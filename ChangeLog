@@ -1,3 +1,26 @@
+2004-06-15 22:56  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/AbstractConnectionPool.java,
+	pool/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	pool/org/firebirdsql/pool/PooledConnectionEventListener.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java,
+	pool/org/firebirdsql/pool/PooledObjectEvent.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+	
+	fixed an issue when physical connection is closed, pool was not
+	notified
+
+2004-06-15 20:53  rrokytskyy
+
+	* client-java/src/:
+	test/org/firebirdsql/jdbc/TestFBCallableStatement.java,
+	main/org/firebirdsql/jdbc/FBEscapedCallParser.java:
+	
+	fixed bug in procedure call parser
+
 2004-06-03 22:40  ryanbaldwin
 
 	* client-java/src/: main/org/firebirdsql/ngds/GDS_Impl.java,
