@@ -159,11 +159,23 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     }
 
     void setString(String value) throws SQLException {
+        
+        if (value == STRING_NULL_VALUE) {
+            setNull();
+            return;
+        }
+        
         byte[] data = field.encodeString(value, javaEncoding);
         setBinaryStream(new ByteArrayInputStream(data), data.length);
     }
 
     void setBytes(byte[] value) throws SQLException {
+
+        if (value == BYTES_NULL_VALUE) {
+            setNull();
+            return;
+        }
+
         byte[] data = field.encodeString(value, javaEncoding);
         setBinaryStream(new ByteArrayInputStream(data), data.length);
     }
@@ -180,6 +192,12 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     }
 
     void setBinaryStream(InputStream in, int length) throws SQLException {
+        
+        if (in == STREAM_NULL_VALUE) {
+            setNull();
+            return;
+        }
+        
         if (!c.getAutoCommit()) {
             copyBinaryStream(in, length);
         } else {
