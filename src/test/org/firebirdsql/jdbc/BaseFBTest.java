@@ -19,6 +19,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2002/08/29 13:41:16  d_jencks
+ * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
+ *
  * Revision 1.1  2002/08/14 13:22:46  d_jencks
  * Moved tests to separate directory. Removed need for jmx classes, and removed jmxri.jar
  *
@@ -89,8 +92,7 @@ public class BaseFBTest extends TestCase
      * Default URL for the test
      */
    private static final String DB_PATH = System.getProperty("test.db.dir", "");
-
-
+   private static final String DB_LC_CTYPE = System.getProperty("test.db.lc_ctype", "NONE");
    public static final String DB_SERVER_URL = System.getProperty("test.db.host", "localhost");
    public static final int DB_SERVER_PORT = Integer.parseInt(System.getProperty("test.db.port", "3050"));
 
@@ -116,7 +118,7 @@ public class BaseFBTest extends TestCase
      */
     public static final String DB_PASSWORD = "masterkey";
     
-    public static final String DB_LC_CTYPE = "NONE";
+//    public static final String DB_LC_CTYPE = "NONE";
 
     /**
      * Default properties for database connection
