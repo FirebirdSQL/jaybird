@@ -58,6 +58,10 @@ public class FBConnection implements Connection
     //so the transaction may be committed automatically after a
     //statement is executed.
     private boolean autoTransaction = false;
+    
+    // This flag is set tu true in close() method to indicate that this 
+    // instance is invalid and cannot be used anymore
+    private boolean invalid = false;
 
 
     FBManagedConnection mc;
@@ -66,10 +70,77 @@ public class FBConnection implements Connection
 
     FBDatabaseMetaData metaData = null;
 
-	 java.sql.SQLWarning firstWarning = null;
+    java.sql.SQLWarning firstWarning = null;
+     
+    // This set contains all allocated but not closed statements
+    // It is used to close them before the connection is closed
+    private java.util.HashSet activeStatements = new java.util.HashSet();
 	 
     public FBConnection(FBManagedConnection mc) {
         this.mc = mc;
+    }
+    
+    /**
+     * Check if this connection is valid. This method should be invoked before
+     * executing any action in this class.
+     * 
+     * @throws SQLException if this connection has been closed and cannot be 
+     * used anymore.
+     */
+    private void checkValidity() throws SQLException {
+        if (invalid)
+            throw new SQLException(
+                "This connection is closed and cannot be used anymore.");
+    }
+    
+    /**
+     * Invalidate this connection. This method makes connection unusable.
+     */
+    private void invalidate() {
+        invalid = true;
+    }
+    
+    /**
+     * This method should be invoked by each of the statements in the 
+     * {@link Statement#close()} method. Here we remove statement from the
+     * <code>activeStatements</code> set, so we do not need to close it 
+     * later.
+     * 
+     * @param stmt statement that was closed.
+     */
+    void notifyStatementClosed(FBStatement stmt) {
+        if (!activeStatements.remove(stmt))
+            throw new IllegalArgumentException(
+                "Specified statement was not created by this connection.");
+    }
+    
+    /**
+     * This method closes all active statements and cleans resources.
+     * 
+     * @throws SQLException if at least one of the active statements failed
+     * to close gracefully.
+     */
+    private void freeStatements() throws SQLException {
+        // clone statements to avoid concurrent modification exception
+        java.util.Set statements = (java.util.Set)activeStatements.clone();
+        
+        // iterate through the set, close statements and collect exceptions
+        java.util.Iterator iter = statements.iterator();
+        SQLException e = null;
+        while(iter.hasNext()) {
+            try {
+                Statement stmt = (Statement)iter.next();
+                stmt.close();
+            } catch(SQLException ex) {
+                if (e != null)
+                    e.setNextException(ex);
+                else
+                    e = ex;
+            }
+        }
+        
+        // throw exception if there is any
+        if (e != null) throw e;
     }
 
     public void setManagedConnection(FBManagedConnection mc) {
@@ -97,7 +168,9 @@ public class FBConnection implements Connection
      * @exception SQLException if a database access error occurs
      */
     public synchronized Statement createStatement() throws SQLException {
-        return new FBStatement(this);
+        Statement stmt =  new FBStatement(this);
+        activeStatements.add(stmt);
+        return stmt;
     }
 
 
@@ -148,7 +221,9 @@ public class FBConnection implements Connection
      */
     public synchronized PreparedStatement prepareStatement(String sql)
         throws SQLException {
-        return new FBPreparedStatement(this, sql);
+        PreparedStatement stmt = new FBPreparedStatement(this, sql);
+        activeStatements.add(stmt);
+        return stmt;
     }
 
 
@@ -244,7 +319,9 @@ public class FBConnection implements Connection
     public synchronized CallableStatement prepareCall(String sql) 
         throws SQLException 
     {
-        return new FBCallableStatement(this, sql);
+        CallableStatement stmt = new FBCallableStatement(this, sql);
+        activeStatements.add(stmt);
+        return stmt;
     }
 
 
@@ -437,16 +514,25 @@ public class FBConnection implements Connection
      * @exception SQLException if a database access error occurs
      */
     public synchronized void close() throws SQLException {
-        if (mc != null) {
-            //if we are in a transaction started automatically because autocommit = false,
-            //end it.
-            if (!getAutoCommit()) 
-            {
-                setAutoCommit(true);
-            } // end of if ()
+        try {
+            freeStatements();
+        } finally {
             
-            mc.close(this);
-            mc = null;
+            try {
+                if (mc != null) {
+                    //if we are in a transaction started 
+                    //automatically because autocommit = false, end it.
+                    if (!getAutoCommit()) 
+                    {
+                        setAutoCommit(true);
+                    } // end of if ()
+                    
+                    mc.close(this);
+                    mc = null;
+                }
+            } finally {
+                invalidate();
+            }
         }
     }
 
@@ -702,13 +788,16 @@ public class FBConnection implements Connection
     public synchronized PreparedStatement prepareStatement(String sql, 
         int resultSetType, int resultSetConcurrency) throws SQLException 
     {
+          PreparedStatement stmt;
 		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
 		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
-	        return new FBPreparedStatement(this, sql);
+	        stmt = new FBPreparedStatement(this, sql);
 		  else{
 		     addWarning(new java.sql.SQLWarning("resultSetType or resultSetConcurrency changed"));
-	        return new FBPreparedStatement(this, sql);
-		  }			  
+	        stmt = new FBPreparedStatement(this, sql);
+		  }		
+          activeStatements.add(stmt);
+          return stmt;
     }
 
     /**
@@ -730,13 +819,16 @@ public class FBConnection implements Connection
     public synchronized CallableStatement prepareCall(String sql, 
         int resultSetType, int resultSetConcurrency) throws SQLException 
     {
+        CallableStatement stmt;
 		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
 		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
-	        return new FBCallableStatement(this, sql);
+	        stmt =new FBCallableStatement(this, sql);
 		  else{
 		     addWarning(new java.sql.SQLWarning("resultSetType or resultSetConcurrency changed"));
-	        return new FBCallableStatement(this, sql);
-		  }			  
+	        stmt = new FBCallableStatement(this, sql);
+		  }		
+          activeStatements.add(stmt);
+          return stmt;
     }
 
 
@@ -1039,6 +1131,10 @@ public class FBConnection implements Connection
             }
         }
         return rs;
+    }
+
+    protected void finalize() throws Throwable {
+        close();
     }
 	 
 }
