@@ -17,11 +17,14 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.rowset;
 
 
 // imports --------------------------------------
 import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.FBResultSet;
+import org.firebirdsql.jdbc.FBStatement;
 
 import javax.sql.RowSet;
 import javax.sql.RowSetListener;
