@@ -894,7 +894,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                     	boolean hasResultSet = internalExecute(sql);
                         
                         if (hasResultSet)
-                        	throw new BatchUpdateException();
+                        	throw new BatchUpdateException(toArray(responses));
                         else
                             responses.add(new Integer(getUpdateCount()));
                     } catch (GDSException ge) {
