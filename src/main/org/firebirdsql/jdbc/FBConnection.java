@@ -521,10 +521,28 @@ public class FBConnection implements Connection
                 if (mc != null) {
                     //if we are in a transaction started 
                     //automatically because autocommit = false, end it.
+                    
+                    // commented by R.Rokytskyy because this code commits
+                    // transaction if it was started but is not in autcommit
+                    // mode, and specification requires "database changes 
+                    // will not be saved"
+                    
+                    /*
                     if (!getAutoCommit()) 
                     {
                         setAutoCommit(true);
                     } // end of if ()
+                    */
+                    
+                    // rollback transaction if it was started
+                    
+                    try {
+                        if (inTransaction())
+                            getLocalTransaction().rollback();
+        
+                    } catch(javax.resource.ResourceException resex) {
+                        throw new FBSQLException(resex);
+                    }
                     
                     mc.close(this);
                     mc = null;
