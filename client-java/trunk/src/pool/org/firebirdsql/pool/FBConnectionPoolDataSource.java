@@ -168,14 +168,16 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
                         getPingStatement(),
                         getPingInterval(),
                         isStatementPooling(),
-                        getTransactionIsolationLevel());
+                        getTransactionIsolationLevel(),
+                        getMaxStatements());
             else
                 pooledConnection = 
                     new FBPooledConnection(
                         managedConnection, 
                         cri, 
                         isStatementPooling(),
-                        getTransactionIsolationLevel());
+                        getTransactionIsolationLevel(),
+                        getMaxStatements());
 
             return pooledConnection;
 

@@ -64,6 +64,7 @@ public abstract class BasicAbstractConnectionPool
     private boolean pooling = true;
     private boolean statementPooling = true;
     private int transactionIsolation = FBPoolingDefaults.DEFAULT_ISOLATION;
+    private int maxStatements = FBPoolingDefaults.DEFAULT_MAX_STATEMENTS;
     
     private Reference reference;
     
@@ -104,6 +105,14 @@ public abstract class BasicAbstractConnectionPool
     public void setIdleTimeout(int idleTimeout) {
         this.idleTimeout = idleTimeout;
     }
+    
+    public int getMaxIdleTime() {
+        return getIdleTimeout();
+    }
+    
+    public void setMaxIdleTimeout(int maxIdleTime) {
+        setIdleTimeout(maxIdleTime);
+    }
 
     public int getMaxConnections() {
         return maxConnections;
@@ -112,6 +121,14 @@ public abstract class BasicAbstractConnectionPool
     public void setMaxConnections(int maxConnections) {
         this.maxConnections = maxConnections;
     }
+    
+    public int getMaxPoolSize() {
+        return getMaxConnections();
+    }
+    
+    public void setMaxPoolSize(int maxPoolSize) {
+        setMaxConnections(maxPoolSize);
+    }
 
     public int getMinConnections() {
         return minConnections;
@@ -119,6 +136,14 @@ public abstract class BasicAbstractConnectionPool
 
     public void setMinConnections(int minConnections) {
         this.minConnections = minConnections;
+    }
+    
+    public int getMinPoolSize() {
+        return getMinConnections();
+    }
+    
+    public void setMinPoolSize(int minPoolSize) {
+        setMinConnections(minPoolSize);
     }
 
     public int getPingInterval() {
@@ -162,7 +187,26 @@ public abstract class BasicAbstractConnectionPool
     }
 
     public void setStatementPooling(boolean statementPooling) {
+        
+        // no statement pooling if max allowed statements is 0
+        if (getMaxStatements() == 0)
+            statementPooling = false;
+        
         this.statementPooling = statementPooling;
+    }
+    
+    public int getMaxStatements() {
+        return maxStatements;
+    }
+    
+    public void setMaxStatements(int maxStatements) {
+        this.maxStatements = maxStatements;
+        
+        if (maxStatements > 0 && !isStatementPooling())
+            setStatementPooling(true);
+        else
+        if (maxStatements == 0)
+            setStatementPooling(false);
     }
     
     public int getTransactionIsolationLevel() {
@@ -205,12 +249,18 @@ public abstract class BasicAbstractConnectionPool
     }
 
     private static final String REF_BLOCKING_TIMEOUT = "blockingTimeout";
-    private static final String REF_IDLE_TIMEOUT = "idleTimeout";
     private static final String REF_LOGIN_TIMEOUT = "loginTimeout";
-    private static final String REF_MAX_SIZE = "maxConnections";
-    private static final String REF_MIN_SIZE = "minConnections";
     private static final String REF_PING_INTERVAL = "pingInterval";
     private static final String REF_TX_ISOLATION = "isolation";
+    private static final String REF_RETRY_INTERVAL = "retryInterval";
+    private static final String REF_PING_STATEMENT = "pingStatement";
+    private static final String REF_POOLING = "pooling";
+    private static final String REF_STATEMENT_POOLING = "statementPooling";
+    private static final String REF_MAX_STATEMENTS = "maxStatements";
+    
+    private static final String REF_MAX_POOL_SIZE = "maxPoolSize";
+    private static final String REF_MIN_POOL_SIZE = "minPoolSize";
+    private static final String REF_MAX_IDLE_TIME = "maxIdleTime";
 
     protected abstract BasicAbstractConnectionPool createObjectInstance();
     
@@ -243,16 +293,16 @@ public abstract class BasicAbstractConnectionPool
             if (REF_BLOCKING_TIMEOUT.equals(type))
                 ds.setBlockingTimeout(Integer.parseInt(addr));
             else
-            if (REF_IDLE_TIMEOUT.equals(type))
+            if (REF_MAX_IDLE_TIME.equals(type))
                 ds.setIdleTimeout(Integer.parseInt(addr));
             else
             if (REF_LOGIN_TIMEOUT.equals(type))
                 ds.setLoginTimeout(Integer.parseInt(addr));
             else
-            if (REF_MAX_SIZE.equals(type))
+            if (REF_MAX_POOL_SIZE.equals(type))
                 ds.setMaxConnections(Integer.parseInt(addr));
             else
-            if (REF_MIN_SIZE.equals(type))
+            if (REF_MIN_POOL_SIZE.equals(type))
                 ds.setMinConnections(Integer.parseInt(addr));
             else
             if (REF_PING_INTERVAL.equals(type))
@@ -260,6 +310,21 @@ public abstract class BasicAbstractConnectionPool
             else
             if (REF_TX_ISOLATION.equals(type))
                 ds.setTransactionIsolationLevel(Integer.parseInt(addr));
+            else
+            if (REF_RETRY_INTERVAL.equals(type))
+                ds.setRetryInterval(Integer.parseInt(addr));
+            else
+            if (REF_PING_STATEMENT.equals(type)) 
+                ds.setPingStatement(addr);
+            else
+            if (REF_POOLING.equals(type))
+                ds.setPooling(Boolean.valueOf(addr).booleanValue());
+            else
+            if (REF_STATEMENT_POOLING.equals(type))
+                ds.setStatementPooling(Boolean.valueOf(addr).booleanValue());
+            else
+            if (REF_MAX_STATEMENTS.equals(type))
+                ds.setMaxStatements(Integer.parseInt(addr));
             else
                 continue;
             
@@ -322,15 +387,15 @@ public abstract class BasicAbstractConnectionPool
                 String.valueOf(getBlockingTimeout())));
     
         if (getIdleTimeout() != FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT)
-            ref.add(new StringRefAddr(REF_IDLE_TIMEOUT,
+            ref.add(new StringRefAddr(REF_MAX_IDLE_TIME,
                 String.valueOf(getIdleTimeout())));
     
         if (getMaxConnections() != FBPoolingDefaults.DEFAULT_MAX_SIZE)
-            ref.add(new StringRefAddr(REF_MAX_SIZE, 
+            ref.add(new StringRefAddr(REF_MAX_POOL_SIZE, 
                 String.valueOf(getMaxConnections())));
     
         if (getMinConnections() != FBPoolingDefaults.DEFAULT_MIN_SIZE)
-            ref.add(new StringRefAddr(REF_MIN_SIZE,
+            ref.add(new StringRefAddr(REF_MIN_POOL_SIZE,
                 String.valueOf(getMinConnections())));
             
         if (getPingInterval() != FBPoolingDefaults.DEFAULT_PING_INTERVAL)
@@ -340,6 +405,26 @@ public abstract class BasicAbstractConnectionPool
         if (getTransactionIsolationLevel() != FBPoolingDefaults.DEFAULT_ISOLATION)
             ref.add(new StringRefAddr(REF_TX_ISOLATION,
                 String.valueOf(getTransactionIsolationLevel())));
+        
+        if (getRetryInterval() != FBPoolingDefaults.DEFAULT_RETRY_INTERVAL)
+            ref.add(new StringRefAddr(REF_RETRY_INTERVAL, 
+                    String.valueOf(getRetryInterval())));
+        
+        if (getPingStatement() != null)
+            ref.add(new StringRefAddr(REF_PING_STATEMENT,
+                    String.valueOf(getPingStatement())));
+        
+        if (!isPooling())
+            ref.add(new StringRefAddr(REF_POOLING,
+                    String.valueOf(isPooling())));
+        
+        if (!isStatementPooling())
+            ref.add(new StringRefAddr(REF_STATEMENT_POOLING,
+                    String.valueOf(isStatementPooling())));
+        
+        if (getMaxStatements() != FBPoolingDefaults.DEFAULT_MAX_STATEMENTS)
+            ref.add(new StringRefAddr(REF_MAX_STATEMENTS,
+                    String.valueOf(getMaxStatements())));
             
         return ref;
     }

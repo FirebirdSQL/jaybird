@@ -364,10 +364,12 @@ public class DriverConnectionPoolDataSource extends BasicAbstractConnectionPool
             if (isPingable())
                 pooledConnection = new PingablePooledConnection(
                     connection, getPingStatement(), getPingInterval(),
-                    isStatementPooling(), getTransactionIsolationLevel());
+                    isStatementPooling(), getTransactionIsolationLevel(),
+                    getMaxStatements());
             else
                 pooledConnection = new PingablePooledConnection(
-                    connection, isStatementPooling(), getTransactionIsolationLevel());
+                    connection, isStatementPooling(), getTransactionIsolationLevel(),
+                    getMaxStatements());
 
             return pooledConnection;
         }

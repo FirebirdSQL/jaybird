@@ -59,4 +59,13 @@ interface XCachablePreparedStatement extends PreparedStatement {
      * @return wrapped prepared statement.
      */
     PreparedStatement getOriginal();
+    
+    /**
+     * Check if this statement is cached or not. Statement might not be cached
+     * if there is a maximum number of cached statements specified for a pool
+     * and this limit is reached.
+     * 
+     * @return <code>true</code> if statement is cached.
+     */
+    boolean isCached();
 }

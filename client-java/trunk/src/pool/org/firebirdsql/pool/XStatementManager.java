@@ -42,6 +42,8 @@ public interface XStatementManager {
      * 
      * @param resultSetConcurrency result set concurrency
      * 
+     * @param cached <code>true</code> if prepared statement will be cached.
+     * 
      * @return instance of {@link java.sql.PreparedStatement} corresponding to the 
      * specified SQL statement.
      * 
@@ -50,7 +52,7 @@ public interface XStatementManager {
      * @see java.sql.Connection#prepareStatement(java.lang.String, int, int)
      */
     XCachablePreparedStatement prepareStatement(String sql, int resultSetType, 
-        int resultSetConcurrency) throws SQLException;
+        int resultSetConcurrency, boolean cached) throws SQLException;
         
     /**
      * Notify about statement close.
