@@ -34,6 +34,11 @@ import java.sql.Array;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.sql.ResultSet;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -46,14 +51,35 @@ public class FBResultSetMetaData implements ResultSetMetaData {
 
     // private isc_stmt_handle stmt;
     private XSQLVAR[] xsqlvars;
+    private Map extendedInfo;
+    private FBResultSet rs;
+    private FBPreparedStatement ps;
 
     /*    FBResultSetMetaData(isc_stmt_handle stmt) {
         this.stmt = stmt;
         }*/
 
-    FBResultSetMetaData(XSQLVAR[] xsqlvars) {
+    FBResultSetMetaData(XSQLVAR[] xsqlvars, FBResultSet rs) throws SQLException {
         this.xsqlvars = xsqlvars;
-        }
+        this.rs = rs;
+        this.extendedInfo = getExtendedFieldInfo(rs.c);
+    }
+    
+    FBResultSetMetaData(XSQLVAR[] xsqlvars, FBPreparedStatement ps) throws SQLException {
+        this.xsqlvars = xsqlvars;
+        this.ps = ps;
+        this.extendedInfo = getExtendedFieldInfo(ps.c);
+    }
+    
+    private String getIscEncoding() {
+        if (rs != null)
+            return rs.c.getIscEncoding();
+        else
+        if (ps != null)
+            return ps.c.getIscEncoding();
+        else
+            return "NONE";
+    }
 
     /**
      * Returns the number of columns in this <code>ResultSet</code> object.
@@ -189,13 +215,26 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      */
     public  int getColumnDisplaySize(int column) throws  SQLException {
         int colType = getColumnType(column);
+        ExtendedFieldInfo fieldInfo = getExtFieldInfo(column);
         switch (colType){
             case java.sql.Types.DECIMAL:
             case java.sql.Types.NUMERIC:
-                return getXsqlvar(column).sqllen;
+                
+                if (fieldInfo == null) 
+                    return estimatePrecision(column);
+                else
+                    return fieldInfo.fieldPrecision;
+            
             case java.sql.Types.CHAR:
             case java.sql.Types.VARCHAR:
-                return getXsqlvar(column).sqllen;
+                
+                if (fieldInfo == null) {
+                    String encoding = getIscEncoding();
+                    int length = getXsqlvar(column).sqllen;
+                    return length / FBConnectionHelper.getIscEncodingSize(encoding);
+                } else
+                    return fieldInfo.characterLength;
+            
             case java.sql.Types.FLOAT:
                 return 9;
             case java.sql.Types.DOUBLE:
@@ -265,13 +304,28 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      */
     public  int getPrecision(int column) throws  SQLException {
         int colType = getColumnType(column);
+        ExtendedFieldInfo fieldInfo = getExtFieldInfo(column);
+        
         switch (colType){
+            
             case java.sql.Types.DECIMAL:
             case java.sql.Types.NUMERIC:
-                return getXsqlvar(column).sqllen;
+            
+                if (fieldInfo == null) 
+                    return estimatePrecision(column);
+                else
+                    return fieldInfo.fieldPrecision;
+                
             case java.sql.Types.CHAR:
             case java.sql.Types.VARCHAR:
-                return getXsqlvar(column).sqllen;
+            
+                if (fieldInfo == null) {
+                    String encoding = getIscEncoding();
+                    int length = getXsqlvar(column).sqllen;
+                    return length / FBConnectionHelper.getIscEncodingSize(encoding);
+                } else
+                    return fieldInfo.characterLength;
+                
             case java.sql.Types.FLOAT:
                 return 7;
             case java.sql.Types.DOUBLE:
@@ -312,7 +366,9 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getTableName(int column) throws  SQLException {
-        return getXsqlvar(column).relname;
+        String result = getXsqlvar(column).relname;
+        if (result == null) result = "";
+        return result;
     }
 
 
@@ -573,6 +629,193 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         //return stmt.getOutSqlda().sqlvar[columnIndex - 1];
         return xsqlvars[columnIndex - 1];
     }
+    
+    private ExtendedFieldInfo getExtFieldInfo(int columnIndex) {
+        FieldKey key = new FieldKey(
+            getXsqlvar(columnIndex).relname, 
+            getXsqlvar(columnIndex).sqlname);
+            
+        return (ExtendedFieldInfo)extendedInfo.get(key);
+    }
+    
+    private int estimatePrecision(int columnIndex) {
+        int sqltype = getXsqlvar(columnIndex).sqltype & ~1;
+        int sqlscale = getXsqlvar(columnIndex).sqlscale;
+        
+        switch(sqltype) {
+            case ISCConstants.SQL_SHORT : return 5;
+            case ISCConstants.SQL_LONG : return 10;
+            case ISCConstants.SQL_INT64 : return 19;
+            case ISCConstants.SQL_DOUBLE : return 19;
+            default : return 0;
+        }
+    }
+    
+    
+    private static final String GET_FIELD_INFO = "SELECT "
+        + "  RF.RDB$RELATION_NAME as RELATION_NAME"
+        + ", RF.RDB$FIELD_NAME as FIELD_NAME"
+        + ", F.RDB$FIELD_LENGTH as FIELD_LENGTH"
+        + ", F.RDB$FIELD_PRECISION as FIELD_PRECISION"
+        + ", F.RDB$FIELD_SCALE as FIELD_SCALE"
+        + ", F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE"
+        + ", F.RDB$CHARACTER_LENGTH as CHARACTER_LENGTH"
+        + ", F.RDB$CHARACTER_SET_ID as CHARACTER_SET_ID"
+        + " FROM"
+        + "  RDB$RELATION_FIELDS RF "
+        + ", RDB$FIELDS F "
+        + " WHERE "
+        + "  RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME"
+        + " AND"
+        + "  RF.RDB$FIELD_NAME = ?"
+        + " AND"
+        + "  RF.RDB$RELATION_NAME = ?"
+        ;
+        
+    /**
+     * This class is an old-fashion data structure that stores additional
+     * information about fields in a database.
+     */
+    private static class ExtendedFieldInfo {
+        String relationName;
+        String fieldName;
+        int fieldLength;
+        int fieldPrecision;
+        int fieldScale;
+        int fieldSubtype;
+        int characterLength;
+        int characterSetId;
+    }
+    
+    /**
+     * This class should be used as a composite key in an internal field
+     * mapping structures.
+     */
+    private static final class FieldKey {
+        private String relationName;
+        private String fieldName;
+        
+        /**
+         * Create instance of this class for the specified relation and field
+         * names.
+         * 
+         * @param relationName relation name.
+         * @param fieldName field name.
+         */
+        FieldKey(String relationName, String fieldName) {
+            this.relationName = relationName;
+            this.fieldName = fieldName;
+        }
 
+        /**
+         * Check if <code>obj</code> is equal to this object.
+         * 
+         * @param obj object to check.
+         * 
+         * @return <code>true</code> if <code>obj</code> is instance of this 
+         * class and has equal relation and field names.
+         */
+        public boolean equals(Object obj) {
+            
+            if (obj == this) return true;
+            
+            if (!(obj instanceof FieldKey)) return false;
+            
+            FieldKey that = (FieldKey)obj;
+            
+            if (relationName == null && fieldName == null)
+                return that.relationName == null && that.fieldName == null;
+            else
+            if (relationName == null && fieldName != null)
+                return that.relationName == null && fieldName.equals(that.fieldName);
+            else
+            if (relationName != null && fieldName == null)
+                return relationName.equals(that.relationName) && that.fieldName == null;
+            else
+                return relationName.equals(that.relationName) && fieldName.equals(that.fieldName);
+        }
+
+        /**
+         * Get hash code of this instance. 
+         * 
+         * @return combination of hash codes of <code>relationName</code> field
+         * and <code>fieldName</code> field.
+         */
+        public int hashCode() {
+            if (relationName == null && fieldName == null)
+                return 0;
+            if (relationName == null && fieldName != null)
+                return fieldName.hashCode();
+            else
+            if (relationName != null && fieldName == null)
+                return relationName.hashCode();
+            else
+                return (relationName.hashCode() ^ fieldName.hashCode()) + 11;
+        }
+        
+        
+    }
+    
+    /**
+     * This method retrieves extended information from the system tables in
+     * a database. Since this method is expensinve, use it with care.
+     * 
+     * @return mapping between {@link FieldKey} instances and 
+     * {@link ExtendedFieldInfo} instances.
+     * 
+     * @throws SQLException if extended field information cannot be obtained.
+     */
+    private Map getExtendedFieldInfo(FBConnection connection) throws SQLException {
+        
+        StringBuffer sb = new StringBuffer();
+        ArrayList params = new ArrayList();
+        for (int i = 0; i < xsqlvars.length; i++) {
+            
+            String relationName = xsqlvars[i].relname;
+            String fieldName = xsqlvars[i].sqlname;
+            
+            if (relationName == null || fieldName == null) continue;
+            
+            sb.append(GET_FIELD_INFO);
+            
+            
+            params.add(fieldName);
+            params.add(relationName);
+            
+            if (i < xsqlvars.length - 1)
+                sb.append("\n").append("UNION").append("\n");
+                
+        }
+        
+        ResultSet rs = connection.doQuery(
+            sb.toString(), 
+            params, 
+            ((FBDatabaseMetaData)connection.getMetaData()).statements);
+            
+        try {
+            HashMap result = new HashMap();
+                
+            while(rs.next()) {
+                ExtendedFieldInfo fieldInfo = new ExtendedFieldInfo();
+                
+                fieldInfo.relationName = rs.getString("RELATION_NAME");
+                fieldInfo.fieldName = rs.getString("FIELD_NAME");
+                fieldInfo.fieldLength = rs.getInt("FIELD_LENGTH");
+                fieldInfo.fieldPrecision = rs.getInt("FIELD_PRECISION");
+                fieldInfo.fieldScale = rs.getInt("FIELD_SCALE");
+                fieldInfo.fieldSubtype = rs.getInt("FIELD_SUB_TYPE");
+                fieldInfo.characterLength = rs.getInt("CHARACTER_LENGTH");
+                fieldInfo.characterSetId = rs.getInt("CHARACTER_SET_ID");
+                
+                result.put(
+                    new FieldKey(fieldInfo.relationName, fieldInfo.fieldName), 
+                    fieldInfo);
+            }
+            
+            return result;
+        } finally {
+            rs.close();
+        }
+    }
 
 }

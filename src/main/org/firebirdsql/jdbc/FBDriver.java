@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.5  2002/11/22 17:53:58  brodsom
+ * Important performance patch
+ *
  * Revision 1.4  2002/11/22 02:30:38  brodsom
  * 1.- Make most variables private in stmt_handle, blob_handle, db_handle and others
  * 2.- Move constants from GDS to ISCConstants (class,1100 lines)
@@ -97,6 +100,7 @@ import javax.security.auth.Subject;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBTpb;
+import org.firebirdsql.jca.FBTpbMapper;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -118,6 +122,8 @@ public class FBDriver implements Driver {
     public static final String PASSWORD = "password";
     public static final String DATABASE = "database";
     public static final String BLOB_BUFFER_LENGTH = "blob_buffer_length";
+    public static final String TPB_MAPPING = "tpb_mapping";
+    
 
     /**
      * @todo implement the default subject for the
@@ -202,8 +208,12 @@ public class FBDriver implements Driver {
 
             FBConnectionRequestInfo conCri =
                 FBConnectionHelper.getCri(info, FBConnectionHelper.getDefaultCri());
-
-            FBTpb tpb = FBConnectionHelper.getTpb(info);
+                
+            String tpbMapping = (String)info.getProperty(TPB_MAPPING);
+            
+            FBTpbMapper tpbMapper = null;
+            if (tpbMapping != null) 
+                tpbMapper = new FBTpbMapper(tpbMapping, getClass().getClassLoader());
 
             // extract the user
             String user = info.getProperty(USER);
@@ -231,7 +241,7 @@ public class FBDriver implements Driver {
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
             mcf.setDatabase(databaseURL);
             mcf.setConnectionRequestInfo(conCri);
-            mcf.setTpb(tpb);
+            mcf.setTpbMapper(tpbMapper);
             if (blobBufferLength != null) 
             {
                 mcf.setBlobBufferLength(blobBufferLength);                

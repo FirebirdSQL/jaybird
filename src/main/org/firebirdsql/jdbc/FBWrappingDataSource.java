@@ -62,7 +62,7 @@ public class FBWrappingDataSource extends FBSimpleDataSource implements DataSour
    private final ManagedConnectionPool.PoolParams poolParams = new ManagedConnectionPool.PoolParams();
 
     public FBWrappingDataSource() throws ResourceException {
-        mcf = new FBManagedConnectionFactory();
+        super();
     }
 
    public void setPooling(final boolean pooling)

@@ -37,6 +37,8 @@ import javax.resource.spi.ConnectionManager;
 import javax.resource.spi.ManagedConnectionFactory;
 
 import org.firebirdsql.jca.FBTpb;
+import org.firebirdsql.jca.FBTpbMapper;
+import org.firebirdsql.jca.FBResourceException;
 import javax.naming.NamingException;
 
 /**
@@ -57,6 +59,7 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
     protected Reference jndiReference;
     protected String description;
     protected int loginTimeout;
+    protected String tpbMapping;
     
     /**
      * Create instance of this class.
@@ -197,6 +200,14 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
         mcf.setPassword(password);
     }
     
+    public String getTpbMapping() {
+        return tpbMapping;
+    }
+    
+    public void setTpbMapping(String tpbMapping) throws FBResourceException {
+        mcf.setTpbMapper(new FBTpbMapper(tpbMapping, getClass().getClassLoader()));
+        this.tpbMapping = tpbMapping;
+    }
     
     /*
      * INTERFACES IMPLEMENTATION

@@ -64,7 +64,7 @@ public class FBResultSet implements ResultSet {
 
     private FBFetcher fbFetcher;
 
-    private FBConnection c;
+    protected FBConnection c;
 
     public XSQLVAR[] xsqlvars;
 
@@ -523,7 +523,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public ResultSetMetaData getMetaData() throws  SQLException {
-        return new FBResultSetMetaData(xsqlvars);
+        return new FBResultSetMetaData(xsqlvars, this);
     }
 
 

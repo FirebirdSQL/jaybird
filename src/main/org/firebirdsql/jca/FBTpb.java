@@ -51,33 +51,33 @@ public class FBTpb implements Serializable
     public static final String TRANSACTION_READ_UNCOMMITTED = "TRANSACTION_READ_UNCOMMITTED";
 
     public final static Integer ISC_TPB_CONSISTENCY = new Integer(ISCConstants.isc_tpb_consistency);
-
+    public final static Integer ISC_TPB_CONCURRENCY = new Integer(ISCConstants.isc_tpb_concurrency);
     public final static Integer ISC_TPB_READ_COMMITTED = new Integer(ISCConstants.isc_tpb_read_committed);
 
-    public final static Integer ISC_TPB_CONCURRENCY = new Integer(ISCConstants.isc_tpb_concurrency);
-
     public final static Integer ISC_TPB_REC_VERSION = new Integer(ISCConstants.isc_tpb_rec_version);
-
     public final static Integer ISC_TPB_NO_REC_VERSION = new Integer(ISCConstants.isc_tpb_no_rec_version);
 	 
     public final static Integer ISC_TPB_WAIT = new Integer(ISCConstants.isc_tpb_wait);
+    public final static Integer ISC_TPB_NOWAIT = new Integer(ISCConstants.isc_tpb_nowait);
 
     public final static Integer ISC_TPB_READ = new Integer(ISCConstants.isc_tpb_read);
-
     public final static Integer ISC_TPB_WRITE = new Integer(ISCConstants.isc_tpb_write);
 
+    private Set tpb;
+    private int txIsolation;
+    private boolean readOnly;
+    private FBTpbMapper mapper;
 
-
-    private final Set tpb = new HashSet();
-
-    public FBTpb() 
-    {
-        tpb.add(ISC_TPB_WRITE);
-        tpb.add(ISC_TPB_READ_COMMITTED);
-        tpb.add(ISC_TPB_REC_VERSION);
-        //tpt.add(ISC_TPB_CONCURRENCY);
-        tpb.add(ISC_TPB_WAIT);
+    public FBTpb(FBTpbMapper mapper) {
+        this.mapper = mapper;
+        this.txIsolation = Connection.TRANSACTION_READ_COMMITTED;
+        this.tpb = mapper.getDefaultMapping();
+        this.readOnly = false;
         createArray();
+    }
+    
+    public void setMapper(FBTpbMapper mapper) {
+        this.mapper = mapper;
     }
 
     public boolean equals(Object other)
@@ -101,14 +101,15 @@ public class FBTpb implements Serializable
 
     public FBTpb(FBTpb tpb)
     {
-        this.tpb.addAll(tpb.tpb);
-        createArray();
+        setTpb(tpb);
     }
 
     public void setTpb(FBTpb tpb)
     {
-        this.tpb.clear();
-        this.tpb.addAll(tpb.tpb);
+        this.tpb = new HashSet(tpb.tpb);
+        this.txIsolation = tpb.txIsolation;
+        this.mapper = tpb.mapper;
+        this.readOnly = tpb.readOnly;
         createArray();
     }
 
@@ -122,23 +123,35 @@ public class FBTpb implements Serializable
         {
             return;
         } // end of if ()
-        if (key.equals(ISC_TPB_CONSISTENCY)
-            || key.equals(ISC_TPB_READ_COMMITTED)
-            || key.equals(ISC_TPB_CONCURRENCY)
-            || key.equals(ISC_TPB_REC_VERSION)
-            || key.equals(ISC_TPB_NO_REC_VERSION)
-            || key.equals(ISC_TPB_WAIT)
-            || key.equals(ISC_TPB_READ)
-            || key.equals(ISC_TPB_WRITE)) 
-        {
-            tpb.add(key);
-            createArray();
-            return;
-        } // end of if ()
-        else
-        {
-            throw new IllegalArgumentException("Unrecognized Tpb parameter: " + key);
-        } // end of else
+        
+        // check if value is correct
+        switch(key.intValue()) {
+            case ISCConstants.isc_tpb_concurrency:
+            case ISCConstants.isc_tpb_consistency:
+            case ISCConstants.isc_tpb_read_committed:
+            case ISCConstants.isc_tpb_rec_version:
+            case ISCConstants.isc_tpb_no_rec_version:
+            case ISCConstants.isc_tpb_wait:
+            case ISCConstants.isc_tpb_nowait:
+            case ISCConstants.isc_tpb_lock_read:
+            case ISCConstants.isc_tpb_lock_write:
+                tpb.add(key);
+                break;
+                
+            case ISCConstants.isc_tpb_read:
+                setReadOnly(true);
+                break;
+                
+            case ISCConstants.isc_tpb_write:
+                setReadOnly(false);
+                break;
+                
+            default:
+                throw new IllegalArgumentException(
+                    "Unrecognized Tpb parameter: " + key);
+        }
+        
+        createArray();
     }
         
 
@@ -146,15 +159,15 @@ public class FBTpb implements Serializable
     {
         if (TRANSACTION_SERIALIZABLE.equals(tin)) 
         {
-            setIscTransactionIsolation(ISCConstants.isc_tpb_consistency);
+            setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
         } // end of if ()
         else if (TRANSACTION_REPEATABLE_READ.equals(tin)) 
         {
-            setIscTransactionIsolation(ISCConstants.isc_tpb_concurrency);
+            setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
         } // end of if ()
         else if (TRANSACTION_READ_COMMITTED.equals(tin)) 
         {
-            setIscTransactionIsolation(ISCConstants.isc_tpb_read_committed);
+            setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         } // end of if ()
         else 
         {
@@ -164,10 +177,10 @@ public class FBTpb implements Serializable
 
     public String getTransactionIsolationName() throws ResourceException
     {
-        switch (getIscTransactionIsolation()) {
-            case ISCConstants.isc_tpb_consistency : return TRANSACTION_SERIALIZABLE;
-            case ISCConstants.isc_tpb_concurrency : return TRANSACTION_REPEATABLE_READ;
-            case ISCConstants.isc_tpb_read_committed : return TRANSACTION_READ_COMMITTED;
+        switch (getTransactionIsolation()) {
+            case Connection.TRANSACTION_SERIALIZABLE : return TRANSACTION_SERIALIZABLE;
+            case Connection.TRANSACTION_REPEATABLE_READ : return TRANSACTION_REPEATABLE_READ;
+            case Connection.TRANSACTION_READ_COMMITTED : return TRANSACTION_READ_COMMITTED;
             default: throw new FBResourceException("Unknown transaction isolation level");
         }
     }
@@ -235,19 +248,21 @@ public class FBTpb implements Serializable
         switch (level) 
         {
         case Connection.TRANSACTION_SERIALIZABLE :
-            setIscTransactionIsolation(ISCConstants.isc_tpb_consistency);
-            break;
         case Connection.TRANSACTION_REPEATABLE_READ :
-            setIscTransactionIsolation(ISCConstants.isc_tpb_concurrency);
-            break;
         case Connection.TRANSACTION_READ_COMMITTED :
-            setIscTransactionIsolation(ISCConstants.isc_tpb_read_committed);
-            break;
         case Connection.TRANSACTION_READ_UNCOMMITTED :
-            setIscTransactionIsolation(ISCConstants.isc_tpb_read_committed);
+        
+            tpb = mapper.getMapping(level);
+            txIsolation = level;
+            
+            // apply read-only flag cached locally
+            setReadOnly(readOnly);
+            
             break;
-        default: throw new FBResourceException("Unsupported transaction isolation level");
+        default: throw new FBResourceException(
+            "Unsupported transaction isolation level");
         }
+        createArray();
     }
 
 
@@ -258,14 +273,19 @@ public class FBTpb implements Serializable
      * @exception SQLException if a database access error occurs
      */
     public int getTransactionIsolation() throws ResourceException {
-        switch (getIscTransactionIsolation()) {
-            case ISCConstants.isc_tpb_consistency : return Connection.TRANSACTION_SERIALIZABLE;
-            case ISCConstants.isc_tpb_concurrency : return Connection.TRANSACTION_REPEATABLE_READ;
-            case ISCConstants.isc_tpb_read_committed : return Connection.TRANSACTION_READ_COMMITTED;
-            default: throw new FBResourceException("Unknown transaction isolation level");
-        }
+        return txIsolation;
     }
 
+    /**
+     * Get Firebird transaction isolation level.
+     * 
+     * @return Firebird transaction isolation level.
+     * 
+     * @deprecated This method should not be used by applications because
+     * only JDBC transaction isolation levels should be used. Also corresponding
+     * setter method is deprecated, so using this method makes a little sense
+     * without it.
+     */
     public int getIscTransactionIsolation() {
         if (tpb.contains(ISC_TPB_CONSISTENCY)) {
             return ISCConstants.isc_tpb_consistency;
@@ -276,28 +296,41 @@ public class FBTpb implements Serializable
         return ISCConstants.isc_tpb_concurrency; //default.
     }
 
+    /**
+     * Set Firebird transaction isolation level. 
+     * 
+     * @param isolation one of the {@link GDS.isc_tpb_consistency}, 
+     * {@link GDS.isc_tpb_concurrency} or {@link GDS.isc_tpb_read_committed}.
+     * 
+     * @deprecated This method does not handle correctly JDBC-TPB mapping and
+     * should not be called if custom mapping is used.
+     */
     public void setIscTransactionIsolation(int isolation) {
-        tpb.remove(ISC_TPB_READ_COMMITTED);
-        tpb.remove(ISC_TPB_CONCURRENCY);
-        tpb.remove(ISC_TPB_CONSISTENCY);
-        tpb.remove(ISC_TPB_REC_VERSION);
-        switch (isolation) {
-            case ISCConstants.isc_tpb_read_committed: 
-                tpb.add(ISC_TPB_READ_COMMITTED);
-                tpb.add(ISC_TPB_REC_VERSION);
-                break;
-            case ISCConstants.isc_tpb_concurrency: 
-                tpb.add(ISC_TPB_CONCURRENCY);
-                break;
-            case ISCConstants.isc_tpb_consistency: 
-                tpb.add(ISC_TPB_CONSISTENCY);
-                break;
-            default: break;
+        try {
+            switch (isolation) {
+                case ISCConstants.isc_tpb_read_committed: 
+                    setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+                    break;
+                case ISCConstants.isc_tpb_concurrency: 
+                    setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+                    break;
+                case ISCConstants.isc_tpb_consistency: 
+                    setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+                    break;
+                default: break;
+            }
+        } catch(ResourceException rex) {
+            // should not happen at all
+            
+            throw new IllegalArgumentException(
+                "Specified transaction isolation is not supported.");
         }
         createArray();
     }
 
     public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
+        
         tpb.remove(ISC_TPB_READ);
         tpb.remove(ISC_TPB_WRITE);
         if (readOnly) {
