@@ -4,13 +4,13 @@
 <!-- JDBC-JCA Driver for Firebird build file                                -->
 <!-- ======================================================================= -->
 
-<project name="FirebirdSQL" default="compile" basedir="../..">
-  <target name="init">
+<project name="FirebirdSQL" default="jmx.jar" basedir="../..">
 
     <property name="Name" value="FirebirdSQL"/>
     <property name="name" value="firebirdsql"/>
     <property name="version" value="0.0"/>
 
+    <property name="lib.dir" value="${basedir}/lib"/>
     <property name="src.dir" value="${basedir}/src"/>
     <property name="src.docs.dir" value="${src.dir}/docs"/>
 
@@ -27,22 +27,33 @@
     <property name="external.dir" value="${dist.dir}/external"/>
     
 
+
     <property name="classpath" value="${build.classes.dir};${src.lib.dir}/jta-spec1_0_1.jar;${src.lib.dir}/connector.jar;${src.lib.dir}/jdbc-3_0-pfd2-classes.zip;${src.lib.dir}/jaas.jar"/>
     <property name="packages" value="firebirdsql.jdbc, firebirdsql.jca"/>
 
     <property name="build.compiler" value="classic"/>
 
-    <available property="jdk1.3+" classname="java.lang.StrictMath" />
-  </target>
+    <!--available property="jdk1.3+" classname="java.lang.StrictMath" /-->
+
+    <path id="cp">
+      <pathelement location="${build.classes.dir}"/>
+      <pathelement location="${src.lib.dir}/jta-spec1_0_1.jar"/>
+      <pathelement location="${src.lib.dir}/connector.jar"/>
+      <pathelement location="${src.lib.dir}/jdbc-3_0-pfd2-classes.zip"/>
+      <pathelement location="${src.lib.dir}/jaas.jar"/>
+      <pathelement location="${src.lib.dir}/jmxri.jar"/>
+      <pathelement location="${lib.dir}/junit.jar"/>
+    </path> 
 
 
   <!-- =================================================================== -->
   <!-- Prepares the build directory                                        -->
   <!-- =================================================================== -->
-  <target name="prepare" depends="init">
+  <target name="prepare">
     <mkdir dir="${build.dir}"/>
     <mkdir dir="${dist.dir}"/>
     <mkdir dir="${build.docs.dir}"/>
+    <mkdir dir="${basedir}/db"/>
   </target>
 
   <!-- =================================================================== -->
@@ -52,12 +63,13 @@
     <mkdir dir="${build.classes.dir}"/>
     <javac srcdir="${src.dir}"
            destdir="${build.classes.dir}"
-           classpath="${classpath}"
            debug="off"
            deprecation="off"
            optimize="on"
            includes="org/**"
-    />
+    >
+      <classpath refid="cp"/>
+    </javac>
   </target>
 
   <!-- =================================================================== -->
@@ -74,6 +86,38 @@
          includes="org/firebirdsql/**"
     />
   </target>
+
+  <target name="junit" depends="jmx.jar">
+    <junit>
+      <classpath>
+         <path refid="cp"/>
+         <pathelement location="${build.classes.dir}"/>
+      </classpath>
+      <formatter type="plain" usefile="false"/>
+      <test name="org.firebirdsql.jgds.TestGds"/>
+      <test name="org.firebirdsql.jca.TestFBManagedConnectionFactory"/>
+    </junit>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the jmx-jar archives                                            -->
+  <!-- =================================================================== -->
+  <target name="jmx.jar" depends="compile">
+    <mkdir dir="${build.dir}/META-INF"/>
+    <copy todir="${build.dir}/META-INF">
+        <fileset dir="${src.resources.dir}"/>
+    </copy>
+
+    <jar jarfile="${dist.dir}/firebirdjmx.jar"
+         basedir="${build.classes.dir}"
+         includes="**/gds/**, **/jgds/**, **/management/**, **/META-INF/**"
+         excludes="**/test/**"
+    />
+    <copy todir="/usr/java/jboss/dev/jboss/dist/lib/ext">
+        <fileset dir="${dist.dir}" includes="firebirdjmx.jar"/>
+    </copy>
+  </target>
+
 
 
   <!-- =================================================================== -->
@@ -160,7 +204,7 @@
   <!-- =================================================================== -->
   <!-- Packages the source files with ZIP                                  -->
   <!-- =================================================================== -->
-  <target name="src-zip" depends="init">
+  <target name="src-zip">
     <zip zipfile="${Name}-src-${version}.zip" basedir="../.." includes="clients/java/**" excludes="clients/java/**.zip"/>
   </target>
 
@@ -182,7 +226,7 @@
   <!-- =================================================================== -->
   <!-- Cleans up generated stuff                                           -->
   <!-- =================================================================== -->
-  <target name="clean" depends="init">
+  <target name="clean">
     <delete dir="${build.dir}"/>
     <delete dir="${dist.dir}"/>
   </target>
