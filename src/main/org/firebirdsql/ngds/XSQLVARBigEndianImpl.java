@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.ngds;
 
+import org.firebirdsql.gds.XSQLVAR;
+
 
 /**
  * Implementation of {@link XSQLVAR} class for big-endian platforms 
@@ -32,6 +34,14 @@ public class XSQLVARBigEndianImpl extends XSQLVARImpl {
         super();
     }
 
+    /* (non-Javadoc)
+     * @see org.firebirdsql.gds.XSQLVAR#deepCopy()
+     */
+    public XSQLVAR deepCopy() {
+        XSQLVARBigEndianImpl result = new XSQLVARBigEndianImpl();
+        result.copyFrom(this);
+        return result;
+    }
     /**
      * Create instance of this class for the specified XSQLVAR parameters.
      */

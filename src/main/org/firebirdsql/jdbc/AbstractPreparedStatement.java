@@ -658,7 +658,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
         XSQLVAR[] newXsqlvar = new XSQLVAR[oldXsqlvar.length];
         for (int i = 0; i < newXsqlvar.length; i++) {
 			newXsqlvar[i] = new XSQLVAR();
-            newXsqlvar[i].copyFrom(oldXsqlvar[i]);
+            newXsqlvar[i] = oldXsqlvar[i].deepCopy();
             
             /*
             newXsqlvar[i].aliasname = oldXsqlvar[i].aliasname;
