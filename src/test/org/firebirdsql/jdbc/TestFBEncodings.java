@@ -42,16 +42,31 @@ public class TestFBEncodings extends BaseFBTest {
         "  none_field VARCHAR(50) CHARACTER SET NONE " +
         ")"
         ;
-        
+
+    public static String CREATE_TABLE_CYRL = 
+        "CREATE TABLE test_encodings_cyrl (" + 
+        "  id INTEGER, " +
+        "  cyrl_field VARCHAR(50) CHARACTER SET CYRL COLLATE DB_RUS, " +
+        "  win1251_field VARCHAR(50) CHARACTER SET WIN1251 COLLATE PXW_CYRL, " +
+        "  unicode_field VARCHAR(50) CHARACTER SET UNICODE_FSS " +
+        ")"
+        ;
+	 
     public static String DROP_TABLE = 
         "DROP TABLE test_encodings";
-    
+
+    public static String DROP_TABLE_CYRL = 
+        "DROP TABLE test_encodings_cyrl";
+	 
     public TestFBEncodings(String testName) {
         super(testName);
     }
     
     protected String getCreateTableStatement() {
         return CREATE_TABLE;
+    }
+    protected String getCreateTableStatement_cyrl() {
+        return CREATE_TABLE_CYRL;
     }
     
     protected void setUp() throws Exception {
@@ -69,17 +84,20 @@ public class TestFBEncodings extends BaseFBTest {
         java.sql.Statement stmt = connection.createStatement();
         try {
             stmt.executeUpdate(DROP_TABLE);
+            stmt.executeUpdate(DROP_TABLE_CYRL);
         }
         catch (Exception e) {}
 
         try {
             stmt.executeUpdate(getCreateTableStatement());
+            stmt.executeUpdate(getCreateTableStatement_cyrl());
             stmt.close();        
         } catch(Exception ex) {
         }
         
         try {
             stmt.executeUpdate("DELETE FROM test_encodings");
+            stmt.executeUpdate("DELETE FROM test_encodings_cyrl");
             stmt.close();        
         } catch(Exception ex) {
         }
@@ -99,6 +117,9 @@ public class TestFBEncodings extends BaseFBTest {
             java.sql.Statement stmt = connection.createStatement();
             stmt.executeUpdate(DROP_TABLE);
             stmt.close();
+				stmt = connection.createStatement();
+				stmt.executeUpdate(DROP_TABLE_CYRL);
+				stmt.close();
         } finally {
             connection.close();      
         }
@@ -199,7 +220,148 @@ public class TestFBEncodings extends BaseFBTest {
             connection.close();
         }
     }
+/*        
+    public static byte[] CYRL_TEST_BYTES = new byte[] {
+        (byte)0x80, (byte)0x81, (byte)0x82, (byte)0x83, 
+        (byte)0x84, (byte)0x85, (byte)0x86, (byte)0x87,
+        (byte)0x88, (byte)0x89, (byte)0x8A, (byte)0x8B, 
+        (byte)0x8C, (byte)0x8D, (byte)0x8C, (byte)0x8F
+    };
+ */
+	 
+	 // 
+	 // This test only demonstrate a failure in the CYRL character set
+	 //
+    public static byte[] CYRL_TEST_BYTES = new byte[] {
+        (byte)0xE0, (byte)0xE1, (byte)0xE2, (byte)0xE3, 
+        (byte)0xE4, (byte)0xE5, (byte)0xE6, (byte)0xE7,
+        (byte)0xE8, (byte)0xE9, (byte)0xEA, (byte)0xEB, 
+        (byte)0xEC, (byte)0xED, (byte)0xEC, (byte)0xEF
+    };
+	 // These are the correct uppercase bytes
+    public static byte[] CYRL_TEST_BYTES_UPPER = new byte[] {
+        (byte)0xC0, (byte)0xC1, (byte)0xC2, (byte)0xC3, 
+        (byte)0xC4, (byte)0xC5, (byte)0xC6, (byte)0xC7,
+        (byte)0xC8, (byte)0xC9, (byte)0xCA, (byte)0xCB, 
+        (byte)0xCC, (byte)0xCD, (byte)0xCC, (byte)0xCF
+    };
+	 // These are the wrong uppercase bytes
+    public static byte[] CYRL_TEST_BYTES_UPPER_WRONG = new byte[] {
+        (byte)0x90, (byte)0x91, (byte)0x92, (byte)0x93, 
+        (byte)0x94, (byte)0x95, (byte)0x96, (byte)0x97,
+        (byte)0x00, (byte)0x99, (byte)0x9A, (byte)0x9B, 
+        (byte)0x9C, (byte)0x9D, (byte)0x9C, (byte)0x9F
+    };
+	 
+    public void testCyrl() throws Exception {
+        String CYRL_TEST_STRING = 
+            new String(CYRL_TEST_BYTES, "Cp1251");
+        String CYRL_TEST_STRING_UPPER = 
+            new String(CYRL_TEST_BYTES_UPPER, "Cp1251");
+        String CYRL_TEST_STRING_UPPER_WRONG = 
+            new String(CYRL_TEST_BYTES_UPPER_WRONG, "Cp1251");
+/*
+for (int i=0; i< CYRL_TEST_BYTES.length ; i++){
+	System.out.println("inic "+Integer.toHexString((int) CYRL_TEST_BYTES[i]&0xFF)+" "+((int) CYRL_TEST_BYTES[i]&0xFF));
+}
+*/
+        java.util.Properties props = new java.util.Properties();
+        props.putAll(DB_INFO);
+        props.put("lc_ctype", "WIN1251");
+        
+        Connection connection = 
+            DriverManager.getConnection(DB_DRIVER_URL, props);
 
+        try {
+            PreparedStatement stmt = connection.prepareStatement(
+                "INSERT INTO test_encodings_cyrl(" + 
+                " id, cyrl_field, win1251_field, unicode_field) " +
+                "VALUES(?, ?, ?, ?)");
+            
+            stmt.setInt(1, 1);
+            stmt.setString(2, CYRL_TEST_STRING);
+            stmt.setString(3, CYRL_TEST_STRING);
+            stmt.setString(4, CYRL_TEST_STRING);
+            
+            int updated = stmt.executeUpdate();
+            stmt.close();
+            
+            assertTrue("Should insert one row", updated == 1);
+            //
+            // Select the same case
+            //
+            stmt = connection.prepareStatement(
+                "SELECT cyrl_field, win1251_field, unicode_field " + 
+                "FROM test_encodings_cyrl WHERE id = ?");
+                
+            stmt.setInt(1, 1);
+                
+            ResultSet rs = stmt.executeQuery();
+            
+            assertTrue("Should have at least one row", rs.next());
+            
+            String cyrlValue = rs.getString(1);
+            String win1251Value = rs.getString(2);
+            String unicodeValue = rs.getString(3);
+
+            assertTrue("Cyrl_field and Win1251_field must be equal ", cyrlValue.equals(win1251Value));
+            assertTrue("Win1251_field and Unicode_field must be equal ", win1251Value.equals(unicodeValue));
+            assertTrue("Cyrl_field and Unicode_field must be equal ", cyrlValue.equals(unicodeValue));
+
+            assertTrue("Should have exactly one row", !rs.next());
+            
+            rs.close();
+            stmt.close();
+            //
+            // Select upper case
+            //
+            stmt = connection.prepareStatement(
+                "SELECT UPPER(cyrl_field), UPPER(win1251_field), UPPER(unicode_field) " + 
+                "FROM test_encodings_cyrl WHERE id = ?");
+                
+            stmt.setInt(1, 1);
+                
+            rs = stmt.executeQuery();
+            
+            assertTrue("Should have at least one row", rs.next());
+            
+            String cyrlValueUpper = rs.getString(1);
+            byte[] cyrlUpperBytes = cyrlValueUpper.getBytes("Cp1251");
+            /*
+for (int i=0; i< cyrlUpperBytes.length	; i++){
+	System.out.println("cyrl "+Integer.toHexString((int) cyrlUpperBytes[i]&0xFF)+" "+((int) cyrlUpperBytes[i]&0xFF));
+}
+*/
+            String win1251ValueUpper = rs.getString(2);
+            byte[] win1251UpperBytes = win1251ValueUpper.getBytes("Cp1251");
+/*
+for (int i=0; i< win1251UpperBytes.length	; i++){
+	System.out.println("win1251 "+Integer.toHexString((int) win1251UpperBytes[i]&0xFF)+" "+((int) win1251UpperBytes[i]&0xFF));
+}
+*/
+            String unicodeValueUpper = rs.getString(3);
+
+            assertTrue("Upper(Cyrl_field) must be != Cyrl_field ", !cyrlValue.equals(cyrlValueUpper));
+            assertTrue("Upper(Win1251_field) must be != Win1251_field ", !win1251Value.equals(win1251ValueUpper));
+            // Unicode only uppercase ASCII characters
+            assertTrue("Upper(unicode) must be == Unicode_field ", unicodeValue.equals(unicodeValueUpper));
+
+            assertTrue("Upper(win1251_field) must == upper test string ", win1251ValueUpper.equals(CYRL_TEST_STRING_UPPER));
+            // The CYRL charset fails because the mapping is 1251 and the uppercase
+            // and lowercase functions work as if the charset is CP866
+            assertTrue("Upper(cyrl_field) must be == wrong upper test string ", cyrlValueUpper.equals(CYRL_TEST_STRING_UPPER_WRONG));
+            // unicode does not uppercase
+            assertTrue("Upper(Unicode_field) must be != upper test string ", ! unicodeValueUpper.equals(CYRL_TEST_STRING_UPPER));
+
+            assertTrue("Should have exactly one row", !rs.next());
+            
+            rs.close();
+            stmt.close();
+            
+        } finally {
+            connection.close();
+        }
+    }	 
 
     // couple of test characters in German
     public static String GERMAN_TEST_STRING_WIN1252 = 
