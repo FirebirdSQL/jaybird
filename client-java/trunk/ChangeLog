@@ -1,3 +1,19 @@
+2004-09-16 15:06  rrokytskyy
+
+	* client-java/src/: resources/isc_error_msg.properties,
+	main/org/firebirdsql/gds/GDSExceptionHelper.java:
+	
+	merged with HEAD
+
+2004-09-16 14:57  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/GDSExceptionHelper.java,
+	resources/isc_error_msg.properties:
+	
+	fixed issue with messages (fix provided by Thomas (ben_ata)),
+	updated messages
+
 2004-09-10 08:39  rrokytskyy
 
 	* client-java/src/pool/org/firebirdsql/pool/:
