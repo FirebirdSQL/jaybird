@@ -42,7 +42,7 @@ import java.util.*;
 import java.sql.SQLException;
 
 public class GDS_Impl implements GDS {
-    public static final boolean debug = true; //turn on and off for excessive logging to System.out.
+    public static final boolean debug = false; //turn on and off for excessive logging to System.out.
 
     /* Operation (packet) types */
 
@@ -592,8 +592,9 @@ public class GDS_Impl implements GDS {
         byte[] buffer = isc_dsql_sql_info(stmt_handle,
                               describe_select_info.length, describe_select_info,
                               buffer_length/*, buffer*/);
-        return parseSqlInfo(buffer);
-
+        XSQLDA xsqlda = new XSQLDA();
+        parseSqlInfo(buffer, xsqlda, 0);
+        return xsqlda;
     }
 
 
@@ -614,6 +615,8 @@ public class GDS_Impl implements GDS {
                                                  isc_info_sql_alias,
                                                  isc_info_sql_describe_end };
 
+        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
+        
 //        byte[] buffer = new byte[32000];
         int buffer_length = MAX_BUFFER_SIZE;
 
@@ -621,9 +624,11 @@ public class GDS_Impl implements GDS {
                               describe_bind_info.length, describe_bind_info,
                               buffer_length/*, buffer*/);
 //        return parseSqlInfo(buffer/*, xsqlda*/);
-        ((isc_stmt_handle_impl)stmt_handle).in_sqlda = parseSqlInfo(buffer);
-        return ((isc_stmt_handle_impl)stmt_handle).in_sqlda;
-
+//        ((isc_stmt_handle_impl)stmt_handle).in_sqlda = parseSqlInfo(buffer);
+        
+        stmt.in_sqlda = new XSQLDA();
+        parseSqlInfo(buffer, stmt.in_sqlda, 0);
+        return stmt.in_sqlda;
     }
 
 
@@ -648,13 +653,17 @@ public class GDS_Impl implements GDS {
         isc_db_handle_impl db = stmt.rsr_rdb;
 
         stmt.clearRows();
-
+        
         // Test Handles needed here
         synchronized (db) {
 
             try {
                 if (debug) {System.out.print((out_xsqlda == null) ? "op_execute " : "op_execute2 ");}
 
+                if (!isSQLDataOK(in_xsqlda)) {
+                    throw new GDSException(isc_dsql_sqlda_value_err);
+                }
+                
                 db.out.writeInt((out_xsqlda == null) ? op_execute : op_execute2);
                 db.out.writeInt(stmt.rsr_id);
                 db.out.writeInt(tr.rtr_id);
@@ -708,6 +717,11 @@ public class GDS_Impl implements GDS {
 
         synchronized (db) {
             try {
+                if (!isSQLDataOK(in_xsqlda)) {
+                    throw new GDSException(isc_dsql_sqlda_value_err);
+                }
+                
+
                 if (in_xsqlda == null && out_xsqlda == null) {
                     if (debug) {System.out.print("op_exec_immediate ");}
                     db.out.writeInt(op_exec_immediate);
@@ -925,7 +939,20 @@ public class GDS_Impl implements GDS {
                 Response r = receiveResponse(db);
                 //            System.arraycopy(resp_data, 0, buffer, 0, resp_data.length);
                 //            return parseSqlInfo(r.resp_data);
-                stmt.out_sqlda = parseSqlInfo(r.resp_data);
+                
+                stmt.out_sqlda = new XSQLDA();
+                byte[] buffer = r.resp_data;
+                int lastindex = 0;
+                while ((lastindex = parseSqlInfo(buffer, stmt.out_sqlda, lastindex)) > 0) {
+                    byte[] items = new byte[4 + sql_prepare_info.length];
+                    items[0] = isc_info_sql_sqlda_start;
+                    items[1] = 2;
+                    items[2] = (byte) (lastindex & 255);
+                    items[3] = (byte) (lastindex >> 8);
+                    System.arraycopy(sql_prepare_info, 0, items, 4, sql_prepare_info.length);
+                    buffer = isc_dsql_sql_info(stmt_handle, items.length, items, buffer.length);
+                }
+
                 return stmt.out_sqlda;
             } catch (IOException ex) {
                 throw new GDSException(isc_net_read_err);
@@ -1499,6 +1526,18 @@ public class GDS_Impl implements GDS {
 
     }
 
+    private boolean isSQLDataOK(XSQLDA xsqlda) {
+        if (xsqlda != null) {
+            for (int i = 0; i < xsqlda.sqld; i++) {
+                if ((xsqlda.sqlvar[i].sqlind != -1) &&
+                    (xsqlda.sqlvar[i].sqldata == null)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     private void writeSQLData(isc_db_handle_impl db,
                                  XSQLDA xsqlda) throws GDSException {
         // This only works if not (port->port_flags & PORT_symmetric)
@@ -1803,8 +1842,7 @@ public class GDS_Impl implements GDS {
     }
 
 
-    private XSQLDA parseSqlInfo(byte[] info) throws GDSException {
-        XSQLDA xsqlda = new XSQLDA();
+    private int parseSqlInfo(byte[] info, XSQLDA xsqlda, int lastindex) throws GDSException {
         byte item;
         int index = 0;
 if (debug) {System.out.println("parseSqlInfo: first 2 bytes are " + isc_vax_integer(info, 0, 2) + " or: " + info[0] + ", " + info[1]);}
@@ -1813,10 +1851,13 @@ if (debug) {System.out.println("parseSqlInfo: first 2 bytes are " + isc_vax_inte
 
         int len = isc_vax_integer(info, i, 2);
         i += 2;
-        xsqlda.sqld = xsqlda.sqln = isc_vax_integer(info, i, len);
+        int n = isc_vax_integer(info, i, len);
 if (debug) {System.out.println("xsqlda.sqln read as " + xsqlda.sqln);}
         i += len;
-        xsqlda.sqlvar = new XSQLVAR[xsqlda.sqln];
+        if (xsqlda.sqlvar == null) {
+            xsqlda.sqld = xsqlda.sqln = n;
+            xsqlda.sqlvar = new XSQLVAR[xsqlda.sqln];
+        }
 
         while (info[i] != isc_info_end) {
             while ((item = info[i++]) != isc_info_sql_describe_end) {
@@ -1824,51 +1865,54 @@ if (debug) {System.out.println("xsqlda.sqln read as " + xsqlda.sqln);}
                 i += 2;
                 switch (item) {
                     case isc_info_sql_sqlda_seq:
-                        index = isc_vax_integer(info, i, len) - 1;
-                        xsqlda.sqlvar[index] = new XSQLVAR();
-if (debug) {System.out.println("new xsqlvar " + index);}
+                        index = isc_vax_integer(info, i, len);
+                        xsqlda.sqlvar[index - 1] = new XSQLVAR();
+if (debug) {System.out.println("new xsqlvar " + (index - 1));}
                         break;
                     case isc_info_sql_type:
-                        xsqlda.sqlvar[index].sqltype = isc_vax_integer (info, i, len);
-if (debug) {System.out.println("isc_info_sql_type " + xsqlda.sqlvar[index].sqltype);}
+                        xsqlda.sqlvar[index - 1].sqltype = isc_vax_integer (info, i, len);
+if (debug) {System.out.println("isc_info_sql_type " + xsqlda.sqlvar[index - 1].sqltype);}
                         break;
                     case isc_info_sql_sub_type:
-                        xsqlda.sqlvar[index].sqlsubtype = isc_vax_integer (info, i, len);
-if (debug) {System.out.println("isc_info_sql_sub_type " + xsqlda.sqlvar[index].sqlsubtype);}
+                        xsqlda.sqlvar[index - 1].sqlsubtype = isc_vax_integer (info, i, len);
+if (debug) {System.out.println("isc_info_sql_sub_type " + xsqlda.sqlvar[index - 1].sqlsubtype);}
                         break;
                     case isc_info_sql_scale:
-                        xsqlda.sqlvar[index].sqlscale = isc_vax_integer (info, i, len);
-if (debug) {System.out.println("isc_info_sql_scale " + xsqlda.sqlvar[index].sqlscale);}
+                        xsqlda.sqlvar[index - 1].sqlscale = isc_vax_integer (info, i, len);
+if (debug) {System.out.println("isc_info_sql_scale " + xsqlda.sqlvar[index - 1].sqlscale);}
                         break;
                     case isc_info_sql_length:
-                        xsqlda.sqlvar[index].sqllen = isc_vax_integer (info, i, len);
-if (debug) {System.out.println("isc_info_sql_length " + xsqlda.sqlvar[index].sqllen);}
+                        xsqlda.sqlvar[index - 1].sqllen = isc_vax_integer (info, i, len);
+if (debug) {System.out.println("isc_info_sql_length " + xsqlda.sqlvar[index - 1].sqllen);}
                         break;
                     case isc_info_sql_field:
-                        xsqlda.sqlvar[index].sqlname = new String(info, i, len);
-if (debug) {System.out.println("isc_info_sql_field " + xsqlda.sqlvar[index].sqlname);}
+                        xsqlda.sqlvar[index - 1].sqlname = new String(info, i, len);
+if (debug) {System.out.println("isc_info_sql_field " + xsqlda.sqlvar[index - 1].sqlname);}
                         break;
                     case isc_info_sql_relation:
-                        xsqlda.sqlvar[index].relname = new String(info, i, len);
-if (debug) {System.out.println("isc_info_sql_relation " + xsqlda.sqlvar[index].relname);}
+                        xsqlda.sqlvar[index - 1].relname = new String(info, i, len);
+if (debug) {System.out.println("isc_info_sql_relation " + xsqlda.sqlvar[index - 1].relname);}
                         break;
                     case isc_info_sql_owner:
-                        xsqlda.sqlvar[index].ownname = new String(info, i, len);
-if (debug) {System.out.println("isc_info_sql_owner " + xsqlda.sqlvar[index].ownname);}
+                        xsqlda.sqlvar[index - 1].ownname = new String(info, i, len);
+if (debug) {System.out.println("isc_info_sql_owner " + xsqlda.sqlvar[index - 1].ownname);}
                         break;
                     case isc_info_sql_alias:
-                        xsqlda.sqlvar[index].aliasname = new String(info, i, len);
-if (debug) {System.out.println("isc_info_sql_alias " + xsqlda.sqlvar[index].aliasname);}
+                        xsqlda.sqlvar[index - 1].aliasname = new String(info, i, len);
+if (debug) {System.out.println("isc_info_sql_alias " + xsqlda.sqlvar[index - 1].aliasname);}
                         break;
                     case isc_info_truncated:
-                        throw new GDSException(isc_dsql_sqlda_err);
+if (debug) {System.out.println("isc_info_truncated ");}
+                        return lastindex;
+                        //throw new GDSException(isc_dsql_sqlda_err);
                     default:
                         throw new GDSException(isc_dsql_sqlda_err);
                 }
                 i += len;
             }
+            lastindex = index;
         }
-        return xsqlda;
+        return 0;
     }
 
     //DEBUG
