@@ -29,6 +29,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2001/08/28 17:13:23  d_jencks
+ * Improved formatting slightly, removed dos cr's
+ *
  * Revision 1.1  2001/07/18 20:07:31  d_jencks
  * Added better GDSExceptions, new NativeSQL, and CallableStatement test from Roman Rokytskyy
  *
@@ -71,6 +74,7 @@ public class FBEscapedParser {
 
     private int state = NORMAL_STATE;
     private int lastState = NORMAL_STATE;
+    private int nestedEscaped = 0;
 
     /**
      * Returns the current state.
@@ -137,10 +141,13 @@ public class FBEscapedParser {
                 case '{' : {
                     if (isInState(NORMAL_STATE))
                         setState(ESCAPE_STATE);
+                    nestedEscaped++;
                     break;
                 }
                 case '}' : {
                     if (isInState(ESCAPE_STATE))
+                        nestedEscaped--;
+                    if (nestedEscaped == 0)
                         setState(NORMAL_STATE);
                     break;
                 }
@@ -177,17 +184,11 @@ public class FBEscapedParser {
         return buffer;
     }
 
-    /**
-     * This method checks the passed parameter to conform the escaped syntax,
-     * checks for the unknown keywords and re-formats result according to the
-     * Firebird SQL syntax.
-     * @param escaped the part of escaped SQL between the '{' and '}'.
-     * @return the native representation of the SQL code.
-     */
-    protected String escapeToNative(String escaped) throws FBSQLParseException {
-        String keyword = "";
-        String payload = "";
-
+    protected void processEscaped(String escaped, StringBuffer keyword,
+        StringBuffer payload)
+    {
+        if (keyword.length() != 0) keyword.delete(0, keyword.length());
+        if (payload.length() != 0) payload.delete(0, payload.length());
         /*
          * Extract the keyword from the escaped syntax.
          */
@@ -196,40 +197,53 @@ public class FBEscapedParser {
         iterator.setText(escaped);
         int keyStart = iterator.first();
         int keyEnd = iterator.next();
-        keyword = escaped.substring(keyStart, keyEnd);
-        payload = escaped.substring(keyEnd, escaped.length());
+        keyword.append(escaped.substring(keyStart, keyEnd));
+        payload.append(escaped.substring(keyEnd, escaped.length()));
+    }
+
+    /**
+     * This method checks the passed parameter to conform the escaped syntax,
+     * checks for the unknown keywords and re-formats result according to the
+     * Firebird SQL syntax.
+     * @param escaped the part of escaped SQL between the '{' and '}'.
+     * @return the native representation of the SQL code.
+     */
+    protected String escapeToNative(String escaped) throws FBSQLParseException {
+        StringBuffer keyword = new StringBuffer();
+        StringBuffer payload = new StringBuffer();
+
+        processEscaped(escaped, keyword, payload);
 
         /*
          * Handle keywords.
          */
-        if (keyword.equalsIgnoreCase(ESCAPE_CALL_KEYWORD2))
+        if (keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD2))
             throw new FBSQLParseException(
-                "Escaped procedure calls with output parameter are not supported. " +
-                "Use native EXECUTE PROCEDURE <proc_name> or " +
-                " SELECT * FROM <proc_name> calls instead.");
+                "Escaped procedure calls {?=call ...} are not yet supported. " +
+                "Use native EXECUTE PROCEDURE <proc_name>, or " +
+                " SELECT * FROM <proc_name> or {call ...} calls instead.");
         else
-        if (keyword.equalsIgnoreCase(ESCAPE_CALL_KEYWORD))
-            return convertProcedureCall(payload.trim());
-        if (keyword.equalsIgnoreCase(ESCAPE_DATE_KEYWORD))
-            return toDateString(payload.trim());
+        if (keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD))
+            return convertProcedureCall(payload.toString().trim());
+        if (keyword.toString().equalsIgnoreCase(ESCAPE_DATE_KEYWORD))
+            return toDateString(payload.toString().trim());
         else
-        if (keyword.equalsIgnoreCase(ESCAPE_ESCAPE_KEYWORD))
+        if (keyword.toString().equalsIgnoreCase(ESCAPE_ESCAPE_KEYWORD))
             throw new FBSQLParseException(
                 "Escaped escapes are not supported.");
         else
-        if (keyword.equalsIgnoreCase(ESCAPE_FUNCTION_KEYWORD))
+        if (keyword.toString().equalsIgnoreCase(ESCAPE_FUNCTION_KEYWORD))
             throw new FBSQLParseException(
                 "Escaped functions are not supported.");
         else
-        if (keyword.equalsIgnoreCase(ESCAPE_OUTERJOIN_KEYWORS))
-            throw new FBSQLParseException(
-                "Escaped outer joins are not supported.");
+        if (keyword.toString().equalsIgnoreCase(ESCAPE_OUTERJOIN_KEYWORS))
+            return convertOuterJoin(payload.toString().trim());
         else
-        if (keyword.equalsIgnoreCase(ESCAPE_TIME_KEYWORD))
-            return toTimeString(payload.trim());
+        if (keyword.toString().equalsIgnoreCase(ESCAPE_TIME_KEYWORD))
+            return toTimeString(payload.toString().trim());
         else
-        if (keyword.equalsIgnoreCase(ESCAPE_TIMESTAMP_KEYWORD))
-            return toTimestampString(payload.trim());
+        if (keyword.toString().equalsIgnoreCase(ESCAPE_TIMESTAMP_KEYWORD))
+            return toTimestampString(payload.toString().trim());
         else
             throw new FBSQLParseException(
                 "Unknown keyword " + keyword + " for escaped syntax.");
@@ -283,9 +297,25 @@ public class FBEscapedParser {
      * and "call" word.
      * @result native procedure call.
      */
-    protected String convertProcedureCall(String procedureCall) {
-        return "EXECUTE PROCEDURE " + procedureCall;
+    protected String convertProcedureCall(String procedureCall)
+        throws FBSQLParseException
+    {
+        FBEscapedParser tempParser = new FBEscapedParser();
+        return FBCallableStatement.NATIVE_CALL_COMMAND + " " +
+            tempParser.parse(procedureCall);
     }
+
+    /**
+     * This method converts the escaped outer join call syntax into the
+     * native outer join. Actually, we do not change anything here, since
+     * Firebird's syntax is the same.
+     */
+    protected String convertOuterJoin(String outerJoin)
+        throws FBSQLParseException
+    {
+        return outerJoin;
+    }
+
 
     public static boolean supportsStoredProcedures() {
         return true;
