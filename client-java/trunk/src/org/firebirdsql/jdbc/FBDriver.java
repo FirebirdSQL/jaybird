@@ -25,6 +25,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.10  2002/06/06 11:24:07  brodsom
+ * Performance patch. Log if log4j is in the classpath, don't log if the enviroment variable FBLog4j is false.
+ *
  * Revision 1.9  2002/06/04 01:17:49  brodsom
  * performance patches
  *
@@ -230,7 +233,7 @@ public class FBDriver implements Driver {
                 // set connection request info
                 factory.setConnectionRequestInfo(FBConnectionHelper.getCri(
                         info, factory.getDefaultConnectionRequestInfo()));
-
+                        
                 dataSource = (FBDataSource)factory.createConnectionFactory();
                 // urlToDataSourceMap.put(databaseURL, dataSource);
             } // end of if ()
