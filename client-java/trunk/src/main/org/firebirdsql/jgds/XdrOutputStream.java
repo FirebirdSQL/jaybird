@@ -45,8 +45,8 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 class XdrOutputStream extends DataOutputStream {
 
-    private final Logger log = LoggerFactory.getLogger(getClass(),false);
-    private final byte[] pad = {0,0,0,0};
+    private final static Logger log = LoggerFactory.getLogger(XdrOutputStream.class,false);
+    private final static byte[] pad = {0,0,0,0};
     static final byte[] textPad = new byte[32767];
 
     public XdrOutputStream(OutputStream out) {

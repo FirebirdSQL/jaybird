@@ -22,7 +22,7 @@ class FBCachedFetcher  implements FBFetcher {
     private boolean isAfterLast = false;
 
 
-    private final Logger log = LoggerFactory.getLogger(getClass(),false);
+    private final static Logger log = LoggerFactory.getLogger(FBCachedFetcher.class,false);
           
     FBCachedFetcher(FBConnection c, FBStatement fbStatement
     , isc_stmt_handle stmt_handle, FBResultSet rs) throws SQLException {

@@ -39,7 +39,7 @@ import org.firebirdsql.logging.LoggerFactory;
 public class IdleRemover 
 {
 
-   private final Logger log = LoggerFactory.getLogger(getClass(),false);
+   private final static Logger log = LoggerFactory.getLogger(IdleRemover.class,false);
 
    private final Collection pools = new ArrayList();
 

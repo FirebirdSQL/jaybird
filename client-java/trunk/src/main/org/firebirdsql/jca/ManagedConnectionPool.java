@@ -56,7 +56,7 @@ public class ManagedConnectionPool
 
    private /*final*/ FIFOSemaphore permits;
 
-   private final Logger log = LoggerFactory.getLogger(getClass(),false);
+   private final static Logger log = LoggerFactory.getLogger(ManagedConnectionPool.class,false);
 
    private final Counter connectionCounter = new Counter();
 

@@ -56,7 +56,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public class FBStatement implements Statement {
 
-   protected final Logger log = LoggerFactory.getLogger(getClass(),false);
+   protected final static Logger log = LoggerFactory.getLogger(FBStatement.class,false);
 
     protected FBConnection c;
 
