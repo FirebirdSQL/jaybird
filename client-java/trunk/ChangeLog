@@ -1,3 +1,78 @@
+2003-11-14 19:25  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	
+	code cleanup
+
+2003-11-14 18:35  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestBatchUpdates.java:
+	
+	initial revision
+
+2003-11-14 18:34  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	FBConnectionPoolDataSource.java, FBWrappingDataSource.java:
+	
+	added support of charSet property
+
+2003-11-14 18:32  rrokytskyy
+
+	*
+	
+	made a subinterface of FirebirdStatement
+	client-java/src/main/org/firebirdsql/jdbc/FirebirdPreparedStatement
+	.java:
+
+2003-11-14 18:32  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FirebirdStatement.java:
+	
+	initial revision
+
+2003-11-14 18:31  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
+	
+	added batch updates support, some extra info methods, code cleanup
+
+2003-11-14 18:27  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FBResultSet.java,
+	FBResultSetMetaData.java:
+	
+	code cleanup
+
+2003-11-14 18:25  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBDriver.java:
+	
+	added support for charSet property
+
+2003-11-14 18:24  rrokytskyy
+
+	*
+	
+	initial revision
+	client-java/src/main/org/firebirdsql/jdbc/FBDriverNotCapableExcepti
+	on.java:
+
+2003-11-14 18:24  rrokytskyy
+
+	*
+	
+	implemented batch updates and some code cleanup
+	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
+	.java:
+
+2003-11-14 18:24  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
+	
+	code cleanup
+
 2003-11-12 23:26  rrokytskyy
 
 	*
