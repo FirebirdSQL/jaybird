@@ -95,12 +95,19 @@ public class FBResultSet implements ResultSet {
      * @param stmt an <code>isc_stmt_handle</code> value
      */
     FBResultSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt) 
-     throws SQLException {
+        throws SQLException 
+    {
         this.c = c;
         xsqlvars = stmt.getOutSqlda().sqlvar;
         maxRows = fbstatement.getMaxRows();
         prepareVars(false);
-        fbFetcher = new FBStatementFetcher(this.c, fbstatement, stmt, this);
+        
+        boolean updatableCursor = fbstatement.isUpdatableCursor();
+        
+        if (updatableCursor) 
+            fbFetcher = new FBUpdatableFetcher(this.c, fbstatement, stmt, this);
+        else
+            fbFetcher = new FBStatementFetcher(this.c, fbstatement, stmt, this);
     }
 
     /**

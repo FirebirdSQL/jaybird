@@ -436,6 +436,9 @@ public class FBStatement implements Statement {
         this.cursorName = name;
     }
 
+    boolean isUpdatableCursor() {
+        return cursorName != null;
+    }
 
     //----------------------- Multiple Results --------------------------
 
