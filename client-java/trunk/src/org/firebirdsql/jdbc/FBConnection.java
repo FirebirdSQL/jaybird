@@ -36,14 +36,20 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.List;
 import javax.resource.ResourceException;
-import javax.resource.cci.LocalTransaction;
+import javax.resource.spi.LocalTransaction;
 import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.isc_blob_handle;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.SqlInfo;
 import org.firebirdsql.jca.FBLocalTransaction;
 import org.firebirdsql.jca.FBManagedConnection;
 import java.util.Map;
@@ -97,6 +103,8 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
 
     FBDatabaseMetaData metaData = null;
 
+	 java.sql.SQLWarning firstWarning = null;
+	 
     public FBConnection(FBManagedConnection mc) {
         this.mc = mc;
     }
@@ -189,7 +197,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public PreparedStatement prepareStatement(String param1, int param2) throws SQLException {
         // TODO: implement this java.sql.Connection method
-        return null;
+        throw new SQLException("not yet implemented");
     }
 
     /**
@@ -204,7 +212,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public PreparedStatement prepareStatement(String param1, int param2, int param3, int param4) throws SQLException {
         // TODO: implement this java.sql.Connection method
-        return null;
+        throw new SQLException("not yet implemented");
     }
 
 
@@ -217,7 +225,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public PreparedStatement prepareStatement(String param1, int[] param2) throws SQLException {
         // TODO: implement this java.sql.Connection method
-        return null;
+        throw new SQLException("not yet implemented");
     }
 
     /**
@@ -229,7 +237,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public PreparedStatement prepareStatement(String param1, String[] param2) throws SQLException {
         // TODO: implement this java.sql.Connection method
-        return null;
+        throw new SQLException("not yet implemented");
     }
 
 
@@ -276,7 +284,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public CallableStatement prepareCall(String param1, int param2, int param3, int param4) throws SQLException {
         // TODO: implement this java.sql.Connection method
-        return null;
+        throw new SQLException("not yet implemented");
     }
 
 
@@ -583,6 +591,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
             case TRANSACTION_READ_COMMITTED :
                 mc.setTransactionIsolation(GDS.isc_tpb_read_committed);
                 break;
+            case TRANSACTION_READ_UNCOMMITTED :
+                mc.setTransactionIsolation(GDS.isc_tpb_read_committed);
+                break;
             default: throw new SQLException("Unsupported transaction isolation level");
         }
     }
@@ -614,7 +625,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      */
     public SQLWarning getWarnings() throws SQLException {
-        return null;
+        return firstWarning;
     }
 
 
@@ -627,6 +638,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      */
     public void clearWarnings() throws SQLException {
+		 firstWarning = null;
     }
 
 
@@ -650,7 +662,13 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public Statement createStatement(int resultSetType, int resultSetConcurrency)
         throws SQLException {
-        return createStatement();
+		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
+		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
+		     return createStatement();
+		  else{
+		     addWarning(new java.sql.SQLWarning("resultSetType or resultSetConcurrency changed"));
+		     return createStatement();
+		  }			  
     }
 
 
@@ -672,7 +690,13 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public PreparedStatement prepareStatement(String sql, int resultSetType,
                     int resultSetConcurrency) throws SQLException {
-        return null;
+		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
+		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
+	        return new FBPreparedStatement(this, sql);
+		  else{
+		     addWarning(new java.sql.SQLWarning("resultSetType or resultSetConcurrency changed"));
+	        return new FBPreparedStatement(this, sql);
+		  }			  
     }
 
     /**
@@ -693,7 +717,13 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public CallableStatement prepareCall(String sql, int resultSetType,
                  int resultSetConcurrency) throws SQLException {
-        return null;
+		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
+		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
+	        return new FBCallableStatement(this, sql);
+		  else{
+		     addWarning(new java.sql.SQLWarning("resultSetType or resultSetConcurrency changed"));
+	        return new FBCallableStatement(this, sql);
+		  }			  
     }
 
 
@@ -803,7 +833,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * to modify.
     **/
     public Blob createBlob() throws SQLException {
-        return new FBBlob(mc, 0);
+        return new FBBlob(this, 0);
     }
 
     //package methods
@@ -831,16 +861,22 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      *
      * @return a <code>boolean</code> value, true if transaction was started.
      */
-    void ensureInTransaction() throws ResourceException
+    void ensureInTransaction() throws SQLException
     {
-        if (inTransaction())
-        {
+		 try {
+			if (inTransaction())
+			{
             autoTransaction = false;
             return;
         } // end of if ()
         //We have to start our own transaction
         getLocalTransaction().begin();
         autoTransaction = true;
+		 }
+		 catch(ResourceException re){
+//           log.warn("resource exception", re);
+           throw new SQLException("ResourceException: " + re);
+		 }
     }
 
     /**
@@ -875,12 +911,121 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
         } // end of if ()
     }
 
+	 protected void addWarning(java.sql.SQLWarning warning){
+		 if (firstWarning == null)
+			 firstWarning = warning;
+		 else{
+			 java.sql.SQLWarning lastWarning = firstWarning;
+			 while (lastWarning.getNextWarning() != null){
+				 lastWarning = lastWarning.getNextWarning();
+			 }
+			 lastWarning.setNextWarning(warning);
+		 }
+	 }
+	 
+	 //******** Proxies of ManagedConnection methods for jdbc methods
+	 
+    public isc_stmt_handle getAllocatedStatement() throws GDSException {
+		  return mc.getAllocatedStatement();
+    }
 
+    public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda) throws GDSException {
+        mc.executeStatement(stmt,sendOutSqlda);
+    }
+	 	 
+    public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
+        mc.closeStatement(stmt,deallocate);
+    }	 
+
+    public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException {
+		 mc.prepareSQL(stmt, sql, describeBind);
+	 }
+	 
+    public void registerStatement(FBStatement fbStatement) {
+		 mc.registerStatement(fbStatement);
+    }
+	 
+    public Object[] fetch(isc_stmt_handle stmt) throws GDSException {
+        return mc.fetch(stmt);
+    }
+
+    public SqlInfo getSqlInfo(isc_stmt_handle stmt) throws GDSException {
+        return mc.getSqlInfo(stmt);
+    }
+	 
+    public int getBlobBufferLength(){
+        return mc.getBlobBufferLength();
+    }
+	 
+    public isc_blob_handle openBlobHandle(long blob_id) throws GDSException {
+        return mc.openBlobHandle(blob_id);
+    }	 
+	 
+    public byte[] getBlobSegment(isc_blob_handle blob, int len) throws GDSException {
+        return mc.getBlobSegment(blob,len);
+    }
+	 
+    public void closeBlob(isc_blob_handle blob) throws GDSException {
+        mc.closeBlob(blob);
+    }
+	 
+    public isc_blob_handle createBlobHandle() throws GDSException {
+        return mc.createBlobHandle();
+    }
+	 
+    public void putBlobSegment(isc_blob_handle blob, byte[] buf) throws GDSException {
+        mc.putBlobSegment(blob, buf);
+    }
+
+    public static String getJavaEncoding(String iscEncoding) {
+        return FBConnectionHelper.getJavaEncoding(iscEncoding);
+    }
+	 
+    private PreparedStatement getStatement(String sql,HashMap statements) 
+	 throws SQLException {
+        PreparedStatement s = (PreparedStatement)statements.get(sql);
+        if (s == null) {
+            s = prepareStatement(sql);
+            statements.put(sql, s);
+        }
+        return s;
+    }
+	 
+    public ResultSet doQuery(String sql, List params,HashMap statements) 
+	 throws SQLException {
+        boolean ourTransaction = false;
+ 	     LocalTransaction trans = null;
+        if (!inTransaction()) {
+				trans = getLocalTransaction();
+				 
+            try {
+                trans.begin();
+                ourTransaction = true;
+            }
+            catch (ResourceException re) {
+                throw new SQLException("couldn't work with local transaction: " + re);
+            }
+        }
+        PreparedStatement s = getStatement(sql,statements);
+        for (int i = 0; i < params.size(); i++) {
+            s.setString(i + 1, (String)params.get(i));
+        }
+        ResultSet rs = null;
+        try {
+            s.execute();
+            rs = ((FBStatement)s).getCachedResultSet(true); //trim strings
+        }
+        finally {
+            if (ourTransaction) {
+                try {
+                    trans.commit();
+                }
+                catch (ResourceException re) {
+                    throw new SQLException("couldn't work with local transaction: " + re);
+                }
+            }
+        }
+        return rs;
+    }
+	 
 }
-
-
-
-
-
-
-

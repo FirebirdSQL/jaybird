@@ -45,8 +45,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
-import javax.resource.ResourceException;
-import org.firebirdsql.jca.FBManagedConnection;
 
 
 
@@ -131,10 +129,12 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
             } // end of if ()
             return hasResultSet;
         }
+/*		  
         catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
+ */
         finally
         {
             c.checkEndTransaction();

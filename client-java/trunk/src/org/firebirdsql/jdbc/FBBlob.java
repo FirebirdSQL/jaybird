@@ -36,7 +36,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.HashSet;
 
-import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.gds.isc_blob_handle;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.logging.Logger;
@@ -92,15 +91,15 @@ public class FBBlob implements Blob{
     private int bufferlength;
 
     private long blob_id;
-    private FBManagedConnection mc;
+    private FBConnection c;
 
     private Collection inputStreams = new HashSet();
     private FBBlobOutputStream blobOut = null;
 
-    FBBlob(FBManagedConnection mc, long blob_id) {
-        this.mc = mc;
+    FBBlob(FBConnection c, long blob_id) {
+        this.c = c;
         this.blob_id = blob_id;
-        this.bufferlength = mc.getBlobBufferLength();
+        this.bufferlength = c.getBlobBufferLength();
     }
 
     void close() throws IOException {
@@ -324,7 +323,7 @@ public class FBBlob implements Blob{
                 throw new SQLException("You can't read a new blob");
             }
             try {
-                blob = mc.openBlobHandle(blob_id);
+                blob = c.openBlobHandle(blob_id);
             }
             catch (GDSException ge) {
                 throw new SQLException("couldn't open blob: " + blob_id + " exception: " + ge.toString());
@@ -338,7 +337,7 @@ public class FBBlob implements Blob{
                 }
                 try {
                     //bufferlength is in FBBlob enclosing class
-                    buffer = mc.getBlobSegment(blob, bufferlength);
+                    buffer = c.getBlobSegment(blob, bufferlength);
                 }
                 catch (GDSException ge) {
                     throw new IOException("Blob read problem: " + ge.toString());
@@ -383,7 +382,7 @@ public class FBBlob implements Blob{
         public void close() throws IOException {
             if (blob != null) {
                 try {
-                    mc.closeBlob(blob);
+                    c.closeBlob(blob);
                 }
                 catch (GDSException ge) {
                     throw new IOException ("couldn't close blob: " + ge);
@@ -401,7 +400,7 @@ public class FBBlob implements Blob{
 
         private FBBlobOutputStream() throws SQLException {
             try {
-                blob = mc.createBlobHandle();
+                blob = c.createBlobHandle();
             }
             catch (GDSException ge) {
                 throw new SQLException("Couldn't create new blob: " + ge);
@@ -432,7 +431,7 @@ public class FBBlob implements Blob{
                         chunk = len;
                     }
                     System.arraycopy(b, off, buf, 0, chunk);
-                    mc.putBlobSegment(blob, buf);
+                    c.putBlobSegment(blob, buf);
                     len -= chunk;
                 }
             }
@@ -444,7 +443,7 @@ public class FBBlob implements Blob{
         public void close() throws IOException {
             if (blob != null) {
                 try {
-                    mc.closeBlob(blob);
+                    c.closeBlob(blob);
 //                    log.info("OutputStream closing, setting blob_id: " + blob.getBlobId());
                     blob_id = blob.getBlobId();
                 }

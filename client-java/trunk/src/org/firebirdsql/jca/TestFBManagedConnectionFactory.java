@@ -17,6 +17,7 @@ import java.sql.Statement;
 import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSFactory;
+import org.firebirdsql.gds.SqlInfo;
 import org.firebirdsql.jgds.GDS_Impl;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.jdbc.FBConnection;
@@ -126,7 +127,7 @@ public class TestFBManagedConnectionFactory extends TestXABase {
 0};
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
-        FBManagedConnection.SqlInfo si = new FBManagedConnection.SqlInfo(testbuffer, GDSFactory.newGDS());
+        SqlInfo si = new SqlInfo(testbuffer, GDSFactory.newGDS());
 
         assertTrue("selectcount wrong " + si.getSelectCount(), si.getSelectCount() == 2);
         assertTrue("insertcount wrong " + si.getInsertCount(), si.getInsertCount() == 1);

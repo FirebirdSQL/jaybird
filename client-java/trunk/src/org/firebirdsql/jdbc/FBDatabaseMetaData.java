@@ -34,8 +34,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.Types;
-import javax.resource.spi.LocalTransaction;
-import javax.resource.ResourceException;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +80,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
     //boolean transactionActive = false;
 
-    LocalTransaction trans;
+//  LocalTransaction trans;
 
     HashMap statements = new HashMap();
 
@@ -91,7 +89,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     FBDatabaseMetaData(FBConnection c) {
         this.c = c;
         //use the spi LocalTransaction that does not notify the ConnectionManager.
-        trans = c.mc.getLocalTransaction();
+//        trans = c.getLocalTransaction();
     }
 
     void close() {
@@ -1052,7 +1050,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsPositionedDelete() throws SQLException {
-        return true;
+        return false;
     }
 
 
@@ -1063,7 +1061,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsPositionedUpdate() throws SQLException {
-        return true;
+        return false;
     }
 
 
@@ -1074,7 +1072,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsSelectForUpdate() throws SQLException {
-        return true;
+        return false;
     }
 
 
@@ -1668,7 +1666,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!procedureClause.getCondition().equals("")) {
             params.add(procedureClause.getValue());
         }
-        return doQuery(sql, params);
+        return c.doQuery(sql, params, statements);
     }
 
 
@@ -1802,7 +1800,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!columnClause.getCondition().equals("")) {
             params.add(columnClause.getValue());
         }
-        return doQuery(sql, params);
+        return c.doQuery(sql, params, statements);
     }
 
 
@@ -2051,7 +2049,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             params.add(getWantsViews(types));
             params.add(tableNamePattern);
         }
-        return doQuery(sql, params);
+        return c.doQuery(sql, params, statements);
     }
 
 
@@ -2239,7 +2237,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             params.add(columnClause.getValue());
         }
 
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[18];
 
@@ -2392,7 +2390,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
             rows.add(row);
         }
-        rows.add(null);
+//        rows.add(null);
         //return new FBResultSet(xsqlvars, rows);
         return new FBResultSet(xsqlvars, rows);
     }
@@ -2481,12 +2479,14 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     //int columnNullableUnknown = 2;
 
     private static final String GET_COLUMN_PRIVILEGES_START = "select "
-        + "RF.RDB$RELATION_NAME, "
-        + "RF.RDB$FIELD_NAME, "
-        + "UP.RDB$GRANTOR, "
-        + "UP.RDB$USER, "
-        + "UP.RDB$PRIVILEGE, "
-        + "UP.RDB$GRANT_OPTION "
+	     + "null as TABLE_CAT,"
+		  + "null as TABLE_SCHEM,"
+        + "RF.RDB$RELATION_NAME as TABLE_NAME, "
+        + "RF.RDB$FIELD_NAME as COLUMN_NAME, "
+        + "UP.RDB$GRANTOR as GRANTOR, "
+        + "UP.RDB$USER as GRANTEE, "
+        + "UP.RDB$PRIVILEGE as PRIVILEGE, "
+        + "UP.RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from "
         + "RDB$RELATION_FIELDS RF, "
         + "RDB$FIELDS F, "
@@ -2542,17 +2542,19 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!columnClause.getCondition().equals("")) {
             params.add(columnClause.getValue());
         }
-        return doQuery(sql, params);
+        return c.doQuery(sql, params, statements);
     }
 
 
 
     private static final String GET_TABLE_PRIVILEGES_START = "select"
-        + " RDB$RELATION_NAME,"
-        + " RDB$GRANTOR,"
-        + " RDB$USER,"
-        + " RDB$PRIVILEGE,"
-        + " RDB$GRANT_OPTION "
+		  + " null as TABLE_CAT, "
+		  + " null as TABLE_SCHEM,"
+        + " RDB$RELATION_NAME as TABLE_NAME,"
+        + " RDB$GRANTOR as GRANTOR, "
+        + " RDB$USER as GRANTEE, "
+        + " RDB$PRIVILEGE as PRIVILEGE, "
+        + " RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from"
         + " RDB$USER_PRIVILEGES "
         + "where ";
@@ -2604,7 +2606,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getValue());
         }
-        return doQuery(sql, params);
+        return c.doQuery(sql, params, statements);
     }
 
 
@@ -2648,7 +2650,56 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getBestRowIdentifier(String catalog, String schema,
         String table, int scope, boolean nullable) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        XSQLVAR[] xsqlvars = new XSQLVAR[8];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_SHORT;
+        xsqlvars[0].sqlname = "SCOPE";
+        xsqlvars[0].relname = "ROWIDENTIFIER";
+		  
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlind = 0;
+        xsqlvars[1].sqlname = "COLUMN_NAME";
+        xsqlvars[1].relname = "ROWIDENTIFIER";
+		  
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = GDS.SQL_SHORT;
+        xsqlvars[2].sqlname = "DATA_TYPE";
+        xsqlvars[2].relname = "ROWIDENTIFIER";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlind = -1;
+        xsqlvars[3].sqlname = "TYPE_NAME";
+        xsqlvars[3].relname = "ROWIDENTIFIER";
+		  
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = GDS.SQL_LONG;
+        xsqlvars[4].sqlname = "COLUMN_SIZE";
+        xsqlvars[4].relname = "ROWIDENTIFIER";
+
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = GDS.SQL_LONG;
+        xsqlvars[5].sqlname = "BUFFER_LENGTH";
+        xsqlvars[5].relname = "ROWIDENTIFIER";
+		  
+        xsqlvars[6] = new XSQLVAR();
+        xsqlvars[6].sqltype = GDS.SQL_SHORT;
+        xsqlvars[6].sqlname = "DECIMAL_DIGITS";
+        xsqlvars[6].relname = "ROWIDENTIFIER";
+
+        xsqlvars[7] = new XSQLVAR();
+        xsqlvars[7].sqltype = GDS.SQL_SHORT;
+        xsqlvars[7].sqlname = "PSEUDO_COLUMN";
+        xsqlvars[7].relname = "ROWIDENTIFIER";
+		  
+        ArrayList rows = new ArrayList(0);
+
+        return new FBResultSet(xsqlvars, rows);
+//        throw new SQLException("Not yet implemented");
     }
 
 
@@ -2743,7 +2794,51 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getVersionColumns(String catalog, String schema,
                 String table) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        XSQLVAR[] xsqlvars = new XSQLVAR[7];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_SHORT;
+        xsqlvars[0].sqlname = "SCOPE";
+        xsqlvars[0].relname = "VERSIONCOL";
+		  
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlind = 0;
+        xsqlvars[1].sqlname = "COLUMN_NAME";
+        xsqlvars[1].relname = "VERSIONCOL";
+		  
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = GDS.SQL_SHORT;
+        xsqlvars[2].sqlname = "DATA_TYPE";
+        xsqlvars[2].relname = "VERSIONCOL";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlind = -1;
+        xsqlvars[3].sqlname = "TYPE_NAME";
+        xsqlvars[3].relname = "VERSIONCOL";
+		  
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = GDS.SQL_LONG;
+        xsqlvars[4].sqlname = "BUFFER_LENGTH";
+        xsqlvars[4].relname = "VERSIONCOL";
+		  
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = GDS.SQL_SHORT;
+        xsqlvars[5].sqlname = "DECIMAL_DIGITS";
+        xsqlvars[5].relname = "VERSIONCOL";
+
+        xsqlvars[6] = new XSQLVAR();
+        xsqlvars[6].sqltype = GDS.SQL_SHORT;
+        xsqlvars[6].sqlname = "PSEUDO_COLUMN";
+        xsqlvars[6].relname = "VERSIONCOL";
+		  
+        ArrayList rows = new ArrayList(0);
+
+        return new FBResultSet(xsqlvars, rows);
+//        throw new SQLException("Not yet implemented");
     }
 
 
@@ -2786,7 +2881,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         + "RDB$RELATION_CONSTRAINTS RC, "
         + "RDB$INDEX_SEGMENTS ISGMT "
         + "where "
-        + "RC.RDB$RELATION_NAME = ? and "
+        + "RC.RDB$RELATION_NAME = UPPER(?) and "
         + "RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME and "
         + "RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
         + "order by ISGMT.RDB$FIELD_NAME ";
@@ -2820,7 +2915,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         ArrayList params = new ArrayList();
         params.add(table);
 
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[6];
 
@@ -2876,13 +2971,47 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
             rows.add(row);
         }
-        rows.add(null);
+//        rows.add(null);
         // return new FBResultSet(xsqlvars, rows);
         return new FBResultSet(xsqlvars, rows);
     }
 
+	 /*
+	  * Problem with update rule, delete rule, must convert to short
+	  * Firebird reports it as String
+	  */
 
-
+    private static final String GET_IMPORTED_KEYS = "select"
+	 +" null as PKTABLE_CAT "
+	 +" ,null as PKTABLE_SCHEM "
+	 +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
+	 +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
+	 +" ,null as FKTABLE_CAT "
+	 +" ,null as FKTABLE_SCHEM "
+	 +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
+	 +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
+	 +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
+//	 +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
+//	 +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
+	 +" ,0 as UPDATE_RULE"
+	 +" ,0 as DELETE_RULE"
+	 +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
+	 +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
+	 +" ,null as DEFERRABILITY "
+	 +" from "
+	 +" RDB$RELATION_CONSTRAINTS PK "
+	 +" ,RDB$RELATION_CONSTRAINTS FK "
+	 +" ,RDB$REF_CONSTRAINTS RC "
+	 +" ,RDB$INDEX_SEGMENTS ISP "
+	 +" ,RDB$INDEX_SEGMENTS ISF "
+	 +" WHERE "
+	 +" FK.RDB$RELATION_NAME = ? "
+	 +" and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+	 +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
+	 +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
+	 +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
+	 +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION ";
+	 
     /**
      * Gets a description of the primary key columns that are
      * referenced by a table's foreign key columns (the primary keys
@@ -2953,7 +3082,127 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getImportedKeys(String catalog, String schema,
                 String table) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        checkCatalogAndSchema(catalog, schema);
+        String sql = GET_IMPORTED_KEYS;
+        ArrayList params = new ArrayList();
+        params.add(table.toUpperCase());
+
+        ResultSet rs = c.doQuery(sql, params, statements);
+
+        XSQLVAR[] xsqlvars = new XSQLVAR[14];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = -1;
+        xsqlvars[0].sqlname = "PKTABLE_CAT";
+        xsqlvars[0].relname = "COLUMNINFO";
+
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlind = -1;
+        xsqlvars[1].sqlname = "PKTABLE_SCHEM";
+        xsqlvars[1].relname = "COLUMNINFO";
+
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqlind = 0;
+        xsqlvars[2].sqlname = "PKTABLE_NAME";
+        xsqlvars[2].relname = "COLUMNINFO";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlind = 0;
+        xsqlvars[3].sqlname = "PKCOLUMN_NAME";
+        xsqlvars[3].relname = "COLUMNINFO";
+
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqlind = -1;
+        xsqlvars[4].sqlname = "FKTABLE_CAT";
+        xsqlvars[4].relname = "COLUMNINFO";
+
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqlind = -1;
+        xsqlvars[5].sqlname = "FKTABLE_SCHEM";
+        xsqlvars[5].relname = "COLUMNINFO";
+
+        xsqlvars[6] = new XSQLVAR();
+        xsqlvars[6].sqltype = GDS.SQL_VARYING;
+        xsqlvars[6].sqllen = 31;
+        xsqlvars[6].sqlind = 0;
+        xsqlvars[6].sqlname = "FKTABLE_NAME";
+        xsqlvars[6].relname = "COLUMNINFO";
+
+        xsqlvars[7] = new XSQLVAR();
+        xsqlvars[7].sqltype = GDS.SQL_VARYING;
+        xsqlvars[7].sqllen = 31;
+        xsqlvars[7].sqlind = 0;
+        xsqlvars[7].sqlname = "FKCOLUMN_NAME";
+        xsqlvars[7].relname = "COLUMNINFO";
+		  
+        xsqlvars[8] = new XSQLVAR();
+        xsqlvars[8].sqltype = GDS.SQL_SHORT;
+        xsqlvars[8].sqlname = "KEY_SEQ";
+        xsqlvars[8].relname = "COLUMNINFO";
+
+        xsqlvars[9] = new XSQLVAR();
+        xsqlvars[9].sqltype = GDS.SQL_SHORT;
+        xsqlvars[9].sqlname = "UPDATE_RULE";
+        xsqlvars[9].relname = "COLUMNINFO";
+
+        xsqlvars[10] = new XSQLVAR();
+        xsqlvars[10].sqltype = GDS.SQL_SHORT;
+        xsqlvars[10].sqlname = "DELETE_RULE";
+        xsqlvars[10].relname = "COLUMNINFO";
+		  
+        xsqlvars[11] = new XSQLVAR();
+        xsqlvars[11].sqltype = GDS.SQL_VARYING;
+        xsqlvars[11].sqllen = 31;
+        xsqlvars[11].sqlind = 0;
+        xsqlvars[11].sqlname = "FK_NAME";
+        xsqlvars[11].relname = "COLUMNINFO";
+
+        xsqlvars[12] = new XSQLVAR();
+        xsqlvars[12].sqltype = GDS.SQL_VARYING;
+        xsqlvars[12].sqllen = 31;
+        xsqlvars[12].sqlind = 0;
+        xsqlvars[12].sqlname = "PK_NAME";
+        xsqlvars[12].relname = "COLUMNINFO";
+
+        xsqlvars[13] = new XSQLVAR();
+        xsqlvars[13].sqltype = GDS.SQL_SHORT;
+        xsqlvars[13].sqlname = "DEFERRABILITY";
+        xsqlvars[13].relname = "COLUMNINFO";
+		  
+        ArrayList rows = new ArrayList();
+        while (rs.next()) {
+            Object[] row = new Object[14];
+            row[0] = null;
+            row[1] = null;
+            row[2] = rs.getString("PKTABLE_NAME").trim();
+            row[3] = rs.getString("PKCOLUMN_NAME").trim();
+            row[4] = null;
+            row[5] = null;
+            row[6] = rs.getString("PKTABLE_NAME").trim();
+            row[7] = rs.getString("PKCOLUMN_NAME").trim();				
+            row[8] = new Short(rs.getShort("KEY_SEQ"));
+            row[9] = new Short(rs.getShort("UPDATE_RULE"));
+            row[10] = new Short(rs.getShort("DELETE_RULE"));				
+            row[11] = rs.getString("FK_NAME");
+            row[12] = rs.getString("PK_NAME");
+				row[13] = new Short(rs.getShort("DEFERRABILITY"));
+            rows.add(row);
+        }
+//        rows.add(null);
+        // return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(xsqlvars, rows);
     }
 
 
@@ -3061,6 +3310,37 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     int importedKeyNotDeferrable  = 7;
 
+    private static final String GET_EXPORTED_KEYS = "select"
+	 +" null as PKTABLE_CAT "
+	 +" ,null as PKTABLE_SCHEM "
+	 +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
+	 +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
+	 +" ,null as FKTABLE_CAT "
+	 +" ,null as FKTABLE_SCHEM "
+	 +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
+	 +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
+	 +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
+//	 +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
+//	 +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
+	 +" ,0 as UPDATE_RULE"
+	 +" ,0 as DELETE_RULE"
+	 +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
+	 +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
+	 +" ,null as DEFERRABILITY "
+	 +" from "
+	 +" RDB$RELATION_CONSTRAINTS PK "
+	 +" ,RDB$RELATION_CONSTRAINTS FK "
+	 +" ,RDB$REF_CONSTRAINTS RC "
+	 +" ,RDB$INDEX_SEGMENTS ISP "
+	 +" ,RDB$INDEX_SEGMENTS ISF "
+	 +" WHERE "
+	 +" PK.RDB$RELATION_NAME = ? "
+	 +" and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+	 +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
+	 +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
+	 +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
+	 +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION ";
+	 
     /**
      * Gets a description of the foreign key columns that reference a
      * table's primary key columns (the foreign keys exported by a
@@ -3131,11 +3411,164 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getExportedKeys(String catalog, String schema,
                 String table) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        checkCatalogAndSchema(catalog, schema);
+        String sql = GET_EXPORTED_KEYS;
+        ArrayList params = new ArrayList();
+        params.add(table.toUpperCase());
+
+        ResultSet rs = c.doQuery(sql, params, statements);
+
+        XSQLVAR[] xsqlvars = new XSQLVAR[14];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = -1;
+        xsqlvars[0].sqlname = "PKTABLE_CAT";
+        xsqlvars[0].relname = "COLUMNINFO";
+
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlind = -1;
+        xsqlvars[1].sqlname = "PKTABLE_SCHEM";
+        xsqlvars[1].relname = "COLUMNINFO";
+
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqlind = 0;
+        xsqlvars[2].sqlname = "PKTABLE_NAME";
+        xsqlvars[2].relname = "COLUMNINFO";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlind = 0;
+        xsqlvars[3].sqlname = "PKCOLUMN_NAME";
+        xsqlvars[3].relname = "COLUMNINFO";
+
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqlind = -1;
+        xsqlvars[4].sqlname = "FKTABLE_CAT";
+        xsqlvars[4].relname = "COLUMNINFO";
+
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqlind = -1;
+        xsqlvars[5].sqlname = "FKTABLE_SCHEM";
+        xsqlvars[5].relname = "COLUMNINFO";
+
+        xsqlvars[6] = new XSQLVAR();
+        xsqlvars[6].sqltype = GDS.SQL_VARYING;
+        xsqlvars[6].sqllen = 31;
+        xsqlvars[6].sqlind = 0;
+        xsqlvars[6].sqlname = "FKTABLE_NAME";
+        xsqlvars[6].relname = "COLUMNINFO";
+
+        xsqlvars[7] = new XSQLVAR();
+        xsqlvars[7].sqltype = GDS.SQL_VARYING;
+        xsqlvars[7].sqllen = 31;
+        xsqlvars[7].sqlind = 0;
+        xsqlvars[7].sqlname = "FKCOLUMN_NAME";
+        xsqlvars[7].relname = "COLUMNINFO";
+		  
+        xsqlvars[8] = new XSQLVAR();
+        xsqlvars[8].sqltype = GDS.SQL_SHORT;
+        xsqlvars[8].sqlname = "KEY_SEQ";
+        xsqlvars[8].relname = "COLUMNINFO";
+
+        xsqlvars[9] = new XSQLVAR();
+        xsqlvars[9].sqltype = GDS.SQL_SHORT;
+        xsqlvars[9].sqlname = "UPDATE_RULE";
+        xsqlvars[9].relname = "COLUMNINFO";
+
+        xsqlvars[10] = new XSQLVAR();
+        xsqlvars[10].sqltype = GDS.SQL_SHORT;
+        xsqlvars[10].sqlname = "DELETE_RULE";
+        xsqlvars[10].relname = "COLUMNINFO";
+		  
+        xsqlvars[11] = new XSQLVAR();
+        xsqlvars[11].sqltype = GDS.SQL_VARYING;
+        xsqlvars[11].sqllen = 31;
+        xsqlvars[11].sqlind = 0;
+        xsqlvars[11].sqlname = "FK_NAME";
+        xsqlvars[11].relname = "COLUMNINFO";
+
+        xsqlvars[12] = new XSQLVAR();
+        xsqlvars[12].sqltype = GDS.SQL_VARYING;
+        xsqlvars[12].sqllen = 31;
+        xsqlvars[12].sqlind = 0;
+        xsqlvars[12].sqlname = "PK_NAME";
+        xsqlvars[12].relname = "COLUMNINFO";
+		  
+        xsqlvars[13] = new XSQLVAR();
+        xsqlvars[13].sqltype = GDS.SQL_SHORT;
+        xsqlvars[13].sqlname = "DEFERRABILITY";
+        xsqlvars[13].relname = "COLUMNINFO";
+		  
+        ArrayList rows = new ArrayList();
+        while (rs.next()) {
+            Object[] row = new Object[14];
+            row[0] = null;
+            row[1] = null;
+            row[2] = rs.getString("PKTABLE_NAME").trim();
+            row[3] = rs.getString("PKCOLUMN_NAME").trim();
+            row[4] = null;
+            row[5] = null;
+            row[6] = rs.getString("PKTABLE_NAME").trim();
+            row[7] = rs.getString("PKCOLUMN_NAME").trim();				
+            row[8] = new Short(rs.getShort("KEY_SEQ"));
+            row[9] = new Short(rs.getShort("UPDATE_RULE"));
+            row[10] = new Short(rs.getShort("DELETE_RULE"));				
+            row[11] = rs.getString("FK_NAME");
+            row[12] = rs.getString("PK_NAME");
+				row[13] = new Short(rs.getShort("DEFERRABILITY"));
+
+            rows.add(row);
+        }
+//        rows.add(null);
+        // return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(xsqlvars, rows);
     }
 
 
 
+    private static final String GET_CROSS_KEYS = "select"
+	 +" null as PKTABLE_CAT "
+	 +" ,null as PKTABLE_SCHEM "
+	 +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
+	 +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
+	 +" ,null as FKTABLE_CAT "
+	 +" ,null as FKTABLE_SCHEM "
+	 +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
+	 +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
+	 +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
+//	 +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
+//	 +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
+	 +" ,0 as UPDATE_RULE"
+	 +" ,0 as DELETE_RULE"
+	 +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
+	 +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
+	 +" ,null as DEFERRABILITY "
+	 +" from "
+	 +" RDB$RELATION_CONSTRAINTS PK "
+	 +" ,RDB$RELATION_CONSTRAINTS FK "
+	 +" ,RDB$REF_CONSTRAINTS RC "
+	 +" ,RDB$INDEX_SEGMENTS ISP "
+	 +" ,RDB$INDEX_SEGMENTS ISF "
+	 +" WHERE "
+	 +" FK.RDB$RELATION_NAME = ? "
+	 +" and PK.RDB$RELATION_NAME = ? "
+	 +" and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+	 +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
+	 +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
+	 +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
+	 +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION ";
+	 
     /**
      * Gets a description of the foreign key columns in the foreign key
      * table that reference the primary key columns of the primary key
@@ -3216,7 +3649,130 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         String primaryCatalog, String primarySchema, String primaryTable,
         String foreignCatalog, String foreignSchema, String foreignTable
         ) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        checkCatalogAndSchema(primaryCatalog, primarySchema);
+        checkCatalogAndSchema(foreignCatalog, foreignSchema);
+        String sql = GET_CROSS_KEYS;
+        ArrayList params = new ArrayList();
+        params.add(foreignTable.toUpperCase());
+        params.add(primaryTable.toUpperCase());
+		  
+        ResultSet rs = c.doQuery(sql, params, statements);
+
+        XSQLVAR[] xsqlvars = new XSQLVAR[14];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = -1;
+        xsqlvars[0].sqlname = "PKTABLE_CAT";
+        xsqlvars[0].relname = "COLUMNINFO";
+
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlind = -1;
+        xsqlvars[1].sqlname = "PKTABLE_SCHEM";
+        xsqlvars[1].relname = "COLUMNINFO";
+
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqlind = 0;
+        xsqlvars[2].sqlname = "PKTABLE_NAME";
+        xsqlvars[2].relname = "COLUMNINFO";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlind = 0;
+        xsqlvars[3].sqlname = "PKCOLUMN_NAME";
+        xsqlvars[3].relname = "COLUMNINFO";
+
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqlind = -1;
+        xsqlvars[4].sqlname = "FKTABLE_CAT";
+        xsqlvars[4].relname = "COLUMNINFO";
+
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqlind = -1;
+        xsqlvars[5].sqlname = "FKTABLE_SCHEM";
+        xsqlvars[5].relname = "COLUMNINFO";
+
+        xsqlvars[6] = new XSQLVAR();
+        xsqlvars[6].sqltype = GDS.SQL_VARYING;
+        xsqlvars[6].sqllen = 31;
+        xsqlvars[6].sqlind = 0;
+        xsqlvars[6].sqlname = "FKTABLE_NAME";
+        xsqlvars[6].relname = "COLUMNINFO";
+
+        xsqlvars[7] = new XSQLVAR();
+        xsqlvars[7].sqltype = GDS.SQL_VARYING;
+        xsqlvars[7].sqllen = 31;
+        xsqlvars[7].sqlind = 0;
+        xsqlvars[7].sqlname = "FKCOLUMN_NAME";
+        xsqlvars[7].relname = "COLUMNINFO";
+		  
+        xsqlvars[8] = new XSQLVAR();
+        xsqlvars[8].sqltype = GDS.SQL_SHORT;
+        xsqlvars[8].sqlname = "KEY_SEQ";
+        xsqlvars[8].relname = "COLUMNINFO";
+
+        xsqlvars[9] = new XSQLVAR();
+        xsqlvars[9].sqltype = GDS.SQL_SHORT;
+        xsqlvars[9].sqlname = "UPDATE_RULE";
+        xsqlvars[9].relname = "COLUMNINFO";
+
+        xsqlvars[10] = new XSQLVAR();
+        xsqlvars[10].sqltype = GDS.SQL_SHORT;
+        xsqlvars[10].sqlname = "DELETE_RULE";
+        xsqlvars[10].relname = "COLUMNINFO";
+		  
+        xsqlvars[11] = new XSQLVAR();
+        xsqlvars[11].sqltype = GDS.SQL_VARYING;
+        xsqlvars[11].sqllen = 31;
+        xsqlvars[11].sqlind = 0;
+        xsqlvars[11].sqlname = "FK_NAME";
+        xsqlvars[11].relname = "COLUMNINFO";
+
+        xsqlvars[12] = new XSQLVAR();
+        xsqlvars[12].sqltype = GDS.SQL_VARYING;
+        xsqlvars[12].sqllen = 31;
+        xsqlvars[12].sqlind = 0;
+        xsqlvars[12].sqlname = "PK_NAME";
+        xsqlvars[12].relname = "COLUMNINFO";
+		  
+        xsqlvars[13] = new XSQLVAR();
+        xsqlvars[13].sqltype = GDS.SQL_SHORT;
+        xsqlvars[13].sqlname = "DEFERRABILITY";
+        xsqlvars[13].relname = "COLUMNINFO";
+		  
+        ArrayList rows = new ArrayList();
+        while (rs.next()) {
+            Object[] row = new Object[14];
+            row[0] = null;
+            row[1] = null;
+            row[2] = rs.getString("PKTABLE_NAME").trim();
+            row[3] = rs.getString("PKCOLUMN_NAME").trim();
+            row[4] = null;
+            row[5] = null;
+            row[6] = rs.getString("PKTABLE_NAME").trim();
+            row[7] = rs.getString("PKCOLUMN_NAME").trim();				
+            row[8] = new Short(rs.getShort("KEY_SEQ"));
+            row[9] = new Short(rs.getShort("UPDATE_RULE"));
+            row[10] = new Short(rs.getShort("DELETE_RULE"));				
+            row[11] = rs.getString("FK_NAME");
+            row[12] = rs.getString("PK_NAME");
+				row[13] = new Short(rs.getShort("DEFERRABILITY"));
+
+            rows.add(row);
+        }
+//        rows.add(null);
+        // return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(xsqlvars, rows);
     }
 
     private static final Short shortZero = new Short((short)0);
@@ -3592,6 +4148,23 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     //int typeSearchable  = 3;
 
+    private static final String GET_INDEX_INFO = "select"
+		+" null as TABLE_CAT "
+		+" ,null as TABLE_SCHEM "
+		+" ,ind.RDB$RELATION_NAME AS TABLE_NAME "
+		+" ,ind.RDB$UNIQUE_FLAG AS NON_UNIQUE "
+		+" ,null as INDEX_QUALIFIER "
+		+" ,ind.RDB$INDEX_NAME as INDEX_NAME "
+		+" ,null as ITYPE "
+		+" ,ise.rdb$field_position as ORDINAL_POSITION "
+		+" ,ise.rdb$field_name as COLUMN_NAME "
+		+" ,'A' as ASC_OR_DESC "
+		+" ,0 as CARDINALITY "
+		+" ,0 as IPAGES "
+		+" ,null as FILTER_CONDITION "
+		+" from rdb$indices ind, rdb$index_segments ise "
+		+" where ind.rdb$index_name = ise.rdb$index_name "
+		+" and ind.rdb$relation_name = ? ";
     /**
      * Gets a description of a table's indices and statistics. They are
      * ordered by NON_UNIQUE, TYPE, INDEX_NAME, and ORDINAL_POSITION.
@@ -3646,7 +4219,119 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getIndexInfo(String catalog, String schema, String table,
         boolean unique, boolean approximate) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        checkCatalogAndSchema(catalog, schema);
+        String sql = GET_INDEX_INFO;
+        ArrayList params = new ArrayList();
+        params.add(table.toUpperCase());
+		  
+        ResultSet rs = c.doQuery(sql, params, statements);
+
+        XSQLVAR[] xsqlvars = new XSQLVAR[13];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = -1;
+        xsqlvars[0].sqlname = "TABLE_CAT";
+        xsqlvars[0].relname = "INDEXINFO";
+
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlind = -1;
+        xsqlvars[1].sqlname = "TABLE_SCHEM";
+        xsqlvars[1].relname = "INDEXINFO";
+
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqlind = 0;
+        xsqlvars[2].sqlname = "TABLE_NAME";
+        xsqlvars[2].relname = "INDEXINFO";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = GDS.SQL_TEXT;
+        xsqlvars[3].sqllen = 1;
+        xsqlvars[3].sqlname = "NON_UNIQUE";
+        xsqlvars[3].relname = "INDEXINFO";
+		  
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqlind = -1;
+        xsqlvars[4].sqlname = "INDEX_QUALIFIER";
+        xsqlvars[4].relname = "INDEXINFO";
+
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqlind = -1;
+        xsqlvars[5].sqlname = "INDEX_NAME";
+        xsqlvars[5].relname = "INDEXINFO";
+
+        xsqlvars[6] = new XSQLVAR();
+        xsqlvars[6].sqltype = GDS.SQL_SHORT;
+        xsqlvars[6].sqlname = "TYPE";
+        xsqlvars[6].relname = "INDEXINFO";
+
+        xsqlvars[7] = new XSQLVAR();
+        xsqlvars[7].sqltype = GDS.SQL_SHORT;
+        xsqlvars[7].sqlname = "ORDINAL_POSITION";
+        xsqlvars[7].relname = "INDEXINFO";
+
+        xsqlvars[8] = new XSQLVAR();
+        xsqlvars[8].sqltype = GDS.SQL_VARYING;
+        xsqlvars[8].sqllen = 31;
+        xsqlvars[8].sqlind = 0;
+        xsqlvars[8].sqlname = "COLUMN_NAME";
+        xsqlvars[8].relname = "INDEXINFO";
+
+        xsqlvars[9] = new XSQLVAR();
+        xsqlvars[9].sqltype = GDS.SQL_VARYING;
+        xsqlvars[9].sqllen = 31;
+        xsqlvars[9].sqlind = -1;
+        xsqlvars[9].sqlname = "ASC_OR_DESC";
+        xsqlvars[9].relname = "INDEXINFO";
+		  
+        xsqlvars[10] = new XSQLVAR();
+        xsqlvars[10].sqltype = GDS.SQL_LONG;
+        xsqlvars[10].sqlname = "CARDINALITY";
+        xsqlvars[10].relname = "INDEXINFO";
+
+        xsqlvars[11] = new XSQLVAR();
+        xsqlvars[11].sqltype = GDS.SQL_LONG;
+        xsqlvars[11].sqlname = "PAGES";
+        xsqlvars[11].relname = "INDEXINFO";
+
+        xsqlvars[12] = new XSQLVAR();
+        xsqlvars[12].sqltype = GDS.SQL_VARYING;
+        xsqlvars[12].sqllen = 31;
+        xsqlvars[12].sqlind = -1;
+        xsqlvars[12].sqlname = "FILTER_CONDITION";
+        xsqlvars[12].relname = "INDEXINFO";
+		  
+        ArrayList rows = new ArrayList();
+        while (rs.next()) {
+            Object[] row = new Object[13];
+            row[0] = null;
+            row[1] = null;
+            row[2] = rs.getString("TABLE_NAME").trim();
+            row[3] = "F";
+            row[4] = null;
+            row[5] = rs.getString("INDEX_NAME").trim();
+            row[6] = null;
+            row[7] = new Short(rs.getShort("ORDINAL_POSITION"));				
+            row[8] = rs.getString("COLUMN_NAME").trim();
+            row[9] = null;
+            row[10] = new Integer(0);
+            row[11] = new Integer(0);
+            row[12] = null;
+
+            rows.add(row);
+        }
+//        rows.add(null);
+        // return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(xsqlvars, rows);
     }
 
 
@@ -3699,7 +4384,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean supportsResultSetType(int type) throws SQLException {
-        throw new SQLException("Not yet implemented");
+		 switch (type){
+			case java.sql.ResultSet.TYPE_FORWARD_ONLY:
+				return true;
+			default:
+				return false;
+		 }
     }
 
 
@@ -3717,7 +4407,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean supportsResultSetConcurrency(int type, int concurrency) throws SQLException {
-        throw new SQLException("Not yet implemented");
+		 if (type==java.sql.ResultSet.TYPE_FORWARD_ONLY 
+		 && concurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
+			return true;
+		 else
+			return false;
     }
 
 
@@ -3734,7 +4428,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean ownUpdatesAreVisible(int type) throws SQLException {
-        throw new SQLException("Not yet implemented");
+		 return false;
     }
 
 
@@ -3751,7 +4445,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean ownDeletesAreVisible(int type) throws SQLException {
-        throw new SQLException("Not yet implemented");
+		 return false;
     }
 
 
@@ -3768,7 +4462,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean ownInsertsAreVisible(int type) throws SQLException {
-        throw new SQLException("Not yet implemented");
+		 return false;
     }
 
 
@@ -3786,7 +4480,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean othersUpdatesAreVisible(int type) throws SQLException {
-        throw new SQLException("Not yet implemented");
+		 return false;
     }
 
 
@@ -3804,7 +4498,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean othersDeletesAreVisible(int type) throws SQLException {
-        throw new SQLException("Not yet implemented");
+		 return false;
     }
 
 
@@ -3823,7 +4517,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean othersInsertsAreVisible(int type) throws SQLException {
-        throw new SQLException("Not yet implemented");
+		 return false;
     }
 
 
@@ -3841,7 +4535,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean updatesAreDetected(int type) throws SQLException {
-        throw new SQLException("Not yet implemented");
+		 return false;
     }
 
 
@@ -3859,7 +4553,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean deletesAreDetected(int type) throws SQLException {
-        throw new SQLException("Not yet implemented");
+		 return false;
     }
 
 
@@ -3876,7 +4570,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean insertsAreDetected(int type) throws SQLException {
-        throw new SQLException("Not yet implemented");
+		 return false;
     }
 
 
@@ -3935,7 +4629,55 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getUDTs(String catalog, String schemaPattern,
               String typeNamePattern, int[] types) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        XSQLVAR[] xsqlvars = new XSQLVAR[6];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = -1;
+        xsqlvars[0].sqlname = "TYPE_CAT";
+        xsqlvars[0].relname = "UDT";
+		  
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlind = -1;
+        xsqlvars[1].sqlname = "TYPE_SCHEM";
+        xsqlvars[1].relname = "UDT";
+		  
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqlind = 0;
+        xsqlvars[2].sqlname = "TYPE_NAME";
+        xsqlvars[2].relname = "UDT";
+		  
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlind = 0;
+        xsqlvars[3].sqlname = "CLASS_NAME";
+        xsqlvars[3].relname = "UDT";
+
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqlind = 0;
+        xsqlvars[4].sqlname = "DATA_TYPE";
+        xsqlvars[4].relname = "UDT";
+
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqlind = -1;
+        xsqlvars[5].sqlname = "REMARKS";
+        xsqlvars[5].relname = "UDT";
+		  
+        ArrayList rows = new ArrayList(0);
+
+        return new FBResultSet(xsqlvars, rows);
+					  
+//      throw new SQLException("Not yet implemented");
     }
 
 
@@ -4192,7 +4934,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             return pattern.toUpperCase();
         }
     }
-
+/*
     private PreparedStatement getStatement(String sql) throws SQLException {
         PreparedStatement s = (PreparedStatement)statements.get(sql);
         if (s == null) {
@@ -4234,12 +4976,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         }
         return rs;
     }
-
+*/
     private void checkCatalogAndSchema(String catalog, String schema) throws SQLException {
-        if (catalog != null) {
+        if (catalog != null && !catalog.equals("") && !catalog.equals("%")) {
             throw new SQLException("Catalogs not supported");
         }
-        if (schema != null) {
+        if (schema != null && (!schema.equals("")) && (!schema.equals("%"))) {
             throw new SQLException("Schemas not supported");
         }
     }

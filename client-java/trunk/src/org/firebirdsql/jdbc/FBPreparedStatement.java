@@ -50,11 +50,9 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Calendar;
-import javax.resource.ResourceException;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.logging.Logger;
 
 /**
@@ -73,7 +71,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     // was initialized, executeQuery, executeUpdate and execute methods
     // will throw an exception if this array contains at least one false value.
     protected boolean[] isParamSet;
-
+	 
     FBPreparedStatement(FBConnection c, String sql) throws SQLException {
         super(c);
         try {
@@ -82,10 +80,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 
             c.checkEndTransaction();
         }
+/*		  
         catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
+ */
         catch (GDSException ge)
         {
             log.info("GDSException in PreparedStatement constructor", ge);
@@ -120,10 +120,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
                 return getResultSet();
             } // end of else
         }
+/*		  
         catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
+ */
         finally
         {
             c.checkEndTransaction();
@@ -151,10 +153,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             }
             return getUpdateCount();
         }
+/*		  
         catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
+ */
         finally
         {
             c.checkEndTransaction();
@@ -172,6 +176,9 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setNull(int parameterIndex, int sqlType) throws  SQLException {
+		 if (parameterIndex > fixedStmt.getInSqlda().sqlvar.length)
+			throw new SQLException("invalid column index");
+			 
         fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqlind = -1;
         fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqldata = null;
         parameterWasSet(parameterIndex);
@@ -264,6 +271,9 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * Factory method for the field access objects
      */
     protected FBField getField(int columnIndex) throws SQLException {
+		 if (columnIndex > fixedStmt.getInSqlda().sqlvar.length)
+			throw new SQLException("invalid column index");
+			
         FBField thisField = FBField.createField(getXsqlvar(columnIndex));
 
         if (thisField instanceof FBBlobField)
@@ -433,10 +443,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             } // end of if ()
             return hasResultSet;
         }
+/*		  
         catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
+ */
         finally
         {
             c.checkEndTransaction();
@@ -445,6 +457,15 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 
     protected boolean internalExecute(boolean sendOutParams) throws  SQLException
     {
+        boolean canExecute = true;
+        for (int i = 0; i < isParamSet.length; i++){
+            canExecute = canExecute && isParamSet[i];
+		  }
+
+        if (!canExecute)
+            throw new SQLException("Not all parameters were set. " +
+                "Cannot execute query.");
+		  
         XSQLVAR[] inVars = fixedStmt.getInSqlda().sqlvar;
 
         for(int i = 0; i < inVars.length; i++)
@@ -462,7 +483,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         }
         try {
             closeResultSet();
-            mc.executeStatement(fixedStmt, sendOutParams);
+            c.executeStatement(fixedStmt, sendOutParams);
+				isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
             return (fixedStmt.getOutSqlda().sqld > 0);
         }
         catch (GDSException ge) {
@@ -484,6 +506,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      *      2.0 API</a>
      */
     public void addBatch() throws  SQLException {
+        throw new SQLException("not yet implemented");
     }
 
 
@@ -511,6 +534,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     public void setCharacterStream(int parameterIndex,
                   java.io.Reader reader,
               int length) throws  SQLException {
+        throw new SQLException("not yet implemented");
     }
 
 
@@ -526,6 +550,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      *      2.0 API</a>
      */
     public void setRef (int i, Ref x) throws  SQLException {
+        throw new SQLException("not yet implemented");
     }
 
 
@@ -550,6 +575,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         }
         sqlvar.sqlind = 0;
         sqlvar.sqldata = new Long(((FBBlob)blob).getBlobId());
+        parameterWasSet(parameterIndex);
     }
 
 
@@ -565,6 +591,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      *      2.0 API</a>
      */
     public void setClob (int i, Clob x) throws  SQLException {
+        throw new SQLException("not yet implemented");
     }
 
 
@@ -620,6 +647,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      *      2.0 API</a>
      */
     public void setDate(int parameterIndex, java.sql.Date x, Calendar cal) throws  SQLException {
+        throw new SQLException("not yet implemented");
     }
 
 
@@ -643,6 +671,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      *      2.0 API</a>
      */
     public void setTime(int parameterIndex, java.sql.Time x, Calendar cal) throws  SQLException {
+        throw new SQLException("not yet implemented");
     }
 
 
@@ -666,6 +695,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      *      2.0 API</a>
      */
     public void setTimestamp(int parameterIndex, java.sql.Timestamp x, Calendar cal) throws  SQLException {
+        throw new SQLException("not yet implemented");
     }
 
 
@@ -699,8 +729,9 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-     public void setNull (int paramIndex, int sqlType, String typeName) throws  SQLException {
-         setNull(paramIndex, sqlType); //all nulls are represented the same... a null reference
+     public void setNull (int parameterIndex, int sqlType, String typeName) throws  SQLException {
+         setNull(parameterIndex, sqlType); //all nulls are represented the same... a null reference
+        parameterWasSet(parameterIndex);
     }
 
 
@@ -748,10 +779,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * Execute statement internally. This method checks if all parameters
      * were set.
      */
+/*	 
     protected boolean internalExecute(String sql) throws GDSException, SQLException {
         boolean canExecute = true;
-        for (int i = 0; i < isParamSet.length; i++)
+        for (int i = 0; i < isParamSet.length; i++){
             canExecute = canExecute && isParamSet[i];
+		  }
 
         if (!canExecute)
             throw new SQLException("Not all parameters were set. " +
@@ -759,7 +792,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 
         return super.internalExecute(sql);
     }
-
+*/
     /**
      * Marks that parameter was set.
      */
