@@ -1095,6 +1095,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         }
         catch (GDSException ge)
         {
+            currentTr = null;
             //All errors are fatal, kill the connection.
             //First check if currentDbHandle is still ok, return if possible
             if (currentDbHandle.isValid())
