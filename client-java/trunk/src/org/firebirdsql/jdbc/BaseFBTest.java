@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.6  2002/04/29 21:35:42  rrokytskyy
+ * added lc_ctype to initial parameters
+ *
  * Revision 1.5  2002/02/04 04:35:51  d_jencks
  * modified test setup to run against remote server using command line properties
  *
@@ -58,6 +61,7 @@ package org.firebirdsql.jdbc;
 import junit.framework.*;
 import org.firebirdsql.management.*;
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 
 /**
@@ -119,7 +123,7 @@ public class BaseFBTest extends TestCase
 
    private final FBManager fbManager = new FBManager();
 
-   protected final Logger log = Logger.getLogger(getClass());
+   protected final Logger log = LoggerFactory.getLogger(getClass());
 
     public BaseFBTest(String testName) {
         super(testName);

@@ -41,6 +41,7 @@ import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.XSQLVAR;
 
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  *
@@ -73,7 +74,7 @@ import org.firebirdsql.logging.Logger;
  */
 public class FBDatabaseMetaData implements DatabaseMetaData {
 
-   private final Logger log = Logger.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass());
     private static final String SPACES = "                               ";//31 spaces
 
     FBConnection c;
@@ -2870,7 +2871,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     int versionColumnPseudo = 2;
 
-    private static final String GET_PRIMARY_KEYS = "select "
+    private static final String GET_PRIMARY_KEYS_START = "select "
         + " null as TABLE_CAT, "
         + " null as TABLE_SCHEM, "
         + "RC.RDB$RELATION_NAME as TABLE_NAME, "
@@ -2880,9 +2881,10 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         + "from "
         + "RDB$RELATION_CONSTRAINTS RC, "
         + "RDB$INDEX_SEGMENTS ISGMT "
-        + "where "
-        + "RC.RDB$RELATION_NAME = UPPER(?) and "
-        + "RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME and "
+        + "where ";		  
+	 
+    private static final String GET_PRIMARY_KEYS_END = 
+        "RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME and "
         + "RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
         + "order by ISGMT.RDB$FIELD_NAME ";
 
@@ -2911,10 +2913,20 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     public ResultSet getPrimaryKeys(String catalog, String schema,
                 String table) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
+		  
+        Clause tableClause = new Clause("RC.RDB$RELATION_NAME", table);
+        String sql = GET_PRIMARY_KEYS_START;
+        sql += tableClause.getCondition();
+        sql += GET_PRIMARY_KEYS_END;
+        ArrayList params = new ArrayList();
+        if (!tableClause.getCondition().equals("")) {
+            params.add(tableClause.getValue());
+        }
+/*
         String sql = GET_PRIMARY_KEYS;
         ArrayList params = new ArrayList();
         params.add(table);
-
+*/
         ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[6];
@@ -2981,7 +2993,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 	  * Firebird reports it as String
 	  */
 
-    private static final String GET_IMPORTED_KEYS = "select"
+    private static final String GET_IMPORTED_KEYS_START = "select"
 	 +" null as PKTABLE_CAT "
 	 +" ,null as PKTABLE_SCHEM "
 	 +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
@@ -3004,9 +3016,10 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 	 +" ,RDB$REF_CONSTRAINTS RC "
 	 +" ,RDB$INDEX_SEGMENTS ISP "
 	 +" ,RDB$INDEX_SEGMENTS ISF "
-	 +" WHERE "
-	 +" FK.RDB$RELATION_NAME = ? "
-	 +" and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+	 +" WHERE ";
+	 
+    private static final String GET_IMPORTED_KEYS_END = 
+	 " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
 	 +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
 	 +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
 	 +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
@@ -3083,10 +3096,19 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     public ResultSet getImportedKeys(String catalog, String schema,
                 String table) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
+        Clause tableClause = new Clause("FK.RDB$RELATION_NAME", table);
+        String sql = GET_IMPORTED_KEYS_START;
+        sql += tableClause.getCondition();
+        sql += GET_IMPORTED_KEYS_END;
+        ArrayList params = new ArrayList();
+        if (!tableClause.getCondition().equals("")) {
+            params.add(tableClause.getValue());
+        }
+/*		  
         String sql = GET_IMPORTED_KEYS;
         ArrayList params = new ArrayList();
         params.add(table.toUpperCase());
-
+*/
         ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
@@ -3310,7 +3332,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     int importedKeyNotDeferrable  = 7;
 
-    private static final String GET_EXPORTED_KEYS = "select"
+    private static final String GET_EXPORTED_KEYS_START = "select"
 	 +" null as PKTABLE_CAT "
 	 +" ,null as PKTABLE_SCHEM "
 	 +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
@@ -3333,9 +3355,10 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 	 +" ,RDB$REF_CONSTRAINTS RC "
 	 +" ,RDB$INDEX_SEGMENTS ISP "
 	 +" ,RDB$INDEX_SEGMENTS ISF "
-	 +" WHERE "
-	 +" PK.RDB$RELATION_NAME = ? "
-	 +" and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+	 +" WHERE ";
+	 
+    private static final String GET_EXPORTED_KEYS_END = 
+	 " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
 	 +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
 	 +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
 	 +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
@@ -3412,10 +3435,15 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     public ResultSet getExportedKeys(String catalog, String schema,
                 String table) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
-        String sql = GET_EXPORTED_KEYS;
+        Clause tableClause = new Clause("PK.RDB$RELATION_NAME", table);
+        String sql = GET_EXPORTED_KEYS_START;
+        sql += tableClause.getCondition();
+        sql += GET_EXPORTED_KEYS_END;
         ArrayList params = new ArrayList();
-        params.add(table.toUpperCase());
-
+        if (!tableClause.getCondition().equals("")) {
+            params.add(tableClause.getValue());
+        }
+		  
         ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
@@ -3537,7 +3565,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
 
 
-    private static final String GET_CROSS_KEYS = "select"
+    private static final String GET_CROSS_KEYS_START = "select"
 	 +" null as PKTABLE_CAT "
 	 +" ,null as PKTABLE_SCHEM "
 	 +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
@@ -3560,10 +3588,10 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 	 +" ,RDB$REF_CONSTRAINTS RC "
 	 +" ,RDB$INDEX_SEGMENTS ISP "
 	 +" ,RDB$INDEX_SEGMENTS ISF "
-	 +" WHERE "
-	 +" FK.RDB$RELATION_NAME = ? "
-	 +" and PK.RDB$RELATION_NAME = ? "
-	 +" and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+	 +" WHERE ";
+	 
+    private static final String GET_CROSS_KEYS_END =
+	 " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
 	 +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
 	 +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
 	 +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
@@ -3651,10 +3679,20 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         ) throws SQLException {
         checkCatalogAndSchema(primaryCatalog, primarySchema);
         checkCatalogAndSchema(foreignCatalog, foreignSchema);
-        String sql = GET_CROSS_KEYS;
+		  
+        Clause primaryTableClause = new Clause("PK.RDB$RELATION_NAME", primaryTable);
+        Clause foreignTableClause = new Clause("FK.RDB$RELATION_NAME", foreignTable);
+        String sql = GET_CROSS_KEYS_START;
+        sql += primaryTableClause.getCondition();
+        sql += foreignTableClause.getCondition();
+        sql += GET_CROSS_KEYS_END;
         ArrayList params = new ArrayList();
-        params.add(foreignTable.toUpperCase());
-        params.add(primaryTable.toUpperCase());
+        if (!primaryTableClause.getCondition().equals("")) {
+            params.add(primaryTableClause.getValue());
+        }
+        if (!foreignTableClause.getCondition().equals("")) {
+            params.add(foreignTableClause.getValue());
+        }
 		  
         ResultSet rs = c.doQuery(sql, params, statements);
 

@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * IdleRemover.java
@@ -46,7 +47,7 @@ import org.firebirdsql.logging.Logger;
 public class IdleRemover 
 {
 
-   private final Logger log = Logger.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass());
 
    private final Collection pools = new ArrayList();
 

@@ -30,6 +30,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.6  2002/02/02 18:58:24  d_jencks
+ * converted to log4j logging and cleaned up some test problems.  If you do not wish to use log4j, you may leave out the log4j-core.jar and get no logging
+ *
  * Revision 1.5  2002/02/01 03:58:06  d_jencks
  * applied fix from William Suroweic in case we messed up the params in error messages
  *
@@ -49,6 +52,7 @@
 package org.firebirdsql.gds;
 
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * This class is supposed to return messages for the specified error code.
@@ -57,7 +61,7 @@ import org.firebirdsql.logging.Logger;
  */
 public class GDSExceptionHelper {
 
-   private static final Logger log = Logger.getLogger(GDSExceptionHelper.class);
+   private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class);
 
     private static final String MESSAGES = "isc_error_msg";
     private static java.util.Properties messages = new java.util.Properties();
