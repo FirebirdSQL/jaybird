@@ -1,3 +1,15 @@
+2004-10-01 23:32  rrokytskyy
+
+	* client-java/src/resources/isc_error_msg.properties:
+	
+	merged with head
+
+2004-10-01 23:28  rrokytskyy
+
+	* client-java/src/resources/isc_error_msg.properties:
+	
+	fixed error messages
+
 2004-09-26 16:00  rrokytskyy
 
 	* client-java/src/: test/org/firebirdsql/ngds/TestNgds.java,
