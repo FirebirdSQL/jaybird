@@ -211,6 +211,13 @@
     >
       <classpath refid="javac.test.classpath"/>
     </javac>
+
+    <copy todir="${build.test}" filtering="no">
+      <fileset dir="${source.test}">
+         <include name="**/*.properties"/>
+      </fileset>
+    </copy>
+
   </target>
 
   <!-- Compile resource files -->
