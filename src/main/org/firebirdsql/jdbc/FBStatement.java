@@ -217,7 +217,7 @@ public class FBStatement implements Statement {
                 c.closeStatement(fixedStmt, true);
             }
             catch (GDSException ge) {
-                throw new SQLException("could not close statement: " + ge.toString());
+                throw new FBSQLException(ge);
             }
             finally {
                 fixedStmt = null;
@@ -584,7 +584,7 @@ public class FBStatement implements Statement {
                 return resCount;
             }
             catch (GDSException ge) {
-                throw new SQLException("Could not get UpdateCount: " + ge);
+                throw new FBSQLException(ge);
             }
         }
     }
@@ -877,7 +877,7 @@ public class FBStatement implements Statement {
                 c.closeStatement(fixedStmt, false);
             }
             catch (GDSException ge) {
-                throw new SQLException("problem closing resultset: " + ge);
+                throw new FBSQLException(ge);
             }
             currentRs = null;
         }

@@ -455,7 +455,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             return (fixedStmt.getOutSqlda().sqld > 0);
         }
         catch (GDSException ge) {
-            throw new SQLException("GDS exception: " + ge.toString());
+            throw new FBSQLException(ge);
         }
     }
 
