@@ -67,20 +67,20 @@ public class FBResultSet implements ResultSet {
 
     private FBConnection c;
 
-    private XSQLVAR[] xsqlvars;
+    public XSQLVAR[] xsqlvars;
 
     public Object[] row = null;
 
-    protected int rowNum = 0;
+//    protected int rowNum = 0;
     protected int maxRows = 0;
     protected int fetchSize = 0;
      
-    private boolean isEmpty = false;
+//    public boolean isEmpty = false;
      
-    private boolean isBeforeFirst = false;
-    private boolean isFirst = false;
-    private boolean isLast = false;
-    private boolean isAfterLast = false;
+//    public boolean isBeforeFirst = false;
+//    public boolean isFirst = false;
+//    public boolean isLast = false;
+//    public boolean isAfterLast = false;
     
     private boolean wasNull = false;
     private boolean wasNullValid = false;
@@ -104,8 +104,8 @@ public class FBResultSet implements ResultSet {
         this.c = c;
         xsqlvars = stmt.getOutSqlda().sqlvar;
         maxRows = fbstatement.getMaxRows();
-        prepareVars();
-        fbFetcher = new FBStatementFetcher(this.c, fbstatement, stmt);
+        prepareVars(false);
+        fbFetcher = new FBStatementFetcher(this.c, fbstatement, stmt, this);
     }
 
     /**
@@ -123,8 +123,8 @@ public class FBResultSet implements ResultSet {
         this.trimStrings = trimStrings;
         maxRows = fbStatement.getMaxRows();
         xsqlvars = stmt.getOutSqlda().sqlvar;
-        prepareVars();
-        fbFetcher = new FBCachedFetcher(this.c, fbStatement,stmt);
+        prepareVars(true);
+        fbFetcher = new FBCachedFetcher(this.c, fbStatement,stmt,this);
         //use willEndTransaction rather than getAutoCommit so blobs are cached only when transactions are
         //automatically ended.  Using jca framework, getAutoCommit is always true.
         if (c.willEndTransaction()) 
@@ -135,23 +135,17 @@ public class FBResultSet implements ResultSet {
 
     FBResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
         maxRows = 0;
-        fbFetcher = new FBCachedFetcher(rows);
+        fbFetcher = new FBCachedFetcher(rows,this);
         this.xsqlvars = xsqlvars;
-        prepareVars();
+        prepareVars(true);
     }
 
-    private void prepareVars() throws SQLException {
+    private void prepareVars(boolean cached) throws SQLException {
         fields = new FBField[xsqlvars.length];
         colNames = new java.util.HashMap(xsqlvars.length,1);
-        row = new Object[xsqlvars.length];
         for (int i=0; i<xsqlvars.length; i++){
-            fields[i] = FBField.createField(xsqlvars[i], row, i);
-            if (fields[i] instanceof FBBlobField)
-                ((FBBlobField)fields[i]).setConnection(c);
-            else{
-                if (fields[i] instanceof FBStringField)
-                   ((FBStringField)fields [i]).setConnection(c);
-            }
+            fields[i] = FBField.createField(xsqlvars[i], this, i, cached);
+            fields[i].setConnection(c);
         }
     }
 
@@ -313,10 +307,11 @@ public class FBResultSet implements ResultSet {
     private FBField getField(int columnIndex) throws SQLException {
         if (columnIndex> xsqlvars.length)
              throw new SQLException("invalid column index");
+        FBField field = fields[columnIndex-1];
         wasNullValid = true;
-        wasNull = fields[columnIndex-1].isNull();
+        wasNull = field.isNull();
 
-        return fields[columnIndex-1];
+        return field;
     }
 
     private FBField getField(String columnName) throws SQLException {
@@ -703,7 +698,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean isBeforeFirst() throws  SQLException {
-         return isBeforeFirst;
+         return fbFetcher.getIsBeforeFirst();
     }
 
 
@@ -720,7 +715,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean isAfterLast() throws  SQLException {
-        return isAfterLast;
+        return fbFetcher.getIsAfterLast();
     }
 
 
@@ -736,7 +731,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean isFirst() throws  SQLException {
-         return isFirst;
+         return fbFetcher.getIsFirst();
     }
 
 
@@ -756,7 +751,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean isLast() throws  SQLException {
-       return isLast;
+       return fbFetcher.getIsLast();
     }
 
 
@@ -836,7 +831,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public int getRow() throws  SQLException {
-       return rowNum;
+       return fbFetcher.getRowNum();
     }
 
 
@@ -2461,7 +2456,7 @@ public class FBResultSet implements ResultSet {
     }
 
     //--------------------------------------------------------------------
-
+/*
     interface FBFetcher {
 
 
@@ -2528,7 +2523,8 @@ public class FBResultSet implements ResultSet {
             }
             else {
                 try {
-                    System.arraycopy(nextRow,0,row,0,row.length);
+//                    System.arraycopy(nextRow,0,row,0,row.length);
+                    row = nextRow;						 
                     nextRow = c.fetch(stmt);
                     rowNum++;
                     
@@ -2587,10 +2583,12 @@ public class FBResultSet implements ResultSet {
                                 
                             if (blobField && localRow[i] != null ) 
                             {
-                                System.arraycopy(localRow, 0, row,0, row.length);
-                                FBBlobField blob = (FBBlobField)FBField.createField(xsqlvars[i], row, i);
+//                                System.arraycopy(localRow, 0, row,0, row.length);
+                                row = localRow;										  
+                                FBBlobField blob = (FBBlobField)FBField.createField(xsqlvars[i], FBResultSet.this, i);
                                 blob.setConnection(c);
                                 localRow[i] = blob.getCachedObject();
+                                row = null;
                             } // end of if ()                            
                         } // end of for ()
                         rows.add(localRow);
@@ -2645,8 +2643,10 @@ public class FBResultSet implements ResultSet {
                     isFirst = true;
                 if (rowNum == rows.size())
                     isLast = true;
-
-                System.arraycopy((Object[])rows.get(rowNum-1),0,row,0,row.length);
+                row = (Object[])rows.get(rowNum-1);
+                // clean the rows element as it is used					 
+                rows.set(rowNum-1,null);
+//                System.arraycopy((Object[])rows.get(rowNum-1),0,row,0,row.length);
                 
                 return true;
             }
@@ -2659,7 +2659,7 @@ public class FBResultSet implements ResultSet {
             return fbStatement;
         }
     }
-
+*/
      protected void addWarning(java.sql.SQLWarning warning){
          if (firstWarning == null)
              firstWarning = warning;

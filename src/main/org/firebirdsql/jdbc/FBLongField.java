@@ -31,14 +31,14 @@ import java.math.BigDecimal;
  * @version 1.0
  */
 class FBLongField extends FBField {
-    FBLongField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
-        super(field, row, numCol);
+    FBLongField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
+        super(field, rs, numCol);
     }
 
     byte getByte() throws SQLException {
-        if (row[numCol]==null) return BYTE_NULL_VALUE;
+        if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
 
-        Long value = (Long)row[numCol];
+        Long value = (Long)rs.row[numCol];
 
         // check if value is withing bounds
         if (value.longValue() > MAX_BYTE_VALUE ||
@@ -46,12 +46,12 @@ class FBLongField extends FBField {
                 throw (SQLException)createException(
                     BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return ((Long)row[numCol]).byteValue();
+        return value.byteValue();
     }
     short getShort() throws SQLException {
-        if (row[numCol]==null) return SHORT_NULL_VALUE;
+        if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
 
-        Long value = (Long)row[numCol];
+        Long value = (Long)rs.row[numCol];
 
         // check if value is withing bounds
         if (value.longValue() > MAX_SHORT_VALUE ||
@@ -59,12 +59,12 @@ class FBLongField extends FBField {
                 throw (SQLException)createException(
                     BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return ((Long)row[numCol]).shortValue();
+        return value.shortValue();
     }
     int getInt() throws SQLException {
-        if (row[numCol]==null) return INT_NULL_VALUE;
+        if (rs.row[numCol]==null) return INT_NULL_VALUE;
 
-        Long value = (Long)row[numCol];
+        Long value = (Long)rs.row[numCol];
 
         // check if value is withing bounds
         if (value.longValue() > MAX_INT_VALUE ||
@@ -72,42 +72,42 @@ class FBLongField extends FBField {
                 throw (SQLException)createException(
                     BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return ((Long)row[numCol]).intValue();
+        return value.intValue();
     }
     long getLong() throws SQLException {
-        if (row[numCol]==null) return LONG_NULL_VALUE;
+        if (rs.row[numCol]==null) return LONG_NULL_VALUE;
 
-        return ((Long)row[numCol]).longValue();
+        return ((Long)rs.row[numCol]).longValue();
     }
     float getFloat() throws SQLException {
-        if (row[numCol]==null) return FLOAT_NULL_VALUE;
+        if (rs.row[numCol]==null) return FLOAT_NULL_VALUE;
 
-        return ((Long)row[numCol]).floatValue();
+        return ((Long)rs.row[numCol]).floatValue();
     }
     double getDouble() throws SQLException {
-        if (row[numCol]==null) return DOUBLE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
-        return ((Long)row[numCol]).doubleValue();
+        return ((Long)rs.row[numCol]).doubleValue();
     }
     java.math.BigDecimal getBigDecimal() throws SQLException {
-        if (row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
+        if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
-        return BigDecimal.valueOf(((Long)row[numCol]).longValue());
+        return BigDecimal.valueOf(((Long)rs.row[numCol]).longValue());
     }
     Object getObject() throws SQLException {
-        if (row[numCol]==null) return OBJECT_NULL_VALUE;
+        if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return row[numCol];
+        return rs.row[numCol];
     }
     boolean getBoolean() throws java.sql.SQLException {
-        if (row[numCol]==null) return BOOLEAN_NULL_VALUE;
+        if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
-        return ((Long)row[numCol]).intValue() == 1;
+        return ((Long)rs.row[numCol]).intValue() == 1;
     }
     String getString() throws SQLException {
-        if (row[numCol]==null) return STRING_NULL_VALUE;
+        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return ((Long)row[numCol]).toString();
+        return ((Long)rs.row[numCol]).toString();
     }
 
     //--- setXXX methods

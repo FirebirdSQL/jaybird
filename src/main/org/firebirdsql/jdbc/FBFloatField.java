@@ -35,14 +35,14 @@ import java.math.BigDecimal;
  * @version 1.0
  */
 class FBFloatField extends FBField {
-    FBFloatField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
-        super(field, row, numCol);
+    FBFloatField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
+        super(field, rs, numCol);
     }
 
     byte getByte() throws SQLException {
-        if (row[numCol]==null) return BYTE_NULL_VALUE;
+        if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
 
-        Float value = (Float)row[numCol];
+        Float value = (Float)rs.row[numCol];
 
         // check if value is withing bounds
         if (value.floatValue() > MAX_BYTE_VALUE ||
@@ -50,12 +50,12 @@ class FBFloatField extends FBField {
                 throw (SQLException)createException(
                     BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return ((Float)row[numCol]).byteValue();
+        return value.byteValue();
     }
     short getShort() throws SQLException {
-        if (row[numCol]==null) return SHORT_NULL_VALUE;
+        if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
 
-        Float value = (Float)row[numCol];
+        Float value = (Float)rs.row[numCol];
 
         // check if value is withing bounds
         if (value.floatValue() > MAX_SHORT_VALUE ||
@@ -63,12 +63,12 @@ class FBFloatField extends FBField {
                 throw (SQLException)createException(
                     SHORT_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return ((Float)row[numCol]).shortValue();
+        return value.shortValue();
     }
     int getInt() throws SQLException {
-        if (row[numCol]==null) return INT_NULL_VALUE;
+        if (rs.row[numCol]==null) return INT_NULL_VALUE;
 
-        Float value = (Float)row[numCol];
+        Float value = (Float)rs.row[numCol];
 
         // check if value is withing bounds
         if (value.floatValue() > MAX_INT_VALUE ||
@@ -76,12 +76,12 @@ class FBFloatField extends FBField {
                 throw (SQLException)createException(
                     INT_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return ((Float)row[numCol]).intValue();
+        return value.intValue();
     }
     long getLong() throws SQLException {
-        if (row[numCol]==null) return LONG_NULL_VALUE;
+        if (rs.row[numCol]==null) return LONG_NULL_VALUE;
 
-        Float value = (Float)row[numCol];
+        Float value = (Float)rs.row[numCol];
 
         // check if value is withing bounds
         if (value.floatValue() > MAX_LONG_VALUE ||
@@ -89,37 +89,37 @@ class FBFloatField extends FBField {
                 throw (SQLException)createException(
                     LONG_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return ((Float)row[numCol]).longValue();
+        return value.longValue();
     }
     float getFloat() throws SQLException {
-        if (row[numCol]==null) return FLOAT_NULL_VALUE;
+        if (rs.row[numCol]==null) return FLOAT_NULL_VALUE;
 
-        return ((Float)row[numCol]).floatValue();
+        return ((Float)rs.row[numCol]).floatValue();
     }
     double getDouble() throws SQLException {
-        if (row[numCol]==null) return DOUBLE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
-        return ((Float)row[numCol]).doubleValue();
+        return ((Float)rs.row[numCol]).doubleValue();
     }
     java.math.BigDecimal getBigDecimal() throws SQLException {
-        if (row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
+        if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
-        return new java.math.BigDecimal(((Float)row[numCol]).doubleValue());
+        return new java.math.BigDecimal(((Float)rs.row[numCol]).doubleValue());
     }
     Object getObject() throws SQLException {
-        if (row[numCol]==null) return OBJECT_NULL_VALUE;
+        if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return row[numCol];
+        return (Float)rs.row[numCol];
     }
     boolean getBoolean() throws java.sql.SQLException {
-        if (row[numCol]==null) return BOOLEAN_NULL_VALUE;
+        if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
-        return ((Float)row[numCol]).intValue() == 1;
+        return ((Float)rs.row[numCol]).intValue() == 1;
     }
     String getString() throws SQLException {
-        if (row[numCol]==null) return STRING_NULL_VALUE;
+        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return ((Float)row[numCol]).toString();
+        return String.valueOf((Float)rs.row[numCol]);
     }
 
     //--- setXXX methods
@@ -144,7 +144,7 @@ class FBFloatField extends FBField {
         setFloat(value ? 1.0f : 0.0f);
     }
     void setFloat(float value) throws java.sql.SQLException {
-        field.sqldata = new Float((float)value);
+        field.sqldata = new Float(value);
     }
     void setDouble(double value) throws java.sql.SQLException {
         // check if value is within bounds

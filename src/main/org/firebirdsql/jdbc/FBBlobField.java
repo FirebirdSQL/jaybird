@@ -36,9 +36,10 @@ public class FBBlobField extends FBField {
     private static final int BUFF_SIZE = 4096;
 
     FBConnection c;
+    boolean isCachedData = false;
 
-    FBBlobField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
-        super(field, row, numCol);
+    FBBlobField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
+        super(field, rs, numCol);
     }
 
     void setConnection(FBConnection c) {
@@ -54,13 +55,13 @@ public class FBBlobField extends FBField {
     }
 
     Blob getBlob(boolean create) throws SQLException {
-        if (row[numCol]==null)
+        if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 
-        if (row[numCol] instanceof Blob)
-            return (Blob)row[numCol];
+//        if (rs.row[numCol] instanceof Blob)
+//            return (Blob)rs.row[numCol];
 
-        Long blobId = (Long)row[numCol];
+        Long blobId = (Long)rs.row[numCol];
 
         if (blobId == null)
             blobId = new Long(0);
@@ -143,7 +144,7 @@ public class FBBlobField extends FBField {
     }
 
     Object getCachedObject() throws SQLException {
-        if (row[numCol]==null)
+        if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 
         return new FBCachedBlob(getBytesInternal());
@@ -197,6 +198,7 @@ public class FBBlobField extends FBField {
             
             field.sqldata = bout.toByteArray();
             field.sqllen = ((byte[])field.sqldata).length;
+            isCachedData = true;
         }
     }
     
@@ -222,14 +224,18 @@ public class FBBlobField extends FBField {
             
             field.sqldata = bout.toByteArray();
             field.sqllen = ((byte[])field.sqldata).length;
+            isCachedData = true;
         }
     }
     
     void flushCachedData() throws SQLException {
-        if (field.sqldata instanceof byte[]) {
+//        if (field.sqldata instanceof byte[]) {
+        if (isCachedData){
             copyBinaryStream(
                 new ByteArrayInputStream((byte[])field.sqldata), field.sqllen);
+            isCachedData=false;
         }
+//        }
     }
     
     private void copyBinaryStream(InputStream in, int length) throws SQLException {
@@ -257,115 +263,5 @@ public class FBBlobField extends FBField {
 
     void setBlob(FBBlob blob) throws SQLException {
         field.sqldata = new Long(blob.getBlobId());
-    }
-
-    /**
-     * This class represents a cached blob field.
-     */
-    private class FBCachedBlob implements java.sql.Blob {
-        private byte[] blobData;
-
-        /**
-         * Create an instance using the cached data.
-         *
-         * @param data array of bytes containing the cached data.
-         */
-        private FBCachedBlob(byte[] data) {
-            blobData = data;
-        }
-
-        /**
-         * Get the length of the cached blob field.
-         *
-         * @return length of the cached blob field or -1 if the field is null.
-         */
-        public long length() throws SQLException {
-            if (blobData == null)
-                return -1;
-
-            return blobData.length;
-        }
-
-        /**
-         * Get part of the blob field.
-         *
-         * @param pos starting position to copy.
-         * @param length amount of bytes to copy.
-         */
-        public byte[] getBytes(long pos, int length) throws SQLException {
-            if (blobData == null)
-                return BYTES_NULL_VALUE;
-
-            byte[] result = new byte[length];
-            System.arraycopy(blobData, (int)pos - 1, result, 0, length);
-            return result;
-        }
-
-        /**
-         * Find the first entry of the specified pattern.
-         *
-         * @throws SQLException always, not yet implemented.
-         */
-        public long position(byte[] pattern, long start) throws SQLException {
-            throw new SQLException("Not yet implemented.");
-        }
-
-        /**
-         * Find the first entry of the specified pattern.
-         *
-         * @throws SQLException always, not yet implemented.
-         */
-        public long position(Blob pattern, long start) throws SQLException {
-            throw new SQLException("Not yet implemented.");
-        }
-
-        /**
-         * Get contents of blob as binary stream.
-         */
-        public InputStream getBinaryStream() throws SQLException {
-            if (blobData == null)
-                return STREAM_NULL_VALUE;
-
-            return new ByteArrayInputStream(blobData);
-        }
-
-        /**
-         * Set contents of the blob.
-         *
-         * @throws SQLException always, set methods are not relevant in cached
-         * state.
-         */
-        public int setBytes(long l, byte abyte0[]) throws SQLException {
-            throw new SQLException("Blob in auto-commit mode is read-only.");
-        }
-
-        /**
-         * Set the contents of blob.
-         *
-         * @throws SQLException always, set methods are not relevant in cached
-         * state.
-         */
-        public int setBytes(long l, byte abyte0[], int i, int j) throws SQLException {
-            throw new SQLException("Blob in auto-commit mode is read-only.");
-        }
-
-        /**
-         * Set the contents of blob as binary stream.
-         *
-         * @throws SQLException always, set methods are not relevant in cached
-         * state.
-         */
-        public OutputStream setBinaryStream(long pos) throws SQLException {
-            throw new SQLException("Blob in auto-commit mode is read-only.");
-        }
-
-        /**
-         * Truncate the blob to specified length.
-         *
-         * @throws SQLException always, truncate is not relevant in cached state.
-         */
-        public void truncate(long length) throws SQLException {
-            throw new SQLException("Not yet implemented.");
-        }
     }
 }

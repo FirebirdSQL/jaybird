@@ -40,13 +40,18 @@ public class TestFBDoubleField extends BaseTestFBField {
 		return new TestSuite(TestFBDoubleField.class);
 	}
 	protected void setUp() throws SQLException{
-		XSQLVAR doubleField = new XSQLVAR();
-      Object[] row = new Object[1];
+        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_DOUBLE;
+        Object[] row = new Object[1];
+        java.util.ArrayList rows = new java.util.ArrayList();
+        rows.add(row);		  
+        FBResultSet rs = new FBResultSet(xsqlvars,rows);
+		  rs.next();
 //		doubleField.sqldata = new Double(TEST_DOUBLE);
 //		doubleField.sqlind = 0;
-		doubleField.sqltype = GDS.SQL_DOUBLE;
 
-		field = FBField.createField(doubleField,row,0);
+		field = FBField.createField(xsqlvars[0],rs,0, false);
 	}
 	protected void tearDown() {
 	}

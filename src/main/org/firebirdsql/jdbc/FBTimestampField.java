@@ -34,33 +34,33 @@ import org.firebirdsql.gds.XSQLVAR;
  * @version 1.0
  */
 class FBTimestampField extends FBField {
-    FBTimestampField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
-        super(field, row, numCol);
+    FBTimestampField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
+        super(field, rs, numCol);
     }
     Object getObject() throws java.sql.SQLException {
-        if (row[numCol]==null) return OBJECT_NULL_VALUE;
+        if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return row[numCol];
+        return rs.row[numCol];
     }
     String getString() throws java.sql.SQLException {
-        if (row[numCol]==null) return STRING_NULL_VALUE;
+        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return row[numCol].toString();
+        return rs.row[numCol].toString();
     }
     Date getDate() throws java.sql.SQLException {
-        if (row[numCol]==null) return DATE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
         return new Date(getTimestamp().getTime());
     }
     Time getTime() throws java.sql.SQLException {
-        if (row[numCol]==null) return TIME_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
         return new Time(getTimestamp().getTime());
     }
     Timestamp getTimestamp() throws java.sql.SQLException {
-        if (row[numCol]==null) return TIMESTAMP_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
-        return (Timestamp)row[numCol];
+        return (Timestamp)rs.row[numCol];
     }
 
     //--- setXXX methods

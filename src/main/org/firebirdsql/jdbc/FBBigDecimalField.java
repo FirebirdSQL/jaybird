@@ -42,8 +42,11 @@ public class FBBigDecimalField extends FBField {
     private static final BigInteger MAX_LONG = BigInteger.valueOf(Long.MAX_VALUE);
     private static final BigInteger MIN_LONG = BigInteger.valueOf(Long.MIN_VALUE);
 
-    FBBigDecimalField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
-        super(field, row, numCol);
+    int fieldType = 0; // 1.- Short, 2.- Integer, 3.- Long
+
+    FBBigDecimalField(XSQLVAR field, FBResultSet rs, int numCol, int fieldType) throws SQLException {
+        super(field, rs, numCol);
+        this.fieldType = fieldType;
     }
 
     boolean getBoolean() throws SQLException {
@@ -51,7 +54,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     byte getByte() throws SQLException {
-        if (row[numCol]==null) return BYTE_NULL_VALUE;
+        if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
 
         long longValue = getLong();
 
@@ -66,13 +69,13 @@ public class FBBigDecimalField extends FBField {
     }
 
     double getDouble() throws SQLException {
-        if (row[numCol]==null) return DOUBLE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
         return getBigDecimal().doubleValue();
     }
 
     float getFloat() throws SQLException {
-        if (row[numCol]==null) return FLOAT_NULL_VALUE;
+        if (rs.row[numCol]==null) return FLOAT_NULL_VALUE;
 
         double doubleValue = getDouble();
 
@@ -88,7 +91,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     int getInt() throws SQLException {
-        if (row[numCol]==null) return INT_NULL_VALUE;
+        if (rs.row[numCol]==null) return INT_NULL_VALUE;
 
         long longValue = getLong();
 
@@ -112,7 +115,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     short getShort() throws SQLException {
-        if (row[numCol]==null) return SHORT_NULL_VALUE;
+        if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
 
         long longValue = getLong();
 
@@ -127,24 +130,24 @@ public class FBBigDecimalField extends FBField {
     }
 
     String getString() throws SQLException {
-        if (row[numCol]==null) return STRING_NULL_VALUE;
+        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
         
         return getBigDecimal().toString();
     }
 
     BigDecimal getBigDecimal() throws SQLException {
-        if (row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
+        if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
         long longValue;
 
-        if (row[numCol] instanceof Integer)
-            longValue = ((Integer)row[numCol]).longValue();
+        if (fieldType==2)
+            longValue = ((Integer)rs.row[numCol]).longValue();
         else
-        if (row[numCol] instanceof Long)
-            longValue = ((Long)row[numCol]).longValue();
+        if (fieldType==3)
+            longValue = ((Long)rs.row[numCol]).longValue();
         else
-        if (row[numCol] instanceof Short)
-            longValue = ((Short)row[numCol]).longValue();
+        if (fieldType==1)
+            longValue = ((Short)rs.row[numCol]).longValue();
         else
             throw (SQLException)createException(
                 BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
@@ -194,7 +197,7 @@ public class FBBigDecimalField extends FBField {
     void setBigDecimal(BigDecimal value) throws SQLException {
         value = value.setScale(-field.sqlscale, BigDecimal.ROUND_HALF_UP);
 
-        if (isType(field, Types.SMALLINT)) {
+        if (fieldType == 1) {
 
             // check if value is withing bounds
             if (value.unscaledValue().compareTo(MAX_SHORT) > 0 ||
@@ -204,7 +207,7 @@ public class FBBigDecimalField extends FBField {
 
             field.sqldata = new Short(value.unscaledValue().shortValue());
         } else
-        if (isType(field, Types.INTEGER)) {
+        if (fieldType == 2) {
 
             // check if value is withing bounds
             if (value.unscaledValue().compareTo(MAX_INT) > 0 ||
@@ -214,7 +217,7 @@ public class FBBigDecimalField extends FBField {
 
             field.sqldata = new Integer(value.unscaledValue().intValue());
         } else
-        if (isType(field, Types.BIGINT)) {
+        if (fieldType == 3) {
             
             // check if value is withing bounds
             if (value.unscaledValue().compareTo(MAX_LONG) > 0 ||

@@ -40,13 +40,18 @@ public class TestFBFloatField extends BaseTestFBField {
 		return new TestSuite(TestFBFloatField.class);
 	}
 	protected void setUp() throws SQLException{
-		XSQLVAR floatField = new XSQLVAR();
-		Object[] row = new Object[1];
+        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_FLOAT;
+        Object[] row = new Object[1];
+        java.util.ArrayList rows = new java.util.ArrayList();
+        rows.add(row);		  
+        FBResultSet rs = new FBResultSet(xsqlvars,rows);
+		  rs.next();
 //		floatField.sqldata = new Float(TEST_FLOAT);
 //		floatField.sqlind = 0;
-		floatField.sqltype = GDS.SQL_FLOAT;
 
-		field = FBField.createField(floatField, row, 0);
+		field = FBField.createField(xsqlvars[0], rs, 0, false);
 	}
 	protected void tearDown() {
 	}

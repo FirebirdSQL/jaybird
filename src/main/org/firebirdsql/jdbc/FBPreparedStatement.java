@@ -65,6 +65,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      
     private FBField[] fields= null;
     private Object[] row = null;
+    private boolean[] isBlob = null;
+    private boolean hasBlobs = false;
 
     FBPreparedStatement(FBConnection c, String sql) throws SQLException {
         super(c);
@@ -153,84 +155,84 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         if (parameterIndex > fields.length)
             throw new SQLException("invalid column index");
         getField(parameterIndex).setNull();
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setBinaryStream(int parameterIndex, InputStream inputStream,
         int length) throws SQLException
     {
         getField(parameterIndex).setBinaryStream(inputStream, length);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 	 
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
         getField(parameterIndex).setBytes(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
         getField(parameterIndex).setBoolean(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setByte(int parameterIndex, byte x) throws SQLException {
         getField(parameterIndex).setByte(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setDate(int parameterIndex, Date x) throws SQLException {
         getField(parameterIndex).setDate(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setDouble(int parameterIndex, double x) throws SQLException {
         getField(parameterIndex).setDouble(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setFloat(int parameterIndex, float x) throws SQLException {
         getField(parameterIndex).setFloat(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setInt(int parameterIndex, int x) throws SQLException {
         getField(parameterIndex).setInteger(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setLong(int parameterIndex, long x) throws SQLException {
         getField(parameterIndex).setLong(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setObject(int parameterIndex, Object x) throws SQLException {
         getField(parameterIndex).setObject(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setShort(int parameterIndex, short x) throws SQLException {
         getField(parameterIndex).setShort(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setString(int parameterIndex, String x) throws SQLException {
         getField(parameterIndex).setString(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setTime(int parameterIndex, Time x) throws SQLException {
         getField(parameterIndex).setTime(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
         getField(parameterIndex).setTimestamp(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws  SQLException {
         getField(parameterIndex).setBigDecimal(x);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
     /**
      * Returns the XSQLVAR structure for the specified column.
@@ -246,7 +248,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
          if (columnIndex > fields.length)
             throw new SQLException("invalid column index");
             
-        return fields[columnIndex-1];
+         isParamSet[columnIndex-1] = true;
+         return fields[columnIndex-1];
     }
 
     /**
@@ -408,31 +411,24 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         boolean canExecute = true;
         for (int i = 0; i < isParamSet.length; i++){
             canExecute = canExecute && isParamSet[i];
-          }
+        }
 
         if (!canExecute)
             throw new SQLException("Not all parameters were set. " +
                 "Cannot execute query.");
-          
-        XSQLVAR[] inVars = fixedStmt.getInSqlda().sqlvar;
 
-        for(int i = 0; i < inVars.length; i++)
-        {
-            boolean isBlobField =
-                FBField.isType(inVars[i], Types.BLOB) ||
-                FBField.isType(inVars[i], Types.BINARY) ||
-                FBField.isType(inVars[i], Types.LONGVARCHAR);
-
-            if (isBlobField)
-            {
-                FBBlobField blobField = (FBBlobField)getField(i + 1);
-                blobField.flushCachedData();
+        if (hasBlobs){
+            for(int i = 0; i < isParamSet.length; i++){
+                if (isBlob[i]){
+                    FBBlobField blobField = (FBBlobField)getField(i + 1);
+                    blobField.flushCachedData();
+                }
             }
         }
         try {
             closeResultSet();
             c.executeStatement(fixedStmt, sendOutParams);
-                isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
+            isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
             return (fixedStmt.getOutSqlda().sqld > 0);
         }
         catch (GDSException ge) {
@@ -483,7 +479,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
                   java.io.Reader reader,
               int length) throws  SQLException {
         getField(parameterIndex).setCharacterStream(reader, length);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
 
@@ -519,7 +515,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             throw new SQLException("You must use FBBlobs with Firebird!");
         }
         getField(parameterIndex).setBlob((FBBlob) blob);
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
 
@@ -711,7 +707,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      */
      public void setNull (int parameterIndex, int sqlType, String typeName) throws  SQLException {
          setNull(parameterIndex, sqlType); //all nulls are represented the same... a null reference
-        parameterWasSet(parameterIndex);
+//        parameterWasSet(parameterIndex);
     }
 
 
@@ -750,16 +746,25 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         // initialize isParamSet member
         isParamSet = new boolean[fixedStmt.getInSqlda().sqln];
         fields = new FBField[fixedStmt.getInSqlda().sqln];		  
+        isBlob = new boolean[fixedStmt.getInSqlda().sqln];		  
+        XSQLVAR[] inVars = fixedStmt.getInSqlda().sqlvar;
         // this is probably redundant, JVM initializes members to false
         for (int i = 0; i < isParamSet.length; i++){
             isParamSet[i] = false;
-      		fields[i] = FBField.createField(getXsqlvar(i+1), null, i);
+      		fields[i] = FBField.createField(getXsqlvar(i+1), null, i, false);
 
       		if (fields[i] instanceof FBBlobField)
       		    ((FBBlobField)fields[i]).setConnection(c);
       		else
       		    if (fields[i] instanceof FBStringField)
-      		        ((FBStringField)fields[i]).setConnection(c);            
+      		        ((FBStringField)fields[i]).setConnection(c);
+
+            isBlob[i] =
+                FBField.isType(getXsqlvar(i+1), Types.BLOB) ||
+                FBField.isType(getXsqlvar(i+1), Types.BINARY) ||
+                FBField.isType(getXsqlvar(i+1), Types.LONGVARCHAR);
+            if (isBlob[i])
+                hasBlobs = true;
         }
     }
 
@@ -784,6 +789,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     /**
      * Marks that parameter was set.
      */
+/*
     protected void parameterWasSet(int parameterIndex) throws SQLException {
         if (parameterIndex < 1 || parameterIndex > isParamSet.length)
             throw new SQLException("Internal driver consistency check: " +
@@ -791,4 +797,5 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 
         isParamSet[parameterIndex - 1] = true;
     }
+*/
 }

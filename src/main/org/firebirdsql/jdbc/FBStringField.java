@@ -94,8 +94,8 @@ class FBStringField extends FBField {
     char[] cBuff;
     String IscEncoding = null;
 
-    FBStringField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
-        super(field, row, numCol);
+    FBStringField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
+        super(field, rs, numCol);
     }
     
     void setConnection(FBConnection c) {
@@ -109,7 +109,7 @@ class FBStringField extends FBField {
     //----- Math code
 
     byte getByte() throws java.sql.SQLException {
-        if (row[numCol]==null) return BYTE_NULL_VALUE;
+        if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
 
         try {
             return Byte.parseByte(getString().trim());
@@ -119,7 +119,7 @@ class FBStringField extends FBField {
         }
     }
     short getShort() throws SQLException {
-        if (row[numCol]==null) return SHORT_NULL_VALUE;
+        if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
 
         try {
             return Short.parseShort(getString().trim());
@@ -129,7 +129,7 @@ class FBStringField extends FBField {
         }
     }
     int getInt() throws SQLException {
-        if (row[numCol]==null) return INT_NULL_VALUE;
+        if (rs.row[numCol]==null) return INT_NULL_VALUE;
 
         try {
             return Integer.parseInt(getString().trim());
@@ -139,7 +139,7 @@ class FBStringField extends FBField {
         }
     }
     long getLong() throws SQLException {
-        if (row[numCol]==null) return LONG_NULL_VALUE;
+        if (rs.row[numCol]==null) return LONG_NULL_VALUE;
 
         try {
             return Long.parseLong(getString().trim());
@@ -150,13 +150,13 @@ class FBStringField extends FBField {
         }
     }
     BigDecimal getBigDecimal() throws java.sql.SQLException {
-        if (row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
+        if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
         /**@todo check what exceptions can be thrown here */
         return new BigDecimal(getString().trim());
     }
     float getFloat() throws SQLException {
-        if (row[numCol]==null) return FLOAT_NULL_VALUE;
+        if (rs.row[numCol]==null) return FLOAT_NULL_VALUE;
 
         try {
             return Float.parseFloat(getString().trim());
@@ -167,7 +167,7 @@ class FBStringField extends FBField {
         }
     }
     double getDouble() throws java.sql.SQLException {
-        if (row[numCol]==null) return DOUBLE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
         try {
             return Double.parseDouble(getString().trim());
@@ -181,23 +181,19 @@ class FBStringField extends FBField {
     //----- getBoolean, getString and getObject code
 
     boolean getBoolean() throws SQLException {
-        if (row[numCol]==null) return BOOLEAN_NULL_VALUE;
+        if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
         return getString().trim().equalsIgnoreCase(LONG_TRUE) ||
                 getString().trim().equalsIgnoreCase(SHORT_TRUE) ||
                 getString().trim().equalsIgnoreCase(SHORT_TRUE_2);
     }
     String getString() throws java.sql.SQLException {
-        if (row[numCol]==null) return STRING_NULL_VALUE;
+        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        // this is a fix for the FBDatabaseMetaData class
-//        if (row[numCol] instanceof String)
-//            return (String)row[numCol];
-
-        return toString((byte[])row[numCol], IscEncoding);
+        return toString((byte[])rs.row[numCol], IscEncoding);
     }
     Object getObject() throws SQLException {
-        if (row[numCol]==null) return OBJECT_NULL_VALUE;
+        if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
         return getString();
     }
@@ -205,40 +201,40 @@ class FBStringField extends FBField {
     //----- getXXXStream code
 
     InputStream getBinaryStream() throws SQLException {
-        if (row[numCol]==null) return STREAM_NULL_VALUE;
+        if (rs.row[numCol]==null) return STREAM_NULL_VALUE;
 
-        return new ByteArrayInputStream((byte[]) row[numCol]);
+        return new ByteArrayInputStream((byte[]) rs.row[numCol]);
     }
     InputStream getUnicodeStream() throws SQLException {
-        if (row[numCol]==null) return STREAM_NULL_VALUE;
+        if (rs.row[numCol]==null) return STREAM_NULL_VALUE;
 
         return getBinaryStream();
     }
     InputStream getAsciiStream() throws SQLException {
-        if (row[numCol]==null) return STREAM_NULL_VALUE;
+        if (rs.row[numCol]==null) return STREAM_NULL_VALUE;
 
         return getBinaryStream();
     }
     byte[] getBytes() throws SQLException {
-        if (row[numCol]==null) return BYTES_NULL_VALUE;
+        if (rs.row[numCol]==null) return BYTES_NULL_VALUE;
 
-        return (byte[]) row[numCol];
+        return (byte[]) rs.row[numCol];
     }
 
     //----- getDate, getTime and getTimestamp code
 
     Date getDate() throws SQLException {
-        if (row[numCol]==null) return DATE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
         return Date.valueOf(getString().trim());
     }
     Time getTime() throws SQLException {
-        if (row[numCol]==null) return TIME_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
         return Time.valueOf(getString().trim());
     }
     Timestamp getTimestamp() throws SQLException {
-        if (row[numCol]==null) return TIMESTAMP_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
         return Timestamp.valueOf(getString().trim());
     }
@@ -284,17 +280,6 @@ class FBStringField extends FBField {
             field.sqldata = null;
             return;
         }
-/*
-        // Do we have to do this by hands? Or is this Firebird's job?
-        if (isType(field, Types.CHAR) && (value.length() < field.sqllen)) {
-            if (cBuff==null)
-                cBuff = new char[field.sqllen];
-            java.util.Arrays.fill(cBuff,value.length()
-               ,field.sqllen,' ');
-            value.getChars(0,value.length(),cBuff,0);
-            value = new String(cBuff);
-        }
-*/
         byte[] supplied = getBytes(value, IscEncoding);
         if (supplied.length > field.sqllen)
             throw new DataTruncation(-1, true, false, supplied.length, field.sqllen);

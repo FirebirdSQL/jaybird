@@ -41,13 +41,18 @@ public class TestFBDateField extends BaseTestFBField {
 		return new TestSuite(TestFBDateField.class);
 	}
 	protected void setUp() throws SQLException{
-		XSQLVAR stringField = new XSQLVAR();
-		Object[] row = new Object[1];
+        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_TYPE_DATE;
+        Object[] row = new Object[1];
+        java.util.ArrayList rows = new java.util.ArrayList();
+        rows.add(row);		  
+        FBResultSet rs = new FBResultSet(xsqlvars,rows);
+		  rs.next();
 //		stringField.sqldata = TEST_DATE;
 //		stringField.sqlind = 0;
-		stringField.sqltype = GDS.SQL_TYPE_DATE;
 
-		field = FBField.createField(stringField, row, 0);
+		field = FBField.createField(xsqlvars[0], rs, 0, false);
 	}
 	protected void tearDown() {
 	}
