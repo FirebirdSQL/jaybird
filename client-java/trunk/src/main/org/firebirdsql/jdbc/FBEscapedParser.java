@@ -34,7 +34,7 @@ public class FBEscapedParser {
     public static final int USE_STANDARD_UDF = 1;
     
     /*
-     * Currently we have three states, normal when we simply copy charactes
+     * Currently we have three states, normal when we simply copy characters
      * from source to destination, escape state, when we extract the escaped
      * syntax and  literal, when we do copy characters from  source to
      * destination but we cannot enter the escape state.

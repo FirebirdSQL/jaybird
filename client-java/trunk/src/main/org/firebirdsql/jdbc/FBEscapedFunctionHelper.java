@@ -304,8 +304,13 @@ public class FBEscapedFunctionHelper {
      * Mathematical functions
      */
     
-    /*
-     * {fn abs(number)}
+    /**
+     * Produce a function call for the <code>abs</code> UDF function. 
+     * The syntax of the <code>abs</code> function is 
+     * <code>{fn abs(number)}</code>.
+     * 
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String abs(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -315,8 +320,13 @@ public class FBEscapedFunctionHelper {
         return "abs(" + params[0] + ")";
     }
     
-    /*
-     * {fn acos(float)}
+    /**
+     * Produce a function call for the <code>acos</code> UDF function. 
+     * The syntax of the <code>acos</code> function is 
+     * <code>{fn acos(float)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String acos(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -326,8 +336,13 @@ public class FBEscapedFunctionHelper {
         return "acos(" + params[0] + ")";
     }
     
-    /*
-     * {fn asin(float)}
+    /**
+     * Produce a function call for the <code>asin</code> UDF function. 
+     * The syntax of the <code>asin</code> function is 
+     * <code>{fn asin(float)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String asin(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -337,8 +352,13 @@ public class FBEscapedFunctionHelper {
         return "asin(" + params[0] + ")";
     }
     
-    /*
-     * {fn atan(float)}
+    /**
+     * Produce a function call for the <code>atan</code> UDF function. 
+     * The syntax of the <code>atan</code> function is 
+     * <code>{fn atan(float)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String atan(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -348,8 +368,13 @@ public class FBEscapedFunctionHelper {
         return "atan(" + params[0] + ")";
     }
     
-    /*
-     * {fn atan2(float1, float2)}
+    /**
+     * Produce a function call for the <code>atan2</code> UDF function. 
+     * The syntax of the <code>atan2</code> function is 
+     * <code>{fn atan2(float1, float2)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String atan2(String[] params) throws FBSQLParseException {
         if (params.length != 2)
@@ -359,8 +384,13 @@ public class FBEscapedFunctionHelper {
         return "atan2(" + params[0] + ", " + params[1] + ")";
     }
     
-    /*
-     * {fn ceiling(number)}
+    /**
+     * Produce a function call for the <code>ceiling</code> UDF function. 
+     * The syntax of the <code>ceiling</code> function is 
+     * <code>{fn ceiling(number)}</code>.
+     *  
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String ceiling(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -370,8 +400,13 @@ public class FBEscapedFunctionHelper {
         return "ceiling(" + params[0] + ")";
     }
 
-    /*
-     * {fn cos(float)}
+    /**
+     * Produce a function call for the <code>cos</code> UDF function. 
+     * The syntax of the <code>cos</code> function is 
+     * <code>{fn cos(float)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String cos(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -381,8 +416,13 @@ public class FBEscapedFunctionHelper {
         return "cos(" + params[0] + ")";
     }
 
-    /*
-     * {fn cot(float)}
+    /**
+     * Produce a function call for the <code>cot</code> UDF function. 
+     * The syntax of the <code>cot</code> function is 
+     * <code>{fn cot(float)}</code>.
+     * 
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String cot(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -392,8 +432,13 @@ public class FBEscapedFunctionHelper {
         return "cot(" + params[0] + ")";
     }
     
-    /*
-     * {fn floor(number)}
+    /**
+     * Produce a function call for the <code>floor</code> UDF function. 
+     * The syntax of the <code>floor</code> function is 
+     * <code>{fn floor(number)}</code>.
+     * 
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String floor(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -403,8 +448,13 @@ public class FBEscapedFunctionHelper {
         return "floor(" + params[0] + ")";
     }
 
-    /*
-     * {fn log(number)}
+    /**
+     * Produce a function call for the <code>log</code> UDF function. 
+     * The syntax of the <code>log</code> function is 
+     * <code>{fn log(number)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String log(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -414,8 +464,13 @@ public class FBEscapedFunctionHelper {
         return "ln(" + params[0] + ")";
     }
     
-    /*
-     * {fn log10(number)}
+    /**
+     * Produce a function call for the <code>log10</code> UDF function. 
+     * The syntax of the <code>log10</code> function is 
+     * <code>{fn log10(number)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String log10(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -425,8 +480,13 @@ public class FBEscapedFunctionHelper {
         return "log10(" + params[0] + ")";
     }
     
-    /*
-     * {fn mod(integer1, integer2)}
+    /**
+     * Produce a function call for the <code>mod</code> UDF function. 
+     * The syntax of the <code>mod</code> function is 
+     * <code>{fn mod(integer1, integer2)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String mod(String[] params) throws FBSQLParseException {
         if (params.length != 2)
@@ -436,8 +496,12 @@ public class FBEscapedFunctionHelper {
         return "mod(" + params[0] + ", " + params[1] + ")";
     }
     
-    /*
-     * {fn pi()}
+    /**
+     * Produce a function call for the <code>pi</code> UDF function. 
+     * The syntax of the <code>pi</code> function is <code>{fn pi()}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String pi(String[] params) throws FBSQLParseException {
         if (params.length != 0)
@@ -447,8 +511,13 @@ public class FBEscapedFunctionHelper {
         return "pi()";
     }
     
-    /*
-     * {fn rand()}
+    /**
+     * Produce a function call for the <code>rand</code> UDF function. 
+     * The syntax for the <code>rand</code> function is 
+     * <code>{fn rand()}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String rand(String[] params) throws FBSQLParseException {
         if (params.length != 0)
@@ -458,8 +527,13 @@ public class FBEscapedFunctionHelper {
         return "rand()";
     }
     
-    /*
-     * {fn sign(number)}
+    /**
+     * Produce a function call for the <code>sign</code> UDF function. 
+     * The syntax for the <code>sign</code> function is 
+     * <code>{fn sign(number)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String sign(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -469,8 +543,13 @@ public class FBEscapedFunctionHelper {
         return "sign(" + params[0] + ")";
     }
     
-    /*
-     * {fn sin(float)}
+    /**
+     * Produce a function call for the <code>sin</code> UDF function.
+     * The syntax for the <code>sin</code> function is 
+     * <code>{fn sin(float)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String sin(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -480,8 +559,13 @@ public class FBEscapedFunctionHelper {
         return "sin(" + params[0] + ")";
     }
     
-    /*
-     * {fn sqrt(number)}
+    /**
+     * Produce a function call for the <code>sqrt</code> UDF function.
+     * The syntax for the <code>sqrt</code> function is
+     * <code>{fn sqrt(number)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String sqrt(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -491,8 +575,13 @@ public class FBEscapedFunctionHelper {
         return "sqrt(" + params[0] + ")";
     }
     
-    /*
-     * {fn tan(float)}
+    /**
+     * Produce a function call for the <code>tan</tan> UDF function.
+     * The syntax for the <code>tan</code> function is
+     * <code>{fn tan(float)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String tan(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -508,8 +597,13 @@ public class FBEscapedFunctionHelper {
      */
     
     
-    /*
-     * {fn ascii(string)}
+    /**
+     * Produce a function call for the <code>ascii</code> UDF function.
+     * The syntax of the <code>ascii</code> function is
+     * <code>{fn ascii(string)}</code>
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String ascii(String[] params) throws FBSQLParseException {
         if (params.length != 1 )
@@ -523,8 +617,13 @@ public class FBEscapedFunctionHelper {
         return "ascii_val(" + params[0].charAt(0) + ")";
     }
     
-    /*
-     * {fn char(integer)}
+    /**
+     * Produce a function call for the <code>char</code> UDF function.
+     * The syntax of the <code>char</code> function is
+     * <code>{fn char(integer)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String _char(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -534,8 +633,13 @@ public class FBEscapedFunctionHelper {
         return "char(" + params[0] + ")";
     }
 
-    /*
-     * {fn lcase(string)}
+    /**
+     * Produce a function call for the <code>lcase</code> UDF function.
+     * The syntax of the <code>lcase</code> function is
+     * <code>{fn lcase(string)}</code>
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String lcase(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -545,8 +649,13 @@ public class FBEscapedFunctionHelper {
         return "lower(" + params[0] + ")";
     }
 
-    /*
-     * {fn length(string)}
+    /**
+     * Produce a function call for the <code>length</code> UDF function.
+     * The syntax of the <code>length</code> function is
+     * <code>{fn length(string)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String length(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -556,8 +665,13 @@ public class FBEscapedFunctionHelper {
         return "strlen(" + params[0] + ")";
     }
     
-    /*
-     * {fn ltrim(string)}
+    /**
+     * Produce a function call for the <code>ltrim</code> UDF function.
+     * The syntax of the <code>ltrim</code> function is
+     * <code>{fn ltrim(string)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String ltrim(String[] params) throws FBSQLParseException {
         if (params.length != 1)
@@ -567,8 +681,13 @@ public class FBEscapedFunctionHelper {
         return "ltrim(" + params[0] + ")";
     }
     
-    /*
-     * {fn rtrim(string)}
+    /**
+     * Produce a function call for the <code>rtrim</code> UDF function.
+     * The syntax of the <code>rtrim</code> function is
+     * <code>{fn rtrim(string)}</code>.
+     *
+     * @param params The parameters to be used in the call
+     * @throws FBSQLParseException if there is an error with the parameters
      */
     public static String rtrim(String[] params) throws FBSQLParseException {
         if (params.length != 1)

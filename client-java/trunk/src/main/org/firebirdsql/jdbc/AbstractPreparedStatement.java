@@ -167,6 +167,19 @@ public abstract class AbstractPreparedStatement extends FBStatement
         isParamSet[parameterIndex - 1] = true;
     }
 
+    /**
+     * Sets the designated parameter to the given input stream, which will have
+     * the specified number of bytes.
+     * 
+     * <P><B>Note:</B> This stream object can either be a standard
+     * Java stream object or your own subclass that implements the
+     * standard interface.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param inputStream the Java input stream 
+     * @param length the number of bytes in the stream
+     * @exception SQLException if a database access error occurs
+     */
     public void setBinaryStream(int parameterIndex, InputStream inputStream,
         int length) throws SQLException
     {
@@ -174,61 +187,148 @@ public abstract class AbstractPreparedStatement extends FBStatement
         isParamSet[parameterIndex - 1] = true;
     }
 	 
+    /**
+     * Set the designated parameter to the given byte array.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x The byte array to be set
+     * @throws SQLException if a database access occurs
+     */
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
         getField(parameterIndex).setBytes(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
+    /**
+     * Sets the designated parameter to the given boolean value.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x The boolean value to be set
+     * @throws SQLException if a database access occurs
+     */
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
         getField(parameterIndex).setBoolean(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
+    /**
+     * Sets the designated parameter to the given byte value.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x The byte value to be set
+     * @throws SQLException if a database access occurs
+     */
     public void setByte(int parameterIndex, byte x) throws SQLException {
         getField(parameterIndex).setByte(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
+    /**
+     * Sets the designated parameter to the given date value.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x The date value to be set
+     * @throws SQLException if a database access occurs
+     */
     public void setDate(int parameterIndex, Date x) throws SQLException {
         getField(parameterIndex).setDate(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
+    /**
+     * Sets the designated parameter to the given double value.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x The double value to be set
+     * @throws SQLException if a database access occurs
+     */
     public void setDouble(int parameterIndex, double x) throws SQLException {
         getField(parameterIndex).setDouble(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
+    /**
+     * Sets the designated parameter to the given floate value.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x The float value to be set
+     * @throws SQLException if a database access occurs
+     */
     public void setFloat(int parameterIndex, float x) throws SQLException {
         getField(parameterIndex).setFloat(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
+    /**
+     * Sets the designated parameter to the given int value.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x The int value to be set
+     * @throws SQLException if a database access occurs
+     */
     public void setInt(int parameterIndex, int x) throws SQLException {
         getField(parameterIndex).setInteger(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
+    /**
+     * Sets the designated parameter to the given long value.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x The long value to be set
+     * @throws SQLException if a database access occurs
+     */
     public void setLong(int parameterIndex, long x) throws SQLException {
         getField(parameterIndex).setLong(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
+    /**
+     * Sets the value of the designated parameter with the given object.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x the object containing the parameter value
+     * @throws SQLException if a database access error occurs
+     */
     public void setObject(int parameterIndex, Object x) throws SQLException {
         getField(parameterIndex).setObject(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
+    /**
+     * Sets the designated parameter to the given short value.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x The short value to be set
+     * @throws SQLException if a database access occurs
+     */
     public void setShort(int parameterIndex, short x) throws SQLException {
         getField(parameterIndex).setShort(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
+    /**
+     * Sets the designated parameter to the given String value.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x The String value to be set
+     * @throws SQLException if a database access occurs
+     */
     public void setString(int parameterIndex, String x) throws SQLException {
         getField(parameterIndex).setString(x);
         isParamSet[parameterIndex - 1] = true;
     }
     
+    /**
+     * Sets the designated parameter to the given String value. This is a
+     * workaround for the ambiguous "operation was cancelled" response from 
+     * the server for when an oversized string is set for a limited-size field.
+     * This method sets the string parameter without checking size constraints.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x The String value to be set
+     * @throws SQLException if a database access occurs
+     */
     public void setStringForced(int parameterIndex, String x) throws SQLException {
         FBField field = getField(parameterIndex);
         if (field instanceof FBWorkaroundStringField)
@@ -238,16 +338,37 @@ public abstract class AbstractPreparedStatement extends FBStatement
         isParamSet[parameterIndex - 1] = true;
     }
 
+    /**
+     * Sets the designated parameter to the given Time value.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x The Time value to be set
+     * @throws SQLException if a database access occurs
+     */
     public void setTime(int parameterIndex, Time x) throws SQLException {
         getField(parameterIndex).setTime(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
+     /**
+     * Sets the designated parameter to the given Timestamp value.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x The Timestamp value to be set
+     * @throws SQLException if a database access occurs
+     */
     public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
         getField(parameterIndex).setTimestamp(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
+    /**
+     * Sets the designated parameter to the given BigDecimal
+     *
+     * @param parameterIndex The first parameter is 1, second is 2, ...
+     * @param x The BigDecimal to be set as a parameter
+     * @throws SQLException if a database access error occurs
+     */
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws  SQLException {
         getField(parameterIndex).setBigDecimal(x);
         isParamSet[parameterIndex - 1] = true;
