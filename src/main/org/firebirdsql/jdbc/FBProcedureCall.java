@@ -113,12 +113,37 @@ public class FBProcedureCall {
      * 
      * @param index index to map.
      * 
-     * @return mapped column number or <code>-1</code> if no output parameter
-     * with the specified index found.
+     * @return mapped column number or <code>index</code> if no output parameter
+     * with the specified index found (assuming that {@link #OLD_CALLABLE_STATEMENT_COMPATIBILITY}
+     * constant is set to <code>true</code>, otherwise throws exception).
+     * 
+     * @throws FBSQLException if compatibility mode is switched off and no
+     * parameter was found (see {@link #OLD_CALLABLE_STATEMENT_COMPATIBILITY} 
+     * constant).
      */
     public int mapOutParamIndexToPosition(int index) throws FBSQLException {
-    	int position = -1;
+        return mapOutParamIndexToPosition(index, OLD_CALLABLE_STATEMENT_COMPATIBILITY);
+    }
         
+    /**
+     * Map output parameter index to a column number of corresponding result 
+     * set.
+     * 
+     * @param index index to map.
+     * @param compatibilityMode <code>true</code> if we should run in old
+     * compatibility mode.
+     * 
+     * @return mapped column number or <code>index</code> if no output parameter
+     * with the specified index found and <code>compatibilityMode</code> is set.
+     * 
+     * @throws FBSQLException if compatibility mode is switched off and no
+     * parameter was found.
+     */
+    public int mapOutParamIndexToPosition(int index, boolean compatibilityMode)
+        throws FBSQLException {
+        
+    	int position = -1;
+
         Iterator iter = outputParams.iterator();
         while(iter.hasNext()) {
         	FBProcedureParam param = (FBProcedureParam)iter.next();
@@ -135,14 +160,11 @@ public class FBProcedureCall {
         // an index that was asked if we run in compatibilty mode
         // 
         // we should switch it off as soon as people convert applications
-        if (position == -1 && OLD_CALLABLE_STATEMENT_COMPATIBILITY)
+        if (compatibilityMode)
             return index;
         else 
-        if (position == -1)
             throw new FBSQLException("Specified parameter does not exist.", 
                     FBSQLException.SQL_STATE_INVALID_COLUMN);
-        else
-        	return position;
     }
     
 

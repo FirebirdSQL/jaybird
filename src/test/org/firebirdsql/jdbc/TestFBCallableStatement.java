@@ -443,6 +443,20 @@ public class TestFBCallableStatement extends FBTestBase {
         }
         
     }
+
+    public void testOutProcedure1() throws Exception {
+        CallableStatement stmt = 
+            connection.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_1);
+        try {
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, 1);
+            stmt.execute();
+            assertTrue("Should return correct value", stmt.getInt(1) == 1);
+        } finally {
+            stmt.close();
+        }
+        
+    }
     
     public void testOutProcedureWithConst() throws Exception {
         CallableStatement stmt = 
