@@ -405,7 +405,9 @@ public class TestFBDatabaseMetaData extends TestXABase {
 		short radix = rs.getShort(11);
 		short nullable = rs.getShort(12);
 		String remarks = rs.getString(13);
-		log.info ("row " + (new Integer(rownum)).toString() + "proc " + procname + " field " + colname);
+        if (log != null)
+		  log.info ("row " + (new Integer(rownum)).toString() + 
+            "proc " + procname + " field " + colname);
 
 		// per JDBC 2.0 spec, there is a very specific order these
 		// rows should come back, so if field names don't match

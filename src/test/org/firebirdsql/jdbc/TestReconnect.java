@@ -73,8 +73,10 @@ public class TestReconnect extends BaseFBTest
             stmt2.close();
         }
         catch (SQLException e) {
-            log.info("Error executing:");
-            log.info(sql);
+            if (log != null) {
+                log.info("Error executing:");
+                log.info(sql);
+            }
             if (stmt != null) {
                 try {
                     stmt.close();
@@ -95,15 +97,19 @@ public class TestReconnect extends BaseFBTest
             catch (SQLException e) {
                 // Workaround for the well-known "object in use" error
                 // (see release notes of Firebird 1.5)
-                log.info(e);
-                log.info("Retrying after reconnecting ...");
+                if (log != null) {
+                    log.info(e);
+                    log.info("Retrying after reconnecting ...");
+                }
                 boolean oldAutoCommit = con.getAutoCommit();
                 con.close();
                 openConnection();
                 if (con.getAutoCommit() != oldAutoCommit)
                     con.setAutoCommit(oldAutoCommit);
-                log.info("reexecuting sql-statement on new connection:");
-                log.info(sql);
+                if (log != null) {
+                    log.info("reexecuting sql-statement on new connection:");
+                    log.info(sql);
+                }
                 execute(sql);
                 // Here the program hangs (see socketRead), and
                 // pressing ctrl-break I get the following output:
@@ -166,7 +172,8 @@ public class TestReconnect extends BaseFBTest
 
     private void dropTestTables() throws SQLException
     {
-        log.info("Dropping test tables ...");
+        if (log != null)
+            log.info("Dropping test tables ...");
         if (!con.getAutoCommit())
             con.setAutoCommit(true);
         for (int i = TABLE_COUNT; i > 0; i--) {
@@ -178,7 +185,8 @@ public class TestReconnect extends BaseFBTest
 
     private void createTestTables() throws SQLException
     {
-        log.info("Creating test tables ...");
+        if (log != null)
+            log.info("Creating test tables ...");
         if (!con.getAutoCommit())
             con.setAutoCommit(true);
 
@@ -223,7 +231,8 @@ public class TestReconnect extends BaseFBTest
 
     private void alterForeignKeys(boolean cascade) throws SQLException
     {
-        log.info("Altering foreign keys ...");
+        if (log != null)
+            log.info("Altering foreign keys ...");
         if (!con.getAutoCommit())
             con.setAutoCommit(true);
         // add FOREIGN KEY's
@@ -256,7 +265,8 @@ public class TestReconnect extends BaseFBTest
     {
         if (con.getAutoCommit())
             con.setAutoCommit(false);
-        log.info("Populating test tables ...");
+        if (log != null)
+            log.info("Populating test tables ...");
         Random random = new Random();
         for (int i = 1; i <= TABLE_COUNT; i++) {
             StringBuffer sql = new StringBuffer(100);
@@ -293,16 +303,20 @@ public class TestReconnect extends BaseFBTest
         ResultSetMetaData md = rs.getMetaData();
         int cols = md.getColumnCount();
         if (print) {
-            log.info(title);
-            log.info("-------------------------------------------------------------------------------");
+            if (log != null) {
+                log.info(title);
+                log.info("-------------------------------------------------------------------------------");
+            }
             StringBuffer sb = new StringBuffer();
             for (int i = 1; i <= cols; i++) {
                 if (i > 1)
                     sb.append('\t');
                 sb.append(md.getColumnLabel(i));
             }
-            log.info(sb.toString());
-            log.info("-------------------------------------------------------------------------------");
+            if (log != null) {
+                log.info(sb.toString());
+                log.info("-------------------------------------------------------------------------------");
+            }
         }
         while (rs.next()) {
             StringBuffer sb = new StringBuffer();
@@ -314,14 +328,16 @@ public class TestReconnect extends BaseFBTest
                 sb.append(value);
                         
             }
-            log.info(sb);
+            if (log != null)
+                log.info(sb);
         }
         rs.close();
     }
 
     private void readMetaData() throws SQLException
     {
-        log.info("Reading meta data ...");
+        if (log != null)
+            log.info("Reading meta data ...");
         DatabaseMetaData md = con.getMetaData();
         for (int i = 1; i <= TABLE_COUNT; i++) {
             String tableName = getTableName(i);
