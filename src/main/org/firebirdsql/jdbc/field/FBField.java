@@ -168,12 +168,22 @@ public abstract class FBField {
     static Throwable createException(String message) {
         return new TypeConvertionException(message);
     }
-
+    
     /**
      * @return <code>true</code> if the corresponding <code>field</code>
      * is <code>null</code>, otherwise <code>false</code>.
      */
-    public boolean isNull() {
+    public boolean isNull() throws SQLException {
+        if (rs == null)
+            throw new FBDriverConsistencyCheckException(
+                "Result set is null. " +
+                "Please report this bug to driver development team.");
+                
+        if (rs.row == null)
+            throw new FBDriverConsistencyCheckException(
+                "Current row is null. " +
+                "Please report this bug to driver development team.");
+        
         return (rs.row[numCol] == null);
     }
 
