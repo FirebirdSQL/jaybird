@@ -1493,9 +1493,10 @@ public final class GDS_Impl implements GDS {
     }
 
     public void connect(isc_db_handle_impl db,
-                            String host, Integer port, String filename) throws GDSException {
+                        String host, Integer port, String filename, Clumplet dpb) 
+			throws GDSException {
         DbAttachInfo dbai = new DbAttachInfo(host, port, filename);
-        connect(db, dbai, null);
+        connect(db, dbai, dpb);
     }
 
     private void connect(isc_db_handle_impl db,
@@ -1603,7 +1604,7 @@ public final class GDS_Impl implements GDS {
         }
     }
 
-    private void disconnect(isc_db_handle_impl db) throws IOException {
+    public void disconnect(isc_db_handle_impl db) throws IOException {
         if (log!=null) log.debug("About to invalidate db handle");
         db.invalidate();
         if (log!=null) log.debug("successfully invalidated db handle");
@@ -1628,7 +1629,7 @@ public final class GDS_Impl implements GDS {
         }
     }
 	 
-    private void receiveResponse(isc_db_handle_impl db, int op) throws GDSException {
+    public void receiveResponse(isc_db_handle_impl db, int op) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
         // when used directly
         try {

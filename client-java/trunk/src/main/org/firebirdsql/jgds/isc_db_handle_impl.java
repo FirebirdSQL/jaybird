@@ -50,8 +50,8 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
     private boolean invalid;
 
     Socket socket;
-    XdrOutputStream out;
-    XdrInputStream in;
+    public XdrOutputStream out;
+    public XdrInputStream in;
     private int resp_object;
     private long resp_blob_id;
     private byte[] resp_data;
@@ -86,7 +86,7 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
     // Vector rdb_sql_requests = new Vector();
     
 
-    void setRdb_id(int rdb_id) {
+    public void setRdb_id(int rdb_id) {
         checkValidity();
         this.rdb_id = rdb_id;
     }
