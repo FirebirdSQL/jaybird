@@ -50,8 +50,8 @@ public final class XdrOutputStream {
 
     private static Logger log = LoggerFactory.getLogger(XdrOutputStream.class,false);
     private static byte[] textPad = new byte[32767];
-    private static byte[] zero = XSQLVAR.encodeInt(0);
-    private static byte[] minusOne = XSQLVAR.encodeInt(-1);
+    private static byte[] zero = new XSQLVAR().encodeInt(0);   // todo
+    private static byte[] minusOne = new XSQLVAR().encodeInt(-1);
 
     private byte[] buf = new byte[32767];
     private int count;

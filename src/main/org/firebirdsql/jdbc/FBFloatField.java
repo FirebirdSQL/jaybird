@@ -42,7 +42,7 @@ class FBFloatField extends FBField {
     byte getByte() throws SQLException {
         if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
 
-        Float value = new Float(XSQLVAR.decodeFloat(rs.row[numCol]));
+        Float value = new Float(field.decodeFloat(rs.row[numCol]));
 
         // check if value is withing bounds
         if (value.floatValue() > MAX_BYTE_VALUE ||
@@ -55,7 +55,7 @@ class FBFloatField extends FBField {
     short getShort() throws SQLException {
         if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
 
-        Float value = new Float(XSQLVAR.decodeFloat(rs.row[numCol]));
+        Float value = new Float(field.decodeFloat(rs.row[numCol]));
 
         // check if value is withing bounds
         if (value.floatValue() > MAX_SHORT_VALUE ||
@@ -68,7 +68,7 @@ class FBFloatField extends FBField {
     int getInt() throws SQLException {
         if (rs.row[numCol]==null) return INT_NULL_VALUE;
 
-        Float value = new Float(XSQLVAR.decodeFloat(rs.row[numCol]));
+        Float value = new Float(field.decodeFloat(rs.row[numCol]));
 
         // check if value is withing bounds
         if (value.floatValue() > MAX_INT_VALUE ||
@@ -81,7 +81,7 @@ class FBFloatField extends FBField {
     long getLong() throws SQLException {
         if (rs.row[numCol]==null) return LONG_NULL_VALUE;
 
-        Float value = new Float(XSQLVAR.decodeFloat(rs.row[numCol]));
+        Float value = new Float(field.decodeFloat(rs.row[numCol]));
 
         // check if value is withing bounds
         if (value.floatValue() > MAX_LONG_VALUE ||
@@ -94,32 +94,32 @@ class FBFloatField extends FBField {
     float getFloat() throws SQLException {
         if (rs.row[numCol]==null) return FLOAT_NULL_VALUE;
 
-        return XSQLVAR.decodeFloat(rs.row[numCol]);
+        return field.decodeFloat(rs.row[numCol]);
     }
     double getDouble() throws SQLException {
         if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
-        return XSQLVAR.decodeFloat(rs.row[numCol]);
+        return field.decodeFloat(rs.row[numCol]);
     }
     BigDecimal getBigDecimal() throws SQLException {
         if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
-        return new BigDecimal(XSQLVAR.decodeFloat(rs.row[numCol]));
+        return new BigDecimal(field.decodeFloat(rs.row[numCol]));
     }
     Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return new Float(XSQLVAR.decodeFloat(rs.row[numCol]));
+        return new Float(field.decodeFloat(rs.row[numCol]));
     }
     boolean getBoolean() throws SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
-        return XSQLVAR.decodeFloat(rs.row[numCol]) == 1;
+        return field.decodeFloat(rs.row[numCol]) == 1;
     }
     String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return String.valueOf(XSQLVAR.decodeFloat(rs.row[numCol]));
+        return String.valueOf(field.decodeFloat(rs.row[numCol]));
     }
 
     //--- setXXX methods
@@ -144,7 +144,7 @@ class FBFloatField extends FBField {
         setFloat(value ? 1.0f : 0.0f);
     }
     void setFloat(float value) throws SQLException {
-        field.sqldata = XSQLVAR.encodeFloat(value);
+        field.sqldata = field.encodeFloat(value);
     }
     void setDouble(double value) throws SQLException {
         // check if value is within bounds

@@ -853,7 +853,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         {
             isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
             blob.setBlob_id(blob_id);
-            Clumplet c = GDSFactory.newClumplet(
+            Clumplet c = mcf.gds.newClumplet(
                 ISCConstants.isc_bpb_type, 
                 segmented ? ISCConstants.isc_bpb_type_segmented : ISCConstants.isc_bpb_type_stream);
             mcf.gds.isc_open_blob2(currentDbHandle, currentTr, blob, c);
@@ -872,7 +872,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         {
             isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
 
-            Clumplet c = GDSFactory.newClumplet(
+            Clumplet c = mcf.gds.newClumplet(
                 ISCConstants.isc_bpb_type, 
                 segmented ? ISCConstants.isc_bpb_type_segmented : ISCConstants.isc_bpb_type_stream);
 

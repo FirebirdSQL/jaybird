@@ -15,7 +15,7 @@ class FBStatementFetcher implements FBFetcher {
     private FBStatement fbStatement;
     private FBResultSet rs;
 
-    private isc_stmt_handle_impl stmt;
+    private isc_stmt_handle stmt;
           
     private Object[] rowsArray;
     private int size;
@@ -36,7 +36,7 @@ class FBStatementFetcher implements FBFetcher {
     {
         this.c = c;
         this.fbStatement = fbStatement;
-        this.stmt = (isc_stmt_handle_impl) stmth;
+        this.stmt = stmth;
         this.rs = rs;
             
         c.registerStatement(fbStatement);

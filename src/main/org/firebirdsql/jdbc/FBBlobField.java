@@ -43,6 +43,10 @@ public class FBBlobField extends FBField implements FBFlushableField {
     
     private FBBlob blob;
 
+	// Rather then hold cached data in the XSQLDAVar we will hold it in here.
+	int length;
+	byte[] data;
+
     FBBlobField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
         super(field, rs, numCol);
     }
@@ -70,7 +74,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 
-        Long blobId = new Long(XSQLVAR.decodeLong(rs.row[numCol]));
+        Long blobId = new Long(field.decodeLong(rs.row[numCol]));
 
         blob = new FBBlob(c, blobId.longValue());
         
@@ -212,8 +216,8 @@ public class FBBlobField extends FBField implements FBFlushableField {
                 throw new SQLException("read/write blob problem: " + ioe);
             }
             
-            field.sqldata = bout.toByteArray();
-            field.sqllen = ((byte[])field.sqldata).length;
+            this.data = bout.toByteArray();
+            this.length = ((byte[])this.data).length;
             isCachedData = true;
         }
     }
@@ -244,8 +248,8 @@ public class FBBlobField extends FBField implements FBFlushableField {
                 throw new SQLException("read/write blob problem: " + ioe);
             }
             
-            field.sqldata = bout.toByteArray();
-            field.sqllen = ((byte[])field.sqldata).length;
+            this.data = bout.toByteArray();
+            this.length = ((byte[])this.data).length;
             isCachedData = true;
         }
     }
@@ -253,7 +257,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
     public void flushCachedData() throws SQLException {
         if (isCachedData){
             copyBinaryStream(
-                new ByteArrayInputStream((byte[])field.sqldata), field.sqllen);
+                new ByteArrayInputStream((byte[])this.data), this.length);
             isCachedData=false;
         }
     }
@@ -266,7 +270,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         
         FBBlob blob =  new FBBlob(c);
         blob.copyStream(in, length);
-        field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
+        field.sqldata = field.encodeLong(blob.getBlobId());
     }
 
     private void copyCharacterStream(Reader in, int length) throws SQLException {
@@ -277,7 +281,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         
         FBBlob blob =  new FBBlob(c);
         blob.copyCharacterStream(in, length);
-        field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
+        field.sqldata = field.encodeLong(blob.getBlobId());
     }
     
     void setBytes(byte[] value) throws SQLException {
@@ -304,6 +308,6 @@ public class FBBlobField extends FBField implements FBFlushableField {
     }
 
     void setBlob(FBBlob blob) throws SQLException {
-        field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
+        field.sqldata = field.encodeLong(blob.getBlobId());
     }
 }

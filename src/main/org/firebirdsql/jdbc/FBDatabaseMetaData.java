@@ -430,7 +430,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * Martin Gruber (1993) Sybex.
      *
      */
-    private final static String fbSQLKeywords = 
+    private final static String fbSQLKeywords =
     //"ACTION," +
     "ACTIVE," +
     //"ADD," +
@@ -666,6 +666,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     //"WRITE," + 
     //"YEAR," + 
     "YEARDAY"; 
+
 
     /**
      * Gets a comma-separated list of all a database's SQL keywords
@@ -1162,7 +1163,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * Can a schema name be used in a data manipulation statement?
      *
      * @return <code>true</code> if so; <code>false</code> otherwise
-     * 
+     *
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsSchemasInDataManipulation() throws SQLException {
@@ -1951,7 +1952,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             if (remarks != null && remarks.length() > xsqlvars[6].sqllen)
                 xsqlvars[6].sqllen = remarks.length();
             short procedureType = rs.getShort("PROCEDURE_TYPE");
-            row[7] = (procedureType == 0) ? XSQLVAR.encodeShort((short)procedureNoResult) : XSQLVAR.encodeShort((short)procedureReturnsResult);
+            row[7] = (procedureType == 0) ? xsqlvars[0].encodeShort((short)procedureNoResult) : xsqlvars[0].encodeShort((short)procedureReturnsResult);
             rows.add(row);
         }
         return new FBResultSet(xsqlvars, rows);
@@ -2139,14 +2140,14 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[3] = getBytes(rs.getString("COLUMN_NAME").trim());
 
             short columnType = rs.getShort("COLUMN_TYPE");
-            row[4] = (columnType == 0) ? XSQLVAR.encodeShort((short)procedureColumnIn) : XSQLVAR.encodeShort((short)procedureColumnOut);
+            row[4] = (columnType == 0) ? xsqlvars[0].encodeShort((short)procedureColumnIn) : xsqlvars[0].encodeShort((short)procedureColumnOut);
 
             short fieldType = rs.getShort("FIELD_TYPE");
             short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
             short fieldScale = rs.getShort("FIELD_SCALE");
             int dataType = getDataType(fieldType, fieldSubType, fieldScale);
 
-            row[5] = XSQLVAR.encodeShort((short) dataType);
+            row[5] = xsqlvars[0].encodeShort((short) dataType);
 
             row[6] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
 
@@ -2154,18 +2155,18 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             if (dataType == Types.DECIMAL ||
                 dataType == Types.NUMERIC)
             {
-                row[7] = XSQLVAR.encodeInt(rs.getShort("FIELD_PRECISION"));
+                row[7] = xsqlvars[0].encodeInt(rs.getShort("FIELD_PRECISION"));
             } else {
-                row[7] = XSQLVAR.encodeInt(rs.getShort("FIELD_LENGTH"));
+                row[7] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
             }
 
-            row[8] = XSQLVAR.encodeInt(rs.getShort("FIELD_LENGTH"));
-            row[9] = XSQLVAR.encodeShort((short)(fieldScale * (-1)));
-            row[10] = XSQLVAR.encodeShort((short)10); // RADIX
+            row[8] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
+            row[9] = xsqlvars[0].encodeShort((short)(fieldScale * (-1)));
+            row[10] = xsqlvars[0].encodeShort((short)10); // RADIX
 
             short nullFlag = rs.getShort("NULL_FLAG");
-            row[11] = (nullFlag == 1) ? XSQLVAR.encodeShort((short)procedureNoNulls) :
-                                        XSQLVAR.encodeShort((short)procedureNullable);
+            row[11] = (nullFlag == 1) ? xsqlvars[0].encodeShort((short)procedureNoNulls) :
+                                        xsqlvars[0].encodeShort((short)procedureNullable);
 
             String remarks = rs.getString("REMARKS");
             row[12] = getBytes(remarks);
@@ -2640,60 +2641,60 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             short fieldScale = rs.getShort("FIELD_SCALE");
             int dataType = getDataType(fieldType, fieldSubType, fieldScale);
 
-            row[4] = XSQLVAR.encodeShort((short) dataType);
+            row[4] = xsqlvars[0].encodeShort((short) dataType);
             row[5] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
 
             switch (dataType){
                 case Types.DECIMAL:
                 case Types.NUMERIC:
-                   row[6] = XSQLVAR.encodeInt(rs.getShort("FIELD_PRECISION"));
-                   row[15] = XSQLVAR.encodeInt(0);
+                   row[6] = xsqlvars[0].encodeInt(rs.getShort("FIELD_PRECISION"));
+                   row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
-                   row[6] = XSQLVAR.encodeInt(rs.getShort("CHARACTER_LENGTH"));
-                   row[15] = XSQLVAR.encodeInt(rs.getShort("FIELD_LENGTH"));
+                   row[6] = xsqlvars[0].encodeInt(rs.getShort("CHARACTER_LENGTH"));
+                   row[15] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
                    break;
                 case Types.FLOAT:
-                   row[6] = XSQLVAR.encodeInt(7);
-                   row[15] = XSQLVAR.encodeInt(0);
+                   row[6] = xsqlvars[0].encodeInt(7);
+                   row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.DOUBLE:
-                   row[6] = XSQLVAR.encodeInt(15);
-                   row[15] = XSQLVAR.encodeInt(0);
+                   row[6] = xsqlvars[0].encodeInt(15);
+                   row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.INTEGER:
-                   row[6] = XSQLVAR.encodeInt(10);
-                   row[15] = XSQLVAR.encodeInt(0);
+                   row[6] = xsqlvars[0].encodeInt(10);
+                   row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.SMALLINT:
-                   row[6] = XSQLVAR.encodeInt(5);
-                   row[15] = XSQLVAR.encodeInt(0);
+                   row[6] = xsqlvars[0].encodeInt(5);
+                   row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.DATE:
-                   row[6] = XSQLVAR.encodeInt(10);
-                   row[15] = XSQLVAR.encodeInt(0);
+                   row[6] = xsqlvars[0].encodeInt(10);
+                   row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.TIME:
-                   row[6] = XSQLVAR.encodeInt(8);
-                   row[15] = XSQLVAR.encodeInt(0);
+                   row[6] = xsqlvars[0].encodeInt(8);
+                   row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.TIMESTAMP:
-                   row[6] = XSQLVAR.encodeInt(19);
-                   row[15] = XSQLVAR.encodeInt(0);
+                   row[6] = xsqlvars[0].encodeInt(19);
+                   row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 default:
-                   row[6] = XSQLVAR.encodeInt(0);
-                   row[15] = XSQLVAR.encodeInt(0);
+                   row[6] = xsqlvars[0].encodeInt(0);
+                   row[15] = xsqlvars[0].encodeInt(0);
                }
 
-            row[7] = XSQLVAR.encodeShort((short) 0);
-            row[8] = XSQLVAR.encodeInt(fieldScale * (-1));
-            row[9] = XSQLVAR.encodeInt(10);
+            row[7] = xsqlvars[0].encodeShort((short) 0);
+            row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
+            row[9] = xsqlvars[0].encodeInt(10);
 
             short nullFlag = rs.getShort("NULL_FLAG");
-            row[10] = (nullFlag == 1) ? XSQLVAR.encodeInt(columnNoNulls) :
-                                        XSQLVAR.encodeInt(columnNullable);
+            row[10] = (nullFlag == 1) ? xsqlvars[0].encodeInt(columnNoNulls) :
+                                        xsqlvars[0].encodeInt(columnNullable);
 
             row[11] = null;
             String column_def = rs.getString("DEFAULT_SOURCE");
@@ -2703,7 +2704,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             	row[12] = null;
             row[13] = null;
             row[14] = null;
-            row[16] = XSQLVAR.encodeInt(rs.getShort("FIELD_POSITION") + 1);
+            row[16] = xsqlvars[0].encodeInt(rs.getShort("FIELD_POSITION") + 1);
             row[17] = (nullFlag == 1) ? getBytes("NO") : getBytes("YES");
 
             rows.add(row);
@@ -3324,7 +3325,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         + "RDB$INDEX_SEGMENTS ISGMT "
         + "where ";
 
-    private static final String GET_PRIMARY_KEYS_END = 
+    private static final String GET_PRIMARY_KEYS_END =
         "RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME and "
         + "RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
         + "order by ISGMT.RDB$FIELD_NAME ";
@@ -3409,7 +3410,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[1] = null;
             row[2] = getBytes(rs.getString("TABLE_NAME").trim());
             row[3] = getBytes(rs.getString("COLUMN_NAME").trim());
-            row[4] = XSQLVAR.encodeShort(rs.getShort("KEY_SEQ"));
+            row[4] = xsqlvars[0].encodeShort(rs.getShort("KEY_SEQ"));
             row[5] = getBytes(rs.getString("PK_NAME"));
 
             rows.add(row);
@@ -3421,7 +3422,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private static final String GET_IMPORTED_KEYS_START = "select"
     +" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "
-    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
+    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME "
     +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
     +" ,null as FKTABLE_CAT "
     +" ,null as FKTABLE_SCHEM "
@@ -3441,7 +3442,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     +" ,RDB$INDEX_SEGMENTS ISF "
     +" WHERE ";
 
-    private static final String GET_IMPORTED_KEYS_END = 
+    private static final String GET_IMPORTED_KEYS_END =
     " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
@@ -3623,28 +3624,28 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[5] = null;
             row[6] = getBytes(rs.getString("FKTABLE_NAME").trim());
             row[7] = getBytes(rs.getString("FKCOLUMN_NAME").trim());
-            row[8] = XSQLVAR.encodeShort(rs.getShort("KEY_SEQ"));
+            row[8] = xsqlvars[0].encodeShort(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
             if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
-                row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyNoAction);
+                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNoAction);
             else if (updateRule.equals("CASCADE"))
-                row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyCascade);
+                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyCascade);
             else if (updateRule.equals("SET NULL"))
-                row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetNull);
+                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetNull);
             else if (updateRule.equals("SET DEFAULT"))
-                row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetDefault);
+                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetDefault);
             String deleteRule = rs.getString("DELETE_RULE");
             if (deleteRule.equals("NO ACTION") || deleteRule.equals("RESTRICT"))
-                row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyNoAction);
+                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNoAction);
             else if (deleteRule.equals("CASCADE"))
-                row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyCascade);
+                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyCascade);
             else if (deleteRule.equals("SET NULL"))
-                row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetNull);
+                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetNull);
             else if (deleteRule.equals("SET DEFAULT"))
-                row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetDefault);
+                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetDefault);
             row[11] = getBytes(rs.getString("FK_NAME"));
             row[12] = getBytes(rs.getString("PK_NAME"));
-            row[13] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyNotDeferrable);
+            row[13] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNotDeferrable);
             rows.add(row);
         }
         return new FBResultSet(xsqlvars, rows);
@@ -3654,7 +3655,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private static final String GET_EXPORTED_KEYS_START = "select"
     +" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "
-    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
+    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME "
     +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
     +" ,null as FKTABLE_CAT "
     +" ,null as FKTABLE_SCHEM "
@@ -3674,7 +3675,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     +" ,RDB$INDEX_SEGMENTS ISF "
     +" WHERE ";
 
-    private static final String GET_EXPORTED_KEYS_END = 
+    private static final String GET_EXPORTED_KEYS_END =
     " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
@@ -3857,28 +3858,29 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[5] = null;
             row[6] = getBytes(rs.getString("FKTABLE_NAME").trim());
             row[7] = getBytes(rs.getString("FKCOLUMN_NAME").trim());
-            row[8] = XSQLVAR.encodeShort(rs.getShort("KEY_SEQ"));
+            row[8] = xsqlvars[0].encodeShort(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
             if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
-                row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyNoAction);
+                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNoAction);
             else if (updateRule.equals("CASCADE"))
-                row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyCascade);
+                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyCascade);
             else if (updateRule.equals("SET NULL"))
-                row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetNull);
+                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetNull);
             else if (updateRule.equals("SET DEFAULT"))
-                row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetDefault);
+                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetDefault);
             String deleteRule = rs.getString("DELETE_RULE");
             if (deleteRule.equals("NO ACTION") || deleteRule.equals("RESTRICT"))
-                row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyNoAction);
+                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNoAction);
             else if (deleteRule.equals("CASCADE"))
-                row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyCascade);
+                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyCascade);
             else if (deleteRule.equals("SET NULL"))
-                row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetNull);
+                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetNull);
             else if (deleteRule.equals("SET DEFAULT"))
-                row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetDefault);
+                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetDefault);
+
             row[11] = getBytes(rs.getString("FK_NAME"));
             row[12] = getBytes(rs.getString("PK_NAME"));
-            row[13] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyNotDeferrable);
+            row[13] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNotDeferrable);
 
             rows.add(row);
         }
@@ -3890,7 +3892,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private static final String GET_CROSS_KEYS_START = "select"
     +" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "
-    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
+    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME "
     +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
     +" ,null as FKTABLE_CAT "
     +" ,null as FKTABLE_SCHEM "
@@ -4110,28 +4112,28 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[5] = null;
             row[6] = getBytes(rs.getString("PKTABLE_NAME").trim());
             row[7] = getBytes(rs.getString("PKCOLUMN_NAME").trim());
-            row[8] = XSQLVAR.encodeShort(rs.getShort("KEY_SEQ"));
+            row[8] = xsqlvars[0].encodeShort(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
             if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
-                row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyNoAction);
+                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNoAction);
             else if (updateRule.equals("CASCADE"))
-                row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyCascade);
+                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyCascade);
             else if (updateRule.equals("SET NULL"))
-                row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetNull);
+                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetNull);
             else if (updateRule.equals("SET DEFAULT"))
-                row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetDefault);
+                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetDefault);
             String deleteRule = rs.getString("DELETE_RULE");
             if (deleteRule.equals("NO ACTION") || deleteRule.equals("RESTRICT"))
-                row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyNoAction);
+                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNoAction);
             else if (deleteRule.equals("CASCADE"))
-                row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyCascade);
+                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyCascade);
             else if (deleteRule.equals("SET NULL"))
-                row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetNull);
+                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetNull);
             else if (deleteRule.equals("SET DEFAULT"))
-                row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetDefault);
+                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetDefault);
             row[11] = getBytes(rs.getString("FK_NAME"));
             row[12] = getBytes(rs.getString("PK_NAME"));
-            row[13] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyNotDeferrable);
+            row[13] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNotDeferrable);
 
             rows.add(row);
         }
@@ -4149,7 +4151,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private byte[] createShort(int value) throws SQLException {
         if (value > Short.MAX_VALUE)
             throw new SQLException("Cannot convert integer to short.");
-        return XSQLVAR.encodeShort((short)value);
+        return new XSQLVAR().encodeShort((short)value);
     }
 
     /**
@@ -4199,7 +4201,10 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getTypeInfo() throws SQLException {
-        byte[] shortZero = XSQLVAR.encodeShort((short)0);
+
+		final XSQLVAR anXSQLVAR = new XSQLVAR();
+
+        byte[] shortZero = anXSQLVAR.encodeShort((short)0);
         byte[] CASESENSITIVE = getBytes("T");
         byte[] CASEINSENSITIVE = getBytes("F");
         byte[] UNSIGNED = getBytes("T");
@@ -4207,11 +4212,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         byte[] FIXEDSCALE = getBytes("T");
         byte[] VARIABLESCALE = getBytes("F");
         byte[] NOTAUTOINC = getBytes("F");
-        byte[] BINARY = XSQLVAR.encodeInt(2);
-        byte[] PREDNONE = XSQLVAR.encodeShort((short) DatabaseMetaData.typePredNone);
-        byte[] PREDBASIC = XSQLVAR.encodeShort((short) DatabaseMetaData.typePredBasic);
-        byte[] SEARCHABLE = XSQLVAR.encodeShort((short) DatabaseMetaData.typeSearchable);
-        byte[] NULLABLE = XSQLVAR.encodeShort((short) DatabaseMetaData.typeNullable);
+        byte[] BINARY = anXSQLVAR.encodeInt(2);
+        byte[] PREDNONE = anXSQLVAR.encodeShort((short) DatabaseMetaData.typePredNone);
+        byte[] PREDBASIC = anXSQLVAR.encodeShort((short) DatabaseMetaData.typePredBasic);
+        byte[] SEARCHABLE = anXSQLVAR.encodeShort((short) DatabaseMetaData.typeSearchable);
+        byte[] NULLABLE = anXSQLVAR.encodeShort((short) DatabaseMetaData.typeNullable);
         //need to construct xsqlvar[] for ResultSetMetaData.
         XSQLVAR[] xsqlvars = new XSQLVAR[18];
 
@@ -4329,93 +4334,93 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         */
         //LONGVARBINARY=-4
         rows.add(new byte[][] {getBytes("BLOB SUB_TYPE 0"), createShort(Types.LONGVARBINARY)
-            , XSQLVAR.encodeInt(0), null, null, null,
+            , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
 
         //LONGVARCHAR=-1
         rows.add(new byte[][] {getBytes("BLOB SUB_TYPE 1"), createShort(Types.LONGVARCHAR)
-            , XSQLVAR.encodeInt(0), null, null, null,
+            , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
 
         //CHAR=1
         rows.add(new byte[][] {getBytes("CHAR"), createShort(Types.CHAR)
-            , XSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
+            , anXSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_TEXT), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TEXT), null, BINARY});
 
         //NUMERIC=2
         rows.add(new byte[][] {getBytes("NUMERIC"), createShort(Types.NUMERIC)
-            , XSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
+            , anXSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, createShort(18), XSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
+            NOTAUTOINC, null, shortZero, createShort(18), anXSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
 
         //DECIMAL=3
         rows.add(new byte[][] {getBytes("DECIMAL"), createShort(Types.DECIMAL)
-            , XSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
+            , anXSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, createShort(18), XSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
+            NOTAUTOINC, null, shortZero, createShort(18), anXSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
 
         //INTEGER=4
         rows.add(new byte[][] {getBytes("INTEGER"), createShort(Types.INTEGER)
-            , XSQLVAR.encodeInt(32), null, null, null,
+            , anXSQLVAR.encodeInt(32), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_LONG), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_LONG), null, BINARY});
 
         //SMALLINT=5
         rows.add(new byte[][] {getBytes("SMALLINT"), createShort(Types.SMALLINT)
-            , XSQLVAR.encodeInt(16), null, null, null,
+            , anXSQLVAR.encodeInt(16), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_SHORT), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_SHORT), null, BINARY});
 
         //FLOAT=6
         rows.add(new byte[][] {getBytes("FLOAT"), createShort(Types.FLOAT)
-            , XSQLVAR.encodeInt(7), null, null, null,
+            , anXSQLVAR.encodeInt(7), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
-            NOTAUTOINC, null, createShort(0), createShort(7), XSQLVAR.encodeInt(ISCConstants.SQL_FLOAT), null, BINARY});
+            NOTAUTOINC, null, createShort(0), createShort(7), anXSQLVAR.encodeInt(ISCConstants.SQL_FLOAT), null, BINARY});
 
         //DOUBLE=8
         rows.add(new byte[][] {getBytes("DOUBLE PRECISION"), createShort(Types.DOUBLE)
-            , XSQLVAR.encodeInt(15), null, null, null,
+            , anXSQLVAR.encodeInt(15), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
-            NOTAUTOINC, null, createShort(0), createShort(15), XSQLVAR.encodeInt(ISCConstants.SQL_DOUBLE), null, BINARY});
+            NOTAUTOINC, null, createShort(0), createShort(15), anXSQLVAR.encodeInt(ISCConstants.SQL_DOUBLE), null, BINARY});
 
         //VARCHAR=12
         rows.add(new byte[][] {getBytes("VARCHAR"), createShort(Types.VARCHAR)
-            , XSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
+            , anXSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_VARYING), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_VARYING), null, BINARY});
 
         //DATE=91
         rows.add(new byte[][] {getBytes("DATE"), createShort(Types.DATE)
-            , XSQLVAR.encodeInt(0), null, null, null,
+            , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_TYPE_DATE), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TYPE_DATE), null, BINARY});
 
         //TIME=92
         rows.add(new byte[][] {getBytes("TIME"), createShort(Types.TIME)
-            , XSQLVAR.encodeInt(0), null, null, null,
+            , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_TYPE_TIME), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TYPE_TIME), null, BINARY});
 
         //TIMESTAMP=93
         rows.add(new byte[][] {getBytes("TIMESTAMP"), createShort(Types.TIMESTAMP)
-            , XSQLVAR.encodeInt(0), null, null, null,
+            , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_TIMESTAMP), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TIMESTAMP), null, BINARY});
 
         //OTHER=1111
         rows.add(new byte[][] {getBytes("ARRAY"), createShort(Types.OTHER)
-            , XSQLVAR.encodeInt(0), null, null, null,
+            , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_ARRAY), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_ARRAY), null, BINARY});
 
         //BLOB=2004
         rows.add(new byte[][] {getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB)
-            , XSQLVAR.encodeInt(0), null, null, null,
+            , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
 
         return new FBResultSet(xsqlvars, rows);
 
@@ -4599,16 +4604,16 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                 row[3] = getBytes("F");
             row[4] = null;
             row[5] = getBytes(rs.getString("INDEX_NAME").trim());
-            row[6] = XSQLVAR.encodeShort((short) DatabaseMetaData.tableIndexOther);
-            row[7] = XSQLVAR.encodeShort(rs.getShort("ORDINAL_POSITION"));
+            row[6] = xsqlvars[0].encodeShort((short) DatabaseMetaData.tableIndexOther);
+            row[7] = xsqlvars[0].encodeShort(rs.getShort("ORDINAL_POSITION"));
             row[8] = getBytes(rs.getString("COLUMN_NAME").trim());
             int index_type = rs.getInt("ASC_OR_DESC");
             if (index_type == 1)
                 row[9] = getBytes("D");
             else
                 row[9] = getBytes("A");
-            row[10] = XSQLVAR.encodeInt(0);
-            row[11] = XSQLVAR.encodeInt(0);
+            row[10] = xsqlvars[0].encodeInt(0);
+            row[11] = xsqlvars[0].encodeInt(0);
             row[12] = null;
 
             rows.add(row);
@@ -4652,7 +4657,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean supportsResultSetConcurrency(int type, int concurrency) throws SQLException {
-        if (type==ResultSet.TYPE_FORWARD_ONLY 
+        if (type==ResultSet.TYPE_FORWARD_ONLY
         && concurrency == ResultSet.CONCUR_READ_ONLY)
             return true;
         else

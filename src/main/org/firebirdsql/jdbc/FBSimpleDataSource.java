@@ -53,12 +53,19 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
     protected String description;
     protected int loginTimeout;
     protected String tpbMapping;
-    
+
     /**
      * Create instance of this class.
      */
     public FBSimpleDataSource() {
-        mcf = new FBManagedConnectionFactory();
+        this(FBManagedConnectionFactory.Type.FOUR);
+    }
+
+    /**
+     * Create instance of this class.
+     */
+    public FBSimpleDataSource(FBManagedConnectionFactory.Type type) {
+        mcf = new FBManagedConnectionFactory(type);
     }
     
     /**

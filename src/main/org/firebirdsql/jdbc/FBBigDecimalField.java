@@ -140,15 +140,15 @@ public class FBBigDecimalField extends FBField {
         long longValue;
 
         if (fieldType==2)
-            longValue = XSQLVAR.decodeInt(rs.row[numCol]);
+            longValue = field.decodeInt(rs.row[numCol]);
 //            longValue = ((Integer)rs.row[numCol]).longValue();
         else
         if (fieldType==3)
-            longValue = XSQLVAR.decodeLong(rs.row[numCol]);
+            longValue = field.decodeLong(rs.row[numCol]);
 //            longValue = ((Long)rs.row[numCol]).longValue();
         else
         if (fieldType==1)
-            longValue = XSQLVAR.decodeShort(rs.row[numCol]);
+            longValue = field.decodeShort(rs.row[numCol]);
 //            longValue = ((Short)rs.row[numCol]).longValue();
         else
             throw (SQLException)createException(
@@ -207,7 +207,7 @@ public class FBBigDecimalField extends FBField {
                     throw (SQLException)createException(
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
-            field.sqldata = XSQLVAR.encodeShort(value.unscaledValue().shortValue());
+            field.sqldata = field.encodeShort(value.unscaledValue().shortValue());
 //            field.sqldata = new Short(value.unscaledValue().shortValue());
         } else
         if (fieldType == 2) {
@@ -218,7 +218,7 @@ public class FBBigDecimalField extends FBField {
                     throw (SQLException)createException(
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
-            field.sqldata = XSQLVAR.encodeInt(value.unscaledValue().intValue());
+            field.sqldata = field.encodeInt(value.unscaledValue().intValue());
 //            field.sqldata = new Integer(value.unscaledValue().intValue());
         } else
         if (fieldType == 3) {
@@ -229,7 +229,7 @@ public class FBBigDecimalField extends FBField {
                     throw (SQLException)createException(
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
             
-            field.sqldata = XSQLVAR.encodeLong(value.unscaledValue().longValue());
+            field.sqldata = field.encodeLong(value.unscaledValue().longValue());
 //            field.sqldata = new Long(value.unscaledValue().longValue());
         } else
             throw (SQLException)createException(
