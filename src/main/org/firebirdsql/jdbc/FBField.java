@@ -475,7 +475,7 @@ abstract class FBField {
         throws  SQLException
     {
         java.sql.Date d = getDate();
-        if (cal == null) 
+        if (cal == null || d == null) 
         {
             return d;
         } // end of if ()
@@ -493,7 +493,7 @@ abstract class FBField {
         throws  SQLException
     {
         java.sql.Time d = getTime();
-        if (cal == null) 
+        if (cal == null || d == null) 
         {
             return d;
         } // end of if ()
@@ -513,7 +513,7 @@ abstract class FBField {
         java.sql.Timestamp x = getTimestamp();
         //return d;
         
-        if (cal == null) 
+        if (cal == null || x == null) 
         {
             return x;
         } // end of if ()
