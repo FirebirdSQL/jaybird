@@ -12,7 +12,7 @@
 <h1 ALIGN=CENTER><font size="6" style="font-size: 20pt"><a name="top"></a>Frequently 
   Asked Questions</font></h1>
 <p ALIGN=CENTER><font size="4">JayBird JCA/JDBC Driver for Firebird</font></p>
-<P ALIGN=CENTER>- Last Updated 11/04/03 -<BR>
+<P ALIGN=CENTER>- Last Updated 01/13/04 -<BR>
 </P>
 <table width="90%" border="0" cellspacing="0" cellpadding="5">
   <tr>
@@ -67,8 +67,13 @@
       <p><a href="#40">40. Why are VARCHAR Strings sometimes padded?</a></p>
       <p><a href="#41">41. Can I use CachedRowSet with JayBird?</a></p>
       <p><a href="#dpb">42. How do I pass Database Parameter Buffer (DPB) parameters?</a></p>
-      <p><a href="#codeexamples">43. Can you give me some code examples?</a></p>
-</td>
+      <p><a href="#43">43.What is a good validation query to use with
+          JayBird?</a></p>
+      <p><a href="#44">44. How can I get the key of the record I just
+      inserted?</a></p>
+      <p><a href="#45">45. How do I set the default character set of a database?</a></p>
+      <p><a href="#46">46. Can you explain how character sets work?</a></p>
+      <p><a href="#codeexamples">47. Can you give me some code examples?</a></p></td>
     <td>&nbsp;</td>
   </tr>
 </table>
@@ -2529,18 +2534,22 @@ debug=&quot;0&quot; reloadable=&quot;true&quot; crossContext=&quot;true&quot;&gt
   to the database and use the standard SQL calls to create tables and populate 
   them. </p>
 <p>This is an example:</p>
-<p>String DB_SERVER_URL = &quot;localhost&quot;;<br>
+<p><font face="Courier New, Courier, mono">String
+      DB_SERVER_URL = &quot;localhost&quot;;<br>
   int DB_SERVER_PORT = 3050;<br>
   String DB_PATH = &quot;c:/database&quot;;<br>
   String DB_NAME = &quot;test.gdb&quot;;<br>
   String DB_USER = &quot;sysdba&quot;;<br>
-  String DB_PASSWORD = &quot;masterkey&quot;;</p>
-<p>fbManager.setServer(DB_SERVER_URL);<br>
-  fbManager.setPort(DB_SERVER_PORT);</p>
-<p>fbManager.start();</p>
-<p>fbManager.createDatabase(DB_PATH + &quot;/&quot; + DB_NAME, DB_USER, DB_PASSWORD);<br>
-</p>
-<p align=center>&nbsp;</p>
+  String DB_PASSWORD = &quot;masterkey&quot;;</font></p>
+<p><font face="Courier New, Courier, mono">fbManager.setServer(DB_SERVER_URL);<br>
+  fbManager.setPort(DB_SERVER_PORT);</font></p>
+<p><font face="Courier New, Courier, mono">fbManager.start();</font></p>
+<p><font face="Courier New, Courier, mono">fbManager.createDatabase(DB_PATH + &quot;/&quot; +
+DB_NAME, DB_USER, DB_PASSWORD);</font></p>
+<p>After you have created the database you can set its default character set
+  with a command like:</p>
+<p><font face="Courier New, Courier, mono">UPDATE rdb$database SET rdb$character_set_name='ISO8859_1'<br>
+</font></p>
 <hr>
 <p align="center"><font size="+2"><a name="34"></a>34- How do I use JayBird with 
   Windows 95/98?</font></p>
@@ -2941,9 +2950,222 @@ requires one jar file, jxRowSet-0.8a.jar.</p>
 </table>
 <p>&nbsp;</p>
 <hr>
-<p><br>
+<br>
+<p align=CENTER><font size=5><a name="43"></a>43- What
+is a good validation query to use with JayBird?</font></p>
+<p align=CENTER><a href="#top">return to top</a></p>
+<p>&nbsp;</p>
+<p>Some programs and web applications need a query that they can send to the
+  database to verify that it is online and connected, or to insure that a connection
+  hasn't timed out. That is called a validation query. A good one for Firebird/JayBird
+  is:</p>
+<p>SELECT CAST(1 AS INTEGER) FROM rdb$database<br>
+  <br>
+  This select will always succeed if the connection is still alive and will have
+  exactly one row in the result set..<br>
 </p>
-<p align=CENTER><font size=5><a name="codeexamples"></a>43- Can you give me some
+<hr>
+<br>
+<p align=CENTER><font size=5><a name="44"></a>44- How
+can I get the key of the new record I just inserted?</font></p>
+<p align=CENTER><a href="#top">return to top</a></p>
+<p>Sometimes it is necessary to get the Primary Key of a record just inserted
+  so that it can be used as the relation in an insert into another table. If
+  you are using a generator and trigger to auto-generate keys and insert them
+  in new records, you do not know what the key is.</p>
+<p>A solution is to get a key from the generator before you do the insert, then
+  use that key to do the insert in both tables.</p>
+<p>Getting a new key is simple but you have to modify the trigger to skip getting
+  a new key if a key is supplied in the insert statement. In this way the database
+  will still auto-generate keys if you like or it will use keys you supply.</p>
+<p>To get a new primary key to insert with use:</p>
+<p><font face="Courier, monospace">SELECT gen_id(my_generator, 1) FROM RDB$DATABASE</font></p>
+<p>This fires your generator and returns the new key in the result set. The following
+  sets up the trigger so that it will auto create the primary key if you don't
+  pass
+  it
+  one in the insert,
+  but will also use one that you give it (generated above) without generating
+  another one. So insert will work either
+way.</p>
+<p>Create the trigger:</p>
+<p><br>
+  <font face="Courier, monospace">active before insert<br>
+  as<br>
+  begin<br>
+  if (new.YourPk is null) then<br>
+  new.YourPk = gen_id(my_generator, 1);<br>
+  end</font><br>
+  <br>
+  Trigger generation is outside of transaction control (the only thing that
+    is!) so it is guaranteed to be 100% atomic. In other words, this will always
+safely give you a unique key.</p>
+<p>You may get better performance by creating a pool of keys to use for inserts.
+You could generate a block of keys at startup, then your inserts will go quicker.</p>
+<p>To create a block of 100 keys, for example, use:</p>
+<p><font face="Courier, monospace">SELECT gen_id(my_generator, 100) FROM RDB$DATABASE</font></p>
+<p>This will return the last number in the block. If that number is myKey, you
+can use numbers from( myKey-99) through myKey.</p>
+<p>&nbsp;</p>
+<hr>
+<br>
+<p align=CENTER><font size=5><a name="45" id="45"></a>45-How do
+I set the default character set of a database?</font></p>
+<p align=CENTER><a href="#top">return to top</a></p>
+<p>After you have created the database (See FAQ item 33) you can set its default
+  character set
+with a command like:</p>
+<p><font face="Courier New, Courier, mono">UPDATE rdb$database SET rdb$character_set_name='ISO8859_1'</font></p>
+<p>Be sure to do this before creating tables. Tables created before the default
+  charset is changed will have the old default charset and will not be affected
+  by the change, unless explicitly set to something else.</p>
+<p>You must also open the connection to the database with lc_ctype set to the
+  same character set as the database for character translations to work properly.</p>
+<hr>
+<p align="center"><font size=5><a name="46" id="46"></a>46- Can you explain
+    how character sets work?</font></p>
+<p align="center"><a href="#top">return to top</a></p>
+<p>Character handling with JayBird can be confusing because the Java VM, Firebird
+  database, browser, and JayBird Connection all have a charset associated with
+  them.
+</p>
+<p>Also, the Firebird server attempts to transliterate the internal charset of
+  a database to the charset specified in the connection. JayBird also attempts
+  to translate the JVM charset to the Firebird server charsets specfied in the
+  connection.</p>
+<p>With Firebird the character encoding of the text data stored in the database
+  is set when the database is created. That applies to the char and varchar columns,
+  and type 1 blobs (text blobs). You can override the default charset for columns
+  with the appropriate SQL commands when the columns are created. Be careful
+  if you do this or you may end up with two columns in the same table that you
+  can't read with the same connection.</p>
+<p>The only situation when this problem can happen is when
+  you have a table with columns that have the &quot;NONE&quot; character set
+  and some other character set (&quot;UNICODE_FSS&quot;, &quot;WIN1252&quot;,
+  etc). The server tries to convert characters from the encoding specified for
+  the column into the encoding specified for connection. The &quot;NONE&quot; character
+  set allows only one-way conversion: from &lt;any&gt; to &quot;NONE&quot;. In
+  this case server simply returns you bytes written in the database. So if you
+  have table:</p>
+<p><font face="Courier New, Courier, mono">CREATE TABLE charset_table(<br>
+  col1 VARCHAR(10) CHARACTER SET WIN1252,<br>
+  col2 VARCHAR(10) CHARACTER SET NONE<br>
+  )</font></p>
+<p>you will not be able to modify both columns in the same SQL statement, and
+  it does not matter whether you use &quot;NONE&quot;, &quot;WIN1252&quot; or &quot;
+UNICODE_FSS&quot; for the connection.</p>
+<p>The only possible way to solve this problem is to use character set &quot;OCTETS&quot;.
+  This is some kind of artificial character set, similar to &quot;NONE&quot; (data
+  are written and read as byte arrays), however there exist bi-directional translation
+  rules between any character set (incl.&quot;NONE&quot;) and &quot;OCTETS&quot;.
+  You can specify &quot;OCTETS&quot; for
+  connection and then decode byte arrays you receive from the server yourself,
+  the driver will do byte-array-to-string conversion incorrectly, since it does
+  not
+get a hint about the character set from the server.</p>
+<p>Let's say your program or web app prompts the user to type a string. If the
+  user types &quot;abc&quot; into a Java text box in your app, or into a text
+  box in a browser for a web app, Java creates a string for that 3 character
+  string in Unicode. So the string would actually have 9 bytes in it- three Unicode
+  characters of three bytes each.</p>
+<p>INSERTing this in a text column in the database would result in nine bytes
+being inserted without translation.</p>
+<p>Note: You have to pass correct unicode strings to the driver. What is &quot;correct
+  unicode&quot; string? It is easier to explain what is not a correct unicode
+string. </p>
+<p>Let's assume you have normal text file in WIN1251 encoding. In this case cyrillic
+  characters from the unicode table (values between 0-65535) are mapped into
+  the characters with values 0-255. However, your regional settings say that
+  you're in Germany. This means that file.encoding will be set to Cp1252 on JVM
+  start. If you now open the file and construct a reader without specifying that
+  character encoding is Cp1251, Java will read the file and construct your strings.
+  However all cyrillic characters will be replaced by characters from the Cp1252
+  encoding that have the same number representation as the cyrillic ones. </p>
+<p>These
+    strings are valid unicode strings, however their content is not the content
+    you read
+    from the file. Interestingly enough, if you  write such strings back into
+    the file, and open it in some text editor saying that this is WIN1251 text,
+    you will see correct text.</p>
+<p>If you open your connection to the database without specifying a character
+  set (lc_ctype) it defaults to NONE and no translation is done. So when you
+  SELECT the previously inserted data from the database and display it in your
+  program you get the same string you entered, right? Well, not necessarily.</p>
+<p>You will get a string with the same nine bytes in it that were stored, but
+  if the user getting that string from the database has a different default charset
+  in his Java VM those bytes will display differently.</p>
+<p>The JVM usually picks up its locale dependent character encoding from the
+  underlying operating system, but it can also be set when you invoke the JVM
+  by using -Dfile.encoding=Cp1252, for example. If you attempt to display characters
+  that aren't in your default JVM encoding they apear as '?'.</p>
+<p>The only way to insure you always get back what you put in is to create the
+  database with a charset and set lc_ctype to the same charset when you open
+  the connection to that database.</p>
+<p>If want to use charsets other than NONE and you have lots of data in databases
+  with a charset of NONE, you may have to set up a new database with a different
+  charset and use a data pump to transfer data over, or write a small program
+  to do the transfer.</p>
+<p>Using UNICODE_FSS works well nearly everywhere but may increase the size of
+  your databases if you have lots of text because Unicode uses characters up
+  to 3
+  bytes long.</p>
+<p>There are some limitations regarding UNICODE_FSS character set: there's only
+  one collation, where strings are sorted by the natural order, and not collation
+  rules for different languages; there are some issues when converting them to
+  upper case, etc. More information on these anomalies  can be found in the Firebird-Support
+  group.</p>
+<p>Again, the default charset for Firebird is NONE. The Firebird server does
+  no translation with this charset.</p>
+<p>If your database has a charset of NONE and you set a charset type on the connection
+  (lc_ctype) that is not NONE, you can write to the database but you can't read
+  from it without getting the &quot;Cannot transliterate between character sets&quot; exception.</p>
+<p>Let's follow a string as it gets inserted into the database and later selected
+  from the database. For this example we will set the database charset to NONE.</p>
+<p>See the freely available Interbase 6 PDF manuals &quot;Data Definition Guide&quot; for
+  a list of charsets available.</p>
+<p>The WIN125X or ISO8859_1 charsets may be a good choice for you if you need
+  the non-English characters but want the compactness of the 1 byte characters.
+  With these char sets you can specify many different national language collation
+  orders in the ORDER BY clause of the SELECT statement.</p>
+<p>Let's look at the same example above, but this time we will insert into a
+  database that has been created with a charset of WIN1251.</p>
+<p>When you open the connection to the database you set the lc_ctype=WIN1251.
+  Then insert the string 'abc' into the appropriate column. JayBird has to take
+  the Unicode encoded Java String &quot;abc&quot;and convert it to WIN1251
+  format and send it to the database server for insertion. Since the database
+  is already in WIN1251 format, the server does not have to translate. When the
+  string is read back from the database it is converted back to the Java VM format
+  by JayBird.</p>
+<p>It is also possible to set an lc_ctype in a connection that is different from
+  the charset of the database. This lets the database server do the translating
+  from one charset to another. This is a feature of the Firebird server that
+  lets programming languages or programs that require specific character formats
+  to connect to the database without requiring the data to be stored in that
+  format.</p>
+<p>You can also avoid problems by using java.sql.PreparedStatement instead of
+  java.sql.Statement and not building SQL strings out of concatenated Java strings.
+  For example:</p>
+<p>String sqlString, firstName=&quot;John&quot;, lastName=&quot;O'Neal&quot;;</p>
+<p>sqlString = &quot;INSERT INTO nameTable (LNAME, FNAME) VALUES('&quot;+lastName+&quot;','&quot;+firstName+&quot;')&quot;;</p>
+<p>Statement stmt = connection.createStatement();<br>
+  int insertedRows = stmt.executeUpdate(sqlString);</p>
+<p>The problem here is that if the user types in data for these strings you might
+  end up with illegal characters, or the translation might not be correct.</p>
+<p>In the example above, the following illegal SQL string would be generated
+  and cause an exception to be thrown because of the apostrophe in O'Neil:</p>
+<p>INSERT INTO nameTable (LNAME, FNAME) VALUES('O'Neal', 'John')</p>
+<p>To avoid this, use a prepared statement like in the example below.</p>
+<p>PreparedStatement stmt = connection.prepareStatement(&quot;INSERT INTO<br>
+  nameTable(LNAME,FNAME) VALUES(?, ?)&quot;);</p>
+<p>stmt.setString(1, lastName);<br>
+  stmt.setString(2, firstName);</p>
+<p>int insertedRows = stmt.executeUpdate();</p>
+<p>if (insertedRows != 1)<br>
+  throw new MyInsertFailedException(&quot;Could not insert data&quot;);<br>
+</p>
+<hr>
+<br>
+<p align=CENTER><font size=5><a name="codeexamples"></a>47- Can you give me some
      code examples?</font></p>
 <p align=CENTER><a href="#top">return to top</a></p>
 <p align=CENTER><br>
