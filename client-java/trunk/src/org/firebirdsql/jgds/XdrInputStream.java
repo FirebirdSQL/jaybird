@@ -34,10 +34,11 @@ package org.firebirdsql.jgds;
 
 import java.io.*;
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 public class XdrInputStream extends FilterInputStream {
 
-   private final Logger log = Logger.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass());
 
     public XdrInputStream(InputStream in) {
         super(in);
@@ -75,9 +76,9 @@ public class XdrInputStream extends FilterInputStream {
         int pos = 0;
         int chunk;
         while (pos < len) {
-           if (log.isDebugEnabled()) {log.debug("Available: " + in.available() + " trying to read to: " + len + " at: " + pos);}
-            chunk = Math.min(in.available(), len - pos);
-            in.read(buffer, pos, chunk);
+            chunk = in.read(buffer, pos, len - pos);
+            if (chunk<0)
+                throw new EOFException();
             pos += chunk;
         }
         for (int i = 0; i < ((4 - len) & 3); i++) {

@@ -22,35 +22,59 @@
  */
 package org.firebirdsql.logging;
 
-public abstract class Logger{
+public class NullLogger extends Logger{
 	
-	abstract public boolean isDebugEnabled();
+	public NullLogger(String name){
+	}
 	
-	abstract public void debug(Object message);
+	public boolean isDebugEnabled() {
+		return false;
+	}
 	
-	abstract public void debug(Object message, Throwable t);
+	public void debug(Object message) {
+	}
 	
-	abstract public boolean isInfoEnabled();
+	public void debug(Object message, Throwable t) {
+	}
 	
-	abstract public void info(Object message);
+	public boolean isInfoEnabled() {
+		return false;
+	}
 	
-	abstract public void info(Object message, Throwable t);
+	public void info(Object message) {
+	}
 	
-	abstract public boolean isWarnEnabled();
+	public void info(Object message, Throwable t) {
+	}
 	
-	abstract public void warn(Object message);
+	public boolean isWarnEnabled() {
+		return false;
+	}
 	
-	abstract public void warn(Object message, Throwable t);
+	public void warn(Object message) {
+	}
 	
-	abstract public boolean isErrorEnabled();
+	public void warn(Object message, Throwable t) {
+	}
 	
-	abstract public void error(Object message);
+	public boolean isErrorEnabled() {
+		return false;
+	}
 	
-	abstract public void error(Object message, Throwable t);
+	public void error(Object message) {
+	}
 	
-	abstract public boolean isFatalEnabled();
+	public void error(Object message, Throwable t) {
+	}
 	
-	abstract public void fatal(Object message);
+	public boolean isFatalEnabled() {
+		return false;
+	}
 	
-	abstract public void fatal(Object message, Throwable t);
+	public void fatal(Object message) {
+	}
+	
+	public void fatal(Object message, Throwable t) {
+	}
+	
 }

@@ -35,6 +35,7 @@ package org.firebirdsql.jgds;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.*;
 import java.net.*;
@@ -42,7 +43,7 @@ import java.util.*;
 
 public class GDS_Impl implements GDS {
 
-   private final Logger log = Logger.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass());
 
     /* Operation (packet) types */
 
@@ -206,14 +207,14 @@ public class GDS_Impl implements GDS {
             DbAttachInfo dbai = new DbAttachInfo(file_name);
             connect(db, dbai);
             try {
-                if (log.isDebugEnabled()) {log.debug("op_create ");}
+                log.debug("op_create ");
                 db.out.writeInt(op_create);
                 db.out.writeInt(0);           // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
                 db.out.writeTyped(isc_dpb_version1, (Xdrable)c);
                 //            db.out.writeBuffer(dpb, dpb_length);
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
 
                 try {
                     Response r = receiveResponse(db);
@@ -260,13 +261,13 @@ public class GDS_Impl implements GDS {
         synchronized (db) {
             connect(db, dbai);
             try {
-                if (log.isDebugEnabled()) {log.debug("op_attach ");}
+                log.debug("op_attach ");
                 db.out.writeInt(op_attach);
                 db.out.writeInt(0);                // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
                 db.out.writeTyped(isc_dpb_version1, (Xdrable)dpb);
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
 
                 try {
                     Response r = receiveResponse(db);
@@ -300,11 +301,11 @@ public class GDS_Impl implements GDS {
         synchronized (db) {
 
             try {
-                if (log.isDebugEnabled()) {log.debug("op_detach ");}
+                log.debug("op_detach ");
                 db.out.writeInt(op_detach);
                 db.out.writeInt(db.getRdb_id());
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 receiveResponse(db);
             } catch (IOException ex) {
                 throw new GDSException(isc_network_error);
@@ -325,11 +326,11 @@ public class GDS_Impl implements GDS {
         synchronized (db) {
 
             try {
-                if (log.isDebugEnabled()) {log.debug("op_drop_database ");}
+                log.debug("op_drop_database ");
                 db.out.writeInt(op_drop_database);
                 db.out.writeInt(db.getRdb_id());
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 receiveResponse(db);
             } catch (IOException ex) {
                 throw new GDSException(isc_network_error);
@@ -369,13 +370,13 @@ public class GDS_Impl implements GDS {
             tr.setState(isc_tr_handle.TRANSACTIONSTARTING);
 
             try {
-                if (log.isDebugEnabled()) {log.debug("op_transaction ");}
+                log.debug("op_transaction ");
                 db.out.writeInt(op_transaction);
                 db.out.writeInt(db.getRdb_id());
                 db.out.writeSet(isc_tpb_version3, tpb);
                 //            db.out.writeBuffer(tpb, tpb_length);
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 //out.flush();
                 Response r = receiveResponse(db);
                 tr.rtr_id = r.resp_object;
@@ -403,12 +404,12 @@ public class GDS_Impl implements GDS {
             tr.setState(isc_tr_handle.TRANSACTIONCOMMITTING);
 
             try {
-                if (log.isDebugEnabled()) {log.debug("op_commit ");}
-                if (log.isDebugEnabled()) {log.debug("tr.rtr_id: " + tr.rtr_id);}
+                log.debug("op_commit ");
+                log.debug("tr.rtr_id: " + tr.rtr_id);
                 db.out.writeInt(op_commit);
                 db.out.writeInt(tr.rtr_id);
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 receiveResponse(db);
             } catch (IOException ex) {
                 throw new GDSException(isc_net_read_err);
@@ -432,11 +433,11 @@ public class GDS_Impl implements GDS {
             tr.setState(isc_tr_handle.TRANSACTIONCOMMITTING);
 
             try {
-                if (log.isDebugEnabled()) {log.debug("op_commit_retaining ");}
+                log.debug("op_commit_retaining ");
                 db.out.writeInt(op_commit_retaining);
                 db.out.writeInt(tr.rtr_id);
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 receiveResponse(db);
             } catch (IOException ex) {
                 throw new GDSException(isc_net_read_err);
@@ -460,11 +461,11 @@ public class GDS_Impl implements GDS {
             tr.setState(isc_tr_handle.TRANSACTIONPREPARING);
             tr.setState(isc_tr_handle.TRANSACTIONPREPARING);
             try {
-                if (log.isDebugEnabled()) {log.debug("op_prepare ");}
+                log.debug("op_prepare ");
                 db.out.writeInt(op_prepare);
                 db.out.writeInt(tr.rtr_id);
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 receiveResponse(db);
             } catch (IOException ex) {
                 throw new GDSException(isc_net_read_err);
@@ -487,12 +488,12 @@ public class GDS_Impl implements GDS {
             }
             tr.setState(isc_tr_handle.TRANSACTIONPREPARING);
             try {
-                if (log.isDebugEnabled()) {log.debug("op_prepare2 ");}
+                log.debug("op_prepare2 ");
                 db.out.writeInt(op_prepare2);
                 db.out.writeInt(tr.rtr_id);
                 db.out.writeBuffer(bytes, bytes.length);
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 receiveResponse(db);
             } catch (IOException ex) {
                 throw new GDSException(isc_net_read_err);
@@ -519,11 +520,11 @@ public class GDS_Impl implements GDS {
             tr.setState(isc_tr_handle.TRANSACTIONROLLINGBACK);
 
             try {
-                if (log.isDebugEnabled()) {log.debug("op_rollback ");}
+                log.debug("op_rollback ");
                 db.out.writeInt(op_rollback);
                 db.out.writeInt(tr.rtr_id);
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 receiveResponse(db);
             } catch (IOException ex) {
                 throw new GDSException(isc_net_read_err);
@@ -553,11 +554,11 @@ public class GDS_Impl implements GDS {
 
         synchronized (db) {
             try {
-                if (log.isDebugEnabled()) {log.debug("op_allocate_statement ");}
+                log.debug("op_allocate_statement ");
                 db.out.writeInt(op_allocate_statement);
                 db.out.writeInt(db.getRdb_id());
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 Response r =receiveResponse(db);
                 stmt.rsr_id = r.resp_object;
             } catch (IOException ex) {
@@ -652,7 +653,7 @@ public class GDS_Impl implements GDS {
         synchronized (db) {
 
             try {
-                if (log.isDebugEnabled()) {log.debug((out_xsqlda == null) ? "op_execute " : "op_execute2 ");}
+                log.debug((out_xsqlda == null) ? "op_execute " : "op_execute2 ");
 
                 if (!isSQLDataOK(in_xsqlda)) {
                     throw new GDSException(isc_dsql_sqlda_value_err);
@@ -675,7 +676,7 @@ public class GDS_Impl implements GDS {
                     db.out.writeInt(0); //out_message_number = out_message_type
                 }
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
 
                 if (nextOperation(db) == op_sql_response) {
                     //this would be an Execute procedure
@@ -723,10 +724,10 @@ public class GDS_Impl implements GDS {
                 
 
                 if (in_xsqlda == null && out_xsqlda == null) {
-                    if (log.isDebugEnabled()) {log.debug("op_exec_immediate ");}
+                    log.debug("op_exec_immediate ");
                     db.out.writeInt(op_exec_immediate);
                 } else {
-                    if (log.isDebugEnabled()) {log.debug("op_exec_immediate2 ");}
+                    log.debug("op_exec_immediate2 ");
                     db.out.writeInt(op_exec_immediate2);
 
                     writeBLR(db, in_xsqlda);
@@ -749,7 +750,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(0);
                 db.out.flush();            
 
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
 
                 if (nextOperation(db) == op_sql_response) {
                     receiveSqlResponse(db, out_xsqlda);
@@ -782,14 +783,14 @@ public class GDS_Impl implements GDS {
             //Fetch next batch of rows
             synchronized (db) {
                 try {
-                    if (log.isDebugEnabled()) {log.debug("op_fetch ");}
+                    log.debug("op_fetch ");
                     db.out.writeInt(op_fetch);
                     db.out.writeInt(stmt.rsr_id);
                     writeBLR(db, xsqlda);
                     db.out.writeInt(0);              // p_sqldata_message_number
                     db.out.writeInt(MAX_FETCH_ROWS); // p_sqldata_messages
                     db.out.flush();            
-                    if (log.isDebugEnabled()) {log.debug("sent");}
+                    log.debug("sent");
 
                     if (nextOperation(db) == op_fetch_response) {
                         int sqldata_status;
@@ -815,7 +816,7 @@ public class GDS_Impl implements GDS {
                         } while (sqldata_messages > 0 && sqldata_status == 0);
 
                         if (sqldata_status == 100) {
-                            if (log.isDebugEnabled()) {log.debug("all rows successfully fetched");}
+                            log.debug("all rows successfully fetched");
                             stmt.allRowsFetched = true;
                         }
 
@@ -875,12 +876,12 @@ public class GDS_Impl implements GDS {
 
         synchronized (db) {
             try {
-                if (log.isDebugEnabled()) {log.debug("op_free_statement ");}
+                log.debug("op_free_statement ");
                 db.out.writeInt(op_free_statement);
                 db.out.writeInt(stmt.rsr_id);
                 db.out.writeInt(option);
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
 
                 receiveResponse(db);
                 if (option == DSQL_drop) {
@@ -935,7 +936,7 @@ public class GDS_Impl implements GDS {
 
         synchronized (db) {
             try {
-                if (log.isDebugEnabled()) {log.debug("op_prepare_statement ");}
+                log.debug("op_prepare_statement ");
                 db.out.writeInt(op_prepare_statement);
                 db.out.writeInt(tr.rtr_id);
                 db.out.writeInt(stmt.rsr_id);
@@ -945,7 +946,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(MAX_BUFFER_SIZE);
                 db.out.flush();            
 
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 Response r = receiveResponse(db);
                 stmt.out_sqlda = parseSqlInfo(stmt_handle, r.resp_data, sql_prepare_info);
                 return stmt.out_sqlda;
@@ -971,7 +972,7 @@ public class GDS_Impl implements GDS {
 
         synchronized (db) {
             try {
-                if (log.isDebugEnabled()) {log.debug("op_set_cursor ");}
+                log.debug("op_set_cursor ");
                 db.out.writeInt(op_set_cursor);
                 db.out.writeInt(stmt.rsr_id);
 
@@ -983,7 +984,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeBuffer(buffer, buffer.length);
                 db.out.writeInt(0);
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
 
                 receiveResponse(db);
             } catch (IOException ex) {
@@ -1005,14 +1006,14 @@ public class GDS_Impl implements GDS {
 
         synchronized (db) {
             try {
-                if (log.isDebugEnabled()) {log.debug("op_info_sql ");}
+                log.debug("op_info_sql ");
                 db.out.writeInt(op_info_sql);
                 db.out.writeInt(stmt.rsr_id);
                 db.out.writeInt(0);
                 db.out.writeBuffer(items, item_length);
                 db.out.writeInt(buffer_length);
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 Response r = receiveResponse(db);
                 return r.resp_data;
             } catch (IOException ex) {
@@ -1079,18 +1080,18 @@ public class GDS_Impl implements GDS {
         synchronized (db) {
             try {
 
-                if (log.isDebugEnabled()) {log.debug((bpb == null)? "op_open/create_blob ": "op_open/create_blob2 ");}
-                if (log.isDebugEnabled()) {log.debug("op: " + op);}
+                log.debug((bpb == null)? "op_open/create_blob ": "op_open/create_blob2 ");
+                log.debug("op: " + op);
                 db.out.writeInt(op);
                 if (bpb != null) {
                     db.out.writeTyped(isc_bpb_version1, (Xdrable)bpb);
                 }
                 db.out.writeInt(tr.rtr_id); //??really a short?
-                if (log.isDebugEnabled()) {log.debug("sending blob_id: " + blob.blob_id);}
+                log.debug("sending blob_id: " + blob.blob_id);
                 db.out.writeLong(blob.blob_id);
                 db.out.flush();            
 
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 Response r = receiveResponse(db);
                 blob.db = db;
                 blob.tr = tr;
@@ -1118,16 +1119,16 @@ public class GDS_Impl implements GDS {
         synchronized (db) {
             try {
 
-                if (log.isDebugEnabled()) {log.debug("op_get_segment ");}
+                log.debug("op_get_segment ");
                 db.out.writeInt(op_get_segment);
                 db.out.writeInt(blob.rbl_id); //short???
-                //            if (log.isDebugEnabled()) {log.debug("trying to read bytes: " + Math.min(blob.rbl_buffer_length, maxread) + 2);}
+                //            log.debug("trying to read bytes: " + Math.min(blob.rbl_buffer_length, maxread) + 2);
                 //db.out.writeInt(Math.min(blob.rbl_buffer_length, maxread) + 2); //Actually needs to be less than max short value
-                if (log.isDebugEnabled()) {log.debug("trying to read bytes: " +Math.min(requested + 2, Short.MAX_VALUE));}
+                log.debug("trying to read bytes: " +Math.min(requested + 2, Short.MAX_VALUE));
                 db.out.writeInt(Math.min(requested + 2, Short.MAX_VALUE));
                 db.out.writeInt(0);//writeBuffer for put segment;
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 Response resp = receiveResponse(db);
                 blob.rbl_flags &= ~RBL_segment;
                 if (resp.resp_object == 1) {
@@ -1178,14 +1179,14 @@ public class GDS_Impl implements GDS {
         synchronized (db) {
             try {
 
-                if (log.isDebugEnabled()) {log.debug("op_batch_segments ");}
+                log.debug("op_batch_segments ");
                 db.out.writeInt(op_batch_segments);
-                if (log.isDebugEnabled()) {log.debug("blob.rbl_id:  " + blob.rbl_id);}
+                log.debug("blob.rbl_id:  " + blob.rbl_id);
                 db.out.writeInt(blob.rbl_id); //short???
-                if (log.isDebugEnabled()) {log.debug("buffer.length " + buffer.length);}
+                log.debug("buffer.length " + buffer.length);
                 db.out.writeBlobBuffer(buffer);
                 db.out.flush();            
-                if (log.isDebugEnabled()) {log.debug("sent");}
+                log.debug("sent");
                 Response resp = receiveResponse(db);
             }
             catch (IOException ioe) {
@@ -1233,18 +1234,17 @@ public class GDS_Impl implements GDS {
         try {
             try {
                 db.socket = new Socket(dbai.getServer(), dbai.getPort());
-                if (log.isDebugEnabled()) {log.debug("Got socket");}
+                log.debug("Got socket");
             } catch (UnknownHostException ex2) {
                 throw new GDSException("Can't get socket: " + ex2);
             }
-
             db.out = new XdrOutputStream(new BufferedOutputStream(db.socket.getOutputStream()));
             db.in = new XdrInputStream(new BufferedInputStream(db.socket.getInputStream()));
 
             //Here we identify the user to the engine.  This may or may not be used 
             //as login info to a database.
             String user = System.getProperty("user.name");
-            if (log.isDebugEnabled()) {log.debug("user.name: " + user);}
+            log.debug("user.name: " + user);
             String host = InetAddress.getLocalHost().getHostName();
 
             byte[] user_id = new byte[200];
@@ -1268,7 +1268,7 @@ public class GDS_Impl implements GDS {
             user_id[n++] = 6;     // CNCT_user_verification
             user_id[n++] = 0;
 
-            if (log.isDebugEnabled()) {log.debug("op_connect ");}
+            log.debug("op_connect ");
             db.out.writeInt(op_connect);
             db.out.writeInt(op_attach);
             db.out.writeInt(2);                    // CONNECT_VERSION2
@@ -1285,17 +1285,17 @@ public class GDS_Impl implements GDS {
             db.out.writeInt(3);                    // ptype_batch_send
             db.out.writeInt(2);
             db.out.flush();            
-            if (log.isDebugEnabled()) {log.debug("sent");}
+            log.debug("sent");
 
-            if (log.isDebugEnabled()) {log.debug("op_accept ");}
+            log.debug("op_accept ");
             if (readOperation(db) == op_accept) {
                 db.in.readInt();                   // Protocol version number
                 db.in.readInt();                   // Architecture for protocol
                 db.in.readInt();                   // Minimum type
-                if (log.isDebugEnabled()) {log.debug("received");}
+                log.debug("received");
             } else {
                 disconnect(db);
-                if (log.isDebugEnabled()) {log.debug("not received");}
+                log.debug("not received");
                 throw new GDSException(isc_connect_reject);
             }
         } catch (IOException ex) {
@@ -1311,10 +1311,10 @@ public class GDS_Impl implements GDS {
     private Object[] receiveSqlResponse(isc_db_handle_impl db,
                                        XSQLDA xsqlda) throws GDSException {
         try {
-            if (log.isDebugEnabled()) {log.debug("op_sql_response ");}
+            log.debug("op_sql_response ");
             if (readOperation(db) == op_sql_response) {
                 int messages = db.in.readInt();
-                if (log.isDebugEnabled()) {log.debug("received");}
+                log.debug("received");
                 if (messages > 0) {
                     return readSQLData(db, xsqlda);
                 }
@@ -1322,7 +1322,7 @@ public class GDS_Impl implements GDS {
                     return null;
                 }
             } else {
-                if (log.isDebugEnabled()) {log.debug("not received");}
+                log.debug("not received");
                 throw new GDSException(isc_net_read_err);
             }
         } catch (IOException ex) {
@@ -1333,25 +1333,25 @@ public class GDS_Impl implements GDS {
 
     private Response receiveResponse(isc_db_handle_impl db) throws GDSException {
         try {
-            if (log.isDebugEnabled()) {log.debug("op_response ");}
+            log.debug("op_response ");
             int op = readOperation(db);
             if (op == op_response) {
                 Response r = new Response();
                 r.resp_object = db.in.readInt();
-            if (log.isDebugEnabled()) {log.debug("op_response resp_object: " + r.resp_object);}
+                log.debug("op_response resp_object: " + r.resp_object);
                 r.resp_blob_id = db.in.readLong();
-            if (log.isDebugEnabled()) {log.debug("op_response resp_blob_id: " + r.resp_blob_id);}
+                log.debug("op_response resp_blob_id: " + r.resp_blob_id);
                 r.resp_data = db.in.readBuffer();
-            if (log.isDebugEnabled()) {log.debug("op_response resp_data size: " + r.resp_data.length);}
+                log.debug("op_response resp_data size: " + r.resp_data.length);
  /*           for (int i = 0; i < Math.min(r.resp_data.length, 16); i++) {
-                if (log.isDebugEnabled()) {log.debug("byte: " + r.resp_data[i]);}
+                log.debug("byte: " + r.resp_data[i]);
             }*/
                 readStatusVector(db);
-                if (log.isDebugEnabled()) {log.debug("received");}
+                log.debug("received");
                 checkAllRead(db.in);//DEBUG
                 return r;
             } else {
-                if (log.isDebugEnabled()) {log.debug("not received: op is " + op);}
+                log.debug("not received: op is " + op);
                 checkAllRead(db.in);
                 return null;
 //                throw new GDSException(isc_net_read_err);
@@ -1366,7 +1366,7 @@ public class GDS_Impl implements GDS {
         do {
             db.op = db.in.readInt();
             if (db.op == op_dummy) {
-                if (log.isDebugEnabled()) {log.debug("op_dummy received");}
+                log.debug("op_dummy received");
             }
         } while (db.op == op_dummy);
         return db.op;
@@ -1394,7 +1394,7 @@ public class GDS_Impl implements GDS {
                     case isc_arg_interpreted:
                     case isc_arg_string:
                         GDSException ts = new GDSException(arg, db.in.readString());
-            if (log.isDebugEnabled()) {log.debug("readStatusVector string: " + ts.getMessage());}
+                        log.debug("readStatusVector string: " + ts.getMessage());
                         if (head == null) {
                             head = ts;
                             tail = ts;
@@ -1407,7 +1407,7 @@ public class GDS_Impl implements GDS {
                     case isc_arg_number:
                     default:
                         int e = db.in.readInt();
-            if (log.isDebugEnabled()) {log.debug("readStatusVector int: " + e);}
+                        log.debug("readStatusVector int: " + e);
                         if (e != 0) {
                             GDSException td = new GDSException(arg, e);
                             if (head == null) {
@@ -1552,20 +1552,16 @@ public class GDS_Impl implements GDS {
     private void writeSQLDatum(isc_db_handle_impl db,
                                   XSQLVAR xsqlvar) throws GDSException {
         byte[] buffer;
-        boolean debug = log.isDebugEnabled();
-        if (debug) 
+        if (db.out == null) 
         {
-            if (db.out == null) 
-            {
-                log.debug("db.out null in writeSQLDatum");
-            }
-            if (xsqlvar.sqldata == null) 
-            {
-                log.debug("sqldata null in writeSQLDatum: " + xsqlvar);
-            }
-        } // end of if ()
+            log.debug("db.out null in writeSQLDatum");
+        }
+        if (xsqlvar.sqldata == null) 
+        {
+            log.debug("sqldata null in writeSQLDatum: " + xsqlvar);
+        }
         fixNull(xsqlvar);
-        if (debug && xsqlvar.sqldata == null) 
+        if (xsqlvar.sqldata == null) 
         {
             log.debug("sqldata still null in writeSQLDatum: " + xsqlvar);
         }
@@ -1867,7 +1863,7 @@ public class GDS_Impl implements GDS {
                                 byte[] info,
                                 byte[] items) throws GDSException {
                 
-        if (log.isDebugEnabled()) {log.debug("parseSqlInfo started");}
+        log.debug("parseSqlInfo started");
         
         XSQLDA xsqlda = new XSQLDA();
         int lastindex = 0;
@@ -1882,7 +1878,7 @@ public class GDS_Impl implements GDS {
             info = isc_dsql_sql_info(stmt_handle, new_items.length,
                                      new_items, info.length);
         }
-        if (log.isDebugEnabled()) {log.debug("parseSqlInfo ended");}
+        log.debug("parseSqlInfo ended");
 
         return xsqlda;
     }
@@ -1893,7 +1889,7 @@ public class GDS_Impl implements GDS {
                                   int lastindex) throws GDSException {
         byte item;
         int index = 0;
-if (log.isDebugEnabled()) {log.debug("parseSqlInfo: first 2 bytes are " + isc_vax_integer(info, 0, 2) + " or: " + info[0] + ", " + info[1]);}
+        log.debug("parseSqlInfo: first 2 bytes are " + isc_vax_integer(info, 0, 2) + " or: " + info[0] + ", " + info[1]);
 
         int i = 2;
 
@@ -1905,7 +1901,7 @@ if (log.isDebugEnabled()) {log.debug("parseSqlInfo: first 2 bytes are " + isc_va
             xsqlda.sqld = xsqlda.sqln = n;
             xsqlda.sqlvar = new XSQLVAR[xsqlda.sqln];
         }
-if (log.isDebugEnabled()) {log.debug("xsqlda.sqln read as " + xsqlda.sqln);}
+        log.debug("xsqlda.sqln read as " + xsqlda.sqln);
 
         while (info[i] != isc_info_end) {
             while ((item = info[i++]) != isc_info_sql_describe_end) {
@@ -1916,66 +1912,66 @@ if (log.isDebugEnabled()) {log.debug("xsqlda.sqln read as " + xsqlda.sqln);}
                         index = isc_vax_integer(info, i, len);
                         i += len;
                         xsqlda.sqlvar[index - 1] = new XSQLVAR();
-if (log.isDebugEnabled()) {log.debug("new xsqlvar " + (index - 1));}
+                        log.debug("new xsqlvar " + (index - 1));
                         break;
                     case isc_info_sql_type:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].sqltype = isc_vax_integer (info, i, len);
                         i += len;
-if (log.isDebugEnabled()) {log.debug("isc_info_sql_type " + xsqlda.sqlvar[index - 1].sqltype);}
+                        log.debug("isc_info_sql_type " + xsqlda.sqlvar[index - 1].sqltype);
                         break;
                     case isc_info_sql_sub_type:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].sqlsubtype = isc_vax_integer (info, i, len);
                         i += len;
-if (log.isDebugEnabled()) {log.debug("isc_info_sql_sub_type " + xsqlda.sqlvar[index - 1].sqlsubtype);}
+                        log.debug("isc_info_sql_sub_type " + xsqlda.sqlvar[index - 1].sqlsubtype);
                         break;
                     case isc_info_sql_scale:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].sqlscale = isc_vax_integer (info, i, len);
                         i += len;
-if (log.isDebugEnabled()) {log.debug("isc_info_sql_scale " + xsqlda.sqlvar[index - 1].sqlscale);}
+                        log.debug("isc_info_sql_scale " + xsqlda.sqlvar[index - 1].sqlscale);
                         break;
                     case isc_info_sql_length:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].sqllen = isc_vax_integer (info, i, len);
                         i += len;
-if (log.isDebugEnabled()) {log.debug("isc_info_sql_length " + xsqlda.sqlvar[index - 1].sqllen);}
+                        log.debug("isc_info_sql_length " + xsqlda.sqlvar[index - 1].sqllen);
                         break;
                     case isc_info_sql_field:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].sqlname = new String(info, i, len);
                         i += len;
-if (log.isDebugEnabled()) {log.debug("isc_info_sql_field " + xsqlda.sqlvar[index - 1].sqlname);}
+                        log.debug("isc_info_sql_field " + xsqlda.sqlvar[index - 1].sqlname);
                         break;
                     case isc_info_sql_relation:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].relname = new String(info, i, len);
                         i += len;
-if (log.isDebugEnabled()) {log.debug("isc_info_sql_relation " + xsqlda.sqlvar[index - 1].relname);}
+                        log.debug("isc_info_sql_relation " + xsqlda.sqlvar[index - 1].relname);
                         break;
                     case isc_info_sql_owner:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].ownname = new String(info, i, len);
                         i += len;
-if (log.isDebugEnabled()) {log.debug("isc_info_sql_owner " + xsqlda.sqlvar[index - 1].ownname);}
+                        log.debug("isc_info_sql_owner " + xsqlda.sqlvar[index - 1].ownname);
                         break;
                     case isc_info_sql_alias:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].aliasname = new String(info, i, len);
                         i += len;
-if (log.isDebugEnabled()) {log.debug("isc_info_sql_alias " + xsqlda.sqlvar[index - 1].aliasname);}
+                        log.debug("isc_info_sql_alias " + xsqlda.sqlvar[index - 1].aliasname);
                         break;
                     case isc_info_truncated:
-if (log.isDebugEnabled()) {log.debug("isc_info_truncated ");}
+                        log.debug("isc_info_truncated ");
                         return lastindex;
                         //throw new GDSException(isc_dsql_sqlda_err);
                     default:
@@ -1992,11 +1988,11 @@ if (log.isDebugEnabled()) {log.debug("isc_info_truncated ");}
         try {
             int i = in.available();
             if (i > 0) {
-                if (log.isDebugEnabled()) {log.debug("Extra bytes in packet read: " + i);}
+                log.debug("Extra bytes in packet read: " + i);
                 byte[] b = new byte[i];
                 in.read(b);
                 for (int j = 0; j < Math.min(b.length, 16); j++) {
-                    if (log.isDebugEnabled()) {log.debug("byte: " + b[j]);}
+                    log.debug("byte: " + b[j]);
                 }
             }
         }
