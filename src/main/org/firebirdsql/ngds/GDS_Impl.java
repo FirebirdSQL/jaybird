@@ -26,22 +26,30 @@ import org.firebirdsql.logging.Logger;
 
 /**
  * Type 2 GDS implementation.
- *
  */
 public class GDS_Impl extends AbstractGDS implements GDS
     {
     private static Logger log = LoggerFactory.getLogger(GDS_Impl.class,false);
 
+	
+	/**
+	 * No arg constructor required for serialization support implemented by AbstractGDS
+	 */ 
 	 public GDS_Impl()
 		 {
-
 		 }
 
+    /**
+     * Constructor used by the GDSFactory. Loads jaybird dll and the appropriate firebird native code. 
+     * 
+     * @param gdsType
+     */ 
     public GDS_Impl(GDSType gdsType)
         {
-		    super(gdsType);
+		super(gdsType);
 
         final boolean logging = log != null;
+        
         if(logging) log.info( "Attempting to loadLibrary for \""+"jaybird"+"\"" );
 
         try
@@ -60,8 +68,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
             }
         if(logging) log.info( "loadLibrary for \""+"java_gds"+"\" returned OK." );
 
-
-   if(logging) log.info( "Attempting to initilize native library." );
+        if(logging) log.info( "Attempting to initilize native library." );
 
         if( this.getGdsType() == GDSType.NATIVE )
             attemptToLoadAClientLibraryFromList(LIST_OF_CLIENT_LIBRARIES_TO_TRY);
@@ -69,8 +76,14 @@ public class GDS_Impl extends AbstractGDS implements GDS
             attemptToLoadAClientLibraryFromList(LIST_OF_EMBEDDED_SERVER_LIBRARIES_TO_TRY);
         else
             throw new RuntimeException("Unrecognized GDS type.");
+        
+        if(logging) log.info( "Initilized native library OK." );
         }
 
+    /**
+     * When initilzing in type2 mode this class will attempt too load the following firebird native dlls
+     * in the order listed until one loads sucesfully.
+     */ 
      private static final String[] LIST_OF_CLIENT_LIBRARIES_TO_TRY = {
         "fbclient.dll",
         "libfbclient.so",
@@ -78,11 +91,20 @@ public class GDS_Impl extends AbstractGDS implements GDS
         "libgds.so",
     };
 
-     private static final String[] LIST_OF_EMBEDDED_SERVER_LIBRARIES_TO_TRY = {
+    /**
+     * When initilzing in embedded mode this class will attempt too load the following firebird native dlls
+     * in the order listed until one loads sucesfully.
+     */  
+    private static final String[] LIST_OF_EMBEDDED_SERVER_LIBRARIES_TO_TRY = {
         "fbembed.dll",
         "libfbembed.so",
      };
 
+    /**
+     * Attempts too load a firebird native dll.
+     * 
+     * @param clientLibraryList
+     */ 
     private void attemptToLoadAClientLibraryFromList(String[] clientLibraryList)
         {
         final boolean logging = log != null;
@@ -115,6 +137,18 @@ public class GDS_Impl extends AbstractGDS implements GDS
             break;
             }
         }
+    
+    /**
+     * Native method used too attempt too load a client library.
+     *
+     * @param firebirdDllName
+     */ 
+    private native void nativeInitilize(String firebirdDllName);
+    
+    
+    
+    // GDS Implementation ----------------------------------------------------------------------------------------------
+    
 
     public ServiceParameterBuffer newServiceParameterBuffer()
         {
@@ -165,7 +199,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
 
 
-    private native void nativeInitilize(String firebirdDllName);
+    
 
     // isc_create_database ---------------------------------------------------------------------------------------------
     public void isc_create_database(String file_name, isc_db_handle db_handle, DatabaseParameterBuffer databaseParameterBuffer) throws GDSException
@@ -175,8 +209,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
             throw new GDSException(ISCConstants.isc_bad_db_handle);
             }
 
-
-        final byte[] dpbBytes = ((DatabaseParameterBufferImp)databaseParameterBuffer).getBytesForNativeCode();
+        final byte[] dpbBytes = databaseParameterBuffer == null ? null : ((DatabaseParameterBufferImp)databaseParameterBuffer).getBytesForNativeCode();
 
         synchronized(this)
             {
@@ -186,58 +219,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
     private native void native_isc_create_database(String file_name, isc_db_handle db_handle, byte[] dpbBytes);
 
-	private String getServerUrl(String file_name) throws GDSException
-		{
-    if( this.getGdsType() == GDSType.NATIVE )
-        return getRemoteServerUrl(file_name);
-    else if(this.getGdsType() == GDSType.NATIVE_EMBEDDED)
-        return getEmbeddedServerUrl(file_name);
-    else
-        throw new RuntimeException("Unrecognized gds type.");
-    }
-
-    private String getRemoteServerUrl(String file_name) throws GDSException
-        {
-        if(log != null)
-        log.debug("Original file name: "+file_name);
-
-        DbAttachInfo dbai = new DbAttachInfo(file_name);
-
-        final String fileName;
-        if( dbai.getFileName().indexOf(':') == -1 && dbai.getFileName().startsWith("/") == false )
-        {
-         fileName = dbai.getServer() +"/"+ dbai.getPort() +":"+"/"  +dbai.getFileName();
-        }
-        else
-        fileName = dbai.getServer() +"/"+ dbai.getPort() +":"+dbai.getFileName();
-
-        if(log != null)
-        log.debug("File name for native code: "+fileName);
-
-        return fileName;
-        }
-
-    private String getEmbeddedServerUrl(String file_name) throws GDSException
-            {
-            if(log != null)
-            log.debug("Original file name: "+file_name);
-
-            DbAttachInfo dbai = new DbAttachInfo(file_name);
-
-            final String fileName;
-           // if( dbai.getFileName().indexOf(':') == -1 && dbai.getFileName().startsWith("/") == false )
-           // {
-           //  fileName = "/"  +dbai.getFileName();
-            //}
-            //else
-            fileName = dbai.getFileName();
-
-            if(log != null)
-            log.debug("File name for native code: "+fileName);
-
-            return fileName;
-            }
-
+	
     // isc_attach_database ---------------------------------------------------------------------------------------------
     public void isc_attach_database(String file_name, isc_db_handle db_handle, DatabaseParameterBuffer databaseParameterBuffer) throws GDSException
         {
@@ -246,13 +228,83 @@ public class GDS_Impl extends AbstractGDS implements GDS
             throw new GDSException(ISCConstants.isc_bad_db_handle);
             }
 
-        final byte[] dpbBytes = ((DatabaseParameterBufferImp)databaseParameterBuffer).getBytesForNativeCode();
+        final byte[] dpbBytes = databaseParameterBuffer == null ? null : ((DatabaseParameterBufferImp)databaseParameterBuffer).getBytesForNativeCode();
 
         synchronized(this)
             {
 		    native_isc_attach_database( getServerUrl(file_name), db_handle, dpbBytes );
             }
+        
+        parseAttachDatabaseInfo(isc_database_info(db_handle,describe_database_info,1024),db_handle);
         }
+    
+     final static byte[] describe_database_info = new byte[] { ISCConstants.isc_info_db_sql_dialect,
+                                   ISCConstants.isc_info_isc_version,
+                                   ISCConstants.isc_info_ods_version,
+                                   ISCConstants.isc_info_ods_minor_version,
+                                   ISCConstants.isc_info_end
+                                   };
+    
+    /**
+ * Parse database info returned after attach. This method assumes that
+ * it is not truncated.
+ * @param info information returned by isc_database_info call
+ * @param handle isc_db_handle to set connection parameters
+ * @throws GDSException if something went wrong :))
+ */
+    private void parseAttachDatabaseInfo(byte[] info, isc_db_handle handle) throws GDSException {
+        boolean debug = log != null && log.isDebugEnabled();
+        if (debug) log.debug("parseDatabaseInfo: first 2 bytes are " + isc_vax_integer(info, 0, 2) + " or: " + info[0] + ", " + info[1]);
+        int value=0;
+        int len=0;
+        int i = 0;
+        isc_db_handle_impl db = (isc_db_handle_impl) handle;
+        while (info[i] != ISCConstants.isc_info_end) {
+            switch (info[i++]) {
+                case ISCConstants.isc_info_db_sql_dialect:
+                    len = isc_vax_integer(info, i, 2);
+                    i += 2;
+                    value = isc_vax_integer (info, i, len);
+                    i += len;
+                    db.setDialect(value);
+                    if (debug) log.debug("isc_info_db_sql_dialect:"+value);
+                    break;
+                case ISCConstants.isc_info_isc_version:
+                    len = isc_vax_integer(info, i, 2);
+                    i += 2;
+                    if (debug) log.debug("isc_info_version len:"+len);
+                    // This +/-2 offset is to skip count and version string length
+                    byte[] vers = new byte[len-2];
+                    System.arraycopy(info, i+2, vers, 0, len-2);
+                    String versS = new String(vers);
+                    i += len;
+                    db.setVersion(versS);
+                    if (debug) log.debug("isc_info_version:"+versS);
+                    break;
+                case ISCConstants.isc_info_ods_version:
+                    len = isc_vax_integer(info, i, 2);
+                    i += 2;
+                    value = isc_vax_integer (info, i, len);
+                    i += len;
+                    db.setODSMajorVersion(value);
+                    if (debug) log.debug("isc_info_ods_version:"+value);
+                    break;
+                case ISCConstants.isc_info_ods_minor_version:
+                    len = isc_vax_integer(info, i, 2);
+                    i += 2;
+                    value = isc_vax_integer (info, i, len);
+                    i += len;
+                    db.setODSMinorVersion(value);
+                    if (debug) log.debug("isc_info_ods_minor_version:"+value);
+                    break;
+                case ISCConstants.isc_info_truncated:
+                    if (debug) log.debug("isc_info_truncated ");
+                    return;
+                default:
+                    throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
+            }
+        }
+    }
 
     private native void native_isc_attach_database(String file_name, isc_db_handle db_handle, byte[] dpbBytes);
 
@@ -275,7 +327,6 @@ public class GDS_Impl extends AbstractGDS implements GDS
     public void isc_detach_database(isc_db_handle db_handle) throws GDSException
         {
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
-
         if (db == null)
             {
             throw new GDSException(ISCConstants.isc_bad_db_handle);
@@ -1034,22 +1085,22 @@ public class GDS_Impl extends AbstractGDS implements GDS
     // isc_close_blob ---------------------------------------------------------------------------------------------
     public void isc_close_blob(isc_blob_handle blob_handle) throws GDSException
         {
-//        isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
-//        isc_db_handle_impl db = blob.getDb();
-//        if (db == null) {
-//            throw new GDSException(ISCConstants.isc_bad_db_handle);
-//        }
-//        isc_tr_handle_impl tr = blob.getTr();
-//        if (tr == null) {
-//            throw new GDSException(ISCConstants.isc_bad_trans_handle);
-//        }
+        isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
+        isc_db_handle_impl db = blob.getDb();
+        if (db == null) {
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
+        }
+        isc_tr_handle_impl tr = blob.getTr();
+        if (tr == null) {
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
+        }
 
         synchronized(((isc_blob_handle_impl)blob_handle).getDb())
             {
-        native_isc_close_blob( blob_handle );
+            native_isc_close_blob( blob_handle );
             }
 
-//        tr.removeBlob(blob);
+        tr.removeBlob(blob);
         }
 
     public native void native_isc_close_blob(isc_blob_handle blob) throws GDSException;
@@ -1150,7 +1201,60 @@ public class GDS_Impl extends AbstractGDS implements GDS
     public native void native_isc_service_start(isc_svc_handle serviceHandle, byte[] serviceParameterBuffer) throws GDSException;
     public native void native_isc_service_query(isc_svc_handle serviceHandle, byte[] sendServiceParameterBuffer, byte[] requestServiceParameterBuffer, byte[] resultBuffer) throws GDSException;
 
+    private String getServerUrl(String file_name) throws GDSException
+		{
+        if( this.getGdsType() == GDSType.NATIVE )
+            return getRemoteServerUrl(file_name);
+        else if(this.getGdsType() == GDSType.NATIVE_EMBEDDED)
+            return getEmbeddedServerUrl(file_name);
+        else
+            throw new RuntimeException("Unrecognized gds type.");
+    }
 
+    private String getRemoteServerUrl(String file_name) throws GDSException
+        {
+        if(log != null)
+        log.debug("Original file name: "+file_name);
+
+        DbAttachInfo dbai = new DbAttachInfo(file_name);
+
+        final String fileName;
+        if( dbai.getFileName().indexOf(':') == -1 && dbai.getFileName().startsWith("/") == false )
+        {
+         fileName = dbai.getServer() +"/"+ dbai.getPort() +":"+"/"  +dbai.getFileName();
+        }
+        else
+        fileName = dbai.getServer() +"/"+ dbai.getPort() +":"+dbai.getFileName();
+
+        if(log != null)
+        log.debug("File name for native code: "+fileName);
+
+        return fileName;
+        }
+
+    private String getEmbeddedServerUrl(String file_name) throws GDSException
+            {
+            if(log != null)
+            log.debug("Original file name: "+file_name);
+
+            DbAttachInfo dbai = new DbAttachInfo(file_name);
+
+            final String fileName;
+           // if( dbai.getFileName().indexOf(':') == -1 && dbai.getFileName().startsWith("/") == false )
+           // {
+           //  fileName = "/"  +dbai.getFileName();
+            //}
+            //else
+            fileName = dbai.getFileName();
+
+            if(log != null)
+            log.debug("File name for native code: "+fileName);
+
+            return fileName;
+            }
+
+    
+    
     // STATIC CLASSES --------------------------------------------------------------------------------------------------
 
     protected static class DbAttachInfo {
