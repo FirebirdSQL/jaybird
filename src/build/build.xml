@@ -37,7 +37,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
 
 
     <property name="classpath" value="${build.classes.dir};${src.lib.dir}/jta-spec1_0_1.jar;${src.lib.dir}/connector.jar;${src.lib.dir}/jdbc-3_0-pfd2-classes.zip;${src.lib.dir}/jaas.jar"/>
-    <property name="packages" value="firebirdsql.jdbc, firebirdsql.jca"/>
+    <property name="packages" value="org.firebirdsql.*"/>
 
     <property name="build.compiler" value="classic"/>
 
@@ -218,7 +218,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
   <target name="javadocs" depends="prepare">
     <mkdir dir="${build.javadocs.dir}"/>
     <javadoc packagenames="${packages}"
-             sourcepath="${src.dir}/main"
+             sourcepath="${src.dir}"
              destdir="${build.javadocs.dir}"
              classpath="${classpath}"
              author="true"
