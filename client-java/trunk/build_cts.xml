@@ -4,9 +4,9 @@
 	<property name="jdbc.password" value="masterkey"/>
 	<property name="jdbc.url"      value="jdbc:firebirdsql:localhost/3050:${basedir}/jdbccts.gdb"/>
 	<property name="jdbc.driver"   value="org.firebirdsql.jdbc.FBDriver"/>
-	<property name="jdbc.init_sql" value="${basedir}/conf/ctssql.ddl.firebird.sql"/>
+	<property name="jdbc.init_sql" value="${basedir}/src/jdbccts/ddl.properties"/>
 	
-	<property name="cts.path"      value="f:/java/jdbccts"/>
+	<property name="cts.path"      value="c:/java/jdbccts"/>
 
 	<property name="cts.config"    value="dml.properties"/>
 	<property name="cts.excludes"  value="excludes.properties"/>
@@ -24,11 +24,7 @@
 		<pathelement location="${cts.path}/lib/parser.jar"/>
 		<pathelement location="${cts.path}/lib/riinterceptors.jar"/>
 		
-		<pathelement path="${output.dir}/j2ee"/>
-		<pathelement path="${output.dir}/classes"/>
-		<pathelement path="${output.dir}/concurrent"/>
-		<pathelement path="${output.dir}/pool"/>
-		<pathelement path="${output.dir}/test"/>
+		<pathelement path="${output.dir}/lib/firebirdsql-full.jar"/>
 	</path>
 
 	<target name="initdb">
@@ -43,7 +39,7 @@
 		</java>
 	</target>
 	
-	<target name="init">
+	<target name="init" depends="initdb">
 		<mkdir dir="${compile.out}"/>
 		<mkdir dir="${test.out}"/>
 		<mkdir dir="${report.out}"/>
