@@ -45,8 +45,8 @@ public class TestDriverConnectionPoolDataSource extends
         connectionPool.setDriverClassName(
             FBDriver.class.getName());
         
-        connectionPool.setMinConnections(DEFAULT_MIN_CONNECTIONS);
-        connectionPool.setMaxConnections(DEFAULT_MAX_CONNECTIONS);
+        connectionPool.setMinPoolSize(DEFAULT_MIN_CONNECTIONS);
+        connectionPool.setMaxPoolSize(DEFAULT_MAX_CONNECTIONS);
         connectionPool.setPingInterval(DEFAULT_PING_INTERVAL);
         
         connectionPool.setProperties(getDefaultPropertiesForConnection());

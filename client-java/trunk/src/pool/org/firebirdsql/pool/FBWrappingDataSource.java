@@ -151,7 +151,7 @@ import org.firebirdsql.jdbc.FBConnectionHelper;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class FBWrappingDataSource implements DataSource, 
-    ObjectFactory, Referenceable, Serializable 
+    ObjectFactory, Referenceable, Serializable, FirebirdPoolConfiguration 
 {
 
     private FBConnectionPoolDataSource pool;
@@ -300,7 +300,7 @@ public class FBWrappingDataSource implements DataSource,
     }
     
     public void setMaxIdleTime(int maxIdleTime) {
-        getPool().setMaxIdleTimeout(maxIdleTime);
+        getPool().setMaxIdleTime(maxIdleTime);
     }
     
     /**
@@ -347,14 +347,28 @@ public class FBWrappingDataSource implements DataSource,
         getPool().setMaxConnections(maxConnections);
     }
     
-    public int getMinConnections() {
-        return getPool().getMinConnections();
+    public int getMinPoolSize() {
+        return getPool().getMinPoolSize();
     }
     
-    public void setMinConnections(int minConnections) {
-        getPool().setMinConnections(minConnections);
+    public void setMinPoolSize(int minPoolSize) {
+        getPool().setMinPoolSize(minPoolSize);
     }
-
+    
+    /**
+     * @deprecated non-standard name, use {@link #getMinPoolSize()}
+     */
+    public int getMinConnections() {
+        return getMinPoolSize();
+    }
+    
+    /**
+     * @deprecated non-standard name, use {@link #setMinPoolSize(int)}
+     */
+    public void setMinConnections(int minConnections) {
+        setMinPoolSize(minConnections);
+    }
+    
     public String getPassword() {
         return getPool().getPassword();
     }
@@ -520,10 +534,13 @@ public class FBWrappingDataSource implements DataSource,
     private static final String REF_BLOCKING_TIMEOUT = "blockingTimeout";
     private static final String REF_DATABASE = "database";
     private static final String REF_DESCRIPTION = "description";
+    private static final String REF_MAX_IDLE_TIME = "maxIdleTime";
     private static final String REF_IDLE_TIMEOUT = "idleTimeout";
     private static final String REF_LOGIN_TIMEOUT = "loginTimeout";
-    private static final String REF_MAX_SIZE = "maxConnections";
-    private static final String REF_MIN_SIZE = "minConnections";
+    private static final String REF_MAX_POOL_SIZE = "maxPoolSize";
+    private static final String REF_MIN_POOL_SIZE = "minPoolSize";
+    private static final String REF_MAX_CONNECTIONS = "maxConnections";
+    private static final String REF_MIN_CONNECTIONS = "minConnections";
     private static final String REF_PING_INTERVAL = "pingInterval";
     private static final String REF_TYPE = "type";
     private static final String REF_TX_ISOLATION = "transactionIsolationLevel";
@@ -565,14 +582,23 @@ public class FBWrappingDataSource implements DataSource,
             if (REF_IDLE_TIMEOUT.equals(type))
                 ds.setIdleTimeout(Integer.parseInt(element.getContent().toString()));
             else
+            if (REF_MAX_IDLE_TIME.equals(type))
+                ds.setMaxIdleTime(Integer.parseInt(element.getContent().toString()));
+            else
             if (REF_LOGIN_TIMEOUT.equals(type))
                 ds.setLoginTimeout(Integer.parseInt(element.getContent().toString()));
             else
-            if (REF_MAX_SIZE.equals(type))
-                ds.setMaxConnections(Integer.parseInt(element.getContent().toString()));
+            if (REF_MAX_POOL_SIZE.equals(type))
+                ds.setMaxPoolSize(Integer.parseInt(element.getContent().toString()));
             else
-            if (REF_MIN_SIZE.equals(type))
+            if (REF_MIN_POOL_SIZE.equals(type))
+                ds.setMinPoolSize(Integer.parseInt(element.getContent().toString()));
+            else
+            if (REF_MIN_CONNECTIONS.equals(type))
                 ds.setMinConnections(Integer.parseInt(element.getContent().toString()));
+            else
+            if (REF_MAX_CONNECTIONS.equals(type))
+                ds.setMaxConnections(Integer.parseInt(element.getContent().toString()));
             else
             if (REF_PING_INTERVAL.equals(type))
                 ds.setPingInterval(Integer.parseInt(element.getContent().toString()));
@@ -653,21 +679,21 @@ public class FBWrappingDataSource implements DataSource,
         if (getDescription() != null)
             ref.add(new StringRefAddr(REF_DESCRIPTION, getDescription()));
           
-        if (getIdleTimeout() != FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT)
-            ref.add(new StringRefAddr(REF_IDLE_TIMEOUT,
-                String.valueOf(getIdleTimeout())));
+        if (getMaxIdleTime() != FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT)
+            ref.add(new StringRefAddr(REF_MAX_IDLE_TIME,
+                String.valueOf(getMaxIdleTime())));
             
         if (getLoginTimeout() != FBPoolingDefaults.DEFAULT_LOGIN_TIMEOUT)
             ref.add(new StringRefAddr(REF_LOGIN_TIMEOUT,
                 String.valueOf(getLoginTimeout())));
 
-        if (getMaxConnections() != FBPoolingDefaults.DEFAULT_MAX_SIZE)
-            ref.add(new StringRefAddr(REF_MAX_SIZE, 
-                String.valueOf(getMaxConnections())));
+        if (getMaxPoolSize() != FBPoolingDefaults.DEFAULT_MAX_SIZE)
+            ref.add(new StringRefAddr(REF_MAX_POOL_SIZE, 
+                String.valueOf(getMaxPoolSize())));
 
-        if (getMinConnections() != FBPoolingDefaults.DEFAULT_MIN_SIZE)
-            ref.add(new StringRefAddr(REF_MIN_SIZE,
-                String.valueOf(getMinConnections())));
+        if (getMinPoolSize() != FBPoolingDefaults.DEFAULT_MIN_SIZE)
+            ref.add(new StringRefAddr(REF_MIN_POOL_SIZE,
+                String.valueOf(getMinPoolSize())));
 
         if (getPingInterval() != FBPoolingDefaults.DEFAULT_PING_INTERVAL)
             ref.add(new StringRefAddr(REF_PING_INTERVAL, 

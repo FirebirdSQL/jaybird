@@ -61,8 +61,8 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         connectionPool.setType(getGdsType().toString());
         
         connectionPool.setDatabase(DB_DATASOURCE_URL);
-        connectionPool.setMinConnections(DEFAULT_MIN_CONNECTIONS);
-        connectionPool.setMaxConnections(DEFAULT_MAX_CONNECTIONS);
+        connectionPool.setMinPoolSize(DEFAULT_MIN_CONNECTIONS);
+        connectionPool.setMaxPoolSize(DEFAULT_MAX_CONNECTIONS);
         connectionPool.setPingInterval(DEFAULT_PING_INTERVAL);
         
         connectionPool.setProperties(getDefaultPropertiesForConnection());
@@ -142,34 +142,10 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         }
     }
     
-    public void testReferenceSupport() throws Exception {
+    public void testReferenceSupportWrapping() throws Exception {
         Reference ref = new Reference(FBWrappingDataSource.class.getName());
         
-        // Firebird standard properties
-        ref.add(new StringRefAddr("database", DB_DATASOURCE_URL));
-        ref.add(new StringRefAddr("userName", DB_USER));
-        ref.add(new StringRefAddr("password", DB_PASSWORD));
-        ref.add(new StringRefAddr("type", getGdsType().toString()));
-        ref.add(new StringRefAddr("sqlRole", "USER"));
-        ref.add(new StringRefAddr("blobBufferSize", "32767"));
-        ref.add(new StringRefAddr("socketBufferSize", "8192"));
-        
-        // pool properties
-        ref.add(new StringRefAddr("blockingTimeout", "1000"));
-        ref.add(new StringRefAddr("idleTimeout", "1000"));
-        ref.add(new StringRefAddr("retryInterval", "100"));
-        ref.add(new StringRefAddr("maxConnections", "5"));
-        ref.add(new StringRefAddr("minConnections", "2"));
-        ref.add(new StringRefAddr("pooling", "false"));
-        ref.add(new StringRefAddr("statementPooling", "false"));
-        ref.add(new StringRefAddr("pingStatement", "SELECT CAST(2 AS INTEGER) FROM RDB$DATABASE"));
-        ref.add(new StringRefAddr("pingInterval", "12000"));
-        ref.add(new StringRefAddr("isolation", "TRANSACTION_REPEATABLE_READ"));
-        
-        // non-standard properties
-        ref.add(new StringRefAddr("nonStandard", "isc_dpb_set_db_charset : WIN1251"));
-        ref.add(new StringRefAddr("nonStandard", "isc_dpb_num_buffers 2048"));
-        ref.add(new StringRefAddr("isc_dpb_sweep_interval", "100"));
+        fillReference(ref);
         
         String JNDI_FACTORY = "com.sun.jndi.fscontext.RefFSContextFactory";
 
@@ -187,36 +163,105 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             
             FBWrappingDataSource ds = (FBWrappingDataSource)obj;
             
-            assertEquals(DB_DATASOURCE_URL, ds.getDatabase());
-            assertEquals(DB_USER, ds.getUserName());
-            assertEquals(DB_PASSWORD, ds.getPassword());
-            assertEquals(getGdsType().toString(), ds.getType());
-            assertEquals("USER", ds.getSqlRole());
-            assertEquals(32767, ds.getBlobBufferSize());
-            assertEquals(8192, ds.getSocketBufferSize());
-            
-            assertEquals(1000, ds.getBlockingTimeout());
-            assertEquals(1000, ds.getMaxIdleTime());
-            assertEquals(5, ds.getMaxPoolSize());
-            assertEquals(2, ds.getMinConnections());
-            assertEquals(12000, ds.getPingInterval());
-            assertEquals("TRANSACTION_REPEATABLE_READ", ds.getIsolation());
-
-            // These properties are not avaiable via FBWrappingDataSource interface
-            //
-            //assertEquals(100, ds.getRetryInterval());
-            //assertEquals(false, ds.getPooling());
-            //assertEquals(false, ds.getStatementPooling());
-            //assertEquals("SELECT CAST(2 AS INTEGER) FROM RDB$DATABASE", ds.getPingStatement());
-
-            assertEquals("WIN1251", ds.getNonStandardProperty("isc_dpb_set_db_charset"));
-            assertEquals("2048", ds.getNonStandardProperty("isc_dpb_num_buffers"));
-            assertEquals("100", ds.getNonStandardProperty("isc_dpb_sweep_interval"));
+            assertPoolConfiguration(ds);
         } finally {
             ctx.unbind("jdbc/test");
         }
     }
     
+    public void testReferenceSupport() throws Exception {
+        Reference ref = new Reference(FBConnectionPoolDataSource.class.getName());
+        
+        fillReference(ref);
+        
+        String JNDI_FACTORY = "com.sun.jndi.fscontext.RefFSContextFactory";
+
+        Properties props = new Properties();
+        props.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
+        props.put(Context.OBJECT_FACTORIES, FBConnectionPoolDataSource.class.getName());
+        
+        Context ctx = new InitialContext(props);
+        try {
+            ctx.bind("jdbc/test", ref);
+            
+            Object obj = ctx.lookup("jdbc/test");
+            
+            assertTrue("Should provide correct data source", obj instanceof FBConnectionPoolDataSource);
+            
+            FBConnectionPoolDataSource ds = (FBConnectionPoolDataSource)obj;
+            
+            assertPoolConfiguration(ds);
+        } finally {
+            ctx.unbind("jdbc/test");
+        }
+    }    
+    
+    /**
+     * Assert that datasource has correct propeties.
+     * 
+     * @param ds data source to check
+     */
+    private void assertPoolConfiguration(FirebirdPoolConfiguration ds) {
+        assertEquals(DB_DATASOURCE_URL, ds.getDatabase());
+        assertEquals(DB_USER, ds.getUserName());
+        assertEquals(DB_PASSWORD, ds.getPassword());
+        assertEquals(getGdsType().toString(), ds.getType());
+        assertEquals("USER", ds.getRoleName());
+        assertEquals(32767, ds.getBlobBufferSize());
+        assertEquals(8192, ds.getSocketBufferSize());
+        
+        assertEquals(1000, ds.getBlockingTimeout());
+        assertEquals(1000, ds.getMaxIdleTime());
+        assertEquals(5, ds.getMaxPoolSize());
+        assertEquals(2, ds.getMinPoolSize());
+        assertEquals(12000, ds.getPingInterval());
+        assertEquals("TRANSACTION_REPEATABLE_READ", ds.getIsolation());
+
+        // These properties are not avaiable via FBWrappingDataSource interface
+        //
+        //assertEquals(100, ds.getRetryInterval());
+        //assertEquals(false, ds.getPooling());
+        //assertEquals(false, ds.getStatementPooling());
+        //assertEquals("SELECT CAST(2 AS INTEGER) FROM RDB$DATABASE", ds.getPingStatement());
+
+        assertEquals("WIN1251", ds.getNonStandardProperty("isc_dpb_set_db_charset"));
+        assertEquals("2048", ds.getNonStandardProperty("isc_dpb_num_buffers"));
+        assertEquals("100", ds.getNonStandardProperty("isc_dpb_sweep_interval"));
+    }
+
+    /**
+     * Fill the refrence.
+     * 
+     * @param ref instance of {@link Reference} to fill.
+     */
+    private void fillReference(Reference ref) {
+        // Firebird standard properties
+        ref.add(new StringRefAddr("database", DB_DATASOURCE_URL));
+        ref.add(new StringRefAddr("userName", DB_USER));
+        ref.add(new StringRefAddr("password", DB_PASSWORD));
+        ref.add(new StringRefAddr("type", getGdsType().toString()));
+        ref.add(new StringRefAddr("sqlRole", "USER"));
+        ref.add(new StringRefAddr("blobBufferSize", "32767"));
+        ref.add(new StringRefAddr("socketBufferSize", "8192"));
+        
+        // pool properties
+        ref.add(new StringRefAddr("blockingTimeout", "1000"));
+        ref.add(new StringRefAddr("maxIdleTime", "1000"));
+        ref.add(new StringRefAddr("retryInterval", "100"));
+        ref.add(new StringRefAddr("maxPoolSize", "5"));
+        ref.add(new StringRefAddr("minPoolSize", "2"));
+        ref.add(new StringRefAddr("pooling", "false"));
+        ref.add(new StringRefAddr("statementPooling", "false"));
+        ref.add(new StringRefAddr("pingStatement", "SELECT CAST(2 AS INTEGER) FROM RDB$DATABASE"));
+        ref.add(new StringRefAddr("pingInterval", "12000"));
+        ref.add(new StringRefAddr("isolation", "TRANSACTION_REPEATABLE_READ"));
+        
+        // non-standard properties
+        ref.add(new StringRefAddr("nonStandard", "isc_dpb_set_db_charset : WIN1251"));
+        ref.add(new StringRefAddr("nonStandard", "isc_dpb_num_buffers 2048"));
+        ref.add(new StringRefAddr("isc_dpb_sweep_interval", "100"));
+    }
+
     /**
      * Test if connection we obtained is ok.
      * 
@@ -346,21 +391,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
                 stmt.close();
             }
         } finally{
-            // we must close the connection because prepared statement
-            // will be alive and it will prevent us from dropping a table
             con.close();
-            
-            con = dataSource.getConnection();
-            try {
-                Statement stmt = con.createStatement();
-                try {
-                    stmt.executeUpdate("DROP TABLE test");
-                } finally {
-                    stmt.close();
-                }
-            } finally {
-                con.close();
-            }
             
             pool.shutdown();
         }
@@ -428,7 +459,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         
         try {
             PooledConnection[] connections = 
-                new PooledConnection[pool.getMaxConnections()];
+                new PooledConnection[pool.getMaxPoolSize()];
                 
             // take all connections, so next access will block
             for (int i = 0; i < connections.length; i++) {
@@ -485,7 +516,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     }
     
     public void testIdleRemover() throws Exception {
-        pool.setIdleTimeout(1 * 1000);
+        pool.setMaxIdleTime(1 * 1000);
         
         try {
             Connection con = pool.getPooledConnection().getConnection();
@@ -512,7 +543,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     }
 
     public void testIdleRemoverAndMinPoolSize() throws Exception {
-        pool.setIdleTimeout(1 * 1000);
+        pool.setMaxIdleTime(1 * 1000);
         pool.setMinPoolSize(1);
         
         try {
