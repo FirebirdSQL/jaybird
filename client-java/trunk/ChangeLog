@@ -1,3 +1,37 @@
+2003-08-12 00:06  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/ngds/TestNgds.java:
+	
+	removed unused imports
+
+2003-08-12 00:05  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	FBDataSourceObjectFactory.java, FBWrappingDataSource.java:
+	
+	deprecated
+
+2003-08-12 00:05  rrokytskyy
+
+	* client-java/examples/: DataSourceExample.java,
+	DriverExample.java:
+	
+	fixed classes so that they compile with recent changes
+
+2003-08-12 00:04  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	AbstractConnectionPoolDataSource.java,
+	ConnectionPoolConfiguration.java,
+	FBConnectionPoolConfiguration.java,
+	FBConnectionPoolDataSource.java,
+	FBConnectionPoolObjectFactory.java, FBPoolingDefaults.java,
+	FBWrappingDataSource.java, PingablePooledConnection.java,
+	PooledConnectionManager.java, PooledConnectionQueue.java,
+	XConnection.java, XConnectionManager.java:
+	
+	significant rework of pooling classes
+
 2003-08-11 23:55  rrokytskyy
 
 	*
