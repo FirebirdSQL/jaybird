@@ -429,7 +429,7 @@ public class FBResultSet implements ResultSet {
                 return false;
             } else {
                 throw new SQLException("can't interpret value as boolean: " + value);
-            }    
+            }
         } else {
             throw new SQLException("Illegal type conversion");
         }
@@ -502,7 +502,7 @@ public class FBResultSet implements ResultSet {
                 return Long.parseLong((String) obj);
             } catch (NumberFormatException ex) {
                 throw new SQLException("Number format error");
-            }    
+            }
         } else {
             throw new SQLException("Illegal type conversion");
         }
@@ -545,7 +545,7 @@ public class FBResultSet implements ResultSet {
                 return Double.parseDouble((String) obj);
             } catch (NumberFormatException ex) {
                 throw new SQLException("Number format error");
-            }    
+            }
         } else {
             throw new SQLException("Illegal type conversion");
         }
@@ -577,7 +577,7 @@ public class FBResultSet implements ResultSet {
                 return new BigDecimal((String) obj);
             } catch (NumberFormatException ex) {
                 throw new SQLException("Number format error");
-            }    
+            }
         } else {
             throw new SQLException("Illegal type conversion");
         }
@@ -1174,10 +1174,10 @@ public class FBResultSet implements ResultSet {
         if (wasNull()) {
             return null;
         }
-        
+
         int sqltype = getXsqlvar(columnIndex).sqltype & ~1;
         int sqlscale = getXsqlvar(columnIndex).sqlscale;
-        
+
         if ((sqltype == GDS.SQL_TEXT) || (sqltype == GDS.SQL_VARYING)) {
             if (row[columnIndex - 1] instanceof String) {
                 return row[columnIndex - 1];
@@ -1200,7 +1200,7 @@ public class FBResultSet implements ResultSet {
                 throw new SQLException("Blob I/O error");
             }
             return out.toByteArray();
-        } else {    
+        } else {
             return row[columnIndex - 1];
         }
     }
@@ -1331,7 +1331,7 @@ public class FBResultSet implements ResultSet {
         if (row[columnIndex - 1] == null) {
             return null;
         }
-        return BigDecimal.valueOf(((Long)row[columnIndex - 1]).longValue(), getXsqlvar(columnIndex).sqlscale);
+        return BigDecimal.valueOf(((Long)row[columnIndex - 1]).longValue(), getXsqlvar(columnIndex).sqlscale * (-1));
     }
 
 
@@ -2830,7 +2830,7 @@ public class FBResultSet implements ResultSet {
         if (row[columnIndex - 1] == null) {
             return null;
         }
-        if (log.isDebugEnabled()) 
+        if (log.isDebugEnabled())
         {
            log.debug("retrieved blob_id: " + row[columnIndex - 1]);
         } // end of if ()
