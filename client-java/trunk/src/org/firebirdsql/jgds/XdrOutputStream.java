@@ -36,8 +36,6 @@ import java.io.*;
 import java.util.Set;
 import java.util.Iterator;
 
-
-import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.logging.Logger;
 
 class XdrOutputStream extends FilterOutputStream {
