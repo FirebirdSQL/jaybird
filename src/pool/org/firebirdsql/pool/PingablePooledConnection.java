@@ -37,10 +37,10 @@ public class PingablePooledConnection implements PooledConnection,
     PooledObject, XConnectionManager,
     XPingableConnection, XStatementManager {
 
-    private static final boolean LOG_PREPARE_STATEMENT = false;
-    private static final boolean LOG_STATEMENT_IN_POOL = false;
-    private static final boolean LOG_POOL_CLEANING = false;
-    private static final boolean LOG_META_DATA = false;
+    private static final boolean LOG_PREPARE_STATEMENT = PoolDebugConfiguration.DEBUG_STMT_POOL;
+    private static final boolean LOG_POOL_CLEANING = PoolDebugConfiguration.DEBUG_STMT_POOL;
+    
+    private static final boolean LOG_META_DATA = PoolDebugConfiguration.LOG_DEBUG_INFO;
 
     private static Logger log =
         LoggerFactory.getLogger(PingablePooledConnection.class, false);

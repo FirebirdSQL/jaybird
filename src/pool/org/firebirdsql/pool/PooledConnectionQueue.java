@@ -35,8 +35,9 @@ import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
  */
 class PooledConnectionQueue {
     
-    private static final boolean LOG_DEBUG_INFO = false;
-    private static final boolean SHOW_STACK_ON_BLOCK = false;
+    private static final boolean LOG_DEBUG_INFO = PoolDebugConfiguration.LOG_DEBUG_INFO;
+    private static final boolean SHOW_STACK_ON_BLOCK = PoolDebugConfiguration.SHOW_TRACE;
+    private static final boolean SHOW_STACK_ON_ALLOCATION = PoolDebugConfiguration.SHOW_TRACE;
     
 
     private PooledConnectionManager connectionManager;
@@ -363,17 +364,24 @@ class PooledConnectionQueue {
         } catch (InterruptedException iex) {
             throw new SQLException(
                 "No free connection was available and "
-                    + "waiting thread was interrupted. Sorry.");
+                    + "waiting thread was interrupted.");
         }
 
         size--;
 
         workingConnections.add(result);
 
-        if (LOG_DEBUG_INFO && getLogger() != null)
-            getLogger().debug(
-                "Thread "+ Thread.currentThread().getName() +
-                 " got connection.");
+        if (LOG_DEBUG_INFO && getLogger() != null) {
+            if (SHOW_STACK_ON_ALLOCATION)
+                getLogger().debug(
+                    "Thread "+ Thread.currentThread().getName() +
+                     " got connection.", new Exception());
+            else
+                getLogger().debug(
+                    "Thread "+ Thread.currentThread().getName() +
+                     " got connection.");
+
+        }
 
         return result;
     }
