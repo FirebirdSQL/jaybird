@@ -1,3 +1,103 @@
+2004-10-03 23:01  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/BasicAbstractConnectionPool.java,
+	pool/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBPooledConnection.java,
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java,
+	test/org/firebirdsql/pool/TestXADataSource.java,
+	main/org/firebirdsql/gds/GDSSynchronizationPolicy.java,
+	main/org/firebirdsql/ngds/GDS_Impl.java,
+	pool/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FirebirdStatement.java:
+	
+	merged with HEAD
+
+2004-10-03 22:53  rrokytskyy
+
+	*
+	
+	fixed incorrect interface querying when constructing dynamic proxy
+	client-java/src/main/org/firebirdsql/gds/GDSSynchronizationPolicy.j
+	ava:
+
+2004-10-03 22:51  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+	
+	added code to close result set when statement is released back to
+	pool
+
+2004-10-03 22:14  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FirebirdStatement.java,
+	pool/org/firebirdsql/pool/FBPooledConnection.java:
+	
+	added code to close result set when statement is released back to
+	pool
+
+2004-10-03 22:02  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	BasicAbstractConnectionPool.java,
+	DriverConnectionPoolDataSource.java,
+	FBConnectionPoolDataSource.java, FBPooledConnection.java,
+	PingablePooledConnection.java:
+	
+	added keepStatements parameter
+
+2004-10-03 21:41  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	
+	removed support for isc_api.dll as deprecated
+
+2004-10-03 15:25  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/pool/TestXADataSource.java:
+	
+	refactored to avoid unneeded inheritance
+
+2004-10-03 14:44  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/GDSFactory.java,
+	main/org/firebirdsql/gds/GDSType.java,
+	main/org/firebirdsql/jdbc/FBDriver.java,
+	main/org/firebirdsql/ngds/GDS_Impl.java,
+	test/org/firebirdsql/common/FBTestBase.java,
+	test/org/firebirdsql/common/SimpleFBTestBase.java:
+	
+	merged with head
+
+2004-10-03 14:13  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	
+	added support for fyracle.dll
+
+2004-10-03 12:19  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/common/FBTestBase.java:
+	
+	added support for Oracle-mode URLs (Fyracle project)
+
+2004-10-03 12:18  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/GDSFactory.java,
+	gds/GDSType.java, ngds/DynamicLibraryLoader.java,
+	ngds/GDS_Impl.java, jdbc/FBDriver.java:
+	
+	added support for Oracle-mode URLs (Fyracle project) and fixed a
+	typo in result set handling (GDS_Impl.isc_dsql_fetch)
+
 2004-10-03 01:39  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/: gds/TestFatalErrors.java,
