@@ -242,7 +242,8 @@ public class TestFBEncodings extends FBTestBase {
             assertTrue("Should insert one row", updated == 1);
             
             stmt = connection.prepareStatement(
-                "SELECT win1251_field, unicode_field " + 
+                "SELECT win1251_field, unicode_field, " + 
+                "'" + UKRAINIAN_TEST_STRING + "' direct_sql_field " +  
                 "FROM test_encodings WHERE id = ?");
                 
             stmt.setInt(1, UKRAINIAN_TEST_ID);
@@ -259,6 +260,10 @@ public class TestFBEncodings extends FBTestBase {
             assertTrue("unicode_field value should be the same", 
                 unicodeValue.equals(UKRAINIAN_TEST_STRING));
                 
+            String directSqlValue = rs.getString(3);
+            assertTrue("direct_sql_field should be the same",
+                directSqlValue.equals(UKRAINIAN_TEST_STRING));
+            
             assertTrue("Should have exactly one row", !rs.next());
             
             rs.close();
@@ -718,5 +723,64 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
             connection.close();
         }
         
+    }
+    
+    private static final byte[] TRANSLATION_TEST_BYTES = new byte[] {
+        (byte)0xde, (byte)0xbd, (byte)0xd8, (byte)0xda, (byte)0xdb, (byte)0xcc, (byte)0xce, (byte)0xcf
+    };
+    
+    private static final String TRANSLATION_TEST = "\u00df\u00a7\u00c4\u00d6\u00dc\u00e4\u00f6\u00fc";
+    
+    /**
+     * Test whether character translation code works correctly.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testTranslation() throws Exception {
+        
+        Properties props = new Properties();
+        props.putAll(getDefaultPropertiesForConnection());
+        props.put("lc_ctype", "NONE");
+        props.put("charSet", "Cp1252");
+        props.put("useTranslation", "translation.hpux");
+        
+        Connection connection = 
+            DriverManager.getConnection(getUrl(), props);
+
+        try {
+            PreparedStatement stmt = connection.prepareStatement(
+                "INSERT INTO test_encodings(" + 
+                "  id, none_field) " +
+                "VALUES(?, ?)");
+            
+            stmt.setInt(1, UNIVERSAL_TEST_ID);
+            stmt.setBytes(2, TRANSLATION_TEST_BYTES);
+            
+            int updated = stmt.executeUpdate();
+            stmt.close();
+            
+            assertTrue("Should insert one row", updated == 1);
+            
+            // 
+            // Test each column
+            //
+            stmt = connection.prepareStatement("SELECT none_field " + 
+                "FROM test_encodings WHERE id = ?");
+            
+            stmt.setInt(1, UNIVERSAL_TEST_ID);
+            
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Should have at least one row", rs.next());
+            
+            String str = rs.getString(1);
+            
+            assertTrue("Value should be correct.", TRANSLATION_TEST.equals(rs.getString(1)));
+            
+            stmt.close();
+
+            
+        } finally {
+            connection.close();
+        }
     }
 }

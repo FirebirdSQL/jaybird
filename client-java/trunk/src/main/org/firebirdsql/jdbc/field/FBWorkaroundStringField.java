@@ -78,7 +78,7 @@ public class FBWorkaroundStringField extends FBStringField {
     public void setConnection(AbstractConnection c) {
         super.setConnection(c);
 
-        bytesPerCharacter = FBConnectionHelper.getIscEncodingSize(IscEncoding);
+        bytesPerCharacter = FBConnectionHelper.getIscEncodingSize(iscEncoding);
         possibleCharLength = field.sqllen / bytesPerCharacter;
     }
 
@@ -105,7 +105,7 @@ public class FBWorkaroundStringField extends FBStringField {
             setNull();
             return;
         }
-        field.sqldata = field.encodeString(value,javaEncoding);
+        field.sqldata = field.encodeString(value,javaEncoding, mappingPath);
     }   
     
     /**

@@ -23,6 +23,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
+import org.firebirdsql.jgds.GDS_Impl;
 
 import org.firebirdsql.common.SimpleFBTestBase;
 
@@ -293,8 +294,8 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
 
         xsqlda.sqlvar[1] = xsqlvar;
 
-        ((org.firebirdsql.jgds.GDS_Impl)gds).calculateBLR(xsqlda);
-        ((org.firebirdsql.jgds.GDS_Impl)gds).calculateIOLength(xsqlda);
+        GDS_Impl.calculateBLR(xsqlda);
+        GDS_Impl.calculateIOLength(xsqlda);
 
         gds.isc_close_blob(blob_handle);
 
