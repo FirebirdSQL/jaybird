@@ -87,8 +87,8 @@ public class FBWorkaroundStringField extends FBStringField {
         if (value == STRING_NULL_VALUE)
             return;
         
-        if (field.sqldata.length > field.sqllen && !isSystemTable(field.relname))
-            throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);
+        if (getFieldData().length > field.sqllen && !isSystemTable(field.relname))
+            throw new DataTruncation(-1, true, false, getFieldData().length, field.sqllen);
     }    
     
     /**
@@ -104,7 +104,7 @@ public class FBWorkaroundStringField extends FBStringField {
             setNull();
             return;
         }
-        field.sqldata = field.encodeString(value,javaEncoding, mappingPath);
+        setFieldData(field.encodeString(value,javaEncoding, mappingPath));
     }   
     
     /**

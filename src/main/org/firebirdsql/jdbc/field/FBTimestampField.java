@@ -43,46 +43,46 @@ class FBTimestampField extends FBField {
     
     /*
     public Object getObject() throws SQLException {
-        if (getRow(numCol)==null) return OBJECT_NULL_VALUE;
+        if (getFieldData()==null) return OBJECT_NULL_VALUE;
 
-        return field.decodeTimestamp(getRow(numCol));
+        return field.decodeTimestamp(getFieldData());
     }
     */
     
     public String getString() throws SQLException {
-        if (getRow(numCol)==null) return STRING_NULL_VALUE;
+        if (getFieldData()==null) return STRING_NULL_VALUE;
 
-        return String.valueOf(field.decodeTimestamp(getRow(numCol)));
+        return String.valueOf(field.decodeTimestamp(getFieldData()));
     }
     public Date getDate(Calendar cal) throws SQLException {
-        if (getRow(numCol)==null) return DATE_NULL_VALUE;
+        if (getFieldData()==null) return DATE_NULL_VALUE;
 
         return field.decodeDate(getDate(),cal);
     }
     public Date getDate() throws SQLException {
-        if (getRow(numCol)==null) return DATE_NULL_VALUE;
+        if (getFieldData()==null) return DATE_NULL_VALUE;
 
         return new Date(getTimestamp().getTime());
     }
     public Time getTime(Calendar cal) throws SQLException {
-        if (getRow(numCol)==null) return TIME_NULL_VALUE;
+        if (getFieldData()==null) return TIME_NULL_VALUE;
 
         return field.decodeTime(getTime(),cal, isInvertTimeZone());
     }
     public Time getTime() throws SQLException {
-        if (getRow(numCol)==null) return TIME_NULL_VALUE;
+        if (getFieldData()==null) return TIME_NULL_VALUE;
 
         return new Time(getTimestamp().getTime());
     }
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        if (getRow(numCol)==null) return TIMESTAMP_NULL_VALUE;
+        if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
 		  
         return field.decodeTimestamp(getTimestamp(),cal, isInvertTimeZone());
     }
     public Timestamp getTimestamp() throws SQLException {
-        if (getRow(numCol)==null) return TIMESTAMP_NULL_VALUE;
+        if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
 
-        return field.decodeTimestamp(getRow(numCol));
+        return field.decodeTimestamp(getFieldData());
     }
     //--- setXXX methods
 
@@ -140,6 +140,6 @@ class FBTimestampField extends FBField {
             return;
         }
 
-        field.sqldata = field.encodeTimestamp(value);
+        setFieldData(field.encodeTimestamp(value));
     }
 }

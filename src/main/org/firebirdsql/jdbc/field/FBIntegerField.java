@@ -40,9 +40,9 @@ class FBIntegerField extends FBField {
     }
 
     public byte getByte() throws SQLException {
-        if (getRow(numCol)==null) return BYTE_NULL_VALUE;
+        if (getFieldData()==null) return BYTE_NULL_VALUE;
 
-        Integer value = new Integer(field.decodeInt(getRow(numCol)));
+        Integer value = new Integer(field.decodeInt(getFieldData()));
 
         // check if value is withing bounds
         if (value.intValue() > MAX_BYTE_VALUE ||
@@ -53,9 +53,9 @@ class FBIntegerField extends FBField {
         return value.byteValue();
     }
     public short getShort() throws SQLException {
-        if (getRow(numCol)==null) return SHORT_NULL_VALUE;
+        if (getFieldData()==null) return SHORT_NULL_VALUE;
 
-        Integer value = new Integer(field.decodeInt(getRow(numCol)));
+        Integer value = new Integer(field.decodeInt(getFieldData()));
 
         // check if value is withing bounds
         if (value.intValue() > MAX_SHORT_VALUE ||
@@ -66,48 +66,48 @@ class FBIntegerField extends FBField {
         return value.shortValue();
     }
     public int getInt() throws SQLException {
-        if (getRow(numCol)==null) return INT_NULL_VALUE;
+        if (getFieldData()==null) return INT_NULL_VALUE;
 
-        return field.decodeInt(getRow(numCol));
+        return field.decodeInt(getFieldData());
     }
     public long getLong() throws SQLException {
-        if (getRow(numCol)==null) return LONG_NULL_VALUE;
+        if (getFieldData()==null) return LONG_NULL_VALUE;
 
-        return (long) field.decodeInt(getRow(numCol));
+        return (long) field.decodeInt(getFieldData());
     }
     public float getFloat() throws SQLException {
-        if (getRow(numCol)==null) return FLOAT_NULL_VALUE;
+        if (getFieldData()==null) return FLOAT_NULL_VALUE;
 
-        return (float) field.decodeInt(getRow(numCol));
+        return (float) field.decodeInt(getFieldData());
     }
     public double getDouble() throws SQLException {
-        if (getRow(numCol)==null) return DOUBLE_NULL_VALUE;
+        if (getFieldData()==null) return DOUBLE_NULL_VALUE;
 
-        return (double) field.decodeInt(getRow(numCol));
+        return (double) field.decodeInt(getFieldData());
     }
     public BigDecimal getBigDecimal() throws SQLException {
-        if (getRow(numCol)==null) return BIGDECIMAL_NULL_VALUE;
+        if (getFieldData()==null) return BIGDECIMAL_NULL_VALUE;
 
-        return BigDecimal.valueOf(field.decodeInt(getRow(numCol)));
+        return BigDecimal.valueOf(field.decodeInt(getFieldData()));
     }
     
     /*
     public Object getObject() throws SQLException {
-        if (getRow(numCol)==null) return OBJECT_NULL_VALUE;
+        if (getFieldData()==null) return OBJECT_NULL_VALUE;
 
-        return new Integer(field.decodeInt(getRow(numCol)));
+        return new Integer(field.decodeInt(getFieldData()));
     }
     */
     
     public boolean getBoolean() throws SQLException {
-        if (getRow(numCol)==null) return BOOLEAN_NULL_VALUE;
+        if (getFieldData()==null) return BOOLEAN_NULL_VALUE;
 
-        return field.decodeInt(getRow(numCol)) == 1;
+        return field.decodeInt(getFieldData()) == 1;
     }
     public String getString() throws SQLException {
-        if (getRow(numCol)==null) return STRING_NULL_VALUE;
+        if (getFieldData()==null) return STRING_NULL_VALUE;
 
-        return String.valueOf(field.decodeInt(getRow(numCol)));
+        return String.valueOf(field.decodeInt(getFieldData()));
     }
 
     //--- setXXX methods
@@ -159,7 +159,7 @@ class FBIntegerField extends FBField {
         setInteger((int)value);
     }
     public void setInteger(int value) throws SQLException {
-        field.sqldata = field.encodeInt(value);
+        setFieldData(field.encodeInt(value));
     }
     public void setByte(byte value) throws SQLException {
         setInteger((int)value);

@@ -164,8 +164,12 @@ public abstract class FBField {
         this.requiredType = requiredType;
     }
 
-    protected byte[] getRow(int numCol) {
+    protected byte[] getFieldData() {
         return dataProvider.getFieldData();
+    }
+    
+    protected void setFieldData(byte[] data) {
+        dataProvider.setFieldData(data);
     }
     
     /**
@@ -185,7 +189,7 @@ public abstract class FBField {
     }
 
     public void setNull() {
-        field.sqldata = null;
+        setFieldData(null);
     }
 
     public void setConnection(AbstractConnection c) {
@@ -680,7 +684,7 @@ public abstract class FBField {
             OBJECT_CONVERSION_ERROR).fillInStackTrace();
         */
         if (value == null) {
-            field.sqldata = null;
+            setNull();
             return;
         }
 
@@ -786,7 +790,7 @@ public abstract class FBField {
     // This method is only for the tests
     //
     void copyOI(){
-        dataProvider.setFieldData(field.sqldata);
+        dataProvider.setFieldData(dataProvider.getFieldData());
     }
 
     protected boolean isInvertTimeZone() {

@@ -38,9 +38,9 @@ class FBDoubleField extends FBField {
     }
 
     public byte getByte() throws SQLException {
-        if (getRow(numCol)==null) return BYTE_NULL_VALUE;
+        if (getFieldData()==null) return BYTE_NULL_VALUE;
 
-        Double value = new Double(field.decodeDouble(getRow(numCol)));
+        Double value = new Double(field.decodeDouble(getFieldData()));
 
         // check if value is withing bounds
         if (value.doubleValue() > MAX_BYTE_VALUE ||
@@ -51,9 +51,9 @@ class FBDoubleField extends FBField {
         return value.byteValue();
     }
     public short getShort() throws SQLException {
-        if (getRow(numCol)==null) return SHORT_NULL_VALUE;
+        if (getFieldData()==null) return SHORT_NULL_VALUE;
 
-        Double value = new Double(field.decodeDouble(getRow(numCol)));
+        Double value = new Double(field.decodeDouble(getFieldData()));
 
         // check if value is withing bounds
         if (value.doubleValue() > MAX_SHORT_VALUE ||
@@ -64,9 +64,9 @@ class FBDoubleField extends FBField {
         return value.shortValue();
     }
     public int getInt() throws SQLException {
-        if (getRow(numCol)==null) return INT_NULL_VALUE;
+        if (getFieldData()==null) return INT_NULL_VALUE;
 
-        Double value = new Double(field.decodeDouble(getRow(numCol)));
+        Double value = new Double(field.decodeDouble(getFieldData()));
 
         // check if value is withing bounds
         if (value.doubleValue() > MAX_INT_VALUE ||
@@ -77,9 +77,9 @@ class FBDoubleField extends FBField {
         return value.intValue();
     }
     public long getLong() throws SQLException {
-        if (getRow(numCol)==null) return LONG_NULL_VALUE;
+        if (getFieldData()==null) return LONG_NULL_VALUE;
 
-        Double value = new Double(field.decodeDouble(getRow(numCol)));
+        Double value = new Double(field.decodeDouble(getFieldData()));
 
         // check if value is withing bounds
         if (value.doubleValue() > MAX_LONG_VALUE ||
@@ -90,9 +90,9 @@ class FBDoubleField extends FBField {
         return value.longValue();
     }
     public float getFloat() throws SQLException {
-        if (getRow(numCol)==null) return FLOAT_NULL_VALUE;
+        if (getFieldData()==null) return FLOAT_NULL_VALUE;
 
-        Double value = new Double(field.decodeDouble(getRow(numCol)));
+        Double value = new Double(field.decodeDouble(getFieldData()));
         float cValue = value.floatValue();
         // check if value is withing bounds
         if (cValue == Float.POSITIVE_INFINITY || cValue == Float.NEGATIVE_INFINITY)
@@ -102,33 +102,33 @@ class FBDoubleField extends FBField {
         return value.floatValue();
     }
     public double getDouble() throws SQLException {
-        if (getRow(numCol)==null) return DOUBLE_NULL_VALUE;
+        if (getFieldData()==null) return DOUBLE_NULL_VALUE;
 
-        return field.decodeDouble(getRow(numCol));
+        return field.decodeDouble(getFieldData());
     }
     public BigDecimal getBigDecimal() throws SQLException {
-        if (getRow(numCol)==null) return BIGDECIMAL_NULL_VALUE;
+        if (getFieldData()==null) return BIGDECIMAL_NULL_VALUE;
 
-        return new BigDecimal(field.decodeDouble(getRow(numCol)));
+        return new BigDecimal(field.decodeDouble(getFieldData()));
     }
     
     /*
     public Object getObject() throws SQLException {
-        if (getRow(numCol)==null) return OBJECT_NULL_VALUE;
+        if (getFieldData()==null) return OBJECT_NULL_VALUE;
 
-        return new Double(field.decodeDouble(getRow(numCol)));
+        return new Double(field.decodeDouble(getFieldData()));
     }
     */
     
     public boolean getBoolean() throws SQLException {
-        if (getRow(numCol)==null) return BOOLEAN_NULL_VALUE;
+        if (getFieldData()==null) return BOOLEAN_NULL_VALUE;
 
-        return field.decodeDouble(getRow(numCol)) == 1;
+        return field.decodeDouble(getFieldData()) == 1;
     }
     public String getString() throws SQLException {
-        if (getRow(numCol)==null) return STRING_NULL_VALUE;
+        if (getFieldData()==null) return STRING_NULL_VALUE;
 
-        return String.valueOf(field.decodeDouble(getRow(numCol)));
+        return String.valueOf(field.decodeDouble(getFieldData()));
     }
 
     //--- setXXX methods
@@ -156,7 +156,7 @@ class FBDoubleField extends FBField {
         setDouble((double)value);
     }
     public void setDouble(double value) throws SQLException {
-        field.sqldata = field.encodeDouble(value);
+        setFieldData(field.encodeDouble(value));
     }
     public void setLong(long value) throws SQLException {
         setDouble((double)value);

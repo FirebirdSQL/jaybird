@@ -43,9 +43,9 @@ class FBFloatField extends FBField {
     }
 
     public byte getByte() throws SQLException {
-        if (getRow(numCol)==null) return BYTE_NULL_VALUE;
+        if (getFieldData()==null) return BYTE_NULL_VALUE;
 
-        Float value = new Float(field.decodeFloat(getRow(numCol)));
+        Float value = new Float(field.decodeFloat(getFieldData()));
 
         // check if value is withing bounds
         if (value.floatValue() > MAX_BYTE_VALUE ||
@@ -56,9 +56,9 @@ class FBFloatField extends FBField {
         return value.byteValue();
     }
     public short getShort() throws SQLException {
-        if (getRow(numCol)==null) return SHORT_NULL_VALUE;
+        if (getFieldData()==null) return SHORT_NULL_VALUE;
 
-        Float value = new Float(field.decodeFloat(getRow(numCol)));
+        Float value = new Float(field.decodeFloat(getFieldData()));
 
         // check if value is withing bounds
         if (value.floatValue() > MAX_SHORT_VALUE ||
@@ -69,9 +69,9 @@ class FBFloatField extends FBField {
         return value.shortValue();
     }
     public int getInt() throws SQLException {
-        if (getRow(numCol)==null) return INT_NULL_VALUE;
+        if (getFieldData()==null) return INT_NULL_VALUE;
 
-        Float value = new Float(field.decodeFloat(getRow(numCol)));
+        Float value = new Float(field.decodeFloat(getFieldData()));
 
         // check if value is withing bounds
         if (value.floatValue() > MAX_INT_VALUE ||
@@ -82,9 +82,9 @@ class FBFloatField extends FBField {
         return value.intValue();
     }
     public long getLong() throws SQLException {
-        if (getRow(numCol)==null) return LONG_NULL_VALUE;
+        if (getFieldData()==null) return LONG_NULL_VALUE;
 
-        Float value = new Float(field.decodeFloat(getRow(numCol)));
+        Float value = new Float(field.decodeFloat(getFieldData()));
 
         // check if value is withing bounds
         if (value.floatValue() > MAX_LONG_VALUE ||
@@ -95,38 +95,38 @@ class FBFloatField extends FBField {
         return value.longValue();
     }
     public float getFloat() throws SQLException {
-        if (getRow(numCol)==null) return FLOAT_NULL_VALUE;
+        if (getFieldData()==null) return FLOAT_NULL_VALUE;
 
-        return field.decodeFloat(getRow(numCol));
+        return field.decodeFloat(getFieldData());
     }
     public double getDouble() throws SQLException {
-        if (getRow(numCol)==null) return DOUBLE_NULL_VALUE;
+        if (getFieldData()==null) return DOUBLE_NULL_VALUE;
 
-        return field.decodeFloat(getRow(numCol));
+        return field.decodeFloat(getFieldData());
     }
     public BigDecimal getBigDecimal() throws SQLException {
-        if (getRow(numCol)==null) return BIGDECIMAL_NULL_VALUE;
+        if (getFieldData()==null) return BIGDECIMAL_NULL_VALUE;
 
-        return new BigDecimal(field.decodeFloat(getRow(numCol)));
+        return new BigDecimal(field.decodeFloat(getFieldData()));
     }
     
     /*
     public Object getObject() throws SQLException {
-        if (getRow(numCol)==null) return OBJECT_NULL_VALUE;
+        if (getFieldData()==null) return OBJECT_NULL_VALUE;
 
-        return new Double(field.decodeFloat(getRow(numCol)));
+        return new Double(field.decodeFloat(getFieldData()));
     }
     */
     
     public boolean getBoolean() throws SQLException {
-        if (getRow(numCol)==null) return BOOLEAN_NULL_VALUE;
+        if (getFieldData()==null) return BOOLEAN_NULL_VALUE;
 
-        return field.decodeFloat(getRow(numCol)) == 1;
+        return field.decodeFloat(getFieldData()) == 1;
     }
     public String getString() throws SQLException {
-        if (getRow(numCol)==null) return STRING_NULL_VALUE;
+        if (getFieldData()==null) return STRING_NULL_VALUE;
 
-        return String.valueOf(field.decodeFloat(getRow(numCol)));
+        return String.valueOf(field.decodeFloat(getFieldData()));
     }
 
     //--- setXXX methods
@@ -151,7 +151,7 @@ class FBFloatField extends FBField {
         setFloat(value ? 1.0f : 0.0f);
     }
     public void setFloat(float value) throws SQLException {
-        field.sqldata = field.encodeFloat(value);
+        setFieldData(field.encodeFloat(value));
     }
     public void setDouble(double value) throws SQLException {
         // check if value is within bounds

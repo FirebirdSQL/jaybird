@@ -42,9 +42,9 @@ public class FBCachedLongVarCharField extends FBLongVarCharField {
     }
 
     public Blob getBlob() throws SQLException {
-        if (getRow(numCol)==null)
+        if (getFieldData()==null)
             return BLOB_NULL_VALUE;
 
-        return new FBCachedBlob(getRow(numCol));
+        return new FBCachedBlob(getFieldData());
     }
 }
