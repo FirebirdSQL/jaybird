@@ -177,4 +177,9 @@ public class TestFBStringField extends BaseTestFBField {
         assertTrue("Time values test failure",
             field.getTime().toString().equals(TEST_TIME.toString()));
     }
+    public void testNull() throws SQLException {
+        field.setString(null);
+        field.copyOI();
+        assertTrue("Null value should be set.", field.getObject() == null);
+    }
 }
