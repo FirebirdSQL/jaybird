@@ -48,11 +48,11 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.isc_tr_handle;
+import org.firebirdsql.jdbc.FBConnectionDefaults;
 import org.firebirdsql.jdbc.FBConnectionHelper;
 import org.firebirdsql.jdbc.FBDataSource;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
-import org.firebirdsql.management.FBManager;
 
 /**
  * FBManagedConnectionFactory implements the jca ManagedConnectionFactory
@@ -104,10 +104,11 @@ public class FBManagedConnectionFactory
 
 
     //must be less than 1024 * 32: 1-24 * 32 -  is ok.
-    private int blobBufferLength = 1024 * 16;
+    private int blobBufferLength = FBConnectionDefaults.DEFAULT_BLOB_BUFFER_SIZE;
 
     //These hold non-serializable stuff.
-    private transient final static Logger log = LoggerFactory.getLogger(FBManagedConnectionFactory.class,true);
+    private transient final static Logger log = 
+        LoggerFactory.getLogger(FBManagedConnectionFactory.class,false);
 
     GDS gds;
 
