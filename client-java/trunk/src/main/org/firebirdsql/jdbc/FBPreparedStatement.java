@@ -156,84 +156,68 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         if (parameterIndex > fields.length)
             throw new SQLException("invalid column index");
         getField(parameterIndex).setNull();
-//        parameterWasSet(parameterIndex);
     }
 
     public void setBinaryStream(int parameterIndex, InputStream inputStream,
         int length) throws SQLException
     {
         getField(parameterIndex).setBinaryStream(inputStream, length);
-//        parameterWasSet(parameterIndex);
     }
 	 
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
         getField(parameterIndex).setBytes(x);
-//        parameterWasSet(parameterIndex);
     }
 
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
         getField(parameterIndex).setBoolean(x);
-//        parameterWasSet(parameterIndex);
     }
 
     public void setByte(int parameterIndex, byte x) throws SQLException {
         getField(parameterIndex).setByte(x);
-//        parameterWasSet(parameterIndex);
     }
 
     public void setDate(int parameterIndex, Date x) throws SQLException {
         getField(parameterIndex).setDate(x);
-//        parameterWasSet(parameterIndex);
     }
 
     public void setDouble(int parameterIndex, double x) throws SQLException {
         getField(parameterIndex).setDouble(x);
-//        parameterWasSet(parameterIndex);
     }
 
     public void setFloat(int parameterIndex, float x) throws SQLException {
         getField(parameterIndex).setFloat(x);
-//        parameterWasSet(parameterIndex);
     }
 
     public void setInt(int parameterIndex, int x) throws SQLException {
         getField(parameterIndex).setInteger(x);
-//        parameterWasSet(parameterIndex);
     }
 
     public void setLong(int parameterIndex, long x) throws SQLException {
         getField(parameterIndex).setLong(x);
-//        parameterWasSet(parameterIndex);
     }
 
     public void setObject(int parameterIndex, Object x) throws SQLException {
         getField(parameterIndex).setObject(x);
-//        parameterWasSet(parameterIndex);
     }
 
     public void setShort(int parameterIndex, short x) throws SQLException {
         getField(parameterIndex).setShort(x);
-//        parameterWasSet(parameterIndex);
     }
 
     public void setString(int parameterIndex, String x) throws SQLException {
         getField(parameterIndex).setString(x);
-//        parameterWasSet(parameterIndex);
     }
 
     public void setTime(int parameterIndex, Time x) throws SQLException {
         getField(parameterIndex).setTime(x);
-//        parameterWasSet(parameterIndex);
     }
 
     public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
         getField(parameterIndex).setTimestamp(x);
-//        parameterWasSet(parameterIndex);
     }
 
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws  SQLException {
         getField(parameterIndex).setBigDecimal(x);
-//        parameterWasSet(parameterIndex);
     }
     /**
      * Returns the XSQLVAR structure for the specified column.
@@ -480,7 +464,6 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
                   java.io.Reader reader,
               int length) throws  SQLException {
         getField(parameterIndex).setCharacterStream(reader, length);
-//        parameterWasSet(parameterIndex);
     }
 
 
@@ -516,7 +499,6 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             throw new SQLException("You must use FBBlobs with Firebird!");
         }
         getField(parameterIndex).setBlob((FBBlob) blob);
-//        parameterWasSet(parameterIndex);
     }
 
 
@@ -588,17 +570,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      *      2.0 API</a>
      */
     public void setDate(int parameterIndex, java.sql.Date x, Calendar cal)
-        throws  SQLException 
-    {
-        if (cal == null) 
-        {
-            setDate(parameterIndex, x);
-        } // end of if ()
-        else
-        {
-            cal.setTime(x);            
-            setDate(parameterIndex, new java.sql.Date(cal.getTime().getTime()));
-        } // end of else
+        throws  SQLException {
+        getField(parameterIndex).setDate(x, cal);
     }
 
 
@@ -622,17 +595,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      *      2.0 API</a>
      */
     public void setTime(int parameterIndex, java.sql.Time x, Calendar cal)
-        throws  SQLException
-    {
-        if (cal == null) 
-        {
-            setTime(parameterIndex, x);
-        } // end of if ()
-        else
-        {
-            cal.setTime(x);
-            setTime(parameterIndex, new java.sql.Time(cal.getTime().getTime()));
-        } // end of else
+        throws  SQLException {
+        getField(parameterIndex).setTime(x, cal);
     }
 
 
@@ -657,22 +621,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @todo change all the methods called to take a Calendar instead of Date object.
      */
     public void setTimestamp(int parameterIndex, java.sql.Timestamp x, Calendar cal) 
-        throws  SQLException 
-    {
-        if (cal == null) 
-        {
-            setTimestamp(parameterIndex, x);
-        } // end of if ()
-        else if (x == null) 
-        {
-            setTimestamp(parameterIndex, new java.sql.Timestamp(cal.getTime().getTime()));
-            
-        } // end of if ()
-        else
-        {
-            long time = x.getTime() - cal.getTimeZone().getRawOffset();
-            setTimestamp(parameterIndex, new java.sql.Timestamp(time));
-        } // end of else
+        throws  SQLException {
+        getField(parameterIndex).setTimestamp(x, cal);
     }
 
 
@@ -708,7 +658,6 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      */
      public void setNull (int parameterIndex, int sqlType, String typeName) throws  SQLException {
          setNull(parameterIndex, sqlType); //all nulls are represented the same... a null reference
-//        parameterWasSet(parameterIndex);
     }
 
 

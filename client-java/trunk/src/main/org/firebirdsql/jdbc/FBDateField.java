@@ -20,6 +20,7 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.Timestamp;
+import java.util.Calendar;
 import java.sql.Date;
 import java.sql.SQLException;
 
@@ -37,10 +38,20 @@ class FBDateField extends FBField {
         super(field, rs, numCol);
     }
 
+    Timestamp getTimestamp(Calendar cal) throws java.sql.SQLException {
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
+		  
+        return XSQLVAR.decodeTimestamp(getTimestamp(),cal);
+    }
     Timestamp getTimestamp() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
         return new Timestamp(getDate().getTime());
+    }
+    Date getDate(Calendar cal) throws java.sql.SQLException {
+        if (rs.row[numCol]==null) return DATE_NULL_VALUE;
+
+        return XSQLVAR.decodeDate(getDate(),cal);
     }
     Date getDate() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return DATE_NULL_VALUE;
@@ -68,6 +79,14 @@ class FBDateField extends FBField {
 
         setDate(Date.valueOf(value));
     }
+    void setTimestamp(Timestamp value, Calendar cal) throws java.sql.SQLException {
+        if (value == null) {
+            field.sqldata = null;
+            return;
+        }
+
+        setTimestamp(XSQLVAR.encodeTimestamp(value,cal));
+    }
     void setTimestamp(Timestamp value) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
@@ -75,6 +94,14 @@ class FBDateField extends FBField {
         }
 
         setDate(new Date(value.getTime()));
+    }
+    void setDate(Date value, Calendar cal) throws java.sql.SQLException {
+        if (value == null) {
+            field.sqldata = null;
+            return;
+        }
+
+        setDate(XSQLVAR.encodeDate(value,cal));
     }
     void setDate(Date value) throws java.sql.SQLException {
         if (value == null) {
