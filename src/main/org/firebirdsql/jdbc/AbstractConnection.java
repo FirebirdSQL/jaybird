@@ -953,7 +953,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         mc.closeStatement(stmt,deallocate);
     }	 
 
-    public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException {
+    public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException, SQLException {
         checkManagedConnection();
         mc.prepareSQL(stmt, sql, describeBind);
     }
@@ -1029,8 +1029,14 @@ public abstract class AbstractConnection implements FirebirdConnection {
         mc.putBlobSegment(blob, buf);
     }
 
-    public static String getJavaEncoding(String iscEncoding) {
-        return FBConnectionHelper.getJavaEncoding(iscEncoding);
+    public String getJavaEncoding() {
+        return getDatabaseParameterBuffer().getArgumentAsString(
+            DatabaseParameterBuffer.local_encoding);
+    }
+    
+    public String getMappingPath() {
+        return getDatabaseParameterBuffer().getArgumentAsString(
+            DatabaseParameterBuffer.mapping_path);
     }
 	 
     private AbstractPreparedStatement getStatement(String sql,HashMap statements) 

@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.5  2003/06/05 22:36:07  brodsom
+ * Substitute package and inline imports
+ *
  * Revision 1.4  2003/06/04 12:38:22  brodsom
  * Remove unused vars and imports
  *
@@ -37,8 +40,20 @@ package org.firebirdsql.encodings;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.SQLException;
+import java.util.HashMap;
 
 public class EncodingFactory {
+    
+    /**
+     * Default mapping table, provides an "identity" mapping.
+     */
+    public static final char[] DEFAULT_MAPPING = new char[256 * 256];
+    static {
+        for (int i = 0; i < DEFAULT_MAPPING.length; i++) {
+            DEFAULT_MAPPING[i] = (char)i;
+        }
+    }
 
     static String defaultEncoding = null;
 
@@ -50,6 +65,28 @@ public class EncodingFactory {
         }
         catch (IOException ioe){
         }
+    }
+    
+    private static final HashMap translations = new HashMap();
+    
+    public static Encoding getEncoding(String encoding, String mappingPath) throws SQLException {
+        
+        if (mappingPath == null)
+            return getEncoding(encoding);
+        
+        CharacterTranslator translator;
+        
+        synchronized(translations) {
+            translator = (CharacterTranslator)translations.get(mappingPath);
+            
+            if (translator == null) {
+                translator = new CharacterTranslator();
+                translator.init(mappingPath);
+                translations.put(mappingPath, translator);
+            }
+        }
+        
+        return getEncoding(encoding, translator.getMapping());
     }
     
     public static Encoding getEncoding(String encoding){
@@ -123,5 +160,79 @@ public class EncodingFactory {
             return new Encoding_ISO8859_13();
         else 
             return new Encoding_NotOneByte(encoding);
+    }
+    
+    public static Encoding getEncoding(String encoding, char[] charMapping){
+        if (encoding == null || encoding.equals("NONE"))
+            encoding = defaultEncoding;
+        
+        if (encoding.equals("Cp1250"))
+            return new Encoding_Cp1250(charMapping);
+        else if (encoding.equals("Cp1251"))
+            return new Encoding_Cp1251(charMapping);
+        else if (encoding.equals("Cp1252"))
+            return new Encoding_Cp1252(charMapping);
+        else if (encoding.equals("Cp1253"))
+            return new Encoding_Cp1253(charMapping);
+        else if (encoding.equals("Cp1254"))
+            return new Encoding_Cp1254(charMapping);
+        else if (encoding.equals("Cp1255"))
+            return new Encoding_Cp1255(charMapping);
+        else if (encoding.equals("Cp1256"))
+            return new Encoding_Cp1256(charMapping);
+        else if (encoding.equals("Cp1257"))
+            return new Encoding_Cp1257(charMapping);
+        else if (encoding.equals("Cp437"))
+            return new Encoding_Cp437(charMapping);
+        else if (encoding.equals("Cp737"))
+            return new Encoding_Cp737(charMapping);
+        else if (encoding.equals("Cp775"))
+            return new Encoding_Cp775(charMapping);
+        else if (encoding.equals("Cp850"))
+            return new Encoding_Cp850(charMapping);
+        else if (encoding.equals("Cp852"))
+            return new Encoding_Cp852(charMapping);
+        else if (encoding.equals("Cp857"))
+            return new Encoding_Cp857(charMapping);
+        else if (encoding.equals("Cp858"))
+            return new Encoding_Cp858(charMapping);
+        else if (encoding.equals("Cp860"))
+            return new Encoding_Cp860(charMapping);
+        else if (encoding.equals("Cp861"))
+            return new Encoding_Cp861(charMapping);
+        else if (encoding.equals("Cp862"))
+            return new Encoding_Cp862(charMapping);
+        else if (encoding.equals("Cp863"))
+            return new Encoding_Cp863(charMapping);
+        else if (encoding.equals("Cp864"))
+            return new Encoding_Cp864(charMapping);
+        else if (encoding.equals("Cp865"))
+            return new Encoding_Cp865(charMapping);
+        else if (encoding.equals("Cp866"))
+            return new Encoding_Cp866(charMapping);
+        else if (encoding.equals("Cp869"))
+            return new Encoding_Cp869(charMapping);
+        else if (encoding.equals("ISO8859_1"))
+            return new Encoding_ISO8859_1(charMapping);
+        else if (encoding.equals("ISO8859_2"))
+            return new Encoding_ISO8859_2(charMapping);
+        else if (encoding.equals("ISO8859_3"))
+            return new Encoding_ISO8859_3(charMapping);
+        else if (encoding.equals("ISO8859_4"))
+            return new Encoding_ISO8859_4(charMapping);
+        else if (encoding.equals("ISO8859_5"))
+            return new Encoding_ISO8859_5(charMapping);
+        else if (encoding.equals("ISO8859_6"))
+            return new Encoding_ISO8859_6(charMapping);
+        else if (encoding.equals("ISO8859_7"))
+            return new Encoding_ISO8859_7(charMapping);
+        else if (encoding.equals("ISO8859_8"))
+            return new Encoding_ISO8859_8(charMapping);
+        else if (encoding.equals("ISO8859_9"))
+            return new Encoding_ISO8859_9(charMapping);
+        else if (encoding.equals("ISO8859_13"))
+            return new Encoding_ISO8859_13(charMapping);
+        else 
+            return new Encoding_NotOneByte(encoding, charMapping);
     }
 }

@@ -155,7 +155,7 @@ public class FBStringField extends FBField {
     public String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return field.decodeString(rs.row[numCol], javaEncoding);
+        return field.decodeString(rs.row[numCol], javaEncoding, mappingPath);
     }
     
     /*
@@ -267,7 +267,7 @@ public class FBStringField extends FBField {
             setNull();
             return;
         }
-        field.sqldata = field.encodeString(value,javaEncoding);
+        field.sqldata = field.encodeString(value,javaEncoding, mappingPath);
 
 //        if (field.sqldata.length > field.sqllen)
 //            throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);

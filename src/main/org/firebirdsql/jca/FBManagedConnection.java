@@ -30,6 +30,8 @@ import javax.resource.spi.security.PasswordCredential;
 import javax.security.auth.Subject;
 import javax.transaction.xa.*;
 
+import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.logging.Logger;
@@ -753,15 +755,18 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         return currentTr != null;
     }
 
-    public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException {
+    public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException, SQLException {
         if (log!=null) log.debug("preparing sql: " + sql);
         //Should we test for dbhandle?
 
-        String encoding = cri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);
+        String localEncoding = cri.getStringProperty(ISCConstants.isc_dpb_local_encoding);
+        String mappingPath = cri.getStringProperty(ISCConstants.isc_dpb_mapping_path);
+        
+        Encoding encoding = EncodingFactory.getEncoding(localEncoding, mappingPath);
 
         try
         {
-            XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, sql, encoding, ISCConstants.SQL_DIALECT_CURRENT);
+            XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, encoding.encodeToCharset(sql) , ISCConstants.SQL_DIALECT_CURRENT);
             if (out.sqld != out.sqln) {
                 throw new GDSException("Not all columns returned");
             }

@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2003/06/04 12:38:22  brodsom
+ * Remove unused vars and imports
+ *
  * Revision 1.1  2003/01/26 00:49:52  brodsom
  * New character sets support
  *
@@ -32,12 +35,26 @@ package org.firebirdsql.encodings;
 
 public class Encoding_ISO8859_6 extends Encoding_OneByte{
 
-    private static char[] byteToChar = new char[256];
-    private static byte[] charToByte = new byte[256*256];;
+    private static char[] defaultByteToChar = new char[256];
+        private static byte[] defaultCharToByte = new byte[256*256];;
 
-    static{
-        Initialize("ISO8859_6", byteToChar, charToByte);
-    }
+        static{
+            Initialize("ISO8859_6", defaultByteToChar, defaultCharToByte);
+        }
+
+        private char[] byteToChar;
+        private byte[] charToByte;
+    
+        public Encoding_ISO8859_6() {
+            byteToChar = defaultByteToChar;
+            charToByte = defaultCharToByte;
+        }
+    
+        public Encoding_ISO8859_6(char[] charMapping) {
+            byteToChar = new char[256];
+            charToByte = new byte[256 * 256];
+            Initialize("ISO8859_6", byteToChar, charToByte, charMapping);
+        }
 
     public int encodeToCharset(char[] in, int off, int len, byte[] out){
         return super.encodeToCharset(charToByte, in, off, len, out);

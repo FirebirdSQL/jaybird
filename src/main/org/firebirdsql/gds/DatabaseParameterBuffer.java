@@ -105,12 +105,14 @@ public interface DatabaseParameterBuffer
      * Driver-specific DPB params that will be removed before sending them
      * to the server. These params influence only client side.
      */
-    int socket_buffer_size =   ISCConstants.isc_dpb_socket_buffer_size;
-    int blob_buffer_size =     ISCConstants.isc_dpb_blob_buffer_size;
-    int use_stream_blobs =     ISCConstants.isc_dpb_use_stream_blobs;
-    int paranoia_mode =        ISCConstants.isc_dpb_paranoia_mode;
+    int socket_buffer_size      = ISCConstants.isc_dpb_socket_buffer_size;
+    int blob_buffer_size        = ISCConstants.isc_dpb_blob_buffer_size;
+    int use_stream_blobs        = ISCConstants.isc_dpb_use_stream_blobs;
+    int paranoia_mode           = ISCConstants.isc_dpb_paranoia_mode;
 	int timestamp_uses_local_timezone =     ISCConstants.isc_dpb_timestamp_uses_local_timezone;
-    int use_standard_udf =     ISCConstants.isc_dpb_use_standard_udf;
+    int use_standard_udf        = ISCConstants.isc_dpb_use_standard_udf;
+    int local_encoding          = ISCConstants.isc_dpb_local_encoding;
+    int mapping_path            = ISCConstants.isc_dpb_mapping_path;
 	
 	
     /**

@@ -122,12 +122,22 @@ public interface GDS {
                                       String statement,
                                       int dialect,
                                       XSQLDA xsqlda) throws GDSException;
+    
+    /**
+     * @deprecated use {@link #isc_dsql_execute_immediate(isc_db_handle, isc_tr_handle, byte[], int, XSQLDA)
+     */
     void isc_dsql_execute_immediate(isc_db_handle db_handle,
                                       isc_tr_handle tr_handle,
                                       String statement,
                                       String encoding,
                                       int dialect,
                                       XSQLDA xsqlda) throws GDSException;
+
+    void isc_dsql_execute_immediate(isc_db_handle db_handle,
+                                    isc_tr_handle tr_handle,
+                                    byte[] statement,
+                                    int dialect,
+                                    XSQLDA xsqlda) throws GDSException;
 
     void isc_dsql_exec_immed2(isc_db_handle db_handle,
                                isc_tr_handle tr_handle,
@@ -136,6 +146,9 @@ public interface GDS {
                                XSQLDA in_xsqlda,
                                XSQLDA out_xsqlda) throws GDSException;
                                
+    /**
+     * @deprecated use {@link #isc_dsql_exec_immed2(isc_db_handle, isc_tr_handle, byte[], int, XSQLDA)
+     */
     void isc_dsql_exec_immed2(isc_db_handle db_handle,
                                isc_tr_handle tr_handle,
                                String statement,
@@ -144,7 +157,13 @@ public interface GDS {
                                XSQLDA in_xsqlda,
                                XSQLDA out_xsqlda) throws GDSException;
 
-//    byte[][] isc_dsql_fetch(isc_stmt_handle stmt_handle,
+    void isc_dsql_exec_immed2(isc_db_handle db_handle,
+                              isc_tr_handle tr_handle,
+                              byte[] statement,
+                              int dialect,
+                              XSQLDA in_xsqlda,
+                              XSQLDA out_xsqlda) throws GDSException;
+
     void isc_dsql_fetch(isc_stmt_handle stmt_handle,
                          int da_version,
                          XSQLDA xsqlda, int fetchSize) throws GDSException;
@@ -157,12 +176,20 @@ public interface GDS {
                            String statement,
                            int dialect) throws GDSException;
                            
+    /**
+     * @deprecated use {@link #isc_dsql_prepare(isc_tr_handle, isc_stmt_handle, byte[], int)
+     */
     XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
                            isc_stmt_handle stmt_handle,
                            String statement,
                            String encoding,
                            int dialect) throws GDSException;
 
+    XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
+                            isc_stmt_handle stmt_handle,
+                            byte[] statement,
+                            int dialect) throws GDSException;
+    
     void isc_dsql_set_cursor_name(isc_stmt_handle stmt_handle,
                                     String cursor_name,
                                     int type) throws GDSException;

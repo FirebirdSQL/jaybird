@@ -147,8 +147,9 @@ public abstract class FBField {
     protected FBResultSet rs;
     protected int numCol;
     protected AbstractConnection c = null;
-    protected String IscEncoding = null;
+    protected String iscEncoding = null;
     protected String javaEncoding	= null;
+    protected String mappingPath = null;
     protected int requiredType;
     protected int scale = -1;
 
@@ -198,16 +199,16 @@ public abstract class FBField {
     public void setConnection(AbstractConnection c) {
         this.c = c;
         if (c!=null)
-            IscEncoding = c.getIscEncoding();
-        if (IscEncoding!= null && (IscEncoding.equalsIgnoreCase("NONE") 
-		  || IscEncoding.equalsIgnoreCase("BINARY")))
-            IscEncoding = null;
-        // Java encoding		  
-        if (IscEncoding!= null)
-            javaEncoding = AbstractConnection.getJavaEncoding(IscEncoding);
-        else
-            javaEncoding = null;			  
-        // this method only do something for FBStringField and FBBlobField
+            iscEncoding = c.getIscEncoding();
+        
+        if (iscEncoding != null && (iscEncoding.equalsIgnoreCase("NONE") 
+		  || iscEncoding.equalsIgnoreCase("BINARY")))
+            iscEncoding = null;
+        
+        if (c != null) {
+            javaEncoding = c.getJavaEncoding();
+            mappingPath = c.getMappingPath();
+        }
     }
     
     /**
