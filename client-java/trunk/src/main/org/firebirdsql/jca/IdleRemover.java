@@ -138,11 +138,12 @@ public class IdleRemover
          
       }
    }
-
+/* Private but not used method
    private void stop()
    {
       if (log!=null) log.debug("stop: stopping IdleRemover");
       interval = -1;
       removerThread.interrupt();
    }
+*/   
 }// IdleRemover

@@ -40,7 +40,7 @@ public class FBTpbMapper implements java.io.Serializable {
     private static final String TRANSACTION_REPEATABLE_READ = FBTpb.TRANSACTION_REPEATABLE_READ;
     private static final String TRANSACTION_READ_COMMITTED = FBTpb.TRANSACTION_READ_COMMITTED;
     private static final String TRANSACTION_READ_UNCOMMITTED = FBTpb.TRANSACTION_READ_UNCOMMITTED;
-    private static final String TRANSACTION_NONE = FBTpb.TRANSACTION_NONE;
+//    private static final String TRANSACTION_NONE = FBTpb.TRANSACTION_NONE;
     
     private HashMap mapping = new HashMap();
     

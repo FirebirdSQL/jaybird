@@ -22,7 +22,6 @@ package org.firebirdsql.jca;
 import java.io.ObjectStreamException;
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,7 +50,6 @@ import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.isc_tr_handle;
 import org.firebirdsql.jdbc.FBConnectionHelper;
 import org.firebirdsql.jdbc.FBDataSource;
-import org.firebirdsql.jdbc.FBStatement;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 

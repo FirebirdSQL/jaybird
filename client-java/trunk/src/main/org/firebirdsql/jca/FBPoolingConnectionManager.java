@@ -38,7 +38,6 @@ import javax.resource.spi.ConnectionManager;
 import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
-import javax.security.auth.Subject;
 
 public class FBPoolingConnectionManager
    implements ConnectionManager 

@@ -24,7 +24,6 @@ package org.firebirdsql.jca;
 
 
 import java.io.Serializable;
-import javax.resource.ResourceException;
 import javax.resource.cci.ConnectionSpec;
 import javax.resource.spi.ConnectionRequestInfo;
 import org.firebirdsql.gds.Clumplet;
