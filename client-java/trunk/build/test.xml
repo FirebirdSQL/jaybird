@@ -360,7 +360,8 @@
     </junitreport>
   </target>
 
-  <target name="tests-report-html-native" depends="all-tests-native">
+  <target name="tests-report-html-native"  depends="all-tests-native,tests-report-html-native-only"/>
+  <target name="tests-report-html-native-only" depends="init">
     <mkdir dir="${build.reports.native}/html"/>
 
     <junitreport todir="${build.reports.native}">
@@ -374,7 +375,8 @@
     </junitreport>
   </target>
 
-  <target name="tests-report-html-embedded" depends="all-tests-embedded">
+  <target name="tests-report-html-embedded"  depends="all-tests-embedded,tests-report-html-embedded-only"/>
+  <target name="tests-report-html-embedded-only" depends="init">
     <mkdir dir="${build.reports.embedded}/html"/>
 
     <junitreport todir="${build.reports.embedded}">
