@@ -23,6 +23,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.8  2003/06/05 23:40:45  brodsom
+ * Substitute package and inline imports
+ *
  * Revision 1.7  2003/06/04 13:51:01  brodsom
  * Remove unused vars and imports
  *
@@ -90,6 +93,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import org.firebirdsql.pool.FBWrappingDataSource;
 
 /**
  * Describe class <code>TestFBWrappingDataSource</code> here.
