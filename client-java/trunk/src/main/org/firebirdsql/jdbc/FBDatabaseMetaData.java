@@ -68,7 +68,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
     private FBConnection c;
 
-    private HashMap statements = new HashMap();
+    HashMap statements = new HashMap();
 
     //PreparedStatement tables = null;
 

@@ -101,7 +101,7 @@ public class FBManagedConnectionFactory
 
     private FBConnectionRequestInfo defaultCri;
 
-    private final FBTpb tpb = new FBTpb();
+    private final FBTpb tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);
 
 
     //must be less than 1024 * 32: 1-24 * 32 -  is ok.
@@ -199,6 +199,10 @@ public class FBManagedConnectionFactory
     public FBTpb getTpb() {
         return tpb;
     }
+    
+    public void setTpbMapper(FBTpbMapper mapper) {
+        this.tpb.setMapper(mapper);
+    }    
 
     public void setTransactionIsolation(Integer level) throws ResourceException
     {

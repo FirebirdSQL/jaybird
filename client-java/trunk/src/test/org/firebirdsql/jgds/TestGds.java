@@ -35,6 +35,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.jdbc.BaseFBTest;
 import org.firebirdsql.jca.FBTpb;
+import org.firebirdsql.jca.FBTpbMapper;
 
 
 /**
@@ -83,7 +84,7 @@ public class TestGds extends BaseFBTest {
 
     private ClumpletImpl c;
 
-    private FBTpb tpb = new FBTpb();
+    private FBTpb tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);
 
     public TestGds(String name) {
         super(name);

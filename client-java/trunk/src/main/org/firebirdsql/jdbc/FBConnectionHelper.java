@@ -21,6 +21,8 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBTpb;
+import org.firebirdsql.jca.FBTpbMapper;
+import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
 
 import java.util.Properties;
@@ -48,14 +50,19 @@ public class FBConnectionHelper {
 
     public static final String ISC_ENCODINGS_RESOURCE =
         "isc_encodings.properties";
+        
+    public static final String ISC_ENCODING_SIZE_RESOURCE = 
+        "isc_encoding_size.properties";
 
     private static final HashMap dpbTypes = new HashMap();
     private static final HashMap tpbTypes = new HashMap();
 
     private static final HashMap iscEncodings = new HashMap();
     private static final HashMap javaEncodings = new HashMap();
+    private static final HashMap iscEncodingSizes = new HashMap();
 
     private static boolean encodingsLoaded = false;
+    private static boolean encodingSizesLoaded = false;
 
     /*
      * Initialize mappings between various GDS constant names and
@@ -180,7 +187,7 @@ public class FBConnectionHelper {
      * <code>info</code>
      */
     public static FBTpb getTpb(Properties info) {
-        FBTpb tpb = new FBTpb();
+        FBTpb tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);
 
         Iterator keys = info.keySet().iterator();
         while(keys.hasNext()) {
@@ -193,6 +200,20 @@ public class FBConnectionHelper {
         }
 
         return tpb;
+    }
+    
+    /**
+     * Get value of TPB parameter for the specified name. This method tries to
+     * match string representation of the TPB parameter with its value.
+     * 
+     * @param name string representation of TPB parameter, can have "isc_tpb_"
+     * prefix.
+     * 
+     * @return value corresponding to the specified parameter name or null if
+     * nothing was found.
+     */
+    public static Integer getTpbParam(String name) {
+        return (Integer)tpbTypes.get(name);
     }
 
     /**
@@ -240,6 +261,50 @@ public class FBConnectionHelper {
 
         encodingsLoaded = true;
     }
+    
+    /**
+     * Load mapping between Java and InterBase encodings. This method loads the
+     * mapping using the classloader that loaded this class.
+     */
+    private static void loadEncodingSizes() {
+        ClassLoader cl = FBConnectionHelper.class.getClassLoader();
+
+        InputStream in = null;
+
+        // get the stream from the classloader or system classloader
+        if (cl == null)
+            in = ClassLoader.getSystemResourceAsStream(ISC_ENCODING_SIZE_RESOURCE);
+        else
+            in = cl.getResourceAsStream(ISC_ENCODING_SIZE_RESOURCE);
+
+        if (in == null) return;
+
+        // load properties
+        Properties props = new Properties();
+        try {
+            props.load(in);
+        } catch(IOException ioex) {
+            ioex.printStackTrace();
+            return;
+        } finally {
+            try {
+                in.close();
+            } catch(IOException ex) {
+                ex.printStackTrace();
+                // do nothing here
+            }
+        }
+
+        Iterator iterator = props.keySet().iterator();
+        while(iterator.hasNext()) {
+            String iscEncoding = (String)iterator.next();
+            String size = (String)props.get(iscEncoding);
+            iscEncodingSizes.put(iscEncoding, new Byte(size));
+        }
+
+        encodingSizesLoaded = true;
+    }
+    
 
     /**
      * Get Java language encoding for given InterBase encoding.
@@ -279,6 +344,24 @@ public class FBConnectionHelper {
             loadEncodings();
 
         return (String)javaEncodings.get(javaEncoding);
+    }
+    
+    /**
+     * Get size of a character for the specified InterBase encoding.
+     *
+     * @param iscEncoding InterBase encoding.
+     * @return maximum size of the character in bytes or 1 if encoding was 
+     * not found.
+     */
+    public static byte getIscEncodingSize(String iscEncoding) {
+        if (!encodingSizesLoaded)
+            loadEncodingSizes();
+            
+        Byte result = (Byte)iscEncodingSizes.get(iscEncoding);
+        if (result == null)
+            return 1;
+        else
+            return result.byteValue();
     }
 
 }
