@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jca;
+package org.firebirdsql.jca.pool;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,6 +25,9 @@ import java.util.Iterator;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ManagedConnection;
+
+import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jca.TestXABase;
 import org.firebirdsql.logging.Logger;
 
 
@@ -129,7 +132,9 @@ public class TestPoolingConnectionManager extends TestXABase
           cm.returnManagedConnection(mc, false);
       }
       cs.clear();
-      log.info("Running short blocking test with blocking timeout: " + pp.blockingTimeout);
+      if (log != null)
+        log.info("Running short blocking test with blocking timeout: " + pp.blockingTimeout);
+        
       final Logger llog = log;
       for (int i = 0; i < pp.maxSize * threadsPerConnection; i++)
       {
