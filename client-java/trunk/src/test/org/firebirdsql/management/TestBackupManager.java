@@ -27,7 +27,6 @@ public class TestBackupManager extends FBTestBase {
         
         fbManager = createFBManager();
         fbManager.setServer("localhost");
-//        fbManager.setPort(3060);
         fbManager.start();
 
         fbManager.setForceCreate(true);
@@ -35,44 +34,40 @@ public class TestBackupManager extends FBTestBase {
         
     }
     private String getDatabasePath() {
-        return DB_PATH + "/" + DB_NAME + ".fdb";
+        return "." + DB_PATH + "/" + DB_NAME + ".fdb";
     }
     
     private String getBackupPath() {
-        return DB_PATH + "/" + DB_NAME + ".fbk";
+        return "." + DB_PATH + "/" + DB_NAME + ".fbk";
     }
     
     private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(
-            "jdbc:firebirdsql:localhost:" + getDatabasePath(), 
-            DB_USER, DB_PASSWORD);
+        try {
+            Class.forName("org.firebirdsql.jdbc.FBDriver");
+            return DriverManager.getConnection(
+                "jdbc:firebirdsql:localhost:" + getDatabasePath(), 
+                DB_USER, DB_PASSWORD);
+        } catch(ClassNotFoundException ex) {
+            throw new SQLException("JayBird not found.");
+        }
     }
 
     protected void tearDown() throws Exception {
-        
-//        fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
-
+        fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
         fbManager.stop();
         
         super.tearDown();
     }
     
-    public void testBla() {
-        
-    }
-    
     public void testBackup() throws Exception {
         BackupManager backupManager = new FBBackupManager(GDSType.PURE_JAVA);
         backupManager.setHost("localhost");
-//        backupManager.setPort(3060);
         backupManager.setUser("SYSDBA");
         backupManager.setPassword("masterkey");
         
         
         backupManager.setDatabase(getDatabasePath());
         backupManager.setBackupPath(getBackupPath());
-//        backupManager.setDatabase("c:/database/employee.fdb");
-//        backupManager.setBackupPath("c:/testdb.gbk");
         backupManager.setLogger(System.out);
         backupManager.backupDatabase(true);
         
