@@ -39,94 +39,71 @@ import java.util.Iterator;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-class XdrOutputStream extends FilterOutputStream {
+class XdrOutputStream extends DataOutputStream {
 
-   private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final byte[] pad = {0,0,0,0};
 
     public XdrOutputStream(OutputStream out) {
         super(out);
     }
-
-    public final void writeShort(short s) throws IOException {
-        writeInt((int) s);
-    }
-
-    public final void writeInt(int i) throws IOException {
-        out.write((i >>> 24) & 0xff);
-        out.write((i >>> 16) & 0xff);
-        out.write((i >>>  8) & 0xff);
-        out.write((i >>>  0) & 0xff);
-    }
-
-    public final void writeLong(long l) throws IOException {
-        out.write((int) (l >>> 56) & 0xff);
-        out.write((int) (l >>> 48) & 0xff);
-        out.write((int) (l >>> 40) & 0xff);
-        out.write((int) (l >>> 32) & 0xff);
-        out.write((int) (l >>> 24) & 0xff);
-        out.write((int) (l >>> 16) & 0xff);
-        out.write((int) (l >>>  8) & 0xff);
-        out.write((int) (l >>>  0) & 0xff);
-    }
-
-    public final void writeFloat(float f) throws IOException {
-        writeInt(Float.floatToIntBits(f));
-    }
-
-    public final void writeDouble(double d) throws IOException {
-        writeLong(Double.doubleToLongBits(d));
-    }
-
+	 
     public final void writeOpaque(byte[] buffer, int len) throws IOException {
         if (buffer != null && len > 0) {
-            out.write(buffer, 0, len);
-            even(len);
+            write(buffer, 0, len);
+            write(pad,0,((4 - len) & 3));
         }
     }
 
     public final void writeBuffer(byte[] buffer, int len) throws IOException {
         writeInt(len);
-        writeOpaque(buffer, len);
+        if (buffer != null && len > 0) {
+            write(buffer, 0, len);
+            write(pad,0,((4 - len) & 3));
+        }
     }
 
     public final void writeBlobBuffer(byte[] buffer) throws IOException {
-    int len = buffer.length ; // 2 for short for buffer length
-    log.debug("writeBlobBuffer len: " + len);
-    if (len > Short.MAX_VALUE) {
-        throw new IOException(""); //Need a value???
-    }
-    writeInt(len + 2);
-    writeInt(len + 2); //bizarre but true! three copies of the length
-    write((len >> 0) & 0xff);
-    write((len >> 8) & 0xff);
-    write(buffer, 0, len);
-    log.debug("writeBlobBuffer wrotebuffer bytes: " + len);
-    even(len + 2);
+        int len = buffer.length ; // 2 for short for buffer length
+        log.debug("writeBlobBuffer len: " + len);
+        if (len > Short.MAX_VALUE) {
+            throw new IOException(""); //Need a value???
+        }
+        writeInt(len + 2);
+        writeInt(len + 2); //bizarre but true! three copies of the length
+        write((len >> 0) & 0xff);
+        write((len >> 8) & 0xff);
+        write(buffer, 0, len);
+        log.debug("writeBlobBuffer wrotebuffer bytes: " + len);
+        write(pad,0,((4 - len+2) & 3));
     }
 
     public final void writeString(String s) throws IOException {
         byte[] buffer = s.getBytes();
-        writeBuffer(buffer, buffer.length);
+		  int len = buffer.length;
+        writeInt(len);
+        if (len > 0) {
+            write(buffer, 0, len);
+            write(pad,0,((4 - len) & 3));
+        }
     }
     public final void writeSet(int type, Set s) throws IOException {
-//      log.debug("writeSet: type: " + type);
+//        log.debug("writeSet: type: " + type);
         if (s == null) {
             writeInt(1);
-            out.write(type); //e.g. gds.isc_tpb_version3
+            write(type); //e.g. gds.isc_tpb_version3
         }
         else {
             writeInt(s.size() + 1);
-            out.write(type);
+            write(type);
             Iterator i = s.iterator();
             while (i.hasNext()) {
                 int n = ((Integer)i.next()).intValue();
-                out.write(n);
+                write(n);
 //              log.debug("writeSet: value: " + n);
             }
 //          log.debug("writeSet: padding 0 : " + ((4 - (s.size() + 1)) & 3));
-            for (int j = 0; j < ((4 - (s.size() + 1)) & 3); j++) {
-                out.write(0);
-            }
+            write(pad,0,((4 - (s.size() + 1)) & 3));
         }
     }
 
@@ -136,23 +113,15 @@ class XdrOutputStream extends FilterOutputStream {
         int size;
         if (item == null) {
             writeInt(1);
-            out.write(type); //e.g. gds.isc_tpb_version3
+            write(type); //e.g. gds.isc_tpb_version3
             size = 1;
         }
         else {
             size = item.getLength() + 1;
             writeInt(size);
-            out.write(type);
+            write(type);
             item.write(this);
         }
-        even(size);
+        write(pad,0,((4 - size) & 3));
     }
-
-
-    final void even(int length) throws IOException {
-        for (int j = 0; j < ((4 - length) & 3); j++) {
-            out.write(0);
-        }
-    }
-
 }
