@@ -32,10 +32,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import javax.resource.ResourceException;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
-import org.firebirdsql.jca.FBManagedConnection;
+import org.firebirdsql.gds.SqlInfo;
 import org.firebirdsql.logging.Logger;
 
 /**
@@ -66,7 +65,6 @@ public class FBStatement implements Statement {
    protected final Logger log = Logger.getLogger(getClass());
 
     protected FBConnection c;
-    protected FBManagedConnection mc;
 
     protected isc_stmt_handle fixedStmt;
 
@@ -75,13 +73,21 @@ public class FBStatement implements Statement {
 
     private boolean closed;
 
+	 java.sql.SQLWarning firstWarning = null;
+
+	 // If the last executedStatement returns ResultSet or UpdateCount
+	 boolean isResultSet;
     //Holds a result set from an execute call using autocommit.
     //This is a cached result set and is used to allow a call to getResultSet()
     private ResultSet currentCachedResultSet;
 
+	 protected int maxRows = 0;	 
+	 private int fetchSize = 0;
+	 private int maxFieldSize = 0;
+	 private int queryTimeout = 0;
+	 
     FBStatement(FBConnection c) {
         this.c = c;
-        mc = c.mc;
         closed = false;
     }
 
@@ -94,6 +100,8 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public ResultSet executeQuery(String sql) throws  SQLException {
+		 if (closed)
+			 throw new SQLException("Statement is closed");
         try
         {
             c.ensureInTransaction();
@@ -111,11 +119,13 @@ public class FBStatement implements Statement {
                 return getResultSet();
             } // end of else
         }
+/*		  
         catch (ResourceException re)
         {
            log.warn("resource exception", re);
            throw new SQLException("ResourceException: " + re);
         } // end of try-catch
+ */
         catch (GDSException ge)
         {
             throw new SQLException("GDSException: " + ge);
@@ -141,6 +151,8 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public int executeUpdate(String sql) throws  SQLException {
+		 if(closed)
+			 throw new SQLException("Statement is closed");
         try
         {
             c.ensureInTransaction();
@@ -149,10 +161,12 @@ public class FBStatement implements Statement {
             }
             return getUpdateCount();
         }
+/*		  
         catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
+ */
         catch (GDSException ge)
         {
             throw new SQLException("GDSException: " + ge);
@@ -219,7 +233,7 @@ public class FBStatement implements Statement {
         if (fixedStmt != null) {
             try {
                 //may need ensureTransaction?
-                mc.closeStatement(fixedStmt, true);
+                c.closeStatement(fixedStmt, true);
             }
             catch (GDSException ge) {
                 throw new SQLException("could not close statement: " + ge.toString());
@@ -231,6 +245,8 @@ public class FBStatement implements Statement {
                 closed = true;
             }
         }
+		  else
+			  closed = true;
     }
 
 
@@ -250,7 +266,7 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public int getMaxFieldSize() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return maxFieldSize;
     }
 
 
@@ -268,7 +284,10 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public void setMaxFieldSize(int max) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+		 if (max<0)
+        throw new SQLException("can't set max field size negative");
+		 else
+			 maxFieldSize = max;
     }
 
 
@@ -281,7 +300,7 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public int getMaxRows() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return maxRows;
     }
 
 
@@ -295,7 +314,10 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public void setMaxRows(int max) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+		 if (max<0)
+		    throw new SQLException("Max rows can't be less than 0");
+		 else
+			 maxRows = max;
     }
 
 
@@ -325,7 +347,7 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public int getQueryTimeout() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return queryTimeout;
     }
 
 
@@ -339,7 +361,10 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public void setQueryTimeout(int seconds) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+		 if (seconds<0)
+        throw new SQLException("can't set query timeout negative");
+		 else
+			 queryTimeout = seconds;
     }
 
 
@@ -372,7 +397,7 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public SQLWarning getWarnings() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return firstWarning;
     }
 
 
@@ -386,7 +411,7 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public void clearWarnings() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        firstWarning = null;
     }
 
 
@@ -442,7 +467,9 @@ public class FBStatement implements Statement {
      * @see #getUpdateCount
      * @see #getMoreResults
      */
-    public boolean execute(String sql) throws  SQLException {
+    public boolean execute(String sql) throws SQLException {
+		 if (closed)
+			 throw new SQLException("Statement is closed");
         try {
             c.ensureInTransaction();
             boolean hasResultSet = internalExecute(sql);
@@ -452,10 +479,12 @@ public class FBStatement implements Statement {
             } // end of if ()
             return hasResultSet;
         }
+/*		  
         catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
+ */
         catch (GDSException ge)
         {
             throw new SQLException("GDSException: " + ge);
@@ -527,11 +556,13 @@ public class FBStatement implements Statement {
             currentCachedResultSet = null;
             return rs;
         } // end of if ()
-        else
-        {
-            //currentRs = new FBResultSet(mc, this, fixedStmt);
-            currentRs = new FBResultSet(c, this, fixedStmt);
-            return currentRs;
+        else {
+			  if (isResultSet){
+					currentRs = new FBResultSet(c, this, fixedStmt);
+					return currentRs;
+			  }
+			  else
+					return null;
         } // end of else
     }
 
@@ -542,8 +573,7 @@ public class FBStatement implements Statement {
         if (fixedStmt == null) {
             throw new SQLException("No statement just executed");
         }
-        //currentCachedResultSet = new FBResultSet(mc, fixedStmt, trimStrings);
-        currentCachedResultSet = new FBResultSet(c, fixedStmt, trimStrings);
+        currentCachedResultSet = new FBResultSet(c, this, fixedStmt, trimStrings);
         return currentCachedResultSet;
     }
 
@@ -559,8 +589,11 @@ public class FBStatement implements Statement {
      * @see #execute
      */
     public int getUpdateCount() throws  SQLException {
+		 if (isResultSet)
+			 return -1;
+		 else {
         try {
-            FBManagedConnection.SqlInfo i = mc.getSqlInfo(fixedStmt);
+            SqlInfo i = c.getSqlInfo(fixedStmt);
             if (log.isDebugEnabled())
             {
                log.debug("InsertCount: " + i.getInsertCount());
@@ -576,6 +609,7 @@ public class FBStatement implements Statement {
         catch (GDSException ge) {
             throw new SQLException("Could not get UpdateCount: " + ge);
         }
+		 }
     }
 
 
@@ -596,7 +630,8 @@ public class FBStatement implements Statement {
      * @see #execute
      */
     public boolean getMoreResults() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+//        throw new SQLException("Not yet implemented");
+		 return false;
     }
 
     /**
@@ -635,7 +670,8 @@ public class FBStatement implements Statement {
      *      2.0 API</a>
      */
     public void setFetchDirection(int direction) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+		 if (direction != java.sql.ResultSet.FETCH_FORWARD)
+			throw new SQLException("can't set fetch direction");
     }
 
 
@@ -655,7 +691,7 @@ public class FBStatement implements Statement {
      *      2.0 API</a>
      */
     public int getFetchDirection() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+       return java.sql.ResultSet.FETCH_FORWARD;
     }
 
 
@@ -674,7 +710,12 @@ public class FBStatement implements Statement {
      *      2.0 API</a>
      */
     public void setFetchSize(int rows) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+		 if (rows < 0)
+			 throw new SQLException("can't set negative fetch size");
+		 else if (rows > maxRows)
+			 throw new SQLException("can't set fetch size > maxRows");
+		 else
+        fetchSize = rows;
     }
 
 
@@ -693,7 +734,7 @@ public class FBStatement implements Statement {
      *      2.0 API</a>
      */
     public int getFetchSize() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return fetchSize;
     }
 
 
@@ -708,7 +749,7 @@ public class FBStatement implements Statement {
      *      2.0 API</a>
      */
     public int getResultSetConcurrency() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return java.sql.ResultSet.CONCUR_READ_ONLY;
     }
 
 
@@ -724,7 +765,7 @@ public class FBStatement implements Statement {
      *      2.0 API</a>
      */
     public int getResultSetType()  throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return java.sql.ResultSet.TYPE_FORWARD_ONLY;
     }
 
 
@@ -856,7 +897,7 @@ public class FBStatement implements Statement {
         currentCachedResultSet = null;
         if (currentRs != null) {
             try {
-                mc.closeStatement(fixedStmt, false);
+                c.closeStatement(fixedStmt, false);
             }
             catch (GDSException ge) {
                 throw new SQLException("problem closing resultset: " + ge);
@@ -880,7 +921,8 @@ public class FBStatement implements Statement {
 
         closeResultSet();
         prepareFixedStatement(sql, false);
-        mc.executeStatement(fixedStmt, false);
+        c.executeStatement(fixedStmt, false);
+		  isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
         return (fixedStmt.getOutSqlda().sqld > 0);
     }
 
@@ -889,8 +931,20 @@ public class FBStatement implements Statement {
         throws GDSException, SQLException
     {
         if (fixedStmt == null) {
-            fixedStmt = mc.getAllocatedStatement();
+            fixedStmt = c.getAllocatedStatement();
         }
-        mc.prepareSQL(fixedStmt, c.nativeSQL(sql), describeBind);
+        c.prepareSQL(fixedStmt, c.nativeSQL(sql), describeBind);
     }
+	 
+	 protected void addWarning(java.sql.SQLWarning warning){
+		 if (firstWarning == null)
+			 firstWarning = warning;
+		 else{
+			 java.sql.SQLWarning lastWarning = firstWarning;
+			 while (lastWarning.getNextWarning() != null){
+				 lastWarning = lastWarning.getNextWarning();
+			 }
+			 lastWarning.setNextWarning(warning);
+		 }
+	 }	 
 }

@@ -59,6 +59,7 @@ import org.firebirdsql.gds.isc_blob_handle;
 import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.isc_tr_handle;
+import org.firebirdsql.gds.SqlInfo;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBStatement;
 import org.firebirdsql.logging.Logger;
@@ -861,7 +862,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
-
+/*
     public static class SqlInfo {
         private int statementType;
         private int insertCount;
@@ -934,5 +935,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         }
     }
 
-
+*/
+	 
 }

@@ -32,7 +32,6 @@ import java.sql.SQLException;
 import java.sql.Blob;
 
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.jca.FBManagedConnection;
 
 public class FBBlobField extends FBField {
     private static final int BUFF_SIZE = 4096;
@@ -67,7 +66,7 @@ public class FBBlobField extends FBField {
         if (blobId == null)
             blobId = new Long(0);
 
-        return new FBBlob(c.mc, blobId.longValue());
+        return new FBBlob(c, blobId.longValue());
     }
 
     InputStream getAsciiStream() throws SQLException {
@@ -207,7 +206,7 @@ public class FBBlobField extends FBField {
     }
     
     private void copyBinaryStream(InputStream in, int length) throws SQLException {
-        FBBlob blob =  new FBBlob(c.mc, 0);
+        FBBlob blob =  new FBBlob(c, 0);
         blob.copyStream(in, length);
         field.sqldata = new Long(blob.getBlobId());
         setNull(false);

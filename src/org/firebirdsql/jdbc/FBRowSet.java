@@ -26,7 +26,6 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
-import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.gds.isc_stmt_handle;
 
 import javax.sql.RowSet;
@@ -80,7 +79,7 @@ import java.util.*;
 
 public class FBRowSet extends FBResultSet implements RowSet {
 
-    FBRowSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt) {
+    FBRowSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt) throws SQLException{
         super(c, fbstatement, stmt);
     }
 

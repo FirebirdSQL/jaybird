@@ -361,7 +361,7 @@ abstract class FBField {
         String javaEncoding = null;
         
         if (iscEncoding != null && !iscEncoding.equalsIgnoreCase("NONE"))
-            javaEncoding = FBConnectionHelper.getJavaEncoding(iscEncoding);
+            javaEncoding = FBConnection.getJavaEncoding(iscEncoding);
         
         if (javaEncoding == null)
             return new String(bytes);        
@@ -388,7 +388,7 @@ abstract class FBField {
         String javaEncoding = null;
         
         if (iscEncoding != null && !iscEncoding.equalsIgnoreCase("NONE"))
-            javaEncoding = FBConnectionHelper.getJavaEncoding(iscEncoding);
+            javaEncoding = FBConnection.getJavaEncoding(iscEncoding);
         
         if (javaEncoding == null)
             return new String(bytes, offset, count);        
@@ -412,7 +412,7 @@ abstract class FBField {
         String javaEncoding = null;
         
         if (iscEncoding != null && !iscEncoding.equalsIgnoreCase("NONE"))
-            javaEncoding = FBConnectionHelper.getJavaEncoding(iscEncoding);
+            javaEncoding = FBConnection.getJavaEncoding(iscEncoding);
         
         if (javaEncoding == null)
             return str.getBytes();
