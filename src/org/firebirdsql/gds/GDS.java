@@ -32,7 +32,6 @@
 
 package org.firebirdsql.gds;
 
-import java.sql.SQLException;
 import java.util.Set;
 
 
