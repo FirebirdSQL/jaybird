@@ -40,8 +40,6 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-import java.sql.SQLException;
-
 public class GDS_Impl implements GDS {
 
    private final Logger log = Logger.getLogger(getClass());
