@@ -5,11 +5,11 @@
 	<TITLE>Release Notes</TITLE>
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.1  (Win32)">
 	<META NAME="CREATED" CONTENT="20020909;21125147">
-	<META NAME="CHANGED" CONTENT="20040419;393339">
+	<META NAME="CHANGED" CONTENT="20040531;12401073">
 	<STYLE>
 	<!--
 		@page { size: 21cm 29.7cm }
-		CODE.western { font-size: 10pt; so-language:  }
+		CODE.western { font-size: 10pt }
 	-->
 	</STYLE>
 </HEAD>
@@ -193,10 +193,15 @@ embedded server version, it is not possible to access them from
 different threads simultaneously. When using client library only one
 thread is allowed to access connection at a time, however it is
 allowed to access different connections from different threads.
-<EM>Embedded version of the server cannot be used on POSIX systems in
-multi-threaded applications. In particular this makes embedded
-version of the server unusable for web applications, where usually
-each request is served in separate thread.</EM></P>
+Client library in local mode and embedded server library on Linux do
+not allow multithreaded access to the library. JayBird provides
+necessary synchronization in Java code, however corresponding mutex
+is local to the classloader that loaded JayBird driver<EM>. Care
+should be taken when deploying applications in web or application
+servers: put jar files in the main library directory of the web
+and/or application server, not in the library directory of the web or
+enterprise application (WEB-INF/lib directory or in .EAR file). This
+issue will be fixed in future releases on JNI level.</EM></P>
 <P>Driver provides different JDBC URLs for different usage scenarios:</P>
 <TABLE WIDTH=100% BORDER=1 CELLPADDING=4 CELLSPACING=3 STYLE="page-break-inside: avoid">
 	<COL WIDTH=20*>
@@ -332,8 +337,8 @@ to <CODE CLASS="western">org.firebirdsql.jdbc.*</CODE> package.</P>
 				</P>
 			</TD>
 			<TD WIDTH=34%>
-				<P ALIGN=LEFT><CODE CLASS="western">setTransactionParameters(<BR>
-				 int isolationLevel, <BR>  int[] tpbParams<BR>)</CODE></P>
+				<P ALIGN=LEFT><CODE CLASS="western">setTransactionParameters(<BR>int
+				isolationLevel, <BR>int[] tpbParams<BR>)</CODE></P>
 			</TD>
 			<TD WIDTH=41%>
 				<P ALIGN=LEFT>Set TPB parameters for the specified transaction
@@ -412,7 +417,7 @@ to <CODE CLASS="western">org.firebirdsql.jdbc.*</CODE> package.</P>
 				</P>
 			</TD>
 			<TD WIDTH=34%>
-				<P ALIGN=LEFT><CODE CLASS="western">setBinaryStream(<BR>  long
+				<P ALIGN=LEFT><CODE CLASS="western">setBinaryStream(<BR>long
 				position<BR>)</CODE></P>
 			</TD>
 			<TD WIDTH=41%>
@@ -442,7 +447,7 @@ to <CODE CLASS="western">org.firebirdsql.jdbc.*</CODE> package.</P>
 			</TD>
 			<TD WIDTH=41%>
 				<P ALIGN=LEFT>Change the position from which BLOB content will be
-				read.</P>
+				read, works only for stream BLOBs.</P>
 			</TD>
 		</TR>
 	</TBODY>
@@ -481,7 +486,8 @@ information on JayBird</FONT></P>
 Frequently Asked Questions (FAQ). The FAQ is included in the
 distribution, and is available online in several places. See
 <A HREF="../../../../JayBird/client-java/output/etc/10">Frequently
-Asked Questions</A> below for details.</P>
+Asked Questions</A> below for details. Also a new resource, JayBird
+Wiki is available: <A HREF="http://jaybirdwiki.firebirdsql.org/">http://jaybirdwiki.firebirdsql.org</A>.</P>
 <HR>
 <P><BR><BR>
 </P>
