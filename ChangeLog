@@ -1,3 +1,9 @@
+2003-11-18 12:06  ryanbaldwin
+
+	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	
+	A little clean up and a couple of potential bugs fixed.
+
 2003-11-17 22:46  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/common/FBTestBase.java:
