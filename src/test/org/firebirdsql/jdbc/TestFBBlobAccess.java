@@ -134,4 +134,35 @@ public class TestFBBlobAccess extends BaseFBTest {
         }
     }
     
+    /**
+     * This method checks if we correctly handle assigning null values to blobs.
+     * @throws Exception if something went wrong
+     */
+    public void testSetNull() throws Exception {
+        
+        PreparedStatement stmt = connection.prepareStatement(
+            "INSERT INTO test_blob(id, bin_data) VALUES(?, ?)");
+            
+        try {
+            stmt.setInt(1, 1);
+            stmt.setBytes(2, null);
+            
+            stmt.executeUpdate();
+            
+            stmt.setInt(1, 2);
+            stmt.setBinaryStream(2, null, 0);
+            
+            stmt.executeUpdate();
+            
+            stmt.setInt(1, 3);
+            stmt.setString(2, null);
+            
+            stmt.executeUpdate();
+            
+        } finally {
+            stmt.close();
+        }
+        
+        
+    }
 }
