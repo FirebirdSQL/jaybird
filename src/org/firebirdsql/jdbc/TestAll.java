@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.1  2001/07/13 18:16:15  d_jencks
+ * Implementation of jdbc 1.0 Driver contributed by Roman Rokytskyy
+ *
  * Revision 1.1  2001/07/09 09:09:51  rrokytskyy
  * Initial revision
  *
@@ -43,6 +46,7 @@ public class TestAll {
         TestSuite suite = new TestSuite();
         suite.addTest(org.firebirdsql.jdbc.TestFBDriver.suite());
         suite.addTest(org.firebirdsql.jdbc.TestFBUnmanagedConnection.suite());
+        suite.addTest(org.firebirdsql.jdbc.TestFBCallableStatement.suite());
         return suite;
     }
 }

@@ -737,7 +737,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
 
     //package methods
 
-    boolean inTransaction() {
+    public boolean inTransaction() {
         return mc.inTransaction();
     }
 
