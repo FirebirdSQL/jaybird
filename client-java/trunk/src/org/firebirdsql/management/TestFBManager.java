@@ -62,7 +62,7 @@ public class TestFBManager extends BaseFBTest {
 
     public void testStart() throws Exception {
         FBManager m = new FBManager();
-        m.setURL("localhost");
+        m.setServer("localhost");
         m.setPort(3050);
         m.start();
         m.stop();
@@ -70,7 +70,7 @@ public class TestFBManager extends BaseFBTest {
 
     public void testCreateDrop() throws Exception {
         FBManager m = new FBManager();
-        m.setURL("localhost");
+        m.setServer("localhost");
         m.setPort(3050);
         m.start();
         m.createDatabase(DB_NAME, DB_USER, DB_PASSWORD);

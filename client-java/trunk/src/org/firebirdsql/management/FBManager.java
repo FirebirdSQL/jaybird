@@ -132,11 +132,11 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
     //Firebird specific methods
     //Which server are we connecting to?
 
-    public void setURL(final String host) {
+    public void setServer(final String host) {
         this.host = host;
     }
 
-    public String getURL() {
+    public String getServer() {
         return host;
     }
 
@@ -320,7 +320,7 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
 
     //private methods
     private String getConnectString(String filename) {
-        String fileString = getURL() + "/" + getPort() + ":" + filename;
+        String fileString = getServer() + "/" + getPort() + ":" + filename;
         return fileString;
     }
 

@@ -24,9 +24,9 @@ public interface FBManagerMBean {
     public int getState();
     public String getStateString();
 
-    public void setURL(String host);
+    public void setServer(String host);
 
-    public String getURL();
+    public String getServer();
 
     public void setPort(int port);
 
