@@ -53,11 +53,11 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
 		if(hasInitilized == false)
 			{
-			try { nativeInitilize( "fbclient.dll" ); hasInitilized = true; } catch( Throwable th ) { th.printStackTrace(); }
+			try { nativeInitilize( "fbclient" ); hasInitilized = true; } catch( Throwable th ) { th.printStackTrace(); }
 			}
 		if(hasInitilized == false)
 			{
-			try { nativeInitilize( "gds32.dll" ); hasInitilized = true; } catch( Throwable th ) { th.printStackTrace(); }
+			try { nativeInitilize( "gds32" ); hasInitilized = true; } catch( Throwable th ) { th.printStackTrace(); }
 			}
 
 		if(hasInitilized == false)
