@@ -32,7 +32,7 @@ public class TestFBResultSet extends BaseFBTest {
         ;
         
     public static final String CREATE_TABLE_STATEMENT = ""
-        + "CREATE TABLE test_empty_string_bug(season_no INTEGER)"
+        + "CREATE TABLE test_empty_string_bug(id INTEGER)"
         ;
         
     public static final String DROP_TABLE_STATEMENT = ""
@@ -40,17 +40,22 @@ public class TestFBResultSet extends BaseFBTest {
         ;
         
     public static final String CREATE_VIEW_STATEMENT = ""
-        + "CREATE VIEW \"TEST\"(\"SEASON_NO\", \"EMPTY_CHAR\") "
+        + "CREATE VIEW test_empty_string_view(marker, id, empty_char) "
         + "  AS  "
-        + "  SELECT season_no, '' FROM test_empty_string_bug"
+        + "  SELECT "
+        + "    CAST('marker' AS VARCHAR(6)), "
+        + "    id, "
+        + "    '' "
+        + "  FROM "
+        + "    test_empty_string_bug"
         ;
         
     public static final String DROP_VIEW_STATEMENT = ""
-        + "DROP VIEW \"TEST\""
+        + "DROP VIEW test_empty_string_view"
         ;
         
     public static final String SELECT_FROM_VIEW_STATEMENT = ""
-        + "SELECT * FROM \"TEST\""
+        + "SELECT * FROM test_empty_string_view"
         ;
     
     public static final String INSERT_INTO_TABLE_STATEMENT = ""
@@ -150,8 +155,13 @@ public class TestFBResultSet extends BaseFBTest {
             
             int counter = 0;
             while(rs.next()) {
-                int key = rs.getInt(1);
-                String value = rs.getString(2);
+                String marker = rs.getString(1);
+                int key = rs.getInt(2);
+                String value = rs.getString(3);
+                
+                assertTrue("Marker should be correct.", "marker".equals(marker));
+                assertTrue("Key should be same as counter.", key == counter);
+                assertTrue("EMPTY_CHAR string should be empty.", "".equals(value));
                 
                 counter++;
             }
