@@ -16,8 +16,8 @@
     <property name="lib.dir" value="${basedir}/lib"/>
 
 <!--you will presumably need to change this if you want to use it.-->
-    <property name="jboss.base.dir" value="/mnt/otherlinux/usr/java/jboss/co12/jboss-all/build/output/jboss-3.0.0beta2"/>
-    <property name="jboss.deploy.dir" value="${jboss.base.dir}/server/default/deploy"/>
+    <property name="jboss.base.dir" value="/usr/java/jboss/rc1/jboss-all/build/output/jboss-3.0.1RC1"/>
+    <property name="jboss.deploy.dir" value="${jboss.base.dir}/server/all/deploy"/>
 
     <!-- Setup the module environment. -->
     <property name="module.root" value="${basedir}"/>
@@ -33,9 +33,11 @@
     <property name="source.java" value="${module.source}"/>
     <property name="source.resources" value="${module.source}/resources"/>
     <property name="source.stylesheets" value="${module.source}/stylesheets"/>
+    <property name="source.test" value="${module.source}/test"/>
 
     <!-- Where build generated files will go -->
     <property name="build.classes" value="${module.output}/classes"/>
+    <property name="build.test" value="${module.output}/test"/>
     <property name="build.lib" value="${module.output}/lib"/>
     <property name="build.api" value="${module.output}/api"/>
     <property name="build.etc" value="${module.output}/etc"/>
@@ -82,7 +84,6 @@
       <pathelement location="${module.thirdparty}/connector.jar"/>
       <pathelement location="${module.thirdparty}/jdbc-3_0-pfd2-classes.zip"/>
       <pathelement location="${module.thirdparty}/jaas.jar"/>
-      <pathelement location="${module.thirdparty}/jmxri.jar"/>
       <pathelement location="${module.thirdparty}/concurrent.jar"/>
       <pathelement location="${module.thirdparty}/log4j-core.jar"/>
       <pathelement location="${lib.dir}/junit.jar"/>
@@ -109,13 +110,22 @@
 
   <target name="compile-classes" depends="init" >
     <mkdir dir="${build.classes}"/>
-<!--depend is apparently not in distributed ant version-->
-    <!--depend srcDir="${source.java}"
-           destDir="${build.classes}"
-           cache="${build.classes}"/-->
 
     <javac srcdir="${source.java}"
            destdir="${build.classes}"
+           target="1.2"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+           includes="org/**"
+           excludes="**/temp*"
+    >
+      <classpath refid="javac.classpath"/>
+    </javac>
+
+    <mkdir dir="${build.test}"/>
+    <javac srcdir="${source.test}"
+           destdir="${build.test}"
            target="1.2"
            debug="on"
            deprecation="on"
@@ -150,7 +160,7 @@
   <!-- =================================================================== -->
   <!-- Creates the jar archives                                            -->
   <!-- =================================================================== -->
-  <target name="jars" depends="jar-jmx, rar"/>
+  <target name="jars" depends="jar-jmx, rar, jar-test"/>
 
   <target name="jar-ra" depends="compile">
 
@@ -158,7 +168,19 @@
     <jar jarfile="${build.lib}/firebirdsql.jar">
        <fileset dir="${build.classes}">
          <include name="org/firebirdsql/**"/>
-         <exclude name="**/**Test**.class"/>
+       </fileset>
+       <fileset dir="${build.resources}">
+         <include name="*.properties"/>
+       </fileset>
+    </jar>
+  </target>
+
+  <target name="jar-test" depends="compile">
+
+    <mkdir dir="${build.lib}"/>
+    <jar jarfile="${build.lib}/firebirdsql-test.jar">
+       <fileset dir="${build.test}">
+         <include name="org/firebirdsql/**"/>
        </fileset>
        <fileset dir="${build.resources}">
          <include name="*.properties"/>
@@ -176,7 +198,6 @@
     <jar jarfile="${build.lib}/firebirdjmx.jar">
        <fileset dir="${build.classes}">
          <include name="org/firebirdsql/**"/>
-         <exclude name="**/*Test*.class"/>
          <exclude name="**/jca/**"/>
          <exclude name="**/jdbc/**"/>
        </fileset>
@@ -192,11 +213,6 @@
   <!-- Creates the rar archives                                            -->
   <!-- =================================================================== -->
   <target name="rar" depends="jar-ra">
-    <!--mkdir dir="${build.jar-ra.dir}/META-INF"/>
-    <copy todir="${build.jar-ra.dir}/META-INF">
-        <fileset dir="${source.resources.dir}"/>
-    </copy-->
-
     <jar jarfile="${build.lib}/firebirdsql.rar">
       <fileset dir="${build.lib}">
         <include name="firebirdsql.jar"/>
@@ -247,6 +263,7 @@
 
       <classpath>
         <pathelement location="${build.classes}"/>
+        <pathelement location="${build.test}"/>
         <pathelement location="${build.resources}"/>
         <pathelement location="${lib.dir}/ant.jar"/>
         <pathelement location="${lib.dir}/optional.jar"/>
@@ -261,7 +278,7 @@
 		 haltonfailure="${junit.batchtest.haltonfailure}" 
 		 fork="${junit.fork}">
 
-        <fileset dir="${build.classes}">
+        <fileset dir="${build.test}">
           <include name="**/Test*.class"/>
           <exclude name="**/TestAll.class"/>
           <exclude name="**/TestXABase*.class"/>
@@ -300,6 +317,7 @@
 
       <classpath>
         <pathelement location="${build.classes}"/>
+        <pathelement location="${build.test}"/>
         <pathelement location="${build.resources}"/>
         <pathelement location="${lib.dir}/ant.jar"/>
         <pathelement location="${lib.dir}/optional.jar"/>
@@ -314,7 +332,7 @@
 		 haltonfailure="${junit.batchtest.haltonfailure}" 
 		 fork="${junit.batchtest.fork}">
 
-        <fileset dir="${build.classes}">
+        <fileset dir="${build.test}">
           <include name="org/firebirdsql/*/Test${test}*.class"/>
         </fileset>
       </batchtest>
@@ -386,7 +404,9 @@
     <zip zipfile="${build.dist}/${Name}-${version}.zip">
       <fileset dir="${build.lib}">
         <include name="firebirdsql.rar"/>
+        <include name="firebirdsql-test.jar"/>
         <include name="firebirdsql.jar"/>
+        <include name="firebirdjmx.jar"/>
       </fileset>
       <zipfileset dir="${module.thirdparty}" prefix="lib">
         <include name="*.jar"/>

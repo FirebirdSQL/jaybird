@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.7  2002/06/06 11:24:07  brodsom
+ * Performance patch. Log if log4j is in the classpath, don't log if the enviroment variable FBLog4j is false.
+ *
  * Revision 1.6  2002/02/02 18:58:24  d_jencks
  * converted to log4j logging and cleaned up some test problems.  If you do not wish to use log4j, you may leave out the log4j-core.jar and get no logging
  *

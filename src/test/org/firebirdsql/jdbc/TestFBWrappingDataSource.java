@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.10  2002/06/06 11:24:07  brodsom
+ * Performance patch. Log if log4j is in the classpath, don't log if the enviroment variable FBLog4j is false.
+ *
  * Revision 1.9  2002/05/09 12:18:29  rrokytskyy
  * fixed couple of issues with correct specification implementation
  * reported by Blas Rodriguez Somoza and Jan Aleman
