@@ -200,6 +200,24 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
         mcf.setPassword(password);
     }
     
+    /**
+     * Get encoding for connections produced by this data source.
+     * 
+     * @return encoding for the connection.
+     */
+    public String getEncoding() {
+        return mcf.getEncoding();
+    }
+    
+    /**
+     * Set encoding for connections produced by this data source.
+     * 
+     * @param encoding encoding for the connection.
+     */
+    public void setEncoding(String encoding) {
+        mcf.setEncoding(encoding);
+    }
+    
     public String getTpbMapping() {
         return tpbMapping;
     }
