@@ -1,3 +1,15 @@
+2003-11-08 13:11  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FirebirdConnection.java,
+	main/org/firebirdsql/jdbc/FirebirdPreparedStatement.java,
+	test/org/firebirdsql/jdbc/TestFBParameterMetaData.java,
+	test/org/firebirdsql/jdbc/TestFBSavepoint.java:
+	
+	Copied some stuff from JDBC 3.0 interfaces to make driver compile
+	and run with JDK 1.3
+
 2003-11-07 19:40  rrokytskyy
 
 	* client-java/src/:
