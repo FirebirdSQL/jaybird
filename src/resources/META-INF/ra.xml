@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE connector PUBLIC "-//Sun Microsystems, Inc.//DTD Connector 1.0//EN" "file:///usr/java/jca/connector_1_0.dtd">
-<!-- DOCTYPE connector PUBLIC"-//Sun Microsystems, Inc.//DTD Connector 1.0//EN" "http://java.sun.com/dtd/connector_1_0.dtd"-->
+<DOCTYPE connector PUBLIC"-//Sun Microsystems, Inc.//DTD Connector 1.0//EN" "http://java.sun.com/dtd/connector_1_0.dtd">
 
 
 <connector>
   <display-name>Firebird Database Connector</display-name>
-  <vendor-name>David Jencks</vendor-name>
+  <vendor-name>Firebird Database</vendor-name>
   <spec-version>1.0</spec-version>
   <eis-type>Relational Database</eis-type>
   <version>1.0</version>
@@ -17,16 +16,8 @@
     <connection-interface>java.sql.Connection</connection-interface>
     <connection-impl-class>org.firebirdsql.jdbc.FBConnection</connection-impl-class>
     <transaction-support>XATransaction</transaction-support>
-    <!--config-property>
-      <config-property-name>Server</config-property-name>
-      <config-property-type>java.lang.String</config-property-type>
-      <config-property-value>localhost</config-property-value>
-    </config-property>
-    <config-property>
-      <config-property-name>Port</config-property-name>
-      <config-property-type>java.lang.Integer</config-property-type>
-      <config-property-value>3050</config-property-value>
-    </config-property-->
+<!-- TODO: add server and port properties.  Right now, you must specify 
+them in the Database property like this: <host>/<port>:<path to db file> -->
     <config-property>
       <config-property-name>Database</config-property-name>
       <config-property-type>java.lang.String</config-property-type>
@@ -55,6 +46,11 @@
     <config-property>
       <config-property-name>BlobBufferLength</config-property-name>
       <config-property-type>int</config-property-type>
+      <config-property-value></config-property-value>
+    </config-property>
+    <config-property>
+      <config-property-name>Encoding</config-property-name>
+      <config-property-type>java.lang.String</config-property-type>
       <config-property-value></config-property-value>
     </config-property>
     <authentication-mechanism>
