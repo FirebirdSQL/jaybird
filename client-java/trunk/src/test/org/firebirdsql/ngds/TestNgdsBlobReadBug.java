@@ -85,7 +85,7 @@ public class TestNgdsBlobReadBug  extends BaseFBTest
             // Now for the actual test - can we read the blob data correctly with the type 2 GDS.
             dataReadFromBlob = openDatabaseReadBlobAndDetatch(getType2Gds());
 
-            assertTrue( "Bad blob data read using type 4 driver - is there a problem with the type 4 or the test itself ?", Arrays.equals( testbuf, dataReadFromBlob ));
+            assertTrue( "Bad blob data read using type 2 driver.", Arrays.equals( testbuf, dataReadFromBlob ));
             }
         finally
             {
