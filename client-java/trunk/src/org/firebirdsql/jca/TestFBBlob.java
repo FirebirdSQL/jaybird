@@ -57,6 +57,7 @@ public class TestFBBlob extends TestXABase {
         mcf = initMcf();
         ds = (DataSource)mcf.createConnectionFactory();
         c = (FBConnection)ds.getConnection();
+        c.setAutoCommit(false);
         s = c.createStatement();
         t = c.getLocalTransaction();
         t.begin();
