@@ -89,6 +89,7 @@ public class FBResultSet implements ResultSet {
     private java.util.HashMap colNames = new java.util.HashMap();
     
     private String cursorName;
+    private FBObjectListener.ResultSetListener listener;
 	 /**
      * Creates a new <code>FBResultSet</code> instance.
      *
@@ -96,11 +97,12 @@ public class FBResultSet implements ResultSet {
      * @param fbstatement a <code>FBStatement</code> value
      * @param stmt an <code>isc_stmt_handle</code> value
      */
-    FBResultSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt) 
-        throws SQLException 
+    FBResultSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt, 
+        FBObjectListener.ResultSetListener listener) throws SQLException 
     {
         this.c = c;
         this.cursorName = fbstatement.getCursorName();
+        this.listener = listener;
         
         xsqlvars = stmt.getOutSqlda().sqlvar;
         maxRows = fbstatement.getMaxRows();
@@ -124,9 +126,14 @@ public class FBResultSet implements ResultSet {
      * in {@link FBDatabaseMetaData} class).
      * @throws SQLException if database access error occurs
      */
-    FBResultSet(FBConnection c, FBStatement fbStatement,isc_stmt_handle stmt, boolean trimStrings) throws SQLException {
+    FBResultSet(FBConnection c, FBStatement fbStatement,isc_stmt_handle stmt, 
+        boolean trimStrings, FBObjectListener.ResultSetListener listener) 
+        throws SQLException 
+    {
         this.c = c;
         this.trimStrings = trimStrings;
+        this.listener = listener;
+        
         maxRows = fbStatement.getMaxRows();
         xsqlvars = stmt.getOutSqlda().sqlvar;
         prepareVars(true);
@@ -214,6 +221,9 @@ public class FBResultSet implements ResultSet {
         } finally {
             fbFetcher.close();
         }
+        
+        if (listener != null)
+            listener.resultSetClosed(this);
     }
 
 
