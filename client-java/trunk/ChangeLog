@@ -1,3 +1,36 @@
+2004-08-15 02:13  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/:
+	TestFBCallableStatement.java, TestFBEscapedCallParser.java,
+	TestFBEscapedFunctionHelper.java, TestFBPreparedStatement.java:
+	
+	adapted to the changes in source
+
+2004-08-15 02:12  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/FBEscapedCallParser.java,
+	main/org/firebirdsql/jdbc/FBEscapedFunctionHelper.java,
+	main/org/firebirdsql/jdbc/FBEscapedParser.java,
+	main/org/firebirdsql/jdbc/FBProcedureCall.java,
+	main/org/firebirdsql/jdbc/FirebirdCallableStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java:
+	
+	added possibility to use CallableStatement with selectable
+	procedures and additional access to standard UDF functions
+
+2004-08-15 02:10  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	gds/DatabaseParameterBuffer.java, gds/ISCConstants.java,
+	gds/XSQLVAR.java, jdbc/field/FBTimestampField.java,
+	jgds/GDS_Impl.java, ngds/GDS_Impl.java:
+	
+	introduced new parameters to change the time zone behavior and
+	escaped parser behavior for function calls
+
 2004-08-13 22:18  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/: FBBlob.java,
