@@ -818,8 +818,15 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                 fieldInfo.fieldPrecision = rs.getInt("FIELD_PRECISION");
                 fieldInfo.fieldScale = rs.getInt("FIELD_SCALE");
                 fieldInfo.fieldSubtype = rs.getInt("FIELD_SUB_TYPE");
-                fieldInfo.characterLength = rs.getInt("CHARACTER_LENGTH");
                 fieldInfo.characterSetId = rs.getInt("CHARACTER_SET_ID");
+                fieldInfo.characterLength = rs.getInt("CHARACTER_LENGTH");
+                
+                if (rs.wasNull())
+                    fieldInfo.characterLength = 
+                        fieldInfo.fieldLength / 
+                        FBConnectionHelper.getCharacterSetSize(fieldInfo.characterSetId);
+                    
+                    
                 
                 result.put(
                     new FieldKey(fieldInfo.relationName, fieldInfo.fieldName), 
