@@ -77,6 +77,10 @@ public class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_handle {
     {
         return !rdb_transactions.isEmpty();
     }
+    
+    int getOpenTransactionCount() {
+        return rdb_transactions.size();
+    }
 
     void addTransaction(isc_tr_handle_impl tr)
     {
