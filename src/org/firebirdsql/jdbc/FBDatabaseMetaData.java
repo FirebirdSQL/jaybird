@@ -1682,9 +1682,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         + " PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,"
         + " F.RDB$FIELD_TYPE as DATA_TYPE,"
         + " F.RDB$FIELD_SUB_TYPE as TYPE_NAME," //unlikely
-        + " 0 as PRECISION,"//Hah!
+        + " 0 as \"PRECISION\","//Hah!
         + " F.RDB$FIELD_SCALE as SCALE,"
-        + " F.RDB$FIELD_LENGTH as LENGTH,"
+        + " F.RDB$FIELD_LENGTH as \"LENGTH\","
         + " 10 as RADIX,"//who knows??
         + " F.RDB$NULL_FLAG as NULLABLE,"
         + " PP.RDB$DESCRIPTION as REMARKS "
