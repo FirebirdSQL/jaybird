@@ -495,48 +495,15 @@ included in the #19 Code Examples section below.</P>
 <P ALIGN=CENTER><FONT SIZE=5>7- Using the Driver with JBoss</FONT></P>
 <P><BR><BR>
 </P>
-<P>Deployment in JBoss 3 beta2 and later:</P>
-<P><BR><BR>
+<P>Deployment in JBoss 3.0.0 and later:</P>
+<P><BR>
 </P>
 <P>The additional jars/classes mentioned above are already available
 in JBoss. Put firebirdsql.rar in the deploy directory. Get
-firebird-service.xml from jboss cvs (or the distribution when
-available) at
+firebird-service.xml from your binary jboss distribution or jboss cvs  at
 connector[jbosscx]/src/etc/example-config/firebird-service.xml and
-modify the URL to point to the desired database location. Add a
-security domain to auth.conf of the form:</P>
-<P><FONT FACE="Courier, monospace">FirebirdDBRealm {</FONT></P>
-<P><BR><BR>
-</P>
-<P><FONT FACE="Courier, monospace">// </FONT>
-</P>
-<P><FONT FACE="Courier, monospace">// Security domain for new jca
-framework. </FONT>
-</P>
-<P><FONT FACE="Courier, monospace">// One per
-ManagedConnectionFactory are required.</FONT></P>
-<P><FONT FACE="Courier, monospace">org.jboss.resource.security.ConfiguredIdentityLoginModule
-required</FONT></P>
-<P><FONT FACE="Courier, monospace">principal=&quot;sysdba&quot;</FONT></P>
-<P><FONT FACE="Courier, monospace">userName=&quot;sysdba&quot;</FONT></P>
-<P><FONT FACE="Courier, monospace">password=&quot;masterkey&quot;</FONT></P>
-<P><FONT FACE="Courier, monospace">managedConnectionFactoryName=&quot;jboss.jca:service=XaTxCM,name=FirebirdDS&quot;;</FONT></P>
-<P><FONT FACE="Courier, monospace">};</FONT></P>
-<P><BR><BR>
-</P>
-<P>where FirebirdDBRealm exactly matches the SecurityDomainJndiName
-attribute of your ConnectionManager mbean configuration and the
-managedConnectionFactoryName exactly matches the object name of the
-ConnectionManager mbean.</P>
-<P><BR><BR>
-</P>
-<P>If you see log messages such as principal=null when trying to get
-a connection, you have the wrong managedConnectionFactoryName. If you
-see attempts to use UserRolesLoginModule, you have mismatched
-SecurityDomainJndiName. Other login modules supporting multiple user
-login should be available in JBoss soon.</P>
-<P><BR><BR>
-</P>
+modify the URL to point to the desired database location. If you get a configuration from cvs, please be very sure and check twice that you have the correct version for your JBoss version.  There are hard-to-spot incompatibilities between every minor release.</P>
+<P>For simplicity, start by setting the UserName and Password in the firebird-service.xml configuration file.  If you need more advanced JAAS based login, set that up based on the instructions in the jboss 3 manual or the quickstart guide after you have a simple configuration working.</P>
 <P ALIGN=CENTER><FONT SIZE=4 STYLE="font-size: 16pt">8- Using the
 Driver with </FONT><FONT SIZE=5>Tomcat</FONT></P>
 <P><BR><BR>
@@ -1096,11 +1063,9 @@ http://sourceforge.net/tracker/?group_id=9028&amp;atid=109028
 Use the Driver</FONT></P>
 <P><BR><BR>
 </P>
-<P>Certain Sun libraries are needed that are distributed with JDK 1.4</P>
-<P>Also:</P>
 <P>mini-j2ee.jar</P>
-<P>concurrent.jar</P>
-<P>jaas.jar</P>
+<P>mini-concurrent.jar</P>
+<P>jaas.jar (with jdk 1.4)</P>
 <P>log4j-core.jar (if you want logging available).</P>
 <P><BR><BR>
 </P>
