@@ -20,9 +20,9 @@
     <property name="name" value="firebirdsql"/>
 
     <property name="version.major" value="1"/>
-    <property name="version.minor" value="0"/>
+    <property name="version.minor" value="1"/>
     <property name="version.revision" value="0"/>
-    <property name="version.tag" value=""/>
+    <property name="version.tag" value="Beta"/>
     <property name="version.name" value=""/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}"/>
