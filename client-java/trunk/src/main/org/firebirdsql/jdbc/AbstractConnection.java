@@ -146,7 +146,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception GDSException if handle needed to be created and creation failed
      */
     public isc_db_handle getIscDBHandle() throws GDSException {
-        return mc.getIscDBHandle();
+        return mc.getGDSHelper().getIscDBHandle();
     }
 
     /**
@@ -154,7 +154,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return handler object for internal API calls
      */
     public GDS getInternalAPIHandler() {
-        return mc.getInternalAPIHandler();
+        return mc.getGDSHelper().getInternalAPIHandler();
     }
     
     /**
@@ -510,7 +510,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public synchronized void setReadOnly(boolean readOnly) throws SQLException {
-        mc.setReadOnly(readOnly);
+        mc.getGDSHelper().setReadOnly(readOnly);
     }
 
 
@@ -521,7 +521,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public boolean isReadOnly() throws SQLException {
-        return mc.isReadOnly();
+        return mc.getGDSHelper().isReadOnly();
     }
 
 
@@ -578,7 +578,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
                     if (inTransaction())
                             getLocalTransaction().internalCommit();
 
-                    mc.setTransactionIsolation(level);
+                    mc.getGDSHelper().setTransactionIsolation(level);
 
                 } catch (ResourceException re) {
                     throw new FBSQLException(re);
@@ -596,7 +596,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public int getTransactionIsolation() throws SQLException {
         try 
         {
-            return mc.getTransactionIsolation();
+            return mc.getGDSHelper().getTransactionIsolation();
         }
         catch (ResourceException e)
         {
@@ -821,16 +821,16 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * Check if this connection is currently involved in a transaction
      */
     public boolean inTransaction() {
-        return mc.inTransaction();
+        return mc.getGDSHelper().inTransaction();
     }
 
     //for DatabaseMetaData
-    String getDatabase() {
-        return mc.getDatabase();
-    }
+//    String getDatabase() {
+//        return mc.getGDSHelper().getDatabase();
+//    }
 
     String getUserName() {
-        return mc.getUserName();
+        return mc.getGDSHelper().getUserName();
     }
 
    
@@ -840,7 +840,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return The name of the encoding used
      */
     public String getIscEncoding() {
-        return mc.getIscEncoding();
+        return mc.getGDSHelper().getIscEncoding();
     }
 
     /**
@@ -948,7 +948,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      private SQLWarning getIscWarnings() {
          SQLWarning firstWarning = null;
          SQLWarning lastWarning = null;
-         Iterator iter = mc.getWarnings().iterator();
+         Iterator iter = mc.getGDSHelper().getWarnings().iterator();
          while (iter.hasNext()) {
              GDSException item = (GDSException)iter.next();
              
@@ -968,7 +968,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
       * Clear warnings associated with this database connection.
       */
      private void clearIscWarnings() {
-         mc.clearWarnings();
+         mc.getGDSHelper().clearWarnings();
      }
 	 
 	 //******** Proxies of ManagedConnection methods for jdbc methods
@@ -985,7 +985,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public isc_stmt_handle getAllocatedStatement() throws GDSException {
         checkManagedConnection();    
-        return mc.getAllocatedStatement();
+        return mc.getGDSHelper().getAllocatedStatement();
     }
 
     /**
@@ -1000,7 +1000,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
             throw new GDSException(ISCConstants.isc_bad_req_handle);
-        mc.executeStatement(stmt,sendOutSqlda);
+        mc.getGDSHelper().executeStatement(stmt,sendOutSqlda);
     }
 	 	 
     /**
@@ -1015,7 +1015,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
             throw new GDSException(ISCConstants.isc_bad_req_handle);
-        mc.closeStatement(stmt,deallocate);
+        mc.getGDSHelper().closeStatement(stmt,deallocate);
     }	 
 
     /**
@@ -1029,7 +1029,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException, SQLException {
         checkManagedConnection();
-        mc.prepareSQL(stmt, sql, describeBind);
+        mc.getGDSHelper().prepareSQL(stmt, sql, describeBind);
     }
 	 
     /**
@@ -1038,7 +1038,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @param fbStatement The statement to be registered
      */
     public void registerStatement(AbstractStatement fbStatement) {
-        mc.registerStatement(fbStatement.fixedStmt);
+        mc.getGDSHelper().registerStatement(fbStatement.fixedStmt);
     }
 	 
     /**
@@ -1053,7 +1053,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
             throw new GDSException(ISCConstants.isc_bad_req_handle);
-        mc.fetch(stmt, fetchSize);
+        mc.getGDSHelper().fetch(stmt, fetchSize);
     }
     
     /**
@@ -1067,7 +1067,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
             throw new GDSException(ISCConstants.isc_bad_req_handle);
-        mc.setCursorName(stmt, cursorName);
+        mc.getGDSHelper().setCursorName(stmt, cursorName);
     }
 
     /**
@@ -1082,7 +1082,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
             throw new GDSException(ISCConstants.isc_bad_req_handle);
-        mc.getSqlCounts(stmt);
+        mc.getGDSHelper().getSqlCounts(stmt);
     }
 
     /**
@@ -1091,7 +1091,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return The name of the database product
      */
     public String getDatabaseProductName() {
-        return mc.getDatabaseProductName();
+        return mc.getGDSHelper().getDatabaseProductName();
     }
 
     /**
@@ -1100,7 +1100,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return The version of the database
      */
     public String getDatabaseProductVersion() {
-        return mc.getDatabaseProductVersion();
+        return mc.getGDSHelper().getDatabaseProductVersion();
     }
 
     /**
@@ -1110,7 +1110,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return The major version number of the database
      */
     public int getDatabaseProductMajorVersion() {
-        return mc.getDatabaseProductMajorVersion();
+        return mc.getGDSHelper().getDatabaseProductMajorVersion();
     }
 
     /**
@@ -1120,7 +1120,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return The minor version number of the database
      */
     public int getDatabaseProductMinorVersion() {
-        return mc.getDatabaseProductMinorVersion();
+        return mc.getGDSHelper().getDatabaseProductMinorVersion();
     }
 
     /**
@@ -1129,8 +1129,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return The size of the blob buffer length
      */
     public Integer getBlobBufferLength() {
-        /**@todo add check if mc is not null */
-        return mc.getBlobBufferLength();
+        return new Integer(mc.getGDSHelper().getBlobBufferLength());
     }
 	 
     /**
@@ -1143,7 +1142,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public isc_blob_handle openBlobHandle(long blob_id, boolean segmented) throws GDSException {
         checkManagedConnection();
-        return mc.openBlobHandle(blob_id, segmented);
+        return mc.getGDSHelper().openBlobHandle(blob_id, segmented);
     }	 
 	 
     /**
@@ -1155,7 +1154,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public byte[] getBlobSegment(isc_blob_handle blob, int len) throws GDSException {
         checkManagedConnection();
-        return mc.getBlobSegment(blob,len);
+        return mc.getGDSHelper().getBlobSegment(blob,len);
     }
 	 
     /**
@@ -1166,7 +1165,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public void closeBlob(isc_blob_handle blob) throws GDSException {
         checkManagedConnection();
-        mc.closeBlob(blob);
+        mc.getGDSHelper().closeBlob(blob);
     }
 	 
     /**
@@ -1178,7 +1177,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public isc_blob_handle createBlobHandle(boolean segmented) throws GDSException {
         checkManagedConnection();
-        return mc.createBlobHandle(segmented);
+        return mc.getGDSHelper().createBlobHandle(segmented);
     }
 	 
     /**
@@ -1190,7 +1189,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public void putBlobSegment(isc_blob_handle blob, byte[] buf) throws GDSException {
         checkManagedConnection();
-        mc.putBlobSegment(blob, buf);
+        mc.getGDSHelper().putBlobSegment(blob, buf);
     }
 
     /**

@@ -53,7 +53,7 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
      */
      public String getEISProductName() throws ResourceException {
          try {
-             return mc.getIscDBHandle().getDatabaseProductName();
+             return mc.getGDSHelper().getIscDBHandle().getDatabaseProductName();
          } catch(GDSException ex) {
              throw new FBResourceException(ex);
          }
@@ -68,7 +68,7 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
       */
      public String getEISProductVersion() throws ResourceException {
          try {
-             return mc.getIscDBHandle().getDatabaseProductVersion();
+             return mc.getGDSHelper().getIscDBHandle().getDatabaseProductVersion();
          } catch(GDSException ex) {
              throw new FBResourceException(ex);
          }
@@ -97,7 +97,7 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
      * @throws ResourceException generic exception
      */
     public String getUserName() throws ResourceException {
-        return mc.getUserName();
+        return mc.getGDSHelper().getUserName();
     }
 
  }
