@@ -1,3 +1,64 @@
+2004-12-05 21:32  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/XdrOutputStream.java:
+	
+	fixed incorrect buffer handling when garbage could be send to
+	server
+
+2004-12-05 21:30  rrokytskyy
+
+	*
+	
+	fixed javadoc
+	client-java/src/main/org/firebirdsql/jdbc/FirebirdCallableStatement
+	.java:
+
+2004-12-05 21:28  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	DriverConnectionPoolDataSource.java,
+	FBConnectionPoolDataSource.java:
+	
+	removed as they moved to other directory during JDK 5.0
+	compatibility
+
+2004-12-05 12:45  rrokytskyy
+
+	* client-java/src/etc/: release_notes.html, release_notes.pdf,
+	release_notes.sxw:
+	
+	updated release history
+
+2004-12-05 11:50  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/jdbc/field/FBField.java,
+	main/org/firebirdsql/jdbc/field/FBLongVarCharField.java,
+	main/org/firebirdsql/jdbc/field/FBStringField.java,
+	main/org/firebirdsql/jdbc/field/FBTimeField.java,
+	main/org/firebirdsql/jdbc/field/FBTimestampField.java,
+	main/org/firebirdsql/gds/AbstractGDS.java,
+	main/org/firebirdsql/gds/GDS.java,
+	main/org/firebirdsql/gds/XSQLVAR.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/FBBlob.java,
+	test/org/firebirdsql/common/FBTestBase.java,
+	test/org/firebirdsql/common/SimpleFBTestBase.java,
+	test/org/firebirdsql/jdbc/TestFBBlobStream.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java,
+	test/org/firebirdsql/gds/TestFatalErrors.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+	
+	merged with HEAD
+
+2004-12-05 10:50  rrokytskyy
+
+	*
+	
+	disabled testSqlRole
+	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
+	ource.java:
+
 2004-12-04 23:36  rrokytskyy
 
 	* client-java/src/:
