@@ -45,7 +45,7 @@ them in the Database property like this: <host>/<port>:<path to db file> -->
     </config-property>
     <config-property>
       <config-property-name>BlobBufferLength</config-property-name>
-      <config-property-type>int</config-property-type>
+      <config-property-type>java.lang.Integer</config-property-type>
       <config-property-value></config-property-value>
     </config-property>
     <config-property>
