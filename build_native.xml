@@ -207,6 +207,7 @@
 
         <delete>
             <fileset dir="${build.native.output}" includes="*.obj"/>
+            <fileset dir="${build.native.output}" includes="*.o"/>
             <fileset dir="${build.native.output}" includes="*.exp"/>
             <fileset dir="${build.native.output}" includes="*.lib"/>
             <fileset dir="${build.native.output}" includes="*.xml"/>
