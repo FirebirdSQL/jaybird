@@ -1,3 +1,20 @@
+2005-03-03 22:56  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jca/FBManagedConnection.java, jdbc/AbstractConnection.java,
+	jdbc/FBDatabaseMetaData.java, jca/FBManagedConnectionFactory.java,
+	jca/FBManagedConnectionMetaData.java, jca/GDSHelper.java:
+	
+	Reworked JCA code to use connection per ManagedConnection instance
+	and no pooling. Code is simpler and more stable now.
+
+2005-03-03 22:54  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/gds/TestFatalErrors.java:
+	
+	removed tests for fatal errors, since no error is considered fatal
+	now
+
 2005-02-27 19:14  gab_reid
 
 	*
