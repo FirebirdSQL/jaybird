@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.8  2002/11/25 15:03:30  rrokytskyy
+ * fixed nullpointer exception
+ *
  * Revision 1.7  2002/11/25 13:54:34  rrokytskyy
  * fixed incorrect line feeds
  *
@@ -215,11 +218,7 @@ public class FBDriver implements Driver {
             FBConnectionRequestInfo conCri =
                 FBConnectionHelper.getCri(info, FBConnectionHelper.getDefaultCri());
                 
-            String tpbMapping = (String)info.getProperty(TPB_MAPPING);
-            
-            FBTpbMapper tpbMapper = null;
-            if (tpbMapping != null) 
-                tpbMapper = new FBTpbMapper(tpbMapping, getClass().getClassLoader());
+            FBTpbMapper tpbMapper = FBConnectionHelper.getTpbMapper(info);
 
             // extract the user
             String user = info.getProperty(USER);
