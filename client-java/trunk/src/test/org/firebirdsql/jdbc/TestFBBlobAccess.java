@@ -60,7 +60,9 @@ public class TestFBBlobAccess extends BaseFBTest {
         try {
             stmt.executeUpdate(DROP_TABLE);
         }
-        catch (Exception e) {}
+        catch (Exception e) {
+            // e.printStackTrace();
+        }
 
         stmt.executeUpdate(CREATE_TABLE);
         stmt.close();
@@ -98,7 +100,7 @@ public class TestFBBlobAccess extends BaseFBTest {
             ps.setInt(1, i);
             ps.setBytes(2, testData[i]);
             
-            ps.execute();
+            ps.executeUpdate();
         }
         
         ps.close();
@@ -162,7 +164,53 @@ public class TestFBBlobAccess extends BaseFBTest {
         } finally {
             stmt.close();
         }
+    }
+    
+    public static final String TEST_TEXT = "Test text";
         
+    /**
+     * This test initially was created to find the bug when LONGVARCHAR column
+     * is used, but it revealed the bug with blobs.
+     * 
+     * We try to execute some blob updates one by one in non-autocommit mode. 
+     * This tests if transaction is started before the blob is created.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testSetString() throws Exception {
         
+        connection.setAutoCommit(false);
+                
+        PreparedStatement stmt = connection.prepareStatement(
+            "INSERT INTO test_blob(id, bin_data) VALUES(?, ?)");
+
+        try {
+            stmt.setInt(1, 1);
+            stmt.setString(2, TEST_TEXT);
+
+            stmt.executeUpdate();
+            
+            connection.commit();
+            
+            stmt.setInt(1, 2);
+            stmt.setString(2, TEST_TEXT);
+
+            stmt.executeUpdate();
+            
+            connection.commit();
+
+            stmt.setInt(1, 3);
+            stmt.setString(2, TEST_TEXT);
+
+            stmt.executeUpdate();
+
+            connection.commit();
+            
+        } finally {
+            stmt.close();
+        }
+        
+        connection.setAutoCommit(true);
+
     }
 }
