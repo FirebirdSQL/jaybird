@@ -140,7 +140,9 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     //rar properties
 
 
-    public void setDatabase(String database) {
+    public void setDatabase(String database) throws ResourceException {
+        if (this.dbAlias!=null && !database.equals(this.dbAlias))
+            throw new ResourceException("can't change database!");
         this.dbAlias = database;
     }
 
