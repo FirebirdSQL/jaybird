@@ -17,6 +17,12 @@
  * All rights reserved.
  */
 
+/* win32/platform.h
+ * 
+ * Platform specific includes, code and defines for win32
+ */
+
+
 #ifndef _JNGDS__Platform
 #define _JNGDS__Platform
 
@@ -36,7 +42,7 @@
 #include <stdarg.h>
 
 // Defines for fb_binding.h and fb_binding.cpp
-#define SHARED_LIBRARY_HANDLE HMODULE
+typedef HMODULE SHARED_LIBRARY_HANDLE;
 
 
 #define FB_ENTRYPOINT(X) \
