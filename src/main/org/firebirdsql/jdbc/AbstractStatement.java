@@ -123,7 +123,12 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                 return this;
         }
     }
-
+    
+    protected void finalize() throws Throwable {
+        if (!closed)
+            close();
+    }
+    
     /**
      * Executes an SQL statement that returns a single <code>ResultSet</code> object.
      *
