@@ -29,6 +29,7 @@ import javax.sql.PooledConnection;
 
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.gds.ISCConstants;
 
 /**
  * Test suite for JDBC connection pool.
@@ -153,7 +154,13 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             Statement stmt = con.createStatement();
             
             try {
-                stmt.executeUpdate("CREATE TABLE test(a INTEGER)");
+                try {
+                    stmt.executeUpdate("CREATE TABLE test(a INTEGER)");
+                } catch(SQLException ex) {
+                    if (ex.getErrorCode() != ISCConstants.isc_no_meta_update)
+                        throw ex;
+                }
+                
                 stmt.executeUpdate("INSERT INTO test VALUES(1)");
                 
                 String sql = "SELECT * FROM test WHERE a = ?";
@@ -169,6 +176,10 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
                     
                     assertTrue("Result set should not be empty.", rs.next());
                     assertTrue("Correct data should be selected", rs.getInt(1) == 1);
+                    
+                    assertTrue("Statement that created result set should be " + 
+                        "same as statement returned by ResultSet.getStatement().",
+                        rs.getStatement() == ps);
                     
                     ps.setInt(1, 0);
                     rs = ps.executeQuery();
