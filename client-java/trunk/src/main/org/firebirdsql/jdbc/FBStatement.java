@@ -66,6 +66,7 @@ public class FBStatement implements Statement {
     private FBResultSet currentRs;
 
     private boolean closed;
+    private boolean escapedProcessing = true;
 
 	 java.sql.SQLWarning firstWarning = null;
 
@@ -315,7 +316,7 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public void setEscapeProcessing(boolean enable) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        escapedProcessing = enable;
     }
 
 
@@ -910,7 +911,10 @@ public class FBStatement implements Statement {
         if (fixedStmt == null) {
             fixedStmt = c.getAllocatedStatement();
         }
-        c.prepareSQL(fixedStmt, c.nativeSQL(sql), describeBind);
+        c.prepareSQL(
+            fixedStmt, 
+            escapedProcessing ? c.nativeSQL(sql) : sql, 
+            describeBind);
     }
 
     protected void addWarning(java.sql.SQLWarning warning){
