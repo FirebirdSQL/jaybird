@@ -345,6 +345,7 @@
          <include name="org/firebirdsql/**"/>
        </fileset>
        <fileset dir="${build.resources}">
+         <exclude name="log4j.properties"/>
          <include name="*.properties"/>
        </fileset>
        <fileset dir="${build.j2ee}">
