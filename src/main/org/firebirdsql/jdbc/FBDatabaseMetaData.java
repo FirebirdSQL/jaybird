@@ -63,7 +63,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public class FBDatabaseMetaData implements DatabaseMetaData {
 
-   private final Logger log = LoggerFactory.getLogger(getClass(),false);
+    private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
     private static final String SPACES = "                               ";//31 spaces
 
     FBConnection c;

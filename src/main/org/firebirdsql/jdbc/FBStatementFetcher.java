@@ -18,7 +18,7 @@ class FBStatementFetcher implements FBFetcher {
           
     private byte[][] nextRow;
 
-    private final Logger log = LoggerFactory.getLogger(getClass(),false);
+    private final static Logger log = LoggerFactory.getLogger(FBStatementFetcher.class,false);
 
     private int rowNum = 0;
     private boolean isEmpty = false;     

@@ -61,7 +61,7 @@ import java.util.ArrayList;
 
 public class FBResultSet implements ResultSet {
 
-    private final Logger log = LoggerFactory.getLogger(getClass(),false);
+    private final static Logger log = LoggerFactory.getLogger(FBResultSet.class,false);
 
     protected FBFetcher fbFetcher;
 

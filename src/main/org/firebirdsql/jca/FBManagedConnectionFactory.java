@@ -107,7 +107,7 @@ public class FBManagedConnectionFactory
     private int blobBufferLength = 1024 * 16;
 
     //These hold non-serializable stuff.
-    private transient final Logger log = LoggerFactory.getLogger(getClass(),true);
+    private transient final static Logger log = LoggerFactory.getLogger(FBManagedConnectionFactory.class,true);
 
     transient final GDS gds = GDSFactory.newGDS();
 
