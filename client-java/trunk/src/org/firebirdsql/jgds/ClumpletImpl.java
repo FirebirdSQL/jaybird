@@ -57,6 +57,7 @@ public class ClumpletImpl implements Clumplet, Xdrable {
         }
     }
 
+    //not a very safe implementation, only works for one unchained clumplet.
     public void append(Clumplet c) {
         ClumpletImpl ci = (ClumpletImpl)c;
         if (this.type == ci.type) {
@@ -68,6 +69,19 @@ public class ClumpletImpl implements Clumplet, Xdrable {
         else {
             next.append(c);
         }
+    }
+
+    public byte[] find(int type)
+    {
+        if (type == this.type) 
+        {
+            return content;        
+        } // end of if ()
+        if (next == null) 
+        {
+            return null;        
+        } // end of if ()
+        return next.find(type);
     }
 
     public int getLength() {

@@ -87,6 +87,15 @@ public class FBConnectionRequestInfo implements ConnectionRequestInfo {
         append(GDSFactory.newClumplet(type, content));
     }
 
+    public String getStringProperty(int type)
+    {
+        if (c == null) 
+        {
+            return null;        
+        } // end of if ()
+        return new String(c.find(type));
+    }
+
     private void append(Clumplet newc) {
         if (c == null) {
             c = newc;
@@ -100,8 +109,18 @@ public class FBConnectionRequestInfo implements ConnectionRequestInfo {
         setProperty(GDS.isc_dpb_user_name, user);
     }
 
+    public String getUser()
+    {
+        return getStringProperty(GDS.isc_dpb_user_name);
+    }
+
     public void setPassword(String password) {
         setProperty(GDS.isc_dpb_password, password);
+    }
+
+    public String getPassword()
+    {
+        return getStringProperty(GDS.isc_dpb_password);
     }
 
     /**

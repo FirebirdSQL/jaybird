@@ -33,13 +33,15 @@ import java.io.IOException;
 
 public interface Clumplet {
 
-    public void append(Clumplet c);
+    void append(Clumplet c);
 
-    public int getLength();
+    byte[] find(int type);
 
-    public boolean equals(Object o);
+    int getLength();
 
-    public int hashCode();
+    boolean equals(Object o);
+
+    int hashCode();
 
 //    public void write(OutputStream out) throws IOException;
 
