@@ -1,3 +1,9 @@
+2005-01-18 10:44  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	
+	fixed memory leak when result set was closed
+
 2005-01-17 11:11  gab_reid
 
 	* client-java/src/test/org/firebirdsql/jgds/TestGdsAttach.java:
