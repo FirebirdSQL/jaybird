@@ -169,6 +169,11 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     }
 
     private void copyBinaryStream(InputStream in, int length) throws SQLException {
+        
+        /** @todo check if this is correct!!! */
+        if (!c.getAutoCommit())
+            c.ensureInTransaction();
+        
         FBBlob blob =  new FBBlob(c, 0);
         blob.copyStream(in, length);
         field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());

@@ -953,6 +953,11 @@ public class FBConnection implements Connection
      * to modify.
     **/
     public synchronized Blob createBlob() throws SQLException {
+        
+        /** @todo check if this is correct code */
+        if (!getAutoCommit())
+            ensureInTransaction();
+
         return new FBBlob(this, 0);
     }
 

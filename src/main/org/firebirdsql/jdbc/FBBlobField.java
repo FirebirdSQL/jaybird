@@ -271,12 +271,22 @@ public class FBBlobField extends FBField implements FBFlushableField {
     }
     
     private void copyBinaryStream(InputStream in, int length) throws SQLException {
+        
+        /** @todo check if this is correct!!! */
+        if (!c.getAutoCommit())
+            c.ensureInTransaction();
+        
         FBBlob blob =  new FBBlob(c, 0);
         blob.copyStream(in, length);
         field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
     }
 
     private void copyCharacterStream(Reader in, int length) throws SQLException {
+        
+        /** @todo check if this is correct!!! */
+        if (!c.getAutoCommit())
+            c.ensureInTransaction();
+        
         FBBlob blob =  new FBBlob(c, 0);
         blob.copyCharacterStream(in, length);
         field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
