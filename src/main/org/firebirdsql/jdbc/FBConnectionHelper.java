@@ -396,7 +396,7 @@ public class FBConnectionHelper {
         , { 3, 3}   // UNICODE_FSS
         , { 5, 2}   // SJIS_0208
         , { 6, 2}   // EUJC_0208
-		  , { 9, 1}   // DOS737
+        , { 9, 1}   // DOS737
         , {10, 1}   // DOS437
         , {11, 1}   // DOS850
         , {12, 1}   // DOS865
