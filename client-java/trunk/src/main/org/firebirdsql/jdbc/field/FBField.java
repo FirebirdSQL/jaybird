@@ -381,10 +381,28 @@ public abstract class FBField {
             return new FBDoubleField(field, rs, numCol, Types.DOUBLE);
         else
         if (isType(field, Types.CHAR))
+            /*
+            
+            // Commented by R.Rokytskyy. Until the bug is fixed in the server
+            // we use "workaround" implementation of the string field. Should
+            // be replaced with original one as soon as bug is fixed in the 
+            // engine.
+            
             return new FBStringField(field, rs, numCol, Types.CHAR);
+            */
+            return new FBWorkaroundStringField(field, rs, numCol, Types.CHAR);
         else
         if (isType(field, Types.VARCHAR))
+            /*
+            
+            // Commented by R.Rokytskyy. Until the bug is fixed in the server
+            // we use "workaround" implementation of the string field. Should
+            // be replaced with original one as soon as bug is fixed in the 
+            // engine.
+            
             return new FBStringField(field, rs, numCol, Types.VARCHAR);
+            */
+            return new FBWorkaroundStringField(field, rs, numCol, Types.VARCHAR);
         else
         if (isType(field, Types.DATE))
             return new FBDateField(field, rs, numCol, Types.DATE);

@@ -218,6 +218,14 @@ public abstract class AbstractPreparedStatement extends FBStatement
     public void setString(int parameterIndex, String x) throws SQLException {
         getField(parameterIndex).setString(x);
     }
+    
+    public void setStringForced(int parameterIndex, String x) throws SQLException {
+        FBField field = getField(parameterIndex);
+        if (field instanceof FBWorkaroundStringField)
+            ((FBWorkaroundStringField)field).setStringForced(x);
+        else
+            field.setString(x);
+    }
 
     public void setTime(int parameterIndex, Time x) throws SQLException {
         getField(parameterIndex).setTime(x);

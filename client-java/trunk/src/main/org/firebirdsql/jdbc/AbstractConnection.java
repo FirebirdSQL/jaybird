@@ -1002,11 +1002,11 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return FBConnectionHelper.getJavaEncoding(iscEncoding);
     }
 	 
-    private PreparedStatement getStatement(String sql,HashMap statements) 
+    private AbstractPreparedStatement getStatement(String sql,HashMap statements) 
 	 throws SQLException {
-        PreparedStatement s = (PreparedStatement)statements.get(sql);
+        AbstractPreparedStatement s = (AbstractPreparedStatement)statements.get(sql);
         if (s == null) {
-            s = prepareStatement(sql);
+            s = (AbstractPreparedStatement)prepareStatement(sql);
             statements.put(sql, s);
         }
         return s;
@@ -1031,10 +1031,10 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 throw new FBSQLException(ge);
             }
         }
-        PreparedStatement s = getStatement(sql,statements);
+        AbstractPreparedStatement s = getStatement(sql,statements);
         for (int i = 0; i < params.size(); i++)
         {
-            s.setString(i + 1, (String)params.get(i));
+            s.setStringForced(i + 1, (String)params.get(i));
         }
         ResultSet rs = null;
         try
