@@ -309,7 +309,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         }
         if (currentDbHandle != null) {
             try {
-                mcf.gds.isc_detach_database(currentDbHandle);
+                //mcf.gds.isc_detach_database(currentDbHandle);
+                mcf.releaseDbHandle(currentDbHandle);
             }
             catch (GDSException ge) {
                 throw new ResourceException("Can't detach from db: " + ge.toString());

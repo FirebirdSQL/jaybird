@@ -1451,16 +1451,26 @@ public class GDS_Impl implements GDS {
             Object sqldata = xsqlvar.sqldata;
             switch (xsqlvar.sqltype & ~1) {
                 case SQL_TEXT:
-                    buffer =
-                        fillString((String) sqldata, xsqlvar.sqllen).getBytes();
-                    db.out.writeOpaque(buffer, buffer.length);
+                    //buffer =
+                    //fillString((String) sqldata, xsqlvar.sqllen).getBytes();
+                    if (((byte[])sqldata).length != xsqlvar.sqllen) {
+                        throw new GDSException(isc_rec_size_err);
+                    }
+                    db.out.writeOpaque((byte[])sqldata, xsqlvar.sqllen);
+                    //db.out.writeOpaque(buffer, buffer.length);
                     break;
                 case SQL_VARYING:
-                    int len = Math.min(((String) sqldata).length(),
+                    if (((byte[])sqldata).length > xsqlvar.sqllen) {
+                        throw new GDSException(isc_rec_size_err);
+                    }
+                    db.out.writeInt(((byte[])sqldata).length);
+                    db.out.writeOpaque((byte[])sqldata, ((byte[])sqldata).length);
+
+                    /* int len = Math.min(((String) sqldata).length(),
                                        xsqlvar.sqllen);
                     db.out.writeInt(len);
                     buffer = ((String) sqldata).substring(0, len).getBytes();
-                    db.out.writeOpaque(buffer, buffer.length);
+                    db.out.writeOpaque(buffer, buffer.length);*/
                     break;
                 case SQL_SHORT:
                     db.out.writeInt(((Short) sqldata).shortValue());
@@ -1571,12 +1581,12 @@ public class GDS_Impl implements GDS {
         try {
             switch (xsqlvar.sqltype & ~1) {
                 case SQL_TEXT:
-                    xsqlvar.sqldata =
-                        new String(db.in.readOpaque(xsqlvar.sqllen));
+                    xsqlvar.sqldata = db.in.readOpaque(xsqlvar.sqllen);
+                        //new String(db.in.readOpaque(xsqlvar.sqllen));
                     break;
                 case SQL_VARYING:
-                    xsqlvar.sqldata =
-                        new String(db.in.readOpaque(db.in.readInt()));
+                xsqlvar.sqldata = db.in.readOpaque(db.in.readInt());
+                        //new String(db.in.readOpaque(db.in.readInt()));
                     break;
                 case SQL_SHORT:
                     xsqlvar.sqldata = new Short((short) db.in.readInt());

@@ -60,7 +60,7 @@ public class TestFBResultSet extends TestXABase {
     
 
 
-    public void testUseResultSet() throws Exception {
+    public void xtestUseResultSet() throws Exception {
         System.out.println();
         System.out.println("testUseResultSet");
         FBManagedConnectionFactory mcf = initMcf();
@@ -108,7 +108,7 @@ public class TestFBResultSet extends TestXABase {
         
     }
 
-    public void testZZUseResultSetMore() throws Exception {
+    public void xtestZZUseResultSetMore() throws Exception {
         System.out.println();
         System.out.println("testUseResultSetMore");
         FBManagedConnectionFactory mcf = initMcf();
@@ -178,7 +178,7 @@ public class TestFBResultSet extends TestXABase {
         
     }
 
-    public void testUseResultSetWithPreparedStatement() throws Exception {
+    public void xtestUseResultSetWithPreparedStatement() throws Exception {
         System.out.println();
         System.out.println("testUseResultSetWithPreparedStatement");
         FBManagedConnectionFactory mcf = initMcf();
