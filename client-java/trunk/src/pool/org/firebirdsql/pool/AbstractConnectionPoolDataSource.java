@@ -598,7 +598,7 @@ public abstract class AbstractConnectionPoolDataSource
                                 "Pool "
                                     + queueName
                                     + " is empty and will block here."
-                                    + " thread "
+                                    + " Thread "
                                     + Thread.currentThread().getName();
 
                             if (SHOW_STACK_ON_BLOCK) {
@@ -616,7 +616,12 @@ public abstract class AbstractConnectionPoolDataSource
                             getConfiguration().getRetryInterval());
                             
                         if (result == null && getLogger() != null)
-                            getLogger().warn("No connection in pool.");
+                            getLogger().warn("No connection in pool. Thread " +
+                                Thread.currentThread().getName());
+                        else
+                        if (result != null && getLogger() != null)
+                            getLogger().info("Obtained connection. Thread " + 
+                                Thread.currentThread().getName());
                     }
 
                 } else {
