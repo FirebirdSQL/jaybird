@@ -37,6 +37,8 @@ import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 
+import org.firebirdsql.jca.FBManagedConnection;
+
 
 
 /**
@@ -82,6 +84,10 @@ import java.sql.ResultSetMetaData;
 	 * @see ResultSet 
 	 */
 public class FBCallableStatement extends FBPreparedStatement implements CallableStatement {
+
+    FBCallableStatement(FBConnection c, String sql) throws SQLException {
+        super(c, sql);
+    }
 
 		/**
 		 * Registers the OUT parameter in ordinal position 

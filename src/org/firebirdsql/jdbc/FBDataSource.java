@@ -26,10 +26,19 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
+import org.firebirdsql.jca.FBConnectionRequestInfo;
+import org.firebirdsql.jca.FBManagedConnectionFactory;
+
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.sql.Connection;
 import javax.sql.DataSource;
 import java.sql.SQLException;
+import javax.naming.Reference;
+import javax.resource.Referenceable;
+import javax.resource.ResourceException;
+import javax.resource.spi.ConnectionManager;
+import javax.resource.spi.ManagedConnectionFactory;
 
 
 /**
@@ -50,8 +59,33 @@ import java.sql.SQLException;
  */
  
 
-public class FBDataSource implements DataSource {
+public class FBDataSource implements DataSource, Serializable, Referenceable {
+    
+    transient private ConnectionManager cm;
+    
+    transient private FBManagedConnectionFactory mcf;
+    
+    transient private PrintWriter log;
+    
+    private Reference jndiReference;
+    
+    private int loginTimeout = 0;
+    
+    public FBDataSource(FBManagedConnectionFactory mcf, ConnectionManager cm) {
+        this.mcf = mcf;
+        this.cm = cm;
+    }
 
+    
+    public void setReference(Reference ref) {
+        this.jndiReference = ref;
+    }
+    
+    public Reference getReference() {
+        return jndiReference;
+    }
+    
+    
   /**
    * <p>Attempt to establish a database connection.
    *
@@ -59,7 +93,12 @@ public class FBDataSource implements DataSource {
    * @exception SQLException if a database-access error occurs.
    */
     public Connection getConnection() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        try {
+            return (Connection)cm.allocateConnection(mcf, mcf.getDefaultConnectionRequestInfo());
+        }
+        catch (ResourceException re) {
+            throw new SQLException("Problem getting connection: " + re);
+        }
     }
 
       
@@ -73,7 +112,15 @@ public class FBDataSource implements DataSource {
    * @exception SQLException if a database-access error occurs.
    */
     public Connection getConnection(String username, String password) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        try {
+            FBConnectionRequestInfo subjectCri = new FBConnectionRequestInfo(mcf.getDefaultConnectionRequestInfo());
+            subjectCri.setUser(username);
+            subjectCri.setPassword(password);
+            return (Connection)cm.allocateConnection(mcf, subjectCri);
+        }
+        catch (ResourceException re) {
+            throw new SQLException("Problem getting connection: " + re);
+        }
     }
 
       
@@ -94,7 +141,7 @@ public class FBDataSource implements DataSource {
    * @exception SQLException if a database-access error occurs.  
    */
     public java.io.PrintWriter getLogWriter() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return log;
     }
 
 
@@ -115,7 +162,7 @@ public class FBDataSource implements DataSource {
    * @exception SQLException if a database-access error occurs.  
    */
     public void setLogWriter(java.io.PrintWriter out) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        log = out;
     }
 
 
@@ -131,7 +178,7 @@ public class FBDataSource implements DataSource {
    * @exception SQLException if a database access error occurs.
    */
     public void setLoginTimeout(int seconds) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        loginTimeout = seconds;
     }
 
      
@@ -147,7 +194,7 @@ public class FBDataSource implements DataSource {
    * @exception SQLException if a database access error occurs.
    */
     public int getLoginTimeout() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return loginTimeout;
     }
 
     

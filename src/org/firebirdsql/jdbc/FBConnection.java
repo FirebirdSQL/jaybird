@@ -34,6 +34,9 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 
+import javax.resource.cci.LocalTransaction;
+
+import org.firebirdsql.jca.FBLocalTransaction;
 import org.firebirdsql.jca.FBManagedConnection;
 
 //import javax.resource.cci.Connection;--can't import, two classes with same name.
@@ -74,6 +77,8 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
     
     FBManagedConnection mc;
     
+    FBLocalTransaction localTransaction = null;
+    
     public FBConnection(FBManagedConnection mc) {
         this.mc = mc;
     }
@@ -98,7 +103,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      */
     public Statement createStatement() throws SQLException {
-        return new FBStatement(mc);
+        return new FBStatement(this);
     }
 
 
@@ -133,7 +138,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public PreparedStatement prepareStatement(String sql)
 	    throws SQLException {
-        return null;
+        return new FBPreparedStatement(this, sql);
     }
 
 
@@ -261,7 +266,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      *
      * @exception SQLException if a database access error occurs
      */
-    public void close() throws SQLException {
+    public void close() {
+        mc.close(this);
+        mc = null;
     }
 
 
@@ -271,8 +278,8 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @return true if the connection is closed; false if it's still open
      * @exception SQLException if a database access error occurs
      */
-    public boolean isClosed() throws SQLException {
-        throw new SQLException("Not yet implemented");
+    public boolean isClosed() {
+        return mc == null;
     }
 
 
@@ -540,6 +547,16 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public void setTypeMap(java.util.Map map) throws SQLException {
+    }
+    
+    //-------------------------------------------
+    //Borrowed from javax.resource.cci.Connection
+    
+    public FBLocalTransaction getLocalTransaction() {
+        if (localTransaction == null) {
+            localTransaction = new FBLocalTransaction(mc, this);
+        }
+        return localTransaction;
     }
 
 }

@@ -32,14 +32,33 @@
 
 package org.firebirdsql.jgds;
 
-import java.util.*;
+import org.firebirdsql.gds.XSQLDA;
+
+import java.util.List;
+import java.util.LinkedList;
 
 public class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_handle {
     int rsr_id;
     isc_db_handle_impl rsr_rdb;
-    Vector rows = new Vector();
+    XSQLDA in_sqlda = null;
+    XSQLDA out_sqlda = null;
+    List rows = new LinkedList();
+    boolean allRowsFetched = false;
 
     public isc_stmt_handle_impl() {
+    }
+    
+    public XSQLDA getInSqlda() {
+        return in_sqlda;
+    }
+    
+    public XSQLDA getOutSqlda() {
+        return out_sqlda;
+    }
+    
+    public void clearRows() {
+        rows.clear();
+        allRowsFetched = false;
     }
 
 }

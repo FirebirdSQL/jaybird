@@ -30,6 +30,10 @@ import javax.resource.spi.ConnectionRequestInfo;
 
 import javax.resource.ResourceException;
 
+import org.firebirdsql.gds.Clumplet;
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.GDSFactory;
+
 
 /**
  *
@@ -53,6 +57,52 @@ to do connection creation and matching.
 **/
 
 public class FBConnectionRequestInfo implements ConnectionRequestInfo {
+    
+    private Clumplet c = null;
+    
+    public FBConnectionRequestInfo() {
+    }
+    
+    public FBConnectionRequestInfo(FBConnectionRequestInfo src) {
+        c = GDSFactory.cloneClumplet(src.c);
+    }
+    
+    Clumplet getDpb() {
+        return c;
+    }
+    
+    public void setProperty(int type, String content) {
+        append(GDSFactory.newClumplet(type, content));
+    }
+    
+    public void setProperty(int type) {
+        append(GDSFactory.newClumplet(type));
+    }
+    
+    public void setProperty(int type, int content) {
+        append(GDSFactory.newClumplet(type, content));
+    }
+    
+    public void setProperty(int type, byte[] content) {
+        append(GDSFactory.newClumplet(type, content));
+    }
+        
+    private void append(Clumplet newc) {
+        if (c == null) {
+            c = newc;
+        }
+        else {
+            c.append(newc);
+        }
+    }
+
+    public void setUser(String user) {
+        setProperty(GDS.isc_dpb_user_name, user);
+    }
+    
+    public void setPassword(String password) {
+        setProperty(GDS.isc_dpb_password, password);
+    }
      
     /**
      Checks whether this instance is equal to another. Since connectionRequestInfo is defined
@@ -65,8 +115,15 @@ public class FBConnectionRequestInfo implements ConnectionRequestInfo {
     **/
 
 
-    public boolean equals(java.lang.Object other) {
-        return false;//not yet implemented
+    public boolean equals(Object other) {
+        if ((other == null) || !(other instanceof FBConnectionRequestInfo)) {
+            return false;
+        }
+        Clumplet otherc = ((FBConnectionRequestInfo)other).c;
+        if (c == null) {
+            return (otherc == null);
+        }
+        return c.equals(otherc);
     }
 
     /**
@@ -78,7 +135,10 @@ public class FBConnectionRequestInfo implements ConnectionRequestInfo {
     **/
      
     public int hashCode() {
-        return 0;//not yet implemented;
+        if (c == null) {
+            return 0;
+        }
+        return c.hashCode();
     }
 
 }

@@ -26,6 +26,11 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
+
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jca.FBManagedConnection;
 import java.math.BigDecimal;
 import java.util.Calendar;
 
@@ -76,6 +81,20 @@ import java.sql.SQLWarning;
  */
 
 public class FBPreparedStatement extends FBStatement implements PreparedStatement {
+    
+    FBPreparedStatement(FBConnection c, String sql) throws SQLException {
+        super(c);
+        try {
+            if (fixedStmt == null) {
+                fixedStmt = mc.getAllocatedStatement();
+            }
+            mc.prepareSQL(fixedStmt, sql, true);
+        }
+        catch (GDSException ge) {
+            throw new SQLException("GDS exception: " + ge.toString());
+        }
+        
+    }
 
     /**
 	 * Executes the SQL query in this <code>PreparedStatement</code> object
@@ -86,7 +105,10 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public ResultSet executeQuery() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        if (!execute()) {
+            throw new SQLException("No resultset for sql");
+        }
+        return getResultSet(); 
     }
 
 
@@ -102,7 +124,10 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public int executeUpdate() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        if (execute()) {
+            throw new SQLException("update statement returned results!");
+        }
+        return getUpdateCount();
     }
 
 
@@ -116,7 +141,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setNull(int parameterIndex, int sqlType) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqlind = -1;
+        fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqldata = null;
     }
 
 
@@ -130,7 +156,9 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setBoolean(int parameterIndex, boolean x) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqlind = 0;
+        //not quite
+        fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqldata = new Boolean(x);
     }
 
 
@@ -144,7 +172,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setByte(int parameterIndex, byte x) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqlind = 0;
+//not quite        fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqldata = x;
     }
 
 
@@ -158,7 +187,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setShort(int parameterIndex, short x) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        if ((sqlvar.sqltype & ~1) != GDS.SQL_SHORT) {
+            throw new SQLException("Not a short, type: " + sqlvar.sqltype);
+        }
+        sqlvar.sqlind = 0;
+        sqlvar.sqldata = new Short(x);
     }
 
 
@@ -172,7 +206,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setInt(int parameterIndex, int x) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        if ((sqlvar.sqltype & ~1) != GDS.SQL_LONG) {
+            throw new SQLException("Not an int, type: " + sqlvar.sqltype);
+        }
+        sqlvar.sqlind = 0;
+        sqlvar.sqldata = new Integer(x);
     }
 
 
@@ -186,7 +225,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setLong(int parameterIndex, long x) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        if ((sqlvar.sqltype & ~1) != GDS.SQL_INT64) {
+            throw new SQLException("Not a long, type: " + sqlvar.sqltype);
+        }
+        sqlvar.sqlind = 0;
+        sqlvar.sqldata = new Long(x);
     }
 
 
@@ -200,7 +244,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setFloat(int parameterIndex, float x) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        if ((sqlvar.sqltype & ~1) != GDS.SQL_FLOAT) {
+            throw new SQLException("Not a float field, type: " + sqlvar.sqltype);
+        }
+        sqlvar.sqlind = 0;
+        sqlvar.sqldata = new Float(x);
     }
 
 
@@ -214,7 +263,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setDouble(int parameterIndex, double x) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        if ((sqlvar.sqltype & ~1) != GDS.SQL_DOUBLE) {
+            throw new SQLException("Not a double, type: " + sqlvar.sqltype);
+        }
+        sqlvar.sqlind = 0;
+        sqlvar.sqldata = new Double(x);
     }
 
 
@@ -228,7 +282,13 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        if ((sqlvar.sqltype & ~1) != GDS.SQL_INT64) {
+            throw new SQLException("Not a BigDecimal, type: " + sqlvar.sqltype);
+        }
+        sqlvar.sqlind = 0;
+        //not quite
+        sqlvar.sqldata = x;
     }
 
 
@@ -245,7 +305,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setString(int parameterIndex, String x) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        if (((sqlvar.sqltype & ~1) != GDS.SQL_TEXT) && ((sqlvar.sqltype & ~1) != GDS.SQL_VARYING)){
+            throw new SQLException("Not a String, type: " + sqlvar.sqltype);
+        }
+        sqlvar.sqlind = 0;
+        sqlvar.sqldata = x;
     }
 
 
@@ -387,6 +452,9 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void clearParameters() throws  SQLException {
+        for (int i = 1; i <= fixedStmt.getInSqlda().sqln; i++) {
+            setNull(i, 0);
+        }
     }
 
 
@@ -486,7 +554,14 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see Statement#execute
      */
     public boolean execute() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        try {
+            closeResultSet();
+            mc.executeStatement(fixedStmt);
+            return (fixedStmt.getOutSqlda().sqld > 0); 
+        }
+        catch (GDSException ge) {
+            throw new SQLException("GDS exception: " + ge.toString());
+        }
     }
 
 
@@ -605,7 +680,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 	 *      2.0 API</a>
      */
     public ResultSetMetaData getMetaData() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return new FBResultSetMetaData(fixedStmt);
     }
 
 
@@ -709,6 +784,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 	 *      2.0 API</a>
      */
      public void setNull (int paramIndex, int sqlType, String typeName) throws  SQLException {
+         setNull(paramIndex, sqlType); //all nulls are represented the same... a null reference
     }
 
 }

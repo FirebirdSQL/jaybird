@@ -26,10 +26,20 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.XSQLDA;
+import org.firebirdsql.gds.XSQLVAR;
+
+import java.math.BigDecimal;
+
 import java.sql.ResultSetMetaData;
 
+import java.sql.Blob;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Types;
 
 /**
  *
@@ -57,6 +67,12 @@ import java.sql.SQLException;
  */
 
 public class FBResultSetMetaData implements ResultSetMetaData {
+    
+    private isc_stmt_handle stmt;
+    
+    FBResultSetMetaData(isc_stmt_handle stmt) {
+        this.stmt = stmt;
+    }
 
     /**
      * Returns the number of columns in this <code>ResultSet</code> object.
@@ -64,8 +80,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return the number of columns
      * @exception SQLException if a database access error occurs
      */
-    public 	int getColumnCount() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+    public 	int getColumnCount() {
+        return stmt.getOutSqlda().sqln;;
     }
 
 
@@ -76,8 +92,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public 	boolean isAutoIncrement(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+    public 	boolean isAutoIncrement(int column) {
+        return false;
     }
 
 
@@ -89,7 +105,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean isCaseSensitive(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return true;
     }
 	
 
@@ -101,7 +117,13 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean isSearchable(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        if (((getXsqlvar(column).sqltype & ~1) == GDS.SQL_ARRAY)
+            || ((getXsqlvar(column).sqltype & ~1) == GDS.SQL_BLOB)) {
+            return false;
+        }
+        else {
+            return true;
+        }
     }
 
 
@@ -113,7 +135,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean isCurrency(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -126,7 +148,12 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	int isNullable(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        if ((getXsqlvar(column).sqltype & 1) == 1) {
+            return columnNullable;
+        }
+        else {
+            return columnNoNulls;
+        }
     }
 
 
@@ -156,7 +183,17 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean isSigned(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        switch (getXsqlvar(column).sqltype & ~1) {
+            case GDS.SQL_SHORT:
+            case GDS.SQL_LONG:
+            case GDS.SQL_FLOAT:
+            case GDS.SQL_DOUBLE:
+            case GDS.SQL_D_FLOAT:
+            case GDS.SQL_INT64:
+                return true;
+            default:
+                return false;
+        }
     }
 
 
@@ -169,7 +206,44 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	int getColumnDisplaySize(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        //These are mostly wrong!!
+        switch (getXsqlvar(column).sqltype & ~1) {
+            case GDS.SQL_TEXT:
+                return getXsqlvar(column).sqllen;
+            case GDS.SQL_VARYING:
+                return getXsqlvar(column).sqllen;
+            case GDS.SQL_SHORT:
+                return getXsqlvar(column).sqllen;
+            case GDS.SQL_LONG:
+                return getXsqlvar(column).sqllen;
+            case GDS.SQL_FLOAT:
+                return getXsqlvar(column).sqllen;
+            case GDS.SQL_DOUBLE:
+                return getXsqlvar(column).sqllen;
+            case GDS.SQL_D_FLOAT:
+                return getXsqlvar(column).sqllen;
+            case GDS.SQL_TIMESTAMP:
+                return getXsqlvar(column).sqllen;
+            case GDS.SQL_BLOB:
+                return 0;
+            case GDS.SQL_ARRAY:
+                return 0;
+            case GDS.SQL_QUAD:
+                return getXsqlvar(column).sqllen;
+            case GDS.SQL_TYPE_TIME:
+                return getXsqlvar(column).sqllen;
+            case GDS.SQL_TYPE_DATE:
+                return 10;
+            case GDS.SQL_INT64:
+                if (getXsqlvar(column).sqlscale == 0) {
+                    return getXsqlvar(column).sqllen;
+                }
+                else {
+                    return getXsqlvar(column).sqllen;
+                }
+            default:
+                throw new SQLException("Unkown sql type");
+        }
     }
 
 
@@ -182,7 +256,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	String getColumnLabel(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return (getXsqlvar(column).aliasname == null) ? getXsqlvar(column).sqlname: getXsqlvar(column).aliasname;
     }
 	
 
@@ -194,7 +268,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	String getColumnName(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return getXsqlvar(column).sqlname;
     }
 
 
@@ -206,7 +280,9 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	String getSchemaName(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        //not really implemented
+        throw new SQLException("Schemas aren't supported");
+        //return getXsqlvar(column).ownname;
     }
 
 
@@ -218,7 +294,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	int getPrecision(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        //presumable wrong!!
+        return getXsqlvar(column).sqllen;
     }
 
 
@@ -230,7 +307,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	int getScale(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return getXsqlvar(column).sqlscale;
     }
 	
 
@@ -242,7 +319,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	String getTableName(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return getXsqlvar(column).relname;
     }
 
 
@@ -254,7 +331,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	String getCatalogName(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new SQLException("Catalogs not supported");
     }
 
 
@@ -267,7 +344,43 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @see Types
      */
     public 	int getColumnType(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        switch (getXsqlvar(column).sqltype & ~1) {
+            case GDS.SQL_TEXT:
+                return Types.CHAR;
+            case GDS.SQL_VARYING:
+                return Types.VARCHAR;
+            case GDS.SQL_SHORT:
+                return Types.SMALLINT;
+            case GDS.SQL_LONG:
+                return Types.BIGINT;
+            case GDS.SQL_FLOAT:
+                return Types.FLOAT;
+            case GDS.SQL_DOUBLE:
+                return Types.DOUBLE;
+            case GDS.SQL_D_FLOAT:
+                return Types.DOUBLE;
+            case GDS.SQL_TIMESTAMP:
+                return Types.TIMESTAMP;
+            case GDS.SQL_BLOB:
+                return Types.BLOB;
+            case GDS.SQL_ARRAY:
+                return Types.ARRAY;
+            case GDS.SQL_QUAD:
+                return Types.BIGINT;
+            case GDS.SQL_TYPE_TIME:
+                return Types.TIME;
+            case GDS.SQL_TYPE_DATE:
+                return Types.DATE;
+            case GDS.SQL_INT64:
+                if (getXsqlvar(column).sqlscale == 0) {
+                    return Types.BIGINT;
+                }
+                else {
+                    return Types.DECIMAL;
+                }
+            default:
+                throw new SQLException("Unkown sql type");
+        }
     }
 
 
@@ -280,7 +393,39 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	String getColumnTypeName(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        //Maybe these are supposed to be the sql keywords????
+        switch (getXsqlvar(column).sqltype & ~1) {
+            case GDS.SQL_TEXT:
+                return "SQL_TEXT";
+            case GDS.SQL_VARYING:
+                return "SQL_VARYING";
+            case GDS.SQL_SHORT:
+                return "SQL_SHORT";
+            case GDS.SQL_LONG:
+                return "SQL_LONG";
+            case GDS.SQL_FLOAT:
+                return "SQL_FLOAT";
+            case GDS.SQL_DOUBLE:
+                return "SQL_DOUBLE";
+            case GDS.SQL_D_FLOAT:
+                return "SQL_D_FLOAT";
+            case GDS.SQL_TIMESTAMP:
+                return "SQL_TIMESTAMP";
+            case GDS.SQL_BLOB:
+                return "SQL_BLOB";
+            case GDS.SQL_ARRAY:
+                return "SQL_ARRAY";
+            case GDS.SQL_QUAD:
+                return "SQL_QUAD";
+            case GDS.SQL_TYPE_TIME:
+                return "SQL_TYPE_TIME";
+            case GDS.SQL_TYPE_DATE:
+                return "SQL_TYPE_DATE";
+            case GDS.SQL_INT64:
+                return "SQL_INT64";
+            default:
+                throw new SQLException("Unkown sql type");
+        }
     }
 
 
@@ -292,6 +437,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean isReadOnly(int column) throws  SQLException {
+        //Need to consider priveleges!!
         throw new SQLException("Not yet implemented");
     }
 
@@ -304,6 +450,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean isWritable(int column) throws  SQLException {
+        //Needs priveleges???
         throw new SQLException("Not yet implemented");
     }
 
@@ -316,6 +463,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean isDefinitelyWritable(int column) throws  SQLException {
+        //Need to consider privileges!!!
         throw new SQLException("Not yet implemented");
     }
 
@@ -339,7 +487,51 @@ public class FBResultSetMetaData implements ResultSetMetaData {
 	 *      2.0 API</a>
      */
     public String getColumnClassName(int column) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        switch (getXsqlvar(column).sqltype & ~1) {
+            case GDS.SQL_TEXT:
+                return String.class.getName();
+            case GDS.SQL_VARYING:
+                return String.class.getName();
+            case GDS.SQL_SHORT:
+                return Short.class.getName();
+            case GDS.SQL_LONG:
+                return Long.class.getName();
+            case GDS.SQL_FLOAT:
+                return Float.class.getName();
+            case GDS.SQL_DOUBLE:
+                return Double.class.getName();
+            case GDS.SQL_D_FLOAT:
+                return Double.class.getName();
+            case GDS.SQL_TIMESTAMP:
+                return java.sql.Timestamp.class.getName();
+            case GDS.SQL_BLOB:
+                return Blob.class.getName();
+            case GDS.SQL_ARRAY:
+                return Array.class.getName();
+            case GDS.SQL_QUAD:
+                return Long.class.getName();
+            case GDS.SQL_TYPE_TIME:
+                return java.sql.Time.class.getName();
+            case GDS.SQL_TYPE_DATE:
+                return java.sql.Date.class.getName();
+            case GDS.SQL_INT64:
+                if (getXsqlvar(column).sqlscale == 0) {
+                    return Long.class.getName();
+                }
+                else {
+                    return BigDecimal.class.getName();
+                }
+            default:
+                throw new SQLException("Unkown sql type");
+        }
     }
+
+    
+    //private methods
+    
+    private XSQLVAR getXsqlvar(int columnIndex) {
+        return stmt.getOutSqlda().sqlvar[columnIndex - 1];
+    }
+    
 
 }

@@ -36,8 +36,11 @@ import javax.security.auth.Subject;
 
 import javax.transaction.xa.XAResource;
 
+import java.io.PrintWriter;
 import java.util.Set;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
@@ -49,7 +52,9 @@ import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.Clumplet;
-import org.firebirdsql.jgds.GDS_Impl;
+import org.firebirdsql.gds.GDSFactory;
+import org.firebirdsql.jdbc.FBDataSource;
+import org.firebirdsql.jdbc.FBStatement;
 
 /**
  *
@@ -68,14 +73,20 @@ matching and creation of ManagedConnection instance.
  */
 
 public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
-
-    GDS gds = new GDS_Impl();
+    
+    private PrintWriter log = new PrintWriter(System.out);
+    
+    GDS gds = GDSFactory.newGDS();
     
     private String dbAlias;
     
     private LinkedList freeDbHandles = new LinkedList();
     
     private HashMap xidMap = new HashMap();  //Maps supplied XID to internal transaction handle.
+    
+    private HashMap TransactionStatementMap = new HashMap();  //Maps transaction handle to list of statements with resultsets.
+
+    private FBConnectionRequestInfo defaultCri;
     
     private Clumplet dpbClumplet;
     
@@ -95,13 +106,22 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         return dbAlias;
     }
     
-    public void setDpb(Clumplet dpb) {
-        dpbClumplet = dpb;
+    public void setConnectionRequestInfo(FBConnectionRequestInfo cri) {
+        this.defaultCri = cri;
     }
     
-    public Clumplet getDpb() {
-        return dpbClumplet;
+    public FBConnectionRequestInfo getDefaultConnectionRequestInfo() {
+        return defaultCri;
     }
+    
+/*    public void setDpb(Clumplet dpb) {
+        dpbClumplet = dpb;
+    }*/
+    
+/*    public Clumplet getDpb() {
+//        return dpbClumplet;
+        return defaultCri.c;
+    }*/
     
     public void setTpb(Set tpb) {
         tpbSet = tpb;
@@ -126,7 +146,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
          ResourceAdapterInternalException - Resource adapter related error condition
 **/
     public java.lang.Object createConnectionFactory(ConnectionManager cxManager) throws ResourceException {
-        throw new ResourceException("not yet implemented");
+        return new FBDataSource(this, cxManager);
     }
 
 
@@ -144,7 +164,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
 **/
     public java.lang.Object createConnectionFactory() throws ResourceException {
-        throw new ResourceException("not yet implemented");
+        return new FBDataSource(this, new FBStandAloneConnectionManager());
     }
 
 
@@ -172,8 +192,10 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     public ManagedConnection createManagedConnection(Subject subject,
                                                  ConnectionRequestInfo cxRequestInfo)
                                           throws ResourceException {
-        //ignore ConnectionRequestInfo till we think of something to use it for.
-        return new FBManagedConnection(subject, this);
+        if (cxRequestInfo == null) {
+            cxRequestInfo = defaultCri;
+        }
+        return new FBManagedConnection(subject, (FBConnectionRequestInfo)cxRequestInfo, this);
     }
 
 
@@ -237,8 +259,8 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
 **/
 
-    public void setLogWriter(java.io.PrintWriter out) throws ResourceException {
-        throw new ResourceException("not yet implemented");
+    public void setLogWriter(PrintWriter out) throws ResourceException {
+        this.log = out;
     }
 
 
@@ -258,8 +280,8 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
          ResourceException - generic exception
 
 **/
-    public java.io.PrintWriter getLogWriter() throws ResourceException {
-        throw new ResourceException("not yet implemented");
+    public PrintWriter getLogWriter() {
+        return log;
     }
 
 
@@ -302,8 +324,6 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     }
     
     //needs synchronization!
-    //Also needs to use firebirds multi-db transactions!
-    //returns uninitialized tr_handle if first use. 
     isc_tr_handle getCurrentIscTrHandle(Xid xid, FBManagedConnection mc, int flags) throws XAException {
         isc_tr_handle tr = lookupXid(xid);
         if (tr == null) {
@@ -330,7 +350,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     }
 
    
-    isc_db_handle getDbHandle() throws XAException {
+    isc_db_handle getDbHandle(FBConnectionRequestInfo cri) throws XAException {
         try {
             synchronized (freeDbHandles) {
                 return (isc_db_handle)freeDbHandles.removeLast();
@@ -338,7 +358,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         } catch (NoSuchElementException e) {
             isc_db_handle db = gds.get_new_isc_db_handle();
             try {
-                gds.isc_attach_database(dbAlias, db, getDpb());
+                gds.isc_attach_database(dbAlias, db, cri.getDpb());
             }
             catch (GDSException ge) {
                 throw new XAException(ge.toString());
@@ -351,9 +371,13 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         freeDbHandles.addLast(db);
     }
     
+    
+    
     void commit(Xid xid) throws XAException {
+        isc_tr_handle tr = lookupXid(xid);
+        forgetResultSets(tr);
         try {
-            gds.isc_commit_transaction(lookupXid(xid));
+            gds.isc_commit_transaction(tr);
         }
         catch (GDSException ge) {
             throw new XAException(ge.toString());
@@ -384,8 +408,10 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     }
         
     void rollback(Xid xid) throws XAException {
+        isc_tr_handle tr = lookupXid(xid);
+        forgetResultSets(tr);
         try {
-            gds.isc_rollback_transaction(lookupXid(xid));
+            gds.isc_rollback_transaction(tr);
         }
         catch (GDSException ge) {
             throw new XAException(ge.toString());
@@ -394,16 +420,34 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             forgetXid(xid);
         }
     }
-        
-
-/*public at the moment, at the top
-    private Clumplet getDpb() {
-        return dpbClumplet;
+    
+    void registerStatementWithTransaction(isc_tr_handle tr, FBStatement stmt) {
+        ArrayList stmts = null;
+        synchronized (tr) {
+            stmts = (ArrayList)TransactionStatementMap.get(tr);
+            if (stmts == null) {
+                stmts = new ArrayList();
+                TransactionStatementMap.put(tr, stmts);
+            }
+        }
+        stmts.add(stmt);
     }
     
-    private Set getTpb() {
-        return tpbSet;
-    }*/
+    private void forgetResultSets(isc_tr_handle tr) {
+        //shouldn't need synchronization, only called by rollback and commit- then we're done
+        //transaction/thread should also help.
+        ArrayList stmts = (ArrayList)TransactionStatementMap.get(tr);
+        if (stmts != null) {
+            Iterator i = stmts.iterator();
+            while (i.hasNext()) {
+                ((FBStatement)i.next()).forgetResultSet();
+            }
+            stmts.clear();
+        }
+    }
+        
+        
+
 } 
 
 

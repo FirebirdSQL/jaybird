@@ -202,6 +202,23 @@ public interface GDS {
     final static int isc_info_sql_stmt_select_for_upd = 12;
     final static int isc_info_sql_stmt_set_generator  = 13;
     
+    /*****************************/
+    /* Request information items */
+    /*****************************/
+
+    final static int isc_info_number_messages        =  4;
+    final static int isc_info_max_message            =  5;
+    final static int isc_info_max_send               =  6;
+    final static int isc_info_max_receive            =  7;
+    final static int isc_info_state                  =  8;
+    final static int isc_info_message_number         =  9;
+    final static int isc_info_message_size           =  10;
+    final static int isc_info_request_cost           =  11;
+    final static int isc_info_access_path            =  12;
+    final static int isc_info_req_select_count       =  13;
+    final static int isc_info_req_insert_count       =  14;
+    final static int isc_info_req_update_count       =  15;
+    final static int isc_info_req_delete_count       =  16;
     
     /********************/
     /* ISC Error Codes */
@@ -945,6 +962,7 @@ public interface GDS {
     
     
     // Database functions
+    void isc_create_database2(String file_name, isc_db_handle db_handle) throws GDSException;
     
     void isc_create_database(String file_name,
                             isc_db_handle db_handle,
@@ -1001,13 +1019,11 @@ public interface GDS {
     void isc_dsql_alloc_statement2(isc_db_handle db_handle,
                                      isc_stmt_handle stmt_handle) throws GDSException;
     
-    void isc_dsql_describe(isc_stmt_handle stmt_handle,
-                            int da_version,
-                            XSQLDA xsqlda) throws GDSException;
+    XSQLDA isc_dsql_describe(isc_stmt_handle stmt_handle,
+                            int da_version) throws GDSException;
     
-    void isc_dsql_describe_bind(isc_stmt_handle stmt_handle,
-                                  int da_version,
-                                  XSQLDA xsqlda) throws GDSException;
+    XSQLDA isc_dsql_describe_bind(isc_stmt_handle stmt_handle,
+                                  int da_version) throws GDSException;
     
     void isc_dsql_execute(isc_tr_handle tr_handle,
                            isc_stmt_handle stmt_handle,
@@ -1020,14 +1036,14 @@ public interface GDS {
                             XSQLDA in_xsqlda,
                             XSQLDA out_xsqlda) throws GDSException;
 
-    void isc_dsql_execute_inmediate(isc_db_handle db_handle,
+    void isc_dsql_execute_immediate(isc_db_handle db_handle,
                                       isc_tr_handle tr_handle,
 //                                      int length,
                                       String statement,
                                       int dialect,
                                       XSQLDA xsqlda) throws GDSException;
     
-    void isc_dsql_exec_inmed2(isc_db_handle db_handle,
+    void isc_dsql_exec_immed2(isc_db_handle db_handle,
                                isc_tr_handle tr_handle,
 //                                      int length,
                                String statement,
@@ -1035,19 +1051,18 @@ public interface GDS {
                                XSQLDA in_xsqlda,
                                XSQLDA out_xsqlda) throws GDSException;
     
-    void isc_dsql_fetch(isc_stmt_handle stmt_handle,
+    Object[] isc_dsql_fetch(isc_stmt_handle stmt_handle,
                          int da_version,
                          XSQLDA xsqlda) throws GDSException;
     
     void isc_dsql_free_statement(isc_stmt_handle stmt_handle,
                                    int option) throws GDSException;
     
-    void isc_dsql_prepare(isc_tr_handle tr_handle,
+    XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
                            isc_stmt_handle stmt_handle,
 //                                      int length,
                            String statement,
-                           int dialect,
-                           XSQLDA xsqlda) throws GDSException;
+                           int dialect) throws GDSException;
 
     void isc_dsql_set_cursor_name(isc_stmt_handle stmt_handle,
                                     String cursor_name,
@@ -1070,11 +1085,12 @@ public interface GDS {
     
     isc_stmt_handle get_new_isc_stmt_handle();
     
-    Clumplet newClumplet(int type, String content);
+/*    Clumplet newClumplet(int type, String content);
     Clumplet newClumplet(int type);
     Clumplet newClumplet(int type, int content);
     Clumplet newClumplet(int type, byte[] content);
     
+    Clumplet cloneClumplet(Clumplet c);*/
     
 }
 

@@ -34,4 +34,10 @@ package org.firebirdsql.gds;
 
 public interface isc_stmt_handle {
 
+    XSQLDA getInSqlda();
+    
+    XSQLDA getOutSqlda();
+
+    void clearRows();
+    
 }

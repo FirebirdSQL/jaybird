@@ -4,6 +4,10 @@
 <!-- JDBC-JCA Driver for Firebird build file                                -->
 <!-- ======================================================================= -->
 
+<!--NOTE IMPORTANT  to run the junit tests you need to create a directory dbsrc
+ next to db and create an empty dialect 3 database in it called fbmctest.gdb.
+Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
+
 <project name="FirebirdSQL" default="jmx.jar" basedir="../..">
 
     <property name="Name" value="FirebirdSQL"/>
@@ -25,6 +29,8 @@
     <property name="build.jar-ra.dir" value="${build.dir}/jar"/>
     <property name="dist.dir" value="dist"/>
     <property name="external.dir" value="${dist.dir}/external"/>
+    <property name="db.dir" value="${basedir}/db"/>
+    <property name="dbsrc.dir" value="${basedir}/dbsrc"/>
     
 
 
@@ -61,6 +67,10 @@
   <!-- =================================================================== -->
   <target name="compile" depends="prepare">
     <mkdir dir="${build.classes.dir}"/>
+    <depend srcDir="${src.dir}" 
+           destDir="${build.classes.dir}"
+           cache="${build.classes.dir}"/>
+           
     <javac srcdir="${src.dir}"
            destdir="${build.classes.dir}"
            debug="off"
@@ -71,7 +81,6 @@
       <classpath refid="cp"/>
     </javac>
   </target>
-
   <!-- =================================================================== -->
   <!-- Creates the jar archives                                            -->
   <!-- =================================================================== -->
@@ -88,14 +97,23 @@
   </target>
 
   <target name="junit" depends="jmx.jar">
+    <delete file="${db.dir}/fbmctest.gdb"/>
+    <copy todir="${db.dir}">
+        <fileset dir="${dbsrc.dir}"/>
+    </copy>
     <junit>
       <classpath>
          <path refid="cp"/>
          <pathelement location="${build.classes.dir}"/>
       </classpath>
       <formatter type="plain" usefile="false"/>
+      <test name="org.firebirdsql.management.TestFBManager"/>
       <test name="org.firebirdsql.jgds.TestGds"/>
       <test name="org.firebirdsql.jca.TestFBManagedConnectionFactory"/>
+      <test name="org.firebirdsql.jca.TestFBXAResource"/>
+      <test name="org.firebirdsql.jca.TestFBConnection"/>
+      <test name="org.firebirdsql.jca.TestFBStandAloneConnectionManager"/>
+      <test name="org.firebirdsql.jca.TestFBResultSet"/>
     </junit>
   </target>
 

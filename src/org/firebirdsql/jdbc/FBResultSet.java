@@ -39,6 +39,12 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jca.FBManagedConnection;
+
 
 /**
  *
@@ -230,6 +236,25 @@ aDa
  */
 
 public class FBResultSet implements ResultSet {
+    
+    private FBManagedConnection mc;
+    
+    private FBStatement fbstatement;
+    
+    private isc_stmt_handle stmt;
+    
+    private Object[] row = null;
+    
+    private int rowNum = 0;
+    
+    FBResultSet(FBManagedConnection mc, FBStatement fbstatement, isc_stmt_handle stmt) {
+        this.mc = mc;
+        this.fbstatement = fbstatement;
+        this.stmt = stmt;
+        mc.registerStatement(fbstatement);
+    }
+    
+    
 
     /**
 	 * Moves the cursor down one row from its current position.
@@ -248,7 +273,13 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public boolean next() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        try {
+            row = mc.fetch(stmt);
+            return (row != null);
+        }
+        catch (GDSException ge) {            
+            throw new SQLException("fetch problem: " + ge.toString());
+        }
     }
 
 
@@ -269,7 +300,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public void close() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        fbstatement.closeResultSet();
     }
 
 
@@ -305,7 +336,11 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public String getString(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if (((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TEXT)
+             &&((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_VARYING)) {
+            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        }
+        return (String)row[columnIndex - 1];
     }
 
 
@@ -350,7 +385,13 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public short getShort(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_SHORT) {
+            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        }
+        if (row[columnIndex - 1] == null) {
+            return 0;
+        }
+        return ((Short)row[columnIndex - 1]).shortValue();
     }
 
 
@@ -365,7 +406,13 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public int getInt(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_LONG) {
+            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        }
+        if (row[columnIndex - 1] == null) {
+            return 0;
+        }
+        return ((Integer)row[columnIndex - 1]).intValue();
     }
 
 
@@ -380,7 +427,13 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public long getLong(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_INT64) {
+            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        }
+        if (row[columnIndex - 1] == null) {
+            return 0;
+        }
+        return ((Long)row[columnIndex - 1]).longValue();
     }
 
 
@@ -395,7 +448,13 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public float getFloat(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_FLOAT) {
+            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        }
+        if (row[columnIndex - 1] == null) {
+            return 0;
+        }
+        return ((Float)row[columnIndex - 1]).floatValue();
     }
 
 
@@ -410,14 +469,20 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public double getDouble(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_DOUBLE) {
+            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        }
+        if (row[columnIndex - 1] == null) {
+            return 0;
+        }
+        return ((Double)row[columnIndex - 1]).doubleValue();
     }
 
 
     /**
      * Gets the value of the designated column in the current row
 	 * of this <code>ResultSet</code> object as
-	 * a <code>java.sql.BigDecimal</code> in the Java programming language.
+	 * a <code>java.math.BigDecimal</code> in the Java programming language.
      *
      * @param columnIndex the first column is 1, the second is 2, ...
      * @param scale the number of digits to the right of the decimal point
@@ -427,7 +492,14 @@ public class FBResultSet implements ResultSet {
      * @deprecated
      */
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_INT64) {
+            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        }
+        if (row[columnIndex - 1] == null) {
+            return null;
+        }
+        //Is this the expected behavior???? Or do we move the decimal point?
+        return (BigDecimal.valueOf(((Long)row[columnIndex - 1]).longValue(), getXsqlvar(columnIndex).sqlscale)).setScale(scale);
     }
 
 
@@ -594,7 +666,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public String getString(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getString(findColumn(columnName));
     }
 
 
@@ -609,7 +681,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public boolean getBoolean(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getBoolean(findColumn(columnName));
     }
 
 
@@ -624,7 +696,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public byte getByte(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getByte(findColumn(columnName));
     }
 
 
@@ -639,7 +711,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public short getShort(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getShort(findColumn(columnName));
     }
 
 
@@ -654,7 +726,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public int getInt(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getInt(findColumn(columnName));
     }
 
 
@@ -669,7 +741,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public long getLong(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getLong(findColumn(columnName));
     }
 
 
@@ -684,7 +756,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public float getFloat(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getFloat(findColumn(columnName));
     }
 
 
@@ -699,7 +771,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public double getDouble(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getDouble(findColumn(columnName));
     }
 
 
@@ -716,8 +788,8 @@ public class FBResultSet implements ResultSet {
      * @deprecated
      */
     public BigDecimal getBigDecimal(String columnName, int scale) throws  SQLException {
-                throw new SQLException("Not yet implemented");
-    }
+       return getBigDecimal(findColumn(columnName), scale);
+     }
 
 
     /**
@@ -732,7 +804,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public byte[] getBytes(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getBytes(findColumn(columnName));
     }
 
 
@@ -747,7 +819,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public java.sql.Date getDate(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getDate(findColumn(columnName));
     }
 
 
@@ -763,7 +835,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public java.sql.Time getTime(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getTime(findColumn(columnName));
     }
 
 
@@ -778,7 +850,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public java.sql.Timestamp getTimestamp(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+       return getTimestamp(findColumn(columnName));
     }
 
 
@@ -805,7 +877,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public java.io.InputStream getAsciiStream(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getAsciiStream(findColumn(columnName));
     }
 
 
@@ -835,7 +907,7 @@ public class FBResultSet implements ResultSet {
      * @deprecated
      */
     public java.io.InputStream getUnicodeStream(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+       return getUnicodeStream(findColumn(columnName));
     }
 
 
@@ -861,7 +933,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public java.io.InputStream getBinaryStream(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getBinaryStream(findColumn(columnName));
     }
 
 
@@ -943,7 +1015,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public ResultSetMetaData getMetaData() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return new FBResultSetMetaData(stmt);
     }
 
 
@@ -973,7 +1045,10 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public Object getObject(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if (row == null) {
+            throw new SQLException("No row fetched");
+        }
+        return row[columnIndex - 1];
     }
 
 
@@ -1003,7 +1078,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public Object getObject(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getObject(findColumn(columnName));
     }
 
 
@@ -1018,7 +1093,21 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public int findColumn(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if (columnName == null || columnName.equals("")) {
+            throw new SQLException("zero length identifiers not allowed");
+        }
+        XSQLVAR[] xsqlvars = stmt.getOutSqlda().sqlvar;
+        for (int i = 0; i< xsqlvars.length; i++) {
+            if (columnName.equals(xsqlvars[i].aliasname)) {
+                return ++i;
+            }
+        }
+        for (int i = 0; i< xsqlvars.length; i++) {
+            if (columnName.equals(xsqlvars[i].sqlname)) {
+                return ++i;
+            }
+        }
+        throw new SQLException("column name " + columnName + " not found in result set.");
     }
 
 
@@ -1061,7 +1150,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public java.io.Reader getCharacterStream(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getCharacterStream(findColumn(columnName));
     }
 
 
@@ -1080,7 +1169,13 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public BigDecimal getBigDecimal(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_INT64) {
+            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        }
+        if (row[columnIndex - 1] == null) {
+            return null;
+        }
+        return BigDecimal.valueOf(((Long)row[columnIndex - 1]).longValue(), getXsqlvar(columnIndex).sqlscale);
     }
 
 
@@ -1100,7 +1195,7 @@ public class FBResultSet implements ResultSet {
      *
      */
     public BigDecimal getBigDecimal(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getBigDecimal(findColumn(columnName));
     }
 
 
@@ -2617,7 +2712,7 @@ public class FBResultSet implements ResultSet {
 	 * This method uses the specified <code>Map</code> object for
 	 * custom mapping if appropriate.
      *
-     * @param colName the name of the column from which to retrieve the value
+     * @param columnName the name of the column from which to retrieve the value
      * @param map a <code>java.util.Map</code> object that contains the mapping 
 	 * from SQL type names to classes in the Java programming language
      * @return an <code>Object</code> representing the SQL value in the specified column
@@ -2625,8 +2720,8 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public Object getObject(String colName, java.util.Map map) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+    public Object getObject(String columnName, java.util.Map map) throws  SQLException {
+        return getObject(findColumn(columnName), map);
     }
 
 
@@ -2635,15 +2730,15 @@ public class FBResultSet implements ResultSet {
 	 * of this <code>ResultSet</code> object as a <code>Ref</code> object
 	 * in the Java programming language.
      *
-     * @param colName the column name
+     * @param columnName the column name
      * @return a <code>Ref</code> object representing the SQL <code>REF</code> value in
 	 *         the specified column
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public Ref getRef(String colName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+    public Ref getRef(String columnName) throws  SQLException {
+        return getRef(findColumn(columnName));
     }
 
 
@@ -2652,15 +2747,15 @@ public class FBResultSet implements ResultSet {
 	 * of this <code>ResultSet</code> object as a <code>Blob</code> object
 	 * in the Java programming language.
      *
-     * @param colName the name of the column from which to retrieve the value
+     * @param columnName the name of the column from which to retrieve the value
      * @return a <code>Blob</code> object representing the SQL <code>BLOB</code> value in
 	 *         the specified column
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public Blob getBlob(String colName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+    public Blob getBlob(String columnName) throws  SQLException {
+        return getBlob(findColumn(columnName));
     }
 
 
@@ -2669,15 +2764,15 @@ public class FBResultSet implements ResultSet {
 	 * of this <code>ResultSet</code> object as a <code>Clob</code> object
 	 * in the Java programming language.
      *
-     * @param colName the name of the column from which to retrieve the value
+     * @param columnName the name of the column from which to retrieve the value
      * @return a <code>Clob</code> object representing the SQL <code>CLOB</code>
 	 * value in the specified column
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public Clob getClob(String colName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+    public Clob getClob(String columnName) throws  SQLException {
+        return getClob(findColumn(columnName));
     }
 
 
@@ -2686,15 +2781,15 @@ public class FBResultSet implements ResultSet {
 	 * of this <code>ResultSet</code> object as an <code>Array</code> object
 	 * in the Java programming language.
      *
-     * @param colName the name of the column from which to retrieve the value
+     * @param columnName the name of the column from which to retrieve the value
      * @return an <code>Array</code> object representing the SQL <code>ARRAY</code> value in
 	 *         the specified column
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public Array getArray(String colName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+    public Array getArray(String columnName) throws  SQLException {
+        return getArray(findColumn(columnName));
     }
 
 
@@ -2742,7 +2837,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public java.sql.Date getDate(String columnName, Calendar cal) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getDate(findColumn(columnName), cal);
     }
 
 
@@ -2791,8 +2886,8 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public java.sql.Time getTime(String columnName, Calendar cal) throws  SQLException {
-                throw new SQLException("Not yet implemented");
-    }
+       return getTime(findColumn(columnName), cal);
+     }
 
 
     /**
@@ -2839,8 +2934,20 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public java.sql.Timestamp getTimestamp(String columnName, Calendar cal) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+       return getTimestamp(findColumn(columnName), cal);
+     }
+    
+    //--------------------------------------------------------------------
+    //package methods
+    
+    XSQLVAR getXsqlvar(int columnIndex) {
+        return stmt.getOutSqlda().sqlvar[columnIndex - 1];
     }
+
+/*    int getColumnCount() {
+        return stmt.getOutSqlda().sqln;
+    }
+*/
 
 }
 

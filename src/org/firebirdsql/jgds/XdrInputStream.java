@@ -69,7 +69,14 @@ public class XdrInputStream extends FilterInputStream {
     
     public final byte[] readOpaque(int len) throws IOException {
         byte[] buffer = new byte[len];
-        in.read(buffer);
+        int pos = 0;
+        int chunk;
+        while (pos < len) {
+            System.out.println("Available: " + in.available() + " trying to read to: " + len + " at: " + pos);
+            chunk = Math.min(in.available(), len - pos);
+            in.read(buffer, pos, chunk);
+            pos += chunk;
+        }
         for (int i = 0; i < ((4 - len) & 3); i++) {
             in.read();
         }
