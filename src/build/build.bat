@@ -31,6 +31,13 @@ set LOCALCLASSPATH=%LOCALCLASSPATH%;..
 set LOCALCLASSPATH=%LOCALCLASSPATH%;"%JAVA_HOME%\lib\tools.jar"
 for %%i in ("..\..\lib\*.jar") do call ".\lcp.bat" %%i
 
+REM set common ANT options
+set JAXP_DOM_FACTORY="org.apache.xerces.jaxp.DocumentBuilderFactoryImpl"
+set JAXP_SAX_FACTORY="org.apache.xerces.jaxp.SAXParserFactoryImpl"
+
+set ANT_CMD_LINE_ARGS=%ANT_CMD_LINE_ARGS% -Djavax.xml.parsers.DocumentBuilderFactory=$JAXP_DOM_FACTORY
+set ANT_CMD_LINE_ARGS=%ANT_CMD_LINE_ARGS% -Djavax.xml.parsers.SAXParserFactory=$JAXP_SAX_FACTORY
+
 :runAnt
 echo on
 java -classpath %LOCALCLASSPATH% org.apache.tools.ant.Main %ANT_CMD_LINE_ARGS%
