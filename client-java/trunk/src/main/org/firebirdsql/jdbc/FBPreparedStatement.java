@@ -544,7 +544,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      *      2.0 API</a>
      */
     public ResultSetMetaData getMetaData() throws  SQLException {
-        return new FBResultSetMetaData(fixedStmt.getOutSqlda().sqlvar, this);
+        return new FBResultSetMetaData(fixedStmt.getOutSqlda().sqlvar, c);
     }
 
 

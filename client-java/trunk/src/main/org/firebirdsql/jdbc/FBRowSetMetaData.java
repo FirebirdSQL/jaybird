@@ -36,8 +36,8 @@ import org.firebirdsql.gds.XSQLVAR;
  */
 public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaData {
 
-    FBRowSetMetaData(XSQLVAR[] xsqlvars, FBRowSet rs) throws SQLException {
-        super(xsqlvars, rs);
+    FBRowSetMetaData(XSQLVAR[] xsqlvars, FBConnection connection) throws SQLException {
+        super(xsqlvars, connection);
     }
 
   /**

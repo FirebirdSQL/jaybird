@@ -403,8 +403,6 @@ public final class GDS_Impl implements GDS {
             {
                 throw new GDSException(ISCConstants.isc_open_trans, db.getOpenTransactionCount());
             } // end of if ()
-        
-
             try {
                 if (log != null) log.debug("op_detach ");
                 db.out.writeInt(op_detach);
@@ -413,16 +411,22 @@ public final class GDS_Impl implements GDS {
                 if (log != null) log.debug("sent");
                 receiveResponse(db,-1);
                 
-                // lars 2002-10-30: Explicitely close socket to server
-                disconnect(db);
                 
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_network_error);
             } 
-
-            //db.rdb_transactions = new Vector();
+            finally
+            {
+                try 
+                {
+                    disconnect(db);
+                }
+                catch (IOException ex2) 
+                {
+                    throw new GDSException(ISCConstants.isc_network_error);
+                } 
+            } // end of finally
         }
-
     }
 
     public void isc_drop_database(isc_db_handle db_handle) throws GDSException {
@@ -633,7 +637,8 @@ public final class GDS_Impl implements GDS {
 
         synchronized (db) {
 
-            if (tr.getState() != isc_tr_handle.TRANSACTIONSTARTED && tr.getState() != isc_tr_handle.TRANSACTIONPREPARED) {
+            if (tr.getState() == isc_tr_handle.NOTRANSACTION)
+            {
                 throw new GDSException(ISCConstants.isc_tra_state);
             }
             tr.setState(isc_tr_handle.TRANSACTIONROLLINGBACK);
@@ -648,11 +653,12 @@ public final class GDS_Impl implements GDS {
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
             }
-
-            tr.setState(isc_tr_handle.NOTRANSACTION);
-            //tr.rtr_rdb = null;
-            //db.rdb_transactions.removeElement(tr);
-            tr.unsetDbHandle();
+            finally
+            {
+                tr.setState(isc_tr_handle.NOTRANSACTION);
+                tr.unsetDbHandle();
+            } // end of finally
+            
         }
 
     }
@@ -1055,6 +1061,12 @@ public final class GDS_Impl implements GDS {
 
         synchronized (db) {
             try {
+                if (!db.isValid()) 
+                {
+                    //too late, socket has been closed
+                    return;
+                } // end of if ()
+                
                 if (log != null) log.debug("op_free_statement ");
                 db.out.writeInt(op_free_statement);
                 db.out.writeInt(stmt.getRsr_id());
@@ -1548,7 +1560,9 @@ public final class GDS_Impl implements GDS {
     }
 
     private void disconnect(isc_db_handle_impl db) throws IOException {
+        log.info("About to invalidate db handle");
         db.invalidate();
+        log.info("successfully invalidated db handle");
     }
 
     private void receiveSqlResponse(isc_db_handle_impl db,

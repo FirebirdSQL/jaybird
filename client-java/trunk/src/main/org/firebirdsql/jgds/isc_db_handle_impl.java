@@ -27,11 +27,12 @@
 
 package org.firebirdsql.jgds;
 
-import java.util.*;
+
+
 import java.net.*;
-
+import java.util.*;
+import java.util.Collection;
 import javax.security.auth.Subject;
-
 import org.firebirdsql.gds.GDSException;
 
 /**
@@ -61,12 +62,14 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
     private int ODSMajorVersion = 0;
     private int ODSMinorVersion = 0;
 	 
-    private void checkValidity() {
-        if (invalid)
-            throw new IllegalStateException(
-                "This database handle is invalid and cannot be used anymore.");
+    public isc_db_handle_impl() {
     }
-    
+
+    public boolean isValid()
+    {
+        return !invalid;
+    }
+
     void invalidate() throws java.io.IOException {
         in.close();
         out.close();
@@ -82,9 +85,6 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
     /** @todo Implement statement handle tracking correctly */
     // Vector rdb_sql_requests = new Vector();
     
-
-    public isc_db_handle_impl() {
-    }
 
     void setRdb_id(int rdb_id) {
         checkValidity();
@@ -127,6 +127,11 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
         rdb_transactions.remove(tr);
     }
     
+    public Collection getTransactions()
+    {
+        return new ArrayList(rdb_transactions);
+    }
+
     public List getWarnings() {
         checkValidity();
         synchronized(rdb_warnings) {
@@ -250,4 +255,12 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
     public byte[] getResp_data(){
         return resp_data;
     }
+
+    private void checkValidity() {
+        if (invalid)
+            throw new IllegalStateException(
+                "This database handle is invalid and cannot be used anymore.");
+    }
+    
+
 }

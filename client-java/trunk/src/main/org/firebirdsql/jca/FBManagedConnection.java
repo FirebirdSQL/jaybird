@@ -75,7 +75,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     private int timeout = 0;
 
-    private FBConnectionRequestInfo cri;
+    /**
+     * Describe variable <code>cri</code> here.  Needed from mcf when
+     * killing a db handle when a new tx cannot be started.
+     */
+    protected FBConnectionRequestInfo cri;
 
 
     private isc_tr_handle currentTr;
@@ -371,12 +375,26 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         if (log!=null) log.debug("Commit called: " + id);
         isc_tr_handle committingTr = mcf.getTrHandleForXid(id);
         if (committingTr == null) {
-            throw new XAException("commit called with unknown transaction");
+            //"commit called with unknown transaction"
+            throw new XAException(XAException.XAER_NOTA);
         }
         if (committingTr == currentTr) {
-            throw new XAException("commit called with current xid");
+            //"commit called with current xid"
+            throw new XAException(XAException.XAER_PROTO);
         }
-        mcf.commit(id);
+        isc_db_handle committingDbHandle = committingTr.getDbHandle();
+
+        try 
+        {
+            mcf.commit(id);            
+        }
+        catch (GDSException ge) 
+        {
+            checkFatalXA(ge, committingDbHandle);
+            log.info("Fatal error committing, ", ge);
+            throw new XAException(XAException.XAER_RMERR);
+        }
+
     }
 
     /**
@@ -416,9 +434,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     }
 
     /**
-     * Indicates that no further action will be taken on behalf of this
-     * transaction (after a heuristic failure).  It is assumed this will be
-     * called after a failed commit or rollback.
+     * Indicates that no further action will be taken on behalf of
+     * this transaction (after a heuristic failure).  It is assumed
+     * this will be called after a failed commit or rollback.  This
+     * should actually never be called since we don't use heuristic tx
+     * completion on timeout.
      * @throws XAException
      *     Occurs when the state was not correct (end never called), or the
      *     transaction ID is wrong.
@@ -449,12 +469,25 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         if (log!=null) log.debug("prepare called: " + id);
         isc_tr_handle committingTr = mcf.getTrHandleForXid(id);
         if (committingTr == null) {
-            throw new XAException("prepare called with unknown transaction");
+            //"prepare called with unknown transaction"
+            throw new XAException(XAException.XAER_INVAL);
         }
         if (committingTr == currentTr) {
-            throw new XAException("prepare called with current xid");
+            //"prepare called with current xid"
+            throw new XAException(XAException.XAER_PROTO);
         }
-        mcf.prepare(id);
+        isc_db_handle committingDbHandle = committingTr.getDbHandle();
+
+        try 
+        {
+            mcf.prepare(id);            
+        }
+        catch (GDSException ge) 
+        {
+            checkFatalXA(ge, committingDbHandle);
+            log.info("Exception in prepare", ge);
+            throw new XAException(XAException.XAER_RMERR);
+        }
         return XA_OK;
     }
 
@@ -498,11 +531,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } 
         catch (SQLException sqle) 
         {
-            throw new XAException("can't perform query to fetch xids" + sqle);
+            log.info("can't perform query to fetch xids", sqle);
+            throw new XAException(XAException.XAER_RMFAIL);
         } // end of try-catch
         catch (ResourceException re) 
         {
-            throw new XAException("can't perform query to fetch xids" + re);
+            log.info("can't perform query to fetch xids", re);
+            throw new XAException(XAException.XAER_RMFAIL);
         } // end of try-catch
      }
 
@@ -523,9 +558,21 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             return;
         }
         if (committingTr == currentTr) {
-            throw new XAException("rollback called with current xid");
+            //"rollback called with current xid"
+            throw new XAException(XAException.XAER_PROTO);
         }
-        mcf.rollback(id);
+        isc_db_handle committingDbHandle = committingTr.getDbHandle();
+
+        try 
+        {
+            mcf.rollback(id);
+        }
+        catch (GDSException ge) 
+        {
+            checkFatalXA(ge, committingDbHandle);
+            log.info("Exception in rollback", ge);
+            throw new XAException(XAException.XAER_RMERR);
+        }
     }
 
     /**
@@ -553,9 +600,61 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public void start(Xid id, int flags) throws XAException {
         if (log!=null) log.debug("start called: " + id);
         if (currentTr != null) {
-            throw new XAException("start called with transaction associated");
+            throw new XAException(XAException.XAER_PROTO);
         }
         findIscTrHandle(id, flags);
+    }
+
+    /**
+     * The <code>checkFatalXA</code> method checks if the supplied
+     * GDSException is fatal and if so destroys the supplied db handle
+     * and sends the ConnectionErrorOccurred notification if
+     * appropriate.  It is called from methods in the XAResource.  It
+     * needs to destroy the db handle itself because it may be
+     * different from the current db handle.  This mc should be
+     * destroyed only if the tx's db handle and the current db handle
+     * are the same.
+     *
+     * @param ge a <code>GDSException</code> value
+     * @param committingDbHandle an <code>isc_db_handle</code> value
+     */
+    private void checkFatalXA(GDSException ge, isc_db_handle committingDbHandle)
+    {
+        if (ge.isFatal()) 
+        {
+            //all db handles associated with a tx will have the
+            //same cri, so we can use ours.
+            mcf.destroyDbHandle(committingDbHandle, cri);
+
+            if (currentDbHandle == committingDbHandle) 
+            {
+                //lose the current tx if any
+                currentTr = null;
+                ConnectionEvent ce = new ConnectionEvent(this, ConnectionEvent.CONNECTION_ERROR_OCCURRED, ge);
+                notify(connectionErrorOccurredNotifier, ce);
+                    
+            } // end of if ()
+                
+        } // end of if ()
+    }
+
+    /**
+     * The <code>checkFatal</code> method checks if the supplied
+     * GDSException is fatal and sends the ConnectionErrorOccurred
+     * notification if it is.  It should be called from every method
+     * that does database access except the ones initiated from the
+     * XAResource which use checkFatalXA since they may be using a
+     * different db handle than the database operations.
+     *
+     * @param ge a <code>GDSException</code> value
+     */
+    private void checkFatal(GDSException ge)
+    {
+        if (ge.isFatal()) 
+        {
+            ConnectionEvent ce = new ConnectionEvent(this, ConnectionEvent.CONNECTION_ERROR_OCCURRED, ge);
+            notify(connectionErrorOccurredNotifier, ce);
+        } // end of if ()
     }
 
     //FB public methods. Could be package if packages reorganized.
@@ -566,7 +665,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             throw new GDSException("No transaction started for allocate statement");
         }
         isc_stmt_handle stmt = mcf.gds.get_new_isc_stmt_handle();
-        mcf.gds.isc_dsql_allocate_statement(currentTr.getDbHandle(), stmt);
+        try 
+        {
+            mcf.gds.isc_dsql_allocate_statement(currentTr.getDbHandle(), stmt);
+        }
+        catch (GDSException ge)
+        {
+            checkFatal(ge);
+            throw ge;
+        } // end of catch
         return stmt;
     }
 
@@ -579,28 +686,74 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         //Should we test for dbhandle?
         
         String encoding = cri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);
-        
-        XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, sql, encoding, ISCConstants.SQL_DIALECT_CURRENT);
-        if (out.sqld != out.sqln) {
-            throw new GDSException("Not all columns returned");
+
+        try
+        {
+            XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, sql, encoding, ISCConstants.SQL_DIALECT_CURRENT);
+            if (out.sqld != out.sqln) {
+                throw new GDSException("Not all columns returned");
+            }
+            if (describeBind) {
+                mcf.gds.isc_dsql_describe_bind(stmt, ISCConstants.SQLDA_VERSION1);
+            }
         }
-        if (describeBind) {
-            mcf.gds.isc_dsql_describe_bind(stmt, ISCConstants.SQLDA_VERSION1);
-        }
+        catch (GDSException ge)
+        {
+            checkFatal(ge);
+            throw ge;
+        } // end of catch
     }
     
-    public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda) throws GDSException {
-        mcf.gds.isc_dsql_execute2(currentTr, stmt,
-                                 ISCConstants.SQLDA_VERSION1, stmt.getInSqlda(), (sendOutSqlda) ? stmt.getOutSqlda() : null);
+    public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda)
+        throws GDSException
+    {
+        try
+        {
+            mcf.gds.isc_dsql_execute2(currentTr,
+                                      stmt,
+                                      ISCConstants.SQLDA_VERSION1,
+                                      stmt.getInSqlda(),
+                                      (sendOutSqlda) ? stmt.getOutSqlda() : null);
+
+        }
+        catch (GDSException ge)
+        {
+            checkFatal(ge);
+            throw ge;
+        } // end of catch
+    }
+
+    public void fetch(isc_stmt_handle stmt, int fetchSize)
+        throws GDSException
+    {
+        try
+        {
+            mcf.gds.isc_dsql_fetch(stmt,
+                                   ISCConstants.SQLDA_VERSION1,
+                                   stmt.getOutSqlda(),
+                                   fetchSize);
+        }
+        catch (GDSException ge)
+        {
+            checkFatal(ge);
+            throw ge;
+        } // end of catch
 
     }
 
-    public void fetch(isc_stmt_handle stmt, int fetchSize) throws GDSException {
-        mcf.gds.isc_dsql_fetch(stmt, ISCConstants.SQLDA_VERSION1, stmt.getOutSqlda(), fetchSize);
-    }
+    public void closeStatement(isc_stmt_handle stmt, boolean deallocate)
+        throws GDSException
+    {
+        try
+        {
+            mcf.gds.isc_dsql_free_statement(stmt, (deallocate) ? ISCConstants.DSQL_drop: ISCConstants.DSQL_close);
+        }
+        catch (GDSException ge)
+        {
+            checkFatal(ge);
+            throw ge;
+        } // end of catch
 
-    public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
-        mcf.gds.isc_dsql_free_statement(stmt, (deallocate) ? ISCConstants.DSQL_drop: ISCConstants.DSQL_close);
     }
 
     public void close(FBConnection c) {
@@ -613,39 +766,93 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     public void registerStatement(FBStatement fbStatement) {
         if (currentTr == null) {
-            throw new Error("registerStatement called with no transaction");
+            throw new IllegalStateException("registerStatement called with no transaction");
         }
 
         currentTr.registerStatementWithTransaction(fbStatement);
     }
 
     public isc_blob_handle openBlobHandle(long blob_id) throws GDSException {
-        isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
-        blob.setBlob_id(blob_id);
-        mcf.gds.isc_open_blob2(currentDbHandle, currentTr, blob, null);//no bpb for now, segmented
-        return blob;
+        try
+        {
+            isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
+            blob.setBlob_id(blob_id);
+            mcf.gds.isc_open_blob2(currentDbHandle, currentTr, blob, null);//no bpb for now, segmented
+            return blob;
+        }
+        catch (GDSException ge)
+        {
+            checkFatal(ge);
+            throw ge;
+        } // end of catch
+
     }
 
     public isc_blob_handle createBlobHandle() throws GDSException {
-        isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
-        mcf.gds.isc_create_blob2(currentDbHandle, currentTr, blob, null);//no bpb for now, segmented
-        return blob;
+        try
+        {
+            isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
+            mcf.gds.isc_create_blob2(currentDbHandle, currentTr, blob, null);//no bpb for now, segmented
+            return blob;
+        }
+        catch (GDSException ge)
+        {
+            checkFatal(ge);
+            throw ge;
+        } // end of catch
+
     }
 
     public byte[] getBlobSegment(isc_blob_handle blob, int len) throws GDSException {
-        return mcf.gds.isc_get_segment(blob, len);
+        try
+        {
+            return mcf.gds.isc_get_segment(blob, len);
+        }
+        catch (GDSException ge)
+        {
+            checkFatal(ge);
+            throw ge;
+        } // end of catch
+
     }
 
     public void closeBlob(isc_blob_handle blob) throws GDSException {
-        mcf.gds.isc_close_blob(blob);
+        try
+        {
+            mcf.gds.isc_close_blob(blob);
+        }
+        catch (GDSException ge)
+        {
+            checkFatal(ge);
+            throw ge;
+        } // end of catch
+
     }
 
     public void putBlobSegment(isc_blob_handle blob, byte[] buf) throws GDSException {
-        mcf.gds.isc_put_segment(blob, buf);
+        try
+        {
+            mcf.gds.isc_put_segment(blob, buf);
+        }
+        catch (GDSException ge)
+        {
+            checkFatal(ge);
+            throw ge;
+        } // end of catch
+
     }
 
     public void getSqlCounts(isc_stmt_handle stmt) throws GDSException {
-        mcf.gds.getSqlCounts(stmt);
+        try
+        {
+            mcf.gds.getSqlCounts(stmt);
+        }
+        catch (GDSException ge)
+        {
+            checkFatal(ge);
+            throw ge;
+        } // end of catch
+
     }
     //for DatabaseMetaData.
     public String getDatabaseProductName() {
@@ -746,8 +953,35 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     //package visibility
     //--------------------------------------------------------------------
 
-    void findIscTrHandle(Xid xid, int flags) throws XAException {
-        currentTr = mcf.getCurrentIscTrHandle(xid, this, flags);
+    private void findIscTrHandle(Xid xid, int flags)
+        throws XAException
+    {
+        try 
+        {
+            currentTr = mcf.getCurrentIscTrHandle(xid, this, flags);
+        }
+        catch (GDSException ge)
+        {
+            //All errors are fatal, kill the connection.  
+            //First check if currentDbHandle is still ok, return if possible
+            if (currentDbHandle.isValid()) 
+            {
+                try 
+                {
+                    mcf.returnDbHandle(currentDbHandle, cri);
+                }
+                catch (GDSException ge2)
+                {
+                    log.info("Another exception killing a dead connection", ge2);
+                } // end of try-catch
+            } // end of if ()
+            //Notify the connection manager.
+            ConnectionEvent ce = new ConnectionEvent(this, ConnectionEvent.CONNECTION_ERROR_OCCURRED, ge);
+            notify(connectionErrorOccurredNotifier, ce);
+            throw new XAException(XAException.XAER_RMERR);
+        } // end of try-catch
+        
+
         if (currentTr.getDbHandle() != currentDbHandle)
         {
             try 
@@ -756,7 +990,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             }
             catch (GDSException ge)
             {
-                throw new XAException(ge.getMessage());
+                throw new XAException(XAException.XAER_RMERR);
             } // end of try-catch
             
             currentDbHandle = currentTr.getDbHandle();

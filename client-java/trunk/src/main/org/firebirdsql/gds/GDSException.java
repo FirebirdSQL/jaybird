@@ -21,6 +21,10 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.5  2002/11/22 02:30:38  brodsom
+ * 1.- Make most variables private in stmt_handle, blob_handle, db_handle and others
+ * 2.- Move constants from GDS to ISCConstants (class,1100 lines)
+ *
  * Revision 1.4  2002/10/18 14:21:28  rrokytskyy
  * fixed warnings handling
  *
@@ -58,6 +62,7 @@
 
 package org.firebirdsql.gds;
 
+
 /**
  * Describe class <code>GDSException</code> here.
  *
@@ -67,25 +72,11 @@ package org.firebirdsql.gds;
  */
 public class GDSException extends Exception {
 
+
     // protected int fbErrorCode = 0;
     protected int type;
     protected int intParam;
     protected String strParam;
-
-    /**
-     * Returns the parameter depending on the type of the
-     * error code.
-     */
-    protected String getParam() {
-        if ((type == ISCConstants.isc_arg_interpreted) ||
-                (type == ISCConstants.isc_arg_string))
-            return strParam;
-        else
-        if (type == ISCConstants.isc_arg_number)
-            return "" + intParam;
-        else
-            return "";
-    }
 
     /**
      * My child
@@ -195,6 +186,43 @@ public class GDSException extends Exception {
         //}
  
         return msg;
+    }
+
+
+    public boolean isFatal()
+    {
+        return isThisFatal() || (next != null && next.isFatal());
+    }
+
+
+    private boolean isThisFatal()
+    {
+        for (int i = 0; i < ISCConstants.FATAL_ERRORS.length 
+                 && intParam >= ISCConstants.FATAL_ERRORS[i]; i++)
+        {
+            if (intParam == ISCConstants.FATAL_ERRORS[i]) 
+            {
+                return true;
+            } // end of if ()
+            
+        } // end of for ()
+        return false;
+    }
+
+
+    /**
+     * Returns the parameter depending on the type of the
+     * error code.
+     */
+    protected String getParam() {
+        if ((type == ISCConstants.isc_arg_interpreted) ||
+                (type == ISCConstants.isc_arg_string))
+            return strParam;
+        else
+        if (type == ISCConstants.isc_arg_number)
+            return "" + intParam;
+        else
+            return "";
     }
 
 }

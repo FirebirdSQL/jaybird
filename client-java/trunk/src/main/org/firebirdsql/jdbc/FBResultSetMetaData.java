@@ -50,33 +50,40 @@ import java.util.Map;
 public class FBResultSetMetaData implements ResultSetMetaData {
 
     // private isc_stmt_handle stmt;
-    private XSQLVAR[] xsqlvars;
+    private final XSQLVAR[] xsqlvars;
     private Map extendedInfo;
-    private FBResultSet rs;
-    private FBPreparedStatement ps;
+    private final FBConnection connection;
+    //private FBResultSet rs;
+    //private FBPreparedStatement ps;
 
     /*    FBResultSetMetaData(isc_stmt_handle stmt) {
         this.stmt = stmt;
         }*/
 
-    FBResultSetMetaData(XSQLVAR[] xsqlvars, FBResultSet rs) throws SQLException {
+    /**
+     * Creates a new <code>FBResultSetMetaData</code> instance.
+     *
+     * @param xsqlvars a <code>XSQLVAR[]</code> value
+     * @param connection a <code>FBConnection</code> value
+     * @exception SQLException if an error occurs
+     *
+     * @todo Need another constructor for metadata from constructed
+     * result set, where we supply the ext field info.
+     */
+    FBResultSetMetaData(XSQLVAR[] xsqlvars, FBConnection connection) throws SQLException {
         this.xsqlvars = xsqlvars;
-        this.rs = rs;
-        this.extendedInfo = getExtendedFieldInfo(rs.c);
+        this.connection = connection;
     }
-    
+    /*
     FBResultSetMetaData(XSQLVAR[] xsqlvars, FBPreparedStatement ps) throws SQLException {
         this.xsqlvars = xsqlvars;
         this.ps = ps;
         this.extendedInfo = getExtendedFieldInfo(ps.c);
     }
-    
+    */
     private String getIscEncoding() {
-        if (rs != null)
-            return rs.c.getIscEncoding();
-        else
-        if (ps != null)
-            return ps.c.getIscEncoding();
+        if (connection != null)
+            return connection.getIscEncoding();
         else
             return "NONE";
     }
@@ -630,7 +637,14 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         return xsqlvars[columnIndex - 1];
     }
     
-    private ExtendedFieldInfo getExtFieldInfo(int columnIndex) {
+    private ExtendedFieldInfo getExtFieldInfo(int columnIndex) 
+        throws SQLException
+    {
+        if (extendedInfo == null) 
+        {
+            this.extendedInfo = getExtendedFieldInfo(connection);            
+        } // end of if ()
+        
         FieldKey key = new FieldKey(
             getXsqlvar(columnIndex).relname, 
             getXsqlvar(columnIndex).sqlname);

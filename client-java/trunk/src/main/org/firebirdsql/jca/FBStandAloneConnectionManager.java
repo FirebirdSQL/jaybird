@@ -30,6 +30,8 @@ import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
 import java.io.Serializable;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 
 
@@ -45,6 +47,7 @@ public class FBStandAloneConnectionManager
     implements ConnectionManager, ConnectionEventListener, Serializable
 {
 
+    private transient final static Logger log = LoggerFactory.getLogger(FBStandAloneConnectionManager.class,true);
      //package constructor
      FBStandAloneConnectionManager() {
      }
@@ -64,23 +67,25 @@ public class FBStandAloneConnectionManager
     //javax.resource.spi.ConnectionEventListener implementation
 
     public void connectionClosed(ConnectionEvent ce) {
-        PrintWriter log = ((FBManagedConnection)ce.getSource()).getLogWriter();
+        PrintWriter externalLog = ((FBManagedConnection)ce.getSource()).getLogWriter();
         try {
             ((FBManagedConnection)ce.getSource()).destroy();
         }
         catch (ResourceException e) {
-            if (log != null) log.println("Exception closing unmanaged connection: " + e);
+            if (externalLog != null) externalLog.println("Exception closing unmanaged connection: " + e);
         }
 
     }
 
     public void connectionErrorOccurred(ConnectionEvent ce) {
-        PrintWriter log = ((FBManagedConnection)ce.getSource()).getLogWriter();
+        PrintWriter externalLog = ((FBManagedConnection)ce.getSource()).getLogWriter();
+        log.info("ConnectionErrorOccurred, ", ce.getException());
         try {
             ((FBManagedConnection)ce.getSource()).destroy();
         }
         catch (ResourceException e) {
-            if (log != null) log.println("Exception closing unmanaged connection: " + e);
+            log.info("further problems destroying connection: ", e);
+            if (externalLog != null) externalLog.println("Exception closing unmanaged connection: " + e);
         }
     }
 
