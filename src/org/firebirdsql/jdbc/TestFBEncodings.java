@@ -54,6 +54,15 @@ public class TestFBEncodings extends BaseFBTest {
         //"\u00f1\u00f2\u00f0\u00b3\u00f7\u00ea\u00e0";
         "\u0441\u0442\u0440\u0456\u0447\u043a\u0430";
         
+    public static byte[] UKRAINIAN_TEST_BYTES = new byte[] {
+        (byte)0xf2, (byte)0xe5, (byte)0xf1, (byte)0xf2, 
+        (byte)0xee, (byte)0xe2, (byte)0xe0, (byte)0x20,
+        (byte)0xf1, (byte)0xf2, (byte)0xf0, (byte)0xb3, 
+        (byte)0xf7, (byte)0xea, (byte)0xe0
+    };
+    
+    public static String UKRAINIAN_TEST_STRING_WIN1251;
+        
     public static int UKRAINIAN_TEST_ID = 1;
     
     // couple of test characters in German
@@ -65,7 +74,7 @@ public class TestFBEncodings extends BaseFBTest {
     public TestFBEncodings(String testName) {
         super(testName);
     }
-
+    
     protected void setUp() throws Exception {
         super.setUp();
         
@@ -96,6 +105,8 @@ public class TestFBEncodings extends BaseFBTest {
         } catch(Exception ex) {
         }
         
+        UKRAINIAN_TEST_STRING_WIN1251 = 
+            new String(UKRAINIAN_TEST_BYTES, "Cp1251");
     }
 
     protected void tearDown() throws Exception {
@@ -117,6 +128,9 @@ public class TestFBEncodings extends BaseFBTest {
     }
     
     public void testUkrainian() throws Exception {
+        assertTrue("Strings should be equal.", 
+            UKRAINIAN_TEST_STRING.equals(UKRAINIAN_TEST_STRING_WIN1251));
+        
         java.util.Properties props = new java.util.Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "WIN1251");
@@ -130,9 +144,9 @@ public class TestFBEncodings extends BaseFBTest {
             "VALUES(?, ?, ?, ?)");
         
         stmt.setInt(1, UKRAINIAN_TEST_ID);
-        stmt.setString(2, UKRAINIAN_TEST_STRING);
-        stmt.setString(3, UKRAINIAN_TEST_STRING);
-        stmt.setString(4, UKRAINIAN_TEST_STRING);
+        stmt.setString(2, UKRAINIAN_TEST_STRING_WIN1251);
+        stmt.setString(3, UKRAINIAN_TEST_STRING_WIN1251);
+        stmt.setString(4, UKRAINIAN_TEST_STRING_WIN1251);
         
         int updated = stmt.executeUpdate();
         stmt.close();
