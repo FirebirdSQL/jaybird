@@ -30,6 +30,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.6  2002/02/26 20:46:20  rrokytskyy
+ * switched from toString() to getMessage() use
+ *
  * Revision 1.5  2001/10/16 18:11:41  alberola
  * Fixed a bug in toString()
  *
@@ -99,6 +102,10 @@ public class GDSException extends Exception {
             return -1;
     }
 
+    public int getIntParam() {
+        return intParam;
+    }
+    
     public void setNext(GDSException e) {
         next = e;
     }
