@@ -1,3 +1,45 @@
+2004-05-05 22:03  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+	
+	fixed bug with incorrect type names
+
+2004-05-05 00:22  rrokytskyy
+
+	* client-java/src/:
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/BasicAbstractConnectionPool.java,
+	pool/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBWrappingDataSource.java:
+	
+	improved javax.naming.Reference support
+
+2004-05-04 23:04  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/ISCConstants.java:
+	
+	small code reformatting
+
+2004-05-04 22:23  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/PooledConnectionHandler.java,
+	pool/org/firebirdsql/pool/PooledPreparedStatementHandler.java,
+	pool/org/firebirdsql/pool/ResultSetHandler.java,
+	pool/org/firebirdsql/pool/StatementHandler.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+	
+	added statement leak prevention mechanism
+
+2004-04-30 23:47  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+	
+	fixed incorrect class name
+
 2004-04-27 22:14  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/field/:
