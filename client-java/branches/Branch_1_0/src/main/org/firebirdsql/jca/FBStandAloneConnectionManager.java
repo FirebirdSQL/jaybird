@@ -47,7 +47,7 @@ public class FBStandAloneConnectionManager
     implements ConnectionManager, ConnectionEventListener, Serializable
 {
 
-    private transient final static Logger log = LoggerFactory.getLogger(FBStandAloneConnectionManager.class,true);
+    private transient final static Logger log = LoggerFactory.getLogger(FBStandAloneConnectionManager.class,false);
      //package constructor
      FBStandAloneConnectionManager() {
      }
