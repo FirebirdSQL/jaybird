@@ -254,6 +254,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } // end of for ()
         connectionHandles.clear();
         this.currentTr = null;
+
+        // reset the TPB from the previous transaction.
+        this.tpb.setTpb(mcf.getTpb());
     }
 
 /**
