@@ -808,6 +808,21 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             FBConnectionRequestInfo fbcri = (FBConnectionRequestInfo)cri;
             if (subject != null) 
             {
+               //see connector spec, section 8.2.6, contract for ManagedConnectinFactory, option A.
+               for (Iterator i = subject.getPrivateCredentials().iterator(); i.hasNext(); )
+               {
+                  Object cred = i.next();
+                  if (cred instanceof PasswordCredential && mcf.equals(((PasswordCredential)cred).getManagedConnectionFactory())) 
+                  {
+                     PasswordCredential pcred = (PasswordCredential)cred;
+                     String user = pcred.getUserName();
+                     String password = new String(pcred.getPassword());
+                     fbcri.setPassword(password);
+                     fbcri.setUser(user);
+                     break;                        
+                  } // end of if ()
+               } // end of for ()
+               /*
                 Iterator iter = subject.getPrivateCredentials().iterator();
                 if (iter.hasNext()) {
                     PasswordCredential cred = (PasswordCredential) iter.next();
@@ -816,6 +831,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
                     fbcri.setPassword(password);
                     fbcri.setUser(user);
                 }
+               */
             } // end of if ()
             
             return fbcri;
