@@ -32,6 +32,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 
+import org.firebirdsql.jca.FBManagedConnection;
+import org.firebirdsql.gds.GDSException;
+
 /**
  *
  *   @see <related>
@@ -56,6 +59,12 @@ import java.sql.SQLWarning;
  * @see ResultSet 
  */
 public class FBStatement implements Statement {
+    
+    private FBManagedConnection mc;
+    
+    FBStatement(FBManagedConnection mc) {
+        this.mc = mc;
+    }
 
     /**
      * Executes an SQL statement that returns a single <code>ResultSet</code> object.
@@ -314,7 +323,12 @@ public class FBStatement implements Statement {
      * @see #getMoreResults 
      */
     public boolean execute(String sql) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        try {
+            return mc.executeSQL(sql);
+        }
+        catch (GDSException ge) {
+            throw new SQLException("GDS exception: " + ge.toString());
+        }
     }
 
 	

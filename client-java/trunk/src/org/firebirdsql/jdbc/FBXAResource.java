@@ -45,15 +45,13 @@ import javax.transaction.xa.Xid;
 
 public class FBXAResource implements XAResource {
 //    private FBManagedConnection fbmc;
-//    private Xid current;
     private boolean active = false;
     private int timeout_ignored = 0;
     
-//    private Object kb = null;//knowledgebase
 
-//    public FBXAResource(FBManagedConnection fbmc) {
-//        this.fbmc = fbmc;
-//    }
+/*    public FBXAResource(FBManagedConnection fbmc) {
+        this.fbmc = fbmc;
+    }*/
 
 
     /**

@@ -34,6 +34,8 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 
+import org.firebirdsql.jca.FBManagedConnection;
+
 //import javax.resource.cci.Connection;--can't import, two classes with same name.
 
 
@@ -45,7 +47,7 @@ import java.sql.Statement;
  *   @version $ $
  */
 
-//Note that this connection class is only a handle to a XAConnection.
+//Note that this connection class is only a handle to a ManagedConnection.
 /**
  * <P>A connection (session) with a specific
  * database. Within the context of a Connection, SQL statements are
@@ -69,6 +71,16 @@ import java.sql.Statement;
  * Methods that are new in the JDBC 2.0 API are tagged @since 1.2. 
  */
 public class FBConnection implements Connection/*, javax.resource.cci.Connection*/ {
+    
+    FBManagedConnection mc;
+    
+    public FBConnection(FBManagedConnection mc) {
+        this.mc = mc;
+    }
+    
+    public void setManagedConnection(FBManagedConnection mc) {
+        this.mc = mc;
+    }
 
     /**
 	 * Creates a <code>Statement</code> object for sending
@@ -86,7 +98,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      */
     public Statement createStatement() throws SQLException {
-        return null;
+        return new FBStatement(mc);
     }
 
 
