@@ -116,7 +116,7 @@ public class TestFBResultSet extends BaseFBTest {
      * 
      * @throws Exception if something went wrong.
      */
-    public void _testFindColumn() throws Exception {
+    public void testFindColumn() throws Exception {
         Statement stmt = connection.createStatement();
         
         ResultSet rs = stmt.executeQuery(SELECT_STATEMENT);
@@ -159,6 +159,9 @@ public class TestFBResultSet extends BaseFBTest {
         try {
             ResultSet rs = select.executeQuery(
                 "SELECT id, str FROM test_table FOR UPDATE OF " + CURSOR_NAME);
+                
+            assertTrue("Cursor name should be correct", 
+                CURSOR_NAME.equals(rs.getCursorName()));
                 
             assertTrue("ResultSet.isBeforeFirst() should be true.", 
                 rs.isBeforeFirst());
@@ -255,7 +258,7 @@ public class TestFBResultSet extends BaseFBTest {
      * 
      * @throws Exception if something went wrong.
      */
-    public void _testEmptyColumnInView() throws Exception {
+    public void testEmptyColumnInView() throws Exception {
         PreparedStatement ps = 
             connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
             

@@ -87,6 +87,8 @@ public class FBResultSet implements ResultSet {
      
     private FBField[] fields = null;
     private java.util.HashMap colNames = new java.util.HashMap();
+    
+    private String cursorName;
 	 /**
      * Creates a new <code>FBResultSet</code> instance.
      *
@@ -98,6 +100,8 @@ public class FBResultSet implements ResultSet {
         throws SQLException 
     {
         this.c = c;
+        this.cursorName = fbstatement.getCursorName();
+        
         xsqlvars = stmt.getOutSqlda().sqlvar;
         maxRows = fbstatement.getMaxRows();
         prepareVars(false);
@@ -544,7 +548,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public String getCursorName() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return cursorName;
     }
 
 

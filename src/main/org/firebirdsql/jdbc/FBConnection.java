@@ -187,9 +187,10 @@ public class FBConnection implements Connection
      * @exception SQLException if a database access error occurs
      */
     public synchronized Statement createStatement() throws SQLException {
-        Statement stmt =  new FBStatement(this);
-        activeStatements.add(stmt);
-        return stmt;
+        return createStatement(
+            ResultSet.TYPE_FORWARD_ONLY, 
+            ResultSet.CONCUR_READ_ONLY
+        );
     }
 
 
@@ -774,13 +775,15 @@ public class FBConnection implements Connection
     public synchronized Statement createStatement(int resultSetType, 
         int resultSetConcurrency) throws SQLException 
     {
-		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
-		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
-		     return createStatement();
-		  else{
-		     addWarning(new java.sql.SQLWarning("resultSetType or resultSetConcurrency changed"));
-		     return createStatement();
-		  }			  
+		if (resultSetType != ResultSet.TYPE_FORWARD_ONLY ||
+           resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) 
+        {
+		     addWarning(new SQLWarning("Unsupported type and/or concurrency"));
+        }
+          
+          Statement stmt =  new FBStatement(this, ResultSet.CONCUR_READ_ONLY);
+          activeStatements.add(stmt);
+          return stmt;
     }
 
 
