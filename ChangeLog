@@ -1,3 +1,14 @@
+2004-04-27 22:14  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/field/:
+	FBDateField.java, FBBigDecimalField.java, FBDoubleField.java,
+	FBFloatField.java, FBIntegerField.java, FBLongField.java,
+	FBLongVarCharField.java, FBShortField.java, FBStringField.java,
+	FBTimeField.java, FBTimestampField.java,
+	FBWorkaroundStringField.java:
+	
+	fixed possible NPEs and refactored the code
+
 2004-04-26 23:07  rrokytskyy
 
 	*
