@@ -622,15 +622,15 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized Statement createStatement(int resultSetType, 
         int resultSetConcurrency) throws SQLException 
     {
-		if (resultSetType != ResultSet.TYPE_FORWARD_ONLY ||
+        if (resultSetType != ResultSet.TYPE_FORWARD_ONLY ||
            resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) 
         {
-		     addWarning(new SQLWarning("Unsupported type and/or concurrency"));
-		  }			  
+            addWarning(new FBSQLWarning("Unsupported type and/or concurrency"));
+        }			  
           
-          Statement stmt =  new FBStatement(this, ResultSet.CONCUR_READ_ONLY);
-          activeStatements.add(stmt);
-          return stmt;
+        Statement stmt =  new FBStatement(this, ResultSet.CONCUR_READ_ONLY);
+        activeStatements.add(stmt);
+        return stmt;
     }
 
 
