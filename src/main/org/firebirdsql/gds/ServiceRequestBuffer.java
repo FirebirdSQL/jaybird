@@ -25,22 +25,28 @@ package org.firebirdsql.gds;
 public interface ServiceRequestBuffer
     {
     /**
+     * Set a void (valueless) parameter on this 
+     * <code>ServiceRequestBuffer</code>.
      *
-     * @param argumentType
+     * @param argumentType The parameter to be set
      */
     public void addArgument(int argumentType);
 
     /**
+     * Set a <code>String</code> parameter on this
+     * <code>ServiceRequestBuffer</code>.
      *
-     * @param argumentType
-     * @param value
+     * @param argumentType The parameter to be set
+     * @param value The value to set for the given parameter
      */
     public void addArgument(int argumentType, String value);
 
     /**
+     * Set an <code>int</code> parameter on this
+     * <code>ServiceRequestBuffer</code>.
      *
-     * @param argumentType
-     * @param value
+     * @param argumentType The parameter to be set
+     * @param value The value to set for the given parameter
      */
     public void addArgument(int argumentType, int value);
     }

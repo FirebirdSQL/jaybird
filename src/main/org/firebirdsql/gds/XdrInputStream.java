@@ -35,7 +35,9 @@ import java.io.InputStream;
 import org.firebirdsql.jgds.isc_stmt_handle_impl;
 
 /**
- * Describe class <code>XdrInputStream</code> here.
+ * <code>XdrInputStream</code> is an input stream for reading in data that
+ * is in the XDR format. An <code>XdrInputStream</code> instance is wrapped 
+ * around an underlying <code>java.io.InputStream</code>.
  *
  * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro Alberola</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
@@ -51,11 +53,23 @@ public final class XdrInputStream {
     private int count;
     private int pos;
 
+    /**
+     * Create a new instance of <code>XdrInputStream</code>.
+     *
+     * @param in The underlying <code>InputStream</code> to read from
+     */
     public XdrInputStream(InputStream in) {
         buf = new byte[defaultBufferSize];
         this.in = in;
     }
 
+    /**
+     * Read in a byte buffer.
+     *
+     * @return The buffer that was read
+     * @throws IOException if an error occurs while reading from the 
+     *         underlying input stream
+     */
     public byte[] readBuffer() throws IOException {
         int len = readInt();
         byte[] buffer = new byte[len];
@@ -64,6 +78,13 @@ public final class XdrInputStream {
         return buffer;
     }
 
+    /**
+     * Read in a <code>String</code>.
+     *
+     * @return The <code>String</code> that was read
+     * @throws IOException if an error occurs while reading from the 
+     *         underlying input stream
+     */
     public String readString() throws IOException {
         int len = readInt();
         byte[] buffer = new byte[len];
@@ -77,6 +98,16 @@ public final class XdrInputStream {
     //
     //Now returns results in Object[] and in xsqlda.data
     //Nulls are represented by null values in Object array
+
+    /**
+     * Read a row of SQL data and store it in the results set of a statement.
+     *
+     * @param ioLength array containing the lengths of each column in the
+     *        data row that is to be read
+     * @param stmt The statement where the row is to be stored
+     * @throws IOException if an error occurs while reading from the 
+     *         underlying input stream
+     */
     public void readSQLData(int[] ioLength, isc_stmt_handle_impl stmt) throws IOException {
         // This only works if not (port->port_flags & PORT_symmetric)		 
         int numCols = ioLength.length;
@@ -112,15 +143,42 @@ public final class XdrInputStream {
     //
     // Substitute DataInputStream
     //
+
+
+    /**
+     * Read in a <code>long</code>.
+     *
+     * @return The <code>long</code> that was read
+     * @throws IOException if an error occurs while reading from the 
+     *         underlying input stream
+     */
     public final long readLong() throws IOException {
         return (read() << 56) | (read() << 48) | (read() << 40) | (read() << 32) 
         | (read() << 24) | (read() << 16) | (read() << 8) | (read() << 0);
     }
 
+    /**
+     * Read in an <code>int</code>.
+     *
+     * @return The <code>int</code> that was read
+     * @throws IOException if an error occurs while reading from the 
+     *         underlying input stream
+     */
     public int readInt() throws IOException {
         return (read() << 24) | (read() << 16) | (read() << 8) | (read() << 0);
     }
 
+    /**
+     * Read a given amount of data from the underlying input stream. The data
+     * that is read is stored in <code>b</code>, starting from offset
+     * <code>off</code>.
+     *
+     * @param b The byte buffer to hold the data that is read
+     * @param off The offset at which to start storing data in <code>b</code>
+     * @param len The number of bytes to be read
+     * @throws IOException if an error occurs while reading from the 
+     *         underlying input stream
+     */
     public final void readFully(byte b[], int off, int len) throws IOException {
 
         if (len <= count-pos){
@@ -152,6 +210,13 @@ public final class XdrInputStream {
     // Buffering classes (those interface with the real InputStream
     //
 
+    /**
+     * Read in the next byte of data from the underlying input stream.
+     *
+     * @return The value that was read
+     * @throws IOException if an error occurs while reading from the 
+     *         underlying input stream
+     */
     public int read() throws IOException {
         if (pos >= count){
             pos = count = 0;
@@ -162,6 +227,12 @@ public final class XdrInputStream {
         return buf[pos++] & 0xff;
     }
 
+    /**
+     * Close this input stream and the underlying input stream.
+     *
+     * @throws IOException if an error occurs while closing the underlying
+     *         input stream
+     */
     public void close() throws IOException {
         if (in == null)
             return;

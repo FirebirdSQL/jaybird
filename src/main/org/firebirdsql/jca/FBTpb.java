@@ -28,8 +28,9 @@ import javax.resource.ResourceException;
 
 import org.firebirdsql.gds.ISCConstants;
 /**
- * FBTpb.java
- *
+ * The <code>FBTpb</code> class represents the Firebird Transaction Parameter
+ * Block (TPB), which contains Firebird-specific information about transaction
+ * isolation.
  *
  * Created: Wed Jun 19 10:12:22 2002
  *
@@ -40,15 +41,51 @@ public class FBTpb implements Serializable
 {
     private byte[] byteArray = null;
 
+    /**
+     * Dirty reads, non-repeatable reads and phantom reads are prevented.
+     * This level includes the prohibitions in
+     * TRANSACTION_REPEATABLE_READ and further prohibits the
+     * situation where one transaction reads all rows that satisfy
+     * a WHERE condition, a second transaction inserts a row that
+     * satisfies that WHERE condition, and the first transaction
+     * rereads for the same condition, retrieving the additional
+     * "phantom" row in the second read.
+     */
     public static final String TRANSACTION_SERIALIZABLE = "TRANSACTION_SERIALIZABLE";
 
+    /**
+     * Dirty reads and non-repeatable reads are prevented; phantom
+     * reads can occur.  This level prohibits a transaction from
+     * reading a row with uncommitted changes in it, and it also
+     * prohibits the situation where one transaction reads a row,
+     * a second transaction alters the row, and the first transaction
+     * rereads the row, getting different values the second time
+     * (a "non-repeatable read").
+     */
     public static final String TRANSACTION_REPEATABLE_READ = "TRANSACTION_REPEATABLE_READ";
 
+    /**
+     * Dirty reads are prevented; non-repeatable reads and phantom
+     * reads can occur.  This level only prohibits a transaction
+     * from reading a row with uncommitted changes in it.
+     */
     public static final String TRANSACTION_READ_COMMITTED = "TRANSACTION_READ_COMMITTED";
 
     //read uncommitted actually not supported
+    /**
+     * Dirty reads, non-repeatable reads and phantom reads can occur.
+     * This level allows a row changed by one transaction to be read
+     * by another transaction before any changes in that row have been
+     * committed (a "dirty read").  If any of the changes are rolled back,
+     * the second transaction will have retrieved an invalid row.
+     * <b>This level is not actually supported</b>
+     */
     public static final String TRANSACTION_READ_UNCOMMITTED = "TRANSACTION_READ_UNCOMMITTED";
     
+    /**
+     * Indicates that transactions are not supported.
+     * <b>This level is not supported</b>
+     */
     public static final String TRANSACTION_NONE = "TRANSACTION_NONE";
 
     public final static Integer ISC_TPB_CONSISTENCY = new Integer(ISCConstants.isc_tpb_consistency);
@@ -69,6 +106,13 @@ public class FBTpb implements Serializable
     private boolean readOnly;
     private FBTpbMapper mapper;
 
+    /**
+     * Create a new Transaction Parameters Block instance based around a
+     * <code>FBTpbMapper</code>.
+     *
+     * @param mapper The <code>FBTpbMapper</code> to be used with this 
+     *        <code>FBTpb</code>
+     */
     public FBTpb(FBTpbMapper mapper) {
         this.mapper = mapper;
         this.txIsolation = Connection.TRANSACTION_READ_COMMITTED;
@@ -77,10 +121,22 @@ public class FBTpb implements Serializable
         createArray();
     }
     
+    /**
+     * Get the <code>FBTpbMapper</code> around which this <code>FBTpb</code> 
+     * instance is based.
+     *
+     * @return The <code>FBTpbMapper</code> instance currently employed
+     */
     public FBTpbMapper getMapper() {
     	return mapper;
     }
     
+    /**
+     * Set the <code>FBTpbMapper</code> to use with this <code>FBTpb</code>.
+     *
+     * @param mapper The mapper to be used
+     * @throws ResourceException if the <code>FBTpbMapper</code> cannot be set
+     */
     public void setMapper(FBTpbMapper mapper) throws FBResourceException {
         this.mapper = mapper;
         this.tpb = mapper.getMapping(txIsolation);
@@ -106,11 +162,22 @@ public class FBTpb implements Serializable
     }
 
 
+    /**
+     * Copy constructor. Create a new <code>FBTpb</code> instance around an
+     * existing one.
+     *
+     * @param tpb An existing <code>FBTpb</code> instance
+     */
     public FBTpb(FBTpb tpb)
     {
         setTpb(tpb);
     }
 
+    /**
+     * Set the inner <code>FBTpb</code> instance to be used.
+     *
+     * @param tpb The <code>FBTpb</code> to be used
+     */
     public void setTpb(FBTpb tpb)
     {
         this.tpb = new HashSet(tpb.tpb);
@@ -120,6 +187,13 @@ public class FBTpb implements Serializable
         createArray();
     }
 
+    /**
+     * Add a Firebird-specific transaction attribute to this TPB. The key
+     * must be one of the isc_tpb_* static final fields of 
+     * {@link ISCConstants}.
+     *
+     * @param key The transaction attribute to add
+     */
     public void add(Integer key)
     {
         if (key == null ) 
@@ -162,6 +236,13 @@ public class FBTpb implements Serializable
     }
         
 
+    /**
+     * Set the JDBC transaction isloation level by name. The name must be
+     * the name of one of the TRANSACTION_* static final fields of this class.
+     *
+     * @param tin The transaction isolation level to be set
+     * @throws ResourceException if the given isolation level is invalid      
+     * */
     public void setTransactionIsolationName(String tin) throws ResourceException
     {
         if (TRANSACTION_SERIALIZABLE.equals(tin)) 
@@ -182,6 +263,15 @@ public class FBTpb implements Serializable
         }
     }
 
+    /**
+     * Get the name of the currently set transaction isolation level. The
+     * returned value will be one of the TRANSACTION_* static final fields
+     * of this class.
+     *
+     * @return The name of the current transaction isolation level
+     * @throws ResourceException if the current isolation level cannot
+     *         be retrieved
+     */
     public String getTransactionIsolationName() throws ResourceException
     {
         switch (getTransactionIsolation()) {
@@ -191,50 +281,6 @@ public class FBTpb implements Serializable
             default: throw new FBResourceException("Unknown transaction isolation level");
         }
     }
-
-    /**
-     * Indicates that transactions are not supported.
-     */
-//    int TRANSACTION_NONE       = 0;
-
-    /**
-     * Dirty reads, non-repeatable reads and phantom reads can occur.
-     * This level allows a row changed by one transaction to be read
-     * by another transaction before any changes in that row have been
-     * committed (a "dirty read").  If any of the changes are rolled back,
-     * the second transaction will have retrieved an invalid row.
-     */
-//    int TRANSACTION_READ_UNCOMMITTED = 1;
-
-    /**
-     * Dirty reads are prevented; non-repeatable reads and phantom
-     * reads can occur.  This level only prohibits a transaction
-     * from reading a row with uncommitted changes in it.
-     */
-//    int TRANSACTION_READ_COMMITTED   = 2;
-
-    /**
-     * Dirty reads and non-repeatable reads are prevented; phantom
-     * reads can occur.  This level prohibits a transaction from
-     * reading a row with uncommitted changes in it, and it also
-     * prohibits the situation where one transaction reads a row,
-     * a second transaction alters the row, and the first transaction
-     * rereads the row, getting different values the second time
-     * (a "non-repeatable read").
-     */
-//    int TRANSACTION_REPEATABLE_READ  = 4;
-
-    /**
-     * Dirty reads, non-repeatable reads and phantom reads are prevented.
-     * This level includes the prohibitions in
-     * TRANSACTION_REPEATABLE_READ and further prohibits the
-     * situation where one transaction reads all rows that satisfy
-     * a WHERE condition, a second transaction inserts a row that
-     * satisfies that WHERE condition, and the first transaction
-     * rereads for the same condition, retrieving the additional
-     * "phantom" row in the second read.
-     */
-//    int TRANSACTION_SERIALIZABLE     = 8;
 
     /**
      * Attempts to change the transaction
@@ -248,7 +294,7 @@ public class FBTpb implements Serializable
      * @param level one of the TRANSACTION_* isolation values with the
      * exception of TRANSACTION_NONE; some databases may not support
      * other values
-     * @exception SQLException if a database access error occurs
+     * @throws SQLException if the isolation level is invalid 
      */
     public void setTransactionIsolation(int level) throws ResourceException {
         
@@ -289,7 +335,8 @@ public class FBTpb implements Serializable
      * Gets this Connection's current transaction isolation level.
      *
      * @return the current TRANSACTION_* mode value
-     * @exception SQLException if a database access error occurs
+     * @exception SQLException if a database access error occurs, should not
+     *            be possible for this to be thrown
      */
     public int getTransactionIsolation() throws ResourceException {
         return txIsolation;
@@ -348,6 +395,12 @@ public class FBTpb implements Serializable
         createArray();
     }
 
+    /**
+     * Set the read-only flag on this TPB.
+     *
+     * @param readOnly If <code>true</code>, this TPB will be set to read-only,
+     *        otherwise it will be be read-write
+     */
     public void setReadOnly(boolean readOnly) {
         this.readOnly = readOnly;
         
@@ -362,6 +415,11 @@ public class FBTpb implements Serializable
         createArray();
     }
 
+    /**
+     * Determine whether this TPB is set to read-only.
+     *
+     * @return <code>true</code> if this TPB is read-only, otherwise false
+     */
     public boolean isReadOnly() {
         return tpb.contains(ISC_TPB_READ);
     }

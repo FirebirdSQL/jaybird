@@ -38,7 +38,8 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 /**
- * Describe class <code>XdrOutputStream</code> here.
+ * An <code>XdrOutputStream</code> writes data in XDR format to an 
+ * underlying <code>java.io.OutputStream</code>.
  *
  * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro Alberola</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
@@ -59,6 +60,11 @@ public final class XdrOutputStream {
 
     private OutputStream out = null;
 
+    /**
+     * Create a new instance of <code>XdrOutputStream</code>.
+     *
+     * @param out The underlying <code>OutputStream</code> to write to
+     */
     public XdrOutputStream(OutputStream out) {
         this.out = out;
         count=0;
@@ -66,6 +72,14 @@ public final class XdrOutputStream {
         Arrays.fill(textPad,(byte) 32);
     }
 
+    /**
+     * Write a <code>byte</code> buffer to the underlying output stream in
+     * XDR format.
+     *
+     * @param buffer The <code>byte</code> buffer to be written
+     * @throws IOException if an error occurs while writing to the 
+     *         underlying output stream
+     */
     public void writeBuffer(byte[] buffer) throws IOException {
         if (buffer == null)
             writeInt(0);
@@ -76,6 +90,13 @@ public final class XdrOutputStream {
         }
     }
 
+    /**
+     * Write a blob buffer to the underlying output stream in XDR format.
+     *
+     * @param buffer A <code>byte</code> array containing the blob
+     * @throws IOException if an error occurs while writing to the 
+     *         underlying output stream
+     */
     public void writeBlobBuffer(byte[] buffer) throws IOException {
         int len = buffer.length ; // 2 for short for buffer length
         if (log != null && log.isDebugEnabled()) log.debug("writeBlobBuffer len: " + len);
@@ -90,6 +111,14 @@ public final class XdrOutputStream {
         write(buffer, len, ((4 - len+2)&3));
     }
 
+    /**
+     * Write a <code>String</code> to the underlying output stream in
+     * XDR format.
+     *
+     * @param s The <code>String</code> to be written
+     * @throws IOException if an error occurs while writing to the 
+     *         underlying output stream
+     */
     public void writeString(String s) throws IOException {
         byte[] buffer = s.getBytes();
         int len = buffer.length;
@@ -115,6 +144,15 @@ public final class XdrOutputStream {
             writeBuffer(s.getBytes());
     }
 
+    /**
+     * Write a set of distinct byte values (ie parameter buffer).
+     *
+     * @param type The type of the parameter value being written, 
+     *        e.g. {@link ISCConstants#isc_tpb_version3}
+     * @param s The set of byte values to be written
+     * @throws IOException if an error occurs while writing to the 
+     *         underlying output stream
+     */
     public void writeSet(int type, byte[] s) throws IOException {
         if (s == null) {
             writeInt(1);
@@ -130,6 +168,15 @@ public final class XdrOutputStream {
         }
     }
 
+    /**
+     * Write an <code>Xdrable</code> to this output stream.
+     *
+     * @param type Type of the <code>Xdrable</code> to be written, 
+     *        e.g. {@link ISCConstants#isc_tpb_version3}
+     * @param item The object to be written
+     * @throws IOException if an error occurs while writing to the 
+     *         underlying output stream
+     */
     public void writeTyped(int type, Xdrable item) throws IOException {
         int size;
         if (item == null) {
@@ -151,6 +198,14 @@ public final class XdrOutputStream {
     // 
     // WriteSQLData methods
     // 
+
+    /**
+     * Write a set of SQL data from a <code>XSQLDA</code> data structure.
+     *
+     * @param xsqlda The datastructure containing the SQL data to be written
+     * @throws IOException if an error occurs while writing to the 
+     *         underlying output stream
+     */
     public void writeSQLData(XSQLDA xsqlda) throws IOException {
         for (int i = 0; i < xsqlda.sqld; i++) {
             XSQLVAR xsqlvar = xsqlda.sqlvar[i];
@@ -220,6 +275,14 @@ public final class XdrOutputStream {
     //
     // DataOutputStream methods
     // 
+    
+    /**
+     * Write a <code>long</code> value to the underlying stream in XDR format.
+     *
+     * @param v The <code>long</code> value to be written
+     * @throws IOException if an error occurs while writing to the 
+     *         underlying output stream
+     */
     public final void writeLong(long v) throws IOException {
         checkBufferSize(8);
         buf[count++] = (byte) (v >>> 56 & 0xFF);
@@ -232,6 +295,13 @@ public final class XdrOutputStream {
         buf[count++] = (byte) (v >>>  0 & 0xFF);
     }
 
+    /**
+     * Write an <code>int</code> value to the underlying stream in XDR format.
+     *
+     * @param v The <code>int</code> value to be written
+     * @throws IOException if an error occurs while writing to the 
+     *         underlying output stream
+     */
     public final void writeInt(int v) throws IOException {
         checkBufferSize(4);
         buf[count++] = (byte) (v >>> 24);
@@ -245,6 +315,16 @@ public final class XdrOutputStream {
     // If the piece to write is greater than 256 bytes, write it directly
     //
 
+    /**
+     * Write a <code>byte</code> buffer to the underlying output stream
+     * in XDR format
+     *
+     * @param b The <code>byte</code> buffer to be written 
+     * @param len The number of bytes to write 
+     * @param pad The number of (blank) padding bytes to write
+     * @throws IOException if an error occurs while writing to the 
+     *         underlying output stream
+     */
     public void write(byte[] b, int len, int pad) throws IOException {
         if (len > 256 || count + len >= BUF_SIZE){
             if (count > 0)
@@ -260,15 +340,37 @@ public final class XdrOutputStream {
         }
     }
 
+    /**
+     * Write a single <code>byte</code> to the underlying output stream in 
+     * XDR format.
+     *
+     * @param b The value to be written, will be truncated to a byte
+     * @throws IOException if an error occurs while writing to the 
+     *         underlying output stream
+     */
     public void write(int b) throws IOException {
         checkBufferSize(1);
         buf[count++] = (byte)b;
     }
 
+    /**
+     * Write an array of <code>byte</code>s to the underlying output stream
+     * in XDR format.
+     *
+     * @param b The <code>byte</code> array to be written
+     * @throws IOException if an error occurs while writing to the 
+     *         underlying output stream
+     */
     public void write(byte b[]) throws IOException{
         write(b,b.length, 0);
     }
 
+    /**
+     * Flush all buffered data to the underlying output stream.
+     * 
+     * @throws IOException if an error occurs while writing to the 
+     *         underlying output stream
+     */
     public void flush() throws IOException {
         if (count > 0){
             out.write(buf,0,count);
@@ -277,6 +379,12 @@ public final class XdrOutputStream {
         out.flush();
     }
 
+    /**
+     * Close this stream and the underlying output stream.
+     *
+     * @throws IOException if an error occurs while closing the 
+     *         underlying stream
+     */
     public void close() throws IOException {
         out.close();
     }

@@ -45,11 +45,32 @@ public interface isc_tr_handle {
     public final static int TRANSACTIONCOMMITTING = 5;
     public final static int TRANSACTIONROLLINGBACK = 6;
 
+    /**
+     * Retrieve a handle to the database to which this transaction is linked.
+     *
+     * @return Handle to the database
+     */
     isc_db_handle getDbHandle();
 
+    /**
+     * Get the current state of the transaction to which this handle is
+     * pointing. The state is equal to one of the <code>TRANSACTION*</code> 
+     * constants of this interface, or the <code>NOTRANSACTION</code> constant,
+     * also of this interface.
+     *
+     * @return The corresponding value for the current state
+     */
     int getState();
 
+    /**
+     * Register a statement within the transaction to which this handle points.
+     *
+     * @param fbStatement Handle to the statement to be registered
+     */
     void registerStatementWithTransaction(isc_stmt_handle fbStatement);
 
+    /**
+     * Clear all the saved result sets from this handle.
+     */
     void forgetResultSets();
 }

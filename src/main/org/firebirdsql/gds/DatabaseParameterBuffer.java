@@ -20,14 +20,15 @@
 package org.firebirdsql.gds;
 
 /**
- * This interface replaces Clumplet in calls to isc_create_database and 
- * isc_attach_database.
- * 
- * Instances are created via GDS.newDatabaseParameterBuffer();
- *
- * Constants from ISCConstants that are relevant to a database parameter buffer 
- * are duplicated on this interface. If the original name where 
- * isc_dpb_cdd_pathname the new name is cdd_pathname. 
+ * This interface replaces Clumplet in calls to 
+ * <code>isc_create_database</code> and <code>isc_attach_database</code>.
+ * <p>
+ * Instances are created via <code>GDS.newDatabaseParameterBuffer();</code>
+ * <p>
+ * Constants from <code>ISCConstants</code> that are relevant to a database 
+ * parameter buffer are duplicated on this interface. If the original name 
+ * was <code>isc_dpb_cdd_pathname</code> then the new name is 
+ * <code>cdd_pathname</code>. 
  */
 public interface DatabaseParameterBuffer
     {

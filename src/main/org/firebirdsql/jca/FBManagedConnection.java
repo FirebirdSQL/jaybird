@@ -58,8 +58,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     private int timeout = 0;
 
     /**
-     * Describe variable <code>cri</code> here.  Needed from mcf when
-     * killing a db handle when a new tx cannot be started.
+     * Needed from mcf when killing a db handle when a new tx cannot be started.
      */
     protected FBConnectionRequestInfo cri;
 
@@ -102,19 +101,16 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     //javax.resource.spi.ManagedConnection implementation
 
     /**
-     Returns an javax.resource.spi.LocalTransaction instance. The LocalTransaction interface
-     is used by the container to manage local transactions for a RM instance.
-     Returns:
-         LocalTransaction instance
-     Throws:
-         ResourceException - generic exception if operation fails
-         NotSupportedException - if the operation is not supported
-         ResourceAdapterInternalException - resource adapter internal error condition
-
-
-
-    **/
-
+     * Returns a <code>javax.resource.spi.LocalTransaction</code> instance. 
+     * The LocalTransaction interface is used by the container to manage 
+     * local transactions for a RM instance.
+     *
+     * @return LocalTransaction instance
+     * @throws ResourceException generic exception if operation fails
+     * @throws NotSupportedException if the operation is not supported
+     * @throws ResourceAdapterInternalException resource adapter internal 
+     *         error condition
+     */
     public LocalTransaction getLocalTransaction()
     {
        return new FBLocalTransaction(this, null);
@@ -123,65 +119,71 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
 
     /**
-     Gets the metadata information for this connection's underlying EIS resource manager instance.
-     The ManagedConnectionMetaData interface provides information about the underlying EIS
-     instance associated with the ManagedConenction instance.
-     Returns:
-         ManagedConnectionMetaData instance
-     Throws:
-         ResourceException - generic exception if operation fails
-         NotSupportedException - if the operation is not supported
-    **/
+     * Gets the metadata information for this connection's underlying EIS 
+     * resource manager instance. The ManagedConnectionMetaData interface 
+     * provides information about the underlying EIS instance associated with 
+     * the ManagedConenction instance.
+     *
+     * @return ManagedConnectionMetaData instance
+     * @throws ResourceException generic exception if operation fails
+     * @throws NotSupportedException if the operation is not supported
+     */
     public ManagedConnectionMetaData getMetaData() throws ResourceException {
         return new FBManagedConnectionMetaData(this);
     }
 
     /**
-     Sets the log writer for this ManagedConnection instance.
-
-     The log writer is a character output stream to which all logging and tracing messages for this
-     ManagedConnection instance will be printed. Application Server manages the association of
-     output stream with the ManagedConnection instance based on the connection pooling
-     requirements.
-
-     When a ManagedConnection object is initially created, the default log writer associated with this
-     instance is obtained from the ManagedConnectionFactory. An application server can set a log
-     writer specific to this ManagedConnection to log/trace this instance using setLogWriter method.
-
-     Parameters:
-         out - Character Output stream to be associated
-     Throws:
-         ResourceException - generic exception if operation fails
-         ResourceAdapterInternalException - resource adapter related error condition
-    **/
+     * Sets the log writer for this ManagedConnection instance.
+     * <P>
+     * The log writer is a character output stream to which all logging and 
+     * tracing messages for this ManagedConnection instance will be printed. 
+     * Application Server manages the association of output stream with the 
+     * ManagedConnection instance based on the connection pooling
+     * requirements.
+     * <P>
+     * When a ManagedConnection object is initially created, the default log 
+     * writer associated with this instance is obtained from the 
+     * <code>ManagedConnectionFactory</code>. An application server can set a 
+     * log writer specific to this ManagedConnection to log/trace this 
+     * instance using setLogWriter method.
+     *
+     * @param out Character Output stream to be associated
+     * @throws ResourceException generic exception if operation fails
+     * @throws ResourceAdapterInternalException resource adapter related error 
+     *         condition
+     */
     public void setLogWriter(PrintWriter out){
        //ignore, we are using log4j.
     }
 
 
     /**
-     Gets the log writer for this ManagedConnection instance.
-
-     The log writer is a character output stream to which all logging and tracing messages for this
-     ManagedConnection instance will be printed. ConnectionManager manages the association of
-     output stream with the ManagedConnection instance based on the connection pooling
-     requirements.
-
-     The Log writer associated with a ManagedConnection instance can be one set as default from the
-     ManagedConnectionFactory (that created this connection) or one set specifically for this
-     instance by the application server.
-
-     Returns:
-         Character ourput stream associated with this Managed- Connection instance
-     Throws:
-         ResourceException - generic exception if operation fails
-    **/
-
+     * Gets the log writer for this ManagedConnection instance.
+     * <P>
+     * The log writer is a character output stream to which all logging and 
+     * tracing messages for this ManagedConnection instance will be printed. 
+     * <code>ConnectionManager</code> manages the association of output stream 
+     * with the <code>ManagedConnection</code> instance based on the 
+     * connection pooling requirements.
+     * <P>
+     * The Log writer associated with a <code>ManagedConnection</code> 
+     * instance can be one set as default from the ManagedConnectionFactory 
+     * (that created this connection) or one set specifically for this
+     * instance by the application server.
+     *
+     * @return Character ourput stream associated with this 
+     *         <code>ManagedConnection</code>
+     *  @throws ResourceException generic exception if operation fails
+     */
     public PrintWriter getLogWriter() {
        return null;//we are using log4j.
     }
 
-  /**<P> Add an event listener.
+    /** 
+     * Add an <code>ConnectionEventListener</code> listener. The listener will
+     * be notified when a <code>ConnectionEvent</code> occurs.
+     *
+     * @param listener The <code>ConnectionEventListener</code> to be added
    */
     public void addConnectionEventListener(ConnectionEventListener listener) {
         connectionEventListeners.add(listener);
@@ -189,29 +191,37 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
 
 
-  /**<P> Remove an event listener.
+    /**
+     * Remove a <code>ConnectionEventListner</code> from the listing of
+     * listeners that will be notified for a <code>ConnectionEvent</code>.
+     *
+     * @param listener The <code>ConnectionEventListener</code> to be removed
    */
-    public void removeConnectionEventListener(ConnectionEventListener listener) {
+    public void removeConnectionEventListener(ConnectionEventListener listener){
         connectionEventListeners.remove(listener);
     }
 
-  /**Used by the container to change the association of an application-level connection handle with a
-     ManagedConneciton instance. The container should find the right ManagedConnection instance
-     and call the associateConnection method.
-
-     The resource adapter is required to implement the associateConnection method. The method
-     implementation for a ManagedConnection should dissociate the connection handle (passed as a
-     parameter) from its currently associated ManagedConnection and associate the new connection
-     handle with itself.
-     Parameters:
-         connection - Application-level connection handle
-     Throws:
-         ResourceException - Failed to associate the connection handle with this
-         ManagedConnection instance
-         IllegalStateException - Illegal state for invoking this method
-         ResourceAdapterInternalException - Resource adapter internal error condition
-*/
-    public void associateConnection(Object connection) throws ResourceException {
+  /**
+   * Used by the container to change the association of an application-level 
+   * connection handle with a ManagedConneciton instance. The container should 
+   * find the right ManagedConnection instance and call the 
+   * associateConnection method.
+   * <P> 
+   * The resource adapter is required to implement the associateConnection 
+   * method. The method implementation for a ManagedConnection should 
+   * dissociate the connection handle (passed as a parameter) from its 
+   * currently associated ManagedConnection and associate the new connection 
+   * handle with itself.
+   *        
+   * @param connection Application-level connection handle
+   * @throws ResourceException Failed to associate the connection handle 
+   *         with this ManagedConnection instance
+   * @throws IllegalStateException Illegal state for invoking this method
+   * @throws ResourceAdapterInternalException Resource adapter internal error 
+   *         condition
+   */
+    public void associateConnection(Object connection) 
+    throws ResourceException {
         try {
             ((AbstractConnection)connection).setManagedConnection(this);
             connectionHandles.add(connection);
@@ -220,34 +230,41 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             throw new FBResourceException("invalid connection supplied to associateConnection.", cce);
         }
     }
-/**
 
 
-     Application server calls this method to force any cleanup on the ManagedConnection instance.
-
-     The method ManagedConnection.cleanup initiates a cleanup of the any client-specific state as
-     maintained by a ManagedConnection instance. The cleanup should invalidate all connection
-     handles that had been created using this ManagedConnection instance. Any attempt by an
-     application component to use the connection handle after cleanup of the underlying
-     ManagedConnection should result in an exception.
-
-     The cleanup of ManagedConnection is always driven by an application server. An application
-     server should not invoke ManagedConnection.cleanup when there is an uncompleted transaction
-     (associated with a ManagedConnection instance) in progress.
-
-     The invocation of ManagedConnection.cleanup method on an already cleaned-up connection
-     should not throw an exception.
-
-     The cleanup of ManagedConnection instance resets its client specific state and prepares the
-     connection to be put back in to a connection pool. The cleanup method should not cause resource
-     adapter to close the physical pipe and reclaim system resources associated with the physical
-     connection.
-     Throws:
-         ResourceException - generic exception if operation fails
-         ResourceAdapterInternalException - resource adapter internal error condition
-         IllegalStateException - Illegal state for calling connection cleanup. Example - if a
-         localtransaction is in progress that doesn't allow connection cleanup
-*/
+    /** 
+     * Application server calls this method to force any cleanup on the 
+     * <code>ManagedConnection</code> instance.
+     * <P> 
+     * The method {@link ManagedConnection#cleanup} initiates a cleanup of the 
+     * any client-specific state as maintained by a ManagedConnection instance. 
+     * The cleanup should invalidate all connection handles that had been 
+     * created using this <code>ManagedConnection</code> instance. Any attempt 
+     * by an application component to use the connection handle after cleanup 
+     * of the underlying <code>ManagedConnection</code> should result in an 
+     * exception.
+     * <P>
+     * The cleanup of ManagedConnection is always driven by an application 
+     * server. An application server should not invoke 
+     * {@link ManagedConnection#cleanup} when there is an uncompleted 
+     * transaction (associated with a ManagedConnection instance) in progress.
+     * <P>
+     * The invocation of {@link ManagedConnection#cleanup} method on an 
+     * already cleaned-up connection should not throw an exception.
+     *
+     * The cleanup of <code>ManagedConnection</code> instance resets its 
+     * client specific state and prepares the connection to be put back in to 
+     * a connection pool. The cleanup method should not cause resource adapter 
+     * to close the physical pipe and reclaim system resources associated with 
+     * the physical connection.
+     *
+     * @throws ResourceException generic exception if operation fails
+     * @throws ResourceAdapterInternalException resource adapter internal 
+     *         error condition
+     * @throws IllegalStateException Illegal state for calling connection 
+     *         cleanup. Example - if a local transaction is in progress that 
+     *         doesn't allow connection cleanup
+     */
     public void cleanup() throws ResourceException
     {
         for (Iterator i = connectionHandles.iterator(); i.hasNext();)
@@ -261,32 +278,35 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         this.tpb.setTpb(mcf.getTpb());
     }
 
-/**
-
-
-     Creates a new connection handle for the underlying physical connection represented by the
-     ManagedConnection instance. This connection handle is used by the application code to refer to
-     the underlying physical connection. A connection handle is tied to its ManagedConnection
-     instance in a resource adapter implementation specific way.
-
-     The ManagedConnection uses the Subject and additional ConnectionRequest Info (which is
-     specific to resource adapter and opaque to application server) to set the state of the physical
-     connection.
-
-     Parameters:
-         Subject - security context as JAAS subject
-         cxRequestInfo - ConnectionRequestInfo instance
-     Returns:
-         generic Object instance representing the connection handle. For CCI, the connection handle
-         created by a ManagedConnection instance is of the type javax.resource.cci.Connection.
-     Throws:
-         ResourceException - generic exception if operation fails
-         ResourceAdapterInternalException - resource adapter internal error condition
-         SecurityException - security related error condition
-         CommException - failed communication with EIS instance
-         EISSystemException - internal error condition in EIS instance - used if EIS instance is
-         involved in setting state of ManagedConnection
-**/
+    /** 
+     * Creates a new connection handle for the underlying physical connection 
+     * represented by the <code>ManagedConnection</code> instance. This 
+     * connection handle is used by the application code to refer to 
+     * the underlying physical connection. A connection handle is tied to its 
+     * <code>ManagedConnection</code> instance in a resource adapter 
+     * implementation specific way.  
+     * <P>
+     *
+     * The <code>ManagedConnection</code> uses the Subject and additional 
+     * <code>ConnectionRequestInfo</code> (which is specific to resource 
+     * adapter and opaque to application server) to set the state of the 
+     * physical connection.
+     *
+     * @param subject security context as JAAS subject
+     * @param cxRequestInfo ConnectionRequestInfo instance
+     * @return generic <code>Object</code> instance representing the 
+     *         connection handle. For CCI, the connection handle created by a 
+     *         <code>ManagedConnection</code> instance is of the type 
+     *         <code>javax.resource.cci.Connection</code>.  
+     * @throws ResourceException generic exception if operation fails 
+     * @throws ResourceAdapterInternalException resource adapter internal 
+     *         error condition 
+     * @throws SecurityException security related error condition 
+     * @throws CommException failed communication with EIS instance 
+     * @throws EISSystemException internal error condition in EIS instance - 
+     *         used if EIS instance is involved in setting state 
+     *         of <code>ManagedConnection</code>
+     */
     public Object getConnection(Subject subject, ConnectionRequestInfo cri)
         throws ResourceException
     {
@@ -301,19 +321,17 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     }
 
 
-/**
-
-
-     Destroys the physical connection to the underlying resource manager.
-
-     To manage the size of the connection pool, an application server can explictly call
-     ManagedConnection.destroy to destroy a physical connection. A resource adapter should destroy
-     all allocated system resources for this ManagedConnection instance when the method destroy is
-     called.
-     Throws:
-         ResourceException - generic exception if operation failed
-         IllegalStateException - illegal state for destroying connection
-**/
+    /**
+     * Destroys the physical connection to the underlying resource manager.
+     * To manage the size of the connection pool, an application server can 
+     * explictly call {@link ManagedConnection#destroy} to destroy a physical 
+     * connection. A resource adapter should destroy all allocated system 
+     * resources for this <code>ManagedConnection</code> instance when the 
+     * method destroy is called.
+     * 
+     * @throws ResourceException generic exception if operation failed 
+     * @throws IllegalStateException illegal state for destroying connection
+     */
     public void destroy() throws ResourceException {
         if (currentTr != null) {
             throw new java.lang.IllegalStateException("Can't destroy managed connection  with active transaction");
@@ -333,8 +351,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     }
 
 
-  /**<P>In both javax.sql.XAConnection and javax.resource.spi.MangagedConnection
-   * <P>Return an XA resource to the caller.
+  /**
+   * Return an XA resource to the caller.
+   * <P>
+   * In both <code>javax.sql.XAConnection</code> and 
+   * <code>javax.resource.spi.MangagedConnection</code>.
    *
    * @return the XAResource
    */
@@ -364,11 +385,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     
     /**
      * Commits a transaction.
-     * @throws XAException
-     *     Occurs when the state was not correct (end never called), the
-     *     transaction ID is wrong, the connection was set to Auto-Commit,
-     *     or the commit on the underlying connection fails.  The error code
-     *     differs depending on the exact situation.
+     *
+     * @throws XAException Occurs when the state was not correct (end never 
+     *         called), the transaction ID is wrong, the connection was set to 
+     *         Auto-Commit, or the commit on the underlying connection fails.  
+     *         The error code differs depending on the exact situation.
      */
     public void commit(Xid id, boolean twoPhase) throws XAException {
         try
@@ -491,6 +512,16 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         return timeout;
     }
 
+    /**
+     * Retrieve whether this <code>FBManagedConnection</code> uses the 
+     * same ResourceManager as <code>res</code>. This method relies on 
+     * <code>res</code> being a Firebird implementation of 
+     * <code>XAResource</code>.
+     *
+     * @param res The other <code>XAResource</code> to compare to
+     * @return <code>true</code> if <code>res</code> uses the same 
+     *         ResourceManager, <code>false</code> otherwise
+     */
     public boolean isSameRM(XAResource res) throws javax.transaction.xa.XAException {
         return (res instanceof FBManagedConnection)
             && (mcf == ((FBManagedConnection)res).mcf);
@@ -534,6 +565,23 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         + "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
         + "FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE = 1";
 
+    
+   /**
+    * Obtain a list of prepared transaction branches from a resource manager. 
+    * The transaction manager calls this method during recovery to obtain the 
+    * list of transaction branches that are currently in prepared or 
+    * heuristically completed states.  
+    *
+    * @param flag One of TMSTARTRSCAN, TMENDRSCAN, TMNOFLAGS. TMNOFLAGS must 
+    *        be used when no other flags are set in flags.
+    * @return The resource manager returns zero or more XIDs for the 
+    *         transaction branches that are currently in a prepared or 
+    *         heuristically completed state. If an error occurs during the 
+    *         operation, the resource manager should throw the appropriate 
+    *         XAException.
+    * @throws XAException An error has occurred. Possible values are 
+    *         XAER_RMERR, XAER_RMFAIL, XAER_INVAL, and XAER_PROTO.
+    */
     public Xid[] recover(int flag) throws javax.transaction.xa.XAException
     {
         ArrayList xids = new ArrayList();
@@ -635,6 +683,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     /**
      * Sets the transaction timeout.  This is saved, but the value is not used
      * by the current implementation.
+     *
+     * @param timeout The timeout to be set in seconds
      */
     public boolean setTransactionTimeout(int timeout) throws javax.transaction.xa.XAException {
         this.timeout = timeout;
@@ -650,9 +700,14 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      * end, either it's a duplicate transaction ID or illegal transaction ID
      * (since you can't have two transactions associated with one DB
      * connection).
-     * @throws XAException
-     *     Occurs when the state was not correct (start called twice), the
-     *     transaction ID is wrong, or the instance has already been closed.
+     *
+     *
+     * @param xid A global transaction identifier to be associated with the 
+     *        resource
+     * @param flags One of TMNOFLAGS, TMJOIN, or TMRESUME      
+     * @throws XAException Occurs when the state was not correct (start 
+     *         called twice), the transaction ID is wrong, or the instance 
+     *         has already been closed.
      */
     public void start(Xid id, int flags) throws XAException
     {
@@ -666,6 +721,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } 
     }
 
+    /**
+     * Perform the internal processing to start associate a JDBC connection 
+     * with a global transaction.
+     *
+     * @see start
+     * @param xid A global transaction identifier to be associated with the 
+     *        resource
+     * @param flags One of TMNOFLAGS, TMJOIN, or TMRESUME      
+     */
     public void internalStart(Xid id, int flags) throws XAException, GDSException {
         if (log!=null) log.debug("start called: " + id);
 
@@ -733,6 +797,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     //FB public methods. Could be package if packages reorganized.
 
+    /**
+     * Retrieve a newly allocated statment handle with the current connection.
+     *
+     * @return The new statement handle
+     * @throws GDSException if a database access error occurs
+     */
     public isc_stmt_handle getAllocatedStatement() throws GDSException {
         //Should we test for dbhandle?
         if (currentTr == null) {
@@ -751,10 +821,27 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         return stmt;
     }
 
+    /**
+     * Retrieve whether this connection is currently involved in a transaction
+     *
+     * @return <code>true</code> if this connection is currently in a 
+     *         transaction, <code>false</code> otherwise.
+     */
     public boolean inTransaction() {
         return currentTr != null;
     }
 
+    /**
+     * Prepare an SQL string for execution (within the database server) in the 
+     * context of a statement handle. 
+     *
+     * @param stmt The statement handle within which the SQL statement will
+     *        be prepared
+     * @param sql The SQL statement to be prepared
+     * @param describeBind Send bind data to the database server
+     * @throws GDSException if a Firebird-specific error occurs
+     * @throws SQLException if a database access error occurs
+     */
     public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException, SQLException {
         if (log!=null) log.debug("preparing sql: " + sql);
         //Should we test for dbhandle?
@@ -785,6 +872,14 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } // end of catch
     }
 
+    /**
+     * Execute a statement in the database. 
+     *
+     * @param stmt The handle to the statement to be executed
+     * @param sendOutSqlda Determines if the XSQLDA structure should be sent
+     *        to the database
+     * @throws GDSException if a Firebird-specific error occurs
+     */
     public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda)
         throws GDSException
     {
@@ -804,6 +899,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } // end of catch
     }
     
+    /**
+     * Execute a SQL statement directly with the current connection.
+     *
+     * @param statement The SQL statement to execute
+     * @throws GDSException if a Firebird-specific error occurs
+     */
     public void executeImmediate(String statement) throws GDSException {
         try {
             mcf.gds.isc_dsql_exec_immed2(
@@ -820,6 +921,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         }
     }
 
+    /**
+     * Fetch data from a statement in the database.
+     *
+     * @param stmt handle to the statement from which data will be fetched
+     * @param fetchSize The number of records to fetch
+     * @throws GDSException if a Firebird-specific error occurs
+     */
     public void fetch(isc_stmt_handle stmt, int fetchSize)
         throws GDSException
     {
@@ -838,6 +946,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
     
+    /**
+     * Set the cursor name for a statement.
+     *
+     * @param stmt handle to statement for which the cursor name will be set
+     * @param cursorName the name for the cursor
+     * @throws GDSException if a Firebird-specific database access error occurs
+     */
     public void setCursorName(isc_stmt_handle stmt, String cursorName) 
         throws GDSException
     {
@@ -850,6 +965,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         }
     }
 
+    /**
+     * Close a statement that is allocated in the database. The statement 
+     * can be optionally deallocated.
+     *
+     * @param stmt handle to the statement to be closed
+     * @param deallocate if <code>true</code>, the statement will be 
+     *        deallocated, otherwise it will not be deallocated
+     * @throws GDSException if a Firebird-specific database access error occurs
+     */
     public void closeStatement(isc_stmt_handle stmt, boolean deallocate)
         throws GDSException
     {
@@ -865,6 +989,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
+    /**
+     * Close this connection with regards to a wrapping 
+     * <code>AbstractConnection</code>.
+     *
+     * @param c The <code>AbstractConnection</code> that is being closed
+     */
     public void close(AbstractConnection c) {
         c.setManagedConnection(null);
         connectionHandles.remove(c);
@@ -873,6 +1003,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         notify(connectionClosedNotifier, ce);
     }
 
+    /**
+     * Register a statement with the current transaction. There must be a 
+     * currently-active transaction to complete this operation.
+     *
+     * @param fbStatement handle to the statement to be registered
+     */
     public void registerStatement(isc_stmt_handle fbStatement) {
         if (currentTr == null) {
             throw new java.lang.IllegalStateException("registerStatement called with no transaction");
@@ -881,6 +1017,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         currentTr.registerStatementWithTransaction(fbStatement);
     }
 
+    /**
+     * Open a handle to a new blob within the current transaction with 
+     * the given id.
+     *
+     * @param blob_id The identifier to be given to the blob
+     * @param segmented If <code>true</code>, the blob will be segmented,
+     *        otherwise is will be streamed
+     * @throws GDSException if a Firebird-specific database error occurs
+     */
     public isc_blob_handle openBlobHandle(long blob_id, boolean segmented) throws GDSException {
         try
         {
@@ -904,6 +1049,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
+    /**
+     * Create a new blob within the current transaction.
+     *
+     * @param segmented If <code>true</code> the blob will be segmented,
+     *        otherwise it will be streamed
+     * @throws GDSException if a Firebird-specific database error occurs
+     */
     public isc_blob_handle createBlobHandle(boolean segmented) throws GDSException {
         try
         {
@@ -926,6 +1078,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
+    /**
+     * Get a segment from a blob.
+     *
+     * @param blob Handle to the blob from which the segment is to be fetched
+     * @param len The maximum length to fetch
+     * @throws GDSException if a Firebird-specific database access error occurs
+     */
     public byte[] getBlobSegment(isc_blob_handle blob, int len) throws GDSException {
         try
         {
@@ -939,6 +1098,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
+    /**
+     * Close a blob that has been opened within the database.
+     *
+     * @param blob Handle to the blob to be closed
+     * @throws GDSException if a Firebird-specific database access error occurs
+     */
     public void closeBlob(isc_blob_handle blob) throws GDSException {
         try
         {
@@ -952,6 +1117,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
+    /**
+     * Write a segment of data to a blob.
+     *
+     * @param blob handle to the blob to which data will be written
+     * @param buf segment of data to be written to the blob
+     * @throws GDSException if a Firebird-specific database access error occurs
+     */
     public void putBlobSegment(isc_blob_handle blob, byte[] buf) throws GDSException {
         try
         {
@@ -965,6 +1137,14 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
+    /**
+     * Fetch the count information for a statement handle. The count
+     * information that is updated includes the counts for update, insert,
+     * delete and select, and it is set in the handle itself.
+     *
+     * @param stmt handle to the statement for which counts will be fetched
+     * @throws GDSException if a Firebird-specific database access error occurs
+     */
     public void getSqlCounts(isc_stmt_handle stmt) throws GDSException {
         try
         {
@@ -977,48 +1157,129 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } // end of catch
 
     }
+    
     //for DatabaseMetaData.
+
+    /**
+     * Get the name of the database product that we're connected to.
+     * 
+     * @return The database product name (i.e. Firebird or Interbase)
+     */
     public String getDatabaseProductName() {
         /**@todo add check if mc is not null */
         return currentDbHandle.getDatabaseProductName();
     }
 
+    /**
+     * Get the version of the the database that we're connected to
+     * 
+     * @return the database product version
+     */
     public String getDatabaseProductVersion() {
         /**@todo add check if mc is not null */
         return currentDbHandle.getDatabaseProductVersion();
     }
 
+    /**
+     * Get the major version number of the database that we're connected to.
+     *
+     * @return The major version number of the database
+     */
     public int getDatabaseProductMajorVersion() {
         /**@todo add check if mc is not null */
         return currentDbHandle.getDatabaseProductMajorVersion();
     }
 
+    /**
+     * Get the minor version number of the database that we're connected to.
+     *
+     * @return The minor version number of the database
+     */
     public int getDatabaseProductMinorVersion() {
         /**@todo add check if mc is not null */
         return currentDbHandle.getDatabaseProductMinorVersion();
     }
 
+    /**
+     * Get the name of the database that we're connected to.
+     *
+     * @return The name of the database involved in this connection
+     */
     public String getDatabase() {
         return mcf.getDatabase();
     }
 
+    /**
+     * Get the database login name of the user that we're connected as.
+     *
+     * @return The username of the current database user
+     */
     public String getUserName()
     {
         return cri.getUser();
     }
 
+    /**
+     * Get the transaction isolation level of this connection. The level is
+     * one of the static final fields of <code>java.sql.Connection</code> (i.e.
+     * <code>TRANSACTION_READ_COMMITTED</code>, 
+     * <code>TRANSACTION_READ_UNCOMMITTED</code>,
+     * <code>TRANSACTION_REPEATABLE_READ</code>,
+     * <code>TRANSACTION_SERIALIZABLE</code>.
+     *
+     * @see java.sql.Connection
+     * @see setTransactionIsolation
+     * @return Value representing a transaction isolation level defined
+     *         in {@link java.sql.Connection}.
+     * @throws ResourceException If the transaction level cannot be retrieved
+     */
     public int getTransactionIsolation() throws ResourceException {
         return tpb.getTransactionIsolation();
     }
 
+    /**
+     * Set the transaction level for this connection. The level is one of the 
+     * static final fields of <code>java.sql.Connection</code> (i.e.
+     * <code>TRANSACTION_READ_COMMITTED</code>, 
+     * <code>TRANSACTION_READ_UNCOMMITTED</code>,
+     * <code>TRANSACTION_REPEATABLE_READ</code>,
+     * <code>TRANSACTION_SERIALIZABLE</code>.
+     *
+     * @see java.sql.Connection
+     * @see getTransactionIsolation
+     * @param isolation Value representing a transaction isolation level 
+     *        defined in {@link java.sql.Connection}.
+     * @throws ResourceException If the transaction level cannot be retrieved
+     */
     public void setTransactionIsolation(int isolation) throws ResourceException {
         tpb.setTransactionIsolation(isolation);
     }
 
+    /**
+     * Get the name of the current transaction isolation level for this
+     * connection.
+     *
+     * @see getTransactionIsolation
+     * @see setTransactionIsolationName
+     * @return The name of the current transaction isolation level
+     * @throws ResourceException If the transaction level cannot be retrieved
+     */
     public String getTransactionIsolationName() throws ResourceException {
         return tpb.getTransactionIsolationName();
     }
 
+    /**
+     * Set the current transaction isolation level for this connection by name 
+     * of the level. The transaction isolation name must be one of the
+     * TRANSACTION_* static final fields in {@link org.firebirdsql.jca.FBTpb}.
+     *
+     * @see getTransactionIsolationName
+     * @see FBTpb
+     * @param isolation The name of the transaction isolation level to be set
+     * @throws ResourceException if the transaction isolation level cannot be
+     *         set to the requested level, or if <code>isolation</code> is not
+     *         a valid transaction isolation name
+     */
     public void setTransactionIsolationName(String isolation) throws ResourceException {
         tpb.setTransactionIsolationName(isolation);
     }
@@ -1039,20 +1300,41 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         tpb.setIscTransactionIsolation(isolation);
     }
 
+    /**
+     * Set whether this connection is to be readonly 
+     *
+     * @param readOnly If <code>true</code>, the connection will be set 
+     *        read-only, otherwise it will be writable
+     */
     public void setReadOnly(boolean readOnly) {
         tpb.setReadOnly(readOnly);
     }
 
+    /**
+     * Retrieve whether this connection is readonly.
+     *
+     * @return <code>true</code> if this connection is readonly, 
+     *         <code>false</code> otherwise
+     */
     public boolean isReadOnly() {
         return tpb.isReadOnly();
     }
 
-
+    /**
+     * Get the buffer length for blobs for this connection.
+     *
+     * @return The length of blob buffers 
+     */
     public Integer getBlobBufferLength()
     {
         return mcf.getBlobBufferLength();
     }
 
+    /**
+     * Get the encoding used for this connection.
+     *
+     * @return The name of the encoding used
+     */
     public String getIscEncoding() {
         try {
             String result = cri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);

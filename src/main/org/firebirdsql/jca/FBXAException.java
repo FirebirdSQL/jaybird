@@ -35,14 +35,33 @@ public class FBXAException extends XAException {
         super();
     }
 
+    /**
+     * Create a new instance of <code>FBXAException</code> with a given 
+     * message.
+     *
+     * @param msg The string message for this exception
+     */
     public FBXAException(String msg) {
         super(msg);
     }
 
+    /**
+     * Create a new instance of <code>FBXAException</code> based around
+     * a specific error code.
+     *
+     * @param errorCode The error code for this exception
+     */
     public FBXAException(int errorCode) {
         super(errorCode);
     }
     
+    /**
+     * Create a new instance of <code>FBXAException</code> based around
+     * a message and specific error code.
+     *
+     * @param msg The string message for this exception
+     * @param errorCode The error code for this exception
+     */
     public FBXAException(String msg, int errorCode) {
         this(msg);
         
@@ -51,6 +70,13 @@ public class FBXAException extends XAException {
 
     private Exception reason;
     
+    /**
+     * Create a new instance of <code>FBXAException</code> wrapped around
+     * an underlying exception.
+     *
+     * @param errorCode The error code for this exception
+     * @param reason The underlying exception
+     */
     public FBXAException(int errorCode, Exception reason) {
         this(errorCode);
         
@@ -75,10 +101,18 @@ public class FBXAException extends XAException {
     }
 
 
+    /** Print a stack trace for this exception to <code>STDERR</code>. */
     public void printStackTrace() {
         printStackTrace(System.err);
     }
 
+    /**
+     * Print a stack trace for this exception with a 
+     * given <code>PrintStream</code>.
+     *
+     * @param s The <code>PrintStream</code> to which the stack trace will
+     *        be written
+     */
     public void printStackTrace(PrintStream s) {
         super.printStackTrace(s);
         if (reason != null) {
@@ -87,6 +121,13 @@ public class FBXAException extends XAException {
         }
     }
 
+    /**
+     * Print a stack trace for this exception with a 
+     * given <code>PrintWriter</code>.
+     *
+     * @param s The <code>PrintWriter</code> to which the stack trace will
+     *        be written
+     */
     public void printStackTrace(PrintWriter s) {
         super.printStackTrace(s);
         if (reason != null) {
