@@ -714,10 +714,32 @@ public class GDS_Impl implements GDS {
                                           XSQLDA xsqlda) throws GDSException {
         isc_dsql_exec_immed2(db_handle, tr_handle, statement, dialect, xsqlda, null);
     }
+    
+    public void isc_dsql_execute_immediate(isc_db_handle db_handle,
+                                          isc_tr_handle tr_handle,
+                                          String statement,
+                                          String encoding,
+                                          int dialect,
+                                          XSQLDA xsqlda) throws GDSException {
+        isc_dsql_exec_immed2(db_handle, tr_handle, statement, 
+            "NONE", dialect, xsqlda, null);
+    }
+
 
     public void isc_dsql_exec_immed2(isc_db_handle db_handle,
                                     isc_tr_handle tr_handle,
                                     String statement,
+                                    int dialect,
+                                    XSQLDA in_xsqlda,
+                                    XSQLDA out_xsqlda) throws GDSException {
+        isc_dsql_exec_immed2(db_handle, tr_handle, 
+            statement, "NONE", dialect, in_xsqlda, out_xsqlda);
+    }
+
+    public void isc_dsql_exec_immed2(isc_db_handle db_handle,
+                                    isc_tr_handle tr_handle,
+                                    String statement,
+                                    String encoding,
                                     int dialect,
                                     XSQLDA in_xsqlda,
                                     XSQLDA out_xsqlda) throws GDSException {
@@ -755,7 +777,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(tr.getTransactionId());
                 db.out.writeInt(0);
                 db.out.writeInt(dialect);
-                db.out.writeString(statement);
+                db.out.writeString(statement, encoding);
                 db.out.writeString("");
                 db.out.writeInt(0);
                 db.out.flush();            
@@ -908,10 +930,18 @@ public class GDS_Impl implements GDS {
 
     }
 
+    public XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
+                                isc_stmt_handle stmt_handle,
+                                String statement,
+                                int dialect/*,
+                                 xsqlda*/) throws GDSException {
+        return isc_dsql_prepare(tr_handle, stmt_handle, statement, "NONE", dialect);
+    }
 
     public XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
                                 isc_stmt_handle stmt_handle,
                                 String statement,
+                                String encoding,
                                 int dialect/*,
                                  xsqlda*/) throws GDSException {
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
@@ -951,7 +981,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(tr.getTransactionId());
                 db.out.writeInt(stmt.rsr_id);
                 db.out.writeInt(dialect);
-                db.out.writeString(statement);
+                db.out.writeString(statement, encoding);
                 db.out.writeBuffer(sql_prepare_info, sql_prepare_info.length);
                 db.out.writeInt(MAX_BUFFER_SIZE);
                 db.out.flush();            
