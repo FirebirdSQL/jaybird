@@ -57,6 +57,7 @@ public class PingablePooledConnection implements PooledConnection,
     private int pingInterval = 0;
     
     private int maxStatements;
+    private boolean keepStatements;
 
     private boolean supportsStatementsAccrossCommit;
     private boolean supportsStatementsAccrossRollback;
@@ -73,13 +74,14 @@ public class PingablePooledConnection implements PooledConnection,
     protected PingablePooledConnection(Connection connection, 
                                        boolean statementPooling, 
                                        int transactionIsolation,
-                                       int maxStatements) 
+                                       int maxStatements, boolean keepStatements) 
         throws SQLException 
     {
         this.jdbcConnection = connection;
         this.statementPooling = statementPooling;
         this.transactionIsolation = transactionIsolation;
         this.maxStatements = maxStatements;
+        this.keepStatements = keepStatements;
 
         this.supportsStatementsAccrossCommit =
             connection.getMetaData().supportsOpenStatementsAcrossCommit();
@@ -103,10 +105,10 @@ public class PingablePooledConnection implements PooledConnection,
 
     protected PingablePooledConnection(Connection connection,
         String pingStatement, int pingInterval, boolean statementPooling, 
-        int transactionIsolation, int maxStatements) 
+        int transactionIsolation, int maxStatements, boolean keepStatements) 
         throws SQLException 
     {
-        this(connection, statementPooling, transactionIsolation, maxStatements);
+        this(connection, statementPooling, transactionIsolation, maxStatements, keepStatements);
         this.pingStatement = pingStatement;
         this.pingInterval = pingInterval;
     }
@@ -119,6 +121,10 @@ public class PingablePooledConnection implements PooledConnection,
         return statementPooling;
     }
 
+    public boolean isKeepStatements() {
+        return keepStatements;
+    }
+    
     /**
      * Ping connection by executing a ping statement.
      */
@@ -449,7 +455,8 @@ public class PingablePooledConnection implements PooledConnection,
                 "Notified about a connection that is not under my control.");
         }
 
-        //cleanCache();
+        if (!keepStatements)
+            cleanCache();
 
         currentConnection = null;
 

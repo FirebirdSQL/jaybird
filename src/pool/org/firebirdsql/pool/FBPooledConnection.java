@@ -97,11 +97,11 @@ class FBPooledConnection extends PingablePooledConnection
      */
     public FBPooledConnection(FBManagedConnection managedConnection, 
         FBConnectionRequestInfo cri, boolean statementPooling, 
-        int transactionIsolation, int maxStatements) 
+        int transactionIsolation, int maxStatements, boolean keepStatements) 
         throws SQLException, ResourceException 
     {
         super((Connection)managedConnection.getConnection(null, cri), 
-            statementPooling, transactionIsolation, maxStatements);
+            statementPooling, transactionIsolation, maxStatements, keepStatements);
         
         this.managedConnection = managedConnection;
         this.cri = cri;
@@ -125,12 +125,13 @@ class FBPooledConnection extends PingablePooledConnection
      */
     protected FBPooledConnection(FBManagedConnection managedConnection, 
         FBConnectionRequestInfo cri, String pingStatement, int pingInterval, 
-        boolean statementPooling, int transactionIsolation, int maxStatements) 
+        boolean statementPooling, int transactionIsolation, int maxStatements, 
+        boolean keepStatements) 
         throws SQLException, ResourceException 
     {
         super((Connection)managedConnection.getConnection(null, cri), 
             pingStatement, pingInterval, statementPooling, transactionIsolation, 
-            maxStatements);
+            maxStatements, keepStatements);
         
         this.managedConnection = managedConnection;
         this.cri = cri;
