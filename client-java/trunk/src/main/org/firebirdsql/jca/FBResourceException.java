@@ -52,12 +52,12 @@ public class FBResourceException extends ResourceException {
     }
 
     public FBResourceException(String string, Exception original) {
-        super(string, original);
+        super(string, original.getMessage());
         this.original = original;
     }
 
     public FBResourceException(Exception original) {
-        super(original);
+        super(original.getMessage());
         this.original = original;
     }
     
