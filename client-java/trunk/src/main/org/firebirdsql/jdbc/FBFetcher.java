@@ -94,6 +94,20 @@ interface FBFetcher {
     boolean relative(int row) throws SQLException;    
     
     /**
+     * Move cursor before first record.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    void beforeFirst() throws SQLException;
+    
+    /**
+     * Move cursor after last record.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    void afterLast() throws SQLException;
+    
+    /**
      * Close this fetcher and corresponding result set.
      * 
      * @throws SQLException if something went wrong.

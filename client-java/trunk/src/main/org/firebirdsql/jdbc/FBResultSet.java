@@ -824,7 +824,8 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void beforeFirst() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        checkCursorMove();
+        fbFetcher.beforeFirst();
     }
 
 
@@ -839,7 +840,8 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void afterLast() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        checkCursorMove();
+        fbFetcher.afterLast();
     }
 
 

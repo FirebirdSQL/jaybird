@@ -153,6 +153,13 @@ class FBStatementFetcher implements FBFetcher {
         throw new FBDriverNotCapableException();
     }
     
+    public void beforeFirst() throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+    
+    public void afterLast() throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
     public void fetch() throws SQLException {
         int maxRows = 0;
         
