@@ -688,6 +688,7 @@ public class FBManagedConnectionFactory
             }
             stmts.clear();
         }
+        TransactionStatementMap.remove(tr);
     }
 
     //Serialization support
