@@ -20,7 +20,6 @@ package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 import java.util.*;
-import java.util.List;
 
 /**
  * Represents procedure call.
@@ -39,10 +38,33 @@ public class FBProcedureCall {
         this.name = name;
     }
     
-    public FBProcedureParam getParam(int index) {
+    /**
+     * Get input parameter by the specified index.
+     * 
+     * @param index index for which parameter has to be returned.
+     * 
+     * @return instance of {@link FBProcedureParam}.
+     */
+    public FBProcedureParam getInputParam(int index) {
+        return getParam(inputParams, index);
+    }
+    
+    public FBProcedureParam getOutputParam(int index) {
+        return getParam(outputParams, index);    
+    }
+    
+    /**
+     * Get parameter with the specified index from the specified collection.
+     * 
+     * @param params collection containing parameters.
+     * @param index index for which parameter has to be found.
+     * 
+     * @return instance of {@link FBProcedureParam}.
+     */
+    private FBProcedureParam getParam(Collection params, int index) {
         int counter = 0;
         
-        Iterator iter = inputParams.iterator();
+        Iterator iter = params.iterator();
         while(iter.hasNext()) {
             FBProcedureParam param = (FBProcedureParam)iter.next();
             
@@ -53,22 +75,56 @@ public class FBProcedureCall {
         return NullParam.NULL_PARAM;
     }
     
-    public List getInputParams() {
-        return inputParams;
+    /**
+     * Map output parameter index to a column number of corresponding result 
+     * set.
+     * 
+     * @param index index to map.
+     * 
+     * @return mapped column number or <code>-1</code> if no output parameter
+     * with the specified index found.
+     */
+    public int mapOutParamIndexToPosition(int index) {
+    	int position = -1;
+        
+        Iterator iter = outputParams.iterator();
+        while(iter.hasNext()) {
+        	FBProcedureParam param = (FBProcedureParam)iter.next();
+            
+            if (param != null && param.isParam()) {
+               position++;
+               
+               if (param.getIndex() == index)
+               	    return position + 1;
+            }
+        }
+        
+        return position;
     }
     
-    public List getOutputParams() {
-        return outputParams;
+    public List getInputParams() {
+    	return inputParams;
     }
     
     public void addInputParam(FBProcedureParam param) {
-        inputParams.add(param);
+    	inputParams.add(param);
     }
     
     public void addOutputParam(FBProcedureParam param) {
-        outputParams.add(param);
+    	outputParams.add(param);
     }
     
+    /**
+     * Add call parameter. This method adds new parameter to the procedure call
+     * and tries to automatically place the parameter into the right collection
+     * if it contains a hint whether it is input or output parameter.
+     * 
+     * @param position position of the parameter in the procedure call.
+     * @param param contents of the parameter.
+     * 
+     * @return instance of the {@link FBProcedureParam} that was created to
+     * represent this parameter.
+     */
     public FBProcedureParam addParam(int position, String param) {
         param = param.trim();
         
@@ -90,7 +146,6 @@ public class FBProcedureCall {
             {
                 param = param.substring(2).trim();
             }
-            
         }
         
         FBProcedureParam callParam = 
@@ -109,16 +164,26 @@ public class FBProcedureCall {
         return callParam;
     }
     
+    /**
+     * Register output parameter. This method marks parameter with the specified
+     * index as output. Parameters marked as output cannot be used as input 
+     * parameters.
+     * 
+     * @param index index of the parameter to mark as output.
+     * @param type SQL type of the parameter.
+     * 
+     * @throws SQLException if something went wrong.
+     */
     public void registerOutParam(int index, int type) throws SQLException {
-        FBProcedureParam param = getParam(index);
+        FBProcedureParam param = getInputParam(index);
         
-//        if (param == null) {
-//            param = (FBProcedureParam)outputParams.get(position);
-//        } else {
-            outputParams.ensureCapacity(param.getPosition() + 1);
+        if (param == null)
+            param = getOutputParam(index);
+        else {
+            outputParams.setSize(param.getPosition() + 1);
             outputParams.set(param.getPosition(), param);
             inputParams.remove(param.getPosition());
-//        }
+        }
         
         if (param == null)
             throw new FBSQLException(
@@ -128,6 +193,11 @@ public class FBProcedureCall {
         param.setType(type);
     }
     
+    /**
+     * Get native SQL for the specified procedure call.
+     * 
+     * @return native SQL that can be executed by the database server.
+     */
     public String getSQL() {
         StringBuffer sb = new StringBuffer();
         sb.append(AbstractCallableStatement.NATIVE_CALL_COMMAND);
@@ -156,6 +226,12 @@ public class FBProcedureCall {
         return sb.toString();
     }
     
+    /**
+     * Check if <code>obj</code> is equal to this instance.
+     * 
+     * @return <code>true</code> iff <code>obj</code> is instance of this class
+     * representing the same procedure with the same parameters.
+     */
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (!(obj instanceof FBProcedureCall)) return false;
@@ -171,6 +247,12 @@ public class FBProcedureCall {
         return result;
     }
     
+    /**
+     * This class defines procedure parameter that does not have any value
+     * and value of which cannot be set. It is created in order to avoid NPE
+     * when {@link FBProcedureCall#getInputParam(int)} does not find correct
+     * parameter.
+     */
     private static final class NullParam extends FBProcedureParam {
         
         private static final NullParam NULL_PARAM = new NullParam();
@@ -181,5 +263,5 @@ public class FBProcedureCall {
                     FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
         }
 
-}
+    }
 }
