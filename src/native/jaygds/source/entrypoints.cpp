@@ -47,6 +47,8 @@ JClassBinding  sInternalErrorClassBinding;
 JClassBinding  sOutOfMemoryErrorClassBinding;
 
 
+
+
 void EnsureJavaExceptionIssued(JNIEnv * javaEnvironment, InternalException& exception)
 	{
 	if( javaEnvironment->ExceptionCheck() == false ) 
@@ -90,30 +92,35 @@ void MaybeIssueOutOfMemory(JNIEnv * javaEnvironment, std::bad_alloc& badAlloc)
 										} 
 
 
+// A hack to ensure that nativeInitilize can be called multiple times
+// until a client library is located.
+bool sHasMostInitilizationBeenDone = false;
 
 JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_nativeInitilize
- 
   (JNIEnv *javaEnvironment, jobject jThis, jstring firebirdDllName)
 	{
 	try
 		{
+		if(sHasMostInitilizationBeenDone == false)
+			{
+			// Todo : If these fail then the exception handling for this method will not work.
+			sInternalErrorClassBinding    = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/InternalError" );
+			sOutOfMemoryErrorClassBinding = JClassBinding( javaEnvironment, "java/lang/OutOfMemoryError" );
 
-		// Todo : If these fail then the exception handling for this method will not work.
-		sInternalErrorClassBinding    = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/InternalError" );
-		sOutOfMemoryErrorClassBinding = JClassBinding( javaEnvironment, "java/lang/OutOfMemoryError" );
+			JIscDatabaseHandle::Initilize(javaEnvironment);
+			JIscTransactionHandle::Initilize(javaEnvironment);
+			JIscStatementHandle::Initilize(javaEnvironment);
+			JIscBlobHandle::Initilize(javaEnvironment);
+			JXSqlda::Initilize(javaEnvironment);
+			FirebirdStatusVector::Initilize(javaEnvironment);
 
-		JIscDatabaseHandle::Initilize(javaEnvironment);
-		JIscTransactionHandle::Initilize(javaEnvironment);
-		JIscStatementHandle::Initilize(javaEnvironment);
-		JIscBlobHandle::Initilize(javaEnvironment);
-		JXSqlda::Initilize(javaEnvironment);
-		FirebirdStatusVector::Initilize(javaEnvironment);
+			sHasMostInitilizationBeenDone = true;
+			}
 
 		JString fileName( javaEnvironment, firebirdDllName );
 		FirebirdApiBinding::Load(fileName.AsCString());
 		}
 	JNI_ENTRYPOINT_CATCH_BLOCK
-
 	}
 
 JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1create_1database
