@@ -104,6 +104,16 @@ public abstract class AbstractCallableStatement
         procedureCall = parser.parseCall(c.nativeSQL(sql));
     }
     
+    public void addBatch() throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+    public void clearBatch() throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+    public int[] executeBatch() throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+    
     /**
      * Set required types for output parameters.
      * 
