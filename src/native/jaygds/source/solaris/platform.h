@@ -17,36 +17,14 @@
  * All rights reserved.
  */
 
-#include "platform.h"
+// stdafx.h : include file for standard system include files,
+//  or project specific include files that are used frequently, but
+//      are changed infrequently
+//
 
-#include "exceptions.h"
-
-#include <stdio.h>
-
-
-// InternalException -------------------------------------------------------------------
-
-/*
- *
- *
- */
-InternalException::InternalException(const char* const message, ... )
-	{
-	va_list args;
-
-	va_start(args, message);
-	_vsnprintf( mBuffer, sizeof(mBuffer), message, args );
-	va_end(args);
-	}
-
-/*
- *
- *
- */
-const char* InternalException::getMessage()
-	{
-	return mBuffer;
-	}
+#if !defined(AFX_STDAFX_H__5F99A579_2606_4470_AAFE_5921F6EC9270__INCLUDED_)
+#define AFX_STDAFX_H__5F99A579_2606_4470_AAFE_5921F6EC9270__INCLUDED_
 
 
 
+#endif // !defined(AFX_STDAFX_H__5F99A579_2606_4470_AAFE_5921F6EC9270__INCLUDED_)

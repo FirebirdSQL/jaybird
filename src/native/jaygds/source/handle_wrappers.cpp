@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
+#include "platform.h"
 
 #include "handle_wrappers.h"
 
