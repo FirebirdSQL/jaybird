@@ -157,7 +157,14 @@ abstract class FBField {
                 return (type == Types.ARRAY);
 
             case GDS.SQL_BLOB :
-                return (type == Types.BLOB);
+                if (field.sqlsubtype < 0)
+                    return (type == Types.BLOB);
+                if (field.sqlsubtype == 1)
+                    return (type == Types.LONGVARCHAR);
+                else
+                    return (type == Types.LONGVARBINARY) ||
+                           (type == Types.VARBINARY) ||
+                           (type == Types.BINARY);
 
             case GDS.SQL_D_FLOAT :
                 return false; // not supported right now
@@ -219,7 +226,8 @@ abstract class FBField {
                 return  (type == Types.BLOB) ||
                         (type == Types.BINARY) ||
                         (type == Types.VARBINARY) ||
-                        (type == Types.LONGVARBINARY)
+                        (type == Types.LONGVARBINARY) ||
+                        (type == Types.LONGVARCHAR)
                         ;
 
             // unfortunatelly we do not know the SQL correspondence to these type
@@ -315,7 +323,7 @@ abstract class FBField {
         if (isType(field, Types.TIMESTAMP))
             return new FBTimestampField(field);
         else
-        if (isType(field, Types.BLOB))
+        if (isType(field, Types.BLOB) || isType(field, Types.LONGVARBINARY))
             return new FBBlobField(field);
         else
             throw (SQLException)createException(

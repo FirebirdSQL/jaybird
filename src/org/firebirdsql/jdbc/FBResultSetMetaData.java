@@ -395,6 +395,9 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                 else
                     return Types.NUMERIC;
             case GDS.SQL_BLOB: 
+                if (sqlsubtype < 0)
+                    return Types.BLOB;
+                else
                 if (sqlsubtype == 1)
                     return Types.LONGVARCHAR;
                 else
