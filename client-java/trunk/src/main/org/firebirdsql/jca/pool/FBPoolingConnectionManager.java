@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jca;
+package org.firebirdsql.jca.pool;
 
 /**
  * FBPoolingConnectionManager.java
@@ -38,6 +38,8 @@ import javax.resource.spi.ConnectionManager;
 import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
+
+import org.firebirdsql.jca.FBResourceException;
 
 public class FBPoolingConnectionManager
    implements ConnectionManager 

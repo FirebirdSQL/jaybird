@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jca;
+package org.firebirdsql.jca.pool;
 
 import java.util.ArrayList;
 import java.util.Collection;
