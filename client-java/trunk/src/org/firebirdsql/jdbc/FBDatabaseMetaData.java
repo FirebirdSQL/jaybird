@@ -1808,7 +1808,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (tables == null) {
             tables = c.prepareStatement("select null as TABLE_CAT, null as TABLE_SCHEM, RDB$RELATION_NAME as TABLE_NAME, 'TABLE' as TABLE_TYPE, 'you want a comment?' as REMARKS from RDB$RELATIONS where RDB$RELATION_NAME = ?");
         }
-        tables.setString(1, tableNamePattern);
+        tables.setString(1, tableNamePattern.toUpperCase());
         tables.execute();
         ResultSet rs = ((FBStatement)tables).getCachedResultSet();
         if (ourTransaction) {

@@ -64,6 +64,13 @@ public class TestFBBlob extends TestXABase {
         t = c.getLocalTransaction();
         t.begin();
         try {
+            s.execute("drop table T1");
+            t.commit();
+            t.begin();
+        }
+        catch (Exception e) {
+        }
+        try {
             s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 BLOB)"); 
             //s.close();
         }

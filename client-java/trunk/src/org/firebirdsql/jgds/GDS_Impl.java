@@ -754,6 +754,7 @@ public class GDS_Impl implements GDS {
                     } while (sqldata_messages > 0 && sqldata_status == 0);
                     
                     if (sqldata_status == 100) {
+                        System.out.println("all rows successfully fetched");
                         stmt.allRowsFetched = true;
                     }
                     

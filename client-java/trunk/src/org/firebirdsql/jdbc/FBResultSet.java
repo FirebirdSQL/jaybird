@@ -260,6 +260,8 @@ public class FBResultSet implements ResultSet {
     private Object[] row = null;
     
     private int rowNum = 0;
+
+    private int wasNullColumnIndex = -1;
     
     FBResultSet(FBManagedConnection mc, FBStatement fbstatement, isc_stmt_handle stmt) {
         fbFetcher = new FBStatementFetcher(mc, fbstatement, stmt);
@@ -342,7 +344,13 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public boolean wasNull() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        if (wasNullColumnIndex == -1) {
+            throw new SQLException("look at a column before testing null!");
+        }
+        if (row == null) {
+            throw new SQLException("No row available for wasNull!");
+        }
+        return row[wasNullColumnIndex - 1] == null;
     }
 
     
@@ -365,6 +373,10 @@ public class FBResultSet implements ResultSet {
              &&((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_VARYING)) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
+        setWasNullColumnIndex(columnIndex);
+        if (wasNull()) {
+            return null;
+        }
         return new String((byte[])row[columnIndex - 1]);
         //return (String)row[columnIndex - 1];
     }
@@ -381,6 +393,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public boolean getBoolean(int columnIndex) throws  SQLException {
+        setWasNullColumnIndex(columnIndex);
                 throw new SQLException("Not yet implemented");
     }
 
@@ -396,6 +409,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public byte getByte(int columnIndex) throws  SQLException {
+        setWasNullColumnIndex(columnIndex);
                 throw new SQLException("Not yet implemented");
     }
 
@@ -414,6 +428,7 @@ public class FBResultSet implements ResultSet {
         if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_SHORT) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
+        setWasNullColumnIndex(columnIndex);
         if (row[columnIndex - 1] == null) {
             return 0;
         }
@@ -435,6 +450,7 @@ public class FBResultSet implements ResultSet {
         if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_LONG) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
+        setWasNullColumnIndex(columnIndex);
         if (row[columnIndex - 1] == null) {
             return 0;
         }
@@ -456,6 +472,7 @@ public class FBResultSet implements ResultSet {
         if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_INT64) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
+        setWasNullColumnIndex(columnIndex);
         if (row[columnIndex - 1] == null) {
             return 0;
         }
@@ -477,6 +494,7 @@ public class FBResultSet implements ResultSet {
         if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_FLOAT) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
+        setWasNullColumnIndex(columnIndex);
         if (row[columnIndex - 1] == null) {
             return 0;
         }
@@ -498,6 +516,7 @@ public class FBResultSet implements ResultSet {
         if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_DOUBLE) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
+        setWasNullColumnIndex(columnIndex);
         if (row[columnIndex - 1] == null) {
             return 0;
         }
@@ -521,6 +540,7 @@ public class FBResultSet implements ResultSet {
         if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_INT64) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
+        setWasNullColumnIndex(columnIndex);
         if (row[columnIndex - 1] == null) {
             return null;
         }
@@ -545,6 +565,7 @@ public class FBResultSet implements ResultSet {
              &&((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_VARYING)) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
+        setWasNullColumnIndex(columnIndex);
         return (byte[])row[columnIndex - 1];
 
     }
@@ -564,6 +585,7 @@ public class FBResultSet implements ResultSet {
         if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TYPE_DATE) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
+        setWasNullColumnIndex(columnIndex);
         if (row[columnIndex - 1] == null) {
             return null;
         }
@@ -585,6 +607,7 @@ public class FBResultSet implements ResultSet {
         if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TYPE_TIME) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
+        setWasNullColumnIndex(columnIndex);
         if (row[columnIndex - 1] == null) {
             return null;
         }
@@ -606,6 +629,7 @@ public class FBResultSet implements ResultSet {
         if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TIMESTAMP) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
+        setWasNullColumnIndex(columnIndex);
         if (row[columnIndex - 1] == null) {
             return null;
         }
@@ -637,7 +661,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public InputStream getAsciiStream(int columnIndex) throws  SQLException {
-       return getBinaryStream(columnIndex);
+        return getBinaryStream(columnIndex);
     }
 
 
@@ -669,7 +693,7 @@ public class FBResultSet implements ResultSet {
 	 *              <code>getUnicodeStream</code>
      */
     public InputStream getUnicodeStream(int columnIndex) throws  SQLException {
-       return getBinaryStream(columnIndex);
+        return getBinaryStream(columnIndex);
     }
 
 
@@ -695,7 +719,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public InputStream getBinaryStream(int columnIndex) throws  SQLException {
-       return getBlob(columnIndex).getBinaryStream();
+        return getBlob(columnIndex).getBinaryStream();
     }
 
 
@@ -837,8 +861,8 @@ public class FBResultSet implements ResultSet {
      * @deprecated
      */
     public BigDecimal getBigDecimal(String columnName, int scale) throws  SQLException {
-       return getBigDecimal(findColumn(columnName), scale);
-     }
+        return getBigDecimal(findColumn(columnName), scale);
+    }
 
 
     /**
@@ -899,7 +923,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public java.sql.Timestamp getTimestamp(String columnName) throws  SQLException {
-       return getTimestamp(findColumn(columnName));
+        return getTimestamp(findColumn(columnName));
     }
 
 
@@ -956,7 +980,7 @@ public class FBResultSet implements ResultSet {
      * @deprecated
      */
     public java.io.InputStream getUnicodeStream(String columnName) throws  SQLException {
-       return getUnicodeStream(findColumn(columnName));
+        return getUnicodeStream(findColumn(columnName));
     }
 
 
@@ -1097,6 +1121,7 @@ public class FBResultSet implements ResultSet {
         if (row == null) {
             throw new SQLException("No row fetched");
         }
+        setWasNullColumnIndex(columnIndex);
         return row[columnIndex - 1];
     }
 
@@ -1221,6 +1246,7 @@ public class FBResultSet implements ResultSet {
         if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_INT64) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
+        setWasNullColumnIndex(columnIndex);
         if (row[columnIndex - 1] == null) {
             return null;
         }
@@ -1398,7 +1424,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public int getRow() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+       return rowNum;
     }
 
 
@@ -2719,6 +2745,7 @@ public class FBResultSet implements ResultSet {
         if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_BLOB) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
+        setWasNullColumnIndex(columnIndex);
         if (row[columnIndex - 1] == null) {
             return null;
         }
@@ -3199,6 +3226,9 @@ public class FBResultSet implements ResultSet {
         }
     }
 
+    private void setWasNullColumnIndex(int columnIndex) {
+        wasNullColumnIndex = columnIndex;
+    }
 
 }
 

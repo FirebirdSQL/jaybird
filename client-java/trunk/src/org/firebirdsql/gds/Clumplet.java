@@ -36,6 +36,10 @@ public interface Clumplet {
     public void append(Clumplet c);
     
     public int getLength();
+
+    public boolean equals(Object o);
+
+    public int hashCode();
     
 //    public void write(OutputStream out) throws IOException;
     

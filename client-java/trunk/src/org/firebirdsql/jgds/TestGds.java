@@ -438,7 +438,7 @@ public class TestGds extends TestCase {
         dropDatabase(db1);   
     }
     
-    public void testZZZCreateAndWriteBlob() throws Exception {
+    public void testCreateAndWriteBlob() throws Exception {
       /*        byte[] testbuf = new byte[1024];
 	for (int i = 0; i < 1024; i++) {
 	    testbuf[i] = (byte)i;
@@ -508,7 +508,7 @@ public class TestGds extends TestCase {
 	teardownTable2(db1);
 	//        dropDatabase(db1);   
     }
-    public void testZZZCreateAndWriteBlobStream() throws Exception {
+    public void testCreateAndWriteBlobStream() throws Exception {
         byte[] a = new String("a").getBytes();
         byte[] testbuf = new byte[500];
 	for (int i = 0; i < 500; i++) {
@@ -587,14 +587,14 @@ public class TestGds extends TestCase {
 	//        dropDatabase(db1);   
     }
 
-    public void testZZZCreateAndWriteBlobStreamInPieces() throws Exception {
+    public void testCreateAndWriteBlobStreamInSegmentedPieces() throws Exception {
         byte[] a = new String("a").getBytes();
         byte[] testbuf = new byte[64];//33];//1024];
 	for (int i = 0; i < 64; i++) {
 	    testbuf[i] = a[0];//(byte)i;
 	    }
         System.out.println();
-        System.out.println("testCreateAndWriteBlobStream");
+        System.out.println("testCreateAndWriteBlobStreamInSegmentedPieces");
         db1 = setupTable2();
         t1 = startTransaction(db1);
 	isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
@@ -666,13 +666,13 @@ public class TestGds extends TestCase {
 	//        dropDatabase(db1);   
     }
 
-    public void testZZZZCreateAndWriteBlobStreamInPieces() throws Exception {
+    public void testCreateAndWriteBlobStreamInStreamPieces() throws Exception {
         byte[] a = new String("a").getBytes();
         byte[] testbuf = new byte[4096];//2030];
         int reps = 10;//10000;
         Arrays.fill(testbuf, a[0]);
         System.out.println();
-        System.out.println("testCreateAndWriteBlobSegmented");
+        System.out.println("testCreateAndWriteBlobInStreamPieces");
         db1 = setupTable2();
         t1 = startTransaction(db1);
 	isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
@@ -746,7 +746,7 @@ public class TestGds extends TestCase {
 	//        dropDatabase(db1);   
     }
     
-    public void testZZReadBlob() throws Exception {
+    public void testReadBlob() throws Exception {
         System.out.println();
         System.out.println("testReadBlob");
         db1 = gds.get_new_isc_db_handle();

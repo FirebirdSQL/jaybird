@@ -244,7 +244,14 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
                                                  javax.security.auth.Subject subject,
                                                  ConnectionRequestInfo cxRequestInfo)
                                           throws ResourceException {
-        throw new ResourceException("not yet implemented");
+	Iterator i = connectionSet.iterator();
+	while (i.hasNext()) {
+	    FBManagedConnection mc = (FBManagedConnection)i.next();
+            if (mc.matches(subject, (FBConnectionRequestInfo)cxRequestInfo)) {
+                return mc;
+            }
+	}
+	return null;
     }
 
 
@@ -309,9 +316,9 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
          hash code for the ManagedConnectionFactory
 
 **/
-    public int hashCode() {
+    /*public int hashCode() {
         return 0;
-    }
+        }*/
 
 
 
@@ -324,9 +331,9 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
 **/
 
-    public boolean equals(java.lang.Object other) {
+    /* public boolean equals(java.lang.Object other) {
         return false;
-    }
+        }*/
     
     //needs synchronization!
     isc_tr_handle lookupXid(Xid xid) {
@@ -365,6 +372,11 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
     int useDbHandle(isc_db_handle db, int inc) {
         synchronized(dbHandleUsage) {
+            Integer i = (Integer)dbHandleUsage.get(db);
+            if (i == null) {
+                System.out.println("db handle not found in Usage map: " + db);
+                return 1;
+            }
             int count = ((Integer)dbHandleUsage.get(db)).intValue();
             dbHandleUsage.put(db, new Integer(count + inc));
             return count + inc;
@@ -392,12 +404,17 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     }
     
     synchronized int returnDbHandle(isc_db_handle db) {
-        freeDbHandles.addLast(db);
-        return useDbHandle(db, -1);
+        if (db != null) {
+            freeDbHandles.addLast(db);
+            return useDbHandle(db, -1);
+        }
+        else {
+            return 0;
+        }
     }
 
     synchronized void releaseDbHandle(isc_db_handle db) throws GDSException {
-        if (returnDbHandle(db) == 0) {
+        if ((db != null) && (returnDbHandle(db) == 0)) {
             dbHandleUsage.remove(db);
             freeDbHandles.remove(db);
             gds.isc_detach_database(db);
@@ -430,9 +447,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             else {
                 fbxid = new FBXid(xid);
             }
-//            gds.isc_prepare_transaction(lookupXid(xid));
             gds.isc_prepare_transaction2(lookupXid(xid), fbxid.toBytes());
-//            gds.isc_prepare_transaction2s(lookupXid(xid), xid.toString());
         }
         catch (GDSException ge) {
             ge.printStackTrace();
