@@ -391,7 +391,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         catch (GDSException ge) 
         {
             checkFatalXA(ge, committingDbHandle);
-            log.info("Fatal error committing, ", ge);
+            if (log!=null) log.info("Fatal error committing, ", ge);
             throw new XAException(XAException.XAER_RMERR);
         }
 
@@ -485,7 +485,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         catch (GDSException ge) 
         {
             checkFatalXA(ge, committingDbHandle);
-            log.info("Exception in prepare", ge);
+            if (log!=null) log.info("Exception in prepare", ge);
             throw new XAException(XAException.XAER_RMERR);
         }
         return XA_OK;
@@ -531,12 +531,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } 
         catch (SQLException sqle) 
         {
-            log.info("can't perform query to fetch xids", sqle);
+            if (log=!null) log.info("can't perform query to fetch xids", sqle);
             throw new XAException(XAException.XAER_RMFAIL);
         } // end of try-catch
         catch (ResourceException re) 
         {
-            log.info("can't perform query to fetch xids", re);
+            if (log!=null) log.info("can't perform query to fetch xids", re);
             throw new XAException(XAException.XAER_RMFAIL);
         } // end of try-catch
      }
@@ -570,7 +570,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         catch (GDSException ge) 
         {
             checkFatalXA(ge, committingDbHandle);
-            log.info("Exception in rollback", ge);
+            if (log!=null) log.info("Exception in rollback", ge);
             throw new XAException(XAException.XAER_RMERR);
         }
     }
@@ -972,7 +972,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
                 }
                 catch (GDSException ge2)
                 {
-                    log.info("Another exception killing a dead connection", ge2);
+                    if (log!=null) log.info("Another exception killing a dead connection", ge2);
                 } // end of try-catch
             } // end of if ()
             //Notify the connection manager.
