@@ -94,6 +94,10 @@ public class FBConnectionRequestInfo implements ConnectionRequestInfo, Connectio
         {
             return null;        
         } // end of if ()
+        if (c.find(type) == null) 
+        {
+            return null;        
+        } // end of if ()
         return new String(c.find(type));
     }
 
