@@ -1054,11 +1054,11 @@ public interface GDS {
                                     int type) throws GDSException;
                                    
                                    
-    void isc_dsql_sql_info(isc_stmt_handle stmt_handle,
+    byte[] isc_dsql_sql_info(isc_stmt_handle stmt_handle,
                             int item_length,
                             byte[] items,
-                            int buffer_length,
-                            byte[] buffer) throws GDSException;
+                            int buffer_length/*,
+                            byte[] buffer*/) throws GDSException;
     
     
     int isc_vax_integer(byte[] buffer, int pos, int length);
