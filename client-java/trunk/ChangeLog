@@ -1,3 +1,143 @@
+2003-11-12 23:26  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/ngds/isc_tr_handle_impl.java:
+	
+	big refactoring to restore JDK 1.3 compatibility and remove dead
+	code
+
+2003-11-12 23:14  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jca/: TestFBBlob.java,
+	TestFBDatabaseMetaData.java, TestFBResultSet.java,
+	TestFBStandAloneConnectionManager.java:
+	
+	big refactoring to restore JDK 1.3 compatibility and remove dead
+	code
+
+2003-11-12 23:01  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/:
+	field/BaseTestFBField.java, field/FBFieldResultSet.java,
+	field/TestFBDateField.java, field/TestFBDoubleField.java,
+	field/TestFBIntegerField.java, field/TestFBShortField.java,
+	field/TestFBStringField.java, field/TestFBTimeField.java,
+	BaseTestFBField.java, TestFBDateField.java, TestFBDoubleField.java,
+	TestFBFloatField.java, TestFBIntegerField.java,
+	TestFBLongField.java, TestFBShortField.java,
+	TestFBStringField.java, TestFBTimeField.java,
+	TestFBTimestampField.java, field/TestFBFloatField.java,
+	field/TestFBLongField.java, field/TestFBTimestampField.java:
+	
+	moved field tests into subpackage
+
+2003-11-12 23:00  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/:
+	TestFBParameterMetaData.java, TestFBSavepoint.java:
+	
+	moved JDBC 3.0 test cases separately to restore JDK 1.3
+	compatibility
+
+2003-11-12 22:45  rrokytskyy
+
+	* client-java/src/test_30/org/firebirdsql/jdbc/:
+	TestFBParameterMetaData.java, TestFBSavepoint.java:
+	
+	moved JDBC 3.0 test cases separately to restore JDK 1.3
+	compatibility
+
+2003-11-12 22:44  rrokytskyy
+
+	* client-java/src/jdbc_30/org/firebirdsql/jdbc/:
+	FBCallableStatement.java, FBConnection.java,
+	FBParameterMetaData.java, FBPreparedStatement.java,
+	FBSavepoint.java, FBStatement.java:
+	
+	initial revision of JDK 1.4 compatible classes
+
+2003-11-12 22:43  rrokytskyy
+
+	* client-java/src/jdbc_20/org/firebirdsql/jdbc/:
+	FBCallableStatement.java, FBConnection.java,
+	FBPreparedStatement.java, FBStatement.java:
+	
+	initial revision of JDK 1.3 compatible classes
+
+2003-11-12 22:42  rrokytskyy
+
+	*
+	
+	fixed JDK 1.3 incompatible change
+	client-java/src/test/org/firebirdsql/ngds/TestJaybirdBlobBackupProb
+	lem.java:
+
+2003-11-12 22:35  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jgds/isc_tr_handle_impl.java:
+	
+	big refactoring to restore JDK 1.3 compatibility and remove dead
+	code
+
+2003-11-12 22:30  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jca/FBLocalTransaction.java, jca/FBManagedConnection.java,
+	gds/isc_tr_handle.java:
+	
+	big refactoring to restore JDK 1.3 compatibility and remove dead
+	code
+
+2003-11-12 22:26  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/rowset/: FBRowSet.java,
+	FBRowSetMetaData.java:
+	
+	big refactoring to restore JDK 1.3 compatibility and remove dead
+	code
+
+2003-11-12 22:23  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractPreparedStatement.java, AbstractStatement.java,
+	FBBlob.java, FBCachedLongVarCharField.java,
+	FBCallableStatement.java, FBDatabaseMetaData.java,
+	FBDoubleField.java, FBDriver.java, FBFlushableField.java,
+	FBIntegerField.java, FBRef.java, FBResultSetMetaData.java,
+	FBStatement.java, FBStruct.java, FBUpdatableFetcher.java,
+	AbstractCallableStatement.java, AbstractConnection.java,
+	FBBigDecimalField.java, FBBlobField.java, FBCachedBlobField.java,
+	FBCachedFetcher.java, FBConnection.java, FBDateField.java,
+	FBEscapedParser.java, FBField.java, FBFloatField.java,
+	FBLongField.java, FBLongVarCharField.java,
+	FBParameterMetaData.java, FBPreparedStatement.java,
+	FBResultSet.java, FBSQLData.java, FBSQLInput.java,
+	FBSQLOutput.java, FBSavepoint.java, FBShortField.java,
+	FBStatementFetcher.java, FBStringField.java, FBTimeField.java,
+	FBTimestampField.java, FirebirdConnection.java,
+	FirebirdPreparedStatement.java, TypeConvertionException.java,
+	field/FBBigDecimalField.java, field/FBBlobField.java,
+	field/FBCachedBlobField.java, field/FBCachedLongVarCharField.java,
+	field/FBDateField.java, field/FBDoubleField.java,
+	field/FBField.java, field/FBFloatField.java,
+	field/FBFlushableField.java, field/FBIntegerField.java,
+	field/FBLongField.java, field/FBLongVarCharField.java,
+	field/FBShortField.java, field/FBStringField.java,
+	field/FBTimeField.java, field/FBTimestampField.java,
+	field/TypeConvertionException.java:
+	
+	big refactoring to restore JDK 1.3 compatibility and remove dead
+	code
+
+2003-11-12 22:01  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	PooledConnectionHandler.java, XPreparedStatementCache.java:
+	
+	- fixed bug that no all interfaces were discovered - fixed bug with
+	JDK 1.3 in equals() and hashCode() methods of dynamic proxy
+
 2003-11-09 15:06  ryanbaldwin
 
 	*
