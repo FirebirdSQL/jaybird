@@ -20,6 +20,7 @@ package org.firebirdsql.pool;
 
 import java.io.PrintWriter;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.resource.ResourceException;
@@ -31,6 +32,7 @@ import javax.transaction.xa.XAResource;
 import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.FirebirdStatement;
 
 
 /**
@@ -97,11 +99,11 @@ class FBPooledConnection extends PingablePooledConnection
      */
     public FBPooledConnection(FBManagedConnection managedConnection, 
         FBConnectionRequestInfo cri, boolean statementPooling, 
-        int transactionIsolation, int maxStatements) 
+        int transactionIsolation, int maxStatements, boolean keepStatements) 
         throws SQLException, ResourceException 
     {
         super((Connection)managedConnection.getConnection(null, cri), 
-            statementPooling, transactionIsolation, maxStatements);
+            statementPooling, transactionIsolation, maxStatements, keepStatements);
         
         this.managedConnection = managedConnection;
         this.cri = cri;
@@ -125,12 +127,13 @@ class FBPooledConnection extends PingablePooledConnection
      */
     protected FBPooledConnection(FBManagedConnection managedConnection, 
         FBConnectionRequestInfo cri, String pingStatement, int pingInterval, 
-        boolean statementPooling, int transactionIsolation, int maxStatements) 
+        boolean statementPooling, int transactionIsolation, int maxStatements, 
+        boolean keepStatements) 
         throws SQLException, ResourceException 
     {
         super((Connection)managedConnection.getConnection(null, cri), 
             pingStatement, pingInterval, statementPooling, transactionIsolation, 
-            maxStatements);
+            maxStatements, keepStatements);
         
         this.managedConnection = managedConnection;
         this.cri = cri;
@@ -165,4 +168,29 @@ class FBPooledConnection extends PingablePooledConnection
         }
     }
     
+    /**
+     * Notify this class that statement was closed. This method closes open 
+     * result set if there is one. Note, it works only for statements 
+     * implementing {@link FirebirdStatement} interface.
+     * 
+     * @param statement SQL statement that was closed.
+     * @param proxy corresponding proxy.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    public void statementClosed(String statement, Object proxy)
+            throws SQLException {
+        
+        if (proxy instanceof FirebirdStatement) {
+            FirebirdStatement fbStmt = (FirebirdStatement)proxy;
+            
+            ResultSet rs = fbStmt.getCurrentResultSet();
+            
+            if (rs != null)
+                rs.close();
+            
+        }
+        
+        super.statementClosed(statement, proxy);
+    }
 }

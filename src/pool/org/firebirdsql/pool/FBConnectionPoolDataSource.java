@@ -285,7 +285,8 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
                         getPingInterval(),
                         isStatementPooling(),
                         getTransactionIsolationLevel(),
-                        getMaxStatements());
+                        getMaxStatements(),
+                        isKeepStatements());
             else
                 pooledConnection = 
                     new FBPooledConnection(
@@ -293,7 +294,8 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
                         cri, 
                         isStatementPooling(),
                         getTransactionIsolationLevel(),
-                        getMaxStatements());
+                        getMaxStatements(),
+                        isKeepStatements());
 
             return pooledConnection;
 

@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 
 
 /**
@@ -62,12 +63,32 @@ public class GDSSynchronizationPolicy {
         
         GDS wrappedObject = (GDS)Proxy.newProxyInstance(
                 gds.getClass().getClassLoader(),
-                gds.getClass().getInterfaces(),
+                getAllInterfaces(gds.getClass()),
                 syncPolicy);
         
         return wrappedObject;
     }
     
+    /**
+     * Get all implemented interfaces by the class.
+     * 
+     * @param clazz class to inspect.
+     * 
+     * @return array of all implemented interfaces.
+     */
+    private static Class[] getAllInterfaces(Class clazz) {
+        ArrayList result = new ArrayList();
+        
+        do {
+            Class[] interfaces = clazz.getInterfaces();
+            for (int i = 0; i < interfaces.length; i++) {
+                result.add(interfaces[i]);
+            }
+            clazz = clazz.getSuperclass();
+        } while(clazz.getSuperclass() != null);
+        
+        return (Class[])result.toArray(new Class[result.size()]);
+    }    
     /**
      * Abstract synchronization policy. This class should be used as invocation
      * handler for dynamic proxy that will wrap corresponding {@link GDS} 

@@ -947,7 +947,7 @@ public abstract class AbstractCallableStatement
     }
 
     //this method doesn't give an exception if it is called twice.
-    protected ResultSet getCurrentResultSet() throws SQLException {
+    public ResultSet getCurrentResultSet() throws SQLException {
         if (currentRs == null)
             currentRs = super.getResultSet();
         return currentRs;

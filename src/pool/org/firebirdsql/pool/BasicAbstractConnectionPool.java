@@ -63,6 +63,7 @@ public abstract class BasicAbstractConnectionPool
 
     private boolean pooling = true;
     private boolean statementPooling = true;
+    private boolean keepStatements = true;
     private int transactionIsolation = FBPoolingDefaults.DEFAULT_ISOLATION;
     private int maxStatements = FBPoolingDefaults.DEFAULT_MAX_STATEMENTS;
     
@@ -211,6 +212,14 @@ public abstract class BasicAbstractConnectionPool
             statementPooling = false;
         
         this.statementPooling = statementPooling;
+    }
+    
+    public boolean isKeepStatements() {
+        return keepStatements;
+    }
+    
+    public void setKeepStatements(boolean keepStatements) {
+        this.keepStatements = keepStatements;
     }
     
     public int getMaxStatements() {
