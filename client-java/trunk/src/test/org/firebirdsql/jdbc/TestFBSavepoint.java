@@ -30,7 +30,7 @@ import org.firebirdsql.common.FBTestBase;
 public class TestFBSavepoint extends FBTestBase {
 
     
-    private Connection connection;
+    private FirebirdConnection connection;
     
     public TestFBSavepoint(String name) {
         super(name);
@@ -41,7 +41,7 @@ public class TestFBSavepoint extends FBTestBase {
         
         Class.forName(FBDriver.class.getName());
         
-        connection = getConnectionViaDriverManager();
+        connection = (FirebirdConnection)getConnectionViaDriverManager();
         
         Statement stmt = connection.createStatement();
         try {
