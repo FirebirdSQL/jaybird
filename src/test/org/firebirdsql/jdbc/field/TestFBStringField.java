@@ -26,7 +26,6 @@ import org.firebirdsql.gds.ISCConstants;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -56,13 +55,7 @@ public class TestFBStringField extends BaseTestFBField {
         xsqlvars[0] = createXSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_TEXT;
         xsqlvars[0].sqllen = TEST_STRING_SIZE;
-        Object[] row = new byte[1][];
-        ArrayList rows = new ArrayList();
-        rows.add(row);		  
-        FBFieldResultSet rs = new FBFieldResultSet(xsqlvars,rows);
-		rs.next();
-
-        field = FBField.createField(xsqlvars[0],rs,0, false);
+        field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), false);
     }
     protected void tearDown() {
     }

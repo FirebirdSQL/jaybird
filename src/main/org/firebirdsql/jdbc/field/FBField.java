@@ -39,9 +39,7 @@ import java.util.Calendar;
 import java.util.Map;
 
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 
 /**
  * Describe class <code>FBField</code> here.
@@ -145,7 +143,7 @@ public abstract class FBField {
     static final double MIN_DOUBLE_VALUE = -1 * MAX_DOUBLE_VALUE;
     
     protected XSQLVAR field;
-    protected FBResultSet rs;
+    private FieldDataProvider dataProvider;
     protected int numCol;
     protected AbstractConnection c = null;
     protected String iscEncoding = null;
@@ -154,7 +152,7 @@ public abstract class FBField {
     protected int requiredType;
     protected int scale = -1;
 
-    FBField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+    FBField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
         throws SQLException 
     {
         if (field == null) throw new FBSQLException(
@@ -162,11 +160,14 @@ public abstract class FBField {
             FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
         
         this.field = field;
-        this.rs = rs;
-        this.numCol = numCol;
+        this.dataProvider = dataProvider;
         this.requiredType = requiredType;
     }
 
+    protected byte[] getRow(int numCol) {
+        return dataProvider.getFieldData();
+    }
+    
     /**
      * Constructs an exception with appropriate message.
      * @todo add XSQLVAR type into the message
@@ -180,17 +181,7 @@ public abstract class FBField {
      * is <code>null</code>, otherwise <code>false</code>.
      */
     public boolean isNull() throws SQLException {
-        if (rs == null)
-            throw new FBDriverConsistencyCheckException(
-                "Result set is null. " +
-                "Please report this bug to driver development team.");
-                
-        if (rs.row == null)
-            throw new FBDriverConsistencyCheckException(
-                "Current row is null. " +
-                "Please report this bug to driver development team.");
-        
-        return (rs.row[numCol] == null);
+        return dataProvider.getFieldData() == null;
     }
 
     public void setNull() {
@@ -354,37 +345,38 @@ public abstract class FBField {
                 return false;
         }
     }
-
+    
     /**
      * This is a factory method that creates appropriate instance of the
      * <code>FBField</code> class according to the SQL datatype. This instance
      * knows how to perform all necessary type conversions.
      */
-    public final static FBField createField(XSQLVAR field, FBResultSet rs, int numCol, boolean cached) 
+    public final static FBField createField(XSQLVAR field, FieldDataProvider dataProvider, boolean cached)
     throws SQLException {
+        
         if (isType(field, Types.SMALLINT))
             if (field.sqlscale == 0)
-                return new FBShortField(field, rs, numCol, Types.SMALLINT);
+                return new FBShortField(field, dataProvider, Types.SMALLINT);
             else
-                return new FBBigDecimalField(field, rs, numCol,1, Types.NUMERIC);
+                return new FBBigDecimalField(field, dataProvider, 1, Types.NUMERIC);
         else
         if (isType(field, Types.INTEGER))
             if (field.sqlscale == 0)
-                return new FBIntegerField(field, rs, numCol, Types.INTEGER);
+                return new FBIntegerField(field, dataProvider, Types.INTEGER);
             else
-                return new FBBigDecimalField(field, rs, numCol,2, Types.NUMERIC);
+                return new FBBigDecimalField(field, dataProvider,2, Types.NUMERIC);
         else
         if (isType(field, Types.BIGINT))
             if (field.sqlscale == 0)
-                return new FBLongField(field, rs, numCol, Types.BIGINT);
+                return new FBLongField(field, dataProvider, Types.BIGINT);
             else
-                return new FBBigDecimalField(field, rs, numCol,3, Types.NUMERIC);
+                return new FBBigDecimalField(field, dataProvider,3, Types.NUMERIC);
         else
         if (isType(field, Types.FLOAT))
-            return new FBFloatField(field, rs, numCol, Types.FLOAT);
+            return new FBFloatField(field, dataProvider, Types.FLOAT);
         else
         if (isType(field, Types.DOUBLE))
-            return new FBDoubleField(field, rs, numCol, Types.DOUBLE);
+            return new FBDoubleField(field, dataProvider, Types.DOUBLE);
         else
         if (isType(field, Types.CHAR))
             /*
@@ -394,9 +386,9 @@ public abstract class FBField {
             // be replaced with original one as soon as bug is fixed in the 
             // engine.
             
-            return new FBStringField(field, rs, numCol, Types.CHAR);
+            return new FBStringField(field, dataProvider, Types.CHAR);
             */
-            return new FBWorkaroundStringField(field, rs, numCol, Types.CHAR);
+            return new FBWorkaroundStringField(field, dataProvider, Types.CHAR);
         else
         if (isType(field, Types.VARCHAR))
             /*
@@ -406,36 +398,36 @@ public abstract class FBField {
             // be replaced with original one as soon as bug is fixed in the 
             // engine.
             
-            return new FBStringField(field, rs, numCol, Types.VARCHAR);
+            return new FBStringField(field, dataProvider, Types.VARCHAR);
             */
-            return new FBWorkaroundStringField(field, rs, numCol, Types.VARCHAR);
+            return new FBWorkaroundStringField(field, dataProvider, Types.VARCHAR);
         else
         if (isType(field, Types.DATE))
-            return new FBDateField(field, rs, numCol, Types.DATE);
+            return new FBDateField(field, dataProvider, Types.DATE);
         else
         if (isType(field, Types.TIME))
-            return new FBTimeField(field, rs, numCol, Types.TIME);
+            return new FBTimeField(field, dataProvider, Types.TIME);
         else
         if (isType(field, Types.TIMESTAMP))
-            return new FBTimestampField(field, rs, numCol, Types.TIMESTAMP);
+            return new FBTimestampField(field, dataProvider, Types.TIMESTAMP);
         else
         if (isType(field, Types.BLOB)) {
                 if (cached)
-                    return new FBCachedBlobField(field, rs, numCol, Types.BLOB);
+                    return new FBCachedBlobField(field, dataProvider, Types.BLOB);
                 else          
-                    return new FBBlobField(field, rs, numCol, Types.BLOB);
+                    return new FBBlobField(field, dataProvider, Types.BLOB);
         } else
         if (isType(field, Types.LONGVARBINARY)) {
             if (cached)
-                return new FBCachedBlobField(field, rs, numCol, Types.LONGVARBINARY);
+                return new FBCachedBlobField(field, dataProvider, Types.LONGVARBINARY);
             else		  
-                return new FBBlobField(field, rs, numCol, Types.LONGVARBINARY);
+                return new FBBlobField(field, dataProvider, Types.LONGVARBINARY);
         } else
         if (isType(field, Types.LONGVARCHAR))
             if (cached)
-                return new FBCachedLongVarCharField(field, rs, numCol, Types.LONGVARCHAR);
+                return new FBCachedLongVarCharField(field, dataProvider, Types.LONGVARCHAR);
             else
-                return new FBLongVarCharField(field, rs, numCol, Types.LONGVARCHAR);
+                return new FBLongVarCharField(field, dataProvider, Types.LONGVARCHAR);
         else
         if (isType(field, Types.ARRAY))
             throw (SQLException)createException(SQL_ARRAY_NOT_SUPPORTED);
@@ -794,7 +786,7 @@ public abstract class FBField {
     // This method is only for the tests
     //
     void copyOI(){
-        rs.row[numCol] = field.sqldata;
+        dataProvider.setFieldData(field.sqldata);
     }
 
     protected boolean isInvertTimeZone() {

@@ -23,11 +23,9 @@ package org.firebirdsql.jdbc.field;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.jdbc.FBResultSet;
 
 
 import junit.framework.Test;
@@ -50,15 +48,8 @@ public class TestFBDateField extends BaseTestFBField {
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
         xsqlvars[0] = createXSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_TYPE_DATE;
-        byte[][] row = new byte[1][];
-        ArrayList rows = new ArrayList();
-        rows.add(row);		  
-        FBResultSet rs = new FBFieldResultSet(xsqlvars,rows);
-		  rs.next();
-//		stringField.sqldata = TEST_DATE;
-//		stringField.sqlind = 0;
 
-		field = FBField.createField(xsqlvars[0], rs, 0, false);
+		field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), false);
 	}
 	protected void tearDown() {
 	}
@@ -179,7 +170,7 @@ public class TestFBDateField extends BaseTestFBField {
 	}
 	public void testString() throws SQLException {
 		field.setString(TEST_DATE.toString());
-      field.copyOI();
+		field.copyOI();
 		// we have to test string representation, because java.sql.Date
 		// keeps the time part of the timestamp after creation, but
 		// usually loses it after some conversions. So, date might
@@ -190,7 +181,7 @@ public class TestFBDateField extends BaseTestFBField {
 	}
 	public void testObject() throws SQLException {
 		field.setObject(TEST_DATE);
-      field.copyOI();
+		field.copyOI();
 		// we have to test string representation, because java.sql.Date
 		// keeps the time part of the timestamp after creation, but
 		// usually loses it after some conversions. So, date might
