@@ -17,14 +17,28 @@
  * All rights reserved.
  */
 
-// stdafx.h : include file for standard system include files,
-//  or project specific include files that are used frequently, but
-//      are changed infrequently
-//
+/* solaris/platform.h
+ * 
+ * Platform specific includes, code and defines for win32
+ */
 
-#if !defined(AFX_STDAFX_H__5F99A579_2606_4470_AAFE_5921F6EC9270__INCLUDED_)
-#define AFX_STDAFX_H__5F99A579_2606_4470_AAFE_5921F6EC9270__INCLUDED_
+#ifndef _JNGDS__Platform
+#define _JNGDS__Platform
+
+#include <dlfcn.h>
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+
+// Defines for fb_binding.h and fb_binding.cpp
+typedef void* SHARED_LIBRARY_HANDLE;
 
 
+#define FB_ENTRYPOINT(X) \
+			if ((##X = (prototype_##X*)dlsym(sHandle, #X)) == NULL) \
+				throw InternalException("FirebirdApiBinding:Initialize() - Entry-point "#X" not found")
 
-#endif // !defined(AFX_STDAFX_H__5F99A579_2606_4470_AAFE_5921F6EC9270__INCLUDED_)
+SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name);
+
+#endif // ifndef(_JNGDS__Platform)
