@@ -403,6 +403,14 @@ typedef ISC_LONG ISC_EXPORT prototype_isc_vax_integer(char *,
 typedef ISC_INT64 ISC_EXPORT prototype_isc_portable_integer(unsigned char *,
 										  short);
 
+typedef ISC_STATUS ISC_EXPORT prototype_isc_seek_blob(ISC_STATUS *,
+									isc_blob_handle *,
+									short,
+									ISC_LONG,
+									ISC_LONG *);
+
+
+
 
 
 
@@ -492,6 +500,7 @@ class FirebirdApiBinding
 		static prototype_isc_transaction_info*		isc_transaction_info;
 		static prototype_isc_transact_request*		isc_transact_request;
 		static prototype_isc_vax_integer*			isc_vax_integer;
+		static prototype_isc_seek_blob*				isc_seek_blob;
 
 	
 

@@ -315,6 +315,22 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1put_1seg
 JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1close_1blob
   (JNIEnv *, jobject, jobject);
 
+/*
+ * Class:     org_firebirdsql_ngds_GDS_0005fImpl
+ * Method:    native_isc_blob_info
+ * Signature: (Lorg/firebirdsql/gds/isc_blob_handle;[B)V
+ */
+JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1blob_1info
+  (JNIEnv *, jobject, jobject, jbyteArray, jint);
+
+/*
+ * Class:     org_firebirdsql_ngds_GDS_0005fImpl
+ * Method:    native_isc_seek_blob
+ * Signature: (Lorg/firebirdsql/gds/isc_blob_handle;)V
+ */
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1seek_1blob
+  (JNIEnv *, jobject, jobject, jint, jint);
+
 #ifdef __cplusplus
 }
 #endif
