@@ -478,7 +478,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      */
     public  boolean isReadOnly(int column) throws  SQLException {
         //Need to consider priveleges!!
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -491,7 +491,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      */
     public  boolean isWritable(int column) throws  SQLException {
         //Needs priveleges???
-        throw new SQLException("Not yet implemented");
+        return true;
     }
 
 
@@ -504,7 +504,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      */
     public  boolean isDefinitelyWritable(int column) throws  SQLException {
         //Need to consider privileges!!!
-        throw new SQLException("Not yet implemented");
+        return true;
     }
 
 
