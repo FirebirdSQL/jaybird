@@ -81,6 +81,7 @@ import org.firebirdsql.gds.GDS;
 public class FBBlob implements Blob{
     
     private static final boolean SEGMENTED = false;
+    public static final int READ_FULLY_BUFFER_SIZE = 16 * 1024;
 
     /**
      * bufferlength is the size of the buffer for blob input and output streams,
@@ -445,8 +446,6 @@ public class FBBlob implements Blob{
             return result;
         }
 
-
-
         public int read(byte[] b, int off, int len) throws IOException {
             checkClosed();
             int result = available();
@@ -462,6 +461,21 @@ public class FBBlob implements Blob{
             buffer = null;
             pos = 0;
             return result;
+        }
+        
+        public void readFully(byte[] b, int off, int len) throws IOException {
+            int counter = 0;
+            int pos = 0;
+            byte[] buffer = new byte[READ_FULLY_BUFFER_SIZE];
+
+            while((counter = read(buffer)) != -1) {
+                System.arraycopy(buffer, 0, b, pos, counter);
+                pos += counter;
+            }
+        }
+        
+        public void readFully(byte[] b) throws IOException {
+            readFully(b, 0, b.length);
         }
 
         public void close() throws IOException {
