@@ -1,3 +1,32 @@
+2004-04-16 23:54  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractConnection.java, AbstractPreparedStatement.java,
+	field/FBField.java, field/FBWorkaroundStringField.java:
+	
+	created a workaround for "operation was cancelled" issue
+
+2004-04-16 23:53  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/field/FBStringField.java:
+	
+	removed duplicated comments
+
+2004-04-16 23:48  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	
+	fixed NPE if no handle is available
+
+2004-04-16 00:31  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractPreparedStatement.java, AbstractStatement.java:
+	
+	made batch exceptions more meaningful
+
 2004-04-07 10:42  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
