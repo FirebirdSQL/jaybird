@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.rowset;
 
 
 
@@ -25,6 +25,8 @@ import javax.sql.RowSetMetaData;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.FBResultSetMetaData;
 
 
 /**
