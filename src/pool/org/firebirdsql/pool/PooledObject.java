@@ -31,4 +31,11 @@ public interface PooledObject {
      * object pool is shutdown and is needed to gracefully release resources.
      */
     void deallocate();
+    
+    /**
+     * Check if this pooled object is still valid.
+     * 
+     * @return <code>true</code> when the object is valid.
+     */
+    boolean isValid();
 }

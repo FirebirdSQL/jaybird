@@ -182,7 +182,10 @@ class PooledConnectionQueue {
             // close all free connections
             while (size() > 0)
                 try {
-                    take().deallocate();
+                    PooledObject item = (PooledObject)take();
+                    if (item.isValid())
+                        item.deallocate();
+                    
                 } catch (SQLException ex) {
                     getLogger().warn("Could not close connection.", ex);
                 }

@@ -229,8 +229,7 @@ public class PingablePooledConnection implements PooledConnection,
         checkValidity();
 
         if (currentConnection != null) {
-            currentConnection.getProxy().close();
-
+            currentConnection.deallocate();
         }
         jdbcConnection.close();
 
