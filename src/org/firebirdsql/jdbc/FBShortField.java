@@ -82,7 +82,7 @@ class FBShortField extends FBField {
     BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return BIGDECIMAL_NULL_VALUE;
 
-        return new java.math.BigDecimal(((Short)field.sqldata).doubleValue());
+        return new java.math.BigDecimal(((Short)field.sqldata).shortValue());
     }
     Object getObject() throws SQLException {
         if (isNull()) return OBJECT_NULL_VALUE;

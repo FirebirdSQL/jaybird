@@ -89,7 +89,7 @@ class FBIntegerField extends FBField {
     java.math.BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return BIGDECIMAL_NULL_VALUE;
 
-        return new java.math.BigDecimal(((Integer)field.sqldata).doubleValue());
+        return new java.math.BigDecimal(((Integer)field.sqldata).intValue());
     }
     Object getObject() throws SQLException {
         if (isNull()) return OBJECT_NULL_VALUE;
