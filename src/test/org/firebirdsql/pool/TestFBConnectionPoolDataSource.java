@@ -23,7 +23,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
 import java.util.Properties;
 
 import javax.naming.Context;
@@ -720,7 +719,6 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         try {
             ((FirebirdPool)pool).setUserName("testUser");
             ((FirebirdPool)pool).setRoleName("testRole");
-            pool.setLoginTimeout(1);
             
             Connection connection = pool.getPooledConnection().getConnection();
             
@@ -809,54 +807,6 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
                 
                 assertTrue("Result set should be closed now.",
                     !ps.hasOpenResultSet());
-                
-            } finally {
-                connection.close();
-            }
-        } finally {
-            pool.shutdown();
-        }
-    }
-    
-    // "test string" in Ukrainian ("тестова стрічка")
-    public static String UKRAINIAN_TEST_STRING = 
-        //"\u00f2\u00e5\u00f1\u00f2\u00ee\u00e2\u00e0 " +
-        "\u0442\u0435\u0441\u0442\u043e\u0432\u0430 " + 
-        //"\u00f1\u00f2\u00f0\u00b3\u00f7\u00ea\u00e0";
-        "\u0441\u0442\u0440\u0456\u0447\u043a\u0430";
-        
-    public static byte[] UKRAINIAN_TEST_BYTES = new byte[] {
-        (byte)0xf2, (byte)0xe5, (byte)0xf1, (byte)0xf2, 
-        (byte)0xee, (byte)0xe2, (byte)0xe0, (byte)0x20,
-        (byte)0xf1, (byte)0xf2, (byte)0xf0, (byte)0xb3, 
-        (byte)0xf7, (byte)0xea, (byte)0xe0
-    };
-
-    public void testEncoding() throws Exception {
-        FBConnectionPoolDataSource fbPool = (FBConnectionPoolDataSource)pool;
-        
-        fbPool.setEncoding("WIN1251");
-        
-        try {
-            Connection connection = pool.getPooledConnection().getConnection();
-            
-            try {
-                
-                Statement stmt = connection.createStatement();
-                try {
-                    ResultSet rs = stmt.executeQuery(
-                        "SELECT '" + UKRAINIAN_TEST_STRING + "' FROM rdb$database");
-                    
-                    assertTrue("Should select at least one row.", rs.next());
-                    assertTrue("Should select correct values", 
-                        Arrays.equals(rs.getBytes(1), UKRAINIAN_TEST_BYTES));
-                    assertTrue("Should select correct values", 
-                        UKRAINIAN_TEST_STRING.equals(rs.getString(1)));
-                    assertTrue("Should select only one row.", !rs.next());
-                    
-                } finally {
-                    stmt.close();
-                }
                 
             } finally {
                 connection.close();

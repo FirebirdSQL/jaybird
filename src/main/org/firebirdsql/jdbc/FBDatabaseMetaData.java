@@ -795,8 +795,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
 
     /**
-     * Retrieves whether concatenations between NULL and non-NULL values 
-     * equal NULL. For SQL-92 compliance, a JDBC technology-enabled driver will
+     * Are concatenations between NULL and non-NULL values NULL?
+     * For SQL-92 compliance, a JDBC technology-enabled driver will
      * return <code>true</code>.
      *
      * @return <code>true</code> if so; <code>false</code> otherwise
@@ -820,7 +820,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
 
     /**
-     * Retrieves whether CONVERT between the given SQL types supported.
+     * Is CONVERT between the given SQL types supported?
      *
      * @param fromType the type to convert from
      * @param toType the type to convert to
@@ -3921,7 +3921,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     /**
      * Gets a description of the foreign key columns in the foreign key
      * table that reference the primary key columns of the primary key
-     * table (describe how one table imports another's key). This
+     * table (describe how one table imports another's key.) This
      * should normally return a single foreign key/primary key pair
      * (most tables only import a foreign key from a table once.)  They
      * are ordered by FKTABLE_CAT, FKTABLE_SCHEM, FKTABLE_NAME, and
@@ -4938,7 +4938,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -4952,42 +4951,36 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     }
 
     /**
-     * Retrieves whether this database supports savepoints.
      *
-     * @return true if savepoints are supported; false otherwise 
-     * @exception SQLException if a database access error occurs
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public boolean supportsSavepoints() throws SQLException {
         return getDatabaseMajorVersion() >= 1 && getDatabaseMinorVersion() >= 5;
     }
 
     /**
-     * Retrieve whether this database supports named parameters.
      *
-     * @return true if named parameters are supported, false otherwise 
-     * @exception SQLException if a database access error occurs
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public boolean supportsNamedParameters() throws SQLException {
         return false;
     }
 
     /**
-     * Retrieves whether it is possible to have multiple <code>ResultSet</code>
-     * objects returned from a <code>CallableStatement</code> object 
-     * simultaneously.
      *
-     * @return true if multiple open ResultSets are supported, false otherwise
-     * @exception SQLException if a database access error occurs 
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public boolean supportsMultipleOpenResults() throws SQLException {
         return false;
     }
 
     /**
-     * Retrieves whether auto-generated keys can be retrieved after creation.
      *
-     * @return true if auto-generated keys can be retrieved, false otherwise
-     * @exception SQLException if a database access error occurs 
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public boolean supportsGetGeneratedKeys() throws SQLException {
         return false;
@@ -4996,47 +4989,13 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
     /**
      *
-     * Retrieves a description of the user-defined type (UDT) hierarchies 
-     * defined in a particular schema in this database. Only the immediate 
-     * super type/sub type relationship is modeled.
-     * <P>
-     * Only supertype information for UDTs matching the catalog, 
-     * schema, and type name is returned. The type name parameter
-     * may be a fully-qualified name. When the UDT name supplied is a 
-     * fully-qualified name, the catalog and schemaPattern parameters are 
-     * ignored. 
-     * <P>
-     * If a UDT does not have a direct super type, it is not listed here.
-     * A row of the <code>ResultSet</code> object returned by this method
-     * describes the designated UDT and a direct supertype. A row has the 
-     * following columns:
-     *  <OL>
-     *  <LI><B>TYPE_CAT</B> String => the UDT's catalog (may be 
-     *  <code>null</code>)
-     *  <LI><B>TYPE_SCHEM</B> String => UDT's schema (may be <code>null</code>)
-     *  <LI><B>TYPE_NAME</B> String => type name of the UDT
-     *  <LI><B>SUPERTYPE_CAT</B> String => the direct super type's catalog 
-     *                           (may be <code>null</code>)
-     *  <LI><B>SUPERTYPE_SCHEM</B> String => the direct super type's schema 
-     *                             (may be <code>null</code>)
-     *  <LI><B>SUPERTYPE_NAME</B> String => the direct super type's name
-     *  </OL>
-     *
-     * <P><B>Note:</B> If the driver does not support type hierarchies, an 
-     * empty result set is returned.
-     *
-     * @param catalog a catalog name; "" retrieves those without a catalog;
-     *        <code>null</code> means drop catalog name from the selection 
-     *        criteria
-     * @param schemaPattern a schema name pattern; "" retrieves those 
-     *        without a schema
-     * @param tableNamePattern a UDT name pattern; may be a fully-qualified
-     *        name
-     * @return a <code>ResultSet</code> object in which a row gives information
-     *         about the designated UDT
-     * @throws SQLException if a database access error occurs
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
-    public ResultSet getSuperTypes(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
+    public ResultSet getSuperTypes(String param1, String param2, String param3) throws SQLException {
         XSQLVAR[] xsqlvars = new XSQLVAR[6];
 
         xsqlvars[0] = new XSQLVAR();
@@ -5080,42 +5039,14 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     }
 
     /**
-     * Retrieves a description of the table hierarchies defined in a particular 
-     * schema in this database.
      *
-     * <P>Only supertable information for tables matching the catalog, schema
-     * and table name are returned. The table name parameter may be a fully-
-     * qualified name, in which case, the catalog and schemaPattern parameters
-     * are ignored. If a table does not have a super table, it is not listed 
-     * here. Supertables have to be defined in the same catalog and schema as 
-     * the sub tables. Therefore, the type description does not need to include
-     * this information for the supertable.
-     *
-     * <P>Each type description has the following columns:
-     *  <OL>
-     *  <LI><B>TABLE_CAT</B> String => the type's catalog (may be 
-     *  <code>null</code>)
-     *  <LI><B>TABLE_SCHEM</B> String => type's schema (may be 
-     *  <code>null</code>)
-     *  <LI><B>TABLE_NAME</B> String => type name
-     *  <LI><B>SUPERTABLE_NAME</B> String => the direct super type's name
-     *  </OL>
-     *
-     * <P><B>Note:</B> If the driver does not support type hierarchies, an 
-     * empty result set is returned.
-     *
-     * @param catalog a catalog name; "" retrieves those without a catalog;
-     *        <code>null</code> means drop catalog name from the selection 
-     *        criteria
-     * @param schemaPattern a schema name pattern; "" retrieves those 
-     *        without a schema
-     * @param tableNamePattern a table name pattern; may be a fully-qualified
-     *        name
-     * @return a <code>ResultSet</code> object in which each row is a type 
-     *         description
-     * @throws SQLException if a database access error occurs
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
-    public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
+    public ResultSet getSuperTables(String param1, String param2, String param3) throws SQLException {
         
         XSQLVAR[] xsqlvars = new XSQLVAR[4];
 
@@ -5149,34 +5080,28 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     }
 
     /**
-     * Retrieves whether this database supports the given results holdability.
      *
-     * @param holdability one of the following constants: 
-     * <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or 
-     * <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
-     * @return <code>true</code> if the holdability is supported, 
-     *         <code>false</code> otherwise 
-     * @exception SQLException if a database access error occurs 
+     * @param holdability <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public boolean supportsResultSetHoldability(int holdability) throws SQLException {
         return holdability == 2; // same as ResultSet.CLOSE_CURSORS_AT_COMMIT, but JDK 1.3 friendly
     }
 
     /**
-     * Retrieves the default holdability of this <code>ResultSet</code>.
      *
-     * @return the default holdability
-     * @exception SQLException if a database access error occurs 
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int getResultSetHoldability() throws SQLException {
         return 2; // same as ResultSet.CLOSE_CURSORS_AT_COMMIT, but makes JDK 1.3 happy
     }
 
     /**
-     * Get the major version number of the database.
      *
-     * @return The major version number 
-     * @exception SQLException if a database access error occurs 
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int getDatabaseMajorVersion() throws SQLException {
         try {
@@ -5187,9 +5112,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     }
 
     /**
-     * Get the minor version number of the database.
-     * @return The minor version number 
-     * @exception SQLException if a database access error occurs 
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int getDatabaseMinorVersion() throws SQLException {
         try {
@@ -5200,31 +5125,27 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     }
 
     /**
-     * Get the JDBC major version for this driver.
      *
-     * @return the JDBC major version 
-     * @exception SQLException should never be thrown in this implementation
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int getJDBCMajorVersion() throws SQLException {
         return 2;
     }
 
     /**
-     * Get the JDBC minor version for this driver
      *
-     * @return the JDBC minor version
-     * @exception SQLException should never be thrown in this implementation
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int getJDBCMinorVersion() throws SQLException {
         return 0;
     }
 
     /**
-     * Indicates whether the SQLSTATEs returned by SQLException.getSQLState is 
-     * X/Open (now known as Open Group) SQL CLI or SQL99
      *
-     * @return the type of SQLSTATEs
-     * @exception SQLException should never be thrown in this implementation 
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int getSQLStateType() throws SQLException {
         // return sqlStateXOpen;
@@ -5242,14 +5163,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         }
     }
 
-    /**
-     * Determine if there are no SQL wildcard characters ('%' or '_') in the 
-     * given pattern.
-     *
-     * @param pattern The pattern to be checked for wildcards
-     * @return <code>true</code> if there are no wildcards in the pattern, 
-     *         <code>false</code> otherwise
-     */
+
     public boolean hasNoWildcards(String pattern) {
         if (pattern == null)
             return true;
@@ -5278,12 +5192,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         return true;
     }
 
-    /**
-     * Strips all backslash-escapes from a string.
-     *
-     * @param pattern The string to be stripped
-     * @return pattern with all backslash-escapes removed
-     */
     public String stripEscape(String pattern) {
         StringBuffer stripped = new StringBuffer(pattern.length());
         for (int pos = 0; pos < pattern.length(); pos++) {
@@ -5321,13 +5229,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         return "F";
     }
 
-    /**
-     * Strips a leading and trailing quote (double or single) from a string.
-     *
-     * @param pattern the string to be stripped
-     * @return a copy of <code>pattern</code> with leading and trailing quote 
-     * removed
-     */
     public String stripQuotes(String pattern) {
         if ((pattern.length() >= 2)
             && (pattern.charAt(0) == '\"')

@@ -21,11 +21,9 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.FBTestBase;
 
 import java.io.ByteArrayInputStream;
-import java.io.OutputStream;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.Random;
 
 /**
  * Describe class <code>TestFBBlobAccess</code> here.
@@ -381,44 +379,5 @@ public class TestFBBlobStream extends FBTestBase {
         } finally {
             ps.close();
         }
-    }
-    
-    public void testWriteBytes() throws Exception {
-        byte[] data = new byte[75 * 1024]; // should be more than 64k
-        Random rnd = new Random();
-        rnd.nextBytes(data);
-        
-        FirebirdConnection fbConnection = (FirebirdConnection)connection;
-        fbConnection.setAutoCommit(false);
-        
-        FirebirdBlob blob = fbConnection.createBlob();
-        OutputStream out = blob.setBinaryStream(0);
-        out.write(data);
-        out.flush();
-        out.close();
-        
-        PreparedStatement ps = connection.prepareStatement(
-            "INSERT INTO test_blob(id, bin_data) VALUES(?, ?)");
-        try {
-            ps.setInt(1, 1);
-            ps.setBlob(2, blob);
-            ps.execute();
-        } finally {
-            ps.close();
-        }
-        
-        fbConnection.commit();
-        
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT bin_data FROM test_blob WHERE id = 1");
-            assertTrue("Should have selected at least one row.", rs.next());
-            byte[] testData = rs.getBytes(1);
-            assertTrue("Selected data should be equal.", Arrays.equals(data, testData));
-            assertTrue("Should have selected only one row.", !rs.next());
-        } finally {
-            stmt.close();
-        }
-        
     }
 }

@@ -374,14 +374,6 @@ public class FBWrappingDataSource implements DataSource,
         setMinPoolSize(minConnections);
     }
     
-    public boolean isKeepStatements() {
-        return getPool().isKeepStatements();
-    }
-    
-    public void setKeepStatements(boolean keepStatements) {
-        getPool().setKeepStatements(keepStatements);
-    }
-    
     public String getPassword() {
         return getPool().getPassword();
     }

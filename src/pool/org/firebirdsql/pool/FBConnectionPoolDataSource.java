@@ -257,15 +257,13 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
 
         Properties props = new Properties();
         props.putAll(getProperties());
-
+        
         if (userName != null)
             props.setProperty(USER_NAME_PROPERTY, userName);
             
         if (password != null)
             props.setProperty(PASSWORD_PROPERTY, password);
-
-        props = FBDriverPropertyManager.normalize(null, props);
-
+            
         FBConnectionRequestInfo defaultCri = 
             getManagedConnectionFactory().getDefaultConnectionRequestInfo();
              
@@ -441,18 +439,6 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
             new PooledObjectEvent(connectionEvent.getSource(), true);
             
         pooledObjectReleased(event);
-    }
-
-    /**
-     * Notify about the deallocation of the physical connection.
-     * 
-     * @param connectionEvent instance of {@link ConnectionEvent}.
-     */
-    public void physicalConnectionDeallocated(ConnectionEvent connectionEvent) {
-        PooledObjectEvent event = 
-            new PooledObjectEvent(connectionEvent.getSource(), true);
-        
-        physicalConnectionDeallocated(event);
     }
     
 	/**

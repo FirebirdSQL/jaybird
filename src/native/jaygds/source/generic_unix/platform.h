@@ -39,7 +39,7 @@ typedef void* SHARED_LIBRARY_HANDLE;
 
 
 #define FB_ENTRYPOINT(X) \
-			if ((X = (prototype_##X*)dlsym(sHandle, #X)) == NULL) \
+			if ((##X = (prototype_##X*)dlsym(sHandle, #X)) == NULL) \
 				throw InternalException("FirebirdApiBinding:Initialize() - Entry-point "#X" not found")
 
 SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name);

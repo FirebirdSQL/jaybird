@@ -68,17 +68,7 @@ public class ParameterBufferBase  implements java.io.Serializable, Xdrable
             }
         return null;
         }
-
-    public int getArgumentAsInt(int type) {
-        final List argumentsList = getArgumentsList();
-        for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument argument = (Argument) argumentsList.get(i);
-            if (argument.getType() == type) { 
-                return argument.getValueAsInt(); }
-        }
-        return 0;
-    }
-
+    
     public boolean hasArgument(int type) {
         final List argumentsList = getArgumentsList();
         
@@ -186,11 +176,6 @@ public class ParameterBufferBase  implements java.io.Serializable, Xdrable
 			{
 			throw new RuntimeException("Cannot get the value for this argument type as a string");
 			}
-        
-        int getValueAsInt()
-        {
-            throw new RuntimeException("Cannot get the value of this argument type as int");
-        }
 		
 		abstract void writeTo(XdrOutputStream outputStream) throws IOException;
 		
@@ -229,10 +214,6 @@ public class ParameterBufferBase  implements java.io.Serializable, Xdrable
             {
             return value;
             }
-       
-       int getValueAsInt() {
-           return Integer.parseInt(value);
-       }
 
         protected void writeLength(int length, XdrOutputStream outputStream) throws IOException
             {
@@ -290,9 +271,6 @@ public class ParameterBufferBase  implements java.io.Serializable, Xdrable
             return 6;
             }
 
-        int getValueAsInt() {
-            return value;
-        }
         protected void writeValue(XdrOutputStream outputStream, final int value) throws IOException
             {
             outputStream.write(4);
@@ -352,14 +330,6 @@ public class ParameterBufferBase  implements java.io.Serializable, Xdrable
             return value.length + 2;
             }
 
-        int getValueAsInt() {
-            if (value.length == 1)
-                return value[0];
-            else
-                throw new UnsupportedOperationException("This method is not " +
-                    "supported for byte arrays with length > 1");
-        }
-        
         protected void writeLength(int length, XdrOutputStream outputStream) throws IOException
             {
             outputStream.write(length);

@@ -20,8 +20,6 @@
 package org.firebirdsql.gds;
 
 /**
- * A GDS-specific exception
- *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
@@ -47,13 +45,6 @@ public class GDSException extends Exception {
      */
     protected GDSException next;
 
-    /**
-     * Factory method to create a new instance with a given <code>XA</code>
-     * error code.
-     *
-     * @param message Message for the new instance
-     * @param xaErrorCode The <code>XA</code> error code
-     */
     public static GDSException createWithXAErrorCode(String message, int xaErrorCode)
     {
         GDSException gdse = new GDSException(message);
@@ -61,29 +52,11 @@ public class GDSException extends Exception {
         return gdse;
     }
 
-    /**
-     * Create a new instance.
-     *
-     * @param type type of the exception, should be always 
-     *        {@link ISCConstants#isc_arg_gds}, otherwise no message will be 
-     *        displayed.
-     * @param intParam Additional int parameter about the new exception
-     */
     public GDSException(int type, int intParam) {
         this.type = type;
         this.intParam = intParam;
     }
 
-    /**
-     * Create a new instance.
-     *
-     * @param type type of the exception, should be always 
-     *        {@link ISCConstants#isc_arg_gds}, otherwise no message will be 
-     *        displayed.
-     * @param strParam value of the string parameter that will substitute 
-     *        <code>{0}</code> entry in error message corresponding to the 
-     *        specified error code.
-     */
     public GDSException(int type, String strParam) {
         this.type = type;
         this.strParam = strParam;
@@ -109,33 +82,17 @@ public class GDSException extends Exception {
         setNext(new GDSException(ISCConstants.isc_arg_string, strParam));
     }
 
-    /**
-     * Create a new instance.
-     *
-     * @param fbErrorCode Firebird error code, one of the constants declared
-     *        in {@link GDS} interface
-     */
     public GDSException(int fbErrorCode) {
         // this.fbErrorCode = fbErrorCode;
         this.intParam = fbErrorCode;
         this.type = ISCConstants.isc_arg_gds;
     }
 
-    /**
-     * Create a new instance with only a simple message.
-     *
-     * @param message Message for the new exception
-     */
     public GDSException(String message) {
         super(message);
         this.type = ISCConstants.isc_arg_string;
     }
 
-    /**
-     * Get the Firebird-specific error code for this exception.
-     *
-     * @return The Firebird error code
-     */
     public int getFbErrorCode() {
         //return fbErrorCode;
         if (type == ISCConstants.isc_arg_number)
@@ -144,11 +101,6 @@ public class GDSException extends Exception {
             return -1;
     }
 
-    /**
-     * Get the <code>int</code> parameter for this exception.
-     *
-     * @return The <code>int</code> parameter
-     */
     public int getIntParam() {
         return intParam;
     }
@@ -172,30 +124,16 @@ public class GDSException extends Exception {
         this.xaErrorCode = xaErrorCode;
     }
 
-    /**
-     * Set the next exception in the chain.
-     *
-     * @param e The next chained exception
-     */
+    
+    
     public void setNext(GDSException e) {
         next = e;
     }
 
-    /**
-     * Get the next chained exception.
-     *
-     * @return The next chained exception
-     */
     public GDSException getNext() {
         return next;
     }
     
-    /**
-     * Retrieve whether this exception is a warning.
-     *
-     * @return <code>true</code> if this is a warning, 
-     *         <code>false</code> otherwise
-     */
     public boolean isWarning() {
         return type == ISCConstants.isc_arg_warning;
     }
@@ -240,13 +178,7 @@ public class GDSException extends Exception {
         return msg;
     }
 
-    /**
-     * Retrieve whether this is a fatal exception, or if this exception
-     * is chained to a fatal exception.
-     *
-     * @return <code>true</code> if this is a fatal exception
-     *         <code>false</code> otherwise
-     */
+
     public boolean isFatal()
     {
         return isThisFatal() || (next != null && next.isFatal());

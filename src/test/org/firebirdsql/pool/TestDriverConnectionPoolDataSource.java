@@ -100,8 +100,4 @@ public class TestDriverConnectionPoolDataSource extends
     public void testReleaseResultSet() throws Exception {
         // test is not defined for this type of pool
     }
-    
-    public void testEncoding() throws Exception {
-        // test is not defined for this type of pool
-    }
 }

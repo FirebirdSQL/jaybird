@@ -25,31 +25,22 @@ package org.firebirdsql.gds;
 public interface ServiceParameterBuffer
     {
     /**
-     * Set a void (valueless) parameter on this 
-     * <code>ServiceParameterBuffer</code>.
      *
-     * @param argumentType The parameter to be set, one of the 
-     *        <code>isc_spb_*</code> constants from {@link ISCConstants}
+     * @param argumentType
      */
     public void addArgument(int argumentType);
 
     /**
-     * Set a <code>String</code> parameter on this 
-     * <code>ServiceParameterBuffer</code>.
      *
-     * @param argumentType The parameter to be set, one of the
-     *        <code>isc_spb_*</code> constants from {@link ISCConstants}
-     * @param value The value to set for the given parameter type
+     * @param argumentType
+     * @param value
      */
     public void addArgument(int argumentType, String value);
 
     /**
-     * Set an <code>int</code> paramter on this
-     * <code>ServiceParameterBuffer</code>.
      *
-     * @param argumentType The parameter to be set, one of the
-     *        <code>isc_spb_*</code> constants from {@link ISCConstants}
-     * @param value The value to set for the given parameter type
+     * @param argumentType
+     * @param value
      */
     public void addArgument(int argumentType, int value);
     }

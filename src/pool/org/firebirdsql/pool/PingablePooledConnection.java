@@ -220,25 +220,7 @@ public class PingablePooledConnection implements PooledConnection,
      * @throws SQLException
      */
     public void close() throws SQLException {
-        internalClose();
-        
-        ConnectionEvent event = new ConnectionEvent(this);
-        
-        List tempListeners = new ArrayList(eventListeners);
-        
-        Iterator iter = tempListeners.iterator();
-        while (iter.hasNext()) {
-            ConnectionEventListener listener = 
-                (ConnectionEventListener)iter.next();
-            
-            if (!(listener instanceof PooledConnectionEventListener))
-                continue;
-            
-            PooledConnectionEventListener pooledEventListener = 
-                (PooledConnectionEventListener)listener;
-            
-            pooledEventListener.physicalConnectionClosed(event);
-        }
+        close(true);
     }
     
     /**
@@ -249,31 +231,15 @@ public class PingablePooledConnection implements PooledConnection,
      * 
      * @throws SQLException if something went wrong.
      */
-    protected void internalClose() throws SQLException {
+    protected void close(boolean generateEvents) throws SQLException {
         checkValidity();
 
-        if (currentConnection != null) 
+        if (currentConnection != null) {
             currentConnection.deallocate();
-        
+        }
         jdbcConnection.close();
 
-        statements.clear();
-        
-        invalidate();
-    }
-    
-    /**
-     * Deallocate this object.
-	 */
-	public void deallocate() {
-        try {
-            internalClose();
-        } catch(SQLException ex) {
-            if (log != null)
-                log.warn("Could not cleanly deallocate connection.", ex);
-            
-        } finally {
-            // and finally notify about the event
+        if (generateEvents) {
             ConnectionEvent event = new ConnectionEvent(this);
             
             List tempListeners = new ArrayList(eventListeners);
@@ -289,8 +255,22 @@ public class PingablePooledConnection implements PooledConnection,
                 PooledConnectionEventListener pooledEventListener = 
                     (PooledConnectionEventListener)listener;
                 
-                pooledEventListener.physicalConnectionDeallocated(event);
+                pooledEventListener.physicalConnectionClosed(event);
             }
+        }
+        
+        invalidate();
+    }
+    
+    /**
+     * Deallocate this object.
+	 */
+	public void deallocate() {
+        try {
+            close(false);
+        } catch(SQLException ex) {
+            if (log != null)
+                log.warn("Could not cleanly deallocate connection.", ex);
         }
 	}
 

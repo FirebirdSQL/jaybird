@@ -46,13 +46,8 @@ public interface FirebirdBlob extends Blob {
      */
     interface BlobInputStream {
         
-        /** Seek based on the absolute beginning of the stream */
         int SEEK_MODE_ABSOLUTE = 0;
-
-        /** Seek relative to the current position in the stream */
         int SEEK_MODE_RELATIVE = 1;
-
-        /** Seek relative to the tail end of the stream */
         int SEEK_MODE_FROM_TAIL = 2;
         
         /**

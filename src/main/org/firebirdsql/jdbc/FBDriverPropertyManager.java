@@ -1,22 +1,3 @@
-/*
- * Firebird Open Source J2ee connector - jdbc driver
- *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
- *
- * All rights reserved.
- */
-
 package org.firebirdsql.jdbc;
 
 import java.sql.DriverPropertyInfo;
@@ -30,8 +11,6 @@ import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
-
-import org.firebirdsql.encodings.EncodingFactory;
 
 
 /**
@@ -216,8 +195,6 @@ public class FBDriverPropertyManager {
             result.put(propInfo.dpbName, propValue);
         }
         
-        handleEncodings(result);
-        
         return result;
     }
     
@@ -231,9 +208,6 @@ public class FBDriverPropertyManager {
      * be extracted.
      */
     private static void convertUrlParams(String url, Properties info) {
-        if (url == null)
-            return;
-        
         int iQuestionMark = url.indexOf("?");
 
         if (iQuestionMark == -1) 
@@ -252,42 +226,6 @@ public class FBDriverPropertyManager {
             } else {
                 info.setProperty(propertyString, "");
             }
-        }
-    }
-    
-    /**
-     * Handle character encoding parameters. This method ensures that both
-     * java encoding an client connection encodings are correctly set. 
-     * Additionally method handles the character translation stuff.
-     * 
-     * @param info connection properties
-     * @param cri mapping connection request info.
-     * 
-     * @throws SQLException if both isc_dpb_local_encoding and charSet are
-     * specified.
-     */
-    private static void handleEncodings(Properties info) throws SQLException {
-        String iscEncoding = info.getProperty("isc_dpb_lc_ctype");
-        String localEncoding = info.getProperty("isc_dpb_local_encoding");
-        
-        if (iscEncoding != null && localEncoding == null) {
-            String javaEncoding = FBConnectionHelper.getJavaEncoding(iscEncoding);
-            
-            if (javaEncoding != null)
-                info.setProperty("isc_dpb_local_encoding", javaEncoding);
-        }
-        
-        if (iscEncoding == null && localEncoding != null) {
-            iscEncoding = FBConnectionHelper.getIscEncoding(localEncoding); 
-            info.setProperty("isc_dpb_lc_ctype", iscEncoding);
-        }
-        
-        // ensure that we fail before any connection is obtained
-        // in case when incorrect mapping path is specified 
-        // (note, EncodingFactory.getEncoding(String, String) throws exception)
-        String mappingPath = info.getProperty("isc_dpb_mapping_path");
-        if (mappingPath != null) {
-            EncodingFactory.getEncoding(localEncoding, mappingPath);
         }
     }
     
