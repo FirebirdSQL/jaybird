@@ -37,7 +37,6 @@ import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.isc_blob_handle;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.SqlInfo;
 import org.firebirdsql.jca.FBLocalTransaction;
 import org.firebirdsql.jca.FBManagedConnection;
 import java.util.Map;
