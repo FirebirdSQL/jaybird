@@ -116,6 +116,15 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         defaultCri = new FBConnectionRequestInfo();
         defaultCri.setProperty(GDS.isc_dpb_num_buffers, new byte[] {90});
         defaultCri.setProperty(GDS.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
+        
+        String charset = "ISO8859_1";
+        String encoding = System.getProperty("file.encoding");
+        if (encoding.equalsIgnoreCase("ISO-8859-1")) {
+            charset = "ISO8859_1";
+        } else if (encoding.equalsIgnoreCase("Cp1252")) {
+            charset = "WIN1252";
+        }
+        defaultCri.setProperty(GDS.isc_dpb_lc_ctype, charset);
 
         tpbSet = new HashSet();
         tpbSet.add(new Integer(GDS.isc_tpb_write));
