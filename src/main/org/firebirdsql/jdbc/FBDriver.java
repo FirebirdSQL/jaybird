@@ -40,7 +40,7 @@ public class FBDriver implements Driver {
 
     public static final String FIREBIRD_PROTOCOL = "jdbc:firebirdsql:";
     public static final String FIREBIRD_PROTOCOL_NATIVE= FIREBIRD_PROTOCOL + "native:";
-    public static final String FIREBIRD_PROTOCOL_NATIVE_EMBEDED = FIREBIRD_PROTOCOL + "native_embeded";
+    public static final String FIREBIRD_PROTOCOL_NATIVE_EMBEDDED = FIREBIRD_PROTOCOL + "embedded";
 
     public static final String USER = "user";
     public static final String PASSWORD = "password";
@@ -165,8 +165,8 @@ public class FBDriver implements Driver {
             String databaseURL;
             if( url.startsWith(FIREBIRD_PROTOCOL_NATIVE) )
                 databaseURL = url.substring(FIREBIRD_PROTOCOL_NATIVE.length());
-            else if( url.startsWith(FIREBIRD_PROTOCOL_NATIVE_EMBEDED) )
-                databaseURL = url.substring(FIREBIRD_PROTOCOL_NATIVE_EMBEDED.length());
+            else if( url.startsWith(FIREBIRD_PROTOCOL_NATIVE_EMBEDDED) )
+                databaseURL = url.substring(FIREBIRD_PROTOCOL_NATIVE_EMBEDDED.length()+1);
             else
                 databaseURL = url.substring(FIREBIRD_PROTOCOL.length());
 
@@ -212,13 +212,13 @@ public class FBDriver implements Driver {
         {
             return FBManagedConnectionFactory.Type.TWO;
         }
-        if(url.startsWith(FIREBIRD_PROTOCOL_NATIVE_EMBEDED))
+        if(url.startsWith(FIREBIRD_PROTOCOL_NATIVE_EMBEDDED))
         {
-            return FBManagedConnectionFactory.Type.TWO_EMBEDED;
+            return FBManagedConnectionFactory.Type.TWO_EMBEDDED;
         }
         else
         {
-        return FBManagedConnectionFactory.Type.FOUR;
+            return FBManagedConnectionFactory.Type.FOUR;
         }
      }
 

@@ -146,9 +146,9 @@ public class FBManagedConnectionFactory
 
         public static final Type FOUR = new Type("type 4");
         public static final Type TWO = new Type("type 2");
-        public static final Type TWO_EMBEDED = new Type("type 2 embeded");
+        public static final Type TWO_EMBEDDED = new Type("type 2 embeded");
 
-        private static final Type[] PRIVATE_VALUES = {FOUR, TWO, TWO_EMBEDED};
+        private static final Type[] PRIVATE_VALUES = {FOUR, TWO, TWO_EMBEDDED};
 
         private Type(String s)
             {
@@ -176,7 +176,7 @@ public class FBManagedConnectionFactory
         {
         internalTypeToGdsTypeMap.put( Type.FOUR, GDSFactory.GdsType.PURE_JAVA );
         internalTypeToGdsTypeMap.put( Type.TWO, GDSFactory.GdsType.NATIVE );
-        internalTypeToGdsTypeMap.put( Type.TWO_EMBEDED, GDSFactory.GdsType.NATIVE_EMBEDED );
+        internalTypeToGdsTypeMap.put( Type.TWO_EMBEDDED, GDSFactory.GdsType.NATIVE_EMBEDDED );
         }
 
 

@@ -90,7 +90,7 @@ public class FBManager implements FBManagerMBean
         {
         internalTypeToGdsTypeMap.put( Type.FOUR, GDSFactory.GdsType.PURE_JAVA );
         internalTypeToGdsTypeMap.put( Type.TWO, GDSFactory.GdsType.NATIVE );
-        internalTypeToGdsTypeMap.put( Type.TWO_EMBEDED, GDSFactory.GdsType.NATIVE_EMBEDED );
+        internalTypeToGdsTypeMap.put( Type.TWO_EMBEDED, GDSFactory.GdsType.NATIVE_EMBEDDED );
         }
 
 

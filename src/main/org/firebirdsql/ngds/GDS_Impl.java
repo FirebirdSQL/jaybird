@@ -67,43 +67,60 @@ public class GDS_Impl extends AbstractGDS implements GDS
         if(logging) log.info( "loadLibrary for \""+"java_gds"+"\" returned OK." );
 
 
-    if(logging) log.info( "Attempting to initilize native library." );
+   if(logging) log.info( "Attempting to initilize native library." );
 
-    for( int i = 0, n = LIST_OF_CLIENT_LIBRARIES_TO_TRY.length; i<n; i++ )
-        {
-        final String currentClientLibraryToTry = LIST_OF_CLIENT_LIBRARIES_TO_TRY[i];
-        try
-            {
-            nativeInitilize(currentClientLibraryToTry);
-            }
-        catch( Throwable th )
-            {
-            th.printStackTrace(); // Dont hide it completly
-
-            if(logging) log.debug( "Failed to load client library # "+i+" - \""+currentClientLibraryToTry+"\".", th );
-
-            // If we have just failed to load the last client library
-            // then we need to throw an exception.
-            if( i == LIST_OF_CLIENT_LIBRARIES_TO_TRY.length - 1 )
-                throw new RuntimeException("Failed to initilize jaybird native library. This is most likley due to a failure to load the firebird client library.");
-
-            // Otherwise we continue to next client library
-            continue;
-            }
-
-        if(logging) log.info( "Failed to load client library # "+i+" - \""+currentClientLibraryToTry+"\"." );
-
-        // If we get here we have been loaded a client library so we stop here.
-        break;
+        if( this.getGdsType() == GDSFactory.GdsType.NATIVE )
+            attemptToLoadAClientLibraryFromList(LIST_OF_CLIENT_LIBRARIES_TO_TRY);
+        else if( this.getGdsType() == GDSFactory.GdsType.NATIVE_EMBEDDED )
+            attemptToLoadAClientLibraryFromList(LIST_OF_EMBEDDED_SERVER_LIBRARIES_TO_TRY);
+        else
+            throw new RuntimeException("Unrecognized GDS type.");
         }
-    }
 
-    private static final String[] LIST_OF_CLIENT_LIBRARIES_TO_TRY = {
+     private static final String[] LIST_OF_CLIENT_LIBRARIES_TO_TRY = {
         "fbclient.dll",
         "libfbclient.so",
         "gds32.dll",
         "libgds.so",
     };
+
+     private static final String[] LIST_OF_EMBEDDED_SERVER_LIBRARIES_TO_TRY = {
+        "fbembed.dll",
+        "libfbembed.so",
+     };
+
+    private void attemptToLoadAClientLibraryFromList(String[] clientLibraryList)
+        {
+        final boolean logging = log != null;
+
+        for( int i = 0, n = clientLibraryList.length; i<n; i++ )
+            {
+            final String currentClientLibraryToTry = clientLibraryList[i];
+            try
+                {
+                nativeInitilize(currentClientLibraryToTry);
+                }
+            catch( Throwable th )
+                {
+                th.printStackTrace(); // Dont hide it completly
+
+                if(logging) log.debug( "Failed to load client library # "+i+" - \""+currentClientLibraryToTry+"\".", th );
+
+                // If we have just failed to load the last client library
+                // then we need to throw an exception.
+                if( i == clientLibraryList.length - 1 )
+                    throw new RuntimeException("Failed to initilize jaybird native library. This is most likley due to a failure to load the firebird client library.");
+
+                // Otherwise we continue to next client library
+                continue;
+                }
+
+            if(logging) log.info( "Failed to load client library # "+i+" - \""+currentClientLibraryToTry+"\"." );
+
+            // If we get here we have been loaded a client library so we stop here.
+            break;
+            }
+        }
 
     public synchronized  Clumplet newClumplet(int type, String content) {
         return new StringClumplet(type, content);
@@ -195,24 +212,55 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
 	private String getServerUrl(String file_name) throws GDSException
 		{
-		if(log != null)
-			log.debug("Original file name: "+file_name);
+    if( this.getGdsType() == GDSFactory.GdsType.NATIVE )
+        return getRemoteServerUrl(file_name);
+    else if(this.getGdsType() == GDSFactory.GdsType.NATIVE_EMBEDDED)
+        return getEmbeddedServerUrl(file_name);
+    else
+        throw new RuntimeException("Unrecognized gds type.");
+    }
 
-		DbAttachInfo dbai = new DbAttachInfo(file_name);
+    private String getRemoteServerUrl(String file_name) throws GDSException
+        {
+        if(log != null)
+        log.debug("Original file name: "+file_name);
 
-		  final String fileName;
-		if( dbai.getFileName().indexOf(':') == -1 && dbai.getFileName().startsWith("/") == false )
-			{
- 			fileName = dbai.getServer() +"/"+ dbai.getPort() +":"+"/"  +dbai.getFileName();
-			}
-		else
-			fileName = dbai.getServer() +"/"+ dbai.getPort() +":"+dbai.getFileName();
+        DbAttachInfo dbai = new DbAttachInfo(file_name);
 
-		if(log != null)
-			log.debug("File name for native code: "+fileName);
+        final String fileName;
+        if( dbai.getFileName().indexOf(':') == -1 && dbai.getFileName().startsWith("/") == false )
+        {
+         fileName = dbai.getServer() +"/"+ dbai.getPort() +":"+"/"  +dbai.getFileName();
+        }
+        else
+        fileName = dbai.getServer() +"/"+ dbai.getPort() +":"+dbai.getFileName();
 
-		return fileName;
-		}
+        if(log != null)
+        log.debug("File name for native code: "+fileName);
+
+        return fileName;
+        }
+
+    private String getEmbeddedServerUrl(String file_name) throws GDSException
+            {
+            if(log != null)
+            log.debug("Original file name: "+file_name);
+
+            DbAttachInfo dbai = new DbAttachInfo(file_name);
+
+            final String fileName;
+            if( dbai.getFileName().indexOf(':') == -1 && dbai.getFileName().startsWith("/") == false )
+            {
+             fileName = "/"  +dbai.getFileName();
+            }
+            else
+            fileName = dbai.getFileName();
+
+            if(log != null)
+            log.debug("File name for native code: "+fileName);
+
+            return fileName;
+            }
 
     // isc_attach_database ---------------------------------------------------------------------------------------------
     public void isc_attach_database(String file_name, isc_db_handle db_handle, Clumplet c) throws GDSException
