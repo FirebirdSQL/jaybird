@@ -155,7 +155,7 @@
   <target name="checkout-j2ee" depends="init" unless="j2ee.present">
     <property name="jboss.cvsroot"
                   value=":pserver:anonymous@cvs.sourceforge.net:/cvsroot/jboss"/>
-    <property name="jboss.cvstag" value="HEAD"/>
+    <property name="jboss.cvstag" value="Branch_3_2"/>
     <!--property name="jboss.cvsdate" value="2002-07-29 13:00 +0000"/-->
 
     <cvspass cvsroot="${jboss.cvsroot}"
@@ -166,6 +166,7 @@
     <cvs cvsRoot="${jboss.cvsroot}"
          passfile=".cvspass"
          command="-q checkout -P"
+         tag="${jboss.cvstag}"
          dest="${jboss.source.root}"
          package="jboss-j2ee"/>
   </target>

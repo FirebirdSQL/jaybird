@@ -38,7 +38,6 @@ import javax.resource.spi.ConnectionManager;
 import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
-import javax.resource.spi.ResourceAdapter;
 import javax.security.auth.Subject;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -447,30 +446,6 @@ public class FBManagedConnectionFactory
        //ignore - we're using log4j
     }
 
-   //New with jca 1.5
-
-    /**
-     * The <code>getResourceAdapter</code> method  is used in jca 1.5
-     * adapters with a centrolized ResourceAdapter.  It would be a
-     * good place for the tx to cx map.
-     *
-     * @return a <code>ResourceAdapter</code> value
-     */
-    public ResourceAdapter getResourceAdapter()
-    {
-        return null;
-    }
-
-    /**
-     * The <code>setResourceAdapter</code> method is used in jca 1.5
-     * adapters with a centrolized ResourceAdapter.  It would be a
-     * good place for the tx to cx map.
-     *
-     * @param resourceAdapter a <code>ResourceAdapter</code> value
-     */
-    public void setResourceAdapter(ResourceAdapter resourceAdapter)
-    {
-    }
 
 
 /**
