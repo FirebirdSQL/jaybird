@@ -770,6 +770,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                     }
                     
                     len -= chunk;
+                    off += chunk;
                 }
             }
             catch (GDSException ge) {
