@@ -1,3 +1,47 @@
+2004-10-24 21:51  rrokytskyy
+
+	*
+	
+	fixed testUnrecognizedTransaction, but disabled for now
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
+	ava:
+
+2004-10-24 18:07  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	pool/org/firebirdsql/pool/FBWrappingDataSource.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java,
+	main/org/firebirdsql/gds/XdrOutputStream.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBMissingParameterException.java:
+	
+	merged with head
+
+2004-10-24 17:56  rrokytskyy
+
+	* client-java/src/etc/: release_notes.html, release_notes.pdf,
+	release_notes.sxw:
+	
+	added list of fixes since 1.5.0
+
+2004-10-24 17:46  rrokytskyy
+
+	*
+	
+	added keepStatements parameter
+	client-java/src/pool/org/firebirdsql/pool/FBWrappingDataSource.java
+	:
+
+2004-10-24 16:52  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractCallableStatement.java, AbstractPreparedStatement.java:
+	
+	fixed a bug in AbstractCallableStatement where not all params were
+	marked as set
+
 2004-10-24 00:11  rrokytskyy
 
 	*
