@@ -1,3 +1,11 @@
+2003-11-26 09:35  ryanbaldwin
+
+	*
+	
+	Removed duff test case that I added.
+	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
+	ource.java:
+
 2003-11-20 20:45  rrokytskyy
 
 	*
