@@ -22,7 +22,7 @@ package org.firebirdsql.jdbc;
 import junit.framework.*;
 
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 
 import java.sql.SQLException;
 import java.io.*;
@@ -50,7 +50,7 @@ public class TestFBStringField extends BaseTestFBField {
     protected void setUp() throws SQLException{
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_TEXT;
+        xsqlvars[0].sqltype = ISCConstants.SQL_TEXT;
         xsqlvars[0].sqllen = TEST_STRING_SIZE;
         Object[] row = new byte[1][];
         java.util.ArrayList rows = new java.util.ArrayList();

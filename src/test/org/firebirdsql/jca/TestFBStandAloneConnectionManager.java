@@ -24,10 +24,7 @@ import javax.transaction.xa.*;
 import java.sql.Connection;
 import javax.sql.DataSource;
 
-//import org.firebirdsql.jca.*;
 import org.firebirdsql.gds.Clumplet;
-import org.firebirdsql.gds.GDS;
-//import org.firebirdsql.jgds.GDS_Impl;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.logging.Logger;
 

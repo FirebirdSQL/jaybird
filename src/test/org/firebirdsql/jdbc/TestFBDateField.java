@@ -22,7 +22,7 @@ package org.firebirdsql.jdbc;
 import junit.framework.*;
 
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 
 import java.sql.*;
 import java.io.*;
@@ -43,7 +43,7 @@ public class TestFBDateField extends BaseTestFBField {
 	protected void setUp() throws SQLException{
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_TYPE_DATE;
+        xsqlvars[0].sqltype = ISCConstants.SQL_TYPE_DATE;
         byte[][] row = new byte[1][];
         java.util.ArrayList rows = new java.util.ArrayList();
         rows.add(row);		  

@@ -23,11 +23,7 @@ import javax.transaction.xa.*;
 import java.sql.Connection;
 import java.sql.Statement;
 
-//import org.firebirdsql.jca.*;
 import org.firebirdsql.gds.Clumplet;
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSFactory;
-//import org.firebirdsql.jgds.GDS_Impl;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.logging.Logger;

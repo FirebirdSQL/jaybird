@@ -22,10 +22,7 @@ import javax.resource.spi.*;
 import javax.transaction.xa.*;
 import java.sql.Connection;
 
-//import org.firebirdsql.jca.*;
-//import org.firebirdsql.gds.Clumplet;
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSFactory;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.management.FBManager;
 
 import java.io.*;
@@ -64,18 +61,18 @@ public class TestXABase extends BaseFBTest {
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
         mcf.setDatabase(DB_DATASOURCE_URL);
         FBConnectionRequestInfo cri = new FBConnectionRequestInfo();
-        cri.setProperty(GDS.isc_dpb_user_name, DB_USER);
-        cri.setProperty(GDS.isc_dpb_password, DB_PASSWORD);
-        cri.setProperty(GDS.isc_dpb_num_buffers, new byte[] {90});
-        cri.setProperty(GDS.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
-        cri.setProperty(GDS.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0});
+        cri.setProperty(ISCConstants.isc_dpb_user_name, DB_USER);
+        cri.setProperty(ISCConstants.isc_dpb_password, DB_PASSWORD);
+        cri.setProperty(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
+        cri.setProperty(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
+        cri.setProperty(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0});
         mcf.setConnectionRequestInfo(cri);
         /*
         HashSet tpb = new HashSet();
-        tpb.add(new Integer(GDS.isc_tpb_write));
-        tpb.add(new Integer(GDS.isc_tpb_read_committed));
-        tpb.add(new Integer(GDS.isc_tpb_no_rec_version));
-        tpb.add(new Integer(GDS.isc_tpb_wait));
+        tpb.add(new Integer(ISCConstants.isc_tpb_write));
+        tpb.add(new Integer(ISCConstants.isc_tpb_read_committed));
+        tpb.add(new Integer(ISCConstants.isc_tpb_no_rec_version));
+        tpb.add(new Integer(ISCConstants.isc_tpb_wait));
         mcf.setTpb(tpb);
         */
         return mcf;
