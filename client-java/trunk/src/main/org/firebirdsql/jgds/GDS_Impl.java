@@ -1147,6 +1147,7 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
                 if (option == ISCConstants.DSQL_drop) {
                     stmt.setInSqlda(null);
                     stmt.setOutSqlda(null);
+                    stmt.setRsr_rdb(null);
                 }
                 // those rows are used by cachedFetcher don't clear
                 stmt.clearRows();

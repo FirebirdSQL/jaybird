@@ -169,6 +169,10 @@ public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_
         rsr_rdb = value;
     }
 
+    public boolean isValid() {
+        return rsr_rdb != null && rsr_rdb.isValid();
+    }
+    
     public int size() {
         return size;
     }
