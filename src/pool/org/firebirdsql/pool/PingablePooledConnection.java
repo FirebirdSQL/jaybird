@@ -55,6 +55,8 @@ public class PingablePooledConnection implements PooledConnection,
     private String pingStatement;
     private long lastPingTime = System.currentTimeMillis();
     private int pingInterval = 0;
+    
+    private int maxStatements;
 
     private boolean supportsStatementsAccrossCommit;
     private boolean supportsStatementsAccrossRollback;
@@ -70,12 +72,14 @@ public class PingablePooledConnection implements PooledConnection,
 
     protected PingablePooledConnection(Connection connection, 
                                        boolean statementPooling, 
-                                       int transactionIsolation) 
+                                       int transactionIsolation,
+                                       int maxStatements) 
         throws SQLException 
     {
         this.jdbcConnection = connection;
         this.statementPooling = statementPooling;
         this.transactionIsolation = transactionIsolation;
+        this.maxStatements = maxStatements;
 
         this.supportsStatementsAccrossCommit =
             connection.getMetaData().supportsOpenStatementsAcrossCommit();
@@ -99,10 +103,10 @@ public class PingablePooledConnection implements PooledConnection,
 
     protected PingablePooledConnection(Connection connection,
         String pingStatement, int pingInterval, boolean statementPooling, 
-        int transactionIsolation) 
+        int transactionIsolation, int maxStatements) 
         throws SQLException 
     {
-        this(connection, statementPooling, transactionIsolation);
+        this(connection, statementPooling, transactionIsolation, maxStatements);
         this.pingStatement = pingStatement;
         this.pingInterval = pingInterval;
     }
@@ -265,7 +269,7 @@ public class PingablePooledConnection implements PooledConnection,
 
     /**
      * Handle {@link Connection#prepareStatement(String)} method call. This
-         * method check internal cache first and returns prepared statement if found.
+     * method check internal cache first and returns prepared statement if found.
      * Otherwise, it prepares statement and caches it.
      *
      * @param statement statement to prepare.
@@ -290,7 +294,8 @@ public class PingablePooledConnection implements PooledConnection,
 
             if (stmtCache == null) {
                 stmtCache = new XPreparedStatementCache(
-                    this, statement, resultSetType, resultSetConcurrency);
+                    this, statement, resultSetType, resultSetConcurrency, 
+                    maxStatements);
 
                 statements.put(statement, stmtCache);
             }
@@ -312,7 +317,7 @@ public class PingablePooledConnection implements PooledConnection,
      * @throws SQLException if underlying connection threw this exception.
      */
     public XCachablePreparedStatement prepareStatement(String statement,
-        int resultSetType, int resultSetConcurrency) throws SQLException {
+        int resultSetType, int resultSetConcurrency, boolean cached) throws SQLException {
         if (LOG_PREPARE_STATEMENT && getLogChannel() != null) {
             getLogChannel().info("Prepared statement for SQL '" + statement +
                 "'");
@@ -324,7 +329,7 @@ public class PingablePooledConnection implements PooledConnection,
         Class[] implementedInterfaces = stmt.getClass().getInterfaces();
 
         PooledPreparedStatementHandler handler =
-            new PooledPreparedStatementHandler(statement, stmt, this);
+            new PooledPreparedStatementHandler(statement, stmt, this, cached);
 
         // copy all implemented interfaces from the original prepared statement
         // and add XCachablePreparedStatement interface

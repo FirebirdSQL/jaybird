@@ -53,6 +53,8 @@ class XPreparedStatementCache {
     private int resultSetType;
     private int resultSetConcurrency;
     
+    private int maxSize;
+    
     /**
      * Create instance of this class for the specified SQL statement and
      * result set type and concurrency.
@@ -67,9 +69,10 @@ class XPreparedStatementCache {
      * @param resultSetConcurrency result set concurrency.
      */
     public XPreparedStatementCache(XStatementManager owner, String sql,
-        int resultSetType, int resultSetConcurrency) 
+        int resultSetType, int resultSetConcurrency, int maxSize) 
     {
         this.owner = owner;
+        this.maxSize = maxSize;
         
         if (sql == null)
             throw new NullPointerException(
@@ -105,7 +108,7 @@ class XPreparedStatementCache {
 
             if (!CACHE_PREPARED_STATEMENTS)
                 result = owner.prepareStatement(
-                    sql, resultSetType, resultSetConcurrency);
+                    sql, resultSetType, resultSetConcurrency, false);
             else {
                 if (freeReferences.isEmpty()) {
 
@@ -115,7 +118,8 @@ class XPreparedStatementCache {
                             "preparing new one.");
 
                     result = owner.prepareStatement(
-                        sql, resultSetType, resultSetConcurrency);
+                        sql, resultSetType, resultSetConcurrency, 
+                        workingReferences.size() < maxSize);
                 } else {
                     if (LOG_STATEMENT_IN_POOL)
                         logChannel.info(
@@ -158,12 +162,17 @@ class XPreparedStatementCache {
                 XCachablePreparedStatement statement = 
                     (XCachablePreparedStatement)reference;
                 
-                // clean reference
-                statement.setConnection(null);
+                if (statement.isCached()) {
+                    statement.setConnection(null);
+                    freeReferences.put(reference);
+                } 
                 
-                freeReferences.put(reference);
                 workingReferences.remove(statement.getOriginal());
 
+                // release statement if it is not cached
+                if (!statement.isCached())
+                    statement.forceClose();
+                
                 if (LOG_STATEMENT_IN_POOL)
                     logChannel.info("Returned prepared statement to pool.");
 

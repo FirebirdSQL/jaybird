@@ -63,10 +63,14 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
     private final static Method PREPARED_STATEMENT_GET_ORIGINAL = findMethod(
         XCachablePreparedStatement.class, "getOriginal", new Class[0]);
     
+    private final static Method PREPARED_STATEMENT_IS_CACHED = findMethod(
+            XCachablePreparedStatement.class, "isCached", new Class[0]);
+    
     private String statement;
     private PreparedStatement preparedStatement;
     private XStatementManager owner;
     private Connection associatedConnection;
+    private boolean cached;
     
     private boolean invalid;
     private String invalidateStackTrace = "";
@@ -83,12 +87,13 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
      * statement.
      */
     PooledPreparedStatementHandler(String statement, PreparedStatement preparedStatement, 
-        XStatementManager owner) 
+        XStatementManager owner, boolean cached) 
     {
         this.statement = statement;
         this.preparedStatement = preparedStatement;
         this.owner = owner;
         this.invalid = false;
+        this.cached = cached;
     }
     
     /**
@@ -115,6 +120,10 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
         associatedConnection = null;
         invalid = true;
         invalidateStackTrace = XConnectionUtil.getStackTrace(new Exception());
+    }
+    
+    protected boolean handleIsCached() throws SQLException {
+        return cached;
     }
         
     /**
@@ -153,6 +162,9 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
             if (method.equals(PREPARED_STATEMENT_FORCE_CLOSE)) {
                 handleForceClose();
                 return Void.TYPE;
+            } else
+            if (method.equals(PREPARED_STATEMENT_IS_CACHED)) {
+                return new Boolean(handleIsCached());
             } else {
                 
                 Object result = method.invoke(preparedStatement, args);
