@@ -868,7 +868,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
      public void setNull (int parameterIndex, int sqlType, String typeName) throws  SQLException {
          setNull(parameterIndex, sqlType); //all nulls are represented the same... a null reference
     }
-
+     
     /**
      * Prepare fixed statement and initialize parameters.
      */
@@ -897,13 +897,6 @@ public abstract class AbstractPreparedStatement extends FBStatement
             
       		fields[i] = FBField.createField(getXsqlvar(i+1), null, i, false);
 
-            /*
-      		if (fields[i] instanceof FBBlobField)
-      		    ((FBBlobField)fields[i]).setConnection(c);
-      		else
-      		if (fields[i] instanceof FBStringField)
-      		    ((FBStringField)fields[i]).setConnection(c);
-            */
             fields[i].setConnection(c);
 
             isBlob[i] =
