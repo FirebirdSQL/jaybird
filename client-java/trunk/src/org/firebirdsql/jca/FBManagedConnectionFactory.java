@@ -204,12 +204,12 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         if (blobBufferLength > MAX_BLOB_BUFFER_LENGTH) 
         {
             this.blobBufferLength = MAX_BLOB_BUFFER_LENGTH;
-            log.warn("Supplied blob buffer length greater than maximum of " + MAX_BLOB_BUFFER_LENGTH);
+            if (log!=null) log.warn("Supplied blob buffer length greater than maximum of " + MAX_BLOB_BUFFER_LENGTH);
         } // end of if ()
         else if (blobBufferLength < MIN_BLOB_BUFFER_LENGTH ) 
         {
             this.blobBufferLength = MIN_BLOB_BUFFER_LENGTH;
-            log.warn("Supplied blob buffer length less than minimum of " + MIN_BLOB_BUFFER_LENGTH);
+            if (log!=null) log.warn("Supplied blob buffer length less than minimum of " + MIN_BLOB_BUFFER_LENGTH);
         } // end of if ()
         else
         {
@@ -454,7 +454,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         synchronized(dbHandleUsage) {
             Integer i = (Integer)dbHandleUsage.get(db);
             if (i == null) {
-                log.warn("db handle not found in Usage map: " + db);
+                if (log!=null) log.warn("db handle not found in Usage map: " + db);
                 return 1;
             }
             int count = ((Integer)dbHandleUsage.get(db)).intValue();
@@ -507,7 +507,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         }
         catch (GDSException ge)
         {
-            log.error("GDS Exception in getDbHandle", ge);
+            if (log!=null) log.error("GDS Exception in getDbHandle", ge);
             throw new XAException(ge.getMessage());
         } // end of try-catch
     }
@@ -528,7 +528,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         }
         catch (GDSException ge)
         {
-            log.info("Could not get a db connection!", ge);
+            if (log!=null) log.info("Could not get a db connection!", ge);
             throw new ResourceException("could not get a db connection!", ge.getMessage());   
         } // end of try-catch
     }
@@ -595,7 +595,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             gds.isc_prepare_transaction2(lookupXid(xid), fbxid.toBytes());
         }
         catch (GDSException ge) {
-            log.warn("error in prepare", ge);
+            if (log!=null) log.warn("error in prepare", ge);
             forgetXid(xid);
             throw new XAException(ge.getMessage());
         }

@@ -30,6 +30,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.7  2002/06/04 01:17:49  brodsom
+ * performance patches
+ *
  * Revision 1.6  2002/02/02 18:58:24  d_jencks
  * converted to log4j logging and cleaned up some test problems.  If you do not wish to use log4j, you may leave out the log4j-core.jar and get no logging
  *
@@ -79,7 +82,7 @@ public class GDSExceptionHelper {
             java.io.InputStream in = cl.getResourceAsStream(res);
             messages.load(in);
         } catch (Exception ex) {
-            log.info("Exception in init of GDSExceptionHelper", ex);
+            if (log!=null) log.info("Exception in init of GDSExceptionHelper", ex);
         } finally {
             initialized = true;
         }

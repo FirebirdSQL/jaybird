@@ -296,7 +296,7 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
             gds.isc_detach_database(db);
         }
         catch (Exception e) {
-           log.error("Exception creating database", e);
+           if (log!=null) log.error("Exception creating database", e);
            throw e;
         }
     }
@@ -312,7 +312,7 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
 
         }
         catch (Exception e) {
-           log.error("Exception dropping database", e);
+           if (log!=null) log.error("Exception dropping database", e);
 
             throw e;
         }

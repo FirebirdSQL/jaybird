@@ -25,6 +25,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.9  2002/06/04 01:17:49  brodsom
+ * performance patches
+ *
  * Revision 1.8  2002/05/20 10:55:48  brodsom
  * write jca imports by class
  *
@@ -136,7 +139,7 @@ public class FBDriver implements Driver {
         try{
             java.sql.DriverManager.registerDriver(new FBDriver());
         } catch(Exception ex) {
-           log.error("Could not register with driver manager", ex);
+           if (log!=null) log.error("Could not register with driver manager", ex);
         }
     }
 

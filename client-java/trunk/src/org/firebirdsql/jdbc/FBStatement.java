@@ -581,10 +581,12 @@ public class FBStatement implements Statement {
                 int delCount = i.getDeleteCount();
                 int resCount = ((updCount>delCount) ? updCount:delCount);
                 resCount = ((resCount>insCount) ? resCount:insCount);
-                log.debug("InsertCount: " + insCount);
-                log.debug("UpdateCount: " + updCount);
-                log.debug("DeleteCount: " + delCount);
-                log.debug("returning: " + resCount);
+                if (log!=null) {
+                    log.debug("InsertCount: " + insCount);
+                    log.debug("UpdateCount: " + updCount);
+                    log.debug("DeleteCount: " + delCount);
+                    log.debug("returning: " + resCount);
+                }
 
                 return resCount;
             }

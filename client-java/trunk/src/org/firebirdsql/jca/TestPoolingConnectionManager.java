@@ -155,7 +155,7 @@ public class TestPoolingConnectionManager extends TestXABase
    
    public void testIdleTimeout() throws Exception
    {
-      log.debug("testIdleTimeout");
+      if (log != null) log.debug("testIdleTimeout");
       FBManagedConnectionFactory mcf = initMcf();//new FBManagedConnectionFactory();
       ManagedConnectionPool.PoolParams pp = new ManagedConnectionPool.PoolParams();
       pp.minSize = 0;
@@ -175,9 +175,9 @@ public class TestPoolingConnectionManager extends TestXABase
       } // end of for ()
       
       assertTrue("Wrong number of connections counted: " + cm.getConnectionCount(), cm.getConnectionCount() == pp.maxSize);
-      log.debug("about to wait for idletimeout");
+      if (log != null) log.debug("about to wait for idletimeout");
       Thread.sleep((long)pp.idleTimeout * 10 + 1000);
-      log.debug("waited for idle timeout");
+      if (log != null) log.debug("waited for idle timeout");
       //      cm.removeTimedOut();
       assertTrue("Wrong number of connections counted: " + cm.getConnectionCount(), cm.getConnectionCount() == 0);
       

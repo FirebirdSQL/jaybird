@@ -106,7 +106,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                 }*/
         }
         catch (SQLException e) {
-           log.warn("error in DatabaseMetaData.close", e);
+           if (log!=null) log.warn("error in DatabaseMetaData.close", e);
         }
     }
 

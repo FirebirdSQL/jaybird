@@ -227,7 +227,7 @@ public class FBResultSet implements ResultSet {
         if (row[columnIndex - 1] == null) {
             return null;
         }
-        log.debug("retrieved blob_id: " + row[columnIndex - 1]);
+        if (log!=null) log.debug("retrieved blob_id: " + row[columnIndex - 1]);
         return new FBBlob(mc, ((Long)row[columnIndex - 1]).longValue());
         //return super.getBlob(columnIndex);
         */
@@ -2574,7 +2574,7 @@ public class FBResultSet implements ResultSet {
             isLast = false;
             isAfterLast = false;
                 
-            log.debug("FBResultSet next - FBStatementFetcher");
+            if (log!=null) log.debug("FBResultSet next - FBStatementFetcher");
                     
             if (isEmpty)
                 return false;
@@ -2694,7 +2694,7 @@ public class FBResultSet implements ResultSet {
             isLast = false;
             isAfterLast = false;
                 
-            log.debug("FBResultSet next - FBCachedFetcher");
+            if (log!=null) log.debug("FBResultSet next - FBCachedFetcher");
             if (isEmpty)
                 return false;
             else 

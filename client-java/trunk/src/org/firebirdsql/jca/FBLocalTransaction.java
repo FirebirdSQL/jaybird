@@ -87,7 +87,7 @@ import org.firebirdsql.logging.LoggerFactory;
              mc.start(xid, XAResource.TMNOFLAGS);  //FBManagedConnection is its own XAResource
          }
          catch (XAException e) {
-            log.warn("couldn't start local transaction: " , e);
+            if (log != null) log.warn("couldn't start local transaction: " , e);
             throw new ResourceException("couldn't start local transaction: " + e);
          }
          if (c != null) {

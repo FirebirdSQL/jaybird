@@ -58,7 +58,7 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
 
     public void testCreateDCM() throws Exception {
         
-        log.info("testCreateDCM");
+        if (log != null) log.info("testCreateDCM");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
         assertTrue("Could not get DataSource", ds != null);
@@ -70,7 +70,7 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
 
     public void testCreateStatement() throws Exception {
         
-        log.info("testCreateStatement");
+        if (log != null) log.info("testCreateStatement");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
         Connection c = ds.getConnection();
@@ -81,7 +81,7 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
 
     public void testUseStatement() throws Exception {
         
-        log.info("testUseStatement");
+        if (log != null) log.info("testUseStatement");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
         FBConnection c = (FBConnection)ds.getConnection();

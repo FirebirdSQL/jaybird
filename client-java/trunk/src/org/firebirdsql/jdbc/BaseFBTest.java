@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.7  2002/06/04 01:17:49  brodsom
+ * performance patches
+ *
  * Revision 1.6  2002/04/29 21:35:42  rrokytskyy
  * added lc_ctype to initial parameters
  *
@@ -140,7 +143,7 @@ public class BaseFBTest extends TestCase
       }
       catch (Exception e)
       {
-         log.warn("exception in setup of " + getName() + ": ", e);
+         if (log!=null) log.warn("exception in setup of " + getName() + ": ", e);
       } // end of try-catch
    }
 
@@ -153,7 +156,7 @@ public class BaseFBTest extends TestCase
       }
       catch (Exception e)
       {
-         log.warn("exception in teardown of " + getName() + ": ", e);
+         if (log!=null) log.warn("exception in teardown of " + getName() + ": ", e);
       } // end of try-catch
       
    }
