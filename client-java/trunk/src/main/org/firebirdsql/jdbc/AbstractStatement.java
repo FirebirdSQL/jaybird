@@ -992,6 +992,10 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         }
     }
     
+    public ResultSet getCurrentResultSet() throws SQLException {
+        return currentRs;
+    }
+    
     /**
      * This method checks if supplied statement is executing procedure or
      * it is generic statement. This check is needed to handle correctly 
