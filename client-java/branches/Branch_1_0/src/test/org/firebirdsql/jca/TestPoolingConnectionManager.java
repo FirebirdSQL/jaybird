@@ -134,7 +134,8 @@ public class TestPoolingConnectionManager extends TestXABase
           cm.returnManagedConnection(mc, false);
       }
       cs.clear();
-      log.info("Running short blocking test with blocking timeout: " + pp.blockingTimeout);
+      if (log != null)
+        log.info("Running short blocking test with blocking timeout: " + pp.blockingTimeout);
       final Logger llog = log;
       for (int i = 0; i < pp.maxSize * threadsPerConnection; i++)
       {

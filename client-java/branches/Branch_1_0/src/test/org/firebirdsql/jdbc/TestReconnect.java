@@ -158,7 +158,7 @@ public class TestReconnect extends BaseFBTest
 
     private void dropTestTables() throws SQLException
     {
-        log.info("Dropping test tables ...");
+        if (log != null) log.info("Dropping test tables ...");
         if (!con.getAutoCommit())
             con.setAutoCommit(true);
         for (int i = TABLE_COUNT; i > 0; i--) {
@@ -170,7 +170,7 @@ public class TestReconnect extends BaseFBTest
 
     private void createTestTables() throws SQLException
     {
-        log.info("Creating test tables ...");
+        if (log != null) log.info("Creating test tables ...");
         if (!con.getAutoCommit())
             con.setAutoCommit(true);
 
@@ -215,7 +215,7 @@ public class TestReconnect extends BaseFBTest
 
     private void alterForeignKeys(boolean cascade) throws SQLException
     {
-        log.info("Altering foreign keys ...");
+        if (log != null) log.info("Altering foreign keys ...");
         if (!con.getAutoCommit())
             con.setAutoCommit(true);
         // add FOREIGN KEY's
@@ -248,7 +248,7 @@ public class TestReconnect extends BaseFBTest
     {
         if (con.getAutoCommit())
             con.setAutoCommit(false);
-        log.info("Populating test tables ...");
+        if (log != null) log.info("Populating test tables ...");
         java.util.Random random = new java.util.Random();
         for (int i = 1; i <= TABLE_COUNT; i++) {
             StringBuffer sql = new StringBuffer(100);
@@ -285,16 +285,16 @@ public class TestReconnect extends BaseFBTest
         ResultSetMetaData md = rs.getMetaData();
         int cols = md.getColumnCount();
         if (print) {
-            log.info(title);
-            log.info("-------------------------------------------------------------------------------");
+            if (log != null) log.info(title);
+            if (log != null) log.info("-------------------------------------------------------------------------------");
             StringBuffer sb = new StringBuffer();
             for (int i = 1; i <= cols; i++) {
                 if (i > 1)
                     sb.append('\t');
                 sb.append(md.getColumnLabel(i));
             }
-            log.info(sb.toString());
-            log.info("-------------------------------------------------------------------------------");
+            if (log != null) log.info(sb.toString());
+            if (log != null) log.info("-------------------------------------------------------------------------------");
         }
         while (rs.next()) {
             StringBuffer sb = new StringBuffer();
@@ -306,14 +306,14 @@ public class TestReconnect extends BaseFBTest
                 sb.append(value);
                         
             }
-            log.info(sb);
+            if (log != null) log.info(sb);
         }
         rs.close();
     }
 
     private void readMetaData() throws SQLException
     {
-        log.info("Reading meta data ...");
+        if (log != null) log.info("Reading meta data ...");
         DatabaseMetaData md = con.getMetaData();
         for (int i = 1; i <= TABLE_COUNT; i++) {
             String tableName = getTableName(i);
