@@ -1,3 +1,21 @@
+2004-08-25 22:38  rrokytskyy
+
+	* client-java/src/etc/: release_notes.sxw, release_notes.html,
+	release_notes.pdf:
+	
+	updated release notes
+
+2004-08-25 22:22  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	pool/org/firebirdsql/pool/PooledConnectionHandler.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java,
+	pool/org/firebirdsql/pool/PooledObject.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+	
+	fixed issues when pool is shutted down with open connections
+
 2004-08-25 00:15  rrokytskyy
 
 	*
