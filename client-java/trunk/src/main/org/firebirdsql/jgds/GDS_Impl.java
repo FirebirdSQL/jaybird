@@ -1034,7 +1034,7 @@ public final class GDS_Impl implements GDS {
         for (int i = 0; i < xsqlda.sqld; i++) {
             switch (xsqlda.sqlvar[i].sqltype & ~1) {
                 case ISCConstants.SQL_TEXT:
-                    xsqlda.ioLength[i] = xsqlda.sqlvar[i].sqllen;
+                    xsqlda.ioLength[i] = xsqlda.sqlvar[i].sqllen+1;
                     break;
                 case ISCConstants.SQL_VARYING:
                     xsqlda.ioLength[i] = 0;
@@ -1499,6 +1499,12 @@ public final class GDS_Impl implements GDS {
 
     public isc_blob_handle get_new_isc_blob_handle() {
         return new isc_blob_handle_impl();
+    }
+
+    public void connect(isc_db_handle_impl db,
+                            String host, Integer port, String filename) throws GDSException {
+        DbAttachInfo dbai = new DbAttachInfo(host, port, filename);
+        connect(db, dbai);
     }
 
     private void connect(isc_db_handle_impl db,
