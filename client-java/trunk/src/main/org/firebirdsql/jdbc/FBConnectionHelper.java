@@ -111,22 +111,6 @@ public class FBConnectionHelper {
 
     public static FBConnectionRequestInfo getDefaultCri(GDS gds) {
         FBConnectionRequestInfo result = new FBConnectionRequestInfo(gds);
-        //
-        // Important for performance on inserts. the charset code must not be none
-        //
-/* There are some old problems where the database use character set NONE 
- * and the client request a different character set 
-        String enc = FBConnectionHelper.getDefaultJavaEncoding();
-        String iscEncoding = FBConnectionHelper.getIscEncoding(enc);
-        if (iscEncoding != null)
-            result.setProperty(ISCConstants.isc_dpb_lc_ctype,iscEncoding);
-        else 
-            result.setProperty(ISCConstants.isc_dpb_lc_ctype,"ISO8859_1");
-*/		  
-        //result.setProperty(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
-        //result.setProperty(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
-        //result.setProperty(ISCConstants.isc_dpb_force_write, new byte[] {0});
-
         return result;
     }
 
@@ -165,7 +149,7 @@ public class FBConnectionHelper {
 
             // if the type is unknown, continue
             if (type == null) continue;
-
+            
             // set the value of the DPB
             try {
 
@@ -176,7 +160,10 @@ public class FBConnectionHelper {
             } catch(NumberFormatException nfex) {
 
                 // ok, that's not a byte, then set it as string
-                cri.setProperty(type.intValue(), value);
+                if ("".equals(value))
+                    cri.setProperty(type.intValue());
+                else
+                    cri.setProperty(type.intValue(), value);
             }
         }
 
