@@ -24,6 +24,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.5  2002/11/19 17:37:47  d_jencks
+ * verify that DECIMAL(18,0) stores all Long values.
+ *
  * Revision 1.4  2002/11/15 00:13:15  rrokytskyy
  * fixed bug with committing transaction when connection is closed
  *
@@ -70,10 +73,13 @@
 
 package org.firebirdsql.jdbc;
 
-import junit.framework.*;
+
 import java.sql.*;
 import java.util.*;
-
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
+import junit.framework.*;
 import org.firebirdsql.logging.Logger;
 
 /**
@@ -179,7 +185,7 @@ public class TestFBDriver extends BaseFBTest {
             Statement s = c.createStatement();
             try 
             {
-                s.execute("CREATE TABLE LONGTEST (LONGID DECIMAL(18,0) NOT NULL PRIMARY KEY)");
+                s.execute("CREATE TABLE LONGTEST (LONGID DECIMAL(18) NOT NULL PRIMARY KEY)");
                 try 
                 {
                     s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MAX_VALUE + ")");
@@ -223,6 +229,65 @@ public class TestFBDriver extends BaseFBTest {
             } // end of try-catch
             
 
+        }
+        finally
+        {
+            c.close();
+        } // end of try-catch
+        
+    }
+
+    private static final TimeZone timeZoneUTC = TimeZone.getTimeZone("UTC");
+    
+    public void testDate() throws Exception
+    {
+        Connection c = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        try 
+        {
+            Statement s = c.createStatement();
+            try 
+            {
+                s.execute("CREATE TABLE DATETEST (DATEID INTEGER NOT NULL PRIMARY KEY, TESTDATE TIMESTAMP)");
+                PreparedStatement ps = c.prepareStatement("INSERT INTO DATETEST (DATEID, TESTDATE) VALUES (?,?)");
+                Calendar cal = new GregorianCalendar(timeZoneUTC);
+                java.util.Date d1 = new java.util.Date("Sat Feb 17 20:59:31 EST 1917");
+                java.sql.Timestamp x = new java.sql.Timestamp(d1.getTime());
+                try 
+                {
+                    ps.setInt(1, 1);
+                    ps.setTimestamp(2, x, cal);
+                    ps.execute();
+                }
+                finally
+                {
+                    ps.close();
+                } // end of finally
+                
+                try 
+                {
+                    ResultSet rs = s.executeQuery("SELECT TESTDATE FROM DATETEST WHERE DATEID=1");
+                    try 
+                    {
+                         
+                        assertTrue("Should have one row!", rs.next());
+                        java.sql.Timestamp x2 = rs.getTimestamp(1, cal);
+                        java.util.Date d2 = new java.util.Date(x2.getTime());
+                        assertTrue("Retrieved wrong value! expected: " + d1 + ", actual: " + d2, d1.equals(d2));
+                    }
+                    finally
+                    {
+                        rs.close();
+                    } // end of try-finally
+                }
+                finally
+                {
+                    s.execute("DROP TABLE DATETEST");
+                } // end of try-finally
+            }
+            finally
+            {
+                s.close();
+            } // end of try-catch
         }
         finally
         {
