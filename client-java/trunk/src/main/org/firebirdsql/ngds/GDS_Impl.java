@@ -1003,7 +1003,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
 		throw new java.lang.UnsupportedOperationException();
 		}
 
-	public void isc_seek_blob(isc_blob_handle handle, int position)
+	public void isc_seek_blob(isc_blob_handle handle, int position, int mode)
 		throws GDSException
 		{
 		throw new java.lang.UnsupportedOperationException();
