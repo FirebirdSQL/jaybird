@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE connector PUBLIC '-//Sun Microsystems, Inc.//DTD Connector 1.0//EN' 'http://java.sun.com/j2ee/dtds/connector_1_0.dtd'>
+
+<connector>
+    <display-name>Firebird Database Connector</display-name>
+    <vendor-name>David Jencks</vendor-name>
+    <spec-version>1.0</spec-version>
+    <version>1.0</version>
+    <eis-type>Relational Database</eis-type>
+    <resourceadapter>
+        <managedconnectionfactory-class>org.firebirdsql.jca.ManagedConnectionFactory</managedconnectionfactory-class>
+        <connectionfactory-interface>javax.sql.DataSource</connectionfactory-interface>
+        <connectionfactory-impl-class>org.firebirdsql.jdbc.FBDataSource</connectionfactory-impl-class>
+        <connection-interface>java.sql.Connection</connection-interface>
+        <connection-impl-class>org.firebirdsql.jdbc.Connection</connection-impl-class>
+        <transaction-support>xa_transaction</transaction-support>
+        <config-property>
+            <config-property-name>Server</config-property-name>
+            <config-property-type>java.lang.String</config-property-type>
+            <config-property-value>localhost</config-property-value>
+        </config-property>
+        <config-property>
+            <config-property-name>Port</config-property-name>
+            <config-property-type>java.lang.Integer</config-property-type>
+            <config-property-value>3050</config-property-value>
+        </config-property>
+        <config-property>
+            <config-property-name>Database</config-property-name>
+            <config-property-type>java.lang.String</config-property-type>
+            <config-property-value></config-property-value>
+        </config-property>
+        <auth-mechanism>
+            <auth-mech-type>basic-password</auth-mech-type>
+            <credential-interface>javax.resource.security.PasswordCredential</credential-interface>
+        </auth-mechanism>
+        <reauthentication-support>false</reauthentication-support>
+    </resourceadapter>
+</connector>

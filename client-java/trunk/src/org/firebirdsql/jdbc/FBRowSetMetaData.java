@@ -26,9 +26,12 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
+
 import javax.sql.RowSetMetaData;
 import java.sql.SQLException;
+import java.sql.*;
 
+import org.firebirdsql.gds.isc_stmt_handle;
 
 /**
  *
@@ -38,7 +41,6 @@ import java.sql.SQLException;
  */
 
 
-import java.sql.*;
 
 /**
  * <P>The RowSetMetaData interface extends ResultSetMetaData with 
@@ -48,6 +50,10 @@ import java.sql.*;
  */
 
 public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaData {
+
+    FBRowSetMetaData(isc_stmt_handle stmt) {
+        super(stmt);
+    }
 
   /**
    * Set the number of columns in the RowSet.

@@ -21,10 +21,16 @@
  *    All rights reserved.
 
  */
-package org.firebirdsql.jgds;
+package org.firebirdsql.management;
 
-import java.io.IOException;
-import org.firebirdsql.gds.GDSException;
+
+//import org.firebirdsql.management.FBManager;
+import java.io.*;
+import java.util.Properties;
+import java.sql.*;
+
+
+import junit.framework.*;
 
 /**
  *
@@ -33,16 +39,43 @@ import org.firebirdsql.gds.GDSException;
  *   @version $ $
  */
 
- /**This interface represents objects that 
- * can serialize themselves to xdr streams. 
- */
 
-interface Xdrable {
+
+/**
+ *This is a class that hands out connections.  Initial implementation uses DriverManager.getConnection,
+ *future enhancements will use datasources/ managed stuff.
+ */
+public class TestFBManager extends TestCase {
+
+    public static String DBNAME = "/usr/local/firebird/dev/client-java/db/fbmtest.gdb";
     
-    int getLength();
+    public TestFBManager(String name) {
+        super(name);
+    }
     
-    void read(XdrInputStream in, int length) throws IOException;
+    public static Test suite() {
+
+        return new TestSuite(TestFBManager.class);
+    }
     
-    void write(XdrOutputStream out) throws IOException;
+    public void testStart() throws Exception {
+        FBManager m = new FBManager();
+        m.setURL("localhost");
+        m.setPort(3050);
+        m.start();
+        m.stop();
+    }
+
+    public void testCreateDrop() throws Exception {
+        FBManager m = new FBManager();
+        m.setURL("localhost");
+        m.setPort(3050);
+        m.start();
+        m.createDatabase(DBNAME);
+        m.dropDatabase(DBNAME);
+        m.stop();
+    }
+
+
 
 }

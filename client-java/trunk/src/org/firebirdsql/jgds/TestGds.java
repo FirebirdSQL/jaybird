@@ -83,15 +83,22 @@ public class TestGds extends TestCase {
     }
     
     public static Test suite() {
+/*		TestSuite suite= new TestSuite();
+		suite.addTest(
+			new TestGds("testPreparedSelect") {
+				 protected void runTest() throws Exception { super.testPreparedSelect(); }
+			}
+		);
+		return suite;*/
 
         return new TestSuite(TestGds.class);
     }
     
     public void setUp() {
         
-        gds = new org.firebirdsql.jgds.GDS_Impl();
-        c = (ClumpletImpl)gds.newClumplet(gds.isc_dpb_num_buffers, new byte[] {90});
-        c.append(gds.newClumplet(gds.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
+        gds = GDSFactory.newGDS(); 
+        c = (ClumpletImpl)GDSFactory.newClumplet(gds.isc_dpb_num_buffers, new byte[] {90});
+        c.append(GDSFactory.newClumplet(gds.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
         tpb.add(new Integer(gds.isc_tpb_write));
         tpb.add(new Integer(gds.isc_tpb_read_committed));
         tpb.add(new Integer(gds.isc_tpb_no_rec_version));
@@ -127,8 +134,8 @@ public class TestGds extends TestCase {
     }
     
     private void doSQLImmed(isc_db_handle db, isc_tr_handle tr, String sql) throws Exception {
-        System.out.println("isc_dsql_exec_inmed2");
-        gds.isc_dsql_exec_inmed2(db, tr, sql,
+        System.out.println("isc_dsql_exec_immed2");
+        gds.isc_dsql_exec_immed2(db, tr, sql,
                                  GDS.SQL_DIALECT_CURRENT, null, null);
         
     }
@@ -188,19 +195,6 @@ public class TestGds extends TestCase {
         dropDatabase(db1);        
     }
 
-    public void testCreateDropTable() throws Exception {
-        System.out.println();
-        System.out.println("testCreateDropTable");
-        db1 = createDatabase(dbName);
-        t1 = startTransaction(db1);
-        doSQLImmed(db1, t1, "create table r1 (col1 smallint not null primary key)");
-        commit(t1);
-        t1 = startTransaction(db1);
-        doSQLImmed(db1, t1, "drop table r1");
-        commit(t1);
-        dropDatabase(db1);   
-        
-    }
     
     public void testDbHandleEquality() throws Exception {
         System.out.println();
@@ -269,4 +263,152 @@ public class TestGds extends TestCase {
         dropDatabase(db1);        
 //        dropDatabase(db2);        
     }*/
+    
+    
+    private isc_db_handle setupTable() throws Exception {
+        isc_db_handle db = createDatabase(dbName);
+        t1 = startTransaction(db);
+        doSQLImmed(db, t1, "create table r1 (col1 smallint not null primary key, col2 smallint)");
+        commit(t1);
+        return db;        
+    }
+    
+    private void teardownTable(isc_db_handle db) throws Exception {
+        t1 = startTransaction(db);
+        doSQLImmed(db, t1, "drop table r1");
+        commit(t1);
+        dropDatabase(db);   
+    }
+    
+    public void testCreateDropTable() throws Exception {
+        System.out.println();
+        System.out.println("testCreateDropTable");
+        db1 = setupTable();
+        teardownTable(db1);
+    }
+    
+    public void testInsert() throws Exception {
+        System.out.println();
+        System.out.println("testInsert");
+        db1 = setupTable();
+        t1 = startTransaction(db1);
+        doSQLImmed(db1, t1, "INSERT INTO R1 VALUES (1, 2)");
+        
+        doSQLImmed(db1, t1, "INSERT INTO R1 VALUES (2, 3)");
+        
+        doSQLImmed(db1, t1, "INSERT INTO R1 VALUES (3, 4)");
+        commit(t1);
+
+        teardownTable(db1);
+    }
+    
+
+    public void testParameterizedInsert() throws Exception {
+        System.out.println();
+        System.out.println("testParameterizedInsert");
+        db1 = setupTable();
+        
+        t1 = startTransaction(db1);
+        XSQLDA xsqlda = new XSQLDA(2);
+        XSQLVAR xsqlvar = new XSQLVAR();
+        xsqlvar.sqltype = GDS.SQL_SHORT;
+        xsqlvar.sqllen = 2;
+        xsqlvar.sqldata = new Short((short) 3);
+        xsqlda.sqlvar[0] = xsqlvar;
+        
+        xsqlvar = new XSQLVAR();
+        xsqlvar.sqltype = GDS.SQL_SHORT;
+        xsqlvar.sqllen = 2;
+        xsqlvar.sqldata = new Short((short) 4);
+        xsqlda.sqlvar[1] = xsqlvar;
+        
+        System.out.println("isc_dsql_exec_immed2");
+        gds.isc_dsql_exec_immed2(db1, t1, "INSERT INTO R1 VALUES (?, ?)",
+                                 GDS.SQL_DIALECT_CURRENT, xsqlda, null);
+
+        
+        xsqlda = new XSQLDA(2);
+        xsqlvar = new XSQLVAR();
+        xsqlvar.sqltype = GDS.SQL_SHORT;
+        xsqlvar.sqllen = 2;
+        xsqlvar.sqldata = null;
+        xsqlda.sqlvar[0] = xsqlvar;
+        
+        xsqlvar = new XSQLVAR();
+        xsqlvar.sqltype = GDS.SQL_SHORT;
+        xsqlvar.sqllen = 2;
+        xsqlvar.sqldata = null;
+        xsqlda.sqlvar[1] = xsqlvar;
+        
+        System.out.println("isc_dsql_exec_immed2");
+        gds.isc_dsql_exec_immed2(db1, t1, "SELECT COL1, COL2 FROM R1 WHERE COL1 = 3",
+                                 GDS.SQL_DIALECT_CURRENT, null, xsqlda);
+        
+        System.out.println("retrieved inserted row C1 = " + xsqlda.sqlvar[0].sqldata + "     " +
+                           "C2 = " + xsqlda.sqlvar[1].sqldata);
+        
+
+
+        commit(t1);
+
+        teardownTable(db1);
+    }
+    
+    public void testPreparedSelect() throws Exception {
+        System.out.println();
+        System.out.println("testPreparedSelect");
+        db1 = setupTable();
+        t1 = startTransaction(db1);
+        doSQLImmed(db1, t1, "INSERT INTO R1 VALUES (1, 2)");
+        
+        doSQLImmed(db1, t1, "INSERT INTO R1 VALUES (2, 3)");
+        
+        doSQLImmed(db1, t1, "INSERT INTO R1 VALUES (3, 4)");
+        
+        XSQLDA in_xsqlda;// = new XSQLDA();
+        XSQLDA out_xsqlda;// = new XSQLDA();
+        
+        isc_stmt_handle stmt1 = gds.get_new_isc_stmt_handle();
+        
+        System.out.println("isc_dsql_allocate_statement");
+        gds.isc_dsql_allocate_statement(db1, stmt1);
+        
+        
+        System.out.println("isc_dsql_prepare");
+        out_xsqlda = gds.isc_dsql_prepare(t1, stmt1, "SELECT COL1, COL2 FROM R1 WHERE COL1 = 1",
+                             GDS.SQL_DIALECT_CURRENT);//, out_xsqlda);
+        
+//        System.out.println("isc_dsql_describe_bind");
+//        in_xsqlda = gds.isc_dsql_describe_bind(stmt1, 1);//, in_xsqlda);
+        in_xsqlda = null;
+        
+//        in_xsqlda.sqlvar[0].sqldata = new Short((short) 1);
+        
+//        System.out.println("isc_dsql_describe");
+//        out_xsqlda = gds.isc_dsql_describe(stmt1, 1);//, out_xsqlda);
+        
+        System.out.println("isc_dsql_execute2");
+        gds.isc_dsql_execute2(t1, stmt1, 1, in_xsqlda, null);
+        
+//        System.out.println("isc_dsql_set_cursor_name");
+//        gds.isc_dsql_set_cursor_name(stmt1, "cur1", 0);
+        
+//        int fetch_stat;
+        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+            for (int i = 0; i < out_xsqlda.sqld; i++) {
+                Short data = (Short) out_xsqlda.sqlvar[i].sqldata;
+                System.out.print(data.shortValue() + "    ");
+            }
+            System.out.println();
+        }
+    
+        System.out.println("isc_dsql_free_statement");
+        gds.isc_dsql_free_statement(stmt1, GDS.DSQL_drop);
+
+        commit(t1);
+
+        teardownTable(db1);
+    }
+    
+    
 }

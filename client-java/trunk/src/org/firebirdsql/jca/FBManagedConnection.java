@@ -31,10 +31,13 @@ import javax.resource.ResourceException;
 import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionMetaData;
 import javax.resource.spi.LocalTransaction;
+import javax.resource.spi.ConnectionEvent;
 import javax.resource.spi.ConnectionEventListener;
 import javax.resource.spi.ConnectionRequestInfo;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
@@ -42,12 +45,14 @@ import javax.transaction.xa.Xid;
 import javax.security.auth.Subject;
 
 import org.firebirdsql.gds.isc_db_handle;
+import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.isc_tr_handle;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.FBStatement;
 
 /**
  *
@@ -70,18 +75,26 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     
     private ArrayList connectionEventListeners = new ArrayList();
     
+    private ArrayList connectionHandles = new ArrayList();
+    
+    private PrintWriter log;
+    
     private int timeout = 0;
     
     private Subject s;
+    
+    private FBConnectionRequestInfo cri;
     
     
     private isc_tr_handle currentTr;
     
     private isc_db_handle currentDbHandle;
     
-    FBManagedConnection(Subject s, FBManagedConnectionFactory mcf) {
+    FBManagedConnection(Subject s, FBConnectionRequestInfo cri, FBManagedConnectionFactory mcf) {
         this.mcf = mcf;
         this.s = s;
+        this.cri = cri;
+        this.log = mcf.getLogWriter();
     }
     
     
@@ -140,8 +153,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          ResourceException - generic exception if operation fails
          ResourceAdapterInternalException - resource adapter related error condition
     **/
-    public void setLogWriter(java.io.PrintWriter out) throws ResourceException {
-        throw new ResourceException("not yet implemented");
+    public void setLogWriter(PrintWriter out){
+        this.log = out;
     }
     
     
@@ -163,8 +176,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          ResourceException - generic exception if operation fails
     **/
 
-    public java.io.PrintWriter getLogWriter() throws ResourceException {
-        throw new ResourceException("not yet implemented");
+    public PrintWriter getLogWriter() {
+        return log;
     }
     
   /**<P> Add an event listener.
@@ -200,6 +213,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public void associateConnection(java.lang.Object connection) throws ResourceException {
         try {
             ((FBConnection)connection).setManagedConnection(this);
+            connectionHandles.add(connection);
         }
         catch (ClassCastException cce) {        
             throw new ResourceException("invalid connection supplied to associateConnection: " + cce);
@@ -234,7 +248,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          localtransaction is in progress that doesn't allow connection cleanup
 */    
     public void cleanup() throws ResourceException {
-        throw new ResourceException("not yet implemented");
+        for (int i = connectionHandles.size() - 1; i>= 0; i--) {
+            ((FBConnection)connectionHandles.get(i)).close();
+        }
     }
     
 /**
@@ -267,8 +283,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         throws ResourceException {
         //subject currently ignored
         //cxRequestInfo currently ignored.
-            
-        return new FBConnection(this);
+        FBConnection c = new FBConnection(this);
+        connectionHandles.add(c);
+        return c;
     }
     
  
@@ -286,7 +303,20 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          IllegalStateException - illegal state for destroying connection
 **/   
     public void destroy() throws ResourceException {
-        throw new ResourceException("not yet implemented");
+        if (currentTr != null) {
+            throw new IllegalStateException("Can't destroy managed connection  with active transaction");
+        }
+        if (currentDbHandle != null) {
+            try {
+                mcf.gds.isc_detach_database(currentDbHandle);
+            }
+            catch (GDSException ge) {
+                throw new ResourceException("Can't detach from db: " + ge.toString());
+            }
+            finally {
+                currentDbHandle = null;
+            }
+        }
     }
              
              
@@ -445,15 +475,64 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     
     //FB public methods. Could be package if packages reorganized.
     
-    public boolean executeSQL(String sql) throws GDSException {
+    public isc_stmt_handle getAllocatedStatement() throws GDSException {
         //Should we test for dbhandle?
-        XSQLDA out = new XSQLDA();
-        mcf.gds.isc_dsql_exec_inmed2(currentTr.getDbHandle(), currentTr, sql,
-                                 GDS.SQL_DIALECT_CURRENT, null, out);
-                                 
-        return false;//Hah!
+        if (currentTr == null) {
+            throw new GDSException("No transaction started for allocate statement");
+        }
+        isc_stmt_handle stmt = mcf.gds.get_new_isc_stmt_handle();
+        mcf.gds.isc_dsql_allocate_statement(currentTr.getDbHandle(), stmt);
+        return stmt;
     }
-
+    
+    public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException {
+        //Should we test for dbhandle?
+        XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, sql, GDS.SQL_DIALECT_CURRENT);
+        if (out.sqld != out.sqln) {
+            throw new GDSException("Not all columns returned");
+        }
+        if (describeBind) {
+            mcf.gds.isc_dsql_describe_bind(stmt, GDS.SQLDA_VERSION1);
+        }
+    }
+    
+    public void executeStatement(isc_stmt_handle stmt) throws GDSException {
+        mcf.gds.isc_dsql_execute2(currentTr, stmt,
+                                 GDS.SQLDA_VERSION1, stmt.getInSqlda(), null);
+                                 
+    }
+    
+    public Object[] fetch(isc_stmt_handle stmt) throws GDSException {
+        return mcf.gds.isc_dsql_fetch(stmt, GDS.SQLDA_VERSION1, stmt.getOutSqlda());
+    }
+    
+    public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
+        mcf.gds.isc_dsql_free_statement(stmt, (deallocate) ? GDS.DSQL_drop: GDS.DSQL_close);
+    }
+    
+    public void close(FBConnection c) {
+        notify(ConnectionEvent.CONNECTION_CLOSED, c, null);
+        connectionHandles.remove(c);
+    }
+    
+    public void registerStatement(FBStatement fbStatement) {
+        if (currentTr == null) {
+            throw new Error("registerStatement called with no transaction");
+        }
+        
+        mcf.registerStatementWithTransaction(currentTr, fbStatement);
+    }
+    
+    private static byte[] stmtInfo = new byte[] 
+        {GDS.isc_info_sql_records, 
+         GDS.isc_info_sql_stmt_type, 
+         GDS.isc_info_end};
+    private static int INFO_SIZE = 128;
+    
+    public SqlInfo getSqlInfo(isc_stmt_handle stmt) throws GDSException {
+        return new SqlInfo(mcf.gds.isc_dsql_sql_info(stmt, stmtInfo.length, stmtInfo, INFO_SIZE), mcf.gds);
+    }
+    
     //--------------------------------------------------------------------
     //package visibility
     //--------------------------------------------------------------------
@@ -465,15 +544,121 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             currentDbHandle = currentTr.getDbHandle();
         }
     }
-    //temporarily public for testing
-    public isc_db_handle getIscDBHandle() throws XAException {
+
+    isc_db_handle getIscDBHandle() throws XAException {
         if (currentDbHandle == null) {
-            currentDbHandle = mcf.getDbHandle();
+            currentDbHandle = mcf.getDbHandle(cri);
         }
         return currentDbHandle;
     }
     
 
+    void notify(int type, FBConnection c, Exception e) {
+        ConnectionEvent ce = new ConnectionEvent(this, type, e);
+        ce.setConnectionHandle(c);
+        Iterator i = connectionEventListeners.iterator();
+        switch (type) {
+            case ConnectionEvent.CONNECTION_CLOSED:
+                while (i.hasNext()) {
+                    ((ConnectionEventListener)i.next()).connectionClosed(ce);
+                }
+            case ConnectionEvent.CONNECTION_ERROR_OCCURRED:
+                while (i.hasNext()) {
+                    ((ConnectionEventListener)i.next()).connectionErrorOccurred(ce);
+                }
+            case ConnectionEvent.LOCAL_TRANSACTION_STARTED:
+                while (i.hasNext()) {
+                    ((ConnectionEventListener)i.next()).localTransactionStarted(ce);
+                }
+            case ConnectionEvent.LOCAL_TRANSACTION_COMMITTED:
+                while (i.hasNext()) {
+                    ((ConnectionEventListener)i.next()).localTransactionCommitted(ce);
+                }
+            case ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK:
+                while (i.hasNext()) {
+                    ((ConnectionEventListener)i.next()).localTransactionRolledback(ce);
+                }
+                
+            default:
+//                throw new 
+        }
+    }
 
+    //-----------------------------------------
+    //Private methods
+    //-----------------------------------------
     
+    public static class SqlInfo {
+        private int statementType;
+        private int insertCount;
+        private int updateCount;
+        private int deleteCount;
+        private int selectCount; //????
+        
+        SqlInfo(byte[] buffer, GDS gds) {
+            int pos = 0;
+            int length;
+            int type;
+            while ((type = buffer[pos++]) != GDS.isc_info_end) {
+                length = gds.isc_vax_integer(buffer, pos, 2);
+                pos += 2;
+                switch (type) {
+                    case GDS.isc_info_sql_records: 
+                        int l;
+                        int t;
+                        while ((t = buffer[pos++]) != GDS.isc_info_end) {
+                            l = gds.isc_vax_integer(buffer, pos, 2);
+                            pos += 2;
+                            switch (t) {
+                                case GDS.isc_info_req_insert_count:
+                                    insertCount = gds.isc_vax_integer(buffer, pos, l);
+                                    break;
+                                case GDS.isc_info_req_update_count:
+                                    updateCount = gds.isc_vax_integer(buffer, pos, l);
+                                    break;
+                                case GDS.isc_info_req_delete_count:
+                                    deleteCount = gds.isc_vax_integer(buffer, pos, l);
+                                    break;
+                                case GDS.isc_info_req_select_count:
+                                    selectCount = gds.isc_vax_integer(buffer, pos, l);
+                                    break;
+                                default:
+                                    break;
+                            }
+                            pos += l;
+                        }
+                        break;
+                    case GDS.isc_info_sql_stmt_type:
+                        statementType = gds.isc_vax_integer(buffer, pos, length);
+                        pos += length;
+                        break;
+                    default:
+                        pos += length;
+                        break;
+                }
+            }
+        }
+        
+        public int getStatementType() {
+            return statementType;
+        }
+        
+        public int getInsertCount() {
+            return insertCount;
+        }
+        
+        public int getUpdateCount() {
+            return updateCount;
+        }
+        
+        public int getDeleteCount() {
+            return deleteCount;
+        }
+        
+        public int getSelectCount() {
+            return selectCount;
+        }
+    }
+                        
+                
 }

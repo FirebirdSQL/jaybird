@@ -21,10 +21,19 @@
  *    All rights reserved.
 
  */
-package org.firebirdsql.jgds;
 
-import java.io.IOException;
-import org.firebirdsql.gds.GDSException;
+package org.firebirdsql.gds;
+
+
+// imports --------------------------------------
+
+
+import org.firebirdsql.gds.isc_db_handle;
+import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.isc_tr_handle;
+import org.firebirdsql.jgds.GDS_Impl;
+import org.firebirdsql.jgds.ClumpletImpl;
+
 
 /**
  *
@@ -33,16 +42,33 @@ import org.firebirdsql.gds.GDSException;
  *   @version $ $
  */
 
- /**This interface represents objects that 
- * can serialize themselves to xdr streams. 
- */
+public class GDSFactory {
+    
+    public static GDS newGDS() {
+        return new GDS_Impl();
+    }
+    
+    
+    public static Clumplet newClumplet(int type, String content) {
+        return GDS_Impl.newClumplet(type, content);
+    }
+    
+    public static Clumplet newClumplet(int type){
+        return GDS_Impl.newClumplet(type);
+    }
+    
 
-interface Xdrable {
+    public static Clumplet newClumplet(int type, int c){
+        return GDS_Impl.newClumplet(type, c);
+    }
     
-    int getLength();
+    public static Clumplet newClumplet(int type, byte[] content) {
+        return GDS_Impl.newClumplet(type, content);
+    }
     
-    void read(XdrInputStream in, int length) throws IOException;
-    
-    void write(XdrOutputStream out) throws IOException;
+    public static Clumplet cloneClumplet(Clumplet c) {
+        return GDS_Impl.cloneClumplet(c);
+    }
 
 }
+

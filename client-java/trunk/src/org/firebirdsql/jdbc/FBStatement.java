@@ -34,6 +34,7 @@ import java.sql.SQLWarning;
 
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.isc_stmt_handle;
 
 /**
  *
@@ -60,10 +61,16 @@ import org.firebirdsql.gds.GDSException;
  */
 public class FBStatement implements Statement {
     
-    private FBManagedConnection mc;
+    private FBConnection c;
+    protected FBManagedConnection mc;
     
-    FBStatement(FBManagedConnection mc) {
-        this.mc = mc;
+    protected isc_stmt_handle fixedStmt = null;
+    
+    private FBResultSet currentRs = null;
+    
+    FBStatement(FBConnection c) {
+        this.c = c;
+        mc = c.mc;
     }
 
     /**
@@ -75,7 +82,10 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public ResultSet executeQuery(String sql) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        if (!execute(sql)) {
+            throw new SQLException("query did not return a result set: " + sql);
+        }
+        return getResultSet();
     }
 
 
@@ -92,7 +102,10 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public int executeUpdate(String sql) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        if (execute(sql)) {
+            throw new SQLException("update statement returned results!");
+        }
+        return getUpdateCount();
     }
 
 
@@ -110,7 +123,18 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public void close() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        if (fixedStmt != null) {
+            try {
+                mc.closeStatement(fixedStmt, true);
+            }
+            catch (GDSException ge) {
+                throw new SQLException("could not close statement: " + ge.toString());
+            }
+            finally {
+                fixedStmt = null;
+                currentRs = null;
+            }
+        }
     }
 
 
@@ -324,7 +348,13 @@ public class FBStatement implements Statement {
      */
     public boolean execute(String sql) throws  SQLException {
         try {
-            return mc.executeSQL(sql);
+            closeResultSet();
+            if (fixedStmt == null) {
+                fixedStmt = mc.getAllocatedStatement();
+            }
+            mc.prepareSQL(fixedStmt, sql, false);
+            mc.executeStatement(fixedStmt);
+            return (fixedStmt.getOutSqlda().sqld > 0);
         }
         catch (GDSException ge) {
             throw new SQLException("GDS exception: " + ge.toString());
@@ -342,7 +372,14 @@ public class FBStatement implements Statement {
      * @see #execute 
      */
     public ResultSet getResultSet() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        if (currentRs != null) {
+            throw new SQLException("Only one resultset at a time/statement!");
+        }
+        if (fixedStmt == null) {
+            throw new SQLException("No statement just executed");
+        }
+        currentRs = new FBResultSet(mc, this, fixedStmt);
+        return currentRs;
     }
  
 
@@ -357,7 +394,19 @@ public class FBStatement implements Statement {
      * @see #execute 
      */
     public int getUpdateCount() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        try {
+            FBManagedConnection.SqlInfo i = mc.getSqlInfo(fixedStmt);
+System.out.println("InsertCount: " + i.getInsertCount());
+System.out.println("UpdateCount: " + i.getUpdateCount());
+System.out.println("DeleteCount: " + i.getDeleteCount());
+
+System.out.println("returning: " + Math.max(i.getInsertCount(), Math.max(i.getUpdateCount(), i.getDeleteCount())));
+
+            return Math.max(i.getInsertCount(), Math.max(i.getUpdateCount(), i.getDeleteCount()));
+        }
+        catch (GDSException ge) {
+            throw new SQLException("Could not get UpdateCount: " + ge);
+        }
     }
  
 
@@ -595,8 +644,29 @@ public class FBStatement implements Statement {
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
 	 *      2.0 API</a>
      */
-    public Connection getConnection()  throws  SQLException {
-        throw new SQLException("Not yet implemented");
+    public Connection getConnection() {
+        return c;
+    }
+    
+    //package level
+    
+    void closeResultSet() throws SQLException {
+        if (currentRs != null) {
+            try {
+                mc.closeStatement(fixedStmt, false);
+            }
+            catch (GDSException ge) {
+                throw new SQLException("problem closing resultset: " + ge);
+            }
+            currentRs = null;
+        }
+    }
+    
+    public void forgetResultSet() { //yuck should be package
+        currentRs = null;
+        if (fixedStmt != null) {
+            fixedStmt.clearRows();
+        }
     }
 
 }	

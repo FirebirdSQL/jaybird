@@ -26,11 +26,17 @@ package org.firebirdsql.jca;
 
 
 // imports --------------------------------------
-import javax.resource.spi.ConnectionRequestInfo;
-import javax.resource.spi.ConnectionManager;
-import javax.resource.spi.ManagedConnectionFactory;
+import java.io.PrintWriter;
 
 import javax.resource.ResourceException;
+
+import javax.resource.spi.ConnectionEvent;
+import javax.resource.spi.ConnectionEventListener;
+import javax.resource.spi.ConnectionRequestInfo;
+import javax.resource.spi.ConnectionManager;
+import javax.resource.spi.ManagedConnection;
+import javax.resource.spi.ManagedConnectionFactory;
+
 
 
 /**
@@ -65,8 +71,13 @@ application developers. In both cases, QOS can be provided as components by thir
 **/
 
 
-public class FBStandAloneConnectionManager implements ConnectionManager {
+public class FBStandAloneConnectionManager implements ConnectionManager , ConnectionEventListener {
      
+     //package constructor
+     FBStandAloneConnectionManager() {
+     }
+     
+     //javax.resource.spi.ConnectionManager implementation
 
 /**
      The method allocateConnection gets called by the resource adapter's connection factory
@@ -92,11 +103,43 @@ public class FBStandAloneConnectionManager implements ConnectionManager {
 
 **/
     public java.lang.Object allocateConnection(ManagedConnectionFactory mcf,
-                                           ConnectionRequestInfo cxRequestInfo)
-        throws ResourceException {
-        throw new ResourceException("not yet implemented");
+       ConnectionRequestInfo cxRequestInfo)
+       throws ResourceException {
+           
+       ManagedConnection mc = ((FBManagedConnectionFactory)mcf).createManagedConnection(null, cxRequestInfo);
+       mc.addConnectionEventListener(this);
+       return mc.getConnection(null, null);
     }
-
-
-     
+    
+    
+    //javax.resource.spi.ConnectionEventListener implementation
+    
+    public void connectionClosed(ConnectionEvent ce) {
+        PrintWriter log = ((FBManagedConnection)ce.getSource()).getLogWriter();
+        try {
+            ((FBManagedConnection)ce.getSource()).destroy();
+        }
+        catch (ResourceException e) {
+            log.println("Exception closing unmanaged connection: " + e);
+        }
+        
+    }
+    
+    public void connectionErrorOccurred(ConnectionEvent ce) {
+        PrintWriter log = ((FBManagedConnection)ce.getSource()).getLogWriter();
+        try {
+            ((FBManagedConnection)ce.getSource()).destroy();
+        }
+        catch (ResourceException e) {
+            log.println("Exception closing unmanaged connection: " + e);
+        }
+    }
+    
+    //We are only supposed to be notified of local transactions that a Connection started.
+    //Not much we can do with this info...
+    public void localTransactionStarted(ConnectionEvent event) {}
+    
+    public void localTransactionCommitted(ConnectionEvent event) {}
+    
+    public void localTransactionRolledback(ConnectionEvent event) {}
 }

@@ -31,6 +31,7 @@ package org.firebirdsql.jgds;
 import org.firebirdsql.gds.Clumplet;
 import java.io.OutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class ClumpletImpl implements Clumplet, Xdrable {
     
@@ -41,12 +42,23 @@ public class ClumpletImpl implements Clumplet, Xdrable {
     ClumpletImpl(int type, byte[] content) {
         this.type = type;
         this.content = content;
-//        this.length = content.length + 2; //+1 for type byte, +1 for length byte
+    }
+    
+    ClumpletImpl(ClumpletImpl c) {
+        this.type = c.type;
+        this.content = c.content;
+        if (c.next != null) {
+            this.next = new ClumpletImpl(c.next);
+        }
     }
 
     public void append(Clumplet c) {
-        if (next == null) {
-            next = (ClumpletImpl)c;
+        ClumpletImpl ci = (ClumpletImpl)c;
+        if (this.type == ci.type) {
+            this.content = ci.content;
+        }
+        else if (next == null) {
+            next = ci;
         }
         else {
             next.append(c);
@@ -62,7 +74,7 @@ public class ClumpletImpl implements Clumplet, Xdrable {
         }
     }
     
-    
+    //XDRable
     public void write(XdrOutputStream out) throws IOException{
         out.write(type);
         out.write(content.length);
@@ -72,6 +84,22 @@ public class ClumpletImpl implements Clumplet, Xdrable {
         }
     }
     
+    //XDRable
     public void read(XdrInputStream in, int length) {}
+    
+    
+    public boolean equals(Object o) {
+        if ((o == null) || !(o instanceof ClumpletImpl)) {
+            return false;
+        }
+        ClumpletImpl c = (ClumpletImpl)o;
+        if (type != c.type || !Arrays.equals(content, c.content)) {
+            return false; //these have different contents
+        }
+        if (next != null) {
+            return next.equals(c.next);//we have next, compare with c.next
+        }
+        return (c.next == null); //contents the same, we have no next, == if c has no next.
+    }
     
 }
