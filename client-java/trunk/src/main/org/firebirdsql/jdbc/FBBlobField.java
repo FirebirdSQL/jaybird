@@ -127,6 +127,8 @@ public class FBBlobField extends FBField {
     Object getObject() throws SQLException {
         if (field.sqlsubtype < 0)
             return getBlob();
+        else if (field.sqlsubtype == 1)
+            return getString();
         else
             return getBytes();
     }
