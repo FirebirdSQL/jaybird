@@ -377,7 +377,7 @@ public class FBConnectionHelper {
         //
         String javaEncoding = (String)iscEncodings.get(iscEncoding);
         String defaultEncoding = getDefaultJavaEncoding();
-        if (javaEncoding.equalsIgnoreCase(defaultEncoding)) 
+        if (javaEncoding == null || javaEncoding.equalsIgnoreCase(defaultEncoding)) 
             return null;
         else 
             return javaEncoding;
