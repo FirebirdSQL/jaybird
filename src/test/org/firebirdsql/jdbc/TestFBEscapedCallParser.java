@@ -19,9 +19,7 @@
 
 package org.firebirdsql.jdbc;
 
-import junit.framework.Test;
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 
 /**
@@ -32,29 +30,48 @@ import junit.framework.TestSuite;
  */
 public class TestFBEscapedCallParser extends TestCase {
     public static final String CALL_TEST_1 =
-    "{call my_proc(?, {d 01-12-11})}";
+        "{call my_proc(?, {d 01-12-11})}";
 
     public static final String CALL_TEST_2 =
-    "{?= call my_proc ?, {d 01-12-11}}";
+        "{?= call my_proc ?, {d 01-12-11}}";
 
     public static final String CALL_TEST_3 =
-    "EXECUTE PROCEDURE my_proc(?, {d 01-12-11})";
+        "EXECUTE PROCEDURE my_proc(?, {d 01-12-11})";
 
     public static final String CALL_TEST_4 =
-    "EXECUTE PROCEDURE my_proc(?, '11-dec-2001');";
+        "EXECUTE PROCEDURE my_proc(?, '11-dec-2001');";
+    
+    public static final String CALL_TEST_5 =
+        "my_proc in ?, in '11-dec-2001', out 'test'";
 
     public TestFBEscapedCallParser(String testName) {
-    super(testName);
+        super(testName);
     }
-    public static Test suite() {
-    return new TestSuite(TestFBEscapedCallParser.class);
-    }
+    
+    protected FBEscapedCallParser.FBProcedureCall testProcedureCall; 
+    
     protected void setUp() {
+        testProcedureCall = new FBEscapedCallParser.FBProcedureCall();
+        testProcedureCall.setName("my_proc");
+        testProcedureCall.addInputParam(
+                new FBEscapedCallParser.FBProcedureCallParam(1, "?"));
+        testProcedureCall.addInputParam(
+                new FBEscapedCallParser.FBProcedureCallParam(1, "'11-dec-2001'"));
+        testProcedureCall.addOutputParam(
+                new FBEscapedCallParser.FBProcedureCallParam(1, "'test'"));
     }
+    
     protected void tearDown() {
     }
-    public void testProcessEscapedCall() {
-    //assertTrue(false);
+    
+    public void testProcessEscapedCall() throws Exception {
+        FBEscapedCallParser parser = new FBEscapedCallParser();
+        
+        FBEscapedCallParser.FBProcedureCall procedureCall = 
+            parser.parseCall(CALL_TEST_5);
+        
+        assertTrue("Should correctly parse call", 
+                testProcedureCall.equals(procedureCall));
     }
 
 }
