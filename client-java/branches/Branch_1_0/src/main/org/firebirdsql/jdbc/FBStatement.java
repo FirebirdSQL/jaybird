@@ -82,6 +82,29 @@ public class FBStatement implements Statement {
     private String cursorName;
 
     private int rsConcurrency;
+    
+    private FBObjectListener.ResultSetListener resultSetListener = new RSListener();
+    
+    /**
+     * Listener for the result sets.
+     */
+    private class RSListener implements FBObjectListener.ResultSetListener {
+        
+        /**
+         * Notify that result set was closed. This method cleans the result
+         * set reference, so that call to {@link #close()} method will not cause
+         * exception.
+         * 
+         * @param rs result set that was closed.
+         */
+        public void resultSetClosed(ResultSet rs) {
+            if (currentRs == rs)
+                currentRs = null;
+            else
+            if (currentCachedResultSet == rs)
+                currentCachedResultSet = null;
+        }
+    }
 
     FBStatement(FBConnection c, int rsConcurrency) {
         this.c = c;
@@ -580,7 +603,7 @@ public class FBStatement implements Statement {
         } // end of if ()
         else {
             if (isResultSet){
-                currentRs = new FBResultSet(c, this, fixedStmt);
+                currentRs = new FBResultSet(c, this, fixedStmt, resultSetListener);
                 return currentRs;
             }
             else
@@ -595,7 +618,7 @@ public class FBStatement implements Statement {
         if (fixedStmt == null) {
             throw new SQLException("No statement just executed");
         }
-        currentCachedResultSet = new FBResultSet(c, this, fixedStmt, trimStrings);
+        currentCachedResultSet = new FBResultSet(c, this, fixedStmt, trimStrings, resultSetListener);
         return currentCachedResultSet;
     }
 

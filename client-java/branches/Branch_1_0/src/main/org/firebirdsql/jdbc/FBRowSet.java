@@ -43,8 +43,8 @@ import java.util.*;
  */
 public class FBRowSet extends FBResultSet implements RowSet {
 
-    FBRowSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt) throws SQLException{
-        super(c, fbstatement, stmt);
+    FBRowSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt, FBObjectListener.ResultSetListener listener) throws SQLException{
+        super(c, fbstatement, stmt, listener);
     }
 
 
