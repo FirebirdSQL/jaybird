@@ -413,28 +413,22 @@ public class FBBlob implements Blob{
 
         public void write(byte[] b, int off, int len) throws IOException {
             try {
-                if ((off == 0) && (len <= bufferlength)) {
-                    mc.putBlobSegment(blob, b);
-                    return;
-                }
-                else {
-                    byte[] buf = new byte[bufferlength];
-                    int chunk;
-                    while (len > 0) {
-                        if (len >= bufferlength) {
-                            if (buf == null) {
-                                buf = new byte[bufferlength];
-                            }
-                            chunk = bufferlength;
+                byte[] buf = new byte[bufferlength];
+                int chunk;
+                while (len > 0) {
+                    if (len >= bufferlength) {
+                        if (buf == null) {
+                            buf = new byte[bufferlength];
                         }
-                        else {
-                            buf = new byte[len];
-                            chunk = len;
-                        }
-                        System.arraycopy(b, off, buf, 0, chunk);
-                        mc.putBlobSegment(blob, buf);
-                        len -= chunk;
+                        chunk = bufferlength;
                     }
+                    else {
+                        buf = new byte[len];
+                        chunk = len;
+                    }
+                    System.arraycopy(b, off, buf, 0, chunk);
+                    mc.putBlobSegment(blob, buf);
+                    len -= chunk;
                 }
             }
             catch (GDSException ge) {
@@ -446,7 +440,7 @@ public class FBBlob implements Blob{
             if (blob != null) {
                 try {
                     mc.closeBlob(blob);
-                    System.out.println("OutputStream closing, setting blob_id: " + blob.getBlobId());
+//                    System.out.println("OutputStream closing, setting blob_id: " + blob.getBlobId());
                     blob_id = blob.getBlobId();
                 }
                 catch (GDSException ge) {
