@@ -763,7 +763,8 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public InputStream getBinaryStream(int columnIndex) throws  SQLException {
-        return getBlob(columnIndex).getBinaryStream();
+        Blob blob = getBlob(columnIndex);
+        return (blob == null) ? null : blob.getBinaryStream();
     }
 
 
