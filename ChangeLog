@@ -1,3 +1,32 @@
+2004-11-21 01:19  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/ngds/GDS_Impl.java,
+	main/org/firebirdsql/jgds/isc_stmt_handle_impl.java,
+	main/org/firebirdsql/ngds/isc_stmt_handle_impl.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	merged with HEAD
+
+2004-11-21 00:48  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	
+	added fix for "trying to reopen an open cursor" in type 2 driver
+
+2004-11-20 23:43  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	added test cases for memory growth and for "trying to reopen an
+	open cursor" in type 2 driver
+
+2004-11-20 23:00  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jgds/isc_stmt_handle_impl.java, ngds/isc_stmt_handle_impl.java:
+	
+	improved memory usage within transaction
+
 2004-11-10 20:01  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/: gds/GDS.java,
