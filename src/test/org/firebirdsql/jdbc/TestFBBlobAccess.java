@@ -23,6 +23,7 @@ import org.firebirdsql.common.FBTestBase;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Random;
@@ -41,9 +42,16 @@ public class TestFBBlobAccess extends FBTestBase {
         "  bin_data BLOB " + 
         ")";
         
+    public static final String CREATE_VIEW = 
+        "CREATE VIEW test_blob_view (id, bin_data) AS " +
+        "  SELECT id, bin_data FROM test_blob"
+        ;
+    
     public static final String DROP_TABLE = 
         "DROP TABLE test_blob";
         
+    public static final String DROP_VIEW =
+        "DROP VIEW test_blob_view";
 
     public static int TEST_ROW_COUNT = 10;        
         
@@ -63,6 +71,13 @@ public class TestFBBlobAccess extends FBTestBase {
         connection = getConnectionViaDriverManager();
         
         Statement stmt = connection.createStatement();
+        
+        try {
+            stmt.execute(DROP_VIEW);
+        } catch(SQLException ex) {
+            // ignore
+        }
+        
         try {
             stmt.executeUpdate(DROP_TABLE);
         }
@@ -71,6 +86,7 @@ public class TestFBBlobAccess extends FBTestBase {
         }
 
         stmt.executeUpdate(CREATE_TABLE);
+        stmt.execute(CREATE_VIEW);
         stmt.close();
         
         Random rnd = new Random();
@@ -87,6 +103,7 @@ public class TestFBBlobAccess extends FBTestBase {
 
     protected void tearDown() throws Exception {
         Statement stmt = connection.createStatement();
+        stmt.execute(DROP_VIEW);
         stmt.executeUpdate(DROP_TABLE);
         stmt.close();
         connection.close();
@@ -219,4 +236,55 @@ public class TestFBBlobAccess extends FBTestBase {
         connection.setAutoCommit(true);
 
     }
+
+    /**
+     * Test if blobs are correctly accessed via views.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testViewAccess() throws Exception {
+        
+        PreparedStatement ps = connection.prepareStatement(
+            "INSERT INTO test_blob_view(id, bin_data) VALUES (?, ?)");
+            
+        for(int i = 0; i < TEST_ROW_COUNT; i++) {
+            ps.setInt(1, i);
+            ps.setBytes(2, testData[i]);
+            
+            ps.executeUpdate();
+        }
+        
+        ps.close();
+        
+       
+        Statement stmt = connection.createStatement();
+            
+        ResultSet rs = stmt.executeQuery("SELECT id, bin_data FROM test_blob_view");
+        
+        try {
+            int counter = 0;
+            
+            while(rs.next()) {
+                
+                int id = rs.getInt("id");
+                byte[] data = rs.getBytes("bin_data");
+                
+                assertTrue(
+                    "Data read from database for id " + id + 
+                    " should be equal to generated one.",
+                    Arrays.equals(testData[id], data));
+                    
+                counter++;
+            }
+            
+            assertTrue(
+                "Should read " + TEST_ROW_COUNT + 
+                " rows, read " + counter, TEST_ROW_COUNT == counter);
+            
+        } finally {
+            rs.close();
+            stmt.close();
+        }
+    }
+
 }
