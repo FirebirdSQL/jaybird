@@ -109,9 +109,10 @@
 
   <target name="compile-classes" depends="init" >
     <mkdir dir="${build.classes}"/>
-    <depend srcDir="${source.java}"
+<!--depend is apparently not in distributed ant version-->
+    <!--depend srcDir="${source.java}"
            destDir="${build.classes}"
-           cache="${build.classes}"/>
+           cache="${build.classes}"/-->
 
     <javac srcdir="${source.java}"
            destdir="${build.classes}"
