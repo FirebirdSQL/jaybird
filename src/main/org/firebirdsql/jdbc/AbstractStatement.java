@@ -547,12 +547,12 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             return rs;
         } // end of if ()
         else {
-            if (isResultSet) {
-                currentRs = new FBResultSet(c, this, fixedStmt,
-                        resultSetListener, false, rsType, rsConcurrency, false);
-                
+            if (isResultSet){
+                currentRs = new FBResultSet(
+                        c, this, fixedStmt, resultSetListener, rsType, rsConcurrency);
                 return currentRs;
-            } else
+            }
+            else
                 return null;
         } // end of else
     }
@@ -564,8 +564,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         if (fixedStmt == null) {
             throw new FBSQLException("No statement was executed.");
         }
-        currentCachedResultSet = new FBResultSet(c, this, fixedStmt,
-                resultSetListener, trimStrings, rsType, rsConcurrency, true);
+        currentCachedResultSet = new FBResultSet(c, this, fixedStmt, trimStrings, resultSetListener);
         return currentCachedResultSet;
     }
 
