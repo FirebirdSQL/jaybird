@@ -148,7 +148,7 @@ public class TestXADataSource extends TestFBConnectionPoolDataSource {
                     assertTrue("First value should be 1", rs.getInt(1) == 1);
 
                     assertTrue("Should select at least two rows.", rs.next());
-                    assertTrue("Second value should be 2", rs.getInt(1) == 2);
+                    assertTrue("Second value should be 2 but is " + rs.getInt(1), rs.getInt(1) == 2);
 
                     assertTrue("Should select only two rows.", !rs.next());
                 } finally {
