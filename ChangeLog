@@ -1,3 +1,23 @@
+2003-10-15 18:23  ryanbaldwin
+
+	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	
+	Temporary fix for bug with positioned updates in type 2 mode.  All
+	tests that pass in type 4 mode now pass in type 2 mode also.
+
+2003-10-15 17:37  ryanbaldwin
+
+	* client-java/src/: main/org/firebirdsql/ngds/GDS_Impl.java,
+	native/jaygds/source/entrypoints.cpp,
+	native/jaygds/source/entrypoints_generated.h,
+	native/jaygds/source/fb_binding.cpp,
+	native/jaygds/source/fb_binding.h:
+	
+	Implements GDS.isc_seek_blob and GDS.isc_blob_info in ngds
+	implementation.  Fixed bug where blob parameter buffer was not
+	being created properly and ignored by database.  All tests in
+	TestFBBlobStream now run properly in type2 mode.
+
 2003-10-14 16:40  rrokytskyy
 
 	* client-java/src/: main/org/firebirdsql/jdbc/FBConnection.java,
