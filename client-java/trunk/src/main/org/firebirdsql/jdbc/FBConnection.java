@@ -1145,9 +1145,9 @@ public class FBConnection implements Connection
         return mc.getBlobBufferLength();
     }
 	 
-    public isc_blob_handle openBlobHandle(long blob_id) throws GDSException {
+    public isc_blob_handle openBlobHandle(long blob_id, boolean segmented) throws GDSException {
         checkManagedConnection();
-        return mc.openBlobHandle(blob_id);
+        return mc.openBlobHandle(blob_id, segmented);
     }	 
 	 
     public byte[] getBlobSegment(isc_blob_handle blob, int len) throws GDSException {
@@ -1160,9 +1160,9 @@ public class FBConnection implements Connection
         mc.closeBlob(blob);
     }
 	 
-    public isc_blob_handle createBlobHandle() throws GDSException {
+    public isc_blob_handle createBlobHandle(boolean segmented) throws GDSException {
         checkManagedConnection();
-        return mc.createBlobHandle();
+        return mc.createBlobHandle(segmented);
     }
 	 
     public void putBlobSegment(isc_blob_handle blob, byte[] buf) throws GDSException {

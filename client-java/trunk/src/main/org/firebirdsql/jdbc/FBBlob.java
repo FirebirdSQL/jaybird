@@ -34,9 +34,13 @@ import java.util.HashSet;
 
 import org.firebirdsql.gds.isc_blob_handle;
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.OutputStream;
 import java.io.BufferedOutputStream;
+import org.firebirdsql.gds.GDS;
 
 
 /**
@@ -75,6 +79,8 @@ import java.io.BufferedOutputStream;
  */
 
 public class FBBlob implements Blob{
+    
+    private static final boolean SEGMENTED = false;
 
     /**
      * bufferlength is the size of the buffer for blob input and output streams,
@@ -103,6 +109,15 @@ public class FBBlob implements Blob{
         inputStreams.clear();
     }
 
+    public byte[] getInfo(byte[] items, int buffer_length) throws GDSException {
+        isc_blob_handle blob = c.openBlobHandle(blob_id, SEGMENTED);
+        try {
+            GDS gds = c.getInternalAPIHandler();
+            return gds.isc_blob_info(blob, items, buffer_length);
+        } finally {
+            c.closeBlob(blob);
+        }
+    }
 
   /**
    * Returns the number of bytes in the <code>BLOB</code> value
@@ -114,7 +129,38 @@ public class FBBlob implements Blob{
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public long length() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        //throw new SQLException("Not yet implemented");
+        try {
+            byte[] info = getInfo(
+                new byte[]{ISCConstants.isc_info_blob_total_length}, 20);
+                
+            return interpretLength(info, 0);
+            
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
+        }
+    }
+
+    /**
+     * Interpret BLOB length from buffer.
+     * 
+     * @param info server response.
+     * @param position where to start interpreting.
+     * 
+     * @return length of the blob.
+     * 
+     * @throws SQLException if length cannot be interpreted.
+     */            
+    private long interpretLength(byte[] info, int position) throws SQLException { 
+                
+        if (info[position] != ISCConstants.isc_info_blob_total_length)
+            throw new SQLException("Length is not available.");
+            
+        int dataLength = 
+            c.getInternalAPIHandler().isc_vax_integer(info, position + 1, 2);
+            
+        return c.getInternalAPIHandler().isc_vax_integer(
+            info, position + 3, dataLength);
     }
 
 
@@ -153,7 +199,8 @@ public class FBBlob implements Blob{
     public InputStream getBinaryStream () throws SQLException {
         FBBlobInputStream blobstream = new FBBlobInputStream();
         inputStreams.add(blobstream);
-        return new BufferedInputStream(blobstream, bufferlength);
+        //return new BufferedInputStream(blobstream, bufferlength);
+        return blobstream;
     }
 
   /**
@@ -339,10 +386,29 @@ public class FBBlob implements Blob{
                 throw new SQLException("You can't read a new blob");
             }
             try {
-                blob = c.openBlobHandle(blob_id);
+                blob = c.openBlobHandle(blob_id, SEGMENTED);
             }
             catch (GDSException ge) {
                 throw new FBSQLException(ge);
+            }
+        }
+
+        public void seek(int position) throws SQLException {
+            try {
+                c.getInternalAPIHandler().isc_seek_blob(blob, position);
+            } catch(GDSException ex) {
+                throw new FBSQLException(ex);
+            }
+        }
+        
+        public long length() throws SQLException {
+            try {
+                byte[] info = c.getInternalAPIHandler().isc_blob_info(blob,
+                    new byte[]{ISCConstants.isc_info_blob_total_length}, 20);
+                    
+                return interpretLength(info, 0);
+            } catch(GDSException ex) {
+                throw new FBSQLException(ex);
             }
         }
 
@@ -416,19 +482,38 @@ public class FBBlob implements Blob{
         }
     }
 
-    private class FBBlobOutputStream extends OutputStream {
+    public class FBBlobOutputStream extends OutputStream {
 
         private isc_blob_handle blob;
 
         private FBBlobOutputStream() throws SQLException {
             try {
-                blob = c.createBlobHandle();
+                blob = c.createBlobHandle(SEGMENTED);
             }
             catch (GDSException ge) {
                 throw new FBSQLException(ge);
             }
             if (blob_id == 0) {
                 blob_id = blob.getBlob_id();
+            }
+        }
+        
+        public void seek(int position) throws SQLException {
+            try {
+                c.getInternalAPIHandler().isc_seek_blob(blob, position);
+            } catch(GDSException ex) {
+                throw new FBSQLException(ex);
+            }
+        }
+        
+        public long length() throws SQLException {
+            try {
+                byte[] info = c.getInternalAPIHandler().isc_blob_info(blob,
+                    new byte[]{ISCConstants.isc_info_blob_total_length}, 20);
+
+                return interpretLength(info, 0);
+            } catch(GDSException ex) {
+                throw new FBSQLException(ex);
             }
         }
 

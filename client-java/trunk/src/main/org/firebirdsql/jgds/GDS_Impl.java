@@ -169,7 +169,7 @@ public final class GDS_Impl implements GDS {
 
 
     static final int MAX_BUFFER_SIZE = 1024; //8192;//4096; //max size for response for ??
-
+    
     public GDS_Impl() {
     }
 
@@ -216,12 +216,12 @@ public final class GDS_Impl implements GDS {
                 db.out.writeInt(op_create);
                 db.out.writeInt(0);           // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
-
+                
                 c = removeInternalDPB(c);
-
+                
                 db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable)c);
                 //            db.out.writeBuffer(dpb, dpb_length);
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
 
                 try {
@@ -237,12 +237,12 @@ public final class GDS_Impl implements GDS {
         }
 
     }
-
+    
     private Clumplet removeInternalDPB(Clumplet dpb) {
         Clumplet result = dpb;
-
+        
         result = result.remove(ISCConstants.isc_dpb_socket_buffer_size);
-
+        
         return result;
     }
 
@@ -290,11 +290,11 @@ public final class GDS_Impl implements GDS {
                 db.out.writeInt(op_attach);
                 db.out.writeInt(0);                // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
-
+                
                 dpb = removeInternalDPB(dpb);
-
+                
                 db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable)dpb);
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
 
                 try {
@@ -333,9 +333,57 @@ public final class GDS_Impl implements GDS {
                 return db.getResp_data();
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_network_error);
-            }
+            } 
         }
     }
+
+    public byte[] isc_blob_info(isc_blob_handle handle,
+                                 byte[] items,
+                                 int buffer_length) throws GDSException {
+        boolean debug = log != null && log.isDebugEnabled();
+        isc_blob_handle_impl blob = (isc_blob_handle_impl) handle;
+        isc_db_handle_impl db = blob.getDb();
+        synchronized (blob){
+            try {
+                if (debug) log.debug("op_info_blob ");
+                db.out.writeInt(op_info_blob);
+                db.out.writeInt(blob.getRbl_id());
+                db.out.writeInt(0);
+                db.out.writeBuffer(items);
+                db.out.writeInt(buffer_length);
+                db.out.flush();
+                if (debug) log.debug("sent");
+                receiveResponse(db,-1);
+                if (debug) log.debug("parseSqlInfo: first 2 bytes are " + isc_vax_integer(db.getResp_data(), 0, 2) + " or: " + db.getResp_data()[0] + ", " + db.getResp_data()[1]);
+                return db.getResp_data();
+            } catch (IOException ex) {
+                throw new GDSException(ISCConstants.isc_network_error);
+            } 
+        }
+    }
+    
+    public void isc_seek_blob(isc_blob_handle handle, int position) throws GDSException {
+        boolean debug = log != null && log.isDebugEnabled();
+        isc_blob_handle_impl blob = (isc_blob_handle_impl) handle;
+        isc_db_handle_impl db = blob.getDb();
+        synchronized (blob){
+            try {
+                if (debug) log.debug("op_info_blob ");
+                db.out.writeInt(op_seek_blob);
+                db.out.writeInt(blob.getRbl_id());
+                db.out.writeInt(0);
+                db.out.writeInt(position);
+                db.out.flush();
+                if (debug) log.debug("sent");
+                receiveResponse(db,-1);
+                if (debug) log.debug("parseSqlInfo: first 2 bytes are " + isc_vax_integer(db.getResp_data(), 0, 2) + " or: " + db.getResp_data()[0] + ", " + db.getResp_data()[1]);
+                blob.setPosition(db.getResp_object());
+            } catch (IOException ex) {
+                throw new GDSException(ISCConstants.isc_network_error);
+            } 
+        }
+    }
+
 
 /**
  * Parse database info returned after attach. This method assumes that
@@ -346,7 +394,7 @@ public final class GDS_Impl implements GDS {
  */
     private void parseAttachDatabaseInfo(byte[] info, isc_db_handle handle) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
-        if (debug) log.debug("parseDatabaseInfo: first 2 bytes are " + isc_vax_integer(info, 0, 2) + " or: " + info[0] + ", " + info[1]);
+        if (debug) log.debug("parseDatabaseInfo: first 2 bytes are " + isc_vax_integer(info, 0, 2) + " or: " + info[0] + ", " + info[1]);	  
         int value=0;
         int len=0;
         int i = 0;
@@ -397,7 +445,7 @@ public final class GDS_Impl implements GDS {
             }
         }
     }
-
+	 
     public void isc_detach_database(isc_db_handle db_handle) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
@@ -406,7 +454,7 @@ public final class GDS_Impl implements GDS {
         }
 
         synchronized (db) {
-            if (db_handle.hasTransactions())
+            if (db_handle.hasTransactions()) 
             {
                 throw new GDSException(ISCConstants.isc_open_trans, db.getOpenTransactionCount());
             } // end of if ()
@@ -414,24 +462,24 @@ public final class GDS_Impl implements GDS {
                 if (debug) log.debug("op_detach ");
                 db.out.writeInt(op_detach);
                 db.out.writeInt(db.getRdb_id());
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
-
-
+                
+                
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_network_error);
-            }
+            } 
             finally
             {
-                try
+                try 
                 {
                     disconnect(db);
                 }
-                catch (IOException ex2)
+                catch (IOException ex2) 
                 {
                     throw new GDSException(ISCConstants.isc_network_error);
-                }
+                } 
             } // end of finally
         }
     }
@@ -451,7 +499,7 @@ public final class GDS_Impl implements GDS {
                 if (debug) log.debug("op_drop_database ");
                 db.out.writeInt(op_drop_database);
                 db.out.writeInt(db.getRdb_id());
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
             } catch (IOException ex) {
@@ -498,7 +546,7 @@ public final class GDS_Impl implements GDS {
                 db.out.writeInt(db.getRdb_id());
                 db.out.writeSet(ISCConstants.isc_tpb_version3, tpb);
                 //            db.out.writeBuffer(tpb, tpb_length);
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
                 //out.flush();
                 receiveResponse(db,-1);
@@ -539,7 +587,7 @@ public final class GDS_Impl implements GDS {
                 }
                 db.out.writeInt(op_commit);
                 db.out.writeInt(tr.getTransactionId());
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
             } catch (IOException ex) {
@@ -572,7 +620,7 @@ public final class GDS_Impl implements GDS {
                 if (debug) log.debug("op_commit_retaining ");
                 db.out.writeInt(op_commit_retaining);
                 db.out.writeInt(tr.getTransactionId());
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
             } catch (IOException ex) {
@@ -600,7 +648,7 @@ public final class GDS_Impl implements GDS {
                 if (debug) log.debug("op_prepare ");
                 db.out.writeInt(op_prepare);
                 db.out.writeInt(tr.getTransactionId());
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
             } catch (IOException ex) {
@@ -629,7 +677,7 @@ public final class GDS_Impl implements GDS {
                 db.out.writeInt(op_prepare2);
                 db.out.writeInt(tr.getTransactionId());
                 db.out.writeBuffer(bytes);
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
             } catch (IOException ex) {
@@ -662,7 +710,7 @@ public final class GDS_Impl implements GDS {
                 if (debug) log.debug("op_rollback ");
                 db.out.writeInt(op_rollback);
                 db.out.writeInt(tr.getTransactionId());
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
             } catch (IOException ex) {
@@ -673,7 +721,7 @@ public final class GDS_Impl implements GDS {
                 tr.setState(isc_tr_handle.NOTRANSACTION);
                 tr.unsetDbHandle();
             } // end of finally
-
+            
         }
 
     }
@@ -696,7 +744,7 @@ public final class GDS_Impl implements GDS {
                 if (debug) log.debug("op_rollback_retaining ");
                 db.out.writeInt(op_rollback_retaining);
                 db.out.writeInt(tr.getTransactionId());
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
             } catch (IOException ex) {
@@ -728,7 +776,7 @@ public final class GDS_Impl implements GDS {
                 if (debug) log.debug("op_allocate_statement ");
                 db.out.writeInt(op_allocate_statement);
                 db.out.writeInt(db.getRdb_id());
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
                 stmt.setRsr_id(db.getResp_object());
@@ -737,7 +785,7 @@ public final class GDS_Impl implements GDS {
             }
 
             stmt.setRsr_rdb(db);
-
+            
             /** @todo implement statement handle tracking correctly */
             // db.rdb_sql_requests.addElement(stmt);
             stmt.setAllRowsFetched(false);
@@ -790,11 +838,11 @@ public final class GDS_Impl implements GDS {
                                          int da_version) throws GDSException {
 
         isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
-
+        
         byte[] buffer = isc_dsql_sql_info(stmt_handle,
                               /* describe_bind_info.length,*/ describe_bind_info,
                               MAX_BUFFER_SIZE);
-
+        
         stmt.setInSqlda(parseSqlInfo(stmt_handle, buffer, describe_bind_info));
         return stmt.getInSqlda();
     }
@@ -845,7 +893,7 @@ public final class GDS_Impl implements GDS {
 
                 if (out_xsqlda != null) {
                     stmt.clearRows();
-                    // only need to clear if there is a
+                    // only need to clear if there is a						 
                     out.writeBuffer(out_xsqlda.blr);
                     out.writeInt(0); //out_message_number = out_message_type
                 }
@@ -860,7 +908,7 @@ public final class GDS_Impl implements GDS {
                     stmt.setAllRowsFetched(true);
                     stmt.setIsSingletonResult(true);
                 }
-                else
+                else 
                 {
                     stmt.setIsSingletonResult(false);
                 } // end of else
@@ -879,14 +927,14 @@ public final class GDS_Impl implements GDS {
                                           XSQLDA xsqlda) throws GDSException {
         isc_dsql_exec_immed2(db_handle, tr_handle, statement, dialect, xsqlda, null);
     }
-
+    
     public void isc_dsql_execute_immediate(isc_db_handle db_handle,
                                           isc_tr_handle tr_handle,
                                           String statement,
                                           String encoding,
                                           int dialect,
                                           XSQLDA xsqlda) throws GDSException {
-        isc_dsql_exec_immed2(db_handle, tr_handle, statement,
+        isc_dsql_exec_immed2(db_handle, tr_handle, statement, 
             encoding, dialect, xsqlda, null);
     }
 
@@ -897,7 +945,7 @@ public final class GDS_Impl implements GDS {
                                     int dialect,
                                     XSQLDA in_xsqlda,
                                     XSQLDA out_xsqlda) throws GDSException {
-        isc_dsql_exec_immed2(db_handle, tr_handle,
+        isc_dsql_exec_immed2(db_handle, tr_handle, 
             statement, "NONE", dialect, in_xsqlda, out_xsqlda);
     }
 
@@ -916,7 +964,7 @@ public final class GDS_Impl implements GDS {
 
         synchronized (db) {
             XdrOutputStream out = db.out;
-            try {
+            try {                
 
                 if (in_xsqlda == null && out_xsqlda == null) {
                     if (debug) log.debug("op_exec_immediate ");
@@ -949,7 +997,7 @@ public final class GDS_Impl implements GDS {
                 out.writeString(statement, encoding);
                 out.writeString("");
                 out.writeInt(0);
-                out.flush();
+                out.flush();            
 
                 if (debug) log.debug("sent");
 
@@ -998,7 +1046,7 @@ public final class GDS_Impl implements GDS {
                     out.writeBuffer(xsqlda.blr);
                     out.writeInt(0);              // p_sqldata_message_number
                     out.writeInt(fetchSize); // p_sqldata_messages
-                    out.flush();
+                    out.flush();            
                     if (debug) log.debug("sent");
 
                     int op = nextOperation(db);
@@ -1017,7 +1065,7 @@ public final class GDS_Impl implements GDS {
                                   if (op==op_response) {
                                     receiveResponse(db, op);
                                     continue;
-                                  }
+                            }
                                 } while (false);
                             }
 
@@ -1080,25 +1128,25 @@ public final class GDS_Impl implements GDS {
 
         //Does not seem to be possible or necessary to close
         //an execute procedure statement.
-        if (stmt.getIsSingletonResult() && option == ISCConstants.DSQL_close)
+        if (stmt.getIsSingletonResult() && option == ISCConstants.DSQL_close) 
         {
-            return;
+            return;        
         } // end of if ()
-
+        
 
         synchronized (db) {
             try {
-                if (!db.isValid())
+                if (!db.isValid()) 
                 {
                     //too late, socket has been closed
                     return;
                 } // end of if ()
-
+                
                 if (debug) log.debug("op_free_statement ");
                 db.out.writeInt(op_free_statement);
                 db.out.writeInt(stmt.getRsr_id());
                 db.out.writeInt(option);
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
 
                 receiveResponse(db,-1);
@@ -1108,7 +1156,7 @@ public final class GDS_Impl implements GDS {
                 }
                 // those rows are used by cachedFetcher don't clear
                 stmt.clearRows();
-
+                
                 /** @todo implement statement handle tracking correctly */
                 // db.rdb_sql_requests.remove(stmt);
             } catch (IOException ex) {
@@ -1130,7 +1178,7 @@ public final class GDS_Impl implements GDS {
                                                ISCConstants.isc_info_sql_owner,
                                                ISCConstants.isc_info_sql_alias,
                                                ISCConstants.isc_info_sql_describe_end };
-
+	 
     public XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
                                 isc_stmt_handle stmt_handle,
                                 String statement,
@@ -1173,7 +1221,7 @@ public final class GDS_Impl implements GDS {
                 db.out.writeString(statement, encoding);
                 db.out.writeBuffer(sql_prepare_info);
                 db.out.writeInt(MAX_BUFFER_SIZE);
-                db.out.flush();
+                db.out.flush();            
 
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
@@ -1213,7 +1261,7 @@ public final class GDS_Impl implements GDS {
 
                 db.out.writeBuffer(buffer);
                 db.out.writeInt(0);
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
 
                 receiveResponse(db,-1);
@@ -1242,7 +1290,7 @@ public final class GDS_Impl implements GDS {
                 db.out.writeInt(0);
                 db.out.writeBuffer(items);
                 db.out.writeInt(buffer_length);
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
                 return db.getResp_data();
@@ -1253,7 +1301,7 @@ public final class GDS_Impl implements GDS {
 
 
     }
-
+	 
     private static byte[] stmtInfo = new byte[]
         {ISCConstants.isc_info_sql_records,
          ISCConstants.isc_info_sql_stmt_type,
@@ -1373,7 +1421,7 @@ public final class GDS_Impl implements GDS {
                 db.out.writeInt(tr.getTransactionId()); //??really a short?
                 if (debug) log.debug("sending blob_id: " + blob.getBlob_id());
                 db.out.writeLong(blob.getBlob_id());
-                db.out.flush();
+                db.out.flush();            
 
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
@@ -1410,7 +1458,7 @@ public final class GDS_Impl implements GDS {
                 if (debug) log.debug("trying to read bytes: " +((requested + 2 < Short.MAX_VALUE) ? requested+2: Short.MAX_VALUE));
                 db.out.writeInt((requested + 2 < Short.MAX_VALUE) ? requested+2 : Short.MAX_VALUE);
                 db.out.writeInt(0);//writeBuffer for put segment;
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
                 blob.rbl_flagsRemove(ISCConstants.RBL_segment);
@@ -1466,7 +1514,7 @@ public final class GDS_Impl implements GDS {
                 db.out.writeInt(blob.getRbl_id()); //short???
                 if (debug) log.debug("buffer.length " + buffer.length);
                 db.out.writeBlobBuffer(buffer);
-                db.out.flush();
+                db.out.flush();            
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
             }
@@ -1510,7 +1558,7 @@ public final class GDS_Impl implements GDS {
     }
 
     public void connect(isc_db_handle_impl db,
-                        String host, Integer port, String filename, Clumplet dpb)
+                        String host, Integer port, String filename, Clumplet dpb) 
 			throws GDSException {
         DbAttachInfo dbai = new DbAttachInfo(host, port, filename);
         connect(db, dbai, dpb);
@@ -1519,8 +1567,8 @@ public final class GDS_Impl implements GDS {
     private void connect(isc_db_handle_impl db,
                             DbAttachInfo dbai, Clumplet dpb) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
-
-
+        
+        
         int socketBufferSize = -1;
 
         String iscSocketBufferLength = dpb.findString(
@@ -1535,17 +1583,17 @@ public final class GDS_Impl implements GDS {
                     ISCConstants.isc_bad_dpb_content);
             }
         }
-
+        
         try {
             try {
                 db.socket = new Socket(dbai.getServer(), dbai.getPort());
                 db.socket.setTcpNoDelay(true);
-
+                
                 if (socketBufferSize != -1) {
                     db.socket.setReceiveBufferSize(socketBufferSize);
                     db.socket.setSendBufferSize(socketBufferSize);
                 }
-
+                
                 if (debug) log.debug("Got socket");
             } catch (UnknownHostException ex2) {
                 String message = "Cannot resolve host " + dbai.getServer();
@@ -1557,7 +1605,7 @@ public final class GDS_Impl implements GDS {
             db.out = new XdrOutputStream(db.socket.getOutputStream());
             db.in = new XdrInputStream(db.socket.getInputStream());
 
-            //Here we identify the user to the engine.  This may or may not be used
+            //Here we identify the user to the engine.  This may or may not be used 
             //as login info to a database.
             String user = System.getProperty("user.name");
             if (debug) log.debug("user.name: " + user);
@@ -1581,7 +1629,7 @@ public final class GDS_Impl implements GDS {
             user_id[n++] = (byte) host.length();
             System.arraycopy(host.getBytes(), 0, user_id, n, host.length());
             n += host.length();
-
+            
             user_id[n++] = 6;     // CNCT_user_verification
             user_id[n++] = 0;
 
@@ -1600,7 +1648,7 @@ public final class GDS_Impl implements GDS {
             db.out.writeInt(2);                    // ptype_rpc
             db.out.writeInt(3);                    // ptype_batch_send
             db.out.writeInt(2);
-            db.out.flush();
+            db.out.flush();            
             if (debug) log.debug("sent");
 
             if (debug) log.debug("op_accept ");
@@ -1645,12 +1693,12 @@ public final class GDS_Impl implements GDS {
             , ex.getMessage());
         }
     }
-
+	 
     public void receiveResponse(isc_db_handle_impl db, int op) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
         // when used directly
         try {
-            if (op == -1)
+            if (op == -1)			  
                 op = nextOperation(db);
             if (debug) log.debug("op_response ");
             if (op == op_response) {
@@ -1708,7 +1756,7 @@ public final class GDS_Impl implements GDS {
             while (true) {
                 int arg = db.in.readInt();
                 switch (arg) {
-                    case ISCConstants.isc_arg_gds:
+                    case ISCConstants.isc_arg_gds: 
                         int er = db.in.readInt();
                         if (debug)log.debug("readStatusVector arg:isc_arg_gds int: " + er);
                         if (er != 0) {
@@ -1724,12 +1772,12 @@ public final class GDS_Impl implements GDS {
                         }
                         break;
                     case ISCConstants.isc_arg_end:
-                        if (head != null && !head.isWarning())
+                        if (head != null && !head.isWarning()) 
                             throw head;
                         else
-                        if (head != null && head.isWarning())
+                        if (head != null && head.isWarning()) 
                             db.addWarning(head);
-
+                        
                         return;
                     case ISCConstants.isc_arg_interpreted:
                     case ISCConstants.isc_arg_string:
@@ -1881,10 +1929,10 @@ public final class GDS_Impl implements GDS {
     private XSQLDA parseSqlInfo(isc_stmt_handle stmt_handle,
                                 byte[] info,
                                 byte[] items) throws GDSException {
-
+                
         boolean debug = log != null && log.isDebugEnabled();
         if (debug) log.debug("parseSqlInfo started");
-
+        
         XSQLDA xsqlda = new XSQLDA();
         int lastindex = 0;
         while ((lastindex = parseTruncSqlInfo(info, xsqlda, lastindex)) > 0) {
@@ -1903,8 +1951,8 @@ public final class GDS_Impl implements GDS {
         calculateIOLength(xsqlda);
         return xsqlda;
     }
-
-
+    
+    
     private int parseTruncSqlInfo(byte[] info,
                                   XSQLDA xsqlda,
                                   int lastindex) throws GDSException {
@@ -2010,7 +2058,7 @@ public final class GDS_Impl implements GDS {
             try {
                 db.out.writeInt(op);
                 db.out.writeInt(id);
-                db.out.flush();
+                db.out.flush();            
                 receiveResponse(db,-1);
             }
             catch (IOException ioe) {
@@ -2066,33 +2114,33 @@ public final class GDS_Impl implements GDS {
                     server = server.substring(0, portSep);
                 }
             }
-            else if (sep == -1)
+            else if (sep == -1) 
             {
                 fileName = connectInfo;
-            } // end of if ()
+            } // end of if ()            
 
         }
 
         public DbAttachInfo(String server, Integer port, String fileName) throws GDSException
         {
-            if (fileName == null || fileName.equals(""))
+            if (fileName == null || fileName.equals("")) 
             {
                 throw new GDSException("null filename in DbAttachInfo");
             } // end of if ()
-            if (server != null)
+            if (server != null) 
             {
                 this.server = server;
             } // end of if ()
-            if (port != null)
+            if (port != null) 
             {
                 this.port = port.intValue();
             } // end of if ()
             this.fileName = fileName;
-            if (fileName == null || fileName.equals(""))
+            if (fileName == null || fileName.equals("")) 
             {
                 throw new GDSException("null filename in DbAttachInfo");
             } // end of if ()
-
+            
         }
 
         public String getServer() {
