@@ -54,10 +54,6 @@ public class TestGds extends BaseFBTest {
 
    private Logger log = Logger.getLogger(getClass());
 
-   //   private static String dbPath = System.getProperty("test.db.dir");
-
-   //static final String dbName = "localhost:" + dbPath + "/testdb.gdb";
-   //static final String dbName2 = "localhost:" + dbPath + "/testdb2.gdb";
 
     static final String dbName = "testdb.gdb";
     static final String dbName2 = "testdb2.gdb";
@@ -125,7 +121,7 @@ public class TestGds extends BaseFBTest {
         isc_db_handle db = gds.get_new_isc_db_handle();
 
         log.info("test- isc_create_database");
-        gds.isc_create_database(DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + name, db, c);
+        gds.isc_create_database(getdbpath(name), db, c);
         return db;
     }
 
@@ -208,7 +204,7 @@ public class TestGds extends BaseFBTest {
         gds.isc_detach_database(db1);
 
         log.info("test- isc_attach_database");
-        gds.isc_attach_database(dbName, db1, c);
+        gds.isc_attach_database(getdbpath(dbName), db1, c);
         dropDatabase(db1);
     }
 
@@ -221,18 +217,18 @@ public class TestGds extends BaseFBTest {
       Clumplet c = (Clumplet)GDSFactory.newClumplet(gds.isc_dpb_num_buffers, new byte[] {90});
            
       c.append(GDSFactory.newClumplet(gds.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
-      //c.append(GDSFactory.newClumplet(gds.isc_dpb_user_name, "alex"));
-      //c.append(GDSFactory.newClumplet(gds.isc_dpb_password, "elx"));
+      c.append(GDSFactory.newClumplet(gds.isc_dpb_user_name, DB_USER));
+      c.append(GDSFactory.newClumplet(gds.isc_dpb_password, DB_PASSWORD));
       c.append(GDSFactory.newClumplet(gds.isc_dpb_overwrite, 0));
       c.append(GDSFactory.newClumplet(gds.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
 
       isc_db_handle db = gds.get_new_isc_db_handle();
 
-      gds.isc_create_database(dbName2, db, c);
+      gds.isc_create_database(getdbpath(dbName2), db, c);
       gds.isc_detach_database(db);
 
       log.info("test- isc_attach_database");
-      gds.isc_attach_database(dbName2, db, c);
+      gds.isc_attach_database(getdbpath(dbName2), db, c);
       dropDatabase(db);
 
    }
@@ -243,7 +239,7 @@ public class TestGds extends BaseFBTest {
         db1 = createDatabase(dbName);
 
         db2 = gds.get_new_isc_db_handle();
-        gds.isc_attach_database(dbName, db2, c);
+        gds.isc_attach_database(getdbpath(dbName), db2, c);
 
         log.info("test- rdb_id1: " + ((isc_db_handle_impl)db1).getRdb_id());
         log.info("test- rdb_id2: " + ((isc_db_handle_impl)db2).getRdb_id());
@@ -252,7 +248,7 @@ public class TestGds extends BaseFBTest {
         gds.isc_detach_database(db2);
 
         log.info("test- isc_attach_database");
-        gds.isc_attach_database(dbName, db1, c);
+        gds.isc_attach_database(getdbpath(dbName), db1, c);
         dropDatabase(db1);
     }
 

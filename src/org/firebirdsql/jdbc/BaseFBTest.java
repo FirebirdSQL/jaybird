@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.3  2002/02/02 18:58:24  d_jencks
+ * converted to log4j logging and cleaned up some test problems.  If you do not wish to use log4j, you may leave out the log4j-core.jar and get no logging
+ *
  * Revision 1.2  2002/01/07 16:32:04  d_jencks
  * Fixed FBManager to require user and password to create a db: added these to setup/teardown for tests.
  *
@@ -65,15 +68,20 @@ public class BaseFBTest extends TestCase
     /**
      * Default URL for the test
      */
-   private static final String dbPath = System.getProperty("test.db.dir");
+   private static final String DB_PATH = System.getProperty("test.db.dir");
 
 
    public static final String DB_SERVER_URL = "localhost";
    public static final int DB_SERVER_PORT = 3050;
 
-   public static final String DB_NAME = dbPath +  "/fbtest.gdb";
+   public static final String DB_NAME = "fbtest.gdb";
 
-   public static final String DB_DATASOURCE_URL = DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + DB_NAME;
+   public static final String getdbpath(String name)
+   {
+      return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + DB_PATH + "/" + name;
+   }
+
+   public static final String DB_DATASOURCE_URL = getdbpath(DB_NAME);
    public static final String DB_DRIVER_URL = FBDriver.FIREBIRD_PROTOCOL + DB_DATASOURCE_URL;
 
 
@@ -115,7 +123,7 @@ public class BaseFBTest extends TestCase
          fbManager.setURL(DB_SERVER_URL);
          fbManager.setPort(DB_SERVER_PORT);
          fbManager.start();
-         fbManager.createDatabase(DB_NAME, DB_USER, DB_PASSWORD);
+         fbManager.createDatabase(DB_PATH + "/" + DB_NAME, DB_USER, DB_PASSWORD);
       }
       catch (Exception e)
       {

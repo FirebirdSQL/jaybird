@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.5  2002/02/02 18:58:24  d_jencks
+ * converted to log4j logging and cleaned up some test problems.  If you do not wish to use log4j, you may leave out the log4j-core.jar and get no logging
+ *
  * Revision 1.4  2002/01/07 06:59:54  d_jencks
  * Revised FBManager to create dialect 3 databases, and the tests to use a newly created database. Simplified and unified test constants. Test targets are now all-tests for all tests and one-test for one test: specify the test as -Dtest=Gds one-test for the TestGds.class test.  Made a few other small changes to improve error messages
  *
@@ -52,6 +55,7 @@
 package org.firebirdsql.jdbc;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import javax.resource.ResourceException;
 import java.sql.*;
 import junit.framework.*;
@@ -154,7 +158,11 @@ public class TestFBWrappingDataSource extends BaseFBTest {
         {
            //got a blocking timeout, good    
         } // end of try-catch
-        
+        for (Iterator i = cs.iterator(); i.hasNext(); )
+        {
+           ((Connection)i.next()).close();      
+        } // end of for ()
+        //This will be from same pool due to internal construction of FBDataSource.
         ds.setUser(DB_USER);
         ds.setPassword(DB_PASSWORD);
         connection = ds.getConnection();

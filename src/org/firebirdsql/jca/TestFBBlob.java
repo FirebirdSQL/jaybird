@@ -53,11 +53,6 @@ public class TestFBBlob extends TestXABase {
         super(name);
     }
 
-    public static Test suite() {
-
-        return new TestSuite(TestFBBlob.class);
-    }
-
     protected void setupTable(String name) throws Exception {
         mcf = initMcf();
         ds = (DataSource)mcf.createConnectionFactory();
