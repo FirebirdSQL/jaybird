@@ -1,9 +1,90 @@
+2003-03-25  d_jencks
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+		Update to use jca 1.5 interface.  NOTE: EVERYONE WILL HAVE TO
+		RUN THE total-clean TARGET TO GET THE NEW JCA1.5 CLASSES
+
+2003-03-09  ryanbaldwin
+	* src/native/jaygds/builds/msvc6/java_gds.dsp:
+	* src/native/jaygds/builds/msvc6/java_gds.dsw:
+	* src/native/jaygds/source/StdAfx.h:
+	* src/native/jaygds/source/allocator.cpp:
+	* src/native/jaygds/source/allocator.h:
+	* src/native/jaygds/source/entrypoints.cpp:
+	* src/native/jaygds/source/entrypoints_generated.h:
+	* src/native/jaygds/source/exceptions.cpp:
+	* src/native/jaygds/source/exceptions.h:
+	* src/native/jaygds/source/external/ib_util.h:
+	* src/native/jaygds/source/external/ibase.h:
+	* src/native/jaygds/source/external/iberror.h:
+	* src/native/jaygds/source/external/ibinstall.h:
+	* src/native/jaygds/source/external/jawt_md.h:
+	* src/native/jaygds/source/external/jni.h:
+	* src/native/jaygds/source/external/jni_md.h:
+	* src/native/jaygds/source/external/win32/jawt_md.h:
+	* src/native/jaygds/source/external/win32/jni_md.h:
+	* src/native/jaygds/source/fb_binding.cpp:
+	* src/native/jaygds/source/fb_binding.h:
+	* src/native/jaygds/source/fb_helpers.cpp:
+	* src/native/jaygds/source/fb_helpers.h:
+	* src/native/jaygds/source/handle_wrappers.cpp:
+	* src/native/jaygds/source/handle_wrappers.h:
+	* src/native/jaygds/source/jni_helpers.cpp:
+	* src/native/jaygds/source/jni_helpers.h:
+	* src/native/jaygds/source/xsqlda_wrapper.cpp:
+	* src/native/jaygds/source/xsqlda_wrapper.h:
+		Added native code for type 2 driver modifications.
+
+	* src/native/jaygds/source/entrypoints.cpp:
+		Fixed a leak of jclasshandle global references that would occur
+		when c++ exceptions were thrown. Sorry.
+
+2003-03-09  rrokytskyy
+	* src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.java:
+		fixed test case failure
+
+	* build.xml:
+		fixed log4j.properties and added new jar creation with all
+		needed classes
+
+	* src/main/org/firebirdsql/jgds/ClumpletImpl.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/StringClumplet.java:
+		rewrite of Clumplet.remove(int)
+
+	* src/main/org/firebirdsql/gds/ISCConstants.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+		added possibility to specify socket buffer size
+
+	* src/main/org/firebirdsql/gds/Clumplet.java:
+	* src/main/org/firebirdsql/jgds/ClumpletImpl.java:
+		added remove(int) method
+
+	* src/main/org/firebirdsql/gds/GDSExceptionHelper.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBDataSourceObjectFactory.java:
+	* src/main/org/firebirdsql/jdbc/FBSimpleDataSource.java:
+	* src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.java:
+		removed some deprecations
+
+	* src/main/org/firebirdsql/jgds/ClumpletImpl.java:
+	* src/main/org/firebirdsql/jgds/StringClumplet.java:
+		fixed NPE
+
+2003-03-05  rrokytskyy
+	* src/main/org/firebirdsql/jgds/XdrOutputStream.java:
+		fixed "operation was cancelled" and bug #696521
+
+	* src/main/org/firebirdsql/jdbc/FBLongVarCharField.java:
+		fixed NPE if null is passed into setXXX method
+
+2003-03-04  rrokytskyy
+	* src/test/org/firebirdsql/jdbc/TestBoundary.java:
+		initial revision
+
 2003-02-28  rfincher
 	* src/etc/faq.PDF:
 		FAQ in Adobe Acrobat pdf format
 
-	* output/etc/faq.html:
-	* output/etc/release_notes.html:
 	* src/etc/FAQ.txt:
 	* src/etc/faq.html:
 		*** empty log message ***
