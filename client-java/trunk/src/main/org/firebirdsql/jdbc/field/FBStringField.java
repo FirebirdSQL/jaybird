@@ -86,7 +86,7 @@ public class FBStringField extends FBField {
     private static final String LONG_TRUE = "true";
     private static final String LONG_FALSE = "false";
     private static final String SHORT_TRUE_2 = "T";
-//    private static final String SHORT_FALSE_2 = "F";
+    private static final String SHORT_TRUE_3 = "1";
     
 
     FBStringField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
@@ -172,7 +172,8 @@ public class FBStringField extends FBField {
 
         return getString().trim().equalsIgnoreCase(LONG_TRUE) ||
                 getString().trim().equalsIgnoreCase(SHORT_TRUE) ||
-                getString().trim().equalsIgnoreCase(SHORT_TRUE_2);
+                getString().trim().equalsIgnoreCase(SHORT_TRUE_2) ||
+                getString().trim().equalsIgnoreCase(SHORT_TRUE_3);
     }
     public String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
