@@ -32,7 +32,7 @@
        </fileset>
        <fileset dir="${build.resources}">
          <exclude name="log4j.properties"/>
-         <include name="*.properties"/>
+         <include name="**/*.properties"/>
        </fileset>
     </jar>
 
@@ -54,7 +54,7 @@
        </fileset>
        <fileset dir="${build.resources}">
          <exclude name="log4j.properties"/>
-         <include name="*.properties"/>
+         <include name="**/*.properties"/>
        </fileset>
        <fileset dir="${build.j2ee}">
          <include name="javax/**"/>
@@ -74,7 +74,7 @@
          <include name="org/firebirdsql/**"/>
        </fileset>
        <fileset dir="${build.resources}">
-         <include name="*.properties"/>
+         <include name="**/*.properties"/>
        </fileset>
     </jar>
   </target>
@@ -93,7 +93,7 @@
          <exclude name="**/jdbc/**"/>
        </fileset>
        <fileset dir="${build.resources}">
-         <include name="*.properties"/>
+         <include name="**/*.properties"/>
        </fileset>
     </jar>
   </target>
