@@ -18,19 +18,17 @@
  */
 package org.firebirdsql.pool;
 
-import java.io.*;
+import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.Hashtable;
 import java.util.Properties;
 
 import javax.naming.*;
-import javax.naming.spi.ObjectFactory;
-import javax.resource.Referenceable;
 import javax.resource.ResourceException;
 import javax.sql.*;
 
-import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.GDSFactory;
+import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.jca.*;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.logging.Logger;
@@ -41,10 +39,9 @@ import org.firebirdsql.logging.LoggerFactory;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBConnectionPoolDataSource extends AbstractConnectionPool
-    implements PooledConnectionManager, ConnectionPoolConfiguration, 
-    ConnectionPoolDataSource, ConnectionEventListener, 
-    Serializable, Referenceable, ObjectFactory
+public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
+    implements PooledConnectionManager, ConnectionPoolDataSource, 
+    ConnectionEventListener
 {
     
     public static final String USER_NAME_PROPERTY = FBDriver.USER;
@@ -56,51 +53,7 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     public static final String SOCKET_BUFFER_PROPERTY = "socket_buffer_size";
     public static final String SQL_ROLE_PROPERTY = "sql_role_property";
 
-    /**
-     * Structure class to store user name and password. 
-     */
-    private static class UserPasswordPair {
-        private String userName;
-        private String password;
-
-        public UserPasswordPair() {
-            this(null, null);
-        }
-    
-        public UserPasswordPair(String userName, String password) {
-            this.userName = userName;
-            this.password = password;
-        }
-    
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null) return false;
-            if (!(obj instanceof UserPasswordPair)) return false;
-        
-            UserPasswordPair that = (UserPasswordPair)obj;
-        
-            boolean equal = true;
-            
-            equal &= userName != null ? 
-                userName.equals(that.userName) : that.userName == null;
-                
-            equal &= password != null ? 
-                password.equals(that.password) : that.password == null;
-        
-            return equal; 
-        }
-    
-        public int hashCode() {
-            int result = 3;
-            
-            result ^= userName != null ? userName.hashCode() : 0;
-            result ^= password != null ? password.hashCode() : 0;
-            
-            return result;
-        }
-    }
-
-    public static final UserPasswordPair EMPTY_USER_PASSWORD = new UserPasswordPair();
+    public static final AbstractConnectionPool.UserPasswordPair EMPTY_USER_PASSWORD = new AbstractConnectionPool.UserPasswordPair();
     private static final String PING_STATEMENT = ""
         + "SELECT cast(1 AS INTEGER) FROM rdb$database" 
         ;
@@ -108,22 +61,10 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     private static final Logger LOG =
         LoggerFactory.getLogger(FBConnectionPoolDataSource.class, false);
         
-    private Reference reference;
-    
-	private int loginTimeout;
 	private transient PrintWriter logWriter;
     
     private transient FBManagedConnectionFactory managedConnectionFactory;
 
-    private int minConnections = FBPoolingDefaults.DEFAULT_MIN_SIZE;
-    private int maxConnections = FBPoolingDefaults.DEFAULT_MAX_SIZE;
-    
-    private int blockingTimeout = FBPoolingDefaults.DEFAULT_BLOCKING_TIMEOUT;
-    private int retryInterval = FBPoolingDefaults.DEFAULT_RETRY_INTERVAL;
-    private int idleTimeout = FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT;
-
-    private int pingInterval = FBPoolingDefaults.DEFAULT_PING_INTERVAL;
-    
     private Properties properties = new Properties();
     private String database;
     private GDSType gdsType = GDSType.PURE_JAVA;
@@ -157,10 +98,6 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
         return LOG;
     }
     
-    public ConnectionPoolConfiguration getConfiguration() {
-        return this;
-    }
-    
     protected PooledConnectionManager getConnectionManager() {
         return this;
     }
@@ -179,12 +116,14 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
         throws SQLException
     {
         
-        if (!(key instanceof UserPasswordPair))
+        if (!(key instanceof AbstractConnectionPool.UserPasswordPair))
             throw new SQLException("Incorrect key.");
             
-        UserPasswordPair pair = (UserPasswordPair)key;
-        String userName = pair.userName; 
-        String password = pair.password;
+        AbstractConnectionPool.UserPasswordPair pair = 
+                (AbstractConnectionPool.UserPasswordPair)key;
+        
+        String userName = pair.getUserName(); 
+        String password = pair.getPassword();
 
         Properties props = new Properties();
         props.putAll(getProperties());
@@ -213,10 +152,14 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
                         managedConnection,
                         cri,
                         getPingStatement(),
-                        getPingInterval());
+                        getPingInterval(),
+                        isStatementPooling());
             else
                 pooledConnection = 
-                    new FBPooledConnection(managedConnection, cri);
+                    new FBPooledConnection(
+                        managedConnection, 
+                        cri, 
+                        isStatementPooling());
 
             return pooledConnection;
 
@@ -249,7 +192,7 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
 	 * @return value set in {@link #setLoginTimeout(int)} method or 0.
 	 */
 	public int getLoginTimeout() {
-	    return loginTimeout;
+	    return getBlockingTimeout() / 1000;
 	}
 
 	/**
@@ -259,7 +202,7 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
 	 * granted.
 	 */
 	public void setLoginTimeout(int seconds) {
-	    loginTimeout = seconds;
+	    setBlockingTimeout(seconds * 1000);
 	}
 
     /**
@@ -306,7 +249,7 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
         throws SQLException 
     {
 	    return (PooledConnection)getPooledConnection(
-            getQueue(new UserPasswordPair(user, password)));
+            getQueue(new AbstractConnectionPool.UserPasswordPair(user, password)));
 	}
     
     /**
@@ -356,24 +299,6 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     }
 
     /**
-     * Get minimum number of open physical connections that are kept in pool. 
-     * 
-     * @see org.firebirdsql.pool.ConnectionPoolConfiguration#getMinConnections()
-     */
-    public int getMinConnections() {
-        return minConnections;
-    }
-
-    /**
-     * Get maximum number of physical connections in the pool.
-     * 
-     * @see org.firebirdsql.pool.ConnectionPoolConfiguration#getMaxConnections()
-     */
-    public int getMaxConnections() {
-        return maxConnections;
-    }
-
-    /**
      * Get JDBC connection properties.
      */
     public Properties getProperties() {
@@ -414,7 +339,7 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
             return 0;
         }
     }
-
+    
     /**
      * Check if this configuation defines a pingable connection JDBC pool.
      * 
@@ -434,16 +359,6 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     }
 
     /**
-     * Get time interval, after which connection is marked to be pinged on 
-     * first request to it.
-     * 
-     * @see org.firebirdsql.pool.ConnectionPoolConfiguration#getPingInterval()
-     */
-    public int getPingInterval() {
-        return pingInterval;
-    }
-
-    /**
      * Set database name.
      * 
      * @param database connection URL without <code>"jdbc:firebirdsql:"</code>
@@ -452,42 +367,6 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
      */
     public void setDatabase(String database) {
         this.database = database;
-    }
-
-    /**
-     * Set maximum number of open physical connections in the pool.
-     * 
-     * @param maxConnections maximum allowed number of open connections in the 
-     * pool.
-     * 
-     * @see #getMaxConnections()
-     */
-    public void setMaxConnections(int maxConnections) {
-        this.maxConnections = maxConnections;
-    }
-
-    /**
-     * Set minimum number of open physical connections in the pool.
-     * 
-     * @param minConnections minimum number of open connections in the pool.
-     * 
-     * @see #getMinConnections()
-     */
-    public void setMinConnections(int minConnections) {
-        this.minConnections = minConnections;
-    }
-
-    /**
-     * Set ping interval for the connections.
-     * 
-     * @param pingInterval number of milliseconds after which connection is 
-     * marked to "ping" before getting it from the pool or <code>0</code> to
-     * remove "pingable" property of this pool.
-     * 
-     * @see #getPingInterval()
-     */
-    public void setPingInterval(int pingInterval) {
-        this.pingInterval = pingInterval;
     }
 
     /**
@@ -524,64 +403,6 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
      */
     public void setIntProperty(String name, int value) {
         setProperty(name, Integer.toString(value));
-    }
-
-    /**
-     * Get pool blocking timeout.
-     * 
-     * @see ConnectionPoolConfiguration#getBlockingTimeout()
-     */
-    public int getBlockingTimeout() {
-        return blockingTimeout;
-    }
-    
-    /**
-     * Set blocking timeout.
-     * 
-     * @param blockingTimeout blocking timeout to set.
-     * 
-     * @see ConnectionPoolConfiguration#getBlockingTimeout()
-     */
-    public void setBlockingTimeout(int blockingTimeout) {
-        this.blockingTimeout = blockingTimeout;
-    }
-
-    /** 
-     * Get retry interval.
-     * 
-     * @see ConnectionPoolConfiguration#getRetryInterval()
-     */
-    public int getRetryInterval() {
-        return retryInterval;
-    }
-
-    /**
-     * Set retry interval.
-     * 
-     * @param retryInterval retry interval in milliseconds
-     * 
-     * @see ConnectionPoolConfiguration#getBlockingTimeout()
-     */
-    public void setRetryInterval(int retryInterval) {
-        this.retryInterval = retryInterval;
-    }
-    
-    /**
-     * Get idle timeout.
-     * 
-     * @return idle timeout in milliseconds.
-     */
-    public int getIdleTimeout() {
-        return idleTimeout;
-    }
-
-    /**
-     * Set idle timeout.
-     * 
-     * @param idleTimeout idle timeout in milliseconds.
-     */
-    public void setIdleTimeout(int idleTimeout) {
-        this.idleTimeout = idleTimeout;
     }
     
     /**
@@ -733,74 +554,53 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     public void setUserName(String userName) {
         setProperty(USER_NAME_PROPERTY, userName);
     }
-
-
-
-    /*
-     * JNDI-related code. 
-     */
-
-    private static final String REF_BLOCKING_TIMEOUT = "blockingTimeout";
+    
     private static final String REF_DATABASE = "database";
-    private static final String REF_IDLE_TIMEOUT = "idleTimeout";
-    private static final String REF_LOGIN_TIMEOUT = "loginTimeout";
-    private static final String REF_MAX_SIZE = "maxSize";
-    private static final String REF_MIN_SIZE = "minSize";
-    private static final String REF_PING_INTERVAL = "pingInterval";
     private static final String REF_TYPE = "type";
     private static final String PROPERTIES = "properties";
+    
+    public Reference getDefaultReference() {
+        Reference ref = super.getDefaultReference();
+        
+        if (getDatabase() != null)            
+            ref.add(new StringRefAddr(REF_DATABASE, getDatabase()));
 
-    /**
-     * Get object instance for the specified name in the specified context.
-     * This method constructs new datasource if <code>obj</code> represents
-     * {@link Reference}, whose factory class is equal to this class.
-     */
-    public Object getObjectInstance(Object obj, Name name, Context nameCtx, 
+        if (getType() != null)
+            ref.add(new StringRefAddr(REF_TYPE, getType()));
+        
+        byte[] data = serialize(getProperties());
+        ref.add(new BinaryRefAddr(PROPERTIES, data));
+        
+        return ref;
+    }
+    
+    
+    protected BasicAbstractConnectionPool createObjectInstance() {
+        return new FBConnectionPoolDataSource();
+    }
+    
+    public Object getObjectInstance(Object obj, Name name, Context nameCtx,
         Hashtable environment) throws Exception 
     {
-        if (!(obj instanceof Reference)) return null;
-
-        Reference ref = (Reference)obj;
-
-        if (!getClass().getName().equals(ref.getClassName()))
+        FBConnectionPoolDataSource ds = 
+            (FBConnectionPoolDataSource)super.getObjectInstance(
+                obj, name, nameCtx, environment);
+        
+        if (ds == null)
             return null;
-
-        FBConnectionPoolDataSource ds = new FBConnectionPoolDataSource();
+        
+        Reference ref = (Reference)obj;
         
         String addr;
-
-        addr = getRefAddr(ref, REF_BLOCKING_TIMEOUT);
-        if (addr != null)
-            ds.setBlockingTimeout(Integer.parseInt(addr));
-            
+        
         addr = getRefAddr(ref, REF_DATABASE);
         if (addr != null)
             ds.setDatabase(addr);
-            
-        addr = getRefAddr(ref, REF_IDLE_TIMEOUT);
-        if (addr != null)
-            ds.setIdleTimeout(Integer.parseInt(addr));
-            
-        addr = getRefAddr(ref, REF_LOGIN_TIMEOUT);
-        if (addr != null)
-            ds.setLoginTimeout(Integer.parseInt(addr));
-            
-        addr = getRefAddr(ref, REF_MAX_SIZE);
-        if (addr != null)
-            ds.setMaxConnections(Integer.parseInt(addr));
-            
-        addr = getRefAddr(ref, REF_MIN_SIZE);
-        if (addr != null)
-            ds.setMinConnections(Integer.parseInt(addr));
 
-        addr = getRefAddr(ref, REF_PING_INTERVAL);
-        if (addr != null)
-            ds.setPingInterval(Integer.parseInt(addr));
-            
         addr = getRefAddr(ref, REF_TYPE);
         if (addr != null)
             ds.setType(addr);
-            
+        
         RefAddr binAddr = ref.get(PROPERTIES);
         if (binAddr != null) {
             byte[] data = (byte[])binAddr.getContent();
@@ -810,107 +610,5 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
         }
         
         return ds;
-    }
-    
-    private String getRefAddr(Reference ref, String type) {
-        RefAddr addr = ref.get(type);
-        if (addr == null)
-            return null;
-        else
-            return addr.getContent().toString();
-    }
-    
-    /**
-     * Get JDNI reference.
-     * 
-     * @return instance of {@link Reference}.
-     */
-    public Reference getReference() {
-        if (reference == null)
-            return getDefaultReference();
-        else
-            return reference;
-    }
-    
-    /**
-     * Set JNDI reference for this data source.
-     * 
-     * @param reference JNDI reference.
-     */
-    public void setReference(Reference reference) {
-        this.reference = reference;
-    }
-
-    /**
-     * Get default JNDI reference for this datasource. This method is called if
-     * datasource is used in non-JCA environment.
-     * 
-     * @return instance of {@link Reference} containing all information 
-     * that allows to reconstruct the datasource.
-     */
-    public Reference getDefaultReference() {
-        Reference ref = new Reference(getClass().getName());
-        
-        if (getBlockingTimeout() != FBPoolingDefaults.DEFAULT_BLOCKING_TIMEOUT)
-            ref.add(new StringRefAddr(REF_BLOCKING_TIMEOUT, 
-                String.valueOf(getBlockingTimeout())));
-
-        if (getDatabase() != null)            
-            ref.add(new StringRefAddr(REF_DATABASE, getDatabase()));
-
-        if (getIdleTimeout() != FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT)
-            ref.add(new StringRefAddr(REF_IDLE_TIMEOUT,
-                String.valueOf(getIdleTimeout())));
-
-        if (getLoginTimeout() != FBPoolingDefaults.DEFAULT_LOGIN_TIMEOUT)
-            ref.add(new StringRefAddr(REF_LOGIN_TIMEOUT,
-                String.valueOf(getLoginTimeout())));
-
-        if (getMaxConnections() != FBPoolingDefaults.DEFAULT_MAX_SIZE)
-            ref.add(new StringRefAddr(REF_MAX_SIZE, 
-                String.valueOf(getMaxConnections())));
-
-        if (getMinConnections() != FBPoolingDefaults.DEFAULT_MIN_SIZE)
-            ref.add(new StringRefAddr(REF_MIN_SIZE,
-                String.valueOf(getMinConnections())));
-            
-        if (getPingInterval() != FBPoolingDefaults.DEFAULT_PING_INTERVAL)
-            ref.add(new StringRefAddr(REF_PING_INTERVAL, 
-                String.valueOf(getPingInterval())));
-            
-        if (getType() != null)
-            ref.add(new StringRefAddr(REF_TYPE, getType()));
-            
-        byte[] data = serialize(getProperties());
-        ref.add(new BinaryRefAddr(PROPERTIES, data));
-
-        return ref;
-    }
-    
-    private byte[] serialize(Object obj) {
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        
-        try {
-            ObjectOutputStream out = new ObjectOutputStream(bout);
-            out.writeObject(obj);
-            out.flush();
-        } catch(IOException ex) {
-            return null;
-        }
-        
-        return bout.toByteArray();
-    }
-    
-    private Object deserialize(byte[] data) {
-        ByteArrayInputStream bin = new ByteArrayInputStream(data);
-        
-        try {
-            ObjectInputStream in = new ObjectInputStream(bin);
-            return in.readObject();
-        } catch(IOException ex) {
-            return null;
-        } catch(ClassNotFoundException ex) {
-            return null;
-        }
     }
 }

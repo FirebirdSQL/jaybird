@@ -326,18 +326,27 @@ public class FBWrappingDataSource implements DataSource,
         getPool().setNonStandardProperty(key, value);
     }
     
-    /*
-     * Deprecated methods included for compatibility reasons. Will be removed
-     * in next release.
+    /**
+     * @deprecated use {@link #isPooling()} method.
      */
-     
-    private boolean pooling;
     public boolean getPooling() {
-        return pooling;
+        return getPool().isPooling();
+    }
+    
+    public boolean isPooling() {
+        return getPool().isPooling();
     }
     
     public void setPooling(boolean pooling) {
-        this.pooling = pooling;
+        getPool().setPooling(pooling);
+    }
+    
+    public boolean isStatementPooling() {
+        return getPool().isStatementPooling();
+    }
+    
+    public void setStatementPooling(boolean statementPooling) {
+        getPool().setStatementPooling(statementPooling);
     }
     
     public int getIdleTimeoutMinutes() {
@@ -349,10 +358,7 @@ public class FBWrappingDataSource implements DataSource,
     }
     
     public int getConnectionCount() throws SQLException {
-        if (getPool() != null)
-            return getPool().getFreeSize();
-        else
-            return 0;
+        return getPool().getFreeSize();
     }
     
     /*

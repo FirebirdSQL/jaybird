@@ -41,27 +41,31 @@ import org.firebirdsql.gds.ISCConstants;
  */
 public class TestFBConnectionPoolDataSource extends FBTestBase {
     
-    private static final int DEFAULT_MIN_CONNECTIONS = 0;
-    private static final int DEFAULT_MAX_CONNECTIONS = 2;
-    private static final int DEFAULT_PING_INTERVAL = 5000;
+    protected static final int DEFAULT_MIN_CONNECTIONS = 0;
+    protected static final int DEFAULT_MAX_CONNECTIONS = 2;
+    protected static final int DEFAULT_PING_INTERVAL = 5000;
     
     public TestFBConnectionPoolDataSource(String name) {
         super(name);
     }
 
-    private FBConnectionPoolDataSource pool;
+    protected BasicAbstractConnectionPool pool;
     
     protected void setUp() throws Exception {
         super.setUp();
         
-        pool = createFBConnectionPoolDataSource();
+        FBConnectionPoolDataSource connectionPool = new FBConnectionPoolDataSource();
+
+        connectionPool.setType(getGdsType().toString());
         
-        pool.setDatabase(DB_DATASOURCE_URL);
-        pool.setMinConnections(DEFAULT_MIN_CONNECTIONS);
-        pool.setMaxConnections(DEFAULT_MAX_CONNECTIONS);
-        pool.setPingInterval(DEFAULT_PING_INTERVAL);
+        connectionPool.setDatabase(DB_DATASOURCE_URL);
+        connectionPool.setMinConnections(DEFAULT_MIN_CONNECTIONS);
+        connectionPool.setMaxConnections(DEFAULT_MAX_CONNECTIONS);
+        connectionPool.setPingInterval(DEFAULT_PING_INTERVAL);
         
-        pool.setProperties(getDefaultPropertiesForConnection());
+        connectionPool.setProperties(getDefaultPropertiesForConnection());
+        
+        this.pool = connectionPool;
     }
 
     protected void tearDown() throws Exception {
@@ -95,13 +99,26 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         props.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
         props.put(Context.OBJECT_FACTORIES, FBConnectionPoolDataSource.class.getName());
         
-        Context context = new InitialContext(props);
+        checkJNDI(props);
+    }
 
+    /**
+     * Perform JNDI test case. This method is separated from {@link #testJNDI()}
+     * during refactoring, since it is used by {@link TestDriverConnectionPoolDataSource}
+     * test case too.
+     * 
+     * @param env environment for JNDI context.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    protected void checkJNDI(Properties env) throws Exception {
+        Context context = new InitialContext(env);
         try {
             context.bind("jdbc/test", pool);
-            FBConnectionPoolDataSource testPool = 
-                (FBConnectionPoolDataSource)context.lookup("jdbc/test");
             
+            BasicAbstractConnectionPool testPool = 
+                (BasicAbstractConnectionPool)context.lookup("jdbc/test");
+
             Connection testConnection = 
                 testPool.getPooledConnection().getConnection();
             try {
@@ -321,7 +338,8 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             t.start();
             
             // sleep for blocking timeout + 1 sec.
-            Thread.sleep(pool.getBlockingTimeout() + 1000);
+            //Thread.sleep(pool.getBlockingTimeout() + 1000);
+            t.join();
             
             assertTrue("Blocked thread should have failed on timeout.", 
                 tester.failedOnTimeout);
