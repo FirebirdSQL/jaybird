@@ -942,7 +942,7 @@ public class FBConnection implements Connection, FirebirdConnection
         if (!getAutoCommit())
             ensureInTransaction();
 
-        return new FBBlob(this, 0);
+        return new FBBlob(this);
     }
 
     //package methods

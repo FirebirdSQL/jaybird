@@ -20,31 +20,14 @@
 package org.firebirdsql.jdbc;
 
 
-import java.math.BigDecimal;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
+import java.io.*;
+import java.math.*;
+import java.net.*;
+import java.sql.*;
 import java.sql.Date;
-import java.sql.Ref;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.Statement;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.util.*;
 
-import org.firebirdsql.gds.isc_stmt_handle;
-import org.firebirdsql.gds.XSQLVAR;
-
-import java.net.URL;
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.ArrayList;
+import org.firebirdsql.gds.*;
 
 
 /**
@@ -118,8 +101,10 @@ public class FBResultSet implements ResultSet {
         xsqlvars = stmt.getOutSqlda().sqlvar;
         prepareVars(true);
         fbFetcher = new FBCachedFetcher(this.c, fbStatement,stmt,this);
-        //use willEndTransaction rather than getAutoCommit so blobs are cached only when transactions are
-        //automatically ended.  Using jca framework, getAutoCommit is always true.
+        
+        // use willEndTransaction rather than getAutoCommit so blobs are cached 
+        // only when transactions are automatically ended.  Using jca framework, 
+        // getAutoCommit is always true.
         if (c.willEndTransaction()) 
         {
             FBCachedFetcher fetcher = (FBCachedFetcher)fbFetcher;
