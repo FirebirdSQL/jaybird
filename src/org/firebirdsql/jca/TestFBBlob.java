@@ -94,15 +94,15 @@ public class TestFBBlob extends TestXABase {
         p.setInt(1, 1);
         ResultSet rs = p.executeQuery();
         while (rs.next()) {
-            log.info("C1: " + rs.getInt(1));
+            if (log != null) log.info("C1: " + rs.getInt(1));
             Blob blobRead = rs.getBlob(2);
-            //            log.info("blobRead blob_id: " + ((FBBlob)blobRead).getBlobId());
+            // if (log != null) log.info("blobRead blob_id: " + ((FBBlob)blobRead).getBlobId());
             InputStream is = blobRead.getBinaryStream();
             int count = 0;
             while (is.read() != -1) {
                 count++;
             }
-            log.info("C2 count: " + count);
+            if (log != null) log.info("C2 count: " + count);
             assertTrue("retrieved wrong length blob: expecting " + bloblength + ", retrieved: " + count, bloblength == count);
 
         }
@@ -113,7 +113,7 @@ public class TestFBBlob extends TestXABase {
 
     public void testUseBlob() throws Exception {
 
-        log.info("testUseBlob");
+        if (log != null) log.info("testUseBlob");
         setupTable("T1");
 
         t.begin();
@@ -140,7 +140,7 @@ public class TestFBBlob extends TestXABase {
 
     public void testUseBlobViapsSetBinaryStream() throws Exception {
 
-        log.info("testUseBlobViapsSetBinaryStream");
+        if (log != null) log.info("testUseBlobViapsSetBinaryStream");
         setupTable("T2");
 
         t.begin();
@@ -164,7 +164,7 @@ public class TestFBBlob extends TestXABase {
 
     public void testUseBlobViapsSetBytes() throws Exception {
 
-        log.info("testUseBlobViapsSetBytes");
+        if (log != null) log.info("testUseBlobViapsSetBytes");
         setupTable("T3");
 
         t.begin();

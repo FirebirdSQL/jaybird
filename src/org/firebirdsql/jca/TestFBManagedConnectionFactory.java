@@ -56,14 +56,14 @@ public class TestFBManagedConnectionFactory extends TestXABase {
 
 
     public void testCreateMcf() throws Exception {
-        log.info("testCreateMcf");
+        if (log != null) log.info("testCreateMcf");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnectionFactory realMcf = mcf;
     }
 
     public void testCreateMc() throws Exception {
         
-        log.info("testCreateMc");
+        if (log != null) log.info("testCreateMc");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         mc.destroy();
@@ -73,7 +73,7 @@ public class TestFBManagedConnectionFactory extends TestXABase {
 
     public void testSqlInfo() throws Exception {
         
-        log.info("testSqlInfo");
+        if (log != null) log.info("testSqlInfo");
         byte[] testbuffer = {
 23, //isc_info_sql_records
 29,  //length

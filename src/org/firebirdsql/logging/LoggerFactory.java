@@ -30,20 +30,18 @@ public class LoggerFactory{
 		String log4j = System.getProperty("FBLog4j");
 		if (log4j == null){
 			try {
-				Class verify = Class.forName("org.apache.log4j.Logger");				
+				Class verify = Class.forName("org.apache.log4j.Logger");
 				log4j = "true";
-				System.out.println("log4j is in the classpath");
 			}
 			catch (ClassNotFoundException cnfe){
 				log4j = "false";
-				System.out.println("log4j is not in the classpath");
 			}
 			System.setProperty("FBLog4j",log4j);
 		}
 		if (log4j.equals("true"))
 			return new Log4jLogger(name);
 		else
-			return new NullLogger(name);
+			return null;
 	}
 	
 	public static Logger getLogger(Class clazz) {

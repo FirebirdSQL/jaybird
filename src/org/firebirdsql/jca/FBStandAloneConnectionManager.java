@@ -120,7 +120,7 @@ public class FBStandAloneConnectionManager implements ConnectionManager , Connec
             ((FBManagedConnection)ce.getSource()).destroy();
         }
         catch (ResourceException e) {
-            log.println("Exception closing unmanaged connection: " + e);
+            if (log != null) log.println("Exception closing unmanaged connection: " + e);
         }
 
     }
@@ -131,7 +131,7 @@ public class FBStandAloneConnectionManager implements ConnectionManager , Connec
             ((FBManagedConnection)ce.getSource()).destroy();
         }
         catch (ResourceException e) {
-            log.println("Exception closing unmanaged connection: " + e);
+            if (log != null) log.println("Exception closing unmanaged connection: " + e);
         }
     }
 

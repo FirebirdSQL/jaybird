@@ -59,7 +59,7 @@ public class TestFBConnection extends TestXABase {
 
 
     public void testCreateC() throws Exception {
-        log.info("testCreateC");
+        if (log != null) log.info("testCreateC");
         FBManagedConnectionFactory mcf = initMcf();
         assertTrue("Could not get FBManagedConnectionFactory", mcf != null);
         ManagedConnection mc = mcf.createManagedConnection(null, null);
@@ -70,7 +70,7 @@ public class TestFBConnection extends TestXABase {
     }
 
     public void testAssociateC() throws Exception {
-        log.info("testAssociateC");
+        if (log != null) log.info("testAssociateC");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc1 = mcf.createManagedConnection(null, null);
         Connection c1 = (Connection)mc1.getConnection(null, null);
@@ -83,7 +83,7 @@ public class TestFBConnection extends TestXABase {
     }
 
     public void testCreateStatement() throws Exception {
-        log.info("testCreateStatement");
+        if (log != null) log.info("testCreateStatement");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         Connection c = (Connection)mc.getConnection(null, null);
@@ -93,7 +93,7 @@ public class TestFBConnection extends TestXABase {
     }
 
     public void testUseStatement() throws Exception {
-        log.info("testUseStatement");
+        if (log != null) log.info("testUseStatement");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         Connection c = (Connection)mc.getConnection(null, null);

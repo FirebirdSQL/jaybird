@@ -159,7 +159,7 @@ public class ManagedConnectionPool
          } // end of else
       } catch (ResourceException re) 
       {
-         //log.info("ResourceException returning ManagedConnection to pool:", re);
+         //if (log!=null) log.info("ResourceException returning ManagedConnection to pool:", re);
       } finally 
       {
          permits.release();
@@ -168,7 +168,7 @@ public class ManagedConnectionPool
 
    public void removeTimedOut()
    {
-      log.debug("Checking for timed out connections");  
+      if (log!=null) log.debug("Checking for timed out connections");  
       synchronized (mcs)
       {
          for (Iterator i = mcs.iterator(); i.hasNext(); ) 
@@ -176,7 +176,7 @@ public class ManagedConnectionPool
             MCHolder mch = (MCHolder)i.next();
             if (mch.isTimedOut()) 
             {
-               log.debug("Removing a timed-out connection");
+               if (log!=null) log.debug("Removing a timed-out connection");
                i.remove();
                doDestroy(mch.getMC());
             } // end of if ()
@@ -254,7 +254,7 @@ public class ManagedConnectionPool
       }
       catch (ResourceException re)
       {
-         //log.info("Exception destroying ManagedConnection", re);
+         //if (log!=null) log.info("Exception destroying ManagedConnection", re);
       } // end of try-catch
    }
 

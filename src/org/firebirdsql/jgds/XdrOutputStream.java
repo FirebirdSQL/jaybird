@@ -65,7 +65,7 @@ class XdrOutputStream extends DataOutputStream {
 
     public final void writeBlobBuffer(byte[] buffer) throws IOException {
         int len = buffer.length ; // 2 for short for buffer length
-        log.debug("writeBlobBuffer len: " + len);
+        if (log != null) log.debug("writeBlobBuffer len: " + len);
         if (len > Short.MAX_VALUE) {
             throw new IOException(""); //Need a value???
         }
@@ -74,7 +74,7 @@ class XdrOutputStream extends DataOutputStream {
         write((len >> 0) & 0xff);
         write((len >> 8) & 0xff);
         write(buffer, 0, len);
-        log.debug("writeBlobBuffer wrotebuffer bytes: " + len);
+        if (log != null) log.debug("writeBlobBuffer wrotebuffer bytes: " + len);
         write(pad,0,((4 - len+2) & 3));
     }
 
@@ -88,7 +88,7 @@ class XdrOutputStream extends DataOutputStream {
         }
     }
     public final void writeSet(int type, Set s) throws IOException {
-//        log.debug("writeSet: type: " + type);
+//      if (log != null) log.debug("writeSet: type: " + type);
         if (s == null) {
             writeInt(1);
             write(type); //e.g. gds.isc_tpb_version3
@@ -100,9 +100,9 @@ class XdrOutputStream extends DataOutputStream {
             while (i.hasNext()) {
                 int n = ((Integer)i.next()).intValue();
                 write(n);
-//              log.debug("writeSet: value: " + n);
+//              if (log != null) log.debug("writeSet: value: " + n);
             }
-//          log.debug("writeSet: padding 0 : " + ((4 - (s.size() + 1)) & 3));
+//          if (log != null) log.debug("writeSet: padding 0 : " + ((4 - (s.size() + 1)) & 3));
             write(pad,0,((4 - (s.size() + 1)) & 3));
         }
     }

@@ -337,7 +337,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         }
         if (currentDbHandle != null) {
             try {
-               // log.debug("in ManagedConnection.destroy",new Exception());
+               // if (log!=null) log.debug("in ManagedConnection.destroy",new Exception());
                 mcf.releaseDbHandle(currentDbHandle, cri);
             }
             catch (GDSException ge) {
@@ -357,7 +357,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
    * @exception SQLException if a database-access error occurs
    */
     public javax.transaction.xa.XAResource getXAResource() throws ResourceException {
-       log.debug("XAResource requested from FBManagedConnection");
+       if (log!=null) log.debug("XAResource requested from FBManagedConnection");
        return this;
     }
 
@@ -375,7 +375,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     differs depending on the exact situation.
      */
     public void commit(Xid id, boolean twoPhase) throws XAException {
-        log.debug("Commit called: " + id);
+        if (log!=null) log.debug("Commit called: " + id);
         if (mcf.lookupXid(id) == null) {
             throw new XAException("commit called with unknown transaction");
         }
@@ -393,10 +393,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      */
      //what do we do with flags?????
     public void end(Xid id, int flags) throws javax.transaction.xa.XAException {
-       log.debug("End called: " + id);
+       if (log!=null) log.debug("End called: " + id);
         if (currentTr == null) {
             //XAException xae = new XAException("end called with no transaction associated");
-           log.debug("end called with no transaction associated: " + id + ", flags: " + flags);//, new Exception());
+           if (log!=null) log.debug("end called with no transaction associated: " + id + ", flags: " + flags);//, new Exception());
 
            //throw xae;
 
@@ -417,7 +417,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     transaction ID is wrong.
      */
     public void forget(Xid id) throws javax.transaction.xa.XAException {
-        log.debug("forget called: " + id);
+        if (log!=null) log.debug("forget called: " + id);
         if (mcf.lookupXid(id) == null) {
             throw new XAException("forget called with unknown transaction");
         }
@@ -446,7 +446,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     transaction ID is wrong, or the connection was set to Auto-Commit.
      */
     public int prepare(Xid id) throws javax.transaction.xa.XAException {
-        log.debug("prepare called: " + id);
+        if (log!=null) log.debug("prepare called: " + id);
         if (mcf.lookupXid(id) == null) {
             throw new XAException("prepare called with unknown transaction");
         }
@@ -515,9 +515,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     differs depending on the exact situation.
      */
     public void rollback(Xid id) throws javax.transaction.xa.XAException {
-        log.debug("rollback called: " + id);
+        if (log!=null) log.debug("rollback called: " + id);
         if (mcf.lookupXid(id) == null) {
-            log.warn("rollback called with unknown transaction: " + id);
+            if (log!=null) log.warn("rollback called with unknown transaction: " + id);
             return;
         }
         if (mcf.lookupXid(id) == currentTr) {
@@ -549,7 +549,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     transaction ID is wrong, or the instance has already been closed.
      */
     public void start(Xid id, int flags) throws XAException {
-        log.debug("start called: " + id);
+        if (log!=null) log.debug("start called: " + id);
         if (currentTr != null) {
             throw new XAException("start called with transaction associated");
         }
@@ -573,7 +573,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     }
 
     public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException {
-        log.debug("preparing sql: " + sql);
+        if (log!=null) log.debug("preparing sql: " + sql);
         //Should we test for dbhandle?
         XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, sql, GDS.SQL_DIALECT_CURRENT);
         if (out.sqld != out.sqln) {
@@ -741,7 +741,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
 
     void notify(int type, FBConnection c, Exception e) {
-       // log.debug("in ManagedConnection.notify",new Exception());
+       // if (log!=null) log.debug("in ManagedConnection.notify",new Exception());
         ConnectionEvent ce = new ConnectionEvent(this, type, e);
         ce.setConnectionHandle(c);
         //avoid a concurrent modification exception - notification modifies list.

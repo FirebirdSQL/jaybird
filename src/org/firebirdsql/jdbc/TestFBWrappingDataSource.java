@@ -28,6 +28,10 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.9  2002/05/09 12:18:29  rrokytskyy
+ * fixed couple of issues with correct specification implementation
+ * reported by Blas Rodriguez Somoza and Jan Aleman
+ *
  * Revision 1.8  2002/03/22 01:43:36  d_jencks
  * Fixed internal association of isc_db_handle to FBManagedConnection to respect the user/password (and FBConnectionRequestInfo) of the FBManagedConnection.  Doesnt break nany tests, but I have no specific test case for the new functionality
  *
@@ -87,7 +91,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
 
 
     public void testConnect() throws Exception {
-        log.info("Testing FBWrapping DataSource on db: " + DB_DATASOURCE_URL);
+        if (log != null) log.info("Testing FBWrapping DataSource on db: " + DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
         ds.setDatabaseName(DB_DATASOURCE_URL);
@@ -100,7 +104,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
     }
 
     public void testOneConnectionWithPooling() throws Exception {
-        log.info("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
+        if (log != null) log.info("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
         ds.setDatabaseName(DB_DATASOURCE_URL);
@@ -138,7 +142,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
 
 
    public void testPooling() throws Exception {
-        log.info("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
+        if (log != null) log.info("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
         ds.setDatabaseName(DB_DATASOURCE_URL);

@@ -49,7 +49,7 @@ public class TestFBXAResource extends TestXABase {
 
     public void testGetXAResource() throws Exception {
         
-        log.info("testGetXAResource");
+        if (log != null) log.info("testGetXAResource");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         XAResource xa1 = mc.getXAResource();
@@ -62,7 +62,7 @@ public class TestFBXAResource extends TestXABase {
 
     public void testIsSameRM() throws Exception {
         
-        log.info("testIsSameRM");
+        if (log != null) log.info("testIsSameRM");
         FBManagedConnectionFactory mcf1 = initMcf();
         ManagedConnection mc1 = mcf1.createManagedConnection(null, null);
         XAResource xa1 = mc1.getXAResource();
@@ -83,7 +83,7 @@ public class TestFBXAResource extends TestXABase {
 
     public void testStartXATrans() throws Exception {
         
-        log.info("testStartXATrans");
+        if (log != null) log.info("testStartXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc = (FBManagedConnection)mc;
@@ -100,7 +100,7 @@ public class TestFBXAResource extends TestXABase {
 
     public void testRollbackXATrans() throws Exception {
         
-        log.info("testStartXATrans");
+        if (log != null) log.info("testStartXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc = (FBManagedConnection)mc;
@@ -117,7 +117,7 @@ public class TestFBXAResource extends TestXABase {
 
     public void test2PCXATrans() throws Exception {
         
-        log.info("testStartXATrans");
+        if (log != null) log.info("testStartXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc = (FBManagedConnection)mc;
@@ -135,7 +135,7 @@ public class TestFBXAResource extends TestXABase {
 
     public void testRollback2PCXATrans() throws Exception {
         
-        log.info("testStartXATrans");
+        if (log != null) log.info("testStartXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc = (FBManagedConnection)mc;
@@ -153,7 +153,7 @@ public class TestFBXAResource extends TestXABase {
 
     public void testDo2XATrans() throws Exception {
         
-        log.info("testDo2XATrans");
+        if (log != null) log.info("testDo2XATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc1 = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc1 = (FBManagedConnection)mc1;
@@ -184,7 +184,7 @@ public class TestFBXAResource extends TestXABase {
     public void testRecover() throws Exception
     {
         
-        log.info("testRecover");
+        if (log != null) log.info("testRecover");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc1 = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc1 = (FBManagedConnection)mc1;
