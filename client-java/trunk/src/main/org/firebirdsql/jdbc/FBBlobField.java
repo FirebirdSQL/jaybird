@@ -67,17 +67,16 @@ public class FBBlobField extends FBField implements FBFlushableField {
     }
 
     Blob getBlob() throws SQLException {
-        
         if (blob != null)
             return blob;
-    
-        if (rs.row[numCol]==null)
+
+        final byte[] bytes = rs.row[numCol];
+
+        if (bytes == null)
             return BLOB_NULL_VALUE;
 
-        Long blobId = new Long(field.decodeLong(rs.row[numCol]));
+        blob = new FBBlob(c, field.decodeLong( bytes ));
 
-        blob = new FBBlob(c, blobId.longValue());
-        
         return blob;
     }
 
