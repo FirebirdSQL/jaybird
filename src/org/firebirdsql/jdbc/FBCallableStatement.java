@@ -94,9 +94,23 @@ import java.util.Map;
 public class FBCallableStatement extends FBPreparedStatement implements CallableStatement {
 
     FBCallableStatement(FBConnection c, String sql) throws SQLException {
+        //Need to rewrite sql to "call x" syntax here
         super(c, sql);
     }
 
+    /**
+	 * Executes an execute stored procedure.
+     * Some prepared statements return multiple results; the <code>execute</code>
+     * method handles these complex statements as well as the simpler
+     * form of statements handled by the methods <code>executeQuery</code>
+	 * and <code>executeUpdate</code>.
+     *
+     * @exception SQLException if a database access error occurs
+     * @see Statement#execute
+     */
+    public boolean execute() throws  SQLException {
+        return execute(true);
+    }
 		/**
 		 * Registers the OUT parameter in ordinal position 
 		 * <code>parameterIndex</code> to the JDBC type 

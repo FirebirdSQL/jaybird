@@ -242,7 +242,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      */
     public CallableStatement prepareCall(String sql) throws SQLException {
-        return null;
+        return new FBCallableStatement(this, sql);
     }
 
 

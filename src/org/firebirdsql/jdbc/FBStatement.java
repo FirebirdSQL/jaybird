@@ -388,7 +388,7 @@ public class FBStatement implements Statement {
                 fixedStmt = mc.getAllocatedStatement();
             }
             mc.prepareSQL(fixedStmt, sql, false);
-            mc.executeStatement(fixedStmt);
+            mc.executeStatement(fixedStmt, false);
             return (fixedStmt.getOutSqlda().sqld > 0);
         }
         catch (GDSException ge) {
