@@ -28,6 +28,8 @@ package org.firebirdsql.jgds;
 
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * Describe class <code>isc_stmt_handle_impl</code> here.
@@ -37,6 +39,9 @@ import org.firebirdsql.gds.isc_stmt_handle;
  * @version 1.0
  */
 public final class isc_stmt_handle_impl implements isc_stmt_handle {
+    private static Logger log = LoggerFactory.getLogger(GDS_Impl.class, false);
+
+    
     private int rsr_id;
     private isc_db_handle_impl rsr_rdb;
     private XSQLDA in_sqlda = null;
@@ -173,5 +178,39 @@ public final class isc_stmt_handle_impl implements isc_stmt_handle {
 
     public void addRow(byte[][] row) {
         rows[size++] = row;
+        //if (log != null) printRow(row);
+    }
+
+    private void printRow(byte[][] row) {
+        StringBuffer sb = new StringBuffer();
+        sb.append("\t");
+        
+        if (row == null)
+            sb.append("null");
+        else {
+            
+            for (int i = 0; i < row.length; i++) {
+                
+                if (row[i] == null)
+                    sb.append("null");
+                else {
+                    for (int j = 0; j < row[i].length; j++) {
+                        String hexValue = Integer.toHexString(row[i][j] & 0xff);
+                        if (hexValue.length() == 1)
+                            hexValue = "0" + hexValue;
+                        
+                        sb.append(hexValue);
+                        if (j < row[i].length - 1)
+                            sb.append(" ");
+                    }
+                }
+                
+                if (i < row.length - 1)
+                    sb.append(", ");
+            }
+        }
+
+        if (log != null)
+            log.debug(sb.toString());
     }
 }
