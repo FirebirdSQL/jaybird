@@ -47,9 +47,12 @@ class XdrOutputStream extends DataOutputStream {
 
     private final Logger log = LoggerFactory.getLogger(getClass(),false);
     private final byte[] pad = {0,0,0,0};
+    static final byte[] textPad = new byte[32767];
 
     public XdrOutputStream(OutputStream out) {
         super(out);
+        // fill the padding with blanks
+        java.util.Arrays.fill(textPad,(byte) 32);
     }
 	 
     public final void writeOpaque(byte[] buffer, int len) throws IOException {
@@ -83,15 +86,13 @@ class XdrOutputStream extends DataOutputStream {
     }
 
     public final void writeString(String s) throws IOException {
-        writeString(s, null);
-        /*
         byte[] buffer = s.getBytes();
 		  int len = buffer.length;
         writeInt(len);
         if (len > 0) {
             write(buffer, 0, len);
             write(pad,0,((4 - len) & 3));
-        */
+        }		
     }
     
     public final void writeString(String s, String encoding) throws IOException {
@@ -147,4 +148,19 @@ class XdrOutputStream extends DataOutputStream {
         }
         write(pad,0,((4 - size) & 3));
     }
+    // 
+    // This method fill the char up to len with bytes 
+    // 
+    public final void writeChar(byte[] buffer, int len) throws IOException {
+        if (buffer != null && len > 0) {
+            if (buffer.length >=len)
+                write(buffer, 0, len);
+				else{
+                write(buffer, 0, buffer.length);
+                write(textPad, 0, len-buffer.length);
+            }
+            write(pad,0,((4 - len) & 3));
+        }
+    }
+	 
 }

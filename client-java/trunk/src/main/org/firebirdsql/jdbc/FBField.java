@@ -169,7 +169,7 @@ abstract class FBField {
      * @return <code>true</code> if the field is of type <code>type</code>.
      * @todo write correct GDS.SQL_QUAD support
      */
-    static boolean isType(XSQLVAR field, int type) {
+    final static boolean isType(XSQLVAR field, int type) {
         // turn off null flag, in this case we're not interested in it.
         int tempType = field.sqltype & ~1;
         switch(tempType) {
@@ -231,7 +231,7 @@ abstract class FBField {
      * This method implements the type compatibility matrix from
      * "JDBC(tm): A Java SQL API, version 1.20" whitepaper, page 21.
      */
-    static boolean isCompatible(XSQLVAR field, int type) {
+    final static boolean isCompatible(XSQLVAR field, int type) {
         // turn off null flag, in this case we're not interested in it.
         int tempType = field.sqltype & ~1;
         switch(tempType) {
@@ -303,7 +303,7 @@ abstract class FBField {
      * <code>FBField</code> class according to the SQL datatype. This instance
      * knows how to perform all necessary type conversions.
      */
-    static FBField createField(XSQLVAR field) throws SQLException {
+    final static FBField createField(XSQLVAR field) throws SQLException {
         if (isType(field, Types.SMALLINT))
             if (field.sqlscale == 0)
                 return new FBShortField(field);
@@ -359,7 +359,7 @@ abstract class FBField {
      * @param iscEncoding InterBase encoding to use.
      * @return converted string.
      */
-    public static String toString(byte[] bytes, String iscEncoding) {
+    public final static String toString(byte[] bytes, String iscEncoding) {
         String javaEncoding = null;
         
         if (iscEncoding != null && !iscEncoding.equalsIgnoreCase("NONE"))
@@ -384,7 +384,7 @@ abstract class FBField {
      * @param iscEncoding InterBase encoding to use.
      * @return converted string.
      */
-    public static String toString(byte[] bytes, int offset, int count, 
+    public final static String toString(byte[] bytes, int offset, int count, 
         String iscEncoding) 
     {
         String javaEncoding = null;
@@ -410,7 +410,7 @@ abstract class FBField {
      * @param iscEncoding InterBase encoding to use.
      * @return converted byte array
      */
-    public static byte[] getBytes(String str, String iscEncoding) {
+    public final static byte[] getBytes(String str, String iscEncoding) {
         String javaEncoding = null;
         
         if (iscEncoding != null && !iscEncoding.equalsIgnoreCase("NONE"))
