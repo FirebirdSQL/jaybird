@@ -82,27 +82,42 @@ public class FBResultSet implements ResultSet {
                           AbstractStatement fbstatement, 
                           isc_stmt_handle stmt, 
                           FBObjectListener.ResultSetListener listener,
+                          boolean trimStrings, 
                           int rsType, 
-                          int rsConcurrency) 
+                          int rsConcurrency,
+                          boolean cached) 
     throws SQLException {
+        
         this.c = c;
         this.cursorName = fbstatement.getCursorName();
+        
         this.listener = listener;
+        
         this.rsType = rsType;
         this.rsConcurrency = rsConcurrency;
         
+        this.trimStrings = trimStrings;
+        
+        // check if we are running in paranoia mode
         checkParanoiaMode(c);
         
-        xsqlvars = stmt.getOutSqlda().sqlvar;
-        maxRows = fbstatement.getMaxRows();
+        this.xsqlvars = stmt.getOutSqlda().sqlvar;
+        this.maxRows = fbstatement.getMaxRows();
         
         boolean updatableCursor = fbstatement.isUpdatableCursor();
 
-        prepareVars(!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE);
+        //prepareVars((!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE) || cached);
         
-        if (!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE)
+        if (cached) {
+            prepareVars(true);
             fbFetcher = new FBCachedFetcher(this.c, fbstatement, stmt, this);
-        else {
+        } else
+        if (!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE) {
+            prepareVars(true);
+            fbFetcher = new FBCachedFetcher(this.c, fbstatement, stmt, this);
+        } else {
+            prepareVars(false);
+            
             if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
                 c.addWarning(new FBSQLWarning(
                     "Result set concurrency changed. " +
@@ -136,21 +151,21 @@ public class FBResultSet implements ResultSet {
      * in {@link FBDatabaseMetaData} class).
      * @throws SQLException if database access error occurs
      */
-    protected FBResultSet(AbstractConnection c, AbstractStatement fbStatement,isc_stmt_handle stmt, 
-        boolean trimStrings, FBObjectListener.ResultSetListener listener) 
-        throws SQLException 
-    {
-        this.c = c;
-        this.trimStrings = trimStrings;
-        this.listener = listener;
-        
-        checkParanoiaMode(c);
-        
-        maxRows = fbStatement.getMaxRows();
-        xsqlvars = stmt.getOutSqlda().sqlvar;
-        prepareVars(true);
-        fbFetcher = new FBCachedFetcher(this.c, fbStatement, stmt, this);
-    }
+//    protected FBResultSet(AbstractConnection c, AbstractStatement fbStatement,isc_stmt_handle stmt, 
+//        boolean trimStrings, FBObjectListener.ResultSetListener listener) 
+//        throws SQLException 
+//    {
+//        this.c = c;
+//        this.trimStrings = trimStrings;
+//        this.listener = listener;
+//        
+//        checkParanoiaMode(c);
+//        
+//        maxRows = fbStatement.getMaxRows();
+//        xsqlvars = stmt.getOutSqlda().sqlvar;
+//        prepareVars(true);
+//        fbFetcher = new FBCachedFetcher(this.c, fbStatement, stmt, this);
+//    }
 
     protected FBResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
         maxRows = 0;
