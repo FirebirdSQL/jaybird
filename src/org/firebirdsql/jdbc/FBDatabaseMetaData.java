@@ -1672,28 +1672,23 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
 
     private static final String GET_PROCEDURE_COLUMNS_START = "select"
-        + " null as PROCEDURE_CAT,"
-        + " null as PROCEDURE_SCHEM,"
-        + " P.RDB$PROCEDURE_NAME as PROCEDURE_NAME,"
+        + " PP.RDB$PROCEDURE_NAME as PROCEDURE_NAME,"
         + " PP.RDB$PARAMETER_NAME as COLUMN_NAME,"
         + " PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,"
-        + " F.RDB$FIELD_TYPE as DATA_TYPE,"
-        + " F.RDB$FIELD_SUB_TYPE as TYPE_NAME," //unlikely
-        + " 0 as \"PRECISION\","//Hah!
-        + " F.RDB$FIELD_SCALE as SCALE,"
-        + " F.RDB$FIELD_LENGTH as \"LENGTH\","
-        + " 10 as RADIX,"//who knows??
-        + " F.RDB$NULL_FLAG as NULLABLE,"
+        + " F.RDB$FIELD_TYPE as FIELD_TYPE,"
+        + " F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE,"
+        + " F.RDB$FIELD_PRECISION as FIELD_PRECISION,"
+        + " F.RDB$FIELD_SCALE as FIELD_SCALE,"
+        + " F.RDB$FIELD_LENGTH as FIELD_LENGTH,"
+        + " F.RDB$NULL_FLAG as NULL_FLAG,"
         + " PP.RDB$DESCRIPTION as REMARKS "
         + "from"
-        + " RDB$PROCEDURES P,"
         + " RDB$PROCEDURE_PARAMETERS PP,"
         + " RDB$FIELDS F "
         + "where ";
-    private static final String GET_PROCEDURE_COLUMNS_END =  " P.RDB$PROCEDURE_NAME = PP.RDB$PROCEDURE_NAME and"
-        + " PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME "
+    private static final String GET_PROCEDURE_COLUMNS_END =  " PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME "
         + "order by"
-        + " P.RDB$PROCEDURE_NAME,"
+        + " PP.RDB$PROCEDURE_NAME,"
         + " PP.RDB$PARAMETER_TYPE desc,"
         + " PP.RDB$PARAMETER_NUMBER";
 
@@ -1760,12 +1755,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             String procedureNamePattern,
             String columnNamePattern) throws SQLException {
         checkCatalogAndSchema(catalog, schemaPattern);
-        Clause procedureClause = new Clause("P.RDB$PROCEDURE_NAME", procedureNamePattern);
+        Clause procedureClause = new Clause("PP.RDB$PROCEDURE_NAME", procedureNamePattern);
         Clause columnClause = new Clause("PP.RDB$PARAMETER_NAME", columnNamePattern);
         String sql = GET_PROCEDURE_COLUMNS_START;
         sql += procedureClause.getCondition();
         sql += columnClause.getCondition();
-        sql += GET_PROCEDURES_END;
+        sql += GET_PROCEDURE_COLUMNS_END;
         ArrayList params = new ArrayList();
         if (!procedureClause.getCondition().equals("")) {
             params.add(procedureClause.getValue());
@@ -1773,7 +1768,129 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!columnClause.getCondition().equals("")) {
             params.add(columnClause.getValue());
         }
-        return c.doQuery(sql, params, statements);
+
+        ResultSet rs = c.doQuery(sql, params, statements);
+
+        XSQLVAR[] xsqlvars = new XSQLVAR[13];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = -1;
+        xsqlvars[0].sqlname = "PROCEDURE_CAT";
+        xsqlvars[0].relname = "COLUMNINFO";
+
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlind = -1;
+        xsqlvars[1].sqlname = "PROCEDURE_SCHEM";
+        xsqlvars[1].relname = "COLUMNINFO";
+
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqlind = 0;
+        xsqlvars[2].sqlname = "PROCEDURE_NAME";
+        xsqlvars[2].relname = "COLUMNINFO";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlind = 0;
+        xsqlvars[3].sqlname = "COLUMN_NAME";
+        xsqlvars[3].relname = "COLUMNINFO";
+
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = GDS.SQL_SHORT;
+        xsqlvars[4].sqlname = "COLUMN_TYPE";
+        xsqlvars[4].relname = "COLUMNINFO";
+
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = GDS.SQL_SHORT;
+        xsqlvars[5].sqlname = "DATA_TYPE";
+        xsqlvars[5].relname = "COLUMNINFO";
+
+        xsqlvars[6] = new XSQLVAR();
+        xsqlvars[6].sqltype = GDS.SQL_VARYING | 1;
+        xsqlvars[6].sqllen = 31;
+        xsqlvars[6].sqlind = -1;
+        xsqlvars[6].sqlname = "TYPE_NAME";
+        xsqlvars[6].relname = "COLUMNINFO";
+
+        xsqlvars[7] = new XSQLVAR();
+        xsqlvars[7].sqltype = GDS.SQL_LONG;
+        xsqlvars[7].sqlname = "PRECISION";
+        xsqlvars[7].relname = "COLUMNINFO";
+
+        xsqlvars[8] = new XSQLVAR();
+        xsqlvars[8].sqltype = GDS.SQL_LONG;
+        xsqlvars[8].sqlname = "LENGTH";
+        xsqlvars[8].relname = "COLUMNINFO";
+
+        xsqlvars[9] = new XSQLVAR();
+        xsqlvars[9].sqltype = GDS.SQL_SHORT;
+        xsqlvars[9].sqlname = "SCALE";
+        xsqlvars[9].relname = "COLUMNINFO";
+
+        xsqlvars[10] = new XSQLVAR();
+        xsqlvars[10].sqltype = GDS.SQL_SHORT;
+        xsqlvars[10].sqlname = "RADIX";
+        xsqlvars[10].relname = "COLUMNINFO";
+
+        xsqlvars[11] = new XSQLVAR();
+        xsqlvars[11].sqltype = GDS.SQL_SHORT;
+        xsqlvars[11].sqlname = "NULLABLE";
+        xsqlvars[11].relname = "COLUMNINFO";
+
+        xsqlvars[12] = new XSQLVAR();
+        xsqlvars[12].sqltype = GDS.SQL_VARYING | 1;
+        xsqlvars[12].sqllen = 31;
+        xsqlvars[12].sqlind = -1;
+        xsqlvars[12].sqlname = "REMARKS";
+        xsqlvars[12].relname = "COLUMNINFO";
+
+        ArrayList rows = new ArrayList();
+        while (rs.next()) {
+            Object[] row = new Object[13];
+            row[0] = null;
+            row[1] = null;
+            row[2] = rs.getString("PROCEDURE_NAME").trim();
+            row[3] = rs.getString("COLUMN_NAME").trim();
+
+            short columnType = rs.getShort("COLUMN_TYPE");
+            row[4] = (columnType == 0) ? new Short((short)procedureColumnIn) : new Short((short)procedureColumnOut);
+
+            short fieldType = rs.getShort("FIELD_TYPE");
+            short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
+            short fieldScale = rs.getShort("FIELD_SCALE");
+            int dataType = getDataType(fieldType, fieldSubType, fieldScale);
+
+            row[5] = new Short((short) dataType);
+
+            row[6] = null; // fixme: should be the type name as a string
+
+            if (dataType == java.sql.Types.DECIMAL ||
+                dataType == java.sql.Types.NUMERIC)
+            {
+                row[7] = new Integer(rs.getShort("FIELD_PRECISION"));
+            } else {
+                row[7] = new Integer(rs.getShort("FIELD_LENGTH"));
+            }
+
+            row[8] = new Integer(rs.getShort("FIELD_LENGTH"));
+            row[9] = new Short((short)(fieldScale * (-1)));
+            row[10] = new Short((short)10); // RADIX
+
+            short nullFlag = rs.getShort("NULL_FLAG");
+            row[11] = (nullFlag == 1) ? new Short((short)procedureNoNulls) :
+                                        new Short((short)procedureNullable);
+
+            // row[12] = rs.getString("REMARKS").trim(); // fixme, DESCRIPTION is a longvarchar (blob), and getString will barf on it.
+	    row[12] = null;
+            rows.add(row);
+        }
+        return new FBResultSet(xsqlvars, rows);
     }
 
     public static final String TABLE = "TABLE";
