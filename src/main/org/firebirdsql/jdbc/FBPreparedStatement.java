@@ -68,14 +68,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         try {
             c.ensureInTransaction();
             prepareFixedStatement(sql, true);
-
-            c.checkEndTransaction();
-        }
-        catch (GDSException ge)
-        {
+        } catch (GDSException ge) {
             if (log!=null) log.info("GDSException in PreparedStatement constructor", ge);
             throw new FBSQLException(ge);
-        } // end of try-catch
+        } finally {
+            c.checkEndTransaction();
+        }// end of try-catch-finally
     }
 
 
