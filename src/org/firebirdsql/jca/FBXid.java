@@ -23,13 +23,15 @@
  */
 package org.firebirdsql.jca;
 
-import java.io.IOException;
-import javax.transaction.xa.Xid;
-import javax.transaction.xa.XAException;
 
-import org.firebirdsql.gds.GDSException;
 
 //import org.firebirdsql.jgds.XdrOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import javax.resource.ResourceException;
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.Xid;
+import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.jgds.XdrInputStream;
 
 
@@ -100,47 +102,49 @@ class FBXid implements Xid {
         branchId = xid.getBranchQualifier();
     }
 
-   /**
-    *  Read info for new xid from XdrInputStream;.
-    *
-    *  @param in the XdrInputStream holding XID info.
-    *  @exception XAException if the format read from stream does
-    *  not correspond to an xid written by this class.
-    */
-    public void read(XdrInputStream in, int length) throws GDSException {
-        try {
-            while (length > 0) { //This sure makes us need the terminating 0!!
-                int tag = in.read();
-                length--;
-                int size;
-                switch (tag) {
-                    case TDR_VERSION:
-                        break;
-                    case TDR_XID_FORMAT_ID:
-                        formatId = in.readInt();
-                        length -= 4;
-                        break;
-                    case TDR_XID_GLOBAL_ID:
-                        size = in.read();
-                        globalId = new byte[size];
-                        in.read(globalId);
-                        length -= size + 1;
-                        break;
-                    case TDR_XID_BRANCH_ID:
-                        size = in.read();
-                        branchId = new byte[size];
-                        in.read(branchId);
-                        length -= size + 1;
-                        break;
-                    default:
-                        throw new GDSException("uninterpretable transaction format");
-                }
+    /**
+     * Creates a new <code>FBXid</code> instance from the byte representation
+     * supplied. This is called by recover to reconstruct an xid 
+     * from the toBytes() representation.
+     *
+     * @param bytes a <code>byte[]</code> value
+     * @exception ResourceException if an error occurs
+     */
+    FBXid(InputStream rawIn) throws ResourceException
+    {
+        try 
+        {
+            XdrInputStream in = new XdrInputStream(rawIn);
+            
+            if (in.read() != TDR_VERSION)
+            {
+                throw new ResourceException("Wrong TDR_VERSION for xid");
             }
-        }
-        catch (IOException e) {
-            throw new GDSException("couldn't read the XId from stream");
-        }
+            if (in.read() != TDR_XID_FORMAT_ID)
+            {
+                throw new ResourceException("Wrong TDR_XID_FORMAT_ID for xid");
+            }
+            formatId = in.readInt(); 
+            if (in.read() != TDR_XID_GLOBAL_ID)
+            {
+                throw new ResourceException("Wrong TDR_XID_GLOBAL_ID for xid");
+            }
+            int globalIdLength = in.read();
+            globalId = in.readOpaque(globalIdLength);
+            if (in.read() != TDR_XID_BRANCH_ID)
+            {
+                throw new ResourceException("Wrong TDR_XID_BRANCH_ID for xid");
+            }
+            int branchIdLength = in.read();
+            branchId = in.readOpaque(branchIdLength);
+        } 
+        catch (IOException ioe) 
+        {
+            throw new ResourceException("IOException: " + ioe);            
+        } // end of try-catch
+        
     }
+
 
     // Public --------------------------------------------------------
 

@@ -213,5 +213,16 @@ public class TestFBXAResource extends TestXABase {
 
     }
 
+    public void testRecover() throws Exception
+    {
+        System.out.println();
+        System.out.println("testRecover");
+        FBManagedConnectionFactory mcf = initMcf();
+        ManagedConnection mc1 = mcf.createManagedConnection(null, null);
+        FBManagedConnection fbmc1 = (FBManagedConnection)mc1;
+        XAResource xa1 = mc1.getXAResource();
+        Xid[] xids = xa1.recover(XAResource.TMSTARTRSCAN);
+        assertTrue("Xid[] was null from recover!", xids != null);
+    }
 
 }
