@@ -531,7 +531,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } 
         catch (SQLException sqle) 
         {
-            if (log=!null) log.info("can't perform query to fetch xids", sqle);
+            if (log!=null) log.info("can't perform query to fetch xids", sqle);
             throw new XAException(XAException.XAER_RMFAIL);
         } // end of try-catch
         catch (ResourceException re) 
