@@ -23,6 +23,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.6  2003/03/09 18:59:59  rrokytskyy
+ * fixed test case failure
+ *
  * Revision 1.5  2003/03/09 17:34:36  rrokytskyy
  * removed some deprecations
  *
@@ -83,11 +86,7 @@ package org.firebirdsql.jdbc;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import javax.resource.ResourceException;
 import java.sql.*;
-import junit.framework.*;
-import org.firebirdsql.logging.Logger;
-
 
 /**
  * Describe class <code>TestFBWrappingDataSource</code> here.

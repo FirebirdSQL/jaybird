@@ -18,9 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.io.*;
 import java.sql.*;
-import java.util.Arrays;
 
 /**
  * Describe class <code>TestFBBlobAccess</code> here.

@@ -24,6 +24,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.7  2002/12/12 23:32:21  rrokytskyy
+ * removed unnecessary stack trace printing
+ *
  * Revision 1.6  2002/11/20 15:04:57  d_jencks
  * Demonstrate problem with timestamps
  *
@@ -83,7 +86,6 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import junit.framework.*;
-import org.firebirdsql.logging.Logger;
 
 /**
  * Test suite for the FBDriver class implementation.

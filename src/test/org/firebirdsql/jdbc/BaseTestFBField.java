@@ -21,10 +21,7 @@ package org.firebirdsql.jdbc;
 
 import junit.framework.*;
 
-import org.firebirdsql.gds.XSQLVAR;
-
 import java.io.*;
-import java.math.*;
 import java.sql.*;
 import java.util.*;
 

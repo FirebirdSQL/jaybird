@@ -1,8 +1,6 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class TestBoundary
     extends BaseFBTest {
