@@ -222,7 +222,7 @@ public class ParameterBufferBase  implements java.io.Serializable, Xdrable
 
         int getLength()
             {
-            return value.length() + 2;
+            return value.getBytes().length + 2;
             }
 
        String getValueAsString()
