@@ -41,7 +41,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * {@link ConnectionPoolConfiguration} containing configuration parameters for
  * this pool and JDBC driver and instantiates this class passing this 
  * configuration into constructor. Before using this connection pool 
- * {@link AbstractConnectionPoolDataSource#start()} must be called.
+ * {@link #start()} must be called.
  * 
  * <pre>
  * ConnectionPoolConfiguration config = 
@@ -98,9 +98,6 @@ public abstract class AbstractConnectionPoolDataSource
     private static final boolean LOG_DEBUG_INFO = false;
     private static final boolean SHOW_STACK_ON_BLOCK = false;
 
-    private static final Logger LOG =
-        LoggerFactory.getLogger(AbstractConnectionPoolDataSource.class, false);
-
     private ConnectionPoolConfiguration config;
 
     private boolean available;
@@ -116,9 +113,7 @@ public abstract class AbstractConnectionPoolDataSource
      * 
      * @return instance of {@link Logger}.
      */
-    protected Logger getLogger() {
-        return LOG;
-    }
+    protected abstract Logger getLogger();
 
     /**
      * Create instance of this class for the specified configuration. 
@@ -640,9 +635,8 @@ public abstract class AbstractConnectionPoolDataSource
 
             if (LOG_DEBUG_INFO && getLogger() != null)
                 getLogger().debug(
-                    "Thread "
-                        + Thread.currentThread().getName()
-                        + " got connection.");
+                    "Thread "+ Thread.currentThread().getName() +
+                     " got connection.");
 
             return result;
         }
