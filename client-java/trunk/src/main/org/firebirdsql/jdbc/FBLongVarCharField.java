@@ -19,10 +19,15 @@
 
 package org.firebirdsql.jdbc;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Blob;
+import java.sql.SQLException;
+
 import org.firebirdsql.gds.XSQLVAR;
 
-import java.sql.*;
-import java.io.*;
 
 /**
  * This is Blob-based implementation of {@link FBStringField}. It should be used

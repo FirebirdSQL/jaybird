@@ -82,7 +82,7 @@ class FBIntegerField extends FBField {
 
         return (double) XSQLVAR.decodeInt(rs.row[numCol]);
     }
-    java.math.BigDecimal getBigDecimal() throws SQLException {
+    BigDecimal getBigDecimal() throws SQLException {
         if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
         return BigDecimal.valueOf(XSQLVAR.decodeInt(rs.row[numCol]));
@@ -92,7 +92,7 @@ class FBIntegerField extends FBField {
 
         return new Integer(XSQLVAR.decodeInt(rs.row[numCol]));
     }
-    boolean getBoolean() throws java.sql.SQLException {
+    boolean getBoolean() throws SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
         return XSQLVAR.decodeInt(rs.row[numCol]) == 1;
@@ -105,7 +105,7 @@ class FBIntegerField extends FBField {
 
     //--- setXXX methods
 
-    void setString(String value) throws java.sql.SQLException {
+    void setString(String value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
@@ -118,13 +118,13 @@ class FBIntegerField extends FBField {
                 INT_CONVERSION_ERROR+" "+value).fillInStackTrace();
         }
     }
-    void setShort(short value) throws java.sql.SQLException {
+    void setShort(short value) throws SQLException {
         setInteger((int)value);
     }
-    void setBoolean(boolean value) throws java.sql.SQLException {
+    void setBoolean(boolean value) throws SQLException {
         setInteger(value ? 1 : 0);
     }
-    void setFloat(float value) throws java.sql.SQLException {
+    void setFloat(float value) throws SQLException {
         // check if value is within bounds
         if (value > MAX_INT_VALUE ||
             value < MIN_INT_VALUE)
@@ -133,7 +133,7 @@ class FBIntegerField extends FBField {
 
         setInteger((int)value);
     }
-    void setDouble(double value) throws java.sql.SQLException {
+    void setDouble(double value) throws SQLException {
         // check if value is within bounds
         if (value > MAX_INT_VALUE ||
             value < MIN_INT_VALUE)
@@ -142,7 +142,7 @@ class FBIntegerField extends FBField {
 
         setInteger((int)value);
     }
-    void setLong(long value) throws java.sql.SQLException {
+    void setLong(long value) throws SQLException {
         // check if value is within bounds
         if (value > MAX_INT_VALUE ||
             value < MIN_INT_VALUE)
@@ -151,13 +151,13 @@ class FBIntegerField extends FBField {
 
         setInteger((int)value);
     }
-    void setInteger(int value) throws java.sql.SQLException {
+    void setInteger(int value) throws SQLException {
         field.sqldata = XSQLVAR.encodeInt(value);
     }
-    void setByte(byte value) throws java.sql.SQLException {
+    void setByte(byte value) throws SQLException {
         setInteger((int)value);
     }
-    void setBigDecimal(java.math.BigDecimal value) throws SQLException {
+    void setBigDecimal(BigDecimal value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;

@@ -20,6 +20,7 @@
 package org.firebirdsql.jdbc;
 
 import java.io.InputStream;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Array;
@@ -254,7 +255,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @param length the number of bytes in the stream
      * @exception SQLException if a database access error occurs
      */
-    public void setAsciiStream(int parameterIndex, java.io.InputStream x,
+    public void setAsciiStream(int parameterIndex, InputStream x,
         int length) throws  SQLException
     {
         setBinaryStream(parameterIndex, x, length);
@@ -285,7 +286,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 
      *I really have no idea if there is anything else we should be doing here
      */
-    public void setUnicodeStream(int parameterIndex, java.io.InputStream x,
+    public void setUnicodeStream(int parameterIndex, InputStream x,
               int length) throws  SQLException {
         setBinaryStream(parameterIndex, x, length);
     }
@@ -462,8 +463,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void setCharacterStream(int parameterIndex,
-                  java.io.Reader reader,
+    public void setCharacterStream(int parameterIndex, Reader reader,
               int length) throws  SQLException {
         getField(parameterIndex).setCharacterStream(reader, length);
     }
@@ -571,7 +571,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void setDate(int parameterIndex, java.sql.Date x, Calendar cal)
+    public void setDate(int parameterIndex, Date x, Calendar cal)
         throws  SQLException {
         getField(parameterIndex).setDate(x, cal);
     }
@@ -596,7 +596,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void setTime(int parameterIndex, java.sql.Time x, Calendar cal)
+    public void setTime(int parameterIndex, Time x, Calendar cal)
         throws  SQLException {
         getField(parameterIndex).setTime(x, cal);
     }
@@ -622,7 +622,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      *      2.0 API</a>
      * @todo change all the methods called to take a Calendar instead of Date object.
      */
-    public void setTimestamp(int parameterIndex, java.sql.Timestamp x, Calendar cal) 
+    public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) 
         throws  SQLException {
         getField(parameterIndex).setTimestamp(x, cal);
     }

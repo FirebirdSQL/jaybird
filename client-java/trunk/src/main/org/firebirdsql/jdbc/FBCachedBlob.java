@@ -9,7 +9,7 @@ import java.io.ByteArrayInputStream;
     /**
      * This class represents a cached blob field.
      */
-public class FBCachedBlob implements java.sql.Blob {
+public class FBCachedBlob implements Blob {
     static final byte[] BYTES_NULL_VALUE = null;
     static final InputStream STREAM_NULL_VALUE = null;
 

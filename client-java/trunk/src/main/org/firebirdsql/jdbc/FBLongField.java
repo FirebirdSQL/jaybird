@@ -89,7 +89,7 @@ class FBLongField extends FBField {
 
         return (double) XSQLVAR.decodeLong(rs.row[numCol]);
     }
-    java.math.BigDecimal getBigDecimal() throws SQLException {
+    BigDecimal getBigDecimal() throws SQLException {
         if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
         return BigDecimal.valueOf(XSQLVAR.decodeLong(rs.row[numCol]));
@@ -99,7 +99,7 @@ class FBLongField extends FBField {
 
         return new Long(XSQLVAR.decodeLong(rs.row[numCol]));
     }
-    boolean getBoolean() throws java.sql.SQLException {
+    boolean getBoolean() throws SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
         return XSQLVAR.decodeLong(rs.row[numCol]) == 1;
@@ -112,7 +112,7 @@ class FBLongField extends FBField {
 
     //--- setXXX methods
 
-    void setString(String value) throws java.sql.SQLException {
+    void setString(String value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
@@ -125,13 +125,13 @@ class FBLongField extends FBField {
                 LONG_CONVERSION_ERROR+" "+value).fillInStackTrace();
         }
     }
-    void setShort(short value) throws java.sql.SQLException {
+    void setShort(short value) throws SQLException {
         setLong((long)value);
     }
-    void setBoolean(boolean value) throws java.sql.SQLException {
+    void setBoolean(boolean value) throws SQLException {
         setLong(value ? 1 : 0);
     }
-    void setFloat(float value) throws java.sql.SQLException {
+    void setFloat(float value) throws SQLException {
         // check if value is within bounds
         if (value > MAX_LONG_VALUE ||
             value < MIN_LONG_VALUE)
@@ -140,7 +140,7 @@ class FBLongField extends FBField {
 
         setLong((long)value);
     }
-    void setDouble(double value) throws java.sql.SQLException {
+    void setDouble(double value) throws SQLException {
         // check if value is within bounds
         if (value > MAX_LONG_VALUE ||
             value < MIN_LONG_VALUE)
@@ -149,16 +149,16 @@ class FBLongField extends FBField {
 
         setLong((long)value);
     }
-    void setLong(long value) throws java.sql.SQLException {
+    void setLong(long value) throws SQLException {
         field.sqldata = XSQLVAR.encodeLong(value);
     }
-    void setInteger(int value) throws java.sql.SQLException {
+    void setInteger(int value) throws SQLException {
         setLong((long)value);
     }
-    void setByte(byte value) throws java.sql.SQLException {
+    void setByte(byte value) throws SQLException {
         setLong((long)value);
     }
-    void setBigDecimal(java.math.BigDecimal value) throws SQLException {
+    void setBigDecimal(BigDecimal value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;

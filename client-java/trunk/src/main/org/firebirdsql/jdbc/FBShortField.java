@@ -85,7 +85,7 @@ class FBShortField extends FBField {
 
         return new Short(XSQLVAR.decodeShort(rs.row[numCol]));
     }
-    boolean getBoolean() throws java.sql.SQLException {
+    boolean getBoolean() throws SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
         return XSQLVAR.decodeShort(rs.row[numCol]) == 1;
@@ -98,7 +98,7 @@ class FBShortField extends FBField {
 
     //--- setXXX methods
 
-    void setString(String value) throws java.sql.SQLException {
+    void setString(String value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
@@ -111,13 +111,13 @@ class FBShortField extends FBField {
                 SHORT_CONVERSION_ERROR+" "+value).fillInStackTrace();
         }
     }
-    void setShort(short value) throws java.sql.SQLException {
+    void setShort(short value) throws SQLException {
         field.sqldata = XSQLVAR.encodeShort(value);
     }
-    void setBoolean(boolean value) throws java.sql.SQLException {
+    void setBoolean(boolean value) throws SQLException {
         setShort((short)(value ? 1 : 0));
     }
-    void setFloat(float value) throws java.sql.SQLException {
+    void setFloat(float value) throws SQLException {
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
@@ -126,7 +126,7 @@ class FBShortField extends FBField {
 
         setShort((short)value);
     }
-    void setDouble(double value) throws java.sql.SQLException {
+    void setDouble(double value) throws SQLException {
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
@@ -135,7 +135,7 @@ class FBShortField extends FBField {
 
         setShort((short)value);
     }
-    void setLong(long value) throws java.sql.SQLException {
+    void setLong(long value) throws SQLException {
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
@@ -144,7 +144,7 @@ class FBShortField extends FBField {
 
         setShort((short)value);
     }
-    void setInteger(int value) throws java.sql.SQLException {
+    void setInteger(int value) throws SQLException {
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
@@ -153,7 +153,7 @@ class FBShortField extends FBField {
 
         setShort((short)value);
     }
-    void setByte(byte value) throws java.sql.SQLException {
+    void setByte(byte value) throws SQLException {
         setShort((short)value);
     }
     void setBigDecimal(BigDecimal value) throws SQLException {

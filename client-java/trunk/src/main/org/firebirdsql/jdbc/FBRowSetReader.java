@@ -23,7 +23,7 @@ package org.firebirdsql.jdbc;
 import javax.sql.RowSetReader;
 import javax.sql.RowSetInternal;
 
-import java.sql.*;
+import java.sql.SQLException;
 
 
 /**

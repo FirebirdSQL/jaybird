@@ -63,7 +63,7 @@ public class FBStatement implements Statement {
     private boolean closed;
     private boolean escapedProcessing = true;
 
-	 protected java.sql.SQLWarning firstWarning = null;
+	 protected SQLWarning firstWarning = null;
 
 	 // If the last executedStatement returns ResultSet or UpdateCount
 	 protected boolean isResultSet;
@@ -650,7 +650,7 @@ public class FBStatement implements Statement {
      *      2.0 API</a>
      */
     public void setFetchDirection(int direction) throws  SQLException {
-        if (direction != java.sql.ResultSet.FETCH_FORWARD)
+        if (direction != ResultSet.FETCH_FORWARD)
             throw new SQLException("can't set fetch direction");
     }
 
@@ -671,7 +671,7 @@ public class FBStatement implements Statement {
      *      2.0 API</a>
      */
     public int getFetchDirection() throws  SQLException {
-       return java.sql.ResultSet.FETCH_FORWARD;
+       return ResultSet.FETCH_FORWARD;
     }
 
 
@@ -729,7 +729,7 @@ public class FBStatement implements Statement {
      *      2.0 API</a>
      */
     public int getResultSetConcurrency() throws  SQLException {
-        return java.sql.ResultSet.CONCUR_READ_ONLY;
+        return ResultSet.CONCUR_READ_ONLY;
     }
 
 
@@ -745,7 +745,7 @@ public class FBStatement implements Statement {
      *      2.0 API</a>
      */
     public int getResultSetType()  throws  SQLException {
-        return java.sql.ResultSet.TYPE_FORWARD_ONLY;
+        return ResultSet.TYPE_FORWARD_ONLY;
     }
 
 
@@ -941,11 +941,11 @@ public class FBStatement implements Statement {
             describeBind);
     }
 
-    protected void addWarning(java.sql.SQLWarning warning){
+    protected void addWarning(SQLWarning warning){
         if (firstWarning == null)
             firstWarning = warning;
         else{
-            java.sql.SQLWarning lastWarning = firstWarning;
+            SQLWarning lastWarning = firstWarning;
             while (lastWarning.getNextWarning() != null){
                 lastWarning = lastWarning.getNextWarning();
             }

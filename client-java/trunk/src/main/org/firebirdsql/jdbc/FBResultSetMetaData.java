@@ -20,6 +20,10 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.10  2003/06/04 13:04:34  brodsom
+ * Remove unused vars and imports
+ * Comment unused private method
+ *
  * Revision 1.9  2003/01/13 19:07:37  brodsom
  * Patch for problem with UNION's when retreiving column information when there are too much columns
  *
@@ -37,12 +41,16 @@ import java.sql.ResultSetMetaData;
 
 import java.sql.Blob;
 import java.sql.Array;
+import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.sql.ResultSet;
-
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Describe class <code>FBResultSetMetaData</code> here.
@@ -227,16 +235,16 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         int colType = getColumnType(column);
         ExtendedFieldInfo fieldInfo = getExtFieldInfo(column);
         switch (colType){
-            case java.sql.Types.DECIMAL:
-            case java.sql.Types.NUMERIC:
+            case Types.DECIMAL:
+            case Types.NUMERIC:
                 
                 if (fieldInfo == null) 
                     return estimatePrecision(column);
                 else
                     return fieldInfo.fieldPrecision;
             
-            case java.sql.Types.CHAR:
-            case java.sql.Types.VARCHAR:
+            case Types.CHAR:
+            case Types.VARCHAR:
                 
                 if (fieldInfo == null) {
                     String encoding = getIscEncoding();
@@ -245,19 +253,19 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                 } else
                     return fieldInfo.characterLength;
             
-            case java.sql.Types.FLOAT:
+            case Types.FLOAT:
                 return 9;
-            case java.sql.Types.DOUBLE:
+            case Types.DOUBLE:
                 return 17;
-            case java.sql.Types.INTEGER:
+            case Types.INTEGER:
                 return 11;
-            case java.sql.Types.SMALLINT:
+            case Types.SMALLINT:
                 return 6;
-            case java.sql.Types.DATE:
+            case Types.DATE:
                 return 10;
-            case java.sql.Types.TIME:
+            case Types.TIME:
                 return 8;
-            case java.sql.Types.TIMESTAMP:
+            case Types.TIMESTAMP:
                 return 19;
             default:
 
@@ -319,16 +327,16 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         
         switch (colType){
             
-            case java.sql.Types.DECIMAL:
-            case java.sql.Types.NUMERIC:
+            case Types.DECIMAL:
+            case Types.NUMERIC:
             
                 if (fieldInfo == null) 
                     return estimatePrecision(column);
                 else
                     return fieldInfo.fieldPrecision;
                 
-            case java.sql.Types.CHAR:
-            case java.sql.Types.VARCHAR:
+            case Types.CHAR:
+            case Types.VARCHAR:
             
                 if (fieldInfo == null) {
                     String encoding = getIscEncoding();
@@ -337,19 +345,19 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                 } else
                     return fieldInfo.characterLength;
                 
-            case java.sql.Types.FLOAT:
+            case Types.FLOAT:
                 return 7;
-            case java.sql.Types.DOUBLE:
+            case Types.DOUBLE:
                 return 15;
-            case java.sql.Types.INTEGER:
+            case Types.INTEGER:
                 return 10;
-            case java.sql.Types.SMALLINT:
+            case Types.SMALLINT:
                 return 5;
-            case java.sql.Types.DATE:
+            case Types.DATE:
                 return 10;
-            case java.sql.Types.TIME:
+            case Types.TIME:
                 return 8;
-            case java.sql.Types.TIMESTAMP:
+            case Types.TIMESTAMP:
                 return 19;
             default:
                 return 0;
@@ -609,7 +617,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
             case ISCConstants.SQL_D_FLOAT:
                 return Double.class.getName();
             case ISCConstants.SQL_TIMESTAMP:
-                return java.sql.Timestamp.class.getName();
+                return Timestamp.class.getName();
             case ISCConstants.SQL_BLOB:
                 return Blob.class.getName();
             case ISCConstants.SQL_ARRAY:
@@ -617,9 +625,9 @@ public class FBResultSetMetaData implements ResultSetMetaData {
             case ISCConstants.SQL_QUAD:
                 return Long.class.getName();
             case ISCConstants.SQL_TYPE_TIME:
-                return java.sql.Time.class.getName();
+                return Time.class.getName();
             case ISCConstants.SQL_TYPE_DATE:
-                return java.sql.Date.class.getName();
+                return Date.class.getName();
             case ISCConstants.SQL_INT64:
                 if (getXsqlvar(column).sqlscale == 0) {
                     return Long.class.getName();

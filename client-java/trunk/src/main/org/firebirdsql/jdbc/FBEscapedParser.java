@@ -20,6 +20,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.1  2002/08/29 13:41:04  d_jencks
+ * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
+ *
  * Revision 1.5  2002/02/19 18:58:06  rrokytskyy
  * removed tabs and added some javadoc
  *
@@ -39,6 +42,7 @@
 
 package org.firebirdsql.jdbc;
 
+import java.text.BreakIterator;
 /**
  * The class <code>FBEscapedParser</code>  parses the SQL 
  * and converts escaped syntax to native form.
@@ -240,8 +244,7 @@ public class FBEscapedParser {
         /*
          * Extract the keyword from the escaped syntax.
          */
-        java.text.BreakIterator iterator =
-            java.text.BreakIterator.getWordInstance();
+        BreakIterator iterator = BreakIterator.getWordInstance();
         iterator.setText(escaped);
         int keyStart = iterator.first();
         int keyEnd = iterator.next();

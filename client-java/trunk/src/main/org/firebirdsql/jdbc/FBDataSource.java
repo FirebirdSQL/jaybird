@@ -123,7 +123,7 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
    * @return the log writer for this data source, null if disabled
    * @exception SQLException if a database-access error occurs.
    */
-    public java.io.PrintWriter getLogWriter() {
+    public PrintWriter getLogWriter() {
         return log;
     }
 
@@ -144,7 +144,7 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
    * @param out the new log writer; to disable, set to null
    * @exception SQLException if a database-access error occurs.
    */
-    public void setLogWriter(java.io.PrintWriter out) {
+    public void setLogWriter(PrintWriter out) {
         log = out;
     }
 

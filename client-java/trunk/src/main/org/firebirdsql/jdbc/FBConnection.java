@@ -30,7 +30,10 @@ import java.sql.SQLWarning;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.Iterator;
 import javax.resource.ResourceException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.isc_stmt_handle;
@@ -70,11 +73,11 @@ public class FBConnection implements Connection
 
     private FBDatabaseMetaData metaData = null;
 
-    private java.sql.SQLWarning firstWarning = null;
+    private SQLWarning firstWarning = null;
      
     // This set contains all allocated but not closed statements
     // It is used to close them before the connection is closed
-    private java.util.HashSet activeStatements = new java.util.HashSet();
+    private HashSet activeStatements = new HashSet();
 	 
     public FBConnection(FBManagedConnection mc) {
         this.mc = mc;
@@ -123,10 +126,10 @@ public class FBConnection implements Connection
      */
     private void freeStatements() throws SQLException {
         // clone statements to avoid concurrent modification exception
-        java.util.Set statements = (java.util.Set)activeStatements.clone();
+        Set statements = (Set)activeStatements.clone();
         
         // iterate through the set, close statements and collect exceptions
-        java.util.Iterator iter = statements.iterator();
+        Iterator iter = statements.iterator();
         SQLException e = null;
         while(iter.hasNext()) {
             try {
@@ -774,11 +777,11 @@ public class FBConnection implements Connection
     public synchronized Statement createStatement(int resultSetType, 
         int resultSetConcurrency) throws SQLException 
     {
-		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
-		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
+		  if (resultSetType == ResultSet.TYPE_FORWARD_ONLY
+		  && resultSetConcurrency == ResultSet.CONCUR_READ_ONLY)
 		     return createStatement();
 		  else{
-		     addWarning(new java.sql.SQLWarning("resultSetType or resultSetConcurrency changed"));
+		     addWarning(new SQLWarning("resultSetType or resultSetConcurrency changed"));
 		     return createStatement();
 		  }			  
     }
@@ -804,11 +807,11 @@ public class FBConnection implements Connection
         int resultSetType, int resultSetConcurrency) throws SQLException 
     {
           PreparedStatement stmt;
-		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
-		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
+		  if (resultSetType == ResultSet.TYPE_FORWARD_ONLY
+		  && resultSetConcurrency == ResultSet.CONCUR_READ_ONLY)
 	        stmt = new FBPreparedStatement(this, sql);
 		  else{
-		     addWarning(new java.sql.SQLWarning("resultSetType or resultSetConcurrency changed"));
+		     addWarning(new SQLWarning("resultSetType or resultSetConcurrency changed"));
 	        stmt = new FBPreparedStatement(this, sql);
 		  }		
           activeStatements.add(stmt);
@@ -835,11 +838,11 @@ public class FBConnection implements Connection
         int resultSetType, int resultSetConcurrency) throws SQLException 
     {
         CallableStatement stmt;
-		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
-		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
+		  if (resultSetType == ResultSet.TYPE_FORWARD_ONLY
+		  && resultSetConcurrency == ResultSet.CONCUR_READ_ONLY)
 	        stmt =new FBCallableStatement(this, sql);
 		  else{
-		     addWarning(new java.sql.SQLWarning("resultSetType or resultSetConcurrency changed"));
+		     addWarning(new SQLWarning("resultSetType or resultSetConcurrency changed"));
 	        stmt = new FBCallableStatement(this, sql);
 		  }		
           activeStatements.add(stmt);
@@ -874,7 +877,7 @@ public class FBConnection implements Connection
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public synchronized void setTypeMap(java.util.Map map) throws SQLException {
+    public synchronized void setTypeMap(Map map) throws SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -1036,11 +1039,11 @@ public class FBConnection implements Connection
         } // end of if ()
     }
 
-	 protected synchronized void addWarning(java.sql.SQLWarning warning){
+	 protected synchronized void addWarning(SQLWarning warning){
 		 if (firstWarning == null)
 			 firstWarning = warning;
 		 else{
-			 java.sql.SQLWarning lastWarning = firstWarning;
+			 SQLWarning lastWarning = firstWarning;
 			 while (lastWarning.getNextWarning() != null){
 				 lastWarning = lastWarning.getNextWarning();
 			 }
@@ -1057,7 +1060,7 @@ public class FBConnection implements Connection
      private SQLWarning getIscWarnings() {
          SQLWarning firstWarning = null;
          SQLWarning lastWarning = null;
-         java.util.Iterator iter = mc.getWarnings().iterator();
+         Iterator iter = mc.getWarnings().iterator();
          while (iter.hasNext()) {
              GDSException item = (GDSException)iter.next();
              

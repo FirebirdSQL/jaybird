@@ -20,6 +20,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.1  2002/08/29 13:41:05  d_jencks
+ * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
+ *
  * Revision 1.1  2002/02/19 19:30:18  rrokytskyy
  * added FBField and related stuff
  *
@@ -27,13 +30,14 @@
 
 package org.firebirdsql.jdbc;
 
+import java.sql.SQLException;
 /**
  * This exception is thrown when the requested type conversion cannot be
  * performed.
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TypeConvertionException extends java.sql.SQLException {
+public class TypeConvertionException extends SQLException {
     public TypeConvertionException() { super();}
     public TypeConvertionException(String msg) { super(msg);}
 }

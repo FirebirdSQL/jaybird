@@ -19,7 +19,8 @@
 
 package org.firebirdsql.jdbc;
 
-import java.sql.*;
+import java.sql.SQLException;
+import java.sql.Blob;
 import org.firebirdsql.gds.XSQLVAR;
 
 /**
