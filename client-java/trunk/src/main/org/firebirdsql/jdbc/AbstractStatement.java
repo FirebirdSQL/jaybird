@@ -44,6 +44,8 @@ import org.firebirdsql.gds.isc_stmt_handle;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  */
 public abstract class AbstractStatement implements FirebirdStatement, Synchronizable {
+    
+    private final Object statementSynchronizationObject = new Object();
 
     protected AbstractConnection c;
 
@@ -962,6 +964,11 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     //package level
 
     void closeResultSet() throws SQLException {
+        if (currentRs != null)
+            currentRs.close();
+    }
+    
+    void releaseResultSet() throws SQLException {
         currentCachedResultSet = null;
         if (currentRs != null) {
             try {

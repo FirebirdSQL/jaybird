@@ -32,6 +32,8 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 class FBStatementFetcher implements FBFetcher {
 
+    private boolean closed;
+    
     private boolean wasFetched;
     
     private AbstractConnection c;
@@ -59,23 +61,27 @@ class FBStatementFetcher implements FBFetcher {
     FBStatementFetcher(AbstractConnection c, AbstractStatement fbStatement, 
         isc_stmt_handle stmth, FBResultSet rs) throws SQLException 
     {
-        this.c = c;
-        this.fbStatement = fbStatement;
-        this.stmt = stmth;
-        this.rs = rs;
-            
-        c.registerStatement(fbStatement);
-            
-        isEmpty = false;
-        isBeforeFirst = false;
-        isFirst = false;
-        isLast = false;
-        isAfterLast = false;
-            
-        // stored procedures
-        if (stmt.getAllRowsFetched()){
-            rowsArray = stmt.getRows();
-            size = stmt.size();
+        
+        Object syncObject = fbStatement.getSynchronizationObject();
+        synchronized(syncObject) {
+            this.c = c;
+            this.fbStatement = fbStatement;
+            this.stmt = stmth;
+            this.rs = rs;
+                
+            c.registerStatement(fbStatement);
+                
+            isEmpty = false;
+            isBeforeFirst = false;
+            isFirst = false;
+            isLast = false;
+            isAfterLast = false;
+                
+            // stored procedures
+            if (stmt.getAllRowsFetched()){
+                rowsArray = stmt.getRows();
+                size = stmt.size();
+            }
         }
     }
 
@@ -163,43 +169,63 @@ class FBStatementFetcher implements FBFetcher {
         throw new FBDriverNotCapableException();
     }
     public void fetch() throws SQLException {
-        int maxRows = 0;
         
-        if (fbStatement.maxRows != 0)
-            maxRows = fbStatement.maxRows - rowNum;
+        Object syncObject = fbStatement.getSynchronizationObject();
+        synchronized(syncObject) {
         
-        int fetchSize = fbStatement.fetchSize;
-        if (fetchSize == 0)
-            fetchSize = MAX_FETCH_ROWS;
-        
-        if (maxRows != 0 && fetchSize > maxRows)
-            fetchSize = maxRows;
-
-        if (!stmt.getAllRowsFetched() && (rowsArray == null || size == rowPosition)){
-            try {
-                c.fetch(stmt, fetchSize);
-                rowPosition = 0;
-                rowsArray = stmt.getRows();
-                size = stmt.size();
+            checkClosed();
+            
+            int maxRows = 0;
+            
+            if (fbStatement.maxRows != 0)
+                maxRows = fbStatement.maxRows - rowNum;
+            
+            int fetchSize = fbStatement.fetchSize;
+            if (fetchSize == 0)
+                fetchSize = MAX_FETCH_ROWS;
+            
+            if (maxRows != 0 && fetchSize > maxRows)
+                fetchSize = maxRows;
+    
+            if (!stmt.getAllRowsFetched() && (rowsArray == null || size == rowPosition)){
+                try {
+                    c.fetch(stmt, fetchSize);
+                    rowPosition = 0;
+                    rowsArray = stmt.getRows();
+                    size = stmt.size();
+                }
+                catch (GDSException ge) {
+                    throw new FBSQLException(ge);
+                }
             }
-            catch (GDSException ge) {
-                throw new FBSQLException(ge);
+            
+            if (rowsArray!=null && size > rowPosition) {
+                setNextRow((byte[][]) rowsArray[rowPosition]);
+                // help the garbage collector
+                rowsArray[rowPosition] = null;
+                rowPosition++;
             }
+            else
+                setNextRow(null);
         }
-        
-        if (rowsArray!=null && size > rowPosition) {
-            setNextRow((byte[][]) rowsArray[rowPosition]);
-            // help the garbage collector
-            rowsArray[rowPosition] = null;
-            rowPosition++;
-        }
-        else
-            setNextRow(null);
     }
 	 
     public void close() throws SQLException {
-        fbStatement.closeResultSet();
+        Object syncObject = fbStatement.getSynchronizationObject();
+        synchronized(syncObject) {
+            try {
+                fbStatement.releaseResultSet();
+            } finally {
+                closed = true;
+            }
+        }
     }
+    
+    private void checkClosed() throws SQLException {
+        if (closed)
+            throw new FBSQLException("Result set is already closed.");
+    }
+    
     public AbstractStatement getStatement() {
         return fbStatement;
     }
