@@ -1,3 +1,20 @@
+2004-03-18 16:48  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/isc_stmt_handle.java,
+	jdbc/AbstractConnection.java, jgds/GDS_Impl.java,
+	jgds/isc_stmt_handle_impl.java, ngds/GDS_Impl.java,
+	ngds/isc_stmt_handle_impl.java:
+	
+	fixed NPE caused by automatic connection recycling in JCA code
+	after serious errors
+
+2004-03-18 16:46  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jca/:
+	FBLocalTransaction.java, FBManagedConnection.java:
+	
+	fixed bug when transaction cannot be started after serious error
+
 2004-03-17 23:17  rrokytskyy
 
 	* client-java/src/:
