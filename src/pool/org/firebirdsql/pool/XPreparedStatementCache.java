@@ -110,7 +110,7 @@ class XPreparedStatementCache {
             else {
                 if (freeReferences.isEmpty()) {
 
-                    if (LOG_STATEMENT_IN_POOL)
+                    if (LOG_STATEMENT_IN_POOL && logChannel != null)
                         logChannel.info(
                             "Found no free prepared statements, " + 
                             "preparing new one.");
@@ -119,7 +119,7 @@ class XPreparedStatementCache {
                         sql, resultSetType, resultSetConcurrency, 
                         workingReferences.size() < maxSize);
                 } else {
-                    if (LOG_STATEMENT_IN_POOL)
+                    if (LOG_STATEMENT_IN_POOL && logChannel != null)
                         logChannel.info(
                             "Found free prepared statement in pool.");    
 
@@ -171,7 +171,7 @@ class XPreparedStatementCache {
                 if (!statement.isCached())
                     statement.forceClose();
                 
-                if (LOG_STATEMENT_IN_POOL)
+                if (LOG_STATEMENT_IN_POOL && logChannel != null)
                     logChannel.info("Returned prepared statement to pool.");
 
             } else
