@@ -23,43 +23,40 @@ import org.firebirdsql.common.FBTestBase;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ParameterMetaData;
 import java.sql.Statement;
 import java.util.Properties;
 
 /**
- * This method tests correctness of {@link FBResultSetMetaData} class.
+ * This method tests correctness of {@link FBParameterMetaData} class.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:skidder@users.sourceforge.net">Nickolay Samofatov</a>
  * @version 1.0
  */
-public class TestFBResultSetMetaData extends FBTestBase {
+public class TestFBParameterMetaData extends FBTestBase {
     
     public static String CREATE_TABLE = 
-        "CREATE TABLE test_rs_metadata (" + 
+        "CREATE TABLE test_p_metadata (" + 
         "  id INTEGER, " +
-        "  simple_field VARCHAR(60) CHARACTER SET WIN1250, " +
+        "  simple_field VARCHAR(60) CHARACTER SET WIN1251 COLLATE PXW_CYRL, " +
         "  two_byte_field VARCHAR(60) CHARACTER SET BIG_5, " +
         "  three_byte_field VARCHAR(60) CHARACTER SET UNICODE_FSS, " +
-        "  long_field NUMERIC(15,2), " +
-        "  int_field NUMERIC(8, 2), " +
-        "  short_field NUMERIC(4, 2) " +
+        "  long_field numeric(18,0), " + // This is BIGINT alias for FB1
+        "  int_field INTEGER, " +
+        "  short_field SMALLINT " +
         ")";
         
     public static final String TEST_QUERY = 
-        "SELECT " + 
+        "insert into test_p_metadata(" + 
         "simple_field, two_byte_field, three_byte_field, " + 
-        "long_field, int_field, short_field " + 
-        "FROM test_rs_metadata";
+        "long_field, int_field, short_field) " + 
+        "values (?,?,?,?,?,?)";
     
-    public static final String TEST_QUERY2 = 
-        "SELECT * from RDB$DATABASE";
-        
     public static String DROP_TABLE = 
-        "DROP TABLE test_rs_metadata";
+        "DROP TABLE test_p_metadata";
     
-    public TestFBResultSetMetaData(String testName) {
+    public TestFBParameterMetaData(String testName) {
         super(testName);
     }
     
@@ -88,35 +85,19 @@ public class TestFBResultSetMetaData extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        /*
-        Properties props = new Properties();
-        props.putAll(DB_INFO);
-        props.put("lc_ctype", "NONE");
-        
-        Connection connection = 
-            DriverManager.getConnection(DB_DRIVER_URL, props);
-            
-        Statement stmt = connection.createStatement();
-        stmt.executeUpdate(DROP_TABLE);
-        stmt.close();
-        connection.close();      
-        */
-        
         super.tearDown();
     }
     
-    public void testResultSetMetaData() throws Exception {
+    public void testParameterMetaData() throws Exception {
         Properties props = new Properties();
         props.putAll(this.getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
         Connection connection = DriverManager.getConnection(this.getUrl(), props);
         
-        Statement stmt = connection.createStatement();
+        PreparedStatement stmt = connection.prepareStatement(TEST_QUERY);
         
-        ResultSet rs = stmt.executeQuery(TEST_QUERY);
-        
-        ResultSetMetaData metaData = rs.getMetaData();
+        ParameterMetaData metaData = stmt.getParameterMetaData();
         
         assertTrue("simple_field must have size 60", 
             metaData.getPrecision(1) == 60);
@@ -127,35 +108,15 @@ public class TestFBResultSetMetaData extends FBTestBase {
         assertTrue("three_byte_field must have size 60", 
             metaData.getPrecision(3) == 60);
 
-        assertTrue("long_field must have precision 15", 
-            metaData.getPrecision(4) == 15);
+        assertTrue("long_field must have precision 19", 
+            metaData.getPrecision(4) == 19);
 
-        assertTrue("int_field must have precision 8", 
-            metaData.getPrecision(5) == 8);
+        assertTrue("int_field must have precision 10", 
+            metaData.getPrecision(5) == 10);
 
-        assertTrue("short_field must have precision 4", 
-            metaData.getPrecision(6) == 4);
+        assertTrue("short_field must have precision 5", 
+            metaData.getPrecision(6) == 5);
 
-        stmt.close();
-        connection.close();
-    }
-    public void testResultSetMetaData2() throws Exception {
-        Properties props = new Properties();
-        props.putAll(this.getDefaultPropertiesForConnection());
-        props.put("lc_ctype", "UNICODE_FSS");
-        
-        Connection connection = DriverManager.getConnection(this.getUrl(), props);
-        
-        Statement stmt = connection.createStatement();
-        
-        ResultSet rs = stmt.executeQuery(TEST_QUERY2);
-        
-        ResultSetMetaData metaData = rs.getMetaData();
-        		  
-        assertTrue("RDB$SECURITY_CLASS must have display size 31 ",metaData.getColumnDisplaySize(3)==10);
-		  
-        assertTrue("RDB$CHARACTER_SET_NAME must have display size 31 ",metaData.getColumnDisplaySize(4)==10);
-		  
         stmt.close();
         connection.close();
     }
