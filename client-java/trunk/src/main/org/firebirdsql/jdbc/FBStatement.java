@@ -896,6 +896,29 @@ public class FBStatement implements Statement {
             fixedStmt.clearRows();
         }
     }
+    
+    /**
+     * This method checks if supplied statement is executing procedure or
+     * it is generic statement. This check is needed to handle correctly 
+     * parameters that are returned from non-selectable procedures.
+     * 
+     * @param sql SQL statement to check
+     * 
+     * @return <code>true</code> if supplied statement is EXECUTE PROCEDURE
+     * type of statement.
+     * 
+     * @throws SQLException if translating statement into native code failed.
+     */
+    protected boolean isExecuteProcedureStatement(String sql) throws SQLException {
+        
+        String trimmedSql = c.nativeSQL(sql).trim();
+        
+        if (trimmedSql.startsWith("EXECUTE"))
+            return true;
+        else
+            return false;
+        
+    }
 
     protected boolean internalExecute(String sql)
         throws GDSException, SQLException
@@ -905,7 +928,7 @@ public class FBStatement implements Statement {
 
         closeResultSet();
         prepareFixedStatement(sql, false);
-        c.executeStatement(fixedStmt, false);
+        c.executeStatement(fixedStmt, isExecuteProcedureStatement(sql));
         isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
         return (fixedStmt.getOutSqlda().sqld > 0);
     }

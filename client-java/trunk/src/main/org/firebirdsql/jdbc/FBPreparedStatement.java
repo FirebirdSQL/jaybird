@@ -64,8 +64,13 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     private FBField[] fields= null;
     private boolean[] isBlob = null;
     private boolean hasBlobs = false;
+    
+    // we need to handle procedure execution separately, 
+    // because in this case we must send out_xsqlda to the server.
+    private boolean isExecuteProcedureStatement;
+    
     private final static Logger log = LoggerFactory.getLogger(FBStatement.class,false);
-
+    
     FBPreparedStatement(FBConnection c, String sql) throws SQLException {
         super(c);
         try {
@@ -93,7 +98,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         try
         {
             c.ensureInTransaction();
-            if (!internalExecute(false))
+            if (!internalExecute(isExecuteProcedureStatement))
             {
                 throw new SQLException("No resultset for sql");
             }
@@ -128,7 +133,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         try
         {
             c.ensureInTransaction();
-            if (internalExecute(false)) {
+            if (internalExecute(isExecuteProcedureStatement)) {
                 throw new SQLException("update statement returned results!");
             }
             return getUpdateCount();
@@ -376,7 +381,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         try
         {
             c.ensureInTransaction();
-            boolean hasResultSet = internalExecute(false);
+            boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
             if (hasResultSet && c.willEndTransaction())
             {
                 getCachedResultSet(false);
@@ -716,6 +721,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             if (isBlob[i])
                 hasBlobs = true;
         }
+        
+        this.isExecuteProcedureStatement = isExecuteProcedureStatement(sql);
     }
 
     /**
