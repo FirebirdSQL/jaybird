@@ -2287,8 +2287,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             Object[] row = new Object[18];
             row[0] = null;
             row[1] = null;
-            row[2] = rs.getString("RELATION_NAME").getBytes();
-            row[3] = rs.getString("FIELD_NAME").getBytes();
+            row[2] = rs.getString("RELATION_NAME").trim();
+            row[3] = rs.getString("FIELD_NAME").trim();
             
             short fieldType = rs.getShort("FIELD_TYPE");
             short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
@@ -2740,7 +2740,65 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         String sql = GET_PRIMARY_KEYS;
         ArrayList params = new ArrayList();
         params.add(table);
-        return doQuery(sql, params);
+        
+        ResultSet rs = doQuery(sql, params);
+        
+        XSQLVAR[] xsqlvars = new XSQLVAR[6];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = -1;
+        xsqlvars[0].sqlname = "TABLE_CAT";
+        xsqlvars[0].relname = "COLUMNINFO";
+
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlind = -1;
+        xsqlvars[1].sqlname = "TABLE_SCHEM";
+        xsqlvars[1].relname = "COLUMNINFO";
+
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqlind = 0;
+        xsqlvars[2].sqlname = "TABLE_NAME";
+        xsqlvars[2].relname = "COLUMNINFO";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlind = 0;
+        xsqlvars[3].sqlname = "COLUMN_NAME";
+        xsqlvars[3].relname = "COLUMNINFO";
+
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = GDS.SQL_SHORT;
+        xsqlvars[4].sqlname = "KEY_SEQ";
+        xsqlvars[4].relname = "COLUMNINFO";
+
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqlind = 0;
+        xsqlvars[5].sqlname = "PK_NAME";
+        xsqlvars[5].relname = "COLUMNINFO";
+
+        ArrayList rows = new ArrayList();
+        while (rs.next()) {
+            Object[] row = new Object[6];
+            row[0] = null;
+            row[1] = null;
+            row[2] = rs.getString("TABLE_NAME").trim();
+            row[3] = rs.getString("COLUMN_NAME").trim();
+            row[4] = new Short(rs.getShort("KEY_SEQ"));
+            row[5] = rs.getString("PK_NAME");
+            
+            rows.add(row);
+        }
+        rows.add(null);
+        return new FBResultSet(xsqlvars, rows);
     }
 
 
