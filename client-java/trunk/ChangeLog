@@ -1,3 +1,37 @@
+2004-10-24 00:11  rrokytskyy
+
+	*
+	
+	added test case for unrecognized tr handle
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
+	ava:
+
+2004-10-23 23:30  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBMissingParameterException.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+	
+	fixed an issue when prepared statement was left in incorrect state
+	when exception happened in setter
+
+2004-10-23 13:21  rrokytskyy
+
+	*
+	
+	fixed an issue with local encodings when connection is obtained via
+	JCA framework
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
+	.java:
+
+2004-10-23 13:12  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/XdrOutputStream.java:
+	
+	applied patch for the ArrayIndexOutOfBoundsException by Gabriel
+	Reid
+
 2004-10-15 18:21  rrokytskyy
 
 	* client-java/src/:
