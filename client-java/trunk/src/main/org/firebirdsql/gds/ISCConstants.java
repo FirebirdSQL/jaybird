@@ -321,7 +321,8 @@ public final class ISCConstants {
     public final static int isc_info_oldest_snapshot = 106;
     public final static int isc_info_next_transaction = 107;
     public final static int isc_info_db_provider = 108;
-	 
+    public final static int isc_info_active_transactions = 109;
+    	 
 /************************/
 /* Blob Parameter Block */
 /************************/

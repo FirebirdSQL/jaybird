@@ -51,11 +51,9 @@ public interface GDS {
                             isc_db_handle db_handle,
                             Clumplet c) throws GDSException;
 
-    void isc_database_info(isc_db_handle db_handle,
-                            int item_length,
+    byte[] isc_database_info(isc_db_handle db_handle,
                             byte[] items,
-                            int buffer_length,
-                            byte[] buffer) throws GDSException;
+                            int buffer_length) throws GDSException;
 
     void isc_detach_database(isc_db_handle db_handle) throws GDSException;
 
