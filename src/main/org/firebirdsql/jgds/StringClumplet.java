@@ -31,7 +31,7 @@ import org.firebirdsql.gds.Clumplet;
  * @version
  */
 
-public class StringClumplet extends ClumpletImpl 
+public final class StringClumplet extends ClumpletImpl 
 {
 
     private String stringContent;

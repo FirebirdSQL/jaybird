@@ -37,7 +37,7 @@ import java.io.*;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class XdrInputStream extends DataInputStream {
+public final class XdrInputStream extends DataInputStream {
 
     private byte[] pad = new byte[4];
 
@@ -45,14 +45,14 @@ public class XdrInputStream extends DataInputStream {
         super(in);
     }
 	 
-    public final byte[] readOpaque(int len) throws IOException {
+    public byte[] readOpaque(int len) throws IOException {
         byte[] buffer = new byte[len];
         readFully(buffer);
         readFully(pad,0,((4 - len) & 3));
         return buffer;
     }
 
-    public final byte[] readBuffer() throws IOException {
+    public byte[] readBuffer() throws IOException {
         int len = readInt();
         byte[] buffer = new byte[len];
         readFully(buffer);
@@ -60,33 +60,33 @@ public class XdrInputStream extends DataInputStream {
         return buffer;
     }
 
-
-    public final String readString() throws IOException {
+    public String readString() throws IOException {
         int len = readInt();
         byte[] buffer = new byte[len];
         readFully(buffer);
         readFully(pad,0,((4 - len) & 3));
         return new String(buffer);				
     }
-    public final byte[] readIntBytes() throws IOException {
+
+    public byte[] readIntBytes() throws IOException {
         byte[] buffer = new byte[4];
 		  readFully(buffer);
 		  return buffer;
 	 }
 
-    public final byte[] readLongBytes() throws IOException {
+    public byte[] readLongBytes() throws IOException {
         byte[] buffer = new byte[8];
 		  readFully(buffer);
 		  return buffer;
 	 }
 
-    public final byte[] readFloatBytes() throws IOException {
+    public byte[] readFloatBytes() throws IOException {
         byte[] buffer = new byte[4];
 		  readFully(buffer);
 		  return buffer;
 	 }
 
-    public final byte[] readDoubleBytes() throws IOException {
+    public byte[] readDoubleBytes() throws IOException {
         byte[] buffer = new byte[8];
 		  readFully(buffer);
 		  return buffer;

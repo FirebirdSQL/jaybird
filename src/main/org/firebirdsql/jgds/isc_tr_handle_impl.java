@@ -39,7 +39,7 @@ import org.firebirdsql.jdbc.FBStatement;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_handle {
+public final class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_handle {
     private int rtr_id;
     private isc_db_handle_impl rtr_rdb;
     //isc_tr_handle_impl rtr_next;

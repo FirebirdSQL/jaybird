@@ -38,7 +38,7 @@ import java.util.ArrayList;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_handle {
+public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_handle {
     int rsr_id;
     isc_db_handle_impl rsr_rdb;
     XSQLDA in_sqlda = null;
