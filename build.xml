@@ -22,8 +22,8 @@
     <property name="version.major" value="1"/>
     <property name="version.minor" value="0"/>
     <property name="version.revision" value="0"/>
-    <property name="version.tag" value="RC3"/>
-    <property name="version.name" value="RC3"/>
+    <property name="version.tag" value=""/>
+    <property name="version.name" value=""/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}"/>
 
@@ -35,7 +35,7 @@
     <property name="specification.version" value="${version.major}.${version.minor}"/>
     <property name="specification.vendor" value="FirebirdSQL (http://www.firebirdsql.org)"/>
 
-    <property name="implementation.title" value="JayBird [${version.name}]"/>
+    <property name="implementation.title" value="JayBird"/>
     <property name="implementation.url" value="http://www.firebirdsql.org"/>
     <property name="implementation.version" 
             value="${version.full} (build: CVSTag=${version.cvstag} date=${build.id})"/>
