@@ -5282,12 +5282,17 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     }
 */
     private void checkCatalogAndSchema(String catalog, String schema) throws SQLException {
+        /*
+        // we ignore incorrect catalog and schema specification as
+        // suggested by Thomas Kellerer in JDBC Forum 
+        
         if (catalog != null && !catalog.equals("") && !catalog.equals("%")) {
             throw new SQLException("Catalogs not supported");
         }
         if (schema != null && (!schema.equals("")) && (!schema.equals("%"))) {
             throw new SQLException("Schemas not supported");
         }
+        */
     }
 
     private class Clause {
