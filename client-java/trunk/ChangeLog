@@ -1,3 +1,10 @@
+2004-01-05 10:53  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/: jdbc/TestFBResultSet.java,
+	jca/TestFBDatabaseMetaData.java:
+	
+	added two test cases to the bugs reported in firebird-java group
+
 2003-12-30 15:57  rrokytskyy
 
 	* client-java/src/etc/JDBC20_conformance.html:
