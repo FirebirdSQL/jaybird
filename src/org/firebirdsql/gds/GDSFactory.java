@@ -28,11 +28,7 @@ package org.firebirdsql.gds;
 // imports --------------------------------------
 
 
-import org.firebirdsql.gds.isc_db_handle;
-import org.firebirdsql.gds.isc_stmt_handle;
-import org.firebirdsql.gds.isc_tr_handle;
 import org.firebirdsql.jgds.GDS_Impl;
-import org.firebirdsql.jgds.ClumpletImpl;
 
 
 /**
