@@ -30,6 +30,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2001/07/18 20:07:31  d_jencks
+ * Added better GDSExceptions, new NativeSQL, and CallableStatement test from Roman Rokytskyy
+ *
  * Revision 1.1  2001/07/16 03:57:43  d_jencks
  * added text error messages to GDSExceptions, thanks Roman Rokytskyy
  *
@@ -45,14 +48,22 @@ public class GDSExceptionHelper {
     private static final String MESSAGES = "org.firebirdsql.gds.isc_error_msg";
     private static java.util.Properties messages = new java.util.Properties();
 
-    static {
+    private static boolean initialized = false;
+
+    /**
+     * This method initializes the messages map.
+     * @todo think about better exception handling.
+     */
+    private static void init() {
         try {
-            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            ClassLoader cl = GDSException.class.getClassLoader();
             String res = MESSAGES.replace('.','/') + ".properties";
             java.io.InputStream in = cl.getResourceAsStream(res);
             messages.load(in);
         } catch (Exception ex) {
             ex.printStackTrace();
+        } finally {
+            initialized = true;
         }
     }
 
@@ -63,8 +74,9 @@ public class GDSExceptionHelper {
      * where you can set desired parameters.
      */
     public static GDSMessage getMessage(int code) {
+        if (!initialized) init();
         return new GDSMessage(messages.getProperty(
-            "" + code, "No message for code " + code + "found."));
+            "" + code, "No message for code " + code + " found."));
     }
 
     /**
