@@ -29,15 +29,20 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.1  2001/07/18 20:07:31  d_jencks
+ * Added better GDSExceptions, new NativeSQL, and CallableStatement test from Roman Rokytskyy
+ *
  */
 
 package org.firebirdsql.jdbc;
+
+import java.sql.SQLException;
 
 /**
  * This exception is thrown by FBEscapedParser when it cannot parse the
  * escaped syntax.
  */
-public class FBSQLParseException extends Exception{
+public class FBSQLParseException extends SQLException{
     public FBSQLParseException() { super(); }
     public FBSQLParseException(String msg) { super(msg); }
 }
