@@ -87,7 +87,7 @@ public abstract class AbstractCallableStatement
     
     private ResultSet currentRs;
     
-    private FBProcedureCall procedureCall;
+    protected FBProcedureCall procedureCall;
 
 
     protected AbstractCallableStatement(AbstractConnection c, String sql, 
@@ -137,6 +137,42 @@ public abstract class AbstractCallableStatement
             field.setRequiredType(param.getType());
         }
     }
+    
+    /**
+     * We allow multiple calls to this method without re-preparing the statement.
+     * This is an workaround to the issue that the statement is actually prepared
+     * only after all OUT parameters are registered.
+     */
+    protected void prepareFixedStatement(String sql, boolean describeBind)
+            throws GDSException, SQLException {
+        
+        if (fixedStmt != null)
+            return;
+        
+        super.prepareFixedStatement(sql, describeBind);
+    }
+    
+    /**
+     * Since we deferred the statement preparation until all OUT params are 
+     * registered, we ensure that the statement is prepared before the meta
+     * data for the callable statement is obtained.
+     */
+    public ResultSetMetaData getMetaData() throws SQLException {
+        
+        Object syncObject = getSynchronizationObject();
+        synchronized(syncObject) {
+            try {
+                c.ensureInTransaction();
+                prepareFixedStatement(procedureCall.getSQL(), true);
+            } catch (GDSException ge) {
+                throw new FBSQLException(ge);
+            } finally {
+                c.checkEndTransaction();
+            } 
+        }
+        
+        return super.getMetaData();
+    }    
     
     /**
      * Executes an execute stored procedure.
