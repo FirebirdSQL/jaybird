@@ -1018,7 +1018,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsANSI92IntermediateSQL() throws SQLException {
-        return true; //lets see what the tests say
+        return false; //lets see what the tests say
     }
 
 
@@ -1029,7 +1029,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsANSI92FullSQL() throws SQLException {
-        return true; //Nah, but lets see what the tests say
+        return false; //Nah, but lets see what the tests say
     }
 
 
@@ -1463,7 +1463,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxCharLiteralLength() throws SQLException {
-        return 0;
+        return 32767;
     }
 
 
@@ -1541,7 +1541,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxColumnsInTable() throws SQLException {
-        return 0; //I don't know
+        return 32767; //I don't know
     }
 
 
@@ -1634,7 +1634,10 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxRowSize() throws SQLException {
-        return 0;
+        if (getDatabaseMajorVersion() >= 1 && getDatabaseMinorVersion() >= 5)
+            return 65531;
+        else 
+            return 0;
     }
 
 
@@ -1729,7 +1732,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see Connection
      */
     public  int getDefaultTransactionIsolation() throws SQLException {
-        return Connection.TRANSACTION_REPEATABLE_READ;//close enough to snapshot.
+        return Connection.TRANSACTION_READ_COMMITTED;//close enough to snapshot.
     }
 
 
@@ -4629,6 +4632,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     public boolean supportsResultSetType(int type) throws SQLException {
         switch (type){
             case ResultSet.TYPE_FORWARD_ONLY:
+            case ResultSet.TYPE_SCROLL_INSENSITIVE :
                 return true;
             default:
                 return false;
@@ -4650,11 +4654,13 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean supportsResultSetConcurrency(int type, int concurrency) throws SQLException {
-        if (type==ResultSet.TYPE_FORWARD_ONLY
-        && concurrency == ResultSet.CONCUR_READ_ONLY)
-            return true;
-        else
-            return false;
+        switch(type) {
+            case ResultSet.TYPE_FORWARD_ONLY:
+            case ResultSet.TYPE_SCROLL_INSENSITIVE :
+                return concurrency == ResultSet.CONCUR_READ_ONLY;
+            default:
+                return false;
+        }
     }
 
 
@@ -4950,7 +4956,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public boolean supportsSavepoints() throws SQLException {
-        return true;
+        return getDatabaseMajorVersion() >= 1 && getDatabaseMinorVersion() >= 5;
     }
 
     /**
@@ -5075,12 +5081,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
     /**
      *
-     * @param param1 <description>
+     * @param holdability <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
      */
-    public boolean supportsResultSetHoldability(int param1) throws SQLException {
-        return false;
+    public boolean supportsResultSetHoldability(int holdability) throws SQLException {
+        return holdability == 2; // same as ResultSet.CLOSE_CURSORS_AT_COMMIT, but JDK 1.3 friendly
     }
 
     /**
