@@ -96,7 +96,7 @@ class FBLongField extends FBField {
     java.math.BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return BIGDECIMAL_NULL_VALUE;
 
-        return new java.math.BigDecimal(((Long)field.sqldata).doubleValue());
+        return new java.math.BigDecimal(((Long)field.sqldata).longValue());
     }
     Object getObject() throws SQLException {
         if (isNull()) return OBJECT_NULL_VALUE;
