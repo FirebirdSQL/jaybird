@@ -2722,6 +2722,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private int getDataType (short fieldType, short fieldSubType, short fieldScale) {
         if (fieldScale < 0) {
             switch (fieldType) {
+                //This might need some help for long mapping.
                 case smallint_type:
                 case integer_type:
                 case int64_type:
@@ -2756,6 +2757,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             case date_type:
                 return java.sql.Types.DATE;
             case int64_type:
+                //This might need some help for long mapping
                 if (fieldSubType == 2)
                     return java.sql.Types.DECIMAL;
                 else
@@ -2779,6 +2781,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private String getDataTypeName (short fieldType, short fieldSubType, short fieldScale) {
         if (fieldScale < 0) {
             switch (fieldType) {
+                //this might need some help for long mapping
                 case smallint_type:
                 case integer_type:
                 case int64_type:
@@ -2813,6 +2816,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             case date_type:
                 return "DATE";
             case int64_type:
+                //this might need some help for long mapping
                 if (fieldSubType == 2)
                     return "DECIMAL";
                 else
@@ -4220,85 +4224,104 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         //dialect 3 only
         ArrayList rows = new ArrayList();
 
-        rows.add(new byte[][] {getBytes("CHAR"), createShort(Types.CHAR)
-            , XSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
-            NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_TEXT), null, BINARY});
-
-        rows.add(new byte[][] {getBytes("NUMERIC"), createShort(Types.NUMERIC)
-            , XSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
+        //BIGINT=-5
+        //Unfortunately it doesn't seem to be possible to specify INT64 as a column datatype
+        //I'm using NUMERIC(18,0) until something better is available.
+        //Note that 18 digits is too few whereas 19 is too many.
+        rows.add(new byte[][] {getBytes("NUMERIC(18,0)"), createShort(Types.BIGINT)
+            , XSQLVAR.encodeInt(64), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, createShort(18), XSQLVAR.encodeInt(GDS.SQL_INT64), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_INT64), null, BINARY});
 
-        rows.add(new byte[][] {getBytes("DECIMAL"), createShort(Types.DECIMAL)
-            , XSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, createShort(18), XSQLVAR.encodeInt(GDS.SQL_INT64), null, BINARY});
-
-        rows.add(new byte[][] {getBytes("INTEGER"), createShort(Types.INTEGER)
-            , XSQLVAR.encodeInt(32), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_LONG), null, BINARY});
-
-        rows.add(new byte[][] {getBytes("SMALLINT"), createShort(Types.SMALLINT)
-            , XSQLVAR.encodeInt(16), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_SHORT), null, BINARY});
-
-        rows.add(new byte[][] {getBytes("FLOAT"), createShort(Types.FLOAT)
-            , XSQLVAR.encodeInt(7), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
-            NOTAUTOINC, null, createShort(0), createShort(7), XSQLVAR.encodeInt(GDS.SQL_FLOAT), null, BINARY});
-
-        rows.add(new byte[][] {getBytes("DOUBLE PRECISION"), createShort(Types.DOUBLE)
-            , XSQLVAR.encodeInt(15), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
-            NOTAUTOINC, null, createShort(0), createShort(15), XSQLVAR.encodeInt(GDS.SQL_DOUBLE), null, BINARY});
-
-        rows.add(new byte[][] {getBytes("VARCHAR"), createShort(Types.VARCHAR)
-            , XSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
-            NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_VARYING), null, BINARY});
-
-        rows.add(new byte[][] {getBytes("DATE"), createShort(Types.DATE)
-            , XSQLVAR.encodeInt(0), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_TYPE_DATE), null, BINARY});
-
-        rows.add(new byte[][] {getBytes("TIME"), createShort(Types.TIME)
-            , XSQLVAR.encodeInt(0), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_TYPE_TIME), null, BINARY});
-
-        rows.add(new byte[][] {getBytes("TIMESTAMP"), createShort(Types.TIMESTAMP)
-            , XSQLVAR.encodeInt(0), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_TIMESTAMP), null, BINARY});
-
-        rows.add(new byte[][] {getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB)
-            , XSQLVAR.encodeInt(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_BLOB), null, BINARY});
-
+        //LONGVARBINARY=-4
         rows.add(new byte[][] {getBytes("BLOB SUB_TYPE 0"), createShort(Types.LONGVARBINARY)
             , XSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_BLOB), null, BINARY});
 
+        //LONGVARCHAR=-1
         rows.add(new byte[][] {getBytes("BLOB SUB_TYPE 1"), createShort(Types.LONGVARCHAR)
             , XSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_BLOB), null, BINARY});
 
-        rows.add(new byte[][] {getBytes("BLOB SUB_TYPE >1"), createShort(Types.OTHER)
-            , XSQLVAR.encodeInt(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_BLOB), null, BINARY});
+        //CHAR=1
+        rows.add(new byte[][] {getBytes("CHAR"), createShort(Types.CHAR)
+            , XSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
+            NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_TEXT), null, BINARY});
 
+        //NUMERIC=2
+        rows.add(new byte[][] {getBytes("NUMERIC"), createShort(Types.NUMERIC)
+            , XSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, createShort(18), XSQLVAR.encodeInt(GDS.SQL_INT64), null, BINARY});
+
+        //DECIMAL=3
+        rows.add(new byte[][] {getBytes("DECIMAL"), createShort(Types.DECIMAL)
+            , XSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, createShort(18), XSQLVAR.encodeInt(GDS.SQL_INT64), null, BINARY});
+
+        //INTEGER=4
+        rows.add(new byte[][] {getBytes("INTEGER"), createShort(Types.INTEGER)
+            , XSQLVAR.encodeInt(32), null, null, null,
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_LONG), null, BINARY});
+
+        //SMALLINT=5
+        rows.add(new byte[][] {getBytes("SMALLINT"), createShort(Types.SMALLINT)
+            , XSQLVAR.encodeInt(16), null, null, null,
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_SHORT), null, BINARY});
+
+        //FLOAT=6
+        rows.add(new byte[][] {getBytes("FLOAT"), createShort(Types.FLOAT)
+            , XSQLVAR.encodeInt(7), null, null, null,
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
+            NOTAUTOINC, null, createShort(0), createShort(7), XSQLVAR.encodeInt(GDS.SQL_FLOAT), null, BINARY});
+
+        //DOUBLE=8
+        rows.add(new byte[][] {getBytes("DOUBLE PRECISION"), createShort(Types.DOUBLE)
+            , XSQLVAR.encodeInt(15), null, null, null,
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
+            NOTAUTOINC, null, createShort(0), createShort(15), XSQLVAR.encodeInt(GDS.SQL_DOUBLE), null, BINARY});
+
+        //VARCHAR=12
+        rows.add(new byte[][] {getBytes("VARCHAR"), createShort(Types.VARCHAR)
+            , XSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
+            NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_VARYING), null, BINARY});
+
+        //DATE=91
+        rows.add(new byte[][] {getBytes("DATE"), createShort(Types.DATE)
+            , XSQLVAR.encodeInt(0), null, null, null,
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_TYPE_DATE), null, BINARY});
+
+        //TIME=92
+        rows.add(new byte[][] {getBytes("TIME"), createShort(Types.TIME)
+            , XSQLVAR.encodeInt(0), null, null, null,
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_TYPE_TIME), null, BINARY});
+
+        //TIMESTAMP=93
+        rows.add(new byte[][] {getBytes("TIMESTAMP"), createShort(Types.TIMESTAMP)
+            , XSQLVAR.encodeInt(0), null, null, null,
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_TIMESTAMP), null, BINARY});
+
+        //OTHER=1111
         rows.add(new byte[][] {getBytes("ARRAY"), createShort(Types.OTHER)
             , XSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_ARRAY), null, BINARY});
+
+        //BLOB=2004
+        rows.add(new byte[][] {getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB)
+            , XSQLVAR.encodeInt(0), null, null, null,
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_BLOB), null, BINARY});
 
         return new FBResultSet(xsqlvars, rows);
 
