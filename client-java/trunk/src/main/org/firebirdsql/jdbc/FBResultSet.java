@@ -52,8 +52,6 @@ public class FBResultSet implements ResultSet {
      
     private boolean wasNull = false;
     private boolean wasNullValid = false;
-    // opened is false until the first next;
-    private boolean opened = false;
     // closed is false until the close method is invoked;
     private boolean closed = false;
 
@@ -160,7 +158,6 @@ public class FBResultSet implements ResultSet {
     protected void checkCursorMove() throws SQLException {
         if (closed) throw new FBSQLException("The resultSet is closed");
         wasNullValid = false;
-        opened = true;
 
         // close current fields, so that resources are freed.
         for(int i = 0; i < fields.length; i++) 
@@ -337,8 +334,9 @@ public class FBResultSet implements ResultSet {
      */
     private FBField getField(int columnIndex) throws SQLException {
         if (closed) throw new FBSQLException("The resultSet is closed");
-
-        if (!opened) throw new FBSQLException(
+        
+        if (isBeforeFirst() || isAfterLast())
+            throw new FBSQLException(
                     "The resultSet is not in a row, use next",
                     FBSQLException.SQL_STATE_NO_ROW_AVAIL);
         
@@ -357,7 +355,8 @@ public class FBResultSet implements ResultSet {
     private FBField getField(String columnName) throws SQLException {
         if (closed) throw new FBSQLException("The resultSet is closed");
         
-        if (!opened) throw new FBSQLException(
+        if (isBeforeFirst() || isAfterLast())
+            throw new FBSQLException(
                     "The resultSet is not in a row, use next",
                     FBSQLException.SQL_STATE_NO_ROW_AVAIL);
 
