@@ -39,9 +39,7 @@ class XPreparedStatementCache {
     
     private static final boolean CACHE_PREPARED_STATEMENTS = true;
 
-    private static final boolean LOG_PREPARE_STATEMENT = false;
-    private static final boolean LOG_STATEMENT_IN_POOL = false;
-    private static final boolean LOG_POOL_CLEANING = false;
+    private static final boolean LOG_STATEMENT_IN_POOL = PoolDebugConfiguration.DEBUG_STMT_POOL;
 
     private static Logger logChannel = 
         LoggerFactory.getLogger(XPreparedStatementCache.class, false);

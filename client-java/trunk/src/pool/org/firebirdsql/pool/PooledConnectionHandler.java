@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -38,11 +39,7 @@ class PooledConnectionHandler implements InvocationHandler {
 	
 	private static final boolean CACHE_PREPARED_STATEMENTS = true;
 	
-	private static final boolean LOG_PREPARE_STATEMENT = false;
-	private static final boolean LOG_STATEMENT_IN_POOL = false;
-	private static final boolean LOG_POOL_CLEANING = false;
-	private static final boolean LOG_META_DATA = false;
-	private static final boolean LOG_REENTRANT_ACCESS = false;
+	private static final boolean LOG_REENTRANT_ACCESS = PoolDebugConfiguration.DEBUG_REENTRANT;
 	
 	private static Logger logChannel = LoggerFactory.getLogger(PooledConnectionHandler.class, false);
     
@@ -117,7 +114,8 @@ class PooledConnectionHandler implements InvocationHandler {
 	private Connection proxy;
     
 	private boolean closed;
-	private String closeStackTrace = "";
+    private ObjectCloseTraceException closeStackTrace;
+	private String closeStackTraceStr = "";
 
     /**
      * Construct instance of this class. This method constructs new proxy
@@ -199,10 +197,16 @@ class PooledConnectionHandler implements InvocationHandler {
 			
 			invokeEntered = true;
 			
-			if (closed) 
-			    throw new SQLException(
-				    "Connection " + this + " was closed. Stack trace on close:\n" + 
-					closeStackTrace + "\nat:\n");
+            // if object is closed, throw an exception
+			if (closed) { 
+			    FBSQLException ex = new FBSQLException(
+				    "Connection " + this + " was closed. " +
+                            "See the attached exception to find the place " +
+                            "where it was closed");
+                ex.setNextException(closeStackTrace);
+                throw ex;
+            }
+            
 			if ((owner != null && !owner.isValid(this)))
 			    throw new SQLException(
 				    "This connection owner is not valid anymore.");
@@ -360,8 +364,8 @@ class PooledConnectionHandler implements InvocationHandler {
             }
     
     		closed = true;
-            
-    		closeStackTrace = XConnectionUtil.getStackTrace(new Exception());
+            closeStackTrace = new ObjectCloseTraceException();
+    		closeStackTraceStr = XConnectionUtil.getStackTrace(closeStackTrace);
         }
 	}
     

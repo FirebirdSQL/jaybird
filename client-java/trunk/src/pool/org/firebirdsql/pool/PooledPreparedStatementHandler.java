@@ -28,6 +28,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.firebirdsql.jdbc.FBSQLException;
+
 /**
  * Wrapper for prepared statements. This invocation handler notifies statement
  * manager about closing prepared statement.
@@ -73,7 +75,8 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
     private boolean cached;
     
     private boolean invalid;
-    private String invalidateStackTrace = "";
+    private ObjectCloseTraceException invalidateStackTrace;
+    private String invalidateStackTraceStr = "";
         
     /**
      * Create instance of this class.
@@ -119,7 +122,8 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
         preparedStatement.close();
         associatedConnection = null;
         invalid = true;
-        invalidateStackTrace = XConnectionUtil.getStackTrace(new Exception());
+        invalidateStackTrace = new ObjectCloseTraceException();
+        invalidateStackTraceStr = XConnectionUtil.getStackTrace(invalidateStackTrace);
     }
     
     protected boolean handleIsCached() throws SQLException {
@@ -204,20 +208,24 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
             "does not have any associated connection at this time. " + 
             "Usually this means that Statement.getConnection() " + 
             "method was called on a closed statement that currently " + 
-            "lives in a statement pool.";
-            
+            "lives in a statement pool. ";
+
         if (invalid)
-            message += "\n" + invalidateStackTrace;
-        
+            message += "See the attached exception " +
+                "for the information where the object was closed.";
+
         boolean incorrectState = 
             (associatedConnection == null &&
              method.getDeclaringClass().equals(PreparedStatement.class)) ||
              invalid;
             
         if (incorrectState)
-            if (TOLERANT_CHECK_MODE)
-                throw new SQLException(message);
-            else
+            if (TOLERANT_CHECK_MODE) {
+                FBSQLException ex = new FBSQLException(message);
+                if (invalid)
+                    ex.setNextException(invalidateStackTrace);
+                throw ex;
+            } else
                 throw new IllegalStateException(message);
     }
 
