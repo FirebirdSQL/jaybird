@@ -135,7 +135,7 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
     {
         return new ArrayList(rdb_transactions);
     }
-
+    
     public List getWarnings() {
         checkValidity();
         synchronized(rdb_warnings) {

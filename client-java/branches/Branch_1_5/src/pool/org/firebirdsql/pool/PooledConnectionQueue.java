@@ -262,7 +262,7 @@ class PooledConnectionQueue {
 
             // deallocate connection if pooling is not enabled.
             if (!getConfiguration().isPooling())
-                connection.deallocate();
+                destroyConnection(connection);
 
             if (LOG_DEBUG_INFO && getLogger() != null)
                 getLogger().debug("Thread "

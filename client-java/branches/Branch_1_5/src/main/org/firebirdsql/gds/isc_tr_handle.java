@@ -49,7 +49,7 @@ public interface isc_tr_handle {
 
     int getState();
 
-    void registerStatementWithTransaction(org.firebirdsql.jdbc.AbstractStatement fbStatement);
+    void registerStatementWithTransaction(isc_stmt_handle fbStatement);
 
     void forgetResultSets();
 }

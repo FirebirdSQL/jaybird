@@ -28,10 +28,9 @@ package org.firebirdsql.ngds;
 
 import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.isc_stmt_handle;
 
-import java.util.Collection;
 import java.util.ArrayList;
-import org.firebirdsql.jdbc.AbstractStatement;
 
 
 /**
@@ -46,11 +45,8 @@ public final class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_hand
     private int rtr_id_ptr = 0;
 
     private isc_db_handle_impl rtr_rdb;
-    //isc_tr_handle_impl rtr_next;
-    private Collection blobs = null;
-    //    isc_blob_handle_impl rbl_next;
-    private AbstractStatement stmt = null;
-    private ArrayList stmts = null;
+    private ArrayList blobs = new ArrayList();
+    private ArrayList stmts = new ArrayList();
 
     private int state = NOTRANSACTION;
 
@@ -78,66 +74,49 @@ public final class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_hand
         this.rtr_id = rtr_id;
     }
 
-    int getTransactionId()
-    {
+    int getTransactionId() {
         return rtr_id;
     }
 
-    void setTransactionIdPtr(final int rtr_id_ptr, int value)
-    {
+    void setTransactionIdPtr(final int rtr_id_ptr, int value) {
         setTransactionId(value);
         this.rtr_id_ptr = rtr_id_ptr;
     }
 
-    int getTransactionIdPtr()
-    {
+    int getTransactionIdPtr() {
         return rtr_id_ptr;
     }
 
-    void setDbHandle(final isc_db_handle_impl db)
-    {
+    void setDbHandle(final isc_db_handle_impl db) {
         this.rtr_rdb = db;
         rtr_rdb.addTransaction(this);
     }
 
-    void unsetDbHandle()
-    {
+    void unsetDbHandle() {
         rtr_rdb.removeTransaction(this);
         rtr_rdb = null;
     }
 
-    void addBlob(final isc_blob_handle_impl blob) {
-        if (blobs==null)
-            blobs = new ArrayList();
+    void addBlob(isc_blob_handle_impl blob) {
         blobs.add(blob);
-    //        blob.next = rbl_next;
-    //        rbl_next = blob;
     }
 
     void removeBlob(isc_blob_handle_impl blob) {
-        if (blobs!=null)
-            blobs.remove(blob);
+        blobs.remove(blob);
     }
 	 
-    public synchronized void registerStatementWithTransaction(org.firebirdsql.jdbc.AbstractStatement stmt) {
-		  if (stmt == null)
-            this.stmt = stmt;
-		  else {
-            if (stmts == null)
-                stmts = new ArrayList();
+    public void registerStatementWithTransaction(isc_stmt_handle stmt) {
+        synchronized(stmts) {
             stmts.add(stmt);
-		  }
+		}
     }
 
     public void forgetResultSets() {
-        if (stmt != null){
-            stmt.forgetResultSet();
-            stmt = null;				
-        }
-		  if (stmts != null) {
-		      for (int i=0; i< stmts.size(); i++)
-                ((AbstractStatement)stmts.get(i)).forgetResultSet();
+        synchronized(stmts) {
+		    for (int i=0; i< stmts.size(); i++)
+                ((isc_stmt_handle)stmts.get(i)).clearRows();
+            
             stmts.clear();
-		  }
+		}
     }
 }
