@@ -38,7 +38,7 @@ public class FBCachedBlobField extends FBBlobField {
         super(field, rs, numCol);
     }
 
-    Blob getBlob(boolean create) throws SQLException {
+    public Blob getBlob() throws SQLException {
         if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 

@@ -392,6 +392,16 @@ abstract class FBField {
      * Returns the relation to which belongs column as declared in XSQLVAR.
      */
     public String getRelationName() { return field.relname; }
+    
+    /**
+     * Close this field. This method tells field implementation to release all
+     * resources allocated when field methods were called.
+     * 
+     * @throws SQLException if field cannot be closed.
+     */
+    public void close() throws SQLException {
+        // default behaviour is to do nothing.
+    }
 
     /*
      * All these methods simply throw an exception

@@ -162,10 +162,15 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public boolean next() throws  SQLException {
-         if (closed) throw new SQLException("The resultSet is closed");
-         wasNullValid = false;
-         opened = true;
-         return fbFetcher.next();
+        if (closed) throw new SQLException("The resultSet is closed");
+        wasNullValid = false;
+        opened = true;
+
+        // close current fields, so that resources are freed.
+        for(int i = 0; i < fields.length; i++) 
+           fields[i].close();
+            
+        return fbFetcher.next();
     }
 
 
@@ -189,7 +194,15 @@ public class FBResultSet implements ResultSet {
         if (closed) throw new SQLException("The resultSet is closed");
         wasNullValid = false;
         closed = true;
-        fbFetcher.close();
+        
+        try {
+            
+            for(int i = 0; i < fields.length; i++)
+                fields[i].close();
+            
+        } finally {
+            fbFetcher.close();
+        }
     }
 
 

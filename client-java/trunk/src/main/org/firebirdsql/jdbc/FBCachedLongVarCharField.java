@@ -37,7 +37,7 @@ public class FBCachedLongVarCharField extends FBLongVarCharField {
         super(field, rs, numCol);
     }
 
-    Blob getBlob(boolean create) throws SQLException {
+    Blob getBlob() throws SQLException {
         if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 
