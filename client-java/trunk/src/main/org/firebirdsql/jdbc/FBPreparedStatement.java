@@ -612,8 +612,18 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void setDate(int parameterIndex, java.sql.Date x, Calendar cal) throws  SQLException {
-        throw new SQLException("not yet implemented");
+    public void setDate(int parameterIndex, java.sql.Date x, Calendar cal)
+        throws  SQLException 
+    {
+        if (cal == null) 
+        {
+            setDate(parameterIndex, x);
+        } // end of if ()
+        else
+        {
+            cal.setTime(x);            
+            setDate(parameterIndex, new java.sql.Date(cal.getTime().getTime()));
+        } // end of else
     }
 
 
@@ -636,8 +646,18 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void setTime(int parameterIndex, java.sql.Time x, Calendar cal) throws  SQLException {
-        throw new SQLException("not yet implemented");
+    public void setTime(int parameterIndex, java.sql.Time x, Calendar cal)
+        throws  SQLException
+    {
+        if (cal == null) 
+        {
+            setTime(parameterIndex, x);
+        } // end of if ()
+        else
+        {
+            cal.setTime(x);
+            setTime(parameterIndex, new java.sql.Time(cal.getTime().getTime()));
+        } // end of else
     }
 
 
@@ -659,9 +679,25 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
+     * @todo change all the methods called to take a Calendar instead of Date object.
      */
-    public void setTimestamp(int parameterIndex, java.sql.Timestamp x, Calendar cal) throws  SQLException {
-        throw new SQLException("not yet implemented");
+    public void setTimestamp(int parameterIndex, java.sql.Timestamp x, Calendar cal) 
+        throws  SQLException 
+    {
+        if (cal == null) 
+        {
+            setTimestamp(parameterIndex, x);
+        } // end of if ()
+        else if (x == null) 
+        {
+            setTimestamp(parameterIndex, new java.sql.Timestamp(cal.getTime().getTime()));
+            
+        } // end of if ()
+        else
+        {
+            long time = x.getTime() - cal.getTimeZone().getRawOffset();
+            setTimestamp(parameterIndex, new java.sql.Timestamp(time));
+        } // end of else
     }
 
 
