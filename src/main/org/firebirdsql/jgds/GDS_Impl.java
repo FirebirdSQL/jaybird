@@ -236,6 +236,7 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
          result.removeArgument(ISCConstants.isc_dpb_socket_buffer_size);
          result.removeArgument(ISCConstants.isc_dpb_blob_buffer_size);
          result.removeArgument(ISCConstants.isc_dpb_use_stream_blobs);
+         result.removeArgument(ISCConstants.isc_dpb_paranoia_mode);
  
          return result;
      }

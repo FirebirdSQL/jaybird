@@ -69,6 +69,8 @@ public class FBResultSet implements ResultSet {
     private int rsType = ResultSet.TYPE_FORWARD_ONLY;
     private int rsConcurrency = ResultSet.CONCUR_READ_ONLY;
     
+    private boolean paranoiaModa;
+    
 	 /**
      * Creates a new <code>FBResultSet</code> instance.
      *
@@ -88,6 +90,8 @@ public class FBResultSet implements ResultSet {
         this.listener = listener;
         this.rsType = rsType;
         this.rsConcurrency = rsConcurrency;
+        
+        checkParanoiaMode(c);
         
         xsqlvars = stmt.getOutSqlda().sqlvar;
         maxRows = fbstatement.getMaxRows();
@@ -139,6 +143,8 @@ public class FBResultSet implements ResultSet {
         this.trimStrings = trimStrings;
         this.listener = listener;
         
+        checkParanoiaMode(c);
+        
         maxRows = fbStatement.getMaxRows();
         xsqlvars = stmt.getOutSqlda().sqlvar;
         prepareVars(true);
@@ -150,6 +156,11 @@ public class FBResultSet implements ResultSet {
         fbFetcher = new FBCachedFetcher(rows,this);
         this.xsqlvars = xsqlvars;
         prepareVars(true);
+    }
+    
+    private void checkParanoiaMode(AbstractConnection c) {
+        DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
+        paranoiaModa = dpb.hasArgument(DatabaseParameterBuffer.paranoia_mode);
     }
 
     private void prepareVars(boolean cached) throws SQLException {
@@ -214,7 +225,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public void close() throws  SQLException {
-        if (closed) throw new FBSQLException("The resultSet is closed");
+        if (closed && paranoiaModa) throw new FBSQLException("The resultSet is closed");
         wasNullValid = false;
         closed = true;
         

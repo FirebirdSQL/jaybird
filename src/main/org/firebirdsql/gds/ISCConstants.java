@@ -128,6 +128,7 @@ public final class ISCConstants {
     public final static int isc_dpb_socket_buffer_size      = 129;
     public final static int isc_dpb_blob_buffer_size        = 130;
     public final static int isc_dpb_use_stream_blobs        = 131;
+    public final static int isc_dpb_paranoia_mode           = 132;
 
     /*************************************/
     /* Transaction parameter block stuff */
