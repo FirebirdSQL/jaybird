@@ -21,6 +21,7 @@ package org.firebirdsql.pool;
 
 import java.lang.reflect.*;
 import java.sql.*;
+import java.util.ArrayList;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -60,6 +61,27 @@ class PooledConnectionHandler implements InvocationHandler {
             throw new NullPointerException(
                 "No method for proxying found. Please check your classpath.");
         }
+    }
+    
+    /**
+     * Get all implemented interfaces by the class.
+     * 
+     * @param clazz class to inspect.
+     * 
+     * @return array of all implemented interfaces.
+     */
+    public static Class[] getAllInterfaces(Class clazz) {
+    	ArrayList result = new ArrayList();
+        
+        do {
+            Class[] interfaces = clazz.getInterfaces();
+            for (int i = 0; i < interfaces.length; i++) {
+				result.add(interfaces[i]);
+			}
+            clazz = clazz.getSuperclass();
+        } while(clazz.getSuperclass() != null);
+        
+        return (Class[])result.toArray(new Class[result.size()]);
     }
     
     private final static Method CONNECTION_PREPARE_STATEMENT = findMethod(
@@ -113,7 +135,8 @@ class PooledConnectionHandler implements InvocationHandler {
             this.connection = connection;
             this.owner = owner;
             
-            Class[] implementedInterfaces = connection.getClass().getInterfaces();
+            Class[] implementedInterfaces = 
+                getAllInterfaces(connection.getClass());
 
             proxy = (Connection)Proxy.newProxyInstance(
                 PooledConnectionHandler.class.getClassLoader(),

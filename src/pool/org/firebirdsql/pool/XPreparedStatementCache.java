@@ -20,7 +20,7 @@
 package org.firebirdsql.pool;
 
 import java.sql.*;
-import java.util.HashSet;
+import java.util.*;
 import java.util.Iterator;
 
 import EDU.oswego.cs.dl.util.concurrent.*;
@@ -48,7 +48,7 @@ class XPreparedStatementCache {
 
     private XStatementManager owner;
     private LinkedQueue freeReferences = new LinkedQueue();
-    private HashSet workingReferences = new HashSet();
+    private HashMap workingReferences = new HashMap();
     private String sql;
     private int resultSetType;
     private int resultSetConcurrency;
@@ -127,7 +127,7 @@ class XPreparedStatementCache {
             
             result.setConnection(connection);
             
-            workingReferences.add(result);
+            workingReferences.put(result.getOriginal(), result);
 
             return result;
         } catch(InterruptedException iex) {
@@ -155,11 +155,14 @@ class XPreparedStatementCache {
         try {
             if (CACHE_PREPARED_STATEMENTS) {
                 
+                XCachablePreparedStatement statement = 
+                    (XCachablePreparedStatement)reference;
+                
                 // clean reference
-                ((XCachablePreparedStatement)reference).setConnection(null);
+                statement.setConnection(null);
                 
                 freeReferences.put(reference);
-                workingReferences.remove(reference);
+                workingReferences.remove(statement.getOriginal());
 
                 if (LOG_STATEMENT_IN_POOL)
                     logChannel.info("Returned prepared statement to pool.");
@@ -199,10 +202,12 @@ class XPreparedStatementCache {
         
         // clear working references, even they're currently in use
         // since we are invalidating the pool and there's no way back
-        Iterator iter = workingReferences.iterator();
+        Iterator iter = workingReferences.entrySet().iterator();
         while(iter.hasNext()) {
+            Map.Entry entry = (Map.Entry)iter.next();
+            
             XCachablePreparedStatement item = 
-                (XCachablePreparedStatement)iter.next();
+                (XCachablePreparedStatement)entry.getValue();
                 
             try {
                 item.forceClose();
