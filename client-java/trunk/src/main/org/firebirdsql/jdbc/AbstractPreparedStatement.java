@@ -638,6 +638,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
                 return toArray(results);
                 
             } finally {
+                clearBatch();
                 c.checkEndTransaction(commit);
             }
         }

@@ -928,6 +928,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                 return toArray(responses);
                 
             } finally {
+                clearBatch();
                 c.checkEndTransaction(commit);
             }
         }
