@@ -181,6 +181,9 @@ class FBCachedFetcher implements FBFetcher {
             throw new FBDriverNotCapableException(
                     "Result set is TYPE_FORWARD_ONLY");
         
+        if (row < 0)
+            row = rowsArray.length + row + 1;
+        
         if (isEmpty())
             return false;
         
@@ -215,6 +218,16 @@ class FBCachedFetcher implements FBFetcher {
 
     public boolean relative(int row) throws SQLException {
         return absolute(rowNum + row);
+    }
+    
+    public void beforeFirst() throws SQLException {
+        first();
+        previous();
+    }
+    
+    public void afterLast() throws SQLException {
+        last();
+        next();
     }
 
     public void close() throws SQLException {
