@@ -32,31 +32,13 @@ class ServiceParameterBufferImp extends ServiceBufferBase implements ServicePara
 
     public void addArgument(int argumentType, String value)
         {
-        getArgumentsList().add(new StringArgument(argumentType, value ));
-        }
-
-    private static final class StringArgument extends ServiceBufferBase.Argument
-        {
-        StringArgument( int type, String value )
+        getArgumentsList().add(new StringArgument(argumentType, value )
             {
-            this.type = type;
-            this.value = value;
-            }
-
-        void writeTo(ByteArrayOutputStream outputStream)
-            {
-            outputStream.write(type);
-
-            final byte[] valueBytes = this.value.getBytes();
-            final int valueLength = valueBytes.length;
-
-            outputStream.write(valueLength);
-            for(int i = 0; i<valueLength; i++)
-                outputStream.write(valueBytes[i]);
-            }
-
-        private int type;
-        private String value;
+            protected void writeLength(int length, ByteArrayOutputStream outputStream)
+                {
+                outputStream.write(length);
+                }
+            });
         }
 
     /**
