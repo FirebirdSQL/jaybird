@@ -280,8 +280,7 @@ public class FBEscapedParser {
             return toDateString(payload.toString().trim());
         else
         if (keyword.toString().equalsIgnoreCase(ESCAPE_ESCAPE_KEYWORD))
-            throw new FBSQLParseException(
-                "Escaped escapes are not supported.");
+            return convertEscapeString(payload.toString().trim());
         else
         if (keyword.toString().equalsIgnoreCase(ESCAPE_FUNCTION_KEYWORD))
             return convertEscapedFunction(payload.toString().trim());
@@ -366,6 +365,18 @@ public class FBEscapedParser {
         return outerJoin;
     }
 
+    /**
+     * Convert the <code>"{escape '...'}"</code> call into the corresponding
+     * escape clause for Firebird.
+     * 
+     * @param escapeString escape string to convert
+     * 
+     * @return converted code.
+     */
+    protected String convertEscapeString(String escapeString) {
+        return escapeString;
+    }
+    
     /**
      * This method converts escaped function to a server function call. Actually
      * we do not change anything here, we hope that all UDF are defined.
