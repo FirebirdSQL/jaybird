@@ -203,7 +203,7 @@ class PooledConnectionHandler implements InvocationHandler {
     {
 		try {
 			
-			if (LOG_REENTRANT_ACCESS && invokeEntered)
+			if (LOG_REENTRANT_ACCESS && invokeEntered && logChannel != null)
 			    logChannel.warn("Re-entrant access detected.", new Exception());
 			
 			invokeEntered = true;

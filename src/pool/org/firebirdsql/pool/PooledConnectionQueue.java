@@ -187,6 +187,7 @@ class PooledConnectionQueue {
                         item.deallocate();
                     
                 } catch (SQLException ex) {
+                    if (getLogger() != null)
                     getLogger().warn("Could not close connection.", ex);
                 }
     
