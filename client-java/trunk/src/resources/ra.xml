@@ -33,7 +33,7 @@
       <config-property-value></config-property-value>
     </config-property>
     <authentication-mechanism>
-      <authentication-mechanism-type>basic-password</authentication-mechanism-type>
+      <authentication-mechanism-type>BasicPassword</authentication-mechanism-type>
       <credential-interface>javax.resource.security.PasswordCredential</credential-interface>
     </authentication-mechanism>
     <reauthentication-support>false</reauthentication-support>
