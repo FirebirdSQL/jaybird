@@ -1,3 +1,11 @@
+2004-12-13 22:41  sjardine
+
+	*
+	
+	Changed tests to use PURE_JAVA.
+	client-java/src/test/org/firebirdsql/management/TestUserManager.jav
+	a:
+
 2004-12-12 17:43  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/: FBResultSet.java,
