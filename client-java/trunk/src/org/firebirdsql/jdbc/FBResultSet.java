@@ -400,6 +400,15 @@ public class FBResultSet implements ResultSet {
     }
 
 
+    /**
+     * Describe <code>getBigDecimal</code> method here.
+     *
+     * @param columnName a <code>String</code> value
+     * @param scale an <code>int</code> value
+     * @return a <code>BigDecimal</code> value
+     * @exception SQLException if an error occurs
+     * @deprecated
+     */
     public BigDecimal getBigDecimal(String columnName, int scale) throws  SQLException {
         return getBigDecimal(findColumn(columnName), scale);
     }
@@ -429,6 +438,14 @@ public class FBResultSet implements ResultSet {
     }
 
 
+    /**
+     * Describe <code>getUnicodeStream</code> method here.
+     *
+     * @param columnName a <code>String</code> value
+     * @return a <code>java.io.InputStream</code> value
+     * @exception SQLException if an error occurs
+     * @deprecated
+     */
     public java.io.InputStream getUnicodeStream(String columnName) throws  SQLException {
         return getUnicodeStream(findColumn(columnName));
     }
