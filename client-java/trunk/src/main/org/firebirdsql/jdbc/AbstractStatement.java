@@ -896,6 +896,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         Object syncObject = getSynchronizationObject();
         LinkedList responses = new LinkedList();
         
+        boolean commit = false;
         synchronized(syncObject) {
             try {
                 c.ensureInTransaction();
@@ -920,9 +921,12 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                     }
                 }
                
+                commit = true;
+                
                 return toArray(responses);
+                
             } finally {
-                c.checkEndTransaction();
+                c.checkEndTransaction(commit);
             }
         }
     }

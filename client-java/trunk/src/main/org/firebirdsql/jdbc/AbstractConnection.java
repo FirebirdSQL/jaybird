@@ -837,12 +837,19 @@ public abstract class AbstractConnection implements FirebirdConnection {
     }
 
     public synchronized void checkEndTransaction() throws SQLException {
+        checkEndTransaction(true);
+    }
+    
+    public synchronized void checkEndTransaction(boolean commit) throws SQLException {
         if (willEndTransaction())
         {
             autoTransaction = false;
             try
             {
-                getLocalTransaction().internalCommit();
+                if (commit)
+                    getLocalTransaction().internalCommit();
+                else
+                    getLocalTransaction().internalRollback();
             }
             catch (ResourceException ge)
             {
