@@ -61,8 +61,11 @@ public class TestFBConnection extends TestXABase {
         System.out.println();
         System.out.println("testCreateC");
         FBManagedConnectionFactory mcf = initMcf();
+        assertTrue("Could not get FBManagedConnectionFactory", mcf != null);
         ManagedConnection mc = mcf.createManagedConnection(null, null);
+        assertTrue("Could not get ManagedConnection", mc != null);
         Connection c = (Connection)mc.getConnection(null, null);
+        assertTrue("Could not get Connection", c != null);
         mc.destroy();
     }
 
@@ -87,6 +90,7 @@ public class TestFBConnection extends TestXABase {
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         Connection c = (Connection)mc.getConnection(null, null);
         Statement s = c.createStatement();
+        assertTrue("Could not create Statement", s != null);
         mc.destroy();
     }
 

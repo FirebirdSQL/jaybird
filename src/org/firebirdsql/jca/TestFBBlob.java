@@ -105,7 +105,7 @@ public class TestFBBlob extends TestXABase {
                 count++;
             }
             System.out.println("C2 count: " + count);
-            assert("retrieved wrong length blob: expecting " + bloblength + ", retrieved: " + count, bloblength == count);
+            assertTrue("retrieved wrong length blob: expecting " + bloblength + ", retrieved: " + count, bloblength == count);
  
         }
 //        rs.close(); //should be automatic
@@ -131,7 +131,7 @@ public class TestFBBlob extends TestXABase {
 
         p.setInt(1, 1);
         p.setBlob(2, blob);
-        assert("executeUpdate count != 1", p.executeUpdate() == 1);
+        assertTrue("executeUpdate count != 1", p.executeUpdate() == 1);
         
         p.close();
         checkReadBlob();
@@ -156,7 +156,7 @@ public class TestFBBlob extends TestXABase {
         p.setBinaryStream(2, bais, bloblength);
 
         p.setInt(1, 1);
-        assert("executeUpdate count != 1", p.executeUpdate() == 1);
+        assertTrue("executeUpdate count != 1", p.executeUpdate() == 1);
         
         p.close();
         checkReadBlob();
@@ -180,7 +180,7 @@ public class TestFBBlob extends TestXABase {
         p.setBytes(2, testbuf);
 
         p.setInt(1, 1);
-        assert("executeUpdate count != 1", p.executeUpdate() == 1);
+        assertTrue("executeUpdate count != 1", p.executeUpdate() == 1);
         
         p.close();
         checkReadBlob();

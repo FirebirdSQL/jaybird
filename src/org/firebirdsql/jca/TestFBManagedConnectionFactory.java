@@ -156,11 +156,11 @@ public class TestFBManagedConnectionFactory extends TestXABase {
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         FBManagedConnection.SqlInfo si = new FBManagedConnection.SqlInfo(testbuffer, GDSFactory.newGDS());
         
-        assert("selectcount wrong " + si.getSelectCount(), si.getSelectCount() == 2);
-        assert("insertcount wrong " + si.getInsertCount(), si.getInsertCount() == 1);
-        assert("updatecount wrong " + si.getUpdateCount(), si.getUpdateCount() == 4);
-        assert("deletecount wrong " + si.getDeleteCount(), si.getDeleteCount() == 3);
-        assert("statement type wrong " + si.getStatementType(), si.getStatementType() == 2);
+        assertTrue("selectcount wrong " + si.getSelectCount(), si.getSelectCount() == 2);
+        assertTrue("insertcount wrong " + si.getInsertCount(), si.getInsertCount() == 1);
+        assertTrue("updatecount wrong " + si.getUpdateCount(), si.getUpdateCount() == 4);
+        assertTrue("deletecount wrong " + si.getDeleteCount(), si.getDeleteCount() == 3);
+        assertTrue("statement type wrong " + si.getStatementType(), si.getStatementType() == 2);
         
         mc.destroy();
     }

@@ -87,9 +87,9 @@ public class TestFBDatabaseMetaData extends TestXABase {
             String name =  rs.getString(3).trim();
             System.out.println("table name: " + name);
             count++;
-            assert("Didn't get back the name expected", "T1".equals(name));
+            assertTrue("Didn't get back the name expected", "T1".equals(name));
         }
-        assert("Got more than one table name back!", count == 1);
+        assertTrue("Got more than one table name back!", count == 1);
         rs.close();
 
 

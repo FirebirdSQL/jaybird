@@ -126,6 +126,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
       <formatter type="plain" usefile="false"/>
       <test name="org.firebirdsql.management.TestFBManager"/>
       <test name="org.firebirdsql.jca.TestAll"/>
+      <test name="org.firebirdsql.jdbc.TestAll"/>
       <!--test name="org.firebirdsql.jgds.TestGds"/>
       <test name="org.firebirdsql.jca.TestFBManagedConnectionFactory"/>
       <test name="org.firebirdsql.jca.TestFBXAResource"/>
