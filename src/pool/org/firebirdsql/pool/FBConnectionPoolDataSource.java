@@ -20,6 +20,7 @@ package org.firebirdsql.pool;
 
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Properties;
 
@@ -52,6 +53,17 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
     public static final String ENCODING_PROPERTY = "lc_ctype";
     public static final String SOCKET_BUFFER_PROPERTY = "socket_buffer_size";
     public static final String SQL_ROLE_PROPERTY = "sql_role_property";
+
+    private static final HashMap PROPERTY_NAME_MAPPING = new HashMap();
+    static {
+        PROPERTY_NAME_MAPPING.put("blobBufferSize", BLOB_BUFFER_PROPERTY);
+        PROPERTY_NAME_MAPPING.put("encoding", ENCODING_PROPERTY);
+        PROPERTY_NAME_MAPPING.put("userName", USER_NAME_PROPERTY);
+        PROPERTY_NAME_MAPPING.put("socketBufferSize", SOCKET_BUFFER_PROPERTY);
+        PROPERTY_NAME_MAPPING.put("sqlRole", SQL_ROLE_PROPERTY);
+        PROPERTY_NAME_MAPPING.put("tpbMapping", TPB_MAPPING_PROPERTY);
+    }
+    
 
     public static final AbstractConnectionPool.UserPasswordPair 
         EMPTY_USER_PASSWORD = new AbstractConnectionPool.UserPasswordPair();
@@ -418,7 +430,6 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
         if (properties == null)
             throw new NullPointerException("Specified properties are null.");
         
-        this.properties.clear();
         this.properties.putAll(properties);
     }
     
@@ -429,7 +440,11 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
      * @param value value of the property.
      */
     private void setProperty(String name, String value) {
-        this.properties.setProperty(name, value);
+        String canonicalName = (String)PROPERTY_NAME_MAPPING.get(name);
+        if (canonicalName == null)
+            canonicalName = name;
+        
+        this.properties.setProperty(canonicalName, value);
     }
     
     /**
@@ -517,6 +532,49 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
     public void setNonStandardProperty(String key, String value) {
         setProperty(key, value);
     }
+    
+    /**
+     * Method that allows setting non-standard property in the form "key=value"
+     * form. This method is needed by some containers to specify properties
+     * in the configuration.
+     * 
+     * @param propertyMapping mapping between property name (key) and its value.
+     * Name and value are separated with "=", ":" or whitespace character. 
+     * Whitespace characters on the beginning of the string and between key and
+     * value are ignored. No escaping is possible: "\n" is backslash-en, not
+     * a new line mark.
+     */
+    public void setNonStandardProperty(String propertyMapping) {
+        char[] chars = propertyMapping.toCharArray();
+        StringBuffer key = new StringBuffer();
+        StringBuffer value = new StringBuffer();
+        
+        boolean keyProcessed = false;
+        for (int i = 0; i < chars.length; i++) {
+            char ch = chars[i];
+            
+            boolean isSeparator = Character.isWhitespace(ch) || ch == '=' || ch == ':';
+            
+            // if no key was processed, ignore white spaces
+            if (key.length() == 0 && isSeparator)
+                continue;
+            
+            if (!keyProcessed && !isSeparator) {
+                key.append(ch);
+            } else if (!keyProcessed && isSeparator) {
+                keyProcessed = true;
+            } else if (keyProcessed && value.length() == 0 && isSeparator) {
+                continue;
+            } else if (keyProcessed) {
+                value.append(ch);
+            }
+        }
+        
+        String keyStr = key.toString().trim();
+        String valueStr = value.length() > 0 ? value.toString().trim() : null;
+        
+        setProperty(keyStr, valueStr);
+    }
 
     public int getBlobBufferSize() {
         if (getProperty(BLOB_BUFFER_PROPERTY) != null)
@@ -594,7 +652,8 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
     
     private static final String REF_DATABASE = "database";
     private static final String REF_TYPE = "type";
-    private static final String PROPERTIES = "properties";
+    private static final String REF_PROPERTIES = "properties";
+    private static final String REF_NON_STANDARD_PROPERTY = "nonStandard";
     
     public Reference getDefaultReference() {
         Reference ref = super.getDefaultReference();
@@ -606,7 +665,7 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
             ref.add(new StringRefAddr(REF_TYPE, getType()));
         
         byte[] data = serialize(getProperties());
-        ref.add(new BinaryRefAddr(PROPERTIES, data));
+        ref.add(new BinaryRefAddr(REF_PROPERTIES, data));
         
         return ref;
     }
@@ -619,6 +678,12 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
     public Object getObjectInstance(Object obj, Name name, Context nameCtx,
         Hashtable environment) throws Exception 
     {
+        if (!(obj instanceof Reference))
+            return null;
+        
+        Reference ref = (Reference)obj;
+        ref = (Reference)ref.clone();
+
         FBConnectionPoolDataSource ds = 
             (FBConnectionPoolDataSource)super.getObjectInstance(
                 obj, name, nameCtx, environment);
@@ -626,24 +691,29 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
         if (ds == null)
             return null;
         
-        Reference ref = (Reference)obj;
-        
-        String addr;
-        
-        addr = getRefAddr(ref, REF_DATABASE);
-        if (addr != null)
-            ds.setDatabase(addr);
-
-        addr = getRefAddr(ref, REF_TYPE);
-        if (addr != null)
-            ds.setType(addr);
-        
-        RefAddr binAddr = ref.get(PROPERTIES);
-        if (binAddr != null) {
-            byte[] data = (byte[])binAddr.getContent();
-            Properties props = (Properties)deserialize(data);
-            if (props != null) 
-                ds.setProperties(props);
+        for (int i = 0; i < ref.size(); i++) {
+            RefAddr element = ref.get(i);
+            
+            String type = element.getType();
+            
+            if (REF_DATABASE.equals(type))
+                ds.setDatabase(element.getContent().toString());
+            else 
+            if (REF_TYPE.equals(type))
+                ds.setType(element.getContent().toString());
+            else 
+            if (REF_PROPERTIES.equals(element.getType())) {
+                
+                byte[] data = (byte[])element.getContent();
+                Properties props = (Properties)deserialize(data);
+                if (props != null) 
+                    ds.setProperties(props);
+            } else
+            if (REF_NON_STANDARD_PROPERTY.equals(type)) 
+                ds.setNonStandardProperty(element.getContent().toString());
+            else
+            if (element.getContent() instanceof String) 
+                ds.setProperty(type, element.getContent().toString());
         }
         
         return ds;

@@ -105,7 +105,6 @@ public class DriverConnectionPoolDataSource extends BasicAbstractConnectionPool
         if (properties == null)
             throw new NullPointerException("Specified properties are null.");
         
-        props.clear();
         props.putAll(properties);
     }
 

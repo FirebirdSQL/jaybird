@@ -27,6 +27,8 @@ import java.util.Properties;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
 import javax.sql.DataSource;
 import javax.sql.PooledConnection;
 
@@ -101,7 +103,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         
         checkJNDI(props);
     }
-
+    
     /**
      * Perform JNDI test case. This method is separated from {@link #testJNDI()}
      * during refactoring, since it is used by {@link TestDriverConnectionPoolDataSource}
@@ -137,6 +139,81 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             
         } finally {
             context.unbind("jdbc/test");
+        }
+    }
+    
+    public void testReferenceSupport() throws Exception {
+        Reference ref = new Reference(FBWrappingDataSource.class.getName());
+        
+        // Firebird standard properties
+        ref.add(new StringRefAddr("database", DB_DATASOURCE_URL));
+        ref.add(new StringRefAddr("userName", DB_USER));
+        ref.add(new StringRefAddr("password", DB_PASSWORD));
+        ref.add(new StringRefAddr("type", getGdsType().toString()));
+        ref.add(new StringRefAddr("sqlRole", "USER"));
+        ref.add(new StringRefAddr("blobBufferSize", "32767"));
+        ref.add(new StringRefAddr("socketBufferSize", "8192"));
+        
+        // pool properties
+        ref.add(new StringRefAddr("blockingTimeout", "1000"));
+        ref.add(new StringRefAddr("idleTimeout", "1000"));
+        ref.add(new StringRefAddr("retryInterval", "100"));
+        ref.add(new StringRefAddr("maxConnections", "5"));
+        ref.add(new StringRefAddr("minConnections", "2"));
+        ref.add(new StringRefAddr("pooling", "false"));
+        ref.add(new StringRefAddr("statementPooling", "false"));
+        ref.add(new StringRefAddr("pingStatement", "SELECT CAST(2 AS INTEGER) FROM RDB$DATABASE"));
+        ref.add(new StringRefAddr("pingInterval", "12000"));
+        ref.add(new StringRefAddr("isolation", "TRANSACTION_REPEATABLE_READ"));
+        
+        // non-standard properties
+        ref.add(new StringRefAddr("nonStandard", "isc_dpb_set_db_charset : WIN1251"));
+        ref.add(new StringRefAddr("nonStandard", "isc_dpb_num_buffers 2048"));
+        ref.add(new StringRefAddr("isc_dpb_sweep_interval", "100"));
+        
+        String JNDI_FACTORY = "com.sun.jndi.fscontext.RefFSContextFactory";
+
+        Properties props = new Properties();
+        props.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
+        props.put(Context.OBJECT_FACTORIES, FBWrappingDataSource.class.getName());
+        
+        Context ctx = new InitialContext(props);
+        try {
+            ctx.bind("jdbc/test", ref);
+            
+            Object obj = ctx.lookup("jdbc/test");
+            
+            assertTrue("Should provide correct data source", obj instanceof FBWrappingDataSource);
+            
+            FBWrappingDataSource ds = (FBWrappingDataSource)obj;
+            
+            assertEquals(DB_DATASOURCE_URL, ds.getDatabase());
+            assertEquals(DB_USER, ds.getUserName());
+            assertEquals(DB_PASSWORD, ds.getPassword());
+            assertEquals(getGdsType().toString(), ds.getType());
+            assertEquals("USER", ds.getSqlRole());
+            assertEquals(32767, ds.getBlobBufferSize());
+            assertEquals(8192, ds.getSocketBufferSize());
+            
+            assertEquals(1000, ds.getBlockingTimeout());
+            assertEquals(1000, ds.getIdleTimeout());
+            assertEquals(5, ds.getMaxConnections());
+            assertEquals(2, ds.getMinConnections());
+            assertEquals(12000, ds.getPingInterval());
+            assertEquals("TRANSACTION_REPEATABLE_READ", ds.getIsolation());
+
+            // These properties are not avaiable via FBWrappingDataSource interface
+            //
+            //assertEquals(100, ds.getRetryInterval());
+            //assertEquals(false, ds.getPooling());
+            //assertEquals(false, ds.getStatementPooling());
+            //assertEquals("SELECT CAST(2 AS INTEGER) FROM RDB$DATABASE", ds.getPingStatement());
+
+            assertEquals("WIN1251", ds.getNonStandardProperty("isc_dpb_set_db_charset"));
+            assertEquals("2048", ds.getNonStandardProperty("isc_dpb_num_buffers"));
+            assertEquals("100", ds.getNonStandardProperty("isc_dpb_sweep_interval"));
+        } finally {
+            ctx.unbind("jdbc/test");
         }
     }
     
