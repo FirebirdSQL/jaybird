@@ -125,16 +125,16 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (data == BYTES_NULL_VALUE)
             return STRING_NULL_VALUE;
         
-        return XSQLVAR.decodeString(data, javaEncoding);
+        return field.decodeString(data, javaEncoding);
     }
 
     void setString(String value) throws SQLException {
-        byte[] data = XSQLVAR.encodeString(value, javaEncoding);
+        byte[] data = field.encodeString(value, javaEncoding);
         setBinaryStream(new ByteArrayInputStream(data), data.length);
     }
 
     void setBytes(byte[] value) throws SQLException {
-        byte[] data = XSQLVAR.encodeString(value, javaEncoding);
+        byte[] data = field.encodeString(value, javaEncoding);
         setBinaryStream(new ByteArrayInputStream(data), data.length);
     }
 

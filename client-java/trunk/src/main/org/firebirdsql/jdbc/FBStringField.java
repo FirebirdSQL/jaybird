@@ -181,7 +181,7 @@ public class FBStringField extends FBField {
     String getString() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return XSQLVAR.decodeString(rs.row[numCol], javaEncoding);
+        return field.decodeString(rs.row[numCol], javaEncoding);
     }
     Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
@@ -285,7 +285,7 @@ public class FBStringField extends FBField {
             field.sqldata = null;
             return;
         }
-        field.sqldata = XSQLVAR.encodeString(value,javaEncoding);
+        field.sqldata = field.encodeString(value,javaEncoding);
 
         if (field.sqldata.length > field.sqllen)
             throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);
@@ -376,7 +376,7 @@ public class FBStringField extends FBField {
             return;
         }
 
-        field.sqldata = XSQLVAR.encodeString(value,javaEncoding);
+        field.sqldata = field.encodeString(value,javaEncoding);
 
         if (field.sqldata.length > field.sqllen)
             throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);

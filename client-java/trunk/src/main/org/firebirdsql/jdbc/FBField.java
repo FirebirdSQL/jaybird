@@ -172,7 +172,8 @@ abstract class FBField {
         this.c = c;
         if (c!=null)
             IscEncoding = c.getIscEncoding();
-        if (IscEncoding!= null && IscEncoding.equalsIgnoreCase("NONE"))
+        if (IscEncoding!= null && (IscEncoding.equalsIgnoreCase("NONE") 
+		  || IscEncoding.equalsIgnoreCase("BINARY")))
             IscEncoding = null;
         // Java encoding		  
         if (IscEncoding!= null)
