@@ -149,11 +149,9 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setNull(int parameterIndex, int sqlType) throws  SQLException {
-         if (parameterIndex > fields.length)
+        if (parameterIndex > fields.length)
             throw new SQLException("invalid column index");
-             
-        fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqlind = -1;
-        fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqldata = null;
+        getField(parameterIndex).setNull(true);
         parameterWasSet(parameterIndex);
     }
 
@@ -524,12 +522,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         if (!(blob instanceof FBBlob)) {
             throw new SQLException("You must use FBBlobs with Firebird!");
         }
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        if ((sqlvar.sqltype & ~1) != GDS.SQL_BLOB) {
-            throw new SQLException("Not a blob, type: " + sqlvar.sqltype);
-        }
-        sqlvar.sqlind = 0;
-        sqlvar.sqldata = new Long(((FBBlob)blob).getBlobId());
+        getField(parameterIndex).setBlob((FBBlob) blob);
         parameterWasSet(parameterIndex);
     }
 

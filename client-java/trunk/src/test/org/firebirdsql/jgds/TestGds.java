@@ -431,9 +431,12 @@ public class TestGds extends BaseFBTest {
 
 //        int fetch_stat;
         String out = "";
-        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+//        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+        Object[] row = null;
+        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Short data = (Short) out_xsqlda.sqlvar[i].sqldata;
+//                Short data = (Short) out_xsqlda.sqlvar[i].sqldata;
+                Short data =  (Short) row[i];
                 out += data.shortValue() + "    ";
             }
             out += System.getProperty("line.separator");
@@ -504,16 +507,20 @@ public class TestGds extends BaseFBTest {
         gds.isc_dsql_execute2(t1, stmt1, 1, null, null);
 
         isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
-        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+//        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+        Object[] row = null;
+        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Object data =  out_xsqlda.sqlvar[i].sqldata;
+//                Object data =  out_xsqlda.sqlvar[i].sqldata;
+                Object data =  row[i];
                 out += "column: " + i + ", value: " + data;
             }
         
             if (log!=null) log.info("fetch returned: " + out);
 
-            blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
+//            blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
+            blob2.blob_id =((Long) row[1]).longValue();
             //blob2.rbl_buffer_length = 30;//1024;
             gds.isc_open_blob2(db1, t1, blob2, null);
             byte[] answer = gds.isc_get_segment(blob2, 32);//1026);
@@ -577,14 +584,18 @@ public class TestGds extends BaseFBTest {
         gds.isc_dsql_execute2(t1, stmt1, 1, null, null);
 
         isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
-        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+//        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+        Object[] row = null;
+        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Object data =  out_xsqlda.sqlvar[i].sqldata;
+//                Object data =  out_xsqlda.sqlvar[i].sqldata;
+                Object data =  row[i];
                 out += "column: " + i + ", value: " + data;
             }
             if (log!=null) log.info(out);
-            blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
+//            blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
+            blob2.blob_id =((Long) row[1]).longValue();
             //blob2.rbl_buffer_length = 1050;//1024;
             gds.isc_open_blob2(db1, t1, blob2, bpb);
             int readcount = 0;
@@ -655,14 +666,18 @@ public class TestGds extends BaseFBTest {
         gds.isc_dsql_execute2(t1, stmt1, 1, null, null);
 
     isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
-        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+//        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+        Object[] row = null;
+        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Object data =  out_xsqlda.sqlvar[i].sqldata;
+//                Object data =  out_xsqlda.sqlvar[i].sqldata;
+                Object data =  row[i];
                 out += "column: " + i + ", value: " + data;
             }
             if (log!=null) log.info(out);
-            blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
+//            blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
+            blob2.blob_id =((Long) row[1]).longValue();
             // blob2.rbl_buffer_length = 10;//1024;
             gds.isc_open_blob2(db1, t1, blob2, bpb);
             int readcount = 0;
@@ -732,14 +747,18 @@ public class TestGds extends BaseFBTest {
         gds.isc_dsql_execute2(t1, stmt1, 1, null, null);
 
         isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
-        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+//        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+        Object[] row = null;
+        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Object data =  out_xsqlda.sqlvar[i].sqldata;
+//                Object data =  out_xsqlda.sqlvar[i].sqldata;
+                Object data =  row[i];
                 out += "column: " + i + ", value: " + data;
             }
             if (log!=null) log.info(out);
-            blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
+//            blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
+            blob2.blob_id =((Long) row[1]).longValue();
             // blob2.rbl_buffer_length = 10;//1024;
             gds.isc_open_blob2(db1, t1, blob2, bpb);
             int readcount = 0;

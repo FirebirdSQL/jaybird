@@ -154,7 +154,7 @@ abstract class FBField {
      * <code>false</code>.
      */
     boolean isNull() {
-        return (field.sqlind == -1);
+        return (field.sqldata == null);
     }
 
     /**

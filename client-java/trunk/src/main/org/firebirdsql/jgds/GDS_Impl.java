@@ -892,20 +892,9 @@ public class GDS_Impl implements GDS {
         if (stmt.rows.size() > 0) {
             //Return next row from cache.
             Object[] row = (Object[])stmt.rows.remove(0);
-            for (int i = 0; i < xsqlda.sqld; i++) {
-                xsqlda.sqlvar[i].sqldata = row[i];
-                xsqlda.sqlvar[i].sqlind = (row[i] == null ? -1 : 0);
-            }
-            for (int i = xsqlda.sqld; i< xsqlda.sqln; i++) {
-                //is this really necessary?
-                xsqlda.sqlvar[i].sqldata = null;
-            }
             return row;
         }
         else {
-            for (int i = 0; i< xsqlda.sqln; i++) {
-                xsqlda.sqlvar[i].sqldata = null;
-            }
             return null; //no rows fetched
         }
 
@@ -1782,65 +1771,59 @@ public class GDS_Impl implements GDS {
         Object[] row = new Object[xsqlda.sqld];
         try {
             for (int i = 0; i < xsqlda.sqld; i++) {
-               XSQLVAR xsqlvar = xsqlda.sqlvar[i];
-               switch (xsqlvar.sqltype & ~1) {
+               switch (xsqlda.sqlvar[i].sqltype & ~1) {
                    case SQL_TEXT:
-                       xsqlvar.sqldata = db.in.readOpaque(xsqlvar.sqllen);
-                       //new String(db.in.readOpaque(xsqlvar.sqllen));
+                       row[i] = db.in.readOpaque(xsqlda.sqlvar[i].sqllen);
                        break;
                    case SQL_VARYING:
-                   xsqlvar.sqldata = db.in.readOpaque(db.in.readInt());
-                           //new String(db.in.readOpaque(db.in.readInt()));
+                       row[i] = db.in.readBuffer();
                        break;
                    case SQL_SHORT:
-                       xsqlvar.sqldata = new Short((short) db.in.readInt());
+                       row[i] = new Short((short) db.in.readInt());
                        break;
                    case SQL_LONG:
-                       xsqlvar.sqldata = new Integer(db.in.readInt());
+                       row[i] = new Integer(db.in.readInt());
                        break;
                    case SQL_FLOAT:
-                       xsqlvar.sqldata = new Float(db.in.readFloat());
+                       row[i] = new Float(db.in.readFloat());
                        break;
                    case SQL_DOUBLE:
-                       xsqlvar.sqldata = new Double(db.in.readDouble());
+                       row[i] = new Double(db.in.readDouble());
                        break;
 //                 case SQL_D_FLOAT:
 //                     break;
                    case SQL_TIMESTAMP:
-                       xsqlvar.sqldata = new java.sql.Timestamp(
+                       row[i] = new java.sql.Timestamp(
                            decodeDate(db.in.readInt()).getTime() +
                            decodeTime(db.in.readInt()).getTime());
                        break;
                    case SQL_BLOB:
-                       xsqlvar.sqldata = new Long(db.in.readLong());
+                       row[i] = new Long(db.in.readLong());
                        break;
                    case SQL_ARRAY:
-                       xsqlvar.sqldata = new Long(db.in.readLong());
+                       row[i] = new Long(db.in.readLong());
                        break;
                    case SQL_QUAD:
-                       xsqlvar.sqldata = new Long(db.in.readLong());
+                       row[i] = new Long(db.in.readLong());
                        break;
                    case SQL_TYPE_TIME:
-                       xsqlvar.sqldata = decodeTime(db.in.readInt());
+                       row[i] = decodeTime(db.in.readInt());
                        break;
                    case SQL_TYPE_DATE:
-                       xsqlvar.sqldata = decodeDate(db.in.readInt());
+                       row[i] = decodeDate(db.in.readInt());
                        break;
                    case SQL_INT64:
-                       xsqlvar.sqldata = new Long(db.in.readLong());
+                       row[i] = new Long(db.in.readLong());
                        break;
                }
 
-               xsqlvar.sqlind = db.in.readInt();
+               int nullInd = db.in.readInt();
 
-               if (xsqlvar.sqlind == 0) {
-                   row[i] = xsqlvar.sqldata;
-               }
-               else if (xsqlvar.sqlind == -1) {
+               if (nullInd == -1) {
                    row[i] = null;
                }
-               else {
-                   throw new GDSException("invalid sqlind value: " + xsqlvar.sqlind);
+               else if (nullInd != 0) {
+                   throw new GDSException("invalid sqlind value: " + nullInd);
                }
            }
            return row;
