@@ -35,14 +35,20 @@ import org.firebirdsql.jdbc.FBResultSet;
  * @version 1.0
  */
 class FBTimestampField extends FBField {
-    FBTimestampField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
-        super(field, rs, numCol);
+    FBTimestampField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+        throws SQLException 
+    {
+        super(field, rs, numCol, requiredType);
     }
+    
+    /*
     public Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
         return field.decodeTimestamp(rs.row[numCol]);
     }
+    */
+    
     public String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 

@@ -34,8 +34,10 @@ import java.math.BigDecimal;
  */
 class FBIntegerField extends FBField {
 
-    FBIntegerField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
-        super(field, rs, numCol);
+    FBIntegerField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+        throws SQLException 
+    {
+        super(field, rs, numCol, requiredType);
     }
 
     public byte getByte() throws SQLException {
@@ -89,11 +91,15 @@ class FBIntegerField extends FBField {
 
         return BigDecimal.valueOf(field.decodeInt(rs.row[numCol]));
     }
+    
+    /*
     public Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
         return new Integer(field.decodeInt(rs.row[numCol]));
     }
+    */
+    
     public boolean getBoolean() throws SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 

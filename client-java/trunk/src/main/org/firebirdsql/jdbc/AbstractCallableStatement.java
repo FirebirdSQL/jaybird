@@ -98,7 +98,29 @@ public abstract class AbstractCallableStatement
         FBEscapedCallParser parser = new FBEscapedCallParser();
         procedureCall = parser.parseCall(c.nativeSQL(sql));
     }
-
+    
+    /**
+     * Set required types for output parameters.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    protected void setRequiredTypes() throws SQLException {
+        
+        FBResultSet resultSet = (FBResultSet)getCurrentResultSet();
+        
+        if (resultSet.isBeforeFirst())
+            resultSet.next();
+        
+        Iterator iter = procedureCall.getOutputParams().iterator();
+        while(iter.hasNext()) {
+            FBProcedureParam param = (FBProcedureParam)iter.next();
+            
+            FBField field = resultSet.getField(param.getIndex());
+            
+            field.setRequiredType(param.getType());
+        }
+    }
+    
     /**
      * Executes an execute stored procedure.
      * Some prepared statements return multiple results; the <code>execute</code>
@@ -122,6 +144,9 @@ public abstract class AbstractCallableStatement
 
                 if (hasResultSet && c.willEndTransaction())
                     getCachedResultSet(false);
+                
+                if (hasResultSet)
+                    setRequiredTypes();
                 
                 return hasResultSet;
                 
@@ -154,6 +179,8 @@ public abstract class AbstractCallableStatement
                             "No resultset for sql",
                             FBSQLException.SQL_STATE_NO_RESULT_SET);
                 
+                setRequiredTypes();
+
                 if (c.willEndTransaction()) 
                     return getCachedResultSet(false);
                 else 
@@ -194,6 +221,9 @@ public abstract class AbstractCallableStatement
                 
                 if (hasResults && c.willEndTransaction())
                     getCachedResultSet(false);
+                
+                if (hasResults)
+                    setRequiredTypes();
                 
                 return getUpdateCount();
                 

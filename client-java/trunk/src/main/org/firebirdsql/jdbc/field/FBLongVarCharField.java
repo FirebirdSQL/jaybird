@@ -50,8 +50,10 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     int length;
     byte[] data;
 
-    FBLongVarCharField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
-        super(field, rs, numCol);
+    FBLongVarCharField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+        throws SQLException 
+    {
+        super(field, rs, numCol, requiredType);
     }
     
     public void close() throws SQLException {
@@ -131,9 +133,11 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         return bout.toByteArray();
     }
 
+    /*
     public Object getObject() throws SQLException {
         return getString();
     }
+    */
     
     public byte[] getCachedObject() throws SQLException {
         if (rs.row[numCol]==null) 

@@ -332,7 +332,7 @@ public class FBResultSet implements ResultSet {
     /**
      * Factory method for the field access objects
      */
-    private FBField getField(int columnIndex) throws SQLException {
+    public FBField getField(int columnIndex) throws SQLException {
         if (closed) throw new FBSQLException("The resultSet is closed");
         
         if (isBeforeFirst() || isAfterLast())
@@ -352,7 +352,7 @@ public class FBResultSet implements ResultSet {
         return field;
     }
 
-    private FBField getField(String columnName) throws SQLException {
+    public FBField getField(String columnName) throws SQLException {
         if (closed) throw new FBSQLException("The resultSet is closed");
         
         if (isBeforeFirst() || isAfterLast())

@@ -132,6 +132,10 @@ public class FBProcedureCall {
     	return inputParams;
     }
     
+    public List getOutputParams() {
+        return outputParams;
+    }
+    
     public void addInputParam(FBProcedureParam param) {
     	inputParams.add(param);
     }

@@ -37,8 +37,10 @@ import java.math.BigDecimal;
  * @version 1.0
  */
 class FBFloatField extends FBField {
-    FBFloatField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
-        super(field, rs, numCol);
+    FBFloatField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+        throws SQLException 
+    {
+        super(field, rs, numCol, requiredType);
     }
 
     public byte getByte() throws SQLException {
@@ -101,24 +103,22 @@ class FBFloatField extends FBField {
     public double getDouble() throws SQLException {
         if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
-        return field.decodeFloat(rs.row[numCol]);
+        return field.decodeDouble(rs.row[numCol]);
     }
     public BigDecimal getBigDecimal() throws SQLException {
         if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
         return new BigDecimal(field.decodeFloat(rs.row[numCol]));
     }
+    
+    /*
     public Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        /*
-        // Commented out by R.Rokytskyy. JDBC CTS expects
-        // java.lang.Double to be returned from this method
-        
-        return new Float(field.decodeFloat(rs.row[numCol]));
-         */
         return new Double(field.decodeFloat(rs.row[numCol]));
     }
+    */
+    
     public boolean getBoolean() throws SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 

@@ -830,16 +830,20 @@ public abstract class AbstractPreparedStatement extends FBStatement
             isParamSet[i] = false;
       		fields[i] = FBField.createField(getXsqlvar(i+1), null, i, false);
 
+            /*
       		if (fields[i] instanceof FBBlobField)
       		    ((FBBlobField)fields[i]).setConnection(c);
       		else
       		if (fields[i] instanceof FBStringField)
       		    ((FBStringField)fields[i]).setConnection(c);
+            */
+            fields[i].setConnection(c);
 
             isBlob[i] =
                 FBField.isType(getXsqlvar(i+1), Types.BLOB) ||
                 FBField.isType(getXsqlvar(i+1), Types.BINARY) ||
                 FBField.isType(getXsqlvar(i+1), Types.LONGVARCHAR);
+            
             if (isBlob[i])
                 hasBlobs = true;
         }
