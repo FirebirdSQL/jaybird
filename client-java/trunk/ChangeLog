@@ -1,3 +1,19 @@
+2005-02-27 19:14  gab_reid
+
+	*
+	
+	Initial revision
+	client-java/src/test/org/firebirdsql/jdbc/TestStatementInfoFactory.
+	java:
+
+2005-02-27 19:13  gab_reid
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractStatement.java, FirebirdStatementInfo.java,
+	FirebirdStatementInfoFactory.java:
+	
+	Added ability to get execution plan
+
 2005-02-22 08:42  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
