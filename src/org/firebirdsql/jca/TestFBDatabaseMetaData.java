@@ -302,12 +302,79 @@ public class TestFBDatabaseMetaData extends TestXABase {
         }
         
     }
+    public void testGetColumnsWildcardQuote() throws Exception {
+        System.out.println();
+        System.out.println("testGetColumnsWildcardQuote");
+        createTable("test_me");
+        createTable("test__me");
+        createTable("\"test_ me\"");
+        createTable("\"test_ me too\"");
+        createTable("\"test_me too\"");
+
+        ResultSet rs = dmd.getColumns(null, null, "test%m_", "\"my\\_ column2\"");
+        int count = 0;
+        while (rs.next()) {
+            String name =  rs.getString(3).trim();
+            String column = rs.getString(4).trim();
+            System.out.println("table name: " + name);
+            assertTrue("wrong name found: " + name, "TEST_ME".equals(name) || "TEST__ME".equals(name));
+            assertTrue("wrong column found: " + column, "my_ column2".equals(column));
+            count++;
+        }
+        assertTrue("more than one table found: " + count, count == 2);
+        rs.close();
+
+
+        dropTable("test_me");
+        dropTable("test__me");
+        dropTable("\"test_ me\"");
+        dropTable("\"test_ me too\"");
+        dropTable("\"test_me too\"");
+        
+        if (ex != null) {
+            throw ex;
+        }
+        
+    }
+
+
+    public void testGetProcedures() throws Exception {
+        System.out.println();
+        System.out.println("testGetProcedures");
+
+        ResultSet rs = dmd.getProcedures(null, null, "%");
+        assertTrue("No resultset returned from getProcedures", rs != null);
+    }
+ 
+    public void testGetProcedureColumns() throws Exception {
+        System.out.println();
+        System.out.println("testGetProcedureColumns");
+
+        ResultSet rs = dmd.getProcedureColumns(null, null, "%", "%");
+        assertTrue("No resultset returned from getProcedureColumns", rs != null);
+    }
+ 
+    public void testGetColumnPrivileges() throws Exception {
+        System.out.println();
+        System.out.println("testGetColumnPrivileges");
+
+        ResultSet rs = dmd.getColumnPrivileges(null, null, "RDB$RELATIONS", "%");
+        assertTrue("No resultset returned from getProcedureColumns", rs != null);
+    }
+ 
+    public void testGetTablePrivileges() throws Exception {
+        System.out.println();
+        System.out.println("testGetTablePrivileges");
+
+        ResultSet rs = dmd.getTablePrivileges(null, null, "%");
+        assertTrue("No resultset returned from getTablePrivileges", rs != null);
+    }
  
     private void createTable(String tableName) throws Exception {
         dropTable(tableName);
         t.begin();
         try {
-            s.execute("CREATE TABLE " + tableName + " ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20))"); 
+            s.execute("CREATE TABLE " + tableName + " ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, \"my column1\" CHAR(10), \"my_ column2\" VARCHAR(20))"); 
         }
         catch (Exception e) {
             ex = e;

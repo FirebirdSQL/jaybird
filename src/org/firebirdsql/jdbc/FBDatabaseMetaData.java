@@ -35,6 +35,9 @@ import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import javax.resource.cci.LocalTransaction;
 import javax.resource.ResourceException;
+import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -1547,6 +1550,16 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         throw new SQLException("Not yet implemented");
     }
 
+    private static final String GET_PROCEDURES_START = "select null as TABLE_CAT,"
+        + " null as TABLE_SCHEM," 
+        + " RDB$PROCEDURE_NAME,"
+        + " RDB$DESCRIPTION,"
+        + " RDB$PROCEDURE_OUTPUTS,"
+        + " RDB$OWNER_NAME "
+        + "from"
+        + " RDB$PROCEDURES "
+        + "where ";
+    private static final String GET_PROCEDURES_END = "1 = 1 order by 1";
 
 
 
@@ -1586,7 +1599,16 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getProcedures(String catalog, String schemaPattern,
 			String procedureNamePattern) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        checkCatalogAndSchema(catalog, schemaPattern);        
+        Clause procedureClause = new Clause("RDB$PROCEDURE_NAME", procedureNamePattern);
+        String sql = GET_PROCEDURES_START;
+        sql += procedureClause.getCondition();
+        sql += GET_PROCEDURES_END;
+        ArrayList params = new ArrayList();
+        if (!procedureClause.getCondition().equals("")) {
+            params.add(procedureClause.getValue());
+        }
+        return doQuery(sql, params);
     }
 
 
@@ -1617,6 +1639,29 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 	 * a result.
      */
 	int procedureReturnsResult	= 2;
+
+    private static final String GET_PROCEDURE_COLUMNS_START = "select" 
+        + " P.RDB$PROCEDURE_NAME," 
+        + " PP.RDB$PARAMETER_NAME," 
+        + " PP.RDB$PARAMETER_TYPE,"
+        + " F.RDB$FIELD_TYPE," 
+        + " F.RDB$FIELD_SUB_TYPE," 
+        + " F.RDB$FIELD_SCALE," 
+        + " F.RDB$FIELD_LENGTH,"
+        + " F.RDB$NULL_FLAG," 
+        + " PP.RDB$DESCRIPTION "
+        + "from" 
+        + " RDB$PROCEDURES P," 
+        + " RDB$PROCEDURE_PARAMETERS PP," 
+        + " RDB$FIELDS F "
+        + "where ";
+    private static final String GET_PROCEDURE_COLUMNS_END =  " P.RDB$PROCEDURE_NAME = PP.RDB$PROCEDURE_NAME and"
+        + " PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME "
+        + "order by" 
+        + " P.RDB$PROCEDURE_NAME," 
+        + " PP.RDB$PARAMETER_TYPE desc," 
+        + " PP.RDB$PARAMETER_NUMBER";
+
 
     /**
      * Gets a description of a catalog's stored procedure parameters
@@ -1679,7 +1724,21 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 			String schemaPattern,
 			String procedureNamePattern, 
 			String columnNamePattern) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        checkCatalogAndSchema(catalog, schemaPattern);        
+        Clause procedureClause = new Clause("P.RDB$PROCEDURE_NAME", procedureNamePattern);
+        Clause columnClause = new Clause("PP.RDB$PARAMETER_NAME", columnNamePattern);
+        String sql = GET_PROCEDURE_COLUMNS_START;
+        sql += procedureClause.getCondition();
+        sql += columnClause.getCondition();
+        sql += GET_PROCEDURES_END;
+        ArrayList params = new ArrayList();
+        if (!procedureClause.getCondition().equals("")) {
+            params.add(procedureClause.getValue());
+        }
+        if (!columnClause.getCondition().equals("")) {
+            params.add(columnClause.getValue());
+        }
+        return doQuery(sql, params);
     }
 
 
@@ -1892,69 +1951,39 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getTables(String catalog, String schemaPattern,
 		String tableNamePattern, String types[]) throws SQLException {
-        if (catalog != null) {
-            throw new SQLException("Catalogs not supported");
-        }
-        if (schemaPattern != null) {
-            throw new SQLException("Schemas not supported");
-        }
+        checkCatalogAndSchema(catalog, schemaPattern);        
         if (types == null) {
             types = ALL_TYPES;
         }
-        boolean ourTransaction = false;
-        if (!c.inTransaction()) {
-            try {
-                trans.begin();
-                ourTransaction = true;
-            }
-            catch (ResourceException re) {
-                throw new SQLException("couldn't work with local transaction: " + re);
-            }
-        }
-        PreparedStatement s;
+        String sql = "";
+        ArrayList params = new ArrayList();
         if (isAllCondition(tableNamePattern)) {
-            s = getStatement(GET_TABLES_ALL);
-            s.setString(1, getWantsSystemTables(types));
-            s.setString(2, getWantsTables(types));
-            s.setString(3, getWantsViews(types));
+            sql = GET_TABLES_ALL;
+            params.add(getWantsSystemTables(types));
+            params.add(getWantsTables(types));
+            params.add(getWantsViews(types));
         }
         else if (hasNoWildcards(tableNamePattern)) {
             tableNamePattern = stripQuotes(stripEscape(tableNamePattern));
-            s = getStatement(GET_TABLES_EXACT);
-            s.setString(1, getWantsSystemTables(types));
-            s.setString(2, tableNamePattern);
-            s.setString(3, getWantsTables(types));
-            s.setString(4, tableNamePattern);
-            s.setString(5, getWantsViews(types));
-            s.setString(6, tableNamePattern);
+            sql = (GET_TABLES_EXACT);
+            params.add(getWantsSystemTables(types));
+            params.add(tableNamePattern);
+            params.add(getWantsTables(types));
+            params.add(tableNamePattern);
+            params.add(getWantsViews(types));
+            params.add(tableNamePattern);
         }
         else {
             tableNamePattern = stripQuotes(tableNamePattern) + SPACES + "%";
-            s = getStatement(GET_TABLES_LIKE);
-            s.setString(1, getWantsSystemTables(types));
-            s.setString(2, tableNamePattern);
-            s.setString(3, getWantsTables(types));
-            s.setString(4, tableNamePattern);
-            s.setString(5, getWantsViews(types));
-            s.setString(6, tableNamePattern);
+            sql = (GET_TABLES_LIKE);
+            params.add(getWantsSystemTables(types));
+            params.add(tableNamePattern);
+            params.add(getWantsTables(types));
+            params.add(tableNamePattern);
+            params.add(getWantsViews(types));
+            params.add(tableNamePattern);
         }
-        ResultSet rs = null;
-        try {
-            s.execute();
-            rs = ((FBStatement)s).getCachedResultSet();
-        }
-        finally {
-            if (ourTransaction) {
-                try {
-                    trans.commit();
-                }
-                catch (ResourceException re) {
-                    throw new SQLException("couldn't work with local transaction: " + re);
-                }
-            }
-        }
-
-        return rs;
+        return doQuery(sql, params);
     }
 
 
@@ -2017,6 +2046,27 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     }
 
 
+    private static final String GET_COLUMNS_START = "select null as TABLE_CAT," +
+        " null as TABLE_SCHEM," +
+        " RF.RDB$RELATION_NAME," +
+        " RF.RDB$FIELD_NAME," +
+        " F.RDB$FIELD_TYPE," +
+        " F.RDB$FIELD_SUB_TYPE," +
+        " F.RDB$FIELD_SCALE," +
+        " F.RDB$FIELD_LENGTH," +
+        " F.RDB$NULL_FLAG," +
+        " RF.RDB$DESCRIPTION," +
+        " RF.RDB$DEFAULT_SOURCE," +
+        " RF.RDB$FIELD_POSITION, " +
+        " RF.RDB$NULL_FLAG, " +
+        " F.RDB$DEFAULT_SOURCE " +
+        "from" +
+        " RDB$RELATION_FIELDS RF," +
+        " RDB$FIELDS F " +
+        "where ";
+
+    public static final String GET_COLUMNS_END = " RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME " +
+        "order by 1, 10";
 
     /**
      * Gets a description of table columns available in 
@@ -2072,7 +2122,21 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getColumns(String catalog, String schemaPattern,
 		String tableNamePattern, String columnNamePattern) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        checkCatalogAndSchema(catalog, schemaPattern);        
+        Clause tableClause = new Clause("RF.RDB$RELATION_NAME", tableNamePattern);
+        Clause columnClause = new Clause("RF.RDB$FIELD_NAME", columnNamePattern);
+        String sql = GET_COLUMNS_START;
+        sql += tableClause.getCondition();
+        sql += columnClause.getCondition();
+        sql += GET_COLUMNS_END;
+        ArrayList params = new ArrayList();
+        if (!tableClause.getCondition().equals("")) {
+            params.add(tableClause.getValue());
+        }
+        if (!columnClause.getCondition().equals("")) {
+            params.add(columnClause.getValue());
+        }
+        return doQuery(sql, params);
     }
 
 
@@ -2102,6 +2166,26 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 	 * <code>getColumns</code>.
      */
     int columnNullableUnknown = 2;
+    private static final String GET_COLUMN_PRIVILEGES_START = "select "
+        + "RF.RDB$RELATION_NAME, "
+        + "RF.RDB$FIELD_NAME, "
+        + "UP.RDB$GRANTOR, "
+        + "UP.RDB$USER, "
+        + "UP.RDB$PRIVILEGE, "
+        + "UP.RDB$GRANT_OPTION "
+        + "from "
+        + "RDB$RELATION_FIELDS RF, "
+        + "RDB$FIELDS F, "
+        + "RDB$USER_PRIVILEGES UP "
+        + "where "
+        + "RF.RDB$RELATION_NAME = UP.RDB$RELATION_NAME and "
+        + "RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME  and "
+        + "(UP.RDB$FIELD_NAME is null or "
+        + "UP.RDB$FIELD_NAME = RF.RDB$FIELD_NAME) and "
+        + "UP.RDB$RELATION_NAME = ? and ((";
+    private static final String GET_COLUMN_PRIVILEGES_END = " UP.RDB$OBJECT_TYPE = 0) or "
+        + "(RF.RDB$FIELD_NAME is null and UP.RDB$OBJECT_TYPE = 0)) "
+        + "order by 1, 2, 5 ";
 
     /**
      * Gets a description of the access rights for a table's columns.
@@ -2134,10 +2218,33 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getColumnPrivileges(String catalog, String schema,
 		String table, String columnNamePattern) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        checkCatalogAndSchema(catalog, schema);        
+        Clause columnClause = new Clause("RF.RDB$FIELD_NAME", columnNamePattern);
+        String sql = GET_COLUMN_PRIVILEGES_START;
+        sql += columnClause.getCondition();
+        sql += GET_COLUMN_PRIVILEGES_END;
+        ArrayList params = new ArrayList();
+        params.add(table);
+        if (!columnClause.getCondition().equals("")) {
+            params.add(columnClause.getValue());
+        }
+        return doQuery(sql, params);
     }
 
 
+  
+    private static final String GET_TABLE_PRIVILEGES_START = "select"
+        + " RDB$RELATION_NAME,"
+        + " RDB$GRANTOR,"
+        + " RDB$USER,"
+        + " RDB$PRIVILEGE,"
+        + " RDB$GRANT_OPTION "
+        + "from" 
+        + " RDB$USER_PRIVILEGES "
+        + "where ";
+    private static final String GET_TABLE_PRIVILEGES_END = " RDB$OBJECT_TYPE = 0 and"
+        + " RDB$FIELD_NAME is null "
+        + "order by 1, 4";
 
     /**
      * Gets a description of the access rights for each table available
@@ -2174,7 +2281,16 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getTablePrivileges(String catalog, String schemaPattern,
 				String tableNamePattern) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        checkCatalogAndSchema(catalog, schemaPattern);        
+        Clause tableClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
+        String sql = GET_TABLE_PRIVILEGES_START;
+        sql += tableClause.getCondition();
+        sql += GET_TABLE_PRIVILEGES_END;
+        ArrayList params = new ArrayList();
+        if (!tableClause.getCondition().equals("")) {
+            params.add(tableClause.getValue());
+        }
+        return doQuery(sql, params);
     }
 
 
@@ -3434,6 +3550,76 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             statements.put(sql, s);
         }
         return s;
+    }
+
+    private ResultSet doQuery(String sql, List params) throws SQLException {
+        boolean ourTransaction = false;
+        if (!c.inTransaction()) {
+            try {
+                trans.begin();
+                ourTransaction = true;
+            }
+            catch (ResourceException re) {
+                throw new SQLException("couldn't work with local transaction: " + re);
+            }
+        }
+        PreparedStatement s = getStatement(sql);
+        for (int i = 0; i < params.size(); i++) {
+            s.setString(i + 1, (String)params.get(i));
+        }
+        ResultSet rs = null;
+        try {
+            s.execute();
+            rs = ((FBStatement)s).getCachedResultSet();
+        }
+        finally {
+            if (ourTransaction) {
+                try {
+                    trans.commit();
+                }
+                catch (ResourceException re) {
+                    throw new SQLException("couldn't work with local transaction: " + re);
+                }
+            }
+        }
+        return rs;
+    }
+
+    private void checkCatalogAndSchema(String catalog, String schema) throws SQLException {
+        if (catalog != null) {
+            throw new SQLException("Catalogs not supported");
+        }
+        if (schema != null) {
+            throw new SQLException("Schemas not supported");
+        }
+    }
+
+    private class Clause {
+        private String condition = "";
+        private String value;
+
+        public Clause (String columnName, String pattern) {
+            if (isAllCondition(pattern)) {
+                //do nothing to tableCondition 
+                return;
+            }
+            else if (hasNoWildcards(pattern)) {
+                value = stripQuotes(stripEscape(pattern));
+                condition = columnName + " = ? and ";
+            }
+            else {
+                value = stripQuotes(pattern) + SPACES + "%";
+                condition = columnName + " || '" + SPACES + "' like ? escape '\\' and ";
+            }
+        }
+
+        public String getCondition() {
+            return condition;
+        }
+
+        public String getValue() {
+            return value;
+        }
     }
 
 }
