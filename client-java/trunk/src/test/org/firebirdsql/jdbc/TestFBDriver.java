@@ -24,6 +24,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.9  2003/06/05 23:40:46  brodsom
+ * Substitute package and inline imports
+ *
  * Revision 1.8  2003/06/04 13:51:01  brodsom
  * Remove unused vars and imports
  *
@@ -161,36 +164,39 @@ public class TestFBDriver extends BaseFBTest {
         Properties info = (Properties)DB_INFO.clone();
         info.setProperty("set_db_sql_dialect", "1");
         
-        // open connection and convert DB to SQL dialect 1
-        Connection dialect1Connection = 
-            DriverManager.getConnection(DB_DRIVER_URL, info);
-            
-        Statement stmt = dialect1Connection.createStatement();
+        try {
+	        // open connection and convert DB to SQL dialect 1
+	        Connection dialect1Connection = 
+	            DriverManager.getConnection(DB_DRIVER_URL, info);
+	            
+	        Statement stmt = dialect1Connection.createStatement();
+	        
+	        // execute select statement, driver will pass SQL dialect 3 
+	        // for this statement and database server will return a warning
+	        stmt.executeQuery("SELECT 1 as col1 FROM rdb$database");
+	        
+	        stmt.close();
+	        
+	        SQLWarning warning = dialect1Connection.getWarnings();
+	        
+	        assertTrue("Connection should have at least one warning.", 
+	            warning != null);
+	            
+	        dialect1Connection.clearWarnings();
+	        
+	        assertTrue("After clearing no warnings should be present.",
+	            dialect1Connection.getWarnings() == null);
+	            
+	        dialect1Connection.close();
+        } finally {
         
-        // execute select statement, driver will pass SQL dialect 3 
-        // for this statement and database server will return a warning
-        stmt.executeQuery("SELECT 1 as col1 FROM rdb$database");
-        
-        stmt.close();
-        
-        SQLWarning warning = dialect1Connection.getWarnings();
-        
-        assertTrue("Connection should have at least one warning.", 
-            warning != null);
-            
-        dialect1Connection.clearWarnings();
-        
-        assertTrue("After clearing no warnings should be present.",
-            dialect1Connection.getWarnings() == null);
-            
-        dialect1Connection.close();
-        
-        info.setProperty("set_db_sql_dialect", "3");
-        
-        Connection dialect3Connection = 
-            DriverManager.getConnection(DB_DRIVER_URL, info);
-            
-        dialect3Connection.close();
+	        info.setProperty("set_db_sql_dialect", "3");
+	        
+	        Connection dialect3Connection = 
+	            DriverManager.getConnection(DB_DRIVER_URL, info);
+	            
+	        dialect3Connection.close();
+        }
     }
 
 
