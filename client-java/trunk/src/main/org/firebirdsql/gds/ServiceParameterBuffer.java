@@ -52,4 +52,14 @@ public interface ServiceParameterBuffer
      * @param value The value to set for the given parameter type
      */
     public void addArgument(int argumentType, int value);
+    
+    /**
+     * Set an <code>byte[]</code> paramter on this
+     * <code>ServiceParameterBuffer</code>.
+     *
+     * @param argumentType The parameter to be set, one of the
+     *        <code>isc_spb_*</code> constants from {@link ISCConstants}
+     * @param value The value to set for the given parameter type
+     */
+    public void addArgument(int argumentType, byte[] data);
     }
