@@ -1,3 +1,12 @@
+2005-03-05 21:44  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/jdbc/FBEscapedParser.java,
+	main/org/firebirdsql/jdbc/FBProcedureCall.java,
+	test/org/firebirdsql/jdbc/TestFBCallableStatement.java,
+	test/org/firebirdsql/jdbc/TestFBEscapedCallParser.java:
+	
+	fixed {?= call} syntax
+
 2005-03-03 22:56  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/:
