@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.7  2002/11/25 13:54:34  rrokytskyy
+ * fixed incorrect line feeds
+ *
  * Revision 1.6  2002/11/24 18:50:18  rrokytskyy
  * added TPB mapping and fixed ResultSetMetaData
  *
@@ -244,7 +247,10 @@ public class FBDriver implements Driver {
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
             mcf.setDatabase(databaseURL);
             mcf.setConnectionRequestInfo(conCri);
-            mcf.setTpbMapper(tpbMapper);
+            
+            if (tpbMapper != null)
+                mcf.setTpbMapper(tpbMapper);
+                
             if (blobBufferLength != null) 
             {
                 mcf.setBlobBufferLength(blobBufferLength);                
