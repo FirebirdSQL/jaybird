@@ -206,7 +206,7 @@ public interface GDS {
     byte[] isc_blob_info(isc_blob_handle handle, byte[] items, int buffer_length) 
         throws GDSException;
         
-    void isc_seek_blob(isc_blob_handle handle, int position) 
+    void isc_seek_blob(isc_blob_handle handle, int position, int seekMode) 
         throws GDSException;
 
     // Handle declaration methods

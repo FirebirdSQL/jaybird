@@ -148,19 +148,29 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * 
      * @return array of bytes containing information about this Blob.
      * 
-     * @throws GDSException if something went wrong.
+     * @throws SQLException if something went wrong.
      */
-    public byte[] getInfo(byte[] items, int buffer_length) throws GDSException {
+    public byte[] getInfo(byte[] items, int buffer_length) throws SQLException {
         
         Object syncObject = getSynchronizationObject();
         
         synchronized(syncObject) {
-            isc_blob_handle blob = c.openBlobHandle(blob_id, SEGMENTED);
             try {
-                GDS gds = c.getInternalAPIHandler();
-                return gds.isc_blob_info(blob, items, buffer_length);
+                c.ensureInTransaction();
+                
+                isc_blob_handle blob = c.openBlobHandle(blob_id, SEGMENTED);
+                try {
+                    GDS gds = c.getInternalAPIHandler();
+                    return gds.isc_blob_info(blob, items, buffer_length);
+                } finally {
+                    c.closeBlob(blob);
+                }
+                
+            } catch(GDSException ex) {
+                throw new FBSQLException(ex);
             } finally {
-                c.closeBlob(blob);
+                if (c.willEndTransaction())
+                    c.checkEndTransaction();
             }
         }
     }
@@ -175,15 +185,10 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public long length() throws SQLException {
-        try {
-            byte[] info = getInfo(
-                new byte[]{ISCConstants.isc_info_blob_total_length}, 20);
-                
-            return interpretLength(info, 0);
+        byte[] info = getInfo(
+            new byte[]{ISCConstants.isc_info_blob_total_length}, 20);
             
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
-        }
+        return interpretLength(info, 0);
     }
 
     /**
@@ -217,23 +222,19 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException if something went wrong.
      */
     public boolean isSegmented() throws SQLException {
-        try {
-            byte[] info = getInfo(
-                new byte[] {ISCConstants.isc_info_blob_type}, 20);
+        byte[] info = getInfo(
+            new byte[] {ISCConstants.isc_info_blob_type}, 20);
 
-            if (info[0] != ISCConstants.isc_info_blob_type)
-                throw new SQLException("Cannot determine BLOB type");
+        if (info[0] != ISCConstants.isc_info_blob_type)
+            throw new SQLException("Cannot determine BLOB type");
 
-            int dataLength =
-                c.getInternalAPIHandler().isc_vax_integer(info, 1, 2);
+        int dataLength =
+            c.getInternalAPIHandler().isc_vax_integer(info, 1, 2);
 
-            int type = c.getInternalAPIHandler().isc_vax_integer(
-                info, 3, dataLength);
+        int type = c.getInternalAPIHandler().isc_vax_integer(
+            info, 3, dataLength);
 
-            return type == ISCConstants.isc_bpb_type_segmented;
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
-        }
+        return type == ISCConstants.isc_bpb_type_segmented;
     }
 
     /**
@@ -275,7 +276,37 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public byte[] getBytes(long pos, int length) throws SQLException{
-        throw new SQLException("Not yet implemented");
+        
+        if (pos > Integer.MAX_VALUE)
+            throw new SQLException("Blob position is limited to 2^31 - 1 " + 
+                "due to isc_seek_blob limitations.");
+        
+        Object syncObject = getSynchronizationObject();
+        synchronized(syncObject) {
+            c.ensureInTransaction();
+            
+            try {
+                FirebirdBlob.BlobInputStream in = 
+                    (FirebirdBlob.BlobInputStream)getBinaryStream();
+                    
+                try {
+                    byte[] result = new byte[length];
+                    
+                    in.seek((int)pos - 1);
+                    in.readFully(result);
+                    
+                    return result;
+                } finally {
+                    in.close();
+                }
+                
+            } catch(IOException ex) {
+                throw new FBSQLException(ex);                    
+            } finally {
+                if (c.willEndTransaction())
+                    c.checkEndTransaction();
+            }
+        }
      }
 
 
@@ -500,12 +531,16 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
 
         public void seek(int position) throws IOException {
+            seek(position, SEEK_MODE_ABSOLUTE);
+        }
+
+        public void seek(int position, int seekMode) throws IOException {
             
             Object syncObject = getSynchronizationObject();
             
             synchronized(syncObject) {
                 try {
-                    c.getInternalAPIHandler().isc_seek_blob(blob, position);
+                    c.getInternalAPIHandler().isc_seek_blob(blob, position, seekMode);
                 } catch (GDSException ex) {
                     /** @todo fix this */
                     throw new IOException(ex.getMessage());
@@ -653,9 +688,9 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             }
         }
         
-        public void seek(int position) throws SQLException {
+        public void seek(int position, int seekMode) throws SQLException {
             try {
-                c.getInternalAPIHandler().isc_seek_blob(blob, position);
+                c.getInternalAPIHandler().isc_seek_blob(blob, position, seekMode);
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
             }

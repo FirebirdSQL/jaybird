@@ -39,6 +39,10 @@ public interface FirebirdBlob extends Blob {
      */
     interface BlobInputStream {
         
+        int SEEK_MODE_ABSOLUTE = 0;
+        int SEEK_MODE_RELATIVE = 1;
+        int SEEK_MODE_FROM_TAIL = 2;
+        
         /**
          * Get instance of {@link FirebirdBlob} to which this stream belongs to.
          * <p>
@@ -132,13 +136,34 @@ public interface FirebirdBlob extends Blob {
         void readFully(byte[] buffer) throws IOException;
         
         /**
-         * Move current position in the Blob stream.
+         * Move current position in the Blob stream. This is a shortcut method
+         * to {@link #seek(int, int)} passing {@link #SEEK_MODE_ABSOLUTE} as 
+         * seek mode.
          * 
-         * @param position absolute position in the stream.
+         * @param position absolute position to seek, starting position is
+         * 0 (note, in {@link Blob#getBytes(long, int)} starting position is 1).
+         * 
+         * @throws IOException if I/O error occurs.
+         */
+        void seek(int position) throws IOException;
+        
+        /**
+         * Move current position in the Blob stream. Depending on the specified
+         * seek mode, position can be either positive or negative.
+         * <p>
+         * Note, this method allows to move position in the Blob stream only
+         * forward. If you need to read data before the current position, new
+         * stream must be opened.
+         * 
+         * @param position position in the stream, starting position is
+         * 0 (note, in {@link Blob#getBytes(long, int)} starting position is 1).
+         * 
+         * @param seekMode mode of seek operation, one of {@link #SEEK_MODE_ABSOLUTE},
+         * {@link #SEEK_MODE_RELATIVE} or {@link #SEEK_MODE_FROM_TAIL}.
          * 
          * @throws IOException if I/O erro occurs.
          */
-        void seek(int position) throws IOException;
+        void seek(int position, int seekMode) throws IOException;
     }
     
     /**

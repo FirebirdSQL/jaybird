@@ -356,7 +356,7 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
         }
     }
 
-    public void isc_seek_blob(isc_blob_handle handle, int position) throws GDSException {
+    public void isc_seek_blob(isc_blob_handle handle, int position, int seekMode) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
         isc_blob_handle_impl blob = (isc_blob_handle_impl) handle;
         isc_db_handle_impl db = blob.getDb();
@@ -365,7 +365,7 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
                 if (debug) log.debug("op_info_blob ");
                 db.out.writeInt(op_seek_blob);
                 db.out.writeInt(blob.getRbl_id());
-                db.out.writeInt(0);
+                db.out.writeInt(seekMode);
                 db.out.writeInt(position);
                 db.out.flush();
                 if (debug) log.debug("sent");
