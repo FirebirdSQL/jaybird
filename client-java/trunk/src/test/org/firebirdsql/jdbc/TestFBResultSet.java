@@ -683,7 +683,7 @@ public class TestFBResultSet extends FBTestBase {
     public void testResultSetNotClosed() throws Exception {
         
 
-        System.setProperty("test.gds_type", "NATIVE");
+        //System.setProperty("test.gds_type", "NATIVE");
         
         connection.setAutoCommit(false);
         
@@ -775,8 +775,14 @@ public class TestFBResultSet extends FBTestBase {
                 
                 rs.updateString(2, "newString" + counter);
                 
+                assertEquals(counter, rs.getInt(1)); 
                 assertEquals("newString" + counter, rs.getString(2));
+
                 rs.updateRow();
+
+                assertEquals(counter, rs.getInt(1)); 
+                assertEquals("newString" + counter, rs.getString(2));
+
                 counter++;
             }
             
@@ -786,6 +792,7 @@ public class TestFBResultSet extends FBTestBase {
             rs.updateInt(1, recordCount);
             rs.updateString(2, "newString" + recordCount);
             rs.insertRow();
+
             
             rs = stmt.executeQuery("SELECT id, long_str FROM test_table ORDER BY id");
             
