@@ -1,3 +1,31 @@
+2004-09-26 16:00  rrokytskyy
+
+	* client-java/src/: test/org/firebirdsql/ngds/TestNgds.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/management/FBManager.java,
+	test/org/firebirdsql/common/FBTestBase.java,
+	test/org/firebirdsql/common/SimpleFBTestBase.java,
+	test/org/firebirdsql/jdbc/TestFBBlobStream.java:
+	
+	merged with HEAD
+
+2004-09-26 15:37  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
+	
+	added additional synchronization
+
+2004-09-26 15:35  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	test/org/firebirdsql/jdbc/TestFBBlobStream.java:
+	
+	fixed issue with three-param setters
+
 2004-09-21 09:35  rrokytskyy
 
 	* client-java/src/:
