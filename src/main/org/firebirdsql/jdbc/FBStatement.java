@@ -212,23 +212,27 @@ public class FBStatement implements Statement {
         if (closed)
             throw new SQLException("This statement is already closed.");
 
-        if (fixedStmt != null) {
-            try {
-                //may need ensureTransaction?
-                c.closeStatement(fixedStmt, true);
+        try {
+            if (fixedStmt != null) {
+                try {
+                    //may need ensureTransaction?
+                    c.closeStatement(fixedStmt, true);
+                }
+                catch (GDSException ge) {
+                    throw new FBSQLException(ge);
+                }
+                finally {
+                    fixedStmt = null;
+                    currentRs = null;
+                    currentCachedResultSet = null;
+                    closed = true;
+                }
             }
-            catch (GDSException ge) {
-                throw new FBSQLException(ge);
-            }
-            finally {
-                fixedStmt = null;
-                currentRs = null;
-                currentCachedResultSet = null;
+            else
                 closed = true;
-            }
+        } finally {
+            c.notifyStatementClosed(this);
         }
-        else
-            closed = true;
     }
 
 
