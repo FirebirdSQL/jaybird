@@ -127,10 +127,13 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
 
     //Meaningful management methods
 
-    public void createDatabase (String fileName) throws Exception {
+    public void createDatabase (String fileName, String user, String password) throws Exception {
         isc_db_handle db = gds.get_new_isc_db_handle();
         try {
-            gds.isc_create_database(getConnectString(fileName), db, c);
+           Clumplet dpb = GDSFactory.cloneClumplet(c);
+           dpb.append(GDSFactory.newClumplet(GDS.isc_dpb_user_name, user));
+           dpb.append(GDSFactory.newClumplet(GDS.isc_dpb_password, password));
+            gds.isc_create_database(getConnectString(fileName), db, dpb);
             gds.isc_detach_database(db);
         }
         catch (Exception e) {
@@ -139,10 +142,13 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
         }
     }
 
-    public void dropDatabase(String fileName) throws Exception {
+    public void dropDatabase(String fileName, String user, String password) throws Exception {
         try {
             isc_db_handle db = gds.get_new_isc_db_handle();
-            gds.isc_attach_database(getConnectString(fileName), db, c);
+           Clumplet dpb = GDSFactory.cloneClumplet(c);
+           dpb.append(GDSFactory.newClumplet(GDS.isc_dpb_user_name, user));
+           dpb.append(GDSFactory.newClumplet(GDS.isc_dpb_password, password));
+            gds.isc_attach_database(getConnectString(fileName), db, dpb);
             gds.isc_drop_database(db);
 
         }

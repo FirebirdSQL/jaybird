@@ -31,9 +31,9 @@ public interface FBManagerMBean {
 
     public int getPort();
 
-    public void createDatabase (String filename) throws Exception;
+    public void createDatabase (String filename, String user, String password) throws Exception;
 
-    public void dropDatabase(String fileName) throws Exception;
+    public void dropDatabase(String fileName, String user, String password) throws Exception;
 
 
 }
