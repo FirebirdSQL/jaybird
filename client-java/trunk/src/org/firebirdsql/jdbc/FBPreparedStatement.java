@@ -246,6 +246,10 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 
         if (thisField instanceof FBBlobField)
             ((FBBlobField)thisField).setConnection(c);
+        else
+        if (thisField instanceof FBStringField)
+            ((FBStringField)thisField).setConnection(c);
+        
 
         return thisField;
     }

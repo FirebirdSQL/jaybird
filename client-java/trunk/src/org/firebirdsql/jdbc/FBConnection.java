@@ -813,6 +813,10 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
     String getUserName() {
         return mc.getUserName();
     }
+    
+    String getIscEncoding() {
+        return mc.getIscEncoding();
+    }
 
     /**
      * The <code>ensureInTransaction</code> method starts a local transaction

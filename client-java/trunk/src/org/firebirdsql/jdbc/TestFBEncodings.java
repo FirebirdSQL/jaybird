@@ -1,0 +1,207 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * Contributor(s): Roman Rokytskyy
+ *
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU Lesser General Public License Version 2.1 or later
+ * (the "LGPL"), in which case the provisions of the LGPL are applicable
+ * instead of those above.  If you wish to allow use of your
+ * version of this file only under the terms of the LGPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the LGPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * LGPL.
+ */
+
+
+package org.firebirdsql.jdbc;
+
+import java.sql.*;
+
+public class TestFBEncodings extends BaseFBTest {
+    
+    public static String CREATE_TABLE = 
+        "CREATE TABLE test_encodings (" + 
+        "  id INTEGER, " +
+        "  win1250_field VARCHAR(50) CHARACTER SET WIN1250, " +
+        "  win1251_field VARCHAR(50) CHARACTER SET WIN1251, " +
+        "  win1252_field VARCHAR(50) CHARACTER SET WIN1252, " +
+        "  win1253_field VARCHAR(50) CHARACTER SET WIN1253, " +
+        "  win1254_field VARCHAR(50) CHARACTER SET WIN1254, " +
+        "  unicode_field VARCHAR(50) CHARACTER SET UNICODE_FSS, " +
+        "  ascii_field VARCHAR(50) CHARACTER SET ASCII, " +
+        "  none_field VARCHAR(50) CHARACTER SET NONE " +
+        ")";
+        
+    public static String DROP_TABLE = 
+        "DROP TABLE test_encodings";
+    
+    // "test string" in Ukrainian ("тестова стрічка")
+    public static String UKRAINIAN_TEST_STRING_WIN1251 = 
+        "\u00f2\u00e5\u00f1\u00f2\u00ee\u00e2\u00e0 " +
+        "\u00f1\u00f2\u00f0\u00b3\u00f7\u00ea\u00e0";
+        
+    public static int UKRAINIAN_TEST_ID = 1;
+    
+    // couple of test characters in German
+    public static String GERMAN_TEST_STRING_WIN1252 = 
+        "Zeichen " + "\u00c4\u00e4, \u00d6\u00f6, \u00dc\u00fc und \u00df";
+        
+    public static int GERMAN_TEST_ID = 2;
+
+    public TestFBEncodings(String testName) {
+        super(testName);
+    }
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        
+        Class.forName(FBDriver.class.getName());
+        
+        java.util.Properties props = new java.util.Properties();
+        props.putAll(DB_INFO);
+        props.put("lc_ctype", "NONE");
+        
+        Connection connection = 
+            DriverManager.getConnection(DB_DRIVER_URL, props);
+        
+        java.sql.Statement stmt = connection.createStatement();
+        try {
+            stmt.executeUpdate(DROP_TABLE);
+        }
+        catch (Exception e) {}
+
+        try {
+            stmt.executeUpdate(CREATE_TABLE);
+            stmt.close();        
+        } catch(Exception ex) {
+        }
+    }
+
+    protected void tearDown() throws Exception {
+        /*
+        java.util.Properties props = new java.util.Properties();
+        props.putAll(DB_INFO);
+        props.put("lc_ctype", "NONE");
+        
+        Connection connection = 
+            DriverManager.getConnection(DB_DRIVER_URL, props);
+            
+        java.sql.Statement stmt = connection.createStatement();
+        stmt.executeUpdate(DROP_TABLE);
+        stmt.close();
+        connection.close();      
+        */
+        
+        super.tearDown();
+    }
+    
+    public void testUkrainian() throws Exception {
+        java.util.Properties props = new java.util.Properties();
+        props.putAll(DB_INFO);
+        props.put("lc_ctype", "WIN1251");
+        
+        Connection connection = 
+            DriverManager.getConnection(DB_DRIVER_URL, props);
+
+        PreparedStatement stmt = connection.prepareStatement(
+            "INSERT INTO test_encodings(" + 
+            "  id, win1251_field, unicode_field, none_field) " +
+            "VALUES(?, ?, ?, ?)");
+        
+        stmt.setInt(1, UKRAINIAN_TEST_ID);
+        stmt.setString(2, UKRAINIAN_TEST_STRING_WIN1251);
+        stmt.setString(3, UKRAINIAN_TEST_STRING_WIN1251);
+        stmt.setString(4, UKRAINIAN_TEST_STRING_WIN1251);
+        
+        int updated = stmt.executeUpdate();
+        stmt.close();
+        
+        assertTrue("Should insert one row", updated == 1);
+        
+        stmt = connection.prepareStatement(
+            "SELECT win1251_field, unicode_field " + 
+            "FROM test_encodings WHERE id = ?");
+            
+        stmt.setInt(1, UKRAINIAN_TEST_ID);
+            
+        ResultSet rs = stmt.executeQuery();
+        
+        assertTrue("Should have at least one row", rs.next());
+        
+        String win1251Value = rs.getString(1);
+        assertTrue("win1251_field value should be the same", 
+            win1251Value.equals(UKRAINIAN_TEST_STRING_WIN1251));
+            
+        String unicodeValue = rs.getString(2);
+        assertTrue("unicode_field value should be the same", 
+            unicodeValue.equals(UKRAINIAN_TEST_STRING_WIN1251));
+            
+        assertTrue("Should have exactly one row", !rs.next());
+        
+        rs.close();
+        stmt.close();
+        connection.close();
+    }
+
+
+    public void testGerman() throws Exception {
+        java.util.Properties props = new java.util.Properties();
+        props.putAll(DB_INFO);
+        props.put("lc_ctype", "WIN1252");
+        
+        Connection connection = 
+            DriverManager.getConnection(DB_DRIVER_URL, props);
+
+        PreparedStatement stmt = connection.prepareStatement(
+            "INSERT INTO test_encodings(" + 
+            "  id, win1252_field, unicode_field, none_field) " +
+            "VALUES(?, ?, ?, ?)");
+        
+        stmt.setInt(1, GERMAN_TEST_ID);
+        stmt.setString(2, GERMAN_TEST_STRING_WIN1252);
+        stmt.setString(3, GERMAN_TEST_STRING_WIN1252);
+        stmt.setString(4, GERMAN_TEST_STRING_WIN1252);
+        
+        int updated = stmt.executeUpdate();
+        stmt.close();
+        
+        assertTrue("Should insert one row", updated == 1);
+        
+        stmt = connection.prepareStatement(
+            "SELECT win1252_field, unicode_field " + 
+            "FROM test_encodings WHERE id = ?");
+            
+        stmt.setInt(1, GERMAN_TEST_ID);
+            
+        ResultSet rs = stmt.executeQuery();
+        
+        assertTrue("Should have at least one row", rs.next());
+        
+        String win1252Value = rs.getString(1);
+        assertTrue("win1252_field value should be the same", 
+            win1252Value.equals(GERMAN_TEST_STRING_WIN1252));
+            
+        String unicodeValue = rs.getString(2);
+        assertTrue("unicode_field value should be the same", 
+            unicodeValue.equals(GERMAN_TEST_STRING_WIN1252));
+            
+        assertTrue("Should have exactly one row", !rs.next());
+        
+        rs.close();
+        stmt.close();
+        connection.close();
+    }
+    
+}

@@ -331,6 +331,80 @@ abstract class FBField {
             throw (SQLException)createException(
                 SQL_TYPE_NOT_SUPPORTED);
     }
+    
+    /**
+     * Convert byte array to string taking into account InterBase encoding.
+     * 
+     * @param bytes byte array to convert.
+     * @param iscEncoding InterBase encoding to use.
+     * @return converted string.
+     */
+    public static String toString(byte[] bytes, String iscEncoding) {
+        String javaEncoding = null;
+        
+        if (iscEncoding != null && !iscEncoding.equalsIgnoreCase("NONE"))
+            FBConnectionHelper.getJavaEncoding(iscEncoding);
+        
+        if (javaEncoding == null)
+            return new String(bytes);        
+        
+        try {
+            return new String(bytes, javaEncoding);
+        } catch(java.io.UnsupportedEncodingException ex) {
+            return new String(bytes);
+        }
+    }
+
+    /**
+     * Convert byte array to string taking into account InterBase encoding.
+     * 
+     * @param bytes byte array to convert.
+     * @param offset offset in array.
+     * @param count how many bytes to convert.
+     * @param iscEncoding InterBase encoding to use.
+     * @return converted string.
+     */
+    public static String toString(byte[] bytes, int offset, int count, 
+        String iscEncoding) 
+    {
+        String javaEncoding = null;
+        
+        if (iscEncoding != null && !iscEncoding.equalsIgnoreCase("NONE"))
+            FBConnectionHelper.getJavaEncoding(iscEncoding);
+        
+        if (javaEncoding == null)
+            return new String(bytes, offset, count);        
+            
+        try {
+            return new String(bytes, offset, count, javaEncoding);
+        } catch(java.io.UnsupportedEncodingException ex) {
+            return new String(bytes, offset, count);
+        }
+    }
+        
+    /**
+     * Convert the string into byte array taking the specified encoding into
+     * account.
+     * 
+     * @param str string to convert.
+     * @param iscEncoding InterBase encoding to use.
+     * @return converted byte array
+     */
+    public static byte[] getBytes(String str, String iscEncoding) {
+        String javaEncoding = null;
+        
+        if (iscEncoding != null && !iscEncoding.equalsIgnoreCase("NONE"))
+            FBConnectionHelper.getJavaEncoding(iscEncoding);
+        
+        if (javaEncoding == null)
+            return str.getBytes();
+        
+        try {
+            return str.getBytes(javaEncoding);
+        } catch(java.io.UnsupportedEncodingException ex) {
+            return str.getBytes();
+        }
+    }
 
 
     /**

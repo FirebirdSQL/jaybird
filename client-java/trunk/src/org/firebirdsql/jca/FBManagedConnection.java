@@ -732,6 +732,16 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     {
         return mcf.getBlobBufferLength();
     }
+    
+    public String getIscEncoding() {
+        try {
+            String result = cri.getStringProperty(GDS.isc_dpb_lc_ctype);
+            if (result == null) result = "NONE";
+            return result;
+        } catch(NullPointerException ex) {
+            return "NONE";
+        }
+    }
 
 
     //--------------------------------------------------------------------

@@ -40,7 +40,7 @@ set JAXP_SAX_FACTORY="org.apache.xerces.jaxp.SAXParserFactoryImpl"
 set ANT_CMD_LINE_ARGS=%ANT_CMD_LINE_ARGS% -Djavax.xml.parsers.DocumentBuilderFactory=%JAXP_DOM_FACTORY%
 set ANT_CMD_LINE_ARGS=%ANT_CMD_LINE_ARGS% -Djavax.xml.parsers.SAXParserFactory=%JAXP_SAX_FACTORY%
 
-RunAnt
+:RunAnt
 echo on
 ANT %ANT_CMD_LINE_ARGS%
 

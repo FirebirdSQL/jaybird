@@ -311,6 +311,10 @@ public class FBResultSet implements ResultSet {
 
         if (thisField instanceof FBBlobField)
             ((FBBlobField)thisField).setConnection(c);
+        else
+        if (thisField instanceof FBStringField)
+            ((FBStringField)thisField).setConnection(c);
+
 
         setWasNullColumnIndex(columnIndex);
 
