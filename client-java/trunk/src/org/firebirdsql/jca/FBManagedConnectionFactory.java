@@ -564,7 +564,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         catch (GDSException ge)
         {
             if (log!=null) log.info("Could not get a db connection!", ge);
-            throw new ResourceException("could not get a db connection!", ge.getMessage());   
+            throw new ResourceException(ge.getMessage());   
         } // end of try-catch
     }
         

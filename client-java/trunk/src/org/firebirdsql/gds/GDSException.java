@@ -30,6 +30,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.8  2002/07/10 23:11:31  rrokytskyy
+ * committed improvements in exception handling by Todd Jonker
+ *
  * Revision 1.7  2002/06/02 09:56:38  rrokytskyy
  * added method to obtain IB error code, thanks to Ken Richard
  *
@@ -84,6 +87,26 @@ public class GDSException extends Exception {
     public GDSException(int type, String strParam) {
         this.type = type;
         this.strParam = strParam;
+    }
+    
+    /**
+     * Construct instance of this class. This method correctly constructs
+     * chain of exceptions for one string parameter.
+     * 
+     * @param type type of the exception, should be always 
+     * {@link GDS#isc_arg_gds}, otherwise no message will be displayed.
+     * 
+     * @param fbErrorCode Firebird error code, one of the constants declared
+     * in {@link GDS} interface.
+     * 
+     * @param strParam value of the string parameter that will substitute 
+     * <code>{0}</code> entry in error message corresponding to the specified
+     * error code.
+     */
+    public GDSException(int type, int fbErrorCode, String strParam) {
+        this.type = type;
+        this.intParam = fbErrorCode;
+        setNext(new GDSException(GDS.isc_arg_string, strParam));
     }
 
     public GDSException(int fbErrorCode) {
