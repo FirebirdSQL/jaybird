@@ -108,14 +108,16 @@ public abstract class AbstractCallableStatement
         
         FBResultSet resultSet = (FBResultSet)getCurrentResultSet();
         
-        if (resultSet.isBeforeFirst())
-            resultSet.next();
-        
         Iterator iter = procedureCall.getOutputParams().iterator();
         while(iter.hasNext()) {
             FBProcedureParam param = (FBProcedureParam)iter.next();
             
-            FBField field = resultSet.getField(param.getIndex());
+            if (param == null)
+                continue;
+            
+            FBField field = resultSet.getField(
+                    procedureCall.mapOutParamIndexToPosition(param.getIndex()),
+                    false);
             
             field.setRequiredType(param.getType());
         }
@@ -172,6 +174,8 @@ public abstract class AbstractCallableStatement
             try {
                 c.ensureInTransaction();
                 
+                currentRs = null;
+                
                 prepareFixedStatement(procedureCall.getSQL(), true);
                 
                 if (!internalExecute(true)) 
@@ -179,12 +183,15 @@ public abstract class AbstractCallableStatement
                             "No resultset for sql",
                             FBSQLException.SQL_STATE_NO_RESULT_SET);
                 
-                setRequiredTypes();
 
                 if (c.willEndTransaction()) 
-                    return getCachedResultSet(false);
+                    getCachedResultSet(false);
                 else 
-                    return getResultSet();
+                    getResultSet();
+
+                setRequiredTypes();
+                
+                return getCurrentResultSet();
                 
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
@@ -204,6 +211,8 @@ public abstract class AbstractCallableStatement
         synchronized(syncObject) {
             try {
                 c.ensureInTransaction();
+                
+                currentRs = null;
                 
                 prepareFixedStatement(procedureCall.getSQL(), true);
                 
@@ -258,6 +267,11 @@ public abstract class AbstractCallableStatement
                 
                 if (value == null)
                     field.setNull();
+                else
+                if (value instanceof TimestampWithCalendar)
+                    field.setTimestamp(
+                            (TimestampWithCalendar)value, 
+                            ((TimestampWithCalendar)value).getCalendar());
                 else
                     field.setObject(value);
             }
@@ -947,7 +961,8 @@ public abstract class AbstractCallableStatement
 
     public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal)
         throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(
+                new TimestampWithCalendar(x, cal));
     }
 
     public void setTimestamp(int parameterIndex, Timestamp x)
@@ -958,6 +973,20 @@ public abstract class AbstractCallableStatement
     public void setUnicodeStream(int parameterIndex, InputStream x, int length)
         throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
+    }
+    
+    private static class TimestampWithCalendar extends Timestamp {
+        private Calendar c;
+        
+        private TimestampWithCalendar(Timestamp t, Calendar c) {
+            super(t.getTime() + t.getNanos()/1000000);
+            
+            this.c = c;
+        }
+        
+        private Calendar getCalendar() {
+            return c;
+        }
     }
 }
 

@@ -329,13 +329,22 @@ public class FBResultSet implements ResultSet {
         return xsqlvars[columnIndex - 1];
     }
 
+    public FBField getField(int columnIndex) throws SQLException {
+        FBField field = getField(columnIndex, true);
+
+        wasNullValid = true;
+        wasNull = field.isNull();
+        
+        return field;
+    }
+    
     /**
      * Factory method for the field access objects
      */
-    public FBField getField(int columnIndex) throws SQLException {
+    public FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
         if (closed) throw new FBSQLException("The resultSet is closed");
         
-        if (isBeforeFirst() || isAfterLast())
+        if (checkRowPosition && (isBeforeFirst() || isAfterLast()))
             throw new FBSQLException(
                     "The resultSet is not in a row, use next",
                     FBSQLException.SQL_STATE_NO_ROW_AVAIL);
@@ -345,11 +354,7 @@ public class FBResultSet implements ResultSet {
                     "Invalid column index.",
                     FBSQLException.SQL_STATE_INVALID_COLUMN);
         
-        FBField field = fields[columnIndex-1];
-        wasNullValid = true;
-        wasNull = field.isNull();
-
-        return field;
+        return fields[columnIndex-1];
     }
 
     public FBField getField(String columnName) throws SQLException {

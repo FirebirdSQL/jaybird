@@ -137,7 +137,10 @@ public class FBProcedureCall {
     }
     
     public void addInputParam(FBProcedureParam param) {
-    	inputParams.add(param);
+        if (inputParams.size() < param.getPosition() + 1)
+            inputParams.setSize(param.getPosition() + 1);
+        
+    	inputParams.set(param.getPosition(), param);
     }
     
     public void addOutputParam(FBProcedureParam param) {
@@ -162,7 +165,7 @@ public class FBProcedureCall {
         param = param.trim();
 
         boolean isInputParam = true;
-        /*
+
         if (param.length() > 3) {
             String possibleOutIndicator = param.substring(0, 3);
             if ("OUT".equalsIgnoreCase(possibleOutIndicator) &&
@@ -181,7 +184,6 @@ public class FBProcedureCall {
                 param = param.substring(2).trim();
             }
         }
-        */
         
         FBProcedureParam callParam = 
             new FBProcedureParam(position, param);
