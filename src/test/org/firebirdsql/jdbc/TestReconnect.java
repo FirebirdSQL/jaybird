@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestBase;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -34,7 +36,7 @@ import java.util.Random;
  * @author Stephan Perktold
  * @version 1.0
  */
-public class TestReconnect extends BaseFBTest 
+public class TestReconnect extends FBTestBase
 {
 
     private static final int TABLE_COUNT	= 10;
@@ -352,7 +354,7 @@ public class TestReconnect extends BaseFBTest
 
     private void openConnection() throws SQLException
     {
-        con = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        con = this.getConnectionViaDriverManager();
         con.setAutoCommit(true);
         con.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
     }

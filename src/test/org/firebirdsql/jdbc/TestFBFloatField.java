@@ -45,7 +45,7 @@ public class TestFBFloatField extends BaseTestFBField {
 	}
 	protected void setUp() throws SQLException{
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
-        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0] = createXSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_FLOAT;
         byte[][] row = new byte[1][];
         ArrayList rows = new ArrayList();

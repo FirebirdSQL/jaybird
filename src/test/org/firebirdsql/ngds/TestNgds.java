@@ -26,14 +26,17 @@ import org.firebirdsql.gds.*;
 
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
-import org.firebirdsql.jdbc.BaseFBTest;
+
+import org.firebirdsql.common.SimpleFBTestBase;
 
 import java.util.Arrays;
+
+import junit.framework.TestCase;
 
 /**
  * Performs basic low level tests of the ngds package.
  */
-public class TestNgds extends BaseFBTest {
+public class TestNgds extends SimpleFBTestBase {
 
    private Logger log = LoggerFactory.getLogger(getClass(),false);
 

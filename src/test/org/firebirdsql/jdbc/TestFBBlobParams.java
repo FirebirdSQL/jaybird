@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestBase;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -30,7 +32,7 @@ import java.sql.Statement;
  *
  * @version 1.0
  */
-public class TestFBBlobParams extends BaseFBTest {
+public class TestFBBlobParams extends FBTestBase {
     public static final String CREATE_TABLE = 
         "CREATE TABLE ClassMap(" + 
         "  oid INTEGER NOT NULL, " + 
@@ -50,7 +52,7 @@ public class TestFBBlobParams extends BaseFBTest {
     protected void setUp() throws Exception {
         super.setUp();
         Class.forName(FBDriver.class.getName());
-        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        Connection connection = getConnectionViaDriverManager();
         
         Statement stmt = connection.createStatement();
         try {
@@ -66,7 +68,7 @@ public class TestFBBlobParams extends BaseFBTest {
     }
 
     protected void tearDown() throws Exception {
-        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        Connection connection = getConnectionViaDriverManager();
         
         Statement stmt = connection.createStatement();
         stmt.executeUpdate(DROP_TABLE);
@@ -82,7 +84,7 @@ public class TestFBBlobParams extends BaseFBTest {
      * @throws Exception if something went wrong.
      */
     public void testParams() throws Exception {
-        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        Connection connection = getConnectionViaDriverManager();
         connection.setAutoCommit(false);
         
         try {
@@ -109,7 +111,7 @@ public class TestFBBlobParams extends BaseFBTest {
      * @throws java.lang.Exception if something went wrong.
      */
     public void testUpperAndBlobParam() throws Exception {
-        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        Connection connection = getConnectionViaDriverManager();
         connection.setAutoCommit(false);
 
         try {
@@ -151,7 +153,7 @@ public class TestFBBlobParams extends BaseFBTest {
      * @throws java.lang.Exception if something went wrong.
      */
     public void testEqualityInBlobParam() throws Exception {
-        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        Connection connection = getConnectionViaDriverManager();
         connection.setAutoCommit(false);
 
         try {

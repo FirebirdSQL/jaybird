@@ -26,9 +26,9 @@ import java.util.Arrays;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.gds.*;
-import org.firebirdsql.jdbc.BaseFBTest;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
+import org.firebirdsql.common.SimpleFBTestBase;
 
 
 /**
@@ -38,7 +38,7 @@ import org.firebirdsql.jca.FBTpbMapper;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class TestGds extends BaseFBTest {
+public class TestGds extends SimpleFBTestBase {
 
    private Logger log = LoggerFactory.getLogger(getClass(),true);
 

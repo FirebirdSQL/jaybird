@@ -24,6 +24,10 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.10  2003/06/13 23:44:01  rrokytskyy
+ * fixed problem in warning test
+ * ----------------------------------------------------------------------
+ *
  * Revision 1.9  2003/06/05 23:40:46  brodsom
  * Substitute package and inline imports
  *
@@ -103,6 +107,7 @@ import java.util.TimeZone;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import org.firebirdsql.common.FBTestBase;
 
 /**
  * Test suite for the FBDriver class implementation.
@@ -110,7 +115,7 @@ import junit.framework.TestSuite;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TestFBDriver extends BaseFBTest {
+public class TestFBDriver extends FBTestBase {
 
     private Connection connection;
     private Driver driver;
@@ -128,7 +133,7 @@ public class TestFBDriver extends BaseFBTest {
     protected void setUp() throws Exception {
        super.setUp();
         Class.forName(org.firebirdsql.jdbc.FBDriver.class.getName());
-        driver = DriverManager.getDriver(DB_DRIVER_URL);
+        driver = DriverManager.getDriver(getUrl());
     }
 
 
@@ -141,12 +146,12 @@ public class TestFBDriver extends BaseFBTest {
 
 
     public void testAcceptsURL() throws Exception {
-        assertTrue(driver.acceptsURL(DB_DRIVER_URL));
+        assertTrue(driver.acceptsURL(getUrl()));
     }
 
     public void testConnect() throws Exception {
-        if (log != null) log.info(DB_DRIVER_URL);
-        connection = driver.connect(DB_DRIVER_URL, DB_INFO);
+        if (log != null) log.info(getUrl());
+        connection = driver.connect(getUrl(), getDefaultPropertiesForConnection());
         assertTrue("Connection is null", connection != null);
     }
 
@@ -161,13 +166,13 @@ public class TestFBDriver extends BaseFBTest {
      * make server return us a warning.
      */
     public void testWarnings() throws Exception {
-        Properties info = (Properties)DB_INFO.clone();
+        Properties info = (Properties)getDefaultPropertiesForConnection().clone();
         info.setProperty("set_db_sql_dialect", "1");
         
         try {
 	        // open connection and convert DB to SQL dialect 1
 	        Connection dialect1Connection = 
-	            DriverManager.getConnection(DB_DRIVER_URL, info);
+	            DriverManager.getConnection(getUrl(), info);
 	            
 	        Statement stmt = dialect1Connection.createStatement();
 	        
@@ -193,7 +198,7 @@ public class TestFBDriver extends BaseFBTest {
 	        info.setProperty("set_db_sql_dialect", "3");
 	        
 	        Connection dialect3Connection = 
-	            DriverManager.getConnection(DB_DRIVER_URL, info);
+	            DriverManager.getConnection(getUrl(), info);
 	            
 	        dialect3Connection.close();
         }
@@ -202,7 +207,7 @@ public class TestFBDriver extends BaseFBTest {
 
     public void testLongRange() throws Exception
     {
-        Connection c = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        Connection c = getConnectionViaDriverManager();
         try 
         {
             Statement s = c.createStatement();
@@ -264,7 +269,7 @@ public class TestFBDriver extends BaseFBTest {
     
     public void testDate() throws Exception
     {
-        Connection c = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        Connection c = getConnectionViaDriverManager();
         try 
         {
             Statement s = c.createStatement();
@@ -327,7 +332,7 @@ public class TestFBDriver extends BaseFBTest {
      * @throws Exception if something went wrong.
      */
     public void testClose() throws Exception {
-        connection = driver.connect(DB_DRIVER_URL, DB_INFO);
+        connection = getConnectionViaDriverManager();
         
         Statement stmt = connection.createStatement();
         
@@ -342,7 +347,7 @@ public class TestFBDriver extends BaseFBTest {
         
         connection.close();
         
-        connection = driver.connect(DB_DRIVER_URL, DB_INFO);
+        connection = getConnectionViaDriverManager();
         
         stmt = connection.createStatement();
         

@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.firebirdsql.pool.FBWrappingDataSource;
+import org.firebirdsql.common.FBTestBase;
 
 /**
  * Describe class <code>TestFBWrappingDataSource</code> here.
@@ -34,7 +35,7 @@ import org.firebirdsql.pool.FBWrappingDataSource;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TestFBWrappingDataSource extends BaseFBTest {
+public class TestFBWrappingDataSource extends FBTestBase {
 
     private Connection connection;
     private FBWrappingDataSource ds;
@@ -47,7 +48,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
     public void testConnect() throws Exception {
         if (log != null) log.info("Testing FBWrapping DataSource on db: " + DB_DATASOURCE_URL);
 
-        ds = new FBWrappingDataSource();
+        ds = createFBWrappingDataSource();
         ds.setDatabase(DB_DATASOURCE_URL);
         ds.setUserName(DB_USER);
         ds.setPassword(DB_PASSWORD);
@@ -60,7 +61,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
     public void testOneConnectionWithPooling() throws Exception {
         if (log != null) log.info("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
 
-        ds = new FBWrappingDataSource();
+        ds = createFBWrappingDataSource();
         ds.setDatabase(DB_DATASOURCE_URL);
         ds.setMinSize(0);
         ds.setMaxSize(5);
@@ -98,7 +99,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
    public void testPooling() throws Exception {
         if (log != null) log.info("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
 
-        ds = new FBWrappingDataSource();
+        ds = createFBWrappingDataSource();
         ds.setDatabase(DB_DATASOURCE_URL);
         ds.setMinSize(3);
         ds.setMaxSize(5);

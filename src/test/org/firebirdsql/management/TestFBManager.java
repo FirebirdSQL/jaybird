@@ -19,6 +19,7 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.jdbc.BaseFBTest;
+import org.firebirdsql.common.FBTestBase;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -30,7 +31,7 @@ import junit.framework.TestSuite;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class TestFBManager extends BaseFBTest {
+public class TestFBManager extends FBTestBase {
 
    // private static String dbPath = System.getProperty("test.db.dir");
 
@@ -46,7 +47,7 @@ public class TestFBManager extends BaseFBTest {
     }
 
     public void testStart() throws Exception {
-        FBManager m = new FBManager();
+        FBManager m = createFBManager();
         m.setServer("localhost");
         m.setPort(3050);
         m.start();
@@ -54,7 +55,7 @@ public class TestFBManager extends BaseFBTest {
     }
 
     public void testCreateDrop() throws Exception {
-        FBManager m = new FBManager();
+        FBManager m = createFBManager();
         m.setServer("localhost");
         m.setPort(3050);
         m.start();

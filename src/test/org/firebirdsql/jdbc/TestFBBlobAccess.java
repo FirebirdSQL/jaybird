@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestBase;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -33,7 +35,7 @@ import java.util.Random;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TestFBBlobAccess extends BaseFBTest {
+public class TestFBBlobAccess extends FBTestBase {
     public static final String CREATE_TABLE = 
         "CREATE TABLE test_blob(" + 
         "  id INTEGER, " + 
@@ -59,7 +61,7 @@ public class TestFBBlobAccess extends BaseFBTest {
     protected void setUp() throws Exception {
         super.setUp();
         Class.forName(FBDriver.class.getName());
-        connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        connection = getConnectionViaDriverManager();
         
         Statement stmt = connection.createStatement();
         try {

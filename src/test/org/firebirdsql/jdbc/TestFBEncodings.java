@@ -19,6 +19,8 @@
 
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestBase;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -35,7 +37,7 @@ import java.util.Vector;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TestFBEncodings extends BaseFBTest {
+public class TestFBEncodings extends FBTestBase {
     
 	 Vector encJava = new Vector();
 	 Vector encFB = new Vector();
@@ -144,10 +146,10 @@ public class TestFBEncodings extends BaseFBTest {
         Class.forName(FBDriver.class.getName());
         
         Properties props = new Properties();
-        props.putAll(DB_INFO);
+        props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "NONE");
         
-        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, props);
+        Connection connection = DriverManager.getConnection(getUrl(), props);
         
         Statement stmt = connection.createStatement();
         try {stmt.executeUpdate(DROP_TABLE);} catch(SQLException ex) { /*ex.printStackTrace();*/}
@@ -169,11 +171,11 @@ public class TestFBEncodings extends BaseFBTest {
 
     protected void tearDown() throws Exception {
         Properties props = new Properties();
-        props.putAll(DB_INFO);
+        props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "NONE");
         
         Connection connection = 
-            DriverManager.getConnection(DB_DRIVER_URL, props);
+            DriverManager.getConnection(getUrl(), props);
             
         try {
             Statement stmt = connection.createStatement();
@@ -216,11 +218,11 @@ public class TestFBEncodings extends BaseFBTest {
             UKRAINIAN_TEST_STRING.equals(UKRAINIAN_TEST_STRING_WIN1251));
         
         Properties props = new Properties();
-        props.putAll(DB_INFO);
+        props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "WIN1251");
         
         Connection connection = 
-            DriverManager.getConnection(DB_DRIVER_URL, props);
+            DriverManager.getConnection(getUrl(), props);
 
         try {
             PreparedStatement stmt = connection.prepareStatement(
@@ -328,11 +330,11 @@ for (int i=0; i< CYRL_TEST_BYTES.length ; i++){
 }
 */
         Properties props = new Properties();
-        props.putAll(DB_INFO);
+        props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "WIN1251");
         
         Connection connection = 
-            DriverManager.getConnection(DB_DRIVER_URL, props);
+            DriverManager.getConnection(getUrl(), props);
 
         try {
             PreparedStatement stmt = connection.prepareStatement(
@@ -433,11 +435,11 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
     
     public void testGerman() throws Exception {
         Properties props = new Properties();
-        props.putAll(DB_INFO);
+        props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "WIN1252");
         
         Connection connection = 
-            DriverManager.getConnection(DB_DRIVER_URL, props);
+            DriverManager.getConnection(getUrl(), props);
 
         try {
             PreparedStatement stmt = connection.prepareStatement(
@@ -524,11 +526,11 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
             HUNGARIAN_TEST_STRING.equals(HUNGARIAN_TEST_STRING_WIN1250));
         
         Properties props = new Properties();
-        props.putAll(DB_INFO);
+        props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
         Connection connection = 
-            DriverManager.getConnection(DB_DRIVER_URL, props);
+            DriverManager.getConnection(getUrl(), props);
 
         try {
             PreparedStatement stmt = connection.prepareStatement(
@@ -614,11 +616,11 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
     public void testUniversal() throws Exception {
 		 
         Properties props = new Properties();
-        props.putAll(DB_INFO);
+        props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
         Connection connection = 
-            DriverManager.getConnection(DB_DRIVER_URL, props);
+            DriverManager.getConnection(getUrl(), props);
 
         try {
 			   String insert = "INSERT INTO test_encodings_universal VALUES(? ";

@@ -24,11 +24,12 @@ import java.util.Set;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jdbc.BaseFBTest;
+import org.firebirdsql.common.FBTestBase;
 
 /**
  * <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class TestFBTpbMapper extends BaseFBTest {
+public class TestFBTpbMapper extends FBTestBase {
     
     public static final String TEST_TPB_MAPPING = "org.firebirdsql.jca.test_tpb_mapping";
     
@@ -42,7 +43,7 @@ public class TestFBTpbMapper extends BaseFBTest {
     protected void setUp() throws Exception {
         super.setUp();
         
-        mcf = new FBManagedConnectionFactory();
+        mcf = super.createFBManagedConnectionFactory();//new FBManagedConnectionFactory();
     }
     
 

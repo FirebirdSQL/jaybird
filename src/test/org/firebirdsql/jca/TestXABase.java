@@ -25,6 +25,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDSFactory;
 
 import org.firebirdsql.jdbc.BaseFBTest;
+import org.firebirdsql.common.FBTestBase;
 
 //for embedded xid implementation
     import java.net.InetAddress;
@@ -41,7 +42,7 @@ import java.io.Serializable;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class TestXABase extends BaseFBTest {
+public class TestXABase extends FBTestBase {
 
 
     public TestXABase(String name) {
@@ -51,9 +52,9 @@ public class TestXABase extends BaseFBTest {
 
     public FBManagedConnectionFactory initMcf() {
 
-        FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
+        FBManagedConnectionFactory mcf = createFBManagedConnectionFactory();
         mcf.setDatabase(DB_DATASOURCE_URL);
-        FBConnectionRequestInfo cri = new FBConnectionRequestInfo(GDSFactory.getDefaultGDS());
+        FBConnectionRequestInfo cri = createFBConnectionRequestInfo();
         cri.setProperty(ISCConstants.isc_dpb_user_name, DB_USER);
         cri.setProperty(ISCConstants.isc_dpb_password, DB_PASSWORD);
         cri.setProperty(ISCConstants.isc_dpb_num_buffers, new byte[] {90});

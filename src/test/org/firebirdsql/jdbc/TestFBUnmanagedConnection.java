@@ -22,6 +22,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.4  2003/06/05 23:40:46  brodsom
+ * Substitute package and inline imports
+ *
  * Revision 1.3  2003/06/04 13:51:00  brodsom
  * Remove unused vars and imports
  *
@@ -81,6 +84,7 @@ import java.util.Map;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import org.firebirdsql.common.FBTestBase;
 
 /**
  * Describe class <code>TestFBUnmanagedConnection</code> here.
@@ -88,7 +92,7 @@ import junit.framework.TestSuite;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TestFBUnmanagedConnection extends BaseFBTest {
+public class TestFBUnmanagedConnection extends FBTestBase {
     public static final String CREATE_TEST_TABLE =
         "CREATE TABLE connection_test (" +
         "  test_int INTEGER" +
@@ -126,7 +130,7 @@ public class TestFBUnmanagedConnection extends BaseFBTest {
     protected void setUp() throws Exception {
        super.setUp();
         Class.forName(FBDriver.class.getName());
-        connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        connection = this.getConnectionViaDriverManager();
     }
     protected void tearDown() throws Exception {
         try 

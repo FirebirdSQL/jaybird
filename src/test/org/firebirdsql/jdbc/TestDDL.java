@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestBase;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -29,7 +31,7 @@ import java.sql.Statement;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TestDDL extends BaseFBTest {
+public class TestDDL extends FBTestBase {
     public static final String CREATE_MAIN_TABLE = ""
         + "CREATE TABLE main_table (" 
         + "  id INTEGER NOT NULL PRIMARY KEY"
@@ -101,7 +103,7 @@ public class TestDDL extends BaseFBTest {
     public void testFKWithAutoCommit() throws Exception {
         Connection connection = null;
         try {
-            connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+            connection = getConnectionViaDriverManager();
             
             tryDrop(connection, DROP_DETAIL_TABLE);
             tryDrop(connection, DROP_MAIN_TABLE);
@@ -127,7 +129,7 @@ public class TestDDL extends BaseFBTest {
     public void testFKWithTx() throws Exception {
         Connection connection = null;
         try {
-            connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+            connection = getConnectionViaDriverManager();
             connection.setAutoCommit(false);
             
             tryDrop(connection, DROP_DETAIL_TABLE);
@@ -163,7 +165,7 @@ public class TestDDL extends BaseFBTest {
     public void testFKMixed() throws Exception {
         Connection connection = null;
         try {
-            connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+            connection = getConnectionViaDriverManager();
             
             tryDrop(connection, DROP_DETAIL_TABLE);
             tryDrop(connection, DROP_MAIN_TABLE);

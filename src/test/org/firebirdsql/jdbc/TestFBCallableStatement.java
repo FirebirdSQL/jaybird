@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestBase;
+
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -32,7 +34,7 @@ import java.sql.Statement;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class TestFBCallableStatement extends BaseFBTest {
+public class TestFBCallableStatement extends FBTestBase {
     public static final String CREATE_PROCEDURE = ""
         + "CREATE PROCEDURE factorial(number INTEGER, mode INTEGER) RETURNS (result INTEGER) " 
         + "AS " 
@@ -118,7 +120,7 @@ public class TestFBCallableStatement extends BaseFBTest {
     protected void setUp() throws Exception {
        super.setUp();
         Class.forName(FBDriver.class.getName());
-        connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        connection = getConnectionViaDriverManager();
         Statement stmt = connection.createStatement();
         try {
             stmt.executeUpdate(DROP_PROCEDURE);

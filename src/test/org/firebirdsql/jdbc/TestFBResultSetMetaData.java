@@ -19,6 +19,8 @@
 
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestBase;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -32,7 +34,7 @@ import java.util.Properties;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TestFBResultSetMetaData extends BaseFBTest {
+public class TestFBResultSetMetaData extends FBTestBase {
     
     public static String CREATE_TABLE = 
         "CREATE TABLE test_rs_metadata (" + 
@@ -68,10 +70,10 @@ public class TestFBResultSetMetaData extends BaseFBTest {
         Class.forName(FBDriver.class.getName());
         
         Properties props = new Properties();
-        props.putAll(DB_INFO);
+        props.putAll(this.getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, props);
+        Connection connection = DriverManager.getConnection(this.getUrl(), props);
         
         Statement stmt = connection.createStatement();
         try {
@@ -105,10 +107,10 @@ public class TestFBResultSetMetaData extends BaseFBTest {
     
     public void testResultSetMetaData() throws Exception {
         Properties props = new Properties();
-        props.putAll(DB_INFO);
+        props.putAll(this.getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, props);
+        Connection connection = DriverManager.getConnection(this.getUrl(), props);
         
         Statement stmt = connection.createStatement();
         
@@ -139,10 +141,10 @@ public class TestFBResultSetMetaData extends BaseFBTest {
     }
     public void testResultSetMetaData2() throws Exception {
         Properties props = new Properties();
-        props.putAll(DB_INFO);
+        props.putAll(this.getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, props);
+        Connection connection = DriverManager.getConnection(this.getUrl(), props);
         
         Statement stmt = connection.createStatement();
         

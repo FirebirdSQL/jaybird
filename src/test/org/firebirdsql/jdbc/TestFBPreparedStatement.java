@@ -19,6 +19,8 @@
 
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestBase;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -31,7 +33,7 @@ import java.sql.Statement;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TestFBPreparedStatement extends BaseFBTest{
+public class TestFBPreparedStatement extends FBTestBase{
     
     public static final String CREATE_GENERATOR = 
         "CREATE GENERATOR test_generator";
@@ -62,7 +64,7 @@ public class TestFBPreparedStatement extends BaseFBTest{
         super.setUp();
         
         Class.forName(FBDriver.class.getName());
-        con = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);            
+        con = this.getConnectionViaDriverManager();
 
         Statement stmt = con.createStatement();
         try {

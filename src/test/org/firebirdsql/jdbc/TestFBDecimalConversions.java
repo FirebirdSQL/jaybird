@@ -19,6 +19,8 @@
 
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestBase;
+
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -32,7 +34,7 @@ import java.sql.Statement;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TestFBDecimalConversions extends BaseFBTest {
+public class TestFBDecimalConversions extends FBTestBase {
     public static final String CREATE_TABLE =
         "CREATE TABLE decimal_test (" +
         "  id INT, " +
@@ -71,7 +73,7 @@ public class TestFBDecimalConversions extends BaseFBTest {
         super.setUp();
 
         Class.forName(FBDriver.class.getName());
-        connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        connection = getConnectionViaDriverManager();
 
         Statement stmt = connection.createStatement();
         try {
