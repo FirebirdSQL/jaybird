@@ -1,3 +1,27 @@
+2005-01-17 11:11  gab_reid
+
+	* client-java/src/test/org/firebirdsql/jgds/TestGdsAttach.java:
+	
+	Changed connection URL to be the standard generic one instead of
+	Windows-specific url
+
+2005-01-17 11:08  gab_reid
+
+	*
+	
+	Updated to reflect interface changes for handling limbo
+	transactions
+	client-java/src/test/org/firebirdsql/management/TestFBMaintenanceMa
+	nager.java:
+
+2005-01-17 11:07  gab_reid
+
+	* client-java/src/main/org/firebirdsql/management/:
+	FBMaintenanceManager.java, MaintenanceManager.java:
+	
+	Fixed interface and implementation for the handling of limbo
+	transactions
+
 2005-01-10 11:09  gab_reid
 
 	*
