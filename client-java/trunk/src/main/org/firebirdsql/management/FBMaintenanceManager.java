@@ -38,17 +38,13 @@
  */
 package org.firebirdsql.management;
 
-import org.firebirdsql.jdbc.FBSQLException;
 
-import org.firebirdsql.gds.GDS;
+import java.sql.SQLException;
+
 import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.isc_svc_handle;
 
-import java.sql.SQLException;
-import java.io.IOException;
 
 
 /**
@@ -97,10 +93,9 @@ public class FBMaintenanceManager extends FBServiceManager
                     + "ACCESS_MODE_READ_WRITE or ACCESS_MODE_READ_ONLY");
         }
 
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getDefaultPropertiesSRB(gds);
+        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
         srb.addArgument(ISCConstants.isc_spb_prp_access_mode, (byte)mode);
-        executeVoidOperation(gds, srb);
+        executeServicesOperation(srb);
     }
 
     /**
@@ -116,10 +111,9 @@ public class FBMaintenanceManager extends FBServiceManager
                     + "1 or 3");
         }
 
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getDefaultPropertiesSRB(gds);
+        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
         srb.addArgument(ISCConstants.isc_spb_prp_set_sql_dialect, dialect);
-        executeVoidOperation(gds, srb);
+        executeServicesOperation(srb);
     }
 
     /**
@@ -134,10 +128,9 @@ public class FBMaintenanceManager extends FBServiceManager
         if (pageCount < 1){
             throw new IllegalArgumentException("page count must be positive");
         }
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getDefaultPropertiesSRB(gds);
+        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
         srb.addArgument(ISCConstants.isc_spb_prp_page_buffers, pageCount);
-        executeVoidOperation(gds, srb);
+        executeServicesOperation(srb);
     }
 
 
@@ -151,12 +144,11 @@ public class FBMaintenanceManager extends FBServiceManager
      * @throws SQLException if a database access error occurs
      */
     public void setForcedWrites(boolean forced) throws SQLException {
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getDefaultPropertiesSRB(gds);
+        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
         srb.addArgument(ISCConstants.isc_spb_prp_write_mode,
                 (byte) (forced ?  ISCConstants.isc_spb_prp_wm_sync 
                     : ISCConstants.isc_spb_prp_wm_async));
-        executeVoidOperation(gds, srb);
+        executeServicesOperation(srb);
     }
 
  
@@ -178,12 +170,11 @@ public class FBMaintenanceManager extends FBServiceManager
             throw new IllegalArgumentException( "Page fill must be either "
                     + "PAGE_FILL_FULL or PAGE_FILL_RESERVE");
         }
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getDefaultPropertiesSRB(gds);
+        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
         srb.addArgument(ISCConstants.isc_spb_prp_reserve_space, 
                         (byte)pageFill);
 
-        executeVoidOperation(gds, srb);
+        executeServicesOperation(srb);
     }
 
 
@@ -229,10 +220,9 @@ public class FBMaintenanceManager extends FBServiceManager
                     "Timeout must be >= 0");
         }
 
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getDefaultPropertiesSRB(gds);
+        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
         srb.addArgument(shutdownMode, timeout);
-        executeVoidOperation(gds, srb);
+        executeServicesOperation(srb);
     }
 
     /**
@@ -241,10 +231,7 @@ public class FBMaintenanceManager extends FBServiceManager
      * @throws SQLException if a database access error occurs
      */
     public void bringDatabaseOnline() throws SQLException {
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getPropertiesSRB(gds, 
-                                        ISCConstants.isc_spb_prp_db_online);
-        executeVoidOperation(gds, srb);
+        executePropertiesOperation(ISCConstants.isc_spb_prp_db_online);
     }
 
 
@@ -259,10 +246,7 @@ public class FBMaintenanceManager extends FBServiceManager
      * @throws SQLException if a database access error occurs
      */
     public void markCorruptRecords() throws SQLException {
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getRepairSRB(gds, 
-                ISCConstants.isc_spb_rpr_mend_db);
-        executeVoidOperation(gds, srb);
+        executeRepairOperation(ISCConstants.isc_spb_rpr_mend_db);
     }
 
     /**
@@ -272,10 +256,7 @@ public class FBMaintenanceManager extends FBServiceManager
      * @throws SQLException if a database access error occurs
      */
     public void validateDatabase() throws SQLException {
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getRepairSRB(gds, 
-                ISCConstants.isc_spb_rpr_validate_db);
-        executeVoidOperation(gds, srb);
+        executeRepairOperation(ISCConstants.isc_spb_rpr_validate_db);
     }
 
     /**
@@ -313,10 +294,9 @@ public class FBMaintenanceManager extends FBServiceManager
                     + "combined with VALIDATE_IGNORE_CHECKSUM");
         }
 
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getRepairSRB(gds, 
+        ServiceRequestBuffer srb = createRepairSRB( 
                 options | ISCConstants.isc_spb_rpr_validate_db);
-        executeVoidOperation(gds, srb);
+        executeServicesOperation(srb);
     }
 
    
@@ -338,10 +318,9 @@ public class FBMaintenanceManager extends FBServiceManager
             throw new IllegalArgumentException("transactions must be >= 0");
         }
 
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getDefaultPropertiesSRB(gds);
+        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
         srb.addArgument(ISCConstants.isc_spb_prp_sweep_interval, transactions);
-        executeVoidOperation(gds, srb);
+        executeServicesOperation(srb);
     }
 
     /**
@@ -350,10 +329,7 @@ public class FBMaintenanceManager extends FBServiceManager
      * @throws SQLException if a database access error occurs
      */
     public void sweepDatabase() throws SQLException {
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getRepairSRB(gds, 
-                ISCConstants.isc_spb_rpr_sweep_db);
-        executeVoidOperation(gds, srb);
+        executeRepairOperation(ISCConstants.isc_spb_rpr_sweep_db);
     }
 
 
@@ -366,10 +342,7 @@ public class FBMaintenanceManager extends FBServiceManager
      * @throws SQLException if a database access error occurs
      */
     public void activateShadowFile() throws SQLException {
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getPropertiesSRB(gds,
-                ISCConstants.isc_spb_prp_activate);
-        executeVoidOperation(gds, srb);
+        executePropertiesOperation(ISCConstants.isc_spb_prp_activate);
     }
 
     /**
@@ -379,103 +352,152 @@ public class FBMaintenanceManager extends FBServiceManager
      * @throws SQLException if a database access error occurs
      */
     public void killUnavailableShadows() throws SQLException {
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getRepairSRB(gds,
-                ISCConstants.isc_spb_rpr_kill_shadows);
-        executeVoidOperation(gds, srb);
+        executeRepairOperation(ISCConstants.isc_spb_rpr_kill_shadows);
+    }
+
+
+
+    //----------- Transaction Management ----------------------------
+   
+
+    /**
+     * Retrieve the ID of each limbo transaction and indicate what would
+     * happen if {@link #twoPhaseRecovery} is called. The output of this 
+     * method is written to the logger.
+     *
+     * @throws SQLException if a database access error occurs
+     */
+    public void listLimboTransactions() throws SQLException {
+        executeRepairOperation(ISCConstants.isc_spb_rpr_list_limbo_trans);
+    }
+
+    /**
+     * Commit all limbo transactions.
+     *
+     * @throws SQLException if a database access error occurs
+     */
+    public void commitAllTransactions() throws SQLException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Commit a specific limbo transaction based on its ID.
+     *
+     * @param transactionId The ID of the limbo transaction to be committed
+     * @throws SQLException if a database access error occurs or the 
+     *         given transaction ID is not valid
+     */
+    public void commitTransaction(int transactionId) throws SQLException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Rollback all limbo transactions.
+     *
+     * @throws SQLException if a database access error occurs
+     */
+    public void rollbackAllTransactions() throws SQLException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Rollback a specific limbo transaction based on its ID.
+     *
+     * @param transactionId The ID of the limbo transaction to be rolled back
+     * @throws SQLException if a database access error occurs or the
+     *         given transaction ID is not valid
+     */
+    public void rollbackTransaction(int transactionId) throws SQLException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Performs automated two-phase recovery for all limbo transactions.
+     *
+     * @throws SQLException if a database access error occurs
+     */
+    public void twoPhaseRecovery() throws SQLException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Performs automated two-phase recovery for a limbo transaction based
+     * on its ID.
+     *
+     * @param transactionId The ID of the limbo transaction to be recovered
+     * @throws SQLException if a database access error occurs or the
+     *         given transaction ID is not valid
+     */
+    public void twoPhaseRecovery(int transactionId) throws SQLException {
+        throw new UnsupportedOperationException();
     }
 
 
     //----------- Private imlementation methods --------------------
+    
+    /**
+     * Execute a isc_spb_rpr_* (repair) services operation.
+     *
+     * @param operation The identifier for the operation to be executed
+     * @throws SQLException if a database access error occurs
+     */
+    private void executeRepairOperation(int operation) throws SQLException {
+        ServiceRequestBuffer srb = createRepairSRB(operation);
+        executeServicesOperation(srb);
+    }
 
     /**
-     * Execute a void (no return value) operation in the database.
+     * Execute a isc_spb_prp_* (properties) services operation.
      *
-     * @param gds The GDS implementation for communication with the database
-     * @param srb The buffer containing the task request
-     * @throws FBSQLException if a database access error occurs or 
-     *         incorrect parameters are supplied
+     * @param operation The identifier for the operation to be executed
+     * @throws SQLException if a database access error occurs
      */
-    private void executeVoidOperation(GDS gds, ServiceRequestBuffer srb)
-            throws FBSQLException {
-
-        try {
-            isc_svc_handle svcHandle = attachServiceManager(gds);
-            try {
-                gds.isc_service_start(svcHandle, srb);
-                queueService(gds, svcHandle);
-            } finally {
-                detachServiceManager(gds, svcHandle);
-            }
-        } catch (GDSException gdse){
-            throw new FBSQLException(gdse);
-        } catch (IOException ioe){
-            throw new FBSQLException(ioe);
-        }
+    private void executePropertiesOperation(int operation) 
+            throws SQLException {
+        ServiceRequestBuffer srb = createPropertiesSRB(operation);
+        executeServicesOperation(srb);
     }
+                
 
     /**
      * Get a mostly empty properties-operation buffer that can be filled in as 
      * needed. The buffer created by this method cannot have the options 
      * bitmask set on it.
-     *
-     * @param gds The GDS implementation to be used
      */
-    private ServiceRequestBuffer getDefaultPropertiesSRB(GDS gds){
-        return getPropertiesSRB(gds, 0);
+    private ServiceRequestBuffer createDefaultPropertiesSRB(){
+        return createPropertiesSRB(0);
     }
 
     /**
      * Get a mostly empty repair-operation buffer that can be filled in as 
      * needed. The buffer created by this method cannot have the options 
      * bitmask set on it.
-     *
-     * @param gds The GDS implementation to be used
      */
-    private ServiceRequestBuffer getDefaultRepairSRB(GDS gds){
-        return getRepairSRB(gds, 0);
+    private ServiceRequestBuffer createDefaultRepairSRB(){
+        return createRepairSRB(0);
     }
-
 
 
     /**
      * Get a mostly-empty properties-operation request buffer that can be 
      * filled as needed.
      *
-     * @param gds The GDS implementation to be used
      * @param options The options bitmask for the request buffer
      */
-    private ServiceRequestBuffer getPropertiesSRB(GDS gds, int options){
-        return getBasicSRB(ISCConstants.isc_action_svc_properties, 
-                            gds, 
-                            options);
+    private ServiceRequestBuffer createPropertiesSRB(int options){
+        return createRequestBuffer(
+                ISCConstants.isc_action_svc_properties, 
+                options);
     }
 
     /**
      * Get a mostly-empty repair-operation request buffer that can be
      * filled as needed.
      *
-     * @param gds The gds implementation to be used
      * @param options The options bitmask for the request buffer
      */
-    private ServiceRequestBuffer getRepairSRB(GDS gds, int options){
-        return getBasicSRB(ISCConstants.isc_action_svc_repair, gds, options);
-    }
-
-
-    /**
-     * Build up a request buffer for a specified operation.
-     *
-     * @param operation The isc_action_svc_* operation
-     * @param gds The GDS implementation to be used
-     * @param options The options bitmask for the request buffer
-     */
-    private ServiceRequestBuffer getBasicSRB(int operation, GDS gds, 
-                                            int options){
-        ServiceRequestBuffer srb = gds.newServiceRequestBuffer(operation);
-        srb.addArgument(ISCConstants.isc_spb_dbname, getDatabase());
-        srb.addArgument(ISCConstants.isc_spb_options, options);
-        return srb;
+    private ServiceRequestBuffer createRepairSRB(int options){
+        return createRequestBuffer(ISCConstants.isc_action_svc_repair, options);
     }
 
 }
