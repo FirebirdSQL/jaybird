@@ -510,6 +510,10 @@ class PooledConnectionQueue {
                 try {
                     int idleTimeout = getConfiguration().getMaxIdleTime();
                     int maxConnections =  getConfiguration().getMaxPoolSize();
+                    
+                    if (maxConnections < 1)
+                        maxConnections = 1;
+                    
                     Thread.sleep(idleTimeout / maxConnections);
                 } catch(InterruptedException ex) {
                     // do nothing
