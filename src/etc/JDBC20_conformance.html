@@ -10,7 +10,7 @@
 
 <BODY>
 <h1>JDBC 2.0 implementation</h1>
-<p>Last updated. December 14 2002</p>
+<p>Last updated. December 17 2002</p>
 <hr/>
 <h2>1.- Introduction</h2>
 <p>This document is focused on feature coverage of the JDBC 2.0 specification and performance.</p>
@@ -302,41 +302,51 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>time ms</td>
   <td>time ms</td>
   <td>time ms</td>
+  <td>time ms</td>
+  <td>time (%)</td>
   <td>time (%)</td>
   <td>time (%)</td>
  </tr>
  <tr>
   <td>&nbsp;</td>
   <td>IC</td>
+  <td>beta1</td>
   <td>RC1a</td>
   <td>RC2</td>
+  <td>beta1/IC</td>
   <td>RC1a/IC</td>
   <td>RC2/IC</td>
  </tr>
  <tr>
-  <td colspan=6 bgcolor="#cccccc">IMPLICIT TRANSACTION CONTROL (Autocommit)</td>
+  <td colspan=8 bgcolor="#cccccc">IMPLICIT TRANSACTION CONTROL (Autocommit)</td>
  </tr>
  <tr>
   <td>Insert short record of Num</td>
   <td align=right>5547</td>
+  <td align=right>11265</td>
   <td align=right>11219</td>
   <td align=right>10657</td>
+  <td align=right>203</td>
   <td align=right>202</td>
   <td align=right>192</td>
  </tr>
  <tr>
   <td>Select short record of Num (by field name)</td>
   <td align=right>2422</td>
+  <td align=right>610</td>
   <td align=right>593</td>
   <td align=right>437</td>
+  <td align=right>25</td>
   <td align=right>24</td>
   <td align=right>18</td>
  </tr>
  <tr>
   <td>Select short record of Num (by field num)</td>
   <td align=right>2297</td>
+  <td align=right>640</td>
   <td align=right>610</td>
   <td align=right>563</td>
+  <td align=right>28</td>
   <td align=right>27</td>
   <td align=right>25</td>
  </tr>
@@ -347,32 +357,42 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
  </tr>
  <tr>
   <td>Insert long record of Num</td>
   <td align=right>6656</td>
+  <td align=right>11641</td>
   <td align=right>11969</td>
   <td align=right>11375</td>
+  <td align=right>175</td>
   <td align=right>180</td>
   <td align=right>171</td>
  </tr>
  <tr>
   <td>Select long record of Num (name)</td>
   <td align=right>6891</td>
+  <td align=right>1812</td>
   <td align=right>1718</td>
   <td align=right>1125</td>
+  <td align=right>26</td>
   <td align=right>25</td>
   <td align=right>16</td>
  </tr>
  <tr>
   <td>Select long record of Num (num)</td>
   <td align=right>7219</td>
+  <td align=right>1031</td>
   <td align=right>1266</td>
   <td align=right>1312</td>
+  <td align=right>14</td>
   <td align=right>18</td>
   <td align=right>18</td>
  </tr>
  <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
@@ -383,24 +403,30 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
  <tr>
   <td>Insert short record of Char</td>
   <td align=right>8547</td>
+  <td align=right>15234</td>
   <td align=right>16250</td>
   <td align=right>14719</td>
+  <td align=right>178</td>
   <td align=right>190</td>
   <td align=right>172</td>
  </tr>
  <tr>
   <td>Select short record of Char (name)</td>
   <td align=right>781</td>
+  <td align=right>835953</td>
   <td align=right>1859</td>
   <td align=right>1656</td>
+  <td align=right>107036</td>
   <td align=right>238</td>
   <td align=right>212</td>
  </tr>
  <tr>
   <td>Select short record of Char (num)</td>
   <td align=right>750</td>
+  <td align=right>835922</td>
   <td align=right>1703</td>
   <td align=right>1547</td>
+  <td align=right>111456</td>
   <td align=right>227</td>
   <td align=right>206</td>
  </tr>
@@ -411,28 +437,36 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
  </tr>
  <tr>
   <td>Insert long record of Char</td>
   <td align=right>6437</td>
+  <td align=right>10515</td>
   <td align=right>11625</td>
   <td align=right>10218</td>
+  <td align=right>163</td>
   <td align=right>181</td>
   <td align=right>159</td>
  </tr>
  <tr>
   <td>Select long record of Char (name)</td>
   <td align=right>1032</td>
+  <td align=right>1131829</td>
   <td align=right>2656</td>
   <td align=right>2313</td>
+  <td align=right>109673</td>
   <td align=right>257</td>
   <td align=right>224</td>
  </tr>
  <tr>
   <td>Select long record of Char (num)</td>
   <td align=right>1015</td>
+  <td align=right>1126875</td>
   <td align=right>2344</td>
   <td align=right>2109</td>
+  <td align=right>111022</td>
   <td align=right>231</td>
   <td align=right>208</td>
  </tr>
@@ -443,28 +477,36 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
  </tr>
  <tr>
   <td>Insert short record of Varchar</td>
   <td align=right>7984</td>
+  <td align=right>13672</td>
   <td align=right>14563</td>
   <td align=right>14016</td>
+  <td align=right>171</td>
   <td align=right>182</td>
   <td align=right>176</td>
  </tr>
  <tr>
   <td>Select short record of Varchar (name)</td>
   <td align=right>641</td>
+  <td align=right>436203</td>
   <td align=right>1062</td>
   <td align=right>922</td>
+  <td align=right>68050</td>
   <td align=right>166</td>
   <td align=right>144</td>
  </tr>
  <tr>
   <td>Select short record of Varchar (num)</td>
   <td align=right>625</td>
+  <td align=right>430937</td>
   <td align=right>1188</td>
   <td align=right>906</td>
+  <td align=right>68950</td>
   <td align=right>190</td>
   <td align=right>145</td>
  </tr>
@@ -475,28 +517,36 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
  </tr>
  <tr>
   <td>Insert long record of Varchar</td>
   <td align=right>5922</td>
+  <td align=right>8860</td>
   <td align=right>9500</td>
   <td align=right>9172</td>
+  <td align=right>150</td>
   <td align=right>160</td>
   <td align=right>155</td>
  </tr>
  <tr>
   <td>Select long record of Varchar (name)</td>
   <td align=right>828</td>
+  <td align=right>476328</td>
   <td align=right>1437</td>
   <td align=right>1375</td>
+  <td align=right>57528</td>
   <td align=right>174</td>
   <td align=right>166</td>
  </tr>
  <tr>
   <td>Select long record of Varchar (num)</td>
   <td align=right>828</td>
+  <td align=right>475859</td>
   <td align=right>1329</td>
   <td align=right>1188</td>
+  <td align=right>57471</td>
   <td align=right>161</td>
   <td align=right>143</td>
  </tr>
@@ -507,15 +557,19 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
  </tr>
  <tr>
-  <td colspan=6 bgcolor="#CCCCCC">EXPLICIT TRANSACTION CONTROL</td>
+  <td colspan=8 bgcolor="#CCCCCC">EXPLICIT TRANSACTION CONTROL</td>
  </tr>
  <tr>
   <td>Insert short record of Num</td>
   <td align=right>2828</td>
+  <td align=right>2531</td>
   <td align=right>2484</td>
   <td align=right>2453</td>
+  <td align=right>89</td>
   <td align=right>88</td>
   <td align=right>87</td>
  </tr>
@@ -523,7 +577,9 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>Select short record of Num (by field name)</td>
   <td align=right>2328</td>
   <td align=right>469</td>
+  <td align=right>469</td>
   <td align=right>359</td>
+  <td align=right>20</td>
   <td align=right>20</td>
   <td align=right>15</td>
  </tr>
@@ -531,11 +587,15 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>Select short record of Num (by field num)</td>
   <td align=right>2297</td>
   <td align=right>375</td>
+  <td align=right>375</td>
   <td align=right>359</td>
+  <td align=right>16</td>
   <td align=right>16</td>
   <td align=right>16</td>
  </tr>
  <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
@@ -546,24 +606,30 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
  <tr>
   <td>Insert long record of Num</td>
   <td align=right>3391</td>
+  <td align=right>3078</td>
   <td align=right>3062</td>
   <td align=right>2969</td>
+  <td align=right>91</td>
   <td align=right>90</td>
   <td align=right>88</td>
  </tr>
  <tr>
   <td>Select long record of Num (name)</td>
   <td align=right>7125</td>
+  <td align=right>1250</td>
   <td align=right>1266</td>
   <td align=right>860</td>
+  <td align=right>18</td>
   <td align=right>18</td>
   <td align=right>12</td>
  </tr>
  <tr>
   <td>Select long record of Num (num)</td>
   <td align=right>7218</td>
+  <td align=right>890</td>
   <td align=right>875</td>
   <td align=right>828</td>
+  <td align=right>12</td>
   <td align=right>12</td>
   <td align=right>11</td>
  </tr>
@@ -574,28 +640,36 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
  </tr>
  <tr>
   <td>Insert short record of Char</td>
   <td align=right>4485</td>
+  <td align=right>4797</td>
   <td align=right>5406</td>
   <td align=right>4594</td>
+  <td align=right>107</td>
   <td align=right>121</td>
   <td align=right>102</td>
  </tr>
  <tr>
   <td>Select short record of Char (name)</td>
   <td align=right>781</td>
+  <td align=right>840297</td>
   <td align=right>1594</td>
   <td align=right>1391</td>
+  <td align=right>107592</td>
   <td align=right>204</td>
   <td align=right>178</td>
  </tr>
  <tr>
   <td>Select short record of Char (num)</td>
   <td align=right>750</td>
+  <td align=right>839968</td>
   <td align=right>1468</td>
   <td align=right>1328</td>
+  <td align=right>111996</td>
   <td align=right>196</td>
   <td align=right>177</td>
  </tr>
@@ -606,28 +680,36 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
  </tr>
  <tr>
   <td>Insert long record of Char</td>
   <td align=right>4078</td>
+  <td align=right>4844</td>
   <td align=right>5734</td>
   <td align=right>4500</td>
+  <td align=right>119</td>
   <td align=right>141</td>
   <td align=right>110</td>
  </tr>
  <tr>
   <td>Select long record of Char (name)</td>
   <td align=right>1031</td>
+  <td align=right>1125579</td>
   <td align=right>2156</td>
   <td align=right>1844</td>
+  <td align=right>109174</td>
   <td align=right>209</td>
   <td align=right>179</td>
  </tr>
  <tr>
   <td>Select long record of Char (num)</td>
   <td align=right>1000</td>
+  <td align=right>1134984</td>
   <td align=right>2015</td>
   <td align=right>1843</td>
+  <td align=right>113498</td>
   <td align=right>202</td>
   <td align=right>184</td>
  </tr>
@@ -638,28 +720,36 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
  </tr>
  <tr>
   <td>Insert short record of Varchar</td>
   <td align=right>4125</td>
+  <td align=right>3985</td>
   <td align=right>4156</td>
   <td align=right>4109</td>
+  <td align=right>97</td>
   <td align=right>101</td>
   <td align=right>100</td>
  </tr>
  <tr>
   <td>Select short record of Varchar (name)</td>
   <td align=right>656</td>
+  <td align=right>430453</td>
   <td align=right>1078</td>
   <td align=right>938</td>
+  <td align=right>65618</td>
   <td align=right>164</td>
   <td align=right>143</td>
  </tr>
  <tr>
   <td>Select short record of Varchar (num)</td>
   <td align=right>610</td>
+  <td align=right>440000</td>
   <td align=right>938</td>
   <td align=right>875</td>
+  <td align=right>72131</td>
   <td align=right>154</td>
   <td align=right>143</td>
  </tr>
@@ -670,32 +760,42 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
  </tr>
  <tr>
   <td>Insert long record of Varchar</td>
   <td align=right>3485</td>
+  <td align=right>3485</td>
   <td align=right>3859</td>
   <td align=right>3609</td>
+  <td align=right>100</td>
   <td align=right>111</td>
   <td align=right>104</td>
  </tr>
  <tr>
   <td>Select long record of Varchar (name)</td>
   <td align=right>828</td>
+  <td align=right>479813</td>
   <td align=right>1391</td>
   <td align=right>1141</td>
+  <td align=right>57948</td>
   <td align=right>168</td>
   <td align=right>138</td>
  </tr>
  <tr>
   <td>Select long record of Varchar (num)</td>
   <td align=right>796</td>
+  <td align=right>475000</td>
   <td align=right>1234</td>
   <td align=right>1109</td>
+  <td align=right>59673</td>
   <td align=right>155</td>
   <td align=right>139</td>
  </tr>
  <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
@@ -732,7 +832,7 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>RC2/IC</td>
  </tr>
  <tr>
-  <td colspan=6 bgcolor="#cccccc">IMPLICIT TRANSACTION CONTROL (Autocommit)</td>
+  <td colspan=8 bgcolor="#cccccc">IMPLICIT TRANSACTION CONTROL (Autocommit)</td>
  </tr>
  <tr>
   <td>Insert short record of Num</td>
@@ -927,7 +1027,7 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>&nbsp;</td>
  </tr>
  <tr>
-  <td colspan=6 bgcolor="#CCCCCC">EXPLICIT TRANSACTION CONTROL</td>
+  <td colspan=8 bgcolor="#CCCCCC">EXPLICIT TRANSACTION CONTROL</td>
  </tr>
  <tr>
   <td>Insert short record of Num</td>
