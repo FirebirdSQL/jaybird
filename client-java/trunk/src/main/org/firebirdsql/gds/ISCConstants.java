@@ -129,6 +129,9 @@ public final class ISCConstants {
     public final static int isc_dpb_blob_buffer_size        = 130;
     public final static int isc_dpb_use_stream_blobs        = 131;
     public final static int isc_dpb_paranoia_mode           = 132;
+    public final static int isc_dpb_timestamp_uses_local_timezone        = 133;
+    public final static int isc_dpb_use_standard_udf        = 134;
+    
 
     /*************************************/
     /* Transaction parameter block stuff */

@@ -29,6 +29,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.18  2004/07/19 14:03:33  rrokytskyy
+ * fixed bug when incorrect data were used during batch execution
+ *
  * Revision 1.17  2004/01/27 14:08:13  rrokytskyy
  * javadoc fixes
  *
@@ -227,14 +230,18 @@ public class XSQLVAR {
     }
     // 
     // times,dates...
-    // 
+    //
     public Timestamp encodeTimestamp(java.sql.Timestamp value, Calendar cal){
+        return encodeTimestamp(value, cal, false);
+    }
+    
+    public Timestamp encodeTimestamp(java.sql.Timestamp value, Calendar cal, boolean invertTimeZone){
         if (cal == null) {
             return value;
         }
         else {
-            long time = value.getTime() - 
-                (cal.getTimeZone().getRawOffset() - 
+            long time = value.getTime() + 
+                (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() - 
                 Calendar.getInstance().getTimeZone().getRawOffset());
             
             return new Timestamp(time);
@@ -262,15 +269,18 @@ public class XSQLVAR {
         return result;
     }
 
+    public java.sql.Timestamp decodeTimestamp(Timestamp value, Calendar cal) {
+        return decodeTimestamp(value, cal, false);
+    }
 
-    public java.sql.Timestamp decodeTimestamp(Timestamp value, Calendar cal){
+    public java.sql.Timestamp decodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone){
 
         if (cal == null) {
             return value;
         }
         else {
-            long time = value.getTime() + 
-                (cal.getTimeZone().getRawOffset() - 
+            long time = value.getTime() - 
+                (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() - 
                  Calendar.getInstance().getTimeZone().getRawOffset());
             
             return new Timestamp(time);

@@ -25,6 +25,7 @@ import java.sql.Time;
 import java.sql.SQLException;
 import java.util.Calendar;
 
+import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.jdbc.FBResultSet;
 
@@ -35,6 +36,7 @@ import org.firebirdsql.jdbc.FBResultSet;
  * @version 1.0
  */
 class FBTimestampField extends FBField {
+    
     FBTimestampField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
         throws SQLException 
     {
@@ -48,6 +50,13 @@ class FBTimestampField extends FBField {
         return field.decodeTimestamp(rs.row[numCol]);
     }
     */
+    
+    private boolean isInvertTimeZone() {
+        if (c == null) return false;
+        
+        DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
+        return dpb.hasArgument(DatabaseParameterBuffer.timestamp_uses_local_timezone);
+    }
     
     public String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
@@ -77,7 +86,7 @@ class FBTimestampField extends FBField {
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 		  
-        return field.decodeTimestamp(getTimestamp(),cal);
+        return field.decodeTimestamp(getTimestamp(),cal, isInvertTimeZone());
     }
     public Timestamp getTimestamp() throws SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
@@ -132,7 +141,7 @@ class FBTimestampField extends FBField {
             return;
         }
 
-        setTimestamp(field.encodeTimestamp(value,cal));
+        setTimestamp(field.encodeTimestamp(value,cal, isInvertTimeZone()));
     }
     public void setTimestamp(Timestamp value) throws SQLException {
         if (value == TIMESTAMP_NULL_VALUE) {
