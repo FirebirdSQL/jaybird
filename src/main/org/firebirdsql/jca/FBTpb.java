@@ -19,10 +19,11 @@
 
 package org.firebirdsql.jca;
 
+import java.io.Serializable;
+import java.sql.Connection;
 import java.util.HashSet;
 import java.util.Set;
 import javax.resource.ResourceException;
-import java.sql.Connection;
 import org.firebirdsql.gds.GDS;
 
 
@@ -37,6 +38,7 @@ import org.firebirdsql.gds.GDS;
  */
 
 public class FBTpb 
+    implements Serializable
 {
 
     public static final String TRANSACTION_SERIALIZABLE = "TRANSACTION_SERIALIZABLE";
@@ -104,6 +106,30 @@ public class FBTpb
         this.tpb.clear();
         this.tpb.addAll(tpb.tpb);
     }
+
+    public void add(Integer key)
+    {
+        if (key == null ) 
+        {
+            throw new IllegalArgumentException("Do not add null to Tpb");
+        } // end of if ()
+        if (tpb.contains(key))
+        {
+            return;
+        } // end of if ()
+        if (key.equals(ISC_TPB_CONSISTENCY)
+            || key.equals(ISC_TPB_READ_COMMITTED)
+            || key.equals(ISC_TPB_CONCURRENCY)
+            || key.equals(ISC_TPB_REC_VERSION)
+            || key.equals(ISC_TPB_WAIT)
+            || key.equals(ISC_TPB_READ)
+            || key.equals(ISC_TPB_WRITE)) 
+        {
+            tpb.add(key);
+        } // end of if ()
+        throw new IllegalArgumentException("Unrecognized Tpb parameter: " + key);
+    }
+        
 
     public void setTransactionIsolationName(String tin) throws ResourceException
     {

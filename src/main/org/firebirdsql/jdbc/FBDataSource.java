@@ -44,9 +44,9 @@ import javax.resource.spi.ManagedConnectionFactory;
  */
 public class FBDataSource implements DataSource, Serializable, Referenceable {
 
-    transient private ConnectionManager cm;
+    private ConnectionManager cm;
 
-    transient private FBManagedConnectionFactory mcf;
+    private FBManagedConnectionFactory mcf;
 
     transient private PrintWriter log;
 

@@ -19,8 +19,9 @@
 
 package org.firebirdsql.gds;
 
-import java.io.OutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Serializable;
 
 /**
  * The interface <code>Clumplet</code> models various Firebird datastructures
@@ -30,7 +31,9 @@ import java.io.IOException;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public interface Clumplet {
+public interface Clumplet 
+    extends Serializable
+{
 
     void append(Clumplet c);
 

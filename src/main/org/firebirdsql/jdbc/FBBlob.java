@@ -96,7 +96,7 @@ public class FBBlob implements Blob{
     FBBlob(FBConnection c, long blob_id) {
         this.c = c;
         this.blob_id = blob_id;
-        this.bufferlength = c.getBlobBufferLength();
+        this.bufferlength = c.getBlobBufferLength().intValue();
     }
 
     void close() throws IOException {

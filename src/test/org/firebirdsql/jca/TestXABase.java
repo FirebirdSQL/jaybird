@@ -62,11 +62,7 @@ public class TestXABase extends BaseFBTest {
     public FBManagedConnectionFactory initMcf() {
 
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
-        try {
-            mcf.setDatabase(DB_DATASOURCE_URL);
-		  }
-        catch (javax.resource.ResourceException re){
-		  }
+        mcf.setDatabase(DB_DATASOURCE_URL);
         FBConnectionRequestInfo cri = new FBConnectionRequestInfo();
         cri.setProperty(GDS.isc_dpb_user_name, DB_USER);
         cri.setProperty(GDS.isc_dpb_password, DB_PASSWORD);

@@ -19,10 +19,11 @@
 
 package org.firebirdsql.jgds;
 
-import org.firebirdsql.gds.Clumplet;
-import java.io.OutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
+import org.firebirdsql.gds.Clumplet;
+import java.io.Serializable;
 
 /**
  * Describe class <code>ClumpletImpl</code> here.
@@ -30,7 +31,9 @@ import java.util.Arrays;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class ClumpletImpl implements Clumplet, Xdrable {
+public class ClumpletImpl 
+    implements Clumplet, Xdrable, Serializable 
+{
 
     //format of a clumplet:
     //type - 1 byte

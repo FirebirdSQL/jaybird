@@ -21,11 +21,12 @@
 package org.firebirdsql.jca;
 
 
-import javax.resource.spi.ConnectionRequestInfo;
-import javax.resource.cci.ConnectionSpec;
 
+
+import java.io.Serializable;
 import javax.resource.ResourceException;
-
+import javax.resource.cci.ConnectionSpec;
+import javax.resource.spi.ConnectionRequestInfo;
 import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSFactory;
@@ -41,7 +42,9 @@ import org.firebirdsql.gds.GDSFactory;
  * @version 1.0
  */
 
-public class FBConnectionRequestInfo implements ConnectionRequestInfo, ConnectionSpec {
+public class FBConnectionRequestInfo 
+    implements ConnectionRequestInfo, ConnectionSpec, Serializable
+{
 
     private Clumplet c = null;
 

@@ -98,7 +98,16 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         this.cri = getCombinedConnectionRequestInfo(subject, cri);//cri;
         this.tpb = mcf.getTpb(); //getTpb supplies a copy.
         //Make sure we can get a connection to the db.
-        mcf.assureDbHandle(this.cri);
+        try 
+        {
+            currentDbHandle =  mcf.createDbHandle(this.cri);
+        }
+        catch (GDSException ge)
+        {
+            if (log!=null) log.info("Could not get a db connection!", ge);
+            throw new ResourceException(ge.getMessage());   
+        } // end of try-catch
+        
     }
 
 
@@ -686,7 +695,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     }
 
 
-    public int getBlobBufferLength()
+    public Integer getBlobBufferLength()
     {
         return mcf.getBlobBufferLength();
     }
@@ -708,16 +717,31 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     void findIscTrHandle(Xid xid, int flags) throws XAException {
         currentTr = mcf.getCurrentIscTrHandle(xid, this, flags);
-        if (currentTr.getDbHandle() != currentDbHandle) {
-            mcf.returnDbHandle(currentDbHandle, cri);
+        if (currentTr.getDbHandle() != currentDbHandle)
+        {
+            try 
+            {
+                mcf.returnDbHandle(currentDbHandle, cri);
+            }
+            catch (GDSException ge)
+            {
+                throw new XAException(ge.getMessage());
+            } // end of try-catch
+            
             currentDbHandle = currentTr.getDbHandle();
         }
     }
 
-    isc_db_handle getIscDBHandle() throws XAException {
+    isc_db_handle getIscDBHandle(Set reserved) throws XAException, GDSException {
         if (currentDbHandle == null) {
             currentDbHandle = mcf.getDbHandle(cri);
         }
+        else if (reserved.contains(currentDbHandle)) 
+        {
+            mcf.releaseDbHandle(currentDbHandle, cri);
+            currentDbHandle = mcf.getDbHandle(cri);
+        } // end of if ()
+        
         return currentDbHandle;
     }
 
