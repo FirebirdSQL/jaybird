@@ -23,7 +23,6 @@ import org.firebirdsql.common.FBTestBase;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ParameterMetaData;
 import java.sql.Statement;
 import java.util.Properties;
@@ -95,7 +94,8 @@ public class TestFBParameterMetaData extends FBTestBase {
         
         Connection connection = DriverManager.getConnection(this.getUrl(), props);
         
-        PreparedStatement stmt = connection.prepareStatement(TEST_QUERY);
+        FirebirdPreparedStatement stmt = 
+            (FirebirdPreparedStatement)connection.prepareStatement(TEST_QUERY);
         
         ParameterMetaData metaData = stmt.getParameterMetaData();
         

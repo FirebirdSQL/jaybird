@@ -39,7 +39,7 @@ import org.firebirdsql.logging.*;
 
 
 
-public class FBPreparedStatement extends FBStatement implements PreparedStatement {
+public class FBPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
 
     // this array contains either true or false indicating if parameter
     // was initialized, executeQuery, executeUpdate and execute methods
