@@ -57,6 +57,9 @@ public class XPreparedStatement implements InvocationHandler {
         XCachablePreparedStatement.class, "setConnection", new Class[] {
             Connection.class});
 
+    private final static Method PREPARED_STATEMENT_GET_ORIGINAL = findMethod(
+        XCachablePreparedStatement.class, "getOriginal", new Class[0]);
+
     
     private String statement;
     private PreparedStatement preparedStatement;
@@ -126,7 +129,10 @@ public class XPreparedStatement implements InvocationHandler {
         if (method.equals(PREPARED_STATEMENT_SET_CONNECTION)) {
             this.associatedConnection = (Connection)args[0];
             return Void.TYPE;
-        }
+        } else
+        if (method.equals(PREPARED_STATEMENT_GET_ORIGINAL)) {
+            return preparedStatement;
+        } else
         if (method.equals(PREPARED_STATEMENT_FORCE_CLOSE)) {
             preparedStatement.close();
             return Void.TYPE;
@@ -152,7 +158,11 @@ public class XPreparedStatement implements InvocationHandler {
             "method was called on a closed statement that currently " + 
             "lives in a statement pool.";
         
-        if (method.getDeclaringClass().equals(PreparedStatement.class))
+        boolean incorrectState = 
+            associatedConnection == null &&
+            method.getDeclaringClass().equals(PreparedStatement.class);
+            
+        if (incorrectState)
             if (TOLERANT_CHECK_MODE)
                 throw new SQLException(message);
             else
