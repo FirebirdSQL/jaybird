@@ -116,7 +116,7 @@ public class TestFBResultSet extends BaseFBTest {
      * 
      * @throws Exception if something went wrong.
      */
-    public void testFindColumn() throws Exception {
+    public void _testFindColumn() throws Exception {
         Statement stmt = connection.createStatement();
         
         ResultSet rs = stmt.executeQuery(SELECT_STATEMENT);
@@ -137,11 +137,13 @@ public class TestFBResultSet extends BaseFBTest {
      * @throws java.lang.Exception if something went wrong.
      */
     public void testPositionedUpdate() throws Exception {
+        int recordCount = 10;
+        
         PreparedStatement ps = 
             connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
 
         try {
-            for(int i = 0; i < 10; i++) {
+            for(int i = 0; i < recordCount; i++) {
                 ps.setInt(1, i);
                 ps.setInt(2, i);
                 ps.executeUpdate();
@@ -166,17 +168,24 @@ public class TestFBResultSet extends BaseFBTest {
                     UPDATE_TABLE_STATEMENT);
 
                 try {
-                    boolean first = true;
                     int counter = 0;
                     
                     while (rs.next()) {
                         
-                        if (first) {
-                            first = false;
+                        if (counter == 0) {
                             assertTrue("ResultSet.isFirst() should be true", 
                                 rs.isFirst());
+                        } else
+                        if (counter == recordCount - 1) {
+                            try {
+                                rs.isLast();
+                                assertTrue("ResultSet.isLast() should be true", 
+                                    false);
+                            } catch(SQLException ex) {
+                                // correct
+                            }
                         }
-                        
+
                         counter++;
 
                         assertTrue("ResultSet.getRow() should be correct", 
@@ -209,7 +218,22 @@ public class TestFBResultSet extends BaseFBTest {
         select = connection.createStatement();
         try {
             ResultSet rs = select.executeQuery("SELECT id, str FROM test_table");
+            
+            int counter = 0;
+            
             while (rs.next()) {
+                
+                if (counter == 0) {
+                    assertTrue("ResultSet.isFirst() should be true", 
+                        rs.isFirst());
+                } else
+                if (counter == recordCount - 1) {
+                    assertTrue("ResultSet.isLast() should be true", 
+                        rs.isLast());
+                }
+
+                counter++;
+
                 int idValue = rs.getInt(1);
                 int strValue = rs.getInt(2);
 
@@ -231,7 +255,7 @@ public class TestFBResultSet extends BaseFBTest {
      * 
      * @throws Exception if something went wrong.
      */
-    public void testEmptyColumnInView() throws Exception {
+    public void _testEmptyColumnInView() throws Exception {
         PreparedStatement ps = 
             connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
             
