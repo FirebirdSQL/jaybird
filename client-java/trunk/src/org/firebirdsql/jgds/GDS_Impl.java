@@ -242,6 +242,7 @@ public class GDS_Impl implements GDS {
     public void isc_attach_database(String connectString,
                                    isc_db_handle db_handle,
                                    Clumplet dpb) throws GDSException  {
+
         DbAttachInfo dbai = new DbAttachInfo(connectString);
         isc_attach_database(dbai, db_handle, dpb);
     }
@@ -2029,29 +2030,29 @@ public class GDS_Impl implements GDS {
                 throw new GDSException("Connection string missing");
             }
 
-
             connectInfo = connectInfo.trim();
             String node_name;
             int sep = connectInfo.indexOf(':');
             if (sep == 0 || sep == connectInfo.length() - 1) {
                 throw new GDSException("Bad connection string: ':' at beginning or end of:" + connectInfo +  isc_bad_db_format);
             }
-            if (sep > 0) {
+            else if (sep > 0) {
                 server = connectInfo.substring(0, sep);
                 fileName = connectInfo.substring(sep + 1);
-                sep = server.indexOf('/');
-                if (sep == 0 || sep == server.length() - 1) {
+                int portSep = server.indexOf('/');
+                if (portSep == 0 || portSep == server.length() - 1) {
                     throw new GDSException("Bad server string: '/' at beginning or end of: " + server +  isc_bad_db_format);
                 }
-                if (sep > 0) {
-                    port = Integer.parseInt(server.substring(sep + 1));
-                    server = server.substring(0, sep);
+                else if (portSep > 0) {
+                    port = Integer.parseInt(server.substring(portSep + 1));
+                    server = server.substring(0, portSep);
                 }
             }
-            if (sep == -1) 
+            else if (sep == -1) 
             {
                 fileName = connectInfo;
             } // end of if ()            
+
         }
 
         public DbAttachInfo(String server, Integer port, String fileName) throws GDSException
