@@ -26,19 +26,6 @@ FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
 <p>The driver complies with the JDBC 2.0 core with some features and methods not implemented. Some of the unimplemented features are required by the specification and some are optional.</p>
 <p>The following optional features and the methods that support it are not implemented:</p>
 <ul>
-<li><b>Batch Updates.</b></li>
-	<ul>
-		<li>java.sql.Statement</li>
-		<ul>
-			<li>addBatch(String sql)</li>
-			<li>clearBatch()</li>
-			<li>executeBatch()</li>
-		</ul>
-		<li>java.sql.Statement</li>
-		<ul>
-			<li>addBatch()</li>
-		</ul>
-	</ul>
 <li><b>Scrollable cursors.</b></li>
 	<ul>
 		<li>java.sql.ResultSet</li>
@@ -67,17 +54,6 @@ FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
 			<li>cancelRowUpdates()</li>
 			<li>moveToInsertRow()</li>
 			<li>moveToCurrentRow()</li>
-		</ul>
-	</ul>
-<li><b>Cursors/Positioned update/delete</b></li>
-	<ul>
-		<li>java.sql.Statement</li>
-		<ul>
-			<li>setCursorName()</li>
-		</ul>
-		<li>java.sql.ResultSet</li>
-		<ul>
-			<li>getCursorName()</li>
 		</ul>
 	</ul>
 <li><b>Ref, Clob and Array types.</b></li>
@@ -126,8 +102,6 @@ FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
 	</ul>
 	<li><b>java.sql.Blob</b></li>
 	<ul>
-		<li>length()</li>
-		<li>getBytes(long pos, int length)</li>
 		<li>position(byte pattern[], long start)</li>
 		<li>position(Blob pattern, long start)</li>
 	</ul>
@@ -156,7 +130,28 @@ FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
 	</ul>
 </ul>
 <h2>4.- Compliance Tests</h2>
-<p>The compliance was checked with <a href="http://www.jDataMaster.com">jDataMaster</a>, 
+<p>JDBC 2.0 compliance was checked with Sun JDBC CTS 1.3.1 test suite. Callable
+statement tests  were excluded from run since driver does not support 
+registerOutParam() method and testing makes little sense. Results can be found 
+in CVS in file client-java/src/etc/jdbc_cts_log.txt.</p>
+<p>Driver does not conform JDBC specification in following areas:
+<ul>
+	<li>Support of ResultSet.TYPE_SCROLL_INSENSITIVE. JDBC specification requires
+	JDBC driver to fully support this type of result set, but JayBird does not.
+	<li>Driver does not return X/Open SQLSTATE values in SQLException.
+</ul>
+Other failures are caused by :
+<ul>
+	<li>float rounding problems of the database server (like 1e-14 is not equal 
+	to 9.9e-15);
+	<li>exact point arithmetic number representation (it is not possible to 
+	represent number with >25 digits in Firebird);
+	<li>absense of BIT data type support (these tests can be excluded from run 
+	anyway);
+	<li>incorrect boolean conversion within the test cases.
+</ul>
+</p>
+<p>Also the compliance was checked with <a href="http://www.jDataMaster.com">jDataMaster</a>, 
 which includes more than 1000 tests, excluding:</p>
 	<ul>
 		<li>CallableStatements</li>
