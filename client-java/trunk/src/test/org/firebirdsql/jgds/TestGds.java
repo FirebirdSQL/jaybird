@@ -19,8 +19,6 @@
 
 package org.firebirdsql.jgds;
 
-
-import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
 import org.firebirdsql.logging.Logger;
@@ -32,11 +30,8 @@ import org.firebirdsql.common.SimpleFBTestBase;
 
 
 /**
- * Describe class <code>TestGds</code> here.
- *
  * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro Alberola</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
  */
 public class TestGds extends SimpleFBTestBase {
 

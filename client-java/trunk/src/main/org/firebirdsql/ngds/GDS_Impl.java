@@ -24,10 +24,6 @@ import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.logging.Logger;
 
-
-import java.io.IOException;
-
-
 /**
  * Type 2 GDS implementation.
  *
