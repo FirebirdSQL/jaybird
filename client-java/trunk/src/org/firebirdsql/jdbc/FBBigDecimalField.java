@@ -165,25 +165,6 @@ public class FBBigDecimalField extends FBField {
         setBigDecimal(BigDecimal.valueOf(value));
     }
 
-    void setObject(Object value) throws SQLException {
-        if (value == null) {
-            setNull(true);
-            return;
-        }
-
-        if (value instanceof Long && isType(field, Types.BIGINT))
-            setLong(((Long)value).longValue());
-        else
-        if (value instanceof Integer && isType(field, Types.INTEGER))
-            setInteger(((Integer)value).intValue());
-        else
-        if (value instanceof BigDecimal)
-            setBigDecimal((BigDecimal)value);
-        else
-            throw (SQLException)createException(
-                INT_CONVERSION_ERROR).fillInStackTrace();
-    }
-
     void setShort(short value) throws SQLException {
         setLong(value);
     }

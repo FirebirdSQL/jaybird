@@ -63,24 +63,6 @@ class FBTimestampField extends FBField {
 
         return (Timestamp)field.sqldata;
     }
-    void setObject(Object value) throws java.sql.SQLException {
-        if (value == null) {
-            setNull(true);
-            return;
-        }
-
-        if (value instanceof Timestamp)
-            setTimestamp((Timestamp)value);
-        else
-        if (value instanceof Time)
-            setTime((Time)value);
-        else
-        if (value instanceof Date)
-            setDate((Date)value);
-        else
-            throw (SQLException)createException(
-                OBJECT_CONVERSION_ERROR).fillInStackTrace();
-    }
     void setString(String value) throws java.sql.SQLException {
         if (value == null) {
             setNull(true);

@@ -141,18 +141,6 @@ class FBLongField extends FBField {
 
         setLong((long)value);
     }
-    void setObject(Object value) throws java.sql.SQLException {
-        if (value == null) {
-            setNull(true);
-            return;
-        }
-
-        if (value instanceof Long)
-            setLong(((Long)value).longValue());
-        else
-            throw (SQLException)createException(
-                INT_CONVERSION_ERROR).fillInStackTrace();
-    }
     void setDouble(double value) throws java.sql.SQLException {
         // check if value is within bounds
         if (value > Long.MAX_VALUE ||

@@ -147,18 +147,6 @@ class FBDoubleField extends FBField {
     void setFloat(float value) throws java.sql.SQLException {
         setDouble((double)value);
     }
-    void setObject(Object value) throws java.sql.SQLException {
-        if (value == null) {
-            setNull(true);
-            return;
-        }
-
-        if (value instanceof Double)
-            setDouble(((Double)value).doubleValue());
-        else
-            throw (SQLException)createException(
-                INT_CONVERSION_ERROR).fillInStackTrace();
-    }
     void setDouble(double value) throws java.sql.SQLException {
         field.sqldata = new Double((double)value);
         setNull(false);

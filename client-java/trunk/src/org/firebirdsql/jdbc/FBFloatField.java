@@ -144,18 +144,6 @@ class FBFloatField extends FBField {
         field.sqldata = new Float((float)value);
         setNull(false);
     }
-    void setObject(Object value) throws java.sql.SQLException {
-        if (value == null) {
-            setNull(true);
-            return;
-        }
-
-        if (value instanceof Float)
-            setFloat(((Float)value).floatValue());
-        else
-            throw (SQLException)createException(
-                INT_CONVERSION_ERROR).fillInStackTrace();
-    }
     void setDouble(double value) throws java.sql.SQLException {
         // check if value is within bounds
         if (value > Float.MAX_VALUE ||

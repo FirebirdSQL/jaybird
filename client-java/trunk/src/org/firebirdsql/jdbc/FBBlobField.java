@@ -154,23 +154,6 @@ public class FBBlobField extends FBField {
     void setBytes(byte[] value) throws SQLException {
         setBinaryStream(new ByteArrayInputStream(value));
     }
-
-    void setObject(Object value) throws SQLException {
-        if (value instanceof String)
-            setString((String)value);
-        else
-        if (value instanceof byte[])
-            setBytes((byte[])value);
-        else
-        if (value instanceof InputStream)
-            setBinaryStream((InputStream)value);
-        else
-        if (value instanceof Blob)
-            setBinaryStream(((FBBlob)value).getBinaryStream());
-        else
-            throw (SQLException)createException(OBJECT_CONVERSION_ERROR);
-    }
-
     void setString(String value) throws SQLException {
         setBytes(value.getBytes());
     }

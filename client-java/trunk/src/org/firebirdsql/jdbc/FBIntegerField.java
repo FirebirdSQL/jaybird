@@ -134,18 +134,6 @@ class FBIntegerField extends FBField {
 
         setInteger((int)value);
     }
-    void setObject(Object value) throws java.sql.SQLException {
-        if (value == null) {
-            setNull(true);
-            return;
-        }
-
-        if (value instanceof Integer)
-            setInteger(((Integer)value).intValue());
-        else
-            throw (SQLException)createException(
-                INT_CONVERSION_ERROR).fillInStackTrace();
-    }
     void setDouble(double value) throws java.sql.SQLException {
         // check if value is within bounds
         if (value > Integer.MAX_VALUE ||

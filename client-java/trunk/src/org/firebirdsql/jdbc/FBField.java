@@ -451,8 +451,63 @@ abstract class FBField {
             STRING_CONVERSION_ERROR).fillInStackTrace();
     }
     void setObject(Object value) throws SQLException {
+        /*
         throw (SQLException)createException(
             OBJECT_CONVERSION_ERROR).fillInStackTrace();
+        */
+        if (value == null) {
+          setNull(true);
+          return;
+        }
+        if (value instanceof InputStream) {
+          setBinaryStream((InputStream) value);
+        } else
+        if (value instanceof BigDecimal) {
+          setBigDecimal((BigDecimal) value);
+        } else
+        if (value instanceof Blob) {
+          setBinaryStream(((Blob) value).getBinaryStream());
+        } else
+        if (value instanceof Boolean) {
+          setBoolean(((Boolean) value).booleanValue());
+        } else
+        if (value instanceof Byte) {
+          setByte(((Byte) value).byteValue());
+        } else
+        if (value instanceof byte[]) {
+          setBytes((byte[]) value);
+        } else
+        if (value instanceof Date) {
+          setDate((Date) value);
+        } else
+        if (value instanceof Double) {
+          setDouble(((Double) value).doubleValue());
+        } else
+        if (value instanceof Float) {
+          setFloat(((Float) value).floatValue());
+        } else
+        if (value instanceof Integer) {
+          setInteger(((Integer) value).intValue());
+        } else
+        if (value instanceof Long) {
+          setLong(((Long) value).longValue());
+        } else
+        if (value instanceof Short) {
+          setShort(((Short) value).shortValue());
+        } else
+        if (value instanceof String) {
+          setString((String) value);
+        } else
+        if (value instanceof Time) {
+          setTime((Time) value);
+        } else
+        if (value instanceof Timestamp) {
+          setTimestamp((Timestamp) value);
+        } else {
+          throw (SQLException) createException(
+            OBJECT_CONVERSION_ERROR).fillInStackTrace();
+        }
+
     }
     void setAsciiStream(InputStream in) throws SQLException {
         throw (SQLException)createException(
