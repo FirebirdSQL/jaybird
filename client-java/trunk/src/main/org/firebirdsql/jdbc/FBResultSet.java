@@ -2558,7 +2558,7 @@ public class FBResultSet implements ResultSet {
                     isBeforeFirst = true;
             }
             catch (GDSException ge) {
-                throw new SQLException("fetch problem: " + ge.toString());
+                throw new FBSQLException(ge);
             }
         }
 
@@ -2593,7 +2593,7 @@ public class FBResultSet implements ResultSet {
                     return true;
                 }
                 catch (GDSException ge) {
-                    throw new SQLException("fetch problem: " + ge.toString());
+                    throw new FBSQLException(ge);
                 }
             }
         }
@@ -2663,7 +2663,7 @@ public class FBResultSet implements ResultSet {
                 c.closeStatement(stmt, false);
             }
             catch (GDSException ge) {
-                throw new SQLException("fetch problem: " + ge.toString());
+                throw new FBSQLException(ge);
             }
         }
 

@@ -341,7 +341,7 @@ public class FBBlob implements Blob{
                 blob = c.openBlobHandle(blob_id);
             }
             catch (GDSException ge) {
-                throw new SQLException("couldn't open blob: " + blob_id + " exception: " + ge.toString());
+                throw new FBSQLException(ge);
             }
         }
 
@@ -418,7 +418,7 @@ public class FBBlob implements Blob{
                 blob = c.createBlobHandle();
             }
             catch (GDSException ge) {
-                throw new SQLException("Couldn't create new blob: " + ge);
+                throw new FBSQLException(ge);
             }
             if (blob_id == 0) {
                 blob_id = blob.getBlobId();
