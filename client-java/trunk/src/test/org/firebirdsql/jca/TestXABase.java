@@ -57,7 +57,7 @@ public class TestXABase extends FBTestBase {
         cri.setProperty(ISCConstants.isc_dpb_password, DB_PASSWORD);
         cri.setProperty(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
         cri.setProperty(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
-        cri.setProperty(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0});
+        cri.setProperty(ISCConstants.isc_dpb_sql_dialect, new byte[] {3});
         mcf.setConnectionRequestInfo(cri);
         /*
         HashSet tpb = new HashSet();
