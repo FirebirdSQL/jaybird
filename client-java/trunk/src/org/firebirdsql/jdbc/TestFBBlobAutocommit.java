@@ -88,6 +88,10 @@ public class TestFBBlobAutocommit extends BaseFBTest {
             Arrays.equals(rs.getBytes(2), TEST_BYTES));
         assertTrue("content of text field should be same to written", 
             Arrays.equals(rs.getBytes(3), TEST_BYTES));
+            
+        assertTrue("string values should be the same",
+            TEST_STRING.equals(rs.getString(3)));
+        
         assertTrue("content of blob field should be same to written", 
             Arrays.equals(
                 rs.getBlob(4).getBytes(1, TEST_BYTES.length), 
