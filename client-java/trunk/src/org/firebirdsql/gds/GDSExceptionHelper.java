@@ -30,6 +30,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.5  2002/02/01 03:58:06  d_jencks
+ * applied fix from William Suroweic in case we messed up the params in error messages
+ *
  * Revision 1.4  2002/01/07 06:59:54  d_jencks
  * Revised FBManager to create dialect 3 databases, and the tests to use a newly created database. Simplified and unified test constants. Test targets are now all-tests for all tests and one-test for one test: specify the test as -Dtest=Gds one-test for the TestGds.class test.  Made a few other small changes to improve error messages
  *
@@ -45,12 +48,17 @@
  */
 package org.firebirdsql.gds;
 
+import org.firebirdsql.logging.Logger;
+
 /**
  * This class is supposed to return messages for the specified error code.
  * It loads all messages during the class initialization and keeps messages
  * in the static <code>java.util.Properties</code> variable.
  */
 public class GDSExceptionHelper {
+
+   private static final Logger log = Logger.getLogger(GDSExceptionHelper.class);
+
     private static final String MESSAGES = "isc_error_msg";
     private static java.util.Properties messages = new java.util.Properties();
 
@@ -67,7 +75,7 @@ public class GDSExceptionHelper {
             java.io.InputStream in = cl.getResourceAsStream(res);
             messages.load(in);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.info("Exception in init of GDSExceptionHelper", ex);
         } finally {
             initialized = true;
         }

@@ -19,6 +19,7 @@ import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.jgds.GDS_Impl;
 import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.logging.Logger;
 
 import java.io.*;
 import java.util.Properties;
@@ -35,16 +36,12 @@ import junit.framework.*;
 /**
  *
  *   @see <related>
- *   @author David Jencks (davidjencks@earthlink.net)
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *   @version $ $
  */
 
 
 
-/**
- *This is a class that hands out connections.  Initial implementation uses DriverManager.getConnection,
- *future enhancements will use datasources/ managed stuff.
- */
 public class TestFBStandAloneConnectionManager extends TestXABase {
 
 
@@ -60,8 +57,8 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
 
 
     public void testCreateDCM() throws Exception {
-        System.out.println();
-        System.out.println("testCreateDCM");
+        
+        log.info("testCreateDCM");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
         assertTrue("Could not get DataSource", ds != null);
@@ -72,8 +69,8 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
 
 
     public void testCreateStatement() throws Exception {
-        System.out.println();
-        System.out.println("testCreateStatement");
+        
+        log.info("testCreateStatement");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
         Connection c = ds.getConnection();
@@ -83,8 +80,8 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
     }
 
     public void testUseStatement() throws Exception {
-        System.out.println();
-        System.out.println("testUseStatement");
+        
+        log.info("testUseStatement");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
         FBConnection c = (FBConnection)ds.getConnection();

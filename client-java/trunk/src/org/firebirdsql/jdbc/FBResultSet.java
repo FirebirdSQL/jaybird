@@ -44,6 +44,8 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.jca.FBManagedConnection;
+import org.firebirdsql.logging.Logger;
+
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.io.InputStream;
@@ -54,7 +56,7 @@ import java.util.ArrayList;
 /**
  *
  *   @see <related>
- *   @author David Jencks (davidjencks@earthlink.net)
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *   @version $ $
  */
 
@@ -247,6 +249,8 @@ aDa
 * @version 1.0
 */
 public class FBResultSet implements ResultSet {
+
+   private final Logger log = Logger.getLogger(getClass());
 
     private FBFetcher fbFetcher;
 
@@ -2826,7 +2830,10 @@ public class FBResultSet implements ResultSet {
         if (row[columnIndex - 1] == null) {
             return null;
         }
-        //System.out.println("retrieved blob_id: " + row[columnIndex - 1]);
+        if (log.isDebugEnabled()) 
+        {
+           log.debug("retrieved blob_id: " + row[columnIndex - 1]);
+        } // end of if ()
         return new FBBlob(mc, ((Long)row[columnIndex - 1]).longValue());
     }
 
@@ -3245,7 +3252,7 @@ public class FBResultSet implements ResultSet {
         }
 
         public boolean next() throws SQLException {
-            //System.out.println("FBResultSet next - FBStatementFetcher");
+            log.debug("FBResultSet next - FBStatementFetcher");
             try {
                 row = mc.fetch(stmt);
                 rowNum++;
@@ -3289,7 +3296,7 @@ public class FBResultSet implements ResultSet {
         }
 
         public boolean next() throws SQLException {
-            //System.out.println("FBResultSet next - FBCachedFetcher");
+            log.debug("FBResultSet next - FBCachedFetcher");
             if (rowNum >= rows.size()) {
                 return false;
             }

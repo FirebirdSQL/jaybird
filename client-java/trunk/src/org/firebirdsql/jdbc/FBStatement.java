@@ -36,11 +36,12 @@ import javax.resource.ResourceException;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.jca.FBManagedConnection;
+import org.firebirdsql.logging.Logger;
 
 /**
  *
  *   @see <related>
- *   @author David Jencks (davidjencks@earthlink.net)
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *   @version $ $
  */
 
@@ -61,6 +62,8 @@ import org.firebirdsql.jca.FBManagedConnection;
  * @see ResultSet
  */
 public class FBStatement implements Statement {
+
+   protected final Logger log = Logger.getLogger(getClass());
 
     protected FBConnection c;
     protected FBManagedConnection mc;
@@ -107,9 +110,8 @@ public class FBStatement implements Statement {
         }
         catch (ResourceException re) 
         {
-           System.out.println("resource exception");
-           re.printStackTrace();
-            throw new SQLException("ResourceException: " + re);
+           log.warn("resource exception", re);
+           throw new SQLException("ResourceException: " + re);
         } // end of try-catch
         catch (GDSException ge) 
         {
@@ -550,12 +552,16 @@ public class FBStatement implements Statement {
     public int getUpdateCount() throws  SQLException {
         try {
             FBManagedConnection.SqlInfo i = mc.getSqlInfo(fixedStmt);
-            /*System.out.println("InsertCount: " + i.getInsertCount());
-              System.out.println("UpdateCount: " + i.getUpdateCount());
-              System.out.println("DeleteCount: " + i.getDeleteCount());
+            if (log.isDebugEnabled()) 
+            {
+               log.debug("InsertCount: " + i.getInsertCount());
+               log.debug("UpdateCount: " + i.getUpdateCount());
+               log.debug("DeleteCount: " + i.getDeleteCount());
 
-              System.out.println("returning: " + Math.max(i.getInsertCount(), Math.max(i.getUpdateCount(), i.getDeleteCount())));
-            */
+               log.debug("returning: " + Math.max(i.getInsertCount(), Math.max(i.getUpdateCount(), i.getDeleteCount())));
+                              
+            } // end of if ()
+            
             return Math.max(i.getInsertCount(), Math.max(i.getUpdateCount(), i.getDeleteCount()));
         }
         catch (GDSException ge) {

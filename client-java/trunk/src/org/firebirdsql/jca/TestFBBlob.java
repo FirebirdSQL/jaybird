@@ -13,6 +13,7 @@ import org.firebirdsql.jgds.GDS_Impl;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBBlob;
+import org.firebirdsql.logging.Logger;
 
 import java.io.*;
 import java.util.Properties;
@@ -27,7 +28,7 @@ import java.util.Arrays;
 /**
  *
  *   @see <related>
- *   @author David Jencks (davidjencks@earthlink.net)
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *   @version $ $
  */
 
@@ -97,15 +98,15 @@ public class TestFBBlob extends TestXABase {
         p.setInt(1, 1);
         ResultSet rs = p.executeQuery();
         while (rs.next()) {
-            System.out.println("C1: " + rs.getInt(1));
+            log.info("C1: " + rs.getInt(1));
             Blob blobRead = rs.getBlob(2);
-            //            System.out.println("blobRead blob_id: " + ((FBBlob)blobRead).getBlobId());
+            //            log.info("blobRead blob_id: " + ((FBBlob)blobRead).getBlobId());
             InputStream is = blobRead.getBinaryStream();
             int count = 0;
             while (is.read() != -1) {
                 count++;
             }
-            System.out.println("C2 count: " + count);
+            log.info("C2 count: " + count);
             assertTrue("retrieved wrong length blob: expecting " + bloblength + ", retrieved: " + count, bloblength == count);
 
         }
@@ -116,8 +117,7 @@ public class TestFBBlob extends TestXABase {
 
     public void testUseBlob() throws Exception {
 
-        System.out.println();
-        System.out.println("testUseBlob");
+        log.info("testUseBlob");
         setupTable("T1");
 
         t.begin();
@@ -144,8 +144,7 @@ public class TestFBBlob extends TestXABase {
 
     public void xtestUseBlobViapsSetBinaryStream() throws Exception {
 
-        System.out.println();
-        System.out.println("testUseBlobViapsSetBinaryStream");
+        log.info("testUseBlobViapsSetBinaryStream");
         setupTable("T2");
 
         t.begin();
@@ -169,8 +168,7 @@ public class TestFBBlob extends TestXABase {
 
     public void xtestUseBlobViapsSetBytes() throws Exception {
 
-        System.out.println();
-        System.out.println("testUseBlobViapsSetBytes");
+        log.info("testUseBlobViapsSetBytes");
         setupTable("T3");
 
         t.begin();

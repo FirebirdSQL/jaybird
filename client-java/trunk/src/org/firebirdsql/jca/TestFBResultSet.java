@@ -20,6 +20,7 @@ import org.firebirdsql.gds.GDS;
 import org.firebirdsql.jgds.GDS_Impl;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.logging.Logger;
 
 import java.io.*;
 import java.util.Properties;
@@ -36,16 +37,12 @@ import junit.framework.*;
 /**
  *
  *   @see <related>
- *   @author David Jencks (davidjencks@earthlink.net)
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *   @version $ $
  */
 
 
 
-/**
- *This is a class that hands out connections.  Initial implementation uses DriverManager.getConnection,
- *future enhancements will use datasources/ managed stuff.
- */
 public class TestFBResultSet extends TestXABase {
 
 
@@ -61,8 +58,8 @@ public class TestFBResultSet extends TestXABase {
 
 
     public void testUseResultSet() throws Exception {
-        System.out.println();
-        System.out.println("testUseResultSet");
+        
+        log.info("testUseResultSet");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         Connection c = (Connection)mc.getConnection(null, null);
@@ -88,7 +85,7 @@ public class TestFBResultSet extends TestXABase {
         assertTrue("execute returned false for select statement", s.execute("select C1, C2 from T1"));
         ResultSet rs = s.getResultSet();
         while (rs.next()) {
-            System.out.println("C1: " + rs.getShort(1) + " C2: " + rs.getShort(2));
+            log.info("C1: " + rs.getShort(1) + " C2: " + rs.getShort(2));
         }
         rs.close();
         //s.close();
@@ -109,8 +106,8 @@ public class TestFBResultSet extends TestXABase {
     }
 
     public void testUseResultSetMore() throws Exception {
-        System.out.println();
-        System.out.println("testUseResultSetMore");
+        
+        log.info("testUseResultSetMore");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         Connection c = (Connection)mc.getConnection(null, null);
@@ -139,7 +136,7 @@ public class TestFBResultSet extends TestXABase {
         assertTrue("execute returned false for select statement", s.execute("select C1, C2, C3,  C4, C5, C6, C7, C8, C9, C10 from T1"));
         ResultSet rs = s.getResultSet();
         while (rs.next()) {
-            System.out.println("C1: " + rs.getInt(1)
+            log.info("C1: " + rs.getInt(1)
                 + " C2: " + rs.getShort(2)
                 + " C3: " + rs.getLong(3)
                 + " C4: " + rs.getFloat(4)
@@ -151,7 +148,7 @@ public class TestFBResultSet extends TestXABase {
                 + " C10: " + rs.getTimestamp(10)
 
                 );
-            System.out.println("C1: " + rs.getInt("C1")
+            log.info("C1: " + rs.getInt("C1")
                 + " C2: " + rs.getShort("C2")
                 + " C3: " + rs.getLong("C3")
                 + " C4: " + rs.getFloat("C4")
@@ -179,8 +176,8 @@ public class TestFBResultSet extends TestXABase {
     }
 
     public void testUseResultSetWithPreparedStatement() throws Exception {
-        System.out.println();
-        System.out.println("testUseResultSetWithPreparedStatement");
+        
+        log.info("testUseResultSetWithPreparedStatement");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
         FBConnection c = (FBConnection)ds.getConnection();
@@ -222,7 +219,7 @@ public class TestFBResultSet extends TestXABase {
         p.setInt(1, 1);
         ResultSet rs = p.executeQuery();
         while (rs.next()) {
-            System.out.println("C1: " + rs.getInt(1)
+            log.info("C1: " + rs.getInt(1)
                 + " C2: " + rs.getShort(2)
                 + " C3: " + rs.getLong(3)
                 + " C4: " + rs.getFloat(4)
@@ -230,7 +227,7 @@ public class TestFBResultSet extends TestXABase {
                 + " C6: " + rs.getString(6)
                 + " C7: " + rs.getString(7)
                 );
-            System.out.println("C1: " + rs.getInt("C1")
+            log.info("C1: " + rs.getInt("C1")
                 + " C2: " + rs.getShort("C2")
                 + " C3: " + rs.getLong("C3")
                 + " C4: " + rs.getFloat("C4")
@@ -243,7 +240,7 @@ public class TestFBResultSet extends TestXABase {
         p.setInt(1, 2);
         rs = p.executeQuery();
         while (rs.next()) {
-            System.out.println("C1: " + rs.getInt(1)
+            log.info("C1: " + rs.getInt(1)
                 + " C2: " + rs.getShort(2)
                 + " C3: " + rs.getLong(3)
                 + " C4: " + rs.getFloat(4)
@@ -251,7 +248,7 @@ public class TestFBResultSet extends TestXABase {
                 + " C6: " + rs.getString(6)
                 + " C7: " + rs.getString(7)
                 );
-            System.out.println("C1: " + rs.getInt("C1")
+            log.info("C1: " + rs.getInt("C1")
                 + " C2: " + rs.getShort("C2")
                 + " C3: " + rs.getLong("C3")
                 + " C4: " + rs.getFloat("C4")
@@ -275,8 +272,8 @@ public class TestFBResultSet extends TestXABase {
     }
 
     public void testUsePreparedStatementAcrossTransactions() throws Exception {
-        System.out.println();
-        System.out.println("testUsePreparedStatementAcrossTransactions");
+        
+        log.info("testUsePreparedStatementAcrossTransactions");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
         FBConnection c = (FBConnection)ds.getConnection();
@@ -325,7 +322,7 @@ public class TestFBResultSet extends TestXABase {
         p.setInt(1, 1);
         ResultSet rs = p.executeQuery();
         while (rs.next()) {
-            System.out.println("C1: " + rs.getInt(1)
+            log.info("C1: " + rs.getInt(1)
                 + " C2: " + rs.getShort(2)
                 + " C3: " + rs.getLong(3)
                 + " C4: " + rs.getFloat(4)
@@ -333,7 +330,7 @@ public class TestFBResultSet extends TestXABase {
                 + " C6: " + rs.getString(6)
                 + " C7: " + rs.getString(7)
                 );
-            System.out.println("C1: " + rs.getInt("C1")
+            log.info("C1: " + rs.getInt("C1")
                 + " C2: " + rs.getShort("C2")
                 + " C3: " + rs.getLong("C3")
                 + " C4: " + rs.getFloat("C4")
@@ -349,7 +346,7 @@ public class TestFBResultSet extends TestXABase {
         p.setInt(1, 2);
         rs = p.executeQuery();
         while (rs.next()) {
-            System.out.println("C1: " + rs.getInt(1)
+            log.info("C1: " + rs.getInt(1)
                 + " C2: " + rs.getShort(2)
                 + " C3: " + rs.getLong(3)
                 + " C4: " + rs.getFloat(4)
@@ -357,7 +354,7 @@ public class TestFBResultSet extends TestXABase {
                 + " C6: " + rs.getString(6)
                 + " C7: " + rs.getString(7)
                 );
-            System.out.println("C1: " + rs.getInt("C1")
+            log.info("C1: " + rs.getInt("C1")
                 + " C2: " + rs.getShort("C2")
                 + " C3: " + rs.getLong("C3")
                 + " C4: " + rs.getFloat("C4")
@@ -381,8 +378,8 @@ public class TestFBResultSet extends TestXABase {
     }
 
     public void testUseResultSetWithCount() throws Exception {
-        System.out.println();
-        System.out.println("testUseResultSetWithCount");
+        
+        log.info("testUseResultSetWithCount");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
         FBConnection c = (FBConnection)ds.getConnection();
@@ -407,7 +404,7 @@ public class TestFBResultSet extends TestXABase {
         assertTrue("execute returned false for insert statement", p.execute());
         ResultSet rs = p.getResultSet();
         while (rs.next()) {
-            System.out.println("count: " + rs.getInt(1) );
+            log.info("count: " + rs.getInt(1) );
         }
 //        rs.close(); //should be automatic
         p.close();
@@ -428,8 +425,8 @@ public class TestFBResultSet extends TestXABase {
         "CREATE PROCEDURE testproc(number INTEGER) RETURNS (result INTEGER) AS BEGIN     result = number; END";
 
     public void testExecutableProcedure() throws Exception {
-        System.out.println();
-        System.out.println("testExecutableProcedure");
+        
+        log.info("testExecutableProcedure");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
         FBConnection c = (FBConnection)ds.getConnection();

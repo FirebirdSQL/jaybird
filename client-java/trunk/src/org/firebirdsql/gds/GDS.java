@@ -1006,19 +1006,14 @@ public interface GDS {
 
 
     // Database functions
-    void isc_create_database2(String file_name, isc_db_handle db_handle) throws GDSException;
 
     void isc_create_database(String file_name,
                             isc_db_handle db_handle,
-                            Clumplet c
-                           /* int dpb_length,
-                            byte[] dpb*/) throws GDSException;
+                            Clumplet c ) throws GDSException;
 
     void isc_attach_database(String file_name,
                             isc_db_handle db_handle,
-                            Clumplet c
-                           /* int dpb_length,
-                            byte[] dpb*/) throws GDSException;
+                            Clumplet c) throws GDSException;
 
     void isc_database_info(isc_db_handle db_handle,
                             int item_length,
@@ -1038,9 +1033,7 @@ public interface GDS {
 
     void isc_start_transaction(    isc_tr_handle tr_handle,
                                 isc_db_handle db_handle,
-                                Set tpb
-                                /*int tpb_length,
-                                byte[] tpb*/) throws GDSException;
+                                Set tpb) throws GDSException;
 
 
     void isc_commit_transaction(    isc_tr_handle tr_handle) throws GDSException;
@@ -1082,14 +1075,12 @@ public interface GDS {
 
     void isc_dsql_execute_immediate(isc_db_handle db_handle,
                                       isc_tr_handle tr_handle,
-//                                      int length,
                                       String statement,
                                       int dialect,
                                       XSQLDA xsqlda) throws GDSException;
 
     void isc_dsql_exec_immed2(isc_db_handle db_handle,
                                isc_tr_handle tr_handle,
-//                                      int length,
                                String statement,
                                int dialect,
                                XSQLDA in_xsqlda,
@@ -1104,7 +1095,6 @@ public interface GDS {
 
     XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
                            isc_stmt_handle stmt_handle,
-//                                      int length,
                            String statement,
                            int dialect) throws GDSException;
 
@@ -1116,8 +1106,7 @@ public interface GDS {
     byte[] isc_dsql_sql_info(isc_stmt_handle stmt_handle,
                             int item_length,
                             byte[] items,
-                            int buffer_length/*,
-                            byte[] buffer*/) throws GDSException;
+                            int buffer_length) throws GDSException;
 
 
     int isc_vax_integer(byte[] buffer, int pos, int length);

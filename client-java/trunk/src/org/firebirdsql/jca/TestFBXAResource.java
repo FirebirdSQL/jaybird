@@ -17,6 +17,7 @@ import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.jgds.GDS_Impl;
 import org.firebirdsql.management.FBManager;
+import org.firebirdsql.logging.Logger;
 
 import java.io.*;
 import java.util.Properties;
@@ -33,16 +34,12 @@ import junit.framework.*;
 /**
  *
  *   @see <related>
- *   @author David Jencks (davidjencks@earthlink.net)
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *   @version $ $
  */
 
 
 
-/**
- *This is a class that hands out connections.  Initial implementation uses DriverManager.getConnection,
- *future enhancements will use datasources/ managed stuff.
- */
 public class TestFBXAResource extends TestXABase {
 
 
@@ -51,8 +48,8 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void testGetXAResource() throws Exception {
-        System.out.println();
-        System.out.println("testGetXAResource");
+        
+        log.info("testGetXAResource");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         XAResource xa1 = mc.getXAResource();
@@ -64,8 +61,8 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void testIsSameRM() throws Exception {
-        System.out.println();
-        System.out.println("testIsSameRM");
+        
+        log.info("testIsSameRM");
         FBManagedConnectionFactory mcf1 = initMcf();
         ManagedConnection mc1 = mcf1.createManagedConnection(null, null);
         XAResource xa1 = mc1.getXAResource();
@@ -85,8 +82,8 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void testStartXATrans() throws Exception {
-        System.out.println();
-        System.out.println("testStartXATrans");
+        
+        log.info("testStartXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc = (FBManagedConnection)mc;
@@ -102,8 +99,8 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void testRollbackXATrans() throws Exception {
-        System.out.println();
-        System.out.println("testStartXATrans");
+        
+        log.info("testStartXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc = (FBManagedConnection)mc;
@@ -119,8 +116,8 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void test2PCXATrans() throws Exception {
-        System.out.println();
-        System.out.println("testStartXATrans");
+        
+        log.info("testStartXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc = (FBManagedConnection)mc;
@@ -137,8 +134,8 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void testRollback2PCXATrans() throws Exception {
-        System.out.println();
-        System.out.println("testStartXATrans");
+        
+        log.info("testStartXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc = (FBManagedConnection)mc;
@@ -155,8 +152,8 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void testDo2XATrans() throws Exception {
-        System.out.println();
-        System.out.println("testDo2XATrans");
+        
+        log.info("testDo2XATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc1 = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc1 = (FBManagedConnection)mc1;
@@ -186,8 +183,8 @@ public class TestFBXAResource extends TestXABase {
 
     public void testRecover() throws Exception
     {
-        System.out.println();
-        System.out.println("testRecover");
+        
+        log.info("testRecover");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc1 = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc1 = (FBManagedConnection)mc1;

@@ -48,11 +48,12 @@ import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.jca.FBManagedConnection;
+import org.firebirdsql.logging.Logger;
 
 /**
  *
  *   @see <related>
- *   @author David Jencks (davidjencks@earthlink.net)
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *   @version $ $
  */
 
@@ -367,7 +368,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             }
             sqlvar.sqlind = 0;
             sqlvar.sqldata = padded.toString().getBytes();
-            //System.out.println("padded: /" + x + "/ to /" + padded + "/ length: " + ((byte[])sqlvar.sqldata).length);
+            //log.debug("padded: /" + x + "/ to /" + padded + "/ length: " + ((byte[])sqlvar.sqldata).length);
             return;
         }
 

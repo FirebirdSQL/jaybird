@@ -37,16 +37,12 @@ import junit.framework.*;
 /**
  *
  *   @see <related>
- *   @author David Jencks (davidjencks@earthlink.net)
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *   @version $ $
  */
 
 
 
-/**
- *This is a class that hands out connections.  Initial implementation uses DriverManager.getConnection,
- *future enhancements will use datasources/ managed stuff.
- */
 public class TestFBDatabaseMetaData extends TestXABase {
 
     private FBConnection c;
@@ -60,12 +56,9 @@ public class TestFBDatabaseMetaData extends TestXABase {
         super(name);
     }
 
-    public static Test suite() {
-
-        return new TestSuite(TestFBDatabaseMetaData.class);
-    }
 
     public void setUp() throws Exception {
+       super.setUp();
         ex = null;
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
@@ -85,18 +78,19 @@ public class TestFBDatabaseMetaData extends TestXABase {
         dmd = null;
         c.close();
         c = null;
+        super.tearDown();
     }
 
     public void testGetTablesNull() throws Exception {
-        System.out.println();
-        System.out.println("testGetTablesNull");
+
+        log.info("testGetTablesNull");
         createTable("T1");
 
         ResultSet rs = dmd.getTables(null, null, "T1", null);
         int count = 0;
         while (rs.next()) {
             String name =  rs.getString(3);
-            System.out.println("table name: " + name);
+            log.info("table name: " + name);
             count++;
             assertTrue("Didn't get back the name expected", "T1".equals(name));
         }
@@ -111,15 +105,15 @@ public class TestFBDatabaseMetaData extends TestXABase {
 
     }
     public void testGetTablesSystem() throws Exception {
-        System.out.println();
-        System.out.println("testGetTablesSystem");
+
+        log.info("testGetTablesSystem");
         createTable("T1");
 
         ResultSet rs = dmd.getTables(null, null, "T1", new String[] {"SYSTEM TABLE"});
         int count = 0;
         while (rs.next()) {
             String name =  rs.getString(3);
-            System.out.println("table name: " + name);
+            log.info("table name: " + name);
             count++;
             assertTrue("Didn't get back the name expected", "T1".equals(name));
         }
@@ -134,15 +128,15 @@ public class TestFBDatabaseMetaData extends TestXABase {
 
     }
     public void testGetTablesTable() throws Exception {
-        System.out.println();
-        System.out.println("testGetTablesTable");
+
+        log.info("testGetTablesTable");
         createTable("T1");
 
         ResultSet rs = dmd.getTables(null, null, "T1", new String[] {"TABLE"});
         int count = 0;
         while (rs.next()) {
             String name =  rs.getString(3);
-            System.out.println("table name: " + name);
+            log.info("table name: " + name);
             count++;
             assertTrue("Didn't get back the name expected", "T1".equals(name));
         }
@@ -158,15 +152,15 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     public void testGetTablesView() throws Exception {
-        System.out.println();
-        System.out.println("testGetTablesView");
+
+        log.info("testGetTablesView");
         createTable("T1");
 
         ResultSet rs = dmd.getTables(null, null, "T1", new String[] {"VIEW"});
         int count = 0;
         while (rs.next()) {
             String name =  rs.getString(3);
-            System.out.println("table name: " + name);
+            log.info("table name: " + name);
             count++;
             assertTrue("Didn't get back the name expected", "T1".equals(name));
         }
@@ -182,14 +176,14 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     public void testGetSystemTablesSystem() throws Exception {
-        System.out.println();
-        System.out.println("testGetSystemTablesSystem");
+
+        log.info("testGetSystemTablesSystem");
 
         ResultSet rs = dmd.getTables(null, null, "RDB$RELATIONS", new String[] {"SYSTEM TABLE"});
         int count = 0;
         while (rs.next()) {
             String name =  rs.getString(3);
-            System.out.println("table name: " + name);
+            log.info("table name: " + name);
             count++;
             assertTrue("Didn't get back the name expected", "RDB$RELATIONS".equals(name));
         }
@@ -200,14 +194,14 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     public void testGetAllSystemTablesSystem() throws Exception {
-        System.out.println();
-        System.out.println("testGetSystemTablesSystem");
+
+        log.info("testGetSystemTablesSystem");
 
         ResultSet rs = dmd.getTables(null, null, "%", new String[] {"SYSTEM TABLE"});
         int count = 0;
         while (rs.next()) {
             String name =  rs.getString(3);
-            System.out.println("table name: " + name);
+            log.info("table name: " + name);
             count++;
         }
         assertTrue("# of system tables is not 32: counted: " + count, count == 32);
@@ -218,8 +212,8 @@ public class TestFBDatabaseMetaData extends TestXABase {
 
 
     public void testAAStringFunctions() {
-        System.out.println();
-        System.out.println("testAAStringFunctions");
+
+        log.info("testAAStringFunctions");
         FBDatabaseMetaData d = (FBDatabaseMetaData)dmd;
         assertTrue("claims test\\_me has wildcards",  d.hasNoWildcards("test\\_me"));
         assertTrue("strip escape wrong", d.stripEscape("test\\_me").equals("test_me"));
@@ -228,8 +222,8 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     public void testGetTablesWildcardQuote() throws Exception {
-        System.out.println();
-        System.out.println("testGetTablesWildcardQuote");
+
+        log.info("testGetTablesWildcardQuote");
         createTable("test_me");
         createTable("test__me");
         createTable("\"test_ me\"");
@@ -240,7 +234,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         int count = 0;
         while (rs.next()) {
             String name =  rs.getString(3);
-            System.out.println("table name: " + name);
+            log.info("table name: " + name);
             assertTrue("wrong name found: " + name, "TEST_ME".equals(name) || "TEST__ME".equals(name));
             count++;
         }
@@ -251,7 +245,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         count = 0;
         while (rs.next()) {
             String name =  rs.getString(3);
-            System.out.println("table name: " + name);
+            log.info("table name: " + name);
             assertTrue("wrong name found: " + name, "TEST_ME".equals(name));
             count++;
         }
@@ -262,7 +256,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         count = 0;
         while (rs.next()) {
             String name =  rs.getString(3);
-            System.out.println("table name: " + name);
+            log.info("table name: " + name);
             assertTrue("wrong name found: " + name, "test_ me".equals(name));
             count++;
         }
@@ -273,7 +267,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         count = 0;
         while (rs.next()) {
             String name =  rs.getString(3);
-            System.out.println("table name: " + name);
+            log.info("table name: " + name);
             assertTrue("wrong name found: " + name, "test_ me".equals(name) || "test_ me too".equals(name));
             count++;
         }
@@ -284,7 +278,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         count = 0;
         while (rs.next()) {
             String name =  rs.getString(3);
-            System.out.println("table name: " + name);
+            log.info("table name: " + name);
             assertTrue("wrong name found: " + name, "RDB$RELATIONS".equals(name));
             count++;
         }
@@ -303,8 +297,8 @@ public class TestFBDatabaseMetaData extends TestXABase {
 
     }
     public void testGetColumnsWildcardQuote() throws Exception {
-        System.out.println();
-        System.out.println("testGetColumnsWildcardQuote");
+
+        log.info("testGetColumnsWildcardQuote");
         createTable("test_me");
         createTable("test__me");
         createTable("\"test_ me\"");
@@ -316,7 +310,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         while (rs.next()) {
             String name =  rs.getString(3);
             String column = rs.getString(4);
-            System.out.println("table name: " + name);
+            log.info("table name: " + name);
             assertTrue("wrong name found: " + name, "TEST_ME".equals(name) || "TEST__ME".equals(name));
             assertTrue("wrong column found: " + column, "my_ column2".equals(column));
             count++;
@@ -339,44 +333,44 @@ public class TestFBDatabaseMetaData extends TestXABase {
 
 
     public void testGetProcedures() throws Exception {
-        System.out.println();
-        System.out.println("testGetProcedures");
+
+        log.info("testGetProcedures");
 
         ResultSet rs = dmd.getProcedures(null, null, "%");
         assertTrue("No resultset returned from getProcedures", rs != null);
     }
 
     public void testGetProcedureColumns() throws Exception {
-        System.out.println();
-        System.out.println("testGetProcedureColumns");
+
+        log.info("testGetProcedureColumns");
 
         ResultSet rs = dmd.getProcedureColumns(null, null, "%", "%");
         assertTrue("No resultset returned from getProcedureColumns", rs != null);
     }
 
     public void testGetColumnPrivileges() throws Exception {
-        System.out.println();
-        System.out.println("testGetColumnPrivileges");
+
+        log.info("testGetColumnPrivileges");
 
         ResultSet rs = dmd.getColumnPrivileges(null, null, "RDB$RELATIONS", "%");
         assertTrue("No resultset returned from getProcedureColumns", rs != null);
     }
 
     public void testGetTablePrivileges() throws Exception {
-        System.out.println();
-        System.out.println("testGetTablePrivileges");
+        log.info("testGetTablePrivileges");
 
         ResultSet rs = dmd.getTablePrivileges(null, null, "%");
         assertTrue("No resultset returned from getTablePrivileges", rs != null);
     }
 
     public void testGetTypeInfo() throws Exception {
-        System.out.println();
-        System.out.println("testGetTypeInfo");
+
+        log.info("testGetTypeInfo");
 
         ResultSet rs = dmd.getTypeInfo();
         assertTrue("No resultset returned from getTablePrivileges", rs != null);
         int count = 0;
+        String out = "";
         while (rs.next()) {
             count++;
             for (int i = 1; i <= 18; i++) {
@@ -384,10 +378,11 @@ public class TestFBDatabaseMetaData extends TestXABase {
                 if (o == null) {
                     o = "null";
                 }
-                System.out.print(o.toString());
+                out += o.toString();
             }
-            System.out.println();
+            out += System.getProperty("line.separator");
         }
+        log.info("getTablePrivileges returned: " + out);
         assertTrue("Not enough TypeInfo rows fetched: " + count, count >= 21);
     }
 

@@ -59,10 +59,12 @@ import org.firebirdsql.jdbc.FBDataSource;
 import org.firebirdsql.jdbc.FBStatement;
 import java.util.HashSet;
 
+import org.firebirdsql.logging.Logger;
+
 /**
  *
  *   @see <related>
- *   @author David Jencks (davidjencks@earthlink.net)
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *   @version $ $
  */
 
@@ -77,7 +79,8 @@ matching and creation of ManagedConnection instance.
 
 public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
-    private PrintWriter log = new PrintWriter(System.out);
+   //private PrintWriter log = new PrintWriter(System.out);
+   private final Logger log = Logger.getLogger(getClass());
 
     GDS gds = GDSFactory.newGDS();
 
@@ -293,7 +296,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 **/
 
     public void setLogWriter(PrintWriter out) throws ResourceException {
-        this.log = out;
+       //ignore - we're using log4j
     }
 
 
@@ -314,7 +317,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
 **/
     public PrintWriter getLogWriter() {
-        return log;
+       return null;//we're using log4j
     }
 
 
@@ -386,7 +389,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         synchronized(dbHandleUsage) {
             Integer i = (Integer)dbHandleUsage.get(db);
             if (i == null) {
-                System.out.println("db handle not found in Usage map: " + db);
+                log.warn("db handle not found in Usage map: " + db);
                 return 1;
             }
             int count = ((Integer)dbHandleUsage.get(db)).intValue();
@@ -408,9 +411,8 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
                 gds.isc_attach_database(dbAlias, db, cri.getDpb());
             }
             catch (GDSException ge) {
-               System.out.println("GDS Exception: " + ge);
-               ge.printStackTrace();
-                throw new XAException(ge.getMessage());
+               log.error("GDS Exception in getDbHandle", ge);
+               throw new XAException(ge.getMessage());
             }
             dbHandleUsage.put(db, new Integer(1));
             return db;
@@ -464,7 +466,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             gds.isc_prepare_transaction2(lookupXid(xid), fbxid.toBytes());
         }
         catch (GDSException ge) {
-            ge.printStackTrace();
+            log.warn("error in prepare", ge);
             forgetXid(xid);
             throw new XAException(ge.getMessage());
         }

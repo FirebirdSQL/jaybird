@@ -25,6 +25,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.4  2001/11/25 23:15:55  d_jencks
+ * Implemented autocommit that does not interfere with connections managed by XAResource or LocalTransaction.  Made Driver reuse ManagedConnectionFactory for same database url.
+ *
  * Revision 1.3  2001/08/28 17:13:23  d_jencks
  * Improved formatting slightly, removed dos cr's
  *
@@ -57,6 +60,8 @@ import java.util.Map;
 import java.util.Vector;
 import javax.security.auth.Subject;
 import org.firebirdsql.jca.*;
+
+import org.firebirdsql.logging.Logger;
 
 /**
  *
@@ -92,6 +97,9 @@ import org.firebirdsql.jca.*;
  * @see Connection
  */
 public class FBDriver implements Driver {
+
+   private final static Logger log;
+
     public static final String FIREBIRD_PROTOCOL = "jdbc:firebirdsql:";
     public static final String USER = "user";
     public static final String PASSWORD = "password";
@@ -106,10 +114,11 @@ public class FBDriver implements Driver {
     private Map urlToDataSourceMap = new HashMap();
 
     static{
+       log = Logger.getLogger(FBDriver.class);
         try{
             java.sql.DriverManager.registerDriver(new FBDriver());
         } catch(Exception ex) {
-            ex.printStackTrace();
+           log.error("Could not register with driver manager", ex);
         }
     }
 
