@@ -56,9 +56,9 @@ public class TestFBEscapedCallParser extends TestCase {
         testProcedureCall.addInputParam(
                 new FBEscapedCallParser.FBProcedureCallParam(1, "?"));
         testProcedureCall.addInputParam(
-                new FBEscapedCallParser.FBProcedureCallParam(1, "'11-dec-2001'"));
+                new FBEscapedCallParser.FBProcedureCallParam(2, "'11-dec-2001'"));
         testProcedureCall.addOutputParam(
-                new FBEscapedCallParser.FBProcedureCallParam(1, "'test'"));
+                new FBEscapedCallParser.FBProcedureCallParam(3, "'test'"));
     }
     
     protected void tearDown() {
