@@ -17,35 +17,10 @@
  * All rights reserved.
  */
 
-/*
- * CVS modification log:
- * $Log$
- * Revision 1.2  2003/06/05 23:22:30  brodsom
- * Substitute package and inline imports
- *
- * Revision 1.1  2002/08/29 13:41:04  d_jencks
- * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
- *
- * Revision 1.5  2002/02/19 18:58:06  rrokytskyy
- * removed tabs and added some javadoc
- *
- * Revision 1.4  2002/02/11 15:13:59  rrokytskyy
- * fixed very slow and inefficient parsing of the SQL statements
- *
- * Revision 1.3  2002/01/25 18:20:24  rrokytskyy
- * added support of the nested escaped syntax and outer joins
- *
- * Revision 1.2  2001/08/28 17:13:23  d_jencks
- * Improved formatting slightly, removed dos cr's
- *
- * Revision 1.1  2001/07/18 20:07:31  d_jencks
- * Added better GDSExceptions, new NativeSQL, and CallableStatement test from Roman Rokytskyy
- *
- */
-
 package org.firebirdsql.jdbc;
 
 import java.text.BreakIterator;
+import java.util.HashMap;
 /**
  * The class <code>FBEscapedParser</code>  parses the SQL 
  * and converts escaped syntax to native form.
@@ -369,6 +344,16 @@ public class FBEscapedParser {
         return outerJoin;
     }
 
+    
+    /*
+     * This map contains mapping between JDBC function names and Firebird ones.
+     */
+    private static final HashMap FUNCTION_MAP = new HashMap();
+    static {
+        FUNCTION_MAP.put("LCASE", "LOWER");
+        FUNCTION_MAP.put("UCASE", "UPPER");
+    }
+
     /**
      * This method converts escaped function to a server function call. Actually
      * we do not change anything here, we hope that all UDF are defined.
@@ -381,7 +366,17 @@ public class FBEscapedParser {
     protected String convertEscapedFunction(String escapedFunction)
         throws FBSQLParseException
     {
-        return escapedFunction;
+        int parenthesisPos = escapedFunction.indexOf('(');
+        
+        if (parenthesisPos == -1) 
+            return escapedFunction;
+
+        String functionName = escapedFunction.substring(0, parenthesisPos).trim();
+        String firebirdName = (String)FUNCTION_MAP.get(functionName.toUpperCase());
+        if (firebirdName != null) 
+            return firebirdName + escapedFunction.substring(parenthesisPos);
+        else
+            return escapedFunction;
     }
 
     public static boolean supportsStoredProcedures() {
