@@ -18,13 +18,17 @@
  */
 package org.firebirdsql.jca;
 
-import javax.resource.spi.*;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.Types;
+
+import javax.resource.spi.LocalTransaction;
 import javax.sql.DataSource;
 
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBDatabaseMetaData;
 
-import java.sql.*;
 
 /**
  * Describe class <code>TestFBDatabaseMetaData</code> here.

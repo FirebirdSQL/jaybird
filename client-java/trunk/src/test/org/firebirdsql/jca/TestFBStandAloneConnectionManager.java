@@ -20,13 +20,15 @@ package org.firebirdsql.jca;
 
 import javax.resource.cci.LocalTransaction;
 import java.sql.Connection;
+import java.sql.Statement;
+
 import javax.sql.DataSource;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 import org.firebirdsql.jdbc.FBConnection;
 
-import java.sql.*;
-
-import junit.framework.*;
 
 /**
  * Describe class <code>TestFBStandAloneConnectionManager</code> here.

@@ -18,8 +18,10 @@
  */
 package org.firebirdsql.jca;
 
-import javax.resource.spi.*;
-import javax.transaction.xa.*;
+
+import javax.resource.spi.ManagedConnection;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
 
 import java.util.HashSet;
 
