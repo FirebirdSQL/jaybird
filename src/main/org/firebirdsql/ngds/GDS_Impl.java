@@ -59,6 +59,10 @@ public class GDS_Impl extends AbstractGDS implements GDS
 			{
 			try { nativeInitilize( "gds32" ); hasInitilized = true; } catch( Throwable th ) { th.printStackTrace(); }
 			}
+    if(hasInitilized == false)
+			{
+			try { nativeInitilize( "gds" ); hasInitilized = true; } catch( Throwable th ) { th.printStackTrace(); }
+			}
 
 		if(hasInitilized == false)
 			throw new RuntimeException("Failed to initilize java_gds");
