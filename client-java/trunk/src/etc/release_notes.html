@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Linux)">
+	<META NAME="CREATED" CONTENT="20020411;6210400">
+	<META NAME="CHANGEDBY" CONTENT="David Jencks">
+	<META NAME="CHANGED" CONTENT="20020411;11205400">
+	<STYLE>
+	<!--
+		@page { margin-left: 1.25in; margin-right: 1.25in; margin-top: 1in; margin-bottom: 1in }
+		P { margin-bottom: 0.08in }
+		H1 { margin-bottom: 0.08in; font-family: "helvetica", sans-serif; font-size: 16pt }
+		H2 { margin-bottom: 0.08in; font-family: "helvetica", sans-serif; font-size: 14pt; font-style: italic }
+	-->
+	</STYLE>
+</HEAD>
+<BODY>
+<H1 ALIGN=CENTER>Pure Java JCA-JDBC Firebird Driver</H1>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">The firebird team has implemented a
+pure java driver for firebirdsql.  This driver is based on both the
+new JCA standard for application server connections to enterprise
+information systems and the well known jdbc standard.  The JCA
+standard specifies an architecture in which an application server can
+cooperate with a driver so that the application server manages
+transactions, security, and resource pooling, and the driver supplies
+only the connection functionality.  While similar to the JDBC 2
+XADataSource idea, the JCA specification is considerably clearer on
+the division of responsibility between the application server and
+driver.</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<H2>Implemented features:</H2>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">Most useful jdbc functionality
+	(&quot;useful&quot; in the opinion of the developers).</P>
+	<LI><P STYLE="margin-bottom: 0in">Complete jca spi support: may be
+	used directly in jca-supporting application servers such as JBoss.</P>
+	<LI><P STYLE="margin-bottom: 0in">XA transactions with true two
+	phase commit when used as a jca resource adapter in a managed
+	environment (with a TransactionManager and jca deployment support).</P>
+	<LI><P STYLE="margin-bottom: 0in">Includes optional internal
+	connection pooling for standalone use and use in non-jca
+	environments such as Tomcat 4.</P>
+	<LI><P STYLE="margin-bottom: 0in">ObjectFactory implementation for
+	use in environments with JNDI but no TransactionManager such as
+	Tomcat 4.</P>
+	<LI><P STYLE="margin-bottom: 0in">DataSource implementations with or
+	without pooling.</P>
+	<LI><P STYLE="margin-bottom: 0in">Driver implementation for use in
+	legacy applications.</P>
+	<LI><P STYLE="margin-bottom: 0in">Complete access to all Firebird
+	database parameter block and transaction parameter block settings.</P>
+	<LI><P STYLE="margin-bottom: 0in">Optional integrated logging
+	through log4j.</P>
+	<LI><P STYLE="margin-bottom: 0in">JMX mbean for database management
+	(so far just database create and drop).</P>
+	<P STYLE="margin-bottom: 0in"></P>
+</UL>
+<H2>Installation:</H2>
+<P STYLE="margin-bottom: 0in">In all cases the classes from the
+following packages must be available:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">concurrent.jar</P>
+	<LI><P STYLE="margin-bottom: 0in">connector.jar</P>
+	<LI><P STYLE="margin-bottom: 0in">jaas.jar</P>
+	<LI><P STYLE="margin-bottom: 0in">jta-spec1_0_1.jar</P>
+	<LI><P STYLE="margin-bottom: 0in">log4j-core.jar (if you want
+	logging available)</P>
+	<LI><P STYLE="margin-bottom: 0in">either the jdbc 2 or 3 classes.</P>
+</UL>
+<P STYLE="margin-bottom: 0in">These archives are included in the
+binary package.</P>
+<P STYLE="margin-bottom: 0in">You can use the jmx management mbean
+either in a jmx agent (MBeanServer) or as a standalone class.  So far
+it has been tested in jbossmx and the  jmxri, although since it is
+extremely simple it should have no problems in any jmx
+implementation.  Use of jbossmx is highly recommended due to its
+smaller bug count and active development.</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">For use in a managed environment as a
+jca resource adapter, deploy firebirdsql.rar according to the
+environments deployment mechanism.</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<H2>Deployment in JBoss 3 beta2 and later</H2>
+<P STYLE="margin-bottom: 0in">The additional jars/classes mentioned
+above are already available in JBoss. Put firebirdsql.rar in the
+deploy directory. Get firebird-service.xml from jboss cvs (or the
+distribution when available) at
+connector[jbosscx]/src/etc/example-config/firebird-service.xml and
+modify the URL to point to the desired database location. Add a
+security domain to auth.conf of the form:</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">FirebirdDBRealm {</P>
+<P STYLE="margin-bottom: 0in">    // 	</P>
+<P STYLE="margin-bottom: 0in">    //  Security domain for new jca
+framework. 
+</P>
+<P STYLE="margin-bottom: 0in">    // One per ManagedConnectionFactory
+are required.</P>
+<P STYLE="margin-bottom: 0in">   
+org.jboss.resource.security.ConfiguredIdentityLoginModule required</P>
+<P STYLE="margin-bottom: 0in">    principal=&quot;sysdba&quot;</P>
+<P STYLE="margin-bottom: 0in">    userName=&quot;sysdba&quot;</P>
+<P STYLE="margin-bottom: 0in">    password=&quot;masterkey&quot;</P>
+<P STYLE="margin-bottom: 0in">   
+managedConnectionFactoryName=&quot;jboss.jca:service=XaTxCM,name=FirebirdDS&quot;</P>
+<P STYLE="margin-bottom: 0in">	;</P>
+<P STYLE="margin-bottom: 0in">};</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">where FirebirdDBRealm exactly matches
+the SecurityDomainJndiName attribute of your ConnectionManager mbean
+configuration and the managedConnectionFactoryName exactly matches
+the object name of the ConnectionManager mbean.</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">If you see log messages such as
+principal=null when trying to get a connection, you have the wrong
+managedConnectionFactoryName.  If you see attempts to use
+UserRolesLoginModule, you have mismatched SecurityDomainJndiName. 
+Other login modules supporting multiple user login should be
+available in JBoss soon.</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<H2>Deployment in a Non managed environment.</H2>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">For all environments that do not
+support jca deployment, make the classes in firebirdsql.jar available
+to your application.  You will probably have to use some of the jars
+mentioned above as necessary.</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">For use in a somewhat managed
+environment with JNDI but no jca support or transaction manager, use
+the FBDataSourceObjectFactory to bind a reference to a DataSource
+into jndi.  Tomcat 4 is an example of this scenario.  The JNDI
+implementation must support use of References/Referenceable.  This
+will not work if the JNDI implementation only supports binding
+serialized objects.</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">For use in a standalone application
+with multiple connections that would benefit from connection pooling,
+use an instance of FBWrappingDataSource configured for pooling.</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">For use in a standalone application
+that only needs one connection, use either FBWrappingDataSource or
+FBDriver.</P>
+<P STYLE="margin-bottom: 0in">A typical use of the FBDriver class
+would use code something like this:</P>
+<P STYLE="margin-bottom: 0in">Class.forName(&quot;org.firebirdsql.jdbc.FBDriver&quot;);</P>
+<P STYLE="margin-bottom: 0in">Connection conn =
+DriverManager.getConnection(&quot;jdbc:firebirdsql:localhost/3050:/firebird/test.gdb&quot;,
+&quot;sysdba&quot;, &quot;masterkey&quot;);</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">or in windows</P>
+<P STYLE="margin-bottom: 0in">DriverManager.getConnection(&quot;jdbc:firebirdsql:localhost/3050:E:\\database\\carwash.gdb&quot;,
+&quot;sysdba&quot;, &quot;masterkey&quot;);</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<H2>BLOBS</H2>
+<P>Firebird BLOB fields are accessed through different JDBC
+interfaces depending on their subtype.  For subtype &lt;0, they are
+accessed as Blob fields.  Subtype 1 is a LongVarChar, and Subtype 2
+is LongVarBinary.</P>
+<H2>Character Encodings</H2>
+<P>Support for character encodings has just been added.  This is
+easily accessible only from the FBDriver class.  To use it, request a
+connection with a properties object containing a name-value pair
+lc_ctype=WIN1250 or other appropriate encoding name.</P>
+<H2>Support, Bugs, Congratulations, Etc.</H2>
+<P>The developers attempt to follow the <A HREF="mailto:Firebird-Java@yahoogroups.comf">Firebird-Java@yahoogroups.com</A>
+list.  You may report bugs in the firebird bugtracker at
+<A HREF="http://sourceforge.net/tracker/?group_id=9028&amp;atid=109028">http://sourceforge.net/tracker/?group_id=9028&amp;atid=109028</A>
+ Perhaps the most crucial need right now is for more and better setup
+and usage guides, and to produce a reasonable section of the Firebird
+web site devoted to this driver.  Work on this would be greatly
+appreciated.</P>
+<H2>History</H2>
+<P>The idea of writing a java translation of the C client library and
+using it in an all-java driver originated in some discussions between
+David Jencks and Jim Starkey.  Alejandro Alberola provided the
+initial translation of most of the client library functionality.  I
+still don't understand how he did it so quickly.  David Jencks (me)
+wrote the JCA support and initial JDBC interfaces.  Roman Rokytskyy
+wrote the CallableStatement support, many of the trickier JDBC
+details, the FBField implementation, and the character encoding
+support (among many other things).  Several others have contributed
+bug fixes.</P>
+</BODY>
+</HTML>
