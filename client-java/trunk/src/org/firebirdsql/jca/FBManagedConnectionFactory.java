@@ -131,14 +131,25 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         return defaultCri;
     }
 
-/*    public void setDpb(Clumplet dpb) {
-        dpbClumplet = dpb;
-    }*/
+    public void setUserName(String userName)
+    {
+        defaultCri.setUser(userName);
+    }
 
-/*    public Clumplet getDpb() {
-//        return dpbClumplet;
-        return defaultCri.c;
-    }*/
+    public String getUserName()
+    {
+        return defaultCri.getUser();
+    }
+
+    public void setPassword(String password)
+    {
+        defaultCri.setPassword(password);
+    }
+
+    public String getPassword()
+    {
+        return defaultCri.getPassword();
+    }
 
     public void setTpb(Collection tpb) {
         tpbSet = new HashSet(tpb);
@@ -207,12 +218,10 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
 **/
     public ManagedConnection createManagedConnection(Subject subject,
-                                                 ConnectionRequestInfo cxRequestInfo)
-                                          throws ResourceException {
-        if (cxRequestInfo == null) {
-            cxRequestInfo = defaultCri;
-        }
-        return new FBManagedConnection(subject, (FBConnectionRequestInfo)cxRequestInfo, this);
+                                                     ConnectionRequestInfo cri)
+        throws ResourceException 
+    {
+        return new FBManagedConnection(subject, cri, this);
     }
 
 
