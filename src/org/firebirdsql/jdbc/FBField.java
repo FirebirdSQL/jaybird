@@ -274,13 +274,22 @@ abstract class FBField {
      */
     static FBField createField(XSQLVAR field) throws SQLException {
         if (isType(field, Types.SMALLINT))
-            return new FBShortField(field);
+            if (field.sqlscale == 0)
+                return new FBShortField(field);
+            else
+                return new FBBigDecimalField(field);
         else
         if (isType(field, Types.INTEGER))
-            return new FBIntegerField(field);
+            if (field.sqlscale == 0)
+                return new FBIntegerField(field);
+            else
+                return new FBBigDecimalField(field);
         else
         if (isType(field, Types.BIGINT))
-            return new FBLongField(field);
+            if (field.sqlscale == 0)
+                return new FBLongField(field);
+            else
+                return new FBBigDecimalField(field);
         else
         if (isType(field, Types.FLOAT))
             return new FBFloatField(field);
