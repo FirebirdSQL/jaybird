@@ -30,6 +30,7 @@ import javax.resource.Referenceable;
 import javax.sql.DataSource;
 
 import org.firebirdsql.jdbc.FBConnectionDefaults;
+import org.firebirdsql.jdbc.FBConnectionHelper;
 
 /**
  * Implementation of {@link javax.sql.DataSource} including connection pooling.
@@ -209,6 +210,18 @@ public class FBWrappingDataSource implements DataSource,
 
     public void setEncoding(String encodingValue) {
         getPool().setEncoding(encodingValue);
+    }
+    
+    public String getCharSet() {
+    	return FBConnectionHelper.getJavaEncoding(getEncoding());
+    }
+    
+    public void setCharSet(String charSet) throws SQLException {
+        String iscEncoding = FBConnectionHelper.getIscEncoding(charSet);
+        if (iscEncoding == null)
+            throw new SQLException("Unknown character set " + charSet);
+        
+    	setEncoding(iscEncoding);
     }
 
     public int getIdleTimeout() {
