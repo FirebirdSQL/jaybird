@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.4  2002/02/03 02:45:39  d_jencks
+ * Fixed the rest of the bugs! The testsuite now all passes
+ *
  * Revision 1.3  2002/02/02 18:58:24  d_jencks
  * converted to log4j logging and cleaned up some test problems.  If you do not wish to use log4j, you may leave out the log4j-core.jar and get no logging
  *
@@ -71,8 +74,8 @@ public class BaseFBTest extends TestCase
    private static final String DB_PATH = System.getProperty("test.db.dir");
 
 
-   public static final String DB_SERVER_URL = "localhost";
-   public static final int DB_SERVER_PORT = 3050;
+   public static final String DB_SERVER_URL = System.getProperty("test.db.host", "localhost");
+   public static final int DB_SERVER_PORT = Integer.parseInt(System.getProperty("test.db.port", "3050"));
 
    public static final String DB_NAME = "fbtest.gdb";
 

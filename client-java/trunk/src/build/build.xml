@@ -69,6 +69,12 @@
     <property name="junit.timeout" value="60000"/>
     <!--property name="junit.jvm" value="true"/-->
 
+<!-- these may be overridden on the command line to test against a server
+  on another host.  For example,
+./build.sh -Dtest.db.host=192.168.0.3 -Dtest.db.dir=/usr/local/firebird/dev/client-java/output/db tests-report-html
+-->
+    <property name="test.db.host" value="localhost"/>
+    <property name="test.db.port" value="3050"/>
     <property name="test.db.dir" value="${module.output}/db"/>
 
 
@@ -228,7 +234,9 @@
   <target name="all-tests" depends="jars">
     <!-- Override JUnit defaults -->
 
-    <mkdir dir="${test.db.dir}"/>
+    <!--create local db dir, if you are running on remote machine
+      you must provide it yourself -->
+    <mkdir dir="${module.output}/db"/>
     <mkdir dir="${build.reports}"/>
     <mkdir dir="${build.testlog}"/>
     <junit dir="${module.output}"
