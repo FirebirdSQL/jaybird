@@ -969,6 +969,8 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     void closeResultSet() throws SQLException {
         if (currentRs != null)
             currentRs.close();
+        
+        currentCachedResultSet = null;
     }
     
     void releaseResultSet() throws SQLException {
