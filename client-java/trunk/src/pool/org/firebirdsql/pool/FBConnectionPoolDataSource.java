@@ -692,6 +692,18 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
         setProperty(ENCODING_PROPERTY, encoding);
     }
 
+    public String getCharSet() {
+        return FBConnectionHelper.getJavaEncoding(getEncoding());
+    }
+    
+    public void setCharSet(String charSet) throws SQLException {
+        String iscEncoding = FBConnectionHelper.getIscEncoding(charSet);
+        if (iscEncoding == null)
+            throw new SQLException("Unknown character set " + charSet);
+        
+        setEncoding(iscEncoding);
+    }
+    
     public String getPassword() {
         return getProperty(PASSWORD_PROPERTY);
     }
