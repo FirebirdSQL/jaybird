@@ -28,19 +28,6 @@ import java.io.ByteArrayOutputStream;
  */
 class ServiceParameterBufferImp extends ParameterBufferBase implements ServiceParameterBuffer
     {
-    // We will overide the addArgument(int argumentType, String value) method.
-
-    public void addArgument(int argumentType, String value)
-        {
-        getArgumentsList().add(new StringArgument(argumentType, value )
-            {
-            protected void writeLength(int length, ByteArrayOutputStream outputStream)
-                {
-                outputStream.write(length);
-                }
-            });
-        }
-
     /**
      * Pacakage local method for obtaining buffer suitable for passing to native method.
      *

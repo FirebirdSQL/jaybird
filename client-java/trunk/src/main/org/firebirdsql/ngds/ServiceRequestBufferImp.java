@@ -36,6 +36,21 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequ
         {
         this.taskIdentifier = taskIdentifier;
         }
+	
+	 // We will overide the addArgument(int argumentType, String value) method.
+
+    public void addArgument(int argumentType, String value)
+        {
+        getArgumentsList().add(new StringArgument(argumentType, value )
+            {
+            protected void writeLength(int length, ByteArrayOutputStream outputStream)
+                {
+                outputStream.write(length);
+				outputStream.write(length>>8);
+                }
+            });
+        }
+
 
     /**
      * Pacakage local method for obtaining buffer suitable for passing to native method.
