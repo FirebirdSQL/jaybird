@@ -244,7 +244,11 @@ public class TestFBResultSet extends FBTestBase {
 
         connection.commit();
         
-        
+
+        /*
+         
+        // Commented out by R.Rokytskyy. We no longer throw exception
+        // when ResultSet.close() is called twice.
         try {
             rs.close();
             assertTrue(
@@ -252,6 +256,7 @@ public class TestFBResultSet extends FBTestBase {
         } catch(SQLException ex) {
             // everything is ok
         }
+        */
         
         connection.setAutoCommit(true);
         
