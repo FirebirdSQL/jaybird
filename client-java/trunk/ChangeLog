@@ -1,3 +1,13 @@
+2004-06-03 22:40  ryanbaldwin
+
+	* client-java/src/: main/org/firebirdsql/ngds/GDS_Impl.java,
+	native/jaygds/source/entrypoints.cpp,
+	native/jaygds/source/entrypoints_generated.h:
+	
+	Fixed bug where encoding parameter was ignored in calls to
+	isc_dsql_prepare and isc_dsql_exec_immed2.  Removed a couple of
+	unnecarsery native methods.
+
 2004-06-01 13:24  ryanbaldwin
 
 	*
