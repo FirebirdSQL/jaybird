@@ -203,12 +203,12 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         return tpb.getTransactionIsolationName();
     }
     
-    public void setEncoding(String encoding) throws ResourceException {
+    public void setEncoding(String encoding) {
         hashCode = 0;
         defaultCri.setProperty(GDS.isc_dpb_lc_ctype, encoding);
     }
     
-    public String getEncoding() throws ResourceException {
+    public String getEncoding() {
         String result = defaultCri.getStringProperty(GDS.isc_dpb_lc_ctype);
         if (result == null)
             result = "NONE";
