@@ -250,7 +250,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
             case java.sql.Types.TIMESTAMP:
                 return 19;
             default:
-                return 0;
+
+               return 0;
             }
         }
 
@@ -549,7 +550,6 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         //Needs priveleges???
         return true;
     }
-
 
     /**
      * Indicates whether a write on the designated column will definitely succeed.
