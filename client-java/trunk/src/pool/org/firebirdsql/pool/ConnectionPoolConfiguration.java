@@ -20,7 +20,7 @@
 package org.firebirdsql.pool;
 
 /**
- * This interface describes a configuration for {@link AbstractConnectionPoolDataSource} 
+ * This interface describes a configuration for {@link AbstractConnectionPool} 
  * instances. Motivation for separating pool configuration into interface is 
  * quite simple, it allows third-party applications to load configuration from
  * various sources (resource bundle, XML file, etc.).
@@ -47,7 +47,7 @@ public interface ConnectionPoolConfiguration {
 	int getMaxConnections();
     
     /**
-     * Get time during which {@link ConnectionPoolDataSource#getPooledConnection()}
+     * Get time during which {@link javax.sql.ConnectionPoolDataSource#getPooledConnection()}
      * can block. By default method blocks forever.
      * 
      * @return pool blocking timeout in milliseconds, {@link Integer#MAX_VALUE} 

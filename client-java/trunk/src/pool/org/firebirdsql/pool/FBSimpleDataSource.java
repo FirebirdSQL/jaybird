@@ -113,7 +113,7 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
      * @deprecated use {@link #setDatabase(String)} instead for the sake of 
      * naming compatibility.
      */
-    public void setDatabaseName(String name) throws ResourceException {
+    public void setDatabaseName(String name) {
         setDatabase(name);
     }
 
@@ -133,11 +133,8 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
      * @param name connection URL without <code>"jdbc:firebirdsql:"</code>
      * prefix (<code>"//localhost:3050/c:/database/employee.gdb"</code>) for
      * example).
-     * 
-     * @throws SQLException if database name cannot be set.
      */
-    public void setDatabase(String name)
-    {
+    public void setDatabase(String name) {
         mcf.setDatabase(name);
     }
     
@@ -158,7 +155,7 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
      * 
      * @param user default user name.
      * 
-     * @deprecated use {@link setUserName(String)} instead for the sake of
+     * @deprecated use {@link #setUserName(String)} instead for the sake of
      * naming compatibility.
      */
     public void setUser(String user) {

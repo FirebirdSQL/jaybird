@@ -132,8 +132,6 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
      * Create instance of this class.
      * 
      * @param config configuration for this connection pool.
-     * 
-     * @throws SQLException if something went wrong.
      */
     public FBConnectionPoolDataSource() {
         super();
@@ -234,7 +232,7 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     /** 
      * Get name of the connection queue.
      * 
-     * @see AbstractConnectionPoolDataSource#getQueueName()
+     * @see AbstractConnectionPool#getPoolName()
      */
     protected String getPoolName() {
         return getDatabase();
@@ -380,8 +378,6 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
 
     /**
      * Get JDBC connection properties.
-     * 
-     * @see org.firebirdsql.pool.ConnectionPoolConfiguration#getProperties()
      */
     public Properties getProperties() {
         Properties result = new Properties();
@@ -451,11 +447,11 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     }
 
     /**
-     * Set JDBC URL that will be used to connect to the database.
+     * Set database name.
      * 
-     * @param jdbcUrl JDBC URL describing a database to connect.
-     * 
-     * @see #getJdbcUrl()
+     * @param name connection URL without <code>"jdbc:firebirdsql:"</code>
+     * prefix (<code>"//localhost:3050/c:/database/employee.gdb"</code>) for
+     * example).
      */
     public void setDatabase(String database) {
         this.database = database;

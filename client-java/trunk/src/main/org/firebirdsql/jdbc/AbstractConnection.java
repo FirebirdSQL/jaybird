@@ -417,7 +417,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * Tests to see if a Connection is closed.
      *
      * @return true if the connection is closed; false if it's still open
-     * @exception SQLException if a database access error occurs
      */
     public boolean isClosed() {
         return mc == null;

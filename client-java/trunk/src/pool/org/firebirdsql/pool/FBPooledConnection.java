@@ -91,11 +91,7 @@ class FBPooledConnection extends PingablePooledConnection
      * @throws SQLException if SQL error happened.
      */
     public XAResource getXAResource() throws SQLException {
-        try {
-            return managedConnection.getXAResource();
-        } catch(ResourceException ex) {
-            throw new FBSQLException(ex);
-        }
+        return managedConnection.getXAResource();
     }
     
     /**

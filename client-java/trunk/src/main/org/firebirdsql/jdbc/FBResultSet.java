@@ -2041,10 +2041,6 @@ public class FBResultSet implements ResultSet {
      * @return the <code>Statment</code> object that produced
      * this <code>ResultSet</code> object or <code>null</code>
      * if the result set was produced some other way
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
      */
     public Statement getStatement() {
         return fbFetcher.getStatement();
@@ -2369,7 +2365,6 @@ public class FBResultSet implements ResultSet {
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
-     * @exception java.net.MalformedURLException <description>
      */
     public URL getURL(int param1) throws SQLException {
         throw new FBDriverNotCapableException();
@@ -2380,7 +2375,6 @@ public class FBResultSet implements ResultSet {
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
-     * @exception java.net.MalformedURLException <description>
      */
     public URL getURL(String param1) throws SQLException {
         throw new FBDriverNotCapableException();

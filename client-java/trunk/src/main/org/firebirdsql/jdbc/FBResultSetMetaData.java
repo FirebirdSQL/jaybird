@@ -78,7 +78,6 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * Returns the number of columns in this <code>ResultSet</code> object.
      *
      * @return the number of columns
-     * @exception SQLException if a database access error occurs
      */
     public  int getColumnCount() {
         return xsqlvars.length;
@@ -90,7 +89,6 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      *
      * @param column the first column is 1, the second is 2, ...
      * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
      */
     public  boolean isAutoIncrement(int column) {
         return false;

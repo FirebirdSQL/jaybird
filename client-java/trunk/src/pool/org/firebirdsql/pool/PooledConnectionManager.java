@@ -35,7 +35,7 @@ public interface PooledConnectionManager {
      * @param userName user name that will be used to access database.
      * @param password password corresponding to the specified user name.
      * 
-     * @return instance of {@link PooledConnection}.
+     * @return instance of {@link javax.sql.PooledConnection}.
      * 
      * @throws SQLException if something went wrong.
      */

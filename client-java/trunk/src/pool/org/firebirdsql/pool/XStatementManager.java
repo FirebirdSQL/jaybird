@@ -25,7 +25,7 @@ import java.sql.SQLException;
  * to prepare SQL statements. Also this instance is notified when statement is 
  * closed.
  * <p>
- * Currently only {@link XConnection} is implementing this interface.
+ * Currently only {@link PingablePooledConnection} is implementing this interface.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
@@ -33,7 +33,7 @@ public interface XStatementManager {
     
     /**
      * Prepare specified SQL statement. This method should call 
-     * {@link Connection#prepareStatement(String)} method on physical JDBC
+     * {@link java.sql.Connection#prepareStatement(String)} method on physical JDBC
      * connection.
      * 
      * @param sql SQL statement to prepare.
@@ -42,7 +42,7 @@ public interface XStatementManager {
      * 
      * @param resultSetConcurrency result set concurrency
      * 
-     * @return instance of {@link PreparedStatement} corresponding to the 
+     * @return instance of {@link java.sql.PreparedStatement} corresponding to the 
      * specified SQL statement.
      * 
      * @throws SQLException if something went wrong.
@@ -56,7 +56,7 @@ public interface XStatementManager {
      * Notify about statement close.
      * 
      * @param statement SQL statement of an object that is being closed.
-     * @param proxy proxy on which {@link Statement#close()} method was called.
+     * @param proxy proxy on which {@link java.sql.Statement#close()} method was called.
      * 
      * @param stmt statement that was closed.
      */

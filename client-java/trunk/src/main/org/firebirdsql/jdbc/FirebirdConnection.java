@@ -44,8 +44,6 @@ public interface FirebirdConnection extends Connection {
      * Get current ISC encoding.
      * 
      * @return current ISC encoding.
-     * 
-     * @throws SQLException if something went wrong.
      */
     String getIscEncoding();
 }
