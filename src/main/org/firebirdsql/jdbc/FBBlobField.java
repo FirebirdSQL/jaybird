@@ -35,19 +35,10 @@ import org.firebirdsql.gds.XSQLVAR;
 public class FBBlobField extends FBField {
     private static final int BUFF_SIZE = 4096;
 
-    FBConnection c;
     boolean isCachedData = false;
 
     FBBlobField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
         super(field, rs, numCol);
-    }
-
-    void setConnection(FBConnection c) {
-        this.c = c;
-    }
-    
-    String getIscEncoding() {
-        return c.getIscEncoding();
     }
 
     Blob getBlob() throws SQLException {
@@ -57,9 +48,6 @@ public class FBBlobField extends FBField {
     Blob getBlob(boolean create) throws SQLException {
         if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
-
-//        if (rs.row[numCol] instanceof Blob)
-//            return (Blob)rs.row[numCol];
 
         Long blobId = new Long(XSQLVAR.decodeLong(rs.row[numCol]));
 
@@ -162,7 +150,7 @@ public class FBBlobField extends FBField {
         if (blob == BLOB_NULL_VALUE)
             return STRING_NULL_VALUE;
 
-        return toString(getBytes(), getIscEncoding());
+        return toString(getBytes());
     }
 
     InputStream getUnicodeStream() throws SQLException {
@@ -255,7 +243,7 @@ public class FBBlobField extends FBField {
         setBinaryStream(new ByteArrayInputStream(value), value.length);
     }
     void setString(String value) throws SQLException {
-        setBytes(getBytes(value, getIscEncoding()));
+        setBytes(getBytes(value));
     }
 
     void setUnicodeStream(InputStream in, int length) throws SQLException {

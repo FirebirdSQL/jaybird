@@ -82,7 +82,7 @@ import org.firebirdsql.gds.XSQLVAR;
  * and "N", or "TRUE" and "FALSE").
  * @todo check if the setBinaryStream(null) is allowed by specs.
  */
-class FBStringField extends FBField {
+public final class FBStringField extends FBField {
     static final String SHORT_TRUE = "Y";
     static final String SHORT_FALSE = "N";
     static final String LONG_TRUE = "TRUE";
@@ -90,22 +90,12 @@ class FBStringField extends FBField {
     static final String SHORT_TRUE_2 = "T";
     static final String SHORT_FALSE_2 = "F";
     
-    FBConnection c;
     char[] cBuff;
-    String IscEncoding = null;
 
     FBStringField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
         super(field, rs, numCol);
     }
-    
-    void setConnection(FBConnection c) {
-        this.c = c;
-        if (c!=null)
-            IscEncoding = c.getIscEncoding();
-        if (IscEncoding!= null && IscEncoding.equalsIgnoreCase("NONE"))
-            IscEncoding = null;
-    }
-
+	 
     //----- Math code
 
     byte getByte() throws java.sql.SQLException {
@@ -190,7 +180,7 @@ class FBStringField extends FBField {
     String getString() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return toString(rs.row[numCol], IscEncoding);
+        return toString(rs.row[numCol]);
     }
     Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
@@ -280,7 +270,7 @@ class FBStringField extends FBField {
             field.sqldata = null;
             return;
         }
-        byte[] supplied = getBytes(value, IscEncoding);
+        byte[] supplied = getBytes(value);
         if (supplied.length > field.sqllen)
             throw new DataTruncation(-1, true, false, supplied.length, field.sqllen);
 
@@ -317,7 +307,7 @@ class FBStringField extends FBField {
             int counter = 0;
             while ((counter = in.read(buff)) != -1)
                 out.write(buff, 0, counter);
-            setString(toString(out.toByteArray(), 0, length, IscEncoding));
+            setString(toString(out.toByteArray(), 0, length));
         }
         catch (IOException ioex) {
             throw (SQLException) createException(
@@ -350,7 +340,7 @@ class FBStringField extends FBField {
             return;
         }
 
-        setString(toString(value, IscEncoding));
+        setString(toString(value));
     }
 
     //----- setDate, setTime and setTimestamp code

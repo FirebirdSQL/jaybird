@@ -135,7 +135,10 @@ abstract class FBField {
     XSQLVAR field;
     FBResultSet rs;
     int numCol;
-	 
+    FBConnection c = null;
+    String IscEncoding = null;
+    String javaEncoding	= null;
+
     FBField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
         if (field == null) throw new SQLException(
             "Cannot create FBField instance for null as XSQLVAR.");
@@ -165,6 +168,16 @@ abstract class FBField {
     }
 
     void setConnection(FBConnection c) {
+        this.c = c;
+        if (c!=null)
+            IscEncoding = c.getIscEncoding();
+        if (IscEncoding!= null && IscEncoding.equalsIgnoreCase("NONE"))
+            IscEncoding = null;
+        // Java encoding		  
+        if (IscEncoding!= null)
+            javaEncoding = FBConnection.getJavaEncoding(IscEncoding);
+        else
+            javaEncoding = null;			  
         // this method only do something for FBStringField and FBBlobField
     }
     /**
@@ -365,16 +378,11 @@ abstract class FBField {
      * @param iscEncoding InterBase encoding to use.
      * @return converted string.
      */
-    public final static String toString(byte[] bytes, String iscEncoding) {
-        if (iscEncoding==null){
+
+    protected final String toString(byte[] bytes) {
+        if (javaEncoding == null)
             return new String(bytes);
-        }
         else {
-            String javaEncoding = FBConnection.getJavaEncoding(iscEncoding);
-        
-            if (javaEncoding == null)
-                return new String(bytes);        
-        
             try {
                 return new String(bytes, javaEncoding);
             } catch(java.io.UnsupportedEncodingException ex) {
@@ -392,18 +400,12 @@ abstract class FBField {
      * @param iscEncoding InterBase encoding to use.
      * @return converted string.
      */
-    public final static String toString(byte[] bytes, int offset, int count, 
-        String iscEncoding) 
+    protected final String toString(byte[] bytes, int offset, int count) 
     {
-        if (iscEncoding==null){
+        if (javaEncoding==null){
             return new String(bytes, offset, count);
         }
         else {
-            String javaEncoding = FBConnection.getJavaEncoding(iscEncoding);
-        
-            if (javaEncoding == null)
-                return new String(bytes, offset, count);        
-            
             try {
                 return new String(bytes, offset, count, javaEncoding);
             } catch(java.io.UnsupportedEncodingException ex) {
@@ -420,16 +422,12 @@ abstract class FBField {
      * @param iscEncoding InterBase encoding to use.
      * @return converted byte array
      */
-    public final static byte[] getBytes(String str, String iscEncoding) {
-        if (iscEncoding==null){
+	 
+    protected final byte[] getBytes(String str) {
+        if (javaEncoding==null){
             return str.getBytes();
         }
         else {
-            String javaEncoding = FBConnection.getJavaEncoding(iscEncoding);
-        
-            if (javaEncoding == null)
-                return str.getBytes();
-        
             try {
                 return str.getBytes(javaEncoding);
             } catch(java.io.UnsupportedEncodingException ex) {
@@ -543,11 +541,6 @@ abstract class FBField {
         throws  SQLException
     {
         java.sql.Date d = getDate();
-
-        if (d == null) 
-        {
-            return null;
-        } // end of if ()
         if (cal == null) 
         {
             return d;
@@ -566,11 +559,6 @@ abstract class FBField {
         throws  SQLException
     {
         java.sql.Time d = getTime();
-
-        if (d == null) 
-        {
-            return null;
-        } // end of if ()
         if (cal == null) 
         {
             return d;
@@ -589,11 +577,7 @@ abstract class FBField {
         throws  SQLException
     {
         java.sql.Timestamp x = getTimestamp();
-
-        if (x == null) 
-        {
-            return null;
-        } // end of if ()
+        //return d;
         
         if (cal == null) 
         {
