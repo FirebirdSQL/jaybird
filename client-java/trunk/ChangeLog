@@ -1,3 +1,29 @@
+2003-11-06 13:16  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FBEscapedFunctionHelper.java,
+	main/org/firebirdsql/jdbc/FBEscapedParser.java,
+	test/org/firebirdsql/jdbc/TestFBEscapedFunctionHelper.java:
+	
+	implemented simple escaped function call conversions using
+	templates
+
+2003-11-06 12:01  rrokytskyy
+
+	*
+	
+	initial revision
+	client-java/src/test/org/firebirdsql/jdbc/TestFBEscapedFunctionHelp
+	er.java:
+
+2003-11-06 12:00  rrokytskyy
+
+	*
+	
+	fixed incorrect parameter parsing
+	client-java/src/main/org/firebirdsql/jdbc/FBEscapedFunctionHelper.j
+	ava:
+
 2003-11-05 23:13  rrokytskyy
 
 	*
