@@ -32,12 +32,29 @@
 
 package org.firebirdsql.jgds;
 
+import org.firebirdsql.gds.isc_db_handle;
+
+
 public class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_handle {
     int rtr_id;
     isc_db_handle_impl rtr_rdb;
     isc_tr_handle_impl rtr_next;
     
+    private int state = NOTRANSACTION;
+    
     public isc_tr_handle_impl() {
+    }
+    
+    public isc_db_handle getDbHandle() {
+        return rtr_rdb;
+    }
+    
+    void setState(int state) {
+        this.state = state;
+    }
+    
+    public int getState() {
+        return state;
     }
 
 }

@@ -1,0 +1,272 @@
+/*   The contents of this file are subject to the Mozilla Public
+ *   License Version 1.1 (the "License"); you may not use this file
+ *   except in compliance with the License. You may obtain a copy of
+ *   the License at http://www.mozilla.org/MPL/
+ *   Alternatively, the contents of this file may be used under the
+ *   terms of the GNU Lesser General Public License Version 2 or later (the
+ *   "LGPL"), in which case the provisions of the GPL are applicable
+ *   instead of those above. You may obtain a copy of the Licence at
+ *   http://www.gnu.org/copyleft/lgpl.html
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    relevant License for more details.
+ *
+ *    This file was created by members of the firebird development team.
+ *    All individual contributions remain the Copyright (C) of those
+ *    individuals.  Contributors to this file are either listed here or
+ *    can be obtained from a CVS history command.
+ *
+ *    All rights reserved.
+
+ */
+package org.firebirdsql.jgds;
+
+
+import org.firebirdsql.gds.*;
+//import org.firebirdsql.jgds.*;
+import java.io.*;
+import java.util.Properties;
+import java.util.HashSet;
+import java.sql.*;
+
+
+import junit.framework.*;
+
+/**
+ *
+ *   @see <related>
+ *   @author David Jencks (davidjencks@earthlink.net)
+ *   @version $ $
+ */
+
+
+
+/**
+ *This is a class that hands out connections.  Initial implementation uses DriverManager.getConnection,
+ *future enhancements will use datasources/ managed stuff.
+ */
+public class TestGds extends TestCase {
+    
+    static final String dbName = "localhost:/usr/local/firebird/dev/client-java/db/testdb.gdb";
+    static final String dbName2 = "localhost:/usr/local/firebird/dev/client-java/db/testdb2.gdb";
+//    static final String jsql1 = "file:/usr/local/firebird/dev/tools/jsql/src/build/jsq2-r.xml";
+//    static final String target1 = "t1";
+
+    private GDS gds;
+    private isc_db_handle db1;
+    private isc_db_handle db2;
+//    private Object[] status = new Object[20];
+    private isc_tr_handle t1;
+    private byte[] dpb = new byte[256];
+        {dpb[0] = (byte) gds.isc_dpb_version1;
+        dpb[1] = (byte) gds.isc_dpb_num_buffers;
+        dpb[2] = (byte) 1;
+        dpb[3] = (byte) 90;
+
+        dpb[4] = (byte) gds.isc_dpb_dummy_packet_interval;
+        dpb[5] = (byte) 4;
+        dpb[6] = (byte) 120;
+        dpb[7] = (byte) 10;
+        dpb[8] = (byte) 0;
+        dpb[9] = (byte) 0;}
+        
+    private short dpb_length = 10;
+    
+    private ClumpletImpl c;
+    
+    private HashSet tpb = new HashSet();
+    
+    public TestGds(String name) {
+        super(name);
+    }
+    
+    public static Test suite() {
+
+        return new TestSuite(TestGds.class);
+    }
+    
+    public void setUp() {
+        
+        gds = new org.firebirdsql.jgds.GDS_Impl();
+        c = (ClumpletImpl)gds.newClumplet(gds.isc_dpb_num_buffers, new byte[] {90});
+        c.append(gds.newClumplet(gds.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
+        tpb.add(new Integer(gds.isc_tpb_write));
+        tpb.add(new Integer(gds.isc_tpb_read_committed));
+        tpb.add(new Integer(gds.isc_tpb_no_rec_version));
+        tpb.add(new Integer(gds.isc_tpb_wait));
+    }
+
+    protected isc_db_handle createDatabase(String name) throws Exception {
+        
+        isc_db_handle db = gds.get_new_isc_db_handle();
+        
+        System.out.println("isc_create_database");
+        gds.isc_create_database(name, db, c);
+//        gds.isc_create_database(name, db, dpb_length, dpb);
+        return db;
+    }
+    
+    private void dropDatabase(isc_db_handle db) throws Exception  {
+        System.out.println("isc_drop_database");        
+        gds.isc_drop_database(db);
+    }
+    
+    private isc_tr_handle startTransaction(isc_db_handle db) throws Exception {
+        isc_tr_handle tr = gds.get_new_isc_tr_handle();
+        
+        System.out.println("isc_start_transaction");
+        gds.isc_start_transaction(tr, db, tpb);
+        return tr;
+    }
+    
+    private void commit(isc_tr_handle tr) throws Exception {
+        System.out.println("isc_commit_transaction");
+        gds.isc_commit_transaction(tr);
+    }
+    
+    private void doSQLImmed(isc_db_handle db, isc_tr_handle tr, String sql) throws Exception {
+        System.out.println("isc_dsql_exec_inmed2");
+        gds.isc_dsql_exec_inmed2(db, tr, sql,
+                                 GDS.SQL_DIALECT_CURRENT, null, null);
+        
+    }
+    
+    public void testClumplets() throws Exception {
+        System.out.println();
+        System.out.println("testClumplets");
+        ByteArrayOutputStream b = new ByteArrayOutputStream();
+        XdrOutputStream x = new XdrOutputStream(b);
+        c.write(x);
+        byte[] ba = b.toByteArray();
+        if (ba.length + 1 != dpb_length) {
+            System.out.println("different length: clumplets " + ba.length  + " dpb_length: " + dpb_length);
+        }
+//        assert(ba.length + 1 != dpb_length);
+        for (int i = 0; i < ba.length;  i++) {
+            System.out.println("clumplet: " + ba[i] + " dpb: " + dpb[i + 1]);
+//            assert(ba[i] == dpb[i + 1]);
+        }
+    }
+
+    public void testClumplets2() throws Exception {
+        System.out.println();
+        System.out.println("testClumplets2");
+        ByteArrayOutputStream b = new ByteArrayOutputStream();
+        XdrOutputStream x = new XdrOutputStream(b);
+        x.writeTyped(gds.isc_dpb_version1, (Xdrable)c);
+        byte[] bac = b.toByteArray();
+        b.reset();
+//        x.writeInt(c.getLength());
+        x.writeBuffer(dpb, dpb_length);
+        byte[] bap = b.toByteArray();
+        
+        
+        if (bac.length != bap.length) {
+            System.out.println("different length: clumplets " + bac.length  + " dpb_length: " + bap.length);
+        }
+//        assert(bac.length != bap.length);
+        for (int i = 0; i < bac.length;  i++) {
+            System.out.println("clumplet: " + bac[i] + " dpb: " + bap[i]);
+//            assert(bac[i] == bap[i]);
+        }
+    }
+
+
+
+    public void testCreateDropDB() throws Exception {
+        System.out.println();
+        System.out.println("testCreateDropDB");
+        db1 = createDatabase(dbName);
+        System.out.println("isc_detach_database");
+        gds.isc_detach_database(db1);
+        
+        System.out.println("isc_attach_database");
+//        gds.isc_attach_database(dbName, db1, dpb_length, dpb);
+        gds.isc_attach_database(dbName, db1, c);
+        dropDatabase(db1);        
+    }
+
+    public void testCreateDropTable() throws Exception {
+        System.out.println();
+        System.out.println("testCreateDropTable");
+        db1 = createDatabase(dbName);
+        t1 = startTransaction(db1);
+        doSQLImmed(db1, t1, "create table r1 (col1 smallint not null primary key)");
+        commit(t1);
+        t1 = startTransaction(db1);
+        doSQLImmed(db1, t1, "drop table r1");
+        commit(t1);
+        dropDatabase(db1);   
+        
+    }
+    
+    public void testDbHandleEquality() throws Exception {
+        System.out.println();
+        System.out.println("testDbHandleEquality");
+        db1 = createDatabase(dbName);
+        
+        db2 = gds.get_new_isc_db_handle();
+//        gds.isc_attach_database(dbName, db2, dpb_length, dpb);
+        gds.isc_attach_database(dbName, db2, c);
+        
+        System.out.println("rdb_id1: " + ((isc_db_handle_impl)db1).getRdb_id());
+        System.out.println("rdb_id2: " + ((isc_db_handle_impl)db2).getRdb_id());
+        System.out.println("isc_detach_database");
+        gds.isc_detach_database(db1);
+        gds.isc_detach_database(db2);
+        
+        System.out.println("isc_attach_database");
+//        gds.isc_attach_database(dbName, db1, dpb_length, dpb);
+        gds.isc_attach_database(dbName, db1, c);
+        dropDatabase(db1);        
+    }
+  
+
+    public void testDbHandleEquality2() throws Exception {
+        System.out.println();
+        System.out.println("testDbHandleEquality2");
+        db1 = createDatabase(dbName);
+        
+        db2 = createDatabase(dbName2);
+//        db2 = gds.get_new_isc_db_handle();
+//        gds.isc_attach_database(dbName, db2, dpb_length, dpb);
+        
+        System.out.println("rdb_id1: " + ((isc_db_handle_impl)db1).getRdb_id());
+        System.out.println("rdb_id2: " + ((isc_db_handle_impl)db2).getRdb_id());
+        t1 = startTransaction(db1);
+        doSQLImmed(db1, t1, "create table r1 (col1 smallint not null primary key)");
+        commit(t1);
+        t1 = startTransaction(db2);
+        doSQLImmed(db2, t1, "create table r1 (col1 smallint not null primary key)");
+        commit(t1);
+        
+        dropDatabase(db1);        
+        dropDatabase(db2);        
+    }
+  
+/*Tests whether a transaction started on one db handle can be moved to another.  No, it can't
+    public void XXtestTrHandlePortability() throws Exception {
+        System.out.println();
+        System.out.println("testTrHandlePortability");
+        db1 = createDatabase(dbName);
+        
+        db2 = gds.get_new_isc_db_handle();
+//        gds.isc_attach_database(dbName, db2, dpb_length, dpb);
+        gds.isc_attach_database(dbName, db2, c);
+        
+        System.out.println("rdb_id1: " + ((isc_db_handle_impl)db1).getRdb_id());
+        System.out.println("rdb_id2: " + ((isc_db_handle_impl)db2).getRdb_id());
+        t1 = startTransaction(db1);
+        doSQLImmed(db1, t1, "create table r1 (col1 smallint not null primary key)");
+        ((isc_tr_handle_impl)t1).rtr_rdb = (isc_db_handle_impl)db2;
+        commit(t1); //on db2 connection
+        t1 = startTransaction(db2);
+        doSQLImmed(db2, t1, "create table r2 (col1 smallint not null primary key)");
+        commit(t1);
+        
+        dropDatabase(db1);        
+//        dropDatabase(db2);        
+    }*/
+}
