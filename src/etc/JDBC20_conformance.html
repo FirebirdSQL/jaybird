@@ -288,10 +288,14 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
 
 <h2>6.- Performance compared with Interclient</h2>
 <p>The results of the jDataMaster basic performance tests, are as follows:</p>
-<p>Local test (Server and driver on same system):</p>
-<p>FB1.0 without forces writes on AMD 1,7 with 512MB/DDR and OS Windows 2000</p>
-<p>The JVM are the Sun j2sdk 1.4.1_01 with the parameters -Xms256 and -Xmx256.</p>
-<p>The default character set of the database is WIN1252</p>
+<p><b>Local test (Server and driver on same system)</b></p>
+<p>Conditions</p>
+<ul>
+<li>FB1.0 without forces writes on AMD 1,7 with 512MB/DDR and OS Windows 2000</li>
+<li>The JVM are the Sun j2sdk 1.4.1_01 with the parameters -Xms256 and -Xmx256.</li>
+<li>The default character set of the database is WIN1252</li>
+</ul>
+<p>Results</p>
 <table border="1" cellpadding=5 cellspacing=0>
  <tr>
   <td>&nbsp;</td>
@@ -700,12 +704,16 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>&nbsp;</td>
  </tr>
 </table>
-<p>Remote test (Server and driver on different machines):</p>
-<p>Client AMD 1,7 with 512MB/DDR with OS Windows 2000<p/>
-<p>Server FB 1.0 on AMD 500MHz with 256MB with OS Suse 7.2</p>
-<p>Client and server are connected by a 100M Ethernet LAN</
-<p>The JVM are the Sun j2sdk 1.4.1_01 with the parameters -Xms256 and -Xmx256.</p>
-<p>The default character set of the database is WIN1252</p>
+<p><b>Remote test (Server and driver on different machines)</b></p>
+<p>Conditions</p>
+<ul>
+<li>Client Jaybird on AMD 1,7 with 512MB/DDR with OS Windows 2000</li>
+<li>Server FB 1.0 on AMD 500MHz with 256MB with OS Suse 7.2</li>
+<li>Client and server are connected by a 100M Ethernet LAN</li>
+<li>The JVM are the Sun j2sdk 1.4.1_01 with the parameters -Xms256 and -Xmx256.</li>
+<li>The default character set of the database is WIN1252</li>
+</ul>
+<p>Results</p>
 <table border="1" cellpadding=5 cellspacing=0>
  <tr>
   <td>&nbsp;</td>
@@ -1114,19 +1122,22 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
   <td>&nbsp;</td>
  </tr>
 </table>
-<p>Some of the reasons that justify this differences between Interclient and JayBird, and which we hope we can solve as soon as posible are the following:</p>
+<p><b>Comments</b></p>
+<p>According to the results, Jaybird is clearly better than Interclient on remote connections excluding inserts using implicit transaction control, when the two performs nearly equal.</p>
+<p>On local connections, when using implicit transaction control, Interclient performs better in all the tests, whether with explicit transaction, Interclient only performs better when reading char data.<p>
+<p>Some of the reasons that justify the difference between Jaybird and Interclient when used with implicit transaction control or reading character data, and which we hope we can solve as soon as posible are the following:</p>
 <ul>
 <li>Autocommit</li>
 <ul>
-	<li>Interclient uses the autocommit facility of the database and JayBird doesn't.</li>
-</ul>
-<li>Character fields</li>
-<ul>
-	<li>Interclient uses a protocol in which the character values are received trimmed, JayBird doesn't.</li>
+	<li>Interclient uses the autocommit facility of the database and JayBird doesn't. Because that, Jaybird needs to close and open a transaction for each statement executed.</li>
 </ul>
 <li>Character and varchar fields</li>
 <ul>
 	<li>It seems that the method to convert characters used by Interclient is better than the default character conversion done by Java.</li>
+</ul>
+<li>Character fields</li>
+<ul>
+	<li>Interclient uses a protocol in which the character values are received trimmed, JayBird doesn't.</li>
 </ul>
 </ul>
 <br/>
