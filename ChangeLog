@@ -1,3 +1,12 @@
+2003-12-04 00:18  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/jdbc/FBResultSet.java,
+	main/org/firebirdsql/jdbc/FBStatementFetcher.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	added check if the cursor is correctly positioned and fixed related
+	bug
+
 2003-12-03 23:51  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
