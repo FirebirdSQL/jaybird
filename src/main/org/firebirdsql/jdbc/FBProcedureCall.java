@@ -111,7 +111,8 @@ public class FBProcedureCall {
     }
     
     public void addOutputParam(FBProcedureParam param) {
-    	outputParams.add(param);
+        outputParams.setSize(param.getPosition() + 1);
+    	outputParams.set(param.getPosition(), param);
     }
     
     /**
