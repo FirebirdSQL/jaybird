@@ -9,13 +9,13 @@
     <version>1.0</version>
     <eis-type>Relational Database</eis-type>
     <resourceadapter>
-        <managedconnectionfactory-class>org.firebirdsql.jca.ManagedConnectionFactory</managedconnectionfactory-class>
+        <managedconnectionfactory-class>org.firebirdsql.jca.FBManagedConnectionFactory</managedconnectionfactory-class>
         <connectionfactory-interface>javax.sql.DataSource</connectionfactory-interface>
         <connectionfactory-impl-class>org.firebirdsql.jdbc.FBDataSource</connectionfactory-impl-class>
         <connection-interface>java.sql.Connection</connection-interface>
-        <connection-impl-class>org.firebirdsql.jdbc.Connection</connection-impl-class>
+        <connection-impl-class>org.firebirdsql.jdbc.FBConnection</connection-impl-class>
         <transaction-support>xa_transaction</transaction-support>
-        <config-property>
+        <!--config-property>
             <config-property-name>Server</config-property-name>
             <config-property-type>java.lang.String</config-property-type>
             <config-property-value>localhost</config-property-value>
@@ -24,7 +24,7 @@
             <config-property-name>Port</config-property-name>
             <config-property-type>java.lang.Integer</config-property-type>
             <config-property-value>3050</config-property-value>
-        </config-property>
+        </config-property-->
         <config-property>
             <config-property-name>Database</config-property-name>
             <config-property-type>java.lang.String</config-property-type>

@@ -77,6 +77,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
            deprecation="off"
            optimize="on"
            includes="org/**"
+           excludes="**/temp*"
     >
       <classpath refid="cp"/>
     </javac>
@@ -107,6 +108,22 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
          <pathelement location="${build.classes.dir}"/>
       </classpath>
       <formatter type="plain" usefile="false"/>
+      <test name="org.firebirdsql.jca.TestFBResultSet"/>
+      <test name="org.firebirdsql.jca.TestFBDatabaseMetaData"/>
+    </junit>
+  </target>
+
+  <target name="junit1" depends="jmx.jar">
+    <delete file="${db.dir}/fbmctest.gdb"/>
+    <copy todir="${db.dir}">
+        <fileset dir="${dbsrc.dir}"/>
+    </copy>
+    <junit>
+      <classpath>
+         <path refid="cp"/>
+         <pathelement location="${build.classes.dir}"/>
+      </classpath>
+      <formatter type="plain" usefile="false"/>
       <test name="org.firebirdsql.management.TestFBManager"/>
       <test name="org.firebirdsql.jgds.TestGds"/>
       <test name="org.firebirdsql.jca.TestFBManagedConnectionFactory"/>
@@ -114,6 +131,8 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
       <test name="org.firebirdsql.jca.TestFBConnection"/>
       <test name="org.firebirdsql.jca.TestFBStandAloneConnectionManager"/>
       <test name="org.firebirdsql.jca.TestFBResultSet"/>
+      <test name="org.firebirdsql.jca.TestFBBlob"/>
+      <test name="org.firebirdsql.jca.TestFBDatabaseMetaData"/>
     </junit>
   </target>
 
@@ -149,7 +168,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
 
     <jar jarfile="${dist.dir}/firebirdsql.rar"
          basedir="${build.jar-ra.dir}"
-         includes="ra.jar,META-INF/ra.xml"
+         includes="firebirdsql.jar,META-INF/ra.xml"
     />
   </target>
 
