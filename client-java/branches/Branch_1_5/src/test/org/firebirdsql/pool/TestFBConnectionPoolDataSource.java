@@ -670,7 +670,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             // everything is fine
         }
     }
-
+    
     public void testPrepareWithError() throws Exception {
         Connection con = pool.getPooledConnection().getConnection();
         con.setAutoCommit(false);
