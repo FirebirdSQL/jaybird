@@ -99,6 +99,11 @@
         <condition property="buildon-windows">
             <os family="windows"/>
         </condition>
+         <condition property="buildon-unix">
+            <not>
+                <isset property="buildon-windows"/>
+            </not>
+        </condition>
 
 
         <!-- set 'jaybirds_platform_headers' - this should be fairly easy -->
@@ -166,8 +171,6 @@
                     -->
 
             <compiler id="gcc" name="gcc" if="buildon-unix">
-                <compilerarg value="-Wall"/>
-                <compilerarg value="-pedantic"/>
 
                 <defineset>
                     <define name="JAVA_GDS_EXPORTS"/>
@@ -198,6 +201,8 @@
             </compiler>
 
             <linker name="gcc" if="buildon-unix">
+                <linkerarg value="-ldl"/>
+                <linkerarg value="-lc"/>
             </linker>
 
             <linker name="msvc" if="buildon-windows">
