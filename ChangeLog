@@ -1,3 +1,19 @@
+2003-10-09 15:20  rrokytskyy
+
+	*
+	
+	added check of ResultSet.getStatement() correctness
+	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
+	ource.java:
+
+2003-10-09 15:19  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	PooledPreparedStatementHandler.java, ResultSetHandler.java,
+	XPreparedStatementCache.java:
+	
+	implemented wrapping of ResultSet
+
 2003-10-05 20:14  skidder
 
 	* client-java/src/:
