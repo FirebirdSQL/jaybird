@@ -127,6 +127,12 @@ public class FBTestBase extends SimpleFBTestBase
      */
     protected Connection getConnectionViaDriverManager() throws SQLException
         {
+        try {
+            Class.forName(FBDriver.class.getName());
+        } catch(ClassNotFoundException ex) {
+            throw new SQLException("No suitable driver.");
+        }
+        
         return DriverManager.getConnection(getUrl(), getDefaultPropertiesForConnection());
         }
 
