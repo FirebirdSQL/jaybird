@@ -28,9 +28,9 @@ import org.firebirdsql.gds.isc_stmt_handle;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBUpdatableFetcher extends FBStatementFetcher {
+public class FBUpdatableCursorFetcher extends FBStatementFetcher {
 
-    FBUpdatableFetcher(AbstractConnection c, AbstractStatement fbStatement, 
+    FBUpdatableCursorFetcher(AbstractConnection c, AbstractStatement fbStatement, 
         isc_stmt_handle stmth, FBResultSet rs) throws SQLException 
     {
         super(c, fbStatement, stmth, rs);

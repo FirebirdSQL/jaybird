@@ -135,7 +135,7 @@ public class FBResultSet implements ResultSet {
             }
             
             if (updatableCursor)  
-                fbFetcher = new FBUpdatableFetcher(this.c, fbstatement, stmt, this);
+                fbFetcher = new FBUpdatableCursorFetcher(this.c, fbstatement, stmt, this);
             else
                 fbFetcher = new FBStatementFetcher(this.c, fbstatement, stmt, this);
         }
