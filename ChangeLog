@@ -1,3 +1,10 @@
+2004-07-15 10:35  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	
+	fixed issue when tx params where not cleaned between transactions
+
 2004-07-15 01:03  rrokytskyy
 
 	* client-java/src/resources/isc_encodings.properties:
