@@ -263,7 +263,8 @@ public class PingablePooledConnection implements PooledConnection,
         try {
             close(false);
         } catch(SQLException ex) {
-            log.warn("Could not cleanly deallocate connection.", ex);
+            if (log != null)
+                log.warn("Could not cleanly deallocate connection.", ex);
         }
 	}
 
