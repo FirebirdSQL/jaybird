@@ -30,35 +30,42 @@ import java.io.ObjectInput;
  *
  */
 public abstract class AbstractGDS implements GDS, Externalizable
-	{
-	public AbstractGDS()
-		{
-		}
+    {
+    public AbstractGDS()
+        {
+        }
 
-	public AbstractGDS(GDSFactory.GdsType gdsType)
-		{
-		this.gdsType = gdsType;
-		}
+    public AbstractGDS(GDSFactory.GdsType gdsType)
+        {
+        this.gdsType = gdsType;
+        }
 
 
-	public void writeExternal(ObjectOutput out) throws IOException
-		{
-		out.writeObject(gdsType);
-		}
+    public GDSFactory.GdsType getGdsType()
+        {
+        return gdsType;
+        }
 
-	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException
-		{
-		gdsType = (GDSFactory.GdsType)in.readObject();
-		}
+    public void close()
+        {
+        }
 
-	public Object readResolve(  )
-		{
-	    return GDSFactory.getGDSForType(gdsType);
-		}
 
-	public void close()
-		{
-		}
+    public void writeExternal(ObjectOutput out) throws IOException
+        {
+        out.writeObject(gdsType);
+        }
 
-	private GDSFactory.GdsType gdsType;
-	}
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException
+        {
+        gdsType = (GDSFactory.GdsType) in.readObject();
+        }
+
+    public Object readResolve()
+        {
+        return GDSFactory.getGDSForType(gdsType);
+        }
+
+
+    private GDSFactory.GdsType gdsType;
+    }
