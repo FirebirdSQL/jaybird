@@ -130,8 +130,6 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     
     /**
      * Create instance of this class.
-     * 
-     * @param config configuration for this connection pool.
      */
     public FBConnectionPoolDataSource() {
         super();
@@ -171,10 +169,9 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
      * Allocate new physical connection for the specified user name and 
      * password.
      * 
-     * @param userName user name.
-     * @param password password.
+     * @param key key identifying pooled object.
      *  
-     * @return instance of {@link PooledConnection}.
+     * @return instance of {@link PooledObject}.
      * 
      * @throws SQLException if connection cannot be allocated.
      */
@@ -449,7 +446,7 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     /**
      * Set database name.
      * 
-     * @param name connection URL without <code>"jdbc:firebirdsql:"</code>
+     * @param database connection URL without <code>"jdbc:firebirdsql:"</code>
      * prefix (<code>"//localhost:3050/c:/database/employee.gdb"</code>) for
      * example).
      */
@@ -528,15 +525,6 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     public void setIntProperty(String name, int value) {
         setProperty(name, Integer.toString(value));
     }
-
-    /**
-     * Get type of the pool that should be created by a JNDI object factory
-     * ({@link FBConnectionPoolObjectFactory}).
-     */
-    public Class getJNDIType() {
-        return ConnectionPoolDataSource.class;
-    }
-
 
     /**
      * Get pool blocking timeout.
@@ -650,7 +638,7 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     /**
      * Set type of the JDBC driver to use.
      *
-     * @param type type of the JDBC driver.
+     * @param gdsType type of the JDBC driver.
      */
     public void setGDSType(GDSType gdsType) {
         this.gdsType = gdsType;

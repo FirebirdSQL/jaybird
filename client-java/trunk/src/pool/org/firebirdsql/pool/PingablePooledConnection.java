@@ -355,7 +355,7 @@ public class PingablePooledConnection implements PooledConnection,
     }
 
     /**
-     * Handle {@link PreparedStatement#close()} method. This implementation
+     * Handle {@link java.sql.PreparedStatement#close()} method. This implementation
      * dereferences proxy in cache.
      *
      * @param statement SQL statement corresponding to the proxy.

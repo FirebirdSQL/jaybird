@@ -305,7 +305,7 @@ public class FBEscapedParser {
     /**
      * This method converts the 'hh:mm:ss' time format into the
      * Firebird understandable format.
-     * @param dateStr the date in the 'hh:mm:ss' format.
+     * @param timeStr the date in the 'hh:mm:ss' format.
      * @return Firebird understandable date format.
      */
     protected String toTimeString(String timeStr) throws FBSQLParseException {
@@ -318,7 +318,7 @@ public class FBEscapedParser {
     /**
      * This method converts the 'yyyy-mm-dd hh:mm:ss' timestamp format into the
      * Firebird understandable format.
-     * @param dateStr the date in the 'yyyy-mm-dd hh:mm:ss' format.
+     * @param timestampStr the date in the 'yyyy-mm-dd hh:mm:ss' format.
      * @return Firebird understandable date format.
      */
     protected String toTimestampString(String timestampStr)
@@ -335,7 +335,7 @@ public class FBEscapedParser {
      * native procedure call.
      * @param procedureCall part of {call proc_name(...)} without curly braces
      * and "call" word.
-     * @result native procedure call.
+     * @return native procedure call.
      */
     protected String convertProcedureCall(String procedureCall)
         throws FBSQLException

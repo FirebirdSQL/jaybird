@@ -21,21 +21,13 @@ package org.firebirdsql.pool;
 import java.sql.*;
 
 /**
- * This interface represents the manager of {@link XConnection} instance.
+ * This interface represents the manager of {@link PooledConnectionHandler} 
+ * instance.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 interface XConnectionManager {
     
-    /**
-     * Get array of interfaces that should be implemented by a dynamic proxy
-     * that will intercept all calls to the connection. Result must contain at
-     * least {@link java.sql.Connection} interface 
-     * 
-     * @return array of interfaces that should be implemented by dynamic proxy.
-     */
-    // Class[] getImplementedInterfaces();
-	
 	/**
 	 * Check if specified connection is still valid. 
 	 * 
@@ -82,9 +74,10 @@ interface XConnectionManager {
 	
 	/**
 	 * Notify connection owner about invocation of the {@link Connection#close()} 
-	 * operation on {@link XConnection} instance.
+	 * operation on {@link PooledConnectionHandler} instance.
 	 * 
-	 * @param connection instance of {@link XConnection} that initiated the call.
+	 * @param connection instance of {@link PooledConnectionHandler} that 
+     * initiated the call.
 	 */
 	void connectionClosed(PooledConnectionHandler connection) throws SQLException;
 	
@@ -92,7 +85,8 @@ interface XConnectionManager {
 	 * Notify connection owner about the {@link SQLException} that happened
 	 * during method invocation on the wrapped connection.
 	 * 
-	 * @param connection instance of {@link XConnection} that catched exception.
+	 * @param connection instance of {@link PooledConnectionHandler} that 
+     * catched exception.
 	 * 
 	 * @param ex instance of {@link SQLException} that was thrown.
 	 */
@@ -101,14 +95,16 @@ interface XConnectionManager {
     /**
      * Notify connection owner about transaction commit.
      * 
-     * @param connection instance of {@link XConnection} that initiated the call.
+     * @param connection instance of {@link PooledConnectionHandler} that 
+     * initiated the call.
      */
     void connectionCommitted(PooledConnectionHandler connection) throws SQLException;
     
     /**
      * Notify connection owner about transaction rollback.
      * 
-     * @param connection instance of {@link XConnection} that initiated the call.
+     * @param connection instance of {@link PooledConnectionHandler} that 
+     * initiated the call.
      */
     void connectionRolledBack(PooledConnectionHandler connection) throws SQLException;
 }

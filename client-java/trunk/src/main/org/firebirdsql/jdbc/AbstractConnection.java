@@ -743,7 +743,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * this connection.  The type map will be used for the
      * custom mapping of SQL structured types and distinct types.
      *
-     * @param the <code>java.util.Map</code> object to install
+     * @param map the <code>java.util.Map</code> object to install
      *        as the replacement for this <code>Connection</code>
      *        object's default type map
      * @since 1.2

@@ -29,6 +29,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.16  2003/12/30 14:53:32  rrokytskyy
+ * fixed incorrect timestamp encoding/decoding when using calendar
+ *
  * Revision 1.15  2003/11/15 22:45:06  rrokytskyy
  * fixed bug in time decoding
  *
@@ -51,7 +54,6 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.*;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 

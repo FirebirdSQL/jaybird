@@ -67,7 +67,7 @@ public class GDSException extends Exception {
      * chain of exceptions for one string parameter.
      * 
      * @param type type of the exception, should be always 
-     * {@link GDS#isc_arg_gds}, otherwise no message will be displayed.
+     * {@link ISCConstants#isc_arg_gds}, otherwise no message will be displayed.
      * 
      * @param fbErrorCode Firebird error code, one of the constants declared
      * in {@link GDS} interface.
@@ -117,7 +117,7 @@ public class GDSException extends Exception {
 
     /**
      * Set the XaErrorCode value.
-     * @param newXaErrorCode The new XaErrorCode value.
+     * @param xaErrorCode The new XaErrorCode value.
      */
     public void setXAErrorCode(int xaErrorCode)
     {

@@ -106,8 +106,7 @@ public abstract class AbstractConnectionPool implements PooledObjectListener {
     /**
      * Get queue for the specified user name and password.
      * 
-     * @param userName user name.
-     * @param password password.
+     * @param key key identifying pool.
      * 
      * @return instance of {@link PooledConnectionQueue}.
      * 
@@ -144,7 +143,7 @@ public abstract class AbstractConnectionPool implements PooledObjectListener {
      * @param queue instance of {@link PooledConnectionQueue} where connection
      * will be obtained.
      * 
-     * @return instance of {@link PooledConnection}.
+     * @return instance of {@link PooledObject}.
      * 
      * @throws SQLException if pooled connection cannot be obtained.
      */
@@ -196,7 +195,7 @@ public abstract class AbstractConnectionPool implements PooledObjectListener {
      * Notify about new available connection. This method is called by 
      * {@link PooledConnection} when its wrapped connection being closed.
      * 
-     * @param event instance of {@link ConnectionEvent} containing 
+     * @param event instance of {@link PooledObjectEvent} containing 
      * information about closed connection.
      */
     public void pooledObjectReleased(PooledObjectEvent event) {
