@@ -732,9 +732,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                 int chunk;
                 while (len > 0) {
                     if (len >= bufferlength) {
-                        if (buf == null) {
-                            buf = new byte[bufferlength];
-                        }
                         chunk = bufferlength;
                     }
                     else {
