@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.9  2002/03/19 17:47:13  d_jencks
+ * combined code to use new FBFields only, fixed a little commit bug
+ *
  * Revision 1.8  2002/02/02 18:58:24  d_jencks
  * converted to log4j logging and cleaned up some test problems.  If you do not wish to use log4j, you may leave out the log4j-core.jar and get no logging
  *
@@ -127,7 +130,7 @@ public class TestFBUnmanagedConnection extends BaseFBTest {
         } catch (Exception e) 
         {
             //these messages are too annoying.
-            //log.debug("Possible problem committing before close of connection-- possibly not a problem", e);
+            //if (log!=null) log.debug("Possible problem committing before close of connection-- possibly not a problem", e);
         } // end of try-catch
 
         connection.close();
@@ -158,7 +161,7 @@ public class TestFBUnmanagedConnection extends BaseFBTest {
             statement.executeUpdate(DROP_TEST_TABLE);
             connection.commit();
         } catch(Exception ex) {
-           log.warn("failing testCommit",  ex);
+            if (log!=null) log.warn("failing testCommit",  ex);
             assertTrue(ex.getMessage(), false);
         }
     }

@@ -56,7 +56,7 @@ public class LoggerFactory{
         if (log4j)
             return new Log4jLogger(name);
         else
-            return new NullLogger(name);
+            return null;
     }
     
     public static Logger getLogger(Class clazz, boolean def) {
