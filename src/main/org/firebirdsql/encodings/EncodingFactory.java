@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2003/01/23 01:37:05  brodsom
+ * Encodings patch
+ *
  */
 
 package org.firebirdsql.encodings;
@@ -55,26 +58,62 @@ public class EncodingFactory {
             return new Encoding_Cp1253();
         else if (encoding.equals("Cp1254"))
             return new Encoding_Cp1254();
+        else if (encoding.equals("Cp1255"))
+            return new Encoding_Cp1255();
+        else if (encoding.equals("Cp1256"))
+            return new Encoding_Cp1256();
+        else if (encoding.equals("Cp1257"))
+            return new Encoding_Cp1257();
         else if (encoding.equals("Cp437"))
             return new Encoding_Cp437();
+        else if (encoding.equals("Cp737"))
+            return new Encoding_Cp737();
+        else if (encoding.equals("Cp775"))
+            return new Encoding_Cp775();
         else if (encoding.equals("Cp850"))
             return new Encoding_Cp850();
         else if (encoding.equals("Cp852"))
             return new Encoding_Cp852();
         else if (encoding.equals("Cp857"))
             return new Encoding_Cp857();
+        else if (encoding.equals("Cp858"))
+            return new Encoding_Cp858();
         else if (encoding.equals("Cp860"))
             return new Encoding_Cp860();
         else if (encoding.equals("Cp861"))
             return new Encoding_Cp861();
+        else if (encoding.equals("Cp862"))
+            return new Encoding_Cp862();
         else if (encoding.equals("Cp863"))
             return new Encoding_Cp863();
+        else if (encoding.equals("Cp864"))
+            return new Encoding_Cp864();
         else if (encoding.equals("Cp865"))
             return new Encoding_Cp865();
+        else if (encoding.equals("Cp866"))
+            return new Encoding_Cp866();
+        else if (encoding.equals("Cp869"))
+            return new Encoding_Cp869();
         else if (encoding.equals("ISO8859_1"))
             return new Encoding_ISO8859_1();
         else if (encoding.equals("ISO8859_2"))
             return new Encoding_ISO8859_2();
+        else if (encoding.equals("ISO8859_3"))
+            return new Encoding_ISO8859_3();
+        else if (encoding.equals("ISO8859_4"))
+            return new Encoding_ISO8859_4();
+        else if (encoding.equals("ISO8859_5"))
+            return new Encoding_ISO8859_5();
+        else if (encoding.equals("ISO8859_6"))
+            return new Encoding_ISO8859_6();
+        else if (encoding.equals("ISO8859_7"))
+            return new Encoding_ISO8859_7();
+        else if (encoding.equals("ISO8859_8"))
+            return new Encoding_ISO8859_8();
+        else if (encoding.equals("ISO8859_9"))
+            return new Encoding_ISO8859_9();
+        else if (encoding.equals("ISO8859_13"))
+            return new Encoding_ISO8859_13();
         else 
             return new Encoding_NotOneByte(encoding);
     }
