@@ -26,7 +26,7 @@ import java.sql.Types;
 import javax.resource.spi.LocalTransaction;
 import javax.sql.DataSource;
 
-import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.AbstractConnection;
 import org.firebirdsql.jdbc.FBDatabaseMetaData;
 
 
@@ -38,7 +38,7 @@ import org.firebirdsql.jdbc.FBDatabaseMetaData;
  */
 public class TestFBDatabaseMetaData extends TestXABase {
 
-    private FBConnection c;
+    private AbstractConnection c;
     private Statement s;
     private DatabaseMetaData dmd;
     private LocalTransaction t;
@@ -55,7 +55,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         ex = null;
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
-        c = (FBConnection)ds.getConnection();
+        c = (AbstractConnection)ds.getConnection();
         s = c.createStatement();
         t = c.getLocalTransaction();
         dmd = c.getMetaData();
