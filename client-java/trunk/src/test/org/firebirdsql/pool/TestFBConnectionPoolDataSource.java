@@ -720,6 +720,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         try {
             ((FirebirdPool)pool).setUserName("testUser");
             ((FirebirdPool)pool).setRoleName("testRole");
+            pool.setLoginTimeout(1);
             
             Connection connection = pool.getPooledConnection().getConnection();
             
