@@ -23,6 +23,10 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.4  2002/11/21 20:33:54  brodsom
+ * 1.- Make stmt_handle vars private.
+ * 2.- Increase sleep time in TestPoolingConnectionManager and FBWrappingDataSource
+ *
  * Revision 1.3  2002/09/28 19:21:37  d_jencks
  * Fixed physical connection leak, made  datasource and ManagedConnectionFactory serializable, and made BlobBufferLength and Integer attribute to be spec-compliant.
  *
@@ -102,8 +106,8 @@ public class TestFBWrappingDataSource extends BaseFBTest {
         if (log != null) log.info("Testing FBWrapping DataSource on db: " + DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
-        ds.setDatabaseName(DB_DATASOURCE_URL);
-        ds.setUser(DB_USER);
+        ds.setDatabase(DB_DATASOURCE_URL);
+        ds.setUserName(DB_USER);
         ds.setPassword(DB_PASSWORD);
         connection = ds.getConnection();
         assertTrue("Connection is null", connection != null);
@@ -115,7 +119,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
         if (log != null) log.info("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
-        ds.setDatabaseName(DB_DATASOURCE_URL);
+        ds.setDatabase(DB_DATASOURCE_URL);
         ds.setMinSize(3);
         ds.setMaxSize(5);
         ds.setBlockingTimeout(100);
@@ -153,13 +157,13 @@ public class TestFBWrappingDataSource extends BaseFBTest {
         if (log != null) log.info("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
-        ds.setDatabaseName(DB_DATASOURCE_URL);
+        ds.setDatabase(DB_DATASOURCE_URL);
         ds.setMinSize(3);
         ds.setMaxSize(5);
         ds.setBlockingTimeout(1000);
         ds.setIdleTimeout(20000);
         ds.setPooling(true);
-        ds.setUser(DB_USER);
+        ds.setUserName(DB_USER);
         ds.setPassword(DB_PASSWORD);
         connection = ds.getConnection();//DB_USER, DB_PASSWORD);
         assertTrue("Connection is null", connection != null);
