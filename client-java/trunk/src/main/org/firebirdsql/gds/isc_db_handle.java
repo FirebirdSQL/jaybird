@@ -41,12 +41,35 @@ import javax.security.auth.Subject;
  */
 public interface isc_db_handle {
 
+    /**
+     * Retrieve whether this handle is valid.
+     *
+     * @return <code>true</code> if this handle is valid, 
+     *         <code>false</code> otherwise
+     */
     boolean isValid();
 
+    /**
+     * Get the <code>Subject</code> instance that represents the current
+     * user identity for this link to the database.
+     *
+     * @return The current <code>Subject</code>
+     */
     Subject getSubject();
 
+    /**
+     * Retrieve whether this handle has active transactions.
+     *
+     * @return <code>true</code> if this handle has active transactions,
+     *         <code>false</code> otherwise
+     */
     boolean hasTransactions();
     
+    /**
+     * Get all active transactions for this handle.
+     *
+     * @return All active transactions
+     */
     Collection getTransactions();
 
 
@@ -64,20 +87,54 @@ public interface isc_db_handle {
      */
     void clearWarnings();
 
+   
+    /**
+     * Set the Interbase/Firebird dialect to be used with this handle.
+     *
+     * @param value The dialect to be used
+     */
     void setDialect(int value);
 
+    /**
+     * Get the Interbase/Firebird dialect that is being used with this handle.
+     *
+     * @return The dialect being used
+     */
     int getDialect();
 
     void setVersion(String value);
 
     String getVersion();
 
+    /**
+     * Get the product name for the database to which this handle is attached.
+     *
+     * @return The product name of the database
+     */
     String getDatabaseProductName();
 
+    /**
+     * Get the product version for the database to which this handle 
+     * is attached.
+     *
+     * @return The product version of the database
+     */
     String getDatabaseProductVersion();
 
+    /**
+     * Get the major version number of the database product to which this
+     * handle is attached.
+     *
+     * @return The major product version number
+     */
     int getDatabaseProductMajorVersion();
 
+    /**
+     * Get the minor version number of the database product to which this
+     * handle is attached.
+     *
+     * @return The minor product version number
+     */
     int getDatabaseProductMinorVersion();
 
     void setODSMajorVersion(int value);

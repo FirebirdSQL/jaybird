@@ -35,17 +35,38 @@ package org.firebirdsql.gds;
  * @version 1.0
  */
 public class XSQLDA {
+
+    /** Version of <code>XSQLDA</code> being used. */
     public int version;
+
+    /** The number of input columns. */
     public int sqln;
+
+    /** The number of output columns. */
     public int sqld;
+
+    /** Array of column values. */
     public XSQLVAR[] sqlvar;
+
+    /** 
+     * Internal array of values containing information about the type and 
+     * length of columns of this row.
+     */
     public byte[] blr;
+
+    /** Array of length (by type) values for each column in this row. */
     public int[] ioLength;	 // 0 varchar, >0 char, -4 int etc, -8 long etc
 
     public XSQLDA() {
         version = ISCConstants.SQLDA_VERSION1;
     }
 
+    /**
+     * Create a new instance of <code>XSQLDA</code> with a given number 
+     * of columns.
+     *
+     * @param n The number of columns to be used
+     */
     public XSQLDA(int n) {
         version = ISCConstants.SQLDA_VERSION1;
         sqln = n;

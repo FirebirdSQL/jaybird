@@ -31,10 +31,28 @@ package org.firebirdsql.gds;
  */
 public interface isc_blob_handle {
 
+    /**
+     * Get the identifier for the blob to which this handle is linked.
+     *
+     * @return identifier for the blob
+     */
     long getBlob_id();
 
+    /**
+     * Set the identifier for the blob to which this handle is linked.
+     *
+     * @param blob_id The identifier to be set
+     */
     void setBlob_id(long blob_id);
+    
     // only used in the tests
+
+    /**
+     * Retrieve whether the <code>EOF</code> has been reached with this blob.
+     *
+     * @return <code>true</code> if <code>EOF</code> has been reached, 
+     *         <code>false</code> otherwise
+     */
     boolean isEof();
 
 }

@@ -46,7 +46,7 @@ import org.firebirdsql.logging.LoggerFactory;
  *
  * @see <related>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version $ $
+ * @version 1.0 
  *
  * @todo add support for separate specification of host/port/filename.
  */
@@ -57,7 +57,6 @@ public class FBManagedConnectionFactory
 {
 
     /**
-     * Describe constant <code>MAX_BLOB_BUFFER_LENGTH</code> here.
      * @todo  Claudio suggests this should be 1024*64 -1, we should find out
      *  I thought this was the largest value I could make work, but I didn't
      *  write down my experiments.
@@ -117,17 +116,30 @@ public class FBManagedConnectionFactory
 
     private volatile int hashCode = 0;
 
-		//Default constructor.
+    /**
+     * Create a new pure-Java FBManagedConnectionFactory.
+     */
     public FBManagedConnectionFactory() {
         this(GDSType.PURE_JAVA);
         }
 
+    /**
+     * Create a new FBManagedConnectionFactory based around the given
+     * GDSType.
+     *
+     * @param GDSType The GDS implementation to use
+     */
     public FBManagedConnectionFactory(GDSType type) {
         this.type = type;
         gds = GDSFactory.getGDSForType(type);
         defaultCri = FBConnectionHelper.getDefaultCri(gds);
         }
 
+    /**
+     * Get the GDS implementation type around which this factory is based.
+     *
+     * @return The GDS implementation type
+     */
     public GDSType getType()
         {
         return this.type;
@@ -138,6 +150,13 @@ public class FBManagedConnectionFactory
     //rar properties
 
 
+    /**
+     * Set the name of the database to which managed connections will 
+     * be created.
+     *
+     * @param database The name of the database to which connections will be
+     *        created
+     */
     public void setDatabase(String database)
     {
         checkNotStarted();
@@ -145,21 +164,46 @@ public class FBManagedConnectionFactory
         this.dbAlias = database;
     }
 
+    /**
+     * Get the name of the database to which managed connections will
+     * be created.
+     *
+     * @return The name of the target database
+     */
     public String getDatabase() {
         return dbAlias;
     }
 
+    /**
+     * Set the connection information for creating new connections.
+     *
+     * @param cri A {@link FBConnectionRequestInfo} instance that contains
+     *        the parameters to be used for creating new connections
+     */
     public void setConnectionRequestInfo(FBConnectionRequestInfo cri) {
         checkNotStarted();
         hashCode = 0;
         this.defaultCri = cri.deepCopy();
     }
 
-
+    /**
+     * Returns a <b>copy</b> of the connection parameters used for 
+     * creating new connections. To update the connections parameters, 
+     * use {@link #setConnectionRequestInfo} or one of the 
+     * <code>setXXX</code> methods.
+     *
+     * @return A {@link FBConnectionRequestInfo} instance that represents
+     *         the parameters used for creating new connections
+     */
     public FBConnectionRequestInfo getDefaultConnectionRequestInfo() {
         return defaultCri.deepCopy();
     }
 
+    /**
+     * Set the username to be used for creating new connections.
+     *
+     * @param userName The username for new connections
+     */
     public void setUserName(String userName)
     {
         checkNotStarted();
@@ -167,23 +211,42 @@ public class FBManagedConnectionFactory
         defaultCri.setUser(userName);
     }
 
+    /**
+     * Get the username that is to be used for creating new connections.
+     *
+     * @return The username used for creating connections
+     */
     public String getUserName()
     {
         return defaultCri.getUser();
     }
 
-    public void setPassword(String password)
-    {
+    /**
+     * Set the password that is to be used for creating new connections.
+     *
+     * @param password The password to be used
+     */
+    public void setPassword(String password) {
         checkNotStarted();
         hashCode = 0;
         defaultCri.setPassword(password);
     }
 
-    public String getPassword()
-    {
+    /**
+     * Get the password that is to be used for creating new connections.
+     *
+     * @return The password used for creating connections
+     */
+    public String getPassword() {
         return defaultCri.getPassword();
     }
 
+    /**
+     * Set the {@link FBTpb Transaction Parameters Block} instance to be used 
+     * to determine transaction parameters for new connections.
+     *
+     * @param tpb <code>FBTpb</code> instance that sets transaction parameters
+     */
     public void setTpb(FBTpb tpb)
     {
         checkNotStarted();
@@ -191,15 +254,38 @@ public class FBManagedConnectionFactory
         this.tpb.setTpb(tpb);
     }
 
-
+    /**
+     * Get the {@link FBTpb Transaction Parameters Block} instance that is 
+     * used to determine transaction parameters for new connections.
+     *
+     * @return <code>FBTpb</code> instance that sets transaction parameters
+     */
     public FBTpb getTpb() {
         return new FBTpb(tpb);
     }
 
+    /**
+     * Set the {@link FBTpbMapper} instance that is used to map JDBC
+     * transaction isolation levels to a Firebird Transaction Parameter Block
+     * (TPB).
+     *
+     * @param mapper The {@link FBTpbMapper} instance to be used
+     * @throws ResourceException if the TpbMapper cannot be set
+     */
     public void setTpbMapper(FBTpbMapper mapper) throws FBResourceException {
         this.tpb.setMapper(mapper);
     }
 
+    /**
+     * Set the transaction isolation level to be used for new connections.
+     * The isolatin level is one of the <code>TRANSACTION_*</code> 
+     * constants in the <code>java.sql.Connection</code> interface.
+     * <code>TRANSACTION_NONE</code> cannot be used.
+     *
+     * @param level The transaction isolation level to be set
+     * @throws ResourceException if the transaction level cannot be set to
+     *         the given level, or the given level is not valid
+     */
     public void setTransactionIsolation(Integer level) throws ResourceException
     {
         checkNotStarted();
@@ -210,11 +296,32 @@ public class FBManagedConnectionFactory
             tpb.setTransactionIsolation(level.intValue());
     }
 
+    /**
+     * Get the current transaction isolation level that is used for creating
+     * new connections. The level will have the int value of one of the
+     * <code>TRANSACTION_*</code> constants in the 
+     * <code>java.sql.Connection</code> interface.
+     *
+     * @return The current transaction isolation level
+     * @throws ResourceException if the current transaction isolation level
+     *         cannot be retrieved
+     */
     public Integer getTransactionIsolation() throws ResourceException
     {
         return new Integer(tpb.getTransactionIsolation());
     }
 
+    /**
+     * Set the current transaction isolation level for new connections by name.
+     * The name should be equal to the name of one of the 
+     * <code>TRANSACTION_*</code> static final fields of 
+     * <code>java.sql.Connection</code>, other than 
+     * <code>TRANSACTION_NONE</code>. These names are also defined as static 
+     * final fields in {@link FBTpb}.
+     *
+     * @param level The name of the transaction level to be set
+     * @throws ResourceException if the transaction level cannot be set
+     */
     public void setTransactionIsolationName(String level) throws ResourceException
     {
         checkNotStarted();
@@ -222,11 +329,26 @@ public class FBManagedConnectionFactory
         tpb.setTransactionIsolationName(level);
     }
 
+    /**
+     * Get the name of the transaction isolation level that is currently used
+     * for creating new connections. The name will have the same name as one
+     * of the <code>TRANSACTION_*</code> static final fields of
+     * <code>java.sql.Connection</code>.
+     *
+     * @return The name of the current transaction isolation level
+     * @throws ResourceException if the current isolation level cannot
+     *         be retrieved
+     */
     public String getTransactionIsolationName() throws ResourceException
     {
         return tpb.getTransactionIsolationName();
     }
 
+    /**
+     * Set the default encoding that is to be used for new connections.
+     *
+     * @param encoding The name of the encoding to be used
+     */
     public void setEncoding(String encoding) {
         checkNotStarted();
         hashCode = 0;
@@ -239,6 +361,11 @@ public class FBManagedConnectionFactory
         }
     }
 
+    /**
+     * Get the name of the default encoding that is used for new connections.
+     *
+     * @return The name of the current default encoding
+     */
     public String getEncoding() {
         String result = defaultCri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);
         if (result == null)
@@ -246,6 +373,12 @@ public class FBManagedConnectionFactory
         return result;
     }
     
+    /**
+     * Set the name of the local encoding that is to be used for 
+     * new connections.
+     *
+     * @param encoding The name of the local encoding to be used
+     */
     public void setLocalEncoding(String localEncoding) {
         checkNotStarted();
         hashCode = 0;
@@ -258,6 +391,12 @@ public class FBManagedConnectionFactory
         }
     }
     
+    /**
+     * Get the name of the local encoding that is to be used for 
+     * new connections.
+     *
+     * @return The name of the current local encoding
+     */
     public String getLocalEncoding() {
         return defaultCri.getStringProperty(ISCConstants.isc_dpb_local_encoding);
     }
@@ -334,7 +473,7 @@ public class FBManagedConnectionFactory
 
     /**
      * The <code>createConnectionFactory</code> method creates a DataSource
-     * using the supplied ConnectionManager..
+     * using the supplied ConnectionManager.
      *
      * @param cxManager a <code>ConnectionManager</code> value
      * @return a <code>java.lang.Object</code> value
@@ -348,9 +487,11 @@ public class FBManagedConnectionFactory
 
     /**
      * The <code>createConnectionFactory</code> method creates a DataSource
-     * with a default stand alone ConnectionManager.  Ours can implement pooling.
+     * with a default stand alone ConnectionManager.  
+     * Ours can implement pooling.
      *
-     * @return a <code>java.lang.Object</code> value
+     * @return a new <code>javax.sql.DataSource</code> based around this
+     *         connection factory
      * @exception ResourceException if an error occurs
      */
     public Object createConnectionFactory() throws ResourceException {
@@ -360,26 +501,25 @@ public class FBManagedConnectionFactory
 
 
 
-/**
-     Creates a new physical connection to the underlying EIS resource manager,
-
-     ManagedConnectionFactory uses the security information (passed as Subject) and additional
-     ConnectionRequestInfo (which is specific to ResourceAdapter and opaque to application server)
-     to create this new connection.
-     Parameters:
-         Subject - Caller's security information
-         cxRequestInfo - Additional resource adapter specific connection request information
-     Returns:
-         ManagedConnection instance
-     Throws:
-         ResourceException - generic exception
-         SecurityException - security related error
-         ResourceAllocationException - failed to allocate system resources for connection
-         request
-         ResourceAdapterInternalException - resource adapter related error condition
-         EISSystemException - internal error condition in EIS instance
-
-**/
+    /** 
+     * Creates a new physical connection to the underlying EIS resource 
+     * manager, ManagedConnectionFactory uses the security information (passed 
+     * as Subject) and additional ConnectionRequestInfo (which is specific to 
+     * ResourceAdapter and opaque to application server) to create this new 
+     * connection.  
+     *
+     * @param Subject Caller's security information 
+     * @param cxRequestInfo Additional resource adapter specific connection 
+     *        request information
+     * @return ManagedConnection instance
+     * @throws ResourceException generic exception 
+     * @throws SecurityException security related error 
+     * @throws ResourceAllocationException failed to allocate system resources 
+     *         for connection request 
+     * @throws ResourceAdapterInternalException resource adapter related error 
+     *         condition 
+     * @throws EISSystemException internal error condition in EIS instance
+     */
     public ManagedConnection createManagedConnection(Subject subject,
                                                      ConnectionRequestInfo cri)
         throws ResourceException
@@ -391,31 +531,30 @@ public class FBManagedConnectionFactory
 
 
 
-/**
-     Returns a matched connection from the candidate set of connections.
-
-     ManagedConnectionFactory uses the security info (as in Subject) and information provided
-     through ConnectionRequestInfo and additional Resource Adapter specific criteria to do
-     matching. Note that criteria used for matching is specific to a resource adapter and is not
-     prescribed by the Connector specification.
-
-     This method returns a ManagedConnection instance that is the best match for handling the
-     connection allocation request.
-
-     Parameters:
-         connectionSet - candidate connection set
-         Subject - caller's security information
-         cxRequestInfo - additional resource adapter specific connection request information
-     Returns:
-         ManagedConnection if resource adapter finds an acceptable match otherwise null
-     Throws:
-         ResourceException - generic exception
-         SecurityException - security related error
-         ResourceAdapterInternalException - resource adapter related error condition
-         NotSupportedException - if operation is not supported
-
-**/
-
+    /** 
+     * Returns a matched connection from the candidate set of connections.  
+     * ManagedConnectionFactory uses the security info (as in 
+     * <code>Subject</code>) and information provided through 
+     * <code>ConnectionRequestInfo</code> and additional Resource Adapter 
+     * specific criteria to do matching. Note that criteria used for matching 
+     * is specific to a resource adapter and is not prescribed by the 
+     * <code>Connector</code> specification.  
+     * <p>
+     * This method returns a <code>ManagedConnection</code> instance that is 
+     * the best match for handling the connection allocation request.
+     *
+     * @param connectionSet candidate connection set 
+     * @param Subject caller's security information 
+     * @param cxRequestInfo additional resource adapter specific connection 
+     *        request information 
+     * @return ManagedConnection if resource adapter finds an acceptable match 
+     *         otherwise null 
+     * @throws ResourceException - generic exception 
+     * @throws SecurityException - security related error 
+     * @throws ResourceAdapterInternalException - resource adapter related 
+     *         error condition 
+     * @throws NotSupportedException - if operation is not supported
+     */
     public ManagedConnection matchManagedConnections(Set connectionSet,
                                                  javax.security.auth.Subject subject,
                                                  ConnectionRequestInfo cxRequestInfo)
@@ -430,53 +569,48 @@ public class FBManagedConnectionFactory
     return null;
     }
 
-
-
-
-/**
-     Set the log writer for this ManagedConnectionFactory instance.
-
-     The log writer is a character output stream to which all logging and tracing messages for this
-     ManagedConnectionfactory instance will be printed.
-
-     ApplicationServer manages the association of output stream with the
-     ManagedConnectionFactory. When a ManagedConnectionFactory object is created the log
-     writer is initially null, in other words, logging is disabled. Once a log writer is associated with a
-     ManagedConnectionFactory, logging and tracing for ManagedConnectionFactory instance is
-     enabled.
-
-     The ManagedConnection instances created by ManagedConnectionFactory "inherits" the log
-     writer, which can be overridden by ApplicationServer using ManagedConnection.setLogWriter
-     to set ManagedConnection specific logging and tracing.
-     Parameters:
-         out - PrintWriter - an out stream for error logging and tracing
-     Throws:
-         ResourceException - generic exception
-         ResourceAdapterInternalException - resource adapter related error condition
-
-**/
-
+    /** 
+     * Set the log writer for this <code>ManagedConnectionFactory</code> 
+     * instance. The log writer is a character output stream to which all 
+     * logging and tracing messages for this 
+     * <code>ManagedConnectionFactory</code> instance will be printed. 
+     * ApplicationServer manages the association of output stream with the 
+     * <code>ManagedConnectionFactory</code>. When a 
+     * <code>ManagedConnectionFactory</code> object is created the log writer 
+     * is initially <code>null</code>, in other words, logging is disabled. 
+     * Once a log writer is associated with a 
+     * <code>ManagedConnectionFactory</code>, logging and tracing for 
+     * <code>ManagedConnectionFactory</code> instance is enabled.  
+     * <p> 
+     * The <code>ManagedConnection</code> instances created by 
+     * <code>ManagedConnectionFactory</code> "inherits" the log writer, which 
+     * can be overridden by ApplicationServer using 
+     * {@link ManagedConnection#setLogWriter} to set 
+     * <code>ManagedConnection</code> specific logging and tracing.
+     * 
+     * @param out an out stream for error logging and tracing
+     * @throws ResourceException  generic exception 
+     * @throws ResourceAdapterInternalException resource adapter related 
+     *         error condition
+     */
     public void setLogWriter(PrintWriter out) throws ResourceException {
        //ignore - we're using log4j
     }
 
 
 
-/**
-     Get the log writer for this ManagedConnectionFactory instance.
-
-     The log writer is a character output stream to which all logging and tracing messages for this
-     ManagedConnectionFactory instance will be printed
-
-     ApplicationServer manages the association of output stream with the
-     ManagedConnectionFactory. When a ManagedConnectionFactory object is created the log
-     writer is initially null, in other words, logging is disabled.
-     Returns:
-         PrintWriter
-     Throws:
-         ResourceException - generic exception
-
-**/
+    /** 
+     * Get the log writer for this <code>ManagedConnectionFactory</code> 
+     * instance.  The log writer is a character output stream to which all 
+     * logging and tracing messages for this 
+     * <code>ManagedConnectionFactory</code> instance will be printed. 
+     * ApplicationServer manages the association of output stream with the 
+     * <code>ManagedConnectionFactory</code>. When a 
+     * <code>ManagedConnectionFactory</code> object is created the log writer 
+     * is initially null, in other words, logging is disabled.  
+     * @return PrintWriter instance 
+     * @throws ResourceException generic exception 
+     */
     public PrintWriter getLogWriter() {
        return null;//we're using log4j
     }

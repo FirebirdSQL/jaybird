@@ -29,7 +29,8 @@ import org.firebirdsql.gds.GDSException;
 
 /**
  * The class <code>FBManagedConnectionMetaData</code> implements 
- * ManagedConnectionMetaData, providing almost no useful information.
+ * <code>javax.resource.sqi.ManagedConnectionMetaData</code>, providing almost 
+ * no useful information.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
@@ -44,11 +45,12 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
     }
 
     /**
-     Returns Product name of the underlying EIS instance connected through the
-     ManagedConnection.
-     Returns:
-         Product name of the EIS instance.
-    **/
+     * Returns Product name of the underlying EIS instance connected through 
+     * the <code>ManagedConnection</code>.  
+     *
+     * @return Product name of the EIS instance.  
+     * @throws ResourceException generic exception
+     */
      public String getEISProductName() throws ResourceException {
          try {
              return mc.getIscDBHandle().getDatabaseProductName();
@@ -58,11 +60,12 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
      }
 
      /**
-     Returns product version of the underlying EIS instance connected through the
-     ManagedConnection.
-     Returns:
-         Product version of the EIS instance
-    **/
+      * Returns product version of the underlying EIS instance connected 
+      * through the <code>ManagedConnection</code>.  
+      *
+      * @return Product version of the EIS instance
+      * @throws ResourceException generic exception
+      */
      public String getEISProductVersion() throws ResourceException {
          try {
              return mc.getIscDBHandle().getDatabaseProductVersion();
@@ -73,26 +76,26 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
 
 
 
-    /**
-     Returns maximum limit on number of active concurrent connections that an EIS instance can
-     support across client processes. If an EIS instance does not know about (or does not have) any
-     such limit, it returns a 0.
-     Returns:
-         Maximum limit for number of active concurrent connections
-    **/
-
+    /** Returns maximum limit on number of active concurrent connections that 
+     * an EIS instance can support across client processes. If an EIS instance 
+     * does not know about (or does not have) any such limit, it returns a 0.
+     *
+     * @return Maximum limit for number of active concurrent connections
+     * @throws ResourceException generic exception
+     */
     public int getMaxConnections() throws ResourceException {
         return 0;
     }
 
     /**
-     Returns name of the user associated with the ManagedConnection instance. The name
-     corresponds to the resource principal under whose whose security context, a connection to the
-     EIS instance has been established.
-     Returns:
-         name of the user
-    **/
-
+     * Returns name of the user associated with the 
+     * <code>ManagedConnection</code> instance. The name corresponds to the 
+     * resource principal under whose whose security context, a connection to 
+     * the EIS instance has been established.
+     *
+     * @return name of the user
+     * @throws ResourceException generic exception
+     */
     public String getUserName() throws ResourceException {
         return mc.getUserName();
     }
