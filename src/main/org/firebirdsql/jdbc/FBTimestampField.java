@@ -40,12 +40,12 @@ class FBTimestampField extends FBField {
     Object getObject() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return rs.row[numCol];
+        return XSQLVAR.decodeTimestamp(rs.row[numCol]);
     }
     String getString() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return rs.row[numCol].toString();
+        return String.valueOf(XSQLVAR.decodeTimestamp(rs.row[numCol]));
     }
     Date getDate() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return DATE_NULL_VALUE;
