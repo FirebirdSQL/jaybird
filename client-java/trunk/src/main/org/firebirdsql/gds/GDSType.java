@@ -73,6 +73,7 @@ public final class GDSType implements Serializable {
      * link.
      * <li><code>"EMBEDDED"</code> for type 2 JDBC driver that will use embedded
      * version of the server to perform database-related operations. 
+     * </ul>
      * 
      * @return instance of {@link GDSType} corresponding to the specified
      * string representation or <code>null</code> if no match could be found. 
