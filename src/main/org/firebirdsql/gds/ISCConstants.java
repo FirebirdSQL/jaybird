@@ -131,6 +131,8 @@ public final class ISCConstants {
     public final static int isc_dpb_paranoia_mode           = 132;
     public final static int isc_dpb_timestamp_uses_local_timezone        = 133;
     public final static int isc_dpb_use_standard_udf        = 134;
+    public final static int isc_dpb_local_encoding          = 135;
+    public final static int isc_dpb_mapping_path            = 136;
     
 
     /*************************************/

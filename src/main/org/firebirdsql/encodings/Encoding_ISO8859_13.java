@@ -21,6 +21,13 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.3  2004/10/08 22:39:11  rrokytskyy
+ * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
+ * added possibility to translate characters if there are some encoding issues
+ *
+ * Revision 1.2  2003/06/04 12:38:23  brodsom
+ * Remove unused vars and imports
+ *
  * Revision 1.1  2003/01/26 00:49:52  brodsom
  * New character sets support
  *
@@ -32,12 +39,26 @@ package org.firebirdsql.encodings;
 
 public class Encoding_ISO8859_13 extends Encoding_OneByte{
 
-    private static char[] byteToChar = new char[256];
-    private static byte[] charToByte = new byte[256*256];;
+    private static char[] defaultByteToChar = new char[256];
+        private static byte[] defaultCharToByte = new byte[256*256];;
 
-    static{
-        Initialize("ISO8859_13", byteToChar, charToByte);
-    }
+        static{
+            Initialize("ISO8859_13", defaultByteToChar, defaultCharToByte);
+        }
+
+        private char[] byteToChar;
+        private byte[] charToByte;
+    
+        public Encoding_ISO8859_13() {
+            byteToChar = defaultByteToChar;
+            charToByte = defaultCharToByte;
+        }
+    
+        public Encoding_ISO8859_13(char[] charMapping) {
+            byteToChar = new char[256];
+            charToByte = new byte[256 * 256];
+            Initialize("ISO8859_13", byteToChar, charToByte, charMapping);
+        }
 
     public int encodeToCharset(char[] in, int off, int len, byte[] out){
         return super.encodeToCharset(charToByte, in, off, len, out);

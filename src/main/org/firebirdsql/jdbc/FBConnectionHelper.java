@@ -29,6 +29,8 @@ import org.firebirdsql.gds.GDS;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -105,7 +107,7 @@ public class FBConnectionHelper {
         }
 
     }
-
+    
     public static FBConnectionRequestInfo getDefaultCri(GDS gds) {
         FBConnectionRequestInfo result = FBConnectionRequestInfo.newInstance(gds);
         return result;
@@ -161,6 +163,28 @@ public class FBConnectionHelper {
         return cri;
     }
 
+    /**
+     * Get integer value of the DPB key corresponding to the specified name.
+     * 
+     * @param name name of the key.
+     * 
+     * @return instance of {@link Integer} corresponding to the specified name
+     * or <code>null</code> if value is not known.
+     */
+    public static Integer getDpbKey(String name) {
+        return (Integer)dpbTypes.get(name);
+    }
+    
+    /**
+     * Get mapping between DPB names and their keys.
+     * 
+     * @return instance of {@link Map}, where key is the name of DPB parameter,
+     * value is its DPB key.
+     */
+    public static Map getDpbMap() {
+        return Collections.unmodifiableMap(dpbTypes);
+    }
+    
     /**
      * Copy the properties supplied in the 'info' parameter into the FBConnectionRequestInfo
      * instance supplied in the 'cri' parameter.

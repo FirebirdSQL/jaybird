@@ -146,7 +146,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (data == BYTES_NULL_VALUE)
             return STRING_NULL_VALUE;
         
-        return field.decodeString(data, javaEncoding);
+        return field.decodeString(data, javaEncoding, mappingPath);
     }
 
     public void setString(String value) throws SQLException {
@@ -156,7 +156,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
             return;
         }
         
-        byte[] data = field.encodeString(value, javaEncoding);
+        byte[] data = field.encodeString(value, javaEncoding, mappingPath);
         setBinaryStream(new ByteArrayInputStream(data), data.length);
     }
 
@@ -167,7 +167,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
             return;
         }
 
-        byte[] data = field.encodeString(value, javaEncoding);
+        byte[] data = field.encodeString(value, javaEncoding, mappingPath);
         setBinaryStream(new ByteArrayInputStream(data), data.length);
     }
 

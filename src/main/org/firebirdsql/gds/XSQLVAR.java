@@ -29,6 +29,13 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.20  2004/10/08 22:39:11  rrokytskyy
+ * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
+ * added possibility to translate characters if there are some encoding issues
+ *
+ * Revision 1.19  2004/08/15 00:10:34  rrokytskyy
+ * introduced new parameters to change the time zone behavior and escaped parser behavior for function calls
+ *
  * Revision 1.18  2004/07/19 14:03:33  rrokytskyy
  * fixed bug when incorrect data were used during batch execution
  *
@@ -174,58 +181,47 @@ public class XSQLVAR {
     //
     // Strings
     //
-    public byte[] encodeString(String value, String encoding) throws SQLException {
-/* Old encoding method 		 
-        if (encoding==null){
-            return value.getBytes();
-        }
-        else {
-            try {
-                return value.getBytes(encoding);
-            } catch(UnsupportedEncodingException ex) {
-                return value.getBytes();
-            }
-        }
-*/
+//    public byte[] encodeString(String value, String encoding) throws SQLException {
+//        if (coder == null)
+//            coder = EncodingFactory.getEncoding(encoding);
+//        return coder.encodeToCharset(value);
+//    }
+//    public byte[] encodeString(byte[] value, String encoding)throws SQLException {
+//        if (encoding == null)
+//            return value;
+//        else {
+//            if (coder == null)
+//                coder = EncodingFactory.getEncoding(encoding);
+//            return coder.encodeToCharset(coder.decodeFromCharset(value));
+//        }
+//    }
+//
+//    public String decodeString(byte[] value, String encoding){
+//        if (coder == null)
+//            coder = EncodingFactory.getEncoding(encoding);
+//        return coder.decodeFromCharset(value);
+//    }
+    //
+    // Strings with mapping
+    //
+    public byte[] encodeString(String value, String encoding, String mappingPath) throws SQLException {
         if (coder == null)
-            coder = EncodingFactory.getEncoding(encoding);
+            coder = EncodingFactory.getEncoding(encoding, mappingPath);
         return coder.encodeToCharset(value);
     }
-    public byte[] encodeString(byte[] value, String encoding)throws SQLException {
-/* Old encoding method		 
-        if (encoding == null)
-            return value;
-        else {
-            try {
-                return (new String(value, encoding)).getBytes();
-            } catch(UnsupportedEncodingException ex) {
-                return value;
-            }
-        }
-*/
+    public byte[] encodeString(byte[] value, String encoding, String mappingPath)throws SQLException {
         if (encoding == null)
             return value;
         else {
             if (coder == null)
-                coder = EncodingFactory.getEncoding(encoding);
+                coder = EncodingFactory.getEncoding(encoding, mappingPath);
             return coder.encodeToCharset(coder.decodeFromCharset(value));
         }
     }
 
-    public String decodeString(byte[] value, String encoding){
-/*
-        if (encoding == null)
-            return new String(value);
-        else {
-            try {
-                return new String(value, encoding);
-            } catch(UnsupportedEncodingException ex) {
-                return new String(value);
-            }
-        }
- */
+    public String decodeString(byte[] value, String encoding, String mappingPath) throws SQLException{
         if (coder == null)
-            coder = EncodingFactory.getEncoding(encoding);
+            coder = EncodingFactory.getEncoding(encoding, mappingPath);
         return coder.decodeFromCharset(value);
     }
     // 

@@ -181,7 +181,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         if (blob == BLOB_NULL_VALUE)
             return STRING_NULL_VALUE;
 
-        return field.decodeString(getBytes(), javaEncoding);
+        return field.decodeString(getBytes(), javaEncoding, mappingPath);
     }
 
     public InputStream getUnicodeStream() throws SQLException {
@@ -313,7 +313,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
             return;
         }
         
-        setBytes(field.encodeString(value,javaEncoding));
+        setBytes(field.encodeString(value,javaEncoding, mappingPath));
     }
 
     public void setUnicodeStream(InputStream in, int length) throws SQLException {
