@@ -30,6 +30,7 @@ import javax.resource.ResourceException;
 import javax.sql.*;
 
 import org.firebirdsql.gds.GDSType;
+import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.jca.*;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.logging.Logger;
@@ -202,7 +203,8 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
         FBConnectionRequestInfo defaultCri = 
             getManagedConnectionFactory().getDefaultConnectionRequestInfo();
              
-        FBConnectionRequestInfo cri = FBConnectionHelper.getCri(props, null);
+        FBConnectionRequestInfo cri = FBConnectionHelper.getCri(props,
+                GDSFactory.getGDSForType(this.getGDSType()));
             
         try {
             FBManagedConnection managedConnection = (FBManagedConnection)
