@@ -46,8 +46,7 @@ class FBIntegerField extends FBField {
         Integer value = (Integer)field.sqldata;
 
         // check if value is withing bounds
-        if (value.intValue() > Byte.MAX_VALUE ||
-            value.intValue() < Byte.MIN_VALUE)
+        if (Math.abs(value.intValue()) > Byte.MAX_VALUE)
                 throw (SQLException)createException(
                     BYTE_CONVERSION_ERROR).fillInStackTrace();
 
@@ -59,8 +58,7 @@ class FBIntegerField extends FBField {
         Integer value = (Integer)field.sqldata;
 
         // check if value is withing bounds
-        if (value.intValue() > Short.MAX_VALUE ||
-            value.intValue() < Short.MIN_VALUE)
+        if (Math.abs(value.intValue()) > Short.MAX_VALUE)
                 throw (SQLException)createException(
                     BYTE_CONVERSION_ERROR).fillInStackTrace();
 
@@ -127,8 +125,7 @@ class FBIntegerField extends FBField {
     }
     void setFloat(float value) throws java.sql.SQLException {
         // check if value is within bounds
-        if (value > Integer.MAX_VALUE ||
-            value < Integer.MIN_VALUE)
+        if (Math.abs(value) > Integer.MAX_VALUE)
                 throw (SQLException)createException(
                     FLOAT_CONVERSION_ERROR).fillInStackTrace();
 
@@ -136,8 +133,7 @@ class FBIntegerField extends FBField {
     }
     void setDouble(double value) throws java.sql.SQLException {
         // check if value is within bounds
-        if (value > Integer.MAX_VALUE ||
-            value < Integer.MIN_VALUE)
+        if (Math.abs(value) > Integer.MAX_VALUE)
                 throw (SQLException)createException(
                     DOUBLE_CONVERSION_ERROR).fillInStackTrace();
 
@@ -145,8 +141,7 @@ class FBIntegerField extends FBField {
     }
     void setLong(long value) throws java.sql.SQLException {
         // check if value is within bounds
-        if (value > Integer.MAX_VALUE ||
-            value < Integer.MIN_VALUE)
+        if (Math.abs(value) > Integer.MAX_VALUE)
                 throw (SQLException)createException(
                     LONG_CONVERSION_ERROR).fillInStackTrace();
 
@@ -166,8 +161,7 @@ class FBIntegerField extends FBField {
         }
 
         // check if value is within bounds
-        if (value.compareTo(new BigDecimal(Integer.MAX_VALUE)) > 0 ||
-            value.compareTo(new BigDecimal(Integer.MIN_VALUE)) < 0)
+        if (value.abs().compareTo(new BigDecimal(Integer.MAX_VALUE)) > 0)
                 throw (SQLException)createException(
                     BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
