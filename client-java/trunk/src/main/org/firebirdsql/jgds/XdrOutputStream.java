@@ -43,11 +43,11 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-class XdrOutputStream extends DataOutputStream {
+public final class XdrOutputStream extends DataOutputStream {
 
-    private final static Logger log = LoggerFactory.getLogger(XdrOutputStream.class,false);
-    private final static byte[] pad = {0,0,0,0};
-    static final byte[] textPad = new byte[32767];
+    private static Logger log = LoggerFactory.getLogger(XdrOutputStream.class,false);
+    private static byte[] pad = {0,0,0,0};
+    private static byte[] textPad = new byte[32767];
 
     public XdrOutputStream(OutputStream out) {
         super(out);
@@ -55,14 +55,14 @@ class XdrOutputStream extends DataOutputStream {
         java.util.Arrays.fill(textPad,(byte) 32);
     }
 	 
-    public final void writeOpaque(byte[] buffer, int len) throws IOException {
+    public void writeOpaque(byte[] buffer, int len) throws IOException {
         if (buffer != null && len > 0) {
             write(buffer, 0, len);
             write(pad,0,((4 - len) & 3));
         }
     }
 
-    public final void writeBuffer(byte[] buffer, int len) throws IOException {
+    public void writeBuffer(byte[] buffer, int len) throws IOException {
         writeInt(len);
         if (buffer != null && len > 0) {
             write(buffer, 0, len);
@@ -70,7 +70,7 @@ class XdrOutputStream extends DataOutputStream {
         }
     }
 
-    public final void writeBlobBuffer(byte[] buffer) throws IOException {
+    public void writeBlobBuffer(byte[] buffer) throws IOException {
         int len = buffer.length ; // 2 for short for buffer length
         if (log != null) log.debug("writeBlobBuffer len: " + len);
         if (len > Short.MAX_VALUE) {
@@ -85,7 +85,7 @@ class XdrOutputStream extends DataOutputStream {
         write(pad,0,((4 - len+2) & 3));
     }
 
-    public final void writeString(String s) throws IOException {
+    public void writeString(String s) throws IOException {
         byte[] buffer = s.getBytes();
 		  int len = buffer.length;
         writeInt(len);
@@ -95,7 +95,7 @@ class XdrOutputStream extends DataOutputStream {
         }		
     }
     
-    public final void writeString(String s, String encoding) throws IOException {
+    public void writeString(String s, String encoding) throws IOException {
         String javaEncoding = null;
         
         if (encoding != null && !"NONE".equals(encoding))
@@ -111,7 +111,7 @@ class XdrOutputStream extends DataOutputStream {
         writeBuffer(buffer, buffer.length);
     }
     
-    public final void writeSet(int type, Set s) throws IOException {
+    public void writeSet(int type, Set s) throws IOException {
 //      if (log != null) log.debug("writeSet: type: " + type);
         if (s == null) {
             writeInt(1);
@@ -131,9 +131,7 @@ class XdrOutputStream extends DataOutputStream {
         }
     }
 
-
-
-    final void writeTyped(int type, Xdrable item) throws IOException {
+    public void writeTyped(int type, Xdrable item) throws IOException {
         int size;
         if (item == null) {
             writeInt(1);
@@ -151,7 +149,7 @@ class XdrOutputStream extends DataOutputStream {
     // 
     // This method fill the char up to len with bytes 
     // 
-    public final void writeChar(byte[] buffer, int len) throws IOException {
+    public void writeChar(byte[] buffer, int len) throws IOException {
         if (buffer != null) {
             if (buffer.length >=len)
                 write(buffer, 0, len);

@@ -40,7 +40,7 @@ import org.firebirdsql.gds.GDSException;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_handle {
+public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_handle {
     private int rdb_id;
     private Subject subject;
     private Collection rdb_transactions = new ArrayList();

@@ -30,7 +30,7 @@ import org.firebirdsql.gds.isc_tr_handle;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class isc_blob_handle_impl implements isc_blob_handle {
+public final class isc_blob_handle_impl implements isc_blob_handle {
 
     isc_db_handle_impl db;
     isc_tr_handle_impl tr;
