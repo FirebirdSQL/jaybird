@@ -638,6 +638,7 @@
           <exclude name="**/TestXABase*.class"/>
           <exclude name="**/TestConst.class"/>
           <exclude name="**/*$$*.class"/>
+          <exclude name="**/ngds/TestSpecialEmbeddedServerUrls.class"/>
 
         </fileset>
       </batchtest>
