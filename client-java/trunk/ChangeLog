@@ -1,3 +1,44 @@
+2004-08-13 22:18  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FBBlob.java,
+	field/FBBlobField.java, field/FBField.java:
+	
+	fixed encoding issues when character stream is read
+
+2004-08-13 22:11  rrokytskyy
+
+	*
+	
+	fixed possible NPE
+	client-java/src/main/org/firebirdsql/jdbc/field/FBBigDecimalField.j
+	ava:
+
+2004-08-13 22:09  rrokytskyy
+
+	* client-java/src/:
+	jdbc_30/org/firebirdsql/jdbc/FBParameterMetaData.java,
+	main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+	
+	fixed issue that blobs sub_type > 1 were not reported as
+	longvarbinary
+
+2004-08-13 22:08  rrokytskyy
+
+	*
+	
+	code cleanup
+	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
+	.java:
+
+2004-08-13 22:07  rrokytskyy
+
+	* client-java/src/:
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java:
+	
+	fixed an issue when getParameterMetaData() is called before the
+	statement is prepared
+
 2004-07-31 19:25  rrokytskyy
 
 	*
