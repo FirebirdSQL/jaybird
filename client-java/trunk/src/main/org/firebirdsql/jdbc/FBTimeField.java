@@ -40,17 +40,17 @@ class FBTimeField extends FBField {
     Object getObject() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return rs.row[numCol];
+        return XSQLVAR.decodeTime(rs.row[numCol]);
     }
     String getString() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return rs.row[numCol].toString();
+        return String.valueOf(XSQLVAR.decodeTime(rs.row[numCol]));
     }
     Time getTime() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
-        return (Time)rs.row[numCol];
+        return XSQLVAR.decodeTime(rs.row[numCol]);
     }
     Timestamp getTimestamp() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
@@ -80,6 +80,6 @@ class FBTimeField extends FBField {
             return;
         }
 
-        field.sqldata = value;
+        field.sqldata = XSQLVAR.encodeTime(value);
     }
 }

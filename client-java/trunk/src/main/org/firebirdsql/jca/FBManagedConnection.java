@@ -596,7 +596,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
-    public Object[] fetch(isc_stmt_handle stmt) throws GDSException {
+    public byte[][] fetch(isc_stmt_handle stmt) throws GDSException {
         return mcf.gds.isc_dsql_fetch(stmt, GDS.SQLDA_VERSION1, stmt.getOutSqlda());
     }
 

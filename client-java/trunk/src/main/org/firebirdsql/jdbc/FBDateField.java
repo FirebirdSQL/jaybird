@@ -45,17 +45,17 @@ class FBDateField extends FBField {
     Date getDate() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
-        return (Date)rs.row[numCol];
+        return XSQLVAR.decodeDate(rs.row[numCol]);
     }
     String getString() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return ((Date)rs.row[numCol]).toString();
+        return XSQLVAR.decodeDate(rs.row[numCol]).toString();
     }
     Object getObject() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return rs.row[numCol];
+        return XSQLVAR.decodeDate(rs.row[numCol]);
     }
 
     //--- setXXX methods
@@ -82,6 +82,6 @@ class FBDateField extends FBField {
             return;
         }
 
-        field.sqldata = (Date)value;
+        field.sqldata = XSQLVAR.encodeDate(value);
     }
 }

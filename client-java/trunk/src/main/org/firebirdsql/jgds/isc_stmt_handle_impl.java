@@ -29,7 +29,7 @@ package org.firebirdsql.jgds;
 import org.firebirdsql.gds.XSQLDA;
 
 import java.util.List;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 /**
  * Describe class <code>isc_stmt_handle_impl</code> here.
@@ -43,8 +43,8 @@ public class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_handle
     isc_db_handle_impl rsr_rdb;
     XSQLDA in_sqlda = null;
     XSQLDA out_sqlda = null;
-    List rows = new LinkedList();
-    boolean allRowsFetched = false;
+    ArrayList rows = new ArrayList();
+    public boolean allRowsFetched = false;
     boolean isSingletonResult = false;
 
     public isc_stmt_handle_impl() {
@@ -62,5 +62,4 @@ public class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_handle
         rows.clear();
         allRowsFetched = false;
     }
-
 }

@@ -16,7 +16,7 @@ class FBStatementFetcher implements FBFetcher {
 
     private isc_stmt_handle stmt;
           
-    private Object[] nextRow;
+    private byte[][] nextRow;
 
     private final Logger log = LoggerFactory.getLogger(getClass(),false);
 

@@ -68,4 +68,27 @@ public class XdrInputStream extends DataInputStream {
         readFully(pad,0,((4 - len) & 3));
         return new String(buffer);				
     }
+    public final byte[] readIntBytes() throws IOException {
+        byte[] buffer = new byte[4];
+		  readFully(buffer);
+		  return buffer;
+	 }
+
+    public final byte[] readLongBytes() throws IOException {
+        byte[] buffer = new byte[8];
+		  readFully(buffer);
+		  return buffer;
+	 }
+
+    public final byte[] readFloatBytes() throws IOException {
+        byte[] buffer = new byte[4];
+		  readFully(buffer);
+		  return buffer;
+	 }
+
+    public final byte[] readDoubleBytes() throws IOException {
+        byte[] buffer = new byte[8];
+		  readFully(buffer);
+		  return buffer;
+	 }	 
 }

@@ -39,7 +39,7 @@ class FBIntegerField extends FBField {
     byte getByte() throws SQLException {
         if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
 
-        Integer value = (Integer)rs.row[numCol];
+        Integer value = new Integer(XSQLVAR.decodeInt(rs.row[numCol]));
 
         // check if value is withing bounds
         if (value.intValue() > MAX_BYTE_VALUE ||
@@ -52,7 +52,7 @@ class FBIntegerField extends FBField {
     short getShort() throws SQLException {
         if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
 
-        Integer value = (Integer)rs.row[numCol];
+        Integer value = new Integer(XSQLVAR.decodeInt(rs.row[numCol]));
 
         // check if value is withing bounds
         if (value.intValue() > MAX_SHORT_VALUE ||
@@ -65,42 +65,42 @@ class FBIntegerField extends FBField {
     int getInt() throws SQLException {
         if (rs.row[numCol]==null) return INT_NULL_VALUE;
 
-        return ((Integer)rs.row[numCol]).intValue();
+        return XSQLVAR.decodeInt(rs.row[numCol]);
     }
     long getLong() throws SQLException {
         if (rs.row[numCol]==null) return LONG_NULL_VALUE;
 
-        return ((Integer)rs.row[numCol]).longValue();
+        return (long) XSQLVAR.decodeInt(rs.row[numCol]);
     }
     float getFloat() throws SQLException {
         if (rs.row[numCol]==null) return FLOAT_NULL_VALUE;
 
-        return ((Integer)rs.row[numCol]).floatValue();
+        return (float) XSQLVAR.decodeInt(rs.row[numCol]);
     }
     double getDouble() throws SQLException {
         if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
-        return ((Integer)rs.row[numCol]).doubleValue();
+        return (double) XSQLVAR.decodeInt(rs.row[numCol]);
     }
     java.math.BigDecimal getBigDecimal() throws SQLException {
         if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
-        return BigDecimal.valueOf(((Integer)rs.row[numCol]).longValue());
+        return BigDecimal.valueOf(XSQLVAR.decodeInt(rs.row[numCol]));
     }
     Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return rs.row[numCol];
+        return new Integer(XSQLVAR.decodeInt(rs.row[numCol]));
     }
     boolean getBoolean() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
-        return ((Integer)rs.row[numCol]).intValue() == 1;
+        return XSQLVAR.decodeInt(rs.row[numCol]) == 1;
     }
     String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return ((Integer)rs.row[numCol]).toString();
+        return String.valueOf(XSQLVAR.decodeInt(rs.row[numCol]));
     }
 
     //--- setXXX methods
@@ -152,7 +152,7 @@ class FBIntegerField extends FBField {
         setInteger((int)value);
     }
     void setInteger(int value) throws java.sql.SQLException {
-        field.sqldata = new Integer((int)value);
+        field.sqldata = XSQLVAR.encodeInt(value);
     }
     void setByte(byte value) throws java.sql.SQLException {
         setInteger((int)value);

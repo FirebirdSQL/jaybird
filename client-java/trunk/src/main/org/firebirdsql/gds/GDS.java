@@ -1104,7 +1104,7 @@ public interface GDS {
                                XSQLDA in_xsqlda,
                                XSQLDA out_xsqlda) throws GDSException;
 
-    Object[] isc_dsql_fetch(isc_stmt_handle stmt_handle,
+    byte[][] isc_dsql_fetch(isc_stmt_handle stmt_handle,
                          int da_version,
                          XSQLDA xsqlda) throws GDSException;
 

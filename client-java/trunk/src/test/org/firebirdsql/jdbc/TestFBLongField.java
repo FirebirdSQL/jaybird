@@ -44,7 +44,7 @@ public class TestFBLongField extends BaseTestFBField {
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_INT64;
-        Object[] row = new Object[1];
+        byte[][] row = new byte[1][];
         java.util.ArrayList rows = new java.util.ArrayList();
         rows.add(row);		  
         FBResultSet rs = new FBResultSet(xsqlvars,rows);

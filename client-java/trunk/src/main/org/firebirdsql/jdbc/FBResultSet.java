@@ -69,7 +69,7 @@ public class FBResultSet implements ResultSet {
 
     public XSQLVAR[] xsqlvars;
 
-    public Object[] row = null;
+    public byte[][] row = null;
 
 //    protected int rowNum = 0;
     protected int maxRows = 0;

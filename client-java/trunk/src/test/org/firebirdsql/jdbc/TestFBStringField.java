@@ -52,7 +52,7 @@ public class TestFBStringField extends BaseTestFBField {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_TEXT;
         xsqlvars[0].sqllen = TEST_STRING_SIZE;
-        Object[] row = new Object[1];
+        Object[] row = new byte[1][];
         java.util.ArrayList rows = new java.util.ArrayList();
         rows.add(row);		  
         FBResultSet rs = new FBResultSet(xsqlvars,rows);
