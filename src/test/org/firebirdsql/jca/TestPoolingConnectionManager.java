@@ -190,7 +190,7 @@ public class TestPoolingConnectionManager extends TestXABase
       final FBPoolingConnectionManager cm = new FBPoolingConnectionManager(pp, mcf);
       ManagedConnection mc = cm.getManagedConnection(cri);
       cm.returnManagedConnection(mc, false);
-      Thread.sleep(1000);//allow filltoMin to work
+      Thread.sleep(2000);//allow filltoMin to work
       assertTrue("Wrong number of connections counted: " + cm.getConnectionCount(), cm.getConnectionCount() == pp.minSize);
       Thread.sleep((long)(pp.idleTimeout * 7)/2);//try to get in the middle of cleanups
       //      cm.removeTimedOut();
