@@ -1,3 +1,103 @@
+2005-01-10 11:09  gab_reid
+
+	*
+	
+	- Changed to use the correct GDS implemenation, based on the test
+	environment variables
+	
+	- Added basic running of new transaction-management methods
+	client-java/src/test/org/firebirdsql/management/TestFBMaintenanceMa
+	nager.java:
+
+2005-01-10 11:07  gab_reid
+
+	*
+	
+	Use whatever GDS implementation that the tests are using
+	client-java/src/test/org/firebirdsql/management/TestUserManager.jav
+	a:
+
+2005-01-10 11:05  gab_reid
+
+	*
+	
+	Changed to use whatever GDS implementation is being used by the
+	tests
+	client-java/src/test/org/firebirdsql/management/TestFBStatisticsMan
+	ager.java:
+
+2005-01-10 11:04  gab_reid
+
+	*
+	
+	Cleanup, and added some tests to reflect changes in the
+	BackupManager interface
+	client-java/src/test/org/firebirdsql/management/TestBackupManager.j
+	ava:
+
+2005-01-10 11:02  gab_reid
+
+	*
+	
+	Updated to reflect refactoring of FBServiceManager
+	client-java/src/main/org/firebirdsql/management/FBStatisticsManager
+	.java:
+
+2005-01-10 11:01  gab_reid
+
+	*
+	
+	Moved common functionality of creating a ServiceRequestBuffer and
+	executing service operations into this base class
+	client-java/src/main/org/firebirdsql/management/FBServiceManager.ja
+	va:
+
+2005-01-10 11:00  gab_reid
+
+	*
+	
+	- Updated to reflect refactoring of the ServiceManager hierarchy
+	
+	- Added empty implementations of transaction-handling methods
+	client-java/src/main/org/firebirdsql/management/FBMaintenanceManage
+	r.java:
+
+2005-01-10 10:58  gab_reid
+
+	*
+	
+	Added transaction management methods
+	client-java/src/main/org/firebirdsql/management/MaintenanceManager.
+	java:
+
+2005-01-10 10:57  gab_reid
+
+	*
+	
+	Updated to reflect the refactoring changes in the BackupManager
+	interface
+	client-java/src/main/org/firebirdsql/management/FBBackupManager.jav
+	a:
+
+2005-01-10 10:56  gab_reid
+
+	*
+	client-java/src/main/org/firebirdsql/management/BackupManager.java:
+	
+	Refactored to a cleaner interface, improved the Javadoc
+
+2005-01-10 10:19  gab_reid
+
+	* client-java/src/resources/isc_error_msg.properties:
+	
+	Added string conversion error
+
+2005-01-10 10:14  gab_reid
+
+	* client-java/src/main/org/firebirdsql/gds/GDSType.java:
+	
+	Fixed javadoc
+
 2004-12-17 09:54  gab_reid
 
 	* client-java/src/test/org/firebirdsql/management/:
