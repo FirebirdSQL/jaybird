@@ -19,8 +19,6 @@
 
 package org.firebirdsql.jdbc;
 
-
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -61,7 +59,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     // this array contains either true or false indicating if parameter
     // was initialized, executeQuery, executeUpdate and execute methods
     // will throw an exception if this array contains at least one false value.
-    protected boolean[] isParamSet;
+    private boolean[] isParamSet;
      
     private FBField[] fields= null;
     private boolean[] isBlob = null;
