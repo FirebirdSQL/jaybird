@@ -106,9 +106,8 @@ class XdrOutputStream extends FilterOutputStream {
         byte[] buffer = s.getBytes();
         writeBuffer(buffer, buffer.length);
     }
-
-
     public final void writeSet(int type, Set s) throws IOException {
+        //System.out.println("writeSet: type: " + type);
         if (s == null) {
             writeInt(1);
             out.write(type); //e.g. gds.isc_tpb_version3
@@ -118,13 +117,18 @@ class XdrOutputStream extends FilterOutputStream {
             out.write(type);
             Iterator i = s.iterator();
             while (i.hasNext()) {
-                out.write(((Integer)i.next()).intValue());
+                int n = ((Integer)i.next()).intValue();
+                out.write(n);
+                //System.out.println("writeSet: value: " + n);
             }
+            //System.out.println("writeSet: padding 0 : " + ((4 - (s.size() + 1)) & 3));
             for (int j = 0; j < ((4 - (s.size() + 1)) & 3); j++) {
                 out.write(0);
             }
         }
     }
+
+
 
     final void writeTyped(int type, Xdrable item) throws IOException {
         int size;

@@ -100,7 +100,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         this.s = s;
         this.cri = cri;
         this.log = mcf.getLogWriter();
-        this.tpb = mcf.getTpb().clone();
+        this.tpb = mcf.getTpb(); //getTpb supplies a copy.
     }
 
 
@@ -621,13 +621,13 @@ throw new XAException("end called with no transaction associated");
         tpb.remove(new Integer(GDS.isc_tpb_concurrency));
         tpb.remove(new Integer(GDS.isc_tpb_consistency));
         switch (isolation) {
-            GDS.isc_tpb_read_committed: 
+            case GDS.isc_tpb_read_committed: 
                 tpb.add(new Integer(GDS.isc_tpb_read_committed));
                 break;
-            GDS.isc_tpb_concurrency: 
+            case GDS.isc_tpb_concurrency: 
                 tpb.add(new Integer(GDS.isc_tpb_concurrency));
                 break;
-            GDS.isc_tpb_consistency: 
+            case GDS.isc_tpb_consistency: 
                 tpb.add(new Integer(GDS.isc_tpb_consistency));
                 break;
             default: break;
@@ -638,10 +638,10 @@ throw new XAException("end called with no transaction associated");
         tpb.remove(new Integer(GDS.isc_tpb_read));
         tpb.remove(new Integer(GDS.isc_tpb_write));
         if (readOnly) {
-            tpb.add(GDS.isc_tpb_read);
+            tpb.add(new Integer(GDS.isc_tpb_read));
         }
         else {
-            tpb.add(GDS.isc_tpb_write);
+            tpb.add(new Integer(GDS.isc_tpb_write));
         }
     }
 
@@ -719,6 +719,10 @@ throw new XAException("end called with no transaction associated");
             return this.cri.equals(cri);
         }
         return s.equals(subj) && this.cri.equals(cri);
+    }
+
+    Set getTpb() {
+        return tpb;
     }
 
 

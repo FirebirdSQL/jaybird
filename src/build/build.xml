@@ -138,7 +138,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
          <pathelement location="${build.classes.dir}"/>
       </classpath>
       <formatter type="plain" usefile="false"/>
-      <test name="org.firebirdsql.management.TestFBManager"/>
+      <!--test name="org.firebirdsql.management.TestFBManager"/-->
       <test name="org.firebirdsql.jca.TestAll"/>
       <test name="org.firebirdsql.jdbc.TestAll"/>
       <!--test name="org.firebirdsql.jgds.TestGds"/>

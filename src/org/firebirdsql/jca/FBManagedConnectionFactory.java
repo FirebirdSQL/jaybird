@@ -27,6 +27,8 @@ package org.firebirdsql.jca;
 
 // imports --------------------------------------
 
+import java.util.Collection;
+
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionManager;
 import javax.resource.spi.ConnectionRequestInfo;
@@ -137,12 +139,12 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         return defaultCri.c;
     }*/
 
-    public void setTpb(Set tpb) {
-        tpbSet = tpb;
+    public void setTpb(Collection tpb) {
+        tpbSet = new HashSet(tpb);
     }
 
     public Set getTpb() {
-        return tpbSet;
+        return new HashSet(tpbSet);
     }
 
 /**

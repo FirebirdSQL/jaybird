@@ -1215,6 +1215,9 @@ public class GDS_Impl implements GDS {
             db.out = new XdrOutputStream(db.socket.getOutputStream());
             db.in = new XdrInputStream(db.socket.getInputStream());
 
+
+            //Here we identify the user to the engine.  This may or may not be used 
+            //as login info to a database.
             String user = System.getProperty("user.name");
             if (debug) {System.out.println("user.name: " + user);}
             String host = InetAddress.getLocalHost().getHostName();
@@ -1226,18 +1229,18 @@ public class GDS_Impl implements GDS {
             System.arraycopy(user.getBytes(), 0, user_id, n, user.length());
             n += user.length();
 
-//            String passwd = "";
-//            user_id[n++] = 2;   // CNCT_passwd
-//            user_id[n++] = (byte) passwd.length();
-//            System.arraycopy(passwd.getBytes(), 0, user_id, n, passwd.length());
-//            n += passwd.length();
+            /*            String passwd = "masterkey";
+            user_id[n++] = 2;   // CNCT_passwd
+            user_id[n++] = (byte) passwd.length();
+            System.arraycopy(passwd.getBytes(), 0, user_id, n, passwd.length());
+            n += passwd.length();*/
 
             user_id[n++] = 4;     // CNCT_host
             user_id[n++] = (byte) host.length();
             System.arraycopy(host.getBytes(), 0, user_id, n, host.length());
             n += host.length();
-//            user_id[n++] = 6;     // CNCT_user_verification
-//            user_id[n++] = 0;
+            //user_id[n++] = 6;     // CNCT_user_verification
+            //user_id[n++] = 0;
 
             if (debug) {System.out.print("op_connect ");}
             db.out.writeInt(op_connect);
