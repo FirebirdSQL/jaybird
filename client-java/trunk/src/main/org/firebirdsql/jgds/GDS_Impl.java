@@ -210,7 +210,7 @@ public final class GDS_Impl implements GDS {
                 if (log != null) log.debug("sent");
 
                 try {
-                    readReceiveResponse(db);
+                    receiveResponse(db,-1);
                     db.setRdb_id(db.getResp_object());
                 } catch (GDSException g) {
                     disconnect(db);
@@ -264,7 +264,7 @@ public final class GDS_Impl implements GDS {
                 if (log != null) log.debug("sent");
 
                 try {
-                    readReceiveResponse(db);
+                    receiveResponse(db,-1);
                     db.setRdb_id(db.getResp_object());
                 }
                 catch (GDSException ge) {
@@ -293,6 +293,7 @@ public final class GDS_Impl implements GDS {
                                  int buffer_length,
                                  byte[] buffer) throws GDSException {
         isc_db_handle_impl db = (isc_db_handle_impl) handle;
+        synchronized (db){
             try {
                 if (log != null) log.debug("op_info_database ");
                 db.out.writeInt(op_info_database);
@@ -302,26 +303,13 @@ public final class GDS_Impl implements GDS {
                 db.out.writeInt(1024);
                 db.out.flush();
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
-/*					 
-byte[] info = db.resp_data;
-System.out.println(db.resp_object);
-System.out.println(db.resp_blob_id);
-System.out.println(db.resp_data.length);
-System.out.println("resp_data="+new String(db.resp_data));
-byte[] info = db.resp_data;
-for (int i= 0; i< info.length; i++){
-	System.out.print(info[i]);
-	System.out.print(",");
-}
-System.out.println("");
-*/
+                receiveResponse(db,-1);
                 parseDatabaseInfo(db,db.getResp_data(),describe_database_info);
         if (log != null) log.debug("parseSqlInfo: first 2 bytes are " + isc_vax_integer(db.getResp_data(), 0, 2) + " or: " + db.getResp_data()[0] + ", " + db.getResp_data()[1]);
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_network_error);
             } 
-//		  }
+        }
     }
 
     private void parseDatabaseInfo(isc_db_handle db,
@@ -351,25 +339,6 @@ System.out.println("");
         byte item;
         int index = 0;
         if (log != null) log.debug("parseDatabaseInfo: first 2 bytes are " + isc_vax_integer(info, 0, 2) + " or: " + info[0] + ", " + info[1]);	  
-/*
-System.out.println("info");
-for (int i= 0; i< info.length; i++){
-	System.out.print(info[i]);
-	System.out.print(",");
-}
-System.out.println("");
-System.out.println("items");
-for (int i= 0; i< items.length; i++){
-	System.out.print(items[i]);
-	System.out.print(",");
-}
-System.out.println("");
-        int infoPos = 0;
-        int itemPos = 0;
-		  int value=0;
-		  int selInfo=0;
-		  int i=0;
-*/
 		  int value=0;
 		  int len=0;
         int i = 0;
@@ -455,7 +424,7 @@ System.out.println("");
                 db.out.writeInt(db.getRdb_id());
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
                 
                 // lars 2002-10-30: Explicitely close socket to server
                 disconnect(db);
@@ -484,7 +453,7 @@ System.out.println("");
                 db.out.writeInt(db.getRdb_id());
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_network_error);
             }
@@ -531,7 +500,7 @@ System.out.println("");
                 db.out.flush();            
                 if (log != null) log.debug("sent");
                 //out.flush();
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_network_error);
             }
@@ -570,7 +539,7 @@ System.out.println("");
                 db.out.writeInt(tr.getTransactionId());
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
             }
@@ -602,7 +571,7 @@ System.out.println("");
                 db.out.writeInt(tr.getTransactionId());
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
             }
@@ -629,7 +598,7 @@ System.out.println("");
                 db.out.writeInt(tr.getTransactionId());
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
             }
@@ -657,7 +626,7 @@ System.out.println("");
                 db.out.writeBuffer(bytes);
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
             }
@@ -688,7 +657,7 @@ System.out.println("");
                 db.out.writeInt(tr.getTransactionId());
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
             }
@@ -720,7 +689,7 @@ System.out.println("");
                 db.out.writeInt(tr.getTransactionId());
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
             }
@@ -751,7 +720,7 @@ System.out.println("");
                 db.out.writeInt(db.getRdb_id());
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
                 stmt.setRsr_id(db.getResp_object());
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
@@ -1106,7 +1075,7 @@ System.out.println("");
                 db.out.flush();            
                 if (log != null) log.debug("sent");
 
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
                 if (option == ISCConstants.DSQL_drop) {
                     stmt.setInSqlda(null);
                     stmt.setOutSqlda(null);
@@ -1181,7 +1150,7 @@ System.out.println("");
                 db.out.flush();            
 
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
                 stmt.setOutSqlda(parseSqlInfo(stmt_handle, db.getResp_data(), sql_prepare_info));
                 return stmt.getOutSqlda();
             } catch (IOException ex) {
@@ -1220,7 +1189,7 @@ System.out.println("");
                 db.out.flush();            
                 if (log != null) log.debug("sent");
 
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
             }
@@ -1248,7 +1217,7 @@ System.out.println("");
                 db.out.writeInt(buffer_length);
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
                 return db.getResp_data();
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
@@ -1379,7 +1348,7 @@ System.out.println("");
                 db.out.flush();            
 
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
                 blob.setDb(db);
                 blob.setTr(tr);
                 blob.setRbl_id(db.getResp_object());
@@ -1414,7 +1383,7 @@ System.out.println("");
                 db.out.writeInt(0);//writeBuffer for put segment;
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
                 blob.rbl_flagsRemove(ISCConstants.RBL_segment);
                 if (db.getResp_object() == 1) {
                     blob.rbl_flagsAdd(ISCConstants.RBL_segment);
@@ -1469,7 +1438,7 @@ System.out.println("");
                 db.out.writeBlobBuffer(buffer);
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
             }
             catch (IOException ioe) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
@@ -1574,10 +1543,9 @@ System.out.println("");
 
             if (log != null) log.debug("op_accept ");
             if (nextOperation(db) == op_accept) {
-                int proto = db.in.readInt();                   // Protocol version number
-                int arch = db.in.readInt();                   // Architecture for protocol
+                db.setProtocol(db.in.readInt());             // Protocol version number
+                int arch = db.in.readInt();                  // Architecture for protocol
                 int min = db.in.readInt();                   // Minimum type
-                if (log != null) log.debug("protocol:"+proto+" arch:"+arch+" mint:"+min);					 
                 if (log != null) log.debug("received");
             } else {
                 disconnect(db);
@@ -1612,23 +1580,12 @@ System.out.println("");
             , ex.getMessage());
         }
     }
-
-    private void readReceiveResponse(isc_db_handle_impl db) throws GDSException {
-        try {
-            int op = nextOperation(db);
-            receiveResponse(db, op);
-        } catch (IOException ex) {
-           if (log != null) log.warn("IOException in readReceiveResponse", ex);
-            // ex.getMessage() makes little sense here, it will not be displayed
-            // because error message for isc_net_read_err does not accept params
-            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_net_read_err
-            , ex.getMessage());
-        }
-    }
-
+	 
     private void receiveResponse(isc_db_handle_impl db, int op) throws GDSException {
         // when used directly
         try {
+            if (op == -1)			  
+                op = nextOperation(db);
             if (log != null) log.debug("op_response ");
             if (op == op_response) {
                 db.setResp_object(db.in.readInt());
@@ -2003,7 +1960,7 @@ System.out.println("");
                 db.out.writeInt(op);
                 db.out.writeInt(id);
                 db.out.flush();            
-                readReceiveResponse(db);
+                receiveResponse(db,-1);
             }
             catch (IOException ioe) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
