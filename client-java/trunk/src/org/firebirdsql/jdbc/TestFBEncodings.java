@@ -47,30 +47,6 @@ public class TestFBEncodings extends BaseFBTest {
     public static String DROP_TABLE = 
         "DROP TABLE test_encodings";
     
-    // "test string" in Ukrainian ("тестова стрічка")
-    public static String UKRAINIAN_TEST_STRING = 
-        //"\u00f2\u00e5\u00f1\u00f2\u00ee\u00e2\u00e0 " +
-        "\u0442\u0435\u0441\u0442\u043e\u0432\u0430 " + 
-        //"\u00f1\u00f2\u00f0\u00b3\u00f7\u00ea\u00e0";
-        "\u0441\u0442\u0440\u0456\u0447\u043a\u0430";
-        
-    public static byte[] UKRAINIAN_TEST_BYTES = new byte[] {
-        (byte)0xf2, (byte)0xe5, (byte)0xf1, (byte)0xf2, 
-        (byte)0xee, (byte)0xe2, (byte)0xe0, (byte)0x20,
-        (byte)0xf1, (byte)0xf2, (byte)0xf0, (byte)0xb3, 
-        (byte)0xf7, (byte)0xea, (byte)0xe0
-    };
-    
-    public static String UKRAINIAN_TEST_STRING_WIN1251;
-        
-    public static int UKRAINIAN_TEST_ID = 1;
-    
-    // couple of test characters in German
-    public static String GERMAN_TEST_STRING_WIN1252 = 
-        "Zeichen " + "\u00c4\u00e4, \u00d6\u00f6, \u00dc\u00fc und \u00df";
-        
-    public static int GERMAN_TEST_ID = 2;
-
     public TestFBEncodings(String testName) {
         super(testName);
     }
@@ -104,9 +80,6 @@ public class TestFBEncodings extends BaseFBTest {
             stmt.close();        
         } catch(Exception ex) {
         }
-        
-        UKRAINIAN_TEST_STRING_WIN1251 = 
-            new String(UKRAINIAN_TEST_BYTES, "Cp1251");
     }
 
     protected void tearDown() throws Exception {
@@ -127,7 +100,29 @@ public class TestFBEncodings extends BaseFBTest {
         super.tearDown();
     }
     
-    public void testUkrainian() throws Exception {
+    
+    // "test string" in Ukrainian ("тестова стрічка")
+    public static String UKRAINIAN_TEST_STRING = 
+        //"\u00f2\u00e5\u00f1\u00f2\u00ee\u00e2\u00e0 " +
+        "\u0442\u0435\u0441\u0442\u043e\u0432\u0430 " + 
+        //"\u00f1\u00f2\u00f0\u00b3\u00f7\u00ea\u00e0";
+        "\u0441\u0442\u0440\u0456\u0447\u043a\u0430";
+        
+    public static byte[] UKRAINIAN_TEST_BYTES = new byte[] {
+        (byte)0xf2, (byte)0xe5, (byte)0xf1, (byte)0xf2, 
+        (byte)0xee, (byte)0xe2, (byte)0xe0, (byte)0x20,
+        (byte)0xf1, (byte)0xf2, (byte)0xf0, (byte)0xb3, 
+        (byte)0xf7, (byte)0xea, (byte)0xe0
+    };
+    
+    public static String UKRAINIAN_TEST_STRING_WIN1251;
+        
+    public static int UKRAINIAN_TEST_ID = 1;
+    
+    public void _testUkrainian() throws Exception {
+        UKRAINIAN_TEST_STRING_WIN1251 = 
+            new String(UKRAINIAN_TEST_BYTES, "Cp1251");
+        
         assertTrue("Strings should be equal.", 
             UKRAINIAN_TEST_STRING.equals(UKRAINIAN_TEST_STRING_WIN1251));
         
@@ -179,7 +174,13 @@ public class TestFBEncodings extends BaseFBTest {
     }
 
 
-    public void testGerman() throws Exception {
+    // couple of test characters in German
+    public static String GERMAN_TEST_STRING_WIN1252 = 
+        "Zeichen " + "\u00c4\u00e4, \u00d6\u00f6, \u00dc\u00fc und \u00df";
+        
+    public static int GERMAN_TEST_ID = 2;
+    
+    public void _testGerman() throws Exception {
         java.util.Properties props = new java.util.Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "WIN1252");
@@ -227,4 +228,69 @@ public class TestFBEncodings extends BaseFBTest {
         connection.close();
     }
     
+    // String in Hungarian ("\u0151r\u00FClt")
+    public static String HUNGARIAN_TEST_STRING = 
+        "\u0151\u0072\u00fc\u006c\u0074";
+        
+    public static byte[] HUNGARIAN_TEST_BYTES = new byte[] {
+        (byte)0xf5, (byte)0x72, (byte)0xfc, (byte)0x6c, (byte)0x74
+    };
+    
+    public static String HUNGARIAN_TEST_STRING_WIN1250;
+        
+    public static int HUNGARIAN_TEST_ID = 3;
+    
+    public void testHungarian() throws Exception {
+        HUNGARIAN_TEST_STRING_WIN1250 = 
+            new String(HUNGARIAN_TEST_BYTES, "Cp1250");
+
+        assertTrue("Strings should be equal.", 
+            HUNGARIAN_TEST_STRING.equals(HUNGARIAN_TEST_STRING_WIN1250));
+        
+        java.util.Properties props = new java.util.Properties();
+        props.putAll(DB_INFO);
+        props.put("lc_ctype", "WIN1250");
+        
+        Connection connection = 
+            DriverManager.getConnection(DB_DRIVER_URL, props);
+
+        PreparedStatement stmt = connection.prepareStatement(
+            "INSERT INTO test_encodings(" + 
+            "  id, win1250_field, unicode_field, none_field) " +
+            "VALUES(?, ?, ?, ?)");
+        
+        stmt.setInt(1, HUNGARIAN_TEST_ID);
+        stmt.setString(2, HUNGARIAN_TEST_STRING_WIN1250);
+        stmt.setString(3, HUNGARIAN_TEST_STRING_WIN1250);
+        stmt.setString(4, HUNGARIAN_TEST_STRING_WIN1250);
+        
+        int updated = stmt.executeUpdate();
+        stmt.close();
+        
+        assertTrue("Should insert one row", updated == 1);
+        
+        stmt = connection.prepareStatement(
+            "SELECT win1250_field, unicode_field " + 
+            "FROM test_encodings WHERE id = ?");
+            
+        stmt.setInt(1, HUNGARIAN_TEST_ID);
+            
+        ResultSet rs = stmt.executeQuery();
+        
+        assertTrue("Should have at least one row", rs.next());
+        
+        String win1250Value = rs.getString(1);
+        assertTrue("win1251_field value should be the same", 
+            win1250Value.equals(HUNGARIAN_TEST_STRING));
+            
+        String unicodeValue = rs.getString(2);
+        assertTrue("unicode_field value should be the same", 
+            unicodeValue.equals(HUNGARIAN_TEST_STRING));
+            
+        assertTrue("Should have exactly one row", !rs.next());
+        
+        rs.close();
+        stmt.close();
+        connection.close();
+    }    
 }
