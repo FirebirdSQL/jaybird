@@ -27,11 +27,11 @@ REM to break out to.
 
 REM add entries to the classpath
 SETLOCAL
-set PATH=%PATH%;..\output\classes
-set PATH=%PATH%;..
+REM set PATH=%PATH%;..\output\classes
+REM set PATH=%PATH%;..
 set PATH=%PATH%;"%ANT_HOME%\bin"
 set PATH=%PATH%;"%JAVA_HOME%\lib\tools.jar"
-for %%i in ("..\lib\*.jar") do call ".\lcp.bat" %%i
+REM for %%i in ("..\lib\*.jar") do call ".\lcp.bat" %%i
 
 REM set common ANT options
 set JAXP_DOM_FACTORY="org.apache.xerces.jaxp.DocumentBuilderFactoryImpl"
