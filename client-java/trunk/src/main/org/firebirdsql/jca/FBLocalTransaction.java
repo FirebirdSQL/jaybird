@@ -48,19 +48,37 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
 
     private static final Logger log = LoggerFactory.getLogger(FBLocalTransaction.class,false);
 
-     private FBManagedConnection mc;
+     private final FBManagedConnection mc;
 
      private Xid xid = null;
 
      //used to determine if local transaction events notify ConnectionEventListeners
      //see jca spec section 6.8.  Basically not null means this is cci LocalTransaction,
      //null means spi.LocalTransaction.
-     private FBConnection c = null;
+     private final ConnectionEvent beginEvent;
+     private final ConnectionEvent commitEvent;
+     private final ConnectionEvent rollbackEvent;
 
      //should be package!!! perhaps reorganize and eliminate jdbc!!!
      public FBLocalTransaction(FBManagedConnection mc, FBConnection c) {
          this.mc = mc;
-         this.c = c;
+         if (c == null) 
+         {
+             beginEvent = null;
+             commitEvent = null;
+             rollbackEvent = null;
+         } // end of if ()
+         else
+         {
+             beginEvent = new ConnectionEvent(mc, ConnectionEvent.LOCAL_TRANSACTION_STARTED, null);
+             beginEvent.setConnectionHandle(c);
+             commitEvent = new ConnectionEvent(mc, ConnectionEvent.LOCAL_TRANSACTION_COMMITTED, null);
+             commitEvent.setConnectionHandle(c);
+
+             rollbackEvent = new ConnectionEvent(mc, ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK, null);
+             rollbackEvent.setConnectionHandle(c);
+         } // end of else
+         
      }
 
 
@@ -87,8 +105,8 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
                 if (log != null) log.warn("couldn't start local transaction: " , e);
                 throw new FBResourceException("couldn't start local transaction", e);
              }
-             if (c != null) {
-                 mc.notify(ConnectionEvent.LOCAL_TRANSACTION_STARTED, c, null);
+             if (beginEvent != null) {
+                 mc.notify(mc.localTransactionStartedNotifier, beginEvent);
              }
          }
      }
@@ -118,8 +136,8 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
              finally {
                  xid = null;
              }
-             if (c != null) {
-                 mc.notify(ConnectionEvent.LOCAL_TRANSACTION_COMMITTED, c, null);
+             if (commitEvent != null) {
+                 mc.notify(mc.localTransactionCommittedNotifier, commitEvent);
              }
          }
      }
@@ -152,8 +170,8 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
              finally {
                  xid = null;
              }
-             if (c != null) {
-                 mc.notify(ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK, c, null);
+             if (rollbackEvent != null) {
+                 mc.notify(mc.localTransactionRolledbackNotifier, rollbackEvent);
              }
          }
      }

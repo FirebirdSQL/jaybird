@@ -605,7 +605,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public void close(FBConnection c) {
         c.setManagedConnection(null);
         connectionHandles.remove(c);
-        notify(ConnectionEvent.CONNECTION_CLOSED, c, null);
+        ConnectionEvent ce = new ConnectionEvent(this, ConnectionEvent.CONNECTION_CLOSED, null);
+        ce.setConnectionHandle(c);
+        notify(connectionClosedNotifier, ce);
     }
 
     public void registerStatement(FBStatement fbStatement) {
@@ -745,45 +747,69 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         return currentDbHandle;
     }
 
-
-    void notify(int type, FBConnection c, Exception e) {
-       // if (log!=null) log.debug("in ManagedConnection.notify",new Exception());
-        ConnectionEvent ce = new ConnectionEvent(this, type, e);
-        ce.setConnectionHandle(c);
-        //avoid a concurrent modification exception - notification modifies list.
-        ArrayList cels = (ArrayList)connectionEventListeners.clone();
-        Iterator i = cels.iterator();
-        switch (type) {
-            case ConnectionEvent.CONNECTION_CLOSED:
-                while (i.hasNext()) {
-                    ((ConnectionEventListener)i.next()).connectionClosed(ce);
-                }
-                break;
-            case ConnectionEvent.CONNECTION_ERROR_OCCURRED:
-                while (i.hasNext()) {
-                    ((ConnectionEventListener)i.next()).connectionErrorOccurred(ce);
-                }
-                break;
-            case ConnectionEvent.LOCAL_TRANSACTION_STARTED:
-                while (i.hasNext()) {
-                    ((ConnectionEventListener)i.next()).localTransactionStarted(ce);
-                }
-                break;
-            case ConnectionEvent.LOCAL_TRANSACTION_COMMITTED:
-                while (i.hasNext()) {
-                    ((ConnectionEventListener)i.next()).localTransactionCommitted(ce);
-                }
-                break;
-            case ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK:
-                while (i.hasNext()) {
-                    ((ConnectionEventListener)i.next()).localTransactionRolledback(ce);
-                }
-                break;
-            default:
-//                throw new
-                break;
+    void notify(CELNotifier notifier, ConnectionEvent ce)
+    {
+        if (connectionEventListeners.size() == 0) 
+        {
+            return;
         }
+        if (connectionEventListeners.size() == 1) 
+        {
+            ConnectionEventListener cel = (ConnectionEventListener)connectionEventListeners.get(0);
+            notifier.notify(cel, ce);
+            return;
+        } // end of if ()
+        ArrayList cels = (ArrayList)connectionEventListeners.clone();
+        for (Iterator i = cels.iterator(); i.hasNext();)
+        {
+            notifier.notify((ConnectionEventListener)i.next(), ce);
+        } // end of for ()
     }
+
+    interface CELNotifier
+    {
+        void notify(ConnectionEventListener cel, ConnectionEvent ce);
+    }
+
+    static final CELNotifier connectionClosedNotifier = new CELNotifier()
+        {
+            public void notify(ConnectionEventListener cel, ConnectionEvent ce)
+            {
+                cel.connectionClosed(ce);
+            }
+        };
+
+    static final CELNotifier connectionErrorOccurredNotifier = new CELNotifier()
+        {
+            public void notify(ConnectionEventListener cel, ConnectionEvent ce)
+            {
+                cel.connectionErrorOccurred(ce);
+            }
+        };
+
+    static final CELNotifier localTransactionStartedNotifier = new CELNotifier()
+        {
+            public void notify(ConnectionEventListener cel, ConnectionEvent ce)
+            {
+                cel.localTransactionStarted(ce);
+            }
+        };
+
+    static final CELNotifier localTransactionCommittedNotifier = new CELNotifier()
+        {
+            public void notify(ConnectionEventListener cel, ConnectionEvent ce)
+            {
+                cel.localTransactionCommitted(ce);
+            }
+        };
+
+    static final CELNotifier localTransactionRolledbackNotifier = new CELNotifier()
+        {
+            public void notify(ConnectionEventListener cel, ConnectionEvent ce)
+            {
+                cel.localTransactionRolledback(ce);
+            }
+        };
 
 
     boolean matches(Subject subj, ConnectionRequestInfo cri) 
