@@ -3943,7 +3943,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     +" ,null as ITYPE "
     +" ,ise.rdb$field_position+1 as ORDINAL_POSITION "
     +" ,ise.rdb$field_name as COLUMN_NAME "
-    +" ,'A' as ASC_OR_DESC "
+    +" ,ind.RDB$INDEX_TYPE as ASC_OR_DESC "
     +" ,0 as CARDINALITY "
     +" ,0 as IPAGES "
     +" ,null as FILTER_CONDITION "
@@ -4111,7 +4111,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[6] = new Short((short) DatabaseMetaData.tableIndexOther);
             row[7] = new Short(rs.getShort("ORDINAL_POSITION"));
             row[8] = rs.getString("COLUMN_NAME").trim();
-            row[9] = null;
+				int index_type = rs.getInt("ASC_OR_DESC");
+				if (index_type == 1)
+					row[9] = "D";
+				else
+					row[9] = "A";					
             row[10] = new Integer(0);
             row[11] = new Integer(0);
             row[12] = null;
