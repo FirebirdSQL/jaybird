@@ -58,6 +58,15 @@ public class FBSQLWarning extends SQLWarning {
     }
     
     /**
+     * Create instance of this class for the specified message.
+     * 
+     * @param message message for this warning.
+     */
+    public FBSQLWarning(String message) {
+        super(message, SQL_STATE_WARNING);
+    }
+    
+    /**
      * Get error code for this warning.
      * 
      * @return error code for this warning.
