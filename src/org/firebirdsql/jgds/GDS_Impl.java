@@ -1237,7 +1237,9 @@ public class GDS_Impl implements GDS {
                 db.socket = new Socket(dbai.getServer(), dbai.getPort());
                 if (log != null) log.debug("Got socket");
             } catch (UnknownHostException ex2) {
-                throw new GDSException("Can't get socket: " + ex2);
+                String message = "Cannot resolve host " + dbai.getServer();
+                if (log != null) log.error(message, ex2);
+                throw new GDSException(isc_arg_gds, isc_network_error, dbai.getServer());
             }
             db.out = new XdrOutputStream(new BufferedOutputStream(db.socket.getOutputStream()));
             db.in = new XdrInputStream(new BufferedInputStream(db.socket.getInputStream()));
@@ -1301,7 +1303,7 @@ public class GDS_Impl implements GDS {
             }
         } catch (IOException ex) {
             if (log != null) log.info("IOException while trying to connect to db:", ex);
-            throw new GDSException(isc_network_error);
+            throw new GDSException(isc_arg_gds, isc_network_error, dbai.getServer());
         }
     }
 
@@ -1327,8 +1329,10 @@ public class GDS_Impl implements GDS {
                 throw new GDSException(isc_net_read_err);
             }
         } catch (IOException ex) {
-           if (log != null) log.warn("IOException in receiveSQLResponse", ex);
-            throw new GDSException(isc_net_read_err, ex.toString());
+            if (log != null) log.warn("IOException in receiveSQLResponse", ex);
+            // ex.getMessage() makes little sense here, it will not be displayed
+            // because error message for isc_net_read_err does not accept params
+            throw new GDSException(isc_arg_gds, isc_net_read_err, ex.getMessage());
         }
     }
 
@@ -1359,7 +1363,9 @@ public class GDS_Impl implements GDS {
             }
         } catch (IOException ex) {
            if (log != null) log.warn("IOException in receiveResponse", ex);
-            throw new GDSException(isc_net_read_err, ex.toString());
+            // ex.getMessage() makes little sense here, it will not be displayed
+            // because error message for isc_net_read_err does not accept params
+            throw new GDSException(isc_arg_gds, isc_net_read_err, ex.getMessage());
         }
     }
 
@@ -1441,7 +1447,9 @@ public class GDS_Impl implements GDS {
             }
         }
         catch (IOException ioe) {
-            throw new GDSException(isc_network_error, ioe.toString());
+            // ioe.getMessage() makes little sense here, it will not be displayed
+            // because error message for isc_net_read_err does not accept params
+            throw new GDSException(isc_arg_gds, isc_net_read_err, ioe.getMessage());
         }
     }
 
