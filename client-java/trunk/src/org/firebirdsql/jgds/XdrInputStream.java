@@ -72,7 +72,7 @@ public class XdrInputStream extends FilterInputStream {
         int pos = 0;
         int chunk;
         while (pos < len) {
-            System.out.println("Available: " + in.available() + " trying to read to: " + len + " at: " + pos);
+            //System.out.println("Available: " + in.available() + " trying to read to: " + len + " at: " + pos);
             chunk = Math.min(in.available(), len - pos);
             in.read(buffer, pos, chunk);
             pos += chunk;
@@ -86,6 +86,7 @@ public class XdrInputStream extends FilterInputStream {
     public final byte[] readBuffer() throws IOException {
         return readOpaque(readInt());
     }
+
     
     public final String readString() throws IOException {
         return new String(readBuffer());

@@ -89,7 +89,7 @@ class XdrOutputStream extends FilterOutputStream {
 
     public final void writeBlobBuffer(byte[] buffer) throws IOException {
 	int len = buffer.length ; // 2 for short for buffer length
-	System.out.println("writeBlobBuffer len: " + len);
+	//System.out.println("writeBlobBuffer len: " + len);
 	if (len > Short.MAX_VALUE) {
 	    throw new IOException(""); //Need a value???
 	}
@@ -98,7 +98,7 @@ class XdrOutputStream extends FilterOutputStream {
 	write((len >> 0) & 0xff);
 	write((len >> 8) & 0xff);
 	write(buffer, 0, len);
-	System.out.println("writeBlobBuffer wrotebuffer bytes: " + len);
+	//System.out.println("writeBlobBuffer wrotebuffer bytes: " + len);
 	even(len + 2);
     }
     
