@@ -43,6 +43,7 @@ import org.firebirdsql.jdbc.FBResultSet;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
+ * 
  * @todo implement data handling code
  *
  * @todo implement correct exception throwing in all setXXX methods that use
@@ -51,33 +52,7 @@ import org.firebirdsql.jdbc.FBResultSet;
  *
  * @todo think about the right setBoolean and getBoolean (currently it is "Y"
  * and "N", or "TRUE" and "FALSE").
- * @todo check if the setBinaryStream(null) is allowed by specs.
- * @todo implement data hadnling code
- *
- * @todo implement correct exception throwing in all setXXX methods that use
- * setString(String), currently it will raise an exception with string conversion
- * error message, instead it should complain about error coresponding to the XXX.
- *
- * @todo think about the right setBoolean and getBoolean (currently it is "Y"
- * and "N", or "TRUE" and "FALSE").
- * @todo check if the setBinaryStream(null) is allowed by specs.
- * @todo implement data hadnling code
- *
- * @todo implement correct exception throwing in all setXXX methods that use
- * setString(String), currently it will raise an exception with string conversion
- * error message, instead it should complain about error coresponding to the XXX.
- *
- * @todo think about the right setBoolean and getBoolean (currently it is "Y"
- * and "N", or "TRUE" and "FALSE").
- * @todo check if the setBinaryStream(null) is allowed by specs.
- * @todo implement data hadnling code
- *
- * @todo implement correct exception throwing in all setXXX methods that use
- * setString(String), currently it will raise an exception with string conversion
- * error message, instead it should complain about error coresponding to the XXX.
- *
- * @todo think about the right setBoolean and getBoolean (currently it is "Y"
- * and "N", or "TRUE" and "FALSE").
+ * 
  * @todo check if the setBinaryStream(null) is allowed by specs.
  */
 public class FBStringField extends FBField {
