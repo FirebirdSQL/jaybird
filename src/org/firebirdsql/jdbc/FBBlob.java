@@ -89,7 +89,7 @@ public class FBBlob implements Blob{
      * also used for the BufferedInputStream/BufferedOutputStream wrappers.
      *
      */
-    private int bufferlength = 2048;
+    private int bufferlength;
 
     private long blob_id;
     private FBManagedConnection mc;
@@ -100,6 +100,7 @@ public class FBBlob implements Blob{
     FBBlob(FBManagedConnection mc, long blob_id) {
         this.mc = mc;
         this.blob_id = blob_id;
+        this.bufferlength = mc.getBlobBufferLength();
     }
 
     void close() throws IOException {

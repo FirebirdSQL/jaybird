@@ -329,6 +329,27 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
         return description;
     }
 
+
+    /**
+     * Get the BlobBufferLength value.
+     * @return the BlobBufferLength value.
+     */
+    public int getBlobBufferLength()
+    {
+        return mcf.getBlobBufferLength();
+    }
+
+    /**
+     * Set the BlobBufferLength value.
+     * @param newBlobBufferLength The new BlobBufferLength value.
+     */
+    public void setBlobBufferLength(final int blobBufferLength)
+    {
+        mcf.setBlobBufferLength(blobBufferLength);
+    }
+
+    
+
    private void checkStarted() throws SQLException
    {
       if (ds == null) 

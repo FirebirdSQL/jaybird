@@ -46,7 +46,7 @@ public class TestFBBlob extends TestXABase {
     private LocalTransaction t;
     private Exception ex = null;
 
-    private int bloblength = 40960;
+    private int bloblength = 40960 * 10;
 
 
     public TestFBBlob(String name) {
@@ -137,7 +137,7 @@ public class TestFBBlob extends TestXABase {
         teardownTable("T1");
     }
 
-    public void xtestUseBlobViapsSetBinaryStream() throws Exception {
+    public void testUseBlobViapsSetBinaryStream() throws Exception {
 
         log.info("testUseBlobViapsSetBinaryStream");
         setupTable("T2");
@@ -161,7 +161,7 @@ public class TestFBBlob extends TestXABase {
 
     }
 
-    public void xtestUseBlobViapsSetBytes() throws Exception {
+    public void testUseBlobViapsSetBytes() throws Exception {
 
         log.info("testUseBlobViapsSetBytes");
         setupTable("T3");

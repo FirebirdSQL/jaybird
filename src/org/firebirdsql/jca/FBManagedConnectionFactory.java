@@ -100,6 +100,13 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
     private Set tpbSet;
 
+    private final static int MAX_BLOB_BUFFER_LENGTH = 1024 * 32 - 1;
+    private final static int MIN_BLOB_BUFFER_LENGTH = 1024;
+
+
+    //must be less than 1024 * 32: 1-24 * 32 -  is ok.
+    private int blobBufferLength = 1024 * 16;
+
 
     public FBManagedConnectionFactory() {
         defaultCri = new FBConnectionRequestInfo();
@@ -161,6 +168,40 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     public Set getTpb() {
         return new HashSet(tpbSet);
     }
+
+
+    /**
+     * Get the BlobBufferLength value.
+     * @return the BlobBufferLength value.
+     */
+    public int getBlobBufferLength()
+    {
+        return blobBufferLength;
+    }
+
+    /**
+     * Set the BlobBufferLength value.
+     * @param newBlobBufferLength The new BlobBufferLength value.
+     */
+    public void setBlobBufferLength(final int blobBufferLength)
+    {
+        if (blobBufferLength > MAX_BLOB_BUFFER_LENGTH) 
+        {
+            this.blobBufferLength = MAX_BLOB_BUFFER_LENGTH;
+            log.warn("Supplied blob buffer length greater than maximum of " + MAX_BLOB_BUFFER_LENGTH);
+        } // end of if ()
+        else if (blobBufferLength < MIN_BLOB_BUFFER_LENGTH ) 
+        {
+            this.blobBufferLength = MIN_BLOB_BUFFER_LENGTH;
+            log.warn("Supplied blob buffer length less than minimum of " + MIN_BLOB_BUFFER_LENGTH);
+        } // end of if ()
+        else
+        {
+            this.blobBufferLength = blobBufferLength;
+        } // end of else
+    }
+
+    
 
 /**
      Creates a Connection Factory instance. The Connection Factory instance gets initialized with
