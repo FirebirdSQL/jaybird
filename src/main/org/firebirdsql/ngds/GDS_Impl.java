@@ -788,6 +788,12 @@ public class GDS_Impl extends AbstractGDS implements GDS {
                     stmt.notifyOpenResultSet();
                     readSQLData(xsqlda, stmt);
                 } else {
+
+                    // workaround for the JNI driver
+                    // without this code driver complains that it is trying to
+                    // re-execute statement with an open cursor.
+                    stmt.notifyOpenResultSet();
+                    
                     stmt.setAllRowsFetched(true);
                     return;
                 }
