@@ -34,7 +34,22 @@ import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
 import javax.security.auth.Subject;
 
+import javax.transaction.xa.XAResource;
+
 import java.util.Set;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
+
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.Xid;
+
+import org.firebirdsql.gds.isc_tr_handle;
+import org.firebirdsql.gds.isc_db_handle;
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.Clumplet;
+import org.firebirdsql.jgds.GDS_Impl;
 
 /**
  *
@@ -54,6 +69,47 @@ matching and creation of ManagedConnection instance.
 
 public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
+    GDS gds = new GDS_Impl();
+    
+    private String dbAlias;
+    
+    private LinkedList freeDbHandles = new LinkedList();
+    
+    private HashMap xidMap = new HashMap();  //Maps supplied XID to internal transaction handle.
+    
+    private Clumplet dpbClumplet;
+    
+    private Set tpbSet;
+    
+    
+    public FBManagedConnectionFactory() {};  //Default constructor.
+    
+    //rar properties
+    
+    
+    public void setDatabase(String database) {
+        this.dbAlias = database;
+    }
+    
+    public String getDatabase() {
+        return dbAlias;
+    }
+    
+    public void setDpb(Clumplet dpb) {
+        dpbClumplet = dpb;
+    }
+    
+    public Clumplet getDpb() {
+        return dpbClumplet;
+    }
+    
+    public void setTpb(Set tpb) {
+        tpbSet = tpb;
+    }
+    
+    public Set getTpb() {
+        return tpbSet;
+    }
 
 /**
      Creates a Connection Factory instance. The Connection Factory instance gets initialized with
@@ -116,7 +172,8 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     public ManagedConnection createManagedConnection(Subject subject,
                                                  ConnectionRequestInfo cxRequestInfo)
                                           throws ResourceException {
-        throw new ResourceException("not yet implemented");
+        //ignore ConnectionRequestInfo till we think of something to use it for.
+        return new FBManagedConnection(subject, this);
     }
 
 
@@ -234,9 +291,120 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     public boolean equals(java.lang.Object other) {
         return false;
     }
+    
+    //needs synchronization!
+    isc_tr_handle lookupXid(Xid xid) {
+        return (isc_tr_handle) xidMap.get(xid);
+    }
+    
+    void forgetXid(Xid xid) {
+        xidMap.remove(xid);
+    }
+    
+    //needs synchronization!
+    //Also needs to use firebirds multi-db transactions!
+    //returns uninitialized tr_handle if first use. 
+    isc_tr_handle getCurrentIscTrHandle(Xid xid, FBManagedConnection mc, int flags) throws XAException {
+        isc_tr_handle tr = lookupXid(xid);
+        if (tr == null) {
+            if (flags != XAResource.TMNOFLAGS) {
+                throw new XAException("Transaction flags wrong, this xid new for this rm");
+            }
+            //new xid for us
+            isc_db_handle db = mc.getIscDBHandle();
+            tr = gds.get_new_isc_tr_handle();
+            try {
+                gds.isc_start_transaction(tr, db, getTpb());
+            } 
+            catch (GDSException ge) {
+                throw new XAException(ge.toString());
+            }
+            xidMap.put(xid, tr);
+        } 
+        else {
+            if (flags != XAResource.TMJOIN && flags != XAResource.TMRESUME) {
+                throw new XAException("Transaction flags wrong, this xid already known");
+            }
+        }
+        return tr;
+    }
 
    
- } 
+    isc_db_handle getDbHandle() throws XAException {
+        try {
+            synchronized (freeDbHandles) {
+                return (isc_db_handle)freeDbHandles.removeLast();
+            }
+        } catch (NoSuchElementException e) {
+            isc_db_handle db = gds.get_new_isc_db_handle();
+            try {
+                gds.isc_attach_database(dbAlias, db, getDpb());
+            }
+            catch (GDSException ge) {
+                throw new XAException(ge.toString());
+            }
+            return db;
+        }
+    }
+    
+    synchronized void returnDbHandle(isc_db_handle db) {
+        freeDbHandles.addLast(db);
+    }
+    
+    void commit(Xid xid) throws XAException {
+        try {
+            gds.isc_commit_transaction(lookupXid(xid));
+        }
+        catch (GDSException ge) {
+            throw new XAException(ge.toString());
+        }
+        finally {
+            forgetXid(xid);
+        }
+    }
+        
+    void prepare(Xid xid) throws XAException {
+        try {
+            FBXid fbxid;
+            if (xid instanceof FBXid) {
+                fbxid = (FBXid)xid;
+            }
+            else {
+                fbxid = new FBXid(xid);
+            }
+//            gds.isc_prepare_transaction(lookupXid(xid));
+            gds.isc_prepare_transaction2(lookupXid(xid), fbxid.toBytes());
+//            gds.isc_prepare_transaction2s(lookupXid(xid), xid.toString());
+        }
+        catch (GDSException ge) {
+            ge.printStackTrace();
+            forgetXid(xid);
+            throw new XAException(ge.toString());
+        }
+    }
+        
+    void rollback(Xid xid) throws XAException {
+        try {
+            gds.isc_rollback_transaction(lookupXid(xid));
+        }
+        catch (GDSException ge) {
+            throw new XAException(ge.toString());
+        }
+        finally {
+            forgetXid(xid);
+        }
+    }
+        
+
+/*public at the moment, at the top
+    private Clumplet getDpb() {
+        return dpbClumplet;
+    }
+    
+    private Set getTpb() {
+        return tpbSet;
+    }*/
+} 
 
 
 

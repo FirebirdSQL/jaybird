@@ -34,7 +34,16 @@ import javax.resource.spi.LocalTransaction;
 import javax.resource.spi.ConnectionEventListener;
 import javax.resource.spi.ConnectionRequestInfo;
 
+import java.util.ArrayList;
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
+
 import javax.security.auth.Subject;
+
+import org.firebirdsql.gds.isc_db_handle;
+import org.firebirdsql.gds.isc_tr_handle;
+import org.firebirdsql.gds.GDS;
 
 /**
  *
@@ -51,7 +60,28 @@ import javax.security.auth.Subject;
  * <p>
  */
 
-public class FBManagedConnection implements ManagedConnection {
+public class FBManagedConnection implements ManagedConnection, XAResource {
+    
+    private FBManagedConnectionFactory mcf;
+    
+    private ArrayList connectionEventListeners = new ArrayList();
+    
+    private int timeout = 0;
+    
+    private Subject s;
+    
+    
+    private isc_tr_handle currentTr;
+    
+    private isc_db_handle currentDbHandle;
+    
+    FBManagedConnection(Subject s, FBManagedConnectionFactory mcf) {
+        this.mcf = mcf;
+        this.s = s;
+    }
+    
+    
+    
     //javax.resource.spi.ManagedConnection implementation
     
     /**
@@ -136,6 +166,7 @@ public class FBManagedConnection implements ManagedConnection {
   /**<P> Add an event listener.
    */
     public void addConnectionEventListener(ConnectionEventListener listener) {
+        connectionEventListeners.add(listener);
     }
 
 
@@ -143,6 +174,7 @@ public class FBManagedConnection implements ManagedConnection {
   /**<P> Remove an event listener.
    */
     public void removeConnectionEventListener(ConnectionEventListener listener) {
+        connectionEventListeners.remove(listener);
     }
     
   /**Used by the container to change the association of an application-level connection handle with a
@@ -253,8 +285,172 @@ public class FBManagedConnection implements ManagedConnection {
    * @exception SQLException if a database-access error occurs
    */
     public javax.transaction.xa.XAResource getXAResource() throws ResourceException {
-        throw new ResourceException("not yet implemented");
+        return this;
     }
+    
+    //--------------------------------------------------------------
+    //XAResource implementation
+    //--------------------------------------------------------------
+    
+
+    /**
+     * Commits a transaction.
+     * @throws XAException
+     *     Occurs when the state was not correct (end never called), the
+     *     transaction ID is wrong, the connection was set to Auto-Commit,
+     *     or the commit on the underlying connection fails.  The error code
+     *     differs depending on the exact situation.
+     */
+    public void commit(Xid id, boolean twoPhase) throws XAException {
+        if (mcf.lookupXid(id) == null) {
+            throw new XAException("commit called with unknown transaction");
+        }
+        if (mcf.lookupXid(id) == currentTr) {
+            throw new XAException("commit called with current xid");
+        }
+        mcf.commit(id);
+    }
+
+    /**
+     * Dissociates a resource from a global transaction.
+     * @throws XAException
+     *     Occurs when the state was not correct (end called twice), or the
+     *     transaction ID is wrong.
+     */
+     //what do we do with flags?????
+    public void end(Xid id, int flags) throws javax.transaction.xa.XAException {
+        if (currentTr == null) {
+            throw new XAException("end called with no transaction associated");
+        }
+        if (mcf.lookupXid(id) != currentTr) {
+            throw new XAException("end called with wrong xid");
+        }
+        currentTr = null;
+    }
+
+    /**
+     * Indicates that no further action will be taken on behalf of this
+     * transaction (after a heuristic failure).  It is assumed this will be
+     * called after a failed commit or rollback.
+     * @throws XAException
+     *     Occurs when the state was not correct (end never called), or the
+     *     transaction ID is wrong.
+     */
+    public void forget(Xid id) throws javax.transaction.xa.XAException {
+        if (mcf.lookupXid(id) == null) {
+            throw new XAException("forget called with unknown transaction");
+        }
+        if (mcf.lookupXid(id) == currentTr) {
+            throw new XAException("forget called with current xid");
+        }
+        mcf.forgetXid(id);
+    }
+
+    /**
+     * Gets the transaction timeout.
+     */
+    public int getTransactionTimeout() throws javax.transaction.xa.XAException {
+        return timeout;
+    }
+
+    public boolean isSameRM(XAResource res) throws javax.transaction.xa.XAException {
+        return (res instanceof FBManagedConnection) 
+            && (mcf == ((FBManagedConnection)res).mcf); 
+    }
+
+    /**
+     * Prepares a transaction to commit.  
+     * @throws XAException
+     *     Occurs when the state was not correct (end never called), the
+     *     transaction ID is wrong, or the connection was set to Auto-Commit.
+     */
+    public int prepare(Xid id) throws javax.transaction.xa.XAException {
+        if (mcf.lookupXid(id) == null) {
+            throw new XAException("prepare called with unknown transaction");
+        }
+        if (mcf.lookupXid(id) == currentTr) {
+            throw new XAException("prepare called with current xid");
+        }
+        mcf.prepare(id);
+        return XA_OK;
+    }
+
+    public Xid[] recover(int flag) throws javax.transaction.xa.XAException {
+/*        if(fbmc.getCurrentXid() == null)
+            return new Xid[0];
+        else
+            return new Xid[]{fbmc.getCurrentXid()};*/
+         return null;
+    }
+
+    /**
+     * Rolls back the work, assuming it was done on behalf of the specified
+     * transaction.
+     * @throws XAException
+     *     Occurs when the state was not correct (end never called), the
+     *     transaction ID is wrong, the connection was set to Auto-Commit,
+     *     or the rollback on the underlying connection fails.  The error code
+     *     differs depending on the exact situation.
+     */
+    public void rollback(Xid id) throws javax.transaction.xa.XAException {
+        if (mcf.lookupXid(id) == null) {
+            throw new XAException("rollback called with unknown transaction");
+        }
+        if (mcf.lookupXid(id) == currentTr) {
+            throw new XAException("rollback called with current xid");
+        }
+        mcf.rollback(id);
+    }
+
+    /**
+     * Sets the transaction timeout.  This is saved, but the value is not used
+     * by the current implementation.
+     */
+    public boolean setTransactionTimeout(int timeout) throws javax.transaction.xa.XAException {
+        this.timeout = timeout;
+        return true;
+    }
+
+    /**
+     * Associates a JDBC connection with a global transaction.  We assume that
+     * end will be called followed by prepare, commit, or rollback.
+     * If start is called after end but before commit or rollback, there is no
+     * way to distinguish work done by different transactions on the same
+     * connection).  If start is called more than once before
+     * end, either it's a duplicate transaction ID or illegal transaction ID
+     * (since you can't have two transactions associated with one DB
+     * connection).
+     * @throws XAException
+     *     Occurs when the state was not correct (start called twice), the
+     *     transaction ID is wrong, or the instance has already been closed.
+     */
+    public void start(Xid id, int flags) throws XAException {
+        if (currentTr != null) {
+            throw new XAException("start called with transaction associated");
+        }
+        findIscTrHandle(id, flags);
+    }
+    
+
+    //--------------------------------------------------------------------
+    //package visibility
+    //--------------------------------------------------------------------
+    
+    void findIscTrHandle(Xid xid, int flags) throws XAException {
+        currentTr = mcf.getCurrentIscTrHandle(xid, this, flags);
+        if (currentTr.getDbHandle() != currentDbHandle) {
+            mcf.returnDbHandle(currentDbHandle);
+            currentDbHandle = currentTr.getDbHandle();
+        }
+    }
+    //temporarily public for testing
+    public isc_db_handle getIscDBHandle() throws XAException {
+        if (currentDbHandle == null) {
+            currentDbHandle = mcf.getDbHandle();
+        }
+        return currentDbHandle;
+    }
+    
 
 
     
