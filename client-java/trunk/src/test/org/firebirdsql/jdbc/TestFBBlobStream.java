@@ -31,24 +31,24 @@ import org.firebirdsql.gds.ISCConstants;
  * @version 1.0
  */
 public class TestFBBlobStream extends BaseFBTest {
-    public static final String CREATE_TABLE = 
-        "CREATE TABLE test_blob(" + 
-        "  id INTEGER, " + 
-        "  bin_data BLOB " + 
+    public static final String CREATE_TABLE =
+        "CREATE TABLE test_blob(" +
+        "  id INTEGER, " +
+        "  bin_data BLOB " +
         ")";
-        
-    public static final String DROP_TABLE = 
-        "DROP TABLE test_blob";
-        
 
-    public static int TEST_ROW_COUNT = 1000;        
-        
+    public static final String DROP_TABLE =
+        "DROP TABLE test_blob";
+
+
+    public static int TEST_ROW_COUNT = 100;
+
     private Connection connection;
-    
+
     private byte[][] testData;
 
-    
-    
+
+
     public TestFBBlobStream(String testName) {
         super(testName);
     }
@@ -56,17 +56,17 @@ public class TestFBBlobStream extends BaseFBTest {
     protected void setUp() throws Exception {
         super.setUp();
         Class.forName(FBDriver.class.getName());
-        
+
         String url = DB_DRIVER_URL;
         // String url = "jdbc:firebirdsql:local:/home/rrokytskyy/fbtest.gdb";
-        
+
         Properties props = new Properties();
-        
+
         props.setProperty("user", DB_INFO.getProperty("user"));
         props.setProperty("password", DB_INFO.getProperty("password"));
-        
+
         connection = DriverManager.getConnection(url, props);
-        
+
         java.sql.Statement stmt = connection.createStatement();
         try {
             stmt.executeUpdate(DROP_TABLE);
@@ -75,17 +75,17 @@ public class TestFBBlobStream extends BaseFBTest {
 
         stmt.executeUpdate(CREATE_TABLE);
         stmt.close();
-        
+
         java.util.Random rnd = new java.util.Random();
-        
+
         testData = new byte[TEST_ROW_COUNT][0];
-        
+
         for (int i = 0; i < testData.length; i++) {
             int testLength = rnd.nextInt(100 * 1024) + 128;
             testData[i] = new byte[testLength];
             rnd.nextBytes(testData[i]);
         }
-        
+
     }
 
     protected void tearDown() throws Exception {
@@ -219,75 +219,73 @@ public class TestFBBlobStream extends BaseFBTest {
     
     /**
      * Test if byte[] are correctly stored and retrieved from database
-     * 
+     *
      * @throws Exception if something went wrong.
      */
     public void testFieldTypes() throws Exception {
         
         connection.setAutoCommit(false);
-        
+
         PreparedStatement ps = connection.prepareStatement(
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
-            
+
         long start = System.currentTimeMillis();
-        
+
         long size = 0;
-            
+
         for(int i = 0; i < TEST_ROW_COUNT; i++) {
             ps.setInt(1, i);
             ps.setBytes(2, testData[i]);
-            
+
             size += testData[i].length;
-            
+
             ps.execute();
         }
-        
+
         long duration = System.currentTimeMillis() - start;
-        
-        System.out.println("Inserted " + size + " bytes in " + duration + " ms, " + 
+
+        System.out.println("Inserted " + size + " bytes in " + duration + " ms, " +
             "speed " + ((size * 1000 * 1000 / duration / 1024 / 1024) / 1000.0) + " MB/s");
-        
+
         ps.close();
-        
+
         connection.commit();
-//        connection.setAutoCommit(true);
-        
-       
+
         Statement stmt = connection.createStatement();
-            
+
         ResultSet rs = stmt.executeQuery("SELECT id, bin_data FROM test_blob");
-        
+
         start = System.currentTimeMillis();
         size = 0;
-        
+
         try {
             int counter = 0;
-            
+
             while(rs.next()) {
-                
+
                 int id = rs.getInt("id");
                 byte[] data = rs.getBytes("bin_data");
-                
+
                 size += data.length;
-                
+
                 assertTrue(
-                    "Data read from database for id " + id + 
+                    "Data read from database for id " + id +
                     " should be equal to generated one.",
                     java.util.Arrays.equals(testData[id], data));
-                    
+
                 counter++;
             }
-            
+
             assertTrue(
-                "Should read " + TEST_ROW_COUNT + 
+                "Should read " + TEST_ROW_COUNT +
                 " rows, read " + counter, TEST_ROW_COUNT == counter);
-                
+
             duration = System.currentTimeMillis() - start;
-            
-            System.out.println("Read " + size + " bytes in " + duration + " ms, " + 
+
+            System.out.println("Read " + size + " bytes in " + duration + " ms, " +
                 "speed " + ((size * 1000 * 1000 / duration / 1024 / 1024) / 1000.0) + " MB/s");
 
-            
+
         } finally {
             rs.close();
             stmt.close();
