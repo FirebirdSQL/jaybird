@@ -20,11 +20,15 @@
 package org.firebirdsql.jdbc;
 
 
+import java.sql.*;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.sql.Statement;
+import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedList;
+
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
 
@@ -45,7 +49,7 @@ import org.firebirdsql.gds.isc_stmt_handle;
  * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  */
-public abstract class AbstractStatement implements Statement, Synchronizable {
+public abstract class AbstractStatement implements FirebirdStatement, Synchronizable {
 
     protected AbstractConnection c;
 
@@ -383,7 +387,7 @@ public abstract class AbstractStatement implements Statement, Synchronizable {
      * @exception SQLException if a database access error occurs
      */
     public void cancel() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -551,6 +555,9 @@ public abstract class AbstractStatement implements Statement, Synchronizable {
         return currentCachedResultSet;
     }
 
+	public boolean hasOpenResultSet() {
+		return currentRs != null;
+	}
 
     /**
      *  Returns the current result as an update count;
@@ -583,6 +590,44 @@ public abstract class AbstractStatement implements Statement, Synchronizable {
         }
     }
 
+    private static final int INSERTED_ROWS_COUNT = 1;
+    private static final int UPDATED_ROWS_COUNT = 2;
+    private static final int DELETED_ROWS_COUNT = 3;
+    
+	private int getChangedRowsCount(int type) throws SQLException {
+        if (isResultSet || !hasMoreResults)
+            return -1;
+        else {
+        	try {
+        		c.getSqlCounts(fixedStmt);
+                switch(type) {
+                    case INSERTED_ROWS_COUNT :
+                    	return fixedStmt.getInsertCount();
+                    case UPDATED_ROWS_COUNT :
+                        return fixedStmt.getUpdateCount();
+                    case DELETED_ROWS_COUNT :
+                        return fixedStmt.getDeleteCount();
+                    default :
+                        throw new IllegalArgumentException(
+                            "Specified type is unknown.");
+                }
+            } catch(GDSException ex) {
+            	throw new FBSQLException(ex);
+            }
+        }
+	}
+    
+    public int getDeletedRowsCount() throws SQLException {
+    	return getChangedRowsCount(DELETED_ROWS_COUNT);
+    }
+
+	public int getInsertedRowsCount() throws SQLException {
+		return getChangedRowsCount(INSERTED_ROWS_COUNT);
+	}
+
+	public int getUpdatedRowsCount() throws SQLException {
+		return getChangedRowsCount(UPDATED_ROWS_COUNT);
+	}
 
     /**
      * Moves to a <code>Statement</code> object's next result.  It returns
@@ -743,6 +788,7 @@ public abstract class AbstractStatement implements Statement, Synchronizable {
         return ResultSet.TYPE_FORWARD_ONLY;
     }
 
+    private LinkedList batchList = new LinkedList();
 
     /**
      * Adds an SQL command to the current batch of commmands for this
@@ -757,7 +803,7 @@ public abstract class AbstractStatement implements Statement, Synchronizable {
      *      2.0 API</a>
      */
     public void addBatch( String sql ) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        batchList.add(sql);
     }
 
 
@@ -772,7 +818,7 @@ public abstract class AbstractStatement implements Statement, Synchronizable {
      *      2.0 API</a>
      */
     public void clearBatch() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        batchList.clear();
     }
 
 
@@ -827,7 +873,57 @@ public abstract class AbstractStatement implements Statement, Synchronizable {
      *      2.0 API</a>
      */
     public int[] executeBatch() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        if (closed)
+            throw new SQLException("Statement is closed");
+        
+        if (c.getAutoCommit())
+            c.addWarning(new SQLWarning("Batch updates should be run " +
+                    "with auto-commit disabled."));
+        
+        Object syncObject = getSynchronizationObject();
+        LinkedList responses = new LinkedList();
+        
+        synchronized(syncObject) {
+            try {
+                c.ensureInTransaction();
+                
+                Iterator iter = batchList.iterator();
+                while(iter.hasNext()) {
+                	String sql = (String)iter.next();
+                    try {
+                    	boolean hasResultSet = internalExecute(sql);
+                        
+                        if (hasResultSet)
+                        	throw new BatchUpdateException();
+                        else
+                            responses.add(new Integer(getUpdateCount()));
+                    } catch (GDSException ge) {
+                        throw new BatchUpdateException(toArray(responses));
+                    }
+                }
+               
+                return toArray(responses);
+            } finally {
+                c.checkEndTransaction();
+            }
+        }
+    }
+    
+    /**
+     * Convert collection of {@link Integer} elements into array of int.
+     * 
+     * @param list collection of integer elements.
+     * 
+     * @return array of int.
+     */
+    protected int[] toArray(Collection list) {
+        int[] result = new int[list.size()];
+        int counter = 0;
+        Iterator iter = list.iterator();
+        while(iter.hasNext()) {
+        	result[counter++] = ((Integer)iter.next()).intValue();
+        }
+        return result;
     }
 
 
