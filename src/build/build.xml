@@ -31,7 +31,9 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
     <property name="external.dir" value="${dist.dir}/external"/>
     <property name="db.dir" value="${basedir}/db"/>
     <property name="dbsrc.dir" value="${basedir}/dbsrc"/>
-    
+    <property name="jdbctest.dir" value="${basedir}/jdbcTest"/>
+    <property name="src.jdbctest.resources.dir" value="${src.dir}/jdbcTestResources"/>
+
 
 
     <property name="classpath" value="${build.classes.dir};${src.lib.dir}/jta-spec1_0_1.jar;${src.lib.dir}/connector.jar;${src.lib.dir}/jdbc-3_0-pfd2-classes.zip;${src.lib.dir}/jaas.jar"/>
@@ -49,8 +51,20 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
       <pathelement location="${src.lib.dir}/jaas.jar"/>
       <pathelement location="${src.lib.dir}/jmxri.jar"/>
       <pathelement location="${lib.dir}/junit.jar"/>
-    </path> 
+    </path>
 
+
+  <!-- =================================================================== -->
+  <!-- Fix cr-lf                                                           -->
+  <!-- =================================================================== -->
+  <target name="pretty">
+    <fixcrlf srcDir="${src.dir}"
+       includes="**/*.java,**/*.xml,**/*.sh"
+       cr="remove"
+       tab="remove"
+       tablength="4"
+       eof="remove"/>
+  </target>
 
   <!-- =================================================================== -->
   <!-- Prepares the build directory                                        -->
@@ -67,16 +81,16 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
   <!-- =================================================================== -->
   <target name="compile" depends="prepare">
     <mkdir dir="${build.classes.dir}"/>
-    <depend srcDir="${src.dir}" 
+    <depend srcDir="${src.dir}"
            destDir="${build.classes.dir}"
            cache="${build.classes.dir}"/>
-           
+
     <javac srcdir="${src.dir}"
            destdir="${build.classes.dir}"
            debug="off"
            deprecation="off"
            optimize="on"
-           includes="org/**"
+           includes="org/**,jdbcTest/**"
            excludes="**/temp*"
     >
       <classpath refid="cp"/>
@@ -109,7 +123,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
       </classpath>
       <formatter type="plain" usefile="false"/>
       <!--test name="org.firebirdsql.jca.TestFBResultSet"/-->
-      <test name="org.firebirdsql.jca.TestFBDatabaseMetaData"/>
+      <test name="org.firebirdsql.jca.TestFBBlob"/>
     </junit>
   </target>
 
@@ -180,6 +194,38 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
 
 
   <!-- =================================================================== -->
+  <!-- Creates the jdbctest jar archives                                            -->
+  <!-- =================================================================== -->
+  <target name="jdbctestjar" depends="compile">
+
+    <mkdir dir="${jdbctest.dir}"/>
+    <jar jarfile="${jdbctest.dir}/jdbcTest.jar"
+         basedir="${build.classes.dir}"
+         includes="jdbcTest/**"
+    />
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- sets up jdbcTest                                           -->
+  <!-- =================================================================== -->
+
+  <target name="dist-jdbc" depends="jar-ra">
+    <copy todir="${dist.dir}" file="${build.jar-ra.dir}/firebirdsql.jar"/>
+  </target>
+
+  <target name="jdbctest" depends="jdbctestjar,dist-jdbc">
+    <copy todir="${jdbctest.dir}">
+        <fileset dir="${src.jdbctest.resources.dir}"/>
+    </copy>
+
+    <mkdir dir="${jdbctest.dir}"/>
+    <jar jarfile="${jdbctest.dir}/jdbcTest.jar"
+         basedir="${build.classes.dir}"
+         includes="jdbcTest/**"
+    />
+  </target>
+
+  <!-- =================================================================== -->
   <!-- Creates the API documentation                                       -->
   <!-- =================================================================== -->
   <target name="javadocs" depends="prepare">
@@ -201,16 +247,16 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
   <!-- Creates the html documentation                                      -->
   <!-- =================================================================== -->
   <target name="docs" depends="prepare">
-    
+
     <echo message="Sorry, you must copy the xml file into the manual/src/docs"/>
     <echo message="directory, add an external entity to jbossdocs.xml for howtorules,"/>
     <echo message="and compile it as part of the jboss documentation."/>
     <!--echo message="Building html documentation. Please wait ..."/-->
-<!--    <style  basedir="${src.docs.dir}"             
+<!--    <style  basedir="${src.docs.dir}"
              style="jboss.xsl"
              destdir="${build.docs.dir}"
              includes="jbossdocs.xml"
-    />    
+    />
     <move todir="${build.docs.dir}">
       <fileset dir="${src.dir}/build" includes="*.html"/>
     </move>
