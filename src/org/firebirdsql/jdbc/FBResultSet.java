@@ -2555,12 +2555,7 @@ public class FBResultSet implements ResultSet {
             
             try {
                 nextRow = c.fetch(stmt);
-                
-                if (nextRow != null)
-                     row = new Object[nextRow.length];
-                else
-                    row = null;
-                    
+
                 if (nextRow==null)
                     isEmpty = true;
                 else 
