@@ -44,6 +44,10 @@ import javax.security.auth.Subject;
 import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.isc_tr_handle;
 import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.XSQLDA;
+import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.FBConnection;
 
 /**
  *
@@ -194,7 +198,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          ResourceAdapterInternalException - Resource adapter internal error condition
 */
     public void associateConnection(java.lang.Object connection) throws ResourceException {
-        throw new ResourceException("not yet implemented");
+        try {
+            ((FBConnection)connection).setManagedConnection(this);
+        }
+        catch (ClassCastException cce) {        
+            throw new ResourceException("invalid connection supplied to associateConnection: " + cce);
+        }
     }
 /**
 
@@ -256,7 +265,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 **/    
     public java.lang.Object getConnection(Subject subject, ConnectionRequestInfo cxRequestInfo)
         throws ResourceException {
-        throw new ResourceException("not yet implemented");
+        //subject currently ignored
+        //cxRequestInfo currently ignored.
+            
+        return new FBConnection(this);
     }
     
  
@@ -431,6 +443,16 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         findIscTrHandle(id, flags);
     }
     
+    //FB public methods. Could be package if packages reorganized.
+    
+    public boolean executeSQL(String sql) throws GDSException {
+        //Should we test for dbhandle?
+        XSQLDA out = new XSQLDA();
+        mcf.gds.isc_dsql_exec_inmed2(currentTr.getDbHandle(), currentTr, sql,
+                                 GDS.SQL_DIALECT_CURRENT, null, out);
+                                 
+        return false;//Hah!
+    }
 
     //--------------------------------------------------------------------
     //package visibility
