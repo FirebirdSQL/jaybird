@@ -30,6 +30,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.4  2001/08/28 17:13:23  d_jencks
+ * Improved formatting slightly, removed dos cr's
+ *
  * Revision 1.3  2001/07/18 20:07:31  d_jencks
  * Added better GDSExceptions, new NativeSQL, and CallableStatement test from Roman Rokytskyy
  *
@@ -128,9 +131,9 @@ public class GDSException extends Exception {
             int paramCount = message.getParamCount();
             GDSException child = this.next;
             for(int i = 0; i < paramCount; i++) {
+                if (child == null) break;
                 message.setParameter(i, child.getParam());
                 child = child.next;
-                if (child == null) break;
             }
 
             // convert message to string
