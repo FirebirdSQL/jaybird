@@ -19,8 +19,12 @@
 
 package org.firebirdsql.jdbc;
 
-import java.sql.*;
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 /**
  * Describe class <code>TestFBDecimalConversions</code> here.
@@ -61,16 +65,15 @@ public class TestFBDecimalConversions extends BaseFBTest {
         super(testName);
     }
 
-    private java.sql.Connection connection;
+    private Connection connection;
 
     protected void setUp() throws Exception {
         super.setUp();
 
         Class.forName(FBDriver.class.getName());
-        connection =
-            java.sql.DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
 
-        java.sql.Statement stmt = connection.createStatement();
+        Statement stmt = connection.createStatement();
         try {
             stmt.executeUpdate(DROP_TABLE);
         }
@@ -88,7 +91,7 @@ public class TestFBDecimalConversions extends BaseFBTest {
 
     protected void tearDown() throws Exception {
         /*
-        java.sql.Statement stmt = connection.createStatement();
+        Statement stmt = connection.createStatement();
         stmt.executeUpdate(DROP_TABLE);
         stmt.close();
         */

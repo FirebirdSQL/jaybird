@@ -23,6 +23,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.7  2003/06/04 13:51:01  brodsom
+ * Remove unused vars and imports
+ *
  * Revision 1.6  2003/03/09 18:59:59  rrokytskyy
  * fixed test case failure
  *
@@ -79,14 +82,14 @@
  *
 
  */
-
-
-
 package org.firebirdsql.jdbc;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.sql.*;
 
 /**
  * Describe class <code>TestFBWrappingDataSource</code> here.
@@ -96,7 +99,7 @@ import java.sql.*;
  */
 public class TestFBWrappingDataSource extends BaseFBTest {
 
-    private java.sql.Connection connection;
+    private Connection connection;
     private FBWrappingDataSource ds;
 
     public TestFBWrappingDataSource(String testName) {

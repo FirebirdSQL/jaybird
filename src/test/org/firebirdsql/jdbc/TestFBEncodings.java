@@ -19,7 +19,15 @@
 
 package org.firebirdsql.jdbc;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
+import java.util.Vector;
+
 
 /**
  * Describe class <code>TestFBEncodings</code> here.
@@ -29,8 +37,8 @@ import java.sql.*;
  */
 public class TestFBEncodings extends BaseFBTest {
     
-	 java.util.Vector encJava = new java.util.Vector();
-	 java.util.Vector encFB = new java.util.Vector();
+	 Vector encJava = new Vector();
+	 Vector encFB = new Vector();
 
     public static String CREATE_TABLE = 
         "CREATE TABLE test_encodings (" + 
@@ -135,14 +143,13 @@ public class TestFBEncodings extends BaseFBTest {
         
         Class.forName(FBDriver.class.getName());
         
-        java.util.Properties props = new java.util.Properties();
+        Properties props = new Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "NONE");
         
-        Connection connection = 
-            DriverManager.getConnection(DB_DRIVER_URL, props);
+        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, props);
         
-        java.sql.Statement stmt = connection.createStatement();
+        Statement stmt = connection.createStatement();
         try {stmt.executeUpdate(DROP_TABLE);} catch(SQLException ex) { /*ex.printStackTrace();*/}
         try {stmt.executeUpdate(DROP_TABLE_CYRL);} catch(SQLException ex) { /*ex.printStackTrace();*/}
         try {stmt.executeUpdate(DROP_TABLE_UNIVERSAL);} catch(SQLException ex) { /*ex.printStackTrace();*/}
@@ -161,7 +168,7 @@ public class TestFBEncodings extends BaseFBTest {
     }
 
     protected void tearDown() throws Exception {
-        java.util.Properties props = new java.util.Properties();
+        Properties props = new Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "NONE");
         
@@ -169,7 +176,7 @@ public class TestFBEncodings extends BaseFBTest {
             DriverManager.getConnection(DB_DRIVER_URL, props);
             
         try {
-            java.sql.Statement stmt = connection.createStatement();
+            Statement stmt = connection.createStatement();
             stmt.executeUpdate(DROP_TABLE);
             stmt.close();
 				stmt = connection.createStatement();
@@ -208,7 +215,7 @@ public class TestFBEncodings extends BaseFBTest {
         assertTrue("Strings should be equal.", 
             UKRAINIAN_TEST_STRING.equals(UKRAINIAN_TEST_STRING_WIN1251));
         
-        java.util.Properties props = new java.util.Properties();
+        Properties props = new Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "WIN1251");
         
@@ -320,7 +327,7 @@ for (int i=0; i< CYRL_TEST_BYTES.length ; i++){
 	System.out.println("inic "+Integer.toHexString((int) CYRL_TEST_BYTES[i]&0xFF)+" "+((int) CYRL_TEST_BYTES[i]&0xFF));
 }
 */
-        java.util.Properties props = new java.util.Properties();
+        Properties props = new Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "WIN1251");
         
@@ -425,7 +432,7 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
     public static int GERMAN_TEST_ID = 2;
     
     public void testGerman() throws Exception {
-        java.util.Properties props = new java.util.Properties();
+        Properties props = new Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "WIN1252");
         
@@ -516,7 +523,7 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
         assertTrue("Strings should be equal.", 
             HUNGARIAN_TEST_STRING.equals(HUNGARIAN_TEST_STRING_WIN1250));
         
-        java.util.Properties props = new java.util.Properties();
+        Properties props = new Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "UNICODE_FSS");
         
@@ -606,7 +613,7 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
     
     public void testUniversal() throws Exception {
 		 
-        java.util.Properties props = new java.util.Properties();
+        Properties props = new Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "UNICODE_FSS");
         

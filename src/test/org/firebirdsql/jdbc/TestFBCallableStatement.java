@@ -18,6 +18,13 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
 /**
  * This test case checks callable statements by executing procedure through
  * {@link java.sql.CallableStatement} and {@link java.sql.PreparedStatement}.
@@ -101,7 +108,7 @@ public class TestFBCallableStatement extends BaseFBTest {
 	 public static final String DROP_EMPLOYEE_PROJECT = 
 	     "DROP TABLE employee_project;";
 
-    private java.sql.Connection connection;
+    private Connection connection;
 
     public TestFBCallableStatement(String testName) {
         super(testName);
@@ -111,9 +118,8 @@ public class TestFBCallableStatement extends BaseFBTest {
     protected void setUp() throws Exception {
        super.setUp();
         Class.forName(FBDriver.class.getName());
-        connection =
-            java.sql.DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
-        java.sql.Statement stmt = connection.createStatement();
+        connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        Statement stmt = connection.createStatement();
         try {
             stmt.executeUpdate(DROP_PROCEDURE);
         }
@@ -138,7 +144,7 @@ public class TestFBCallableStatement extends BaseFBTest {
         stmt.close();
     }
     protected void tearDown() throws Exception {
-        java.sql.Statement stmt = connection.createStatement();
+        Statement stmt = connection.createStatement();
         stmt.executeUpdate(DROP_PROCEDURE);
         stmt.executeUpdate(DROP_PROCEDURE_EMP_SELECT);
         stmt.executeUpdate(DROP_PROCEDURE_EMP_INSERT);
@@ -149,7 +155,7 @@ public class TestFBCallableStatement extends BaseFBTest {
     }
 
     public void testRun() throws Exception {
-        java.sql.CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE);
+        CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE);
         try {
           cstmt.setInt(1, 5);
           cstmt.execute();
@@ -159,10 +165,10 @@ public class TestFBCallableStatement extends BaseFBTest {
           cstmt.close();
         }
         
-        java.sql.PreparedStatement stmt = connection.prepareStatement(SELECT_PROCEDURE);
+        PreparedStatement stmt = connection.prepareStatement(SELECT_PROCEDURE);
         try {
           stmt.setInt(1, 5);
-          java.sql.ResultSet rs = stmt.executeQuery();
+          ResultSet rs = stmt.executeQuery();
           assertTrue("Should have at least one row", rs.next());
           int result = rs.getInt(1);
           assertTrue("Wrong result: expecting 120, received " + result, result == 120);
@@ -178,7 +184,7 @@ public class TestFBCallableStatement extends BaseFBTest {
         //
         // Insert and select with callable statement
         // 		 
-        java.sql.CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
+        CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         try {
           cstmt.setInt(1, 44);
           cstmt.setString(2, "DGPII");
@@ -207,7 +213,7 @@ public class TestFBCallableStatement extends BaseFBTest {
         cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
         try {
           cstmt.setInt(1, 44);
-          java.sql.ResultSet rs = cstmt.executeQuery();
+          ResultSet rs = cstmt.executeQuery();
           assertTrue("Should have three rows", rs.next());
 			 assertTrue("First row value must be DGPII", rs.getString(1).equals("DGPII"));
           assertTrue("Should have three rows", !rs.next());
@@ -237,10 +243,10 @@ public class TestFBCallableStatement extends BaseFBTest {
           cstmt.close();
         }
 		  
-        java.sql.PreparedStatement stmt = connection.prepareStatement(SELECT_PROCEDURE_EMP_SELECT);
+        PreparedStatement stmt = connection.prepareStatement(SELECT_PROCEDURE_EMP_SELECT);
         try {
           stmt.setInt(1, 44);
-          java.sql.ResultSet rs = stmt.executeQuery();
+          ResultSet rs = stmt.executeQuery();
           assertTrue("Should have three rows", rs.next());
 			 assertTrue("First row value must be DGPII", rs.getString(1).equals("DGPII"));
           assertTrue("Should have three rows", rs.next());
@@ -262,10 +268,10 @@ public class TestFBCallableStatement extends BaseFBTest {
     }
 
     public void testFatalError() throws Exception {
-        java.sql.PreparedStatement stmt = connection.prepareStatement(EXECUTE_PROCEDURE);
+        PreparedStatement stmt = connection.prepareStatement(EXECUTE_PROCEDURE);
         try {
           stmt.setInt(1, 5);
-          java.sql.ResultSet rs = stmt.executeQuery();
+          ResultSet rs = stmt.executeQuery();
           assertTrue("Should have at least one row", rs.next());
           int result = rs.getInt(1);
           assertTrue("Wrong result: expecting 120, received " + result, result == 120);

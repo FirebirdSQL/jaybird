@@ -19,12 +19,17 @@
 
 package org.firebirdsql.jdbc;
 
-import junit.framework.*;
+
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.util.ArrayList;
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
 
-import java.sql.*;
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
  * Describe class <code>TestFBTimeField</code> here.
@@ -44,7 +49,7 @@ public class TestFBTimeField extends BaseTestFBField {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_TYPE_TIME;
         byte[][] row = new byte[1][];
-        java.util.ArrayList rows = new java.util.ArrayList();
+        ArrayList rows = new ArrayList();
         rows.add(row);		  
         FBResultSet rs = new FBResultSet(xsqlvars,rows);
 		  rs.next();
@@ -55,7 +60,7 @@ public class TestFBTimeField extends BaseTestFBField {
 	}
 	protected void tearDown() {
 	}
-	public void testShort() throws java.sql.SQLException {
+	public void testShort() throws SQLException {
 		try {
 			super.testShort();
 			assertTrue("This method should fail.", false);
@@ -63,7 +68,7 @@ public class TestFBTimeField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testDouble() throws java.sql.SQLException {
+	public void testDouble() throws SQLException {
 		try {
 			super.testDouble();
 			assertTrue("This method should fail.", false);
@@ -71,7 +76,7 @@ public class TestFBTimeField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testLong() throws java.sql.SQLException {
+	public void testLong() throws SQLException {
 		try {
 			super.testLong();
 			assertTrue("This method should fail.", false);
@@ -79,7 +84,7 @@ public class TestFBTimeField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testUnicodeStream() throws java.sql.SQLException {
+	public void testUnicodeStream() throws SQLException {
 		try {
 			super.testUnicodeStream();
 			assertTrue("This method should fail.", false);
@@ -87,7 +92,7 @@ public class TestFBTimeField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testByte() throws java.sql.SQLException {
+	public void testByte() throws SQLException {
 		try {
 			super.testByte();
 			assertTrue("This method should fail.", false);
@@ -95,7 +100,7 @@ public class TestFBTimeField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testBoolean() throws java.sql.SQLException {
+	public void testBoolean() throws SQLException {
 		try {
 			super.testBoolean();
 			assertTrue("This method should fail.", false);
@@ -103,7 +108,7 @@ public class TestFBTimeField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testBinaryStream() throws java.sql.SQLException {
+	public void testBinaryStream() throws SQLException {
 		try {
 			super.testBinaryStream();
 			assertTrue("This method should fail.", false);
@@ -111,7 +116,7 @@ public class TestFBTimeField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testFloat() throws java.sql.SQLException {
+	public void testFloat() throws SQLException {
 		try {
 			super.testFloat();
 			assertTrue("This method should fail.", false);
@@ -119,7 +124,7 @@ public class TestFBTimeField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testBytes() throws java.sql.SQLException {
+	public void testBytes() throws SQLException {
 		try {
 			super.testBytes();
 			assertTrue("This method should fail.", false);
@@ -127,7 +132,7 @@ public class TestFBTimeField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testAsciiStream() throws java.sql.SQLException {
+	public void testAsciiStream() throws SQLException {
 		try {
 			super.testAsciiStream();
 			assertTrue("This method should fail.", false);
@@ -135,7 +140,7 @@ public class TestFBTimeField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testInteger() throws java.sql.SQLException {
+	public void testInteger() throws SQLException {
 		try {
 			super.testInteger();
 			assertTrue("This method should fail.", false);
@@ -143,9 +148,9 @@ public class TestFBTimeField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testBigDecimal() throws java.sql.SQLException {
+	public void testBigDecimal() throws SQLException {
 		try {
-			field.setBigDecimal(new java.math.BigDecimal(TEST_DOUBLE));
+			field.setBigDecimal(new BigDecimal(TEST_DOUBLE));
 			assertTrue("This method should fail.", false);
 		} catch(SQLException ex) {
 			//everything is ok :)
@@ -154,7 +159,7 @@ public class TestFBTimeField extends BaseTestFBField {
 
 	//--- real test methods
 
-	public void testDate() throws java.sql.SQLException {
+	public void testDate() throws SQLException {
 		try {
 			super.testDate();
 			assertTrue("This method should fail.", false);
@@ -162,7 +167,7 @@ public class TestFBTimeField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testTimestamp() throws java.sql.SQLException {
+	public void testTimestamp() throws SQLException {
 		String timeStr = new Time(TEST_TIMESTAMP.getTime()).toString();
 		field.setTimestamp(TEST_TIMESTAMP);
 		field.copyOI();
@@ -170,7 +175,7 @@ public class TestFBTimeField extends BaseTestFBField {
 		assertTrue("Timestamp value test failure.",
 			field.getTime().toString().equals(timeStr));
 	}
-	public void testString() throws java.sql.SQLException {
+	public void testString() throws SQLException {
 		field.setString(TEST_TIME.toString());
 		// we have to test string representation, because java.sql.Date
 		// keeps the time part of the timestamp after creation, but
@@ -181,7 +186,7 @@ public class TestFBTimeField extends BaseTestFBField {
 		assertTrue("String value test failure",
 			field.getString().equals(TEST_TIME.toString()));
 	}
-	public void testObject() throws java.sql.SQLException {
+	public void testObject() throws SQLException {
 		field.setObject(TEST_TIME);
 		// we have to test string representation, because java.sql.Date
 		// keeps the time part of the timestamp after creation, but

@@ -18,7 +18,14 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.Random;
+
 
 /**
  * Describe class <code>TestFBBlobAccess</code> here.
@@ -54,7 +61,7 @@ public class TestFBBlobAccess extends BaseFBTest {
         Class.forName(FBDriver.class.getName());
         connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
         
-        java.sql.Statement stmt = connection.createStatement();
+        Statement stmt = connection.createStatement();
         try {
             stmt.executeUpdate(DROP_TABLE);
         }
@@ -65,7 +72,7 @@ public class TestFBBlobAccess extends BaseFBTest {
         stmt.executeUpdate(CREATE_TABLE);
         stmt.close();
         
-        java.util.Random rnd = new java.util.Random();
+        Random rnd = new Random();
         
         testData = new byte[TEST_ROW_COUNT][0];
         
@@ -78,7 +85,7 @@ public class TestFBBlobAccess extends BaseFBTest {
     }
 
     protected void tearDown() throws Exception {
-        java.sql.Statement stmt = connection.createStatement();
+        Statement stmt = connection.createStatement();
         stmt.executeUpdate(DROP_TABLE);
         stmt.close();
         connection.close();
@@ -119,7 +126,7 @@ public class TestFBBlobAccess extends BaseFBTest {
                 assertTrue(
                     "Data read from database for id " + id + 
                     " should be equal to generated one.",
-                    java.util.Arrays.equals(testData[id], data));
+                    Arrays.equals(testData[id], data));
                     
                 counter++;
             }

@@ -19,7 +19,12 @@
 
 package org.firebirdsql.jdbc;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
+import java.util.Properties;
 
 /**
  * This method tests correctness of {@link FBResultSetMetaData} class.
@@ -62,14 +67,13 @@ public class TestFBResultSetMetaData extends BaseFBTest {
         
         Class.forName(FBDriver.class.getName());
         
-        java.util.Properties props = new java.util.Properties();
+        Properties props = new Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = 
-            DriverManager.getConnection(DB_DRIVER_URL, props);
+        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, props);
         
-        java.sql.Statement stmt = connection.createStatement();
+        Statement stmt = connection.createStatement();
         try {
             stmt.executeUpdate(DROP_TABLE);
         }
@@ -83,14 +87,14 @@ public class TestFBResultSetMetaData extends BaseFBTest {
 
     protected void tearDown() throws Exception {
         /*
-        java.util.Properties props = new java.util.Properties();
+        Properties props = new Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "NONE");
         
         Connection connection = 
             DriverManager.getConnection(DB_DRIVER_URL, props);
             
-        java.sql.Statement stmt = connection.createStatement();
+        Statement stmt = connection.createStatement();
         stmt.executeUpdate(DROP_TABLE);
         stmt.close();
         connection.close();      
@@ -100,12 +104,11 @@ public class TestFBResultSetMetaData extends BaseFBTest {
     }
     
     public void testResultSetMetaData() throws Exception {
-        java.util.Properties props = new java.util.Properties();
+        Properties props = new Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = 
-            DriverManager.getConnection(DB_DRIVER_URL, props);
+        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, props);
         
         Statement stmt = connection.createStatement();
         
@@ -135,12 +138,11 @@ public class TestFBResultSetMetaData extends BaseFBTest {
         connection.close();
     }
     public void testResultSetMetaData2() throws Exception {
-        java.util.Properties props = new java.util.Properties();
+        Properties props = new Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = 
-            DriverManager.getConnection(DB_DRIVER_URL, props);
+        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, props);
         
         Statement stmt = connection.createStatement();
         
