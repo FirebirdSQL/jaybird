@@ -178,6 +178,7 @@
       <include name="javax/resource/cci/LocalTransaction.java"/>
       <include name="javax/resource/spi/**/*.java"/>
       <include name="javax/transaction/xa/*.java"/>
+      <include name="javax/sql/*.java"/>
     </javac>
   </target>
 
