@@ -43,6 +43,7 @@ public class FBDriver implements Driver {
     public static final String FIREBIRD_PROTOCOL_NATIVE_EMBEDDED = FIREBIRD_PROTOCOL + "embedded";
 
     public static final String USER = "user";
+    public static final String USER_NAME = "user_name";
     public static final String PASSWORD = "password";
     public static final String DATABASE = "database";
     public static final String BLOB_BUFFER_LENGTH = "blob_buffer_length";
@@ -127,6 +128,8 @@ public class FBDriver implements Driver {
                             
                         } // end of if ()
                         
+                    } else {
+                        info.setProperty(propertyString, "");
                     }
                 }
                 url = url.substring(0,iQuestionMark);
