@@ -569,7 +569,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
             case ISCConstants.SQL_SHORT:
                 return Short.class.getName();
             case ISCConstants.SQL_LONG:
-                return Long.class.getName();
+                return Integer.class.getName();
             case ISCConstants.SQL_FLOAT:
                 return Float.class.getName();
             case ISCConstants.SQL_DOUBLE:
