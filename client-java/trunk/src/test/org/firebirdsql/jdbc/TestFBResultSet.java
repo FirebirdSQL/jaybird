@@ -67,9 +67,9 @@ public class TestFBResultSet extends BaseFBTest {
         assertTrue("Should have at least one row.", rs.next());
         
         assertTrue("COL1 should be 1.", rs.getInt("COL1") == 1);
-        assertTrue("col1 should be 2.", rs.getInt("col1") == 2);
+        assertTrue("col1 should be 1.", rs.getInt("col1") == 1);
         assertTrue("\"col1\" should be 2.", rs.getInt("\"col1\"") == 2);
-        assertTrue("Col1 should be 3.", rs.getInt("Col1") == 3);
+        assertTrue("Col1 should be 1.", rs.getInt("Col1") == 1);
         
         stmt.close();
     }
