@@ -22,6 +22,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
+import org.firebirdsql.jca.FBResourceException;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
 
@@ -44,6 +45,11 @@ import java.io.*;
  * @version 1.0
  */
 public class FBConnectionHelper {
+    
+    public static final String TRANSACTION_SERIALIZABLE = "TRANSACTION_SERIALIZABLE";
+    public static final String TRANSACTION_REPEATABLE_READ = "TRANSACTION_REPEATABLE_READ";
+    public static final String TRANSACTION_READ_COMMITTED = "TRANSACTION_READ_COMMITTED";
+    
 
     public static final String DPB_PREFIX = "isc_dpb_";
     public static final String TPB_PREFIX = "isc_tpb_";
@@ -200,6 +206,55 @@ public class FBConnectionHelper {
         }
 
         return tpb;
+    }
+    
+    /**
+     * This method extracts TPB mapping information from the connection 
+     * parameters. Two formats are supported:
+     * <ul>
+     * <li><code>info</code> contains <code>"tpb_mapping"</code> parameter
+     * pointing to a resource bundle with mapping information;
+     * <li><code>info</code> contains separate mappings for each of following
+     * transaction isolation levels: <code>"TRANSACTION_SERIALIZABLE"</code>, 
+     * <code>"TRANSACTION_REPEATABLE_READ"</code> and 
+     * <code>"TRANSACTION_READ_COMMITTED"</code>.
+     * </ul>
+     * 
+     * @param info connection parameters passed into a driver.
+     * 
+     * @return instance of {@link FBTpbMapper} containing specified TPB mapping
+     * or <code>null</code> if not TPB mapping was specified.
+     * 
+     * @throws FBResourceException if specified mapping is incorrect.
+     */
+    public static FBTpbMapper getTpbMapper(Properties info) throws FBResourceException {
+        String tpbMapping = (String)info.getProperty(FBDriver.TPB_MAPPING);
+        
+        FBTpbMapper tpbMapper = null;
+        
+        if (tpbMapping != null) 
+            tpbMapper = new FBTpbMapper(tpbMapping, 
+                FBConnectionHelper.class.getClassLoader());
+        else {
+            HashMap mapping = new HashMap();
+            
+            if (info.containsKey(TRANSACTION_SERIALIZABLE))
+                mapping.put(TRANSACTION_SERIALIZABLE, 
+                    info.get(TRANSACTION_SERIALIZABLE));
+                
+            if (info.containsKey(TRANSACTION_REPEATABLE_READ))
+                mapping.put(TRANSACTION_REPEATABLE_READ, 
+                    info.get(TRANSACTION_REPEATABLE_READ));
+                    
+            if (info.containsKey(TRANSACTION_READ_COMMITTED))
+                mapping.put(TRANSACTION_READ_COMMITTED,
+                    info.get(TRANSACTION_READ_COMMITTED));
+                    
+            if (mapping.size() > 0)
+                tpbMapper = new FBTpbMapper(mapping);
+        }
+        
+        return tpbMapper;
     }
     
     /**
