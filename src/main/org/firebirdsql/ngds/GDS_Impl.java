@@ -25,9 +25,6 @@ import org.firebirdsql.logging.Logger;
 
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.FileOutputStream;
-import java.io.File;
 
 
 /**

@@ -29,9 +29,6 @@ package org.firebirdsql.ngds;
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.GDSException;
 
-import java.util.List;
-import java.util.ArrayList;
-
 /**
  * Describe class <code>isc_stmt_handle_impl</code> here.
  *
