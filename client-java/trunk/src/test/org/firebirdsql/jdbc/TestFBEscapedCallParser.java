@@ -47,6 +47,9 @@ public class TestFBEscapedCallParser extends TestCase {
     public static final String CALL_TEST_5 =
         "{? = call my_proc(UPPER(?), '11-dec-2001',out 'test string, with comma')}";
     
+    public static final String CALL_TEST_5_1 =
+        "{?= call my_proc(UPPER(?), '11-dec-2001',out 'test string, with comma')}";
+    
     public static final String CALL_TEST_6 =
         "{call my_proc(?, {fn ucase(?)}, '11-dec-2001',out 'test string, with comma')}";
     
@@ -95,6 +98,18 @@ public class TestFBEscapedCallParser extends TestCase {
             
         } catch(SQLException ex) {
         	// everything is ok
+        }
+
+        procedureCall = parser.parseCall(CALL_TEST_5_1);
+        procedureCall.registerOutParam(1, Types.INTEGER);
+        procedureCall.getInputParam(2).setValue("test value");
+        try {
+            procedureCall.registerOutParam(3, Types.CHAR);
+            assertTrue("Should not allow registering param 3 as output, " +
+                    "since it does not exist.", false);
+            
+        } catch(SQLException ex) {
+            // everything is ok
         }
         
         assertTrue("Should correctly parse call. " + procedureCall.getSQL(), 
