@@ -644,6 +644,8 @@ public class GDS_Impl implements GDS {
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
         isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
         isc_db_handle_impl db = stmt.rsr_rdb;
+
+        stmt.clearRows();
         
         // Test Handles needed here
         synchronized (db) {
@@ -671,7 +673,9 @@ public class GDS_Impl implements GDS {
                 System.out.println("sent");
             
                 if (nextOperation(db) == op_sql_response) {
-                    receiveSqlResponse(db, out_xsqlda);
+                    //this would be an Execute procedure
+                    stmt.rows.add(receiveSqlResponse(db, out_xsqlda));
+                    stmt.allRowsFetched = true;
                 }
  
                 receiveResponse(db);
@@ -1272,16 +1276,19 @@ public class GDS_Impl implements GDS {
         db.socket.close();
     }
     
-    private void receiveSqlResponse(isc_db_handle_impl db,
+    private Object[] receiveSqlResponse(isc_db_handle_impl db,
                                        XSQLDA xsqlda) throws GDSException {
         try {
             System.out.print("op_sql_response ");
             if (readOperation(db) == op_sql_response) {
                 int messages = db.in.readInt();
-                if (messages > 0) {
-                    readSQLData(db, xsqlda);
-                }
                 System.out.println("received");
+                if (messages > 0) {
+                    return readSQLData(db, xsqlda);
+                }
+                else {
+                    return null;
+                }
             } else {
                 System.out.println("not received");
                 throw new GDSException(isc_net_read_err);
