@@ -2474,6 +2474,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      *  <LI><B>SQL_DATA_TYPE</B> int => unused
      *  <LI><B>SQL_DATETIME_SUB</B> int => unused
      *  <LI><B>CHAR_OCTET_LENGTH</B> int => for char types the
+     *  <LI><B>CHAR_OCTET_LENGTH</B> int => for char types the
      *       maximum number of bytes in the column
      *  <LI><B>ORDINAL_POSITION</B> int => index of column in table
      *      (starting at 1)
@@ -2681,10 +2682,17 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
             row[11] = null;
             String column_def = rs.getString("DEFAULT_SOURCE");
-            if (column_def!=null) 
-            	row[12] = getBytes(column_def.trim());
-            else
+            if (column_def!=null) {
+                String defaultValue = column_def.trim();
+                
+                int defaultPos = defaultValue.toUpperCase().indexOf("DEFAULT");
+                if (defaultPos >= 0)
+                    defaultValue = defaultValue.substring(7).trim();
+                
+            	row[12] = getBytes(defaultValue);
+            } else
             	row[12] = null;
+            
             row[13] = null;
             row[14] = null;
             row[16] = xsqlvars[0].encodeInt(rs.getShort("FIELD_POSITION") + 1);

@@ -498,13 +498,41 @@ public class TestFBDatabaseMetaData extends TestXABase {
         if (log != null) log.info("getTypeInfoblePrivileges returned: " + out);
         assertTrue("Not enough TypeInfo rows fetched: " + count, count >= 15);
     }
+    
+    public void testDefaultValue() throws Exception {
+        t.begin();
+        try {
+            s.execute("CREATE TABLE test_default (" +
+                    "test_col INTEGER DEFAULT 0 NOT NULL)");
+            
+            ResultSet rs = dmd.getColumns(null, "%", "test_default", null);
+            boolean hasRow = rs.next();
+
+            assertTrue("Should return at least one row", hasRow);
+            
+            String defaultValue = rs.getString("COLUMN_DEF");
+            assertTrue("Default value should be correct.", 
+                    "0".equals(defaultValue));
+            
+        } finally {
+            // s.execute("DROP TABLE test_default");
+        }
+    }
 
 
     private void createTable(String tableName) throws Exception {
         dropTable(tableName);
         t.begin();
         try {
-            s.execute("CREATE TABLE " + tableName + " ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, \"my column1\" CHAR(10), \"my_ column2\" VARCHAR(20))");
+            s.execute(
+                    "CREATE TABLE " + tableName + " ( " +
+                    "C1 INTEGER not null primary key, " +
+                    "C2 SMALLINT, " +
+                    "C3 DECIMAL(18,0), " +
+                    "C4 FLOAT, " +
+                    "C5 DOUBLE PRECISION, " +
+                    "\"my column1\" CHAR(10), " +
+                    "\"my_ column2\" VARCHAR(20))");
         }
         catch (Exception e) {
             ex = e;
