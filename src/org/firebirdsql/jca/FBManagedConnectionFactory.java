@@ -41,6 +41,7 @@ import javax.transaction.xa.XAResource;
 import java.io.PrintWriter;
 import java.util.Set;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -81,21 +82,21 @@ matching and creation of ManagedConnection instance.
 
 public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
-   //private PrintWriter log = new PrintWriter(System.out);
    private final Logger log = Logger.getLogger(getClass());
 
-    GDS gds = GDSFactory.newGDS();
+    final GDS gds = GDSFactory.newGDS();
 
     //should add handling for host/port/file separately.
     private String dbAlias;
 
-    private LinkedList freeDbHandles = new LinkedList();
+    //private LinkedList freeDbHandles = new LinkedList();
+    private final Map criToFreeDbHandlesMap = new HashMap();
 
-    private HashMap dbHandleUsage = new HashMap();
+    private final HashMap dbHandleUsage = new HashMap();
 
-    private HashMap xidMap = new HashMap();  //Maps supplied XID to internal transaction handle.
+    private final HashMap xidMap = new HashMap();  //Maps supplied XID to internal transaction handle.
 
-    private HashMap TransactionStatementMap = new HashMap();  //Maps transaction handle to list of statements with resultsets.
+    private final HashMap TransactionStatementMap = new HashMap();  //Maps transaction handle to list of statements with resultsets.
 
     private FBConnectionRequestInfo defaultCri;
 
@@ -394,17 +395,25 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         return false;
         }*/
 
-    //needs synchronization!
-    isc_tr_handle lookupXid(Xid xid) {
-        return (isc_tr_handle) xidMap.get(xid);
+    isc_tr_handle lookupXid(Xid xid) 
+    {
+        synchronized (xidMap)
+        {
+            return (isc_tr_handle) xidMap.get(xid);
+        }
     }
 
-    void forgetXid(Xid xid) {
-        xidMap.remove(xid);
+    void forgetXid(Xid xid) 
+    {
+        synchronized (xidMap)
+        {
+            xidMap.remove(xid);
+        }
     }
 
-    //needs synchronization!
-    isc_tr_handle getCurrentIscTrHandle(Xid xid, FBManagedConnection mc, int flags) throws XAException {
+    isc_tr_handle getCurrentIscTrHandle(Xid xid, FBManagedConnection mc, int flags) 
+        throws XAException 
+    {
         isc_tr_handle tr = lookupXid(xid);
         if (tr == null) {
             if (flags != XAResource.TMNOFLAGS) {
@@ -429,7 +438,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         return tr;
     }
 
-    int useDbHandle(isc_db_handle db, int inc) {
+    private int useDbHandle(isc_db_handle db, int inc) {
         synchronized(dbHandleUsage) {
             Integer i = (Integer)dbHandleUsage.get(db);
             if (i == null) {
@@ -442,26 +451,53 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         }
     }
 
-    isc_db_handle getDbHandle(FBConnectionRequestInfo cri) throws XAException {
-        try {
-            synchronized (freeDbHandles) {
-                isc_db_handle db = (isc_db_handle)freeDbHandles.removeLast();
-                useDbHandle(db, 1);
-                return db;
-            }
-        } 
-        catch (NoSuchElementException e) 
+    private boolean removeDbHandleIfLastUse(isc_db_handle db)
+    {
+        synchronized(dbHandleUsage)
+        {
+            Integer i = (Integer)dbHandleUsage.get(db);
+            if (i.intValue() == 1) 
+            {
+                dbHandleUsage.remove(db);
+                return true;
+            } // end of if ()
+            return false;
+        }
+    }
+
+    isc_db_handle getDbHandle(FBConnectionRequestInfo cri) throws XAException 
+    {
+        try 
         {
             try 
             {
+                LinkedList freeDbHandles = null;
+                synchronized (criToFreeDbHandlesMap)
+                {
+                    freeDbHandles = (LinkedList)criToFreeDbHandlesMap.get(cri);
+                }
+                if (freeDbHandles != null) 
+                {
+                    isc_db_handle db = null;
+                    synchronized (freeDbHandles) 
+                    {
+                        db = (isc_db_handle)freeDbHandles.removeLast();
+                    }
+                    useDbHandle(db, 1);
+                    return db;
+                } // end of if ()
+                return createDbHandle(cri);
+            } 
+            catch (NoSuchElementException e) 
+            {
                 return createDbHandle(cri);
             }
-            catch (GDSException ge)
-            {
-                log.error("GDS Exception in getDbHandle", ge);
-                throw new XAException(ge.getMessage());
-            } // end of try-catch
         }
+        catch (GDSException ge)
+        {
+            log.error("GDS Exception in getDbHandle", ge);
+            throw new XAException(ge.getMessage());
+        } // end of try-catch
     }
 
     private isc_db_handle createDbHandle(FBConnectionRequestInfo cri) throws GDSException
@@ -476,7 +512,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     {
         try 
         {
-            returnDbHandle(createDbHandle(cri));
+            returnDbHandle(createDbHandle(cri), cri);
         }
         catch (GDSException ge)
         {
@@ -486,9 +522,22 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     }
         
 
-    synchronized int returnDbHandle(isc_db_handle db) {
+    synchronized int returnDbHandle(isc_db_handle db, FBConnectionRequestInfo cri) {
         if (db != null) {
-            freeDbHandles.addLast(db);
+            LinkedList freeDbHandles = null;
+            synchronized(criToFreeDbHandlesMap)
+            {
+                freeDbHandles = (LinkedList)criToFreeDbHandlesMap.get(cri);
+                if (freeDbHandles == null) 
+                {
+                    freeDbHandles = new LinkedList();
+                    criToFreeDbHandlesMap.put(cri, freeDbHandles);
+                } // end of if ()
+            }
+            synchronized(freeDbHandles)
+            {
+                freeDbHandles.addLast(db);
+            }
             return useDbHandle(db, -1);
         }
         else {
@@ -496,10 +545,11 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         }
     }
 
-    synchronized void releaseDbHandle(isc_db_handle db) throws GDSException {
-        if ((db != null) && (returnDbHandle(db) == 0)) {
-            dbHandleUsage.remove(db);
-            freeDbHandles.remove(db);
+    synchronized void releaseDbHandle(isc_db_handle db, FBConnectionRequestInfo cri) 
+        throws GDSException 
+    {
+        if (db != null && removeDbHandleIfLastUse(db)) 
+        {
             gds.isc_detach_database(db);
         }
     }

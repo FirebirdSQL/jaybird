@@ -336,7 +336,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         if (currentDbHandle != null) {
             try {
                //if (log.isDebugEnabled()) {log.debug("in ManagedConnection.destroy",new Exception());}
-                mcf.releaseDbHandle(currentDbHandle);
+                mcf.releaseDbHandle(currentDbHandle, cri);
             }
             catch (GDSException ge) {
                 throw new ResourceException("Can't detach from db: " + ge.toString());
@@ -741,7 +741,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     void findIscTrHandle(Xid xid, int flags) throws XAException {
         currentTr = mcf.getCurrentIscTrHandle(xid, this, flags);
         if (currentTr.getDbHandle() != currentDbHandle) {
-            mcf.returnDbHandle(currentDbHandle);
+            mcf.returnDbHandle(currentDbHandle, cri);
             currentDbHandle = currentTr.getDbHandle();
         }
     }
