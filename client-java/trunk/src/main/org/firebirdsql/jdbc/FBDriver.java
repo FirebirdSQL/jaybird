@@ -56,7 +56,6 @@ public class FBDriver implements Driver {
     public static final String BLOB_BUFFER_LENGTH = "blob_buffer_length";
     public static final String TPB_MAPPING = "tpb_mapping";
     
-
     /**
      * @todo implement the default subject for the
      * standard connection.
@@ -102,49 +101,22 @@ public class FBDriver implements Driver {
         throws SQLException
     {
         if (url == null || !url.startsWith(FIREBIRD_PROTOCOL))
-        {
             return null;
-        } // end of if ()
 
         final GDSType type = getDriverType(url);
 
-        Integer blobBufferLength = null;
         try {
-            int iQuestionMark = url.indexOf("?");
-            if (iQuestionMark > -1) {
-                if(info == null) info = new Properties();
-                String propString = url.substring(iQuestionMark+1);
-                StringTokenizer st = new StringTokenizer(propString,"&");
-                while(st.hasMoreTokens()) {
-                    String propertyString = st.nextToken();
-                    int iIs = propertyString.indexOf("=");
-                    if(iIs > -1) {
-                        String property = propertyString.substring(0, iIs);
-                        String value = propertyString.substring(iIs+1);
-                        info.setProperty(property,value);
-                        if (property.equals(BLOB_BUFFER_LENGTH)) 
-                        {
-                            try 
-                            {
-                                blobBufferLength = new Integer(value);
-                            }
-                            catch (NumberFormatException e)
-                            {
-                                throw new FBSQLException(
-                                    "Blob buffer length " + value + 
-                                    " could not be converted to an integer",
-                                    FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
-                            }
-                            
-                        } 
-                        
-                    } else {
-                        info.setProperty(propertyString, "");
-                    }
-                }
-                url = url.substring(0,iQuestionMark);
-            }
+            if (info == null)
+                info = new Properties();
 
+            info = FBDriverPropertyManager.normalize(url, info);
+            
+            int qMarkIndex = url.indexOf('?');
+            if (qMarkIndex != -1)
+                url = url.substring(0, qMarkIndex);
+
+            Integer blobBufferLength = extractBlobBufferLength(info);
+            
 
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
             
@@ -156,7 +128,7 @@ public class FBDriver implements Driver {
             FBTpbMapper tpbMapper = FBConnectionHelper.getTpbMapper(info);
 
             // extract the user
-            String user = info.getProperty(USER);
+            String user = conCri.getStringProperty(ISCConstants.isc_dpb_user);
 
             if (user == null)
                 user = conCri.getStringProperty(ISCConstants.isc_dpb_user_name);
@@ -217,6 +189,23 @@ public class FBDriver implements Driver {
             return dataSource.getConnection(user, password);
         } catch(ResourceException resex) {
             throw new FBSQLException(resex);
+        }
+    }
+
+
+    private Integer extractBlobBufferLength(Properties info) throws SQLException {
+        String blobBufferLengthStr = (String)info.get(
+            FBConnectionHelper.DPB_PREFIX + BLOB_BUFFER_LENGTH);
+        
+        if (blobBufferLengthStr == null)
+            return null;
+        
+        try {
+            return new Integer(blobBufferLengthStr);
+        } catch (NumberFormatException e) {
+            throw new FBSQLException("Blob buffer length " + blobBufferLengthStr
+                    + " could not be converted to an integer",
+                    FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
         }
     }
 
@@ -345,6 +334,7 @@ public class FBDriver implements Driver {
     public DriverPropertyInfo[] getPropertyInfo(String url,
         Properties info) throws  SQLException
     {
+        /*
         Vector properties = new Vector();
         String database = url.substring(FIREBIRD_PROTOCOL.length());
         String user = info.getProperty(USER);
@@ -376,6 +366,8 @@ public class FBDriver implements Driver {
 
         return (DriverPropertyInfo[])
             properties.toArray(new DriverPropertyInfo[0]);
+        */
+        return FBDriverPropertyManager.getDriverPropertyInfo(info);
     }
 
 

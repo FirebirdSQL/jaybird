@@ -357,7 +357,8 @@ public class DriverConnectionPoolDataSource extends BasicAbstractConnectionPool
             String password = pair.getPassword();
             
             // set all properties
-            Properties props = new Properties(
+            Properties props = new Properties();
+            props.putAll(
                 DriverConnectionPoolDataSource.this.getProperties());
 
             if (userName != null)
