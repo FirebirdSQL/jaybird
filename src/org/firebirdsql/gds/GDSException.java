@@ -30,6 +30,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.7  2002/06/02 09:56:38  rrokytskyy
+ * added method to obtain IB error code, thanks to Ken Richard
+ *
  * Revision 1.6  2002/02/26 20:46:20  rrokytskyy
  * switched from toString() to getMessage() use
  *
@@ -131,6 +134,10 @@ public class GDSException extends Exception {
      * Returns a string representation of this exception.
      */
     public String getMessage() {
+        String msg;
+        
+        GDSException child = this.next;
+        
         // If I represent a GDSMessage code, then let's format it nicely.
         if (type == GDS.isc_arg_gds) {
             // get message
@@ -139,7 +146,6 @@ public class GDSException extends Exception {
 
             // substitute parameters using my children
             int paramCount = message.getParamCount();
-            GDSException child = this.next;
             for(int i = 0; i < paramCount; i++) {
                 if (child == null) break;
                 message.setParameter(i, child.getParam());
@@ -147,18 +153,20 @@ public class GDSException extends Exception {
             }
 
             // convert message to string
-            String msg = message.toString();
-
-            // Do we have more children? Then include them...
-            if (child != null)
-                msg += "\n" + child.getMessage();
-
-            // Ok, we have a message, so return it to the client.
-            return msg;
+            msg = message.toString();
         }
-        // ok, I'm not GDSMessage code, somebody invoked toString() method
-        // on me by mistake... :(
-        return "";
+        else {
+            // No GDSMessage code, so use the default message.
+            msg = super.getMessage();
+        }
+  
+        // Do we have more children? Then include their messages too.
+        while (child != null) {
+            msg += "\n" + child.getMessage();
+            child = child.next;
+        }
+ 
+        return msg;
     }
 
 }
