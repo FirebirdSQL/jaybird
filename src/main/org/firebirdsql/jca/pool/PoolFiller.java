@@ -18,7 +18,7 @@
  */
 
 
-package org.firebirdsql.jca;
+package org.firebirdsql.jca.pool;
 
 
 import java.util.LinkedList;

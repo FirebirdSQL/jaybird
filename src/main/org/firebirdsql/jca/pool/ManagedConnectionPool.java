@@ -18,7 +18,7 @@
  */
 
 
-package org.firebirdsql.jca;
+package org.firebirdsql.jca.pool;
 
 import EDU.oswego.cs.dl.util.concurrent.FIFOSemaphore;
 import java.util.ArrayList;
@@ -33,6 +33,7 @@ import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
 //import javax.security.auth.Subject;
+import org.firebirdsql.jca.FBResourceException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
