@@ -33,7 +33,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
-import javax.resource.cci.LocalTransaction;
+import javax.resource.spi.LocalTransaction;
 import javax.resource.ResourceException;
 import java.util.Collection;
 import java.util.ArrayList;
@@ -89,7 +89,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
     FBDatabaseMetaData(FBConnection c) {
         this.c = c;
-        trans = c.getLocalTransaction();
+        //use the spi LocalTransaction that does not notify the ConnectionManager.
+        trans = c.mc.getLocalTransaction();
     }
 
     void close() {
