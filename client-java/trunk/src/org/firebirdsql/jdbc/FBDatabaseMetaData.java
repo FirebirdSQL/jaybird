@@ -33,6 +33,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
+import java.sql.Types;
 import javax.resource.spi.LocalTransaction;
 import javax.resource.ResourceException;
 import java.util.Collection;
@@ -515,7 +516,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getExtraNameCharacters() throws SQLException {
-        return "";
+        return "$";
     }
 
 
@@ -570,7 +571,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean nullPlusNonNullIsNull() throws SQLException {
-        return true;//I didn't check
+        return true;//I didn't check (rrokytskyy: checked, true for FB 1.0 RC2)
     }
 
 
@@ -645,7 +646,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsOrderByUnrelated() throws SQLException {
-        return true;//I'm not sure on this one
+        return true;//I'm not sure on this one, (rrokytskyy: works on FB 1.0 RC2)
     }
 
 
@@ -811,7 +812,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsIntegrityEnhancementFacility() throws SQLException {
-        throw new SQLException("Not yet implemented");//wtf is this? referential integrity??
+        //throw new SQLException("Not yet implemented");//wtf is this? referential integrity??
+        return true; // rrokytskyy: yep, they call so foreign keys + cascade deletes
     }
 
 
@@ -1497,7 +1499,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see Connection
      */
     public  int getDefaultTransactionIsolation() throws SQLException {
-        return Connection.TRANSACTION_SERIALIZABLE;//close enough to snapshot.
+        return Connection.TRANSACTION_REPEATABLE_READ;//close enough to snapshot.
     }
 
 
@@ -1527,9 +1529,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     public boolean supportsTransactionIsolationLevel(int level) throws SQLException {
         switch (level) {
             case Connection.TRANSACTION_NONE: return false;
-            case Connection.TRANSACTION_READ_COMMITTED: return false;//true soon
+            case Connection.TRANSACTION_READ_COMMITTED: return true;//true soon
             case Connection.TRANSACTION_READ_UNCOMMITTED: return false;
-            case Connection.TRANSACTION_REPEATABLE_READ: return false;//??
+            case Connection.TRANSACTION_REPEATABLE_READ: return true;//??
             case Connection.TRANSACTION_SERIALIZABLE: return true;//????
             default: return false;
         }
@@ -1929,7 +1931,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
     private static final String GET_TABLES_LIKE = "select null as TABLE_CAT,"
         + " null as TABLE_SCHEM,"
-        + " RDB$RELATION_NAME as TABLE_NAME,"
+        + " RDB$RELATION_NAME TABLE_NAME,"
         + " cast('" + SYSTEM_TABLE + "' as varchar(31)) as TABLE_TYPE,"
         + " RDB$DESCRIPTION as REMARKS,"
         + " RDB$OWNER_NAME as OWNER_NAME"
@@ -2083,6 +2085,22 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getTableTypes() throws SQLException {
+        /*
+        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = -1;
+        xsqlvars[0].sqlname = "TABLE_TYPE";
+        xsqlvars[0].relname = "TABLETYPES";
+
+        ArrayList rows = new ArrayList(ALL_TYPES.length);
+        for(int i = 0; i < ALL_TYPES.length; i++)
+          rows.add(new Object[] {ALL_TYPES[i]});
+
+        return new FBResultSetWithFields(xsqlvars, rows);
+        */
         throw new SQLException("Not yet implemented");
     }
 
@@ -2175,9 +2193,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!columnClause.getCondition().equals("")) {
             params.add(columnClause.getValue());
         }
-        
+
         ResultSet rs = doQuery(sql, params);
-        
+
         XSQLVAR[] xsqlvars = new XSQLVAR[18];
 
         xsqlvars[0] = new XSQLVAR();
@@ -2293,14 +2311,14 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[1] = null;
             row[2] = rs.getString("RELATION_NAME").trim();
             row[3] = rs.getString("FIELD_NAME").trim();
-            
+
             short fieldType = rs.getShort("FIELD_TYPE");
             short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
             short fieldScale = rs.getShort("FIELD_SCALE");
             int dataType = getDataType(fieldType, fieldSubType, fieldScale);
 
             row[4] = new Short((short) dataType);
-            
+
             row[5] = null;
 
             if (dataType == java.sql.Types.DECIMAL ||
@@ -2314,7 +2332,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[7] = new Short((short) 0);
             row[8] = new Integer(fieldScale * (-1));
             row[9] = new Integer(10);
-            
+
             short nullFlag = rs.getShort("NULL_FLAG");
             row[10] = (nullFlag == 1) ? new Integer(columnNoNulls) :
                                         new Integer(columnNullable);
@@ -2326,20 +2344,21 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[15] = new Integer(0);
             row[16] = new Integer(rs.getShort("FIELD_POSITION") + 1);
             row[17] = (nullFlag == 1) ? "NO" : "YES";
-            
+
             rows.add(row);
         }
         rows.add(null);
-        return new FBResultSet(xsqlvars, rows);
+        //return new FBResultSet(xsqlvars, rows);
+        return new FBResultSetWithFields(xsqlvars, rows);
     }
 
     private int getDataType (short fieldType, short fieldSubType, short fieldScale) {
         if (fieldScale < 0) {
             switch (fieldType) {
-                case 7: 
-                case 8: 
-                case 16: 
-                case 27: 
+                case 7:
+                case 8:
+                case 16:
+                case 27:
                     if (fieldSubType == 2)
                         return java.sql.Types.DECIMAL;
                     else
@@ -2350,20 +2369,20 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         }
 
         switch (fieldType) {
-            case 7: 
+            case 7:
                 return java.sql.Types.SMALLINT;
-            case 8: 
+            case 8:
                 return java.sql.Types.INTEGER;
-            case 27: 
+            case 27:
             case 11:
                 return java.sql.Types.DOUBLE;
-            case 10: 
+            case 10:
                 return java.sql.Types.FLOAT;
-            case 14: 
+            case 14:
                 return java.sql.Types.CHAR;
-            case 37: 
+            case 37:
                 return java.sql.Types.VARCHAR;
-            case 35: 
+            case 35:
                 return java.sql.Types.TIMESTAMP;
             case 13:
                 return java.sql.Types.TIME;
@@ -2374,18 +2393,18 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                     return java.sql.Types.DECIMAL;
                 else
                     return java.sql.Types.NUMERIC;
-            case 261: 
+            case 261:
                 if (fieldSubType == 1)
                     return java.sql.Types.LONGVARCHAR;
                 else
                     return java.sql.Types.LONGVARBINARY;
-            case 9: 
+            case 9:
                 return java.sql.Types.OTHER;
             default:
-                return java.sql.Types.NULL;      
+                return java.sql.Types.NULL;
         }
     }
-    
+
 
     /**
      * Indicates that the column might not allow NULL values.
@@ -2712,19 +2731,19 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private static final String GET_PRIMARY_KEYS = "select "
         + " null as TABLE_CAT, "
         + " null as TABLE_SCHEM, "
-	    + "RC.RDB$RELATION_NAME as TABLE_NAME, "
-	    + "ISGMT.RDB$FIELD_NAME as COLUMN_NAME, "
-	    + "CAST ((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ, "
-	    + "RC.RDB$CONSTRAINT_NAME as PK_NAME "
-	    + "from "
-	    + "RDB$RELATION_CONSTRAINTS RC, "
-	    + "RDB$INDEX_SEGMENTS ISGMT "
-	    + "where "
-	    + "RC.RDB$RELATION_NAME = ? and "
-	    + "RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME and "
+        + "RC.RDB$RELATION_NAME as TABLE_NAME, "
+        + "ISGMT.RDB$FIELD_NAME as COLUMN_NAME, "
+        + "CAST ((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ, "
+        + "RC.RDB$CONSTRAINT_NAME as PK_NAME "
+        + "from "
+        + "RDB$RELATION_CONSTRAINTS RC, "
+        + "RDB$INDEX_SEGMENTS ISGMT "
+        + "where "
+        + "RC.RDB$RELATION_NAME = ? and "
+        + "RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME and "
         + "RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
         + "order by ISGMT.RDB$FIELD_NAME ";
-    
+
     /**
      * Gets a description of a table's primary key columns.  They
      * are ordered by COLUMN_NAME.
@@ -2753,9 +2772,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         String sql = GET_PRIMARY_KEYS;
         ArrayList params = new ArrayList();
         params.add(table);
-        
+
         ResultSet rs = doQuery(sql, params);
-        
+
         XSQLVAR[] xsqlvars = new XSQLVAR[6];
 
         xsqlvars[0] = new XSQLVAR();
@@ -2807,11 +2826,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[3] = rs.getString("COLUMN_NAME").trim();
             row[4] = new Short(rs.getShort("KEY_SEQ"));
             row[5] = rs.getString("PK_NAME");
-            
+
             rows.add(row);
         }
         rows.add(null);
-        return new FBResultSet(xsqlvars, rows);
+        // return new FBResultSet(xsqlvars, rows);
+        return new FBResultSetWithFields(xsqlvars, rows);
     }
 
 
@@ -3167,6 +3187,19 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private static final Integer BINARY = new Integer(2);
 
     /**
+     * Simple convertor function to convert integer values to Short objects.
+     * Used in {@link #getTypeInfo()} for values of {@link java.sql.Types} class.
+     *
+     * @param value integer value to convert
+     * @return instance of java.lang.Short representing the value
+     */
+    private Short createShort(int value) throws SQLException {
+        if (value > Short.MAX_VALUE)
+            throw new SQLException("Cannot convert integer to short.");
+        return new Short((short)value);
+    }
+
+    /**
      * Gets a description of all the standard SQL types supported by
      * this database. They are ordered by DATA_TYPE and then by how
      * closely the data type maps to the corresponding JDBC SQL type.
@@ -3322,80 +3355,94 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
         //dialect 3 only
         ArrayList rows = new ArrayList();
-        rows.add(new Object[] {"BIT", new Short((short)-7), new Integer(1), null, null, null,
+        /*
+        rows.add(new Object[] {"SMALLINT", createShort(Types.BIT), new Integer(1), null, null, null,
             NULLABLE, CASEINSENSITIVE, PREDBASIC, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_SHORT), null, BINARY});
+        */
 
+        /*
         rows.add(new Object[] {"TINYINT", new Short((short)-6), new Integer(8), null, null, null,
             NULLABLE, CASEINSENSITIVE, PREDBASIC, SIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_SHORT), null, BINARY});
+        */
 
-        rows.add(new Object[] {"BIGINT", new Short((short)-5), new Integer(64), null, null, null,
+        rows.add(new Object[] {"NUMERIC", createShort(Types.BIGINT), new Integer(18), null, null, null,
             NULLABLE, CASEINSENSITIVE, PREDBASIC, SIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_INT64), null, BINARY});
 
+        /*
         rows.add(new Object[] {"LONGVARBINARY", new Short((short)-4), new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+        */
 
+        /*
         rows.add(new Object[] {"VARBINARY", new Short((short)-3), new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+        */
 
-        rows.add(new Object[] {"BINARY", new Short((short)-2), new Integer(0), null, null, null,
+        /*
+        rows.add(new Object[] {"BINARY", createShort(Types.BLOB), new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+        */
 
+        /*
                    //??should this be varchar???
         rows.add(new Object[] {"LONGVARCHAR", new Short((short)-2), new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+        */
 
-        rows.add(new Object[] {"CHAR", new Short((short)1), new Integer(0), "'", "'", null,
+        rows.add(new Object[] {"CHAR", createShort(Types.CHAR), new Integer(0), "'", "'", null,
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TEXT), null, BINARY});
 
-        rows.add(new Object[] {"NUMERIC", new Short((short)2), new Integer(64), null, null, null,
+        rows.add(new Object[] {"NUMERIC", createShort(Types.NUMERIC), new Integer(18), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, new Short(Short.MIN_VALUE), new Short(Short.MAX_VALUE), new Integer(GDS.SQL_INT64), null, BINARY});
+            NOTAUTOINC, null, shortZero, createShort(18), new Integer(GDS.SQL_INT64), null, BINARY});
 
-        rows.add(new Object[] {"DECIMAL", new Short((short)3), new Integer(64), null, null, null,
+        rows.add(new Object[] {"DECIMAL", createShort(Types.DECIMAL), new Integer(18), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, new Short(Short.MIN_VALUE), new Short(Short.MAX_VALUE), new Integer(GDS.SQL_INT64), null, BINARY});
+            NOTAUTOINC, null, shortZero, createShort(18), new Integer(GDS.SQL_INT64), null, BINARY});
 
-        rows.add(new Object[] {"INTEGER", new Short((short)4), new Integer(32), null, null, null,
+        rows.add(new Object[] {"INTEGER", createShort(Types.INTEGER), new Integer(32), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_LONG), null, BINARY});
 
-        rows.add(new Object[] {"SMALLINT", new Short((short)5), new Integer(16), null, null, null,
+        rows.add(new Object[] {"SMALLINT", createShort(Types.SMALLINT), new Integer(16), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_SHORT), null, BINARY});
 
-        rows.add(new Object[] {"FLOAT", new Short((short)6), new Integer(32), null, null, null,
+        rows.add(new Object[] {"FLOAT", createShort(Types.FLOAT), new Integer(7), null, null, null,
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
+            NOTAUTOINC, null, createShort(0), createShort(7), new Integer(GDS.SQL_FLOAT), null, BINARY});
+
+        /*
+        rows.add(new Object[] {"REAL", createShort((short)7), new Integer(32), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
             NOTAUTOINC, null, new Short((short)-38), new Short((short)38), new Integer(GDS.SQL_FLOAT), null, BINARY});
+        */
 
-        rows.add(new Object[] {"REAL", new Short((short)7), new Integer(32), null, null, null,
+        rows.add(new Object[] {"DOUBLE PRECISION", createShort(Types.DOUBLE), new Integer(15), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
-            NOTAUTOINC, null, new Short((short)-38), new Short((short)38), new Integer(GDS.SQL_FLOAT), null, BINARY});
+            NOTAUTOINC, null, createShort(0), createShort(15), new Integer(GDS.SQL_DOUBLE), null, BINARY});
 
-        rows.add(new Object[] {"DOUBLE", new Short((short)8), new Integer(64), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
-            NOTAUTOINC, null, new Short((short)-308), new Short((short)308), new Integer(GDS.SQL_DOUBLE), null, BINARY});
-
-        rows.add(new Object[] {"VARCHAR", new Short((short)12), new Integer(0), "'", "'", null,
+        rows.add(new Object[] {"VARCHAR", createShort(Types.VARCHAR), new Integer(0), "'", "'", null,
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_VARYING), null, BINARY});
 
-        rows.add(new Object[] {"DATE", new Short((short)91), new Integer(0), null, null, null,
+        rows.add(new Object[] {"DATE", createShort(Types.DATE), new Integer(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TYPE_DATE), null, BINARY});
 
-        rows.add(new Object[] {"TIME", new Short((short)92), new Integer(0), null, null, null,
+        rows.add(new Object[] {"TIME", createShort(Types.TIME), new Integer(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TYPE_TIME), null, BINARY});
 
-        rows.add(new Object[] {"TIMESTAMP", new Short((short)91), new Integer(0), null, null, null,
+        rows.add(new Object[] {"TIMESTAMP", createShort(Types.TIMESTAMP), new Integer(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TIMESTAMP), null, BINARY});
 
@@ -3419,20 +3466,23 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
                  */
-        rows.add(new Object[] {"BLOB", new Short((short)2004), new Integer(0), null, null, null,
+        rows.add(new Object[] {"BLOB", createShort(Types.BLOB), new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
 
+        /*
         rows.add(new Object[] {"CLOB", new Short((short)2005), new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+        */
 
                  /*rows.add(new Object[] {"REF", new Short((short)2006), new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});*/
 
-        rows.add(null);
-        return new FBResultSet(xsqlvars, rows);
+        //rows.add(null);
+        // return new FBResultSet(xsqlvars, rows);
+        return new FBResultSetWithFields(xsqlvars, rows);
 
     }
 
@@ -3798,7 +3848,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean supportsBatchUpdates() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -3857,7 +3907,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public Connection getConnection() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return c;
     }
 
     //jdbc 3 methods
@@ -3893,8 +3943,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public boolean supportsNamedParameters() throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        return false;
     }
 
     /**
@@ -3903,8 +3952,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public boolean supportsMultipleOpenResults() throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        return false;
     }
 
     /**

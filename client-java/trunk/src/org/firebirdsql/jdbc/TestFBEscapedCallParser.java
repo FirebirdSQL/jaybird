@@ -1,0 +1,58 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * Contributor(s): Roman Rokytskyy
+ *
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU Lesser General Public License Version 2.1 or later
+ * (the "LGPL"), in which case the provisions of the LGPL are applicable
+ * instead of those above.  If you wish to allow use of your
+ * version of this file only under the terms of the LGPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the LGPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * LGPL.
+ */
+
+package org.firebirdsql.jdbc;
+
+import junit.framework.*;
+
+public class TestFBEscapedCallParser extends TestCase {
+    public static final String CALL_TEST_1 =
+    "{call my_proc(?, {d 01-12-11})}";
+
+    public static final String CALL_TEST_2 =
+    "{?= call my_proc ?, {d 01-12-11}}";
+
+    public static final String CALL_TEST_3 =
+    "EXECUTE PROCEDURE my_proc(?, {d 01-12-11})";
+
+    public static final String CALL_TEST_4 =
+    "EXECUTE PROCEDURE my_proc(?, '11-dec-2001');";
+
+    public TestFBEscapedCallParser(String testName) {
+    super(testName);
+    }
+    public static Test suite() {
+    return new TestSuite(TestFBEscapedCallParser.class);
+    }
+    protected void setUp() {
+    }
+    protected void tearDown() {
+    }
+    public void testProcessEscapedCall() {
+    //assertTrue(false);
+    }
+
+}
