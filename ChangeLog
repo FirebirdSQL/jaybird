@@ -1,3 +1,21 @@
+2004-08-22 02:52  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/GDSExceptionHelper.java:
+	
+	fixed bug when the driver is loaded by the system classloader
+
+2004-08-21 23:50  rrokytskyy
+
+	* client-java/src/:
+	test/org/firebirdsql/pool/TestDriverConnectionPoolDataSource.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/BasicAbstractConnectionPool.java,
+	pool/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBWrappingDataSource.java,
+	pool/org/firebirdsql/pool/FirebirdPoolConfiguration.java:
+	
+	fixed ArrayIndexOutOfBoundsException
+
 2004-08-15 13:58  rrokytskyy
 
 	*
