@@ -37,14 +37,14 @@ import org.firebirdsql.jca.FBManagedConnection;
 public class FBBlobField extends FBField {
     private static final int BUFF_SIZE = 4096;
 
-    FBManagedConnection mc;
+    FBConnection c;
 
     FBBlobField(XSQLVAR field) throws SQLException {
         super(field);
     }
 
-    void setManagedConnection(FBManagedConnection mc) {
-        this.mc = mc;
+    void setConnection(FBConnection c) {
+        this.c = c;
     }
 
     Blob getBlob() throws SQLException {
@@ -63,7 +63,7 @@ public class FBBlobField extends FBField {
         if (blobId == null)
             blobId = new Long(0);
 
-        return new FBBlob(mc, blobId.longValue());
+        return new FBBlob(c.mc, blobId.longValue());
     }
 
     InputStream getAsciiStream() throws SQLException {
@@ -148,7 +148,40 @@ public class FBBlobField extends FBField {
     }
 
     void setBinaryStream(InputStream in, int length) throws SQLException {
-        FBBlob blob =  new FBBlob(mc, 0);
+        if (!c.getAutoCommit()) {
+            copyBinaryStream(in, length);
+        } else {
+            byte[] buff = new byte[BUFF_SIZE];
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(length);
+            
+            int chunk;
+            try {
+                while (length >0) {
+                    chunk =in.read(buff, 0, Math.min(length, BUFF_SIZE));
+                    bout.write(buff, 0, chunk);
+                    length -= chunk;
+                }
+                bout.close();
+            }
+            catch (IOException ioe) {
+                throw new SQLException("read/write blob problem: " + ioe);
+            }
+            
+            field.sqldata = bout.toByteArray();
+            setNull(false);
+            field.sqllen = ((byte[])field.sqldata).length;
+        }
+    }
+    
+    void flushCachedData() throws SQLException {
+        if (field.sqldata instanceof byte[]) {
+            copyBinaryStream(
+                new ByteArrayInputStream((byte[])field.sqldata), field.sqllen);
+        }
+    }
+    
+    private void copyBinaryStream(InputStream in, int length) throws SQLException {
+        FBBlob blob =  new FBBlob(c.mc, 0);
         blob.copyStream(in, length);
         field.sqldata = new Long(blob.getBlobId());
         setNull(false);
@@ -266,7 +299,7 @@ public class FBBlobField extends FBField {
          * @throws SQLException always, set methods are not relevant in cached
          * state.
          */
-        public OutputStream setBinaryStream(long l) throws SQLException {
+        public OutputStream setBinaryStream(long pos) throws SQLException {
             throw new SQLException("Blob in auto-commit mode is read-only.");
         }
 
@@ -275,7 +308,7 @@ public class FBBlobField extends FBField {
          *
          * @throws SQLException always, truncate is not relevant in cached state.
          */
-        public void truncate(long l) throws SQLException {
+        public void truncate(long length) throws SQLException {
             throw new SQLException("Not yet implemented.");
         }
     }

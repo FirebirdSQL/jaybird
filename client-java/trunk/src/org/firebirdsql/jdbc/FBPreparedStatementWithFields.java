@@ -108,8 +108,25 @@ public class FBPreparedStatementWithFields extends FBPreparedStatement {
         FBField thisField = FBField.createField(getXsqlvar(columnIndex));
 
         if (thisField instanceof FBBlobField)
-            ((FBBlobField)thisField).setManagedConnection(mc);
+            ((FBBlobField)thisField).setConnection(c);
 
         return thisField;
     }
+
+    protected boolean internalExecute(boolean sendOutParams) throws SQLException {
+        if (c.getAutoCommit()) {
+            
+            XSQLVAR[] inVars = fixedStmt.getInSqlda().sqlvar;
+            
+            for(int i = 0; i < inVars.length; i++) {
+                if (FBField.isType(inVars[i], Types.BLOB)) {
+                    FBBlobField blobField = (FBBlobField)getField(i + 1);
+                    blobField.flushCachedData();
+                }
+            }
+        }
+        return super.internalExecute(sendOutParams);
+    }
+    
+    
 }

@@ -37,28 +37,37 @@ import java.io.Reader;
 
 public class FBResultSetWithFields extends FBResultSet {
 
+    FBConnection c;
+    
     FBResultSetWithFields(FBManagedConnection mc, FBStatement fbstatement,
         isc_stmt_handle stmt)
     {
         super(mc, fbstatement, stmt);
     }
 
+    /**
+     * Creates an instance of this class and caches complete result set for
+     * later use. This constructor should be used only in auto-commit case.
+     * 
+     * @param c active database connection
+     * @param stmt statement handle
+     * @param trimStrings <code>true</code> if we should trim strings (used 
+     * in {@link FBDatabaseMetaData} class).
+     * @throws SQLException if database access error occurs
+     */
     FBResultSetWithFields(FBConnection c, isc_stmt_handle stmt,
         boolean trimStrings)
     throws SQLException {
         super(c.mc, stmt, trimStrings);
-        //fbFetcher = new FBAdvancedCachedFetcher(fbFetcher);
-
-        try {
+        
+        this.c = c;
+        
         if (c.getAutoCommit()) {
             FBCachedFetcher fetcher = (FBCachedFetcher)fbFetcher;
             for(int i = 0; i < fetcher.rows.size(); i++) {
-                cacheBlobIfPresent((Object[])((FBCachedFetcher)fbFetcher).rows.get(i));
-                //System.err.println("done.");
+                cacheBlobIfPresent(
+                    (Object[])((FBCachedFetcher)fbFetcher).rows.get(i));
             }
-        }
-        } catch(Exception ex) {
-            ex.printStackTrace();
         }
     }
 
@@ -66,7 +75,7 @@ public class FBResultSetWithFields extends FBResultSet {
         super(xsqlvars, rows);
     }
 
-    void cacheBlobIfPresent(Object[] row) {
+    void cacheBlobIfPresent(Object[] row) throws SQLException {
         if (row == null)
             return;
 
@@ -84,15 +93,11 @@ public class FBResultSetWithFields extends FBResultSet {
             xsqlvar.sqldata = row[i];
             xsqlvar.sqlind = row[i] != null ? 0 : -1;
 
-            try {
-                // if this is BLOB field and we're in autocommit, get the cached copy
-                if (FBField.isType(xsqlvar, Types.BLOB) && row[i] != null) {
-                    FBBlobField blob = (FBBlobField)FBField.createField(xsqlvar);
-                    blob.setManagedConnection(mc);
-                    row[i] = blob.getCachedObject();
-                }
-            } catch(SQLException ex) {
-                ex.printStackTrace();
+            // if this is BLOB field and we're in autocommit, get the cached copy
+            if (FBField.isType(xsqlvar, Types.BLOB) && row[i] != null) {
+                FBBlobField blob = (FBBlobField)FBField.createField(xsqlvar);
+                blob.setConnection(c);
+                row[i] = blob.getCachedObject();
             }
         }
     }
@@ -191,7 +196,7 @@ public class FBResultSetWithFields extends FBResultSet {
         FBField thisField = FBField.createField(getXsqlvar(columnIndex));
 
         if (thisField instanceof FBBlobField)
-            ((FBBlobField)thisField).setManagedConnection(mc);
+            ((FBBlobField)thisField).setConnection(c);
 
         setWasNullColumnIndex(columnIndex);
 
