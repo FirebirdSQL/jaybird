@@ -19,8 +19,20 @@
  *    can be obtained from a CVS history command.
  *
  *    All rights reserved.
-
  */
+
+/* added by Roman Rokytskyy:
+ *
+ * CVS modification log:
+ * $Log$
+ * Revision 1.3  2001/07/09 09:09:34  rrokytskyy
+ * Switched to the FBUnmanagedConnection implementation
+ *
+ * Revision 1.2  2001/07/08 18:42:30  rrokytskyy
+ * Implementation of main java.sql.Driver methods.
+ *
+ */
+
 
 package org.firebirdsql.jdbc;
 
@@ -32,6 +44,11 @@ import java.sql.Driver;
 import java.sql.Connection;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
+
+import javax.security.auth.Subject;
+import org.firebirdsql.jca.*;
+
+import java.util.Vector;
 
 /**
  *
@@ -64,9 +81,28 @@ import java.sql.SQLException;
  * </pre>
  *
  * @see DriverManager
- * @see Connection 
+ * @see Connection
  */
 public class FBDriver implements Driver {
+    public static final String FIREBIRD_PROTOCOL = "jdbc:firebirdsql:";
+    public static final String USER = "user";
+    public static final String PASSWORD = "password";
+    public static final String DATABASE = "database";
+
+    /**
+     * @todo implement the default subject for the
+     * standard connection.
+     */
+    private Subject subject = null;
+
+    static{
+        try{
+            java.sql.DriverManager.registerDriver(new FBDriver());
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
 
     /**
      * Attempts to make a database connection to the given URL.
@@ -75,7 +111,7 @@ public class FBDriver implements Driver {
      * the JDBC driver manager is asked to connect to a given URL it passes
      * the URL to each loaded driver in turn.
      *
-     * <P>The driver should raise a SQLException if it is the right 
+     * <P>The driver should raise a SQLException if it is the right
      * driver to connect to the given URL, but has trouble connecting to
      * the database.
      *
@@ -89,11 +125,49 @@ public class FBDriver implements Driver {
      * connection arguments. Normally at least a "user" and
      * "password" property should be included.
      * @return a <code>Connection</code> object that represents a
-	 *         connection to the URL
+     *         connection to the URL
      * @exception SQLException if a database access error occurs
      */
-    public Connection connect(String url, java.util.Properties info) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+    public Connection connect(String url, java.util.Properties info)
+        throws SQLException
+    {
+        try {
+            // extract the user
+            String user = info.getProperty(USER);
+            if (user == null)
+                throw new SQLException(
+                    "User for database connection not specified.");
+
+            // extract the password
+            String password = info.getProperty(PASSWORD);
+            if (password == null)
+                throw new SQLException(
+                    "Password for database connection not specified.");
+
+            // extract the database URL
+            String databaseURL = url.substring(FIREBIRD_PROTOCOL.length());
+
+            // use the managed connection factory
+            FBManagedConnectionFactory factory = new FBManagedConnectionFactory();
+            factory.setDatabase(databaseURL);
+
+            // prepare the connection parameters
+            FBConnectionRequestInfo connectionInfo =
+                factory.getDefaultConnectionRequestInfo();
+            connectionInfo.setUser(user);
+            connectionInfo.setPassword(password);
+
+            // obtain the managed connection
+            FBManagedConnection mc = (FBManagedConnection)
+                factory.createManagedConnection(subject, connectionInfo);
+
+            // wrap the managed connection into the java.sql.Connection.
+            FBUnmanagedConnection connection = new FBUnmanagedConnection(mc);
+
+            return connection;
+        } catch(javax.resource.ResourceException resex) {
+            throw new SQLException(resex.toString());
+        }
     }
 
 
@@ -104,19 +178,19 @@ public class FBDriver implements Driver {
      * they don't.
      *
      * @param url the URL of the database
-     * @return true if this driver can connect to the given URL  
+     * @return true if this driver can connect to the given URL
      * @exception SQLException if a database access error occurs
      */
     public boolean acceptsURL(String url) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        return url.startsWith(FIREBIRD_PROTOCOL);
     }
 
 
 
     /**
-	 * Gets information about the possible properties for this driver.
-     * <p>The getPropertyInfo method is intended to allow a generic GUI tool to 
-     * discover what properties it should prompt a human for in order to get 
+     * Gets information about the possible properties for this driver.
+     * <p>The getPropertyInfo method is intended to allow a generic GUI tool to
+     * discover what properties it should prompt a human for in order to get
      * enough information to connect to a database.  Note that depending on
      * the values the human has supplied so far, additional values may become
      * necessary, so it may be necessary to iterate though several calls
@@ -129,16 +203,50 @@ public class FBDriver implements Driver {
      *          properties.  This array may be an empty array if no properties
      *          are required.
      * @exception SQLException if a database access error occurs
+     * @todo check the correctness of implementation
+     * @todo convert parameters into constants
      */
-    public DriverPropertyInfo[] getPropertyInfo(String url, java.util.Properties info) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+    public DriverPropertyInfo[] getPropertyInfo(String url,
+        java.util.Properties info) throws  SQLException
+    {
+        Vector properties = new Vector();
+        String database = url.substring(FIREBIRD_PROTOCOL.length());
+        String user = info.getProperty(USER);
+        String passwd = info.getProperty(PASSWORD);
+
+        // add non-empty database
+        if ((database != null) && (database != "")) {
+            DriverPropertyInfo dinfo =
+                new DriverPropertyInfo(DATABASE, database);
+            dinfo.required = true;
+            properties.add(dinfo);
+        }
+
+        // add user if it is not null
+        if (user != null) {
+            DriverPropertyInfo dinfo =
+                new DriverPropertyInfo(USER, user);
+            dinfo.required = true;
+            properties.add(dinfo);
+        }
+
+        // add password if it is not null
+        if (passwd != null) {
+            DriverPropertyInfo dinfo =
+                new DriverPropertyInfo(PASSWORD, passwd);
+            dinfo.required = true;
+            properties.add(dinfo);
+        }
+
+        return (DriverPropertyInfo[])
+            properties.toArray(new DriverPropertyInfo[0]);
     }
 
 
 
     /**
      * Gets the driver's major version number. Initially this should be 1.
-	 * @return this driver's major version number
+         * @return this driver's major version number
      */
     public int getMajorVersion() {
         return 0;
@@ -146,7 +254,7 @@ public class FBDriver implements Driver {
 
     /**
      * Gets the driver's minor version number. Initially this should be 0.
-	 * @return this driver's minor version number
+         * @return this driver's minor version number
      */
     public int getMinorVersion() {
         return 1;
@@ -155,7 +263,7 @@ public class FBDriver implements Driver {
 
     /**
      * Reports whether this driver is a genuine JDBC
-	 * COMPLIANT<sup><font size=-2>TM</font></sup> driver.
+         * COMPLIANT<sup><font size=-2>TM</font></sup> driver.
      * A driver may only report true here if it passes the JDBC compliance
      * tests; otherwise it is required to return false.
      *
@@ -173,5 +281,9 @@ public class FBDriver implements Driver {
     public boolean jdbcCompliant() {
         return false; //Lets work to make it true!
     }
-} 
+
+    /** @link dependency
+     * @stereotype instantiate*/
+    /*#FBConnection lnkFBConnection;*/
+}
 
