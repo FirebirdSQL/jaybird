@@ -565,7 +565,7 @@ It is more likely that Firebird will be used by all of your web apps and Tomcat 
 
 A simple example web app that creates a Firebird database and does a few transactions directly is included below. It is called test.
 
-Below that is the same web app set up to use a DataSource and connection poolingf via DBCP. It is called dbTest.
+Below that is the same web app set up to use a DataSource and connection pooling via DBCP. It is called dbTest.
 
 To use JayBird's internal connection pooling, you can configure an FBWrapping DataSource for pooling just as you would in a stand-alone program. If you put a class for doing that in a servlet and start it when Tomcat is initialized, you can share a pool among web applications. If you do this, take care to make it thread safe and synchronize access to methods.
 
@@ -611,7 +611,7 @@ Sample web app test:
 
 To use this sample web app create a folder called "test" in the webapps directory of your Tomcat installation. Put the HTML file below into a file called index.htm inside the folder called test. Put the contents of the XML file following this into test/WEB-INF/web.xml. Finally, put the contents of the jsp file following that into test/search.jsp. Start Tomcat and run test in your browser by calling http://localhost/test/index.htm.
 
-Put this in test/index.htm:
+Put this in CATALINA_HOME/webapps/test/index.htm:
 
 <html>
 < head>
@@ -648,7 +648,7 @@ then click &quot;Submit&quot;.</p>
 
  
 
-Put this in test/WEB-INF/web.xml:
+Put this in CATALINA_HOME/webapps/test/WEB-INF/web.xml:
 
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -667,7 +667,7 @@ Put this in test/WEB-INF/web.xml:
 < /web-app>
 
 
-Put this in test/search.jsp:
+Put this in CATALINA_HOME/webapps/test/search.jsp:
 
 <%@page contentType="text/html; charset=iso-8859-1" language="java" import="java.sql.*,org.firebirdsql.management.*"%>
 
@@ -897,9 +897,9 @@ connRSFind.close();
 
 Sample web app dbTest:
 
-This sample web app shows how to use a Fiorebird DataSource with Tomcat. To use it, create a folder called "dbTest" in the webapps directory of your Tomcat installation. Put the HTML file below into a file called index.htm inside the folder called dbTest. Put the contents of the XML file following this into dbTtest/WEB-INF/web.xml. Put the contents of the jsp file following that into dbTest/search.jsp. Put the context XML code after that into the conf/server.xml file of your Tomcat installation just before the entry: </Host>. Start Tomcat and run testDB in your browser by calling http://localhost/testDB/index.htm.
+This sample web app shows how to use a Fiorebird DataSource with Tomcat. To use it, create a folder called "dbTest" in the webapps directory of your Tomcat installation. Put the HTML file below into a file called index.htm inside the folder called dbTest. Put the contents of the XML file following this into dbTtest/WEB-INF/web.xml. Put the contents of the jsp file following that into dbTest/search.jsp. Put the context XML code after that into the conf/server.xml file of your Tomcat installation just before the entry: </Host>. Start Tomcat and run dbTest in your browser by calling http://localhost/dbTest/index.htm.
 
-Put this in testDB/index.htm:
+Put this in CATALINA_HOME/webapps/dbTest/index.htm:
 
 <html>
 < head>
@@ -936,7 +936,7 @@ then click &quot;Submit&quot;.</p>
 
  
 
-Put this in dbTest/WEB-INF/web.xml:
+Put this in CATALINA_HOME/webapps/dbTest/WEB-INF/web.xml:
 
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -960,7 +960,7 @@ Put this in dbTest/WEB-INF/web.xml:
 < /web-app>
 
 
-Put this in dbTest/search.jsp:
+Put this in CATALINA_HOME/webapps/dbTest/search.jsp:
 
 
 <%@page contentType="text/html; charset=iso-8859-1" language="java" import="java.sql.*,javax.sql.*,javax.servlet.*, javax.servlet.http.*,javax.naming.*,org.firebirdsql.management.*"%>
@@ -1212,7 +1212,7 @@ connRSFind.close();
 
 
 
-Put this in conf/server.xml before </Host>: 
+Put this in CATALINA_HOME/conf/server.xml before </Host>: 
 
 <Context path="/dbTest" docBase="dbTest"
 debug="0" reloadable="true" crossContext="true">
