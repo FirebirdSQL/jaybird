@@ -580,7 +580,7 @@ public class FBResultSet implements ResultSet {
         if (columnName == null || columnName.equals("")) {
             throw new SQLException("zero length identifiers not allowed");
         }
-    columnName = columnName.toUpperCase();
+        columnName = columnName.toUpperCase();
         //XSQLVAR[] xsqlvars = stmt.getOutSqlda().sqlvar;
         for (int i = 0; i< xsqlvars.length; i++) {
             if (columnName.equals(xsqlvars[i].aliasname)) {

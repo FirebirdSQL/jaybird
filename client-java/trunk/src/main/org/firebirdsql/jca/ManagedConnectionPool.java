@@ -98,7 +98,7 @@ public class ManagedConnectionPool
                   if (mc == null) 
                   {
                      //match didn't work!
-                     throw new ResourceException("Error in setting up ManagedConnectionPool: matchManagedConnection failed with ConnectionRequestInfo: " + cri);
+                     throw new FBResourceException("Error in setting up ManagedConnectionPool: matchManagedConnection failed with ConnectionRequestInfo: " + cri);
                   } // end of if ()
                   return mc;
                } // end of if ()
@@ -125,12 +125,12 @@ public class ManagedConnectionPool
          else 
          {
             //we timed out
-            throw new ResourceException("No ManagedConnections Available!");        
+            throw new FBResourceException("No ManagedConnections Available!");        
          } // end of else
       
       } catch (InterruptedException ie) 
       {
-         throw new ResourceException("Interrupted while requesting permit!");
+         throw new FBResourceException("Interrupted while requesting permit!");
       } // end of try-catch
       
    }

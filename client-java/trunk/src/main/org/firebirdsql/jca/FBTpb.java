@@ -147,7 +147,7 @@ public class FBTpb
         } // end of if ()
         else 
         {
-            throw new ResourceException("Unsupported tx isolation level");
+            throw new FBResourceException("Unsupported tx isolation level");
         }
     }
 
@@ -157,7 +157,7 @@ public class FBTpb
             case GDS.isc_tpb_consistency : return TRANSACTION_SERIALIZABLE;
             case GDS.isc_tpb_concurrency : return TRANSACTION_REPEATABLE_READ;
             case GDS.isc_tpb_read_committed : return TRANSACTION_READ_COMMITTED;
-            default: throw new ResourceException("Unknown transaction isolation level");
+            default: throw new FBResourceException("Unknown transaction isolation level");
         }
     }
 
@@ -235,7 +235,7 @@ public class FBTpb
         case Connection.TRANSACTION_READ_UNCOMMITTED :
             setIscTransactionIsolation(GDS.isc_tpb_read_committed);
             break;
-        default: throw new ResourceException("Unsupported transaction isolation level");
+        default: throw new FBResourceException("Unsupported transaction isolation level");
         }
     }
 
@@ -251,7 +251,7 @@ public class FBTpb
             case GDS.isc_tpb_consistency : return Connection.TRANSACTION_SERIALIZABLE;
             case GDS.isc_tpb_concurrency : return Connection.TRANSACTION_REPEATABLE_READ;
             case GDS.isc_tpb_read_committed : return Connection.TRANSACTION_READ_COMMITTED;
-            default: throw new ResourceException("Unknown transaction isolation level");
+            default: throw new FBResourceException("Unknown transaction isolation level");
         }
     }
 

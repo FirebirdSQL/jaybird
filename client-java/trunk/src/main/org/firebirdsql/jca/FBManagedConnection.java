@@ -105,7 +105,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         catch (GDSException ge)
         {
             if (log!=null) log.info("Could not get a db connection!", ge);
-            throw new ResourceException(ge.getMessage());   
+            throw new FBResourceException(ge);
         } // end of try-catch
         
     }
@@ -230,7 +230,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             connectionHandles.add(connection);
         }
         catch (ClassCastException cce) {
-            throw new ResourceException("invalid connection supplied to associateConnection: " + cce);
+            throw new FBResourceException("invalid connection supplied to associateConnection.", cce);
         }
     }
 /**
@@ -301,7 +301,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     {
         if (!matches(subject, cri)) 
         {
-            throw new ResourceException("Incompatible subject or ConnectionRequestInfo in getConnection!");        
+            throw new FBResourceException("Incompatible subject or ConnectionRequestInfo in getConnection!");        
         } // end of if ()
         
         FBConnection c = new FBConnection(this);
@@ -333,7 +333,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
                 mcf.releaseDbHandle(currentDbHandle, cri);
             }
             catch (GDSException ge) {
-                throw new ResourceException("Can't detach from db: " + ge.toString());
+                throw new FBResourceException("Can't detach from db.", ge);
             }
             finally {
                 currentDbHandle = null;
@@ -838,10 +838,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } 
         catch (ClassCastException cce) 
         {
-            throw new ResourceException("Incorrect ConnectionRequestInfo class supplied");
+            throw new FBResourceException("Incorrect ConnectionRequestInfo class supplied");
         } // end of try-catch
 
     }
 
-	 
+     
 }

@@ -75,7 +75,7 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
     **/
      public void begin() throws ResourceException {
          if (xid != null) {
-             throw new ResourceException("local transaction active: can't begin another");
+             throw new FBResourceException("local transaction active: can't begin another");
          }
          xid = new FBLocalXid();
          
@@ -85,7 +85,7 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
              }
              catch (XAException e) {
                 if (log != null) log.warn("couldn't start local transaction: " , e);
-                throw new ResourceException("couldn't start local transaction: " + e);
+                throw new FBResourceException("couldn't start local transaction", e);
              }
              if (c != null) {
                  mc.notify(ConnectionEvent.LOCAL_TRANSACTION_STARTED, c, null);
@@ -113,7 +113,7 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
                  mc.commit(xid, true);
              }
              catch (XAException e) {
-                 throw new ResourceException("couldn't commit local transaction: " + e);
+                 throw new FBResourceException("couldn't commit local transaction.", e);
              }
              finally {
                  xid = null;
@@ -138,7 +138,7 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
 
     public void rollback() throws ResourceException {
          if (xid == null) {
-             throw new ResourceException("no local transaction active: can't rollback");
+             throw new FBResourceException("no local transaction active: can't rollback");
          }
          
          synchronized(mc) {
@@ -147,7 +147,7 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
                  mc.rollback(xid);
              }
              catch (XAException e) {
-                 throw new ResourceException("couldn't commit local transaction: " + e);
+                 throw new FBResourceException("couldn't commit local transaction.", e);
              }
              finally {
                  xid = null;
