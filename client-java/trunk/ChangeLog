@@ -1,3 +1,52 @@
+2004-12-17 09:54  gab_reid
+
+	* client-java/src/test/org/firebirdsql/management/:
+	TestFBMaintenanceManager.java, TestFBStatisticsManager.java:
+	
+	Initial add of unit testing for further Services API functionality
+
+2004-12-17 09:53  gab_reid
+
+	* client-java/src/main/org/firebirdsql/management/:
+	DatabaseManager.java, FBDatabaseManager.java:
+	
+	This interface/functionality is defined in MaintenanceManager and
+	FBMaintenanceManager
+
+2004-12-17 09:52  gab_reid
+
+	* client-java/src/main/org/firebirdsql/management/:
+	FBStatisticsManager.java, StatisticsManager.java:
+	
+	Initial add. Provide the functionality of the gstat commandline
+	tool.
+
+2004-12-17 09:51  gab_reid
+
+	* client-java/src/main/org/firebirdsql/management/:
+	FBMaintenanceManager.java, MaintenanceManager.java:
+	
+	Functionality of the gfix command-line tool.
+	
+	The current interface and implementation are not yet complete;
+	transaction management still has to be added to both.
+
+2004-12-17 09:40  gab_reid
+
+	* client-java/src/main/org/firebirdsql/:
+	gds/ServiceRequestBuffer.java, jgds/ServiceRequestBufferImp.java,
+	ngds/ParameterBufferBase.java:
+	
+	Added a method to set a single-byte argument, which is a
+	requirement of the Services API
+
+2004-12-17 09:38  gab_reid
+
+	* client-java/src/resources/isc_error_msg.properties:
+	
+	Added export of msgs.h, to deal with the same messages but
+	different identifiers that are given back through the Services API
+
 2004-12-15 23:43  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/:
