@@ -42,7 +42,7 @@ import java.util.*;
 import java.sql.SQLException;
 
 public class GDS_Impl implements GDS {
-    public static final boolean debug = false; //turn on and off for excessive logging to System.out.
+    public static final boolean debug = true; //turn on and off for excessive logging to System.out.
 
     /* Operation (packet) types */
 
@@ -570,8 +570,7 @@ public class GDS_Impl implements GDS {
     }
 
     public XSQLDA isc_dsql_describe(isc_stmt_handle stmt_handle,
-                                 int da_version/*,
-                                 XSQLDA xsqlda*/) throws GDSException {
+                                 int da_version) throws GDSException {
 
         byte[] describe_select_info = new byte[] { isc_info_sql_select,
                                                    isc_info_sql_describe_vars,
@@ -586,21 +585,16 @@ public class GDS_Impl implements GDS {
                                                    isc_info_sql_alias,
                                                    isc_info_sql_describe_end };
 
-//        byte[] buffer = new byte[32000];
         int buffer_length = MAX_BUFFER_SIZE;
-
         byte[] buffer = isc_dsql_sql_info(stmt_handle,
                               describe_select_info.length, describe_select_info,
-                              buffer_length/*, buffer*/);
-        XSQLDA xsqlda = new XSQLDA();
-        parseSqlInfo(buffer, xsqlda, 0);
-        return xsqlda;
+                              MAX_BUFFER_SIZE);
+        return parseSqlInfo(stmt_handle, buffer, describe_select_info);
     }
 
 
-    public XSQLDA isc_dsql_describe_bind(   isc_stmt_handle stmt_handle,
-                                      int da_version/*,
-                                      XSQLDA xsqlda*/) throws GDSException {
+    public XSQLDA isc_dsql_describe_bind(isc_stmt_handle stmt_handle,
+                                         int da_version) throws GDSException {
 
         byte[] describe_bind_info = new byte[] { isc_info_sql_bind,
                                                  isc_info_sql_describe_vars,
@@ -617,17 +611,11 @@ public class GDS_Impl implements GDS {
 
         isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
         
-//        byte[] buffer = new byte[32000];
-        int buffer_length = MAX_BUFFER_SIZE;
-
         byte[] buffer = isc_dsql_sql_info(stmt_handle,
                               describe_bind_info.length, describe_bind_info,
-                              buffer_length/*, buffer*/);
-//        return parseSqlInfo(buffer/*, xsqlda*/);
-//        ((isc_stmt_handle_impl)stmt_handle).in_sqlda = parseSqlInfo(buffer);
+                              MAX_BUFFER_SIZE);
         
-        stmt.in_sqlda = new XSQLDA();
-        parseSqlInfo(buffer, stmt.in_sqlda, 0);
+        stmt.in_sqlda = parseSqlInfo(stmt_handle, buffer, describe_bind_info);
         return stmt.in_sqlda;
     }
 
@@ -922,8 +910,6 @@ public class GDS_Impl implements GDS {
                                                isc_info_sql_alias,
                                                isc_info_sql_describe_end };
 
-//        byte[] buffer = new byte[32000];
-        int buffer_length = MAX_BUFFER_SIZE;
         synchronized (db) {
             try {
                 if (debug) {System.out.print("op_prepare_statement ");}
@@ -933,26 +919,11 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(dialect);
                 db.out.writeString(statement);
                 db.out.writeBuffer(sql_prepare_info, sql_prepare_info.length);
-                db.out.writeInt(buffer_length);
+                db.out.writeInt(MAX_BUFFER_SIZE);
 
                 if (debug) {System.out.println("sent");}
                 Response r = receiveResponse(db);
-                //            System.arraycopy(resp_data, 0, buffer, 0, resp_data.length);
-                //            return parseSqlInfo(r.resp_data);
-                
-                stmt.out_sqlda = new XSQLDA();
-                byte[] buffer = r.resp_data;
-                int lastindex = 0;
-                while ((lastindex = parseSqlInfo(buffer, stmt.out_sqlda, lastindex)) > 0) {
-                    byte[] items = new byte[4 + sql_prepare_info.length];
-                    items[0] = isc_info_sql_sqlda_start;
-                    items[1] = 2;
-                    items[2] = (byte) (lastindex & 255);
-                    items[3] = (byte) (lastindex >> 8);
-                    System.arraycopy(sql_prepare_info, 0, items, 4, sql_prepare_info.length);
-                    buffer = isc_dsql_sql_info(stmt_handle, items.length, items, buffer.length);
-                }
-
+                stmt.out_sqlda = parseSqlInfo(stmt_handle, r.resp_data, sql_prepare_info);
                 return stmt.out_sqlda;
             } catch (IOException ex) {
                 throw new GDSException(isc_net_read_err);
@@ -1841,8 +1812,34 @@ public class GDS_Impl implements GDS {
         return new java.sql.Date(calendar.getTime().getTime());
     }
 
+    
+    private XSQLDA parseSqlInfo(isc_stmt_handle stmt_handle,
+                                byte[] info,
+                                byte[] items) throws GDSException {
+                
+        if (debug) {System.out.println("parseSqlInfo started");}
+        
+        XSQLDA xsqlda = new XSQLDA();
+        int lastindex = 0;
+        while ((lastindex = parseTruncSqlInfo(info, xsqlda, lastindex)) > 0) {
+            byte[] new_items = new byte[4 + items.length];
+            new_items[0] = isc_info_sql_sqlda_start;
+            new_items[1] = 2;
+            new_items[2] = (byte) (lastindex & 255);
+            new_items[3] = (byte) (lastindex >> 8);
+            System.arraycopy(items, 0, new_items, 4, items.length);
+            info = isc_dsql_sql_info(stmt_handle, new_items.length,
+                                     new_items, info.length);
+        }
+        if (debug) {System.out.println("parseSqlInfo ended");}
 
-    private int parseSqlInfo(byte[] info, XSQLDA xsqlda, int lastindex) throws GDSException {
+        return xsqlda;
+    }
+    
+    
+    private int parseTruncSqlInfo(byte[] info,
+                                  XSQLDA xsqlda,
+                                  int lastindex) throws GDSException {
         byte item;
         int index = 0;
 if (debug) {System.out.println("parseSqlInfo: first 2 bytes are " + isc_vax_integer(info, 0, 2) + " or: " + info[0] + ", " + info[1]);}
@@ -1852,12 +1849,12 @@ if (debug) {System.out.println("parseSqlInfo: first 2 bytes are " + isc_vax_inte
         int len = isc_vax_integer(info, i, 2);
         i += 2;
         int n = isc_vax_integer(info, i, len);
-if (debug) {System.out.println("xsqlda.sqln read as " + xsqlda.sqln);}
         i += len;
         if (xsqlda.sqlvar == null) {
             xsqlda.sqld = xsqlda.sqln = n;
             xsqlda.sqlvar = new XSQLVAR[xsqlda.sqln];
         }
+if (debug) {System.out.println("xsqlda.sqln read as " + xsqlda.sqln);}
 
         while (info[i] != isc_info_end) {
             while ((item = info[i++]) != isc_info_sql_describe_end) {
