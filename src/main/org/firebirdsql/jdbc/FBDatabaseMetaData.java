@@ -31,7 +31,7 @@ import java.sql.Types;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
 
 import org.firebirdsql.logging.Logger;
@@ -66,9 +66,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
     private static final String SPACES = "                               ";//31 spaces
 
-    FBConnection c;
+    private FBConnection c;
 
-    HashMap statements = new HashMap();
+    private HashMap statements = new HashMap();
 
     //PreparedStatement tables = null;
 
@@ -1889,49 +1889,49 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[8];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "PROCEDURE_CAT";
         xsqlvars[0].relname = "RDB$PROCEDURES";
 
         xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlname = "PROCEDURE_SCHEM";
         xsqlvars[1].relname = "RDB$PROCEDURES";
 
         xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
         xsqlvars[2].sqlname = "PROCEDURE_NAME";
         xsqlvars[2].relname = "RDB$PROCEDURES";
 
         xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
         xsqlvars[3].sqlname = "FUTURE1";
         xsqlvars[3].relname = "RDB$PROCEDURES";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
         xsqlvars[4].sqlname = "FUTURE2";
         xsqlvars[4].relname = "RDB$PROCEDURES";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
         xsqlvars[5].sqlname = "FUTURE3";
         xsqlvars[5].relname = "RDB$PROCEDURES";
 
         xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = GDS.SQL_VARYING;
+        xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[6].sqllen = 80; // gets updated if there are longer remarks.
         xsqlvars[6].sqlname = "REMARKS";
         xsqlvars[6].relname = "RDB$PROCEDURES";
 
         xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = GDS.SQL_SHORT;
+        xsqlvars[7].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[7].sqlname = "PROCEDURE_TYPE";
         xsqlvars[7].relname = "RDB$PROCEDURES";
 
@@ -2059,72 +2059,72 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[13];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "PROCEDURE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlname = "PROCEDURE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
         xsqlvars[2].sqlname = "PROCEDURE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
         xsqlvars[3].sqlname = "COLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = GDS.SQL_SHORT;
+        xsqlvars[4].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[4].sqlname = "COLUMN_TYPE";
         xsqlvars[4].relname = "COLUMNINFO";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_SHORT;
+        xsqlvars[5].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[5].sqlname = "DATA_TYPE";
         xsqlvars[5].relname = "COLUMNINFO";
 
         xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = GDS.SQL_VARYING;
+        xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[6].sqllen = 31;
         xsqlvars[6].sqlname = "TYPE_NAME";
         xsqlvars[6].relname = "COLUMNINFO";
 
         xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = GDS.SQL_LONG;
+        xsqlvars[7].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[7].sqlname = "PRECISION";
         xsqlvars[7].relname = "COLUMNINFO";
 
         xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = GDS.SQL_LONG;
+        xsqlvars[8].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[8].sqlname = "LENGTH";
         xsqlvars[8].relname = "COLUMNINFO";
 
         xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = GDS.SQL_SHORT;
+        xsqlvars[9].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[9].sqlname = "SCALE";
         xsqlvars[9].relname = "COLUMNINFO";
 
         xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = GDS.SQL_SHORT;
+        xsqlvars[10].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[10].sqlname = "RADIX";
         xsqlvars[10].relname = "COLUMNINFO";
 
         xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = GDS.SQL_SHORT;
+        xsqlvars[11].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[11].sqlname = "NULLABLE";
         xsqlvars[11].relname = "COLUMNINFO";
 
         xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = GDS.SQL_VARYING;
+        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[12].sqllen = 80; // gets updated if we get a longer description
         xsqlvars[12].sqlname = "REMARKS";
         xsqlvars[12].relname = "COLUMNINFO";
@@ -2361,7 +2361,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "TABLE_SCHEM";
         xsqlvars[0].relname = "TABLESCHEMAS";
@@ -2390,7 +2390,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "TABLECATALOGS";
@@ -2421,7 +2421,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "TABLE_TYPE";
         xsqlvars[0].relname = "TABLETYPES";
@@ -2528,99 +2528,99 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[18];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
         xsqlvars[3].sqlname = "COLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = GDS.SQL_SHORT;
+        xsqlvars[4].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[4].sqlname = "DATA_TYPE";
         xsqlvars[4].relname = "COLUMNINFO";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_VARYING | 1;
+        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING | 1;
         xsqlvars[5].sqllen = 31;
         xsqlvars[5].sqlname = "TYPE_NAME";
         xsqlvars[5].relname = "COLUMNINFO";
 
         xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = GDS.SQL_LONG;
+        xsqlvars[6].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[6].sqlname = "COLUMN_SIZE";
         xsqlvars[6].relname = "COLUMNINFO";
 
         xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = GDS.SQL_SHORT;
+        xsqlvars[7].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[7].sqlname = "BUFFER_LENGTH";
         xsqlvars[7].relname = "COLUMNINFO";
 
         xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = GDS.SQL_LONG;
+        xsqlvars[8].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[8].sqlname = "DECIMAL_DIGITS";
         xsqlvars[8].relname = "COLUMNINFO";
 
         xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = GDS.SQL_LONG;
+        xsqlvars[9].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[9].sqlname = "NUM_PREC_RADIX";
         xsqlvars[9].relname = "COLUMNINFO";
 
         xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = GDS.SQL_LONG;
+        xsqlvars[10].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[10].sqlname = "NULLABLE";
         xsqlvars[10].relname = "COLUMNINFO";
 
         xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = GDS.SQL_VARYING | 1;
+        xsqlvars[11].sqltype = ISCConstants.SQL_VARYING | 1;
         xsqlvars[11].sqllen = 31;
         xsqlvars[11].sqlname = "REMARKS";
         xsqlvars[11].relname = "COLUMNINFO";
 
         xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = GDS.SQL_VARYING | 1;
+        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING | 1;
         xsqlvars[12].sqllen = 31;
         xsqlvars[12].sqlname = "COLUMN_DEF";
         xsqlvars[12].relname = "COLUMNINFO";
 
         xsqlvars[13] = new XSQLVAR();
-        xsqlvars[13].sqltype = GDS.SQL_LONG;
+        xsqlvars[13].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[13].sqlname = "SQL_DATA_TYPE";
         xsqlvars[13].relname = "COLUMNINFO";
 
         xsqlvars[14] = new XSQLVAR();
-        xsqlvars[14].sqltype = GDS.SQL_LONG;
+        xsqlvars[14].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[14].sqlname = "SQL_DATETIME_SUB";
         xsqlvars[14].relname = "COLUMNINFO";
 
         xsqlvars[15] = new XSQLVAR();
-        xsqlvars[15].sqltype = GDS.SQL_LONG;
+        xsqlvars[15].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[15].sqlname = "CHAR_OCTET_LENGTH";
         xsqlvars[15].relname = "COLUMNINFO";
 
         xsqlvars[16] = new XSQLVAR();
-        xsqlvars[16].sqltype = GDS.SQL_LONG;
+        xsqlvars[16].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[16].sqlname = "ORDINAL_POSITION";
         xsqlvars[16].relname = "COLUMNINFO";
 
         xsqlvars[17] = new XSQLVAR();
-        xsqlvars[17].sqltype = GDS.SQL_VARYING;
+        xsqlvars[17].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[17].sqllen = 3;
         xsqlvars[17].sqlname = "IS_NULLABLE";
         xsqlvars[17].relname = "COLUMNINFO";
@@ -2962,43 +2962,43 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[7];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "TABLEPRIV";
 
         xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "TABLEPRIV";
 
         xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "TABLEPRIV";
 
         xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
         xsqlvars[3].sqlname = "GRANTOR";
         xsqlvars[3].relname = "TABLEPRIV";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
         xsqlvars[4].sqlname = "GRANTEE";
         xsqlvars[4].relname = "TABLEPRIV";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
         xsqlvars[5].sqlname = "PRIVILEGE";
         xsqlvars[5].relname = "TABLEPRIV";
 
         xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = GDS.SQL_VARYING;
+        xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[6].sqllen = 31;
         xsqlvars[6].sqlname = "IS_GRANTABLE";
         xsqlvars[6].relname = "TABLEPRIV";
@@ -3082,44 +3082,44 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[8];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_SHORT;
+        xsqlvars[0].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[0].sqlname = "SCOPE";
         xsqlvars[0].relname = "ROWIDENTIFIER";
 
         xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlname = "COLUMN_NAME";
         xsqlvars[1].relname = "ROWIDENTIFIER";
 
         xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = GDS.SQL_SHORT;
+        xsqlvars[2].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[2].sqlname = "DATA_TYPE";
         xsqlvars[2].relname = "ROWIDENTIFIER";
 
         xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
         xsqlvars[3].sqlname = "TYPE_NAME";
         xsqlvars[3].relname = "ROWIDENTIFIER";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = GDS.SQL_LONG;
+        xsqlvars[4].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[4].sqlname = "COLUMN_SIZE";
         xsqlvars[4].relname = "ROWIDENTIFIER";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_LONG;
+        xsqlvars[5].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[5].sqlname = "BUFFER_LENGTH";
         xsqlvars[5].relname = "ROWIDENTIFIER";
 
         xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = GDS.SQL_SHORT;
+        xsqlvars[6].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[6].sqlname = "DECIMAL_DIGITS";
         xsqlvars[6].relname = "ROWIDENTIFIER";
 
         xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = GDS.SQL_SHORT;
+        xsqlvars[7].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[7].sqlname = "PSEUDO_COLUMN";
         xsqlvars[7].relname = "ROWIDENTIFIER";
 
@@ -3164,44 +3164,44 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[8];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_SHORT;
+        xsqlvars[0].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[0].sqlname = "SCOPE";
         xsqlvars[0].relname = "VERSIONCOL";
 
         xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlname = "COLUMN_NAME";
         xsqlvars[1].relname = "VERSIONCOL";
 
         xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = GDS.SQL_SHORT;
+        xsqlvars[2].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[2].sqlname = "DATA_TYPE";
         xsqlvars[2].relname = "VERSIONCOL";
 
         xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
         xsqlvars[3].sqlname = "TYPE_NAME";
         xsqlvars[3].relname = "VERSIONCOL";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = GDS.SQL_LONG;
+        xsqlvars[4].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[4].sqlname = "COLUMN_SIZE";
         xsqlvars[4].relname = "VERSIONCOL";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_LONG;
+        xsqlvars[5].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[5].sqlname = "BUFFER_LENGTH";
         xsqlvars[5].relname = "VERSIONCOL";
 
         xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = GDS.SQL_SHORT;
+        xsqlvars[6].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[6].sqlname = "DECIMAL_DIGITS";
         xsqlvars[6].relname = "VERSIONCOL";
 
         xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = GDS.SQL_SHORT;
+        xsqlvars[7].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[7].sqlname = "PSEUDO_COLUMN";
         xsqlvars[7].relname = "VERSIONCOL";
 
@@ -3267,36 +3267,36 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[6];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
         xsqlvars[3].sqlname = "COLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = GDS.SQL_SHORT;
+        xsqlvars[4].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[4].sqlname = "KEY_SEQ";
         xsqlvars[4].relname = "COLUMNINFO";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
         xsqlvars[5].sqlname = "PK_NAME";
         xsqlvars[5].relname = "COLUMNINFO";
@@ -3432,82 +3432,82 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "PKTABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlname = "PKTABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
         xsqlvars[2].sqlname = "PKTABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
         xsqlvars[3].sqlname = "PKCOLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
         xsqlvars[4].sqlname = "FKTABLE_CAT";
         xsqlvars[4].relname = "COLUMNINFO";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
         xsqlvars[5].sqlname = "FKTABLE_SCHEM";
         xsqlvars[5].relname = "COLUMNINFO";
 
         xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = GDS.SQL_VARYING;
+        xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[6].sqllen = 31;
         xsqlvars[6].sqlname = "FKTABLE_NAME";
         xsqlvars[6].relname = "COLUMNINFO";
 
         xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = GDS.SQL_VARYING;
+        xsqlvars[7].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[7].sqllen = 31;
         xsqlvars[7].sqlname = "FKCOLUMN_NAME";
         xsqlvars[7].relname = "COLUMNINFO";
 
         xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = GDS.SQL_SHORT;
+        xsqlvars[8].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[8].sqlname = "KEY_SEQ";
         xsqlvars[8].relname = "COLUMNINFO";
 
         xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = GDS.SQL_SHORT;
+        xsqlvars[9].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[9].sqlname = "UPDATE_RULE";
         xsqlvars[9].relname = "COLUMNINFO";
 
         xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = GDS.SQL_SHORT;
+        xsqlvars[10].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[10].sqlname = "DELETE_RULE";
         xsqlvars[10].relname = "COLUMNINFO";
 
         xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = GDS.SQL_VARYING;
+        xsqlvars[11].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[11].sqllen = 31;
         xsqlvars[11].sqlname = "FK_NAME";
         xsqlvars[11].relname = "COLUMNINFO";
 
         xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = GDS.SQL_VARYING;
+        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[12].sqllen = 31;
         xsqlvars[12].sqlname = "PK_NAME";
         xsqlvars[12].relname = "COLUMNINFO";
 
         xsqlvars[13] = new XSQLVAR();
-        xsqlvars[13].sqltype = GDS.SQL_SHORT;
+        xsqlvars[13].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[13].sqlname = "DEFERRABILITY";
         xsqlvars[13].relname = "COLUMNINFO";
 
@@ -3666,82 +3666,82 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "PKTABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlname = "PKTABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
         xsqlvars[2].sqlname = "PKTABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
         xsqlvars[3].sqlname = "PKCOLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
         xsqlvars[4].sqlname = "FKTABLE_CAT";
         xsqlvars[4].relname = "COLUMNINFO";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
         xsqlvars[5].sqlname = "FKTABLE_SCHEM";
         xsqlvars[5].relname = "COLUMNINFO";
 
         xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = GDS.SQL_VARYING;
+        xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[6].sqllen = 31;
         xsqlvars[6].sqlname = "FKTABLE_NAME";
         xsqlvars[6].relname = "COLUMNINFO";
 
         xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = GDS.SQL_VARYING;
+        xsqlvars[7].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[7].sqllen = 31;
         xsqlvars[7].sqlname = "FKCOLUMN_NAME";
         xsqlvars[7].relname = "COLUMNINFO";
 
         xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = GDS.SQL_SHORT;
+        xsqlvars[8].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[8].sqlname = "KEY_SEQ";
         xsqlvars[8].relname = "COLUMNINFO";
 
         xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = GDS.SQL_SHORT;
+        xsqlvars[9].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[9].sqlname = "UPDATE_RULE";
         xsqlvars[9].relname = "COLUMNINFO";
 
         xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = GDS.SQL_SHORT;
+        xsqlvars[10].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[10].sqlname = "DELETE_RULE";
         xsqlvars[10].relname = "COLUMNINFO";
 
         xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = GDS.SQL_VARYING;
+        xsqlvars[11].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[11].sqllen = 31;
         xsqlvars[11].sqlname = "FK_NAME";
         xsqlvars[11].relname = "COLUMNINFO";
 
         xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = GDS.SQL_VARYING;
+        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[12].sqllen = 31;
         xsqlvars[12].sqlname = "PK_NAME";
         xsqlvars[12].relname = "COLUMNINFO";
 
         xsqlvars[13] = new XSQLVAR();
-        xsqlvars[13].sqltype = GDS.SQL_SHORT;
+        xsqlvars[13].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[13].sqlname = "DEFERRABILITY";
         xsqlvars[13].relname = "COLUMNINFO";
 
@@ -3919,82 +3919,82 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "PKTABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlname = "PKTABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
         xsqlvars[2].sqlname = "PKTABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
         xsqlvars[3].sqlname = "PKCOLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
         xsqlvars[4].sqlname = "FKTABLE_CAT";
         xsqlvars[4].relname = "COLUMNINFO";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
         xsqlvars[5].sqlname = "FKTABLE_SCHEM";
         xsqlvars[5].relname = "COLUMNINFO";
 
         xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = GDS.SQL_VARYING;
+        xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[6].sqllen = 31;
         xsqlvars[6].sqlname = "FKTABLE_NAME";
         xsqlvars[6].relname = "COLUMNINFO";
 
         xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = GDS.SQL_VARYING;
+        xsqlvars[7].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[7].sqllen = 31;
         xsqlvars[7].sqlname = "FKCOLUMN_NAME";
         xsqlvars[7].relname = "COLUMNINFO";
 
         xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = GDS.SQL_SHORT;
+        xsqlvars[8].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[8].sqlname = "KEY_SEQ";
         xsqlvars[8].relname = "COLUMNINFO";
 
         xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = GDS.SQL_SHORT;
+        xsqlvars[9].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[9].sqlname = "UPDATE_RULE";
         xsqlvars[9].relname = "COLUMNINFO";
 
         xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = GDS.SQL_SHORT;
+        xsqlvars[10].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[10].sqlname = "DELETE_RULE";
         xsqlvars[10].relname = "COLUMNINFO";
 
         xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = GDS.SQL_VARYING;
+        xsqlvars[11].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[11].sqllen = 31;
         xsqlvars[11].sqlname = "FK_NAME";
         xsqlvars[11].relname = "COLUMNINFO";
 
         xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = GDS.SQL_VARYING;
+        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[12].sqllen = 31;
         xsqlvars[12].sqlname = "PK_NAME";
         xsqlvars[12].relname = "COLUMNINFO";
 
         xsqlvars[13] = new XSQLVAR();
-        xsqlvars[13].sqltype = GDS.SQL_SHORT;
+        xsqlvars[13].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[13].sqlname = "DEFERRABILITY";
         xsqlvars[13].relname = "COLUMNINFO";
 
@@ -4115,101 +4115,101 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[18];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "TYPE_NAME";
         xsqlvars[0].relname = "TYPEINFO";
 
         xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = GDS.SQL_SHORT;
+        xsqlvars[1].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[1].sqlname = "DATA_TYPE";
         xsqlvars[1].relname = "TYPEINFO";
 
         xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = GDS.SQL_LONG;
+        xsqlvars[2].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[2].sqlname = "PRECISION";
         xsqlvars[2].relname = "TYPEINFO";
 
         xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[3].sqllen = 1;
         xsqlvars[3].sqlname = "LITERAL_PREFIX";
         xsqlvars[3].relname = "TYPEINFO";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[4].sqllen = 1;
         xsqlvars[4].sqlname = "LITERAL_SUFFIX";
         xsqlvars[4].relname = "TYPEINFO";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
         xsqlvars[5].sqlname = "CREATE_PARAMS";
         xsqlvars[5].relname = "TYPEINFO";
 
         xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = GDS.SQL_SHORT;
+        xsqlvars[6].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[6].sqlname = "NULLABLE";
         xsqlvars[6].relname = "TYPEINFO";
 
         xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = GDS.SQL_TEXT;
+        xsqlvars[7].sqltype = ISCConstants.SQL_TEXT;
         xsqlvars[7].sqllen = 1;
         xsqlvars[7].sqlname = "CASE_SENSITIVE";
         xsqlvars[7].relname = "TYPEINFO";
 
         xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = GDS.SQL_SHORT;
+        xsqlvars[8].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[8].sqlname = "SEARCHABLE";
         xsqlvars[8].relname = "TYPEINFO";
 
         xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = GDS.SQL_TEXT;
+        xsqlvars[9].sqltype = ISCConstants.SQL_TEXT;
         xsqlvars[9].sqllen = 1;
         xsqlvars[9].sqlname = "UNSIGNED_ATTRIBUTE";
         xsqlvars[9].relname = "TYPEINFO";
 
         xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = GDS.SQL_TEXT;
+        xsqlvars[10].sqltype = ISCConstants.SQL_TEXT;
         xsqlvars[10].sqllen = 1;
         xsqlvars[10].sqlname = "FIXED_PREC_SCALE";
         xsqlvars[10].relname = "TYPEINFO";
 
         xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = GDS.SQL_TEXT;
+        xsqlvars[11].sqltype = ISCConstants.SQL_TEXT;
         xsqlvars[11].sqllen = 1;
         xsqlvars[11].sqlname = "AUTO_INCREMENT";
         xsqlvars[11].relname = "TYPEINFO";
 
         xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = GDS.SQL_VARYING;
+        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[12].sqllen = 31;
         xsqlvars[12].sqlname = "LOCAL_TYPE_NAME";
         xsqlvars[12].relname = "TYPEINFO";
 
         xsqlvars[13] = new XSQLVAR();
-        xsqlvars[13].sqltype = GDS.SQL_SHORT;
+        xsqlvars[13].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[13].sqlname = "MINIMUM_SCALE";
         xsqlvars[13].relname = "TYPEINFO";
 
         xsqlvars[14] = new XSQLVAR();
-        xsqlvars[14].sqltype = GDS.SQL_SHORT;
+        xsqlvars[14].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[14].sqlname = "MAXIMUM_SCALE";
         xsqlvars[14].relname = "TYPEINFO";
 
         xsqlvars[15] = new XSQLVAR();
-        xsqlvars[15].sqltype = GDS.SQL_LONG;
+        xsqlvars[15].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[15].sqlname = "SQL_DATA_TYPE";
         xsqlvars[15].relname = "TYPEINFO";
 
         xsqlvars[16] = new XSQLVAR();
-        xsqlvars[16].sqltype = GDS.SQL_LONG;
+        xsqlvars[16].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[16].sqlname = "SQL_DATETIME_SUB";
         xsqlvars[16].relname = "TYPEINFO";
 
         xsqlvars[17] = new XSQLVAR();
-        xsqlvars[17].sqltype = GDS.SQL_LONG;
+        xsqlvars[17].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[17].sqlname = "NUM_PREC_RADIX";
         xsqlvars[17].relname = "TYPEINFO";
 
@@ -4224,97 +4224,97 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         rows.add(new byte[][] {getBytes("NUMERIC(18,0)"), createShort(Types.BIGINT)
             , XSQLVAR.encodeInt(64), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_INT64), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
         */
         //LONGVARBINARY=-4
         rows.add(new byte[][] {getBytes("BLOB SUB_TYPE 0"), createShort(Types.LONGVARBINARY)
             , XSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_BLOB), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
 
         //LONGVARCHAR=-1
         rows.add(new byte[][] {getBytes("BLOB SUB_TYPE 1"), createShort(Types.LONGVARCHAR)
             , XSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_BLOB), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
 
         //CHAR=1
         rows.add(new byte[][] {getBytes("CHAR"), createShort(Types.CHAR)
             , XSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_TEXT), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_TEXT), null, BINARY});
 
         //NUMERIC=2
         rows.add(new byte[][] {getBytes("NUMERIC"), createShort(Types.NUMERIC)
             , XSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, createShort(18), XSQLVAR.encodeInt(GDS.SQL_INT64), null, BINARY});
+            NOTAUTOINC, null, shortZero, createShort(18), XSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
 
         //DECIMAL=3
         rows.add(new byte[][] {getBytes("DECIMAL"), createShort(Types.DECIMAL)
             , XSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, createShort(18), XSQLVAR.encodeInt(GDS.SQL_INT64), null, BINARY});
+            NOTAUTOINC, null, shortZero, createShort(18), XSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
 
         //INTEGER=4
         rows.add(new byte[][] {getBytes("INTEGER"), createShort(Types.INTEGER)
             , XSQLVAR.encodeInt(32), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_LONG), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_LONG), null, BINARY});
 
         //SMALLINT=5
         rows.add(new byte[][] {getBytes("SMALLINT"), createShort(Types.SMALLINT)
             , XSQLVAR.encodeInt(16), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_SHORT), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_SHORT), null, BINARY});
 
         //FLOAT=6
         rows.add(new byte[][] {getBytes("FLOAT"), createShort(Types.FLOAT)
             , XSQLVAR.encodeInt(7), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
-            NOTAUTOINC, null, createShort(0), createShort(7), XSQLVAR.encodeInt(GDS.SQL_FLOAT), null, BINARY});
+            NOTAUTOINC, null, createShort(0), createShort(7), XSQLVAR.encodeInt(ISCConstants.SQL_FLOAT), null, BINARY});
 
         //DOUBLE=8
         rows.add(new byte[][] {getBytes("DOUBLE PRECISION"), createShort(Types.DOUBLE)
             , XSQLVAR.encodeInt(15), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
-            NOTAUTOINC, null, createShort(0), createShort(15), XSQLVAR.encodeInt(GDS.SQL_DOUBLE), null, BINARY});
+            NOTAUTOINC, null, createShort(0), createShort(15), XSQLVAR.encodeInt(ISCConstants.SQL_DOUBLE), null, BINARY});
 
         //VARCHAR=12
         rows.add(new byte[][] {getBytes("VARCHAR"), createShort(Types.VARCHAR)
             , XSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_VARYING), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_VARYING), null, BINARY});
 
         //DATE=91
         rows.add(new byte[][] {getBytes("DATE"), createShort(Types.DATE)
             , XSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_TYPE_DATE), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_TYPE_DATE), null, BINARY});
 
         //TIME=92
         rows.add(new byte[][] {getBytes("TIME"), createShort(Types.TIME)
             , XSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_TYPE_TIME), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_TYPE_TIME), null, BINARY});
 
         //TIMESTAMP=93
         rows.add(new byte[][] {getBytes("TIMESTAMP"), createShort(Types.TIMESTAMP)
             , XSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_TIMESTAMP), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_TIMESTAMP), null, BINARY});
 
         //OTHER=1111
         rows.add(new byte[][] {getBytes("ARRAY"), createShort(Types.OTHER)
             , XSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_ARRAY), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_ARRAY), null, BINARY});
 
         //BLOB=2004
         rows.add(new byte[][] {getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB)
             , XSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_BLOB), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
 
         return new FBResultSet(xsqlvars, rows);
 
@@ -4412,75 +4412,75 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[13];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "INDEXINFO";
 
         xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "INDEXINFO";
 
         xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "INDEXINFO";
 
         xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = GDS.SQL_TEXT;
+        xsqlvars[3].sqltype = ISCConstants.SQL_TEXT;
         xsqlvars[3].sqllen = 1;
         xsqlvars[3].sqlname = "NON_UNIQUE";
         xsqlvars[3].relname = "INDEXINFO";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
         xsqlvars[4].sqlname = "INDEX_QUALIFIER";
         xsqlvars[4].relname = "INDEXINFO";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
         xsqlvars[5].sqlname = "INDEX_NAME";
         xsqlvars[5].relname = "INDEXINFO";
 
         xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = GDS.SQL_SHORT;
+        xsqlvars[6].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[6].sqlname = "TYPE";
         xsqlvars[6].relname = "INDEXINFO";
 
         xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = GDS.SQL_SHORT;
+        xsqlvars[7].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[7].sqlname = "ORDINAL_POSITION";
         xsqlvars[7].relname = "INDEXINFO";
 
         xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = GDS.SQL_VARYING;
+        xsqlvars[8].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[8].sqllen = 31;
         xsqlvars[8].sqlname = "COLUMN_NAME";
         xsqlvars[8].relname = "INDEXINFO";
 
         xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = GDS.SQL_VARYING;
+        xsqlvars[9].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[9].sqllen = 31;
         xsqlvars[9].sqlname = "ASC_OR_DESC";
         xsqlvars[9].relname = "INDEXINFO";
 
         xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = GDS.SQL_LONG;
+        xsqlvars[10].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[10].sqlname = "CARDINALITY";
         xsqlvars[10].relname = "INDEXINFO";
 
         xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = GDS.SQL_LONG;
+        xsqlvars[11].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[11].sqlname = "PAGES";
         xsqlvars[11].relname = "INDEXINFO";
 
         xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = GDS.SQL_VARYING;
+        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[12].sqllen = 31;
         xsqlvars[12].sqlname = "FILTER_CONDITION";
         xsqlvars[12].relname = "INDEXINFO";
@@ -4776,37 +4776,37 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         XSQLVAR[] xsqlvars = new XSQLVAR[6];
 
         xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
         xsqlvars[0].sqlname = "TYPE_CAT";
         xsqlvars[0].relname = "UDT";
 
         xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlname = "TYPE_SCHEM";
         xsqlvars[1].relname = "UDT";
 
         xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
         xsqlvars[2].sqlname = "TYPE_NAME";
         xsqlvars[2].relname = "UDT";
 
         xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
         xsqlvars[3].sqlname = "CLASS_NAME";
         xsqlvars[3].relname = "UDT";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
         xsqlvars[4].sqlname = "DATA_TYPE";
         xsqlvars[4].relname = "UDT";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
         xsqlvars[5].sqlname = "REMARKS";
         xsqlvars[5].relname = "UDT";

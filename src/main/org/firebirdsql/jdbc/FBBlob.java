@@ -421,7 +421,7 @@ public class FBBlob implements Blob{
                 throw new FBSQLException(ge);
             }
             if (blob_id == 0) {
-                blob_id = blob.getBlobId();
+                blob_id = blob.getBlob_id();
             }
         }
 
@@ -460,7 +460,7 @@ public class FBBlob implements Blob{
                 try {
                     c.closeBlob(blob);
 //                  if (log!=null) log.info("OutputStream closing, setting blob_id: " + blob.getBlobId());
-                    blob_id = blob.getBlobId();
+                    blob_id = blob.getBlob_id();
                 }
                 catch (GDSException ge) {
                     throw new IOException("could not close blob: " + ge);

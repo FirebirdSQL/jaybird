@@ -43,11 +43,11 @@ public class XSQLDA {
     public int[] ioLength;	 // 0 varchar, >0 char, -4 int etc, -8 long etc
 
     public XSQLDA() {
-        version = GDS.SQLDA_VERSION1;
+        version = ISCConstants.SQLDA_VERSION1;
     }
 
     public XSQLDA(int n) {
-        version = GDS.SQLDA_VERSION1;
+        version = ISCConstants.SQLDA_VERSION1;
         sqln = n;
         sqld = n;
         sqlvar = new XSQLVAR[n];

@@ -191,7 +191,7 @@ public final class GDS_Impl implements GDS {
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
 
         if (db == null) {
-            throw new GDSException(isc_bad_db_handle);
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
         }
 
         synchronized (db) {
@@ -204,20 +204,20 @@ public final class GDS_Impl implements GDS {
                 db.out.writeInt(op_create);
                 db.out.writeInt(0);           // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
-                db.out.writeTyped(isc_dpb_version1, (Xdrable)c);
+                db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable)c);
                 //            db.out.writeBuffer(dpb, dpb_length);
                 db.out.flush();            
                 if (log != null) log.debug("sent");
 
                 try {
                     readReceiveResponse(db);
-                    db.setRdb_id(db.resp_object);
+                    db.setRdb_id(db.getResp_object());
                 } catch (GDSException g) {
                     disconnect(db);
                     throw g;
                 }
             } catch (IOException ex) {
-                throw new GDSException(isc_net_write_err);
+                throw new GDSException(ISCConstants.isc_net_write_err);
             }
         }
 
@@ -249,7 +249,7 @@ public final class GDS_Impl implements GDS {
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
 
         if (db == null) {
-            throw new GDSException(isc_bad_db_handle);
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
         }
 
         synchronized (db) {
@@ -259,13 +259,13 @@ public final class GDS_Impl implements GDS {
                 db.out.writeInt(op_attach);
                 db.out.writeInt(0);                // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
-                db.out.writeTyped(isc_dpb_version1, (Xdrable)dpb);
+                db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable)dpb);
                 db.out.flush();            
                 if (log != null) log.debug("sent");
 
                 try {
                     readReceiveResponse(db);
-                    db.setRdb_id(db.resp_object);
+                    db.setRdb_id(db.getResp_object());
                 }
                 catch (GDSException ge) {
                     disconnect(db);
@@ -274,17 +274,17 @@ public final class GDS_Impl implements GDS {
                 // read database information
                 isc_database_info(db,0,null,0,null);
             } catch (IOException ex) {
-                throw new GDSException(isc_net_write_err);
+                throw new GDSException(ISCConstants.isc_net_write_err);
             }
         }
     }
 
-	 final static byte[] describe_database_info = new byte[] { isc_info_db_sql_dialect,
-											isc_info_isc_version,
-											isc_info_firebird_version,
-											isc_info_ods_version,
-                                 isc_info_ods_minor_version,
-                                 isc_info_end
+	 final static byte[] describe_database_info = new byte[] { ISCConstants.isc_info_db_sql_dialect,
+											ISCConstants.isc_info_isc_version,
+											ISCConstants.isc_info_firebird_version,
+											ISCConstants.isc_info_ods_version,
+                                 ISCConstants.isc_info_ods_minor_version,
+                                 ISCConstants.isc_info_end
                                  };
 
     public void isc_database_info(isc_db_handle handle,
@@ -316,10 +316,10 @@ for (int i= 0; i< info.length; i++){
 }
 System.out.println("");
 */
-                parseDatabaseInfo(db,db.resp_data,describe_database_info);
-        if (log != null) log.debug("parseSqlInfo: first 2 bytes are " + isc_vax_integer(db.resp_data, 0, 2) + " or: " + db.resp_data[0] + ", " + db.resp_data[1]);
+                parseDatabaseInfo(db,db.getResp_data(),describe_database_info);
+        if (log != null) log.debug("parseSqlInfo: first 2 bytes are " + isc_vax_integer(db.getResp_data(), 0, 2) + " or: " + db.getResp_data()[0] + ", " + db.getResp_data()[1]);
             } catch (IOException ex) {
-                throw new GDSException(isc_network_error);
+                throw new GDSException(ISCConstants.isc_network_error);
             } 
 //		  }
     }
@@ -335,7 +335,7 @@ System.out.println("");
         while ((lastindex = parseTruncDatabaseInfo(info, lastindex, db)) > 0) {
             lastindex--;               // Is this OK ?
             byte[] new_items = new byte[4 + items.length];
-            new_items[0] = isc_info_sql_sqlda_start;
+            new_items[0] = ISCConstants.isc_info_sql_sqlda_start;
             new_items[1] = 2;
             new_items[2] = (byte) (lastindex & 255);
             new_items[3] = (byte) (lastindex >> 8);
@@ -374,9 +374,9 @@ System.out.println("");
 		  int len=0;
         int i = 0;
         isc_db_handle_impl db = (isc_db_handle_impl) handle;
-        while (info[i] != isc_info_end) {
+        while (info[i] != ISCConstants.isc_info_end) {
             switch (info[i++]) {
-                case isc_info_db_sql_dialect:
+                case ISCConstants.isc_info_db_sql_dialect:
                     len = isc_vax_integer(info, i, 2);
                     i += 2;
   					     value = isc_vax_integer (info, i, len);
@@ -384,7 +384,7 @@ System.out.println("");
 						  db.setDialect(value);
                     if (log != null) log.info("isc_info_db_sql_dialect:"+value);
                     break;
-                case isc_info_isc_version:
+                case ISCConstants.isc_info_isc_version:
                     len = isc_vax_integer(info, i, 2);
                     i += 2;
                     if (log != null) log.info("isc_info_version len:"+len);
@@ -396,7 +396,7 @@ System.out.println("");
 						  db.setVersion(versS);
                     if (log != null) log.info("isc_info_version:"+versS);
 						  break;
-                case isc_info_firebird_version:
+                case ISCConstants.isc_info_firebird_version:
                     len = isc_vax_integer(info, i, 2);
                     i += 2;
                     if (log != null) log.info("isc_info_firebird_version len:"+len);
@@ -408,7 +408,7 @@ System.out.println("");
 						  db.setFBVersion(FBversS);
                     if (log != null) log.info("isc_info_firebird_version:"+FBversS);
                     break;
-                case isc_info_ods_version:
+                case ISCConstants.isc_info_ods_version:
                     len = isc_vax_integer(info, i, 2);
                     i += 2;
   					     value = isc_vax_integer (info, i, len);
@@ -416,7 +416,7 @@ System.out.println("");
 						  db.setODSMajorVersion(value);
                     if (log != null) log.info("isc_info_ods_version:"+value);
                     break;
-                case isc_info_ods_minor_version:
+                case ISCConstants.isc_info_ods_minor_version:
                     len = isc_vax_integer(info, i, 2);
                     i += 2;
   					     value = isc_vax_integer (info, i, len);
@@ -424,12 +424,12 @@ System.out.println("");
 						  db.setODSMinorVersion(value);
                     if (log != null) log.info("isc_info_ods_minor_version:"+value);
                     break;
-                case isc_info_truncated:
+                case ISCConstants.isc_info_truncated:
                     if (log != null) log.debug("isc_info_truncated ");
                     return lastindex;
                     //throw new GDSException(isc_dsql_sqlda_err);
                 default:
-                    throw new GDSException(isc_dsql_sqlda_err);
+                    throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
             }
             lastindex = index;
         }
@@ -439,13 +439,13 @@ System.out.println("");
     public void isc_detach_database(isc_db_handle db_handle) throws GDSException {
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
         if (db == null) {
-            throw new GDSException(isc_bad_db_handle);
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
         }
 
         synchronized (db) {
             if (db_handle.hasTransactions()) 
             {
-                throw new GDSException(isc_open_trans, db.getOpenTransactionCount());
+                throw new GDSException(ISCConstants.isc_open_trans, db.getOpenTransactionCount());
             } // end of if ()
         
 
@@ -461,7 +461,7 @@ System.out.println("");
                 disconnect(db);
                 
             } catch (IOException ex) {
-                throw new GDSException(isc_network_error);
+                throw new GDSException(ISCConstants.isc_network_error);
             } 
 
             //db.rdb_transactions = new Vector();
@@ -473,7 +473,7 @@ System.out.println("");
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
 
         if (db == null) {
-            throw new GDSException(isc_bad_db_handle);
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
         }
 
         synchronized (db) {
@@ -486,7 +486,7 @@ System.out.println("");
                 if (log != null) log.debug("sent");
                 readReceiveResponse(db);
             } catch (IOException ex) {
-                throw new GDSException(isc_network_error);
+                throw new GDSException(ISCConstants.isc_network_error);
             }
         }
 
@@ -510,15 +510,15 @@ System.out.println("");
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
 
         if (tr_handle == null) {
-            throw new GDSException(isc_bad_trans_handle);
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
         }
 
         if (db_handle == null) {
-            throw new GDSException(isc_bad_db_handle);
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
         }
         synchronized (db) {
             if (tr.getState() != isc_tr_handle.NOTRANSACTION) {
-                throw new GDSException(isc_tra_state);
+                throw new GDSException(ISCConstants.isc_tra_state);
             }
             tr.setState(isc_tr_handle.TRANSACTIONSTARTING);
 
@@ -526,16 +526,16 @@ System.out.println("");
                 if (log != null) log.debug("op_transaction ");
                 db.out.writeInt(op_transaction);
                 db.out.writeInt(db.getRdb_id());
-                db.out.writeSet(isc_tpb_version3, tpb);
+                db.out.writeSet(ISCConstants.isc_tpb_version3, tpb);
                 //            db.out.writeBuffer(tpb, tpb_length);
                 db.out.flush();            
                 if (log != null) log.debug("sent");
                 //out.flush();
                 readReceiveResponse(db);
             } catch (IOException ex) {
-                throw new GDSException(isc_network_error);
+                throw new GDSException(ISCConstants.isc_network_error);
             }
-            tr.setTransactionId(db.resp_object);
+            tr.setTransactionId(db.getResp_object());
 
             //tr.rtr_rdb = db;
             tr.setDbHandle(db);
@@ -547,7 +547,7 @@ System.out.println("");
 
     public void isc_commit_transaction(isc_tr_handle tr_handle) throws GDSException {
         if (tr_handle == null) {
-            throw new GDSException(isc_bad_trans_handle);
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
         }
 
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
@@ -557,7 +557,7 @@ System.out.println("");
         synchronized (db) {
 
             if (tr.getState() != isc_tr_handle.TRANSACTIONSTARTED && tr.getState() != isc_tr_handle.TRANSACTIONPREPARED) {
-                throw new GDSException(isc_tra_state);
+                throw new GDSException(ISCConstants.isc_tra_state);
             }
             tr.setState(isc_tr_handle.TRANSACTIONCOMMITTING);
 
@@ -572,7 +572,7 @@ System.out.println("");
                 if (log != null) log.debug("sent");
                 readReceiveResponse(db);
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
 
             tr.setState(isc_tr_handle.NOTRANSACTION);
@@ -586,13 +586,13 @@ System.out.println("");
     public void isc_commit_retaining( isc_tr_handle tr_handle) throws GDSException {
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
         if (tr == null) {
-            throw new GDSException(isc_bad_trans_handle);
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
         }
         isc_db_handle_impl db = (isc_db_handle_impl)tr.getDbHandle();
 
         synchronized (db) {
             if (tr.getState() != isc_tr_handle.TRANSACTIONSTARTED && tr.getState() != isc_tr_handle.TRANSACTIONPREPARED) {
-                throw new GDSException(isc_tra_state);
+                throw new GDSException(ISCConstants.isc_tra_state);
             }
             tr.setState(isc_tr_handle.TRANSACTIONCOMMITTING);
 
@@ -604,7 +604,7 @@ System.out.println("");
                 if (log != null) log.debug("sent");
                 readReceiveResponse(db);
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
             tr.setState(isc_tr_handle.TRANSACTIONSTARTED);
         }
@@ -614,13 +614,13 @@ System.out.println("");
     public void isc_prepare_transaction(isc_tr_handle tr_handle) throws GDSException {
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
         if (tr == null) {
-            throw new GDSException(isc_bad_trans_handle);
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
         }
         isc_db_handle_impl db = (isc_db_handle_impl)tr.getDbHandle();
 
         synchronized (db) {
             if (tr.getState() != isc_tr_handle.TRANSACTIONSTARTED) {
-                throw new GDSException(isc_tra_state);
+                throw new GDSException(ISCConstants.isc_tra_state);
             }
             tr.setState(isc_tr_handle.TRANSACTIONPREPARING);
             try {
@@ -631,7 +631,7 @@ System.out.println("");
                 if (log != null) log.debug("sent");
                 readReceiveResponse(db);
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
             tr.setState(isc_tr_handle.TRANSACTIONPREPARED);
         }
@@ -641,13 +641,13 @@ System.out.println("");
                                         byte[] bytes) throws GDSException {
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
         if (tr == null) {
-            throw new GDSException(isc_bad_trans_handle);
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
         }
         isc_db_handle_impl db = (isc_db_handle_impl)tr.getDbHandle();
 
         synchronized (db) {
             if (tr.getState() != isc_tr_handle.TRANSACTIONSTARTED) {
-                throw new GDSException(isc_tra_state);
+                throw new GDSException(ISCConstants.isc_tra_state);
             }
             tr.setState(isc_tr_handle.TRANSACTIONPREPARING);
             try {
@@ -659,7 +659,7 @@ System.out.println("");
                 if (log != null) log.debug("sent");
                 readReceiveResponse(db);
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
 
             tr.setState(isc_tr_handle.TRANSACTIONPREPARED);
@@ -671,14 +671,14 @@ System.out.println("");
 
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
         if (tr == null) {
-            throw new GDSException(isc_bad_trans_handle);
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
         }
         isc_db_handle_impl db = (isc_db_handle_impl)tr.getDbHandle();
 
         synchronized (db) {
 
             if (tr.getState() != isc_tr_handle.TRANSACTIONSTARTED && tr.getState() != isc_tr_handle.TRANSACTIONPREPARED) {
-                throw new GDSException(isc_tra_state);
+                throw new GDSException(ISCConstants.isc_tra_state);
             }
             tr.setState(isc_tr_handle.TRANSACTIONROLLINGBACK);
 
@@ -690,7 +690,7 @@ System.out.println("");
                 if (log != null) log.debug("sent");
                 readReceiveResponse(db);
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
 
             tr.setState(isc_tr_handle.NOTRANSACTION);
@@ -704,13 +704,13 @@ System.out.println("");
     public void isc_rollback_retaining( isc_tr_handle tr_handle) throws GDSException {
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
         if (tr == null) {
-            throw new GDSException(isc_bad_trans_handle);
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
         }
         isc_db_handle_impl db = (isc_db_handle_impl)tr.getDbHandle();
 
         synchronized (db) {
             if (tr.getState() != isc_tr_handle.TRANSACTIONSTARTED && tr.getState() != isc_tr_handle.TRANSACTIONPREPARED) {
-                throw new GDSException(isc_tra_state);
+                throw new GDSException(ISCConstants.isc_tra_state);
             }
             tr.setState(isc_tr_handle.TRANSACTIONROLLINGBACK);
 
@@ -722,7 +722,7 @@ System.out.println("");
                 if (log != null) log.debug("sent");
                 readReceiveResponse(db);
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
             tr.setState(isc_tr_handle.TRANSACTIONSTARTED);
         }
@@ -737,11 +737,11 @@ System.out.println("");
         isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
 
         if (db_handle == null) {
-            throw new GDSException(isc_bad_db_handle);
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
         }
 
         if (stmt_handle == null) {
-            throw new GDSException(isc_bad_req_handle);
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
         }
 
         synchronized (db) {
@@ -752,9 +752,9 @@ System.out.println("");
                 db.out.flush();            
                 if (log != null) log.debug("sent");
                 readReceiveResponse(db);
-                stmt.setRsr_id(db.resp_object);
+                stmt.setRsr_id(db.getResp_object());
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
 
             stmt.setRsr_rdb(db);
@@ -768,21 +768,21 @@ System.out.println("");
 
     public void isc_dsql_alloc_statement2(      isc_db_handle db_handle,
                                          isc_stmt_handle stmt_handle) throws GDSException {
-        throw new GDSException(isc_wish_list);
+        throw new GDSException(ISCConstants.isc_wish_list);
     }
 
-    final static byte[] describe_select_info = new byte[] { isc_info_sql_select,
-                                                   isc_info_sql_describe_vars,
-                                                   isc_info_sql_sqlda_seq,
-                                                   isc_info_sql_type,
-                                                   isc_info_sql_sub_type,
-                                                   isc_info_sql_scale,
-                                                   isc_info_sql_length,
-                                                   isc_info_sql_field,
-                                                   isc_info_sql_relation,
-                                                   isc_info_sql_owner,
-                                                   isc_info_sql_alias,
-                                                   isc_info_sql_describe_end };
+    final static byte[] describe_select_info = new byte[] { ISCConstants.isc_info_sql_select,
+                                                   ISCConstants.isc_info_sql_describe_vars,
+                                                   ISCConstants.isc_info_sql_sqlda_seq,
+                                                   ISCConstants.isc_info_sql_type,
+                                                   ISCConstants.isc_info_sql_sub_type,
+                                                   ISCConstants.isc_info_sql_scale,
+                                                   ISCConstants.isc_info_sql_length,
+                                                   ISCConstants.isc_info_sql_field,
+                                                   ISCConstants.isc_info_sql_relation,
+                                                   ISCConstants.isc_info_sql_owner,
+                                                   ISCConstants.isc_info_sql_alias,
+                                                   ISCConstants.isc_info_sql_describe_end };
 
     public XSQLDA isc_dsql_describe(isc_stmt_handle stmt_handle,
                                  int da_version) throws GDSException {
@@ -794,18 +794,18 @@ System.out.println("");
         return parseSqlInfo(stmt_handle, buffer, describe_select_info);
     }
 
-    final static byte[] describe_bind_info = new byte[] { isc_info_sql_bind,
-                                                 isc_info_sql_describe_vars,
-                                                 isc_info_sql_sqlda_seq,
-                                                 isc_info_sql_type,
-                                                 isc_info_sql_sub_type,
-                                                 isc_info_sql_scale,
-                                                 isc_info_sql_length,
-                                                 isc_info_sql_field,
-                                                 isc_info_sql_relation,
-                                                 isc_info_sql_owner,
-                                                 isc_info_sql_alias,
-                                                 isc_info_sql_describe_end };
+    final static byte[] describe_bind_info = new byte[] { ISCConstants.isc_info_sql_bind,
+                                                 ISCConstants.isc_info_sql_describe_vars,
+                                                 ISCConstants.isc_info_sql_sqlda_seq,
+                                                 ISCConstants.isc_info_sql_type,
+                                                 ISCConstants.isc_info_sql_sub_type,
+                                                 ISCConstants.isc_info_sql_scale,
+                                                 ISCConstants.isc_info_sql_length,
+                                                 ISCConstants.isc_info_sql_field,
+                                                 ISCConstants.isc_info_sql_relation,
+                                                 ISCConstants.isc_info_sql_owner,
+                                                 ISCConstants.isc_info_sql_alias,
+                                                 ISCConstants.isc_info_sql_describe_end };
 
     public XSQLDA isc_dsql_describe_bind(isc_stmt_handle stmt_handle,
                                          int da_version) throws GDSException {
@@ -886,7 +886,7 @@ System.out.println("");
                 } // end of else
                 receiveResponse(db,op);
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
         }
     }
@@ -979,7 +979,7 @@ System.out.println("");
                 }
                 receiveResponse(db,op);
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
         }
     }
@@ -993,15 +993,15 @@ System.out.println("");
         isc_db_handle_impl db = stmt.getRsr_rdb();
 
         if (stmt_handle == null) {
-            throw new GDSException(isc_bad_req_handle);
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
         }
 
         if (xsqlda == null) {
-            throw new GDSException(isc_dsql_sqlda_err);
+            throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
         }
 
         if (fetchSize <= 0) {
-            throw new GDSException(isc_dsql_sqlda_err);
+            throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
         }
         // Apply fetchSize
         synchronized (db) {
@@ -1044,7 +1044,7 @@ System.out.println("");
                         receiveResponse(db,op);
                     }
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
         }
     }
@@ -1053,27 +1053,27 @@ System.out.println("");
         xsqlda.ioLength = new int[xsqlda.sqld];
         for (int i = 0; i < xsqlda.sqld; i++) {
             switch (xsqlda.sqlvar[i].sqltype & ~1) {
-                case SQL_TEXT:
+                case ISCConstants.SQL_TEXT:
                     xsqlda.ioLength[i] = xsqlda.sqlvar[i].sqllen;
                     break;
-                case SQL_VARYING:
+                case ISCConstants.SQL_VARYING:
                     xsqlda.ioLength[i] = 0;
                     break;
-                case SQL_SHORT:
-                case SQL_LONG:
-                case SQL_FLOAT:
-                case SQL_TYPE_TIME:
-                case SQL_TYPE_DATE:
+                case ISCConstants.SQL_SHORT:
+                case ISCConstants.SQL_LONG:
+                case ISCConstants.SQL_FLOAT:
+                case ISCConstants.SQL_TYPE_TIME:
+                case ISCConstants.SQL_TYPE_DATE:
                     xsqlda.ioLength[i] = -4;
                     break;
 //              case SQL_D_FLOAT:
 //                  break;
-                case SQL_DOUBLE:
-                case SQL_TIMESTAMP:
-                case SQL_BLOB:
-                case SQL_ARRAY:
-                case SQL_QUAD:
-                case SQL_INT64:
+                case ISCConstants.SQL_DOUBLE:
+                case ISCConstants.SQL_TIMESTAMP:
+                case ISCConstants.SQL_BLOB:
+                case ISCConstants.SQL_ARRAY:
+                case ISCConstants.SQL_QUAD:
+                case ISCConstants.SQL_INT64:
                     xsqlda.ioLength[i] = -8;
                     break;
             }
@@ -1086,12 +1086,12 @@ System.out.println("");
         isc_db_handle_impl db = stmt.getRsr_rdb();
 
         if (stmt_handle == null) {
-            throw new GDSException(isc_bad_req_handle);
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
         }
 
         //Does not seem to be possible or necessary to close
         //an execute procedure statement.
-        if (stmt.getIsSingletonResult() && option == DSQL_close) 
+        if (stmt.getIsSingletonResult() && option == ISCConstants.DSQL_close) 
         {
             return;        
         } // end of if ()
@@ -1107,7 +1107,7 @@ System.out.println("");
                 if (log != null) log.debug("sent");
 
                 readReceiveResponse(db);
-                if (option == DSQL_drop) {
+                if (option == ISCConstants.DSQL_drop) {
                     stmt.setInSqlda(null);
                     stmt.setOutSqlda(null);
                 }
@@ -1117,24 +1117,24 @@ System.out.println("");
                 /** @todo implement statement handle tracking correctly */
                 // db.rdb_sql_requests.remove(stmt);
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
         }
 
     }
 
-    final static byte[] sql_prepare_info = new byte[] { isc_info_sql_select,
-                                               isc_info_sql_describe_vars,
-                                               isc_info_sql_sqlda_seq,
-                                               isc_info_sql_type,
-                                               isc_info_sql_sub_type,
-                                               isc_info_sql_scale,
-                                               isc_info_sql_length,
-                                               isc_info_sql_field,
-                                               isc_info_sql_relation,
-                                               isc_info_sql_owner,
-                                               isc_info_sql_alias,
-                                               isc_info_sql_describe_end };
+    final static byte[] sql_prepare_info = new byte[] { ISCConstants.isc_info_sql_select,
+                                               ISCConstants.isc_info_sql_describe_vars,
+                                               ISCConstants.isc_info_sql_sqlda_seq,
+                                               ISCConstants.isc_info_sql_type,
+                                               ISCConstants.isc_info_sql_sub_type,
+                                               ISCConstants.isc_info_sql_scale,
+                                               ISCConstants.isc_info_sql_length,
+                                               ISCConstants.isc_info_sql_field,
+                                               ISCConstants.isc_info_sql_relation,
+                                               ISCConstants.isc_info_sql_owner,
+                                               ISCConstants.isc_info_sql_alias,
+                                               ISCConstants.isc_info_sql_describe_end };
 	 
     public XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
                                 isc_stmt_handle stmt_handle,
@@ -1155,11 +1155,11 @@ System.out.println("");
         isc_db_handle_impl db = stmt.getRsr_rdb();
 
         if (tr_handle == null) {
-            throw new GDSException(isc_bad_trans_handle);
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
         }
 
         if (stmt_handle == null) {
-            throw new GDSException(isc_bad_req_handle);
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
         }
 
         //reinitialize stmt SQLDA members.
@@ -1182,10 +1182,10 @@ System.out.println("");
 
                 if (log != null) log.debug("sent");
                 readReceiveResponse(db);
-                stmt.setOutSqlda(parseSqlInfo(stmt_handle, db.resp_data, sql_prepare_info));
+                stmt.setOutSqlda(parseSqlInfo(stmt_handle, db.getResp_data(), sql_prepare_info));
                 return stmt.getOutSqlda();
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
 
             // RSR_blob ??????????
@@ -1201,7 +1201,7 @@ System.out.println("");
         isc_db_handle_impl db = stmt.getRsr_rdb();
 
         if (stmt_handle == null) {
-            throw new GDSException(isc_bad_req_handle);
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
         }
 
         synchronized (db) {
@@ -1222,7 +1222,7 @@ System.out.println("");
 
                 readReceiveResponse(db);
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
         }
 
@@ -1249,9 +1249,9 @@ System.out.println("");
                 db.out.flush();            
                 if (log != null) log.debug("sent");
                 readReceiveResponse(db);
-                return db.resp_data;
+                return db.getResp_data();
             } catch (IOException ex) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
         }
 
@@ -1259,9 +1259,9 @@ System.out.println("");
     }
 	 
     private static byte[] stmtInfo = new byte[]
-        {GDS.isc_info_sql_records,
-         GDS.isc_info_sql_stmt_type,
-         GDS.isc_info_end};
+        {ISCConstants.isc_info_sql_records,
+         ISCConstants.isc_info_sql_stmt_type,
+         ISCConstants.isc_info_end};
     private static int INFO_SIZE = 128;
 
     public void getSqlCounts(isc_stmt_handle stmt_handle) throws GDSException {
@@ -1270,28 +1270,28 @@ System.out.println("");
         int pos = 0;
         int length;
         int type;
-        while ((type = buffer[pos++]) != GDS.isc_info_end) {
+        while ((type = buffer[pos++]) != ISCConstants.isc_info_end) {
             length = isc_vax_integer(buffer, pos, 2);
             pos += 2;
             switch (type) {
-            case GDS.isc_info_sql_records:
+            case ISCConstants.isc_info_sql_records:
                 int l;
                 int t;
-                while ((t = buffer[pos++]) != GDS.isc_info_end) {
+                while ((t = buffer[pos++]) != ISCConstants.isc_info_end) {
                     l = isc_vax_integer(buffer, pos, 2);
                     pos += 2;
                     switch (t) {
-                    case GDS.isc_info_req_insert_count:
-                        stmt.insertCount = isc_vax_integer(buffer, pos, l);
+                    case ISCConstants.isc_info_req_insert_count:
+                        stmt.setInsertCount(isc_vax_integer(buffer, pos, l));
                         break;
-                    case GDS.isc_info_req_update_count:
-                        stmt.updateCount = isc_vax_integer(buffer, pos, l);
+                    case ISCConstants.isc_info_req_update_count:
+                        stmt.setUpdateCount(isc_vax_integer(buffer, pos, l));
                         break;
-                    case GDS.isc_info_req_delete_count:
-                        stmt.deleteCount = isc_vax_integer(buffer, pos, l);
+                    case ISCConstants.isc_info_req_delete_count:
+                        stmt.setDeleteCount(isc_vax_integer(buffer, pos, l));
                         break;
-                    case GDS.isc_info_req_select_count:
-                        stmt.selectCount = isc_vax_integer(buffer, pos, l);
+                    case ISCConstants.isc_info_req_select_count:
+                        stmt.setSelectCount(isc_vax_integer(buffer, pos, l));
                         break;
                     default:
                         break;
@@ -1299,8 +1299,8 @@ System.out.println("");
                     pos += l;
                 }
                 break;
-            case GDS.isc_info_sql_stmt_type:
-                stmt.statementType = isc_vax_integer(buffer, pos, length);
+            case ISCConstants.isc_info_sql_stmt_type:
+                stmt.setStatementType(isc_vax_integer(buffer, pos, length));
                 pos += length;
                 break;
             default:
@@ -1334,7 +1334,7 @@ System.out.println("");
                         isc_blob_handle blob_handle, //contains blob_id
                         Clumplet bpb) throws GDSException {
         openOrCreateBlob(db_handle, tr_handle, blob_handle, bpb, (bpb == null)? op_create_blob: op_create_blob2);
-        ((isc_blob_handle_impl)blob_handle).rbl_flags |= RBL_create;
+        ((isc_blob_handle_impl)blob_handle).rbl_flagsAdd(ISCConstants.RBL_create);
     }
 
     public void isc_open_blob2(isc_db_handle db_handle,
@@ -1354,13 +1354,13 @@ System.out.println("");
         isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
 
         if (db == null) {
-            throw new GDSException(isc_bad_db_handle);
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
         }
         if (tr == null) {
-            throw new GDSException(isc_bad_trans_handle);
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
         }
         if (blob == null) {
-            throw new GDSException(isc_bad_segstr_handle);
+            throw new GDSException(ISCConstants.isc_bad_segstr_handle);
         }
         synchronized (db) {
             try {
@@ -1371,23 +1371,23 @@ System.out.println("");
                 }
                 db.out.writeInt(op);
                 if (bpb != null) {
-                    db.out.writeTyped(isc_bpb_version1, (Xdrable)bpb);
+                    db.out.writeTyped(ISCConstants.isc_bpb_version1, (Xdrable)bpb);
                 }
                 db.out.writeInt(tr.getTransactionId()); //??really a short?
-                if (log != null) log.debug("sending blob_id: " + blob.blob_id);
-                db.out.writeLong(blob.blob_id);
+                if (log != null) log.debug("sending blob_id: " + blob.getBlob_id());
+                db.out.writeLong(blob.getBlob_id());
                 db.out.flush();            
 
                 if (log != null) log.debug("sent");
                 readReceiveResponse(db);
-                blob.db = db;
-                blob.tr = tr;
-                blob.rbl_id = db.resp_object;
-                blob.blob_id = db.resp_blob_id;
+                blob.setDb(db);
+                blob.setTr(tr);
+                blob.setRbl_id(db.getResp_object());
+                blob.setBlob_id(db.getResp_blob_id());
                 tr.addBlob(blob);
             }
             catch (IOException ioe) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
         }
     }
@@ -1395,34 +1395,34 @@ System.out.println("");
     public byte[] isc_get_segment(isc_blob_handle blob_handle,
                                   int requested) throws GDSException {
         isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
-        isc_db_handle_impl db = blob.db;
+        isc_db_handle_impl db = blob.getDb();
         if (db == null) {
-            throw new GDSException(isc_bad_db_handle);
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
         }
-        isc_tr_handle_impl tr = blob.tr;
+        isc_tr_handle_impl tr = blob.getTr();
         if (tr == null) {
-            throw new GDSException(isc_bad_trans_handle);
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
         }
         synchronized (db) {
             try {
 
                 if (log != null) log.debug("op_get_segment ");
                 db.out.writeInt(op_get_segment);
-                db.out.writeInt(blob.rbl_id); //short???
+                db.out.writeInt(blob.getRbl_id()); //short???
                 if (log != null) log.debug("trying to read bytes: " +((requested + 2 < Short.MAX_VALUE) ? requested+2: Short.MAX_VALUE));
                 db.out.writeInt((requested + 2 < Short.MAX_VALUE) ? requested+2 : Short.MAX_VALUE);
                 db.out.writeInt(0);//writeBuffer for put segment;
                 db.out.flush();            
                 if (log != null) log.debug("sent");
                 readReceiveResponse(db);
-                blob.rbl_flags &= ~RBL_segment;
-                if (db.resp_object == 1) {
-                    blob.rbl_flags |= RBL_segment;
+                blob.rbl_flagsRemove(ISCConstants.RBL_segment);
+                if (db.getResp_object() == 1) {
+                    blob.rbl_flagsAdd(ISCConstants.RBL_segment);
                 }
-                else if (db.resp_object == 2) {
-                    blob.rbl_flags |= RBL_eof_pending;
+                else if (db.getResp_object() == 2) {
+                    blob.rbl_flagsAdd(ISCConstants.RBL_eof_pending);
                 }
-                byte[] buffer = db.resp_data;
+                byte[] buffer = db.getResp_data();
                 if (buffer.length == 0) {//previous segment was last, this has no data
                     return buffer;
                 }
@@ -1442,7 +1442,7 @@ System.out.println("");
 
             }
             catch (IOException ioe) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
         }
     }
@@ -1450,21 +1450,21 @@ System.out.println("");
 
     public void isc_put_segment(isc_blob_handle blob_handle, byte[] buffer) throws GDSException {
         isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
-        isc_db_handle_impl db = blob.db;
+        isc_db_handle_impl db = blob.getDb();
         if (db == null) {
-            throw new GDSException(isc_bad_db_handle);
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
         }
-        isc_tr_handle_impl tr = blob.tr;
+        isc_tr_handle_impl tr = blob.getTr();
         if (tr == null) {
-            throw new GDSException(isc_bad_trans_handle);
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
         }
         synchronized (db) {
             try {
 
                 if (log != null) log.debug("op_batch_segments ");
                 db.out.writeInt(op_batch_segments);
-                if (log != null) log.debug("blob.rbl_id:  " + blob.rbl_id);
-                db.out.writeInt(blob.rbl_id); //short???
+                if (log != null) log.debug("blob.rbl_id:  " + blob.getRbl_id());
+                db.out.writeInt(blob.getRbl_id()); //short???
                 if (log != null) log.debug("buffer.length " + buffer.length);
                 db.out.writeBlobBuffer(buffer);
                 db.out.flush();            
@@ -1472,22 +1472,22 @@ System.out.println("");
                 readReceiveResponse(db);
             }
             catch (IOException ioe) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
         }
     }
 
     public void isc_close_blob(isc_blob_handle blob_handle) throws GDSException {
         isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
-        isc_db_handle_impl db = blob.db;
+        isc_db_handle_impl db = blob.getDb();
         if (db == null) {
-            throw new GDSException(isc_bad_db_handle);
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
         }
-        isc_tr_handle_impl tr = blob.tr;
+        isc_tr_handle_impl tr = blob.getTr();
         if (tr == null) {
-            throw new GDSException(isc_bad_trans_handle);
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
         }
-        releaseObject(db, op_close_blob, blob.rbl_id);
+        releaseObject(db, op_close_blob, blob.getRbl_id());
     tr.removeBlob(blob);
     }
 
@@ -1519,7 +1519,8 @@ System.out.println("");
             } catch (UnknownHostException ex2) {
                 String message = "Cannot resolve host " + dbai.getServer();
                 if (log != null) log.error(message, ex2);
-                throw new GDSException(isc_arg_gds, isc_network_error, dbai.getServer());
+                throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_network_error
+                , dbai.getServer());
             }
 
             db.out = new XdrOutputStream(db.socket.getOutputStream());
@@ -1581,11 +1582,12 @@ System.out.println("");
             } else {
                 disconnect(db);
                 if (log != null) log.debug("not received");
-                throw new GDSException(isc_connect_reject);
+                throw new GDSException(ISCConstants.isc_connect_reject);
             }
         } catch (IOException ex) {
             if (log != null) log.info("IOException while trying to connect to db:", ex);
-            throw new GDSException(isc_arg_gds, isc_network_error, dbai.getServer());
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_network_error
+            , dbai.getServer());
         }
     }
 
@@ -1606,7 +1608,8 @@ System.out.println("");
             if (log != null) log.warn("IOException in receiveSQLResponse", ex);
             // ex.getMessage() makes little sense here, it will not be displayed
             // because error message for isc_net_read_err does not accept params
-            throw new GDSException(isc_arg_gds, isc_net_read_err, ex.getMessage());
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_net_read_err
+            , ex.getMessage());
         }
     }
 
@@ -1618,7 +1621,8 @@ System.out.println("");
            if (log != null) log.warn("IOException in readReceiveResponse", ex);
             // ex.getMessage() makes little sense here, it will not be displayed
             // because error message for isc_net_read_err does not accept params
-            throw new GDSException(isc_arg_gds, isc_net_read_err, ex.getMessage());
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_net_read_err
+            , ex.getMessage());
         }
     }
 
@@ -1627,13 +1631,13 @@ System.out.println("");
         try {
             if (log != null) log.debug("op_response ");
             if (op == op_response) {
-                db.resp_object = db.in.readInt();
-                db.resp_blob_id = db.in.readLong();
-                db.resp_data = db.in.readBuffer();
+                db.setResp_object(db.in.readInt());
+                db.setResp_blob_id(db.in.readLong());
+                db.setResp_data(db.in.readBuffer());
                 if (log != null) {
-                    log.debug("op_response resp_object: " + db.resp_object);
-                    log.debug("op_response resp_blob_id: " + db.resp_blob_id);
-                    log.debug("op_response resp_data size: " + db.resp_data.length);
+                    log.debug("op_response resp_object: " + db.getResp_object());
+                    log.debug("op_response resp_blob_id: " + db.getResp_blob_id());
+                    log.debug("op_response resp_data size: " + db.getResp_data().length);
                 }
 //              for (int i = 0; i < ((r.resp_data.length< 16) ? r.resp_data.length: 16) ; i++) {
 //                  if (log != null) log.debug("byte: " + r.resp_data[i]);
@@ -1653,7 +1657,8 @@ System.out.println("");
            if (log != null) log.warn("IOException in receiveResponse", ex);
             // ex.getMessage() makes little sense here, it will not be displayed
             // because error message for isc_net_read_err does not accept params
-            throw new GDSException(isc_arg_gds, isc_net_read_err, ex.getMessage());
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_net_read_err
+            , ex.getMessage());
         }
     }
 
@@ -1678,7 +1683,7 @@ System.out.println("");
             while (true) {
                 int arg = db.in.readInt();
                 switch (arg) {
-                    case isc_arg_gds: 
+                    case ISCConstants.isc_arg_gds: 
                         int er = db.in.readInt();
                         if (log != null)log.debug("readStatusVector arg:isc_arg_gds int: " + er);
                         if (er != 0) {
@@ -1693,7 +1698,7 @@ System.out.println("");
                             }
                         }
                         break;
-                    case isc_arg_end:
+                    case ISCConstants.isc_arg_end:
                         if (head != null && !head.isWarning()) 
                             throw head;
                         else
@@ -1701,8 +1706,8 @@ System.out.println("");
                             db.addWarning(head);
                         
                         return;
-                    case isc_arg_interpreted:
-                    case isc_arg_string:
+                    case ISCConstants.isc_arg_interpreted:
+                    case ISCConstants.isc_arg_string:
                         GDSException ts = new GDSException(arg, db.in.readString());
                         if (log != null) log.debug("readStatusVector string: " + ts.getMessage());
                         if (head == null) {
@@ -1714,7 +1719,7 @@ System.out.println("");
                             tail = ts;
                         }
                         break;
-                    case isc_arg_number:
+                    case ISCConstants.isc_arg_number:
                         {
                             int arg_value = db.in.readInt();
                             if (log != null)log.debug("readStatusVector arg:isc_arg_number int: " + arg_value);
@@ -1750,7 +1755,8 @@ System.out.println("");
         catch (IOException ioe) {
             // ioe.getMessage() makes little sense here, it will not be displayed
             // because error message for isc_net_read_err does not accept params
-            throw new GDSException(isc_arg_gds, isc_net_read_err, ioe.getMessage());
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_net_read_err
+            , ioe.getMessage());
         }
     }
 
@@ -1765,12 +1771,12 @@ System.out.println("");
             int par_count = 0;
             for (int i = 0; i < xsqlda.sqld; i++) {
                 int dtype = xsqlda.sqlvar[i].sqltype & ~1;
-                if (dtype == SQL_VARYING || dtype == SQL_TEXT) {
+                if (dtype == ISCConstants.SQL_VARYING || dtype == ISCConstants.SQL_TEXT) {
                     blr_len += 3;
-                } else if (dtype == SQL_SHORT || dtype == SQL_LONG ||
-                            dtype == SQL_INT64 ||
-                            dtype == SQL_QUAD ||
-                            dtype == SQL_BLOB || dtype == SQL_ARRAY) {
+                } else if (dtype == ISCConstants.SQL_SHORT || dtype == ISCConstants.SQL_LONG ||
+                            dtype == ISCConstants.SQL_INT64 ||
+                            dtype == ISCConstants.SQL_QUAD ||
+                            dtype == ISCConstants.SQL_BLOB || dtype == ISCConstants.SQL_ARRAY) {
                     blr_len += 2;
                 } else {
                     blr_len++;
@@ -1793,42 +1799,42 @@ System.out.println("");
             for (int i = 0; i < xsqlda.sqld; i++) {
                 int dtype = xsqlda.sqlvar[i].sqltype & ~1;
                 int len = xsqlda.sqlvar[i].sqllen;
-                if (dtype == SQL_VARYING) {
+                if (dtype == ISCConstants.SQL_VARYING) {
                     blr[n++] = 37;              // blr_varying
                     blr[n++] = (byte) (len & 255);
                     blr[n++] = (byte) (len >> 8);
-                } else if (dtype == SQL_TEXT) {
+                } else if (dtype == ISCConstants.SQL_TEXT) {
                     blr[n++] = 14;              // blr_text
                     blr[n++] = (byte) (len & 255);
                     blr[n++] = (byte) (len >> 8);
-                } else if (dtype == SQL_DOUBLE) {
+                } else if (dtype == ISCConstants.SQL_DOUBLE) {
                     blr[n++] = 27;              // blr_double
-                } else if (dtype == SQL_FLOAT) {
+                } else if (dtype == ISCConstants.SQL_FLOAT) {
                     blr[n++] = 10;              // blr_float
-                } else if (dtype == SQL_D_FLOAT) {
+                } else if (dtype == ISCConstants.SQL_D_FLOAT) {
                     blr[n++] = 11;              // blr_d_float
-                } else if (dtype == SQL_TYPE_DATE) {
+                } else if (dtype == ISCConstants.SQL_TYPE_DATE) {
                     blr[n++] = 12;              // blr_sql_date
-                } else if (dtype == SQL_TYPE_TIME) {
+                } else if (dtype == ISCConstants.SQL_TYPE_TIME) {
                     blr[n++] = 13;              // blr_sql_time
-                } else if (dtype == SQL_TIMESTAMP) {
+                } else if (dtype == ISCConstants.SQL_TIMESTAMP) {
                     blr[n++] = 35;              // blr_timestamp
-                } else if (dtype == SQL_BLOB) {
+                } else if (dtype == ISCConstants.SQL_BLOB) {
                     blr[n++] = 9;               // blr_quad
                     blr[n++] = 0;
-                } else if (dtype == SQL_ARRAY) {
+                } else if (dtype == ISCConstants.SQL_ARRAY) {
                     blr[n++] = 9;               // blr_quad
                     blr[n++] = 0;
-                } else if (dtype == SQL_LONG) {
+                } else if (dtype == ISCConstants.SQL_LONG) {
                     blr[n++] = 8;               // blr_long
                     blr[n++] = (byte) xsqlda.sqlvar[i].sqlscale;
-                } else if (dtype == SQL_SHORT) {
+                } else if (dtype == ISCConstants.SQL_SHORT) {
                     blr[n++] = 7;               // blr_short
                     blr[n++] = (byte) xsqlda.sqlvar[i].sqlscale;
-                } else if (dtype == SQL_INT64) {
+                } else if (dtype == ISCConstants.SQL_INT64) {
                     blr[n++] = 16;              // blr_int64
                     blr[n++] = (byte) xsqlda.sqlvar[i].sqlscale;
-                } else if (dtype == SQL_QUAD) {
+                } else if (dtype == ISCConstants.SQL_QUAD) {
                     blr[n++] = 9;               // blr_quad
                     blr[n++] = (byte) xsqlda.sqlvar[i].sqlscale;
                 } else {
@@ -1858,7 +1864,7 @@ System.out.println("");
         while ((lastindex = parseTruncSqlInfo(info, xsqlda, lastindex)) > 0) {
             lastindex--;               // Is this OK ?
             byte[] new_items = new byte[4 + items.length];
-            new_items[0] = isc_info_sql_sqlda_start;
+            new_items[0] = ISCConstants.isc_info_sql_sqlda_start;
             new_items[1] = 2;
             new_items[2] = (byte) (lastindex & 255);
             new_items[3] = (byte) (lastindex >> 8);
@@ -1892,10 +1898,10 @@ System.out.println("");
         }
         if (log != null) log.debug("xsqlda.sqln read as " + xsqlda.sqln);
 
-        while (info[i] != isc_info_end) {
-            while ((item = info[i++]) != isc_info_sql_describe_end) {
+        while (info[i] != ISCConstants.isc_info_end) {
+            while ((item = info[i++]) != ISCConstants.isc_info_sql_describe_end) {
                 switch (item) {
-                    case isc_info_sql_sqlda_seq:
+                    case ISCConstants.isc_info_sql_sqlda_seq:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         index = isc_vax_integer(info, i, len);
@@ -1903,68 +1909,68 @@ System.out.println("");
                         xsqlda.sqlvar[index - 1] = new XSQLVAR();
                         if (log != null) log.debug("new xsqlvar " + (index - 1));
                         break;
-                    case isc_info_sql_type:
+                    case ISCConstants.isc_info_sql_type:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].sqltype = isc_vax_integer (info, i, len);
                         i += len;
                         if (log != null) log.debug("isc_info_sql_type " + xsqlda.sqlvar[index - 1].sqltype);
                         break;
-                    case isc_info_sql_sub_type:
+                    case ISCConstants.isc_info_sql_sub_type:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].sqlsubtype = isc_vax_integer (info, i, len);
                         i += len;
                         if (log != null) log.debug("isc_info_sql_sub_type " + xsqlda.sqlvar[index - 1].sqlsubtype);
                         break;
-                    case isc_info_sql_scale:
+                    case ISCConstants.isc_info_sql_scale:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].sqlscale = isc_vax_integer (info, i, len);
                         i += len;
                         if (log != null) log.debug("isc_info_sql_scale " + xsqlda.sqlvar[index - 1].sqlscale);
                         break;
-                    case isc_info_sql_length:
+                    case ISCConstants.isc_info_sql_length:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].sqllen = isc_vax_integer (info, i, len);
                         i += len;
                         if (log != null) log.debug("isc_info_sql_length " + xsqlda.sqlvar[index - 1].sqllen);
                         break;
-                    case isc_info_sql_field:
+                    case ISCConstants.isc_info_sql_field:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].sqlname = new String(info, i, len);
                         i += len;
                         if (log != null) log.debug("isc_info_sql_field " + xsqlda.sqlvar[index - 1].sqlname);
                         break;
-                    case isc_info_sql_relation:
+                    case ISCConstants.isc_info_sql_relation:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].relname = new String(info, i, len);
                         i += len;
                         if (log != null) log.debug("isc_info_sql_relation " + xsqlda.sqlvar[index - 1].relname);
                         break;
-                    case isc_info_sql_owner:
+                    case ISCConstants.isc_info_sql_owner:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].ownname = new String(info, i, len);
                         i += len;
                         if (log != null) log.debug("isc_info_sql_owner " + xsqlda.sqlvar[index - 1].ownname);
                         break;
-                    case isc_info_sql_alias:
+                    case ISCConstants.isc_info_sql_alias:
                         len = isc_vax_integer(info, i, 2);
                         i += 2;
                         xsqlda.sqlvar[index - 1].aliasname = new String(info, i, len);
                         i += len;
                         if (log != null) log.debug("isc_info_sql_alias " + xsqlda.sqlvar[index - 1].aliasname);
                         break;
-                    case isc_info_truncated:
+                    case ISCConstants.isc_info_truncated:
                         if (log != null) log.debug("isc_info_truncated ");
                         return lastindex;
                         //throw new GDSException(isc_dsql_sqlda_err);
                     default:
-                        throw new GDSException(isc_dsql_sqlda_err);
+                        throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
                 }
             }
             lastindex = index;
@@ -2000,7 +2006,7 @@ System.out.println("");
                 readReceiveResponse(db);
             }
             catch (IOException ioe) {
-                throw new GDSException(isc_net_read_err);
+                throw new GDSException(ISCConstants.isc_net_read_err);
             }
         }
     }
@@ -2038,14 +2044,14 @@ System.out.println("");
 
             int sep = connectInfo.indexOf(hostSepChar);
             if (sep == 0 || sep == connectInfo.length() - 1) {
-                throw new GDSException("Bad connection string: '"+hostSepChar+"' at beginning or end of:" + connectInfo +  isc_bad_db_format);
+                throw new GDSException("Bad connection string: '"+hostSepChar+"' at beginning or end of:" + connectInfo +  ISCConstants.isc_bad_db_format);
             }
             else if (sep > 0) {
                 server = connectInfo.substring(0, sep);
                 fileName = connectInfo.substring(sep + 1);
                 int portSep = server.indexOf(portSepChar);
                 if (portSep == 0 || portSep == server.length() - 1) {
-                    throw new GDSException("Bad server string: '"+portSepChar+"' at beginning or end of: " + server +  isc_bad_db_format);
+                    throw new GDSException("Bad server string: '"+portSepChar+"' at beginning or end of: " + server +  ISCConstants.isc_bad_db_format);
                 }
                 else if (portSep > 0) {
                     port = Integer.parseInt(server.substring(portSep + 1));

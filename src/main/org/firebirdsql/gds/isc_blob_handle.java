@@ -31,10 +31,10 @@ package org.firebirdsql.gds;
  */
 public interface isc_blob_handle {
 
-    long getBlobId();
+    long getBlob_id();
 
-    void setBlobId(long blob_id);
-
+    void setBlob_id(long blob_id);
+    // only used in the tests
     boolean isEof();
 
 }

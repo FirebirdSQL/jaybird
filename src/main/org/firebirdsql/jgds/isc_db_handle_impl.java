@@ -47,7 +47,20 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
     private List rdb_warnings = new ArrayList();
     
     private boolean invalid;
-    
+
+    Socket socket;
+    XdrOutputStream out;
+    XdrInputStream in;
+    private int resp_object;
+    private long resp_blob_id;
+    private byte[] resp_data;
+
+    private int dialect = 0;
+    private String version = null;
+    private String FBVersion = null;
+    private int ODSMajorVersion = 0;
+    private int ODSMinorVersion = 0;
+	 
     private void checkValidity() {
         if (invalid)
             throw new IllegalStateException(
@@ -69,13 +82,6 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
     /** @todo Implement statement handle tracking correctly */
     // Vector rdb_sql_requests = new Vector();
     
-    Socket socket;
-    XdrOutputStream out;
-    XdrInputStream in;
-    int resp_object;
-    long resp_blob_id;
-    byte[] resp_data;
-//    int op = -1;
 
     public isc_db_handle_impl() {
     }
@@ -144,12 +150,6 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
     //
     //
     //
-    int dialect = 0;
-    String version = null;
-    String FBVersion = null;
-    int ODSMajorVersion = 0;
-    int ODSMinorVersion = 0;
-
     public void setDialect(int value){
         dialect = value;
     }
@@ -225,5 +225,29 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
 
     public int getODSMinorVersion(){
         return ODSMinorVersion;
+    }
+
+    public void setResp_object(int value){
+        resp_object = value;
+    }
+
+    public int getResp_object(){
+        return resp_object;
+    }
+
+    public void setResp_blob_id(long value){
+        resp_blob_id = value;
+    }
+
+    public long getResp_blob_id(){
+        return resp_blob_id;
+    }
+
+    public void setResp_data(byte[] value){
+        resp_data = value;
+    }
+
+    public byte[] getResp_data(){
+        return resp_data;
     }
 }

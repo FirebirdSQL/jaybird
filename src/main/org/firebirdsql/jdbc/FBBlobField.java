@@ -35,7 +35,7 @@ import org.firebirdsql.gds.XSQLVAR;
 public class FBBlobField extends FBField {
     private static final int BUFF_SIZE = 4096;
 
-    boolean isCachedData = false;
+    private boolean isCachedData = false;
 
     FBBlobField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
         super(field, rs, numCol);

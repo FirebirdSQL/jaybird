@@ -21,6 +21,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.4  2002/10/18 14:21:28  rrokytskyy
+ * fixed warnings handling
+ *
  * Revision 1.3  2002/10/07 18:54:56  rrokytskyy
  * improved exception handling
  *
@@ -74,11 +77,11 @@ public class GDSException extends Exception {
      * error code.
      */
     protected String getParam() {
-        if ((type == GDS.isc_arg_interpreted) ||
-                (type == GDS.isc_arg_string))
+        if ((type == ISCConstants.isc_arg_interpreted) ||
+                (type == ISCConstants.isc_arg_string))
             return strParam;
         else
-        if (type == GDS.isc_arg_number)
+        if (type == ISCConstants.isc_arg_number)
             return "" + intParam;
         else
             return "";
@@ -116,23 +119,23 @@ public class GDSException extends Exception {
     public GDSException(int type, int fbErrorCode, String strParam) {
         this.type = type;
         this.intParam = fbErrorCode;
-        setNext(new GDSException(GDS.isc_arg_string, strParam));
+        setNext(new GDSException(ISCConstants.isc_arg_string, strParam));
     }
 
     public GDSException(int fbErrorCode) {
         // this.fbErrorCode = fbErrorCode;
         this.intParam = fbErrorCode;
-        this.type = GDS.isc_arg_gds;
+        this.type = ISCConstants.isc_arg_gds;
     }
 
     public GDSException(String message) {
         super(message);
-        this.type = GDS.isc_arg_string;
+        this.type = ISCConstants.isc_arg_string;
     }
 
     public int getFbErrorCode() {
         //return fbErrorCode;
-        if (type == GDS.isc_arg_number)
+        if (type == ISCConstants.isc_arg_number)
             return intParam;
         else
             return -1;
@@ -151,7 +154,7 @@ public class GDSException extends Exception {
     }
     
     public boolean isWarning() {
-        return type == GDS.isc_arg_warning;
+        return type == ISCConstants.isc_arg_warning;
     }
 
     /**
@@ -163,7 +166,7 @@ public class GDSException extends Exception {
         GDSException child = this.next;
         
         // If I represent a GDSMessage code, then let's format it nicely.
-        if (type == GDS.isc_arg_gds || type == GDS.isc_arg_warning) {
+        if (type == ISCConstants.isc_arg_gds || type == ISCConstants.isc_arg_warning) {
             // get message
             GDSExceptionHelper.GDSMessage message =
                 GDSExceptionHelper.getMessage(intParam);

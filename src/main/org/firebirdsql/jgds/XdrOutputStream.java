@@ -55,7 +55,7 @@ public final class XdrOutputStream {
     private static byte[] buf = new byte[32767];
     private int count;
 
-    OutputStream out = null;
+    private OutputStream out = null;
 
     public XdrOutputStream(OutputStream out) {
         this.out = out;

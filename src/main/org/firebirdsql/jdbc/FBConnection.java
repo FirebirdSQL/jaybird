@@ -33,7 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import javax.resource.ResourceException;
 import javax.resource.spi.LocalTransaction;
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.isc_blob_handle;
 import org.firebirdsql.gds.GDSException;
@@ -63,13 +63,13 @@ public class FBConnection implements Connection
     private boolean invalid = false;
 
 
-    FBManagedConnection mc;
+    private FBManagedConnection mc;
 
-    FBLocalTransaction localTransaction = null;
+    private FBLocalTransaction localTransaction = null;
 
-    FBDatabaseMetaData metaData = null;
+    private FBDatabaseMetaData metaData = null;
 
-    java.sql.SQLWarning firstWarning = null;
+    private java.sql.SQLWarning firstWarning = null;
      
     // This set contains all allocated but not closed statements
     // It is used to close them before the connection is closed
@@ -1090,7 +1090,7 @@ public class FBConnection implements Connection
      
     private void checkManagedConnection() throws GDSException {
         if (mc == null)
-            throw new GDSException(GDS.isc_arg_gds, GDS.isc_req_no_trans);
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_req_no_trans);
     }
 	 
     public isc_stmt_handle getAllocatedStatement() throws GDSException {

@@ -19,7 +19,7 @@
 
 package org.firebirdsql.jgds;
 
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.isc_blob_handle;
 import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.isc_tr_handle;
@@ -32,25 +32,60 @@ import org.firebirdsql.gds.isc_tr_handle;
  */
 public final class isc_blob_handle_impl implements isc_blob_handle {
 
-    isc_db_handle_impl db;
-    isc_tr_handle_impl tr;
-    int rbl_id;
-    long blob_id;
-    isc_blob_handle_impl next;
-    int rbl_flags;
+    private isc_db_handle_impl db;
+    private isc_tr_handle_impl tr;
+    private int rbl_id;
+    private long blob_id;
+//    private isc_blob_handle_impl next;
+    private int rbl_flags;
 
     isc_blob_handle_impl() {};
 
-    public long getBlobId() {
+    public isc_tr_handle_impl getTr() {
+        return tr;
+    }
+
+    public void setTr(isc_tr_handle_impl value) {
+        tr = value;
+    }
+
+    public isc_db_handle_impl getDb() {
+        return db;
+    }
+
+    public void setDb(isc_db_handle_impl value) {
+        db = value;
+    }
+
+    public long getBlob_id() {
         return blob_id;
     }
 
-     public void setBlobId(long blob_id) {
-         this.blob_id = blob_id;
-     }
-
-    public boolean isEof() {
-    return (rbl_flags & GDS.RBL_eof_pending) != 0;
+    public void setBlob_id(long value) {
+        blob_id = value;
     }
 
+    public int getRbl_id() {
+        return rbl_id;
+    }
+
+    public void setRbl_id(int value) {
+        rbl_id = value;
+    }
+/* not used
+    public int getRbl_flags() {
+        return rbl_flags;
+    }
+*/
+    public void rbl_flagsAdd(int value) {
+        rbl_flags |= value;
+    }
+
+    public void rbl_flagsRemove(int value) {
+        rbl_flags &= ~value;
+    }
+    // only used in the tests
+    public boolean isEof() {
+        return (rbl_flags & ISCConstants.RBL_eof_pending) != 0;
+    }
 }

@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.3  2002/10/18 04:16:05  d_jencks
+ * fixed some errors Claudio pointed out, thanks
+ *
  * Revision 1.2  2002/09/28 19:21:36  d_jencks
  * Fixed physical connection leak, made  datasource and ManagedConnectionFactory serializable, and made BlobBufferLength and Integer attribute to be spec-compliant.
  *
@@ -93,7 +96,8 @@ import org.firebirdsql.jca.FBTpb;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.jgds.ClumpletImpl;
 
 /**
  * Describe class <code>FBDriver</code> here.
@@ -201,7 +205,7 @@ public class FBDriver implements Driver {
             String user = info.getProperty(USER);
 
             if (user == null)
-                user = conCri.getStringProperty(GDS.isc_dpb_user_name);
+                user = conCri.getStringProperty(ISCConstants.isc_dpb_user_name);
 
             if (user == null)
                 throw new SQLException(
@@ -211,7 +215,7 @@ public class FBDriver implements Driver {
             String password = info.getProperty(PASSWORD);
 
             if (password == null)
-                password = conCri.getStringProperty(GDS.isc_dpb_password);
+                password = conCri.getStringProperty(ISCConstants.isc_dpb_password);
 
             if (password == null)
                 throw new SQLException(

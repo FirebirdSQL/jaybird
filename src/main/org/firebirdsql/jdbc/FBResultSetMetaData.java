@@ -20,7 +20,7 @@
 package org.firebirdsql.jdbc;
 
 
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
@@ -99,8 +99,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean isSearchable(int column) throws  SQLException {
-        if (((getXsqlvar(column).sqltype & ~1) == GDS.SQL_ARRAY)
-            || ((getXsqlvar(column).sqltype & ~1) == GDS.SQL_BLOB)) {
+        if (((getXsqlvar(column).sqltype & ~1) == ISCConstants.SQL_ARRAY)
+            || ((getXsqlvar(column).sqltype & ~1) == ISCConstants.SQL_BLOB)) {
             return false;
         }
         else {
@@ -166,12 +166,12 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      */
     public  boolean isSigned(int column) throws  SQLException {
         switch (getXsqlvar(column).sqltype & ~1) {
-            case GDS.SQL_SHORT:
-            case GDS.SQL_LONG:
-            case GDS.SQL_FLOAT:
-            case GDS.SQL_DOUBLE:
-            case GDS.SQL_D_FLOAT:
-            case GDS.SQL_INT64:
+            case ISCConstants.SQL_SHORT:
+            case ISCConstants.SQL_LONG:
+            case ISCConstants.SQL_FLOAT:
+            case ISCConstants.SQL_DOUBLE:
+            case ISCConstants.SQL_D_FLOAT:
+            case ISCConstants.SQL_INT64:
                 return true;
             default:
                 return false;
@@ -343,10 +343,10 @@ public class FBResultSetMetaData implements ResultSetMetaData {
 
         if (sqlscale < 0) {
             switch (sqltype) {
-                case GDS.SQL_SHORT:
-                case GDS.SQL_LONG:
-                case GDS.SQL_INT64:
-                case GDS.SQL_DOUBLE:
+                case ISCConstants.SQL_SHORT:
+                case ISCConstants.SQL_LONG:
+                case ISCConstants.SQL_INT64:
+                case ISCConstants.SQL_DOUBLE:
                     if (sqlsubtype == 2)
                         return Types.DECIMAL;
                     else
@@ -357,31 +357,31 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         }
 
         switch (sqltype) {
-            case GDS.SQL_SHORT:
+            case ISCConstants.SQL_SHORT:
                 return Types.SMALLINT;
-            case GDS.SQL_LONG:
+            case ISCConstants.SQL_LONG:
                 return Types.INTEGER;
-            case GDS.SQL_DOUBLE:
-            case GDS.SQL_D_FLOAT:
+            case ISCConstants.SQL_DOUBLE:
+            case ISCConstants.SQL_D_FLOAT:
                 return Types.DOUBLE;
-            case GDS.SQL_FLOAT:
+            case ISCConstants.SQL_FLOAT:
                 return Types.FLOAT;
-            case GDS.SQL_TEXT:
+            case ISCConstants.SQL_TEXT:
                 return Types.CHAR;
-            case GDS.SQL_VARYING:
+            case ISCConstants.SQL_VARYING:
                 return Types.VARCHAR;
-            case GDS.SQL_TIMESTAMP:
+            case ISCConstants.SQL_TIMESTAMP:
                 return Types.TIMESTAMP;
-            case GDS.SQL_TYPE_TIME:
+            case ISCConstants.SQL_TYPE_TIME:
                 return Types.TIME;
-            case GDS.SQL_TYPE_DATE:
+            case ISCConstants.SQL_TYPE_DATE:
                 return Types.DATE;
-            case GDS.SQL_INT64:
+            case ISCConstants.SQL_INT64:
                 if (sqlsubtype == 2)
                     return Types.DECIMAL;
                 else
                     return Types.NUMERIC;
-            case GDS.SQL_BLOB:
+            case ISCConstants.SQL_BLOB:
                 if (sqlsubtype < 0)
                     return Types.BLOB;
                 else if (sqlsubtype == 0)
@@ -390,7 +390,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                     return Types.LONGVARCHAR;
                 else
                     return Types.OTHER;
-            case GDS.SQL_QUAD:
+            case ISCConstants.SQL_QUAD:
                 return Types.OTHER;
             default:
                 return Types.NULL;
@@ -414,10 +414,10 @@ public class FBResultSetMetaData implements ResultSetMetaData {
 
         if (sqlscale < 0) {
             switch (sqltype) {
-                case GDS.SQL_SHORT:
-                case GDS.SQL_LONG:
-                case GDS.SQL_INT64:
-                case GDS.SQL_DOUBLE:
+                case ISCConstants.SQL_SHORT:
+                case ISCConstants.SQL_LONG:
+                case ISCConstants.SQL_INT64:
+                case ISCConstants.SQL_DOUBLE:
                     if (sqlsubtype == 2)
                         return "DECIMAL";
                     else
@@ -428,31 +428,31 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         }
 
         switch (sqltype) {
-            case GDS.SQL_SHORT:
+            case ISCConstants.SQL_SHORT:
                 return "SMALLINT";
-            case GDS.SQL_LONG:
+            case ISCConstants.SQL_LONG:
                 return "INTEGER";
-            case GDS.SQL_DOUBLE:
-            case GDS.SQL_D_FLOAT:
+            case ISCConstants.SQL_DOUBLE:
+            case ISCConstants.SQL_D_FLOAT:
                 return "DOUBLE PRECISION";
-            case GDS.SQL_FLOAT:
+            case ISCConstants.SQL_FLOAT:
                 return "FLOAT";
-            case GDS.SQL_TEXT:
+            case ISCConstants.SQL_TEXT:
                 return "CHAR";
-            case GDS.SQL_VARYING:
+            case ISCConstants.SQL_VARYING:
                 return "VARCHAR";
-            case GDS.SQL_TIMESTAMP:
+            case ISCConstants.SQL_TIMESTAMP:
                 return "TIMESTAMP";
-            case GDS.SQL_TYPE_TIME:
+            case ISCConstants.SQL_TYPE_TIME:
                 return "TIME";
-            case GDS.SQL_TYPE_DATE:
+            case ISCConstants.SQL_TYPE_DATE:
                 return "DATE";
-            case GDS.SQL_INT64:
+            case ISCConstants.SQL_INT64:
                 if (sqlsubtype == 2)
                     return "DECIMAL";
                 else
                     return "NUMERIC";
-            case GDS.SQL_BLOB:
+            case ISCConstants.SQL_BLOB:
                 if (sqlsubtype < 0)
                     return "BLOB SUB_TYPE <0";
                 else if (sqlsubtype == 0)
@@ -461,7 +461,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                     return "BLOB SUB_TYPE 1";
                 else
                     return "BLOB SUB_TYPE >1";
-            case GDS.SQL_QUAD:
+            case ISCConstants.SQL_QUAD:
                 return "ARRAY";
             default:
                 return "NULL";
@@ -528,33 +528,33 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      */
     public String getColumnClassName(int column) throws  SQLException {
         switch (getXsqlvar(column).sqltype & ~1) {
-            case GDS.SQL_TEXT:
+            case ISCConstants.SQL_TEXT:
                 return String.class.getName();
-            case GDS.SQL_VARYING:
+            case ISCConstants.SQL_VARYING:
                 return String.class.getName();
-            case GDS.SQL_SHORT:
+            case ISCConstants.SQL_SHORT:
                 return Short.class.getName();
-            case GDS.SQL_LONG:
+            case ISCConstants.SQL_LONG:
                 return Long.class.getName();
-            case GDS.SQL_FLOAT:
+            case ISCConstants.SQL_FLOAT:
                 return Float.class.getName();
-            case GDS.SQL_DOUBLE:
+            case ISCConstants.SQL_DOUBLE:
                 return Double.class.getName();
-            case GDS.SQL_D_FLOAT:
+            case ISCConstants.SQL_D_FLOAT:
                 return Double.class.getName();
-            case GDS.SQL_TIMESTAMP:
+            case ISCConstants.SQL_TIMESTAMP:
                 return java.sql.Timestamp.class.getName();
-            case GDS.SQL_BLOB:
+            case ISCConstants.SQL_BLOB:
                 return Blob.class.getName();
-            case GDS.SQL_ARRAY:
+            case ISCConstants.SQL_ARRAY:
                 return Array.class.getName();
-            case GDS.SQL_QUAD:
+            case ISCConstants.SQL_QUAD:
                 return Long.class.getName();
-            case GDS.SQL_TYPE_TIME:
+            case ISCConstants.SQL_TYPE_TIME:
                 return java.sql.Time.class.getName();
-            case GDS.SQL_TYPE_DATE:
+            case ISCConstants.SQL_TYPE_DATE:
                 return java.sql.Date.class.getName();
-            case GDS.SQL_INT64:
+            case ISCConstants.SQL_INT64:
                 if (getXsqlvar(column).sqlscale == 0) {
                     return Long.class.getName();
                 }

@@ -41,7 +41,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Calendar;
-import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.logging.Logger;

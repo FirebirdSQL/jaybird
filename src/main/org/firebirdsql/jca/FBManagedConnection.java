@@ -42,7 +42,7 @@ import javax.security.auth.Subject;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
@@ -578,29 +578,29 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         if (log!=null) log.debug("preparing sql: " + sql);
         //Should we test for dbhandle?
         
-        String encoding = cri.getStringProperty(GDS.isc_dpb_lc_ctype);
+        String encoding = cri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);
         
-        XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, sql, encoding, GDS.SQL_DIALECT_CURRENT);
+        XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, sql, encoding, ISCConstants.SQL_DIALECT_CURRENT);
         if (out.sqld != out.sqln) {
             throw new GDSException("Not all columns returned");
         }
         if (describeBind) {
-            mcf.gds.isc_dsql_describe_bind(stmt, GDS.SQLDA_VERSION1);
+            mcf.gds.isc_dsql_describe_bind(stmt, ISCConstants.SQLDA_VERSION1);
         }
     }
     
     public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda) throws GDSException {
         mcf.gds.isc_dsql_execute2(currentTr, stmt,
-                                 GDS.SQLDA_VERSION1, stmt.getInSqlda(), (sendOutSqlda) ? stmt.getOutSqlda() : null);
+                                 ISCConstants.SQLDA_VERSION1, stmt.getInSqlda(), (sendOutSqlda) ? stmt.getOutSqlda() : null);
 
     }
 
     public void fetch(isc_stmt_handle stmt, int fetchSize) throws GDSException {
-        mcf.gds.isc_dsql_fetch(stmt, GDS.SQLDA_VERSION1, stmt.getOutSqlda(), fetchSize);
+        mcf.gds.isc_dsql_fetch(stmt, ISCConstants.SQLDA_VERSION1, stmt.getOutSqlda(), fetchSize);
     }
 
     public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
-        mcf.gds.isc_dsql_free_statement(stmt, (deallocate) ? GDS.DSQL_drop: GDS.DSQL_close);
+        mcf.gds.isc_dsql_free_statement(stmt, (deallocate) ? ISCConstants.DSQL_drop: ISCConstants.DSQL_close);
     }
 
     public void close(FBConnection c) {
@@ -621,7 +621,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     public isc_blob_handle openBlobHandle(long blob_id) throws GDSException {
         isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
-        blob.setBlobId(blob_id);
+        blob.setBlob_id(blob_id);
         mcf.gds.isc_open_blob2(currentDbHandle, currentTr, blob, null);//no bpb for now, segmented
         return blob;
     }
@@ -717,7 +717,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     
     public String getIscEncoding() {
         try {
-            String result = cri.getStringProperty(GDS.isc_dpb_lc_ctype);
+            String result = cri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);
             if (result == null) result = "NONE";
             return result;
         } catch(NullPointerException ex) {

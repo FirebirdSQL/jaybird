@@ -21,7 +21,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBTpb;
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 
 import java.util.Properties;
 import java.util.HashMap;
@@ -62,9 +62,9 @@ public class FBConnectionHelper {
      * their values. This operation should be executed only once.
      */
     static {
-        Class gdsClass = GDS.class;
+        Class iscClass = ISCConstants.class;
 
-        Field[] fields = gdsClass.getFields();
+        Field[] fields = iscClass.getFields();
 
         for(int i = 0; i < fields.length; i++) {
             if (!fields[i].getType().getName().equals("int"))

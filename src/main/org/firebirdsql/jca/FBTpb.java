@@ -24,7 +24,7 @@ import java.sql.Connection;
 import java.util.HashSet;
 import java.util.Set;
 import javax.resource.ResourceException;
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 
 import java.util.Iterator;
 /**
@@ -50,21 +50,21 @@ public class FBTpb implements Serializable
     //read uncommitted actually not supported
     public static final String TRANSACTION_READ_UNCOMMITTED = "TRANSACTION_READ_UNCOMMITTED";
 
-    public final static Integer ISC_TPB_CONSISTENCY = new Integer(GDS.isc_tpb_consistency);
+    public final static Integer ISC_TPB_CONSISTENCY = new Integer(ISCConstants.isc_tpb_consistency);
 
-    public final static Integer ISC_TPB_READ_COMMITTED = new Integer(GDS.isc_tpb_read_committed);
+    public final static Integer ISC_TPB_READ_COMMITTED = new Integer(ISCConstants.isc_tpb_read_committed);
 
-    public final static Integer ISC_TPB_CONCURRENCY = new Integer(GDS.isc_tpb_concurrency);
+    public final static Integer ISC_TPB_CONCURRENCY = new Integer(ISCConstants.isc_tpb_concurrency);
 
-    public final static Integer ISC_TPB_REC_VERSION = new Integer(GDS.isc_tpb_rec_version);
+    public final static Integer ISC_TPB_REC_VERSION = new Integer(ISCConstants.isc_tpb_rec_version);
 
-    public final static Integer ISC_TPB_NO_REC_VERSION = new Integer(GDS.isc_tpb_no_rec_version);
+    public final static Integer ISC_TPB_NO_REC_VERSION = new Integer(ISCConstants.isc_tpb_no_rec_version);
 	 
-    public final static Integer ISC_TPB_WAIT = new Integer(GDS.isc_tpb_wait);
+    public final static Integer ISC_TPB_WAIT = new Integer(ISCConstants.isc_tpb_wait);
 
-    public final static Integer ISC_TPB_READ = new Integer(GDS.isc_tpb_read);
+    public final static Integer ISC_TPB_READ = new Integer(ISCConstants.isc_tpb_read);
 
-    public final static Integer ISC_TPB_WRITE = new Integer(GDS.isc_tpb_write);
+    public final static Integer ISC_TPB_WRITE = new Integer(ISCConstants.isc_tpb_write);
 
 
 
@@ -146,15 +146,15 @@ public class FBTpb implements Serializable
     {
         if (TRANSACTION_SERIALIZABLE.equals(tin)) 
         {
-            setIscTransactionIsolation(GDS.isc_tpb_consistency);
+            setIscTransactionIsolation(ISCConstants.isc_tpb_consistency);
         } // end of if ()
         else if (TRANSACTION_REPEATABLE_READ.equals(tin)) 
         {
-            setIscTransactionIsolation(GDS.isc_tpb_concurrency);
+            setIscTransactionIsolation(ISCConstants.isc_tpb_concurrency);
         } // end of if ()
         else if (TRANSACTION_READ_COMMITTED.equals(tin)) 
         {
-            setIscTransactionIsolation(GDS.isc_tpb_read_committed);
+            setIscTransactionIsolation(ISCConstants.isc_tpb_read_committed);
         } // end of if ()
         else 
         {
@@ -165,9 +165,9 @@ public class FBTpb implements Serializable
     public String getTransactionIsolationName() throws ResourceException
     {
         switch (getIscTransactionIsolation()) {
-            case GDS.isc_tpb_consistency : return TRANSACTION_SERIALIZABLE;
-            case GDS.isc_tpb_concurrency : return TRANSACTION_REPEATABLE_READ;
-            case GDS.isc_tpb_read_committed : return TRANSACTION_READ_COMMITTED;
+            case ISCConstants.isc_tpb_consistency : return TRANSACTION_SERIALIZABLE;
+            case ISCConstants.isc_tpb_concurrency : return TRANSACTION_REPEATABLE_READ;
+            case ISCConstants.isc_tpb_read_committed : return TRANSACTION_READ_COMMITTED;
             default: throw new FBResourceException("Unknown transaction isolation level");
         }
     }
@@ -235,16 +235,16 @@ public class FBTpb implements Serializable
         switch (level) 
         {
         case Connection.TRANSACTION_SERIALIZABLE :
-            setIscTransactionIsolation(GDS.isc_tpb_consistency);
+            setIscTransactionIsolation(ISCConstants.isc_tpb_consistency);
             break;
         case Connection.TRANSACTION_REPEATABLE_READ :
-            setIscTransactionIsolation(GDS.isc_tpb_concurrency);
+            setIscTransactionIsolation(ISCConstants.isc_tpb_concurrency);
             break;
         case Connection.TRANSACTION_READ_COMMITTED :
-            setIscTransactionIsolation(GDS.isc_tpb_read_committed);
+            setIscTransactionIsolation(ISCConstants.isc_tpb_read_committed);
             break;
         case Connection.TRANSACTION_READ_UNCOMMITTED :
-            setIscTransactionIsolation(GDS.isc_tpb_read_committed);
+            setIscTransactionIsolation(ISCConstants.isc_tpb_read_committed);
             break;
         default: throw new FBResourceException("Unsupported transaction isolation level");
         }
@@ -259,21 +259,21 @@ public class FBTpb implements Serializable
      */
     public int getTransactionIsolation() throws ResourceException {
         switch (getIscTransactionIsolation()) {
-            case GDS.isc_tpb_consistency : return Connection.TRANSACTION_SERIALIZABLE;
-            case GDS.isc_tpb_concurrency : return Connection.TRANSACTION_REPEATABLE_READ;
-            case GDS.isc_tpb_read_committed : return Connection.TRANSACTION_READ_COMMITTED;
+            case ISCConstants.isc_tpb_consistency : return Connection.TRANSACTION_SERIALIZABLE;
+            case ISCConstants.isc_tpb_concurrency : return Connection.TRANSACTION_REPEATABLE_READ;
+            case ISCConstants.isc_tpb_read_committed : return Connection.TRANSACTION_READ_COMMITTED;
             default: throw new FBResourceException("Unknown transaction isolation level");
         }
     }
 
     public int getIscTransactionIsolation() {
         if (tpb.contains(ISC_TPB_CONSISTENCY)) {
-            return GDS.isc_tpb_consistency;
+            return ISCConstants.isc_tpb_consistency;
         }
         if (tpb.contains(ISC_TPB_READ_COMMITTED)) {
-            return GDS.isc_tpb_read_committed;
+            return ISCConstants.isc_tpb_read_committed;
         }
-        return GDS.isc_tpb_concurrency; //default.
+        return ISCConstants.isc_tpb_concurrency; //default.
     }
 
     public void setIscTransactionIsolation(int isolation) {
@@ -282,14 +282,14 @@ public class FBTpb implements Serializable
         tpb.remove(ISC_TPB_CONSISTENCY);
         tpb.remove(ISC_TPB_REC_VERSION);
         switch (isolation) {
-            case GDS.isc_tpb_read_committed: 
+            case ISCConstants.isc_tpb_read_committed: 
                 tpb.add(ISC_TPB_READ_COMMITTED);
                 tpb.add(ISC_TPB_REC_VERSION);
                 break;
-            case GDS.isc_tpb_concurrency: 
+            case ISCConstants.isc_tpb_concurrency: 
                 tpb.add(ISC_TPB_CONCURRENCY);
                 break;
-            case GDS.isc_tpb_consistency: 
+            case ISCConstants.isc_tpb_consistency: 
                 tpb.add(ISC_TPB_CONSISTENCY);
                 break;
             default: break;

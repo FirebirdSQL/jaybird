@@ -44,9 +44,9 @@ public final class XdrInputStream {
     private InputStream in = null;
     // Buffer
     private static int defaultBufferSize = 16384;
-    protected byte buf[];
-    protected int count;
-    protected int pos;
+    private byte buf[];
+    private int count;
+    private int pos;
 
     public XdrInputStream(InputStream in) {
         buf = new byte[defaultBufferSize];

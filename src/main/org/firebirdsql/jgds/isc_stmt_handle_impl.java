@@ -48,11 +48,11 @@ public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_
     private boolean allRowsFetched = false;
     private boolean isSingletonResult = false;
 
-    int statementType;
-    int insertCount;
-    int updateCount;
-    int deleteCount;
-    int selectCount; //????
+    private int statementType;
+    private int insertCount;
+    private int updateCount;
+    private int deleteCount;
+    private int selectCount; //????
 
     public isc_stmt_handle_impl() {
     }
@@ -84,20 +84,40 @@ public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_
         allRowsFetched = false;
     }
 
+    public void setStatementType(int value) {
+        statementType = value;
+    }
+
     public int getStatementType() {
         return statementType;
+    }
+
+    public void setInsertCount(int value) {
+        insertCount = value;
     }
 
     public int getInsertCount() {
         return insertCount;
     }
 
+    public void setUpdateCount(int value) {
+        updateCount = value;
+    }
+
     public int getUpdateCount() {
         return updateCount;
     }
 
+    public void setDeleteCount(int value) {
+        deleteCount = value;
+    }
+
     public int getDeleteCount() {
         return deleteCount;
+    }
+
+    public void setSelectCount(int value) {
+        selectCount = value;
     }
 
     public int getSelectCount() {

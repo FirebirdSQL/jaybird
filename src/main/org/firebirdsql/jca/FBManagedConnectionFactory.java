@@ -43,6 +43,7 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 //import org.firebirdsql.gds.Clumplet;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.GDSFactory;
@@ -233,11 +234,11 @@ public class FBManagedConnectionFactory
     public void setEncoding(String encoding) {
         checkNotStarted();
         hashCode = 0;
-        defaultCri.setProperty(GDS.isc_dpb_lc_ctype, encoding);
+        defaultCri.setProperty(ISCConstants.isc_dpb_lc_ctype, encoding);
     }
     
     public String getEncoding() {
-        String result = defaultCri.getStringProperty(GDS.isc_dpb_lc_ctype);
+        String result = defaultCri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);
         if (result == null)
             result = "NONE";
         return result;

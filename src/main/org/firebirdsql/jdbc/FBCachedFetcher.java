@@ -11,8 +11,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 class FBCachedFetcher implements FBFetcher {
 
-    Object[] rowsArray;
-    byte[][] row;
+    private Object[] rowsArray;
     private FBStatement fbStatement;
     private FBResultSet rs;
     private int rowNum = 0;
