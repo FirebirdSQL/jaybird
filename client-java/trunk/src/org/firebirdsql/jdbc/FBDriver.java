@@ -25,6 +25,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.6  2002/04/08 19:10:52  rrokytskyy
+ * added lc_ctype support
+ *
  * Revision 1.5  2002/02/02 18:58:24  d_jencks
  * converted to log4j logging and cleaned up some test problems.  If you do not wish to use log4j, you may leave out the log4j-core.jar and get no logging
  *
@@ -61,6 +64,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
+import java.util.Properties;
+import java.util.StringTokenizer;
 import javax.security.auth.Subject;
 import org.firebirdsql.jca.*;
 
@@ -154,53 +159,70 @@ public class FBDriver implements Driver {
     public Connection connect(String url, java.util.Properties info)
         throws SQLException
     {
-        if (url == null || !url.startsWith(FIREBIRD_PROTOCOL)) 
+        if (url == null || !url.startsWith(FIREBIRD_PROTOCOL))
         {
             return null;
         } // end of if ()
-        
+
         try {
-            FBConnectionRequestInfo conCri = 
+            int iQuestionMark = url.indexOf("?");
+            if (iQuestionMark > -1) {
+                if(info == null) info = new Properties();
+                String propString = url.substring(iQuestionMark+1);
+                StringTokenizer st = new StringTokenizer(propString,"&");
+                while(st.hasMoreTokens()) {
+                    String propertyString = st.nextToken();
+                    int iIs = propertyString.indexOf("=");
+                    if(iIs > -1) {
+                        String property = propertyString.substring(0, iIs);
+                        String value = propertyString.substring(iIs+1);
+                        info.setProperty(property,value);
+                    }
+                }
+                url = url.substring(0,iQuestionMark);
+            }
+
+            FBConnectionRequestInfo conCri =
                 FBConnectionHelper.getCri(info, null);
-            
+
             // extract the user
             String user = info.getProperty(USER);
-            
+
             if (user == null)
                 user = conCri.getStringProperty(GDS.isc_dpb_user_name);
-            
+
             if (user == null)
                 throw new SQLException(
                     "User for database connection not specified.");
 
             // extract the password
             String password = info.getProperty(PASSWORD);
-            
+
             if (password == null)
                 password = conCri.getStringProperty(GDS.isc_dpb_password);
-            
+
             if (password == null)
                 throw new SQLException(
                     "Password for database connection not specified.");
 
             // extract the database URL
             String databaseURL = url.substring(FIREBIRD_PROTOCOL.length());
-            
-            FBDataSource dataSource = 
+
+            FBDataSource dataSource =
                 (FBDataSource)urlToDataSourceMap.get(databaseURL);
-                
+
             if (dataSource == null) {
                 FBManagedConnectionFactory factory = new FBManagedConnectionFactory();
                 factory.setDatabase(databaseURL);
-                
-                // set connection request info 
+
+                // set connection request info
                 factory.setConnectionRequestInfo(FBConnectionHelper.getCri(
                         info, factory.getDefaultConnectionRequestInfo()));
-                        
+
                 dataSource = (FBDataSource)factory.createConnectionFactory();
                 // urlToDataSourceMap.put(databaseURL, dataSource);
             } // end of if ()
-            
+
 
             return dataSource.getConnection(user, password);
         } catch(javax.resource.ResourceException resex) {

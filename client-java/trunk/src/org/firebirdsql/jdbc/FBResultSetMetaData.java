@@ -287,8 +287,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      */
     public  String getSchemaName(int column) throws  SQLException {
         //not really implemented
-        throw new SQLException("Schemas aren't supported");
-        //return getXsqlvar(column).ownname;
+        return "";
     }
 
 
@@ -336,8 +335,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return column name or "" if not applicable
      * @exception SQLException if a database access error occurs
      */
-    public  String getCatalogName(int column) throws  SQLException {
-        throw new SQLException("Catalogs not supported");
+    public String getCatalogName(int column) throws  SQLException {
+        return "";
     }
 
 
@@ -353,13 +352,13 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         int sqltype = getXsqlvar(column).sqltype & ~1;
         int sqlscale = getXsqlvar(column).sqlscale;
         int sqlsubtype = getXsqlvar(column).sqlsubtype;
-        
+
         if (sqlscale < 0) {
             switch (sqltype) {
-                case GDS.SQL_SHORT: 
-                case GDS.SQL_LONG: 
-                case GDS.SQL_INT64: 
-                case GDS.SQL_DOUBLE: 
+                case GDS.SQL_SHORT:
+                case GDS.SQL_LONG:
+                case GDS.SQL_INT64:
+                case GDS.SQL_DOUBLE:
                     if (sqlsubtype == 2)
                         return Types.DECIMAL;
                     else
@@ -368,22 +367,22 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                     break;
             }
         }
-        
+
         switch (sqltype) {
-            case GDS.SQL_SHORT: 
+            case GDS.SQL_SHORT:
                 return Types.SMALLINT;
-            case GDS.SQL_LONG: 
+            case GDS.SQL_LONG:
                 return Types.INTEGER;
-            case GDS.SQL_DOUBLE: 
+            case GDS.SQL_DOUBLE:
             case GDS.SQL_D_FLOAT:
                 return Types.DOUBLE;
-            case GDS.SQL_FLOAT: 
+            case GDS.SQL_FLOAT:
                 return Types.FLOAT;
-            case GDS.SQL_TEXT: 
+            case GDS.SQL_TEXT:
                 return Types.CHAR;
-            case GDS.SQL_VARYING: 
+            case GDS.SQL_VARYING:
                 return Types.VARCHAR;
-            case GDS.SQL_TIMESTAMP: 
+            case GDS.SQL_TIMESTAMP:
                 return Types.TIMESTAMP;
             case GDS.SQL_TYPE_TIME:
                 return Types.TIME;
@@ -394,7 +393,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                     return Types.DECIMAL;
                 else
                     return Types.NUMERIC;
-            case GDS.SQL_BLOB: 
+            case GDS.SQL_BLOB:
                 if (sqlsubtype < 0)
                     return Types.BLOB;
                 else
@@ -402,10 +401,10 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                     return Types.LONGVARCHAR;
                 else
                     return Types.LONGVARBINARY;
-            case GDS.SQL_QUAD: 
+            case GDS.SQL_QUAD:
                 return Types.OTHER;
             default:
-                return Types.NULL;      
+                return Types.NULL;
         }
     }
 

@@ -73,13 +73,16 @@ public class FBStatement implements Statement {
     //The normally retrieved resultset. (no autocommit, not a cached rs).
     private FBResultSet currentRs;
 
-    //Holds a result set from an execute call using autocommit. 
+    private boolean closed;
+
+    //Holds a result set from an execute call using autocommit.
     //This is a cached result set and is used to allow a call to getResultSet()
     private ResultSet currentCachedResultSet;
 
     FBStatement(FBConnection c) {
         this.c = c;
         mc = c.mc;
+        closed = false;
     }
 
     /**
@@ -91,33 +94,33 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public ResultSet executeQuery(String sql) throws  SQLException {
-        try 
+        try
         {
             c.ensureInTransaction();
             if (!internalExecute(sql)) {
                 throw new SQLException("query did not return a result set: " + sql);
             }
-            if (c.willEndTransaction()) 
+            if (c.willEndTransaction())
             {
                 ResultSet rs = getCachedResultSet(false);
                 //autocommits.
-                return rs;       
+                return rs;
             } // end of if ()
-            else 
+            else
             {
                 return getResultSet();
             } // end of else
         }
-        catch (ResourceException re) 
+        catch (ResourceException re)
         {
            log.warn("resource exception", re);
            throw new SQLException("ResourceException: " + re);
         } // end of try-catch
-        catch (GDSException ge) 
+        catch (GDSException ge)
         {
             throw new SQLException("GDSException: " + ge);
         } // end of try-catch
-        finally 
+        finally
         {
             c.checkEndTransaction();
         } // end of finally
@@ -138,7 +141,7 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public int executeUpdate(String sql) throws  SQLException {
-        try 
+        try
         {
             c.ensureInTransaction();
             if (internalExecute(sql)) {
@@ -146,15 +149,15 @@ public class FBStatement implements Statement {
             }
             return getUpdateCount();
         }
-        catch (ResourceException re) 
+        catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
-        catch (GDSException ge) 
+        catch (GDSException ge)
         {
             throw new SQLException("GDSException: " + ge);
         } // end of try-catch
-        finally 
+        finally
         {
             c.checkEndTransaction();
         } // end of finally
@@ -210,6 +213,9 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public void close() throws  SQLException {
+        if (closed)
+            throw new SQLException("This statement is already closed.");
+
         if (fixedStmt != null) {
             try {
                 //may need ensureTransaction?
@@ -222,6 +228,7 @@ public class FBStatement implements Statement {
                 fixedStmt = null;
                 currentRs = null;
                 currentCachedResultSet = null;
+                closed = true;
             }
         }
     }
@@ -439,21 +446,21 @@ public class FBStatement implements Statement {
         try {
             c.ensureInTransaction();
             boolean hasResultSet = internalExecute(sql);
-            if (hasResultSet && c.willEndTransaction()) 
+            if (hasResultSet && c.willEndTransaction())
             {
                 getCachedResultSet(false);
             } // end of if ()
             return hasResultSet;
         }
-        catch (ResourceException re) 
+        catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
-        catch (GDSException ge) 
+        catch (GDSException ge)
         {
             throw new SQLException("GDSException: " + ge);
         } // end of try-catch
-        finally 
+        finally
         {
             c.checkEndTransaction();
         } // end of finally
@@ -514,13 +521,13 @@ public class FBStatement implements Statement {
         if (fixedStmt == null) {
             throw new SQLException("No statement just executed");
         }
-        if (currentCachedResultSet != null) 
+        if (currentCachedResultSet != null)
         {
             ResultSet rs = currentCachedResultSet;
             currentCachedResultSet = null;
-            return rs;    
+            return rs;
         } // end of if ()
-        else 
+        else
         {
             //currentRs = new FBResultSet(mc, this, fixedStmt);
             currentRs = new FBResultSet(c, this, fixedStmt);
@@ -554,16 +561,16 @@ public class FBStatement implements Statement {
     public int getUpdateCount() throws  SQLException {
         try {
             FBManagedConnection.SqlInfo i = mc.getSqlInfo(fixedStmt);
-            if (log.isDebugEnabled()) 
+            if (log.isDebugEnabled())
             {
                log.debug("InsertCount: " + i.getInsertCount());
                log.debug("UpdateCount: " + i.getUpdateCount());
                log.debug("DeleteCount: " + i.getDeleteCount());
 
                log.debug("returning: " + Math.max(i.getInsertCount(), Math.max(i.getUpdateCount(), i.getDeleteCount())));
-                              
+
             } // end of if ()
-            
+
             return Math.max(i.getInsertCount(), Math.max(i.getUpdateCount(), i.getDeleteCount()));
         }
         catch (GDSException ge) {
@@ -865,14 +872,25 @@ public class FBStatement implements Statement {
         }
     }
 
-    protected boolean internalExecute(String sql) throws GDSException, SQLException {
+    protected boolean internalExecute(String sql)
+        throws GDSException, SQLException
+    {
+        if (closed)
+            throw new SQLException("Statement is already closed.");
+
         closeResultSet();
-        if (fixedStmt == null) {
-            fixedStmt = mc.getAllocatedStatement();
-        }
-        mc.prepareSQL(fixedStmt, c.nativeSQL(sql), false);
+        prepareFixedStatement(sql, false);
         mc.executeStatement(fixedStmt, false);
         return (fixedStmt.getOutSqlda().sqld > 0);
     }
 
+
+    protected void prepareFixedStatement(String sql, boolean describeBind)
+        throws GDSException, SQLException
+    {
+        if (fixedStmt == null) {
+            fixedStmt = mc.getAllocatedStatement();
+        }
+        mc.prepareSQL(fixedStmt, c.nativeSQL(sql), describeBind);
+    }
 }

@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.8  2002/03/22 01:43:36  d_jencks
+ * Fixed internal association of isc_db_handle to FBManagedConnection to respect the user/password (and FBConnectionRequestInfo) of the FBManagedConnection.  Doesnt break nany tests, but I have no specific test case for the new functionality
+ *
  * Revision 1.7  2002/03/21 18:12:40  d_jencks
  * Changed to get a db connection when a ManagedConnection is created.  Note that this may or may not be the db connection used when you start a transaction and do some work.
  *
@@ -113,7 +116,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
         Exception ex = null;
         try {
            s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)");
-            s.close();
+            //s.close();
             ResultSet rs = s.executeQuery("select * from T1");
             rs.close();
         }
@@ -153,20 +156,20 @@ public class TestFBWrappingDataSource extends BaseFBTest {
         ArrayList cs = new ArrayList();
         for (int i = 0; i < ds.getMaxSize(); i++)
         {
-           cs.add(ds.getConnection(DB_USER, DB_PASSWORD));      
+           cs.add(ds.getConnection(DB_USER, DB_PASSWORD));
         } // end of for ()
-        try 
+        try
         {
-           ds.getConnection(DB_USER, DB_PASSWORD);              
+           ds.getConnection(DB_USER, DB_PASSWORD);
            fail("got a connection more than maxsize!");
         }
         catch (SQLException re)
         {
-           //got a blocking timeout, good    
+           //got a blocking timeout, good
         } // end of try-catch
         for (Iterator i = cs.iterator(); i.hasNext(); )
         {
-           ((Connection)i.next()).close();      
+           ((Connection)i.next()).close();
         } // end of for ()
         //This will be from same pool due to internal construction of FBDataSource.
         ds.setUser(DB_USER);

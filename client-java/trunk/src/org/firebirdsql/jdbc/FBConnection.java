@@ -82,11 +82,11 @@ import java.util.Map;
  */
 public class FBConnection implements Connection/*, javax.resource.cci.Connection*/ {
     //flag that is set to true when a transaction is started automatically,
-    //so the transaction may be committed automatically after a 
+    //so the transaction may be committed automatically after a
     //statement is executed.
     private boolean autoTransaction = false;
 
-    //Autocommit flag.  This should be left true if you are using Local or 
+    //Autocommit flag.  This should be left true if you are using Local or
     //XATransactions and want to execute statements outside a transaction.
     //Set it false only if you use the Connection.commit and rollback methods.
     private boolean autoCommit = true;
@@ -140,7 +140,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public Statement createStatement(int param1, int param2, int param3) throws SQLException {
         // TODO: implement this java.sql.Connection method
-        throw new SQLException("not yet implemented");;
+        throw new SQLException("not yet implemented");
     }
 
 
@@ -330,7 +330,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
             } catch(javax.resource.ResourceException resex) {
                 throw new SQLException(resex.toString());
             }
-            
+
         this.autoCommit = autoCommit;
     }
 
@@ -357,13 +357,13 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @see #setAutoCommit
      */
     public void commit() throws SQLException {
-        if (getAutoCommit()) 
+        if (getAutoCommit())
         {
-            throw new SQLException("commit called with AutoCommit true!");   
+            throw new SQLException("commit called with AutoCommit true!");
         } // end of if ()
-        
+
         try {
-            if (inTransaction()) 
+            if (inTransaction())
             {
                 getLocalTransaction().commit();
             } // end of if ()
@@ -383,14 +383,14 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @see #setAutoCommit
      */
     public void rollback() throws SQLException {
-        if (getAutoCommit()) 
+        if (getAutoCommit())
         {
-            throw new SQLException("rollback called with AutoCommit true!");   
+            throw new SQLException("rollback called with AutoCommit true!");
         } // end of if ()
         if (isClosed())
             throw new SQLException("You cannot rollback closed connection.");
         try{
-            if (inTransaction()) 
+            if (inTransaction())
             {
                 getLocalTransaction().rollback();
             } // end of if ()
@@ -574,13 +574,13 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public void setTransactionIsolation(int level) throws SQLException {
         switch (level) {
-            case TRANSACTION_SERIALIZABLE : 
+            case TRANSACTION_SERIALIZABLE :
                 mc.setTransactionIsolation(GDS.isc_tpb_consistency);
                 break;
-            case TRANSACTION_REPEATABLE_READ : 
+            case TRANSACTION_REPEATABLE_READ :
                 mc.setTransactionIsolation(GDS.isc_tpb_concurrency);
                 break;
-            case TRANSACTION_READ_COMMITTED : 
+            case TRANSACTION_READ_COMMITTED :
                 mc.setTransactionIsolation(GDS.isc_tpb_read_committed);
                 break;
             default: throw new SQLException("Unsupported transaction isolation level");
@@ -650,7 +650,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public Statement createStatement(int resultSetType, int resultSetConcurrency)
         throws SQLException {
-        return null;
+        return createStatement();
     }
 
 
@@ -820,7 +820,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
     String getUserName() {
         return mc.getUserName();
     }
-    
+
     String getIscEncoding() {
         return mc.getIscEncoding();
     }
@@ -833,10 +833,10 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     void ensureInTransaction() throws ResourceException
     {
-        if (inTransaction()) 
+        if (inTransaction())
         {
             autoTransaction = false;
-            return;        
+            return;
         } // end of if ()
         //We have to start our own transaction
         getLocalTransaction().begin();
@@ -860,21 +860,21 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
 
     void checkEndTransaction() throws SQLException
     {
-        if (willEndTransaction()) 
+        if (willEndTransaction())
         {
-            autoTransaction = false; 
-            try   
+            autoTransaction = false;
+            try
             {
                 getLocalTransaction().commit();
             }
-            catch (ResourceException re) 
+            catch (ResourceException re)
             {
-                throw new SQLException("Error during autocommit: " + re);   
+                throw new SQLException("Error during autocommit: " + re);
             } // end of catch
-            
+
         } // end of if ()
-    }    
-        
+    }
+
 
 }
 
