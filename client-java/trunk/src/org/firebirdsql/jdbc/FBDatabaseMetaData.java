@@ -26,6 +26,8 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
+import java.util.HashMap;
+import java.util.Iterator;
 import java.sql.DatabaseMetaData;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -65,13 +67,17 @@ import javax.resource.ResourceException;
  */
 public class FBDatabaseMetaData implements DatabaseMetaData {
 
+    private static final String SPACES = "                               ";//31 spaces
+
     FBConnection c;
 
     //boolean transactionActive = false;
 
     LocalTransaction trans;
 
-    PreparedStatement tables = null;
+    HashMap statements = new HashMap();
+
+    //PreparedStatement tables = null;
 
     FBDatabaseMetaData(FBConnection c) {
         this.c = c;
@@ -80,10 +86,15 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
     void close() {
         try {
-            if (tables != null) {
+            Iterator i = statements.values().iterator();
+            while(i.hasNext()) {
+                ((PreparedStatement)i.next()).close();
+            }
+            statements.clear();
+            /*if (tables != null) {
                 tables.close();
                 tables = null;
-            }
+                }*/
         }
         catch (SQLException e) {
             //yuckola
@@ -1754,6 +1765,99 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     int procedureNullableUnknown = 2;
 
+    public static final String TABLE = "TABLE";
+    public static final String SYSTEM_TABLE = "SYSTEM TABLE";
+    public static final String VIEW = "VIEW";
+    public static final String[] ALL_TYPES = {TABLE, SYSTEM_TABLE, VIEW};
+
+    private static final String GET_TABLES_ALL = "select null as TABLE_CAT," 
+        + " null as TABLE_SCHEM," 
+        + " RDB$RELATION_NAME as TABLE_NAME," 
+        + " cast('" + SYSTEM_TABLE + "' as varchar(31)) as TABLE_TYPE," 
+        + " RDB$DESCRIPTION as REMARKS," 
+        + " RDB$OWNER_NAME as OWNER_NAME" 
+        + " from RDB$RELATIONS" 
+        + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
+        + " union"
+        + " select null as TABLE_CAT," 
+        + " null as TABLE_SCHEM," 
+        + " RDB$RELATION_NAME as TABLE_NAME," 
+        + " cast('" + TABLE + "' as varchar(31)) as TABLE_TYPE," 
+        + " RDB$DESCRIPTION as REMARKS," 
+        + " RDB$OWNER_NAME as OWNER_NAME" 
+        + " from RDB$RELATIONS" 
+        + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
+        + " union"
+        + " select null as TABLE_CAT," 
+        + " null as TABLE_SCHEM," 
+        + " RDB$RELATION_NAME as TABLE_NAME," 
+        + " cast('" + VIEW + "' as varchar(31)) as TABLE_TYPE," 
+        + " RDB$DESCRIPTION as REMARKS," 
+        + " RDB$OWNER_NAME as OWNER_NAME" 
+        + " from RDB$RELATIONS" 
+        + " where ? = 'T' and RDB$VIEW_SOURCE is not null";
+
+    private static final String GET_TABLES_EXACT = "select null as TABLE_CAT," 
+        + " null as TABLE_SCHEM," 
+        + " RDB$RELATION_NAME as TABLE_NAME," 
+        + " cast('" + SYSTEM_TABLE + "' as varchar(31)) as TABLE_TYPE," 
+        + " RDB$DESCRIPTION as REMARKS," 
+        + " RDB$OWNER_NAME as OWNER_NAME" 
+        + " from RDB$RELATIONS" 
+        + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
+        + " and ? = RDB$RELATION_NAME"
+        + " union"
+        + " select null as TABLE_CAT," 
+        + " null as TABLE_SCHEM," 
+        + " RDB$RELATION_NAME as TABLE_NAME," 
+        + " cast('" + TABLE + "' as varchar(31)) as TABLE_TYPE," 
+        + " RDB$DESCRIPTION as REMARKS," 
+        + " RDB$OWNER_NAME as OWNER_NAME" 
+        + " from RDB$RELATIONS" 
+        + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
+        + " and ? = RDB$RELATION_NAME"
+        + " union"
+        + " select null as TABLE_CAT," 
+        + " null as TABLE_SCHEM," 
+        + " RDB$RELATION_NAME as TABLE_NAME," 
+        + " cast('" + VIEW + "' as varchar(31)) as TABLE_TYPE," 
+        + " RDB$DESCRIPTION as REMARKS," 
+        + " RDB$OWNER_NAME as OWNER_NAME" 
+        + " from RDB$RELATIONS" 
+        + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
+        + " and ? = RDB$RELATION_NAME";
+
+    private static final String GET_TABLES_LIKE = "select null as TABLE_CAT," 
+        + " null as TABLE_SCHEM," 
+        + " RDB$RELATION_NAME as TABLE_NAME," 
+        + " cast('" + SYSTEM_TABLE + "' as varchar(31)) as TABLE_TYPE," 
+        + " RDB$DESCRIPTION as REMARKS," 
+        + " RDB$OWNER_NAME as OWNER_NAME" 
+        + " from RDB$RELATIONS" 
+        + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
+        + " and RDB$RELATION_NAME || '" + SPACES + "' like ? escape '\\'"
+        + " union"
+        + " select null as TABLE_CAT," 
+        + " null as TABLE_SCHEM," 
+        + " RDB$RELATION_NAME as TABLE_NAME," 
+        + " cast('" + TABLE + "' as varchar(31)) as TABLE_TYPE," 
+        + " RDB$DESCRIPTION as REMARKS," 
+        + " RDB$OWNER_NAME as OWNER_NAME" 
+        + " from RDB$RELATIONS" 
+        + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
+        + " and RDB$RELATION_NAME || '" + SPACES + "' like ? escape '\\'"
+        + " union"
+        + " select null as TABLE_CAT," 
+        + " null as TABLE_SCHEM," 
+        + " RDB$RELATION_NAME as TABLE_NAME," 
+        + " cast('" + VIEW + "' as varchar(31)) as TABLE_TYPE," 
+        + " RDB$DESCRIPTION as REMARKS," 
+        + " RDB$OWNER_NAME as OWNER_NAME" 
+        + " from RDB$RELATIONS" 
+        + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
+        + " and RDB$RELATION_NAME || '" + SPACES + "' like ? escape '\\'";
+
+
 
     /**
      * Gets a description of tables available in a catalog.
@@ -1794,9 +1898,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (schemaPattern != null) {
             throw new SQLException("Schemas not supported");
         }
+        if (types == null) {
+            types = ALL_TYPES;
+        }
         boolean ourTransaction = false;
         if (!c.inTransaction()) {
-
             try {
                 trans.begin();
                 ourTransaction = true;
@@ -1805,22 +1911,49 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                 throw new SQLException("couldn't work with local transaction: " + re);
             }
         }
-        if (tables == null) {
-            tables = c.prepareStatement("select null as TABLE_CAT, null as TABLE_SCHEM, RDB$RELATION_NAME as TABLE_NAME, 'TABLE' as TABLE_TYPE, 'you want a comment?' as REMARKS from RDB$RELATIONS where RDB$RELATION_NAME = ?");
+        PreparedStatement s;
+        if (isAllCondition(tableNamePattern)) {
+            s = getStatement(GET_TABLES_ALL);
+            s.setString(1, getWantsSystemTables(types));
+            s.setString(2, getWantsTables(types));
+            s.setString(3, getWantsViews(types));
         }
-        tables.setString(1, tableNamePattern.toUpperCase());
-        tables.execute();
-        ResultSet rs = ((FBStatement)tables).getCachedResultSet();
-        if (ourTransaction) {
-            try {
-                trans.commit();
-            }
-            catch (ResourceException re) {
-                throw new SQLException("couldn't work with local transaction: " + re);
+        else if (hasNoWildcards(tableNamePattern)) {
+            tableNamePattern = stripQuotes(stripEscape(tableNamePattern));
+            s = getStatement(GET_TABLES_EXACT);
+            s.setString(1, getWantsSystemTables(types));
+            s.setString(2, tableNamePattern);
+            s.setString(3, getWantsTables(types));
+            s.setString(4, tableNamePattern);
+            s.setString(5, getWantsViews(types));
+            s.setString(6, tableNamePattern);
+        }
+        else {
+            tableNamePattern = stripQuotes(tableNamePattern) + SPACES + "%";
+            s = getStatement(GET_TABLES_LIKE);
+            s.setString(1, getWantsSystemTables(types));
+            s.setString(2, tableNamePattern);
+            s.setString(3, getWantsTables(types));
+            s.setString(4, tableNamePattern);
+            s.setString(5, getWantsViews(types));
+            s.setString(6, tableNamePattern);
+        }
+        ResultSet rs = null;
+        try {
+            s.execute();
+            rs = ((FBStatement)s).getCachedResultSet();
+        }
+        finally {
+            if (ourTransaction) {
+                try {
+                    trans.commit();
+                }
+                catch (ResourceException re) {
+                    throw new SQLException("couldn't work with local transaction: " + re);
+                }
             }
         }
 
-        //ResultSet rs = tables.executeQuery();
         return rs;
     }
 
@@ -3206,6 +3339,101 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     public int getSQLStateType() throws SQLException {
         // TODO: implement this java.sql.DatabaseMetaData method
         throw new SQLException("not yet supported");
+    }
+
+    //private
+    private boolean isAllCondition(String pattern) {
+        if ("%".equals(pattern)) {
+            //asks for everything, no condition needed
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+
+    public boolean hasNoWildcards(String pattern) {
+        int scannedTo = 0;
+        int pos;
+        while ((pos = pattern.indexOf('%', scannedTo)) < pattern.length()) {
+            if (pos == -1) {
+                break;
+            }
+            if ((pos == 0) || (pattern.charAt(pos - 1) != '\\')) {
+                return false;
+            }
+            scannedTo = ++pos;
+        }
+        scannedTo = 0;
+        while ((pos = pattern.indexOf('_', scannedTo)) < pattern.length()) {
+            if (pos == -1) {
+                break;
+            }
+            if ((pos == 0) || (pattern.charAt(pos - 1) != '\\')) {
+                return false;
+            }
+            scannedTo = ++pos;
+        }
+        return true;
+    }
+
+    public String stripEscape(String pattern) {
+        StringBuffer stripped = new StringBuffer(pattern.length());
+        for (int pos = 0; pos < pattern.length(); pos++) {
+            if (pattern.charAt(pos) != '\\') {
+                stripped.append(pattern.charAt(pos));
+            }
+        }
+        return stripped.toString();
+    }
+
+    private String getWantsSystemTables(String[] types) {
+        for (int i = 0; i < types.length; i++) {
+            if (SYSTEM_TABLE.equals(types[i])) {
+                return "T";
+            }
+        }
+        return "F";
+    }
+
+    private String getWantsTables(String[] types) {
+        for (int i = 0; i < types.length; i++) {
+            if (TABLE.equals(types[i])) {
+                return "T";
+            }
+        }
+        return "F";
+    }
+
+    private String getWantsViews(String[] types) {
+        for (int i = 0; i < types.length; i++) {
+            if (VIEW.equals(types[i])) {
+                return "T";
+            }
+        }
+        return "F";
+    }
+
+    public String stripQuotes(String pattern) {
+        if ((pattern.length() >= 2) 
+            && (pattern.charAt(0) == '\"') 
+            && (pattern.charAt(pattern.length() - 1) == '\"')) 
+        {
+            return pattern.substring(1, pattern.length() - 1);
+        }
+        else {
+            return pattern.toUpperCase();
+        }
+    }
+
+    private PreparedStatement getStatement(String sql) throws SQLException {
+        PreparedStatement s = (PreparedStatement)statements.get(sql);
+        if (s == null) {
+            s = c.prepareStatement(sql);
+            statements.put(sql, s);
+        }
+        return s;
     }
 
 }

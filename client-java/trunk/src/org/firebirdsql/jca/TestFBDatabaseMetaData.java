@@ -20,6 +20,7 @@ import org.firebirdsql.gds.GDS;
 import org.firebirdsql.jgds.GDS_Impl;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.FBDatabaseMetaData;
 
 import java.io.*;
 import java.util.Properties;
@@ -47,6 +48,12 @@ import junit.framework.*;
  *future enhancements will use datasources/ managed stuff.
  */
 public class TestFBDatabaseMetaData extends TestXABase {
+
+    private FBConnection c;
+    private Statement s;
+    private DatabaseMetaData dmd;
+    private LocalTransaction t;
+    private Exception ex;
     
     
     public TestFBDatabaseMetaData(String name) {
@@ -58,29 +65,33 @@ public class TestFBDatabaseMetaData extends TestXABase {
         return new TestSuite(TestFBDatabaseMetaData.class);
     }
     
-
-
-    public void testGetTables() throws Exception {
-        System.out.println();
-        System.out.println("testGetTables");
+    public void setUp() throws Exception {
+        ex = null;
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
-        FBConnection c = (FBConnection)ds.getConnection();
-        Statement s = c.createStatement();
-        LocalTransaction t = c.getLocalTransaction();
-        Exception ex = null;
-        t.begin();
-        try {
-            s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20))"); 
-            //s.close();
+        c = (FBConnection)ds.getConnection();
+        s = c.createStatement();
+        t = c.getLocalTransaction();
+        dmd = c.getMetaData();
+    }
+
+    public void tearDown() throws Exception {
+        s.close();
+        s = null;
+        if (c.inTransaction()) {
+            t.commit();
         }
-        catch (Exception e) {
-            ex = e;
-        }
-        t.commit();
+        t = null;
+        dmd = null;
+        c.close();
+        c = null;
+    }
+
+    public void testGetTablesNull() throws Exception {
+        System.out.println();
+        System.out.println("testGetTablesNull");
+        createTable("T1");
         
-        //t.begin();
-        DatabaseMetaData dmd = c.getMetaData();
         ResultSet rs = dmd.getTables(null, null, "T1", null);
         int count = 0;
         while (rs.next()) {
@@ -93,18 +104,226 @@ public class TestFBDatabaseMetaData extends TestXABase {
         rs.close();
 
 
+        dropTable("T1");        
+        if (ex != null) {
+            throw ex;
+        }
         
-        t.begin();
-        s.execute("DROP TABLE T1"); 
-        s.close();
-        t.commit();
-        c.close();
+    }
+    public void testGetTablesSystem() throws Exception {
+        System.out.println();
+        System.out.println("testGetTablesSystem");
+        createTable("T1");
+        
+        ResultSet rs = dmd.getTables(null, null, "T1", new String[] {"SYSTEM TABLE"});
+        int count = 0;
+        while (rs.next()) {
+            String name =  rs.getString(3).trim();
+            System.out.println("table name: " + name);
+            count++;
+            assertTrue("Didn't get back the name expected", "T1".equals(name));
+        }
+        assertTrue("Got more a table name back!", count == 0);
+        rs.close();
+
+
+        dropTable("T1");        
+        if (ex != null) {
+            throw ex;
+        }
+        
+    }
+    public void testGetTablesTable() throws Exception {
+        System.out.println();
+        System.out.println("testGetTablesTable");
+        createTable("T1");
+        
+        ResultSet rs = dmd.getTables(null, null, "T1", new String[] {"TABLE"});
+        int count = 0;
+        while (rs.next()) {
+            String name =  rs.getString(3).trim();
+            System.out.println("table name: " + name);
+            count++;
+            assertTrue("Didn't get back the name expected", "T1".equals(name));
+        }
+        assertTrue("Got more a table name back!", count == 1);
+        rs.close();
+
+
+        dropTable("T1");        
         if (ex != null) {
             throw ex;
         }
         
     }
 
+    public void testGetTablesView() throws Exception {
+        System.out.println();
+        System.out.println("testGetTablesView");
+        createTable("T1");
+        
+        ResultSet rs = dmd.getTables(null, null, "T1", new String[] {"VIEW"});
+        int count = 0;
+        while (rs.next()) {
+            String name =  rs.getString(3).trim();
+            System.out.println("table name: " + name);
+            count++;
+            assertTrue("Didn't get back the name expected", "T1".equals(name));
+        }
+        assertTrue("Got more a table name back!", count == 0);
+        rs.close();
 
+
+        dropTable("T1");        
+        if (ex != null) {
+            throw ex;
+        }
+        
+    }
+
+    public void testGetSystemTablesSystem() throws Exception {
+        System.out.println();
+        System.out.println("testGetSystemTablesSystem");
+        
+        ResultSet rs = dmd.getTables(null, null, "RDB$RELATIONS", new String[] {"SYSTEM TABLE"});
+        int count = 0;
+        while (rs.next()) {
+            String name =  rs.getString(3).trim();
+            System.out.println("table name: " + name);
+            count++;
+            assertTrue("Didn't get back the name expected", "RDB$RELATIONS".equals(name));
+        }
+        assertTrue("Got more than one table name back!", count == 1);
+        rs.close();
+
+        
+    }
+ 
+    public void testGetAllSystemTablesSystem() throws Exception {
+        System.out.println();
+        System.out.println("testGetSystemTablesSystem");
+        
+        ResultSet rs = dmd.getTables(null, null, "%", new String[] {"SYSTEM TABLE"});
+        int count = 0;
+        while (rs.next()) {
+            String name =  rs.getString(3).trim();
+            System.out.println("table name: " + name);
+            count++;
+        }
+        assertTrue("# of system tables is not 32: counted: " + count, count == 32);
+        rs.close();
+
+        
+    }
+ 
+
+    public void testAAStringFunctions() {
+        System.out.println();
+        System.out.println("testAAStringFunctions");
+        FBDatabaseMetaData d = (FBDatabaseMetaData)dmd;
+        assertTrue("claims test\\_me has wildcards",  d.hasNoWildcards("test\\_me"));
+        assertTrue("strip escape wrong", d.stripEscape("test\\_me").equals("test_me"));
+        assertTrue("strip quotes wrong", d.stripQuotes("test_me").equals("TEST_ME"));
+        assertTrue("strip quotes wrong: " + d.stripQuotes("\"test_me\""), d.stripQuotes("\"test_me\"").equals("test_me"));
+    }
+
+    public void testGetTablesWildcardQuote() throws Exception {
+        System.out.println();
+        System.out.println("testGetTablesWildcardQuote");
+        createTable("test_me");
+        createTable("test__me");
+        createTable("\"test_ me\"");
+        createTable("\"test_ me too\"");
+        createTable("\"test_me too\"");
+
+        ResultSet rs = dmd.getTables(null, null, "test%m_", new String[] {"TABLE"});
+        int count = 0;
+        while (rs.next()) {
+            String name =  rs.getString(3).trim();
+            System.out.println("table name: " + name);
+            assertTrue("wrong name found: " + name, "TEST_ME".equals(name) || "TEST__ME".equals(name));
+            count++;
+        }
+        assertTrue("more than one table found: " + count, count == 2);
+        rs.close();
+
+        rs = dmd.getTables(null, null, "test\\_me", new String[] {"TABLE"});
+        count = 0;
+        while (rs.next()) {
+            String name =  rs.getString(3).trim();
+            System.out.println("table name: " + name);
+            assertTrue("wrong name found: " + name, "TEST_ME".equals(name));
+            count++;
+        }
+        assertTrue("more than one table found: " + count, count == 1);
+        rs.close();
+
+        rs = dmd.getTables(null, null, "\"test\\_ me\"", new String[] {"TABLE"});
+        count = 0;
+        while (rs.next()) {
+            String name =  rs.getString(3).trim();
+            System.out.println("table name: " + name);
+            assertTrue("wrong name found: " + name, "test_ me".equals(name));
+            count++;
+        }
+        assertTrue("more than one table found: " + count, count == 1);
+        rs.close();
+
+        rs = dmd.getTables(null, null, "\"test\\_ me%\"", new String[] {"TABLE"});
+        count = 0;
+        while (rs.next()) {
+            String name =  rs.getString(3).trim();
+            System.out.println("table name: " + name);
+            assertTrue("wrong name found: " + name, "test_ me".equals(name) || "test_ me too".equals(name));
+            count++;
+        }
+        assertTrue("more than one table found: " + count, count == 2);
+        rs.close();
+
+        rs = dmd.getTables(null, null, "RDB_RELATIONS", new String[] {"SYSTEM TABLE"});
+        count = 0;
+        while (rs.next()) {
+            String name =  rs.getString(3).trim();
+            System.out.println("table name: " + name);
+            assertTrue("wrong name found: " + name, "RDB$RELATIONS".equals(name));
+            count++;
+        }
+        assertTrue("more than one table found: " + count, count == 1);
+        rs.close();
+
+        dropTable("test_me");
+        dropTable("test__me");
+        dropTable("\"test_ me\"");
+        dropTable("\"test_ me too\"");
+        dropTable("\"test_me too\"");
+        
+        if (ex != null) {
+            throw ex;
+        }
+        
+    }
+ 
+    private void createTable(String tableName) throws Exception {
+        dropTable(tableName);
+        t.begin();
+        try {
+            s.execute("CREATE TABLE " + tableName + " ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20))"); 
+        }
+        catch (Exception e) {
+            ex = e;
+        }
+        t.commit();
+    }
+
+    private void dropTable(String tableName) throws Exception {
+        t.begin();
+        try {
+            s.execute("drop table " + tableName);
+        }
+        catch (Exception e) {
+        }
+        t.commit();
+    }
     
 }
+
