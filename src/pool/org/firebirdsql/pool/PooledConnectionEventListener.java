@@ -37,4 +37,14 @@ public interface PooledConnectionEventListener extends ConnectionEventListener {
      * of {@link javax.sql.PooledConnection} that generated this event. 
      */
     void physicalConnectionClosed(ConnectionEvent event);
+    
+    
+    /**
+     * Notify listener that {@link PooledObject#deallocate()} method
+     * is invoked by the application.
+     * 
+     * @param event instance of {@link ConnectionEvent} containing the instance 
+     * of {@link PooledObject} that generated this event. 
+     */
+    void physicalConnectionDeallocated(ConnectionEvent event);
 }
