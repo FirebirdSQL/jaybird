@@ -25,6 +25,10 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.7  2002/05/09 12:18:29  rrokytskyy
+ * fixed couple of issues with correct specification implementation
+ * reported by Blas Rodriguez Somoza and Jan Aleman
+ *
  * Revision 1.6  2002/04/08 19:10:52  rrokytskyy
  * added lc_ctype support
  *
@@ -67,7 +71,8 @@ import java.util.Vector;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import javax.security.auth.Subject;
-import org.firebirdsql.jca.*;
+import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jca.FBConnectionRequestInfo;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.gds.GDS;
