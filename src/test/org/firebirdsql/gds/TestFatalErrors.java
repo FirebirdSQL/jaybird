@@ -179,23 +179,6 @@ public class TestFatalErrors extends FBTestBase {
         }
     }
     
-    /**
-     * Test driver's behaviour when using JNI-bridge.
-     * 
-     * @throws Exception if something went wrong.
-     */
-    public void testNativeFatalInTransaction() throws Exception {
-        String savedProperty = System.getProperty("test.gds_type");
-        System.setProperty("test.gds_type", "NATIVE");
-        try {
-            testFatalInTransaction();
-        } finally {
-            if (savedProperty == null)
-                savedProperty = "PURE_JAVA";
-            System.setProperty("test.gds_type", savedProperty);
-        }
-    }
-    
     public void testFatalOnCommit() throws Exception {
         FirebirdConnection connection = (FirebirdConnection)getConnectionViaDriverManager();
         
@@ -276,16 +259,5 @@ public class TestFatalErrors extends FBTestBase {
             }
         }
     }
-    
-    public void testNativeFatalOnCommit() throws Exception {
-        String savedProperty = System.getProperty("test.gds_type");
-        System.setProperty("test.gds_type", "NATIVE");
-        try {
-            testFatalOnCommit();
-        } finally {
-            if (savedProperty == null)
-                savedProperty = "PURE_JAVA";
-            System.setProperty("test.gds_type", savedProperty);
-        }
-    }
+
 }
