@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.Calendar;
 import java.util.Map;
 
+import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.logging.Logger;
@@ -79,13 +80,17 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public abstract class AbstractCallableStatement 
     extends AbstractPreparedStatement 
-    implements CallableStatement 
+    implements CallableStatement, FirebirdCallableStatement 
 {
     static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE";
+    static final String NATIVE_SELECT_COMMAND = "SELECT * FROM";
+    
     private final static Logger log = 
         LoggerFactory.getLogger(AbstractStatement.class,false);
     
     private ResultSet currentRs;
+    
+    protected boolean selectableProcedure;
     
     protected FBProcedureCall procedureCall;
 
@@ -95,7 +100,14 @@ public abstract class AbstractCallableStatement
     throws SQLException {
         super(c, rsType, rsConcurrency);
         
-        FBEscapedCallParser parser = new FBEscapedCallParser();
+        DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
+        
+        int mode = FBEscapedParser.USE_BUILT_IN;
+        
+        if (dpb.hasArgument(DatabaseParameterBuffer.use_standard_udf))
+            mode = FBEscapedParser.USE_STANDARD_UDF;
+        
+        FBEscapedCallParser parser = new FBEscapedCallParser(mode);
         
         // here statement is parsed twicel, once in c.nativeSQL(...)
         // and second time in parser.parseCall(...)... not nice, maybe 
@@ -112,6 +124,13 @@ public abstract class AbstractCallableStatement
     }
     public int[] executeBatch() throws SQLException {
         throw new FBDriverNotCapableException();
+    }
+    
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdCallableStatement#setSelectableProcedure(boolean)
+     */
+    public void setSelectableProcedure(boolean selectableProcedure) {
+        this.selectableProcedure = selectableProcedure;
     }
     
     /**
@@ -163,7 +182,7 @@ public abstract class AbstractCallableStatement
         synchronized(syncObject) {
             try {
                 c.ensureInTransaction();
-                prepareFixedStatement(procedureCall.getSQL(), true);
+                prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
             } catch (GDSException ge) {
                 throw new FBSQLException(ge);
             } finally {
@@ -192,8 +211,8 @@ public abstract class AbstractCallableStatement
                 
                 currentRs = null;
                 
-                prepareFixedStatement(procedureCall.getSQL(), true);
-                boolean hasResultSet = internalExecute(true);
+                prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
+                boolean hasResultSet = internalExecute(!selectableProcedure);
 
                 if (hasResultSet) {
                     if (c.willEndTransaction())
@@ -225,9 +244,9 @@ public abstract class AbstractCallableStatement
                 
                 currentRs = null;
                 
-                prepareFixedStatement(procedureCall.getSQL(), true);
+                prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
                 
-                if (!internalExecute(true)) 
+                if (!internalExecute(!selectableProcedure)) 
                     throw new FBSQLException(
                             "No resultset for sql",
                             FBSQLException.SQL_STATE_NO_RESULT_SET);
@@ -263,7 +282,7 @@ public abstract class AbstractCallableStatement
                 
                 currentRs = null;
                 
-                prepareFixedStatement(procedureCall.getSQL(), true);
+                prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
                 
                 /*
                 // R.Rokytskyy: JDBC CTS suite uses executeUpdate()
@@ -275,7 +294,7 @@ public abstract class AbstractCallableStatement
                     "Update statement returned results.");
                 */
                 
-                boolean hasResults = internalExecute(true);
+                boolean hasResults = internalExecute(!selectableProcedure);
                 
                 if (hasResults) {
                     if (c.willEndTransaction())

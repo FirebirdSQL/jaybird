@@ -241,9 +241,13 @@ public class FBProcedureCall {
      * 
      * @return native SQL that can be executed by the database server.
      */
-    public String getSQL() throws FBSQLException {
+    public String getSQL(boolean select) throws FBSQLException {
         StringBuffer sb = new StringBuffer();
-        sb.append(AbstractCallableStatement.NATIVE_CALL_COMMAND);
+        if (select)
+            sb.append(AbstractCallableStatement.NATIVE_SELECT_COMMAND);
+        else
+            sb.append(AbstractCallableStatement.NATIVE_CALL_COMMAND);
+        
         sb.append(" ");
         sb.append(name);
         

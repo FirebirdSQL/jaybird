@@ -85,7 +85,7 @@ public class FBCallableStatement extends AbstractCallableStatement {
         synchronized(syncObject) {
             try {
                 c.ensureInTransaction();
-                prepareFixedStatement(procedureCall.getSQL(), true);
+                prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
             } catch (GDSException ge) {
                 throw new FBSQLException(ge);
             } finally {

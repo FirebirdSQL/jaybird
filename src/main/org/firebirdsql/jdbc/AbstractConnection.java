@@ -277,7 +277,15 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public synchronized String nativeSQL(String sql) throws SQLException {
-        return new FBEscapedParser().parse(sql);
+        
+        DatabaseParameterBuffer dpb = getDatabaseParameterBuffer();
+        
+        int mode = FBEscapedParser.USE_BUILT_IN;
+        
+        if (dpb.hasArgument(DatabaseParameterBuffer.use_standard_udf))
+            mode = FBEscapedParser.USE_STANDARD_UDF;
+        
+        return new FBEscapedParser(mode).parse(sql);
     }
 
     /**

@@ -29,6 +29,10 @@ import java.text.BreakIterator;
  * @version 1.0
  */
 public class FBEscapedParser {
+    
+    public static final int USE_BUILT_IN = 0;
+    public static final int USE_STANDARD_UDF = 1;
+    
     /*
      * Currently we have three states, normal when we simply copy charactes
      * from source to destination, escape state, when we extract the escaped
@@ -76,6 +80,12 @@ public class FBEscapedParser {
     private int lastState = NORMAL_STATE;
     private int nestedEscaped = 0;
 
+    private int mode;
+    
+    public FBEscapedParser(int mode) {
+        this.mode = mode;
+    }
+    
     /**
      * Returns the current state.
      */
@@ -340,9 +350,9 @@ public class FBEscapedParser {
     protected String convertProcedureCall(String procedureCall)
         throws FBSQLException
     {
-        FBEscapedCallParser tempParser = new FBEscapedCallParser();
+        FBEscapedCallParser tempParser = new FBEscapedCallParser(mode);
         FBProcedureCall call = tempParser.parseCall(procedureCall);
-        return call.getSQL();
+        return call.getSQL(false);
     }
 
     /**
@@ -369,7 +379,7 @@ public class FBEscapedParser {
         throws FBSQLParseException
     {
         String templateResult = 
-            FBEscapedFunctionHelper.convertTemplate(escapedFunction);
+            FBEscapedFunctionHelper.convertTemplate(escapedFunction, mode);
         
         if (templateResult != null)
             return templateResult;
