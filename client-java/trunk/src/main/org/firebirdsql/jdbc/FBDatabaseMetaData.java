@@ -5160,7 +5160,3 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             return null;
     }
 }
-
-
-
-
