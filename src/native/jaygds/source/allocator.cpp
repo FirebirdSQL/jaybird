@@ -90,6 +90,9 @@ char* ScratchPadAllocator::AllocateMemory( int size )
  */
 char* ScratchPadAllocator::MemoryChunk::TryToAllocate( long sizeToAllocate )
 	{
+	// Ensure that all allocations are on an 8 byte boundary.
+	allocOffset += allocOffset % 8;
+
 	if( size - allocOffset >= sizeToAllocate )
 		{
 		char* returnValue = ((char*)this) + allocOffset;
