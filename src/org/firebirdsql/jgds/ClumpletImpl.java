@@ -9,11 +9,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the Firebird Java GDS implementation.
- * 
- * The Initial Developer of the Original Code is Alejandro Alberola.
- * Portions created by Alejandro Alberola are Copyright (C) 2001
- * Boix i Oltra, S.L. All Rights Reserved.
+ * Original developer David Jencks
  * 
  * Contributor(s):
  * 
@@ -32,39 +28,50 @@
 
 package org.firebirdsql.jgds;
 
-import java.util.*;
-import java.net.*;
+import org.firebirdsql.gds.Clumplet;
+import java.io.OutputStream;
+import java.io.IOException;
 
-import javax.security.auth.Subject;
-
-public class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_handle {
-    private int rdb_id;
-    private Subject subject;
-    Vector rdb_transactions = new Vector();
-    Vector rdb_sql_requests = new Vector();
-    Socket socket;
-    XdrOutputStream out;
-    XdrInputStream in;
-    int op = -1;
+public class ClumpletImpl implements Clumplet, Xdrable {
     
-    public isc_db_handle_impl() {
-    }
+    int type;
+    byte[] content;
+    ClumpletImpl next;
     
-    void setRdb_id(int rdb_id) {
-        System.out.println("setting rdb_id to: " + rdb_id);
-        this.rdb_id = rdb_id;
-    }
-    
-    public int getRdb_id() {
-        return rdb_id;
-    }
-    
-    void setSubject(Subject subject) {
-        this.subject = subject;
-    }
-    
-    public Subject getSubject() {
-        return subject;
+    ClumpletImpl(int type, byte[] content) {
+        this.type = type;
+        this.content = content;
+//        this.length = content.length + 2; //+1 for type byte, +1 for length byte
     }
 
+    public void append(Clumplet c) {
+        if (next == null) {
+            next = (ClumpletImpl)c;
+        }
+        else {
+            next.append(c);
+        }
+    }
+    
+    public int getLength() {
+        if (next == null) {
+            return content.length + 2;
+        }
+        else {
+            return content.length + 2 + next.getLength();
+        }
+    }
+    
+    
+    public void write(XdrOutputStream out) throws IOException{
+        out.write(type);
+        out.write(content.length);
+        out.write(content);
+        if (next != null) {
+            next.write(out);
+        }
+    }
+    
+    public void read(XdrInputStream in, int length) {}
+    
 }

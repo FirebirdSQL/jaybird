@@ -33,6 +33,11 @@
 package org.firebirdsql.jgds;
 
 import java.io.*;
+import java.util.Set;
+import java.util.Iterator;
+
+
+import org.firebirdsql.gds.Clumplet;
 
 class XdrOutputStream extends FilterOutputStream {
 
@@ -73,9 +78,7 @@ class XdrOutputStream extends FilterOutputStream {
     public final void writeOpaque(byte[] buffer, int len) throws IOException {
         if (buffer != null && len > 0) {
             out.write(buffer, 0, len);
-            for (int i = 0; i < ((4 - len) & 3); i++) {
-                out.write(0);
-            }
+            even(len);
         }
     }
     
@@ -88,4 +91,47 @@ class XdrOutputStream extends FilterOutputStream {
         byte[] buffer = s.getBytes();
         writeBuffer(buffer, buffer.length);
     }
+    
+    
+    public final void writeSet(int type, Set s) throws IOException {
+        if (s == null) {
+            writeInt(1);
+            out.write(type); //e.g. gds.isc_tpb_version3
+        }
+        else {
+            writeInt(s.size() + 1);
+            out.write(type);
+            Iterator i = s.iterator();
+            while (i.hasNext()) {
+                out.write(((Integer)i.next()).intValue());
+            }
+            for (int j = 0; j < ((4 - (s.size() + 1)) & 3); j++) {
+                out.write(0);
+            }
+        }
+    }
+
+    final void writeTyped(int type, Xdrable item) throws IOException {
+        int size;
+        if (item == null) {
+            writeInt(1);
+            out.write(type); //e.g. gds.isc_tpb_version3
+            size = 1;
+        }
+        else {
+            size = item.getLength() + 1;
+            writeInt(size);
+            out.write(type);
+            item.write(this);
+        }
+        even(size);
+    }
+    
+    
+    final void even(int length) throws IOException {
+        for (int j = 0; j < ((4 - length) & 3); j++) {
+            out.write(0);
+        }
+    }
+        
 }

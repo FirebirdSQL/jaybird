@@ -34,7 +34,7 @@ package org.firebirdsql.jgds;
 
 import java.io.*;
 
-class XdrInputStream extends FilterInputStream {
+public class XdrInputStream extends FilterInputStream {
 
     public XdrInputStream(InputStream in) {
         super(in);
