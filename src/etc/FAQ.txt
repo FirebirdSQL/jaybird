@@ -2,7 +2,7 @@ Frequently Asked Questions
 
 JayBird JCA/JDBC Driver for Firebird
 
-- Last Updated 2/3/03 -
+- Last Updated 2/28/03 -
 
 
 
@@ -465,13 +465,13 @@ System.out.println("Could Not create org.firebirdsql.jdbc.FBWrappingDataSource, 
 
 
 
-fbwds.setDatabaseName("//localhost:3050/dir1/subdir/myDatabase.gdb");
+fbwds.setDatabase("//localhost:3050/dir1/subdir/myDatabase.gdb");
 
 // an old format version of the same url
 
-// fbwds.setDatabaseName("localhost/3050:/dir1/subdir/myDatabase.gdb");
+// fbwds.setDatabase("localhost/3050:/dir1/subdir/myDatabase.gdb");
 
-fbwds.setUser("sysdba");
+fbwds.setUserName("sysdba");
 
 fbwds.setPassword("masterkey");
 
