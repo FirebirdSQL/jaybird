@@ -309,4 +309,34 @@ public class TestFBPreparedStatement extends FBTestBase{
             ps.close();
         }
     }
+    
+    /**
+     * Test if batch execution works correctly.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testBatch() throws Exception {
+        Connection c = getConnectionViaDriverManager();
+        try {
+            Statement s = c.createStatement();
+            s.executeUpdate("CREATE TABLE foo (" +
+                    "bar varchar(64) NOT NULL, " +
+                    "baz varchar(8) NOT NULL, " +
+                    "CONSTRAINT pk_foo PRIMARY KEY (bar, baz))");
+            PreparedStatement ps = c
+                    .prepareStatement("Insert into foo values (?, ?)");
+            ps.setString(1, "one");
+            ps.setString(2, "two");
+            ps.addBatch();
+            ps.executeBatch();
+            ps.clearBatch();
+            ps.setString(1, "one");
+            ps.setString(2, "three");
+            ps.addBatch();
+            ps.executeBatch();
+            ps.clearBatch();
+        } finally {
+            c.close();
+        }
+    }
 }

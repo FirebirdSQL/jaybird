@@ -29,6 +29,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.17  2004/01/27 14:08:13  rrokytskyy
+ * javadoc fixes
+ *
  * Revision 1.16  2003/12/30 14:53:32  rrokytskyy
  * fixed incorrect timestamp encoding/decoding when using calendar
  *
@@ -83,6 +86,18 @@ public class XSQLVAR {
     protected Encoding coder;
 
     public XSQLVAR() {
+    }
+    
+    public void copyFrom(XSQLVAR original) {
+        this.sqltype = original.sqltype;
+        this.sqlscale = original.sqlscale;
+        this.sqlsubtype = original.sqlsubtype;
+        this.sqllen = original.sqllen;
+        this.sqldata = original.sqldata;
+        this.sqlname = original.sqlname;
+        this.relname = original.relname;
+        this.ownname = original.ownname;
+        this.aliasname = original.aliasname;
     }
     //
     // numbers
