@@ -58,7 +58,7 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
          Product version of the EIS instance
     **/
      public String getEISProductVersion() throws ResourceException {
-         throw new FBResourceException("not yet implemented");
+         throw new FBResourceException("Not yet implemented");
      }
 
 

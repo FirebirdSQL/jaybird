@@ -87,7 +87,8 @@ public class FBUpdatableFetcher extends FBStatementFetcher {
 
 
     public boolean getIsLast() throws SQLException {
-        throw new SQLException("isLast() operation is not defined in case of " +
+        throw new FBDriverNotCapableException(
+            "isLast() operation is not defined in case of " +
             "updatable cursors, because server cannot determine cursor position " +
             "without additional fetch.");
     }

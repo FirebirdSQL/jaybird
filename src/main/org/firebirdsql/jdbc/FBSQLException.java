@@ -35,8 +35,27 @@ import java.io.IOException;
  */
 
 public class FBSQLException extends SQLException {
+    
+    public static final String SQL_STATE_INVALID_CONN_ATTR = "01S00";
+    public static final String SQL_STATE_NO_ROW_AVAIL = "01S06";
+    
+    public static final String SQL_STATE_GENERAL_ERROR = "HY000";
+    public static final String SQL_STATE_INVALID_COLUMN = "HY002";
+    public static final String SQL_STATE_INVALID_PARAM_TYPE = "HY105";
+    public static final String SQL_STATE_INVALID_ARG_VALUE = "HY009";
+    
+    public static final String SQL_STATE_WRONG_PARAM_NUM = "07001";
+    public static final String SQL_STATE_NO_RESULT_SET = "07005";
+    public static final String SQL_STATE_INVALID_CONVERSION = "07006";
+    
+    public static final String SQL_STATE_CONNECTION_CLOSED = "08003";
+    public static final String SQL_STATE_CONNECTION_FAILURE_IN_TX = "08007";
+    public static final String SQL_STATE_COMM_LINK_FAILURE = "08S01";
+    
     private Exception original;
     private String message;
+    
+    private String sqlState;
     
     public FBSQLException(IOException ioex) {
         super(ioex.getMessage());
@@ -51,7 +70,7 @@ public class FBSQLException extends SQLException {
     }
 
     public FBSQLException(ResourceException ex) {
-        super(ex.getMessage());
+        super(ex.getMessage(), ex.getErrorCode());
         
         // try to unwrap wrapped exception
         if (ex instanceof FBResourceException) {
@@ -68,7 +87,15 @@ public class FBSQLException extends SQLException {
             
         message = "Resource Exception. " + ex.getMessage();
     }
+    
+    public FBSQLException(String message) {
+        super(message, SQL_STATE_GENERAL_ERROR);
+    }
 
+    public FBSQLException(String message, String sqlState) {
+        super(message, sqlState);
+    }
+    
     public int getErrorCode() {
         if (original instanceof GDSException)
             return ((GDSException)original).getIntParam();

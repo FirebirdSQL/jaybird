@@ -19,39 +19,16 @@
 
 package org.firebirdsql.jca;
 
-import java.io.ObjectStreamException;
-import java.io.PrintWriter;
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.WeakHashMap;
-import javax.resource.ResourceException;
-import javax.resource.spi.ConnectionManager;
-import javax.resource.spi.ConnectionRequestInfo;
-import javax.resource.spi.ManagedConnection;
-import javax.resource.spi.ManagedConnectionFactory;
-import javax.security.auth.Subject;
-import javax.transaction.xa.XAException;
-import javax.transaction.xa.XAResource;
-import javax.transaction.xa.Xid;
+import java.io.*;
+import java.util.*;
 
-import org.firebirdsql.gds.GDSType;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.GDSFactory;
-import org.firebirdsql.gds.isc_db_handle;
-import org.firebirdsql.gds.isc_tr_handle;
-import org.firebirdsql.jdbc.FBConnectionDefaults;
-import org.firebirdsql.jdbc.FBConnectionHelper;
-import org.firebirdsql.jdbc.FBDataSource;
+import javax.resource.ResourceException;
+import javax.resource.spi.*;
+import javax.security.auth.Subject;
+import javax.transaction.xa.*;
+
+import org.firebirdsql.gds.*;
+import org.firebirdsql.jdbc.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -147,7 +124,6 @@ public class FBManagedConnectionFactory
 
     public FBManagedConnectionFactory(GDSType type) {
         this.type = type;
-        //gds = GDSFactory.getGDSForType((GDSFactory.GdsType)internalTypeToGdsTypeMap.get(type));
         gds = GDSFactory.getGDSForType(type);
         defaultCri = FBConnectionHelper.getDefaultCri(gds);
         }
@@ -229,13 +205,9 @@ public class FBManagedConnectionFactory
         checkNotStarted();
         hashCode = 0;
         if (level == null)
-        {
             throw new FBResourceException("You must supply a isolation level");
-        } // end of if ()
         else
-        {
             tpb.setTransactionIsolation(level.intValue());
-        } // end of else
     }
 
     public Integer getTransactionIsolation() throws ResourceException
@@ -495,13 +467,15 @@ public class FBManagedConnectionFactory
 
 
     isc_tr_handle getCurrentIscTrHandle(Xid xid, FBManagedConnection mc, int flags)
-        throws GDSException
+        throws GDSException, XAException
     {
         isc_tr_handle tr = getTrHandleForXid(xid);
         if (tr == null) {
             if (flags != XAResource.TMNOFLAGS) {
                 //We don't know this xid, should come with no flags.
-                throw GDSException.createWithXAErrorCode("You are trying to resume a transaction that has is new", XAException.XAER_INVAL);
+                throw new FBXAException(
+                        "You are trying to resume a transaction that has is new",
+                        XAException.XAER_INVAL);
             }
             //new xid for us
             isc_db_handle db = mc.getIscDBHandle(waitingToClose);
@@ -515,7 +489,7 @@ public class FBManagedConnectionFactory
                 //I think all errors here are fatal??
                 destroyDbHandle(db, mc.cri);
                 throw ge;
-            } // end of try-catch
+            }
 
 
             xidMap.put(xid, tr);
@@ -524,7 +498,10 @@ public class FBManagedConnectionFactory
             if (flags != XAResource.TMJOIN && flags != XAResource.TMRESUME) {
                 //this xid is already known, should have join or resume flag.
                 //DUPID might be better?
-                throw GDSException.createWithXAErrorCode("You are trying to start a transaction as new that is already known to this XAResource", XAException.XAER_INVAL);
+                throw new FBXAException(
+                    "You are trying to start a transaction as new " +
+                    "that is already known to this XAResource", 
+                    XAException.XAER_INVAL);
             }
         }
         return tr;
@@ -639,7 +616,7 @@ public class FBManagedConnectionFactory
 
 
             }
-            catch (IllegalStateException ise)
+            catch (java.lang.IllegalStateException ise)
             {
                 //db is already invalidated, no point in trying again.
                 waitingToClose.remove(db);
@@ -810,14 +787,14 @@ public class FBManagedConnectionFactory
         }
     }
 
-    private void checkNotStarted() throws IllegalStateException
+    private void checkNotStarted() throws java.lang.IllegalStateException
     {
         synchronized (startLock)
         {
             if (started)
-            {
-                throw new IllegalStateException("Operation not permitted after ManagedConnectionFactory in use");
-            } // end of if ()
+                throw new java.lang.IllegalStateException(
+                    "Operation not permitted after " +
+                    "ManagedConnectionFactory in use");
         }
     }
 

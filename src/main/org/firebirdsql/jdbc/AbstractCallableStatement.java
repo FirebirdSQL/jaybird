@@ -133,7 +133,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     public void registerOutParameter(int parameterIndex, int sqlType)
         throws SQLException
     {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -161,7 +161,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     public void registerOutParameter(int parameterIndex, int sqlType, int scale)
         throws SQLException
     {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -175,7 +175,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      */
     public boolean wasNull() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -678,7 +678,9 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
 
         // check if we still have no row and throw an exception in this case.
         if (rs.getRow() == 0)
-            throw new SQLException("Current statement has not data to return.");
+            throw new FBSQLException(
+                "Current statement has not data to return.",
+                    FBSQLException.SQL_STATE_NO_RESULT_SET);
     }
 
     //this method doesn't give an exception if it is called twice.

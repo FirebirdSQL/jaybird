@@ -358,7 +358,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         catch (GDSException ge)
         {
             throw new XAException(ge.getXAErrorCode());
-        } // end of try-catch
+        } 
     }
 
     /**
@@ -370,26 +370,26 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      * @param twoPhase a <code>boolean</code> value
      * @exception GDSException if an error occurs
      */
-    void internalCommit(Xid id, boolean twoPhase) throws GDSException
+    void internalCommit(Xid id, boolean twoPhase) throws XAException, GDSException
     {
         if (log!=null) log.debug("Commit called: " + id);
         isc_tr_handle committingTr = mcf.getTrHandleForXid(id);
+
         if (committingTr == null)
-        {
-            throw GDSException.createWithXAErrorCode("commit called with unknown transaction", XAException.XAER_NOTA);
-        }
+            throw new FBXAException(
+                    "Commit called with unknown transaction",
+                    XAException.XAER_NOTA);
+
         if (committingTr == currentTr)
-        {
-            throw GDSException.createWithXAErrorCode("commit called with current xid", XAException.XAER_PROTO);
-        }
+            throw new FBXAException(
+                    "Commit called with current xid",
+                    XAException.XAER_PROTO);
+
         isc_db_handle committingDbHandle = committingTr.getDbHandle();
 
-        try
-        {
+        try {
             mcf.commit(id);
-        }
-        catch (GDSException ge)
-        {
+        } catch (GDSException ge) {
             checkFatalXA(ge, committingDbHandle);
             if (log!=null) log.debug("Fatal error committing, ", ge);
             ge.setXAErrorCode(XAException.XAER_RMERR);
@@ -406,14 +406,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      */
     public void end(Xid id, int flags) throws XAException
     {
-        try
-        {
-            internalEnd(id, flags);
-        }
-        catch (GDSException ge)
-        {
-            throw new XAException(ge.getXAErrorCode());
-        } // end of try-catch
+        internalEnd(id, flags);
     }
 
     /**
@@ -426,29 +419,32 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      * @param flags an <code>int</code> value
      * @exception GDSException if an error occurs
      */
-    void internalEnd(Xid id, int flags) throws GDSException
+    void internalEnd(Xid id, int flags) throws XAException
     {
         if (flags != XAResource.TMSUSPEND
             && flags != XAResource.TMSUCCESS
             && flags != XAResource.TMFAIL)
         {
-            throw GDSException.createWithXAErrorCode("Invalid flag in end: must be TMSUSPEND, TMSUCCESS, or TMFAIL", XAException.XAER_INVAL);
-        } // end of if ()
+            throw new FBXAException(
+                "Invalid flag in end: must be TMSUSPEND, TMSUCCESS, or TMFAIL",
+                XAException.XAER_INVAL);
+        } 
 
         if (log!=null) log.debug("End called: " + id);
         isc_tr_handle endingTr = mcf.getTrHandleForXid(id);
+
         if (endingTr == null)
-        {
-            throw GDSException.createWithXAErrorCode("Unrecognized transaction", XAException.XAER_NOTA);
-        } // end of if ()
+            throw new FBXAException(
+                    "Unrecognized transaction", XAException.XAER_NOTA);
+
         if (endingTr == currentTr)
-        {
             currentTr = null;
-        } // end of if ()
-        else if (flags == XAResource.TMSUSPEND)
-        {
-            throw GDSException.createWithXAErrorCode("You are trying to suspend a transaction that is not the current transaction", XAException.XAER_INVAL);
-        } // end of if ()
+        else 
+        if (flags == XAResource.TMSUSPEND)
+            throw new FBXAException(
+                    "You are trying to suspend a transaction " +
+                    "that is not the current transaction", 
+                    XAException.XAER_INVAL);
 
         //Otherwise, it is fail or success for a tx that will be committed or
         //rolled back shortly.
@@ -465,7 +461,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     transaction ID is wrong.
      */
     public void forget(Xid id) throws javax.transaction.xa.XAException {
-        throw new XAException("Not yet implemented");
+        throw new FBXAException("Not yet implemented");
     }
 
     /**
@@ -489,14 +485,16 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public int prepare(Xid id) throws javax.transaction.xa.XAException {
         if (log!=null) log.debug("prepare called: " + id);
         isc_tr_handle committingTr = mcf.getTrHandleForXid(id);
-        if (committingTr == null) {
-            //"prepare called with unknown transaction"
-            throw new XAException(XAException.XAER_INVAL);
-        }
-        if (committingTr == currentTr) {
-            //"prepare called with current xid"
-            throw new XAException(XAException.XAER_PROTO);
-        }
+        if (committingTr == null) 
+            throw new FBXAException(
+                    "Prepare called with unknown transaction", 
+                    XAException.XAER_INVAL);
+
+        if (committingTr == currentTr) 
+            throw new FBXAException(
+                    "Prepare called with current xid",
+                    XAException.XAER_PROTO);
+
         isc_db_handle committingDbHandle = committingTr.getDbHandle();
 
         try
@@ -507,12 +505,14 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         {
             checkFatalXA(ge, committingDbHandle);
             if (log!=null) log.debug("Exception in prepare", ge);
-            throw new XAException(XAException.XAER_RMERR);
+            throw new FBXAException(XAException.XAER_RMERR);
         }
         return XA_OK;
     }
 
-    private static final String RECOVERY_QUERY = "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE = 1";
+    private static final String RECOVERY_QUERY = ""
+        + "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
+        + "FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE = 1";
 
     public Xid[] recover(int flag) throws javax.transaction.xa.XAException
     {
@@ -583,7 +583,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } // end of try-catch
     }
 
-    void internalRollback(Xid id) throws GDSException
+    void internalRollback(Xid id) throws XAException, GDSException
     {
         if (log!=null) log.debug("rollback called: " + id);
         isc_tr_handle committingTr = mcf.getTrHandleForXid(id);
@@ -592,10 +592,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             if (log!=null) log.warn("rollback called with unknown transaction: " + id);
             return;
         }
+
         if (committingTr == currentTr)
-        {
-            throw GDSException.createWithXAErrorCode("Rollback called with current xid", XAException.XAER_PROTO);
-        }
+            throw new FBXAException(
+                    "Rollback called with current xid", XAException.XAER_PROTO);
+
         isc_db_handle committingDbHandle = committingTr.getDbHandle();
 
         try
@@ -642,15 +643,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         catch (GDSException ge)
         {
             throw new XAException(ge.getXAErrorCode());
-        } // end of try-catch
+        } 
     }
 
-    public void internalStart(Xid id, int flags) throws GDSException {
+    public void internalStart(Xid id, int flags) throws XAException, GDSException {
         if (log!=null) log.debug("start called: " + id);
+
         if (currentTr != null)
-        {
-            throw GDSException.createWithXAErrorCode("start called while there is an active transaction", XAException.XAER_PROTO);
-        }
+            throw new XAException(XAException.XAER_PROTO);
+
         findIscTrHandle(id, flags);
     }
 
@@ -1086,7 +1087,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     //--------------------------------------------------------------------
 
     private void findIscTrHandle(Xid xid, int flags)
-        throws GDSException
+        throws GDSException, XAException
     {
         try
         {

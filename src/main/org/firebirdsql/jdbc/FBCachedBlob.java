@@ -57,7 +57,7 @@ public class FBCachedBlob implements Blob {
          * @throws SQLException always, not yet implemented.
          */
         public long position(byte[] pattern, long start) throws SQLException {
-            throw new SQLException("Not yet implemented.");
+            throw new FBDriverNotCapableException();
         }
 
         /**
@@ -66,7 +66,7 @@ public class FBCachedBlob implements Blob {
          * @throws SQLException always, not yet implemented.
          */
         public long position(Blob pattern, long start) throws SQLException {
-            throw new SQLException("Not yet implemented.");
+            throw new FBDriverNotCapableException();
         }
 
         /**
@@ -86,7 +86,7 @@ public class FBCachedBlob implements Blob {
          * state.
          */
         public int setBytes(long l, byte abyte0[]) throws SQLException {
-            throw new SQLException("Blob in auto-commit mode is read-only.");
+            throw new FBSQLException("Blob in auto-commit mode is read-only.");
         }
 
         /**
@@ -96,7 +96,7 @@ public class FBCachedBlob implements Blob {
          * state.
          */
         public int setBytes(long l, byte abyte0[], int i, int j) throws SQLException {
-            throw new SQLException("Blob in auto-commit mode is read-only.");
+            throw new FBSQLException("Blob in auto-commit mode is read-only.");
         }
 
         /**
@@ -106,7 +106,7 @@ public class FBCachedBlob implements Blob {
          * state.
          */
         public OutputStream setBinaryStream(long pos) throws SQLException {
-            throw new SQLException("Blob in auto-commit mode is read-only.");
+            throw new FBSQLException("Blob in auto-commit mode is read-only.");
         }
 
         /**
@@ -115,6 +115,6 @@ public class FBCachedBlob implements Blob {
          * @throws SQLException always, truncate is not relevant in cached state.
          */
         public void truncate(long length) throws SQLException {
-            throw new SQLException("Not yet implemented.");
+            throw new FBDriverNotCapableException();
         }
     }

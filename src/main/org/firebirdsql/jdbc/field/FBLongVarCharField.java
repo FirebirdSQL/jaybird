@@ -118,13 +118,13 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
             try {
                 in.close();
             } catch(IOException ioex) {
-                throw new SQLException("Unable to close BLOB input stream.");
+                throw new FBSQLException(ioex);
             }
 
             try {
                 bout.close();
             } catch(IOException ioex) {
-                throw new SQLException("Unable to close ByteArrayOutputStream.");
+                throw new FBSQLException(ioex);
             }
         }
 
@@ -207,7 +207,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
                 bout.close();
             }
             catch (IOException ioe) {
-                throw new SQLException("read/write blob problem: " + ioe);
+                throw new FBSQLException(ioe);
             }
 
             this.data = bout.toByteArray();

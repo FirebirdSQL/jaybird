@@ -16,20 +16,34 @@
  *
  * All rights reserved.
  */
+package org.firebirdsql.jca;
 
-package org.firebirdsql.jdbc;
+import javax.transaction.xa.XAException;
 
 /**
- * This exception is thrown by FBEscapedParser when it cannot parse the
- * escaped syntax.
+ * Convenience exception that adds constructor taking message and error code
+ * together. 
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBSQLParseException extends FBSQLException{
-    
-    public static final String SQL_STATE_INVALID_ESCAPE_SEQ = "22025";
-    
-    public FBSQLParseException(String msg) { 
-        super(msg, SQL_STATE_INVALID_ESCAPE_SEQ); 
+public class FBXAException extends XAException {
+
+    public FBXAException() {
+        super();
     }
+
+    public FBXAException(String msg) {
+        super(msg);
+    }
+
+    public FBXAException(int errorCode) {
+        super(errorCode);
+    }
+    
+    public FBXAException(String msg, int errorCode) {
+        this(msg);
+        
+        this.errorCode = errorCode;
+    }
+
 }

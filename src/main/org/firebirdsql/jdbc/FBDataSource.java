@@ -20,18 +20,19 @@
 package org.firebirdsql.jdbc;
 
 
-import org.firebirdsql.jca.FBConnectionRequestInfo;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
-
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.sql.Connection;
-import javax.sql.DataSource;
 import java.sql.SQLException;
+
 import javax.naming.Reference;
 import javax.resource.Referenceable;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionManager;
+import javax.sql.DataSource;
+
+import org.firebirdsql.jca.FBConnectionRequestInfo;
+import org.firebirdsql.jca.FBManagedConnectionFactory;
 
 /**
  * The class <code>FBDataSource</code> is a ConnectionFactory for jdbc
@@ -78,7 +79,7 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
             return (Connection)cm.allocateConnection(mcf, mcf.getDefaultConnectionRequestInfo());
         }
         catch (ResourceException re) {
-            throw new SQLException("Problem getting connection: " + re);
+            throw new FBSQLException("Problem getting connection: " + re);
         }
     }
 

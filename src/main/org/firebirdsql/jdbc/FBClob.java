@@ -48,7 +48,7 @@ public class FBClob implements Clob {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public long length() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -57,7 +57,7 @@ public class FBClob implements Clob {
      * @exception java.sql.SQLException <description>
      */
     public void truncate(long param1) throws SQLException {
-        // TODO: implement this java.sql.Clob method
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -80,7 +80,7 @@ public class FBClob implements Clob {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public String getSubString(long pos, int length) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -94,7 +94,7 @@ public class FBClob implements Clob {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public Reader getCharacterStream() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -108,7 +108,7 @@ public class FBClob implements Clob {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public InputStream getAsciiStream() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -128,7 +128,7 @@ public class FBClob implements Clob {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public long position(String searchstr, long start) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -148,7 +148,7 @@ public class FBClob implements Clob {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public long position(Clob searchstr, long start) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -159,8 +159,7 @@ public class FBClob implements Clob {
      * @exception java.sql.SQLException <description>
      */
     public int setString(long param1, String param2) throws SQLException {
-        // TODO: implement this java.sql.Clob method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
 
     }
 
@@ -174,8 +173,7 @@ public class FBClob implements Clob {
      * @exception java.sql.SQLException <description>
      */
     public int setString(long param1, String param2, int param3, int param4) throws SQLException {
-        // TODO: implement this java.sql.Clob method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
 
     }
 
@@ -186,8 +184,7 @@ public class FBClob implements Clob {
      * @exception java.sql.SQLException <description>
      */
     public OutputStream setAsciiStream(long param1) throws SQLException {
-        // TODO: implement this java.sql.Clob method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -197,8 +194,7 @@ public class FBClob implements Clob {
      * @exception java.sql.SQLException <description>
      */
     public Writer setCharacterStream(long param1) throws SQLException {
-        // TODO: implement this java.sql.Clob method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 

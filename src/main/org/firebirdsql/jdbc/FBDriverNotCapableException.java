@@ -18,14 +18,13 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.SQLException;
-
 /**
  * Tell that driver is not able to serve the request due to missing capabilities.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBDriverNotCapableException extends SQLException {
+public class FBDriverNotCapableException extends FBSQLException {
+    public static final String SQL_STATE_DRIVER_NOT_CAPABLE = "HYC00";
 
 	/**
      * Create instance of this class for the specified reason.
@@ -33,7 +32,7 @@ public class FBDriverNotCapableException extends SQLException {
 	 * @param reason reason that will be displayed.
 	 */
 	public FBDriverNotCapableException(String reason) {
-		super(reason);
+		super(reason, SQL_STATE_DRIVER_NOT_CAPABLE);
 	}
 
 	/**

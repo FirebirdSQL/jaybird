@@ -41,21 +41,23 @@ import java.io.PrintStream;
  */
 public class FBResourceException extends ResourceException {
     
-    public FBResourceException(String string) {
-        super(string);
+    public static final String SQL_STATE_GENERAL_ERROR = "HY000";
+    
+    public FBResourceException(String reason) {
+        super(reason, SQL_STATE_GENERAL_ERROR);
     }
 
-    public FBResourceException(String string, String string1) {
-        super(string, string1);
+    public FBResourceException(String reason, String errorCode) {
+        super(reason, errorCode);
     }
 
-    public FBResourceException(String string, Exception original) {
-        super(string);
+    public FBResourceException(String reason, Exception original) {
+        super(reason, SQL_STATE_GENERAL_ERROR);
         setLinkedException(original);
     }
 
     public FBResourceException(Exception original) {
-        super(original.getMessage());
+        super(original.getMessage(), SQL_STATE_GENERAL_ERROR);
         setLinkedException(original);
     }
     
