@@ -1171,7 +1171,7 @@ public class FBResultSet implements ResultSet {
                 return new String((byte[])row[columnIndex - 1]);
             }
         } else if ((sqltype == GDS.SQL_INT64) || (sqlscale < 0)) {
-            return BigDecimal.valueOf(((Long)row[columnIndex - 1]).longValue(),
+            return BigDecimal.valueOf(((Number)row[columnIndex - 1]).longValue(),
                                                                sqlscale * (-1));
         } else if (sqltype == GDS.SQL_BLOB) {
             InputStream in = getBinaryStream(columnIndex);
