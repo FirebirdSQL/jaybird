@@ -108,6 +108,7 @@ public interface DatabaseParameterBuffer
     int socket_buffer_size =   ISCConstants.isc_dpb_socket_buffer_size;
     int blob_buffer_size =     ISCConstants.isc_dpb_blob_buffer_size;
     int use_stream_blobs =     ISCConstants.isc_dpb_use_stream_blobs;
+    int paranoia_mode =        ISCConstants.isc_dpb_paranoia_mode;
 	
 	
 	
