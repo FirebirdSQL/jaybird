@@ -4115,7 +4115,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         ResultSet rs = null;
         try {
             s.execute();
-            rs = ((FBStatement)s).getCachedResultSet();
+            rs = ((FBStatement)s).getCachedResultSet(true); //trim strings
         }
         finally {
             if (ourTransaction) {

@@ -183,7 +183,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
       </classpath>
       <formatter type="plain" usefile="false"/>
       <!--test name="org.firebirdsql.jca.TestFBResultSet"/-->
-      <test name="org.firebirdsql.jca.TestFBBlob"/>
+      <test name="org.firebirdsql.jca.TestFBDatabaseMetaData"/>
     </junit>
   </target>
 

@@ -95,7 +95,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         ResultSet rs = dmd.getTables(null, null, "T1", null);
         int count = 0;
         while (rs.next()) {
-            String name =  rs.getString(3).trim();
+            String name =  rs.getString(3);
             System.out.println("table name: " + name);
             count++;
             assertTrue("Didn't get back the name expected", "T1".equals(name));
@@ -118,7 +118,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         ResultSet rs = dmd.getTables(null, null, "T1", new String[] {"SYSTEM TABLE"});
         int count = 0;
         while (rs.next()) {
-            String name =  rs.getString(3).trim();
+            String name =  rs.getString(3);
             System.out.println("table name: " + name);
             count++;
             assertTrue("Didn't get back the name expected", "T1".equals(name));
@@ -141,7 +141,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         ResultSet rs = dmd.getTables(null, null, "T1", new String[] {"TABLE"});
         int count = 0;
         while (rs.next()) {
-            String name =  rs.getString(3).trim();
+            String name =  rs.getString(3);
             System.out.println("table name: " + name);
             count++;
             assertTrue("Didn't get back the name expected", "T1".equals(name));
@@ -165,7 +165,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         ResultSet rs = dmd.getTables(null, null, "T1", new String[] {"VIEW"});
         int count = 0;
         while (rs.next()) {
-            String name =  rs.getString(3).trim();
+            String name =  rs.getString(3);
             System.out.println("table name: " + name);
             count++;
             assertTrue("Didn't get back the name expected", "T1".equals(name));
@@ -188,7 +188,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         ResultSet rs = dmd.getTables(null, null, "RDB$RELATIONS", new String[] {"SYSTEM TABLE"});
         int count = 0;
         while (rs.next()) {
-            String name =  rs.getString(3).trim();
+            String name =  rs.getString(3);
             System.out.println("table name: " + name);
             count++;
             assertTrue("Didn't get back the name expected", "RDB$RELATIONS".equals(name));
@@ -206,7 +206,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         ResultSet rs = dmd.getTables(null, null, "%", new String[] {"SYSTEM TABLE"});
         int count = 0;
         while (rs.next()) {
-            String name =  rs.getString(3).trim();
+            String name =  rs.getString(3);
             System.out.println("table name: " + name);
             count++;
         }
@@ -239,7 +239,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         ResultSet rs = dmd.getTables(null, null, "test%m_", new String[] {"TABLE"});
         int count = 0;
         while (rs.next()) {
-            String name =  rs.getString(3).trim();
+            String name =  rs.getString(3);
             System.out.println("table name: " + name);
             assertTrue("wrong name found: " + name, "TEST_ME".equals(name) || "TEST__ME".equals(name));
             count++;
@@ -250,7 +250,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         rs = dmd.getTables(null, null, "test\\_me", new String[] {"TABLE"});
         count = 0;
         while (rs.next()) {
-            String name =  rs.getString(3).trim();
+            String name =  rs.getString(3);
             System.out.println("table name: " + name);
             assertTrue("wrong name found: " + name, "TEST_ME".equals(name));
             count++;
@@ -261,7 +261,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         rs = dmd.getTables(null, null, "\"test\\_ me\"", new String[] {"TABLE"});
         count = 0;
         while (rs.next()) {
-            String name =  rs.getString(3).trim();
+            String name =  rs.getString(3);
             System.out.println("table name: " + name);
             assertTrue("wrong name found: " + name, "test_ me".equals(name));
             count++;
@@ -272,7 +272,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         rs = dmd.getTables(null, null, "\"test\\_ me%\"", new String[] {"TABLE"});
         count = 0;
         while (rs.next()) {
-            String name =  rs.getString(3).trim();
+            String name =  rs.getString(3);
             System.out.println("table name: " + name);
             assertTrue("wrong name found: " + name, "test_ me".equals(name) || "test_ me too".equals(name));
             count++;
@@ -283,7 +283,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         rs = dmd.getTables(null, null, "RDB_RELATIONS", new String[] {"SYSTEM TABLE"});
         count = 0;
         while (rs.next()) {
-            String name =  rs.getString(3).trim();
+            String name =  rs.getString(3);
             System.out.println("table name: " + name);
             assertTrue("wrong name found: " + name, "RDB$RELATIONS".equals(name));
             count++;
@@ -314,8 +314,8 @@ public class TestFBDatabaseMetaData extends TestXABase {
         ResultSet rs = dmd.getColumns(null, null, "test%m_", "\"my\\_ column2\"");
         int count = 0;
         while (rs.next()) {
-            String name =  rs.getString(3).trim();
-            String column = rs.getString(4).trim();
+            String name =  rs.getString(3);
+            String column = rs.getString(4);
             System.out.println("table name: " + name);
             assertTrue("wrong name found: " + name, "TEST_ME".equals(name) || "TEST__ME".equals(name));
             assertTrue("wrong column found: " + column, "my_ column2".equals(column));

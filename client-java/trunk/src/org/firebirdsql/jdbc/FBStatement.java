@@ -453,14 +453,14 @@ public class FBStatement implements Statement {
         return currentRs;
     }
 
-    ResultSet getCachedResultSet() throws SQLException {
+    ResultSet getCachedResultSet(boolean trimStrings) throws SQLException {
         if (currentRs != null) {
             throw new SQLException("Only one resultset at a time/statement!");
         }
         if (fixedStmt == null) {
             throw new SQLException("No statement just executed");
         }
-        return new FBResultSet(mc, fixedStmt);
+        return new FBResultSet(mc, fixedStmt, trimStrings);
     }
 
 
