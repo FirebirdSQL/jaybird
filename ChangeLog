@@ -1,3 +1,44 @@
+2003-10-02 14:37  ryanbaldwin
+
+	* client-java/src/main/org/firebirdsql/management/FBManager.java:
+	
+	Added check for unrecognized type string.
+
+2003-10-02 13:10  ryanbaldwin
+
+	* client-java/src/test/org/firebirdsql/: common/FBTestBase.java,
+	common/SimpleFBTestBase.java, jca/TestFBTpbMapper.java,
+	jca/TestXABase.java, jdbc/BaseFBTest.java,
+	jdbc/BaseTestFBField.java, jdbc/TestBoundary.java,
+	jdbc/TestDDL.java, jdbc/TestFBBlobAccess.java,
+	jdbc/TestFBBlobAutocommit.java, jdbc/TestFBBlobParams.java,
+	jdbc/TestFBBlobStream.java, jdbc/TestFBCallableStatement.java,
+	jdbc/TestFBDateField.java, jdbc/TestFBDecimalConversions.java,
+	jdbc/TestFBDoubleField.java, jdbc/TestFBDriver.java,
+	jdbc/TestFBEncodings.java, jdbc/TestFBFloatField.java,
+	jdbc/TestFBIntegerField.java, jdbc/TestFBLongField.java,
+	jdbc/TestFBPreparedStatement.java, jdbc/TestFBResultSet.java,
+	jdbc/TestFBResultSetMetaData.java, jdbc/TestFBShortField.java,
+	jdbc/TestFBStringField.java, jdbc/TestFBTimeField.java,
+	jdbc/TestFBTimestampField.java,
+	jdbc/TestFBUnmanagedConnection.java,
+	jdbc/TestFBWrappingDataSource.java, jdbc/TestReconnect.java,
+	jgds/TestGds.java, management/TestFBManager.java,
+	ngds/TestNgds.java, ngds/TestNgdsBlobReadBug.java,
+	pool/TestFBConnectionPoolDataSource.java:
+	
+	Modified tests to allow them to easily be run with different GDS
+	implementations.  New targets have been added to build.xml for
+	running the tests against different GDS implementations.
+
+2003-10-02 13:07  ryanbaldwin
+
+	* client-java/src/main/org/firebirdsql/management/FBManager.java:
+	
+	Removed FBManager's own type safe enumeration for JDBC type - now
+	uses GDSType from gds package.	String based setType and getType
+	methods implemented.
+
 2003-09-19 13:06  ryanbaldwin
 
 	* client-java/src/main/org/firebirdsql/jdbc/FBBlobField.java:
