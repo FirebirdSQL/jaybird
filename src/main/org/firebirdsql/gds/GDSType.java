@@ -31,6 +31,7 @@ public final class GDSType implements Serializable {
     public static final String TYPE2_STR = "TYPE2";
     public static final String EMBEDDED_STR = "EMBEDDED";
     public static final String LOCAL_STR = "LOCAL";
+    public static final String ORACLE_MODE_STR = "ORACLE_MODE";
     
     private static int nextOrdinal = 0;
 
@@ -38,9 +39,10 @@ public final class GDSType implements Serializable {
     public static final GDSType NATIVE = new GDSType(NATIVE_STR);
     public static final GDSType NATIVE_EMBEDDED = new GDSType(EMBEDDED_STR);
     public static final GDSType NATIVE_LOCAL = new GDSType(LOCAL_STR);
+    public static final GDSType ORACLE_MODE = new GDSType(ORACLE_MODE_STR);
 
     private static final GDSType[] PRIVATE_VALUES = {
-        PURE_JAVA, NATIVE, NATIVE_EMBEDDED
+        PURE_JAVA, NATIVE, NATIVE_EMBEDDED, NATIVE_LOCAL, ORACLE_MODE
     };
     
     private static final HashMap STRING_MAP = new HashMap();
@@ -51,6 +53,7 @@ public final class GDSType implements Serializable {
         STRING_MAP.put(TYPE2_STR, NATIVE);
         STRING_MAP.put(EMBEDDED_STR, NATIVE_EMBEDDED);
         STRING_MAP.put(LOCAL_STR, NATIVE_LOCAL);
+        STRING_MAP.put(ORACLE_MODE_STR, ORACLE_MODE);
     }
     
     /**

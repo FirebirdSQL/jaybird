@@ -77,6 +77,8 @@ public class GDS_Impl extends AbstractGDS implements GDS
             attemptToLoadAClientLibraryFromList(LIST_OF_CLIENT_LIBRARIES_TO_TRY);
         else if( this.getGdsType() == GDSType.NATIVE_EMBEDDED )
             attemptToLoadAClientLibraryFromList(LIST_OF_EMBEDDED_SERVER_LIBRARIES_TO_TRY);
+        else if (this.getGdsType() == GDSType.ORACLE_MODE)
+            attemptToLoadAClientLibraryFromList(LIST_OF_ORACLE_MODE_LIBRARIES_TO_TRY);
         else
             throw new RuntimeException("Unrecognized GDS type.");
         
@@ -103,6 +105,11 @@ public class GDS_Impl extends AbstractGDS implements GDS
         "libfbembed.so",
      };
 
+    private static final String[] LIST_OF_ORACLE_MODE_LIBRARIES_TO_TRY = {
+        "isc_api.dll",
+        "libisc_api.so"
+    };
+    
     /**
      * Attempts too load a firebird native dll.
      * 
@@ -802,7 +809,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
                 boolean isRowPresent = native_isc_dsql_fetch( stmt_handle, da_version, xsqlda, fetchSize );
                 if( isRowPresent )
                     {
-                    stmt.hasOpenResultSet();
+                    stmt.notifyOpenResultSet();
                     readSQLData( xsqlda, stmt );
                     }
                 else
@@ -1241,7 +1248,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
     private String getServerUrl(String file_name) throws GDSException
 		{
-        if( this.getGdsType() == GDSType.NATIVE )
+        if( this.getGdsType() == GDSType.NATIVE || this.getGdsType() == GDSType.ORACLE_MODE)
             return getRemoteServerUrl(file_name);
         else if(this.getGdsType() == GDSType.NATIVE_LOCAL || this.getGdsType() == GDSType.NATIVE_EMBEDDED)
             return getEmbeddedServerUrl(file_name);
