@@ -21,8 +21,11 @@ package org.firebirdsql.jdbc.field;
 
 import java.sql.DataTruncation;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.AbstractConnection;
+import org.firebirdsql.jdbc.FBConnectionHelper;
 import org.firebirdsql.jdbc.FBResultSet;
 
 
@@ -46,6 +49,9 @@ import org.firebirdsql.jdbc.FBResultSet;
  */
 public class FBWorkaroundStringField extends FBStringField {
 
+    private int possibleCharLength;
+    private int bytesPerCharacter;
+    
     /**
      * Create instance of this class for the specified field and result set.
      * 
@@ -60,6 +66,17 @@ public class FBWorkaroundStringField extends FBStringField {
             int requiredType) throws SQLException 
     {
         super(field, rs, numCol, requiredType);
+    }
+    
+    /**
+     * Set connection for this field. This method estimates character
+     * length and bytes per chracter.
+     */
+    public void setConnection(AbstractConnection c) {
+        super.setConnection(c);
+
+        bytesPerCharacter = FBConnectionHelper.getIscEncodingSize(IscEncoding);
+        possibleCharLength = field.sqllen / bytesPerCharacter;
     }
 
     public void setString(String value) throws SQLException {
@@ -86,8 +103,29 @@ public class FBWorkaroundStringField extends FBStringField {
             return;
         }
         field.sqldata = field.encodeString(value,javaEncoding);
-    }    
+    }   
     
+    /**
+     * Get string value of this field.
+     * 
+     * @return string value of this filed or <code>null</code> if the value is 
+     * NULL.
+     */
+    public String getString() throws SQLException {
+        String result = super.getString();
+        
+        if (result == STRING_NULL_VALUE)
+            return STRING_NULL_VALUE;
+        
+        if (isType(field, Types.VARCHAR))
+            return result;
+        
+        // fix incorrect padding done by the database for multibyte charsets
+        if ((field.sqllen % bytesPerCharacter) == 0 && result.length() > possibleCharLength)
+            result = result.substring(0, possibleCharLength);
+        
+        return result;
+    }
     /**
      * List of system tables from Firebird 1.5
      */

@@ -52,7 +52,8 @@ public class TestFBEncodings extends FBTestBase {
         "  win1254_field VARCHAR(50) CHARACTER SET WIN1254, " +
         "  unicode_field VARCHAR(50) CHARACTER SET UNICODE_FSS, " +
         "  ascii_field VARCHAR(50) CHARACTER SET ASCII, " +
-        "  none_field VARCHAR(50) CHARACTER SET NONE " +
+        "  none_field VARCHAR(50) CHARACTER SET NONE, " +
+        "  char_field CHAR(50) CHARACTER SET UNICODE_FSS " +
         ")"
         ;
 
@@ -668,4 +669,54 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
             connection.close();
         }
     }    
+    
+    public void testPadding() throws Exception {
+        
+        String testString = "test string";
+        
+        Properties props = new Properties();
+        props.putAll(getDefaultPropertiesForConnection());
+        props.put("lc_ctype", "UNICODE_FSS");
+        
+        Connection connection = 
+            DriverManager.getConnection(getUrl(), props);
+
+        try {
+            PreparedStatement stmt = connection.prepareStatement(
+                "INSERT INTO test_encodings(" + 
+                "  id, char_field) " +
+                "VALUES(?, ?)");
+            
+            stmt.setInt(1, UNIVERSAL_TEST_ID);
+            stmt.setString(2, testString);
+            
+            int updated = stmt.executeUpdate();
+            stmt.close();
+            
+            assertTrue("Should insert one row", updated == 1);
+            
+            // 
+            // Test each column
+            //
+            stmt = connection.prepareStatement("SELECT char_field " + 
+                "FROM test_encodings WHERE id = ?");
+            
+            stmt.setInt(1, UNIVERSAL_TEST_ID);
+            
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Should have at least one row", rs.next());
+            
+            String str = rs.getString(1);
+            
+            assertTrue("Field length should be correct", str.length() == 50);
+            assertTrue("Trimmed values should be correct.", testString.equals(str.trim()));
+            
+            stmt.close();
+
+            
+        } finally {
+            connection.close();
+        }
+        
+    }
 }
