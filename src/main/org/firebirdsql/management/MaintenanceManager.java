@@ -299,5 +299,66 @@ public interface MaintenanceManager extends ServiceManager {
      */
     public void killUnavailableShadows() throws SQLException;
 
-    
+
+    //----------- Transaction Management ----------------------------
+   
+
+    /**
+     * Retrieve the ID of each limbo transaction and indicate what would
+     * happen if {@link #twoPhaseRecovery} is called. The output of this 
+     * method is written to the logger.
+     *
+     * @throws SQLException if a database access error occurs
+     */
+    public void listLimboTransactions() throws SQLException;
+
+    /**
+     * Commit all limbo transactions.
+     *
+     * @throws SQLException if a database access error occurs
+     */
+    public void commitAllTransactions() throws SQLException;
+
+    /**
+     * Commit a specific limbo transaction based on its ID.
+     *
+     * @param transactionId The ID of the limbo transaction to be committed
+     * @throws SQLException if a database access error occurs or the 
+     *         given transaction ID is not valid
+     */
+    public void commitTransaction(int transactionId) throws SQLException;
+
+    /**
+     * Rollback all limbo transactions.
+     *
+     * @throws SQLException if a database access error occurs
+     */
+    public void rollbackAllTransactions() throws SQLException;
+
+    /**
+     * Rollback a specific limbo transaction based on its ID.
+     *
+     * @param transactionId The ID of the limbo transaction to be rolled back
+     * @throws SQLException if a database access error occurs or the
+     *         given transaction ID is not valid
+     */
+    public void rollbackTransaction(int transactionId) throws SQLException;
+
+    /**
+     * Performs automated two-phase recovery for all limbo transactions.
+     *
+     * @throws SQLException if a database access error occurs
+     */
+    public void twoPhaseRecovery() throws SQLException;
+
+    /**
+     * Performs automated two-phase recovery for a limbo transaction based
+     * on its ID.
+     *
+     * @param transactionId The ID of the limbo transaction to be recovered
+     * @throws SQLException if a database access error occurs or the
+     *         given transaction ID is not valid
+     */
+    public void twoPhaseRecovery(int transactionId) throws SQLException;
+
 }
