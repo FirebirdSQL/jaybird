@@ -885,9 +885,11 @@ public abstract class AbstractPreparedStatement extends FBStatement
         fields = new FBField[inSqlda.sqln];		  
         isBlob = new boolean[inSqlda.sqln];		  
         XSQLVAR[] inVars = inSqlda.sqlvar;
-        // this is probably redundant, JVM initializes members to false
+
         for (int i = 0; i < isParamSet.length; i++){
+            // this is probably redundant, JVM initializes members to false
             isParamSet[i] = false;
+            
       		fields[i] = FBField.createField(getXsqlvar(i+1), null, i, false);
 
             /*
