@@ -20,6 +20,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.1  2002/08/29 13:41:01  d_jencks
+ * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
+ *
  * Revision 1.9  2002/06/10 18:47:40  brodsom
  * logging change, logging depends on the first class used, default to true for FBManagedConnectionFactory, FBManager and tests and false for other classes.
  *
@@ -81,7 +84,15 @@ public class GDSExceptionHelper {
             ClassLoader cl = GDSException.class.getClassLoader();
             String res = MESSAGES.replace('.','/') + ".properties";
             java.io.InputStream in = cl.getResourceAsStream(res);
-            messages.load(in);
+            
+            if (in == null) {
+                cl = Thread.currentThread().getContextClassLoader();
+                in = cl.getResourceAsStream(res);
+            }
+            
+            if (in != null)
+                messages.load(in);
+                
         } catch (Exception ex) {
             if (log!=null) log.info("Exception in init of GDSExceptionHelper", ex);
         } finally {

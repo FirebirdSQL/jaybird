@@ -111,7 +111,7 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
      * naming compatibility.
      */
     public void setDatabaseName(String name) throws ResourceException {
-        mcf.setDatabase(name);
+        setDatabase(name);
     }
 
     /**
