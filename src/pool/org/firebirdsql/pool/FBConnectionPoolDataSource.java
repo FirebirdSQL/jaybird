@@ -257,13 +257,15 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
 
         Properties props = new Properties();
         props.putAll(getProperties());
-        
+
         if (userName != null)
             props.setProperty(USER_NAME_PROPERTY, userName);
             
         if (password != null)
             props.setProperty(PASSWORD_PROPERTY, password);
-            
+
+        props = FBDriverPropertyManager.normalize(null, getProperties());
+
         FBConnectionRequestInfo defaultCri = 
             getManagedConnectionFactory().getDefaultConnectionRequestInfo();
              
