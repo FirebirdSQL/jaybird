@@ -38,6 +38,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 
 import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringWriter;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -306,6 +308,26 @@ class FBStringField extends FBField {
         catch (IOException ioex) {
             throw (SQLException) createException(
                 BINARY_STREAM_CONVERSION_ERROR).fillInStackTrace();
+        }
+    }
+    void setCharacterStream(Reader in, int length) throws SQLException {
+        if (in == null) {
+            setNull(true);
+            return;
+        }
+
+        try {
+            StringWriter out = new StringWriter();
+            char[] buff = new char[4096];
+            int counter = 0;
+            while ((counter = in.read(buff)) != -1)
+                out.write(buff, 0, counter);
+				String outString = out.toString();
+            setString(outString.substring(0, length));
+        }
+        catch (IOException ioex) {
+            throw (SQLException) createException(
+                CHARACTER_STREAM_CONVERSION_ERROR).fillInStackTrace();
         }
     }
     void setBytes(byte[] value) throws SQLException {

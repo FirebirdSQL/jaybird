@@ -39,6 +39,7 @@ import java.sql.Blob;
 import java.math.BigDecimal;
 
 import java.io.InputStream;
+import java.io.Reader;
 
 abstract class FBField {
     static String BYTE_CONVERSION_ERROR =
@@ -79,6 +80,8 @@ abstract class FBField {
         "Error converting to unicode stream.";
     static String BINARY_STREAM_CONVERSION_ERROR =
         "Error converting to binary stream.";
+    static String CHARACTER_STREAM_CONVERSION_ERROR =
+        "Error converting to character stream.";
 
     static String BYTES_CONVERSION_ERROR =
         "Error converting to array of bytes.";
@@ -630,6 +633,10 @@ abstract class FBField {
     void setBinaryStream(InputStream in, int length) throws SQLException {
         throw (SQLException)createException(
             BINARY_STREAM_CONVERSION_ERROR).fillInStackTrace();
+    }
+    void setCharacterStream(Reader in, int length) throws SQLException {
+        throw (SQLException)createException(
+            ASCII_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
     void setBytes(byte[] value) throws SQLException {
         throw (SQLException)createException(
