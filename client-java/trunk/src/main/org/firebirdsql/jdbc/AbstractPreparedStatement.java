@@ -56,6 +56,23 @@ public abstract class AbstractPreparedStatement extends FBStatement
     private final static Logger log = 
         LoggerFactory.getLogger(AbstractStatement.class,false);
     
+    protected AbstractPreparedStatement(AbstractConnection c,  
+                                        int rsType, int rsConcurrency) 
+        throws SQLException 
+    {
+    	super(c, rsType, rsConcurrency);
+    }
+    
+    /**
+     * Create instance of this class and prepare SQL statement.
+     * 
+     * @param c connection to be used.
+     * @param sql SQL statement to prepare.
+     * @param rsType type of result set to create.
+     * @param rsConcurrency result set concurrency.
+     * 
+     * @throws SQLException if something went wrong.
+     */
     protected AbstractPreparedStatement(AbstractConnection c, String sql, 
                                         int rsType, int rsConcurrency) 
         throws SQLException 

@@ -77,7 +77,10 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public abstract class AbstractCallableStatement extends FBPreparedStatement implements CallableStatement {
+public abstract class AbstractCallableStatement 
+    extends AbstractPreparedStatement 
+    implements CallableStatement 
+{
     static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE";
     private final static Logger log = 
         LoggerFactory.getLogger(AbstractStatement.class,false);
@@ -90,7 +93,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     protected AbstractCallableStatement(AbstractConnection c, String sql, 
                                         int rsType, int rsConcurrency) 
     throws SQLException {
-        super(c, sql, rsType, rsConcurrency);
+        super(c, rsType, rsConcurrency);
         
         FBEscapedCallParser parser = new FBEscapedCallParser();
         procedureCall = parser.parseCall(c.nativeSQL(sql));
@@ -117,11 +120,9 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
                 prepareFixedStatement(procedureCall.getSQL(), true);
                 boolean hasResultSet = internalExecute(true);
 
-                
                 if (hasResultSet && c.willEndTransaction())
                     getCachedResultSet(false);
                 
-
                 return hasResultSet;
                 
             } catch (GDSException ge) {
@@ -134,7 +135,69 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
             } // end of try-catch-finally
         }
     }
+    
+    /**
+     * Execute query. This method prepares statement before execution. Rest of
+     * the processing is done by superclass.
+     */
+	public ResultSet executeQuery() throws SQLException {
+        Object syncObject = getSynchronizationObject();
+        
+        synchronized(syncObject) {
+            try {
+                c.ensureInTransaction();
+                
+                prepareFixedStatement(procedureCall.getSQL(), true);
+                
+                if (!internalExecute(true)) 
+                    throw new FBSQLException(
+                            "No resultset for sql",
+                            FBSQLException.SQL_STATE_NO_RESULT_SET);
+                
+                if (c.willEndTransaction()) 
+                    return getCachedResultSet(false);
+                else 
+                    return getResultSet();
+                
+            } catch(GDSException ex) {
+                throw new FBSQLException(ex);
+            } finally {
+                c.checkEndTransaction();
+            }
+        }
+    }
 
+    /**
+     * Execute query. This method prepares statement before execution. Rest of
+     * the processing is done by superclass.
+     */
+    public int executeUpdate() throws SQLException {
+        Object syncObject = getSynchronizationObject();
+        
+        synchronized(syncObject) {
+            try {
+                c.ensureInTransaction();
+                
+                prepareFixedStatement(procedureCall.getSQL(), true);
+                
+                if (internalExecute(true)) 
+                    throw new FBSQLException(
+                    "Update statement returned results.");
+                
+                return getUpdateCount();
+                
+            } catch(GDSException ex) {
+                throw new FBSQLException(ex);
+            } finally {
+                c.checkEndTransaction();
+            }
+        }
+    }
+
+    /**
+     * Execute statement internally. This method sets cached parameters. Rest
+     * of the processing is done by superclass.
+     */
     protected boolean internalExecute(boolean sendOutParams)
     throws SQLException {
         
@@ -146,6 +209,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
             FBProcedureParam param = (FBProcedureParam)iter.next();
             
             if (param != null && param.isParam()) {
+                
                 counter++;
                 
                 Object value = param.getValue();
@@ -188,7 +252,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     public void registerOutParameter(int parameterIndex, int sqlType)
         throws SQLException
     {
-        throw new FBDriverNotCapableException();
+        procedureCall.registerOutParam(parameterIndex, sqlType);
     }
 
 
@@ -216,7 +280,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     public void registerOutParameter(int parameterIndex, int sqlType, int scale)
         throws SQLException
     {
-        throw new FBDriverNotCapableException();
+        procedureCall.registerOutParam(parameterIndex, sqlType);
     }
 
 
@@ -672,46 +736,6 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     //--------------------------JDBC 3.0-----------------------------
 
     /**
-     *
-     * Registers the designated output parameter.  This version of
-             * the method <code>registerOutParameter</code>
-     * should be used for a user-named or REF output parameter.  Examples
-     * of user-named types include: STRUCT, DISTINCT, JAVA_OBJECT, and
-     * named array types.
-     *
-     * Before executing a stored procedure call, you must explicitly
-     * call <code>registerOutParameter</code> to register the type from
-             * <code>java.sql.Types</code> for each
-     * OUT parameter.  For a user-named parameter the fully-qualified SQL
-     * type name of the parameter should also be given, while a REF
-     * parameter requires that the fully-qualified type name of the
-     * referenced type be given.  A JDBC driver that does not need the
-     * type code and type name information may ignore it.   To be portable,
-     * however, applications should always provide these values for
-     * user-named and REF parameters.
-     *
-     * Although it is intended for user-named and REF parameters,
-     * this method may be used to register a parameter of any JDBC type.
-     * If the parameter does not have a user-named or REF type, the
-     * typeName parameter is ignored.
-     *
-     * <P><B>Note:</B> When reading the value of an out parameter, you
-     * must use the <code>getXXX</code> method whose Java type XXX corresponds to the
-     * parameter's registered SQL type.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2,...
-     * @param sqlType a value from {@link java.sql.Types}
-     * @param typeName the fully-qualified name of an SQL structured type
-     * @exception SQLException if a database access error occurs
-     * @see Types
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
-    public void registerOutParameter (int paramIndex, int sqlType, String typeName)
-    throws SQLException {
-    }
-
-    /**
      * Asserts if the current statement has data to return. It checks if the
      * result set has a row with data.
      *
@@ -742,134 +766,134 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     
     
     public void setArray(int i, Array x) throws SQLException {
-        procedureCall.getParam(i).setValue(x);
+        procedureCall.getInputParam(i).setValue(x);
     }
 
     public void setAsciiStream(int parameterIndex, InputStream x, int length)
     throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setBigDecimal(int parameterIndex, BigDecimal x)
         throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setBinaryStream(int parameterIndex, InputStream inputStream,
         int length) throws SQLException 
     {
-        procedureCall.getParam(parameterIndex).setValue(inputStream);
+        procedureCall.getInputParam(parameterIndex).setValue(inputStream);
     }
 
     public void setBlob(int parameterIndex, Blob blob) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(blob);
+        procedureCall.getInputParam(parameterIndex).setValue(blob);
     }
 
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(new Boolean(x));
+        procedureCall.getInputParam(parameterIndex).setValue(new Boolean(x));
     }
 
     public void setByte(int parameterIndex, byte x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(new Byte(x));
+        procedureCall.getInputParam(parameterIndex).setValue(new Byte(x));
     }
 
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setCharacterStream(int parameterIndex, Reader reader,
         int length) throws SQLException 
     {
-        procedureCall.getParam(parameterIndex).setValue(reader);
+        procedureCall.getInputParam(parameterIndex).setValue(reader);
     }
 
     public void setClob(int parameterIndex, Clob x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setDate(int parameterIndex, java.sql.Date x, Calendar cal)
         throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setDate(int parameterIndex, java.sql.Date x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setDouble(int parameterIndex, double x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(new Double(x));
+        procedureCall.getInputParam(parameterIndex).setValue(new Double(x));
     }
 
     public void setFloat(int parameterIndex, float x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(new Float(x));
+        procedureCall.getInputParam(parameterIndex).setValue(new Float(x));
     }
 
     public void setInt(int parameterIndex, int x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(new Integer(x));
+        procedureCall.getInputParam(parameterIndex).setValue(new Integer(x));
     }
 
     public void setLong(int parameterIndex, long x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(new Long(x));
+        procedureCall.getInputParam(parameterIndex).setValue(new Long(x));
     }
 
     public void setNull(int parameterIndex, int sqlType, String typeName)
         throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(null);
+        procedureCall.getInputParam(parameterIndex).setValue(null);
     }
 
     public void setNull(int parameterIndex, int sqlType) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(null);
+        procedureCall.getInputParam(parameterIndex).setValue(null);
     }
 
     public void setObject(int parameterIndex, Object x, int targetSqlType,
         int scale) throws SQLException 
     {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setObject(int parameterIndex, Object x, int targetSqlType)
         throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setObject(int parameterIndex, Object x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setRef(int parameterIndex, Ref x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setShort(int parameterIndex, short x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(new Short(x));
+        procedureCall.getInputParam(parameterIndex).setValue(new Short(x));
     }
 
     public void setString(int parameterIndex, String x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setTime(int parameterIndex, Time x, Calendar cal)
         throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setTime(int parameterIndex, Time x) throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal)
         throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setTimestamp(int parameterIndex, Timestamp x)
         throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setUnicodeStream(int parameterIndex, InputStream x, int length)
         throws SQLException {
-        procedureCall.getParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 }
 

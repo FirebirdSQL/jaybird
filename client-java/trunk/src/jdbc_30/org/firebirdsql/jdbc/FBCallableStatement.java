@@ -49,6 +49,41 @@ public class FBCallableStatement extends AbstractCallableStatement {
 		super(c, sql, rsType, rsConcurrency);
 	}
 
+    // ----------JDBC 3.0 --- java.sql.PreparedStatement methods ---------------
+    
+    /**
+     * Sets the designated parameter to the given <code>java.net.URL</code> value. 
+     * The driver converts this to an SQL <code>DATALINK</code> value
+     * when it sends it to the database.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x the <code>java.net.URL</code> object to be set
+     * @exception SQLException if a database access error occurs
+     * @since 1.4
+     */ 
+    public void setURL(int param1, URL param2) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+
+    /**
+     * Retrieves the number, types and properties of this 
+     * <code>PreparedStatement</code> object's parameters.
+     *
+     * @return a <code>ParameterMetaData</code> object that contains information
+     *         about the number, types and properties of this 
+     *         <code>PreparedStatement</code> object's parameters
+     * @exception SQLException if a database access error occurs
+     * @see ParameterMetaData
+     * @since 1.4
+     */
+    public ParameterMetaData getParameterMetaData() throws SQLException {
+        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, c);
+    }
+    
+    
+    // ----------JDBC 3.0 -- java.sql.CallableStatement methods ----------------
+    
 	public void registerOutParameter(String param1, int param2)
 		throws SQLException {
 		throw new SQLException("not yet implemented");
@@ -274,6 +309,46 @@ public class FBCallableStatement extends AbstractCallableStatement {
 
 	public URL getURL(String colName) throws SQLException {
 		return getURL(getCurrentResultSet().findColumn(colName));
+	}
+
+	/**
+	 *
+	 * Registers the designated output parameter.  This version of
+	         * the method <code>registerOutParameter</code>
+	 * should be used for a user-named or REF output parameter.  Examples
+	 * of user-named types include: STRUCT, DISTINCT, JAVA_OBJECT, and
+	 * named array types.
+	 *
+	 * Before executing a stored procedure call, you must explicitly
+	 * call <code>registerOutParameter</code> to register the type from
+	         * <code>java.sql.Types</code> for each
+	 * OUT parameter.  For a user-named parameter the fully-qualified SQL
+	 * type name of the parameter should also be given, while a REF
+	 * parameter requires that the fully-qualified type name of the
+	 * referenced type be given.  A JDBC driver that does not need the
+	 * type code and type name information may ignore it.   To be portable,
+	 * however, applications should always provide these values for
+	 * user-named and REF parameters.
+	 *
+	 * Although it is intended for user-named and REF parameters,
+	 * this method may be used to register a parameter of any JDBC type.
+	 * If the parameter does not have a user-named or REF type, the
+	 * typeName parameter is ignored.
+	 *
+	 * <P><B>Note:</B> When reading the value of an out parameter, you
+	 * must use the <code>getXXX</code> method whose Java type XXX corresponds to the
+	 * parameter's registered SQL type.
+	 *
+	 * @param parameterIndex the first parameter is 1, the second is 2,...
+	 * @param sqlType a value from {@link java.sql.Types}
+	 * @param typeName the fully-qualified name of an SQL structured type
+	 * @exception SQLException if a database access error occurs
+	 * @see Types
+	 * @since 1.2
+	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
+	 */
+	public void registerOutParameter(int paramIndex, int sqlType, String typeName) throws SQLException {
+	    throw new FBDriverNotCapableException();
 	}
 
 }

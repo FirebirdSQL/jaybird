@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
 
+import java.sql.*;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -59,8 +60,11 @@ public class TestFBCallableStatement extends FBTestBase {
         "SELECT * FROM factorial(?, 1)";
 
     public static final String EXECUTE_PROCEDURE =
+        "{call factorial(?, ?, ?)}";
+    
+    public static final String EXECUTE_PROCEDURE_AS_STMT =
         "{call factorial(?, 0)}";
-	 
+    
 	 public static final String CREATE_PROCEDURE_EMP_SELECT = ""
 	     + "CREATE PROCEDURE get_emp_proj(emp_no SMALLINT) "
 		  + " RETURNS (proj_id VARCHAR(25)) AS "
@@ -121,7 +125,7 @@ public class TestFBCallableStatement extends FBTestBase {
          ;
      
      public static final String EXECUTE_SIMPLE_OUT_PROCEDURE = ""
-         + "{call test_out(?)}";
+         + "{call test_out ?, ? }";
          ;
 
     private Connection connection;
@@ -180,7 +184,9 @@ public class TestFBCallableStatement extends FBTestBase {
     public void testRun() throws Exception {
         CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE);
         try {
+          cstmt.registerOutParameter(2, Types.INTEGER);
           cstmt.setInt(1, 5);
+          cstmt.setInt(3, 0);
           cstmt.execute();
           int ans = cstmt.getInt(1);
           assertTrue("got wrong answer, expected 120: " + ans, ans == 120);
@@ -291,7 +297,7 @@ public class TestFBCallableStatement extends FBTestBase {
     }
 
     public void testFatalError() throws Exception {
-        PreparedStatement stmt = connection.prepareStatement(EXECUTE_PROCEDURE);
+        PreparedStatement stmt = connection.prepareStatement(EXECUTE_PROCEDURE_AS_STMT);
         try {
           stmt.setInt(1, 5);
           ResultSet rs = stmt.executeQuery();
@@ -311,6 +317,7 @@ public class TestFBCallableStatement extends FBTestBase {
             connection.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
             stmt.setInt(1, 1);
+            stmt.registerOutParameter(2, Types.INTEGER);
             stmt.execute();
             assertTrue("Should return correct value", stmt.getInt(1) == 1);
         } finally {
