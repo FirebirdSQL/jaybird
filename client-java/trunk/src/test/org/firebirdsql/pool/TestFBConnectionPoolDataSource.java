@@ -35,6 +35,7 @@ import javax.sql.PooledConnection;
 
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.jdbc.FirebirdPreparedStatement;
 
 /**
  * Test suite for JDBC connection pool.
@@ -660,7 +661,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         pool.shutdown();
         
         try {
-            Statement test = con1.createStatement();
+            Statement test = con2.createStatement();
             try {
                 test.close();
             } finally {
@@ -776,6 +777,40 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             
             Connection connection2 = pool.getPooledConnection().getConnection();
             assertTrue(pool.getTotalSize() == 1);
+        } finally {
+            pool.shutdown();
+        }
+    }
+    
+    public void testReleaseResultSet() throws Exception {
+        try {
+            Connection connection = pool.getPooledConnection().getConnection();
+            connection.setAutoCommit(false);
+            try {
+                String sql = "SELECT * FROM rdb$database";
+                
+                FirebirdPreparedStatement ps = (FirebirdPreparedStatement) 
+                    connection.prepareStatement(sql);
+                
+                ResultSet rs = ps.executeQuery();
+
+                assertTrue("Statement should have open result set.", 
+                    ps.hasOpenResultSet());
+                
+                ps.close();
+
+                // strictly speaking we cannot call ps.hasOpenResultSet() method
+                // now, because statement is in pool and might throw appropriate
+                // exception. So we prepare another statement relying on the fact
+                // that we get the same statement object back.
+                ps = (FirebirdPreparedStatement)connection.prepareStatement(sql);
+                
+                assertTrue("Result set should be closed now.",
+                    !ps.hasOpenResultSet());
+                
+            } finally {
+                connection.close();
+            }
         } finally {
             pool.shutdown();
         }
