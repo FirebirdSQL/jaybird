@@ -1,3 +1,36 @@
+2004-10-11 23:03  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	AbstractConnectionPool.java, DriverConnectionPoolDataSource.java,
+	FBConnectionPoolDataSource.java, PingablePooledConnection.java,
+	PooledConnectionEventListener.java:
+	
+	fixed memory leak
+
+2004-10-11 08:43  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/GDSSynchronizationPolicy.java,
+	pool/org/firebirdsql/pool/PooledConnectionHandler.java:
+	
+	merged with HEAD
+
+2004-10-11 08:42  rrokytskyy
+
+	*
+	
+	removed unused import
+	client-java/src/main/org/firebirdsql/gds/GDSSynchronizationPolicy.j
+	ava:
+
+2004-10-11 08:41  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/PooledConnectionHandler.java,
+	main/org/firebirdsql/gds/GDSSynchronizationPolicy.java:
+	
+	fixed ClassFormatError
+
 2004-10-10 14:32  rrokytskyy
 
 	* client-java/src/:
