@@ -1,3 +1,11 @@
+2003-08-19 21:26  rrokytskyy
+
+	*
+	
+	fixed compilation error
+	client-java/src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.
+	java:
+
 2003-08-12 00:06  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/ngds/TestNgds.java:
