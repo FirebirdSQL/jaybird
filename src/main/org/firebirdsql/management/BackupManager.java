@@ -120,16 +120,76 @@ public interface BackupManager extends ServiceManager {
 
     
     /**
-     * Returns the location of the backup file.
-     * @return the location of the backup file.
-     */
-    public String getBackupPath();
-
-    /**
-     * Sets the location of the backup file.
+     * Sets the location of the backup file. This method is used to set the
+     * path to the backup consisting of a single file. It is not possible to
+     * add multiple files or specify the max. size of the file using this 
+     * method. It is also not possible to call {@link #addBackupPath(String, int)}
+     * method after calling this one.
+     * 
      * @param backupPath the location of the backup file.
+     * 
+     * @see #addBackupPath(String, int) for multi-file backups.
      */
-    public void setBackupPath(String backupPath);
+    void setBackupPath(String backupPath);
+    
+    /**
+     * Add the file to the backup of the specified size. Firebird allows 
+     * splitting the backup into multiple files, limiting the size of the backup
+     * file. This can be useful for example for creating a backup on CD or DVD.
+     * 
+     * @param path path to the backup file.
+     * @param size max size of the file in bytes.
+     */
+    void addBackupPath(String path, int size);
+    
+    /**
+     * Add backup file to the list. This method is used only during restoring 
+     * the database to specify multi-file backups. The call is equivalent to 
+     * passing the size -1 to {@link #addBackupPath(String, int)} call. 
+     * <p>
+     * If application invokes backup operation, an error is generated in that 
+     * call.
+     * 
+     * @param path path to the backup file.
+     */
+    void addBackupPath(String path);
+    
+    /**
+     * Clear the information about backup paths. This method undoes all 
+     * parameters set in the {@link #addBackupPath(String, int)} or 
+     * {@link #addBackupPath(String)} methods. 
+     */
+    void clearBackupPaths();
+    
+    /**
+     * Set the path to the database. This method is used both for backup and
+     * restore operation.
+     * 
+     * @param path path to the database file.
+     * <p>
+     * In case of backup, value specifies the path of the existing database on
+     * the server that will be backed up.
+     * <p>
+     * In case of restore, value specifies the path of the single-file database
+     * where the backup will be restored to.
+     */
+    void setDatabase(String path);
+    
+    /**
+     * Add the file to the multi-file database of the specified size for restore
+     * operation. 
+     * 
+     * @param path path to the backup file.
+     * @param size max size of the database file in pages.
+     */
+    void addRestorePath(String path, int size);
+    
+    /**
+     * Clear the information about restore paths. This method undoes all 
+     * parameters set in the {@link #addRestorePath(String, int)} or 
+     * {@link #setDatabase(String)} methods. 
+     */
+    void clearRestorePaths();
 
     /**
      * Perform the backup operation.
@@ -186,10 +246,12 @@ public interface BackupManager extends ServiceManager {
      * overwriting an existing database.
      *
      * @param create If <code>true</code>, the restore operation will attempt
-     *        to create a new database, otherwise the restore operation will
-     *        overwrite an existing database
+     *        to create a new database if it does not exit or overwrite an 
+     *        existing one when it exists, <code>false</code> when restore 
+     *        should fail if database already exist (if it doesn't, a database
+     *        will be successfully created).
      */
-    public void setRestoreCreate(boolean create);
+    public void setRestoreReplace(boolean replace);
 
     /**
      * Set the read-only attribute on a restored database.

@@ -21,11 +21,14 @@
 package org.firebirdsql.management;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.jdbc.FBSQLException;
 
 /**
  * Implements the backup and restore functionality of Firebird Services API.
@@ -35,8 +38,52 @@ import org.firebirdsql.gds.ServiceRequestBuffer;
  */
 public class FBBackupManager extends FBServiceManager implements BackupManager {
 
-    private String backupPath;
+    /**
+     * Structure that holds path to the database and corresponding size of the 
+     * file (in case of backup - that is size of the file in megabytes, in case
+     * of restore - size of the database file in pages).
+     */
+    private static class PathSizeStruct {
+        private int size;
+        private String path;
+        
+        private PathSizeStruct(String path, int size) {
+            this.path = path;
+            this.size = size;
+        }
+        
+        public String getPath() {
+            return path;
+        }
 
+        public int getSize() {
+            return size;
+        }
+        
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (!(obj instanceof PathSizeStruct)) return false;
+            
+            PathSizeStruct that = (PathSizeStruct)obj;
+            
+            return this.path.equals(that.path);
+        }
+
+        public int hashCode() {
+            return path.hashCode();
+        }
+
+        public String toString() {
+            return path + " " + size;
+        }
+    }
+
+    private boolean noLimitBackup = false;
+    private ArrayList backupPaths = new ArrayList();
+    
+    private boolean noLimitRestore = false;
+    private ArrayList restorePaths = new ArrayList();
+    
     private boolean verbose;
 
     private int restoreBufferCount;
@@ -45,7 +92,7 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
 
     private boolean restoreReadOnly;
 
-    private boolean restoreCreate;
+    private boolean restoreReplace;
 
 
     private static final int RESTORE_REPLACE = ISCConstants.isc_spb_res_replace;
@@ -63,23 +110,68 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
         restoreBufferCount = -1;
         restorePageSize = -1;
         restoreReadOnly = false;
-        restoreCreate = true;
+        restoreReplace = false;
     }
 
     /**
      * @see org.firebirdsql.management.BackupManager#getBackupPath()
+     * 
+     * @deprecated method is no longer supported.
      */
     public String getBackupPath() {
-        return backupPath;
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     /**
      * @see org.firebirdsql.management.BackupManager#setBackupPath(java.lang.String)
      */
     public void setBackupPath(String backupPath) {
-        this.backupPath = backupPath;
+        addBackupPath(backupPath, -1);
+        noLimitBackup = true;
     }
 
+    public void addBackupPath(String path) {
+        addBackupPath(path, -1);
+    }
+    
+    public void addBackupPath(String path, int size) {
+        
+        if (noLimitBackup)
+            throw new IllegalArgumentException(
+                "You cannot use setBackupPath(String) and " +
+                "addBackupPath(String, int) methods simultaneously.");
+        
+        backupPaths.add(new PathSizeStruct(path, size));
+    }
+    
+    public void clearBackupPaths() {
+        backupPaths.clear();
+        noLimitBackup = false;
+    }
+    
+    /* (non-Javadoc)
+     * @see org.firebirdsql.management.ServiceManager#setDatabase(java.lang.String)
+     */
+    public void setDatabase(String database) {
+        super.setDatabase(database);
+        addRestorePath(database, -1);
+        noLimitRestore = true;
+    }
+    public void addRestorePath(String path, int size) {
+
+        if (noLimitRestore)
+            throw new IllegalArgumentException(
+                "You cannot use setDatabase(String) and " +
+                "addRestorePath(String, int) methods simultaneously.");
+        
+        restorePaths.add(new PathSizeStruct(path, size));
+    }
+    
+    public void clearRestorePaths() {
+        restorePaths.clear();
+        noLimitRestore = false;
+    }
+    
     /**
      * @see org.firebirdsql.management.BackupManager#backupDatabase()
      */
@@ -108,15 +200,26 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
      * @param options The isc_spb_bkp_* parameters options to be used
      * @return the "backup" service request buffer for the Service Manager.
      */
-    private ServiceRequestBuffer getBackupSRB(int options) {
+    private ServiceRequestBuffer getBackupSRB(int options) throws SQLException {
 
-        ServiceRequestBuffer backupSPB = createRequestBuffer(
-                ISCConstants.isc_action_svc_backup, 
-                options);
+        ServiceRequestBuffer backupSPB = getGds().newServiceRequestBuffer(
+                ISCConstants.isc_action_svc_backup);
 
-        backupSPB.addArgument(ISCConstants.isc_spb_bkp_file, getBackupPath());
-        backupSPB.addArgument(ISCConstants.isc_spb_bkp_length, 2048);
-
+        backupSPB.addArgument(ISCConstants.isc_spb_dbname, getDatabase());
+        
+        for (Iterator iter = backupPaths.iterator(); iter.hasNext();) {
+            PathSizeStruct pathSize = (PathSizeStruct) iter.next();
+            
+            backupSPB.addArgument(ISCConstants.isc_spb_bkp_file, pathSize.getPath());
+            
+            if (iter.hasNext() && pathSize.getSize() == -1)
+                throw new FBSQLException("No size specified for a backup file " + 
+                    pathSize.getPath());
+            
+            if (iter.hasNext())
+                backupSPB.addArgument(ISCConstants.isc_spb_bkp_length, pathSize.size);
+        }
+        
         if (verbose)
             backupSPB.addArgument(ISCConstants.isc_spb_verbose);
 
@@ -185,12 +288,12 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
      * Set the restore operation to create a new database, as opposed to
      * overwriting an existing database. This is true by default.
      *
-     * @param create If <code>true</code>, the restore operation will attempt
+     * @param replace If <code>true</code>, the restore operation will attempt
      *        to create a new database, otherwise the restore operation will
      *        overwrite an existing database
      */
-    public void setRestoreCreate(boolean create) {
-        this.restoreCreate = create;
+    public void setRestoreReplace(boolean replace) {
+        this.restoreReplace = replace;
     }
 
 
@@ -218,10 +321,23 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
         ServiceRequestBuffer restoreSPB = gds
                 .newServiceRequestBuffer(ISCConstants.isc_action_svc_restore);
 
-        // db-name and backup path are reversed for restore operations
-        restoreSPB.addArgument(ISCConstants.isc_spb_dbname, getBackupPath());
-        restoreSPB.addArgument(ISCConstants.isc_spb_bkp_file, getDatabase());
-
+        // backup files without sizes
+        for (Iterator iter = backupPaths.iterator(); iter.hasNext();) {
+            PathSizeStruct pathSize = (PathSizeStruct) iter.next();
+            
+            restoreSPB.addArgument(ISCConstants.isc_spb_dbname, pathSize.getPath());            
+        }
+        
+        // restore files with sizes except the last one
+        for (Iterator iter = restorePaths.iterator(); iter.hasNext();) {
+            PathSizeStruct pathSize = (PathSizeStruct) iter.next();
+            
+            restoreSPB.addArgument(ISCConstants.isc_spb_bkp_file, pathSize.getPath());
+            
+            if (iter.hasNext() && pathSize.getSize() != -1)
+                restoreSPB.addArgument(ISCConstants.isc_spb_res_length, pathSize.getSize());
+        }
+        
         if (restoreBufferCount != -1)
             restoreSPB.addArgument(ISCConstants.isc_spb_res_buffers, 
                     restoreBufferCount);
@@ -240,7 +356,7 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
 
         if ((options & RESTORE_CREATE) != RESTORE_CREATE 
                 && (options & RESTORE_REPLACE) != RESTORE_REPLACE){
-            options |= restoreCreate ? RESTORE_CREATE : RESTORE_REPLACE;
+            options |= restoreReplace ? RESTORE_REPLACE : RESTORE_CREATE;
         }
         
         restoreSPB.addArgument(ISCConstants.isc_spb_options, options);
