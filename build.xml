@@ -393,7 +393,7 @@
      | Here you specify the testcase class, not the directory
    -->
 
-  <target name="one-test" depends="jars" if="FBBlob"
+  <target name="one-test" depends="jars"
 	  description="Execute a single test.">
     <mkdir dir="${test.db.dir}"/>
     <mkdir dir="${build.reports}"/>
