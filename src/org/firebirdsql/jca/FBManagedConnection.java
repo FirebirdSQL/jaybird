@@ -89,8 +89,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     private int timeout = 0;
 
-    private Subject s;
-
     private FBConnectionRequestInfo cri;
 
 
@@ -100,10 +98,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     private Set tpb;
 
-    FBManagedConnection(Subject s, FBConnectionRequestInfo cri, FBManagedConnectionFactory mcf) {
+    FBManagedConnection(Subject subject, 
+                        ConnectionRequestInfo cri, 
+                        FBManagedConnectionFactory mcf)
+        throws ResourceException
+    {
         this.mcf = mcf;
-        this.s = s;
-        this.cri = cri;
+        this.cri = getCombinedConnectionRequestInfo(subject, cri);//cri;
         this.log = mcf.getLogWriter();
         this.tpb = mcf.getTpb(); //getTpb supplies a copy.
     }
@@ -290,10 +291,14 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          EISSystemException - internal error condition in EIS instance - used if EIS instance is
          involved in setting state of ManagedConnection
 **/
-    public java.lang.Object getConnection(Subject subject, ConnectionRequestInfo cxRequestInfo)
-        throws ResourceException {
-        //subject currently ignored
-        //cxRequestInfo currently ignored.
+    public Object getConnection(Subject subject, ConnectionRequestInfo cri)
+        throws ResourceException 
+    {
+        if (!matches(subject, cri)) 
+        {
+            throw new ResourceException("Incompatible subject or ConnectionRequestInfo in getConnection!");        
+        } // end of if ()
+        
         FBConnection c = new FBConnection(this);
         connectionHandles.add(c);
         return c;
@@ -639,16 +644,9 @@ throw new XAException("end called with no transaction associated");
         return mcf.getDatabase();
     }
 
-    public String getUserName() {
-        if (s != null) {
-            Set credentials = s.getPrivateCredentials(javax.resource.spi.security.PasswordCredential.class);
-            Iterator i = credentials.iterator();
-            while (i.hasNext()) {
-                PasswordCredential pc = (PasswordCredential)i.next();
-                return pc.getUserName();
-            }
-        }
-        return null;//we could go fishing but why bother?
+    public String getUserName() 
+    {
+        return cri.getUser();
     }
 
     public int getTransactionIsolation() {
@@ -756,14 +754,16 @@ throw new XAException("end called with no transaction associated");
     }
 
 
-    boolean matches(Subject subj, FBConnectionRequestInfo cri) {
-        if (s == null) {
-            if (subj != null) {
-                return false;
-            }
-            return this.cri.equals(cri);
-        }
-        return s.equals(subj) && this.cri.equals(cri);
+    boolean matches(Subject subj, ConnectionRequestInfo cri) 
+    {
+        try 
+        {
+            return this.cri.equals(getCombinedConnectionRequestInfo(subj, cri));
+        } 
+        catch (ResourceException re) 
+        {
+            return false;   
+        } // end of try-catch
     }
 
     Set getTpb() {
@@ -774,6 +774,37 @@ throw new XAException("end called with no transaction associated");
     //-----------------------------------------
     //Private methods
     //-----------------------------------------
+
+
+    private FBConnectionRequestInfo getCombinedConnectionRequestInfo(Subject subject, ConnectionRequestInfo cri) throws ResourceException
+    {
+        if (cri == null) {
+            cri = mcf.getDefaultConnectionRequestInfo();
+        }
+        try 
+        {
+            FBConnectionRequestInfo fbcri = (FBConnectionRequestInfo)cri;
+            if (subject != null) 
+            {
+                Iterator iter = subject.getPrivateCredentials().iterator();
+                if (iter.hasNext()) {
+                    PasswordCredential cred = (PasswordCredential) iter.next();
+                    String user = cred.getUserName();
+                    String password = new String(cred.getPassword());
+                    fbcri.setPassword(password);
+                    fbcri.setUser(user);
+                }
+            } // end of if ()
+            
+            return fbcri;
+        } 
+        catch (ClassCastException cce) 
+        {
+            throw new ResourceException("Incorrect ConnectionRequestInfo class supplied");
+        } // end of try-catch
+
+    }
+
 
     public static class SqlInfo {
         private int statementType;
