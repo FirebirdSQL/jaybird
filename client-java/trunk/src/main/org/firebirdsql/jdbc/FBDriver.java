@@ -17,116 +17,16 @@
  * All rights reserved.
  */
 
-/* added by Roman Rokytskyy:
- *
- * CVS modification log:
- * $Log$
- * Revision 1.12  2003/06/05 23:22:31  brodsom
- * Substitute package and inline imports
- *
- * Revision 1.11  2003/06/04 13:04:34  brodsom
- * Remove unused vars and imports
- * Comment unused private method
- *
- * Revision 1.10  2003/02/01 01:19:55  brodsom
- * Remove unused import
- *
- * Revision 1.9  2002/11/25 20:23:44  rrokytskyy
- * improved TPB mapping code
- *
- * Revision 1.8  2002/11/25 15:03:30  rrokytskyy
- * fixed nullpointer exception
- *
- * Revision 1.7  2002/11/25 13:54:34  rrokytskyy
- * fixed incorrect line feeds
- *
- * Revision 1.6  2002/11/24 18:50:18  rrokytskyy
- * added TPB mapping and fixed ResultSetMetaData
- *
- * Revision 1.5  2002/11/22 17:53:58  brodsom
- * Important performance patch
- *
- * Revision 1.4  2002/11/22 02:30:38  brodsom
- * 1.- Make most variables private in stmt_handle, blob_handle, db_handle and others
- * 2.- Move constants from GDS to ISCConstants (class,1100 lines)
- *
- * Revision 1.3  2002/10/18 04:16:05  d_jencks
- * fixed some errors Claudio pointed out, thanks
- *
- * Revision 1.2  2002/09/28 19:21:36  d_jencks
- * Fixed physical connection leak, made  datasource and ManagedConnectionFactory serializable, and made BlobBufferLength and Integer attribute to be spec-compliant.
- *
- * Revision 1.1  2002/08/29 13:41:04  d_jencks
- * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
- *
- * Revision 1.13  2002/06/12 00:55:19  brodsom
- * Enable Connection management by ManagedConnectionFactory
- *
- * Revision 1.12  2002/06/10 18:47:41  brodsom
- * logging change, logging depends on the first class used, default to true for FBManagedConnectionFactory, FBManager and tests and false for other classes.
- *
- * Revision 1.11  2002/06/07 02:34:09  skywalker
- * Fixed setCharacterStream bug (was a recursive call in PrepairedStatement)
- * also added a bit to allow setCharacterStream to work with blob fields.
- *
- * Revision 1.10  2002/06/06 11:24:07  brodsom
- * Performance patch. Log if log4j is in the classpath, don't log if the enviroment variable FBLog4j is false.
- *
- * Revision 1.9  2002/06/04 01:17:49  brodsom
- * performance patches
- *
- * Revision 1.8  2002/05/20 10:55:48  brodsom
- * write jca imports by class
- *
- * Revision 1.7  2002/05/09 12:18:29  rrokytskyy
- * fixed couple of issues with correct specification implementation
- * reported by Blas Rodriguez Somoza and Jan Aleman
- *
- * Revision 1.6  2002/04/08 19:10:52  rrokytskyy
- * added lc_ctype support
- *
- * Revision 1.5  2002/02/02 18:58:24  d_jencks
- * converted to log4j logging and cleaned up some test problems.  If you do not wish to use log4j, you may leave out the log4j-core.jar and get no logging
- *
- * Revision 1.4  2001/11/25 23:15:55  d_jencks
- * Implemented autocommit that does not interfere with connections managed by XAResource or LocalTransaction.  Made Driver reuse ManagedConnectionFactory for same database url.
- *
- * Revision 1.3  2001/08/28 17:13:23  d_jencks
- * Improved formatting slightly, removed dos cr's
- *
- * Revision 1.2  2001/07/13 18:16:15  d_jencks
- * Implementation of jdbc 1.0 Driver contributed by Roman Rokytskyy
- *
- * Revision 1.3  2001/07/09 09:09:34  rrokytskyy
- * Switched to the FBUnmanagedConnection implementation
- *
- * Revision 1.2  2001/07/08 18:42:30  rrokytskyy
- * Implementation of main java.sql.Driver methods.
- *
- */
-
-
 package org.firebirdsql.jdbc;
 
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Driver;
-import java.sql.DriverPropertyInfo;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Vector;
-import java.util.Properties;
-import java.util.StringTokenizer;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
-import org.firebirdsql.jca.FBConnectionRequestInfo;
-import org.firebirdsql.jca.FBTpbMapper;
+import java.sql.*;
+import java.util.*;
 
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.jca.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.GDSFactory;
 
 /**
  * Describe class <code>FBDriver</code> here.

@@ -21,7 +21,6 @@ package org.firebirdsql.pool;
 
 import java.lang.reflect.*;
 import java.sql.*;
-import java.util.*;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;

@@ -19,16 +19,15 @@
 
 package org.firebirdsql.pool;
 
-import java.sql.*;
-import javax.sql.*;
-import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Iterator;
 
-import java.util.*;
+import javax.sql.PooledConnection;
 
-import javax.naming.*;
-
-import EDU.oswego.cs.dl.util.concurrent.*;
 import org.firebirdsql.logging.Logger;
+
+import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
 
 /**
  * Implementation of free connection queue.
