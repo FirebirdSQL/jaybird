@@ -118,6 +118,9 @@ public class FBConnectionHelper {
      * Get the instance of {@link FBConnectionRequestInfo} containing all
      * relevant parameters from the <code>info</code> properties.
      *
+     * The FBConnectionRequestInfo instance returned will be 'bound' to the
+     * same GDS implementation as baseCri.
+     *
      * @param info instance of {@link Properties} containing connection
      * parameters.
      *
@@ -129,16 +132,43 @@ public class FBConnectionHelper {
      * @return instance of {@link FBConnectionRequestInfo} containing all
      * relevant connection parameters.
      */
-    public static FBConnectionRequestInfo getCri(Properties info,
-        FBConnectionRequestInfo baseCri)
-    {
-        FBConnectionRequestInfo cri;
+    public static FBConnectionRequestInfo getCri(Properties info, FBConnectionRequestInfo baseCri) {
+        final FBConnectionRequestInfo cri = new FBConnectionRequestInfo(baseCri);
 
-        if (baseCri != null)
-            cri = new FBConnectionRequestInfo(baseCri);
-        else
-            cri = new FBConnectionRequestInfo(getDefaultCri(GDSFactory.getDefaultGDS()));
+        copyPropertiesIntoCri(info, cri);
 
+        return cri;
+    }
+
+    /**
+     * Get the instance of {@link FBConnectionRequestInfo} containing all
+     * relevant parameters from the <code>info</code> properties.
+     *
+     * The FBConnectionRequestInfo instance returned will be 'bound' to the
+     * same GDS implementation supplied in the gdsToUse parameter.
+     *
+     * @param info instance of {@link Properties} containing connection
+     * parameters.
+     *
+     * @param gdsToUse The GDS implementation to which the returned
+     * {@link FBConnectionRequestInfo} will be bound.
+     *
+     * @return instance of {@link FBConnectionRequestInfo} containing all
+     * relevant connection parameters.
+     */
+    public static FBConnectionRequestInfo getCri(Properties info, GDS gdsToUse) {
+        final FBConnectionRequestInfo cri = new FBConnectionRequestInfo(getDefaultCri(gdsToUse));
+
+        copyPropertiesIntoCri(info, cri);
+
+        return cri;
+    }
+
+    /**
+     * Copy the properties supplied in the 'info' parameter into the FBConnectionRequestInfo
+     * instance supplied in the 'cri' parameter.
+     */
+    private static void copyPropertiesIntoCri(Properties info, FBConnectionRequestInfo cri) {
         // process all set keys
         Iterator keys = info.keySet().iterator();
         while(keys.hasNext()) {
@@ -149,7 +179,7 @@ public class FBConnectionHelper {
 
             // if the type is unknown, continue
             if (type == null) continue;
-            
+
             // set the value of the DPB
             try {
 
@@ -166,8 +196,6 @@ public class FBConnectionHelper {
                     cri.setProperty(type.intValue(), value);
             }
         }
-
-        return cri;
     }
 
     /**
