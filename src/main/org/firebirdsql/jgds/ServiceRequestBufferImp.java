@@ -96,6 +96,16 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
         });
     }
     
+    public void addArgument(int argumentType, byte value){
+        getArgumentsList().add(new NumericArgument(argumentType, value){
+            
+            protected void writeValue(XdrOutputStream outputStream, int value)
+                    throws IOException {
+                outputStream.write((byte)value);
+            }
+        });
+    }
+
     /* (non-Javadoc)
      * @see org.firebirdsql.jgds.ParameterBufferBase#write(org.firebirdsql.gds.XdrOutputStream)
      */

@@ -42,6 +42,17 @@ abstract class ParameterBufferBase implements java.io.Serializable
         getArgumentsList().add(new NumericArgument(argumentType, value));
         }
 
+    public void addArgument(int argumentType, byte value) {
+
+        getArgumentsList().add(new NumericArgument(argumentType, value){
+            protected void writeValue(ByteArrayOutputStream outputStream, 
+                    final int value){
+                outputStream.write((byte)value);
+            }
+        });
+    }
+
+
     public void addArgument(int argumentType)
         {
         getArgumentsList().add(new SingleItem(argumentType));
