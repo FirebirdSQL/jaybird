@@ -368,7 +368,7 @@ public class TestNgds extends SimpleFBTestBase {
 
         XSQLDA xsqlda = new XSQLDAImpl(2);
 
-        XSQLVAR xsqlvar = new XSQLVARImpl();
+        XSQLVAR xsqlvar = new XSQLVARLittleEndianImpl();
 
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
 
@@ -378,7 +378,7 @@ public class TestNgds extends SimpleFBTestBase {
 
         xsqlda.sqlvar[0] = xsqlvar;
 
-        xsqlvar = new XSQLVARImpl();
+        xsqlvar = new XSQLVARLittleEndianImpl();
 
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
 
@@ -395,7 +395,7 @@ public class TestNgds extends SimpleFBTestBase {
 
         xsqlda = new XSQLDAImpl(2);
 
-        xsqlvar = new XSQLVARImpl();
+        xsqlvar = new XSQLVARLittleEndianImpl();
 
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
 
@@ -405,7 +405,7 @@ public class TestNgds extends SimpleFBTestBase {
 
         xsqlda.sqlvar[0] = xsqlvar;
 
-        xsqlvar = new XSQLVARImpl();
+        xsqlvar = new XSQLVARLittleEndianImpl();
 
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
 
@@ -549,7 +549,7 @@ public class TestNgds extends SimpleFBTestBase {
 
         XSQLDA xsqlda = new XSQLDAImpl(2);
 
-        XSQLVAR xsqlvar = new XSQLVARImpl();
+        XSQLVAR xsqlvar = new XSQLVARLittleEndianImpl();
 
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
 
@@ -561,7 +561,7 @@ public class TestNgds extends SimpleFBTestBase {
 
 
 
-        xsqlvar = new XSQLVARImpl();
+        xsqlvar = new XSQLVARLittleEndianImpl();
 
         xsqlvar.sqltype = ISCConstants.SQL_BLOB;
 
@@ -675,7 +675,7 @@ public class TestNgds extends SimpleFBTestBase {
 
         XSQLDA xsqlda = new XSQLDAImpl(2);
 
-        XSQLVAR xsqlvar = new XSQLVARImpl();
+        XSQLVAR xsqlvar = new XSQLVARLittleEndianImpl();
 
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
 
@@ -685,7 +685,7 @@ public class TestNgds extends SimpleFBTestBase {
 
         xsqlda.sqlvar[0] = xsqlvar;
 
-        xsqlvar = new XSQLVARImpl();
+        xsqlvar = new XSQLVARLittleEndianImpl();
 
         xsqlvar.sqltype = ISCConstants.SQL_BLOB;
 
@@ -806,7 +806,7 @@ public class TestNgds extends SimpleFBTestBase {
 
         XSQLDA xsqlda = new XSQLDAImpl(2);
 
-        XSQLVAR xsqlvar = new XSQLVARImpl();
+        XSQLVAR xsqlvar = new XSQLVARLittleEndianImpl();
 
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
 
@@ -818,7 +818,7 @@ public class TestNgds extends SimpleFBTestBase {
 
 
 
-        xsqlvar = new XSQLVARImpl();
+        xsqlvar = new XSQLVARLittleEndianImpl();
 
         xsqlvar.sqltype = ISCConstants.SQL_BLOB;
 
@@ -938,7 +938,7 @@ public class TestNgds extends SimpleFBTestBase {
 
         XSQLDA xsqlda = new XSQLDAImpl(2);
 
-        XSQLVAR xsqlvar = new XSQLVARImpl();
+        XSQLVAR xsqlvar = new XSQLVARLittleEndianImpl();
 
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
 
@@ -948,7 +948,7 @@ public class TestNgds extends SimpleFBTestBase {
 
         xsqlda.sqlvar[0] = xsqlvar;
 
-        xsqlvar = new XSQLVARImpl();
+        xsqlvar = new XSQLVARLittleEndianImpl();
 
         xsqlvar.sqltype = ISCConstants.SQL_BLOB;
 

@@ -32,6 +32,7 @@ import java.util.Arrays;
 import junit.framework.TestCase;
 import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.ngds.XSQLVARLittleEndianImpl;
 
 /**
  * Describe class <code>BaseTestFBField</code> here.
@@ -172,7 +173,7 @@ public abstract class BaseTestFBField extends TestCase {
         else
         if(getGdsType() == GDSType.NATIVE ||
            getGdsType() == GDSType.NATIVE_EMBEDDED)
-            return new org.firebirdsql.ngds.XSQLVARImpl();
+            return new XSQLVARLittleEndianImpl();
         else
             throw new RuntimeException("Unrecognised GDSType");
         }
