@@ -24,7 +24,10 @@ public class DriverExample
     // Note: localhost is a TCP/IP keyword which resolves to your local machine's IP address.
     //       If localhost is not recognized, try using your local machine's name or
     //       the loopback IP address 127.0.0.1 in place of localhost.
-    String databaseURL = "jdbc:firebirdsql:localhost/3050:c:/database/employee.gdb?isc_dpb_sweep";
+    String databaseURL = "jdbc:firebirdsql:localhost/3050:c:/database/employee.gdb";
+    //String databaseURL = "jdbc:firebirdsql:native:localhost/3050:c:/database/employee.gdb";
+    //String databaseURL = "jdbc:firebirdsql:local:c:/database/employee.gdb";
+    //String databaseURL = "jdbc:firebirdsql:embedded:c:/database/employee.gdb";
     String user = "sysdba";
     String password = "masterkey";
     String driverName = "org.firebirdsql.jdbc.FBDriver";
