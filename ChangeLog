@@ -1,3 +1,20 @@
+2004-03-29 01:06  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FirebirdBlob.java,
+	FirebirdConnection.java, FirebirdPreparedStatement.java,
+	FirebirdStatement.java:
+	
+	switched from LGPL to BSD-like to make linking with these files
+	safe for any type of application
+
+2004-03-29 01:03  rrokytskyy
+
+	* client-java/src/:
+	test/org/firebirdsql/jdbc/TestFBBlobStream.java,
+	main/org/firebirdsql/jdbc/FBBlob.java:
+	
+	fixed endless loop when length specified incorrectly
+
 2004-03-25 20:13  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jgds/GDS_Impl.java:
