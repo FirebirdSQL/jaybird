@@ -46,6 +46,10 @@ public class FBBlobField extends FBField {
     void setConnection(FBConnection c) {
         this.c = c;
     }
+    
+    String getIscEncoding() {
+        return c.getIscEncoding();
+    }
 
     Blob getBlob() throws SQLException {
         return getBlob(false);
@@ -158,7 +162,7 @@ public class FBBlobField extends FBField {
         if (blob == BLOB_NULL_VALUE)
             return STRING_NULL_VALUE;
 
-        return new String(getBytes());
+        return toString(getBytes(), getIscEncoding());
     }
 
     InputStream getUnicodeStream() throws SQLException {
@@ -213,7 +217,7 @@ public class FBBlobField extends FBField {
         setBinaryStream(new ByteArrayInputStream(value), value.length);
     }
     void setString(String value) throws SQLException {
-        setBytes(value.getBytes());
+        setBytes(getBytes(value, getIscEncoding()));
     }
 
     void setUnicodeStream(InputStream in, int length) throws SQLException {

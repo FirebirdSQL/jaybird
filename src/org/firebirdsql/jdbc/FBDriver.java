@@ -25,6 +25,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.5  2002/02/02 18:58:24  d_jencks
+ * converted to log4j logging and cleaned up some test problems.  If you do not wish to use log4j, you may leave out the log4j-core.jar and get no logging
+ *
  * Revision 1.4  2001/11/25 23:15:55  d_jencks
  * Implemented autocommit that does not interfere with connections managed by XAResource or LocalTransaction.  Made Driver reuse ManagedConnectionFactory for same database url.
  *
@@ -62,6 +65,7 @@ import javax.security.auth.Subject;
 import org.firebirdsql.jca.*;
 
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.gds.GDS;
 
 /**
  *
@@ -156,33 +160,51 @@ public class FBDriver implements Driver {
         } // end of if ()
         
         try {
+            FBConnectionRequestInfo conCri = 
+                FBConnectionHelper.getCri(info, null);
+            
             // extract the user
             String user = info.getProperty(USER);
+            
+            if (user == null)
+                user = conCri.getStringProperty(GDS.isc_dpb_user_name);
+            
             if (user == null)
                 throw new SQLException(
                     "User for database connection not specified.");
 
             // extract the password
             String password = info.getProperty(PASSWORD);
+            
+            if (password == null)
+                password = conCri.getStringProperty(GDS.isc_dpb_password);
+            
             if (password == null)
                 throw new SQLException(
                     "Password for database connection not specified.");
 
             // extract the database URL
             String databaseURL = url.substring(FIREBIRD_PROTOCOL.length());
-            FBDataSource dataSource = (FBDataSource)urlToDataSourceMap.get(databaseURL);
-            if (dataSource == null) 
-            {
+            
+            FBDataSource dataSource = 
+                (FBDataSource)urlToDataSourceMap.get(databaseURL);
+                
+            if (dataSource == null) {
                 FBManagedConnectionFactory factory = new FBManagedConnectionFactory();
                 factory.setDatabase(databaseURL);
+                
+                // set connection request info 
+                factory.setConnectionRequestInfo(FBConnectionHelper.getCri(
+                        info, factory.getDefaultConnectionRequestInfo()));
+                        
                 dataSource = (FBDataSource)factory.createConnectionFactory();
-                urlToDataSourceMap.put(databaseURL, dataSource);
+                // urlToDataSourceMap.put(databaseURL, dataSource);
             } // end of if ()
             
 
             return dataSource.getConnection(user, password);
         } catch(javax.resource.ResourceException resex) {
-            throw new SQLException(resex.toString());
+            throw new SQLException(resex.getMessage());
         }
     }
 
