@@ -97,12 +97,12 @@ class FBCachedFetcher implements FBFetcher {
                 for (int i=0;i< rowsArray.length; i++){
                     localRow = (byte[][])rowsArray[i];
                     //ugly blob caching workaround.
-                    for (int j = 0; i < localRow.length; i++){                   
-                        if (isBlob[i] && localRow[i] != null ) {
+                    for (int j = 0; j < localRow.length; j++){                   
+                        if (isBlob[j] && localRow[j] != null ) {
                             rs.row = localRow;						  
-                            FBBlobField blob = (FBBlobField)FBField.createField(rs.xsqlvars[i], rs, i,false);
+                            FBBlobField blob = (FBBlobField)FBField.createField(rs.xsqlvars[j], rs, j,false);
                             blob.setConnection(c);
-                            localRow[i] = blob.getCachedObject();
+                            localRow[j] = blob.getCachedObject();
                             rs.row = null;
                         }
                     }
