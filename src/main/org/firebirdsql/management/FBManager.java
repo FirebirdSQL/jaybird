@@ -19,16 +19,10 @@
 
 package org.firebirdsql.management;
 
-import org.firebirdsql.gds.Clumplet;
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSFactory;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.isc_db_handle;
-
-import java.sql.SQLException;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
+import org.firebirdsql.gds.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 

@@ -19,15 +19,12 @@
 
 package org.firebirdsql.pool;
 
-import java.sql.*;
-import javax.sql.*;
 import java.io.PrintWriter;
-
-import java.util.*;
+import java.sql.SQLException;
 
 import javax.naming.*;
+import javax.sql.*;
 
-import EDU.oswego.cs.dl.util.concurrent.*;
 import org.firebirdsql.logging.Logger;
 
 /**
