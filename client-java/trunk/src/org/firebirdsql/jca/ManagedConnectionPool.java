@@ -38,7 +38,7 @@ import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
 //import javax.security.auth.Subject;
-//import org.jboss.logging.Logger;
+import org.firebirdsql.logging.Logger;
 
 /**
  * ManagedConnectionPool.java
@@ -61,7 +61,7 @@ public class ManagedConnectionPool
 
    private /*final*/ FIFOSemaphore permits;
 
-   //   private final Logger log;
+   private final Logger log = Logger.getLogger(getClass());
 
    private final Counter connectionCounter = new Counter();
 
@@ -73,7 +73,6 @@ public class ManagedConnectionPool
       this.mcf = mcf;
       defaultCri = cri;
       this.poolParams = poolParams;
-      //this.log = log;
       permits = new FIFOSemaphore(this.poolParams.maxSize);
       IdleRemover.registerPool(this, poolParams.idleTimeout);
    }
@@ -168,6 +167,7 @@ public class ManagedConnectionPool
 
    public void removeTimedOut()
    {
+      log.debug("Checking for timed out connections");  
       synchronized (mcs)
       {
          for (Iterator i = mcs.iterator(); i.hasNext(); ) 
@@ -175,6 +175,7 @@ public class ManagedConnectionPool
             MCHolder mch = (MCHolder)i.next();
             if (mch.isTimedOut()) 
             {
+               log.debug("Removing a timed-out connection");
                i.remove();
                doDestroy(mch.getMC());
             } // end of if ()

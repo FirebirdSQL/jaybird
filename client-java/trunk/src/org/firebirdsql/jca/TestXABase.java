@@ -57,10 +57,11 @@ public class TestXABase extends BaseFBTest {
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
         mcf.setDatabase(DB_DATASOURCE_URL);
         FBConnectionRequestInfo cri = new FBConnectionRequestInfo();
-        cri.setProperty(GDS.isc_dpb_user_name, "SYSDBA");
-        cri.setProperty(GDS.isc_dpb_password, "masterkey");
+        cri.setProperty(GDS.isc_dpb_user_name, DB_USER);
+        cri.setProperty(GDS.isc_dpb_password, DB_PASSWORD);
         cri.setProperty(GDS.isc_dpb_num_buffers, new byte[] {90});
         cri.setProperty(GDS.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
+        cri.setProperty(GDS.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0});
         mcf.setConnectionRequestInfo(cri);
         HashSet tpb = new HashSet();
         tpb.add(new Integer(GDS.isc_tpb_write));

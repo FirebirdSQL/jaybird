@@ -112,8 +112,10 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
    * @exception SQLException if a database-access error occurs.
    */
     public Connection getConnection(String username, String password) throws  SQLException {
-        try {
-            FBConnectionRequestInfo subjectCri = new FBConnectionRequestInfo(mcf.getDefaultConnectionRequestInfo());
+        try 
+        {
+           //mcf makes a copy for us.
+            FBConnectionRequestInfo subjectCri = mcf.getDefaultConnectionRequestInfo();
             subjectCri.setUser(username);
             subjectCri.setPassword(password);
             return (Connection)cm.allocateConnection(mcf, subjectCri);

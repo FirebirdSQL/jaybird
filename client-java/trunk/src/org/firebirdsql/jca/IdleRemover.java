@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.firebirdsql.logging.Logger;
+
 /**
  * IdleRemover.java
  *
@@ -43,6 +45,8 @@ import java.util.Iterator;
 
 public class IdleRemover 
 {
+
+   private final Logger log = Logger.getLogger(getClass());
 
    private final Collection pools = new ArrayList();
 
@@ -78,16 +82,21 @@ public class IdleRemover
                      try 
                      {
                         pools.wait(interval);
+                        log.debug("run: IdleRemover notifying pools, interval: " + interval);
                         for (Iterator i = pools.iterator(); i.hasNext(); ) 
                         {
                            ((ManagedConnectionPool)i.next()).removeTimedOut();
                         } // end of if ()
                         next = System.currentTimeMillis() + interval;
-                        
+                        if (next < 0) 
+                        {
+                           next = Long.MAX_VALUE;      
+                        } // end of if ()
                      }
                      catch (InterruptedException ie)
                      {
-                         return;  
+                        log.info("run: IdleRemover has been interrupted, returning");
+                        return;  
                      } // end of try-catch
                         
                   } // end of while ()
@@ -101,6 +110,7 @@ public class IdleRemover
 
    private void internalRegisterPool(ManagedConnectionPool mcp, long interval)
    {
+      log.debug("internalRegisterPool: registering pool with interval " + interval + " old interval: " + this.interval);
       synchronized (pools)
       {
          pools.add(mcp);
@@ -108,8 +118,9 @@ public class IdleRemover
          {
             this.interval = interval/2;
             long maybeNext = System.currentTimeMillis() + this.interval;
-            if (next > maybeNext) 
+            if (next > maybeNext && maybeNext > 0) 
             {
+               log.debug("internalRegisterPool: about to notify thread: old next: " + next + ", new next: " + maybeNext);
                next = maybeNext;
                pools.notify();
                //removerThread.interrupt();
@@ -127,6 +138,7 @@ public class IdleRemover
          pools.remove(mcp);
          if (pools.size() == 0) 
          {
+            log.debug("internalUnregisterPool: setting interval to Long.MAX_VALUE");
             interval = Long.MAX_VALUE;
          } // end of if ()
          
@@ -135,6 +147,7 @@ public class IdleRemover
 
    private void stop()
    {
+      log.debug("stop: stopping IdleRemover");
       interval = -1;
       removerThread.interrupt();
    }
