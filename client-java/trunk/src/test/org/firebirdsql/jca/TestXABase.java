@@ -22,6 +22,7 @@ package org.firebirdsql.jca;
 import javax.transaction.xa.Xid;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.GDSFactory;
 
 import org.firebirdsql.jdbc.BaseFBTest;
 
@@ -52,7 +53,7 @@ public class TestXABase extends BaseFBTest {
 
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
         mcf.setDatabase(DB_DATASOURCE_URL);
-        FBConnectionRequestInfo cri = new FBConnectionRequestInfo();
+        FBConnectionRequestInfo cri = new FBConnectionRequestInfo(GDSFactory.getDefaultGDS());
         cri.setProperty(ISCConstants.isc_dpb_user_name, DB_USER);
         cri.setProperty(ISCConstants.isc_dpb_password, DB_PASSWORD);
         cri.setProperty(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
