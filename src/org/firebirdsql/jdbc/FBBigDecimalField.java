@@ -118,6 +118,8 @@ public class FBBigDecimalField extends FBField {
     }
 
     String getString() throws SQLException {
+        if (isNull()) return STRING_NULL_VALUE;
+        
         return getBigDecimal().toString();
     }
 
