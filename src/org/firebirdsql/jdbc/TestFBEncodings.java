@@ -48,9 +48,11 @@ public class TestFBEncodings extends BaseFBTest {
         "DROP TABLE test_encodings";
     
     // "test string" in Ukrainian ("тестова стрічка")
-    public static String UKRAINIAN_TEST_STRING_WIN1251 = 
-        "\u00f2\u00e5\u00f1\u00f2\u00ee\u00e2\u00e0 " +
-        "\u00f1\u00f2\u00f0\u00b3\u00f7\u00ea\u00e0";
+    public static String UKRAINIAN_TEST_STRING = 
+        //"\u00f2\u00e5\u00f1\u00f2\u00ee\u00e2\u00e0 " +
+        "\u0442\u0435\u0441\u0442\u043e\u0432\u0430 " + 
+        //"\u00f1\u00f2\u00f0\u00b3\u00f7\u00ea\u00e0";
+        "\u0441\u0442\u0440\u0456\u0447\u043a\u0430";
         
     public static int UKRAINIAN_TEST_ID = 1;
     
@@ -87,6 +89,13 @@ public class TestFBEncodings extends BaseFBTest {
             stmt.close();        
         } catch(Exception ex) {
         }
+        
+        try {
+            stmt.executeUpdate("DELETE FROM test_encodings");
+            stmt.close();        
+        } catch(Exception ex) {
+        }
+        
     }
 
     protected void tearDown() throws Exception {
@@ -121,9 +130,9 @@ public class TestFBEncodings extends BaseFBTest {
             "VALUES(?, ?, ?, ?)");
         
         stmt.setInt(1, UKRAINIAN_TEST_ID);
-        stmt.setString(2, UKRAINIAN_TEST_STRING_WIN1251);
-        stmt.setString(3, UKRAINIAN_TEST_STRING_WIN1251);
-        stmt.setString(4, UKRAINIAN_TEST_STRING_WIN1251);
+        stmt.setString(2, UKRAINIAN_TEST_STRING);
+        stmt.setString(3, UKRAINIAN_TEST_STRING);
+        stmt.setString(4, UKRAINIAN_TEST_STRING);
         
         int updated = stmt.executeUpdate();
         stmt.close();
@@ -142,11 +151,11 @@ public class TestFBEncodings extends BaseFBTest {
         
         String win1251Value = rs.getString(1);
         assertTrue("win1251_field value should be the same", 
-            win1251Value.equals(UKRAINIAN_TEST_STRING_WIN1251));
+            win1251Value.equals(UKRAINIAN_TEST_STRING));
             
         String unicodeValue = rs.getString(2);
         assertTrue("unicode_field value should be the same", 
-            unicodeValue.equals(UKRAINIAN_TEST_STRING_WIN1251));
+            unicodeValue.equals(UKRAINIAN_TEST_STRING));
             
         assertTrue("Should have exactly one row", !rs.next());
         
