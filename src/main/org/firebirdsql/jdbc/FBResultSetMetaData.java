@@ -20,6 +20,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.13  2003/08/20 21:53:30  rrokytskyy
+ * made constructors protected for rowset implementation
+ *
  * Revision 1.12  2003/06/23 21:51:20  rrokytskyy
  * code cleanup
  *
@@ -226,26 +229,26 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      */
     public  int getColumnDisplaySize(int column) throws  SQLException {
         int colType = getColumnType(column);
-        ExtendedFieldInfo fieldInfo = getExtFieldInfo(column);
         switch (colType){
             case Types.DECIMAL:
-            case Types.NUMERIC:
-                
-                if (fieldInfo == null) 
+            case Types.NUMERIC: {
+                ExtendedFieldInfo fieldInfo = getExtFieldInfo(column);
+                if (fieldInfo == null)
                     return estimatePrecision(column);
                 else
                     return fieldInfo.fieldPrecision;
-            
+            }
+
             case Types.CHAR:
-            case Types.VARCHAR:
-                
-                if (fieldInfo == null) {
-                    String encoding = getIscEncoding();
-                    int length = getXsqlvar(column).sqllen;
-                    return length / FBConnectionHelper.getIscEncodingSize(encoding);
-                } else
-                    return fieldInfo.characterLength;
-            
+            case Types.VARCHAR: {
+                XSQLVAR var = getXsqlvar(column);
+                int charset = var.sqlsubtype & 0xFF;
+                int charSetSize = charset == 127 /* CS_dynamic */ ?
+                    FBConnectionHelper.getIscEncodingSize(getIscEncoding()) :
+                    FBConnectionHelper.getCharacterSetSize(charset);
+                return var.sqllen / charSetSize;
+            }
+
             case Types.FLOAT:
                 return 9;
             case Types.DOUBLE:
@@ -276,7 +279,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getColumnLabel(int column) throws  SQLException {
-        return (getXsqlvar(column).aliasname == null) ? 
+        return (getXsqlvar(column).aliasname == null) ?
             getXsqlvar(column).sqlname: getXsqlvar(column).aliasname;
     }
 
@@ -316,28 +319,28 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      */
     public  int getPrecision(int column) throws  SQLException {
         int colType = getColumnType(column);
-        ExtendedFieldInfo fieldInfo = getExtFieldInfo(column);
-        
+
         switch (colType){
-            
+
             case Types.DECIMAL:
-            case Types.NUMERIC:
-            
-                if (fieldInfo == null) 
+            case Types.NUMERIC: {
+                ExtendedFieldInfo fieldInfo = getExtFieldInfo(column);
+                if (fieldInfo == null)
                     return estimatePrecision(column);
                 else
                     return fieldInfo.fieldPrecision;
-                
+            }
+
             case Types.CHAR:
-            case Types.VARCHAR:
-            
-                if (fieldInfo == null) {
-                    String encoding = getIscEncoding();
-                    int length = getXsqlvar(column).sqllen;
-                    return length / FBConnectionHelper.getIscEncodingSize(encoding);
-                } else
-                    return fieldInfo.characterLength;
-                
+            case Types.VARCHAR: {
+                XSQLVAR var = getXsqlvar(column);
+                int charset = var.sqlsubtype & 0xFF;
+                int charSetSize = charset == 127 /* CS_dynamic */ ?
+                    FBConnectionHelper.getIscEncodingSize(getIscEncoding()) :
+                    FBConnectionHelper.getCharacterSetSize(charset);
+                return var.sqllen / charSetSize;
+            }
+
             case Types.FLOAT:
                 return 7;
             case Types.DOUBLE:
@@ -640,26 +643,26 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         //return stmt.getOutSqlda().sqlvar[columnIndex - 1];
         return xsqlvars[columnIndex - 1];
     }
-    
-    private ExtendedFieldInfo getExtFieldInfo(int columnIndex) 
+
+    private ExtendedFieldInfo getExtFieldInfo(int columnIndex)
         throws SQLException
     {
-        if (extendedInfo == null) 
+        if (extendedInfo == null)
         {
-            this.extendedInfo = getExtendedFieldInfo(connection);            
+            this.extendedInfo = getExtendedFieldInfo(connection);
         } // end of if ()
-        
+
         FieldKey key = new FieldKey(
-            getXsqlvar(columnIndex).relname, 
+            getXsqlvar(columnIndex).relname,
             getXsqlvar(columnIndex).sqlname);
-            
+
         return (ExtendedFieldInfo)extendedInfo.get(key);
     }
-    
+
     private int estimatePrecision(int columnIndex) {
         int sqltype = getXsqlvar(columnIndex).sqltype & ~1;
         int sqlscale = getXsqlvar(columnIndex).sqlscale;
-        
+
         switch(sqltype) {
             case ISCConstants.SQL_SHORT : return 5;
             case ISCConstants.SQL_LONG : return 10;
@@ -668,8 +671,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
             default : return 0;
         }
     }
-    
-    
+
+
     private static final String GET_FIELD_INFO = "SELECT "
         + "  RF.RDB$RELATION_NAME as RELATION_NAME"
         + ", RF.RDB$FIELD_NAME as FIELD_NAME"
@@ -689,7 +692,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         + " AND"
         + "  RF.RDB$RELATION_NAME = ?"
         ;
-        
+
     /**
      * This class is an old-fashion data structure that stores additional
      * information about fields in a database.
@@ -704,7 +707,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         int characterLength;
         int characterSetId;
     }
-    
+
     /**
      * This class should be used as a composite key in an internal field
      * mapping structures.
@@ -712,11 +715,11 @@ public class FBResultSetMetaData implements ResultSetMetaData {
     private static final class FieldKey {
         private String relationName;
         private String fieldName;
-        
+
         /**
          * Create instance of this class for the specified relation and field
          * names.
-         * 
+         *
          * @param relationName relation name.
          * @param fieldName field name.
          */
@@ -727,20 +730,20 @@ public class FBResultSetMetaData implements ResultSetMetaData {
 
         /**
          * Check if <code>obj</code> is equal to this object.
-         * 
+         *
          * @param obj object to check.
-         * 
-         * @return <code>true</code> if <code>obj</code> is instance of this 
+         *
+         * @return <code>true</code> if <code>obj</code> is instance of this
          * class and has equal relation and field names.
          */
         public boolean equals(Object obj) {
-            
+
             if (obj == this) return true;
-            
+
             if (!(obj instanceof FieldKey)) return false;
-            
+
             FieldKey that = (FieldKey)obj;
-            
+
             if (relationName == null && fieldName == null)
                 return that.relationName == null && that.fieldName == null;
             else
@@ -754,8 +757,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         }
 
         /**
-         * Get hash code of this instance. 
-         * 
+         * Get hash code of this instance.
+         *
          * @return combination of hash codes of <code>relationName</code> field
          * and <code>fieldName</code> field.
          */
@@ -770,25 +773,25 @@ public class FBResultSetMetaData implements ResultSetMetaData {
             else
                 return (relationName.hashCode() ^ fieldName.hashCode()) + 11;
         }
-        
-        
+
+
     }
-    
+
     /**
      * This method retrieves extended information from the system tables in
      * a database. Since this method is expensinve, use it with care.
-     * 
-     * @return mapping between {@link FieldKey} instances and 
+     *
+     * @return mapping between {@link FieldKey} instances and
      * {@link ExtendedFieldInfo} instances.
-     * 
+     *
      * @throws SQLException if extended field information cannot be obtained.
      */
     private Map getExtendedFieldInfo(FBConnection connection) throws SQLException {
-        
+
         if (connection == null) return Collections.EMPTY_MAP;
-        
+
         //
-        // Apparently there is a limit in the UNION 
+        // Apparently there is a limit in the UNION
         // It is necesary to split in several querys
         // Although the problem reported with 93 UNION use only 70
         //
@@ -800,32 +803,32 @@ public class FBResultSetMetaData implements ResultSetMetaData {
 
             int maxLength = (pending>70) ? 70 : pending;
             for (int i = 0; i < maxLength; i++) {
-            
+
                 String relationName = xsqlvars[i].relname;
                 String fieldName = xsqlvars[i].sqlname;
-            
+
                 if (relationName == null || fieldName == null) continue;
-            
+
                 sb.append(GET_FIELD_INFO);
-                        
+
                 params.add(fieldName);
                 params.add(relationName);
-            
+
                 if (i < maxLength - 1)
                     sb.append("\n").append("UNION").append("\n");
-                
+
             }
 
             ResultSet rs = connection.doQuery(
-                sb.toString(), 
-                params, 
+                sb.toString(),
+                params,
                 ((FBDatabaseMetaData)connection.getMetaData()).statements);
-            
+
             try {
-                
+
                 while(rs.next()) {
                     ExtendedFieldInfo fieldInfo = new ExtendedFieldInfo();
-                
+
                     fieldInfo.relationName = rs.getString("RELATION_NAME");
                     fieldInfo.fieldName = rs.getString("FIELD_NAME");
                     fieldInfo.fieldLength = rs.getInt("FIELD_LENGTH");
@@ -834,14 +837,14 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                     fieldInfo.fieldSubtype = rs.getInt("FIELD_SUB_TYPE");
                     fieldInfo.characterSetId = rs.getInt("CHARACTER_SET_ID");
                     fieldInfo.characterLength = rs.getInt("CHARACTER_LENGTH");
-                
+
                     if (rs.wasNull())
-                        fieldInfo.characterLength = 
-                            fieldInfo.fieldLength / 
+                        fieldInfo.characterLength =
+                            fieldInfo.fieldLength /
                             FBConnectionHelper.getCharacterSetSize(fieldInfo.characterSetId);
-                
+
                     result.put(
-                        new FieldKey(fieldInfo.relationName, fieldInfo.fieldName), 
+                        new FieldKey(fieldInfo.relationName, fieldInfo.fieldName),
                         fieldInfo);
                 }
             } finally {

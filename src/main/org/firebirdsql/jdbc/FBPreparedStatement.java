@@ -145,8 +145,6 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setNull(int parameterIndex, int sqlType) throws  SQLException {
-        if (parameterIndex > fields.length)
-            throw new SQLException("invalid column index");
         getField(parameterIndex).setNull();
     }
 
@@ -662,13 +660,18 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
          setNull(parameterIndex, sqlType); //all nulls are represented the same... a null reference
     }
 
+    //------------------------- JDBC 3.0 -----------------------------------
 
     /**
-     * jdbc 3
-     * @param param1 <description>
-     * @param param2 <description>
-     * @exception java.sql.SQLException <description>
-     */
+     * Sets the designated parameter to the given <code>java.net.URL</code> value. 
+     * The driver converts this to an SQL <code>DATALINK</code> value
+     * when it sends it to the database.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x the <code>java.net.URL</code> object to be set
+     * @exception SQLException if a database access error occurs
+     * @since 1.4
+     */ 
     public void setURL(int param1, URL param2) throws SQLException {
         // TODO: implement this java.sql.PreparedStatement method
         throw new SQLException("Not yet implemented");
@@ -676,13 +679,18 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 
 
     /**
-     * jdbc 3
-     * @return <description>
-     * @exception java.sql.SQLException <description>
+     * Retrieves the number, types and properties of this 
+     * <code>PreparedStatement</code> object's parameters.
+     *
+     * @return a <code>ParameterMetaData</code> object that contains information
+     *         about the number, types and properties of this 
+     *         <code>PreparedStatement</code> object's parameters
+     * @exception SQLException if a database access error occurs
+     * @see ParameterMetaData
+     * @since 1.4
      */
     public ParameterMetaData getParameterMetaData() throws SQLException {
-        // TODO: implement this java.sql.PreparedStatement method
-        throw new SQLException("Not yet implemented");
+        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, c);
     }
 
 
