@@ -119,6 +119,12 @@ public final class ISCConstants {
     public final static int isc_dpb_gfix_attach             = 66;
     public final static int isc_dpb_gstat_attach            = 67;
     public final static int isc_dpb_set_db_charset          = 68;
+    
+    /*
+     * Driver-specific DPB params that will be removed before sending them
+     * to the server. These params influence only client side.
+     */
+    public final static int isc_dpb_socket_buffer_size    = 129;
 
     /*************************************/
     /* Transaction parameter block stuff */

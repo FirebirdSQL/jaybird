@@ -199,7 +199,7 @@ public final class GDS_Impl implements GDS {
 
 
             DbAttachInfo dbai = new DbAttachInfo(file_name);
-            connect(db, dbai);
+            connect(db, dbai, null);
             try {
                 if (debug) log.debug("op_create ");
                 db.out.writeInt(op_create);
@@ -262,12 +262,15 @@ public final class GDS_Impl implements GDS {
         }
 
         synchronized (db) {
-            connect(db, dbai);
+            connect(db, dbai, dpb);
             try {
                 if (debug) log.debug("op_attach ");
                 db.out.writeInt(op_attach);
                 db.out.writeInt(0);                // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
+                
+                dpb = removeInternalDPBParams(dpb);
+                
                 db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable)dpb);
                 db.out.flush();            
                 if (debug) log.debug("sent");
@@ -286,6 +289,14 @@ public final class GDS_Impl implements GDS {
                 throw new GDSException(ISCConstants.isc_net_write_err);
             }
         }
+    }
+    
+    private Clumplet removeInternalDPBParams(Clumplet dpb) {
+        Clumplet result = GDSFactory.cloneClumplet(dpb);
+        
+        result.remove(ISCConstants.isc_dpb_socket_buffer_size);
+        
+        return result;
     }
 
     public byte[] isc_database_info(isc_db_handle handle,
@@ -1481,16 +1492,37 @@ public final class GDS_Impl implements GDS {
     public void connect(isc_db_handle_impl db,
                             String host, Integer port, String filename) throws GDSException {
         DbAttachInfo dbai = new DbAttachInfo(host, port, filename);
-        connect(db, dbai);
+        connect(db, dbai, null);
     }
 
     private void connect(isc_db_handle_impl db,
-                            DbAttachInfo dbai) throws GDSException {
+                            DbAttachInfo dbai, Clumplet dpb) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
+        
+        int socketBufferSize = -1;
+        
+        String iscSocketBufferLength = dpb.findString(ISCConstants.isc_dpb_socket_buffer_size);
+        
+        if (iscSocketBufferLength != null) {
+            try {
+                socketBufferSize = Integer.parseInt(iscSocketBufferLength);
+            } catch(NumberFormatException ex) {
+                throw new GDSException(
+                    ISCConstants.isc_arg_gds, 
+                    ISCConstants.isc_bad_dpb_content);
+            }
+        }
+        
         try {
             try {
                 db.socket = new Socket(dbai.getServer(), dbai.getPort());
                 db.socket.setTcpNoDelay(true);
+                
+                if (socketBufferSize != -1) {
+                    db.socket.setReceiveBufferSize(socketBufferSize);
+                    db.socket.setSendBufferSize(socketBufferSize);
+                }
+                
                 if (debug) log.debug("Got socket");
             } catch (UnknownHostException ex2) {
                 String message = "Cannot resolve host " + dbai.getServer();
