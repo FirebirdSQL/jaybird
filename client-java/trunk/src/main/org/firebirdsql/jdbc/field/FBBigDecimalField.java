@@ -20,7 +20,6 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.jdbc.FBResultSet;
 
 import java.sql.SQLException;
 import java.math.BigDecimal;
@@ -45,10 +44,10 @@ public class FBBigDecimalField extends FBField {
 
     private int fieldType = 0; // 1.- Short, 2.- Integer, 3.- Long
 
-    FBBigDecimalField(XSQLVAR field, FBResultSet rs, int numCol, int fieldType, 
+    FBBigDecimalField(XSQLVAR field, FieldDataProvider dataProvider, int fieldType, 
         int requiredType) throws SQLException 
     {
-        super(field, rs, numCol, requiredType);
+        super(field, dataProvider, requiredType);
         this.fieldType = fieldType;
     }
 
@@ -57,7 +56,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     public byte getByte() throws SQLException {
-        if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
+        if (getRow(numCol)==null) return BYTE_NULL_VALUE;
 
         long longValue = getLong();
 
@@ -72,7 +71,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     public double getDouble() throws SQLException {
-        if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
+        if (getRow(numCol)==null) return DOUBLE_NULL_VALUE;
 
         BigDecimal value = getBigDecimal();
         
@@ -83,7 +82,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     public float getFloat() throws SQLException {
-        if (rs.row[numCol]==null) return FLOAT_NULL_VALUE;
+        if (getRow(numCol)==null) return FLOAT_NULL_VALUE;
 
         double doubleValue = getDouble();
 
@@ -99,7 +98,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     public int getInt() throws SQLException {
-        if (rs.row[numCol]==null) return INT_NULL_VALUE;
+        if (getRow(numCol)==null) return INT_NULL_VALUE;
 
         long longValue = getLong();
 
@@ -131,7 +130,7 @@ public class FBBigDecimalField extends FBField {
     */
 
     public short getShort() throws SQLException {
-        if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
+        if (getRow(numCol)==null) return SHORT_NULL_VALUE;
 
         long longValue = getLong();
 
@@ -146,7 +145,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     public String getString() throws SQLException {
-        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
+        if (getRow(numCol)==null) return STRING_NULL_VALUE;
         
         BigDecimal value = getBigDecimal();
         
@@ -157,18 +156,18 @@ public class FBBigDecimalField extends FBField {
     }
 
     public BigDecimal getBigDecimal() throws SQLException {
-        if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
+        if (getRow(numCol)==null) return BIGDECIMAL_NULL_VALUE;
 
         long longValue;
 
         if (fieldType==2)
-            longValue = field.decodeInt(rs.row[numCol]);
+            longValue = field.decodeInt(getRow(numCol));
         else
         if (fieldType==3)
-            longValue = field.decodeLong(rs.row[numCol]);
+            longValue = field.decodeLong(getRow(numCol));
         else
         if (fieldType==1)
-            longValue = field.decodeShort(rs.row[numCol]);
+            longValue = field.decodeShort(getRow(numCol));
         else
             throw (SQLException)createException(
                 BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();

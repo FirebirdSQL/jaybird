@@ -22,7 +22,6 @@ package org.firebirdsql.jdbc.field;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
@@ -47,13 +46,7 @@ public class TestFBTimestampField extends BaseTestFBField {
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
         xsqlvars[0] = createXSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_TIMESTAMP;
-        Object[] row = new byte[1][];
-        ArrayList rows = new ArrayList();
-        rows.add(row);		  
-        FBFieldResultSet rs = new FBFieldResultSet(xsqlvars,rows);
-		rs.next();
-
-		field = FBField.createField(xsqlvars[0],rs,0, false);
+        field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), false);
 	}
 	protected void tearDown() {
 	}

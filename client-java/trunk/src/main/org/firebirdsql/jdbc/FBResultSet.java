@@ -183,7 +183,20 @@ public class FBResultSet implements ResultSet {
         fields = new FBField[xsqlvars.length];
         colNames = new HashMap(xsqlvars.length,1);
         for (int i=0; i<xsqlvars.length; i++){
-            fields[i] = FBField.createField(xsqlvars[i], this, i, cached);
+            final int fieldPosition = i;
+            
+              // anonymous implementation of the FieldDataProvider interface
+              FieldDataProvider dataProvider = new FieldDataProvider() {
+                  public byte[] getFieldData() {
+                      return row[fieldPosition];
+                  }
+                  
+                  public void setFieldData(byte[] data) {
+                      row[fieldPosition] = data;
+                  }
+              };
+              
+            fields[i] = FBField.createField(xsqlvars[i], dataProvider, cached);
             fields[i].setConnection(c);
         }
     }

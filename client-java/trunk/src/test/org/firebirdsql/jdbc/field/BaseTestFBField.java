@@ -27,11 +27,13 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
 import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.ngds.XSQLVARLittleEndianImpl;
 
 /**
@@ -67,6 +69,27 @@ public abstract class BaseTestFBField extends TestCase {
         super(testName);
     }
 
+    protected FieldDataProvider createDataProvider(XSQLVAR[] xsqlvars) throws SQLException {
+        byte[][] row = new byte[1][];
+        ArrayList rows = new ArrayList();
+        rows.add(row);
+        final FBResultSet rs = new FBFieldResultSet(xsqlvars, rows);
+        rs.next();
+        // anonymous implementation of the FieldDataProvider interface
+        FieldDataProvider dataProvider = new FieldDataProvider() {
+
+            public byte[] getFieldData() {
+                return rs.row[0];
+            }
+
+            public void setFieldData(byte[] data) {
+                rs.row[0] = data;
+            }
+        };
+        
+        return dataProvider;
+    }
+    
     public void testByte() throws SQLException {
         field.setByte(TEST_BYTE);
         field.copyOI();		  

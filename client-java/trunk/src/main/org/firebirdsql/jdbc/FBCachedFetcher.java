@@ -97,12 +97,21 @@ class FBCachedFetcher implements FBFetcher {
                         // if field is blob and there is a value in cache
                         if (isBlob[j] && localRow[j] != null ) {
                             
-                            // make this row current in result set
-                            rs.row = localRow;
-                            
+                            // anonymous implementation of the FieldDataProvider interface
+                            final byte[] tempData = localRow[j];
+                            FieldDataProvider dataProvider = new FieldDataProvider() {
+                                public byte[] getFieldData() {
+                                    return tempData;
+                                }
+                                
+                                public void setFieldData(byte[] data) {
+                                    throw new UnsupportedOperationException();
+                                }
+                            };
+
                             // copy data from current row
                             FBField localField = FBField.createField(
-                                    rs.xsqlvars[j], rs, j,false);
+                                    rs.xsqlvars[j], dataProvider,false);
                             
                             FBFlushableField blob = (FBFlushableField)localField;
                                   
@@ -113,9 +122,6 @@ class FBCachedFetcher implements FBFetcher {
                                 ((FBLongVarCharField)blob).setConnection(c);
                                 
                             localRow[j] = blob.getCachedObject();
-                            
-                            // set current row in result set to null
-                            rs.row = null;
                         }
                     }
                 }

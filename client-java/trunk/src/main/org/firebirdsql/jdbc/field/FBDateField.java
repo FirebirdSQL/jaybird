@@ -25,7 +25,6 @@ import java.sql.Date;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.jdbc.FBResultSet;
 
 /**
  * Describe class <code>FBDateField</code> here.
@@ -35,36 +34,36 @@ import org.firebirdsql.jdbc.FBResultSet;
  */
 class FBDateField extends FBField {
 
-    FBDateField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+    FBDateField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
         throws SQLException
     {
-        super(field, rs, numCol, requiredType);
+        super(field, dataProvider, requiredType);
     }
 
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
+        if (getRow(numCol)==null) return TIMESTAMP_NULL_VALUE;
 		  
         return field.decodeTimestamp(getTimestamp(),cal);
     }
     public Timestamp getTimestamp() throws SQLException {
-        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
+        if (getRow(numCol)==null) return TIMESTAMP_NULL_VALUE;
 
         return new Timestamp(getDate().getTime());
     }
     public Date getDate(Calendar cal) throws SQLException {
-        if (rs.row[numCol]==null) return DATE_NULL_VALUE;
+        if (getRow(numCol)==null) return DATE_NULL_VALUE;
 
         return field.decodeDate(getDate(),cal);
     }
     public Date getDate() throws SQLException {
-        if (rs.row[numCol]==null) return DATE_NULL_VALUE;
+        if (getRow(numCol)==null) return DATE_NULL_VALUE;
 
-        return field.decodeDate(rs.row[numCol]);
+        return field.decodeDate(getRow(numCol));
     }
     public String getString() throws SQLException {
-        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
+        if (getRow(numCol)==null) return STRING_NULL_VALUE;
 
-        return field.decodeDate(rs.row[numCol]).toString();
+        return field.decodeDate(getRow(numCol)).toString();
     }
     
     //--- setXXX methods

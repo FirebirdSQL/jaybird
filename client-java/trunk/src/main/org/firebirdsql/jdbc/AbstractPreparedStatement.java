@@ -1042,7 +1042,20 @@ public abstract class AbstractPreparedStatement extends FBStatement
             // this is probably redundant, JVM initializes members to false
             isParamSet[i] = false;
             
-      		fields[i] = FBField.createField(getXsqlvar(i+1), null, i, false);
+            final int fieldPos = i;
+            
+            FieldDataProvider dataProvider = new FieldDataProvider() {
+                public byte[] getFieldData() {
+                    return getXsqlvar(fieldPos + 1).sqldata;
+                }
+                
+                public void setFieldData(byte[] data) {
+                    getXsqlvar(fieldPos + 1).sqldata = data;
+                }
+            };
+
+            
+      		fields[i] = FBField.createField(getXsqlvar(i+1), dataProvider, false);
 
             fields[i].setConnection(c);
 

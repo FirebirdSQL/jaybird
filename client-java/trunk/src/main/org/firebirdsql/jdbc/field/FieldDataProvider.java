@@ -16,33 +16,30 @@
  *
  * All rights reserved.
  */
- 
 package org.firebirdsql.jdbc.field;
 
-import java.sql.SQLException;
-import java.sql.Blob;
-
-import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.jdbc.FBCachedBlob;
 
 /**
- * Describe class <code>FBBlobField</code> here.
- *
+ * Provider of the row data.
+ * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @version 1.0
  */
-public class FBCachedBlobField extends FBBlobField {
+public interface FieldDataProvider {
+    
+    /**
+     * Get raw content of the filed. This method returns the array of bytes sent
+     * by the server back.
+     * 
+     * @return contents of the field or <code>null</code> if NULL value was
+     * sent from the server.
+     */
+    byte[] getFieldData();
+    
+    /**
+     * Set raw content of the field. 
+     * 
+     * @param data raw content of the field.
+     */
+    void setFieldData(byte[] data);
 
-    FBCachedBlobField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
-        throws SQLException 
-    {
-        super(field, dataProvider, requiredType);
-    }
-
-    public Blob getBlob() throws SQLException {
-        if (getRow(numCol)==null)
-            return BLOB_NULL_VALUE;
-
-        return new FBCachedBlob(getRow(numCol));
-    }
 }

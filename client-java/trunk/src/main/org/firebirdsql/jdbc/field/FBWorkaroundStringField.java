@@ -26,7 +26,6 @@ import java.sql.Types;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.jdbc.AbstractConnection;
 import org.firebirdsql.jdbc.FBConnectionHelper;
-import org.firebirdsql.jdbc.FBResultSet;
 
 
 /**
@@ -62,10 +61,10 @@ public class FBWorkaroundStringField extends FBStringField {
      * 
      * @throws SQLException if something went wrong.
      */
-    public FBWorkaroundStringField(XSQLVAR field, FBResultSet rs, int numCol,
+    public FBWorkaroundStringField(XSQLVAR field, FieldDataProvider dataProvider,
             int requiredType) throws SQLException 
     {
-        super(field, rs, numCol, requiredType);
+        super(field, dataProvider, requiredType);
         
         bytesPerCharacter = 1;
         possibleCharLength = field.sqllen / bytesPerCharacter;

@@ -20,7 +20,6 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.jdbc.FBResultSet;
 
 import java.sql.SQLException;
 import java.math.BigDecimal;
@@ -32,16 +31,16 @@ import java.math.BigDecimal;
  * @version 1.0
  */
 class FBDoubleField extends FBField {
-    FBDoubleField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+    FBDoubleField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
         throws SQLException 
     {
-        super(field, rs, numCol, requiredType);
+        super(field, dataProvider, requiredType);
     }
 
     public byte getByte() throws SQLException {
-        if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
+        if (getRow(numCol)==null) return BYTE_NULL_VALUE;
 
-        Double value = new Double(field.decodeDouble(rs.row[numCol]));
+        Double value = new Double(field.decodeDouble(getRow(numCol)));
 
         // check if value is withing bounds
         if (value.doubleValue() > MAX_BYTE_VALUE ||
@@ -52,9 +51,9 @@ class FBDoubleField extends FBField {
         return value.byteValue();
     }
     public short getShort() throws SQLException {
-        if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
+        if (getRow(numCol)==null) return SHORT_NULL_VALUE;
 
-        Double value = new Double(field.decodeDouble(rs.row[numCol]));
+        Double value = new Double(field.decodeDouble(getRow(numCol)));
 
         // check if value is withing bounds
         if (value.doubleValue() > MAX_SHORT_VALUE ||
@@ -65,9 +64,9 @@ class FBDoubleField extends FBField {
         return value.shortValue();
     }
     public int getInt() throws SQLException {
-        if (rs.row[numCol]==null) return INT_NULL_VALUE;
+        if (getRow(numCol)==null) return INT_NULL_VALUE;
 
-        Double value = new Double(field.decodeDouble(rs.row[numCol]));
+        Double value = new Double(field.decodeDouble(getRow(numCol)));
 
         // check if value is withing bounds
         if (value.doubleValue() > MAX_INT_VALUE ||
@@ -78,9 +77,9 @@ class FBDoubleField extends FBField {
         return value.intValue();
     }
     public long getLong() throws SQLException {
-        if (rs.row[numCol]==null) return LONG_NULL_VALUE;
+        if (getRow(numCol)==null) return LONG_NULL_VALUE;
 
-        Double value = new Double(field.decodeDouble(rs.row[numCol]));
+        Double value = new Double(field.decodeDouble(getRow(numCol)));
 
         // check if value is withing bounds
         if (value.doubleValue() > MAX_LONG_VALUE ||
@@ -91,9 +90,9 @@ class FBDoubleField extends FBField {
         return value.longValue();
     }
     public float getFloat() throws SQLException {
-        if (rs.row[numCol]==null) return FLOAT_NULL_VALUE;
+        if (getRow(numCol)==null) return FLOAT_NULL_VALUE;
 
-        Double value = new Double(field.decodeDouble(rs.row[numCol]));
+        Double value = new Double(field.decodeDouble(getRow(numCol)));
         float cValue = value.floatValue();
         // check if value is withing bounds
         if (cValue == Float.POSITIVE_INFINITY || cValue == Float.NEGATIVE_INFINITY)
@@ -103,33 +102,33 @@ class FBDoubleField extends FBField {
         return value.floatValue();
     }
     public double getDouble() throws SQLException {
-        if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
+        if (getRow(numCol)==null) return DOUBLE_NULL_VALUE;
 
-        return field.decodeDouble(rs.row[numCol]);
+        return field.decodeDouble(getRow(numCol));
     }
     public BigDecimal getBigDecimal() throws SQLException {
-        if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
+        if (getRow(numCol)==null) return BIGDECIMAL_NULL_VALUE;
 
-        return new BigDecimal(field.decodeDouble(rs.row[numCol]));
+        return new BigDecimal(field.decodeDouble(getRow(numCol)));
     }
     
     /*
     public Object getObject() throws SQLException {
-        if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
+        if (getRow(numCol)==null) return OBJECT_NULL_VALUE;
 
-        return new Double(field.decodeDouble(rs.row[numCol]));
+        return new Double(field.decodeDouble(getRow(numCol)));
     }
     */
     
     public boolean getBoolean() throws SQLException {
-        if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
+        if (getRow(numCol)==null) return BOOLEAN_NULL_VALUE;
 
-        return field.decodeDouble(rs.row[numCol]) == 1;
+        return field.decodeDouble(getRow(numCol)) == 1;
     }
     public String getString() throws SQLException {
-        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
+        if (getRow(numCol)==null) return STRING_NULL_VALUE;
 
-        return String.valueOf(field.decodeDouble(rs.row[numCol]));
+        return String.valueOf(field.decodeDouble(getRow(numCol)));
     }
 
     //--- setXXX methods
