@@ -19,31 +19,12 @@
 
 package org.firebirdsql.jdbc;
 
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.Savepoint;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Iterator;
-import javax.resource.ResourceException;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.isc_stmt_handle;
-import org.firebirdsql.gds.isc_blob_handle;
-import org.firebirdsql.gds.isc_db_handle;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.jca.FBLocalTransaction;
-import org.firebirdsql.jca.FBManagedConnection;
-import java.util.Map;
+import java.sql.*;
+import java.util.*;
+import javax.resource.*;
+
+import org.firebirdsql.gds.*;
+import org.firebirdsql.jca.*;
 
 /**
  * The class <code>FBConnection</code> is a handle to a FBManagedConnection.
@@ -51,7 +32,7 @@ import java.util.Map;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBConnection implements Connection
+public class FBConnection implements Connection, FirebirdConnection
 /*, javax.resource.cci.Connection
  * It is not possible to implement both Connection interfaces in one class
  * due to conflicting exception signatures.
@@ -955,7 +936,7 @@ public class FBConnection implements Connection
      * into a blob field without needing a preexisting blob
      * to modify.
     **/
-    public synchronized Blob createBlob() throws SQLException {
+    public synchronized FirebirdBlob createBlob() throws SQLException {
         
         /** @todo check if this is correct code */
         if (!getAutoCommit())

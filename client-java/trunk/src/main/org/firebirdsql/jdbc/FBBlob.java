@@ -20,27 +20,12 @@
 package org.firebirdsql.jdbc;
 
 
+import java.io.*;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.util.*;
 
-import java.io.BufferedInputStream;
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.OutputStreamWriter;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.HashSet;
-
-import org.firebirdsql.gds.isc_blob_handle;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
-
-import java.io.OutputStream;
-import java.io.BufferedOutputStream;
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.*;
 
 
 /**
@@ -78,7 +63,7 @@ import org.firebirdsql.gds.GDS;
  * @since 1.2
  */
 
-public class FBBlob implements Blob{
+public class FBBlob implements FirebirdBlob {
     
     private static final boolean SEGMENTED = false;
     public static final int READ_FULLY_BUFFER_SIZE = 16 * 1024;
@@ -130,7 +115,6 @@ public class FBBlob implements Blob{
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public long length() throws SQLException {
-        //throw new SQLException("Not yet implemented");
         try {
             byte[] info = getInfo(
                 new byte[]{ISCConstants.isc_info_blob_total_length}, 20);
@@ -164,6 +148,12 @@ public class FBBlob implements Blob{
             info, position + 3, dataLength);
     }
 
+    /**
+     * Check if blob is segmented. 
+     * 
+     * @return <code>true</code> if this blob is segmented, 
+     * otherwise <code>false</code>
+     */
     public boolean isSegmented() throws SQLException {
         try {
             byte[] info = getInfo(
@@ -182,6 +172,26 @@ public class FBBlob implements Blob{
         } catch(GDSException ex) {
             throw new FBSQLException(ex);
         }
+    }
+
+    /**
+     * Detach this blob. This method creates new instance of the same blob 
+     * database object that is not under result set control. When result set
+     * is closed, all associated resources are also released, including open
+     * blob streams. This method creates an new instance of blob object with
+     * the same blob ID that can be used even when result set is closed.
+     * <p>
+     * Note, detached blob will not remember the stream position of this object.
+     * This means that you cannot start reading data from the blob, then detach
+     * it, and then continue reading. Reading from detached blob will begin at
+     * the blob start.
+     * 
+     * @return instance of {@link FBBlob} that is not under result set control.
+     * 
+     * @throws SQLException if Blob cannot be detached.
+     */    
+    public FirebirdBlob detach() throws SQLException {
+        return new FBBlob(c, blob_id);
     }
 
   /**
@@ -217,7 +227,7 @@ public class FBBlob implements Blob{
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public InputStream getBinaryStream () throws SQLException {
-        FBBlobInputStream blobstream = new FBBlobInputStream();
+        FBBlobInputStream blobstream = new FBBlobInputStream(this);
         inputStreams.add(blobstream);
         //return new BufferedInputStream(blobstream, bufferlength);
         return blobstream;
@@ -322,7 +332,8 @@ public class FBBlob implements Blob{
             //copy pos bytes from input to output
             //implement this later
         }
-        return new BufferedOutputStream(blobOut, bufferlength);
+        // return new BufferedOutputStream(blobOut, bufferlength);
+        return blobOut;
     }
 
 
@@ -373,7 +384,9 @@ public class FBBlob implements Blob{
 
     //Inner classes
 
-    public class FBBlobInputStream extends InputStream {
+    public class FBBlobInputStream extends InputStream 
+        implements FirebirdBlob.BlobInputStream
+    {
 
 
         /**
@@ -397,8 +410,11 @@ public class FBBlob implements Blob{
         private int pos = 0;
         
         private boolean closed;
+        
+        private FBBlob owner;
 
-        private FBBlobInputStream() throws SQLException {
+        private FBBlobInputStream(FBBlob owner) throws SQLException {
+            this.owner = owner;
             
             closed = false;
             
@@ -412,23 +428,32 @@ public class FBBlob implements Blob{
                 throw new FBSQLException(ge);
             }
         }
+        
+        public FirebirdBlob getBlob() {
+            return owner;
+        }
 
-        public void seek(int position) throws SQLException {
+        public void seek(int position) throws IOException {
             try {
                 c.getInternalAPIHandler().isc_seek_blob(blob, position);
             } catch(GDSException ex) {
-                throw new FBSQLException(ex);
+                /** @todo fix this */
+                //throw new FBSQLException(ex);
+                throw new IOException(ex.getMessage());
             }
         }
         
-        public long length() throws SQLException {
+        public long length() throws IOException {
             try {
                 byte[] info = c.getInternalAPIHandler().isc_blob_info(blob,
                     new byte[]{ISCConstants.isc_info_blob_total_length}, 20);
                     
                 return interpretLength(info, 0);
             } catch(GDSException ex) {
-                throw new FBSQLException(ex);
+                //throw new FBSQLException(ex);
+                throw new IOException(ex.getMessage());
+            } catch(SQLException ex) {
+                throw new IOException(ex.getMessage());
             }
         }
 
@@ -491,6 +516,9 @@ public class FBBlob implements Blob{
                 System.arraycopy(buffer, 0, b, pos, counter);
                 pos += counter;
             }
+            
+            if (pos < length())
+                throw new EOFException();
         }
         
         public void readFully(byte[] b) throws IOException {
@@ -515,7 +543,9 @@ public class FBBlob implements Blob{
         }
     }
 
-    public class FBBlobOutputStream extends OutputStream {
+    public class FBBlobOutputStream extends OutputStream 
+        implements FirebirdBlob.BlobOutputStream
+    {
 
         private isc_blob_handle blob;
 
@@ -539,14 +569,16 @@ public class FBBlob implements Blob{
             }
         }
         
-        public long length() throws SQLException {
+        public long length() throws IOException {
             try {
                 byte[] info = c.getInternalAPIHandler().isc_blob_info(blob,
                     new byte[]{ISCConstants.isc_info_blob_total_length}, 20);
 
                 return interpretLength(info, 0);
             } catch(GDSException ex) {
-                throw new FBSQLException(ex);
+                throw new IOException(ex.getMessage());
+            } catch(SQLException ex) {
+                throw new IOException(ex.getMessage());
             }
         }
 
