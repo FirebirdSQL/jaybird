@@ -1,3 +1,18 @@
+2004-12-04 23:36  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	test/org/firebirdsql/gds/TestFatalErrors.java:
+	
+	fixed NPE when error happens during reconnecting
+
+2004-12-04 11:43  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/AbstractGDS.java,
+	gds/GDS.java, jdbc/AbstractConnection.java:
+	
+	allowed calling commit/rollback in Oracle mode
+
 2004-11-25 00:58  rrokytskyy
 
 	* client-java/src/:
