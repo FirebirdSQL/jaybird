@@ -28,6 +28,7 @@
 package org.firebirdsql.gds;
 
 import javax.security.auth.Subject;
+import java.util.List;
 
 /**
  * The interface <code>isc_db_handle</code> represents a socket connection
@@ -42,6 +43,20 @@ public interface isc_db_handle {
     Subject getSubject();
 
     boolean hasTransactions();
+    
+    /**
+     * Get list of warnings that were returned by the server.
+     * 
+     * @return instance of {@link List} containing instances of 
+     * {@link GDSException} representing server warnings (method 
+     * {@link GDSException#isWarning()} returns <code>true</code>).
+     */
+    List getWarnings();
+    
+    /**
+     * Clear warning list associated with this connection.
+     */
+    void clearWarnings();
 
 }
 

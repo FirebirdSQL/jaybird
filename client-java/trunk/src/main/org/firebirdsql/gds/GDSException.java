@@ -21,6 +21,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.3  2002/10/07 18:54:56  rrokytskyy
+ * improved exception handling
+ *
  * Revision 1.2  2002/09/18 23:10:29  rrokytskyy
  * f
  *
@@ -151,19 +154,6 @@ public class GDSException extends Exception {
         return type == GDS.isc_arg_warning;
     }
 
-    /*
-    public String toString() {
-        //this should really include the message, too
-        String s = "GDSException: " + fbErrorCode + ": ";
-        s += GDSExceptionHelper.getMessage(fbErrorCode);
-        s += "\n";
-        if (next != null) {
-            s += next.toString();
-        }
-        return s;
-    }
-    */
-
     /**
      * Returns a string representation of this exception.
      */
@@ -173,7 +163,7 @@ public class GDSException extends Exception {
         GDSException child = this.next;
         
         // If I represent a GDSMessage code, then let's format it nicely.
-        if (type == GDS.isc_arg_gds) {
+        if (type == GDS.isc_arg_gds || type == GDS.isc_arg_warning) {
             // get message
             GDSExceptionHelper.GDSMessage message =
                 GDSExceptionHelper.getMessage(intParam);

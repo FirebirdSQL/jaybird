@@ -909,6 +909,7 @@ public class GDS_Impl implements GDS {
                     stmt.out_sqlda = null;
                 }
                 stmt.clearRows();
+                db.rdb_sql_requests.remove(stmt);
             } catch (IOException ex) {
                 throw new GDSException(isc_net_read_err);
             }
@@ -1416,9 +1417,11 @@ public class GDS_Impl implements GDS {
                 int arg = db.in.readInt();
                 switch (arg) {
                     case isc_arg_end:
-                        if (head != null && !head.isWarning()) {
+                        if (head != null && !head.isWarning()) 
                             throw head;
-                        } 
+                        else
+                        if (head != null && head.isWarning()) 
+                            db.addWarning(head);
                         
                         return;
                     case isc_arg_interpreted:
