@@ -38,7 +38,7 @@ class FBLongField extends FBField {
     byte getByte() throws SQLException {
         if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
 
-        Long value = (Long)rs.row[numCol];
+        Long value = new Long(XSQLVAR.decodeLong(rs.row[numCol]));
 
         // check if value is withing bounds
         if (value.longValue() > MAX_BYTE_VALUE ||
@@ -51,7 +51,7 @@ class FBLongField extends FBField {
     short getShort() throws SQLException {
         if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
 
-        Long value = (Long)rs.row[numCol];
+        Long value = new Long(XSQLVAR.decodeLong(rs.row[numCol]));
 
         // check if value is withing bounds
         if (value.longValue() > MAX_SHORT_VALUE ||
@@ -64,7 +64,7 @@ class FBLongField extends FBField {
     int getInt() throws SQLException {
         if (rs.row[numCol]==null) return INT_NULL_VALUE;
 
-        Long value = (Long)rs.row[numCol];
+        Long value = new Long(XSQLVAR.decodeLong(rs.row[numCol]));
 
         // check if value is withing bounds
         if (value.longValue() > MAX_INT_VALUE ||
@@ -77,37 +77,37 @@ class FBLongField extends FBField {
     long getLong() throws SQLException {
         if (rs.row[numCol]==null) return LONG_NULL_VALUE;
 
-        return ((Long)rs.row[numCol]).longValue();
+        return XSQLVAR.decodeLong(rs.row[numCol]);
     }
     float getFloat() throws SQLException {
         if (rs.row[numCol]==null) return FLOAT_NULL_VALUE;
 
-        return ((Long)rs.row[numCol]).floatValue();
+        return (float) XSQLVAR.decodeLong(rs.row[numCol]);
     }
     double getDouble() throws SQLException {
         if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
-        return ((Long)rs.row[numCol]).doubleValue();
+        return (double) XSQLVAR.decodeLong(rs.row[numCol]);
     }
     java.math.BigDecimal getBigDecimal() throws SQLException {
         if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
-        return BigDecimal.valueOf(((Long)rs.row[numCol]).longValue());
+        return BigDecimal.valueOf(XSQLVAR.decodeLong(rs.row[numCol]));
     }
     Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return rs.row[numCol];
+        return new Long(XSQLVAR.decodeLong(rs.row[numCol]));
     }
     boolean getBoolean() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
-        return ((Long)rs.row[numCol]).intValue() == 1;
+        return XSQLVAR.decodeLong(rs.row[numCol]) == 1;
     }
     String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return ((Long)rs.row[numCol]).toString();
+        return String.valueOf(XSQLVAR.decodeLong(rs.row[numCol]));
     }
 
     //--- setXXX methods
@@ -150,7 +150,7 @@ class FBLongField extends FBField {
         setLong((long)value);
     }
     void setLong(long value) throws java.sql.SQLException {
-        field.sqldata = new Long(value);
+        field.sqldata = XSQLVAR.encodeLong(value);
     }
     void setInteger(int value) throws java.sql.SQLException {
         setLong((long)value);

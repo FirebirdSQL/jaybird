@@ -60,7 +60,7 @@ class FBTimestampField extends FBField {
     Timestamp getTimestamp() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
-        return (Timestamp)rs.row[numCol];
+        return XSQLVAR.decodeTimestamp(rs.row[numCol]);
     }
 
     //--- setXXX methods
@@ -95,6 +95,6 @@ class FBTimestampField extends FBField {
             return;
         }
 
-        field.sqldata = value;
+        field.sqldata = XSQLVAR.encodeTimestamp(value);
     }
 }

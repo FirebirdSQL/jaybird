@@ -64,7 +64,6 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     protected boolean[] isParamSet;
      
     private FBField[] fields= null;
-    private Object[] row = null;
     private boolean[] isBlob = null;
     private boolean hasBlobs = false;
 

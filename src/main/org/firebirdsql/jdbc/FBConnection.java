@@ -1101,7 +1101,7 @@ public class FBConnection implements Connection
         mc.registerStatement(fbStatement);
     }
 	 
-    public Object[] fetch(isc_stmt_handle stmt) throws GDSException {
+    public byte[][] fetch(isc_stmt_handle stmt) throws GDSException {
         checkManagedConnection();
         return mc.fetch(stmt);
     }

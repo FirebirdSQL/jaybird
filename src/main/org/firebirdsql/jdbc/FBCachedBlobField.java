@@ -42,6 +42,6 @@ public class FBCachedBlobField extends FBBlobField {
         if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 
-        return (Blob)rs.row[numCol];
+        return new FBCachedBlob(rs.row[numCol]);
     }
 }

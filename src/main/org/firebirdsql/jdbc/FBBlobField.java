@@ -61,7 +61,7 @@ public class FBBlobField extends FBField {
 //        if (rs.row[numCol] instanceof Blob)
 //            return (Blob)rs.row[numCol];
 
-        Long blobId = (Long)rs.row[numCol];
+        Long blobId = new Long(XSQLVAR.decodeLong(rs.row[numCol]));
 
         if (blobId == null)
             blobId = new Long(0);
@@ -143,11 +143,12 @@ public class FBBlobField extends FBField {
             return getBytes();
     }
 
-    Object getCachedObject() throws SQLException {
-        if (rs.row[numCol]==null)
-            return BLOB_NULL_VALUE;
+    byte[] getCachedObject() throws SQLException {
+        if (rs.row[numCol]==null) return null;
+//            return BLOB_NULL_VALUE;
 
-        return new FBCachedBlob(getBytesInternal());
+		  return getBytesInternal();
+//        return new FBCachedBlob(getBytesInternal());
     }
 
     String getString() throws SQLException {
@@ -241,13 +242,13 @@ public class FBBlobField extends FBField {
     private void copyBinaryStream(InputStream in, int length) throws SQLException {
         FBBlob blob =  new FBBlob(c, 0);
         blob.copyStream(in, length);
-        field.sqldata = new Long(blob.getBlobId());
+        field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
     }
 
     private void copyCharacterStream(Reader in, int length) throws SQLException {
         FBBlob blob =  new FBBlob(c, 0);
         blob.copyCharacterStream(in, length);
-        field.sqldata = new Long(blob.getBlobId());
+        field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
     }
     
     void setBytes(byte[] value) throws SQLException {
@@ -262,6 +263,6 @@ public class FBBlobField extends FBField {
     }
 
     void setBlob(FBBlob blob) throws SQLException {
-        field.sqldata = new Long(blob.getBlobId());
+        field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
     }
 }

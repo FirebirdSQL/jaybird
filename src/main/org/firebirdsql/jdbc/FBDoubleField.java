@@ -37,7 +37,7 @@ class FBDoubleField extends FBField {
     byte getByte() throws SQLException {
         if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
 
-        Double value = (Double)rs.row[numCol];
+        Double value = new Double(XSQLVAR.decodeDouble(rs.row[numCol]));
 
         // check if value is withing bounds
         if (value.doubleValue() > MAX_BYTE_VALUE ||
@@ -50,7 +50,7 @@ class FBDoubleField extends FBField {
     short getShort() throws SQLException {
         if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
 
-        Double value = (Double)rs.row[numCol];
+        Double value = new Double(XSQLVAR.decodeDouble(rs.row[numCol]));
 
         // check if value is withing bounds
         if (value.doubleValue() > MAX_SHORT_VALUE ||
@@ -63,7 +63,7 @@ class FBDoubleField extends FBField {
     int getInt() throws SQLException {
         if (rs.row[numCol]==null) return INT_NULL_VALUE;
 
-        Double value = (Double)rs.row[numCol];
+        Double value = new Double(XSQLVAR.decodeDouble(rs.row[numCol]));
 
         // check if value is withing bounds
         if (value.doubleValue() > MAX_INT_VALUE ||
@@ -76,7 +76,7 @@ class FBDoubleField extends FBField {
     long getLong() throws SQLException {
         if (rs.row[numCol]==null) return LONG_NULL_VALUE;
 
-        Double value = (Double)rs.row[numCol];
+        Double value = new Double(XSQLVAR.decodeDouble(rs.row[numCol]));
 
         // check if value is withing bounds
         if (value.doubleValue() > MAX_LONG_VALUE ||
@@ -89,7 +89,7 @@ class FBDoubleField extends FBField {
     float getFloat() throws SQLException {
         if (rs.row[numCol]==null) return FLOAT_NULL_VALUE;
 
-        Double value = (Double)rs.row[numCol];
+        Double value = new Double(XSQLVAR.decodeDouble(rs.row[numCol]));
         float cValue = value.floatValue();
         // check if value is withing bounds
         if (cValue == Float.POSITIVE_INFINITY || cValue == Float.NEGATIVE_INFINITY)
@@ -101,27 +101,27 @@ class FBDoubleField extends FBField {
     double getDouble() throws SQLException {
         if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
-        return ((Double)rs.row[numCol]).doubleValue();
+        return XSQLVAR.decodeDouble(rs.row[numCol]);
     }
     java.math.BigDecimal getBigDecimal() throws SQLException {
         if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
-        return new java.math.BigDecimal(((Double)rs.row[numCol]).doubleValue());
+        return new java.math.BigDecimal(XSQLVAR.decodeDouble(rs.row[numCol]));
     }
     Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return (Double)rs.row[numCol];
+        return new Double(XSQLVAR.decodeDouble(rs.row[numCol]));
     }
     boolean getBoolean() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
-        return ((Double)rs.row[numCol]).intValue() == 1;
+        return XSQLVAR.decodeDouble(rs.row[numCol]) == 1;
     }
     String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return String.valueOf((Double)rs.row[numCol]);
+        return String.valueOf(XSQLVAR.decodeDouble(rs.row[numCol]));
     }
 
     //--- setXXX methods
@@ -149,7 +149,7 @@ class FBDoubleField extends FBField {
         setDouble((double)value);
     }
     void setDouble(double value) throws java.sql.SQLException {
-        field.sqldata = new Double(value);
+        field.sqldata = XSQLVAR.encodeDouble(value);
     }
     void setLong(long value) throws java.sql.SQLException {
         setDouble((double)value);

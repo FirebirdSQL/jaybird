@@ -26,7 +26,7 @@ class FBCachedFetcher  implements FBFetcher {
           
         FBCachedFetcher(FBConnection c, FBStatement fbStatement
         , isc_stmt_handle stmt, FBResultSet rs) throws SQLException {
-            Object[] localRow = null;
+            byte[][] localRow = null;
             
             this.fbStatement = fbStatement;
             this.rs = rs;
@@ -118,10 +118,9 @@ class FBCachedFetcher  implements FBFetcher {
                     isFirst = true;
                 if (rowNum == rows.size())
                     isLast = true;
-                rs.row = (Object[])rows.get(rowNum-1);
+                rs.row = (byte[][])rows.get(rowNum-1);
                 // clean the rows element as it is used					 
                 rows.set(rowNum-1,null);
-//                System.arraycopy((Object[])rows.get(rowNum-1),0,row,0,row.length);
                 
                 return true;
             }

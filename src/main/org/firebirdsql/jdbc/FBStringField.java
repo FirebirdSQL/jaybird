@@ -190,7 +190,7 @@ class FBStringField extends FBField {
     String getString() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return toString((byte[])rs.row[numCol], IscEncoding);
+        return toString(rs.row[numCol], IscEncoding);
     }
     Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
@@ -203,7 +203,7 @@ class FBStringField extends FBField {
     InputStream getBinaryStream() throws SQLException {
         if (rs.row[numCol]==null) return STREAM_NULL_VALUE;
 
-        return new ByteArrayInputStream((byte[]) rs.row[numCol]);
+        return new ByteArrayInputStream(rs.row[numCol]);
     }
     InputStream getUnicodeStream() throws SQLException {
         if (rs.row[numCol]==null) return STREAM_NULL_VALUE;
@@ -218,7 +218,7 @@ class FBStringField extends FBField {
     byte[] getBytes() throws SQLException {
         if (rs.row[numCol]==null) return BYTES_NULL_VALUE;
 
-        return (byte[]) rs.row[numCol];
+        return rs.row[numCol];
     }
 
     //----- getDate, getTime and getTimestamp code

@@ -825,7 +825,7 @@ public class GDS_Impl implements GDS {
     }
 
 
-    public Object[] isc_dsql_fetch(isc_stmt_handle stmt_handle,
+    public byte[][] isc_dsql_fetch(isc_stmt_handle stmt_handle,
                               int da_version,
                               XSQLDA xsqlda) throws GDSException {
 
@@ -885,7 +885,7 @@ public class GDS_Impl implements GDS {
 
         if (stmt.rows.size() > 0) {
             //Return next row from cache.
-            return (Object[])stmt.rows.remove(0);
+            return (byte[][])stmt.rows.remove(0);
         }
         else {
             return null; //no rows fetched
@@ -1353,7 +1353,7 @@ public class GDS_Impl implements GDS {
         db.socket.close();
     }
 
-    private Object[] receiveSqlResponse(isc_db_handle_impl db,
+    private byte[][] receiveSqlResponse(isc_db_handle_impl db,
                                        XSQLDA xsqlda) throws GDSException {
         try {
             if (log != null) log.debug("op_sql_response ");
@@ -1636,49 +1636,52 @@ public class GDS_Impl implements GDS {
                         break;
                     case SQL_SHORT:
                         if (xsqlvar.sqldata == null)
-                            xsqlvar.sqldata = new Short((short)0);
-                        db.out.writeInt(((Short) xsqlvar.sqldata).shortValue());
+                            xsqlvar.sqldata = XSQLVAR.encodeShort((short) 0);
+                        db.out.write(xsqlvar.sqldata);
                         break;
                     case SQL_LONG:
                         if (xsqlvar.sqldata == null)
-                            xsqlvar.sqldata = new Integer(0);
-                        db.out.writeInt(((Integer) xsqlvar.sqldata).intValue());
+                            xsqlvar.sqldata = XSQLVAR.encodeInt(0);
+                        db.out.write(xsqlvar.sqldata);
                         break;
                     case SQL_FLOAT:
                         if (xsqlvar.sqldata == null)
-                            xsqlvar.sqldata = new Float(0);
-                        db.out.writeFloat(((Float) xsqlvar.sqldata).floatValue());
+                            xsqlvar.sqldata = XSQLVAR.encodeFloat(0);
+                        db.out.write(xsqlvar.sqldata);
                         break;
                     case SQL_DOUBLE:
                         if (xsqlvar.sqldata == null)
-                            xsqlvar.sqldata = new Double(0);
-                        db.out.writeDouble(((Double) xsqlvar.sqldata).doubleValue());
+                            xsqlvar.sqldata = XSQLVAR.encodeDouble(0);
+                        db.out.write(xsqlvar.sqldata);
                         break;
 //                case SQL_D_FLOAT:
 //                    break;
                     case SQL_TIMESTAMP:
                         if (xsqlvar.sqldata == null)
-                            xsqlvar.sqldata = new java.sql.Timestamp(0);
-                        db.out.writeInt(encodeDate((java.sql.Timestamp) xsqlvar.sqldata));
-                        db.out.writeInt(encodeTime((java.sql.Timestamp) xsqlvar.sqldata));
+                            xsqlvar.sqldata = XSQLVAR.encodeTimestamp(new java.sql.Timestamp(0));
+                        db.out.write(xsqlvar.sqldata);
+//                        db.out.writeInt(encodeDate((java.sql.Timestamp) xsqlvar.sqldata));
+//                        db.out.writeInt(encodeTime((java.sql.Timestamp) xsqlvar.sqldata));
                         break;
                     case SQL_BLOB:
                     case SQL_ARRAY:
                     case SQL_QUAD:
                     case SQL_INT64:
                         if (xsqlvar.sqldata == null)
-                            xsqlvar.sqldata = new Long(0);
-                        db.out.writeLong(((Long) xsqlvar.sqldata).longValue());
+                            xsqlvar.sqldata = XSQLVAR.encodeLong(0);
+                        db.out.write(xsqlvar.sqldata);
                         break;
                     case SQL_TYPE_TIME:
                         if (xsqlvar.sqldata == null)
-                            xsqlvar.sqldata = new java.sql.Time(0);
-                        db.out.writeInt(encodeTime((java.sql.Time) xsqlvar.sqldata));
+                            xsqlvar.sqldata = XSQLVAR.encodeTime(new java.sql.Time(0));
+                        db.out.write(xsqlvar.sqldata);
+//                        db.out.writeInt(encodeTime((java.sql.Time) xsqlvar.sqldata));
                         break;
                     case SQL_TYPE_DATE:
                         if (xsqlvar.sqldata == null)
-                            xsqlvar.sqldata = new java.sql.Date(0);
-                        db.out.writeInt(encodeDate((java.sql.Date) xsqlvar.sqldata));
+                            xsqlvar.sqldata = XSQLVAR.encodeDate(new java.sql.Date(0));
+                        db.out.write(xsqlvar.sqldata);
+//                        db.out.writeInt(encodeDate((java.sql.Date) xsqlvar.sqldata));
                         break;
                     default:
                         throw new GDSException("Unknown sql data type: " + xsqlvar.sqltype);
@@ -1691,7 +1694,7 @@ public class GDS_Impl implements GDS {
             }
 		  }
     }
-
+/*
     private int encodeTime(java.util.Date d) {
         GregorianCalendar c = new GregorianCalendar();
         c.setTime(d);
@@ -1736,14 +1739,14 @@ public class GDS_Impl implements GDS {
                  (153 * month + 2) / 5 +
                  day + 1721119 - 2400001);
     }
-
+*/
 
     //Now returns results in Object[] and in xsqlda.data
     //Nulls are represented by null values in Object array
-    private Object[] readSQLData(isc_db_handle_impl db,
+    private byte[][] readSQLData(isc_db_handle_impl db,
                                 XSQLDA xsqlda) throws GDSException {
         // This only works if not (port->port_flags & PORT_symmetric)
-        Object[] row = new Object[xsqlda.sqld];
+        byte[][] row = new byte[xsqlda.sqld][];
         try {
             for (int i = 0; i < xsqlda.sqld; i++) {
                switch (xsqlda.sqlvar[i].sqltype & ~1) {
@@ -1754,35 +1757,38 @@ public class GDS_Impl implements GDS {
                        row[i] = db.in.readBuffer();
                        break;
                    case SQL_SHORT:
-                       row[i] = new Short((short) db.in.readInt());
+                       row[i] = db.in.readIntBytes();
                        break;
                    case SQL_LONG:
-                       row[i] = new Integer(db.in.readInt());
+                       row[i] = db.in.readIntBytes();
                        break;
                    case SQL_FLOAT:
-                       row[i] = new Float(db.in.readFloat());
+                       row[i] = db.in.readFloatBytes();
                        break;
                    case SQL_DOUBLE:
-                       row[i] = new Double(db.in.readDouble());
+                       row[i] = db.in.readDoubleBytes();
                        break;
 //                 case SQL_D_FLOAT:
 //                     break;
                    case SQL_TIMESTAMP:
-                       row[i] = new java.sql.Timestamp(
-                           decodeDate(db.in.readInt()).getTime() +
-                           decodeTime(db.in.readInt()).getTime());
+                       row[i] = db.in.readLongBytes();
+//                       row[i] = new java.sql.Timestamp(
+//                           decodeDate(db.in.readInt()).getTime() +
+//                           decodeTime(db.in.readInt()).getTime());
                        break;
                    case SQL_BLOB:
                    case SQL_ARRAY:
                    case SQL_QUAD:
                    case SQL_INT64:
-                       row[i] = new Long(db.in.readLong());
+                       row[i] = db.in.readLongBytes();
                        break;
                    case SQL_TYPE_TIME:
-                       row[i] = decodeTime(db.in.readInt());
+                       row[i] = db.in.readIntBytes();
+//                       row[i] = decodeTime(db.in.readInt());
                        break;
                    case SQL_TYPE_DATE:
-                       row[i] = decodeDate(db.in.readInt());
+                       row[i] = db.in.readIntBytes();
+//                       row[i] = decodeDate(db.in.readInt());
                        break;
                }
 
@@ -1800,7 +1806,7 @@ public class GDS_Impl implements GDS {
             throw new GDSException(isc_net_read_err);
         }
     }
-
+/*
     private java.sql.Time decodeTime(int sql_time) {
         return new java.sql.Time(sql_time / 10);
     }
@@ -1833,7 +1839,7 @@ public class GDS_Impl implements GDS {
         Calendar calendar = new GregorianCalendar(year, month - 1, day);
         return new java.sql.Date(calendar.getTime().getTime());
     }
-
+*/
     
     private XSQLDA parseSqlInfo(isc_stmt_handle stmt_handle,
                                 byte[] info,
