@@ -164,7 +164,7 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
     static final int MAX_BUFFER_SIZE = 1024; //8192;//4096; //max size for response for ??
 
     public GDS_Impl() {
-	super(GDSFactory.GdsType.PURE_JAVA);
+	super(GDSType.PURE_JAVA);
     }
 
 

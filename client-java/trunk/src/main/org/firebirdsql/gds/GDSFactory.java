@@ -24,8 +24,6 @@ import org.firebirdsql.jgds.GDS_Impl;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.io.Serializable;
-
 
 /**
  * The class <code>GDSFactory</code> exists to provide a way
@@ -36,48 +34,13 @@ import java.io.Serializable;
  */
 public class GDSFactory
     {
-    public static class GdsType implements Serializable
-        {
-        private static int nextOrdinal = 0;
-
-        /**
-         * Type 4 GDS Implementation.
-         */
-        public static final GdsType PURE_JAVA = new GdsType();
-
-        /**
-         * Type 2 GDS Implementation. Expects to be able to find fbembed.dll
-         */
-        public static final GdsType NATIVE_EMBEDDED = new GdsType();
-
-        /**
-         * Type 2 GDS Implementation. Expects to be able to find fbclient.dll or gds32.dll in that order.
-         */
-        public static final GdsType NATIVE = new GdsType();
-
-
-        private static final GdsType[] PRIVATE_VALUES = new GdsType[]{PURE_JAVA, NATIVE_EMBEDDED, NATIVE};
-
-        private GdsType()
-            {
-            ordinal = nextOrdinal++;
-            }
-
-        public Object readResolve()
-            {
-            return PRIVATE_VALUES[ordinal];
-            }
-
-        final int ordinal;
-        }
-
 
     public static GDS getDefaultGDS()
         {
-        return getGDSForType(GdsType.PURE_JAVA);
+        return getGDSForType(GDSType.PURE_JAVA);
         }
 
-    public synchronized static GDS getGDSForType(GdsType gdsType)
+    public synchronized static GDS getGDSForType(GDSType gdsType)
         {
         GDS gds = (GDS) gdsTypeToGdsInstanceMap.get(gdsType);
         if (gds == null)
@@ -89,16 +52,19 @@ public class GDSFactory
         return gds;
         }
 
-    private static GDS createGDSForType(GdsType gdsType)
+    private static GDS createGDSForType(GDSType gdsType)
         {
-        if (gdsType == GdsType.PURE_JAVA)
+        if (gdsType == GDSType.PURE_JAVA)
             return new GDS_Impl();
-        else if (gdsType == GdsType.NATIVE || gdsType == GdsType.NATIVE_EMBEDDED)
+        else if (gdsType == GDSType.NATIVE || gdsType == GDSType.NATIVE_EMBEDDED)
             return new org.firebirdsql.ngds.GDS_Impl(gdsType);
         else
             throw new java.lang.IllegalArgumentException("gdsType not recognized.");
         }
 
     private static final Map gdsTypeToGdsInstanceMap = new HashMap();
+
+    /** @link dependency */
+    /*# AbstractGDS lnkAbstractGDS; */
     }
 

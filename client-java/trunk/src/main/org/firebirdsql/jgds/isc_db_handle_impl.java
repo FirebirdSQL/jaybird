@@ -35,6 +35,8 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.security.auth.Subject;
+
+import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.GDSException;
 
 /**

@@ -40,7 +40,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
 		 }
 
-    public GDS_Impl(GDSFactory.GdsType gdsType)
+    public GDS_Impl(GDSType gdsType)
         {
 		    super(gdsType);
 
@@ -66,9 +66,9 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
    if(logging) log.info( "Attempting to initilize native library." );
 
-        if( this.getGdsType() == GDSFactory.GdsType.NATIVE )
+        if( this.getGdsType() == GDSType.NATIVE )
             attemptToLoadAClientLibraryFromList(LIST_OF_CLIENT_LIBRARIES_TO_TRY);
-        else if( this.getGdsType() == GDSFactory.GdsType.NATIVE_EMBEDDED )
+        else if( this.getGdsType() == GDSType.NATIVE_EMBEDDED )
             attemptToLoadAClientLibraryFromList(LIST_OF_EMBEDDED_SERVER_LIBRARIES_TO_TRY);
         else
             throw new RuntimeException("Unrecognized GDS type.");
@@ -209,9 +209,9 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
 	private String getServerUrl(String file_name) throws GDSException
 		{
-    if( this.getGdsType() == GDSFactory.GdsType.NATIVE )
+    if( this.getGdsType() == GDSType.NATIVE )
         return getRemoteServerUrl(file_name);
-    else if(this.getGdsType() == GDSFactory.GdsType.NATIVE_EMBEDDED)
+    else if(this.getGdsType() == GDSType.NATIVE_EMBEDDED)
         return getEmbeddedServerUrl(file_name);
     else
         throw new RuntimeException("Unrecognized gds type.");

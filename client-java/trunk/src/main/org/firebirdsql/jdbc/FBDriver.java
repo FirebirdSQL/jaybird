@@ -23,6 +23,7 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 import java.util.*;
 
+import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jca.*;
 import org.firebirdsql.logging.Logger;
@@ -99,7 +100,7 @@ public class FBDriver implements Driver {
             return null;
         } // end of if ()
 
-        final FBManagedConnectionFactory.Type type = getDriverType(url);
+        final GDSType type = getDriverType(url);
 
         Integer blobBufferLength = null;
         try {
@@ -209,19 +210,19 @@ public class FBDriver implements Driver {
 	 * @param url
 	 * @return
 	 */
-    private FBManagedConnectionFactory.Type getDriverType(String url)
+    private GDSType getDriverType(String url)
     {
         if(url.startsWith(FIREBIRD_PROTOCOL_NATIVE))
         {
-            return FBManagedConnectionFactory.Type.TWO;
+            return GDSType.NATIVE;
         }
         if(url.startsWith(FIREBIRD_PROTOCOL_NATIVE_EMBEDDED))
         {
-            return FBManagedConnectionFactory.Type.TWO_EMBEDDED;
+            return GDSType.NATIVE_EMBEDDED;
         }
         else
         {
-            return FBManagedConnectionFactory.Type.FOUR;
+            return GDSType.PURE_JAVA;
         }
      }
 
