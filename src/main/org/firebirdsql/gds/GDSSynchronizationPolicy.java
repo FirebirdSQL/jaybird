@@ -22,7 +22,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
+import java.util.HashSet;
 
 
 /**
@@ -77,7 +77,7 @@ public class GDSSynchronizationPolicy {
      * @return array of all implemented interfaces.
      */
     private static Class[] getAllInterfaces(Class clazz) {
-        ArrayList result = new ArrayList();
+        HashSet result = new HashSet();
         
         do {
             Class[] interfaces = clazz.getInterfaces();
