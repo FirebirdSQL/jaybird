@@ -43,7 +43,6 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 import org.firebirdsql.gds.Clumplet;
-import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLDA;

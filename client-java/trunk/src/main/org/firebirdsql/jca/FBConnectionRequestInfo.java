@@ -28,7 +28,6 @@ import javax.resource.cci.ConnectionSpec;
 import javax.resource.spi.ConnectionRequestInfo;
 import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.gds.GDS;
 
 
