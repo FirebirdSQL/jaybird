@@ -164,6 +164,25 @@ public class FBBlob implements Blob{
             info, position + 3, dataLength);
     }
 
+    public boolean isSegmented() throws SQLException {
+        try {
+            byte[] info = getInfo(
+                new byte[] {ISCConstants.isc_info_blob_type}, 20);
+
+            if (info[0] != ISCConstants.isc_info_blob_type)
+                throw new SQLException("Cannot determine BLOB type");
+
+            int dataLength =
+                c.getInternalAPIHandler().isc_vax_integer(info, 1, 2);
+
+            int type = c.getInternalAPIHandler().isc_vax_integer(
+                info, 3, dataLength);
+
+            return type == ISCConstants.isc_bpb_type_segmented;
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
+        }
+    }
 
   /**
    * Returns as an array of bytes, part or all of the <code>BLOB</code>
