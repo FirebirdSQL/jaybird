@@ -1,3 +1,9 @@
+2004-04-19 00:40  rrokytskyy
+
+	* client-java/src/etc/release_notes.html:
+	
+	updated release notes to match new version
+
 2004-04-18 23:20  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/:
