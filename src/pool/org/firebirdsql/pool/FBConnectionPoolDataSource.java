@@ -673,7 +673,10 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     }
 
     public int getBlobBufferSize() {
-        return getIntProperty(BLOB_BUFFER_PROPERTY);
+        if (getProperty(BLOB_BUFFER_PROPERTY) != null)
+            return getIntProperty(BLOB_BUFFER_PROPERTY);
+        else
+            return FBConnectionDefaults.DEFAULT_BLOB_BUFFER_SIZE;
     }
 
     public void setBlobBufferSize(int blobBufferSize) {
@@ -709,7 +712,10 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     }
 
     public int getSocketBufferSize() {
-        return getIntProperty(SOCKET_BUFFER_PROPERTY);
+        if (getProperty(SOCKET_BUFFER_PROPERTY) != null)
+            return getIntProperty(SOCKET_BUFFER_PROPERTY);
+        else
+            return FBConnectionDefaults.DEFAULT_SOCKET_BUFFER_SIZE;
     }
 
     public void setSocketBufferSize(int socketBufferSize) {
@@ -857,26 +863,32 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     public Reference getDefaultReference() {
         Reference ref = new Reference(getClass().getName());
         
-        ref.add(new StringRefAddr(REF_BLOCKING_TIMEOUT, 
-            String.valueOf(getBlockingTimeout())));
+        if (getBlockingTimeout() != FBPoolingDefaults.DEFAULT_BLOCKING_TIMEOUT)
+            ref.add(new StringRefAddr(REF_BLOCKING_TIMEOUT, 
+                String.valueOf(getBlockingTimeout())));
 
         if (getDatabase() != null)            
             ref.add(new StringRefAddr(REF_DATABASE, getDatabase()));
+
+        if (getIdleTimeout() != FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT)
+            ref.add(new StringRefAddr(REF_IDLE_TIMEOUT,
+                String.valueOf(getIdleTimeout())));
+
+        if (getLoginTimeout() != FBPoolingDefaults.DEFAULT_LOGIN_TIMEOUT)
+            ref.add(new StringRefAddr(REF_LOGIN_TIMEOUT,
+                String.valueOf(getLoginTimeout())));
+
+        if (getMaxConnections() != FBPoolingDefaults.DEFAULT_MAX_SIZE)
+            ref.add(new StringRefAddr(REF_MAX_SIZE, 
+                String.valueOf(getMaxConnections())));
+
+        if (getMinConnections() != FBPoolingDefaults.DEFAULT_MIN_SIZE)
+            ref.add(new StringRefAddr(REF_MIN_SIZE,
+                String.valueOf(getMinConnections())));
             
-        ref.add(new StringRefAddr(REF_IDLE_TIMEOUT,
-            String.valueOf(getIdleTimeout())));
-            
-        ref.add(new StringRefAddr(REF_LOGIN_TIMEOUT,
-            String.valueOf(getLoginTimeout())));
-            
-        ref.add(new StringRefAddr(REF_MAX_SIZE, 
-            String.valueOf(getMaxConnections())));
-            
-        ref.add(new StringRefAddr(REF_MIN_SIZE,
-            String.valueOf(getMinConnections())));
-            
-        ref.add(new StringRefAddr(REF_PING_INTERVAL, 
-            String.valueOf(getPingInterval())));
+        if (getPingInterval() != FBPoolingDefaults.DEFAULT_PING_INTERVAL)
+            ref.add(new StringRefAddr(REF_PING_INTERVAL, 
+                String.valueOf(getPingInterval())));
             
         if (getType() != null)
             ref.add(new StringRefAddr(REF_TYPE, getType()));

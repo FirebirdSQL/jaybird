@@ -25,9 +25,9 @@ package org.firebirdsql.pool;
  */
 public class FBPoolingDefaults {
 
-    public static final int DEFAULT_LOGIN_TIMEOUT = 10;
-    public static final int DEFAULT_IDLE_TIMEOUT = Integer.MAX_VALUE;
-    public static final int DEFAULT_BLOCKING_TIMEOUT = Integer.MAX_VALUE;
+    public static final int DEFAULT_IDLE_TIMEOUT = Integer.MAX_VALUE / 1000;
+    public static final int DEFAULT_BLOCKING_TIMEOUT = Integer.MAX_VALUE / 1000;
+    public static final int DEFAULT_LOGIN_TIMEOUT = DEFAULT_BLOCKING_TIMEOUT * 1000;
     public static final int DEFAULT_RETRY_INTERVAL = 1 * 1000;
     public static final int DEFAULT_PING_INTERVAL = 5 * 1000;
     
