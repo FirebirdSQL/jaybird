@@ -447,9 +447,17 @@
       <sysproperty key="test.db.lc_ctype" value="${test.db.lc_ctype}"/>
 
       <classpath>
-        <pathelement location="${build.classes}"/>
-        <pathelement location="${build.test}"/>
-        <pathelement location="${build.resources}"/>
+        <!-- pathelement location="${build.classes}"/ -->
+        <!-- pathelement location="${build.test}"/ -->
+        <!-- pathelement location="${build.resources}"/ -->
+        
+        <pathelement location="${build.lib}/firebirdsql.jar"/>
+        <pathelement location="${build.lib}/firebirdsql-test.jar"/>
+        <pathelement location="${build.lib}/mini-concurrent.jar"/>
+        <pathelement location="${build.lib}/mini-j2ee.jar"/>
+        <pathelement location="${build.lib}/firebirdsql-test.jar"/>
+        
+        
         <pathelement location="${lib.dir}/ant.jar"/>
         <pathelement location="${lib.dir}/optional.jar"/>
         <path refid="javac.test.classpath"/>
@@ -592,6 +600,7 @@
       <fileset dir="${build.lib}">
         <include name="firebirdsql.rar"/>
         <include name="firebirdsql-test.jar"/>
+        <include name="firebirdsql-full.jar"/>
         <include name="firebirdsql.jar"/>
         <include name="firebirdjmx.jar"/>
       </fileset>
