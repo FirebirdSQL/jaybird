@@ -66,7 +66,7 @@ public class TestFBShortField extends BaseTestFBField {
 	public void testObject() throws SQLException {
 		field.setObject(new Short(TEST_SHORT));
 		field.copyOI();
-		assertTrue(field.getObject().equals(new Short(TEST_SHORT)));
+		assertTrue(field.getObject().equals(new Integer(TEST_SHORT)));
 	}
 	public void testUnicodeStream() throws SQLException {
 		try {
