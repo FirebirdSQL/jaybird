@@ -78,6 +78,12 @@ public class FBCallableStatement extends AbstractCallableStatement {
      * @since 1.4
      */
     public ParameterMetaData getParameterMetaData() throws SQLException {
+        
+        if (fixedStmt == null)
+            throw new FBSQLException("CallableStatement.getParameterMetaData() " +
+                    "can be used only after executing a statement.", 
+                    FBSQLException.SQL_STATE_NO_RESULT_SET);
+        
         return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, c);
     }
     
