@@ -1,3 +1,32 @@
+2004-01-27 15:08  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/GDSException.java,
+	main/org/firebirdsql/gds/XSQLVAR.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBBlob.java,
+	main/org/firebirdsql/jdbc/FBConnectionHelper.java,
+	main/org/firebirdsql/jdbc/FBDataSource.java,
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/FBEscapedParser.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	main/org/firebirdsql/jdbc/FBUpdatableFetcher.java,
+	main/org/firebirdsql/management/FBManager.java,
+	pool/org/firebirdsql/pool/AbstractConnectionPool.java,
+	pool/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	pool/org/firebirdsql/pool/XConnectionManager.java,
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBParameterMetaData.java,
+	jdbc_30/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	main/org/firebirdsql/gds/isc_svc_handle.java,
+	main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	main/org/firebirdsql/jca/FBTpb.java,
+	main/org/firebirdsql/jdbc/field/FBField.java:
+	
+	javadoc fixes
+
 2004-01-19 22:21  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/:
