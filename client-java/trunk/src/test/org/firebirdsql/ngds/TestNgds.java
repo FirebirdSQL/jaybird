@@ -65,7 +65,10 @@ public class TestNgds extends SimpleFBTestBase {
 
 
     protected void setUp() {
-       gds = GDSFactory.getGDSForType(GDSType.NATIVE);
+        if (GDSType.EMBEDDED_STR.equals(System.getProperty("test.gds_type")))
+            gds = GDSFactory.getGDSForType(GDSType.NATIVE_EMBEDDED);
+        else
+            gds = GDSFactory.getGDSForType(GDSType.NATIVE);
 
         c= gds.newDatabaseParameterBuffer();
 
@@ -180,7 +183,13 @@ public class TestNgds extends SimpleFBTestBase {
 
    public void testCreateDropD3DB() throws Exception
    {
-       GDS gds = GDSFactory.getGDSForType(GDSType.NATIVE);
+       
+       GDS gds;
+
+       if (GDSType.EMBEDDED_STR.equals(System.getProperty("test.gds_type")))
+           return;
+       else
+           gds = GDSFactory.getGDSForType(GDSType.NATIVE);
 
       DatabaseParameterBuffer databaseParameterBuffer = gds.newDatabaseParameterBuffer();
 
