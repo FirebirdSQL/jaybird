@@ -43,6 +43,7 @@ public class TestFBEscapedFunctionHelper extends TestCase {
      * commas and double quotes in string literals.
      */
     public static final String ESCAPED_FUNCTION_CALL = "test(\"arg1\", 12, ',\"')";
+    public static final String ESCAPED_FUNCTION_NAME = "test";
     public static final List ESCAPED_FUNCTION_PARAMS = new ArrayList();
     static {
         ESCAPED_FUNCTION_PARAMS.add("\"arg1\"");
@@ -56,4 +57,32 @@ public class TestFBEscapedFunctionHelper extends TestCase {
         assertTrue("Parsed params should be equal to the test ones.", 
             ESCAPED_FUNCTION_PARAMS.equals(parsedParams));
     }
+    
+    /**
+     * Test if function name is parsed correctly.
+     */
+    public void testParseName() throws SQLException {
+        String name = FBEscapedFunctionHelper.parseFunction(ESCAPED_FUNCTION_CALL);
+        
+        assertTrue("Parsed function name should be equal to the test one.",
+            ESCAPED_FUNCTION_NAME.equals(name));
+    }
+    
+    public static final String LCASE_FUNCTION_CALL = "{fn lcase('some name')}";
+    public static final String LCASE_FUNCTION_TEST = "LOWER('some name')";
+    
+    public static final String UCASE_FUNCTION_CALL = "{fn ucase(some_identifier)}";
+    public static final String UCASE_FUNCTION_TEST = "UPPER(some_identifier)";
+    
+    public void testEscapedFunctionCall() throws SQLException {
+        FBEscapedParser parser = new FBEscapedParser();
+        
+        String lcaseTest = parser.parse(LCASE_FUNCTION_CALL);
+        assertTrue("lcase function parsing should be correct",
+                LCASE_FUNCTION_TEST.equals(lcaseTest));
+        
+        String ucaseTest = parser.parse(UCASE_FUNCTION_CALL);
+        assertTrue("ucase function parsing should be correct",
+                UCASE_FUNCTION_TEST.equals(ucaseTest));
+       }
 }
