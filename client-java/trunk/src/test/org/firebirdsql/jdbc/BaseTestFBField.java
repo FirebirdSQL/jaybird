@@ -30,6 +30,8 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
+import org.firebirdsql.gds.GDSType;
+import org.firebirdsql.gds.XSQLVAR;
 
 /**
  * Describe class <code>BaseTestFBField</code> here.
@@ -162,5 +164,25 @@ public abstract class BaseTestFBField extends TestCase {
             return null;
         }
     }
+
+    protected XSQLVAR createXSQLVAR()
+        {
+        if(getGdsType() == GDSType.PURE_JAVA)
+            return new org.firebirdsql.gds.XSQLVAR();
+        else
+        if(getGdsType() == GDSType.NATIVE ||
+           getGdsType() == GDSType.NATIVE_EMBEDDED)
+            return new org.firebirdsql.ngds.XSQLVARImpl();
+        else
+            throw new RuntimeException("Unrecognised GDSType");
+        }
+
+
+    private GDSType getGdsType()
+        {
+        return GDSType.PURE_JAVA;
+        }
+
+
 
 }

@@ -28,13 +28,14 @@ import javax.sql.DataSource;
 import javax.sql.PooledConnection;
 
 import org.firebirdsql.jdbc.BaseFBTest;
+import org.firebirdsql.common.FBTestBase;
 
 /**
  * Test suite for JDBC connection pool.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class TestFBConnectionPoolDataSource extends BaseFBTest {
+public class TestFBConnectionPoolDataSource extends FBTestBase {
     
     private static final int DEFAULT_MIN_CONNECTIONS = 0;
     private static final int DEFAULT_MAX_CONNECTIONS = 2;
@@ -49,14 +50,14 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
     protected void setUp() throws Exception {
         super.setUp();
         
-        pool = new FBConnectionPoolDataSource();
+        pool = createFBConnectionPoolDataSource();
         
         pool.setDatabase(DB_DATASOURCE_URL);
         pool.setMinConnections(DEFAULT_MIN_CONNECTIONS);
         pool.setMaxConnections(DEFAULT_MAX_CONNECTIONS);
         pool.setPingInterval(DEFAULT_PING_INTERVAL);
         
-        pool.setProperties(DB_INFO);
+        pool.setProperties(getDefaultPropertiesForConnection());
     }
 
     protected void tearDown() throws Exception {

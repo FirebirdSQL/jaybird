@@ -1,292 +1,569 @@
 /*
+
  * Firebird Open Source J2ee connector - jdbc driver
+
  *
+
  * Distributable under LGPL license.
+
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+
  *
+
  * This program is distributed in the hope that it will be useful,
+
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+
  * LGPL License for more details.
+
  *
+
  * This file was created by members of the firebird development team.
+
  * All individual contributions remain the Copyright (C) of those
+
  * individuals.  Contributors to this file are either listed here or
+
  * can be obtained from a CVS history command.
+
  *
+
  * All rights reserved.
+
  */
+
 package org.firebirdsql.jdbc;
 
+
+
+import org.firebirdsql.common.FBTestBase;
+
 import java.sql.*;
+
 import java.util.Arrays;
+
 import java.util.Properties;
 
+
+
 /**
+
  * Describe class <code>TestFBBlobAccess</code> here.
+
  *
+
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+
  * @version 1.0
+
  */
-public class TestFBBlobStream extends BaseFBTest {
+
+public class TestFBBlobStream extends FBTestBase {
+
     public static final String CREATE_TABLE =
+
         "CREATE TABLE test_blob(" +
+
         "  id INTEGER, " +
+
         "  bin_data BLOB " +
+
         ")";
 
+
+
     public static final String DROP_TABLE =
+
         "DROP TABLE test_blob";
+
+
+
 
 
     public static int TEST_ROW_COUNT = 100;
 
+
+
     private Connection connection;
+
+
 
     private byte[][] testData;
 
 
 
+
+
+
+
     public TestFBBlobStream(String testName) {
+
         super(testName);
+
     }
 
+
+
     protected void setUp() throws Exception {
+
         super.setUp();
+
         Class.forName(FBDriver.class.getName());
 
-        String url = DB_DRIVER_URL;
-        // String url = "jdbc:firebirdsql:local:/home/rrokytskyy/fbtest.gdb";
 
-        Properties props = new Properties();
 
-        props.setProperty("user", DB_INFO.getProperty("user"));
-        props.setProperty("password", DB_INFO.getProperty("password"));
+        connection = getConnectionViaDriverManager();
 
-        connection = DriverManager.getConnection(url, props);
+
 
         java.sql.Statement stmt = connection.createStatement();
+
         try {
+
             stmt.executeUpdate(DROP_TABLE);
+
         }
+
         catch (Exception e) {}
 
+
+
         stmt.executeUpdate(CREATE_TABLE);
+
         stmt.close();
+
+
 
         java.util.Random rnd = new java.util.Random();
 
+
+
         testData = new byte[TEST_ROW_COUNT][0];
 
+
+
         for (int i = 0; i < testData.length; i++) {
+
             int testLength = rnd.nextInt(100 * 1024) + 128;
+
             testData[i] = new byte[testLength];
+
             rnd.nextBytes(testData[i]);
+
         }
 
+
+
     }
+
+
 
     protected void tearDown() throws Exception {
+
         
+
         if (!connection.getAutoCommit())
+
             connection.setAutoCommit(true);
+
         
+
         java.sql.Statement stmt = connection.createStatement();
+
         stmt.executeUpdate(DROP_TABLE);
+
         stmt.close();
+
         
+
         connection.close();
+
         super.tearDown();
+
     }
+
     
+
     /**
+
      * Test if BLOB length is reported correctly.
+
      * 
+
      * @throws java.lang.Exception if something went wrong.
+
      */
+
     public void testBlobLength() throws Exception {
+
         connection.setAutoCommit(false);
 
+
+
         PreparedStatement ps = connection.prepareStatement(
+
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
 
+
+
         try {
+
             long start = System.currentTimeMillis();
+
     
+
             long size = testData[0].length;
+
     
+
             ps.setInt(1, 1);
+
             ps.setBytes(2, testData[0]);
+
             ps.executeUpdate();
+
     
+
             ps.close();
+
     
+
             connection.commit();
+
     
+
             ps = connection.prepareStatement(
+
                 "SELECT bin_data FROM test_blob WHERE id = ?");
+
                 
+
             ps.setInt(1, 1);
+
             
+
             ResultSet rs = ps.executeQuery();
+
             
+
             assertTrue("Should select at least one row", rs.next());
+
             
+
             FBBlob blob = (FBBlob)rs.getBlob(1);
+
             
+
             start = System.currentTimeMillis();
+
             for(int i = 0; i < 1000; i++)
+
                 assertTrue("Reported length should be correct.", blob.length() == size);
+
             System.out.println("Getting info took " + 
+
                 (System.currentTimeMillis() - start));
+
     
+
             rs.close();
+
         } finally {
+
             ps.close();
+
         }
+
     }
+
     
+
     /**
+
      * Test if BLOB seek() method works correctly.
+
      * 
+
      * @throws java.lang.Exception if something went wrong.
+
      */
+
     public void testBlobSeek() throws Exception {
+
         connection.setAutoCommit(false);
 
+
+
         PreparedStatement ps = connection.prepareStatement(
+
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
 
+
+
         try {
+
             long start = System.currentTimeMillis();
+
     
+
             long size = testData[0].length;
+
     
+
             ps.setInt(1, 1);
+
             ps.setBytes(2, testData[0]);
+
             ps.executeUpdate();
+
             
+
         } finally {
+
             ps.close();
+
         }
+
     
+
             connection.commit();
+
     
+
         try {
+
             ps = connection.prepareStatement(
+
                 "SELECT bin_data FROM test_blob WHERE id = ?");
+
     
+
             ps.setInt(1, 1);
+
     
+
             ResultSet rs = ps.executeQuery();
+
     
+
             assertTrue("Should select at least one row", rs.next());
+
     
+
             FBBlob.FBBlobInputStream in = 
+
                 (FBBlob.FBBlobInputStream)rs.getBinaryStream(1);
+
             
+
             int blobSize = (int)in.length();
+
             byte[] fullBlob = new byte[blobSize];
+
             
+
             in.readFully(fullBlob);
+
             
+
             in.close();
+
             
+
             in = (FBBlob.FBBlobInputStream)rs.getBinaryStream(1);
+
             in.seek(10);
+
             
+
             byte[] truncatedBlob = new byte[blobSize - 10];
+
             in.readFully(truncatedBlob);
+
             
+
             byte[] testBlob = new byte[blobSize - 10];
+
             System.arraycopy(fullBlob, 10, testBlob, 0, blobSize - 10);
+
     
+
             assertTrue("Full and original blobs must be equal.", 
+
                 Arrays.equals(testData[0], fullBlob));
+
                 
+
             assertTrue("Truncated and testing blobs must be equal.", 
+
                 Arrays.equals(testBlob, truncatedBlob));
+
             
+
             rs.close();
+
         } finally {
+
             ps.close();
+
         }
+
     }
+
     
+
     
+
     
+
     /**
+
      * Test if byte[] are correctly stored and retrieved from database
+
      *
+
      * @throws Exception if something went wrong.
+
      */
+
     public void testFieldTypes() throws Exception {
+
         
+
         connection.setAutoCommit(false);
 
+
+
         PreparedStatement ps = connection.prepareStatement(
+
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
+
+
 
         long start = System.currentTimeMillis();
 
+
+
         long size = 0;
 
+
+
         for(int i = 0; i < TEST_ROW_COUNT; i++) {
+
             ps.setInt(1, i);
+
             ps.setBytes(2, testData[i]);
+
+
 
             size += testData[i].length;
 
+
+
             ps.execute();
+
         }
+
+
 
         long duration = System.currentTimeMillis() - start;
 
+
+
         System.out.println("Inserted " + size + " bytes in " + duration + " ms, " +
+
             "speed " + ((size * 1000 * 1000 / duration / 1024 / 1024) / 1000.0) + " MB/s");
+
+
 
         ps.close();
 
+
+
         connection.commit();
+
+
 
         Statement stmt = connection.createStatement();
 
+
+
         ResultSet rs = stmt.executeQuery("SELECT id, bin_data FROM test_blob");
 
+
+
         start = System.currentTimeMillis();
+
         size = 0;
 
+
+
         try {
+
             int counter = 0;
+
+
 
             while(rs.next()) {
 
+
+
                 int id = rs.getInt("id");
+
                 byte[] data = rs.getBytes("bin_data");
+
+
 
                 size += data.length;
 
+
+
                 assertTrue(
+
                     "Data read from database for id " + id +
+
                     " should be equal to generated one.",
+
                     java.util.Arrays.equals(testData[id], data));
 
+
+
                 counter++;
+
             }
 
+
+
             assertTrue(
+
                 "Should read " + TEST_ROW_COUNT +
+
                 " rows, read " + counter, TEST_ROW_COUNT == counter);
+
+
 
             duration = System.currentTimeMillis() - start;
 
+
+
             System.out.println("Read " + size + " bytes in " + duration + " ms, " +
+
                 "speed " + ((size * 1000 * 1000 / duration / 1024 / 1024) / 1000.0) + " MB/s");
 
 
+
+
+
         } finally {
+
             rs.close();
+
             stmt.close();
+
         }
+
     }
+
 }

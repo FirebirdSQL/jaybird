@@ -1,5 +1,7 @@
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestBase;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -7,7 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class TestBoundary
-    extends BaseFBTest {
+    extends FBTestBase {
     final String CREATE_META_ONE = "CREATE TABLE COMMUNICATIONS_FIT ( \n" +
         "ID INTEGER NOT NULL, \n" +
         "GUIDID CHAR(16), \n" +
@@ -35,7 +37,7 @@ public class TestBoundary
 
     public void testLockUp() throws Exception {
         Connection connection =
-            DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+            getConnectionViaDriverManager();
 
         connection.setAutoCommit(false);
 
@@ -82,7 +84,7 @@ public class TestBoundary
 
     public void testNoLockUp() throws Exception {
         Connection connection =
-            DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+            getConnectionViaDriverManager();
 
         connection.setAutoCommit(false);
 
@@ -157,7 +159,7 @@ public class TestBoundary
     private void performLockupSequence() throws
         SQLException {
         Connection conn =
-            DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+            getConnectionViaDriverManager();
 
         final PreparedStatement statement =
             conn.prepareStatement("INSERT INTO COMMUNICATIONS_FIT ( \n " +
@@ -192,7 +194,7 @@ public class TestBoundary
 
     private void performSimilarButNoLockupSequence() throws SQLException {
         Connection conn =
-            DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+            getConnectionViaDriverManager();
 
         final PreparedStatement statement =
             conn.prepareStatement("INSERT INTO COMMUNICATIONS_FIT ( \n " +

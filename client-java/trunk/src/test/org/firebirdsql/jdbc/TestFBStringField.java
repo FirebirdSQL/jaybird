@@ -53,7 +53,7 @@ public class TestFBStringField extends BaseTestFBField {
     }
     protected void setUp() throws SQLException{
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
-        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0] = createXSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_TEXT;
         xsqlvars[0].sqllen = TEST_STRING_SIZE;
         Object[] row = new byte[1][];

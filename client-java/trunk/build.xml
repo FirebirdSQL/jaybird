@@ -89,7 +89,9 @@
     <property name="build.docs" value="${module.output}/docs"/>
     <property name="build.resources" value="${module.output}/resources"/>
     <property name="build.stylesheets" value="${module.output}/stylesheets"/>
-    <property name="build.reports" value="${module.output}/reports"/>
+    <property name="build.reports.pure_java" value="${module.output}/reports/pure_java"/>
+    <property name="build.reports.native" value="${module.output}/reports/native"/>
+    <property name="build.reports.embedded" value="${module.output}/reports/embedded"/>
     <property name="build.testlog" value="${module.output}/log"/>
     <property name="build.dist" value="${module.output}/dist"/>
 
@@ -149,7 +151,7 @@
       <pathelement location="${build.pool}"/>
       <pathelement location="${lib.dir}/junit.jar"/>
     </path>
-    
+
     <path id="javac.examples.classpath">
       <path refid="javac.driver.classpath"/>
       <pathelement location="${build.classes}"/>
@@ -264,7 +266,7 @@
     </javac>
   </target>
 
-  
+
   <target name="compile-examples">
   	<mkdir dir="${build.examples}"/>
     <javac srcdir="${source.examples}"
@@ -418,7 +420,7 @@
          <include name="*.properties"/>
        </fileset>
     </jar>
-    
+
     <jar jarfile="${build.lib}/firebirdsql-pool.jar" manifest="${build.etc}/default.mf">
        <fileset dir="${build.pool}">
          <include name="org/firebirdsql/**"/>
@@ -511,14 +513,15 @@
   <!-- runs the junit tests                                                -->
   <!-- =================================================================== -->
 
-  <target name="all-tests" depends="jars,copy_native_to_test_path">
+  <target name="all-tests-pure-java" depends="jars,copy_native_to_test_path">
 
    <!-- Override JUnit defaults -->
+
 
     <!--create local db dir, if you are running on remote machine
       you must provide it yourself -->
     <mkdir dir="${module.output}/db"/>
-    <mkdir dir="${build.reports}"/>
+    <mkdir dir="${build.reports.pure_java}"/>
     <mkdir dir="${build.testlog}"/>
     <junit dir="${module.output}"
 	   printsummary="${junit.printsummary}"
@@ -535,6 +538,7 @@
       <sysproperty key="test.db.host" value="${test.db.host}"/>
       <sysproperty key="test.db.port" value="${test.db.port}"/>
       <sysproperty key="test.db.lc_ctype" value="${test.db.lc_ctype}"/>
+      <sysproperty key="test.gds_type" value="PURE_JAVA"/>
 
       <classpath>
         <!-- pathelement location="${build.classes}"/ -->
@@ -556,14 +560,145 @@
       <formatter type="${junit.formatter.type}"
 		 usefile="${junit.formatter.usefile}"/>
 
-      <batchtest todir="${build.reports}"
+      <batchtest todir="${build.reports.pure_java}"
 		 haltonerror="${junit.batchtest.haltonerror}"
 		 haltonfailure="${junit.batchtest.haltonfailure}"
 		 fork="${junit.fork}">
 
         <fileset dir="${build.test}">
           <include name="**/Test*.class"/>
-          <exclude name="**/ngds/Test*.class" if="no_type2_tests"/>
+          <exclude name="**/ngds/Test*.class"/>
+          <exclude name="**/TestAll.class"/>
+          <exclude name="**/TestXABase*.class"/>
+          <exclude name="**/TestConst.class"/>
+          <exclude name="**/*$$*.class"/>
+
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+
+
+  <target name="all-tests-native" depends="jars,compile-native,copy_native_to_test_path">
+
+   <!-- Override JUnit defaults -->
+
+    <!--create local db dir, if you are running on remote machine
+      you must provide it yourself -->
+    <mkdir dir="${module.output}/db"/>
+    <mkdir dir="${build.reports.native}"/>
+    <mkdir dir="${build.testlog}"/>
+    <junit dir="${module.output}"
+	   printsummary="${junit.printsummary}"
+	   haltonerror="${junit.haltonerror}"
+	   haltonfailure="${junit.haltonfailure}"
+	   fork="${junit.fork}"
+	   timeout="${junit.timeout}"
+	   jvm="${junit.jvm}">
+
+      <jvmarg value="${junit.jvm.options}"/>
+      <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
+      <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
+      <sysproperty key="test.db.dir" value="${test.db.dir}"/>
+      <sysproperty key="test.db.host" value="${test.db.host}"/>
+      <sysproperty key="test.db.port" value="${test.db.port}"/>
+      <sysproperty key="test.db.lc_ctype" value="${test.db.lc_ctype}"/>
+      <sysproperty key="test.gds_type" value="NATIVE"/>
+
+      <classpath>
+        <!-- pathelement location="${build.classes}"/ -->
+        <!-- pathelement location="${build.test}"/ -->
+        <!-- pathelement location="${build.resources}"/ -->
+
+        <pathelement location="${build.lib}/firebirdsql.jar"/>
+        <pathelement location="${build.lib}/firebirdsql-test.jar"/>
+        <pathelement location="${build.lib}/mini-concurrent.jar"/>
+        <pathelement location="${build.lib}/mini-j2ee.jar"/>
+        <pathelement location="${build.lib}/firebirdsql-test.jar"/>
+
+
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
+        <path refid="javac.test.classpath"/>
+      </classpath>
+
+      <formatter type="${junit.formatter.type}"
+		 usefile="${junit.formatter.usefile}"/>
+
+      <batchtest todir="${build.reports.native}"
+		 haltonerror="${junit.batchtest.haltonerror}"
+		 haltonfailure="${junit.batchtest.haltonfailure}"
+		 fork="${junit.fork}">
+
+        <fileset dir="${build.test}">
+          <include name="**/Test*.class"/>
+          <exclude name="**/jgds/Test*.class"/>
+          <exclude name="**/TestAll.class"/>
+          <exclude name="**/TestXABase*.class"/>
+          <exclude name="**/TestConst.class"/>
+          <exclude name="**/*$$*.class"/>
+
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="all-tests-embedded" depends="jars,compile-native,copy_native_to_test_path">
+
+   <!-- Override JUnit defaults -->
+    <property name="test.gds_type" value="EMBEDDED"/>
+
+    <!--create local db dir, if you are running on remote machine
+      you must provide it yourself -->
+    <mkdir dir="${module.output}/db"/>
+    <mkdir dir="${build.reports.embedded}"/>
+    <mkdir dir="${build.testlog}"/>
+    <junit dir="${module.output}"
+	   printsummary="${junit.printsummary}"
+	   haltonerror="${junit.haltonerror}"
+	   haltonfailure="${junit.haltonfailure}"
+	   fork="${junit.fork}"
+	   timeout="${junit.timeout}"
+	   jvm="${junit.jvm}">
+
+      <jvmarg value="${junit.jvm.options}"/>
+      <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
+      <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
+      <sysproperty key="test.db.dir" value="${test.db.dir}"/>
+      <sysproperty key="test.db.host" value="${test.db.host}"/>
+      <sysproperty key="test.db.port" value="${test.db.port}"/>
+      <sysproperty key="test.db.lc_ctype" value="${test.db.lc_ctype}"/>
+      <sysproperty key="test.gds_type" value="EMBEDDED"/>
+
+      <classpath>
+        <!-- pathelement location="${build.classes}"/ -->
+        <!-- pathelement location="${build.test}"/ -->
+        <!-- pathelement location="${build.resources}"/ -->
+
+        <pathelement location="${build.lib}/firebirdsql.jar"/>
+        <pathelement location="${build.lib}/firebirdsql-test.jar"/>
+        <pathelement location="${build.lib}/mini-concurrent.jar"/>
+        <pathelement location="${build.lib}/mini-j2ee.jar"/>
+        <pathelement location="${build.lib}/firebirdsql-test.jar"/>
+
+
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
+        <path refid="javac.test.classpath"/>
+      </classpath>
+
+      <formatter type="${junit.formatter.type}"
+		 usefile="${junit.formatter.usefile}"/>
+
+      <batchtest todir="${build.reports.embedded}"
+		 haltonerror="${junit.batchtest.haltonerror}"
+		 haltonfailure="${junit.batchtest.haltonfailure}"
+		 fork="${junit.fork}">
+
+        <fileset dir="${build.test}">
+          <include name="**/Test*.class"/>
+          <exclude name="**/jgds/Test*.class"/>
           <exclude name="**/TestAll.class"/>
           <exclude name="**/TestXABase*.class"/>
           <exclude name="**/TestConst.class"/>
@@ -580,10 +715,10 @@
      | Here you specify the testcase class, not the directory
    -->
 
-  <target name="one-test" depends="jars"
+  <target name="one-test-pure-java" depends="jars"
 	  description="Execute a single test.">
     <mkdir dir="${test.db.dir}"/>
-    <mkdir dir="${build.reports}"/>
+    <mkdir dir="${build.reports.pure_java}"/>
     <mkdir dir="${build.testlog}"/>
     <junit dir="${module.output}"
 	   printsummary="${junit.printsummary}"
@@ -613,7 +748,97 @@
       <formatter type="${junit.formatter.type}"
 		 usefile="${junit.formatter.usefile}"/>
 
-      <batchtest todir="${build.reports}"
+      <batchtest todir="${build.reports.pure_java}"
+		 haltonerror="${junit.batchtest.haltonerror}"
+		 haltonfailure="${junit.batchtest.haltonfailure}"
+		 fork="${junit.batchtest.fork}">
+
+        <fileset dir="${build.test}">
+          <include name="org/firebirdsql/*/Test${test}*.class"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="one-test-native" depends="jars"
+	  description="Execute a single test.">
+    <mkdir dir="${test.db.dir}"/>
+    <mkdir dir="${build.reports.native}"/>
+    <mkdir dir="${build.testlog}"/>
+    <junit dir="${module.output}"
+	   printsummary="${junit.printsummary}"
+	   haltonerror="${junit.haltonerror}"
+	   haltonfailure="${junit.haltonfailure}"
+	   fork="${junit.fork}"
+	   timeout="${junit.timeout}"
+	   jvm="${junit.jvm}">
+
+      <jvmarg value="${junit.jvm.options}"/>
+      <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
+      <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
+      <sysproperty key="test.db.dir" value="${test.db.dir}"/>
+      <sysproperty key="test.db.host" value="${test.db.host}"/>
+      <sysproperty key="test.db.port" value="${test.db.port}"/>
+      <sysproperty key="test.db.lc_ctype" value="${test.db.lc_ctype}"/>
+
+      <classpath>
+        <pathelement location="${build.classes}"/>
+        <pathelement location="${build.test}"/>
+        <pathelement location="${build.resources}"/>
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
+        <path refid="javac.test.classpath"/>
+      </classpath>
+
+      <formatter type="${junit.formatter.type}"
+		 usefile="${junit.formatter.usefile}"/>
+
+      <batchtest todir="${build.reports.native}"
+		 haltonerror="${junit.batchtest.haltonerror}"
+		 haltonfailure="${junit.batchtest.haltonfailure}"
+		 fork="${junit.batchtest.fork}">
+
+        <fileset dir="${build.test}">
+          <include name="org/firebirdsql/*/Test${test}*.class"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="one-test-embedded" depends="jars"
+	  description="Execute a single test.">
+    <mkdir dir="${test.db.dir}"/>
+    <mkdir dir="${build.reports.embedded}"/>
+    <mkdir dir="${build.testlog}"/>
+    <junit dir="${module.output}"
+	   printsummary="${junit.printsummary}"
+	   haltonerror="${junit.haltonerror}"
+	   haltonfailure="${junit.haltonfailure}"
+	   fork="${junit.fork}"
+	   timeout="${junit.timeout}"
+	   jvm="${junit.jvm}">
+
+      <jvmarg value="${junit.jvm.options}"/>
+      <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
+      <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
+      <sysproperty key="test.db.dir" value="${test.db.dir}"/>
+      <sysproperty key="test.db.host" value="${test.db.host}"/>
+      <sysproperty key="test.db.port" value="${test.db.port}"/>
+      <sysproperty key="test.db.lc_ctype" value="${test.db.lc_ctype}"/>
+
+      <classpath>
+        <pathelement location="${build.classes}"/>
+        <pathelement location="${build.test}"/>
+        <pathelement location="${build.resources}"/>
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
+        <path refid="javac.test.classpath"/>
+      </classpath>
+
+      <formatter type="${junit.formatter.type}"
+		 usefile="${junit.formatter.usefile}"/>
+
+      <batchtest todir="${build.reports.embedded}"
 		 haltonerror="${junit.batchtest.haltonerror}"
 		 haltonfailure="${junit.batchtest.haltonfailure}"
 		 fork="${junit.batchtest.fork}">
@@ -627,18 +852,49 @@
 
 
 
-  <target name="tests-report-html" depends="all-tests">
-    <mkdir dir="${build.reports}/html"/>
+  <target name="tests-report-html-pure-java" depends="all-tests-pure-java">
+    <mkdir dir="${build.reports.pure_java}/html"/>
 
-    <junitreport todir="${build.reports}">
-      <fileset dir="${build.reports}">
+    <junitreport todir="${build.reports.pure_java}">
+      <fileset dir="${build.reports.pure_java}">
         <include name="TEST-*.xml"/>
       </fileset>
       <report format="frames"
-              todir="${build.reports}/html"
+              todir="${build.reports.pure_java}/html"
               styledir="${build.stylesheets}"
       />
     </junitreport>
+  </target>
+
+  <target name="tests-report-html-native" depends="all-tests-native">
+    <mkdir dir="${build.reports.native}/html"/>
+
+    <junitreport todir="${build.reports.native}">
+      <fileset dir="${build.reports.native}">
+        <include name="TEST-*.xml"/>
+      </fileset>
+      <report format="frames"
+              todir="${build.reports.native}/html"
+              styledir="${build.stylesheets}"
+      />
+    </junitreport>
+  </target>
+
+  <target name="tests-report-html-embedded" depends="all-tests-embedded">
+    <mkdir dir="${build.reports.embedded}/html"/>
+
+    <junitreport todir="${build.reports.embedded}">
+      <fileset dir="${build.reports.embedded}">
+        <include name="TEST-*.xml"/>
+      </fileset>
+      <report format="frames"
+              todir="${build.reports.embedded}/html"
+              styledir="${build.stylesheets}"
+      />
+    </junitreport>
+  </target>
+
+  <target name="tests-report-html-all" depends="tests-report-html-pure-java,tests-report-html-native,tests-report-html-embedded">
   </target>
 
   <!-- =================================================================== -->

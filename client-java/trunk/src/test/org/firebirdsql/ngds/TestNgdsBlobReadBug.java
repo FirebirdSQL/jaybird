@@ -23,7 +23,8 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
-import org.firebirdsql.jdbc.BaseFBTest;
+
+import org.firebirdsql.common.SimpleFBTestBase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +38,7 @@ import java.util.Arrays;
  * If a blob greater then 65536 bytes in length is written to a database using jaybird in type 4 mode it will not be
  * possible to read it in type 2 mode.
  */
-public class TestNgdsBlobReadBug  extends BaseFBTest
+public class TestNgdsBlobReadBug  extends SimpleFBTestBase
     {
     private Logger log = LoggerFactory.getLogger(getClass(), false);
     private FBTpb tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);

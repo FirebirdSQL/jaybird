@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestBase;
+
 import java.io.ByteArrayInputStream;
 import java.sql.Blob;
 import java.sql.Connection;
@@ -34,7 +36,7 @@ import java.util.Arrays;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TestFBBlobAutocommit extends BaseFBTest {
+public class TestFBBlobAutocommit extends FBTestBase {
     public static final String CREATE_TABLE = 
         "CREATE TABLE test_blob(" + 
         "  id INTEGER, " + 
@@ -64,7 +66,7 @@ public class TestFBBlobAutocommit extends BaseFBTest {
     protected void setUp() throws Exception {
         super.setUp();
         Class.forName(FBDriver.class.getName());
-        connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        connection = getConnectionViaDriverManager();
         
         Statement stmt = connection.createStatement();
         try {

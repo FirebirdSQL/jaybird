@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestBase;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -25,7 +27,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class TestFBResultSet extends BaseFBTest {
+public class TestFBResultSet extends FBTestBase {
     
     public static final String SELECT_STATEMENT = ""
         + "SELECT "
@@ -83,8 +85,7 @@ public class TestFBResultSet extends BaseFBTest {
         
         Class.forName(FBDriver.class.getName());
         
-        connection = DriverManager.getConnection(
-            DB_DRIVER_URL, DB_INFO);
+        connection = this.getConnectionViaDriverManager();
             
         Statement stmt = connection.createStatement();
         
