@@ -1,10 +1,20 @@
-/*   This class is LGPL only, due to the inclusion of a
- *Xid implementation from the JBoss project as a static inner class for testing purposes.
- *The portions before the XidImpl are usable under MPL 1.1 or LGPL
- *If we write our own xid test implementation, we can reset the license to match
- *the rest of the project.
- *Original author of non-jboss code david jencks
- *copyright 2001 all rights reserved.
+ /*
+ * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
  */
 package org.firebirdsql.jca;
 
@@ -33,16 +43,13 @@ import org.firebirdsql.jdbc.BaseFBTest;
 import junit.framework.*;
 
 /**
+ * THIS FILE INCLUDES AN XID IMPLEMENTATION FROM THE JBOSS PROJECT
+ * www.jboss.org.
  *
- *   @see <related>
- *   @author David Jencks (davidjencks@earthlink.net)
- *   @version $ $
- */
-
-
-
-/**
- *This base test case includes and Xid implementation class
+ * Describe class <code>TestXABase</code> here.
+ *
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @version 1.0
  */
 public class TestXABase extends BaseFBTest {
 
