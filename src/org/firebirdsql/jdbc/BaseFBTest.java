@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.1  2002/01/07 06:59:54  d_jencks
+ * Revised FBManager to create dialect 3 databases, and the tests to use a newly created database. Simplified and unified test constants. Test targets are now all-tests for all tests and one-test for one test: specify the test as -Dtest=Gds one-test for the TestGds.class test.  Made a few other small changes to improve error messages
+ *
  * Revision 1.3  2002/01/06 23:37:58  d_jencks
  * added a connection test to datasource test, cleaned up constants a bit.
  *
@@ -56,11 +59,6 @@ public class BaseFBTest extends TestCase
      * Default URL for the test
      */
    private static final String dbPath = System.getProperty("test.db.dir");
-
-   //static final String dbName = "localhost:" + dbPath + "/testdb.gdb";
-   //static final String dbName2 = "localhost:" + dbPath + "/testdb2.gdb";
-
-   //private static final String PERSONAL_DB_LOCATION = "/usr/local/firebird/dev/client-java/db/fbmctest.gdb";
 
 
    public static final String DB_SERVER_URL = "localhost";
@@ -108,7 +106,7 @@ public class BaseFBTest extends TestCase
          fbManager.setURL(DB_SERVER_URL);
          fbManager.setPort(DB_SERVER_PORT);
          fbManager.start();
-         fbManager.createDatabase(DB_NAME);
+         fbManager.createDatabase(DB_NAME, DB_USER, DB_PASSWORD);
       }
       catch (Exception e)
       {
@@ -121,7 +119,7 @@ public class BaseFBTest extends TestCase
    {
       try 
       {
-         fbManager.dropDatabase(DB_NAME);
+         fbManager.dropDatabase(DB_NAME, DB_USER, DB_PASSWORD);
          fbManager.stop();
       }
       catch (Exception e)

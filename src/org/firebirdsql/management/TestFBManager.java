@@ -28,6 +28,7 @@ package org.firebirdsql.management;
 import java.io.*;
 import java.util.Properties;
 import java.sql.*;
+import org.firebirdsql.jdbc.BaseFBTest;
 
 
 import junit.framework.*;
@@ -42,14 +43,13 @@ import junit.framework.*;
 
 
 /**
- *This is a class that hands out connections.  Initial implementation uses DriverManager.getConnection,
- *future enhancements will use datasources/ managed stuff.
+ *This class tests the FBManager mbean as a class, not in a jmx environment.
  */
-public class TestFBManager extends TestCase {
+public class TestFBManager extends BaseFBTest {
 
-   private static String dbPath = System.getProperty("test.db.dir");
+   // private static String dbPath = System.getProperty("test.db.dir");
 
-    public static String DBNAME = dbPath + "/fbmtest.gdb";
+   // public static String DBNAME = dbPath + "/fbmtest.gdb";
 
     public TestFBManager(String name) {
         super(name);
@@ -73,8 +73,8 @@ public class TestFBManager extends TestCase {
         m.setURL("localhost");
         m.setPort(3050);
         m.start();
-        m.createDatabase(DBNAME);
-        m.dropDatabase(DBNAME);
+        m.createDatabase(DB_NAME, DB_USER, DB_PASSWORD);
+        m.dropDatabase(DB_NAME, DB_USER, DB_PASSWORD);
         m.stop();
     }
 
