@@ -100,7 +100,7 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
 
     private byte[] openDatabaseReadBlobAndDetatch(GDS gds) throws Exception
         {
-        Clumplet databaseParameterBuffer = createDatabaseParameterBuffer(gds);
+        DatabaseParameterBuffer databaseParameterBuffer = createDatabaseParameterBuffer(gds);
 
         isc_db_handle database_handle = gds.get_new_isc_db_handle();
 
@@ -126,7 +126,9 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
         isc_tr_handle transaction_handle = startTransaction(gds, database_handle);
         try
             {
-            Clumplet blobParameterBuffer = gds.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
+            final BlobParameterBuffer blobParameterBuffer = gds.newBlobParameterBuffer();
+
+            blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
 
             isc_stmt_handle statement_handle =  gds.get_new_isc_stmt_handle();
 
@@ -227,7 +229,7 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
 
     private isc_db_handle createAndSetupDatabase(GDS gds) throws Exception
         {
-        Clumplet databaseParameterBuffer = createDatabaseParameterBuffer(gds);
+        DatabaseParameterBuffer databaseParameterBuffer = createDatabaseParameterBuffer(gds);
 
         isc_db_handle database_handle = gds.get_new_isc_db_handle();
 
@@ -247,7 +249,9 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
 
     private void writeBlobRecord(GDS gds, isc_db_handle database_handle,  byte[] testBuffer) throws Exception
         {
-        Clumplet blobParameterBuffer = gds.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
+        final BlobParameterBuffer blobParameterBuffer = gds.newBlobParameterBuffer();
+
+        blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
 
         isc_blob_handle blob_handle = gds.get_new_isc_blob_handle();
 
@@ -305,7 +309,7 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
 
     private void dropDatabase(GDS gds) throws GDSException
         {
-        Clumplet c = createDatabaseParameterBuffer(gds);
+        DatabaseParameterBuffer c = createDatabaseParameterBuffer(gds);
 
         isc_db_handle db = gds.get_new_isc_db_handle();
 
@@ -316,19 +320,18 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
 
     // basic helper for creating an appropriate DPB for the suplied GDS ------------------------------------------------
 
-    private Clumplet createDatabaseParameterBuffer(GDS gds)
+    private DatabaseParameterBuffer createDatabaseParameterBuffer(GDS gds)
         {
-        Clumplet c = gds.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
+        final DatabaseParameterBuffer databaseParameterBuffer = gds.newDatabaseParameterBuffer();
 
-        c.append(gds.newClumplet(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
+        databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
+        databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
+        databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0});
+        databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
+        databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
 
-        c.append(gds.newClumplet(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
+        return databaseParameterBuffer;
 
-        c.append(gds.newClumplet(ISCConstants.isc_dpb_user_name, DB_USER));
-
-        c.append(gds.newClumplet(ISCConstants.isc_dpb_password, DB_PASSWORD));
-
-        return c;
         }
 
 

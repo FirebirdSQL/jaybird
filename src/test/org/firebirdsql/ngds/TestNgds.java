@@ -50,7 +50,7 @@ public class TestNgds extends SimpleFBTestBase {
 
     private isc_tr_handle t1;
 
-    private ClumpletImpl c;
+    private DatabaseParameterBuffer c;
 
     private FBTpb tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);
 
@@ -67,17 +67,13 @@ public class TestNgds extends SimpleFBTestBase {
     protected void setUp() {
        gds = GDSFactory.getGDSForType(GDSType.NATIVE);
 
-        c = (ClumpletImpl)gds.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
+        c= gds.newDatabaseParameterBuffer();
 
-        c.append(gds.newClumplet(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
-
-       c.append(gds.newClumplet(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
-
-      c.append(gds.newClumplet(ISCConstants.isc_dpb_user_name, DB_USER));
-
-      c.append(gds.newClumplet(ISCConstants.isc_dpb_password, DB_PASSWORD));
-
-
+        c.addArgument(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
+        c.addArgument(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
+        c.addArgument(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0});
+        c.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
+        c.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
 
         tpb.add(new Integer(ISCConstants.isc_tpb_write));
 
@@ -186,21 +182,18 @@ public class TestNgds extends SimpleFBTestBase {
    {
        GDS gds = GDSFactory.getGDSForType(GDSType.NATIVE);
 
-      Clumplet c = (Clumplet)gds.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
+      DatabaseParameterBuffer databaseParameterBuffer = gds.newDatabaseParameterBuffer();
 
-   c.append(gds.newClumplet(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
-
-      c.append(gds.newClumplet(ISCConstants.isc_dpb_user_name, DB_USER));
-
-      c.append(gds.newClumplet(ISCConstants.isc_dpb_password, DB_PASSWORD));
-
-      c.append(gds.newClumplet(ISCConstants.isc_dpb_overwrite, 0));
-
-      c.append(gds.newClumplet(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
+       databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
+       databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
+       databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
+       databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
+       databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_overwrite, 0);
+       databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0});
 
      isc_db_handle db = gds.get_new_isc_db_handle();
 
-      gds.isc_create_database(getdbpath(dbName2), db, c);
+      gds.isc_create_database(getdbpath(dbName2), db, databaseParameterBuffer);
 
       gds.isc_detach_database(db);
 
@@ -208,7 +201,7 @@ public class TestNgds extends SimpleFBTestBase {
 
       if (log!=null) log.info("test- isc_attach_database");
 
-      gds.isc_attach_database(getdbpath(dbName2), db, c);
+      gds.isc_attach_database(getdbpath(dbName2), db, databaseParameterBuffer);
 
       dropDatabase(db);
    }
@@ -544,11 +537,11 @@ public class TestNgds extends SimpleFBTestBase {
 
     isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
 
+    final BlobParameterBuffer blobParameterBuffer = gds.newBlobParameterBuffer();
 
+    blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
 
-    Clumplet bpb = gds.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
-
-    gds.isc_create_blob2(db1, t1, blob1, bpb);
+    gds.isc_create_blob2(db1, t1, blob1, blobParameterBuffer);
 
     if (log!=null) log.info("test- test- new blob_id: " + blob1.getBlob_id());
 
@@ -664,9 +657,11 @@ public class TestNgds extends SimpleFBTestBase {
 
     isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
 
-    Clumplet bpb = gds.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
+    final BlobParameterBuffer blobParameterBuffer = gds.newBlobParameterBuffer();
 
-    gds.isc_create_blob2(db1, t1, blob1, bpb);
+    blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
+
+    gds.isc_create_blob2(db1, t1, blob1, blobParameterBuffer);
 
     if (log!=null) log.info("test- new blob_id: " + blob1.getBlob_id());
 
@@ -746,7 +741,7 @@ public class TestNgds extends SimpleFBTestBase {
 
             blob2.setBlob_id(xsqlvar.decodeLong(row[1]));
 
-            gds.isc_open_blob2(db1, t1, blob2, bpb);
+            gds.isc_open_blob2(db1, t1, blob2, blobParameterBuffer);
 
             int readcount = 0;
 
@@ -795,9 +790,11 @@ public class TestNgds extends SimpleFBTestBase {
 
     isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
 
-    Clumplet bpb = gds.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
+    final BlobParameterBuffer blobParameterBuffer = gds.newBlobParameterBuffer();
 
-    gds.isc_create_blob2(db1, t1, blob1, bpb);
+    blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
+
+    gds.isc_create_blob2(db1, t1, blob1, blobParameterBuffer);
 
     if (log!=null) log.info("test- new blob_id: " + blob1.getBlob_id());
 
@@ -877,7 +874,7 @@ public class TestNgds extends SimpleFBTestBase {
 
             blob2.setBlob_id(xsqlvar.decodeLong(row[1]));
 
-           gds.isc_open_blob2(db1, t1, blob2, bpb);
+           gds.isc_open_blob2(db1, t1, blob2, blobParameterBuffer );
 
             int readcount = 0;
 
@@ -925,9 +922,11 @@ public class TestNgds extends SimpleFBTestBase {
 
 
 
-    Clumplet bpb = gds.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
+    final BlobParameterBuffer blobParameterBuffer = gds.newBlobParameterBuffer();
 
-    gds.isc_create_blob2(db1, t1, blob1, bpb);
+    blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
+
+    gds.isc_create_blob2(db1, t1, blob1, blobParameterBuffer);
 
     if (log!=null) log.info("test- new blob_id: " + blob1.getBlob_id());
 
@@ -1005,7 +1004,7 @@ public class TestNgds extends SimpleFBTestBase {
 
             blob2.setBlob_id(xsqlvar.decodeLong(row[1]));
 
-           gds.isc_open_blob2(db1, t1, blob2, bpb);
+           gds.isc_open_blob2(db1, t1, blob2, blobParameterBuffer );
 
             int readcount = 0;
 

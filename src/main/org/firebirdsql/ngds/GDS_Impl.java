@@ -120,40 +120,6 @@ public class GDS_Impl extends AbstractGDS implements GDS
             }
         }
 
-    public synchronized  Clumplet newClumplet(int type, String content) {
-        return new StringClumplet(type, content);
-    }
-
-    public synchronized  Clumplet newClumplet(int type){
-        return new ClumpletImpl(type, new byte[] {});
-    }
-
-
-    public synchronized  Clumplet newClumplet(int type, int c)
-        {
-        // Unfortuanatly firebird does not seem to read items in the blob parameter buffer
-        // correclly if they are encoded in more then two bytes.
-
-        // As a temporary work around I have only used two bytes to encode these values and
-        // put a simple check in to catch most potential problems. I have made a note to myself
-        // to come back and review this soon.
-        if( c >= 65536 )
-            throw new RuntimeException("Clumplet value out of range.");
-
-        return new ClumpletImpl(type, new byte[] {(byte)(c>>8), (byte)c});
-        }
-
-    public synchronized  Clumplet newClumplet(int type, byte[] content) {
-        return new ClumpletImpl(type, content);
-    }
-
-    public synchronized  Clumplet cloneClumplet(Clumplet c) {
-        if (c == null) {
-            return null;
-        }
-        return ((ClumpletImpl)c).cloneClumplet();
-    }
-
     public ServiceParameterBuffer newServiceParameterBuffer()
         {
         return new ServiceParameterBufferImp();
@@ -162,6 +128,16 @@ public class GDS_Impl extends AbstractGDS implements GDS
     public ServiceRequestBuffer newServiceRequestBuffer(int taskIdentifier)
         {
         return new ServiceRequestBufferImp(taskIdentifier);
+        }
+
+    public DatabaseParameterBuffer newDatabaseParameterBuffer()
+        {
+        return new DatabaseParameterBufferImp();
+        }
+
+    public BlobParameterBuffer newBlobParameterBuffer()
+        {
+        return new BlobParameterBufferImp();
         }
 
     // Handle declaration methods
@@ -191,26 +167,12 @@ public class GDS_Impl extends AbstractGDS implements GDS
         return new isc_svc_handle_impl();
         }
 
-    private byte[] clupletToBytes(Clumplet bpb)
-        {
-        if(bpb == null)
-            return null;
-        try
-            {
-            return ((ClumpletImpl)bpb).toBytes();
-            }
-        catch (IOException e)
-            {
-            e.printStackTrace();  //To change body of catch statement use Options | File Templates.
-            }
 
-        return new byte[0];
-        }
 
     private native void nativeInitilize(String firebirdDllName);
 
     // isc_create_database ---------------------------------------------------------------------------------------------
-    public void isc_create_database(String file_name, isc_db_handle db_handle, Clumplet c) throws GDSException
+    public void isc_create_database(String file_name, isc_db_handle db_handle, DatabaseParameterBuffer databaseParameterBuffer) throws GDSException
         {
         if (db_handle == null)
             {
@@ -218,16 +180,11 @@ public class GDS_Impl extends AbstractGDS implements GDS
             }
 
 
-        final byte[] dpbBytes = clupletToBytes(c);
-        final byte[] arg = new byte[dpbBytes.length+1];
-        arg[0] = 1;
-        System.arraycopy( dpbBytes, 0, arg, 1, dpbBytes.length );
-
-
+        final byte[] dpbBytes = ((DatabaseParameterBufferImp)databaseParameterBuffer).getBytesForNativeCode();
 
         synchronized(this)
             {
-            native_isc_create_database( getServerUrl(file_name), db_handle, arg );
+            native_isc_create_database( getServerUrl(file_name), db_handle, dpbBytes );
             }
         }
 
@@ -286,27 +243,18 @@ public class GDS_Impl extends AbstractGDS implements GDS
             }
 
     // isc_attach_database ---------------------------------------------------------------------------------------------
-    public void isc_attach_database(String file_name, isc_db_handle db_handle, Clumplet c) throws GDSException
+    public void isc_attach_database(String file_name, isc_db_handle db_handle, DatabaseParameterBuffer databaseParameterBuffer) throws GDSException
         {
         if (db_handle == null)
             {
             throw new GDSException(ISCConstants.isc_bad_db_handle);
             }
 
-        final byte[] dpbBytes = clupletToBytes(c);
-
-
-
-        final byte[] arg = new byte[dpbBytes.length+1];
-        arg[0] = 1;
-        System.arraycopy( dpbBytes, 0, arg, 1, dpbBytes.length );
-
-
-
+        final byte[] dpbBytes = ((DatabaseParameterBufferImp)databaseParameterBuffer).getBytesForNativeCode();
 
         synchronized(this)
             {
-		    native_isc_attach_database( getServerUrl(file_name), db_handle, arg );
+		    native_isc_attach_database( getServerUrl(file_name), db_handle, dpbBytes );
             }
         }
 
@@ -994,7 +942,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
     public void isc_create_blob2(isc_db_handle db_handle,
                                  isc_tr_handle tr_handle,
                                  isc_blob_handle blob_handle,
-                                 Clumplet bpbClumpet) throws GDSException
+                                 BlobParameterBuffer blobParameterBuffer) throws GDSException
         {
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
@@ -1010,7 +958,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
             throw new GDSException(ISCConstants.isc_bad_segstr_handle);
         }
 
-        final byte[] bpb = blobParameterClumpetToBuffer(bpbClumpet);
+        final byte[] bpb = blobParameterBuffer == null ? null : ((BlobParameterBufferImp)blobParameterBuffer).getBytesForNativeCode();
 
         synchronized(db)
             {
@@ -1032,7 +980,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
     public void isc_open_blob2(isc_db_handle db_handle,
                                isc_tr_handle tr_handle,
                                isc_blob_handle blob_handle,
-                               Clumplet bpbClumpet) throws GDSException
+                               BlobParameterBuffer blobParameterBuffer) throws GDSException
         {
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
@@ -1048,7 +996,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
             throw new GDSException(ISCConstants.isc_bad_segstr_handle);
         }
 
-        final byte[] bpb = blobParameterClumpetToBuffer(bpbClumpet);
+        final byte[] bpb = blobParameterBuffer == null ? null : ((BlobParameterBufferImp)blobParameterBuffer).getBytesForNativeCode();
 
         synchronized(db)
             {
@@ -1062,22 +1010,6 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
     private native void native_isc_open_blob2(isc_db_handle db, isc_tr_handle tr, isc_blob_handle blob, byte[] dpbBytes);
 
-
-    private byte[] blobParameterClumpetToBuffer(Clumplet bpbClumpet)
-        {
-        final byte[] bpbBytes = clupletToBytes(bpbClumpet);
-        if(bpbBytes == null)
-            return null;
-        else
-            {
-            final byte[] bpb = new byte[bpbBytes.length+1];
-
-            bpb[0] = 1;
-            System.arraycopy( bpbBytes, 0, bpb, 1, bpbBytes.length );
-
-            return bpb;
-            }
-        }
 
 
     // isc_get_segment ---------------------------------------------------------------------------------------------

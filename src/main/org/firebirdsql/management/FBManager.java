@@ -39,7 +39,7 @@ public class FBManager implements FBManagerMBean
 
     private GDS gds;
 
-    private Clumplet c;
+    private DatabaseParameterBuffer c;
 
 
     private String host = "localhost";
@@ -92,9 +92,11 @@ public class FBManager implements FBManagerMBean
      */
     public void start() throws Exception {
         gds = GDSFactory.getGDSForType(type);
-        c = gds.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
-        c.append(gds.newClumplet(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
-        c.append(gds.newClumplet(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
+      
+        c = gds.newDatabaseParameterBuffer();
+        c.addArgument(DatabaseParameterBuffer.num_buffers, new byte[] {90});
+        c.addArgument(DatabaseParameterBuffer.dummy_packet_interval, new byte[] {120, 10, 0, 0});
+        c.addArgument(DatabaseParameterBuffer.sql_dialect, new byte[] {3, 0, 0, 0});
 
         state = STARTED;
         if (isCreateOnStart())
@@ -392,9 +394,9 @@ public class FBManager implements FBManagerMBean
 	if (!forceCreate) {
 	    db = gds.get_new_isc_db_handle();
 	    try {
-		Clumplet dpb = gds.cloneClumplet(c);
-		dpb.append(gds.newClumplet(ISCConstants.isc_dpb_user_name, user));
-		dpb.append(gds.newClumplet(ISCConstants.isc_dpb_password, password));
+		DatabaseParameterBuffer dpb = c.deepCopy();
+                dpb.addArgument(DatabaseParameterBuffer.user_name, user);
+                dpb.addArgument(DatabaseParameterBuffer.password, password);
 		gds.isc_attach_database(getConnectString(fileName), db, dpb);
 		gds.isc_detach_database(db);
 		return; //database exists, don't wipe it out.
@@ -408,9 +410,9 @@ public class FBManager implements FBManagerMBean
 
 	db = gds.get_new_isc_db_handle();
         try {
-            Clumplet dpb = gds.cloneClumplet(c);
-            dpb.append(gds.newClumplet(ISCConstants.isc_dpb_user_name, user));
-            dpb.append(gds.newClumplet(ISCConstants.isc_dpb_password, password));
+            DatabaseParameterBuffer dpb = c.deepCopy();
+            dpb.addArgument(DatabaseParameterBuffer.user_name, user);
+            dpb.addArgument(DatabaseParameterBuffer.password, password);
             gds.isc_create_database(getConnectString(fileName), db, dpb);
             gds.isc_detach_database(db);
         }
@@ -437,9 +439,9 @@ public class FBManager implements FBManagerMBean
     {
         try {
             isc_db_handle db = gds.get_new_isc_db_handle();
-            Clumplet dpb = gds.cloneClumplet(c);
-            dpb.append(gds.newClumplet(ISCConstants.isc_dpb_user_name, user));
-            dpb.append(gds.newClumplet(ISCConstants.isc_dpb_password, password));
+            DatabaseParameterBuffer dpb = c.deepCopy();
+            dpb.addArgument(DatabaseParameterBuffer.user_name, user);
+            dpb.addArgument(DatabaseParameterBuffer.password, password);
             gds.isc_attach_database(getConnectString(fileName), db, dpb);
             gds.isc_drop_database(db);
 

@@ -42,7 +42,8 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
-import org.firebirdsql.gds.Clumplet;
+
+import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLDA;
@@ -51,6 +52,8 @@ import org.firebirdsql.gds.isc_blob_handle;
 import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.isc_tr_handle;
+
+
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBStatement;
 import org.firebirdsql.logging.Logger;
@@ -880,10 +883,14 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         {
             isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
             blob.setBlob_id(blob_id);
-            Clumplet c = mcf.gds.newClumplet(
-                ISCConstants.isc_bpb_type, 
-                segmented ? ISCConstants.isc_bpb_type_segmented : ISCConstants.isc_bpb_type_stream);
-            mcf.gds.isc_open_blob2(currentDbHandle, currentTr, blob, c);
+
+            final BlobParameterBuffer blobParameterBuffer = mcf.gds.newBlobParameterBuffer();
+
+            blobParameterBuffer.addArgument(BlobParameterBuffer.type,
+                    segmented ? BlobParameterBuffer.type_segmented : BlobParameterBuffer.type_stream);
+
+            mcf.gds.isc_open_blob2(currentDbHandle, currentTr, blob, blobParameterBuffer);
+
             return blob;
         }
         catch (GDSException ge)
@@ -899,11 +906,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         {
             isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
 
-            Clumplet c = mcf.gds.newClumplet(
-                ISCConstants.isc_bpb_type, 
-                segmented ? ISCConstants.isc_bpb_type_segmented : ISCConstants.isc_bpb_type_stream);
+            final BlobParameterBuffer blobParameterBuffer = mcf.gds.newBlobParameterBuffer();
 
-            mcf.gds.isc_create_blob2(currentDbHandle, currentTr, blob, c);//no bpb for now, segmented
+            blobParameterBuffer.addArgument(BlobParameterBuffer.type,
+                    segmented ? BlobParameterBuffer.type_segmented : BlobParameterBuffer.type_stream);
+
+            mcf.gds.isc_create_blob2(currentDbHandle, currentTr, blob, blobParameterBuffer);
+
             return blob;
         }
         catch (GDSException ge)

@@ -1,4 +1,4 @@
-/*
+ /*
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -16,25 +16,38 @@
  *
  * All rights reserved.
  */
+
 package org.firebirdsql.ngds;
 
-import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.ISCConstants;
 
 import java.io.ByteArrayOutputStream;
 
 /**
- * ngds implementation for ServiceRequestBufferImp.
+ *
  */
-class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequestBuffer
+public class BlobParameterBufferImp extends ParameterBufferBase implements BlobParameterBuffer
     {
-    /**
-     * Every ServiceRequestBuffer has an associated taskIdentifier.
-     *
-     * @param taskIdentifier
-     */
-    ServiceRequestBufferImp(int taskIdentifier)
+    public BlobParameterBufferImp()
         {
-        this.taskIdentifier = taskIdentifier;
+        super();
+        }
+
+    public void addArgument(int argumentType, int value)
+        {
+		if(value > 65535)
+			throw new RuntimeException("Blob parameter buffer value out of range for type "+argumentType); 
+					
+        getArgumentsList().add(new NumericArgument(argumentType, value)
+            {
+            protected void writeValue(ByteArrayOutputStream outputStream, int value)
+                {
+                outputStream.write(2);
+                outputStream.write(value);
+                outputStream.write(value>>8);
+                }
+            });
         }
 
     /**
@@ -42,18 +55,14 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequ
      *
      * @return
      */
-    byte[] toByteArray()
+    byte[] getBytesForNativeCode()
         {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        byteArrayOutputStream.write(taskIdentifier);
+        byteArrayOutputStream.write(ISCConstants.isc_bpb_version1);
 
         super.writeArgumentsTo(byteArrayOutputStream);
 
         return byteArrayOutputStream.toByteArray();
         }
-
-    // PRIVATE MEMBERS
-
-    private int taskIdentifier;
     }

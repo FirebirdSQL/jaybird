@@ -37,33 +37,26 @@ package org.firebirdsql.gds;
  */
 public interface GDS {
     
-    public  Clumplet newClumplet(int type, String content);
+    public ServiceParameterBuffer  newServiceParameterBuffer();
 
-    public  Clumplet newClumplet(int type);
+    public ServiceRequestBuffer    newServiceRequestBuffer(int taskIdentifier);
 
-    public  Clumplet newClumplet(int type, int c);
+    public DatabaseParameterBuffer newDatabaseParameterBuffer();
 
-    public  Clumplet newClumplet(int type, byte[] content) ;
+    public BlobParameterBuffer     newBlobParameterBuffer();
 
-    public  Clumplet cloneClumplet(Clumplet c) ;
 
-    // NOTE - In current ngds implementation ServiceParameterBuffer and ServiceRequestBuffer must be created and used on
-    // a single thread.
-
-    public ServiceParameterBuffer newServiceParameterBuffer();
-
-    public ServiceRequestBuffer   newServiceRequestBuffer(int taskIdentifier);
 
 
     // Database functions
 
     void isc_create_database(String file_name,
                             isc_db_handle db_handle,
-                            Clumplet c ) throws GDSException;
+                            DatabaseParameterBuffer databaseParameterBuffer ) throws GDSException;
 
     void isc_attach_database(String file_name,
                             isc_db_handle db_handle,
-                            Clumplet c) throws GDSException;
+                            DatabaseParameterBuffer databaseParameterBuffer) throws GDSException;
 
     byte[] isc_database_info(isc_db_handle db_handle,
                             byte[] items,
@@ -192,12 +185,12 @@ public interface GDS {
     void isc_create_blob2(isc_db_handle db,
                         isc_tr_handle tr,
                         isc_blob_handle blob,
-                        Clumplet bpb) throws GDSException;
+                        BlobParameterBuffer blobParameterBuffer) throws GDSException;
 
     void isc_open_blob2(isc_db_handle db,
                         isc_tr_handle tr,
                         isc_blob_handle blob,
-                        Clumplet bpb) throws GDSException;
+                        BlobParameterBuffer blobParameterBuffer) throws GDSException;
 
     byte[] isc_get_segment(isc_blob_handle blob,
                            int maxread) throws GDSException;

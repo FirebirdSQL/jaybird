@@ -109,7 +109,7 @@ public class FBConnectionHelper {
     }
 
     public static FBConnectionRequestInfo getDefaultCri(GDS gds) {
-        FBConnectionRequestInfo result = new FBConnectionRequestInfo(gds);
+        FBConnectionRequestInfo result = FBConnectionRequestInfo.newInstance(gds);
         return result;
     }
 
@@ -132,7 +132,7 @@ public class FBConnectionHelper {
      * relevant connection parameters.
      */
     public static FBConnectionRequestInfo getCri(Properties info, FBConnectionRequestInfo baseCri) {
-        final FBConnectionRequestInfo cri = new FBConnectionRequestInfo(baseCri);
+        final FBConnectionRequestInfo cri = baseCri.deepCopy();
 
         copyPropertiesIntoCri(info, cri);
 
@@ -156,7 +156,7 @@ public class FBConnectionHelper {
      * relevant connection parameters.
      */
     public static FBConnectionRequestInfo getCri(Properties info, GDS gdsToUse) {
-        final FBConnectionRequestInfo cri = new FBConnectionRequestInfo(getDefaultCri(gdsToUse));
+        final FBConnectionRequestInfo cri = getDefaultCri(gdsToUse).deepCopy();
 
         copyPropertiesIntoCri(info, cri);
 

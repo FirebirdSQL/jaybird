@@ -176,12 +176,12 @@ public class FBManagedConnectionFactory
     public void setConnectionRequestInfo(FBConnectionRequestInfo cri) {
         checkNotStarted();
         hashCode = 0;
-        this.defaultCri = new FBConnectionRequestInfo(cri);
+        this.defaultCri = cri.deepCopy();
     }
 
 
     public FBConnectionRequestInfo getDefaultConnectionRequestInfo() {
-        return new FBConnectionRequestInfo(defaultCri);
+        return defaultCri.deepCopy();
     }
 
     public void setUserName(String userName)

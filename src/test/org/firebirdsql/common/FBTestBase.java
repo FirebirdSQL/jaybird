@@ -117,7 +117,7 @@ public class FBTestBase extends SimpleFBTestBase
      */
     protected FBConnectionRequestInfo createFBConnectionRequestInfo()
         {
-        return new FBConnectionRequestInfo(GDSFactory.getGDSForType(getGdsType()));
+        return FBConnectionRequestInfo.newInstance(GDSFactory.getGDSForType(getGdsType()));
         }
 
     /**

@@ -26,9 +26,10 @@ package org.firebirdsql.jca;
 import java.io.Serializable;
 import javax.resource.cci.ConnectionSpec;
 import javax.resource.spi.ConnectionRequestInfo;
-import org.firebirdsql.gds.Clumplet;
+
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
 
 
 
@@ -44,56 +45,48 @@ import org.firebirdsql.gds.GDS;
 public class FBConnectionRequestInfo 
     implements ConnectionRequestInfo, ConnectionSpec, Serializable
 {
+    public static FBConnectionRequestInfo newInstance(GDS gds)
+        {
+        return new FBConnectionRequestInfo(gds.newDatabaseParameterBuffer());
+        }
 
-    private Clumplet c = null;
-    private final GDS gds;
+    public FBConnectionRequestInfo deepCopy()
+        {
+        return new FBConnectionRequestInfo(c.deepCopy());
+        }
 
-    public FBConnectionRequestInfo( GDS gds ) {
-	this.gds = gds;
+
+
+   private FBConnectionRequestInfo(DatabaseParameterBuffer src) {
+        c = src.deepCopy();
     }
 
-    public FBConnectionRequestInfo(FBConnectionRequestInfo src) {
-        this.gds = src.gds;
-        c = gds.cloneClumplet(src.c);
-    }
-
-    Clumplet getDpb() {
+    DatabaseParameterBuffer getDpb() {
         return c;
     }
 
     public void setProperty(int type, String content) {
-        append(gds.newClumplet(type, content));
+        c.addArgument(type, content);
     }
 
     public void setProperty(int type) {
-        append(gds.newClumplet(type));
+        c.addArgument(type);
     }
 
     public void setProperty(int type, int content) {
-        append(gds.newClumplet(type, content));
+        c.addArgument(type, content);
     }
 
     public void setProperty(int type, byte[] content) {
-        append(gds.newClumplet(type, content));
+        c.addArgument(type, content);
     }
 
     public String getStringProperty(int type)
     {
-        if (c == null) 
-        {
-            return null;        
-        } // end of if ()
-        return c.findString(type);
+        return c.getArgumentAsString(type);
     }
 
-    private void append(Clumplet newc) {
-        if (c == null) {
-            c = newc;
-        }
-        else {
-            c.append(newc);
-        }
-    }
+
 
     public void setUser(String user) {
         setProperty(ISCConstants.isc_dpb_user_name, user);
@@ -128,10 +121,7 @@ public class FBConnectionRequestInfo
         if ((other == null) || !(other instanceof FBConnectionRequestInfo)) {
             return false;
         }
-        Clumplet otherc = ((FBConnectionRequestInfo)other).c;
-        if (c == null) {
-            return (otherc == null);
-        }
+        DatabaseParameterBuffer otherc = ((FBConnectionRequestInfo)other).c;
         return c.equals(otherc);
     }
 
@@ -144,10 +134,9 @@ public class FBConnectionRequestInfo
     **/
 
     public int hashCode() {
-        if (c == null) {
-            return 0;
-        }
-        return c.hashCode();
+       return c.hashCode();
     }
 
-}
+
+    private final DatabaseParameterBuffer c;
+    }

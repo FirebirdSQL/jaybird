@@ -122,6 +122,10 @@ SOURCE=..\..\source\jni_helpers.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\source\win32\platform.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\source\xsqlda_wrapper.cpp
 # End Source File
 # End Group
