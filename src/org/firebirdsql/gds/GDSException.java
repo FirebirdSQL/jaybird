@@ -30,6 +30,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.5  2001/10/16 18:11:41  alberola
+ * Fixed a bug in toString()
+ *
  * Revision 1.4  2001/08/28 17:13:23  d_jencks
  * Improved formatting slightly, removed dos cr's
  *
@@ -120,7 +123,7 @@ public class GDSException extends Exception {
     /**
      * Returns a string representation of this exception.
      */
-    public String toString() {
+    public String getMessage() {
         // If I represent a GDSMessage code, then let's format it nicely.
         if (type == GDS.isc_arg_gds) {
             // get message
@@ -141,7 +144,7 @@ public class GDSException extends Exception {
 
             // Do we have more children? Then include them...
             if (child != null)
-                msg += "\n" + child.toString();
+                msg += "\n" + child.getMessage();
 
             // Ok, we have a message, so return it to the client.
             return msg;
@@ -150,7 +153,6 @@ public class GDSException extends Exception {
         // on me by mistake... :(
         return "";
     }
-
 
 }
 
