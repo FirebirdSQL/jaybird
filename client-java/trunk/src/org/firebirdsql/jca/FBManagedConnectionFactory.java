@@ -84,7 +84,7 @@ matching and creation of ManagedConnection instance.
 
 public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
-   private final Logger log = LoggerFactory.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass(),true);
 
     final GDS gds = GDSFactory.newGDS();
 

@@ -43,7 +43,7 @@ import java.util.*;
 
 public class GDS_Impl implements GDS {
 
-   private final Logger log = LoggerFactory.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass(),false);
 
     /* Operation (packet) types */
 

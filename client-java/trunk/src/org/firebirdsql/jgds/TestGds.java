@@ -53,7 +53,7 @@ import org.firebirdsql.jdbc.BaseFBTest;
  */
 public class TestGds extends BaseFBTest {
 
-   private Logger log = LoggerFactory.getLogger(getClass());
+   private Logger log = LoggerFactory.getLogger(getClass(),true);
 
 
     static final String dbName = "testdb.gdb";

@@ -15,7 +15,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 public class FBManager implements FBManagerMBean, MBeanRegistration {
 
-   private final Logger log = LoggerFactory.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass(),true);
 
     // Constants -----------------------------------------------------
     public static final String[] states = {"Stopped","Stopping","Starting","Started"};

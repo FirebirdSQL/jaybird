@@ -84,7 +84,7 @@ import java.io.BufferedOutputStream;
 
 public class FBBlob implements Blob{
 
-   private final Logger log = LoggerFactory.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass(),false);
 
     /**
      * bufferlength is the size of the buffer for blob input and output streams,

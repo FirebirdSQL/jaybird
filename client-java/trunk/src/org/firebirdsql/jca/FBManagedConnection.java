@@ -82,7 +82,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 public class FBManagedConnection implements ManagedConnection, XAResource {
 
-   private final Logger log = LoggerFactory.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass(),false);
 
     private FBManagedConnectionFactory mcf;
 
