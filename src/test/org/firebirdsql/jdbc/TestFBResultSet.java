@@ -205,6 +205,9 @@ public class TestFBResultSet extends FBTestBase {
                     assertTrue("ResultSet.isAfterLast() should be true", 
                         rs.isAfterLast());
                     
+                    assertTrue("ResultSet.next() should return false.",
+                        !rs.next());
+                    
                 } finally {
                     update.close();
                 }
@@ -258,6 +261,9 @@ public class TestFBResultSet extends FBTestBase {
             
             assertTrue("ResultSet.isAfterLast() should be true",
                     rs.isAfterLast());
+            
+            assertTrue("ResultSet.next() should return false.",
+                    !rs.next());
             
         } catch(Exception e) {
             e.printStackTrace();
@@ -401,6 +407,8 @@ public class TestFBResultSet extends FBTestBase {
             } catch(SQLException ex) {
                 // everything is fine
             }
+            assertTrue("ResultSet.next() should return false.", !rs.next());
+            
         } finally {
             stmt.close();
         }
