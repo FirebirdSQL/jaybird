@@ -1,3 +1,13 @@
+2003-12-16 16:00  rrokytskyy
+
+	* client-java/src/:
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	test/org/firebirdsql/jdbc/TestFBCallableStatement.java:
+	
+	basic support for escaped procedure call syntax
+
 2003-12-15 15:50  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/FBProcedureCall.java:
