@@ -78,6 +78,12 @@ public class FBManagedConnectionFactory
     implements  ManagedConnectionFactory, Serializable
 {
 
+    /**
+     * Describe constant <code>MAX_BLOB_BUFFER_LENGTH</code> here.
+     * @todo  Claudio suggests this should be 1024*64 -1, we should find out
+     *  I thought this was the largest value I could make work, but I didn't 
+     *  write down my experiments.
+     */
     private final static int MAX_BLOB_BUFFER_LENGTH = 1024 * 32 - 1;
     private final static int MIN_BLOB_BUFFER_LENGTH = 1024;
 

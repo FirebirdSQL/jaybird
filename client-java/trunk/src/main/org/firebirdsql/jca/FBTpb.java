@@ -126,8 +126,12 @@ public class FBTpb
             || key.equals(ISC_TPB_WRITE)) 
         {
             tpb.add(key);
+            return;
         } // end of if ()
-        throw new IllegalArgumentException("Unrecognized Tpb parameter: " + key);
+        else
+        {
+            throw new IllegalArgumentException("Unrecognized Tpb parameter: " + key);
+        } // end of else
     }
         
 

@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2002/09/28 19:21:36  d_jencks
+ * Fixed physical connection leak, made  datasource and ManagedConnectionFactory serializable, and made BlobBufferLength and Integer attribute to be spec-compliant.
+ *
  * Revision 1.1  2002/08/29 13:41:04  d_jencks
  * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
  *
@@ -106,7 +109,7 @@ public class FBDriver implements Driver {
     public static final String USER = "user";
     public static final String PASSWORD = "password";
     public static final String DATABASE = "database";
-    public static final String BLOB_BUFFER_LENGTH = "blob)buffer_length";
+    public static final String BLOB_BUFFER_LENGTH = "blob_buffer_length";
 
     /**
      * @todo implement the default subject for the
