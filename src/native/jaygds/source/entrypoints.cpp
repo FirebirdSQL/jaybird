@@ -331,7 +331,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1prepare_
 		
 		JByteArray tpb( javaEnvironment, jBytes );
 
-		FirebirdApiBinding::isc_prepare_transaction2( status.RawAccess(), &rawTransactionHandle, tpb.Size(), tpb.Read() );
+		FirebirdApiBinding::isc_prepare_transaction2( status.RawAccess(), &rawTransactionHandle, tpb.Size(), (unsigned char*)tpb.Read() );
 		
 		transactionHandle.SetHandleValue(rawTransactionHandle);
 
@@ -865,7 +865,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1open_1bl
 		ISC_QUAD rawBlobId = blobHandle.GetId();
 		
 
-		FirebirdApiBinding::isc_open_blob2( status.RawAccess(), &rawDatabaseHandle, &rawTransactionHandle, &rawBlobHandle, &rawBlobId, clumpetBytes.Size(), clumpetBytes.Read() );
+		FirebirdApiBinding::isc_open_blob2( status.RawAccess(), &rawDatabaseHandle, &rawTransactionHandle, &rawBlobHandle, &rawBlobId, clumpetBytes.Size(), (unsigned char*)clumpetBytes.Read() );
 
 	
 		databaseHandle.SetHandleValue(rawDatabaseHandle);
