@@ -1278,7 +1278,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsPositionedDelete() throws SQLException {
-        return false;
+        return true;
     }
 
 
@@ -1289,7 +1289,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsPositionedUpdate() throws SQLException {
-        return false;
+        return true;
     }
 
 
@@ -1300,7 +1300,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsSelectForUpdate() throws SQLException {
-        return false;
+        return true;
     }
 
 
