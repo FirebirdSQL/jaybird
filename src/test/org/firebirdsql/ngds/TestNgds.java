@@ -11,9 +11,7 @@ import org.firebirdsql.ngds.XSQLVARImpl;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
 import org.firebirdsql.jdbc.BaseFBTest;
-import org.firebirdsql.management.FBManager;
 
-import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
 /**
@@ -25,7 +23,7 @@ import java.util.Arrays;
  */
 public class TestNgds extends BaseFBTest {
 
-   private Logger log = LoggerFactory.getLogger(getClass(),true);
+   private Logger log = LoggerFactory.getLogger(getClass(),false);
 
     static final String dbName = "testdb.gdb";
 
