@@ -389,22 +389,28 @@ public class TestFBPreparedStatement extends FBTestBase{
                     String ts2Str = null;
                     String ts3Str = null;
                     
+                    int maxLength = 23;
+                    
+                    // workaround for the bug in java.sql.Timestamp in JDK 1.3 
+                    if ("1.3".equals(System.getProperty("java.specification.version")))
+                        maxLength = 19;
+                    
                     while(rs.next()) {
                         
                         switch(rs.getInt(1)) {
                             case 1 :
                                 ts1 = rs.getTimestamp(3);
-                                ts1Str = rs.getString(2).substring(0, 23);
+                                ts1Str = rs.getString(2).substring(0, maxLength);
                                 break;
                                 
                             case 2 :
                                 ts2 = rs.getTimestamp(3);
-                                ts2Str = rs.getString(2).substring(0, 23);
+                                ts2Str = rs.getString(2).substring(0, maxLength);
                                 break;
                                 
                             case 3 : 
                                 ts3 = rs.getTimestamp(3);
-                                ts3Str = rs.getString(2).substring(0, 23);
+                                ts3Str = rs.getString(2).substring(0, maxLength);
                                 break;
                         }
                         /*
@@ -423,13 +429,13 @@ public class TestFBPreparedStatement extends FBTestBase{
                         Math.abs(ts1.getTime() - ts3.getTime()) == 3600*1000);
                     
                     assertTrue("Server should see the same timestamp",
-                        ts1.toString().equals(ts1Str));
+                        ts1.toString().substring(0,  maxLength).equals(ts1Str));
 
                     assertTrue("Server should see the same timestamp",
-                        ts2.toString().equals(ts2Str));
+                        ts2.toString().substring(0, maxLength).equals(ts2Str));
 
                     assertTrue("Server should see the same timestamp",
-                        ts3.toString().equals(ts3Str));
+                        ts3.toString().substring(0, maxLength).equals(ts3Str));
 
                 } finally {
                     selectStmt.close();
