@@ -1049,6 +1049,8 @@ public interface GDS {
 
     void isc_rollback_transaction(isc_tr_handle tr_handle) throws GDSException;
 
+    void isc_rollback_retaining(isc_tr_handle tr_handle) throws GDSException;
+
 
     // Dynamic SQL
 

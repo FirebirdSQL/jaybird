@@ -409,6 +409,9 @@ public class GDS_Impl implements GDS {
 
         synchronized (db) {
 
+            if (tr.getState() != isc_tr_handle.TRANSACTIONSTARTED && tr.getState() != isc_tr_handle.TRANSACTIONPREPARED) {
+                throw new GDSException(isc_tra_state);
+            }
             tr.setState(isc_tr_handle.TRANSACTIONCOMMITTING);
 
             try {
@@ -439,6 +442,9 @@ public class GDS_Impl implements GDS {
         isc_db_handle_impl db = (isc_db_handle_impl)tr.getDbHandle();
 
         synchronized (db) {
+            if (tr.getState() != isc_tr_handle.TRANSACTIONSTARTED && tr.getState() != isc_tr_handle.TRANSACTIONPREPARED) {
+                throw new GDSException(isc_tra_state);
+            }
             tr.setState(isc_tr_handle.TRANSACTIONCOMMITTING);
 
             try {
@@ -467,7 +473,6 @@ public class GDS_Impl implements GDS {
             if (tr.getState() != isc_tr_handle.TRANSACTIONSTARTED) {
                 throw new GDSException(isc_tra_state);
             }
-            tr.setState(isc_tr_handle.TRANSACTIONPREPARING);
             tr.setState(isc_tr_handle.TRANSACTIONPREPARING);
             try {
                 if (log != null) log.debug("op_prepare ");
@@ -543,6 +548,34 @@ public class GDS_Impl implements GDS {
             //tr.rtr_rdb = null;
             //db.rdb_transactions.removeElement(tr);
             tr.unsetDbHandle();
+        }
+
+    }
+
+    public void isc_rollback_retaining( isc_tr_handle tr_handle) throws GDSException {
+        isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
+        if (tr == null) {
+            throw new GDSException(isc_bad_trans_handle);
+        }
+        isc_db_handle_impl db = (isc_db_handle_impl)tr.getDbHandle();
+
+        synchronized (db) {
+            if (tr.getState() != isc_tr_handle.TRANSACTIONSTARTED && tr.getState() != isc_tr_handle.TRANSACTIONPREPARED) {
+                throw new GDSException(isc_tra_state);
+            }
+            tr.setState(isc_tr_handle.TRANSACTIONROLLINGBACK);
+
+            try {
+                if (log != null) log.debug("op_rollback_retaining ");
+                db.out.writeInt(op_rollback_retaining);
+                db.out.writeInt(tr.getTransactionId());
+                db.out.flush();            
+                if (log != null) log.debug("sent");
+                receiveResponse(db);
+            } catch (IOException ex) {
+                throw new GDSException(isc_net_read_err);
+            }
+            tr.setState(isc_tr_handle.TRANSACTIONSTARTED);
         }
 
     }
