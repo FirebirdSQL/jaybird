@@ -1,3 +1,52 @@
+2004-10-14 00:26  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/AbstractConnectionPool.java,
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	test/org/firebirdsql/pool/TestDriverConnectionPoolDataSource.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java,
+	main/org/firebirdsql/jdbc/FBDriver.java,
+	main/org/firebirdsql/jdbc/FBDriverPropertyManager.java,
+	main/org/firebirdsql/ngds/XSQLVARBigEndianImpl.java,
+	pool/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/PooledConnectionEventListener.java:
+	
+	merged with head
+
+2004-10-14 00:21  rrokytskyy
+
+	*
+	
+	fixed a bug with personalized connections in pool
+	client-java/src/pool/org/firebirdsql/pool/FBConnectionPoolDataSourc
+	e.java:
+
+2004-10-14 00:11  rrokytskyy
+
+	*
+	
+	fixed the ClassCastException because of incorrect configuration
+	client-java/src/test/org/firebirdsql/pool/TestDriverConnectionPoolD
+	ataSource.java:
+
+2004-10-13 23:59  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/jdbc/FBDriver.java,
+	main/org/firebirdsql/jdbc/FBDriverPropertyManager.java,
+	pool/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+	
+	fixed a bug with encodings in pool
+
+2004-10-13 23:36  rrokytskyy
+
+	*
+	
+	fixed ArrayIndexOutOfBoundsException
+	client-java/src/main/org/firebirdsql/ngds/XSQLVARBigEndianImpl.java
+	:
+
 2004-10-11 23:03  rrokytskyy
 
 	* client-java/src/pool/org/firebirdsql/pool/:
