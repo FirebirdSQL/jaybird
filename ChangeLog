@@ -1,3 +1,9 @@
+2003-12-18 12:44  ryanbaldwin
+
+	* client-java/src/native/jaygds/source/entrypoints.cpp:
+	
+	Fixed solaris/linux build problem.
+
 2003-12-16 16:00  rrokytskyy
 
 	* client-java/src/:
