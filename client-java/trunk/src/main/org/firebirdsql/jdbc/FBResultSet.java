@@ -34,7 +34,6 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.sql.Types;
 
-import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.XSQLVAR;
@@ -63,7 +62,7 @@ public class FBResultSet implements ResultSet {
 
     private final static Logger log = LoggerFactory.getLogger(FBResultSet.class,false);
 
-    protected FBFetcher fbFetcher;
+    private FBFetcher fbFetcher;
 
     private FBConnection c;
 
@@ -71,24 +70,16 @@ public class FBResultSet implements ResultSet {
 
     public byte[][] row = null;
 
-//    protected int rowNum = 0;
-    protected int maxRows = 0;
-    protected int fetchSize = 0;
+    private int maxRows = 0;
+    private int fetchSize = 0;
      
-//    public boolean isEmpty = false;
-     
-//    public boolean isBeforeFirst = false;
-//    public boolean isFirst = false;
-//    public boolean isLast = false;
-//    public boolean isAfterLast = false;
-    
     private boolean wasNull = false;
     private boolean wasNullValid = false;
 
     //might be a bit of a kludge, or a useful feature.
-    protected boolean trimStrings;
+    private boolean trimStrings;
 
-    java.sql.SQLWarning firstWarning = null;
+    private java.sql.SQLWarning firstWarning = null;
      
     private FBField[] fields = null;
     private java.util.HashMap colNames = new java.util.HashMap();

@@ -84,14 +84,14 @@ import org.firebirdsql.gds.XSQLVAR;
  * @todo check if the setBinaryStream(null) is allowed by specs.
  */
 public final class FBStringField extends FBField {
-    static final String SHORT_TRUE = "Y";
-    static final String SHORT_FALSE = "N";
-    static final String LONG_TRUE = "TRUE";
-    static final String LONG_FALSE = "FALSE";
-    static final String SHORT_TRUE_2 = "T";
-    static final String SHORT_FALSE_2 = "F";
+    private static final String SHORT_TRUE = "Y";
+    private static final String SHORT_FALSE = "N";
+    private static final String LONG_TRUE = "TRUE";
+    private static final String LONG_FALSE = "FALSE";
+    private static final String SHORT_TRUE_2 = "T";
+    private static final String SHORT_FALSE_2 = "F";
     
-    char[] cBuff;
+//    private char[] cBuff;
 
     FBStringField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
         super(field, rs, numCol);

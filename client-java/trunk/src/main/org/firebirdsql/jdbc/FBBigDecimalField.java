@@ -42,7 +42,7 @@ public class FBBigDecimalField extends FBField {
     private static final BigInteger MAX_LONG = BigInteger.valueOf(Long.MAX_VALUE);
     private static final BigInteger MIN_LONG = BigInteger.valueOf(Long.MIN_VALUE);
 
-    int fieldType = 0; // 1.- Short, 2.- Integer, 3.- Long
+    private int fieldType = 0; // 1.- Short, 2.- Integer, 3.- Long
 
     FBBigDecimalField(XSQLVAR field, FBResultSet rs, int numCol, int fieldType) throws SQLException {
         super(field, rs, numCol);

@@ -67,10 +67,10 @@ public class FBStatement implements Statement {
     private boolean closed;
     private boolean escapedProcessing = true;
 
-	 java.sql.SQLWarning firstWarning = null;
+	 protected java.sql.SQLWarning firstWarning = null;
 
 	 // If the last executedStatement returns ResultSet or UpdateCount
-	 boolean isResultSet;
+	 protected boolean isResultSet;
     //Holds a result set from an execute call using autocommit.
     //This is a cached result set and is used to allow a call to getResultSet()
     private ResultSet currentCachedResultSet;

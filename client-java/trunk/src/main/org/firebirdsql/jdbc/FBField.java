@@ -20,7 +20,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -132,12 +132,12 @@ abstract class FBField {
     static final double MAX_DOUBLE_VALUE = Double.MAX_VALUE;
     static final double MIN_DOUBLE_VALUE = -1 * MAX_DOUBLE_VALUE;
     
-    XSQLVAR field;
-    FBResultSet rs;
-    int numCol;
-    FBConnection c = null;
-    String IscEncoding = null;
-    String javaEncoding	= null;
+    protected XSQLVAR field;
+    protected FBResultSet rs;
+    protected int numCol;
+    protected FBConnection c = null;
+    protected String IscEncoding = null;
+    protected String javaEncoding	= null;
 
     FBField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
         if (field == null) throw new SQLException(
@@ -182,16 +182,16 @@ abstract class FBField {
     }
     /**
      * @return <code>true</code> if the field is of type <code>type</code>.
-     * @todo write correct GDS.SQL_QUAD support
+     * @todo write correct ISCConstants.SQL_QUAD support
      */
     final static boolean isType(XSQLVAR field, int type) {
         // turn off null flag, in this case we're not interested in it.
         int tempType = field.sqltype & ~1;
         switch(tempType) {
-            case GDS.SQL_ARRAY :
+            case ISCConstants.SQL_ARRAY :
                 return (type == Types.ARRAY);
 
-            case GDS.SQL_BLOB :
+            case ISCConstants.SQL_BLOB :
                 if (field.sqlsubtype < 0)
                     return (type == Types.BLOB);
                 if (field.sqlsubtype == 1)
@@ -201,40 +201,40 @@ abstract class FBField {
                            (type == Types.VARBINARY) ||
                            (type == Types.BINARY);
 
-            case GDS.SQL_D_FLOAT :
+            case ISCConstants.SQL_D_FLOAT :
                 return false; // not supported right now
 
-            case GDS.SQL_DOUBLE :
+            case ISCConstants.SQL_DOUBLE :
                 return (type == Types.DOUBLE);
 
-            case GDS.SQL_FLOAT :
+            case ISCConstants.SQL_FLOAT :
                 return (type == Types.FLOAT);
 
-            case GDS.SQL_INT64 :
+            case ISCConstants.SQL_INT64 :
                 return (type == Types.BIGINT);
 
-            case GDS.SQL_LONG :
+            case ISCConstants.SQL_LONG :
                 return  (type == Types.INTEGER);
 
-            case GDS.SQL_QUAD:
+            case ISCConstants.SQL_QUAD:
                 return false; //not supported right now
 
-            case GDS.SQL_SHORT:
+            case ISCConstants.SQL_SHORT:
                 return (type == Types.SMALLINT);
 
-            case GDS.SQL_TEXT:
+            case ISCConstants.SQL_TEXT:
                 return (type == Types.CHAR);
 
-            case GDS.SQL_TIMESTAMP:
+            case ISCConstants.SQL_TIMESTAMP:
                 return (type == Types.TIMESTAMP);
 
-            case GDS.SQL_TYPE_DATE:
+            case ISCConstants.SQL_TYPE_DATE:
                 return (type == Types.DATE);
 
-            case GDS.SQL_TYPE_TIME:
+            case ISCConstants.SQL_TYPE_TIME:
                 return (type == Types.TIME);
 
-            case GDS.SQL_VARYING:
+            case ISCConstants.SQL_VARYING:
                 return (type == Types.VARCHAR);
 
             default:
@@ -252,12 +252,12 @@ abstract class FBField {
         switch(tempType) {
             // this type does not belong to JDBC v.1.20, but as long as
             // Firebird supports arrays, lets use them.
-            case GDS.SQL_ARRAY :
+            case ISCConstants.SQL_ARRAY :
                 return (type == Types.ARRAY);
 
             // this type does not belong to JDBC v.1.20, but as long as
             // Firebird supports arrays, lets use them.
-            case GDS.SQL_BLOB :
+            case ISCConstants.SQL_BLOB :
                 return  (type == Types.BLOB) ||
                         (type == Types.BINARY) ||
                         (type == Types.VARBINARY) ||
@@ -266,16 +266,16 @@ abstract class FBField {
                         ;
 
             // unfortunatelly we do not know the SQL correspondence to these type
-            case GDS.SQL_QUAD:
-            case GDS.SQL_D_FLOAT :
+            case ISCConstants.SQL_QUAD:
+            case ISCConstants.SQL_D_FLOAT :
                 return false;
 
             // currently we do not provide compatibilty with CHAR and VARCHAR
-            case GDS.SQL_DOUBLE :
-            case GDS.SQL_FLOAT :
-            case GDS.SQL_INT64 :
-            case GDS.SQL_LONG :
-            case GDS.SQL_SHORT:
+            case ISCConstants.SQL_DOUBLE :
+            case ISCConstants.SQL_FLOAT :
+            case ISCConstants.SQL_INT64 :
+            case ISCConstants.SQL_LONG :
+            case ISCConstants.SQL_SHORT:
                 return  (type == Types.DOUBLE) ||
                         (type == Types.FLOAT) ||
                         (type == Types.REAL) ||
@@ -288,23 +288,23 @@ abstract class FBField {
                         (type == Types.BIT)
                         ;
 
-            case GDS.SQL_TEXT:
-            case GDS.SQL_VARYING:
+            case ISCConstants.SQL_TEXT:
+            case ISCConstants.SQL_VARYING:
                 return  (type == Types.CHAR) ||
                         (type == Types.VARCHAR) ||
                         (type == Types.LONGVARCHAR)
                         ;
 
-            case GDS.SQL_TIMESTAMP:
+            case ISCConstants.SQL_TIMESTAMP:
                 return  (type == Types.TIMESTAMP) ||
                         (type == Types.TIME) ||
                         (type == Types.DATE);
 
-            case GDS.SQL_TYPE_DATE:
+            case ISCConstants.SQL_TYPE_DATE:
                 return  (type == Types.DATE) ||
                         (type == Types.TIMESTAMP);
 
-            case GDS.SQL_TYPE_TIME:
+            case ISCConstants.SQL_TYPE_TIME:
                 return  (type == Types.TIME) ||
                         (type == Types.TIMESTAMP);
 

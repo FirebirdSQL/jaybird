@@ -28,7 +28,7 @@ import javax.resource.ResourceException;
 import javax.resource.cci.ConnectionSpec;
 import javax.resource.spi.ConnectionRequestInfo;
 import org.firebirdsql.gds.Clumplet;
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDSFactory;
 
 
@@ -94,21 +94,21 @@ public class FBConnectionRequestInfo
     }
 
     public void setUser(String user) {
-        setProperty(GDS.isc_dpb_user_name, user);
+        setProperty(ISCConstants.isc_dpb_user_name, user);
     }
 
     public String getUser()
     {
-        return getStringProperty(GDS.isc_dpb_user_name);
+        return getStringProperty(ISCConstants.isc_dpb_user_name);
     }
 
     public void setPassword(String password) {
-        setProperty(GDS.isc_dpb_password, password);
+        setProperty(ISCConstants.isc_dpb_password, password);
     }
 
     public String getPassword()
     {
-        return getStringProperty(GDS.isc_dpb_password);
+        return getStringProperty(ISCConstants.isc_dpb_password);
     }
 
     /**
