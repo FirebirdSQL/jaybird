@@ -1,3 +1,10 @@
+2004-05-12 22:42  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	FBDatabaseMetaData.java, FBResultSetMetaData.java:
+	
+	fixed a bug with BIGINT handling, patch submitted by Stephan Asa
+
 2004-05-10 23:57  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
