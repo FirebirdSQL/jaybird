@@ -18,8 +18,13 @@
  */
 package org.firebirdsql.pool;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
+import javax.sql.DataSource;
 import javax.sql.PooledConnection;
 
 import org.firebirdsql.jdbc.BaseFBTest;
@@ -58,6 +63,11 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
         super.tearDown();
     }
 
+    /**
+     * Test if pool is started correctly.
+     * 
+     * @throws Exception if something went wrong.
+     */
     public void testPoolStart() throws Exception {
         FBConnectionPoolDataSource pool = new FBConnectionPoolDataSource(config);
         
@@ -70,6 +80,147 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
         }
     }
     
+    /**
+     * Test if connection we obtained is ok.
+     * 
+     * @throws Exception if something is wrong.
+     */
+    public void testConnection() throws Exception {
+        FBConnectionPoolDataSource pool = new FBConnectionPoolDataSource(config);
+        DataSource dataSource = new SimpleDataSource(pool);
+        
+        pool.start();
+        
+        Connection con = dataSource.getConnection();
+        
+        try {
+            
+            Statement stmt = con.createStatement();
+            
+            try {
+                ResultSet rs = stmt.executeQuery(
+                    "SELECT cast(1 AS INTEGER) FROM rdb$database");
+                    
+                assertTrue("Should select one row", rs.next());
+                assertTrue("Selected value should be 1.", rs.getInt(1) == 1);
+            } finally {            
+                stmt.close();
+            }
+            
+        } catch(SQLException ex) {
+            ex.printStackTrace();
+            fail("No exception should be thrown.");
+        } finally {
+            con.close();
+        }
+    }
+    
+    /**
+     * Test if we can call some methods on closed connection.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testFalseConnectionUsage() throws Exception {
+        FBConnectionPoolDataSource pool = new FBConnectionPoolDataSource(config);
+        DataSource dataSource = new SimpleDataSource(pool);
+        
+        pool.start();
+        
+        Connection con = dataSource.getConnection();
+        
+        // release connection
+        con.close();
+        
+        try {
+            Statement stmt = con.createStatement();
+            
+            fail("Should not be able to create statement with closed connection.");
+        } catch(SQLException ex) {
+            // everything is ok
+        }
+    }
+    
+    /**
+     * Check if prepared statements function correctly.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testPreparedStatement() throws Exception {
+        FBConnectionPoolDataSource pool = new FBConnectionPoolDataSource(config);
+        DataSource dataSource = new SimpleDataSource(pool);
+        
+        pool.start();
+        
+        Connection con = dataSource.getConnection();
+        
+        try {
+            Statement stmt = con.createStatement();
+            
+            try {
+                stmt.executeUpdate("CREATE TABLE test(a INTEGER)");
+                stmt.executeUpdate("INSERT INTO test VALUES(1)");
+                
+                String sql = "SELECT * FROM test WHERE a = ?";
+                PreparedStatement ps = con.prepareStatement(sql);
+                
+                PreparedStatement original = 
+                    ((XCachablePreparedStatement)ps).getOriginal();
+                    
+                try {
+                    ps.setInt(1, 1);
+                    
+                    ResultSet rs = ps.executeQuery();
+                    
+                    assertTrue("Result set should not be empty.", rs.next());
+                    assertTrue("Correct data should be selected", rs.getInt(1) == 1);
+                    
+                    ps.setInt(1, 0);
+                    rs = ps.executeQuery();
+                    
+                    assertTrue("Result set should be empty", !rs.next());
+                } finally {
+                    ps.close();
+                }
+                
+                ps = con.prepareStatement(sql);
+                try {
+                    PreparedStatement anotherOriginal = 
+                        ((XCachablePreparedStatement)ps).getOriginal();
+                        
+                    assertTrue("Original statemenets should be identical.", 
+                        original == anotherOriginal);
+                } finally {
+                    ps.close();
+                }
+                
+            } finally {
+                stmt.close();
+            }
+        } finally{
+            // we must close the connection because prepared statement
+            // will be alive and it will prevent us from dropping a table
+            con.close();
+            
+            con = dataSource.getConnection();
+            try {
+                Statement stmt = con.createStatement();
+                try {
+                    stmt.executeUpdate("DROP TABLE test");
+                } finally {
+                    stmt.close();
+                }
+            } finally {
+                con.close();
+            }
+
+        }
+    }
+    
+    /**
+     * Test if blocking works correctly.
+     * 
+     * @throws Exception if something went wrong.
+     */
     public void testBlocking() throws Exception {
         
         config.setBlockingTimeout(2 * 1000);
@@ -89,14 +240,23 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
             
             class BlockingTester implements Runnable {
                 private boolean failedOnTimeout;
+                private long duration;
                 
                 public void run() {
                     PooledConnection connection = null;
+                    long start = System.currentTimeMillis();
                     try {
+                        
                         connection = pool.getPooledConnection();
+                        
+                        // set duration to zero, to indicate incorrect behavior
+                        duration = 0;
                     } catch(SQLException ex) {
+                        
                         //everything is fine
                         failedOnTimeout = true;
+                        duration = System.currentTimeMillis() - start;
+                        
                     } finally {
                         try {
                             if (connection != null)
@@ -116,8 +276,11 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
             // sleep for blocking timeout + 1 sec.
             Thread.sleep(config.getBlockingTimeout() + 1000);
             
-            assertTrue("Blocked thread should have failed on timeout", 
+            assertTrue("Blocked thread should have failed on timeout.", 
                 tester.failedOnTimeout);
+                
+            assertTrue("Exception should not have been thrown too early.", 
+                tester.duration >= config.getBlockingTimeout());
         } finally {
             pool.shutdown();    
         }
