@@ -265,6 +265,7 @@ public class FBResultSet implements ResultSet {
             
         } finally {
             fbFetcher.close();
+            fbFetcher = null;
         }
         
         if (listener != null)
