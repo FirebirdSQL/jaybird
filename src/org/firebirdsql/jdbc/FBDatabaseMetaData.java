@@ -2415,6 +2415,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                 else
                     return java.sql.Types.NUMERIC;
             case 261:
+                if (fieldSubType < 0)
+                    return java.sql.Types.BLOB;
                 if (fieldSubType == 1)
                     return java.sql.Types.LONGVARCHAR;
                 else

@@ -214,6 +214,7 @@ public class FBResultSet implements ResultSet {
     }
 
     public Blob getBlob(int columnIndex) throws SQLException {
+        /*
         if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_BLOB) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
@@ -227,7 +228,9 @@ public class FBResultSet implements ResultSet {
         } // end of if ()
         return new FBBlob(mc, ((Long)row[columnIndex - 1]).longValue());
         //return super.getBlob(columnIndex);
+        */
         
+        return getField(columnIndex).getBlob();
     }
 
     public boolean getBoolean(int columnIndex) throws SQLException {
@@ -2544,7 +2547,12 @@ public class FBResultSet implements ResultSet {
                         //ugly blob caching workaround.
                         for (int i = 0; i < localRow.length; i++)
                         {
-                            if (FBField.isType(xsqlvars[i], Types.BLOB) && localRow[i] != null ) 
+                            boolean blobField = 
+                                FBField.isType(xsqlvars[i], Types.BLOB) ||
+                                FBField.isType(xsqlvars[i], Types.BINARY) ||
+                                FBField.isType(xsqlvars[i], Types.LONGVARCHAR);
+                                
+                            if (blobField && localRow[i] != null ) 
                             {
                                 FBBlobField blob = (FBBlobField)FBField.createField(xsqlvars[i]);
                                 blob.setConnection(c);
