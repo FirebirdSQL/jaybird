@@ -127,7 +127,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     **/
 
-    public LocalTransaction getLocalTransaction() throws ResourceException {
+    public LocalTransaction getLocalTransaction()
+    {
        return new FBLocalTransaction(this, null);
     }
 
