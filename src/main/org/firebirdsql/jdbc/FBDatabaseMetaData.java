@@ -1657,49 +1657,42 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "PROCEDURE_CAT";
         xsqlvars[0].relname = "RDB$PROCEDURES";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlind = -1;
         xsqlvars[1].sqlname = "PROCEDURE_SCHEM";
         xsqlvars[1].relname = "RDB$PROCEDURES";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = GDS.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlind = 0;
         xsqlvars[2].sqlname = "PROCEDURE_NAME";
         xsqlvars[2].relname = "RDB$PROCEDURES";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = GDS.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlind = -1;
         xsqlvars[3].sqlname = "FUTURE1";
         xsqlvars[3].relname = "RDB$PROCEDURES";
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = GDS.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlind = -1;
         xsqlvars[4].sqlname = "FUTURE2";
         xsqlvars[4].relname = "RDB$PROCEDURES";
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = GDS.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlind = -1;
         xsqlvars[5].sqlname = "FUTURE3";
         xsqlvars[5].relname = "RDB$PROCEDURES";
 
         xsqlvars[6] = new XSQLVAR();
         xsqlvars[6].sqltype = GDS.SQL_VARYING;
         xsqlvars[6].sqllen = 80; // gets updated if there are longer remarks.
-        xsqlvars[6].sqlind = 0;
         xsqlvars[6].sqlname = "REMARKS";
         xsqlvars[6].relname = "RDB$PROCEDURES";
 
@@ -1714,14 +1707,14 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             Object[] row = new Object[8];
             row[0] = null;
             row[1] = null;
-            row[2] = rs.getString("PROCEDURE_NAME").trim();
-	    row[3] = null;
+            row[2] = getBytes(rs.getString("PROCEDURE_NAME").trim());
+            row[3] = null;
             row[4] = null;
             row[5] = null;
-	    String remarks = rs.getString("REMARKS");
-	    row[6] = remarks;
-	    if (remarks != null && remarks.length() > xsqlvars[6].sqllen)
-		    xsqlvars[6].sqllen = remarks.length();
+            String remarks = rs.getString("REMARKS");
+            row[6] = getBytes(remarks);
+            if (remarks != null && remarks.length() > xsqlvars[6].sqllen)
+                xsqlvars[6].sqllen = remarks.length();
             short procedureType = rs.getShort("PROCEDURE_TYPE");
             row[7] = (procedureType == 0) ? new Short((short)procedureNoResult) : new Short((short)procedureReturnsResult);
             rows.add(row);
@@ -1834,28 +1827,24 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "PROCEDURE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlind = -1;
         xsqlvars[1].sqlname = "PROCEDURE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = GDS.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlind = 0;
         xsqlvars[2].sqlname = "PROCEDURE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = GDS.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlind = 0;
         xsqlvars[3].sqlname = "COLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
@@ -1903,7 +1892,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[12] = new XSQLVAR();
         xsqlvars[12].sqltype = GDS.SQL_VARYING;
         xsqlvars[12].sqllen = 80; // gets updated if we get a longer description
-        xsqlvars[12].sqlind = 0;
         xsqlvars[12].sqlname = "REMARKS";
         xsqlvars[12].relname = "COLUMNINFO";
 
@@ -1912,8 +1900,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             Object[] row = new Object[13];
             row[0] = null;
             row[1] = null;
-            row[2] = rs.getString("PROCEDURE_NAME").trim();
-            row[3] = rs.getString("COLUMN_NAME").trim();
+            row[2] = getBytes(rs.getString("PROCEDURE_NAME").trim());
+            row[3] = getBytes(rs.getString("COLUMN_NAME").trim());
 
             short columnType = rs.getShort("COLUMN_TYPE");
             row[4] = (columnType == 0) ? new Short((short)procedureColumnIn) : new Short((short)procedureColumnOut);
@@ -1925,9 +1913,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
             row[5] = new Short((short) dataType);
 
-            row[6] = getDataTypeName(fieldType, fieldSubType, fieldScale); 
+            row[6] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
 
-	    row[7] = null;
+            row[7] = null;
             if (dataType == java.sql.Types.DECIMAL ||
                 dataType == java.sql.Types.NUMERIC)
             {
@@ -1944,10 +1932,10 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[11] = (nullFlag == 1) ? new Short((short)procedureNoNulls) :
                                         new Short((short)procedureNullable);
 
-	    String remarks = rs.getString("REMARKS");
-            row[12] = remarks;
+            String remarks = rs.getString("REMARKS");
+            row[12] = getBytes(remarks);
             if (remarks != null && remarks.length() > xsqlvars[12].sqllen)
-		    xsqlvars[12].sqllen = remarks.length();
+                xsqlvars[12].sqllen = remarks.length();
 
             rows.add(row);
         }
@@ -2141,7 +2129,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "TABLE_SCHEM";
         xsqlvars[0].relname = "TABLESCHEMAS";
 
@@ -2171,7 +2158,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "TABLECATALOGS";
 
@@ -2203,13 +2189,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "TABLE_TYPE";
         xsqlvars[0].relname = "TABLETYPES";
 
         ArrayList rows = new ArrayList(ALL_TYPES.length);
         for(int i = 0; i < ALL_TYPES.length; i++)
-          rows.add(new Object[] {ALL_TYPES[i]});
+          rows.add(new Object[] {getBytes(ALL_TYPES[i])});
 
         return new FBResultSet(xsqlvars, rows);
     }
@@ -2311,28 +2296,24 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlind = -1;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = GDS.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlind = 0;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = GDS.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlind = 0;
         xsqlvars[3].sqlname = "COLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
@@ -2344,7 +2325,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = GDS.SQL_VARYING | 1;
         xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlind = 0;
         xsqlvars[5].sqlname = "TYPE_NAME";
         xsqlvars[5].relname = "COLUMNINFO";
 
@@ -2376,14 +2356,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[11] = new XSQLVAR();
         xsqlvars[11].sqltype = GDS.SQL_VARYING | 1;
         xsqlvars[11].sqllen = 31;
-        xsqlvars[11].sqlind = 0;
         xsqlvars[11].sqlname = "REMARKS";
         xsqlvars[11].relname = "COLUMNINFO";
 
         xsqlvars[12] = new XSQLVAR();
         xsqlvars[12].sqltype = GDS.SQL_VARYING | 1;
         xsqlvars[12].sqllen = 31;
-        xsqlvars[12].sqlind = 0;
         xsqlvars[12].sqlname = "COLUMN_DEF";
         xsqlvars[12].relname = "COLUMNINFO";
 
@@ -2410,7 +2388,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[17] = new XSQLVAR();
         xsqlvars[17].sqltype = GDS.SQL_VARYING;
         xsqlvars[17].sqllen = 3;
-        xsqlvars[17].sqlind = 0;
         xsqlvars[17].sqlname = "IS_NULLABLE";
         xsqlvars[17].relname = "COLUMNINFO";
 
@@ -2419,8 +2396,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             Object[] row = new Object[18];
             row[0] = null;
             row[1] = null;
-            row[2] = rs.getString("RELATION_NAME").trim();
-            row[3] = rs.getString("FIELD_NAME").trim();
+            row[2] = getBytes(rs.getString("RELATION_NAME").trim());
+            row[3] = getBytes(rs.getString("FIELD_NAME").trim());
 
             short fieldType = rs.getShort("FIELD_TYPE");
             short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
@@ -2428,7 +2405,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             int dataType = getDataType(fieldType, fieldSubType, fieldScale);
 
             row[4] = new Short((short) dataType);
-            row[5] = getDataTypeName(fieldType, fieldSubType, fieldScale);
+            row[5] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
 
             switch (dataType){
                 case java.sql.Types.DECIMAL:
@@ -2478,7 +2455,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[14] = null;
             row[15] = new Integer(0);
             row[16] = new Integer(rs.getShort("FIELD_POSITION") + 1);
-            row[17] = (nullFlag == 1) ? "NO" : "YES";
+            row[17] = (nullFlag == 1) ? getBytes("NO") : getBytes("YES");
 
             rows.add(row);
         }
@@ -2749,49 +2726,42 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "TABLEPRIV";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlind = -1;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "TABLEPRIV";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = GDS.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlind = 0;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "TABLEPRIV";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = GDS.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlind = -1;
         xsqlvars[3].sqlname = "GRANTOR";
         xsqlvars[3].relname = "TABLEPRIV";
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = GDS.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlind = 0;
         xsqlvars[4].sqlname = "GRANTEE";
         xsqlvars[4].relname = "TABLEPRIV";
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = GDS.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlind = 0;
         xsqlvars[5].sqlname = "PRIVILEGE";
         xsqlvars[5].relname = "TABLEPRIV";
 
         xsqlvars[6] = new XSQLVAR();
         xsqlvars[6].sqltype = GDS.SQL_VARYING;
         xsqlvars[6].sqllen = 31;
-        xsqlvars[6].sqlind = 0;
         xsqlvars[6].sqlname = "IS_GRANTABLE";
         xsqlvars[6].relname = "TABLEPRIV";
 
@@ -2800,29 +2770,29 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             Object[] row = new Object[7];
             row[0] = null;
             row[1] = null;
-            row[2] = rs.getString("TABLE_NAME");
-            row[3] = rs.getString("GRANTOR");
-            row[4] = rs.getString("GRANTEE");
+            row[2] = getBytes(rs.getString("TABLE_NAME"));
+            row[3] = getBytes(rs.getString("GRANTOR"));
+            row[4] = getBytes(rs.getString("GRANTEE"));
             String privilege = rs.getString("PRIVILEGE");
             if (privilege.equals("A"))
-                row[5] = "ALL";
+                row[5] = getBytes("ALL");
             else if (privilege.equals("S"))
-                row[5] = "SELECT";
+                row[5] = getBytes("SELECT");
             else if (privilege.equals("D"))
-                row[5] = "DELETE";
+                row[5] = getBytes("DELETE");
             else if (privilege.equals("I"))
-                row[5] = "INSERT";
+                row[5] = getBytes("INSERT");
             else if (privilege.equals("U"))
-                row[5] = "UPDATE";
+                row[5] = getBytes("UPDATE");
             else if (privilege.equals("R"))
-                row[5] = "REFERENCE";
+                row[5] = getBytes("REFERENCE");
             else if (privilege.equals("M"))
-                row[5] = "MEMBEROF";				
+                row[5] = getBytes("MEMBEROF");	
             int isGrantable = rs.getShort("IS_GRANTABLE");
             if (isGrantable==0)
-                row[6] = "NO";
+                row[6] = getBytes("NO");
             else
-                row[6] = "YES";
+                row[6] = getBytes("YES");
 
             rows.add(row);
         }
@@ -2881,7 +2851,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlind = 0;
         xsqlvars[1].sqlname = "COLUMN_NAME";
         xsqlvars[1].relname = "ROWIDENTIFIER";
 
@@ -2893,7 +2862,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = GDS.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlind = -1;
         xsqlvars[3].sqlname = "TYPE_NAME";
         xsqlvars[3].relname = "ROWIDENTIFIER";
 
@@ -2965,7 +2933,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlind = 0;
         xsqlvars[1].sqlname = "COLUMN_NAME";
         xsqlvars[1].relname = "VERSIONCOL";
 
@@ -2977,7 +2944,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = GDS.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlind = -1;
         xsqlvars[3].sqlname = "TYPE_NAME";
         xsqlvars[3].relname = "VERSIONCOL";
 
@@ -3065,28 +3031,24 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlind = -1;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = GDS.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlind = 0;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = GDS.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlind = 0;
         xsqlvars[3].sqlname = "COLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
@@ -3098,7 +3060,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = GDS.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlind = 0;
         xsqlvars[5].sqlname = "PK_NAME";
         xsqlvars[5].relname = "COLUMNINFO";
 
@@ -3107,10 +3068,10 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             Object[] row = new Object[6];
             row[0] = null;
             row[1] = null;
-            row[2] = rs.getString("TABLE_NAME").trim();
-            row[3] = rs.getString("COLUMN_NAME").trim();
+            row[2] = getBytes(rs.getString("TABLE_NAME").trim());
+            row[3] = getBytes(rs.getString("COLUMN_NAME").trim());
             row[4] = new Short(rs.getShort("KEY_SEQ"));
-            row[5] = rs.getString("PK_NAME");
+            row[5] = getBytes(rs.getString("PK_NAME"));
 
             rows.add(row);
         }
@@ -3235,56 +3196,48 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "PKTABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlind = -1;
         xsqlvars[1].sqlname = "PKTABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = GDS.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlind = 0;
         xsqlvars[2].sqlname = "PKTABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = GDS.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlind = 0;
         xsqlvars[3].sqlname = "PKCOLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = GDS.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlind = -1;
         xsqlvars[4].sqlname = "FKTABLE_CAT";
         xsqlvars[4].relname = "COLUMNINFO";
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = GDS.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlind = -1;
         xsqlvars[5].sqlname = "FKTABLE_SCHEM";
         xsqlvars[5].relname = "COLUMNINFO";
 
         xsqlvars[6] = new XSQLVAR();
         xsqlvars[6].sqltype = GDS.SQL_VARYING;
         xsqlvars[6].sqllen = 31;
-        xsqlvars[6].sqlind = 0;
         xsqlvars[6].sqlname = "FKTABLE_NAME";
         xsqlvars[6].relname = "COLUMNINFO";
 
         xsqlvars[7] = new XSQLVAR();
         xsqlvars[7].sqltype = GDS.SQL_VARYING;
         xsqlvars[7].sqllen = 31;
-        xsqlvars[7].sqlind = 0;
         xsqlvars[7].sqlname = "FKCOLUMN_NAME";
         xsqlvars[7].relname = "COLUMNINFO";
 
@@ -3306,14 +3259,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[11] = new XSQLVAR();
         xsqlvars[11].sqltype = GDS.SQL_VARYING;
         xsqlvars[11].sqllen = 31;
-        xsqlvars[11].sqlind = 0;
         xsqlvars[11].sqlname = "FK_NAME";
         xsqlvars[11].relname = "COLUMNINFO";
 
         xsqlvars[12] = new XSQLVAR();
         xsqlvars[12].sqltype = GDS.SQL_VARYING;
         xsqlvars[12].sqllen = 31;
-        xsqlvars[12].sqlind = 0;
         xsqlvars[12].sqlname = "PK_NAME";
         xsqlvars[12].relname = "COLUMNINFO";
 
@@ -3327,12 +3278,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             Object[] row = new Object[14];
             row[0] = null;
             row[1] = null;
-            row[2] = rs.getString("PKTABLE_NAME").trim();
-            row[3] = rs.getString("PKCOLUMN_NAME").trim();
+            row[2] = getBytes(rs.getString("PKTABLE_NAME").trim());
+            row[3] = getBytes(rs.getString("PKCOLUMN_NAME").trim());
             row[4] = null;
             row[5] = null;
-            row[6] = rs.getString("FKTABLE_NAME").trim();
-            row[7] = rs.getString("FKCOLUMN_NAME").trim();
+            row[6] = getBytes(rs.getString("FKTABLE_NAME").trim());
+            row[7] = getBytes(rs.getString("FKCOLUMN_NAME").trim());
             row[8] = new Short(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
             if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
@@ -3352,8 +3303,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                 row[10] = new Short((short) DatabaseMetaData.importedKeySetNull);
             else if (deleteRule.equals("SET DEFAULT"))
                 row[10] = new Short((short) DatabaseMetaData.importedKeySetDefault);
-            row[11] = rs.getString("FK_NAME");
-            row[12] = rs.getString("PK_NAME");
+            row[11] = getBytes(rs.getString("FK_NAME"));
+            row[12] = getBytes(rs.getString("PK_NAME"));
             row[13] = new Short((short) DatabaseMetaData.importedKeyNotDeferrable);
             rows.add(row);
         }
@@ -3479,56 +3430,48 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "PKTABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlind = -1;
         xsqlvars[1].sqlname = "PKTABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = GDS.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlind = 0;
         xsqlvars[2].sqlname = "PKTABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = GDS.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlind = 0;
         xsqlvars[3].sqlname = "PKCOLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = GDS.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlind = -1;
         xsqlvars[4].sqlname = "FKTABLE_CAT";
         xsqlvars[4].relname = "COLUMNINFO";
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = GDS.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlind = -1;
         xsqlvars[5].sqlname = "FKTABLE_SCHEM";
         xsqlvars[5].relname = "COLUMNINFO";
 
         xsqlvars[6] = new XSQLVAR();
         xsqlvars[6].sqltype = GDS.SQL_VARYING;
         xsqlvars[6].sqllen = 31;
-        xsqlvars[6].sqlind = 0;
         xsqlvars[6].sqlname = "FKTABLE_NAME";
         xsqlvars[6].relname = "COLUMNINFO";
 
         xsqlvars[7] = new XSQLVAR();
         xsqlvars[7].sqltype = GDS.SQL_VARYING;
         xsqlvars[7].sqllen = 31;
-        xsqlvars[7].sqlind = 0;
         xsqlvars[7].sqlname = "FKCOLUMN_NAME";
         xsqlvars[7].relname = "COLUMNINFO";
 
@@ -3550,14 +3493,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[11] = new XSQLVAR();
         xsqlvars[11].sqltype = GDS.SQL_VARYING;
         xsqlvars[11].sqllen = 31;
-        xsqlvars[11].sqlind = 0;
         xsqlvars[11].sqlname = "FK_NAME";
         xsqlvars[11].relname = "COLUMNINFO";
 
         xsqlvars[12] = new XSQLVAR();
         xsqlvars[12].sqltype = GDS.SQL_VARYING;
         xsqlvars[12].sqllen = 31;
-        xsqlvars[12].sqlind = 0;
         xsqlvars[12].sqlname = "PK_NAME";
         xsqlvars[12].relname = "COLUMNINFO";
 
@@ -3571,12 +3512,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             Object[] row = new Object[14];
             row[0] = null;
             row[1] = null;
-            row[2] = rs.getString("PKTABLE_NAME").trim();
-            row[3] = rs.getString("PKCOLUMN_NAME").trim();
+            row[2] = getBytes(rs.getString("PKTABLE_NAME").trim());
+            row[3] = getBytes(rs.getString("PKCOLUMN_NAME").trim());
             row[4] = null;
             row[5] = null;
-            row[6] = rs.getString("FKTABLE_NAME").trim();
-            row[7] = rs.getString("FKCOLUMN_NAME").trim();				
+            row[6] = getBytes(rs.getString("FKTABLE_NAME").trim());
+            row[7] = getBytes(rs.getString("FKCOLUMN_NAME").trim());
             row[8] = new Short(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
             if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
@@ -3596,8 +3537,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                 row[10] = new Short((short) DatabaseMetaData.importedKeySetNull);
             else if (deleteRule.equals("SET DEFAULT"))
                 row[10] = new Short((short) DatabaseMetaData.importedKeySetDefault);				
-            row[11] = rs.getString("FK_NAME");
-            row[12] = rs.getString("PK_NAME");
+            row[11] = getBytes(rs.getString("FK_NAME"));
+            row[12] = getBytes(rs.getString("PK_NAME"));
             row[13] = new Short((short) DatabaseMetaData.importedKeyNotDeferrable);
 
             rows.add(row);
@@ -3742,56 +3683,48 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "PKTABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlind = -1;
         xsqlvars[1].sqlname = "PKTABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = GDS.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlind = 0;
         xsqlvars[2].sqlname = "PKTABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = GDS.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlind = 0;
         xsqlvars[3].sqlname = "PKCOLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = GDS.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlind = -1;
         xsqlvars[4].sqlname = "FKTABLE_CAT";
         xsqlvars[4].relname = "COLUMNINFO";
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = GDS.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlind = -1;
         xsqlvars[5].sqlname = "FKTABLE_SCHEM";
         xsqlvars[5].relname = "COLUMNINFO";
 
         xsqlvars[6] = new XSQLVAR();
         xsqlvars[6].sqltype = GDS.SQL_VARYING;
         xsqlvars[6].sqllen = 31;
-        xsqlvars[6].sqlind = 0;
         xsqlvars[6].sqlname = "FKTABLE_NAME";
         xsqlvars[6].relname = "COLUMNINFO";
 
         xsqlvars[7] = new XSQLVAR();
         xsqlvars[7].sqltype = GDS.SQL_VARYING;
         xsqlvars[7].sqllen = 31;
-        xsqlvars[7].sqlind = 0;
         xsqlvars[7].sqlname = "FKCOLUMN_NAME";
         xsqlvars[7].relname = "COLUMNINFO";
 
@@ -3813,14 +3746,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[11] = new XSQLVAR();
         xsqlvars[11].sqltype = GDS.SQL_VARYING;
         xsqlvars[11].sqllen = 31;
-        xsqlvars[11].sqlind = 0;
         xsqlvars[11].sqlname = "FK_NAME";
         xsqlvars[11].relname = "COLUMNINFO";
 
         xsqlvars[12] = new XSQLVAR();
         xsqlvars[12].sqltype = GDS.SQL_VARYING;
         xsqlvars[12].sqllen = 31;
-        xsqlvars[12].sqlind = 0;
         xsqlvars[12].sqlname = "PK_NAME";
         xsqlvars[12].relname = "COLUMNINFO";
 
@@ -3834,12 +3765,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             Object[] row = new Object[14];
             row[0] = null;
             row[1] = null;
-            row[2] = rs.getString("PKTABLE_NAME").trim();
-            row[3] = rs.getString("PKCOLUMN_NAME").trim();
+            row[2] = getBytes(rs.getString("PKTABLE_NAME").trim());
+            row[3] = getBytes(rs.getString("PKCOLUMN_NAME").trim());
             row[4] = null;
             row[5] = null;
-            row[6] = rs.getString("PKTABLE_NAME").trim();
-            row[7] = rs.getString("PKCOLUMN_NAME").trim();				
+            row[6] = getBytes(rs.getString("PKTABLE_NAME").trim());
+            row[7] = getBytes(rs.getString("PKCOLUMN_NAME").trim());
             row[8] = new Short(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
             if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
@@ -3859,8 +3790,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                 row[10] = new Short((short) DatabaseMetaData.importedKeySetNull);
             else if (deleteRule.equals("SET DEFAULT"))
                 row[10] = new Short((short) DatabaseMetaData.importedKeySetDefault);
-            row[11] = rs.getString("FK_NAME");
-            row[12] = rs.getString("PK_NAME");
+            row[11] = getBytes(rs.getString("FK_NAME"));
+            row[12] = getBytes(rs.getString("PK_NAME"));
             row[13] = new Short((short) DatabaseMetaData.importedKeyNotDeferrable);
 
             rows.add(row);
@@ -3930,13 +3861,13 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public  ResultSet getTypeInfo() throws SQLException {
         Short shortZero = new Short((short)0);
-        String CASESENSITIVE = "T";
-        String CASEINSENSITIVE = "F";
-        String UNSIGNED = "T";
-        String SIGNED = "F";
-        String FIXEDSCALE = "T";
-        String VARIABLESCALE = "F";
-        String NOTAUTOINC = "F";
+        byte[] CASESENSITIVE = getBytes("T");
+        byte[] CASEINSENSITIVE = getBytes("F");
+        byte[] UNSIGNED = getBytes("T");
+        byte[] SIGNED = getBytes("F");
+        byte[] FIXEDSCALE = getBytes("T");
+        byte[] VARIABLESCALE = getBytes("F");
+        byte[] NOTAUTOINC = getBytes("F");
         Integer BINARY = new Integer(2);
         Short PREDNONE = new Short((short) DatabaseMetaData.typePredNone);
         Short PREDBASIC = new Short((short) DatabaseMetaData.typePredBasic);
@@ -3948,7 +3879,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = 0;
         xsqlvars[0].sqlname = "TYPE_NAME";
         xsqlvars[0].relname = "TYPEINFO";
 
@@ -3965,21 +3895,18 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = GDS.SQL_VARYING;
         xsqlvars[3].sqllen = 1;
-        xsqlvars[3].sqlind = -1;
         xsqlvars[3].sqlname = "LITERAL_PREFIX";
         xsqlvars[3].relname = "TYPEINFO";
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = GDS.SQL_VARYING;
         xsqlvars[4].sqllen = 1;
-        xsqlvars[4].sqlind = -1;
         xsqlvars[4].sqlname = "LITERAL_SUFFIX";
         xsqlvars[4].relname = "TYPEINFO";
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = GDS.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlind = -1;
         xsqlvars[5].sqlname = "CREATE_PARAMS";
         xsqlvars[5].relname = "TYPEINFO";
 
@@ -4020,7 +3947,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[12] = new XSQLVAR();
         xsqlvars[12].sqltype = GDS.SQL_VARYING;
         xsqlvars[12].sqllen = 31;
-        xsqlvars[12].sqlind = -1;
         xsqlvars[12].sqlname = "LOCAL_TYPE_NAME";
         xsqlvars[12].relname = "TYPEINFO";
 
@@ -4052,67 +3978,83 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         //dialect 3 only
         ArrayList rows = new ArrayList();
 
-        rows.add(new Object[] {"CHAR", createShort(Types.CHAR), new Integer(32664), "'", "'", "length",
+        rows.add(new Object[] {getBytes("CHAR"), createShort(Types.CHAR)
+            , new Integer(32664), getBytes("'"), getBytes("'"), getBytes("length"),
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TEXT), null, BINARY});
 
-        rows.add(new Object[] {"NUMERIC", createShort(Types.NUMERIC), new Integer(18), null, null, "precision,scale",
+        rows.add(new Object[] {getBytes("NUMERIC"), createShort(Types.NUMERIC)
+            , new Integer(18), null, null, getBytes("precision,scale"),
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, createShort(18), new Integer(GDS.SQL_INT64), null, BINARY});
 
-        rows.add(new Object[] {"DECIMAL", createShort(Types.DECIMAL), new Integer(18), null, null, "precision,scale",
+        rows.add(new Object[] {getBytes("DECIMAL"), createShort(Types.DECIMAL)
+            , new Integer(18), null, null, getBytes("precision,scale"),
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, createShort(18), new Integer(GDS.SQL_INT64), null, BINARY});
 
-        rows.add(new Object[] {"INTEGER", createShort(Types.INTEGER), new Integer(32), null, null, null,
+        rows.add(new Object[] {getBytes("INTEGER"), createShort(Types.INTEGER)
+            , new Integer(32), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_LONG), null, BINARY});
 
-        rows.add(new Object[] {"SMALLINT", createShort(Types.SMALLINT), new Integer(16), null, null, null,
+        rows.add(new Object[] {getBytes("SMALLINT"), createShort(Types.SMALLINT)
+            , new Integer(16), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_SHORT), null, BINARY});
 
-        rows.add(new Object[] {"FLOAT", createShort(Types.FLOAT), new Integer(7), null, null, null,
+        rows.add(new Object[] {getBytes("FLOAT"), createShort(Types.FLOAT)
+            , new Integer(7), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
             NOTAUTOINC, null, createShort(0), createShort(7), new Integer(GDS.SQL_FLOAT), null, BINARY});
 
-        rows.add(new Object[] {"DOUBLE PRECISION", createShort(Types.DOUBLE), new Integer(15), null, null, null,
+        rows.add(new Object[] {getBytes("DOUBLE PRECISION"), createShort(Types.DOUBLE)
+            , new Integer(15), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
             NOTAUTOINC, null, createShort(0), createShort(15), new Integer(GDS.SQL_DOUBLE), null, BINARY});
 
-        rows.add(new Object[] {"VARCHAR", createShort(Types.VARCHAR), new Integer(32664), "'", "'", "length",
+        rows.add(new Object[] {getBytes("VARCHAR"), createShort(Types.VARCHAR)
+            , new Integer(32664), getBytes("'"), getBytes("'"), getBytes("length"),
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_VARYING), null, BINARY});
 
-        rows.add(new Object[] {"DATE", createShort(Types.DATE), new Integer(0), null, null, null,
+        rows.add(new Object[] {getBytes("DATE"), createShort(Types.DATE)
+            , new Integer(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TYPE_DATE), null, BINARY});
 
-        rows.add(new Object[] {"TIME", createShort(Types.TIME), new Integer(0), null, null, null,
+        rows.add(new Object[] {getBytes("TIME"), createShort(Types.TIME)
+            , new Integer(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TYPE_TIME), null, BINARY});
 
-        rows.add(new Object[] {"TIMESTAMP", createShort(Types.TIMESTAMP), new Integer(0), null, null, null,
+        rows.add(new Object[] {getBytes("TIMESTAMP"), createShort(Types.TIMESTAMP)
+            , new Integer(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TIMESTAMP), null, BINARY});
 
-        rows.add(new Object[] {"BLOB SUB_TYPE <0 ", createShort(Types.BLOB), new Integer(0), null, null, null,
+        rows.add(new Object[] {getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB)
+            , new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
 
-        rows.add(new Object[] {"BLOB SUB_TYPE 0", createShort(Types.LONGVARBINARY), new Integer(0), null, null, null,
+        rows.add(new Object[] {getBytes("BLOB SUB_TYPE 0"), createShort(Types.LONGVARBINARY)
+            , new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
 
-        rows.add(new Object[] {"BLOB SUB_TYPE 1", createShort(Types.LONGVARCHAR), new Integer(0), null, null, null,
+        rows.add(new Object[] {getBytes("BLOB SUB_TYPE 1"), createShort(Types.LONGVARCHAR)
+            , new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
 
-        rows.add(new Object[] {"BLOB SUB_TYPE >1", createShort(Types.OTHER), new Integer(0), null, null, null,
+        rows.add(new Object[] {getBytes("BLOB SUB_TYPE >1"), createShort(Types.OTHER)
+            , new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
 
-        rows.add(new Object[] {"ARRAY", createShort(Types.OTHER), new Integer(0), null, null, null,
+        rows.add(new Object[] {getBytes("ARRAY"), createShort(Types.OTHER)
+            , new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_ARRAY), null, BINARY});
 
@@ -4214,21 +4156,18 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "INDEXINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlind = -1;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "INDEXINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = GDS.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlind = 0;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "INDEXINFO";
 
@@ -4241,14 +4180,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = GDS.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlind = -1;
         xsqlvars[4].sqlname = "INDEX_QUALIFIER";
         xsqlvars[4].relname = "INDEXINFO";
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = GDS.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlind = -1;
         xsqlvars[5].sqlname = "INDEX_NAME";
         xsqlvars[5].relname = "INDEXINFO";
 
@@ -4265,14 +4202,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[8] = new XSQLVAR();
         xsqlvars[8].sqltype = GDS.SQL_VARYING;
         xsqlvars[8].sqllen = 31;
-        xsqlvars[8].sqlind = 0;
         xsqlvars[8].sqlname = "COLUMN_NAME";
         xsqlvars[8].relname = "INDEXINFO";
 
         xsqlvars[9] = new XSQLVAR();
         xsqlvars[9].sqltype = GDS.SQL_VARYING;
         xsqlvars[9].sqllen = 31;
-        xsqlvars[9].sqlind = -1;
         xsqlvars[9].sqlname = "ASC_OR_DESC";
         xsqlvars[9].relname = "INDEXINFO";
 
@@ -4289,7 +4224,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[12] = new XSQLVAR();
         xsqlvars[12].sqltype = GDS.SQL_VARYING;
         xsqlvars[12].sqllen = 31;
-        xsqlvars[12].sqlind = -1;
         xsqlvars[12].sqlname = "FILTER_CONDITION";
         xsqlvars[12].relname = "INDEXINFO";
 
@@ -4298,22 +4232,22 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             Object[] row = new Object[13];
             row[0] = null;
             row[1] = null;
-            row[2] = rs.getString("TABLE_NAME").trim();
+            row[2] = getBytes(rs.getString("TABLE_NAME").trim());
             int nonUnique = rs.getInt("NON_UNIQUE");
             if (nonUnique==0)
-                row[3] = "T";
+                row[3] = getBytes("T");
             else
-                row[3] = "F";
+                row[3] = getBytes("F");
             row[4] = null;
-            row[5] = rs.getString("INDEX_NAME").trim();
+            row[5] = getBytes(rs.getString("INDEX_NAME").trim());
             row[6] = new Short((short) DatabaseMetaData.tableIndexOther);
             row[7] = new Short(rs.getShort("ORDINAL_POSITION"));
-            row[8] = rs.getString("COLUMN_NAME").trim();
+            row[8] = getBytes(rs.getString("COLUMN_NAME").trim());
             int index_type = rs.getInt("ASC_OR_DESC");
             if (index_type == 1)
-                row[9] = "D";
+                row[9] = getBytes("D");
             else
-                row[9] = "A";
+                row[9] = getBytes("A");
             row[10] = new Integer(0);
             row[11] = new Integer(0);
             row[12] = null;
@@ -4586,42 +4520,36 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_VARYING;
         xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "TYPE_CAT";
         xsqlvars[0].relname = "UDT";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlind = -1;
         xsqlvars[1].sqlname = "TYPE_SCHEM";
         xsqlvars[1].relname = "UDT";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = GDS.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlind = 0;
         xsqlvars[2].sqlname = "TYPE_NAME";
         xsqlvars[2].relname = "UDT";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = GDS.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlind = 0;
         xsqlvars[3].sqlname = "CLASS_NAME";
         xsqlvars[3].relname = "UDT";
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = GDS.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlind = 0;
         xsqlvars[4].sqlname = "DATA_TYPE";
         xsqlvars[4].relname = "UDT";
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = GDS.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlind = -1;
         xsqlvars[5].sqlname = "REMARKS";
         xsqlvars[5].relname = "UDT";
 
@@ -4967,6 +4895,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         }
     }
 
+    private byte[] getBytes(String value){
+        if (value !=null)
+            return value.getBytes();
+		  else
+            return null;
+    }
 }
 
 
