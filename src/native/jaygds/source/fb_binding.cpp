@@ -30,7 +30,7 @@
 // Static Members
 
 bool	FirebirdApiBinding::sIsLoaded = false;
-HMODULE FirebirdApiBinding::sHandle = NULL;
+SHARED_LIBRARY_HANDLE FirebirdApiBinding::sHandle = NULL;
 
 prototype_isc_attach_database*		FirebirdApiBinding::isc_attach_database  = NULL;
 prototype_isc_array_gen_sdl*			FirebirdApiBinding::isc_array_gen_sdl  = NULL;
@@ -114,16 +114,9 @@ void FirebirdApiBinding::Load(const char* const firebirdDllName)
 	{
 	if (sHandle == NULL)
 		{
-		sHandle = LoadLibrary(firebirdDllName);
-		if (sHandle == NULL)
-			{
-			throw InternalException("FirebirdApiBinding::Initialize - Could not find or load the GDS32.DLL");
-			}
+		sHandle = PlatformLoadLibrary(firebirdDllName);
 
-		#define FB_ENTRYPOINT(X) \
-			if ((##X = (prototype_##X*)GetProcAddress(sHandle, #X)) == NULL) \
-				throw InternalException("FirebirdApiBinding:Initialize() - Entry-point "#X" not found")
-
+		
 
 		FB_ENTRYPOINT(isc_attach_database);
 		FB_ENTRYPOINT(isc_array_gen_sdl);
