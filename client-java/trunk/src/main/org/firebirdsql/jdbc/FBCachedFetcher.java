@@ -282,4 +282,55 @@ class FBCachedFetcher implements FBFetcher {
     public boolean isAfterLast() {
         return rowNum > rowsArray.length;
     }
+
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FBFetcher#deleteRow()
+     */
+    public void deleteRow() throws SQLException {
+        Object[] newRows = new Object[rowsArray.length - 1];
+        System.arraycopy(rowsArray, 0, newRows, 0, rowNum - 1);
+        
+        if (rowNum < rowsArray.length)
+            System.arraycopy(rowsArray, rowNum, newRows, rowNum - 1, rowsArray.length - rowNum);
+        
+        rowsArray = newRows;
+        
+        if (isAfterLast())
+            rs.row = null;
+        else
+        if (isBeforeFirst())
+            rs.row = null;
+        else
+            rs.row = (byte[][])rowsArray[rowNum - 1];
+    }
+
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FBFetcher#insertRow(byte[][])
+     */
+    public void insertRow(byte[][] data) throws SQLException {
+        Object[] newRows = new Object[rowsArray.length + 1];
+        System.arraycopy(rowsArray, 0, newRows, 0, rowNum - 1);
+        System.arraycopy(rowsArray, rowNum - 1, newRows, rowNum, rowsArray.length - rowNum + 1);
+        newRows[rowNum - 1] = data;
+
+        rowsArray = newRows;
+
+        if (isAfterLast())
+            rs.row = null;
+        else
+        if (isBeforeFirst())
+            rs.row = null;
+        else
+            rs.row = (byte[][])rowsArray[rowNum - 1];
+    }
+
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FBFetcher#updateRow(byte[][])
+     */
+    public void updateRow(byte[][] data) throws SQLException {
+        if (!isAfterLast() && !isBeforeFirst()) {
+            rowsArray[rowNum - 1] = data;
+            rs.row = data;
+        }
+    }
 }

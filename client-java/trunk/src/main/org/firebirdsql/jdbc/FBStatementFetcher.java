@@ -286,6 +286,27 @@ class FBStatementFetcher implements FBFetcher {
     public void setIsAfterLast(boolean isAfterLastValue) {
         this.isAfterLast = isAfterLastValue;
     }
+
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FBFetcher#deleteRow()
+     */
+    public void deleteRow() throws SQLException {
+        //empty
+    }
+
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FBFetcher#insertRow(byte[][])
+     */
+    public void insertRow(byte[][] data) throws SQLException {
+        // empty
+    }
+
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FBFetcher#updateRow(byte[][])
+     */
+    public void updateRow(byte[][] data) throws SQLException {
+        // empty
+    }
     
     
 }
