@@ -31,7 +31,7 @@ import org.firebirdsql.gds.GDSException;
 
 import java.util.Collection;
 import java.util.ArrayList;
-import org.firebirdsql.jdbc.FBStatement;
+import org.firebirdsql.jdbc.AbstractStatement;
 
 
 /**
@@ -49,7 +49,7 @@ public final class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_hand
     //isc_tr_handle_impl rtr_next;
     private Collection blobs = null;
     //    isc_blob_handle_impl rbl_next;
-    private FBStatement stmt = null;
+    private AbstractStatement stmt = null;
     private ArrayList stmts = null;
 
     private int state = NOTRANSACTION;
@@ -119,7 +119,7 @@ public final class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_hand
             blobs.remove(blob);
     }
 	 
-    public synchronized void registerStatementWithTransaction(org.firebirdsql.jdbc.FBStatement stmt) {
+    public synchronized void registerStatementWithTransaction(org.firebirdsql.jdbc.AbstractStatement stmt) {
 		  if (stmt == null)
             this.stmt = stmt;
 		  else {
@@ -136,7 +136,7 @@ public final class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_hand
         }
 		  if (stmts != null) {
 		      for (int i=0; i< stmts.size(); i++)
-                ((FBStatement)stmts.get(i)).forgetResultSet();
+                ((AbstractStatement)stmts.get(i)).forgetResultSet();
             stmts.clear();
 		  }
     }
