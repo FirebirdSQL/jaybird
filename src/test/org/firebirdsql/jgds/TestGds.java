@@ -195,6 +195,8 @@ public class TestGds extends BaseFBTest {
         db1 = createDatabase(dbName);
         if (log!=null) log.info("test- isc_detach_database");
         gds.isc_detach_database(db1);
+        
+        db1 = gds.get_new_isc_db_handle();
 
         if (log!=null) log.info("test- isc_attach_database");
         gds.isc_attach_database(getdbpath(dbName), db1, c);
@@ -219,6 +221,8 @@ public class TestGds extends BaseFBTest {
 
       gds.isc_create_database(getdbpath(dbName2), db, c);
       gds.isc_detach_database(db);
+      
+      db = gds.get_new_isc_db_handle();
 
       if (log!=null) log.info("test- isc_attach_database");
       gds.isc_attach_database(getdbpath(dbName2), db, c);
@@ -239,6 +243,8 @@ public class TestGds extends BaseFBTest {
         if (log!=null) log.info("test- isc_detach_database");
         gds.isc_detach_database(db1);
         gds.isc_detach_database(db2);
+        
+        db1 = gds.get_new_isc_db_handle();
 
         if (log!=null) log.info("test- isc_attach_database");
         gds.isc_attach_database(getdbpath(dbName), db1, c);
