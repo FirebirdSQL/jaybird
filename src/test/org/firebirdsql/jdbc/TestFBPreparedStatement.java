@@ -347,7 +347,8 @@ public class TestFBPreparedStatement extends FBTestBase{
     public void testTimestampWithCalendar() throws Exception {
         //Connection connection = getConnectionViaDriverManager();
         
-        Properties props = new Properties(getDefaultPropertiesForConnection());
+        Properties props = new Properties();
+        props.putAll(getDefaultPropertiesForConnection());
         props.setProperty("timestamp_uses_local_timezone", "");
         
         Connection connection = DriverManager.getConnection(getUrl(), props);
