@@ -13,14 +13,11 @@
     </jar>
   </target>
 
+  <!-- Not really a jar operation but necessary :) -->
   <target name="jar-j2ee" depends="compile">
-
+ 
     <mkdir dir="${build.lib}"/>
-    <jar jarfile="${build.lib}/mini-j2ee.jar">
-       <fileset dir="${build.j2ee}">
-         <include name="javax/**"/>
-       </fileset>
-    </jar>
+    <copy file="${module.thirdparty}/mini-j2ee.jar" tofile="${build.lib}/mini.j2ee.jar"/>
   </target>
 
   <target name="jar-ra" depends="compile">

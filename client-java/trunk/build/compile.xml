@@ -1,7 +1,7 @@
   <!-- =================================================================== -->
   <!-- Compiles the source code                                            -->
   <!-- =================================================================== -->
-  <target name="compile" depends="compile-concurrent, compile-j2ee, compile-driver, compile-pool, compile-compatibility, compile-tests, compile-etc, compile-examples, compile-resources, compile-stylesheets"/>
+  <target name="compile" depends="compile-concurrent, compile-driver, compile-pool, compile-compatibility, compile-tests, compile-etc, compile-examples, compile-resources, compile-stylesheets"/>
 
   <!-- calling this unjar a compile is stretching the truth a bit-->
   <target name="compile-concurrent" depends="init">
@@ -25,34 +25,15 @@
         <include name="EDU/oswego/cs/dl/util/concurrent/Takable.class"/>
       </patternset>
     </unjar>
+
+    <unjar src="${module.thirdparty}/mini-j2ee.jar" dest="${build.j2ee}"/>
   </target>
 
 
   <target name="compile-native" depends="init">
     <ant antfile="build_native.xml"/>
   </target>
-
-  <target name="compile-j2ee" depends="init, checkout-j2ee">
-    <mkdir dir="${build.j2ee}"/>
-
-    <javac destdir="${build.j2ee}"
-           target="${ant.java.version}"
-           debug="on"
-           deprecation="on"
-           optimize="on">
-      <classpath refid="javac.j2ee.classpath"/>
-      <src path="${jboss.source.root}/jboss-j2ee/src/main"/>
-
-      <include name="javax/resource/*.java"/>
-      <include name="javax/resource/cci/ConnectionSpec.java"/>
-      <include name="javax/resource/cci/LocalTransaction.java"/>
-      <include name="javax/resource/spi/**/*.java"/>
-      <include name="javax/transaction/xa/*.java"/>
-      <include name="javax/sql/*.java"/>
-    </javac>
-  </target>
-
-
+ 
   <target name="compile-examples">
   	<mkdir dir="${build.examples}"/>
     <javac srcdir="${source.examples}"
@@ -92,7 +73,7 @@
     </path>
   </target>
 
-  <target name="compile-driver" depends="compile-j2ee,set-jdbc-20-src,set-jdbc-30-src,set-jdk1.4-src,set-jdk1.5-src">
+  <target name="compile-driver" depends="set-jdbc-20-src,set-jdbc-30-src,set-jdk1.4-src,set-jdk1.5-src">
     <mkdir dir="${build.classes}"/>
     <javac destdir="${build.classes}"
            target="${ant.java.version}"
