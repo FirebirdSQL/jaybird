@@ -184,7 +184,7 @@ public class FBEscapedParser {
      * @param sql to parse
      * @return native form of the <code>sql</code>.
      */
-    public String parse(String sql) throws FBSQLParseException {
+    public String parse(String sql) throws FBSQLException {
         
         lastState = NORMAL_STATE;
         state = NORMAL_STATE;
@@ -243,7 +243,7 @@ public class FBEscapedParser {
      * @param escaped the part of escaped SQL between the '{' and '}'.
      * @return the native representation of the SQL code.
      */
-    protected String escapeToNative(String escaped) throws FBSQLParseException {
+    protected String escapeToNative(String escaped) throws FBSQLException {
         StringBuffer keyword = new StringBuffer();
         StringBuffer payload = new StringBuffer();
 
@@ -338,7 +338,7 @@ public class FBEscapedParser {
      * @result native procedure call.
      */
     protected String convertProcedureCall(String procedureCall)
-        throws FBSQLParseException
+        throws FBSQLException
     {
         FBEscapedCallParser tempParser = new FBEscapedCallParser();
         FBProcedureCall call = tempParser.parseCall(procedureCall);

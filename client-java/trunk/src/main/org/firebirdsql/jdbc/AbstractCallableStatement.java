@@ -180,9 +180,20 @@ public abstract class AbstractCallableStatement
                 
                 prepareFixedStatement(procedureCall.getSQL(), true);
                 
+                /*
+                // R.Rokytskyy: JDBC CTS suite uses executeUpdate()
+                // together with output parameters, therefore we cannot
+                // throw exception if we want to pass the test suite
+                
                 if (internalExecute(true)) 
                     throw new FBSQLException(
                     "Update statement returned results.");
+                */
+                
+                boolean hasResults = internalExecute(true);
+                
+                if (hasResults && c.willEndTransaction())
+                    getCachedResultSet(false);
                 
                 return getUpdateCount();
                 
@@ -398,7 +409,7 @@ public abstract class AbstractCallableStatement
     public long getLong(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getInt(parameterIndex);
+        return getCurrentResultSet().getLong(parameterIndex);
     }
 
 

@@ -59,18 +59,24 @@ public class TestFBEscapedCallParser extends TestCase {
     }
     
     protected FBProcedureCall testProcedureCall; 
+    protected FBProcedureParam param1 = new FBProcedureParam(0, "?");
+    protected FBProcedureParam param2 = new FBProcedureParam(1, "UPPER(?)");
+    protected FBProcedureParam param3 = new FBProcedureParam(2, "'11-dec-2001'");
+    protected FBProcedureParam param4 = new FBProcedureParam(3, "'test string, with comma'");
     
-    protected void setUp() {
+    protected void setUp() throws SQLException {
         testProcedureCall = new FBProcedureCall();
         testProcedureCall.setName("my_proc");
-        testProcedureCall.addOutputParam(
-                new FBProcedureParam(0, "?"));
-        testProcedureCall.addInputParam(
-                new FBProcedureParam(1, "UPPER(?)"));
-        testProcedureCall.addInputParam(
-                new FBProcedureParam(2, "'11-dec-2001'"));
-        testProcedureCall.addOutputParam(
-                new FBProcedureParam(3, "'test string, with comma'"));
+        testProcedureCall.addOutputParam(param1);
+        testProcedureCall.addInputParam(param2);
+        testProcedureCall.addInputParam(param3);
+        testProcedureCall.addOutputParam(param4);
+        
+        param1.setIndex(1);
+        param2.setIndex(2);
+        
+        testProcedureCall.registerOutParam(1, Types.INTEGER);
+        testProcedureCall.getInputParam(2).setValue("test value");
     }
     
     protected void tearDown() {
@@ -81,6 +87,7 @@ public class TestFBEscapedCallParser extends TestCase {
         
         FBProcedureCall procedureCall = parser.parseCall(CALL_TEST_5);
         procedureCall.registerOutParam(1, Types.INTEGER);
+        procedureCall.getInputParam(2).setValue("test value");
         try {
         	procedureCall.registerOutParam(3, Types.CHAR);
             assertTrue("Should not allow registering param 3 as output, " +
@@ -95,6 +102,7 @@ public class TestFBEscapedCallParser extends TestCase {
         
         procedureCall = parser.parseCall(CALL_TEST_6);
         procedureCall.registerOutParam(1, Types.INTEGER);
+        procedureCall.getInputParam(2).setValue("test value");
         assertTrue("Should correctly parse call. " + procedureCall.getSQL(), 
                 testProcedureCall.equals(procedureCall));
         

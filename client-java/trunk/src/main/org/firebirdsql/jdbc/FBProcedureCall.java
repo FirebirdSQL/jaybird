@@ -48,7 +48,20 @@ public class FBProcedureCall {
      * @return instance of {@link FBProcedureParam}.
      */
     public FBProcedureParam getInputParam(int index) {
-        return getParam(inputParams, index);
+        FBProcedureParam result = getParam(inputParams, index);
+        
+        if (result == null || result == NullParam.NULL_PARAM) {
+            result = getParam(outputParams, index);
+            
+            // ensure that vector has right size
+            // note, index starts with 1
+            if (inputParams.size() < index)
+                inputParams.setSize(index);
+            
+            inputParams.set(index - 1, result);
+        }
+        
+        return result;
     }
     
     public FBProcedureParam getOutputParam(int index) {
@@ -143,8 +156,9 @@ public class FBProcedureCall {
      */
     public FBProcedureParam addParam(int position, String param) {
         param = param.trim();
-        
+
         boolean isInputParam = true;
+        /*
         if (param.length() > 3) {
             String possibleOutIndicator = param.substring(0, 3);
             if ("OUT".equalsIgnoreCase(possibleOutIndicator) &&
@@ -163,6 +177,7 @@ public class FBProcedureCall {
                 param = param.substring(2).trim();
             }
         }
+        */
         
         FBProcedureParam callParam = 
             new FBProcedureParam(position, param);
@@ -202,7 +217,9 @@ public class FBProcedureCall {
             	outputParams.setSize(param.getPosition() + 1);
             
             outputParams.set(param.getPosition(), param);
-            inputParams.remove(param.getPosition());
+            
+            if (!param.isValueSet())
+                inputParams.set(param.getPosition(), null);
         }
         
         if (param == null || param == NullParam.NULL_PARAM)
@@ -218,27 +235,47 @@ public class FBProcedureCall {
      * 
      * @return native SQL that can be executed by the database server.
      */
-    public String getSQL() {
+    public String getSQL() throws FBSQLException {
         StringBuffer sb = new StringBuffer();
         sb.append(AbstractCallableStatement.NATIVE_CALL_COMMAND);
         sb.append(" ");
         sb.append(name);
-        sb.append("(");
+        
+        StringBuffer paramsBuffer = new StringBuffer();
         
         boolean firstParam = true;
         Iterator iter = inputParams.iterator();
         while(iter.hasNext()) {
             FBProcedureParam param = (FBProcedureParam)iter.next();
+            
+            if (param == null)
+                continue;
+            
+            // if parameter does not have set value, and is not registered
+            // as output parameter, throw an exception, otherwise, continue
+            // to the next one.
+            if (!param.isValueSet()) {
+                if (param.isParam() && 
+                        outputParams.size() > 0 &&
+                        outputParams.get(param.getPosition()) == null)
+                    throw new FBSQLException(
+                        "Value of parameter " + param.getIndex() + " not set and " +
+                        "it was not registered as output parameter.",
+                        FBSQLException.SQL_STATE_WRONG_PARAM_NUM);
+            }
+            
             if (param != null) {
                 if (!firstParam)
-                    sb.append(", ");
+                    paramsBuffer.append(", ");
                 else
                     firstParam = false;
                 
-                sb.append(param.getParamValue());
+                paramsBuffer.append(param.getParamValue());
             }
         }
-        sb.append(")");
+        
+        if (paramsBuffer.length() > 0)
+            sb.append('(').append(paramsBuffer).append(')');
         
         return sb.toString();
     }
