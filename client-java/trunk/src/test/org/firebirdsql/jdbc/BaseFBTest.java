@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.10  2002/08/09 21:24:32  rrokytskyy
+ * fixed compile error
+ *
  * Revision 1.9  2002/06/10 18:47:41  brodsom
  * logging change, logging depends on the first class used, default to true for FBManagedConnectionFactory, FBManager and tests and false for other classes.
  *
@@ -142,7 +145,6 @@ public class BaseFBTest extends TestCase
    {
       try 
       {
-         //fbManager.setURL(DB_SERVER_URL);
          fbManager.setServer(DB_SERVER_URL);
          fbManager.setPort(DB_SERVER_PORT);
          fbManager.start();

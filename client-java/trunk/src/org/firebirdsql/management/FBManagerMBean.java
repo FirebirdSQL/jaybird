@@ -1,3 +1,6 @@
+/**
+ * This code is licensed under the lgpl.  for details consult gnu.org.
+ */
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.*;
@@ -5,14 +8,15 @@ import org.firebirdsql.jgds.*;
 
 import java.sql.SQLException;
 
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
 
 
+/**
+ * Describe interface <code>FBManagerMBean</code> here.
+ *
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @version 1.0
+ */
 public interface FBManagerMBean {
-
-    public final static String OBJECT_NAME = "DefaultDomain:service=firebirdsqlmanager";
 
     public void start()
         throws Exception;
@@ -21,8 +25,8 @@ public interface FBManagerMBean {
         throws Exception;
 
     public String getName();
-    public int getState();
-    public String getStateString();
+
+    public String getState();
 
     public void setServer(String host);
 

@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.10  2002/06/11 13:35:12  brodsom
+ * bug (log!=null) not tested in PreparedStatement and testFBUnmanagedConnection, restore previous loggerFactory
+ *
  * Revision 1.9  2002/03/19 17:47:13  d_jencks
  * combined code to use new FBFields only, fixed a little commit bug
  *
