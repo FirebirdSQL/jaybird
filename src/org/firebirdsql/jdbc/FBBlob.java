@@ -31,6 +31,8 @@ import java.sql.SQLException;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.io.Reader;
+import java.io.OutputStreamWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
@@ -284,6 +286,24 @@ public class FBBlob implements Blob{
             while (length >0) {
                 chunk =inputStream.read(buffer, 0, ((length<bufferlength) ? length:bufferlength));
                 os.write(buffer, 0, chunk);
+                length -= chunk;
+            }
+            os.close();
+        }
+        catch (IOException ioe) {
+            throw new SQLException("read/write blob problem: " + ioe);
+        }
+    }
+
+    void copyCharacterStream(Reader inputStream, int length) throws SQLException {
+        OutputStream os = setBinaryStream(0);
+        OutputStreamWriter osw = new OutputStreamWriter(os);
+        char[] buffer = new char[bufferlength];
+        int chunk;
+        try {
+            while (length >0) {
+                chunk =inputStream.read(buffer, 0, ((length<bufferlength) ? length:bufferlength));
+                osw.write(buffer, 0, chunk);                
                 length -= chunk;
             }
             os.close();

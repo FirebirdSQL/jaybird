@@ -172,6 +172,34 @@ public class FBBlobField extends FBField {
         setBinaryStream(in, length);
     }
 
+    void setCharacterStream(Reader in, int length) throws SQLException {
+        if (!c.getAutoCommit()) {
+            copyCharacterStream(in, length);
+        } else {
+            char[] buff = new char[BUFF_SIZE];
+            ByteArrayOutputStream bout = new ByteArrayOutputStream(length);
+            OutputStreamWriter boutw = new OutputStreamWriter(bout);
+
+            int chunk;
+            try {
+                while (length >0) {
+                    chunk =in.read(buff, 0, ((length<BUFF_SIZE) ? length:BUFF_SIZE));
+                    boutw.write(buff, 0, chunk);
+                    length -= chunk;
+                }
+                boutw.close();
+                bout.close();
+            }
+            catch (IOException ioe) {
+                throw new SQLException("read/write blob problem: " + ioe);
+            }
+            
+            field.sqldata = bout.toByteArray();
+            setNull(false);
+            field.sqllen = ((byte[])field.sqldata).length;
+        }
+    }
+    
     void setBinaryStream(InputStream in, int length) throws SQLException {
         if (!c.getAutoCommit()) {
             copyBinaryStream(in, length);
@@ -212,6 +240,13 @@ public class FBBlobField extends FBField {
         setNull(false);
     }
 
+    private void copyCharacterStream(Reader in, int length) throws SQLException {
+        FBBlob blob =  new FBBlob(c, 0);
+        blob.copyCharacterStream(in, length);
+        field.sqldata = new Long(blob.getBlobId());
+        setNull(false);
+    }
+    
     void setBytes(byte[] value) throws SQLException {
         setBinaryStream(new ByteArrayInputStream(value), value.length);
     }

@@ -542,7 +542,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     public void setCharacterStream(int parameterIndex,
                   java.io.Reader reader,
               int length) throws  SQLException {
-        setCharacterStream(parameterIndex, reader, length);
+        getField(parameterIndex).setCharacterStream(reader, length);
+        parameterWasSet(parameterIndex);
     }
 
 
