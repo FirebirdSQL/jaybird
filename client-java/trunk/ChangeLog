@@ -1,3 +1,11 @@
+2004-01-19 22:21  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	FBDriverConsistencyCheckException.java, FBResultSet.java,
+	field/FBField.java:
+	
+	fixed several performance issues
+
 2004-01-16 15:41  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/jdbc/TestFBConnection.java:
