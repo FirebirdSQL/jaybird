@@ -76,7 +76,8 @@ public class TestUserManager extends FBTestBase {
     public void testUsers() throws Exception {
 
         // Initialize the UserManager.
-        UserManager userManager = new FBUserManager(GDSType.PURE_JAVA);
+        GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type")); 
+        UserManager userManager = new FBUserManager(gdsType);
         userManager.setHost("localhost");
         userManager.setUser("SYSDBA");
         userManager.setPassword("masterkey");
