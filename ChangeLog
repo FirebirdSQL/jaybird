@@ -1,3 +1,17 @@
+2003-10-16 12:04  ryanbaldwin
+
+	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	
+	Added a check and some comments.
+
+2003-10-16 05:42  ryanbaldwin
+
+	* client-java/src/: main/org/firebirdsql/ngds/GDS_Impl.java,
+	test/org/firebirdsql/ngds/TestSpecialEmbeddedServerUrls.java:
+	
+	Fix for problem with relative directory in URL with the embedded
+	server.  Added tests for 'special case' embedded server URL's.
+
 2003-10-15 18:23  ryanbaldwin
 
 	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
