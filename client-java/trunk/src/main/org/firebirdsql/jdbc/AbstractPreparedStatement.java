@@ -324,6 +324,9 @@ public abstract class AbstractPreparedStatement extends FBStatement
      * @exception SQLException if a database access error occurs
      */
     public void clearParameters() throws  SQLException {
+        if (isParamSet == null)
+            return;
+        
         for (int i = 0; i < isParamSet.length; i++)
             isParamSet[i] = false;
         
