@@ -1,3 +1,60 @@
+2003-12-30 15:57  rrokytskyy
+
+	* client-java/src/etc/JDBC20_conformance.html:
+	
+	updated JDBC conformance info
+
+2003-12-30 15:53  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/XSQLVAR.java:
+	
+	fixed incorrect timestamp encoding/decoding when using calendar
+
+2003-12-30 15:52  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractCallableStatement.java, FBProcedureCall.java,
+	FBResultSet.java:
+	
+	fixed bugs related to incorrect result set usage and problems in
+	procedure input params
+
+2003-12-30 15:48  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/field/FBFloatField.java:
+	
+	fixed bug when reading float value as double
+
+2003-12-30 15:46  rrokytskyy
+
+	* client-java/src/jdbccts/: ddl.properties, excludes.properties:
+	
+	finally made callable statement tests suceed
+
+2003-12-30 15:43  rrokytskyy
+
+	*
+	
+	added callable statement tests
+	client-java/src/jdbccts/org/firebirdsql/jdbc/cts/FirebirdSuite.java
+	:
+
+2003-12-30 14:47  rrokytskyy
+
+	*
+	
+	fixed deviation from JDBC spec
+	client-java/src/test/org/firebirdsql/jdbc/field/TestFBShortField.ja
+	va:
+
+2003-12-30 01:05  rrokytskyy
+
+	* client-java/src/jdbccts/: ddl.properties, dml.properties,
+	excludes.properties:
+	
+	fixed some bugs in DDL, DML and excluded some tests
+
 2003-12-29 19:57  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/:
