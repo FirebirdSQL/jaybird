@@ -223,6 +223,16 @@ public class FBConnectionPoolConfiguration extends RefAddr
         this.properties.clear();
         this.properties.putAll(properties);
     }
+    
+    /**
+     * Set specified property.
+     * 
+     * @param name name of the property.
+     * @param value value of the property.
+     */
+    public void setProperty(String name, String value) {
+        this.properties.setProperty(name, value);
+    }
 
     /**
      * Get type of the pool that should be created by a JNDI object factory
