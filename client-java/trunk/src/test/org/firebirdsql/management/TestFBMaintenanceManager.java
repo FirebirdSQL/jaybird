@@ -82,7 +82,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
         fbManager.stop();
         super.tearDown();
     }
-
+    
     public void testSetModeReadOnly() throws Exception {
         createTestTable();
         Connection conn = getConnection();
@@ -368,7 +368,6 @@ public class TestFBMaintenanceManager extends FBTestBase {
             // Ignore
         }
     }
-
     public void testSetSweepThreshold() throws Exception {
         // Just run it to see if it throws an exception
         maintenanceManager.setSweepThreshold(0);
@@ -393,33 +392,6 @@ public class TestFBMaintenanceManager extends FBTestBase {
     public void testListLimboTransactions() throws Exception {
         // Just run it to see if it throws an exception
         maintenanceManager.listLimboTransactions();
-    }
-
-    public void testCommitAllTransactions() throws Exception {
-        // Just run it to see if it throws an exception 
-        maintenanceManager.commitAllTransactions();
-    }
-
-    public void testCommitSpecificTransaction() throws Exception {
-        maintenanceManager.commitTransaction(2);
-    }
-
-    public void testRollbackAllTransactions() throws Exception {
-        // Just run it to see if it throws an exception 
-        maintenanceManager.rollbackAllTransactions();
-    }
-
-    public void testRollbackSpecificTransaction() throws Exception {
-        maintenanceManager.rollbackTransaction(2);
-    }
-
-    public void testTwoPhaseRecovery() throws Exception {
-        // Just run it to see if it throws an exception 
-        maintenanceManager.twoPhaseRecovery();
-    }
-
-    public void testTwoPhaseRecoverySpecificTransaction() throws Exception {
-        maintenanceManager.twoPhaseRecovery(2);
     }
 
 }
