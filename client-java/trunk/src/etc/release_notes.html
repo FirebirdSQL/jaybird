@@ -5,7 +5,7 @@
 	<TITLE></TITLE>
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.2  (Win32)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
-	<META NAME="CHANGED" CONTENT="20040723;13302115">
+	<META NAME="CHANGED" CONTENT="20040815;12562263">
 	<STYLE>
 	<!--
 		@page { size: 21cm 29.7cm; margin: 2cm }
@@ -33,7 +33,7 @@
 	</STYLE>
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
-<H1 CLASS="western" ALIGN=CENTER>JayBird JCA/JDBC Driver<BR><!--IMG SRC="release_notes_html_e56c521.gif"--><BR>Release
+<H1 CLASS="western" ALIGN=CENTER>JayBird JCA/JDBC Driver<BR>Release
 Notes v 1.5.0</H1>
 <DIV ID="Table of Contents1" DIR="LTR">
 	<DIV ID="Table of Contents1_Head" DIR="LTR">
@@ -70,6 +70,9 @@ Notes v 1.5.0</H1>
 	2.0 compatibility</A></P>
 	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><A HREF="#1.3.Distribution package|outline">Distribution
 	package</A></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.3.1.License|outline">License</A></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.3.2.Source Code|outline">Source
+	Code</A></P>
 	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><A HREF="#1.4.JDBC URL Format|outline">JDBC
 	URL Format</A></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.4.1.Pure Java|outline">Pure
@@ -88,24 +91,36 @@ Notes v 1.5.0</H1>
 	2.0 Compatibility</A></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.6.1.Unimplemented JDBC 2.0 Features|outline">Unimplemented
 	JDBC 2.0 Features</A></P>
-	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><A HREF="#1.7.Connection pooling with JayBird 1.5|outline">Connection
+	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><A HREF="#1.7.JayBird Specifics|outline">JayBird
+	Specifics</A></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.7.1.Result sets|outline">Result
+	sets</A></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.7.2.PreparedStatement.setTimestamp(int, Timestamp, Calendar)|outline">PreparedStatement.setTimestamp(int,
+	Timestamp, Calendar)</A></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.7.3.Using java.sql.ParameterMetaData with Callable Statements|outline">Using
+	java.sql.ParameterMetaData with Callable Statements</A></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.7.4.Using ResultSet.getCharacterStream with BLOB fields|outline">Using
+	ResultSet.getCharacterStream with BLOB fields</A></P>
+	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><A HREF="#1.8.Connection pooling with JayBird 1.5|outline">Connection
 	pooling with JayBird 1.5</A></P>
-	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.7.1.Usage scenario|outline">Usage
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.8.1.Usage scenario|outline">Usage
 	scenario</A></P>
-	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.7.2.Connection Pool Classes|outline">Connection
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.8.2.Connection Pool Classes|outline">Connection
 	Pool Classes</A></P>
-	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.7.3.org.firebirdsql.pool.FBConnectionPoolDataSource|outline">org.firebirdsql.pool.FBConnectionPoolDataSource</A></P>
-	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.7.4.org.firebirdsql.pool.DriverConnectionPoolDataSource|outline">org.firebirdsql.pool.DriverConnectionPoolDataSource</A></P>
-	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.7.5.org.firebirdsql.pool.FBWrappingDataSource|outline">org.firebirdsql.pool.FBWrappingDataSource</A></P>
-	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><A HREF="#1.8.Documentation and Support|outline">Documentation
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.8.3.org.firebirdsql.pool.FBConnectionPoolDataSource|outline">org.firebirdsql.pool.FBConnectionPoolDataSource</A></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.8.4.org.firebirdsql.pool.DriverConnectionPoolDataSource|outline">org.firebirdsql.pool.DriverConnectionPoolDataSource</A></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.8.5.org.firebirdsql.pool.FBWrappingDataSource|outline">org.firebirdsql.pool.FBWrappingDataSource</A></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.8.6.Runtime object allocation and deallocation hints|outline">Runtime
+	object allocation and deallocation hints</A></P>
+	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><A HREF="#1.9.Documentation and Support|outline">Documentation
 	and Support</A></P>
-	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.8.1.Where to get more information on JayBird|outline">Where
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.9.1.Where to get more information on JayBird|outline">Where
 	to get more information on JayBird</A></P>
-	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.8.2.Where to get help|outline">Where
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.9.2.Where to get help|outline">Where
 	to get help</A></P>
-	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.8.3.Reporting Bugs|outline">Reporting
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.9.3.Reporting Bugs|outline">Reporting
 	Bugs</A></P>
-	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.8.4.Corrections/Additions To Release Notes|outline">Corrections/Additions
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><A HREF="#1.9.4.Corrections/Additions To Release Notes|outline">Corrections/Additions
 	To Release Notes</A></P>
 </DIV>
 <P><BR><BR>
@@ -482,9 +497,22 @@ possible to enable debugging inside the driver.</P>
 	This archive can be used for standalone<A CLASS="sdfootnoteanc" NAME="sdfootnote2anc" HREF="#sdfootnote2sym"><SUP>2</SUP></A>
 	JayBird deployments.</P>
 </UL>
+<H3 CLASS="western"><A NAME="1.3.1.License|outline"></A>License</H3>
+<P>JayBird JCA/JDBC driver is distributed under the GNU Lesser
+General Public License (LGPL). Text of the license can be obtained
+from <A HREF="http://www.gnu.org/copyleft/lesser.html">http://www.gnu.org/copyleft/lesser.html</A>.</P>
+<H3 CLASS="western"><A NAME="1.3.2.Source Code|outline"></A>Source
+Code</H3>
+<P>Source code can be obtained from the CVS at SourceForge.net. The
+CVSROOT is <BR><CODE CLASS="western">:pserver:anonymous@cvs.sourceforge.net:/cvsroot/firebird</CODE>,
+the module name is <CODE CLASS="western">client-java</CODE>.
+Alternatively source code can be viewed online at
+<A HREF="http://cvs.sourceforge.net/viewcvs.py/firebird/client-java/">http://cvs.sourceforge.net/viewcvs.py/firebird/client-java/</A>
+</P>
 <H2 CLASS="western"><A NAME="1.4.JDBC URL Format|outline"></A>JDBC
 URL Format</H2>
-<P>Driver provides different JDBC URLs for different usage scenarios:</P>
+<P STYLE="page-break-before: auto; page-break-after: avoid">Driver
+provides different JDBC URLs for different usage scenarios:</P>
 <H3 CLASS="western"><A NAME="1.4.1.Pure Java|outline"></A>Pure Java</H3>
 <P><CODE CLASS="western">jdbc:firebirdsql:host[/port]:/path/to/db.fdb</CODE>
 <BR><CODE CLASS="western">jdbc:firebirdsql://host[:port]/path/to/db.fdb</CODE></P>
@@ -795,7 +823,68 @@ are not implemented:</P>
 		</UL>
 	</UL>
 </UL>
-<H2 CLASS="western"><A NAME="1.7.Connection pooling with JayBird 1.5|outline"></A>
+<H2 CLASS="western"><A NAME="1.7.JayBird Specifics|outline"></A>JayBird
+Specifics</H2>
+<P>JayBird driver has also some implementation-specific issues that
+should be considered during development.</P>
+<H3 CLASS="western"><A NAME="1.7.1.Result sets|outline"></A>Result
+sets</H3>
+<P>JayBird behaves differently not only when different result set
+types are used but also the behavior depends whether connection is in
+auto-commit mode or not.</P>
+<P><CODE CLASS="western">ResultSet.TYPE_FORWARD_ONLY</CODE> result
+sets when used in auto-commit mode are completely cached on the
+client before the execution of the query is finished. This leads to
+the increased time  needed to execute statement, however the result
+set navigation happens almost instantly. When auto-commit mode is
+switched off, only part of the result set specified by the fetch size
+is cached on the client.</P>
+<P><CODE CLASS="western">ResultSet.TYPE_SCROLL_INSENSITIVE</CODE>
+result sets are always cached on the client. The reason is quite
+simple &ndash; Firebird API does not provide scrollable cursor
+support, navigation is possible only in one direction.</P>
+<H3 CLASS="western"><A NAME="1.7.2.PreparedStatement.setTimestamp(int, Timestamp, Calendar)|outline"></A>
+PreparedStatement.setTimestamp(int, Timestamp, Calendar)</H3>
+<P>JDBC specification tells that &ldquo;With a Calendar object, the
+driver can calculate the timestamp taking into account a custom
+timezone.&rdquo;. However it does not tell how this phrase should be
+interpreted and there is no agreement between driver developers about
+the meaning of this phrase.</P>
+<P>All previous versions of JayBird, including all release
+candidates, interpreted it as &ldquo;the timestamp is specified in
+the time zone of the passed calendar, it is written into the database
+using the local time zone of the JVM&rdquo;. However it was decided
+that this interpretation is incorrect. New interpretation is
+&ldquo;Timestamp is specified in local JVM time zone, it should be
+written into the database converted to the time zone of the specified
+calendar&rdquo;.</P>
+<P>All applications that rely on the old interpretation of this
+method should specify <CODE CLASS="western">timestamp_uses_local_timezone</CODE>
+connection parameter</P>
+<H3 CLASS="western"><A NAME="1.7.3.Using java.sql.ParameterMetaData with Callable Statements|outline"></A>
+Using java.sql.ParameterMetaData with Callable Statements</H3>
+<P>This interface can be used only to obtain information about the IN
+parameters. Also it is not allowed to call the
+<CODE CLASS="western">PreparedStatement.getParameterMetaData</CODE>
+method before all of the OUT parameters are registered. Otherwise the
+corresponding method of <CODE CLASS="western">CallableStatement</CODE>
+throws an <CODE CLASS="western">SQLException</CODE>, because the
+driver tries to prepare the procedure call with incorrect number of
+parameters.</P>
+<H3 CLASS="western"><A NAME="1.7.4.Using ResultSet.getCharacterStream with BLOB fields|outline"></A>
+Using ResultSet.getCharacterStream with BLOB fields</H3>
+<P>JayBird JDBC driver always uses connection encoding when
+converting array of bytes into character stream. The BLOB SUB_TYPE 1
+fields allow setting the character encoding for the field. However
+when the contents of the field is sent to the client, it is not
+converted according to the character set translation rules in
+Firebird, but is sent &ldquo;as is&rdquo;. When such field is
+accessed from Java application via JayBird and character set of the
+connection does not match the character encoding of the field,
+conversion errors might happen. Therefore it is recommended to
+convert such fields in the application using the appropriate
+encoding.</P>
+<H2 CLASS="western"><A NAME="1.8.Connection pooling with JayBird 1.5|outline"></A>
 Connection pooling with JayBird 1.5</H2>
 <P>Connection pooling provides effective way to handle physical
 database connections. It is believed that establishing new connection
@@ -817,7 +906,7 @@ from the fact that in addition to connection pooling, it can pool
 also prepared statement. Tests executed using AS3AP benchmark suite
 show that prepared statement pooling might increase speed of the
 application by 100% keeping source code clean and understandable.</P>
-<H3 CLASS="western"><A NAME="1.7.1.Usage scenario|outline"></A>Usage
+<H3 CLASS="western"><A NAME="1.8.1.Usage scenario|outline"></A>Usage
 scenario</H3>
 <P>When some statement is used more than one time, it makes sense to
 use prepared statement. It will be compiled by the server only once,
@@ -898,7 +987,7 @@ SQL query. If no such statement is found it prepares a new one. In
 line 013 prepared statement is not closed, but returned to the pool,
 where it waits for the next call. Same happens to the connection
 object that is returned to the pool in line 016.</P>
-<H3 CLASS="western"><A NAME="1.7.2.Connection Pool Classes|outline"></A>
+<H3 CLASS="western"><A NAME="1.8.2.Connection Pool Classes|outline"></A>
 Connection Pool Classes</H3>
 <P>JayBird 1.5 connection pooling classes belong to
 <CODE CLASS="western">org.firebirdsql.pool.*</CODE> package.</P>
@@ -991,7 +1080,7 @@ Connection Pool Classes</H3>
 		</TR>
 	</TBODY>
 </TABLE>
-<H3 CLASS="western"><A NAME="1.7.3.org.firebirdsql.pool.FBConnectionPoolDataSource|outline"></A>
+<H3 CLASS="western"><A NAME="1.8.3.org.firebirdsql.pool.FBConnectionPoolDataSource|outline"></A>
 org.firebirdsql.pool.FBConnectionPoolDataSource</H3>
 <P>This class is a corner stone of connection and statement pooling
 in JayBird. It can be instantiated within the application as well as
@@ -1556,7 +1645,7 @@ the Database Parameters Block parameters can be set using
 		</TR>
 	</TBODY>
 </TABLE>
-<H3 CLASS="western"><A NAME="1.7.4.org.firebirdsql.pool.DriverConnectionPoolDataSource|outline"></A>
+<H3 CLASS="western"><A NAME="1.8.4.org.firebirdsql.pool.DriverConnectionPoolDataSource|outline"></A>
 org.firebirdsql.pool.DriverConnectionPoolDataSource</H3>
 <P>This class provides connection and statement pooling capabilities
 for arbitrary any JDBC driver. It is very similar to the previous
@@ -1642,16 +1731,95 @@ believe that if there is situation where
 <CODE CLASS="western">DriverConnectionPoolDataSource.setProperty(String,
 String)</CODE> cannot be used, one can easily create a subclass
 providing all necessary setters.</P>
-<H3 CLASS="western"><A NAME="1.7.5.org.firebirdsql.pool.FBWrappingDataSource|outline"></A>
+<H3 CLASS="western"><A NAME="1.8.5.org.firebirdsql.pool.FBWrappingDataSource|outline"></A>
 org.firebirdsql.pool.FBWrappingDataSource</H3>
 <P ALIGN=LEFT>This class is a wrapper for <CODE CLASS="western">FBConnectionPoolDataSource</CODE>
 converting interface from <CODE CLASS="western">javax.sql.ConnectionPoolDataSource</CODE>
 to <CODE CLASS="western">javax.sql.DataSource</CODE>. It defines same
 properties as <CODE CLASS="western">FBConnectionPoolDataSource</CODE>
 does.</P>
-<H2 CLASS="western"><A NAME="1.8.Documentation and Support|outline"></A>
+<H3 CLASS="western"><A NAME="1.8.6.Runtime object allocation and deallocation hints|outline"></A>
+Runtime object allocation and deallocation hints</H3>
+<P ALIGN=LEFT>Pool implementation shipped with JayBird can provide
+hints for the application where the connection was obtained from the
+pool, when it was released back to the pool, when the statement was
+prepared. Such information is written into the log when appropriate
+system properties are set to <CODE CLASS="western">true</CODE>.
+Additionally, when connection or prepared statement is closed twice,
+driver will throw an SQL exception with an attached stack trace of
+previous call to <CODE CLASS="western">close()</CODE> method.</P>
+<H4>List of properties</H4>
+<TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0 FRAME=HSIDES RULES=ROWS>
+	<COL WIDTH=75*>
+	<COL WIDTH=181*>
+	<THEAD>
+		<TR VALIGN=TOP>
+			<TH WIDTH=29%>
+				<P>Property name</P>
+			</TH>
+			<TH WIDTH=71%>
+				<P>Description</P>
+			</TH>
+		</TR>
+	</THEAD>
+	<TBODY>
+		<TR VALIGN=TOP>
+			<TD WIDTH=29%>
+				<P><CODE CLASS="western">FBLog4j</CODE></P>
+			</TD>
+			<TD WIDTH=71%>
+				<P>Enables logging inside driver. This is the essential property,
+				if it is not present or set to <CODE CLASS="western">false</CODE>
+				no debug information is available.</P>
+				<P>When it is set to <CODE CLASS="western">true</CODE>, pool
+				automatically prints the following information:</P>
+				<UL>
+					<LI><P>When physical connection is added to the pool &ndash;
+					<CODE CLASS="western">DEBUG</CODE></P>
+					<LI><P>When a maximum pool capacity is reached &ndash; <CODE CLASS="western">DEBUG</CODE></P>
+					<LI><P>When connection is obtained from pool &ndash; <CODE CLASS="western">DEBUG</CODE></P>
+					<LI><P>When connection is released back to pool &ndash; <CODE CLASS="western">DEBUG</CODE></P>
+					<LI><P>Whether pool supports open statements across transaction
+					boundaries &ndash; <CODE CLASS="western">INFO</CODE></P>
+				</UL>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=29%>
+				<P><CODE CLASS="western">FBPoolShowTrace</CODE></P>
+			</TD>
+			<TD WIDTH=71%>
+				<P>Enables logging of the thread stack trace when debugging is
+				enabled and:</P>
+				<UL>
+					<LI><P>Connection is allocated from the pool &ndash; <CODE CLASS="western">DEBUG</CODE></P>
+					<LI><P>Thread is blocked while waiting for a free connection &ndash;
+					<CODE CLASS="western">WARN</CODE></P>
+				</UL>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=29%>
+				<P><CODE CLASS="western">FBPoolDebugStmtCache</CODE></P>
+			</TD>
+			<TD WIDTH=71%>
+				<P>When statement caching is used and debugging is enabled,
+				following information is logged:</P>
+				<UL>
+					<LI><P>When a statement is prepared &ndash; <CODE CLASS="western">INFO</CODE></P>
+					<LI><P>When statement cache is cleaned &ndash; <CODE CLASS="western">INFO</CODE></P>
+					<LI><P>When statement is obtained from or returned back to pool
+					&ndash; <CODE CLASS="western">INFO</CODE></P>
+				</UL>
+			</TD>
+		</TR>
+	</TBODY>
+</TABLE>
+<P><BR><BR>
+</P>
+<H2 CLASS="western"><A NAME="1.9.Documentation and Support|outline"></A>
 Documentation and Support</H2>
-<H3 CLASS="western"><A NAME="1.8.1.Where to get more information on JayBird|outline"></A>
+<H3 CLASS="western"><A NAME="1.9.1.Where to get more information on JayBird|outline"></A>
 Where to get more information on JayBird</H3>
 <P>The most detailed information can be found in the JayBird
 Frequently Asked Questions (FAQ). The FAQ is included in the
@@ -1660,7 +1828,7 @@ distribution, and is available on-line in several places.
 <P>Also a new resource, JayBirdWiki is available at
 <A HREF="http://jaybirdwiki.firebirdsql.org/">http://jaybirdwiki.firebirdsql.org</A>.
 You are welcome to provide information and tips in the SandBox area.</P>
-<H3 CLASS="western"><A NAME="1.8.2.Where to get help|outline"></A>Where
+<H3 CLASS="western"><A NAME="1.9.2.Where to get help|outline"></A>Where
 to get help</H3>
 <P>The best place to start is the FAQ. Many details for using JayBird
 with various programs are located there. Below are some links to
@@ -1672,7 +1840,7 @@ useful web sites.</P>
 	<A HREF="http://sourceforge.net/projects/firebird">http://sourceforge.net/projects/firebird</A>.</P>
 	<LI><P>The Firebird project home page <A HREF="http://www.firebirdsql.com/">http://www.firebirdsql.com</A>.</P>
 </UL>
-<H3 CLASS="western"><A NAME="1.8.3.Reporting Bugs|outline"></A>Reporting
+<H3 CLASS="western"><A NAME="1.9.3.Reporting Bugs|outline"></A>Reporting
 Bugs</H3>
 <P>The developers follow the Firebird-Java@yahoogroups.com list. Join
 the list and post information about suspected bugs. This is a good
@@ -1683,7 +1851,7 @@ again, whereas bug fixes might take awhile.</P>
 the Firebird bug tracker, &ldquo;Java Client (JayBird)&rdquo; at
 SourceForge.net project area
 (<A HREF="http://sourceforge.net/projects/firebird">http://sourceforge.net/projects/firebird</A>).</P>
-<H3 CLASS="western"><A NAME="1.8.4.Corrections/Additions To Release Notes|outline"></A>
+<H3 CLASS="western"><A NAME="1.9.4.Corrections/Additions To Release Notes|outline"></A>
 Corrections/Additions To Release Notes</H3>
 <P ALIGN=LEFT>Please send corrections, suggestions, or additions to
 these Release Notes to to the mailing list at
