@@ -79,8 +79,8 @@ public class TestFBWrappingDataSource extends FBTestBase {
 
         ds = createFBWrappingDataSource();
         ds.setDatabase(DB_DATASOURCE_URL);
-        ds.setMinSize(0);
-        ds.setMaxSize(5);
+        ds.setMinConnections(0);
+        ds.setMaxConnections(5);
         ds.setBlockingTimeout(100);
         ds.setIdleTimeout(1000);
         ds.setPooling(true);
@@ -117,8 +117,8 @@ public class TestFBWrappingDataSource extends FBTestBase {
 
         ds = createFBWrappingDataSource();
         ds.setDatabase(DB_DATASOURCE_URL);
-        ds.setMinSize(3);
-        ds.setMaxSize(5);
+        ds.setMinConnections(3);
+        ds.setMaxConnections(5);
         ds.setBlockingTimeout(1000);
         ds.setIdleTimeout(20000);
         ds.setPooling(true);
@@ -128,10 +128,10 @@ public class TestFBWrappingDataSource extends FBTestBase {
         assertTrue("Connection is null", connection != null);
         Thread.sleep(3000);
         int ccount = ds.getConnectionCount(); // should be 2, 3 total, but one is working
-        assertTrue("Wrong number of connections! " + ccount + ", expected " + (ds.getMinSize() - 1), ccount == (ds.getMinSize() - 1));
+        assertTrue("Wrong number of connections! " + ccount + ", expected " + (ds.getMinConnections() - 1), ccount == (ds.getMinConnections() - 1));
         connection.close();
         ArrayList cs = new ArrayList();
-        for (int i = 0; i < ds.getMaxSize(); i++)
+        for (int i = 0; i < ds.getMaxConnections(); i++)
         {
             cs.add(ds.getConnection());//DB_USER, DB_PASSWORD));
         } // end of for ()
