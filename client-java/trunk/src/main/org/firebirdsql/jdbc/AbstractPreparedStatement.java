@@ -419,6 +419,36 @@ public abstract class AbstractPreparedStatement extends FBStatement
             }
         }
     }
+    
+    /**
+     * Execute meta-data query. This method is similar to {@link #executeQuery()}
+     * however, it always returns cached result set and strings in the result
+     * set are always trimmed (server defines system tables using CHAR data
+     * type, but it should be used as VARCHAR).
+     * 
+     * @return result set corresponding to the specified query.
+     * 
+     * @throws SQLException if something went wrong or no result set was 
+     * available.
+     */
+    ResultSet executeMetaDataQuery() throws SQLException {
+        Object syncObject = getSynchronizationObject();
+        
+        synchronized(syncObject) {
+            try {
+                c.ensureInTransaction();
+                boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
+                
+                if (!hasResultSet)
+                    throw new FBSQLException("No result set is available.");
+                
+                return getCachedResultSet(true);
+                
+            } finally {
+                c.checkEndTransaction();
+            }
+        }
+    }
 
     protected boolean internalExecute(boolean sendOutParams) throws  SQLException
     {

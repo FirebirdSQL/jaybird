@@ -1022,6 +1022,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized ResultSet doQuery(String sql, List params,HashMap statements) 
 	 throws SQLException
     {
+        /*
+        
+        // Commented out by R.Rokytskyy on 29.05.2004 
+        // during simplification of the metadata query handling.
+        // Remove after next release.
+         
         boolean ourTransaction = false;
         FBLocalTransaction trans = null;
         if (!inTransaction())
@@ -1038,6 +1044,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 throw new FBSQLException(ge);
             }
         }
+        */
         AbstractPreparedStatement s = getStatement(sql,statements);
         for (int i = 0; i < params.size(); i++)
         {
@@ -1046,11 +1053,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
         ResultSet rs = null;
         try
         {
-            s.execute();
-            rs = ((AbstractStatement)s).getCachedResultSet(true); //trim strings
+            rs = s.executeMetaDataQuery();
+            // rs = ((AbstractStatement)s).getCachedResultSet(true); //trim strings
         }
         finally
         {
+            /*
             if (ourTransaction) 
             {
                 try 
@@ -1062,6 +1070,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
                     throw new FBSQLException(ge);
                 }
             }
+            */
         }
         return rs;
     }
