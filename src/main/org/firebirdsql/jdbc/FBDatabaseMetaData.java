@@ -434,6 +434,249 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         return "\"";
     }
 
+    /**
+     * Describe constant <code>fbSQLKeywords</code> here.
+     * Derived from firebird2/src/dsql/keywords.cpp.
+     * Exclusions from list of sql-92 keywords in SQL Instant Reference,
+     * Martin Gruber (1993) Sybex.
+     *
+     */
+    private final static String fbSQLKeywords = 
+	//"ACTION," +
+	"ACTIVE," +
+	//"ADD," +
+	"ADMIN," +
+	"AFTER," +
+	//"ALL," +
+	//"ALTER," + 
+	//"AND," + 
+	//"ANY," + 
+	//"AS," + 
+	//"ASC," +	/* Alias of ASCENDING */
+	"ASCENDING," +
+	//"AT," +
+	"AUTO," +
+	//"AVG," +
+	"BASE_NAME," +
+	"BEFORE," +
+	//"BEGIN," +
+	//"BETWEEN," +
+	"BIGINT," +
+	"BLOB," +
+	"BREAK," + 
+	//"BY," +
+	"CACHE," +
+	//"CASCADE," +
+	//"CASE," +
+	//"CAST," +
+	//"CHAR," +
+	//"CHARACTER," +
+	//"CHECK," +
+	"CHECK_POINT_LENGTH," +
+	//"COALESCE," +
+	//"COLLATE," +
+	//"COLUMN," +
+	//"COMMIT," +
+	//"COMMITTED," +
+	"COMPUTED," +
+	"CONDITIONAL," +
+	"CONNECTION_ID," +
+	//"CONSTRAINT," +
+	"CONTAINING," +
+	//"COUNT," +
+	//"CREATE," +
+	"CSTRING," +
+	//"CURRENT," +
+	//"CURRENT_DATE," +
+	"CURRENT_ROLE," +
+	//"CURRENT_TIME," +
+	//"CURRENT_TIMESTAMP," +
+	//"CURRENT_USER," +
+	//"CURSOR," +
+	"DATABASE," +
+	//"DATE," +
+	//"DAY," +
+	"DEBUG," +
+	//"DEC," +
+	//"DECIMAL," +
+	//"DECLARE," +
+	//"DEFAULT," + 
+	//"DELETE," + 
+	//"DESC," +	/* Alias of DESCENDING */
+	"DESCENDING," +
+       	//"DESCRIPTOR," +
+	//"DISTINCT," +
+	"DO," +
+	//"DOMAIN," +
+	//"DOUBLE," +
+	//"DROP," +
+	//"ELSE," +
+	//"END," +
+	"ENTRY_POINT," +
+	//"ESCAPE," +
+	//"EXCEPTION," +
+	//"EXECUTE," +
+	//"EXISTS," +
+	"EXIT," +
+	//"EXTERNAL," +
+	//"EXTRACT," +
+	"FILE," +
+	"FILTER," +
+	//"FIRST," +
+	//"FLOAT," +
+	//"FOR," +
+	//"FOREIGN," +
+	"FREE_IT," +
+	//"FROM," +
+	//"FULL," +
+	"FUNCTION," +
+	"GDSCODE," +
+	"GENERATOR," +
+	"GEN_ID," +
+	//"GRANT," +
+	//"GROUP," +
+	"GROUP_COMMIT_WAIT_TIME," +
+	//"HAVING," +
+	//"HOUR," +
+	"IF," +
+	//"IN," +
+	"INACTIVE," +
+	"INDEX," +
+	//"INNER," +
+	"INPUT_TYPE," +
+	//"INSERT," +
+	//"INT," +
+	//"INTEGER," +
+	//"INTO," +
+	//"IS," +
+	//"ISOLATION," +
+	//"JOIN," +
+	//"KEY," +
+	//"LAST," +
+	//"LEFT," +
+	//"LENGTH," +
+	//"LEVEL," +
+	//"LIKE," +
+	"LOGFILE," +
+	"LOG_BUFFER_SIZE," +
+	"LONG," +
+	"MANUAL," +
+	//"MAX," +
+	"MAXIMUM_SEGMENT," +
+	"MERGE," +
+	"MESSAGE," +
+	//"MIN," +
+	//"MINUTE," +
+	"MODULE_NAME," +
+	//"MONTH," +
+	//"NAMES," +
+	//"NATIONAL," +
+	//"NATURAL," +
+	//"NCHAR," +
+	//"NO," +
+	//"NOT," +
+	//"NULLIF," +
+	//"NULL," +
+	"NULLS," +
+	"LOCK," +
+	//"NUMERIC," +
+	"NUM_LOG_BUFFERS," +
+	//"OF," +
+	//"ON," +
+	//"ONLY," +
+	//"OPTION," +
+	//"OR," +
+	//"ORDER," +
+	//"OUTER," +
+	"OUTPUT_TYPE," +
+	"OVERFLOW," +
+	"PAGE," +
+	"PAGES," +
+	"PAGE_SIZE," +
+	"PARAMETER," +
+	"PASSWORD," +
+	"PLAN," +
+	//"POSITION," +
+	"POST_EVENT," +
+	//"PRECISION," +
+	//"PRIMARY," +
+	//"PRIVILEGES," +
+	//"PROCEDURE," +
+	"PROTECTED," +
+	"RAW_PARTITIONS," +
+	"RDB$DB_KEY," +
+	//"READ," +
+	//"REAL," +
+	"RECORD_VERSION," +
+	"RECREATE," +
+	//"REFERENCES," + 
+	"RESERV," +	/* Alias of RESERVING */
+	"RESERVING," +
+	//"RESTRICT," +
+	"RETAIN," +
+	"RETURNING_VALUES," +
+	"RETURNS," +
+	//"REVOKE," +
+	//"RIGHT," +
+	"ROLE," + 
+	//"ROLLBACK," + 
+	"ROWS_AFFECTED," +
+	"SAVEPOINT," +
+	//"SCHEMA," +	/* Alias of DATABASE */
+	//"SECOND," +
+	"SEGMENT," +
+	//"SELECT," +
+	//"SET," +
+	"SHADOW," +
+	"SHARED," +
+	"SINGULAR," +
+	//"SIZE," +
+	"SKIP," +
+	//"SMALLINT," +
+	"SNAPSHOT," +
+	//"SOME," +
+	"SORT," +
+	//"SQLCODE," +
+	"STABILITY," + 
+	"STARTING," + 
+	"STARTS," +	/* Alias of STARTING */
+	"STATISTICS," +
+	//"SUBSTRING," +
+	"SUB_TYPE," +
+	//"SUM," +
+	"SUSPEND," +
+	//"TABLE," +
+	//"THEN," +
+	//"TIME," +
+	//"TIMESTAMP," +
+	//"TO," +
+	//"TRANSACTION," +
+	"TRANSACTION_ID," +
+	"TRIGGER," +
+	//"TYPE," +
+	//"UNCOMMITTED," +
+	//"UNION," +
+	//"UNIQUE," +
+	//"UPDATE," +
+	//"UPPER," +
+	//"USER," +
+	//"USING," +
+	//"VALUE," +
+	//"VALUES," +
+	//"VARCHAR," +
+	"VARIABLE," +
+	//"VARYING," +
+	//"VIEW," +
+	"WAIT," +
+	"WEEKDAY," +
+	//"WHEN," +
+	//"WHERE," +
+	"WHILE," +
+	//"WITH," +
+	//"WORK," +
+	//"WRITE," + 
+	//"YEAR," + 
+	"YEARDAY"; 
 
     /**
      * Gets a comma-separated list of all a database's SQL keywords
@@ -443,8 +686,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getSQLKeywords() throws SQLException {
-        return "NOT YET IMPLEMENTED";
-        //throw new SQLException("Not yet implemented");
+        return fbSQLKeywords;
     }
 
 
