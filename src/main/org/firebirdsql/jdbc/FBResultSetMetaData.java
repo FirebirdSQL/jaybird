@@ -36,9 +36,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.sql.ResultSet;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -780,6 +778,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @throws SQLException if extended field information cannot be obtained.
      */
     private Map getExtendedFieldInfo(FBConnection connection) throws SQLException {
+        
+        if (connection == null) return Collections.EMPTY_MAP;
         
         StringBuffer sb = new StringBuffer();
         ArrayList params = new ArrayList();
