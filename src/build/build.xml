@@ -23,7 +23,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
     <property name="build.dir" value="${basedir}/build"/>
     <property name="build.bin.dir" value="${build.dir}/bin"/>
     <property name="build.lib.dir" value="${build.dir}/lib"/>
-    <property name="build.classes.dir" value="${build.dir}/classes"/>
+    <property name="build.classes" value="${build.dir}/classes"/>
     <property name="build.docs.dir" value="${build.dir}/docs"/>
     <property name="build.javadocs.dir" value="${build.dir}/docs/api"/>
     <property name="build.jar-ra.dir" value="${build.dir}/jar"/>
@@ -36,15 +36,15 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
 
 
 
-    <property name="classpath" value="${build.classes.dir};${src.lib.dir}/jta-spec1_0_1.jar;${src.lib.dir}/connector.jar;${src.lib.dir}/jdbc-3_0-pfd2-classes.zip;${src.lib.dir}/jaas.jar"/>
+    <property name="classpath" value="${build.classes};${src.lib.dir}/jta-spec1_0_1.jar;${src.lib.dir}/connector.jar;${src.lib.dir}/jdbc-3_0-pfd2-classes.zip;${src.lib.dir}/jaas.jar"/>
     <property name="packages" value="org.firebirdsql.*"/>
 
     <property name="build.compiler" value="classic"/>
 
     <!--available property="jdk1.3+" classname="java.lang.StrictMath" /-->
 
-    <path id="cp">
-      <pathelement location="${build.classes.dir}"/>
+    <path id="javac.classpath">
+      <pathelement location="${build.classes}"/>
       <pathelement location="${src.lib.dir}/jta-spec1_0_1.jar"/>
       <pathelement location="${src.lib.dir}/connector.jar"/>
       <pathelement location="${src.lib.dir}/jdbc-3_0-pfd2-classes.zip"/>
@@ -80,22 +80,22 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
   <!-- Compiles the source code                                            -->
   <!-- =================================================================== -->
   <target name="compile" depends="prepare">
-    <mkdir dir="${build.classes.dir}"/>
+    <mkdir dir="${build.classes}"/>
     <depend srcDir="${src.dir}"
-           destDir="${build.classes.dir}"
-           cache="${build.classes.dir}"/>
+           destDir="${build.classes}"
+           cache="${build.classes}"/>
 
     <javac srcdir="${src.dir}"
-           destdir="${build.classes.dir}"
+           destdir="${build.classes}"
            debug="off"
            deprecation="off"
            optimize="on"
            includes="org/**"
            excludes="**/temp*"
     >
-      <classpath refid="cp"/>
+      <classpath refid="javac.classpath"/>
     </javac>
-    <copy todir="${build.classes.dir}">
+    <copy todir="${build.classes}">
         <fileset dir="${src.dir}" includes="**/*.properties"/>
     </copy>
 
@@ -116,7 +116,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
 
     <mkdir dir="${build.jar-ra.dir}"/>
     <jar jarfile="${build.jar-ra.dir}/firebirdsql.jar"
-         basedir="${build.classes.dir}"
+         basedir="${build.classes}"
          includes="org/firebirdsql/**"
          excludes="**/Test*.java"
     />
@@ -129,7 +129,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
   <target name="jmx.jar" depends="compile">
 
     <jar jarfile="${dist.dir}/firebirdjmx.jar"
-         basedir="${build.classes.dir}"
+         basedir="${build.classes}"
          includes="**/gds/**, **/jgds/**, **/management/**, **/META-INF/**"
          excludes="**/test/**"
     />
@@ -178,8 +178,8 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
     </copy>
     <junit>
       <classpath>
-         <path refid="cp"/>
-         <pathelement location="${build.classes.dir}"/>
+         <path refid="javac.classpath"/>
+         <pathelement location="${build.classes}"/>
       </classpath>
       <formatter type="plain" usefile="false"/>
       <!--test name="org.firebirdsql.jca.TestFBResultSet"/-->
@@ -194,8 +194,8 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
     </copy>
     <junit>
       <classpath>
-         <path refid="cp"/>
-         <pathelement location="${build.classes.dir}"/>
+         <path refid="javac.classpath"/>
+         <pathelement location="${build.classes}"/>
       </classpath>
       <formatter type="plain" usefile="false"/>
       <!--test name="org.firebirdsql.management.TestFBManager"/-->
@@ -211,6 +211,87 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
       <test name="org.firebirdsql.jca.TestFBDatabaseMetaData"/-->
     </junit>
   </target>
+
+  <target name="tests-standard-unit" depends="jmx.jar">
+    <!-- Override JUnit defaults -->
+    <!-- Setup the module environment. -->
+    <property name="module.root" value="${basedir}"/>
+
+    <property file="${module.root}/local.properties"/>
+    <property name="module.source" value="${module.root}/src"/>
+    <property name="module.output" value="${module.root}/output"/>
+    <property name="module.tools" value="${module.root}/tools"/>
+    <property name="module.thirdparty" value="${module.root}/thirdparty"/>
+
+
+    <property name="junit.timeout" value="600000"/> <!-- 10 minutes -->
+    <property name="junit.batchtest.todir" value="${build.reports}"/>
+    <property name="junit.jvm.options" value="-Ddummy"/>
+
+    <property name="build.stylesheets" value="${module.source}/stylesheets"/>
+    <property name="build.reports" value="${module.output}/reports"/>
+    <property name="build.testlog" value="${module.output}/log"/>
+
+    <property name="junit.formatter.type" value="xml"/>
+    <property name="junit.formatter.usefile" value="true"/>
+
+
+    <delete file="${db.dir}/fbmctest.gdb"/>
+    <copy todir="${db.dir}">
+        <fileset dir="${dbsrc.dir}"/>
+    </copy>
+    <mkdir dir="${build.reports}"/>
+    <mkdir dir="${build.testlog}"/>
+    <junit dir="${module.output}"
+	   printsummary="${junit.printsummary}" 
+	   haltonerror="${junit.haltonerror}" 
+	   haltonfailure="${junit.haltonfailure}" 
+	   fork="${junit.fork}"
+	   timeout="${junit.timeout}"
+	   jvm="${junit.jvm}">
+
+      <jvmarg value="${junit.jvm.options}"/>
+      <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
+      <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
+
+      <classpath>
+        <pathelement location="${build.classes}"/>
+        <!--pathelement location="${build.resources}"/-->
+        <path refid="javac.classpath"/>
+      </classpath>
+
+      <formatter type="${junit.formatter.type}"
+		 usefile="${junit.formatter.usefile}"/>
+
+      <batchtest todir="${build.reports}"
+		 haltonerror="${junit.batchtest.haltonerror}" 
+		 haltonfailure="${junit.batchtest.haltonfailure}" 
+		 fork="${junit.batchtest.fork}">
+
+        <fileset dir="${build.classes}">
+          <include name="**/Test*.class"/>
+          <exclude name="**/TestAll.class"/>
+          <exclude name="**/TestXABase*.class"/>
+          <exclude name="**/TestConst.class"/>
+
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <!--maybe later target name="tests-report-html" depends="tests-standard-unit">
+    <mkdir dir="${build.reports}/html"/>
+
+    <junitreport todir="${build.reports}">
+      <fileset dir="${build.reports}">
+        <include name="TEST-*.xml"/>
+      </fileset>
+      <report format="frames" 
+              todir="${build.reports}/html"
+              styledir="${build.stylesheets}"
+      />
+    </junitreport>
+  </target-->
 
   <!-- =================================================================== -->
   <!-- Creates the API documentation                                       -->
