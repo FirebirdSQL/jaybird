@@ -279,10 +279,9 @@ public final class GDS_Impl implements GDS {
         }
     }
 
-	 final static byte[] describe_database_info = new byte[] { ISCConstants.isc_info_db_sql_dialect,
-											ISCConstants.isc_info_isc_version,
-											ISCConstants.isc_info_firebird_version,
-											ISCConstants.isc_info_ods_version,
+    final static byte[] describe_database_info = new byte[] { ISCConstants.isc_info_db_sql_dialect,
+                                 ISCConstants.isc_info_isc_version,
+                                 ISCConstants.isc_info_ods_version,
                                  ISCConstants.isc_info_ods_minor_version,
                                  ISCConstants.isc_info_end
                                  };
@@ -319,7 +318,7 @@ public final class GDS_Impl implements GDS {
         if (log != null) log.debug("parseDatabaseInfo started");
         
         int lastindex = 0;
-		  parseTruncDatabaseInfo(info, lastindex, db);		  
+        parseTruncDatabaseInfo(info, lastindex, db);
         while ((lastindex = parseTruncDatabaseInfo(info, lastindex, db)) > 0) {
             lastindex--;               // Is this OK ?
             byte[] new_items = new byte[4 + items.length];
@@ -333,14 +332,14 @@ public final class GDS_Impl implements GDS {
         }
         if (log != null) log.debug("parseDatabaseInfo ended");
     }
-	 
+
     private int parseTruncDatabaseInfo(byte[] info,
                                   int lastindex, isc_db_handle handle) throws GDSException {
         byte item;
         int index = 0;
         if (log != null) log.debug("parseDatabaseInfo: first 2 bytes are " + isc_vax_integer(info, 0, 2) + " or: " + info[0] + ", " + info[1]);	  
-		  int value=0;
-		  int len=0;
+        int value=0;
+        int len=0;
         int i = 0;
         isc_db_handle_impl db = (isc_db_handle_impl) handle;
         while (info[i] != ISCConstants.isc_info_end) {
@@ -348,49 +347,37 @@ public final class GDS_Impl implements GDS {
                 case ISCConstants.isc_info_db_sql_dialect:
                     len = isc_vax_integer(info, i, 2);
                     i += 2;
-  					     value = isc_vax_integer (info, i, len);
-						  i += len;
-						  db.setDialect(value);
+                    value = isc_vax_integer (info, i, len);
+                    i += len;
+                    db.setDialect(value);
                     if (log != null) log.info("isc_info_db_sql_dialect:"+value);
                     break;
                 case ISCConstants.isc_info_isc_version:
                     len = isc_vax_integer(info, i, 2);
                     i += 2;
                     if (log != null) log.info("isc_info_version len:"+len);
-						  // 
-						  byte[] vers = new byte[len];
-						  System.arraycopy(info, i, vers, 0, len);
-  					     String versS = new String(vers);
-						  i += len;
-						  db.setVersion(versS);
+                    // 
+                    byte[] vers = new byte[len];
+                    System.arraycopy(info, i, vers, 0, len);
+                    String versS = new String(vers);
+                    i += len;
+                    db.setVersion(versS);
                     if (log != null) log.info("isc_info_version:"+versS);
-						  break;
-                case ISCConstants.isc_info_firebird_version:
-                    len = isc_vax_integer(info, i, 2);
-                    i += 2;
-                    if (log != null) log.info("isc_info_firebird_version len:"+len);
-						  // 
-						  byte[] FBvers = new byte[len];
-						  System.arraycopy(info, i, FBvers, 0, len);
-  					     String FBversS = new String(FBvers);
-						  i += len;
-						  db.setFBVersion(FBversS);
-                    if (log != null) log.info("isc_info_firebird_version:"+FBversS);
-                    break;
+                        break;
                 case ISCConstants.isc_info_ods_version:
                     len = isc_vax_integer(info, i, 2);
                     i += 2;
-  					     value = isc_vax_integer (info, i, len);
-						  i += len;
-						  db.setODSMajorVersion(value);
+                    value = isc_vax_integer (info, i, len);
+                    i += len;
+                    db.setODSMajorVersion(value);
                     if (log != null) log.info("isc_info_ods_version:"+value);
                     break;
                 case ISCConstants.isc_info_ods_minor_version:
                     len = isc_vax_integer(info, i, 2);
                     i += 2;
-  					     value = isc_vax_integer (info, i, len);
-						  i += len;
-						  db.setODSMinorVersion(value);
+                    value = isc_vax_integer (info, i, len);
+                    i += len;
+                    db.setODSMinorVersion(value);
                     if (log != null) log.info("isc_info_ods_minor_version:"+value);
                     break;
                 case ISCConstants.isc_info_truncated:

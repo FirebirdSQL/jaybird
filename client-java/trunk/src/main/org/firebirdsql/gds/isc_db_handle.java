@@ -74,10 +74,6 @@ public interface isc_db_handle {
 
     int getDatabaseProductMinorVersion();
 
-    void setFBVersion(String value);
-
-    String getFBVersion();
-
     void setODSMajorVersion(int value);
 
     int getODSMajorVersion();
