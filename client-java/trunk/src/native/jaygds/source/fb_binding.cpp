@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-#include "Stdafx.h"
+#include "platform.h"
 
 #include "fb_binding.h"
 
