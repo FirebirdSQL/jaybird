@@ -376,16 +376,12 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public String getString(int columnIndex) throws  SQLException {
-        if (((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TEXT)
-             &&((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_VARYING)) {
-            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
-        }
-        setWasNullColumnIndex(columnIndex);
-        if (wasNull()) {
+        Object obj = getObject(columnIndex);
+        if (obj == null) {
             return null;
+        } else {
+            return obj.toString();
         }
-        return new String((byte[])row[columnIndex - 1]);
-        //return (String)row[columnIndex - 1];
     }
 
 
@@ -400,34 +396,30 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public boolean getBoolean(int columnIndex) throws  SQLException {
-        setWasNullColumnIndex(columnIndex);
-        if (row[columnIndex - 1] == null) {
+        Object obj = getObject(columnIndex).toString();
+        if (obj == null) {
             return false;
-        }
-        if (((getXsqlvar(columnIndex).sqltype & ~1) == GDS.SQL_TEXT)
-             ||((getXsqlvar(columnIndex).sqltype & ~1) == GDS.SQL_VARYING)) {
-            String value = ((String)row[columnIndex - 1]).toUpperCase();
-            if (value.equals("T") || value.equals("TRUE")) {
-                return true;
-            }
-            if (value.equals("F") || value.equals("FALSE")) {
-                return false;
-            }
-            throw new SQLException("can't interpret value as boolean: " + value);
-        }
-        if (((getXsqlvar(columnIndex).sqltype & ~1) == GDS.SQL_SHORT)
-             ||((getXsqlvar(columnIndex).sqltype & ~1) == GDS.SQL_LONG)) {
-            int value = ((Number)row[columnIndex - 1]).intValue();
-            if (value == 0) {
-                return true;
-            }
+        } if (obj instanceof Number) {
+            long value = ((Number) obj).longValue();
             if (value == 1) {
+                return true;
+            } else if (value == 0) {
                 return false;
+            } else {
+                throw new SQLException("can't interpret value as boolean: " + value);
             }
-            throw new SQLException("can't interpret value as boolean: " + value);
+        } if (obj instanceof String) {
+            String value = (String) obj;
+            if (value.equalsIgnoreCase("T") || value.equalsIgnoreCase("TRUE")) {
+                return true;
+            } else if (value.equalsIgnoreCase("F") || value.equalsIgnoreCase("FALSE")) {
+                return false;
+            } else {
+                throw new SQLException("can't interpret value as boolean: " + value);
+            }    
+        } else {
+            throw new SQLException("Illegal type conversion");
         }
-        throw new SQLException("can't interpret type as boolean: " + (getXsqlvar(columnIndex).sqltype & ~1));
-
     }
 
 
@@ -442,8 +434,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public byte getByte(int columnIndex) throws  SQLException {
-        setWasNullColumnIndex(columnIndex);
-                throw new SQLException("Not yet implemented");
+        return (byte) getLong(columnIndex);
     }
 
 
@@ -458,14 +449,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public short getShort(int columnIndex) throws  SQLException {
-        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_SHORT) {
-            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
-        }
-        setWasNullColumnIndex(columnIndex);
-        if (row[columnIndex - 1] == null) {
-            return 0;
-        }
-        return ((Short)row[columnIndex - 1]).shortValue();
+        return (short) getLong(columnIndex);
     }
 
 
@@ -480,14 +464,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public int getInt(int columnIndex) throws  SQLException {
-        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_LONG) {
-            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
-        }
-        setWasNullColumnIndex(columnIndex);
-        if (row[columnIndex - 1] == null) {
-            return 0;
-        }
-        return ((Integer)row[columnIndex - 1]).intValue();
+        return (int) getLong(columnIndex);
     }
 
 
@@ -502,14 +479,20 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public long getLong(int columnIndex) throws  SQLException {
-        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_INT64) {
-            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
-        }
-        setWasNullColumnIndex(columnIndex);
-        if (row[columnIndex - 1] == null) {
+        Object obj = getObject(columnIndex);
+        if (obj == null) {
             return 0;
+        } if (obj instanceof Number) {
+            return ((Number) obj).longValue();
+        } if (obj instanceof String) {
+            try {
+                return Long.parseLong((String) obj);
+            } catch (NumberFormatException ex) {
+                throw new SQLException("Number format error");
+            }    
+        } else {
+            throw new SQLException("Illegal type conversion");
         }
-        return ((Long)row[columnIndex - 1]).longValue();
     }
 
 
@@ -524,14 +507,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public float getFloat(int columnIndex) throws  SQLException {
-        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_FLOAT) {
-            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
-        }
-        setWasNullColumnIndex(columnIndex);
-        if (row[columnIndex - 1] == null) {
-            return 0;
-        }
-        return ((Float)row[columnIndex - 1]).floatValue();
+        return (float) getDouble(columnIndex);
     }
 
 
@@ -546,14 +522,20 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public double getDouble(int columnIndex) throws  SQLException {
-        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_DOUBLE) {
-            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
-        }
-        setWasNullColumnIndex(columnIndex);
-        if (row[columnIndex - 1] == null) {
+        Object obj = getObject(columnIndex);
+        if (obj == null) {
             return 0;
+        } if (obj instanceof Number) {
+            return ((Number) obj).doubleValue();
+        } if (obj instanceof String) {
+            try {
+                return Double.parseDouble((String) obj);
+            } catch (NumberFormatException ex) {
+                throw new SQLException("Number format error");
+            }    
+        } else {
+            throw new SQLException("Illegal type conversion");
         }
-        return ((Double)row[columnIndex - 1]).doubleValue();
     }
 
 
@@ -570,15 +552,22 @@ public class FBResultSet implements ResultSet {
      * @deprecated
      */
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws  SQLException {
-        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_INT64) {
-            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
-        }
-        setWasNullColumnIndex(columnIndex);
-        if (row[columnIndex - 1] == null) {
+        Object obj = getObject(columnIndex);
+        if (obj == null) {
             return null;
+        } if (obj instanceof BigDecimal) {
+            return (BigDecimal) obj;
+        } if (obj instanceof Number) {
+            return new BigDecimal(((Number) obj).doubleValue());
+        } if (obj instanceof String) {
+            try {
+                return new BigDecimal((String) obj);
+            } catch (NumberFormatException ex) {
+                throw new SQLException("Number format error");
+            }    
+        } else {
+            throw new SQLException("Illegal type conversion");
         }
-        //Is this the expected behavior???? Or do we move the decimal point?
-        return (BigDecimal.valueOf(((Long)row[columnIndex - 1]).longValue(), getXsqlvar(columnIndex).sqlscale)).setScale(scale);
     }
 
 
@@ -594,26 +583,14 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public byte[] getBytes(int columnIndex) throws  SQLException {
-        if ((getXsqlvar(columnIndex).sqltype & ~1) == GDS.SQL_BLOB) {
-            setWasNullColumnIndex(columnIndex);
-            InputStream in = getBinaryStream(columnIndex);
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            try {
-                byte[] buffer = new byte[512];
-                while (in.available() > 0) {
-                    int count = in.read(buffer);
-                    out.write(buffer, 0, count);
-                }
-            } catch (java.io.IOException ex) {
-                throw new SQLException("Blob I/O error");
-            }
-            return out.toByteArray();
-        } else if (((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TEXT)
-             &&((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_VARYING)) {
-            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        Object obj = getObject(columnIndex);
+        if (obj == null) {
+            return null;
+        } if (obj instanceof byte[]) {
+            return (byte[]) obj;
+        } else {
+            throw new SQLException("Illegal type conversion");
         }
-        setWasNullColumnIndex(columnIndex);
-        return (byte[])row[columnIndex - 1];
     }
 
 
@@ -628,14 +605,18 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public java.sql.Date getDate(int columnIndex) throws  SQLException {
-        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TYPE_DATE) {
-            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
-        }
-        setWasNullColumnIndex(columnIndex);
-        if (row[columnIndex - 1] == null) {
+        Object obj = getObject(columnIndex);
+        if (obj == null) {
             return null;
+        } else if (obj instanceof java.sql.Date) {
+            return (java.sql.Date) obj;
+        } else if (obj instanceof java.sql.Timestamp) {
+            return new java.sql.Date(((java.sql.Timestamp) obj).getTime());
+        } if (obj instanceof String) {
+            return java.sql.Date.valueOf((String) obj);
+        } else {
+            throw new SQLException("Illegal type conversion");
         }
-        return (java.sql.Date)row[columnIndex - 1];
     }
 
 
@@ -650,14 +631,18 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public java.sql.Time getTime(int columnIndex) throws  SQLException {
-        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TYPE_TIME) {
-            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
-        }
-        setWasNullColumnIndex(columnIndex);
-        if (row[columnIndex - 1] == null) {
+        Object obj = getObject(columnIndex);
+        if (obj == null) {
             return null;
+        } else if (obj instanceof java.sql.Time) {
+            return (java.sql.Time) obj;
+        } else if (obj instanceof java.sql.Timestamp) {
+            return new java.sql.Time(((java.sql.Timestamp) obj).getTime());
+        } if (obj instanceof String) {
+            return java.sql.Time.valueOf((String) obj);
+        } else {
+            throw new SQLException("Illegal type conversion");
         }
-        return (java.sql.Time)row[columnIndex - 1];
     }
 
 
@@ -672,14 +657,18 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public java.sql.Timestamp getTimestamp(int columnIndex) throws  SQLException {
-        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TIMESTAMP) {
-            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
-        }
-        setWasNullColumnIndex(columnIndex);
-        if (row[columnIndex - 1] == null) {
+        Object obj = getObject(columnIndex);
+        if (obj == null) {
             return null;
+        } else if (obj instanceof java.sql.Timestamp) {
+            return (java.sql.Timestamp) obj;
+        } else if (obj instanceof java.sql.Date) {
+            return new java.sql.Timestamp(((java.sql.Date) obj).getTime());
+        } if (obj instanceof String) {
+            return java.sql.Timestamp.valueOf((String) obj);
+        } else {
+            throw new SQLException("Illegal type conversion");
         }
-        return (java.sql.Timestamp)row[columnIndex - 1];
     }
 
 
@@ -1168,7 +1157,38 @@ public class FBResultSet implements ResultSet {
             throw new SQLException("No row fetched");
         }
         setWasNullColumnIndex(columnIndex);
-        return row[columnIndex - 1];
+        if (wasNull()) {
+            return null;
+        }
+        
+        int sqltype = getXsqlvar(columnIndex).sqltype & ~1;
+        int sqlscale = getXsqlvar(columnIndex).sqlscale;
+        
+        if ((sqltype == GDS.SQL_TEXT) || (sqltype == GDS.SQL_VARYING)) {
+            if (row[columnIndex - 1] instanceof String) {
+                return row[columnIndex - 1];
+            } else {
+                return new String((byte[])row[columnIndex - 1]);
+            }
+        } else if ((sqltype == GDS.SQL_INT64) || (sqlscale < 0)) {
+            return BigDecimal.valueOf(((Long)row[columnIndex - 1]).longValue(),
+                                                               sqlscale * (-1));
+        } else if (sqltype == GDS.SQL_BLOB) {
+            InputStream in = getBinaryStream(columnIndex);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            try {
+                byte[] buffer = new byte[512];
+                while (in.available() > 0) {
+                    int count = in.read(buffer);
+                    out.write(buffer, 0, count);
+                }
+            } catch (java.io.IOException ex) {
+                throw new SQLException("Blob I/O error");
+            }
+            return out.toByteArray();
+        } else {    
+            return row[columnIndex - 1];
+        }
     }
 
 
