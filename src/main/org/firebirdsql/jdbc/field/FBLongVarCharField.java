@@ -149,6 +149,10 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         return field.decodeString(data, javaEncoding, mappingPath);
     }
 
+    public void setBlob(FBBlob blob) throws SQLException {
+        field.sqldata = field.encodeLong(blob.getBlobId());
+    }
+    
     public void setString(String value) throws SQLException {
         
         if (value == STRING_NULL_VALUE) {
