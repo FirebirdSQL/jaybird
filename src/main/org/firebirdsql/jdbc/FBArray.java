@@ -25,10 +25,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import java.util.Map;
+
 /**
- * Describe class <code>FBArray</code> here.
+ * A Firebird-specific implementation of the mapping of a java.sql.Array.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @see java.sql.Array
  * @version 1.0
  */
 public class FBArray implements Array {

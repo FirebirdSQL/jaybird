@@ -27,7 +27,8 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.jca.*;
 
 /**
- * The class <code>AbstractConnection</code> is a handle to a FBManagedConnection.
+ * The class <code>AbstractConnection</code> is a handle to a 
+ * {@link FBManagedConnection}.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
@@ -56,6 +57,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
     // It is used to close them before the connection is closed
     private HashSet activeStatements = new HashSet();
 	 
+    /**
+     * Create a new AbstractConnection instance based on a
+     * {@link FBManagedConnection}.
+     *
+     * @param mc A FBManagedConnection around which this connection is based
+     */
     public AbstractConnection(FBManagedConnection mc) {
         this.mc = mc;
     }
@@ -117,6 +124,11 @@ public abstract class AbstractConnection implements FirebirdConnection {
         if (e != null) throw e;
     }
 
+    /**
+     * Set the {@link FBManagedConnection} around which this connection is
+     * based.
+     * @param mc The FBManagedConnection around which this connection is based
+     */
     public void setManagedConnection(FBManagedConnection mc) {
         //close any prepared statements we may have executed.
         if (this.mc != mc && metaData != null) {
@@ -778,6 +790,10 @@ public abstract class AbstractConnection implements FirebirdConnection {
     //-------------------------------------------
     //Borrowed from javax.resource.cci.Connection
 
+    /**
+     * Returns a FBLocalTransaction instance that enables a component to 
+     * demarcate resource manager local transactions on this connection.
+     */
     public synchronized FBLocalTransaction getLocalTransaction() {
         synchronized(mc) {
             if (localTransaction == null) {
@@ -786,12 +802,13 @@ public abstract class AbstractConnection implements FirebirdConnection {
             return localTransaction;
         }
     }
+
     /**
-     * This non- interface method is included so you can
+     * This non-interface method is included so you can
      * actually get a blob object to use to write new data
      * into a blob field without needing a preexisting blob
      * to modify.
-    **/
+    */
     public synchronized FirebirdBlob createBlob() throws SQLException {
         
         /** @todo check if this is correct code */
@@ -803,6 +820,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
 
     //package methods
 
+    /**
+     * Check if this connection is currently involved in a transaction
+     */
     public boolean inTransaction() {
         return mc.inTransaction();
     }
@@ -816,6 +836,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return mc.getUserName();
     }
 
+   
+    /**
+     * Get the encoding that is being used for this connection.
+     *
+     * @return The name of the encoding used
+     */
     public String getIscEncoding() {
         return mc.getIscEncoding();
     }
@@ -861,10 +887,24 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return getAutoCommit() && autoTransaction;
     }
 
+    /**
+     * Ensure that the current implicit transaction is ended (if there is
+     * one) with a commit. 
+     *
+     * @throws SQLException if a database access error occurs
+     */
     public synchronized void checkEndTransaction() throws SQLException {
         checkEndTransaction(true);
     }
     
+    /**
+     * Ensure that the current implicit transaction is ended (if there is one),
+     * either with a commit or rollback.
+     *
+     * @param commit if true, end the transaction with a commit, otherwise
+     * end the transaction with a rollback
+     * @throws SQLException if a database access error occurrs
+     */
     public synchronized void checkEndTransaction(boolean commit) throws SQLException {
         if (willEndTransaction())
         {
@@ -934,11 +974,24 @@ public abstract class AbstractConnection implements FirebirdConnection {
             throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_req_no_trans);
     }
 	 
+    /**
+     * Allocate a statement handle from the underlying FBManagedConnection
+     * @return The newly allocated statement handle
+     * @throws GDSException if an error occurs in the underlying connection
+     */
     public isc_stmt_handle getAllocatedStatement() throws GDSException {
         checkManagedConnection();    
         return mc.getAllocatedStatement();
     }
 
+    /**
+     * Execute a statement based on a statement handle.
+     * 
+     * @param stmt The statement handle to be executed
+     * @param sendOutSqlda Determine if the XSQLDA datastructure should be sent
+     * to the server
+     * @throws GDSException if an error occurs with the underlying connection
+     */
     public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda) throws GDSException {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
@@ -946,6 +999,14 @@ public abstract class AbstractConnection implements FirebirdConnection {
         mc.executeStatement(stmt,sendOutSqlda);
     }
 	 	 
+    /**
+     * Close a statement based on a statment handle.
+     *
+     * @param stmt The statement to be closed
+     * @param deallocate if true, the statement is deallocated, if false the 
+     * statement is just closed
+     * @throws GDSException if an error occurs with the underlying connection
+     */
     public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
@@ -953,15 +1014,37 @@ public abstract class AbstractConnection implements FirebirdConnection {
         mc.closeStatement(stmt,deallocate);
     }	 
 
+    /**
+     * Prepare an sql statement for a given statement handle.
+     * 
+     * @param stmt The statement that is being prepared
+     * @param sql The sql statement to prepare in the statement
+     * @param describeBind Send bind information to the server
+     * @throws GDSException if an error occurs with the underlying connection
+     * @throws SQLException if a general database error occurs
+     */
     public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException, SQLException {
         checkManagedConnection();
         mc.prepareSQL(stmt, sql, describeBind);
     }
 	 
+    /**
+     * Register a statement with the current transaction.
+     * 
+     * @param fbStatement The statement to be registered
+     */
     public void registerStatement(AbstractStatement fbStatement) {
         mc.registerStatement(fbStatement.fixedStmt);
     }
 	 
+    /**
+     * Fetch the next batch of row data from a statement handle.
+     * 
+     * @param stmt The underlying statement handle from which data should 
+     * be fetched
+     * @param fetchSize The number of rows to fetch
+     * @throws GDSException if an error occurs with the underlying connection
+     */
     public void fetch(isc_stmt_handle stmt, int fetchSize) throws GDSException {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
@@ -969,6 +1052,13 @@ public abstract class AbstractConnection implements FirebirdConnection {
         mc.fetch(stmt, fetchSize);
     }
     
+    /**
+     * Set the cursor name to be used with the given statement handle.
+     * 
+     * @param stmt The statement whose cursor is being named
+     * @param cursorName The name for the cursor
+     * @throws GDSException if an error occurs
+     */
     public void setCursorName(isc_stmt_handle stmt, String cursorName) throws GDSException {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
@@ -976,6 +1066,14 @@ public abstract class AbstractConnection implements FirebirdConnection {
         mc.setCursorName(stmt, cursorName);
     }
 
+    /**
+     * Fetch the count information for a statement handle. The count 
+     * information that is updated includes the counts for update, insert,
+     * delete and select, and it is set in the handle itself.
+     * 
+     * @param stmt The statement handle for which count info is being fetched
+     * @throws GDSException if an error occurs
+     */
     public void getSqlCounts(isc_stmt_handle stmt) throws GDSException {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
@@ -983,57 +1081,129 @@ public abstract class AbstractConnection implements FirebirdConnection {
         mc.getSqlCounts(stmt);
     }
 
+    /**
+     * Get the product name for the database involved in this connection.
+     * 
+     * @return The name of the database product
+     */
     public String getDatabaseProductName() {
         return mc.getDatabaseProductName();
     }
 
+    /**
+     * Get the version of the database involved in this connection
+     *
+     * @return The version of the database
+     */
     public String getDatabaseProductVersion() {
         return mc.getDatabaseProductVersion();
     }
 
+    /**
+     * Get the major version number for the database involved in this 
+     * connection
+     * 
+     * @return The major version number of the database
+     */
     public int getDatabaseProductMajorVersion() {
         return mc.getDatabaseProductMajorVersion();
     }
 
+    /**
+     * Get the minor version number for the database involved in this
+     * connection
+     *
+     * @return The minor version number of the database
+     */
     public int getDatabaseProductMinorVersion() {
         return mc.getDatabaseProductMinorVersion();
     }
 
+    /**
+     * Get the blob buffer length used for this connection.
+     * 
+     * @return The size of the blob buffer length
+     */
     public Integer getBlobBufferLength() {
         /**@todo add check if mc is not null */
         return mc.getBlobBufferLength();
     }
 	 
+    /**
+     * Open a blob handle with the given identifier.
+     *
+     * @param blob_id The id given to the blob handle
+     * @param segmented If true, the blob handle will be segmented, otherwise
+     * it will be a stream
+     * @throws GDSException if an error occurs with the underlying connection
+     */
     public isc_blob_handle openBlobHandle(long blob_id, boolean segmented) throws GDSException {
         checkManagedConnection();
         return mc.openBlobHandle(blob_id, segmented);
     }	 
 	 
+    /**
+     * Fetch a segment of of a blob.
+     * 
+     * @param blob The handle to the blob for which a segment is requested
+     * @param len The length of the segment that is being requested
+     * @throws GDSException if an error occurs with the underlying connection
+     */
     public byte[] getBlobSegment(isc_blob_handle blob, int len) throws GDSException {
         checkManagedConnection();
         return mc.getBlobSegment(blob,len);
     }
 	 
+    /**
+     * Close a blob handle.
+     *
+     * @param blob The handle to the blob to be closed
+     * @throws GDSException if an error occurs with the underlying connection
+     */
     public void closeBlob(isc_blob_handle blob) throws GDSException {
         checkManagedConnection();
         mc.closeBlob(blob);
     }
 	 
+    /**
+     * Create a new blob handle.
+     *
+     * @param segmented If true, the new blob will be segmented, otherwise
+     * it will be streamed.
+     * @throws GDSException if an error occurs with the underlying connection
+     */
     public isc_blob_handle createBlobHandle(boolean segmented) throws GDSException {
         checkManagedConnection();
         return mc.createBlobHandle(segmented);
     }
 	 
+    /**
+     * Put a segment data data into a blob handle.
+     *
+     * @param blob The blob to which data is being added
+     * @param buf The data to be added to the blob
+     * @throws GDSException if an error occurs with the underlying connection
+     */
     public void putBlobSegment(isc_blob_handle blob, byte[] buf) throws GDSException {
         checkManagedConnection();
         mc.putBlobSegment(blob, buf);
     }
 
+    /**
+     * Get the name of the encoding that is being used by the java driver.
+     *
+     * @return The name of the encoding
+     */
     public String getJavaEncoding() {
         return getDatabaseParameterBuffer().getArgumentAsString(
             DatabaseParameterBuffer.local_encoding);
     }
     
+    /**
+     * Get the path to the character mapping for this connection.
+     * 
+     * @return The path to the character mapping
+     */
     public String getMappingPath() {
         return getDatabaseParameterBuffer().getArgumentAsString(
             DatabaseParameterBuffer.mapping_path);
@@ -1049,6 +1219,14 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return s;
     }
 	 
+    /**
+     * Execute an sql query with a given set of parameters.
+     *
+     * @param sql The sql statement to be used for the query
+     * @param params The parameters to be used in the query
+     * @param statements map of sql-&gt;AbstractStatements mappings
+     * @throws SQLException if a database access error occurs
+     */
     public synchronized ResultSet doQuery(String sql, List params,HashMap statements) 
 	 throws SQLException
     {

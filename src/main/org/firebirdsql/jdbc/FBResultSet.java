@@ -141,7 +141,7 @@ public class FBResultSet implements ResultSet {
         }
     }
 
-    /**
+    /*
      * Creates an instance of this class and caches complete result set for
      * later use. This constructor should be used only in auto-commit case.
      * 
@@ -281,62 +281,216 @@ public class FBResultSet implements ResultSet {
         return wasNull;		  
     }
 
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * ResultSet object as a stream of ASCII characters. The value can then be 
+     * read in chunks from the stream. This method is particularly suitable 
+     * for retrieving large LONGVARCHAR values. 
+     *
+     * @param columnIndex The index of the parameter to retrieve, first 
+     * parameter is 1, second is 2, ...
+     * @return a stream of ascii characters
+     * @throws SQLException if this parameter cannot be retrieved as an ASCII
+     * stream
+     */
     public InputStream getAsciiStream(int columnIndex) throws SQLException {
         return getField(columnIndex).getAsciiStream();
     }
 
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a BigDecimal object.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The value of the field as a BigDecimal
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a BigDecimal
+     */
     public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
         return getField(columnIndex).getBigDecimal();
     }
 
-    public InputStream getBinaryStream(int columnIndex) throws SQLException {
+
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a binary InputStream.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The value of the field as a binary input stream 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a binary InputStream 
+     */
+public InputStream getBinaryStream(int columnIndex) throws SQLException {
         return getField(columnIndex).getBinaryStream();
     }
 
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a Blob object.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The value of the field as a Blob object 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a Blob 
+     */
     public Blob getBlob(int columnIndex) throws SQLException {
         return getField(columnIndex).getBlob();
     }
 
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a <code>boolean</code> value.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The <code>boolean</code> value of the field 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a <code>boolean</code>
+     */
     public boolean getBoolean(int columnIndex) throws SQLException {
         return getField(columnIndex).getBoolean();
     }
 
+
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a <code>byte</code> value.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The <code>byte</code> value of the field 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a <code>byte</code>
+     */
     public byte getByte(int columnIndex) throws SQLException {
         return getField(columnIndex).getByte();
     }
 
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a <code>byte</code> array.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The <code>byte</code> array value of the field 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a <code>byte</code> array
+     */
     public byte[] getBytes(int columnIndex) throws SQLException {
         return getField(columnIndex).getBytes();
     }
 
-    public Date getDate(int columnIndex) throws SQLException {
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a <code>Date</code> object.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The <code>Date</code> object of the field 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a <code>Date</code> object
+     */
+public Date getDate(int columnIndex) throws SQLException {
         return getField(columnIndex).getDate();
     }
 
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a <code>double</code> value.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The <code>double</code> value of the field 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a <code>double</code>
+     */
     public double getDouble(int columnIndex) throws SQLException {
         return getField(columnIndex).getDouble();
     }
 
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a <code>float</code> value.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The <code>float</code> value of the field 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a <code>float</code>
+     */
     public float getFloat(int columnIndex) throws SQLException {
         return getField(columnIndex).getFloat();
     }
 
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as an <code>int</code> value.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The <code>int</code> value of the field 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * an <code>int</code>
+     */
     public int getInt(int columnIndex) throws SQLException {
         return getField(columnIndex).getInt();
     }
 
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a <code>long</code> value.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The <code>long</code> value of the field 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a <code>long</code>
+     */
     public long getLong(int columnIndex) throws SQLException {
         return getField(columnIndex).getLong();
     }
 
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as an <code>Object</code>.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The <code>Object</code> representation of the field 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * an <code>Object</code>
+     */
     public Object getObject(int columnIndex) throws SQLException {
         return getField(columnIndex).getObject();
     }
 
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a <code>short</code> value.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The <code>short</code> value of the field 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a <code>short</code>
+     */
     public short getShort(int columnIndex) throws SQLException {
         return getField(columnIndex).getShort();
     }
 
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a <code>String</code> object.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The <code>String</code> representation of the field 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a <code>String</code>
+     */
     public String getString(int columnIndex) throws SQLException {
         if (trimStrings) {
             String result = getField(columnIndex).getString();
@@ -345,10 +499,30 @@ public class FBResultSet implements ResultSet {
             return getField(columnIndex).getString();
     }
 
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a <code>Time</code> object.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The <code>Time</code> representation of the field 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a <code>Time</code> object
+     */
     public Time getTime(int columnIndex) throws SQLException {
         return getField(columnIndex).getTime();
     }
 
+    /**
+     * Retrieve the value of the designated column in the current row of
+     * this ResultSet as a <code>Timestamp</code> object.
+     *
+     * @param columnIndex The index of the parameter to retrieve, first
+     * parameter is 1, second is 2, ...
+     * @return The <code>Timestamp</code> representation of the field 
+     * @throws SQLException if this paramater cannot be retrieved as 
+     * a <code>Timestamp</code> object
+     */
     public Timestamp getTimestamp(int columnIndex) throws SQLException {
         return getField(columnIndex).getTimestamp();
     }
@@ -367,6 +541,12 @@ public class FBResultSet implements ResultSet {
         return xsqlvars[columnIndex - 1];
     }
 
+    /**
+     * Get the <code>FBField</code> object at the given column index
+     *
+     * @param columnIndex The index of the parameter, 1 is the first index
+     * @throws SQLException If there is an error accessing the field
+     */
     public FBField getField(int columnIndex) throws SQLException {
         FBField field = getField(columnIndex, true);
 
@@ -396,6 +576,12 @@ public class FBResultSet implements ResultSet {
         return fields[columnIndex-1];
     }
 
+    /**
+     * Get a <code>FBField</code> by name.
+     *
+     * @param columnName The name of the field to be retrieved
+     * @throws SQLException if the field cannot be retrieved
+     */
     public FBField getField(String columnName) throws SQLException {
         if (closed) throw new FBSQLException("The resultSet is closed");
         
@@ -446,6 +632,13 @@ public class FBResultSet implements ResultSet {
     // Methods for accessing results by column name
     //======================================================================
 
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a <code>String</code>. 
+     *
+     * @param columnName The SQL name of the column
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public String getString(String columnName) throws  SQLException {
         if (trimStrings) {
             String result = getField(columnName).getString();
@@ -455,88 +648,188 @@ public class FBResultSet implements ResultSet {
     }
 
 
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a <code>boolean</code> value. 
+     *
+     * @param columnName The SQL name of the column
+     * @return The <code>String</code> value
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public boolean getBoolean(String columnName) throws  SQLException {
         return getField(columnName).getBoolean();
     }
 
-
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a <code>byte</code> value. 
+     *
+     * @param columnName The SQL name of the column
+     * @return The <code>byte</code> value
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public byte getByte(String columnName) throws  SQLException {
         return getField(columnName).getByte();
     }
 
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a <code>short</code> value. 
+     *
+     * @param columnName The SQL name of the column
+     * @return THe <code>short</code> value
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public short getShort(String columnName) throws  SQLException {
         return getField(columnName).getShort();
     }
 
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as an <code>int</code> value. 
+     *
+     * @param columnName The SQL name of the column
+     * @return The <code>int</code> value
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public int getInt(String columnName) throws  SQLException {
         return getField(columnName).getInt();
     }
 
 
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a <code>long</code> value. 
+     *
+     * @param columnName The SQL name of the column
+     * @return The <code>long</code> value
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public long getLong(String columnName) throws  SQLException {
         return getField(columnName).getLong();
     }
 
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a <code>float</code> value. 
+     *
+     * @param columnName The SQL name of the column
+     * @return The <code>float</code> value
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public float getFloat(String columnName) throws  SQLException {
         return getField(columnName).getFloat();
     }
 
-
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a <code>double</code> value. 
+     *
+     * @param columnName The SQL name of the column
+     * @return The <code>double</code> value
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public double getDouble(String columnName) throws  SQLException {
         return getField(columnName).getDouble();
     }
 
-
     /**
-     * Describe <code>getBigDecimal</code> method here.
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a <code>BigDecimal</code>. 
      *
-     * @param columnName a <code>String</code> value
-     * @param scale an <code>int</code> value
-     * @return a <code>BigDecimal</code> value
-     * @exception SQLException if an error occurs
+     * @param columnName The SQL name of the column
+     * @return The <code>BigDecimal</code> value
+     * @throws SQLException if the given column cannot be retrieved
      * @deprecated
      */
     public BigDecimal getBigDecimal(String columnName, int scale) throws  SQLException {
         return getField(columnName).getBigDecimal(scale);
     }
 
-
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a <code>byte</code> array. 
+     *
+     * @param columnName The SQL name of the column
+     * @return The <code>byte</code> array value
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public byte[] getBytes(String columnName) throws  SQLException {
         return getField(columnName).getBytes();
     }
 
 
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a <code>Date</code>. 
+     *
+     * @param columnName The SQL name of the column
+     * @return The <code>Date</code> value
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public Date getDate(String columnName) throws  SQLException {
         return getField(columnName).getDate();
     }
 
 
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a <code>Time</code> object. 
+     *
+     * @param columnName The SQL name of the column
+     * @return The <code>Time</code> value
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public Time getTime(String columnName) throws  SQLException {
         return getField(columnName).getTime();
     }
 
-
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a <code>Timestamp</code> object. 
+     *
+     * @param columnName The SQL name of the column
+     * @return The <code>Timestamp</code> value
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public Timestamp getTimestamp(String columnName) throws  SQLException {
         return getField(columnName).getTimestamp();
     }
 
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as an <code>InputStream</code>. 
+     *
+     * @param columnName The SQL name of the column
+     * @return The value as an <code>InputStream</code> 
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public InputStream getAsciiStream(String columnName) throws  SQLException {
         return getField(columnName).getAsciiStream();
     }
 
-
     /**
-     * Describe <code>getUnicodeStream</code> method here.
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a unicode <code>InputStream</code>. 
      *
-     * @param columnName a <code>String</code> value
-     * @return a <code>java.io.InputStream</code> value
-     * @exception SQLException if an error occurs
+     * @param columnName The SQL name of the column
+     * @return The value as a unicode <code>InputStream</code> 
+     * @throws SQLException if the given column cannot be retrieved
      * @deprecated
      */
     public InputStream getUnicodeStream(String columnName) throws  SQLException {
         return getField(columnName).getUnicodeStream();
     }
 
+
+    /**
+     * Retrieves the value of the designated column in the current row of this 
+     * <code>ResultSet</code> object as a binary <code>InputStream</code>. 
+     *
+     * @param columnName The SQL name of the column
+     * @return The value as a binary <code>InputStream</code> 
+     * @throws SQLException if the given column cannot be retrieved
+     */
     public InputStream getBinaryStream(String columnName) throws  SQLException {
         return getField(columnName).getBinaryStream();
     }
@@ -2447,6 +2740,7 @@ public class FBResultSet implements ResultSet {
     //jdbc 3 methods
 
     /**
+     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @return <description>
@@ -2457,6 +2751,7 @@ public class FBResultSet implements ResultSet {
     }
 
     /**
+     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @return <description>
@@ -2468,6 +2763,7 @@ public class FBResultSet implements ResultSet {
 
 
     /**
+     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -2478,6 +2774,7 @@ public class FBResultSet implements ResultSet {
     }
 
     /**
+     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -2488,6 +2785,7 @@ public class FBResultSet implements ResultSet {
     }
 
     /**
+     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -2498,6 +2796,7 @@ public class FBResultSet implements ResultSet {
     }
 
     /**
+     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -2508,6 +2807,7 @@ public class FBResultSet implements ResultSet {
     }
 
     /**
+     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -2518,6 +2818,7 @@ public class FBResultSet implements ResultSet {
     }
 
     /**
+     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -2528,6 +2829,7 @@ public class FBResultSet implements ResultSet {
     }
 
     /**
+     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -2538,6 +2840,7 @@ public class FBResultSet implements ResultSet {
     }
 
     /**
+     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
