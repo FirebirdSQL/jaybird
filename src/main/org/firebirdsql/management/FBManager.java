@@ -41,7 +41,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public class FBManager implements FBManagerMBean {
 
-    private final static Logger log = LoggerFactory.getLogger(FBManager.class,true);
+    private final static Logger log = LoggerFactory.getLogger(FBManager.class,false);
 
     private GDS gds;
 
