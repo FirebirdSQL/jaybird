@@ -106,7 +106,7 @@ public class TestFBBlobStream extends BaseFBTest {
      * 
      * @throws java.lang.Exception if something went wrong.
      */
-    public void _testBlobLength() throws Exception {
+    public void testBlobLength() throws Exception {
         connection.setAutoCommit(false);
 
         PreparedStatement ps = connection.prepareStatement(
@@ -214,8 +214,8 @@ public class TestFBBlobStream extends BaseFBTest {
             ps.close();
         }
     }
-
-
+    
+    
     
     /**
      * Test if byte[] are correctly stored and retrieved from database
