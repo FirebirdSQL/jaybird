@@ -113,7 +113,7 @@
         </condition>
 
         <condition property="buildon-solaris">
-            <os family="solaris"/>
+            <equals arg1="${os.name}" arg2="Solaris" casesensitive="false"/>
         </condition>
 
         <!-- set 'jaybirds_platform_headers' - this should be fairly easy -->
