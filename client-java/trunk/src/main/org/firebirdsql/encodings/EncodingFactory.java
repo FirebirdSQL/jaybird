@@ -21,6 +21,10 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.6  2004/10/08 22:39:10  rrokytskyy
+ * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
+ * added possibility to translate characters if there are some encoding issues
+ *
  * Revision 1.5  2003/06/05 22:36:07  brodsom
  * Substitute package and inline imports
  *
@@ -74,6 +78,12 @@ public class EncodingFactory {
         if (mappingPath == null)
             return getEncoding(encoding);
         
+        CharacterTranslator translator = getTranslator(mappingPath);
+        
+        return getEncoding(encoding, translator.getMapping());
+    }
+    
+    public static CharacterTranslator getTranslator(String mappingPath) throws SQLException {
         CharacterTranslator translator;
         
         synchronized(translations) {
@@ -85,10 +95,9 @@ public class EncodingFactory {
                 translations.put(mappingPath, translator);
             }
         }
-        
-        return getEncoding(encoding, translator.getMapping());
+        return translator;
     }
-    
+
     public static Encoding getEncoding(String encoding){
         if (encoding == null || encoding.equals("NONE"))
             encoding = defaultEncoding;
