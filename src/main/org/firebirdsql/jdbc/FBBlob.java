@@ -591,19 +591,17 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             int pos = 0;
             byte[] buffer = new byte[READ_FULLY_BUFFER_SIZE];
 
-            while((counter = read(buffer)) != -1) {
+            int toRead = len;
+
+            while(toRead > 0 && (counter = read(buffer, 0, toRead)) != -1) {
                 System.arraycopy(buffer, 0, b, pos, counter);
                 pos += counter;
+                
+                toRead -= counter;
             }
             
-            /*
-            // Commented out by R.Rokytskyy on 24-06-2003
-            // as this code does not consider current position
-            // in the blob. If no fix is provided, remove it.
-            
-            if (pos < length())
+            if (counter == -1)
                 throw new EOFException();
-            */
         }
         
         public void readFully(byte[] b) throws IOException {
