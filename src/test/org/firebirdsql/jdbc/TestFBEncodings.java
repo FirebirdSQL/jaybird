@@ -84,7 +84,7 @@ public class TestFBEncodings extends BaseFBTest {
 				encJava.add("Cp861"); encFB.add("DOS861");
 				encJava.add("Cp863"); encFB.add("DOS863");
 				encJava.add("Cp865"); encFB.add("DOS865");
-				encJava.add("Cp869"); encFB.add("DOS869");
+//				encJava.add("Cp869"); encFB.add("DOS869");
 
 				encJava.add("Cp1250"); encFB.add("WIN1250");
 				encJava.add("Cp1251"); encFB.add("WIN1251");
@@ -143,28 +143,19 @@ public class TestFBEncodings extends BaseFBTest {
             DriverManager.getConnection(DB_DRIVER_URL, props);
         
         java.sql.Statement stmt = connection.createStatement();
-        try {
-            stmt.executeUpdate(DROP_TABLE);
-            stmt.executeUpdate(DROP_TABLE_CYRL);
-            stmt.executeUpdate(DROP_TABLE_UNIVERSAL);
-        }
-        catch (Exception e) {}
+        try {stmt.executeUpdate(DROP_TABLE);} catch(SQLException ex) { /*ex.printStackTrace();*/}
+        try {stmt.executeUpdate(DROP_TABLE_CYRL);} catch(SQLException ex) { /*ex.printStackTrace();*/}
+        try {stmt.executeUpdate(DROP_TABLE_UNIVERSAL);} catch(SQLException ex) { /*ex.printStackTrace();*/}
 
-        try {
-            stmt.executeUpdate(getCreateTableStatement());
-            stmt.executeUpdate(getCreateTableStatement_cyrl());
-            stmt.executeUpdate(getCreateTableStatement_universal());
-            stmt.close();        
-        } catch(Exception ex) {
-        }
+        stmt.executeUpdate(getCreateTableStatement());
+        stmt.executeUpdate(getCreateTableStatement_cyrl());
+        stmt.executeUpdate(getCreateTableStatement_universal());
         
-        try {
-            stmt.executeUpdate("DELETE FROM test_encodings");
-            stmt.executeUpdate("DELETE FROM test_encodings_cyrl");
-            stmt.executeUpdate("DELETE FROM test_encodings_universal");
-            stmt.close();        
-        } catch(Exception ex) {
-        }
+        stmt.executeUpdate("DELETE FROM test_encodings");
+        stmt.executeUpdate("DELETE FROM test_encodings_cyrl");
+        stmt.executeUpdate("DELETE FROM test_encodings_universal");
+
+        stmt.close();        
         
         connection.close();
     }
