@@ -346,6 +346,20 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     //--------------------------------------------------------------
 
 
+    boolean isXidActive(Xid xid) {
+        isc_tr_handle trHandle = mcf.getTrHandleForXid(xid);
+        
+        if (trHandle == null)
+            return false;
+        
+        isc_db_handle dbHandle = trHandle.getDbHandle();
+        
+        if (dbHandle == null)
+            return false;
+        
+        return dbHandle.isValid();
+    }
+    
     /**
      * Commits a transaction.
      * @throws XAException
