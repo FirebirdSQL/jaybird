@@ -66,15 +66,15 @@ abstract class ServiceBufferBase
         return arguments;
         }
 
-
     // PRIVATE MEMBERS
 
     private final List arguments = new ArrayList();
 
 
-    // PRIVATE CLASSES - STOCK
 
-    private static final class StringArgument extends Argument
+    // STOCK ARGUMENTS WHICH CAN BE EXTENDED
+
+    protected static class StringArgument extends Argument
         {
         StringArgument( int type, String value )
             {
@@ -89,15 +89,23 @@ abstract class ServiceBufferBase
             final byte[] valueBytes = this.value.getBytes();
             final int valueLength = valueBytes.length;
 
-            outputStream.write(valueLength);
-            outputStream.write(valueLength>>8);
+            writeLength(valueLength, outputStream);
             for(int i = 0; i<valueLength; i++)
                 outputStream.write(valueBytes[i]);
+            }
+
+        protected void writeLength(int length, ByteArrayOutputStream outputStream)
+            {
+            outputStream.write(length);
+            outputStream.write(length>>8);
             }
 
         private int type;
         private String value;
         }
+
+
+    // PRIVATE CLASSES - STOCK ARGUMENTS
 
     private static final class NumericArgument extends Argument
         {
