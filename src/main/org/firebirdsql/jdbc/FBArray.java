@@ -24,7 +24,7 @@ import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import java.util.Map;
+
 /**
  * Describe class <code>FBArray</code> here.
  *
@@ -112,7 +112,7 @@ public class FBArray implements Array {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
    *      2.0 API</a>
    */
-    public Object getArray(Map map) throws SQLException {
+    public Object getArray(java.util.Map map) throws SQLException {
         return null;
     }
 
@@ -170,7 +170,7 @@ public class FBArray implements Array {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
    *      2.0 API</a>
    */
-    public Object getArray(long index, int count, Map map)
+    public Object getArray(long index, int count, java.util.Map map)
        throws SQLException {
        return null;
    }
@@ -232,7 +232,7 @@ public class FBArray implements Array {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
    *      2.0 API</a>
    */
-    public ResultSet getResultSet (Map map) throws SQLException {
+    public ResultSet getResultSet (java.util.Map map) throws SQLException {
         return null;
     }
 
@@ -305,7 +305,7 @@ public class FBArray implements Array {
    *      2.0 API</a>
    *
    */
-    public ResultSet getResultSet (long index, int count, Map map)
+    public ResultSet getResultSet (long index, int count, java.util.Map map)
        throws SQLException {
        return null;
     }

@@ -27,10 +27,9 @@
 
 package org.firebirdsql.jgds;
 
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Arrays;
+import java.io.*;
+import java.util.Set;
+import java.util.Iterator;
 
 import org.firebirdsql.jdbc.FBConnectionHelper;
 import org.firebirdsql.gds.XSQLVAR;
@@ -50,8 +49,8 @@ public final class XdrOutputStream {
 
     private static Logger log = LoggerFactory.getLogger(XdrOutputStream.class,false);
     private static byte[] textPad = new byte[32767];
-    private static byte[] zero = new XSQLVAR().encodeInt(0);   // todo
-    private static byte[] minusOne = new XSQLVAR().encodeInt(-1);
+    private static byte[] zero = XSQLVAR.encodeInt(0);
+    private static byte[] minusOne = XSQLVAR.encodeInt(-1);
 
     private byte[] buf = new byte[32767];
     private int count;
@@ -62,7 +61,7 @@ public final class XdrOutputStream {
         this.out = out;
         count=0;
         // fill the padding with blanks
-        Arrays.fill(textPad,(byte) 32);
+        java.util.Arrays.fill(textPad,(byte) 32);
     }
 
     public void writeBuffer(byte[] buffer) throws IOException {
@@ -233,7 +232,7 @@ public final class XdrOutputStream {
     // If the piece to write is greater than 128 bytes, write it directly
     //
 
-    public void write(byte[] b, int len, int pad) throws IOException {
+    public void write(byte[] b, int len, int pad) throws java.io.IOException {
         if (len > 256){
             if (count > 0)
                 out.write(buf, 0, count);
@@ -247,11 +246,11 @@ public final class XdrOutputStream {
         }
     }
 
-    public void write(int b) throws IOException {
+    public void write(int b) throws java.io.IOException {
         buf[count++] = (byte)b;
     }
 
-    public void write(byte b[]) throws IOException{
+    public void write(byte b[]) throws java.io.IOException{
         write(b,b.length, 0);
     }
 

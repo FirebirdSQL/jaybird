@@ -1,11 +1,11 @@
 package org.firebirdsql.jdbc;
 
-
-import java.sql.*;
+import org.firebirdsql.gds.*;
+import org.firebirdsql.jgds.*;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
-
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -26,10 +26,10 @@ class FBCachedFetcher implements FBFetcher {
           
     FBCachedFetcher(FBConnection c, FBStatement fbStatement
     , isc_stmt_handle stmt_handle, FBResultSet rs) throws SQLException {
-        ArrayList rowsSets = new ArrayList(100);
-        ArrayList rows = new ArrayList(100);
+        java.util.ArrayList rowsSets = new ArrayList(100);
+        java.util.ArrayList rows = new ArrayList(100);
 
-        isc_stmt_handle stmt =  stmt_handle;
+        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
         byte[][] localRow = null;
             
         this.fbStatement = fbStatement;

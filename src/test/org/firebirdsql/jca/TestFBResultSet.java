@@ -18,25 +18,28 @@
  */
 package org.firebirdsql.jca;
 
-
-import javax.resource.spi.LocalTransaction;
-import javax.resource.spi.ManagedConnection;
-import javax.transaction.xa.XAResource;
-import javax.transaction.xa.Xid;
-import java.sql.CallableStatement;
+import javax.resource.spi.*;
+import javax.transaction.xa.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-
 import javax.sql.DataSource;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
+import org.firebirdsql.gds.Clumplet;
+import org.firebirdsql.management.FBManager;
 import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.logging.Logger;
+
+import java.io.*;
+import java.util.Properties;
+import java.util.HashSet;
+import java.sql.*;
+
+//for embedded xid implementation
+    import java.net.InetAddress;
+    import java.net.UnknownHostException;
 
 
+import junit.framework.*;
 
 /**
  * Describe class <code>TestFBResultSet</code> here.

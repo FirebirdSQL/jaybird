@@ -21,12 +21,6 @@
  *
  * CVS modification log:
  * $Log$
- * Revision 1.4  2003/06/04 12:38:22  brodsom
- * Remove unused vars and imports
- *
- * Revision 1.3  2003/01/26 00:50:07  brodsom
- * New character sets support
- *
  * Revision 1.2  2003/01/23 01:37:05  brodsom
  * Encodings patch
  *
@@ -34,21 +28,20 @@
 
 package org.firebirdsql.encodings;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import org.firebirdsql.jgds.XdrInputStream;
+import org.firebirdsql.jgds.XdrOutputStream;
 
 public class EncodingFactory {
 
     static String defaultEncoding = null;
 
     static {
-        InputStreamReader reader = new InputStreamReader(new ByteArrayInputStream(new byte[2])); 
+        java.io.InputStreamReader reader = new java.io.InputStreamReader(new java.io.ByteArrayInputStream(new byte[2])); 
         defaultEncoding = reader.getEncoding();
         try {
             reader.close();
         }
-        catch (IOException ioe){
+        catch (java.io.IOException ioe){
         }
     }
     

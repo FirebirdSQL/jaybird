@@ -19,17 +19,14 @@
 
 package org.firebirdsql.jdbc;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Date;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.Arrays;
+import junit.framework.*;
 
-import junit.framework.TestCase;
+import org.firebirdsql.gds.XSQLVAR;
+
+import java.io.*;
+import java.math.*;
+import java.sql.*;
+import java.util.*;
 
 /**
  * Describe class <code>BaseTestFBField</code> here.
@@ -50,14 +47,14 @@ public abstract class BaseTestFBField extends TestCase {
 
     static long TEST_TIME_LONG = System.currentTimeMillis();
 
-    static Date TEST_DATE =
-        new Date(System.currentTimeMillis());
+    static java.sql.Date TEST_DATE =
+        new java.sql.Date(System.currentTimeMillis());
 
-    static Time TEST_TIME =
-        new Time(System.currentTimeMillis());
+    static java.sql.Time TEST_TIME =
+        new java.sql.Time(System.currentTimeMillis());
 
-    static Timestamp TEST_TIMESTAMP =
-        new Timestamp(System.currentTimeMillis());
+    static java.sql.Timestamp TEST_TIMESTAMP =
+        new java.sql.Timestamp(System.currentTimeMillis());
 
 
     public BaseTestFBField(String testName) {

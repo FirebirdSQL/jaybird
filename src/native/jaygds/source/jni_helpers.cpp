@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-#include "platform.h"
+#include "stdafx.h"
 
 #include "jni_helpers.h"
 
@@ -26,6 +26,8 @@
 
 #include "jni.h"
 
+// for _alloca
+#include "malloc.h"
 
 
 // JClassBinding
@@ -575,7 +577,7 @@ JString::JString( JNIEnv* javaEnvironment, const char* const string ) :
 JString::JString( JNIEnv* javaEnvironment, const char* const string, jint Length ) :
 		mJavaEnvironment(javaEnvironment), mStringBuffer(NULL)
 	{
-	char* buffer = (char*)alloca( Length+1 );
+	char* buffer = (char*)_alloca( Length+1 );
 	memset(buffer, 0, Length+1 );
 	memcpy( buffer, string, Length ); 
 	buffer[Length] = 0;

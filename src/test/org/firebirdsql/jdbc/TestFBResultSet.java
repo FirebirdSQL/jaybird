@@ -18,12 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import junit.framework.TestCase;
+import java.sql.*;
 
 public class TestFBResultSet extends BaseFBTest {
     
@@ -156,14 +152,17 @@ public class TestFBResultSet extends BaseFBTest {
             ps.close();
         }
         
-        ResultSet rs;
         connection.setAutoCommit(false);
         
+        ResultSet rs;
         Statement select = connection.createStatement();
         select.setCursorName(CURSOR_NAME);
         try {
             rs = select.executeQuery(
                 "SELECT id, str FROM test_table FOR UPDATE OF " + CURSOR_NAME);
+                
+            assertTrue("Cursor name should be correct", 
+                CURSOR_NAME.equals(rs.getCursorName()));
                 
             assertTrue("ResultSet.isBeforeFirst() should be true.", 
                 rs.isBeforeFirst());
@@ -212,9 +211,6 @@ public class TestFBResultSet extends BaseFBTest {
         } finally {
             select.close();
         }
-
-        connection.commit();
-        
         
         try {
             rs.close();
@@ -223,6 +219,9 @@ public class TestFBResultSet extends BaseFBTest {
         } catch(SQLException ex) {
             // everything is ok
         }
+
+        connection.commit();
+        
         select = connection.createStatement();
         try {
             rs = select.executeQuery("SELECT id, str FROM test_table");

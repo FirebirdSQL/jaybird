@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-#include "platform.h"
+#include "stdafx.h"
 
 #include "exceptions.h"
 
@@ -35,7 +35,7 @@ InternalException::InternalException(const char* const message, ... )
 	va_list args;
 
 	va_start(args, message);
-	vsnprintf( mBuffer, sizeof(mBuffer), message, args );
+	_vsnprintf( mBuffer, sizeof(mBuffer), message, args );
 	va_end(args);
 	}
 

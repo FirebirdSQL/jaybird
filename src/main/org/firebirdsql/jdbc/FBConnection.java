@@ -19,12 +19,29 @@
 
 package org.firebirdsql.jdbc;
 
-import java.sql.*;
-import java.util.*;
-import javax.resource.*;
-
-import org.firebirdsql.gds.*;
-import org.firebirdsql.jca.*;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.Savepoint;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.List;
+import javax.resource.ResourceException;
+import javax.resource.spi.LocalTransaction;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.isc_blob_handle;
+import org.firebirdsql.gds.isc_db_handle;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.jca.FBLocalTransaction;
+import org.firebirdsql.jca.FBManagedConnection;
+import java.util.Map;
 
 /**
  * The class <code>FBConnection</code> is a handle to a FBManagedConnection.
@@ -32,7 +49,7 @@ import org.firebirdsql.jca.*;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBConnection implements Connection, FirebirdConnection
+public class FBConnection implements Connection
 /*, javax.resource.cci.Connection
  * It is not possible to implement both Connection interfaces in one class
  * due to conflicting exception signatures.
@@ -54,11 +71,11 @@ public class FBConnection implements Connection, FirebirdConnection
 
     private FBDatabaseMetaData metaData = null;
 
-    private SQLWarning firstWarning = null;
+    private java.sql.SQLWarning firstWarning = null;
      
     // This set contains all allocated but not closed statements
     // It is used to close them before the connection is closed
-    private HashSet activeStatements = new HashSet();
+    private java.util.HashSet activeStatements = new java.util.HashSet();
 	 
     public FBConnection(FBManagedConnection mc) {
         this.mc = mc;
@@ -80,11 +97,10 @@ public class FBConnection implements Connection, FirebirdConnection
     /**
      * Invalidate this connection. This method makes connection unusable.
      */
-/* Private and not used method    
     private void invalidate() {
         invalid = true;
     }
-*/    
+    
     /**
      * This method should be invoked by each of the statements in the 
      * {@link Statement#close()} method. Here we remove statement from the
@@ -107,10 +123,10 @@ public class FBConnection implements Connection, FirebirdConnection
      */
     private void freeStatements() throws SQLException {
         // clone statements to avoid concurrent modification exception
-        Set statements = (Set)activeStatements.clone();
+        java.util.Set statements = (java.util.Set)activeStatements.clone();
         
         // iterate through the set, close statements and collect exceptions
-        Iterator iter = statements.iterator();
+        java.util.Iterator iter = statements.iterator();
         SQLException e = null;
         while(iter.hasNext()) {
             try {
@@ -763,7 +779,7 @@ public class FBConnection implements Connection, FirebirdConnection
            resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) 
         {
 		     addWarning(new SQLWarning("Unsupported type and/or concurrency"));
-		  }			  
+        }
           
           Statement stmt =  new FBStatement(this, ResultSet.CONCUR_READ_ONLY);
           activeStatements.add(stmt);
@@ -791,11 +807,11 @@ public class FBConnection implements Connection, FirebirdConnection
         int resultSetType, int resultSetConcurrency) throws SQLException 
     {
           PreparedStatement stmt;
-		  if (resultSetType == ResultSet.TYPE_FORWARD_ONLY
-		  && resultSetConcurrency == ResultSet.CONCUR_READ_ONLY)
+		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
+		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
 	        stmt = new FBPreparedStatement(this, sql);
 		  else{
-		     addWarning(new SQLWarning("resultSetType or resultSetConcurrency changed"));
+		     addWarning(new java.sql.SQLWarning("resultSetType or resultSetConcurrency changed"));
 	        stmt = new FBPreparedStatement(this, sql);
 		  }		
           activeStatements.add(stmt);
@@ -822,11 +838,11 @@ public class FBConnection implements Connection, FirebirdConnection
         int resultSetType, int resultSetConcurrency) throws SQLException 
     {
         CallableStatement stmt;
-		  if (resultSetType == ResultSet.TYPE_FORWARD_ONLY
-		  && resultSetConcurrency == ResultSet.CONCUR_READ_ONLY)
+		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
+		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
 	        stmt =new FBCallableStatement(this, sql);
 		  else{
-		     addWarning(new SQLWarning("resultSetType or resultSetConcurrency changed"));
+		     addWarning(new java.sql.SQLWarning("resultSetType or resultSetConcurrency changed"));
 	        stmt = new FBCallableStatement(this, sql);
 		  }		
           activeStatements.add(stmt);
@@ -861,7 +877,7 @@ public class FBConnection implements Connection, FirebirdConnection
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public synchronized void setTypeMap(Map map) throws SQLException {
+    public synchronized void setTypeMap(java.util.Map map) throws SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -939,7 +955,7 @@ public class FBConnection implements Connection, FirebirdConnection
      * into a blob field without needing a preexisting blob
      * to modify.
     **/
-    public synchronized FirebirdBlob createBlob() throws SQLException {
+    public synchronized Blob createBlob() throws SQLException {
         
         /** @todo check if this is correct code */
         if (!getAutoCommit())
@@ -1023,11 +1039,11 @@ public class FBConnection implements Connection, FirebirdConnection
         } // end of if ()
     }
 
-	 protected synchronized void addWarning(SQLWarning warning){
+	 protected synchronized void addWarning(java.sql.SQLWarning warning){
 		 if (firstWarning == null)
 			 firstWarning = warning;
 		 else{
-			 SQLWarning lastWarning = firstWarning;
+			 java.sql.SQLWarning lastWarning = firstWarning;
 			 while (lastWarning.getNextWarning() != null){
 				 lastWarning = lastWarning.getNextWarning();
 			 }
@@ -1044,7 +1060,7 @@ public class FBConnection implements Connection, FirebirdConnection
      private SQLWarning getIscWarnings() {
          SQLWarning firstWarning = null;
          SQLWarning lastWarning = null;
-         Iterator iter = mc.getWarnings().iterator();
+         java.util.Iterator iter = mc.getWarnings().iterator();
          while (iter.hasNext()) {
              GDSException item = (GDSException)iter.next();
              
@@ -1134,9 +1150,9 @@ public class FBConnection implements Connection, FirebirdConnection
         return mc.getBlobBufferLength();
     }
 	 
-    public isc_blob_handle openBlobHandle(long blob_id, boolean segmented) throws GDSException {
+    public isc_blob_handle openBlobHandle(long blob_id) throws GDSException {
         checkManagedConnection();
-        return mc.openBlobHandle(blob_id, segmented);
+        return mc.openBlobHandle(blob_id);
     }	 
 	 
     public byte[] getBlobSegment(isc_blob_handle blob, int len) throws GDSException {
@@ -1149,9 +1165,9 @@ public class FBConnection implements Connection, FirebirdConnection
         mc.closeBlob(blob);
     }
 	 
-    public isc_blob_handle createBlobHandle(boolean segmented) throws GDSException {
+    public isc_blob_handle createBlobHandle() throws GDSException {
         checkManagedConnection();
-        return mc.createBlobHandle(segmented);
+        return mc.createBlobHandle();
     }
 	 
     public void putBlobSegment(isc_blob_handle blob, byte[] buf) throws GDSException {

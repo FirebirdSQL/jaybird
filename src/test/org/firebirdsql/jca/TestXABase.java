@@ -18,11 +18,17 @@
  */
 package org.firebirdsql.jca;
 
-
-import javax.transaction.xa.Xid;
+import javax.resource.spi.*;
+import javax.transaction.xa.*;
+import java.sql.Connection;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.GDSFactory;
+import org.firebirdsql.management.FBManager;
+
+import java.io.*;
+import java.util.Properties;
+import java.util.HashSet;
+import java.sql.*;
 
 import org.firebirdsql.jdbc.BaseFBTest;
 
@@ -30,7 +36,8 @@ import org.firebirdsql.jdbc.BaseFBTest;
     import java.net.InetAddress;
     import java.net.UnknownHostException;
 
-import java.io.Serializable;
+
+import junit.framework.*;
 
 /**
  * THIS FILE INCLUDES AN XID IMPLEMENTATION FROM THE JBOSS PROJECT
@@ -53,7 +60,7 @@ public class TestXABase extends BaseFBTest {
 
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
         mcf.setDatabase(DB_DATASOURCE_URL);
-        FBConnectionRequestInfo cri = new FBConnectionRequestInfo(GDSFactory.getDefaultGDS());
+        FBConnectionRequestInfo cri = new FBConnectionRequestInfo();
         cri.setProperty(ISCConstants.isc_dpb_user_name, DB_USER);
         cri.setProperty(ISCConstants.isc_dpb_password, DB_PASSWORD);
         cri.setProperty(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
@@ -99,7 +106,7 @@ public class TestXABase extends BaseFBTest {
      *  @version $Revision$
      */
         public static class  XidImpl
-       implements Xid, Serializable
+       implements Xid, java.io.Serializable
     {
        // Constants -----------------------------------------------------
 

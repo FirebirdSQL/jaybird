@@ -25,12 +25,18 @@ import javax.resource.spi.LocalTransaction;
 
 import javax.resource.ResourceException;
 
+import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 import org.firebirdsql.gds.GDSException;
 
 import org.firebirdsql.jdbc.FBConnection;
+
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+
+
 
 /**
  * The class <code>FBLocalTransaction</code> implements
@@ -43,6 +49,8 @@ import org.firebirdsql.jdbc.FBConnection;
  * @version 1.0
  */
 public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.LocalTransaction {
+
+    private static final Logger log = LoggerFactory.getLogger(FBLocalTransaction.class,false);
 
      private final FBManagedConnection mc;
 
@@ -109,7 +117,7 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
          synchronized(mc) {
              mc.internalStart(xid, XAResource.TMNOFLAGS);
              if (beginEvent != null) {
-                 mc.notify(FBManagedConnection.localTransactionStartedNotifier, beginEvent);
+                 mc.notify(mc.localTransactionStartedNotifier, beginEvent);
              }
          }
      }
@@ -151,7 +159,7 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
                  xid = null;
              }
              if (commitEvent != null) {
-                 mc.notify(FBManagedConnection.localTransactionCommittedNotifier, commitEvent);
+                 mc.notify(mc.localTransactionCommittedNotifier, commitEvent);
              }
          }
      }
@@ -195,7 +203,7 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
                  xid = null;
              }
              if (rollbackEvent != null) {
-                 mc.notify(FBManagedConnection.localTransactionRolledbackNotifier, rollbackEvent);
+                 mc.notify(mc.localTransactionRolledbackNotifier, rollbackEvent);
              }
          }
      }

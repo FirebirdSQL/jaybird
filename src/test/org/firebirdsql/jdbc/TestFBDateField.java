@@ -19,18 +19,13 @@
 
 package org.firebirdsql.jdbc;
 
-
-import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.SQLException;
-import java.util.ArrayList;
+import junit.framework.*;
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
 
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import java.sql.*;
+import java.io.*;
 
 /**
  * Describe class <code>TestFBDateField</code> here.
@@ -50,7 +45,7 @@ public class TestFBDateField extends BaseTestFBField {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_TYPE_DATE;
         byte[][] row = new byte[1][];
-        ArrayList rows = new ArrayList();
+        java.util.ArrayList rows = new java.util.ArrayList();
         rows.add(row);		  
         FBResultSet rs = new FBResultSet(xsqlvars,rows);
 		  rs.next();
@@ -61,7 +56,7 @@ public class TestFBDateField extends BaseTestFBField {
 	}
 	protected void tearDown() {
 	}
-	public void testShort() throws SQLException {
+	public void testShort() throws java.sql.SQLException {
 		try {
 			super.testShort();
 			assertTrue("This method should fail.", false);
@@ -69,7 +64,7 @@ public class TestFBDateField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testDouble() throws SQLException {
+	public void testDouble() throws java.sql.SQLException {
 		try {
 			super.testDouble();
 			assertTrue("This method should fail.", false);
@@ -77,7 +72,7 @@ public class TestFBDateField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testLong() throws SQLException {
+	public void testLong() throws java.sql.SQLException {
 		try {
 			super.testLong();
 			assertTrue("This method should fail.", false);
@@ -85,7 +80,7 @@ public class TestFBDateField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testUnicodeStream() throws SQLException {
+	public void testUnicodeStream() throws java.sql.SQLException {
 		try {
 			super.testUnicodeStream();
 			assertTrue("This method should fail.", false);
@@ -93,7 +88,7 @@ public class TestFBDateField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testByte() throws SQLException {
+	public void testByte() throws java.sql.SQLException {
 		try {
 			super.testByte();
 			assertTrue("This method should fail.", false);
@@ -101,7 +96,7 @@ public class TestFBDateField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testBoolean() throws SQLException {
+	public void testBoolean() throws java.sql.SQLException {
 		try {
 			super.testBoolean();
 			assertTrue("This method should fail.", false);
@@ -109,7 +104,7 @@ public class TestFBDateField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testBinaryStream() throws SQLException {
+	public void testBinaryStream() throws java.sql.SQLException {
 		try {
 			super.testBinaryStream();
 			assertTrue("This method should fail.", false);
@@ -117,7 +112,7 @@ public class TestFBDateField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testFloat() throws SQLException {
+	public void testFloat() throws java.sql.SQLException {
 		try {
 			super.testFloat();
 			assertTrue("This method should fail.", false);
@@ -125,7 +120,7 @@ public class TestFBDateField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testBytes() throws SQLException {
+	public void testBytes() throws java.sql.SQLException {
 		try {
 			super.testBytes();
 			assertTrue("This method should fail.", false);
@@ -133,7 +128,7 @@ public class TestFBDateField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testAsciiStream() throws SQLException {
+	public void testAsciiStream() throws java.sql.SQLException {
 		try {
 			super.testAsciiStream();
 			assertTrue("This method should fail.", false);
@@ -141,7 +136,7 @@ public class TestFBDateField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testInteger() throws SQLException {
+	public void testInteger() throws java.sql.SQLException {
 		try {
 			super.testInteger();
 			assertTrue("This method should fail.", false);
@@ -149,9 +144,9 @@ public class TestFBDateField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testBigDecimal() throws SQLException {
+	public void testBigDecimal() throws java.sql.SQLException {
 		try {
-			field.setBigDecimal(new BigDecimal(TEST_DOUBLE));
+			field.setBigDecimal(new java.math.BigDecimal(TEST_DOUBLE));
 			assertTrue("This method should fail.", false);
 		} catch(SQLException ex) {
 			//everything is ok :)
@@ -160,7 +155,7 @@ public class TestFBDateField extends BaseTestFBField {
 
 	//--- real test methods
 
-	public void testTime() throws SQLException {
+	public void testTime() throws java.sql.SQLException {
 		try {
 			super.testTime();
 			assertTrue("This method should fail.", false);
@@ -168,7 +163,7 @@ public class TestFBDateField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testTimestamp() throws SQLException {
+	public void testTimestamp() throws java.sql.SQLException {
 		String dateStr = new Date(TEST_TIMESTAMP.getTime()).toString();
 		field.setTimestamp(TEST_TIMESTAMP);
       field.copyOI();
@@ -176,7 +171,7 @@ public class TestFBDateField extends BaseTestFBField {
 		assertTrue("Timestamp value test failure.",
 			field.getDate().toString().equals(dateStr));
 	}
-	public void testString() throws SQLException {
+	public void testString() throws java.sql.SQLException {
 		field.setString(TEST_DATE.toString());
       field.copyOI();
 		// we have to test string representation, because java.sql.Date
@@ -187,7 +182,7 @@ public class TestFBDateField extends BaseTestFBField {
 		assertTrue("String value test failure",
 			field.getString().equals(TEST_DATE.toString()));
 	}
-	public void testObject() throws SQLException {
+	public void testObject() throws java.sql.SQLException {
 		field.setObject(TEST_DATE);
       field.copyOI();
 		// we have to test string representation, because java.sql.Date

@@ -348,16 +348,6 @@ public final class ISCConstants {
     public final static int RBL_segment          = 2;
     public final static int RBL_eof_pending      = 4;
     public final static int RBL_create           = 8;
-    
-    
-    /**************************/
-    /* Blob information items */
-    /**************************/
-    public final static int isc_info_blob_num_segments      = 4;
-    public final static int isc_info_blob_max_segment       = 5;
-    public final static int isc_info_blob_total_length      = 6;
-    public final static int isc_info_blob_type              = 7;
-
 
 
     /********************/

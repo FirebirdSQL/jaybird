@@ -18,12 +18,13 @@
  */
 package org.firebirdsql.jca;
 
+import junit.framework.*;
 
-import java.sql.Connection;
-import java.util.Set;
+import java.sql.*;
+import java.util.*;
 
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.jdbc.BaseFBTest;
+import org.firebirdsql.gds.*;
+import org.firebirdsql.jdbc.*;
 
 /**
  * <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>

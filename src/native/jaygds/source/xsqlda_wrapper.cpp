@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-#include "platform.h"
+#include "stdafx.h"
 
 #include "xsqlda_wrapper.h"
 
@@ -301,17 +301,10 @@ void JXSqlda::Resync(JNIEnv* javaEnvironment)
 		else
 			sXSQLVARFieldBinding_sqldata.SetByteArrayNull( javaEnvironment, currentJavaXsqlvar );
 
-
-		JString jsqlName(javaEnvironment, currentXsqlvar.sqlname, currentXsqlvar.sqlname_length);
-		JString jrelName(javaEnvironment, currentXsqlvar.relname, currentXsqlvar.relname_length);
-		JString jownName(javaEnvironment, currentXsqlvar.ownname, currentXsqlvar.ownname_length);
-		JString jaliasName(javaEnvironment, currentXsqlvar.aliasname, currentXsqlvar.aliasname_length);
-
-
-		sXSQLVARFieldBinding_sqlname.SetString( javaEnvironment, currentJavaXsqlvar, jsqlName );
-		sXSQLVARFieldBinding_relname.SetString( javaEnvironment, currentJavaXsqlvar, jrelName );
-		sXSQLVARFieldBinding_ownname.SetString( javaEnvironment, currentJavaXsqlvar, jownName );
-		sXSQLVARFieldBinding_aliasname.SetString( javaEnvironment, currentJavaXsqlvar, jaliasName );
+		sXSQLVARFieldBinding_sqlname.SetString( javaEnvironment, currentJavaXsqlvar, JString(javaEnvironment, currentXsqlvar.sqlname, currentXsqlvar.sqlname_length) );
+		sXSQLVARFieldBinding_relname.SetString( javaEnvironment, currentJavaXsqlvar, JString(javaEnvironment, currentXsqlvar.relname, currentXsqlvar.relname_length) );
+		sXSQLVARFieldBinding_ownname.SetString( javaEnvironment, currentJavaXsqlvar, JString(javaEnvironment, currentXsqlvar.ownname, currentXsqlvar.ownname_length) );
+		sXSQLVARFieldBinding_aliasname.SetString( javaEnvironment, currentJavaXsqlvar, JString(javaEnvironment, currentXsqlvar.aliasname, currentXsqlvar.aliasname_length));
 		}
 	
 	}

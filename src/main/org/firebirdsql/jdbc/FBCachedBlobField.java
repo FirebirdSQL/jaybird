@@ -19,6 +19,8 @@
  
 package org.firebirdsql.jdbc;
 
+import java.io.*;
+
 import java.sql.SQLException;
 import java.sql.Blob;
 

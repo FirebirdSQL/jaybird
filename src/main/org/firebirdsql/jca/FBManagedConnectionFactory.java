@@ -22,6 +22,7 @@ package org.firebirdsql.jca;
 import java.io.ObjectStreamException;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,9 +51,9 @@ import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.isc_tr_handle;
 import org.firebirdsql.jdbc.FBConnectionHelper;
 import org.firebirdsql.jdbc.FBDataSource;
+import org.firebirdsql.jdbc.FBStatement;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
-import org.firebirdsql.management.FBManager;
 
 /**
  * FBManagedConnectionFactory implements the jca ManagedConnectionFactory
@@ -107,11 +108,9 @@ public class FBManagedConnectionFactory
     private int blobBufferLength = 1024 * 16;
 
     //These hold non-serializable stuff.
-    private transient final static Logger log = LoggerFactory.getLogger(FBManagedConnectionFactory.class,true);
+    private transient final static Logger log = LoggerFactory.getLogger(FBManagedConnectionFactory.class,false);
 
-    GDS gds;
-
-    private Type type;
+    transient final GDS gds = GDSFactory.newGDS();
 
     /**
      * The <code>criToFreeDbHandlesMap</code> maps cri to lists of physical
@@ -138,65 +137,9 @@ public class FBManagedConnectionFactory
 
     private volatile int hashCode = 0;
 
-
-
-    public static final class Type implements Serializable
-        {
-        private static int nextOrdinal = 0;
-
-        public static final Type FOUR = new Type("type 4");
-        public static final Type TWO = new Type("type 2");
-        public static final Type TWO_EMBEDED = new Type("type 2 embeded");
-
-        private static final Type[] PRIVATE_VALUES = {FOUR, TWO, TWO_EMBEDED};
-
-        private Type(String s)
-            {
-            name = s;
-            ordinal = nextOrdinal++;
-            }
-
-        public Object readResolve()
-            {
-            return PRIVATE_VALUES[ordinal];
-            }
-
-        public String toString()
-            {
-            return name;
-            }
-
-        private final String name;
-        private final int ordinal;
-        }
-
-
-    private static final Map internalTypeToGdsTypeMap = new HashMap();
-    static
-        {
-        internalTypeToGdsTypeMap.put( Type.FOUR, GDSFactory.GdsType.PURE_JAVA );
-        internalTypeToGdsTypeMap.put( Type.TWO, GDSFactory.GdsType.NATIVE );
-        internalTypeToGdsTypeMap.put( Type.TWO_EMBEDED, GDSFactory.GdsType.NATIVE_EMBEDED );
-        }
-
-
-		//Default constructor.
     public FBManagedConnectionFactory() {
-        this(Type.FOUR);
-        }
-
-    public FBManagedConnectionFactory(Type type) {
-        this.type = type;
-        gds = GDSFactory.getGDSForType((GDSFactory.GdsType)internalTypeToGdsTypeMap.get(type));
-        defaultCri = FBConnectionHelper.getDefaultCri(gds);
-        }
-
-    public Type getType()
-        {
-        return this.type;
-        }
-
-
+        defaultCri = FBConnectionHelper.getDefaultCri();
+    }  //Default constructor.
 
     //rar properties
 
@@ -353,7 +296,6 @@ public class FBManagedConnectionFactory
         result = 37 * result + defaultCri.hashCode();
         result = 37 * result + tpb.hashCode();
         result = 37 * result + blobBufferLength;
-        result = 37 * result + type.hashCode();
         hashCode = result;
         return hashCode;
     }
@@ -373,8 +315,7 @@ public class FBManagedConnectionFactory
             (dbAlias == null ? mcf.dbAlias == null : dbAlias.equals(mcf.dbAlias))
             && (defaultCri.equals(mcf.defaultCri))
             && (tpb.equals(mcf.tpb))
-            && (blobBufferLength == mcf.blobBufferLength)
-            && (type == mcf.type);
+            && (blobBufferLength == mcf.blobBufferLength);
     }
 
     /**
@@ -385,7 +326,7 @@ public class FBManagedConnectionFactory
      * @return a <code>java.lang.Object</code> value
      * @exception ResourceException if an error occurs
      */
-    public Object createConnectionFactory(ConnectionManager cxManager) throws ResourceException {
+    public java.lang.Object createConnectionFactory(ConnectionManager cxManager) throws ResourceException {
         start();
         return new FBDataSource(this, cxManager);
     }
@@ -398,7 +339,7 @@ public class FBManagedConnectionFactory
      * @return a <code>java.lang.Object</code> value
      * @exception ResourceException if an error occurs
      */
-    public Object createConnectionFactory() throws ResourceException {
+    public java.lang.Object createConnectionFactory() throws ResourceException {
         start();
         return new FBDataSource(this, new FBStandAloneConnectionManager());
     }
@@ -461,7 +402,7 @@ public class FBManagedConnectionFactory
 
 **/
 
-    public ManagedConnection matchManagedConnections(Set connectionSet,
+    public ManagedConnection matchManagedConnections(java.util.Set connectionSet,
                                                  javax.security.auth.Subject subject,
                                                  ConnectionRequestInfo cxRequestInfo)
                                           throws ResourceException {
@@ -809,7 +750,7 @@ public class FBManagedConnectionFactory
         {
             return mcf;
         } // end of if ()
-        mcf = new FBManagedConnectionFactory(type);
+        mcf = new FBManagedConnectionFactory();
         mcf.setDatabase(this.getDatabase());
         mcf.setConnectionRequestInfo(this.getDefaultConnectionRequestInfo());
         mcf.setTpb(this.getTpb());

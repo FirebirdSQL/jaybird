@@ -18,11 +18,10 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.*;
+import org.firebirdsql.jgds.*;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -38,7 +37,7 @@ class FBStatementFetcher implements FBFetcher {
     protected FBStatement fbStatement;
     protected FBResultSet rs;
 
-    private isc_stmt_handle stmt;
+    private isc_stmt_handle_impl stmt;
           
     private Object[] rowsArray;
     private int size;
@@ -60,7 +59,7 @@ class FBStatementFetcher implements FBFetcher {
     {
         this.c = c;
         this.fbStatement = fbStatement;
-        this.stmt = stmth;
+        this.stmt = (isc_stmt_handle_impl) stmth;
         this.rs = rs;
             
         c.registerStatement(fbStatement);

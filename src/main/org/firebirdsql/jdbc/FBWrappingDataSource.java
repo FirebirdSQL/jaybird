@@ -21,31 +21,39 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
-import java.sql.SQLException;
-
-import javax.resource.ResourceException;
-import javax.sql.DataSource;
-
 import org.firebirdsql.jca.FBConnectionRequestInfo;
-import org.firebirdsql.jca.FBPoolingConnectionManager;
-import org.firebirdsql.jca.FBTpb;
-import org.firebirdsql.jca.ManagedConnectionPool;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jca.FBPoolingConnectionManager;
+import org.firebirdsql.jca.ManagedConnectionPool;
+
+import java.io.PrintWriter;
+import java.io.Serializable;
+import java.sql.Connection;
+import javax.sql.DataSource;
+import java.sql.SQLException;
+import java.util.Set;
+import javax.naming.Reference;
+import javax.resource.Referenceable;
+import javax.resource.ResourceException;
+import javax.resource.spi.ConnectionManager;
+import javax.resource.spi.ManagedConnectionFactory;
+
+import org.firebirdsql.jca.FBTpb;
 
 
 
 
 /**
  * This DataSource implementation is for use in an unmanaged environment.
- * It allows you to set the databaseName, User, and Password.
- * It creates a ManagedConnectionFactory and normal FBDataSource.
+ * It allows you to set the databaseName, User, and Password. 
+ * It creates a ManagedConnectionFactory and normal FBDataSource.  
  * All getConnection() calls are forwarded to the internal FBDataSource.
  * It supports pooling connections.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBWrappingDataSource extends FBSimpleDataSource {
+public class FBWrappingDataSource extends FBSimpleDataSource implements DataSource, Serializable, Referenceable {
 
    transient private FBPoolingConnectionManager cm;
 
@@ -53,15 +61,9 @@ public class FBWrappingDataSource extends FBSimpleDataSource {
 
    private final ManagedConnectionPool.PoolParams poolParams = new ManagedConnectionPool.PoolParams();
 
-   public FBWrappingDataSource() throws ResourceException
-   {
-      super(FBManagedConnectionFactory.Type.FOUR);
-   }
-
-   public FBWrappingDataSource(FBManagedConnectionFactory.Type type) throws ResourceException
-   {
-      super(type);
-   }
+    public FBWrappingDataSource() throws ResourceException {
+        super();
+    }
 
    public void setPooling(final boolean pooling)
    {
@@ -155,29 +157,29 @@ public class FBWrappingDataSource extends FBSimpleDataSource {
 
    public int getConnectionCount()
    {
-       if (cm == null)
+       if (cm == null) 
        {
            return 0;
        } // end of if ()
-
+       
        return cm.getConnectionCount();
    }
 
    protected synchronized DataSource getDataSource() throws SQLException
    {
-      if (ds == null)
+      if (ds == null) 
       {
-         try
+         try 
          {
             if (getDatabase() == null)
             {
                 throw new SQLException("DataSource has no databaseName");
             }
-
-            if (pooling)
+          
+            if (pooling) 
             {
                cm = new FBPoolingConnectionManager(poolParams, mcf);
-               ds = (FBDataSource)mcf.createConnectionFactory(cm);
+               ds = (FBDataSource)mcf.createConnectionFactory(cm);  
             } // end of if ()
             else
             {
@@ -188,11 +190,11 @@ public class FBWrappingDataSource extends FBSimpleDataSource {
          {
             throw new SQLException("Couldn't create ConnectionFactory! " + re);
          } // end of try-catch
-
+        
       } // end of if ()
-
+      
       return ds;
-   }
+   }      
 
 }
 

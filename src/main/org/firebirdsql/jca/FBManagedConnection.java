@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -41,12 +42,10 @@ import javax.security.auth.Subject;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
-
-import org.firebirdsql.gds.Clumplet;
-import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLDA;
+import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.isc_blob_handle;
 import org.firebirdsql.gds.isc_db_handle;
@@ -231,7 +230,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          IllegalStateException - Illegal state for invoking this method
          ResourceAdapterInternalException - Resource adapter internal error condition
 */
-    public void associateConnection(Object connection) throws ResourceException {
+    public void associateConnection(java.lang.Object connection) throws ResourceException {
         try {
             ((FBConnection)connection).setManagedConnection(this);
             connectionHandles.add(connection);
@@ -860,15 +859,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         currentTr.registerStatementWithTransaction(fbStatement);
     }
 
-    public isc_blob_handle openBlobHandle(long blob_id, boolean segmented) throws GDSException {
+    public isc_blob_handle openBlobHandle(long blob_id) throws GDSException {
         try
         {
             isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
             blob.setBlob_id(blob_id);
-            Clumplet c = mcf.gds.newClumplet(
-                ISCConstants.isc_bpb_type, 
-                segmented ? ISCConstants.isc_bpb_type_segmented : ISCConstants.isc_bpb_type_stream);
-            mcf.gds.isc_open_blob2(currentDbHandle, currentTr, blob, c);
+            mcf.gds.isc_open_blob2(currentDbHandle, currentTr, blob, null);//no bpb for now, segmented
             return blob;
         }
         catch (GDSException ge)
@@ -879,16 +875,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
-    public isc_blob_handle createBlobHandle(boolean segmented) throws GDSException {
+    public isc_blob_handle createBlobHandle() throws GDSException {
         try
         {
             isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
-
-            Clumplet c = mcf.gds.newClumplet(
-                ISCConstants.isc_bpb_type, 
-                segmented ? ISCConstants.isc_bpb_type_segmented : ISCConstants.isc_bpb_type_stream);
-
-            mcf.gds.isc_create_blob2(currentDbHandle, currentTr, blob, c);//no bpb for now, segmented
+            mcf.gds.isc_create_blob2(currentDbHandle, currentTr, blob, null);//no bpb for now, segmented
             return blob;
         }
         catch (GDSException ge)

@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.lang.reflect.Array;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ManagedConnection;
@@ -374,7 +373,7 @@ public class ManagedConnectionPool
       public Object[] toArray(Object[] array) {
          if (array.length < 1) 
          {
-            array = (Object[])Array.newInstance(array.getClass().getComponentType(), 1); 
+            array = (Object[])java.lang.reflect.Array.newInstance(array.getClass().getComponentType(), 1); 
          } // end of if ()
          array[0] = object;
          return array;

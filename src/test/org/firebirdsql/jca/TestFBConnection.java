@@ -18,15 +18,26 @@
  */
 package org.firebirdsql.jca;
 
-import javax.resource.spi.ManagedConnection;
-import javax.transaction.xa.XAResource;
-import javax.transaction.xa.Xid;
-
+import javax.resource.spi.*;
+import javax.transaction.xa.*;
 import java.sql.Connection;
-import java.sql.Statement;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import org.firebirdsql.gds.Clumplet;
+import org.firebirdsql.management.FBManager;
+import org.firebirdsql.logging.Logger;
+
+import java.io.*;
+import java.util.Properties;
+import java.util.HashSet;
+import java.sql.*;
+
+//for embedded xid implementation
+    import java.net.InetAddress;
+    import java.net.UnknownHostException;
+
+
+import junit.framework.*;
+
 
 /**
  * Describe class <code>TestFBConnection</code> here.

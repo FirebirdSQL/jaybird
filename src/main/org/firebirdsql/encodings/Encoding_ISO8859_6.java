@@ -21,9 +21,6 @@
  *
  * CVS modification log:
  * $Log$
- * Revision 1.1  2003/01/26 00:49:52  brodsom
- * New character sets support
- *
  * Revision 1.2  2003/01/23 01:37:05  brodsom
  * Encodings patch
  *
@@ -34,6 +31,7 @@ public class Encoding_ISO8859_6 extends Encoding_OneByte{
 
     private static char[] byteToChar = new char[256];
     private static byte[] charToByte = new byte[256*256];;
+    private static String encoding;
 
     static{
         Initialize("ISO8859_6", byteToChar, charToByte);

@@ -47,14 +47,14 @@ public class FBStandAloneConnectionManager
     implements ConnectionManager, ConnectionEventListener, Serializable
 {
 
-    private transient final static Logger log = LoggerFactory.getLogger(FBStandAloneConnectionManager.class,true);
+    private transient final static Logger log = LoggerFactory.getLogger(FBStandAloneConnectionManager.class,false);
      //package constructor
      FBStandAloneConnectionManager() {
      }
 
      //javax.resource.spi.ConnectionManager implementation
 
-    public Object allocateConnection(ManagedConnectionFactory mcf,
+    public java.lang.Object allocateConnection(ManagedConnectionFactory mcf,
        ConnectionRequestInfo cxRequestInfo)
        throws ResourceException {
 

@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-#include "platform.h"
+#include "stdafx.h"
 
 #include "entrypoints_generated.h"
 
@@ -33,11 +33,6 @@
 
 #include <new>
 
-// Dll Entrypoints
-
-
-
-
 // First some basic helper functions for error handling and a macro to use for the
 // catch block in each JNI entrypoint.
 
@@ -45,8 +40,6 @@
 // Must be initilized in Java_org_firebirdsql_ngds_GDS_1Impl_nativeInitilize
 JClassBinding  sInternalErrorClassBinding;
 JClassBinding  sOutOfMemoryErrorClassBinding;
-
-
 
 
 void EnsureJavaExceptionIssued(JNIEnv * javaEnvironment, InternalException& exception)
@@ -91,36 +84,45 @@ void MaybeIssueOutOfMemory(JNIEnv * javaEnvironment, std::bad_alloc& badAlloc)
 										EnsureJavaExceptionIssued( javaEnvironment );				\
 										} 
 
+// Dll Entrypoints
 
-// A hack to ensure that nativeInitilize can be called multiple times
-// until a client library is located.
-bool sHasMostInitilizationBeenDone = false;
+BOOL APIENTRY DllMain( HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved )
+	{
+    switch (ul_reason_for_call)
+		{
+		case DLL_PROCESS_ATTACH:
+		case DLL_THREAD_ATTACH:
+		case DLL_THREAD_DETACH:
+		case DLL_PROCESS_DETACH:
+			break;
+		}
+		return TRUE;
+	}
+
 
 JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_nativeInitilize
+ 
   (JNIEnv *javaEnvironment, jobject jThis, jstring firebirdDllName)
 	{
 	try
 		{
-		if(sHasMostInitilizationBeenDone == false)
-			{
-			// Todo : If these fail then the exception handling for this method will not work.
-			sInternalErrorClassBinding    = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/InternalError" );
-			sOutOfMemoryErrorClassBinding = JClassBinding( javaEnvironment, "java/lang/OutOfMemoryError" );
 
-			JIscDatabaseHandle::Initilize(javaEnvironment);
-			JIscTransactionHandle::Initilize(javaEnvironment);
-			JIscStatementHandle::Initilize(javaEnvironment);
-			JIscBlobHandle::Initilize(javaEnvironment);
-			JXSqlda::Initilize(javaEnvironment);
-			FirebirdStatusVector::Initilize(javaEnvironment);
+		// Todo : If these fail then the exception handling for this method will not work.
+		sInternalErrorClassBinding    = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/InternalError" );
+		sOutOfMemoryErrorClassBinding = JClassBinding( javaEnvironment, "java/lang/OutOfMemoryError" );
 
-			sHasMostInitilizationBeenDone = true;
-			}
+		JIscDatabaseHandle::Initilize(javaEnvironment);
+		JIscTransactionHandle::Initilize(javaEnvironment);
+		JIscStatementHandle::Initilize(javaEnvironment);
+		JIscBlobHandle::Initilize(javaEnvironment);
+		JXSqlda::Initilize(javaEnvironment);
+		FirebirdStatusVector::Initilize(javaEnvironment);
 
 		JString fileName( javaEnvironment, firebirdDllName );
 		FirebirdApiBinding::Load(fileName.AsCString());
 		}
 	JNI_ENTRYPOINT_CATCH_BLOCK
+
 	}
 
 JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1create_1database
@@ -331,7 +333,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1prepare_
 		
 		JByteArray tpb( javaEnvironment, jBytes );
 
-		FirebirdApiBinding::isc_prepare_transaction2( status.RawAccess(), &rawTransactionHandle, tpb.Size(), (unsigned char*)tpb.Read() );
+		FirebirdApiBinding::isc_prepare_transaction2( status.RawAccess(), &rawTransactionHandle, tpb.Size(), tpb.Read() );
 		
 		transactionHandle.SetHandleValue(rawTransactionHandle);
 
@@ -865,7 +867,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1open_1bl
 		ISC_QUAD rawBlobId = blobHandle.GetId();
 		
 
-		FirebirdApiBinding::isc_open_blob2( status.RawAccess(), &rawDatabaseHandle, &rawTransactionHandle, &rawBlobHandle, &rawBlobId, clumpetBytes.Size(), (unsigned char*)clumpetBytes.Read() );
+		FirebirdApiBinding::isc_open_blob2( status.RawAccess(), &rawDatabaseHandle, &rawTransactionHandle, &rawBlobHandle, &rawBlobId, clumpetBytes.Size(), clumpetBytes.Read() );
 
 	
 		databaseHandle.SetHandleValue(rawDatabaseHandle);

@@ -28,9 +28,8 @@
 
 package org.firebirdsql.jgds;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.*;
 
 /**
  * Describe class <code>XdrInputStream</code> here.

@@ -23,18 +23,17 @@ import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
 import org.firebirdsql.jca.FBResourceException;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Field;
 import java.util.Properties;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Collection;
 import java.util.Iterator;
+
+import java.lang.reflect.*;
+import java.io.*;
 
 /**
  * This class maps the extended JDBC properties to the
@@ -109,8 +108,8 @@ public class FBConnectionHelper {
 
     }
 
-    public static FBConnectionRequestInfo getDefaultCri(GDS gds) {
-        FBConnectionRequestInfo result = new FBConnectionRequestInfo(gds);
+    public static FBConnectionRequestInfo getDefaultCri() {
+        FBConnectionRequestInfo result = new FBConnectionRequestInfo();
         //
         // Important for performance on inserts. the charset code must not be none
         //
@@ -153,7 +152,7 @@ public class FBConnectionHelper {
         if (baseCri != null)
             cri = new FBConnectionRequestInfo(baseCri);
         else
-            cri = new FBConnectionRequestInfo(getDefaultCri(GDSFactory.getDefaultGDS()));
+            cri = new FBConnectionRequestInfo(getDefaultCri());
 
         // process all set keys
         Iterator keys = info.keySet().iterator();

@@ -18,6 +18,13 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.gds.*;
+//import org.firebirdsql.jgds.*;
+
+import java.sql.SQLException;
+
+
+
 /**
  * Describe interface <code>FBManagerMBean</code> here.
  *

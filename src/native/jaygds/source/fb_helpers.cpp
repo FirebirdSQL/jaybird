@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-#include "platform.h"
+#include "stdafx.h"
 
 #include "fb_helpers.h"
 

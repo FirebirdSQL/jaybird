@@ -19,15 +19,31 @@
 
 package org.firebirdsql.jdbc;
 
-import java.io.*;
-import java.math.*;
-import java.net.*;
-import java.sql.*;
+import org.firebirdsql.gds.XSQLDA;
+import java.io.InputStream;
+import java.io.Reader;
+import java.math.BigDecimal;
+import java.net.URL;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.Date;
-import java.util.*;
-
-import org.firebirdsql.gds.*;
-import org.firebirdsql.logging.*;
+import java.sql.DataTruncation;
+import java.sql.ParameterMetaData;
+import java.sql.PreparedStatement;
+import java.sql.Ref;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.util.Calendar;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  *
@@ -58,21 +74,15 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     
     FBPreparedStatement(FBConnection c, String sql) throws SQLException {
         super(c, ResultSet.CONCUR_READ_ONLY);
-        
-        Object syncObject = getSynchronizationObject();
-        synchronized(syncObject) {
-            try {
-                c.ensureInTransaction();
-                prepareFixedStatement(sql, true);
-            } catch (GDSException ge) {
-                if (log != null)
-                    log.info("GDSException in PreparedStatement constructor",
-                        ge);
-                throw new FBSQLException(ge);
-            } finally {
-                c.checkEndTransaction();
-            } // end of try-catch-finally
-        }
+        try {
+            c.ensureInTransaction();
+            prepareFixedStatement(sql, true);
+        } catch (GDSException ge) {
+            if (log!=null) log.info("GDSException in PreparedStatement constructor", ge);
+            throw new FBSQLException(ge);
+        } finally {
+            c.checkEndTransaction();
+        }// end of try-catch-finally
     }
 
 
@@ -86,23 +96,26 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public ResultSet executeQuery() throws  SQLException {
-        Object syncObject = getSynchronizationObject();
-        
-        synchronized(syncObject) {
-            try {
-                c.ensureInTransaction();
-                if (!internalExecute(isExecuteProcedureStatement)) {
-                    throw new SQLException("No resultset for sql");
-                }
-                if (c.willEndTransaction()) {
-                    return getCachedResultSet(false);
-                } else { 
-                    return getResultSet();
-                }
-            } finally {
-                c.checkEndTransaction();
+        try
+        {
+            c.ensureInTransaction();
+            if (!internalExecute(isExecuteProcedureStatement))
+            {
+                throw new SQLException("No resultset for sql");
             }
+            if (c.willEndTransaction())
+            {
+                return getCachedResultSet(false);
+            } // end of if ()
+            else
+            {
+                return getResultSet();
+            } // end of else
         }
+        finally
+        {
+            c.checkEndTransaction();
+        } // end of finally
     }
 
 
@@ -118,20 +131,18 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public int executeUpdate() throws  SQLException {
-        
-        Object syncObject = getSynchronizationObject();
-        
-        synchronized(syncObject) {
-            try {
-                c.ensureInTransaction();
-                if (internalExecute(isExecuteProcedureStatement)) {
-                    throw new SQLException("update statement returned results!");
-                }
-                return getUpdateCount();
-            } finally {
-                c.checkEndTransaction();
+        try
+        {
+            c.ensureInTransaction();
+            if (internalExecute(isExecuteProcedureStatement)) {
+                throw new SQLException("update statement returned results!");
             }
+            return getUpdateCount();
         }
+        finally
+        {
+            c.checkEndTransaction();
+        } // end of finally
     }
 
 
@@ -247,7 +258,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @param length the number of bytes in the stream
      * @exception SQLException if a database access error occurs
      */
-    public void setAsciiStream(int parameterIndex, InputStream x,
+    public void setAsciiStream(int parameterIndex, java.io.InputStream x,
         int length) throws  SQLException
     {
         setBinaryStream(parameterIndex, x, length);
@@ -278,7 +289,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 
      *I really have no idea if there is anything else we should be doing here
      */
-    public void setUnicodeStream(int parameterIndex, InputStream x,
+    public void setUnicodeStream(int parameterIndex, java.io.InputStream x,
               int length) throws  SQLException {
         setBinaryStream(parameterIndex, x, length);
     }
@@ -368,22 +379,20 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see Statement#execute
      */
     public boolean execute() throws  SQLException {
-        
-        Object syncObject = getSynchronizationObject();
-        
-        synchronized(syncObject) {
-            try {
-                c.ensureInTransaction();
-                boolean hasResultSet = internalExecute(
-                    isExecuteProcedureStatement);
-                if (hasResultSet && c.willEndTransaction()) {
-                    getCachedResultSet(false);
-                }
-                return hasResultSet;
-            } finally {
-                c.checkEndTransaction();
-            }
+        try
+        {
+            c.ensureInTransaction();
+            boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
+            if (hasResultSet && c.willEndTransaction())
+            {
+                getCachedResultSet(false);
+            } // end of if ()
+            return hasResultSet;
         }
+        finally
+        {
+            c.checkEndTransaction();
+        } // end of finally
     }
 
     protected boolean internalExecute(boolean sendOutParams) throws  SQLException
@@ -397,28 +406,24 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             throw new SQLException("Not all parameters were set. " +
                 "Cannot execute query.");
 
-        Object syncObject = getSynchronizationObject();
-        
-        synchronized(syncObject) {
-            if (hasBlobs) {
-                for (int i = 0; i < isParamSet.length; i++) {
-                    if (isBlob[i]) {
-                        FBFlushableField flushableField =
-                            (FBFlushableField)getField(i + 1);
-
-                        flushableField.flushCachedData();
-                    }
+        if (hasBlobs){
+            for(int i = 0; i < isParamSet.length; i++){
+                if (isBlob[i]){
+                    FBFlushableField flushableField = 
+                        (FBFlushableField)getField(i + 1);
+                        
+                    flushableField.flushCachedData();
                 }
             }
-            
-            try {
-                closeResultSet();
-                c.executeStatement(fixedStmt, sendOutParams);
-                isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
-                return (fixedStmt.getOutSqlda().sqld > 0);
-            } catch (GDSException ge) {
-                throw new FBSQLException(ge);
-            }
+        }
+        try {
+            closeResultSet();
+            c.executeStatement(fixedStmt, sendOutParams);
+            isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
+            return (fixedStmt.getOutSqlda().sqld > 0);
+        }
+        catch (GDSException ge) {
+            throw new FBSQLException(ge);
         }
     }
 
@@ -461,7 +466,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void setCharacterStream(int parameterIndex, Reader reader,
+    public void setCharacterStream(int parameterIndex,
+                  java.io.Reader reader,
               int length) throws  SQLException {
         getField(parameterIndex).setCharacterStream(reader, length);
     }
@@ -569,7 +575,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void setDate(int parameterIndex, Date x, Calendar cal)
+    public void setDate(int parameterIndex, java.sql.Date x, Calendar cal)
         throws  SQLException {
         getField(parameterIndex).setDate(x, cal);
     }
@@ -594,7 +600,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void setTime(int parameterIndex, Time x, Calendar cal)
+    public void setTime(int parameterIndex, java.sql.Time x, Calendar cal)
         throws  SQLException {
         getField(parameterIndex).setTime(x, cal);
     }
@@ -620,7 +626,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      *      2.0 API</a>
      * @todo change all the methods called to take a Calendar instead of Date object.
      */
-    public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) 
+    public void setTimestamp(int parameterIndex, java.sql.Timestamp x, Calendar cal) 
         throws  SQLException {
         getField(parameterIndex).setTimestamp(x, cal);
     }

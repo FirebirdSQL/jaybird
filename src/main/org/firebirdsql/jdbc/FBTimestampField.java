@@ -37,49 +37,49 @@ class FBTimestampField extends FBField {
     FBTimestampField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
         super(field, rs, numCol);
     }
-    Object getObject() throws SQLException {
+    Object getObject() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return field.decodeTimestamp(rs.row[numCol]);
+        return XSQLVAR.decodeTimestamp(rs.row[numCol]);
     }
-    String getString() throws SQLException {
+    String getString() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return String.valueOf(field.decodeTimestamp(rs.row[numCol]));
+        return String.valueOf(XSQLVAR.decodeTimestamp(rs.row[numCol]));
     }
-    Date getDate(Calendar cal) throws SQLException {
+    Date getDate(Calendar cal) throws java.sql.SQLException {
         if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
-        return field.decodeDate(getDate(),cal);
+        return XSQLVAR.decodeDate(getDate(),cal);
     }
-    Date getDate() throws SQLException {
+    Date getDate() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
         return new Date(getTimestamp().getTime());
     }
-    Time getTime(Calendar cal) throws SQLException {
+    Time getTime(Calendar cal) throws java.sql.SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
-        return field.decodeTime(getTime(),cal);
+        return XSQLVAR.decodeTime(getTime(),cal);
     }
-    Time getTime() throws SQLException {
+    Time getTime() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
         return new Time(getTimestamp().getTime());
     }
-    Timestamp getTimestamp(Calendar cal) throws SQLException {
+    Timestamp getTimestamp(Calendar cal) throws java.sql.SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 		  
-        return field.decodeTimestamp(getTimestamp(),cal);
+        return XSQLVAR.decodeTimestamp(getTimestamp(),cal);
     }
-    Timestamp getTimestamp() throws SQLException {
+    Timestamp getTimestamp() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
-        return field.decodeTimestamp(rs.row[numCol]);
+        return XSQLVAR.decodeTimestamp(rs.row[numCol]);
     }
     //--- setXXX methods
 
-    void setString(String value) throws SQLException {
+    void setString(String value) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
@@ -87,15 +87,15 @@ class FBTimestampField extends FBField {
 
         setTimestamp(Timestamp.valueOf(value));
     }
-    void setDate(Date value, Calendar cal) throws SQLException {
+    void setDate(Date value, Calendar cal) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
         }
 
-        setDate(field.encodeDate(value,cal));
+        setDate(XSQLVAR.encodeDate(value,cal));
     }
-    void setDate(Date value) throws SQLException {
+    void setDate(Date value) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
@@ -103,15 +103,15 @@ class FBTimestampField extends FBField {
 
         setTimestamp(new Timestamp(value.getTime()));
     }
-    void setTime(Time value, Calendar cal) throws SQLException {
+    void setTime(Time value, Calendar cal) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
         }
 
-        setTime(field.encodeTime(value,cal));
+        setTime(XSQLVAR.encodeTime(value,cal));
     }
-    void setTime(Time value) throws SQLException {
+    void setTime(Time value) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
@@ -119,20 +119,20 @@ class FBTimestampField extends FBField {
 
         setTimestamp(new Timestamp(value.getTime()));
     }
-    void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
+    void setTimestamp(Timestamp value, Calendar cal) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
         }
 
-        setTimestamp(field.encodeTimestamp(value,cal));
+        setTimestamp(XSQLVAR.encodeTimestamp(value,cal));
     }
-    void setTimestamp(Timestamp value) throws SQLException {
+    void setTimestamp(Timestamp value) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
         }
 
-        field.sqldata = field.encodeTimestamp(value);
+        field.sqldata = XSQLVAR.encodeTimestamp(value);
     }
 }

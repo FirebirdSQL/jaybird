@@ -26,19 +26,14 @@ import org.firebirdsql.gds.isc_stmt_handle;
 import javax.sql.RowSet;
 import javax.sql.RowSetListener;
 
-import java.io.InputStream;
-import java.io.Reader;
-import java.math.BigDecimal;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Date;
-import java.sql.Ref;
 import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Map;
+
+import java.sql.*;
+import java.io.*;
+import java.math.*;
+import java.util.*;
+
+
 
 /**
  * Describe class <code>FBRowSet</code> here.
@@ -48,8 +43,8 @@ import java.util.Map;
  */
 public class FBRowSet extends FBResultSet implements RowSet {
 
-    FBRowSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt) throws SQLException{
-        super(c, fbstatement, stmt, null);
+    FBRowSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt, FBObjectListener.ResultSetListener listener) throws SQLException{
+        super(c, fbstatement, stmt, listener);
     }
 
 
@@ -193,7 +188,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * @return a map object
    * @exception SQLException if a database-access error occurs.
    */
-    public Map getTypeMap() throws  SQLException {
+    public java.util.Map getTypeMap() throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -205,7 +200,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * @param map a map object
    * @exception SQLException if a database-access error occurs.
    */
-    public void setTypeMap(Map map) throws  SQLException {
+    public void setTypeMap(java.util.Map map) throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -582,7 +577,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * @param x the parameter value
    * @exception SQLException if a database-access error occurs.
    */
-    public void setDate(int parameterIndex, Date x) throws  SQLException {
+    public void setDate(int parameterIndex, java.sql.Date x) throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -594,7 +589,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * @param x the parameter value
    * @exception SQLException if a database-access error occurs.
    */
-    public void setTime(int parameterIndex, Time x) throws  SQLException {
+    public void setTime(int parameterIndex, java.sql.Time x) throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -606,7 +601,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * @param x the parameter value
    * @exception SQLException if a database-access error occurs.
    */
-    public void setTimestamp(int parameterIndex, Timestamp x) throws  SQLException {
+    public void setTimestamp(int parameterIndex, java.sql.Timestamp x) throws  SQLException {
     }
 
 
@@ -625,7 +620,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * @param length the number of bytes in the stream
    * @exception SQLException if a database-access error occurs.
    */
-    public void setAsciiStream(int parameterIndex, InputStream x, int length) throws  SQLException {
+    public void setAsciiStream(int parameterIndex, java.io.InputStream x, int length) throws  SQLException {
     }
 
 
@@ -644,7 +639,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * @param length the number of bytes in the stream
    * @exception SQLException if a database-access error occurs.
    */
-    public void setBinaryStream(int parameterIndex, InputStream x,
+    public void setBinaryStream(int parameterIndex, java.io.InputStream x,
                int length) throws  SQLException {
     }
 
@@ -796,7 +791,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * @param x the parameter value
    * @exception SQLException if a database-access error occurs.
    */
-    public void setDate(int parameterIndex, Date x, Calendar cal) throws  SQLException {
+    public void setDate(int parameterIndex, java.sql.Date x, Calendar cal) throws  SQLException {
     }
 
 
@@ -808,7 +803,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * @param x the parameter value
    * @exception SQLException if a database-access error occurs.
    */
-    public void setTime(int parameterIndex, Time x, Calendar cal) throws  SQLException {
+    public void setTime(int parameterIndex, java.sql.Time x, Calendar cal) throws  SQLException {
     }
 
 
@@ -821,7 +816,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * @param x the parameter value
    * @exception SQLException if a database-access error occurs.
    */
-    public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws  SQLException {
+    public void setTimestamp(int parameterIndex, java.sql.Timestamp x, Calendar cal) throws  SQLException {
     }
 
 

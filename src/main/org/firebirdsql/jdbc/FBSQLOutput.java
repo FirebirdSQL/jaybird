@@ -21,7 +21,6 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
-import java.sql.Date;
 import java.sql.SQLOutput;
 import java.sql.Array;
 import java.sql.Blob;
@@ -30,12 +29,9 @@ import java.sql.Ref;
 import java.sql.SQLException;
 import java.sql.Struct;
 import java.sql.SQLData;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.io.InputStream;
-import java.io.Reader;
-import java.math.BigDecimal;
 import java.net.URL;
+import java.net.MalformedURLException;
+
 
 /**
  *
@@ -186,7 +182,7 @@ import java.net.URL;
    * @param x the value to pass to the database
    * @exception SQLException if a database access error occurs
    */
-    public void writeBigDecimal(BigDecimal x) throws  SQLException {
+    public void writeBigDecimal(java.math.BigDecimal x) throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -212,7 +208,7 @@ import java.net.URL;
    * @param x the value to pass to the database
    * @exception SQLException if a database access error occurs
    */
-    public void writeDate(Date x) throws  SQLException {
+    public void writeDate(java.sql.Date x) throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -225,7 +221,7 @@ import java.net.URL;
    * @param x the value to pass to the database
    * @exception SQLException if a database access error occurs
    */
-    public void writeTime(Time x) throws  SQLException {
+    public void writeTime(java.sql.Time x) throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -238,7 +234,7 @@ import java.net.URL;
    * @param x the value to pass to the database
    * @exception SQLException if a database access error occurs
    */
-    public void writeTimestamp(Timestamp x) throws  SQLException {
+    public void writeTimestamp(java.sql.Timestamp x) throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -249,7 +245,7 @@ import java.net.URL;
    * @param x the value to pass to the database
    * @exception SQLException if a database access error occurs
    */
-    public void writeCharacterStream(Reader x) throws  SQLException {
+    public void writeCharacterStream(java.io.Reader x) throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -260,7 +256,7 @@ import java.net.URL;
    * @param x the value to pass to the database
    * @exception SQLException if a database access error occurs
    */
-    public void writeAsciiStream(InputStream x) throws  SQLException {
+    public void writeAsciiStream(java.io.InputStream x) throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -272,7 +268,7 @@ import java.net.URL;
    * @param x the value to pass to the database
    * @exception SQLException if a database access error occurs
    */
-    public void writeBinaryStream(InputStream x) throws  SQLException {
+    public void writeBinaryStream(java.io.InputStream x) throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 

@@ -41,6 +41,8 @@ import java.io.PrintStream;
  */
 public class FBResourceException extends ResourceException {
     
+    private Exception original;
+
     public FBResourceException(String string) {
         super(string);
     }
@@ -50,13 +52,23 @@ public class FBResourceException extends ResourceException {
     }
 
     public FBResourceException(String string, Exception original) {
-        super(string);
-        setLinkedException(original);
+        super(string, original.getMessage());
+        this.original = original;
     }
 
     public FBResourceException(Exception original) {
         super(original.getMessage());
-        setLinkedException(original);
+        this.original = original;
+    }
+    
+    /**
+     * Get original exception.
+     * 
+     * @return original exception that is wrapped by this object, or 
+     * <code>null</code> if there is no original exception.
+     */
+    public Exception getOriginal() {
+        return original;
     }
     
     /**
@@ -67,13 +79,13 @@ public class FBResourceException extends ResourceException {
     public String getMessage() {
         String s = super.getMessage();
 
-        if (getLinkedException() == null)
+        if (original == null)
             return s;
             
         if (s == null)
-            return getLinkedException().getMessage();
+            return original.getMessage();
             
-        return s + "\nReason: " + getLinkedException().getMessage();
+        return s + "\nReason: " + original.getMessage();
     }
 
 
@@ -83,17 +95,17 @@ public class FBResourceException extends ResourceException {
 
     public void printStackTrace(PrintStream s) {
         super.printStackTrace(s);
-        if (getLinkedException() != null) {
+        if (original != null) {
             s.print("at ");
-            getLinkedException().printStackTrace(s);
+            original.printStackTrace(s);
         }
     }
 
     public void printStackTrace(PrintWriter s) {
         super.printStackTrace(s);
-        if (getLinkedException() != null) {
+        if (original != null) {
             s.print("at ");
-            getLinkedException().printStackTrace(s);
+            original.printStackTrace(s);
         }
     }
 }

@@ -28,12 +28,10 @@
 package org.firebirdsql.jgds;
 
 
-import java.io.IOException;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
+import java.net.*;
+import java.util.*;
+import java.util.Collection;
 import javax.security.auth.Subject;
 import org.firebirdsql.gds.GDSException;
 
@@ -72,7 +70,7 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
         return !invalid;
     }
 
-    void invalidate() throws IOException {
+    void invalidate() throws java.io.IOException {
         in.close();
         out.close();
         socket.close();

@@ -21,14 +21,9 @@
  *
  * CVS modification log:
  * $Log$
- * Revision 1.2  2003/01/23 01:37:05  brodsom
- * Encodings patch
- *
  */
 
 package org.firebirdsql.encodings;
-
-import java.io.UnsupportedEncodingException;
 
 public abstract class Encoding_OneByte implements Encoding{
 
@@ -43,7 +38,7 @@ public abstract class Encoding_OneByte implements Encoding{
                 byteToChar[i] = charArray[0];
                 charToByte[byteToChar[i]] = (byte) i;
             }
-            catch (UnsupportedEncodingException uee){
+            catch (java.io.UnsupportedEncodingException uee){
                 uee.printStackTrace();
             }
         }

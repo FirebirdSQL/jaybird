@@ -47,7 +47,7 @@ public class FBSQLException extends SQLException {
     public FBSQLException(GDSException ex) {
         super(ex.getMessage());
         original = ex;
-        message = "GDS Exception "+ ex.getIntParam() + ". " + ex.getMessage();
+        message = "GDS Exception. " + ex.getMessage();
     }
 
     public FBSQLException(ResourceException ex) {
@@ -58,8 +58,8 @@ public class FBSQLException extends SQLException {
             
             FBResourceException rex = (FBResourceException)ex;
             
-            if (rex.getLinkedException() != null)
-                original = rex.getLinkedException();
+            if (rex.getOriginal() != null)
+                original = rex.getOriginal();
             else
                 original = rex;
                 

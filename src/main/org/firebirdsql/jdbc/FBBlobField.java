@@ -19,12 +19,8 @@
  
 package org.firebirdsql.jdbc;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
+import java.io.*;
+
 import java.sql.SQLException;
 import java.sql.Blob;
 
@@ -42,10 +38,6 @@ public class FBBlobField extends FBField implements FBFlushableField {
     private boolean isCachedData = false;
     
     private FBBlob blob;
-
-	// Rather then hold cached data in the XSQLDAVar we will hold it in here.
-	int length;
-	byte[] data;
 
     FBBlobField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
         super(field, rs, numCol);
@@ -71,10 +63,26 @@ public class FBBlobField extends FBField implements FBFlushableField {
         if (blob != null)
             return blob;
     
+    /*
+    // This code was commented by R.Rokytskyy
+    // since getBlob(boolean) was used only in getBlob() method.
+    // and it makes a little sense to keep two methods.
+    
+        return getBlob(false);
+    }
+
+    Blob getBlob(boolean create) throws SQLException {
+    */
         if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 
-        Long blobId = new Long(field.decodeLong(rs.row[numCol]));
+        Long blobId = new Long(XSQLVAR.decodeLong(rs.row[numCol]));
+
+        
+        // Commented by R.Rokytskyy, this is dead code, remove before release
+        if (blobId == null)
+            blobId = new Long(0);
+        
 
         blob = new FBBlob(c, blobId.longValue());
         
@@ -216,8 +224,8 @@ public class FBBlobField extends FBField implements FBFlushableField {
                 throw new SQLException("read/write blob problem: " + ioe);
             }
             
-            this.data = bout.toByteArray();
-            this.length = ((byte[])this.data).length;
+            field.sqldata = bout.toByteArray();
+            field.sqllen = ((byte[])field.sqldata).length;
             isCachedData = true;
         }
     }
@@ -248,8 +256,8 @@ public class FBBlobField extends FBField implements FBFlushableField {
                 throw new SQLException("read/write blob problem: " + ioe);
             }
             
-            this.data = bout.toByteArray();
-            this.length = ((byte[])this.data).length;
+            field.sqldata = bout.toByteArray();
+            field.sqllen = ((byte[])field.sqldata).length;
             isCachedData = true;
         }
     }
@@ -257,7 +265,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
     public void flushCachedData() throws SQLException {
         if (isCachedData){
             copyBinaryStream(
-                new ByteArrayInputStream((byte[])this.data), this.length);
+                new ByteArrayInputStream((byte[])field.sqldata), field.sqllen);
             isCachedData=false;
         }
     }
@@ -270,7 +278,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         
         FBBlob blob =  new FBBlob(c);
         blob.copyStream(in, length);
-        field.sqldata = field.encodeLong(blob.getBlobId());
+        field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
     }
 
     private void copyCharacterStream(Reader in, int length) throws SQLException {
@@ -281,7 +289,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         
         FBBlob blob =  new FBBlob(c);
         blob.copyCharacterStream(in, length);
-        field.sqldata = field.encodeLong(blob.getBlobId());
+        field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
     }
     
     void setBytes(byte[] value) throws SQLException {
@@ -308,6 +316,6 @@ public class FBBlobField extends FBField implements FBFlushableField {
     }
 
     void setBlob(FBBlob blob) throws SQLException {
-        field.sqldata = field.encodeLong(blob.getBlobId());
+        field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
     }
 }

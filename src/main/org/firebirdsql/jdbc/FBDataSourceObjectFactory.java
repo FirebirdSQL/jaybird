@@ -19,8 +19,6 @@
 
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.jca.FBManagedConnectionFactory;
-
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -67,7 +65,7 @@ public class FBDataSourceObjectFactory
       {
          return cfs.get(name);
       } // end of if ()
-      FBWrappingDataSource ds = new FBWrappingDataSource(FBManagedConnectionFactory.Type.FOUR);
+      FBWrappingDataSource ds = new FBWrappingDataSource();
       //This follows the example given for Catalina. 
       //see http://jakarta.apache.org/tomcat/tomcat-4.0-doc/jndi-resources-howto.html
       Reference ref = (Reference)obj;

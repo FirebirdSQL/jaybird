@@ -19,11 +19,7 @@
 
 package org.firebirdsql.jdbc;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 
 /**
  * Describe class <code>TestFBPreparedStatement</code> here.
@@ -52,6 +48,7 @@ public class TestFBPreparedStatement extends BaseFBTest{
     
     public static final String ANOTHER_TEST_STRING = "Another test string.";
     
+    
     public TestFBPreparedStatement(String testName) {
         super(testName);
     }
@@ -62,9 +59,11 @@ public class TestFBPreparedStatement extends BaseFBTest{
         super.setUp();
         
         Class.forName(FBDriver.class.getName());
-        con = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);            
+        con =
+            java.sql.DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+            
 
-        Statement stmt = con.createStatement();
+        java.sql.Statement stmt = con.createStatement();
         try {
             stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
         }
@@ -76,17 +75,17 @@ public class TestFBPreparedStatement extends BaseFBTest{
             stmt.executeUpdate(DROP_GENERATOR);
         } catch(Exception ex) {
         }
-        
+
         stmt.executeUpdate(CREATE_TEST_BLOB_TABLE);
         
         stmt.executeUpdate(CREATE_GENERATOR);
-        
+
         stmt.close(); 
         
     }
 
     protected void tearDown() throws Exception {
-        Statement stmt = con.createStatement();
+        java.sql.Statement stmt = con.createStatement();
         stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
         stmt.close();
 
@@ -134,28 +133,6 @@ public class TestFBPreparedStatement extends BaseFBTest{
         updatePs.close();
     }
     
-    public void testMixedExecution() throws Throwable {
-        PreparedStatement ps = con.prepareStatement(
-            "INSERT INTO test_blob VALUES(?, NULL)");
-        
-        try {
-
-            ps.setInt(1, 100);
-            ps.execute();
-
-            ResultSet rs = ps.executeQuery("SELECT * FROM test_blob");
-            while (rs.next()) {
-                // nothing
-            }
-        } catch(Throwable t) {
-            t.printStackTrace();
-            throw t;
-        } finally {
-            ps.close();
-        }
-        
-    }    
-    
     void checkSelectString(String stringToTest, int id) throws Exception {
         PreparedStatement selectPs = con.prepareStatement(
             "SELECT obj_data FROM test_blob WHERE id = ?");
@@ -190,6 +167,28 @@ public class TestFBPreparedStatement extends BaseFBTest{
         
         rs.close();
         ps.close();
+    }
+    
+    public void testMixedExecution() throws Throwable {
+        PreparedStatement ps = con.prepareStatement(
+            "INSERT INTO test_blob VALUES(?, NULL)");
+        
+        try {
+
+            ps.setInt(1, 100);
+            ps.execute();
+
+            ResultSet rs = ps.executeQuery("SELECT * FROM test_blob");
+            while (rs.next()) {
+                // nothing
+            }
+        } catch(Throwable t) {
+            t.printStackTrace();
+            throw t;
+        } finally {
+            ps.close();
+        }
+        
     }
     
 }

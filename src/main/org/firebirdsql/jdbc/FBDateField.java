@@ -38,40 +38,40 @@ class FBDateField extends FBField {
         super(field, rs, numCol);
     }
 
-    Timestamp getTimestamp(Calendar cal) throws SQLException {
+    Timestamp getTimestamp(Calendar cal) throws java.sql.SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 		  
-        return field.decodeTimestamp(getTimestamp(),cal);
+        return XSQLVAR.decodeTimestamp(getTimestamp(),cal);
     }
-    Timestamp getTimestamp() throws SQLException {
+    Timestamp getTimestamp() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
         return new Timestamp(getDate().getTime());
     }
-    Date getDate(Calendar cal) throws SQLException {
+    Date getDate(Calendar cal) throws java.sql.SQLException {
         if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
-        return field.decodeDate(getDate(),cal);
+        return XSQLVAR.decodeDate(getDate(),cal);
     }
-    Date getDate() throws SQLException {
+    Date getDate() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
-        return field.decodeDate(rs.row[numCol]);
+        return XSQLVAR.decodeDate(rs.row[numCol]);
     }
-    String getString() throws SQLException {
+    String getString() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return field.decodeDate(rs.row[numCol]).toString();
+        return XSQLVAR.decodeDate(rs.row[numCol]).toString();
     }
-    Object getObject() throws SQLException {
+    Object getObject() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return field.decodeDate(rs.row[numCol]);
+        return XSQLVAR.decodeDate(rs.row[numCol]);
     }
 
     //--- setXXX methods
 	 
-    void setString(String value) throws SQLException {
+    void setString(String value) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
@@ -79,15 +79,15 @@ class FBDateField extends FBField {
 
         setDate(Date.valueOf(value));
     }
-    void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
+    void setTimestamp(Timestamp value, Calendar cal) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
         }
 
-        setTimestamp(field.encodeTimestamp(value,cal));
+        setTimestamp(XSQLVAR.encodeTimestamp(value,cal));
     }
-    void setTimestamp(Timestamp value) throws SQLException {
+    void setTimestamp(Timestamp value) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
@@ -95,20 +95,20 @@ class FBDateField extends FBField {
 
         setDate(new Date(value.getTime()));
     }
-    void setDate(Date value, Calendar cal) throws SQLException {
+    void setDate(Date value, Calendar cal) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
         }
 
-        setDate(field.encodeDate(value,cal));
+        setDate(XSQLVAR.encodeDate(value,cal));
     }
-    void setDate(Date value) throws SQLException {
+    void setDate(Date value) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
         }
 
-        field.sqldata = field.encodeDate(value);
+        field.sqldata = XSQLVAR.encodeDate(value);
     }
 }

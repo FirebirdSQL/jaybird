@@ -282,20 +282,6 @@ class JIscBlobHandle
 
 	
 	private:
-
-	/* The primary purpose of this method is to ensure that the byte ordering in the jlong
-	 * is the same across all platforms - the java code may set this into the sqldata field
-	 * on an XSQLDAVar structure so it must always be LSB first.
-	 */
-	jlong  GetJLongFromIscQuad(ISC_QUAD value);
-
-	/* The inverse of the above method.
-	 */
-	ISC_QUAD GetIscQuadFromJavaLong(jlong value);
-
-	bool IsLittleEndianByteOrdering();
-
-
 	
 	JNIEnv* mJavaEnvironment;
 	jobject mJavaObjectHandle;

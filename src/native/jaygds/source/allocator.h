@@ -145,4 +145,3 @@ class Buffer
 	};
 
 #endif // _JNGDS__Allocator
-

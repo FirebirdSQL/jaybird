@@ -18,15 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Random;
+import java.sql.*;
 
 /**
  * Describe class <code>TestReconnect</code> here.
@@ -48,7 +40,7 @@ public class TestReconnect extends BaseFBTest
     protected void setUp() throws Exception {
         super.setUp();
         Class.forName(org.firebirdsql.jdbc.FBDriver.class.getName());
-        //driver = DriverManager.getDriver(DB_DRIVER_URL);
+        //driver = java.sql.DriverManager.getDriver(DB_DRIVER_URL);
     }
 
 
@@ -257,7 +249,7 @@ public class TestReconnect extends BaseFBTest
         if (con.getAutoCommit())
             con.setAutoCommit(false);
         log.info("Populating test tables ...");
-        Random random = new Random();
+        java.util.Random random = new java.util.Random();
         for (int i = 1; i <= TABLE_COUNT; i++) {
             StringBuffer sql = new StringBuffer(100);
             sql.append("INSERT INTO ");

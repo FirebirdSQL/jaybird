@@ -27,6 +27,7 @@
 
 package org.firebirdsql.gds;
 
+import java.util.Set;
 
 
 
@@ -39,17 +40,6 @@ package org.firebirdsql.gds;
  * @version 1.0
  */
 public interface GDS {
-
-    public  Clumplet newClumplet(int type, String content);
-
-    public  Clumplet newClumplet(int type);
-
-    public  Clumplet newClumplet(int type, int c);
-
-    public  Clumplet newClumplet(int type, byte[] content) ;
-
-    public  Clumplet cloneClumplet(Clumplet c) ;
-
 
     // Database functions
 
@@ -202,12 +192,6 @@ public interface GDS {
              byte[] buffer) throws GDSException;
 
     void isc_close_blob(isc_blob_handle blob) throws GDSException;
-    
-    byte[] isc_blob_info(isc_blob_handle handle, byte[] items, int buffer_length) 
-        throws GDSException;
-        
-    void isc_seek_blob(isc_blob_handle handle, int position, int seekMode) 
-        throws GDSException;
 
     // Handle declaration methods
     isc_db_handle get_new_isc_db_handle();
@@ -217,6 +201,4 @@ public interface GDS {
     isc_stmt_handle get_new_isc_stmt_handle();
 
     isc_blob_handle get_new_isc_blob_handle();
-
-    void close();
-    }
+}

@@ -13,7 +13,7 @@ goto end
 REM Slurp the command line arguments.  This loop allows for an unlimited number of 
 REM arguments (up to the command line limit, anyway).
 :slurpArgs
-set ANT= .\bin\ant.bat
+set ANT= bin/ant.bat
 
 set ANT_CMD_LINE_ARGS=
 

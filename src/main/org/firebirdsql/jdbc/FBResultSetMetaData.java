@@ -20,22 +20,14 @@
 /*
  * CVS modification log:
  * $Log$
- * Revision 1.11  2003/06/05 23:22:31  brodsom
- * Substitute package and inline imports
- *
- * Revision 1.10  2003/06/04 13:04:34  brodsom
- * Remove unused vars and imports
- * Comment unused private method
- *
- * Revision 1.9  2003/01/13 19:07:37  brodsom
- * Patch for problem with UNION's when retreiving column information when there are too much columns
- *
  *
 */
 package org.firebirdsql.jdbc;
 
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
 
 import java.math.BigDecimal;
@@ -44,16 +36,13 @@ import java.sql.ResultSetMetaData;
 
 import java.sql.Blob;
 import java.sql.Array;
-import java.sql.Date;
+import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.sql.Types;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+
+import java.util.*;
+
 
 /**
  * Describe class <code>FBResultSetMetaData</code> here.
@@ -67,6 +56,12 @@ public class FBResultSetMetaData implements ResultSetMetaData {
     private final XSQLVAR[] xsqlvars;
     private Map extendedInfo;
     private final FBConnection connection;
+    //private FBResultSet rs;
+    //private FBPreparedStatement ps;
+
+    /*    FBResultSetMetaData(isc_stmt_handle stmt) {
+        this.stmt = stmt;
+        }*/
 
     /**
      * Creates a new <code>FBResultSetMetaData</code> instance.
@@ -82,7 +77,13 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
     }
-
+    /*
+    FBResultSetMetaData(XSQLVAR[] xsqlvars, FBPreparedStatement ps) throws SQLException {
+        this.xsqlvars = xsqlvars;
+        this.ps = ps;
+        this.extendedInfo = getExtendedFieldInfo(ps.c);
+    }
+    */
     private String getIscEncoding() {
         if (connection != null)
             return connection.getIscEncoding();
@@ -97,6 +98,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getColumnCount() {
+        //return stmt.getOutSqlda().sqln;;
         return xsqlvars.length;
     }
 
@@ -225,16 +227,16 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         int colType = getColumnType(column);
         ExtendedFieldInfo fieldInfo = getExtFieldInfo(column);
         switch (colType){
-            case Types.DECIMAL:
-            case Types.NUMERIC:
+            case java.sql.Types.DECIMAL:
+            case java.sql.Types.NUMERIC:
                 
                 if (fieldInfo == null) 
                     return estimatePrecision(column);
                 else
                     return fieldInfo.fieldPrecision;
             
-            case Types.CHAR:
-            case Types.VARCHAR:
+            case java.sql.Types.CHAR:
+            case java.sql.Types.VARCHAR:
                 
                 if (fieldInfo == null) {
                     String encoding = getIscEncoding();
@@ -243,19 +245,19 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                 } else
                     return fieldInfo.characterLength;
             
-            case Types.FLOAT:
+            case java.sql.Types.FLOAT:
                 return 9;
-            case Types.DOUBLE:
+            case java.sql.Types.DOUBLE:
                 return 17;
-            case Types.INTEGER:
+            case java.sql.Types.INTEGER:
                 return 11;
-            case Types.SMALLINT:
+            case java.sql.Types.SMALLINT:
                 return 6;
-            case Types.DATE:
+            case java.sql.Types.DATE:
                 return 10;
-            case Types.TIME:
+            case java.sql.Types.TIME:
                 return 8;
-            case Types.TIMESTAMP:
+            case java.sql.Types.TIMESTAMP:
                 return 19;
             default:
 
@@ -317,16 +319,16 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         
         switch (colType){
             
-            case Types.DECIMAL:
-            case Types.NUMERIC:
+            case java.sql.Types.DECIMAL:
+            case java.sql.Types.NUMERIC:
             
                 if (fieldInfo == null) 
                     return estimatePrecision(column);
                 else
                     return fieldInfo.fieldPrecision;
                 
-            case Types.CHAR:
-            case Types.VARCHAR:
+            case java.sql.Types.CHAR:
+            case java.sql.Types.VARCHAR:
             
                 if (fieldInfo == null) {
                     String encoding = getIscEncoding();
@@ -335,19 +337,19 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                 } else
                     return fieldInfo.characterLength;
                 
-            case Types.FLOAT:
+            case java.sql.Types.FLOAT:
                 return 7;
-            case Types.DOUBLE:
+            case java.sql.Types.DOUBLE:
                 return 15;
-            case Types.INTEGER:
+            case java.sql.Types.INTEGER:
                 return 10;
-            case Types.SMALLINT:
+            case java.sql.Types.SMALLINT:
                 return 5;
-            case Types.DATE:
+            case java.sql.Types.DATE:
                 return 10;
-            case Types.TIME:
+            case java.sql.Types.TIME:
                 return 8;
-            case Types.TIMESTAMP:
+            case java.sql.Types.TIMESTAMP:
                 return 19;
             default:
                 return 0;
@@ -607,7 +609,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
             case ISCConstants.SQL_D_FLOAT:
                 return Double.class.getName();
             case ISCConstants.SQL_TIMESTAMP:
-                return Timestamp.class.getName();
+                return java.sql.Timestamp.class.getName();
             case ISCConstants.SQL_BLOB:
                 return Blob.class.getName();
             case ISCConstants.SQL_ARRAY:
@@ -615,9 +617,9 @@ public class FBResultSetMetaData implements ResultSetMetaData {
             case ISCConstants.SQL_QUAD:
                 return Long.class.getName();
             case ISCConstants.SQL_TYPE_TIME:
-                return Time.class.getName();
+                return java.sql.Time.class.getName();
             case ISCConstants.SQL_TYPE_DATE:
-                return Date.class.getName();
+                return java.sql.Date.class.getName();
             case ISCConstants.SQL_INT64:
                 if (getXsqlvar(column).sqlscale == 0) {
                     return Long.class.getName();

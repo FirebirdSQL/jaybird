@@ -26,44 +26,37 @@ package org.firebirdsql.logging;
  */
 public class LoggerFactory{
     
-    private static final boolean forceConsoleLogger = false;
-    
     private static boolean checked = false;
     private static boolean log4j = false;
     
     public static Logger getLogger(String name,boolean def) {
         if (!checked){
-            String sLog4j = System.getProperty("FBLog4j");
-            if (!def){
-                if (sLog4j != null && sLog4j.equals("true"))
-                    log4j = true;
-                      else
-                    log4j = false;
-                 }
-            else{
-                if (sLog4j != null && sLog4j.equals("false"))
-                    log4j = false;
-                      else
-                    log4j = true;
-                 }
-
+            try {
+                Class verify = Class.forName("org.apache.log4j.Category");
+                log4j = true;
+            }
+            catch (ClassNotFoundException cnfe){
+                log4j = false;
+            }
             if (log4j){
-                 try {
-                     Class verify = Class.forName("org.apache.log4j.Category");
-                     log4j = true;
-                 }
-                 catch (ClassNotFoundException cnfe){
-                     log4j = false;
-                 }
-                
+                    String sLog4j = System.getProperty("FBLog4j");
+                if (!def){
+                    if (sLog4j != null && sLog4j.equals("true"))
+                        log4j = true;
+                          else
+                        log4j = false;
+                     }
+                else{
+                    if (sLog4j != null && sLog4j.equals("false"))
+                        log4j = false;
+                          else
+                        log4j = true;
+                     }
             }
             checked = true;
         }
         if (log4j)
             return new Log4jLogger(name);
-        else
-        if (forceConsoleLogger)
-            return new ConsoleLogger(name);
         else
             return null;
     }

@@ -19,15 +19,10 @@
 
 package org.firebirdsql.jdbc;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Blob;
-import java.sql.SQLException;
-
 import org.firebirdsql.gds.XSQLVAR;
 
+import java.sql.*;
+import java.io.*;
 
 /**
  * This is Blob-based implementation of {@link FBStringField}. It should be used
@@ -44,10 +39,6 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     private boolean isCachedData = false;
     
     private FBBlob blob;
-
-    // Rather then hold cached data in the XSQLDAVar we will hold it in here.
-    int length;
-    byte[] data;
 
     FBLongVarCharField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
         super(field, rs, numCol);
@@ -85,7 +76,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 
-        Long blobId = new Long(field.decodeLong(rs.row[numCol]));
+        Long blobId = new Long(XSQLVAR.decodeLong(rs.row[numCol]));
         
         /*
         // commented out by R.Rokytskyy, it's dead code
@@ -195,9 +186,9 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (!c.getAutoCommit())
             c.ensureInTransaction();
         
-        FBBlob blob =  new FBBlob(c, 0);
+        FBBlob blob =  new FBBlob(c);
         blob.copyStream(in, length);
-        field.sqldata = field.encodeLong(blob.getBlobId());
+        field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
     }
 
     void setBinaryStream(InputStream in, int length) throws SQLException {
@@ -226,8 +217,8 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
                 throw new SQLException("read/write blob problem: " + ioe);
             }
 
-            this.data = bout.toByteArray();
-            this.length = data.length;
+            field.sqldata = bout.toByteArray();
+            field.sqllen = ((byte[])field.sqldata).length;
             isCachedData = true;
         }
     }
@@ -235,7 +226,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     public void flushCachedData() throws SQLException {
         if (isCachedData){
             copyBinaryStream(
-                new ByteArrayInputStream(data), length);
+                new ByteArrayInputStream((byte[])field.sqldata), field.sqllen);
             isCachedData=false;
         }
     }

@@ -19,21 +19,11 @@
 
 package org.firebirdsql.jca;
 
-import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.*;
 import org.firebirdsql.jdbc.FBConnectionHelper;
 
-import java.io.Serializable;
-import java.sql.Connection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.sql.*;
+import java.util.*;
 
 /**
  * This class is provides mapping capabilities between standard JDBC
@@ -41,7 +31,7 @@ import java.util.StringTokenizer;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBTpbMapper implements Serializable {
+public class FBTpbMapper implements java.io.Serializable {
     
     public static final String DEFAULT_MAPPING_RESOURCE = "isc_tpb_mapping";
     public static final FBTpbMapper DEFAULT_MAPPER = new FBTpbMapper();
@@ -50,7 +40,7 @@ public class FBTpbMapper implements Serializable {
     private static final String TRANSACTION_REPEATABLE_READ = FBTpb.TRANSACTION_REPEATABLE_READ;
     private static final String TRANSACTION_READ_COMMITTED = FBTpb.TRANSACTION_READ_COMMITTED;
     private static final String TRANSACTION_READ_UNCOMMITTED = FBTpb.TRANSACTION_READ_UNCOMMITTED;
-//    private static final String TRANSACTION_NONE = FBTpb.TRANSACTION_NONE;
+    private static final String TRANSACTION_NONE = FBTpb.TRANSACTION_NONE;
     
     private HashMap mapping = new HashMap();
     

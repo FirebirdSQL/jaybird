@@ -20,7 +20,6 @@
 package org.firebirdsql.jca;
 
 import java.io.Serializable;
-import java.io.ByteArrayOutputStream;
 import java.sql.Connection;
 import java.util.HashSet;
 import java.util.Set;
@@ -370,7 +369,7 @@ public class FBTpb implements Serializable
     }
 	 
     void createArray(){
-        ByteArrayOutputStream bao = new ByteArrayOutputStream();
+        java.io.ByteArrayOutputStream bao = new java.io.ByteArrayOutputStream();
         Iterator i = tpb.iterator();
         while (i.hasNext()) {
             int n = ((Integer)i.next()).intValue();

@@ -18,10 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import junit.framework.*;
+import java.sql.*;
 
 /**
  * This test case checks if DDL statements are executed correctly.

@@ -21,6 +21,8 @@ package org.firebirdsql.jgds;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.isc_blob_handle;
+import org.firebirdsql.gds.isc_db_handle;
+import org.firebirdsql.gds.isc_tr_handle;
 
 /**
  * Describe class <code>isc_blob_handle_impl</code> here.
@@ -36,7 +38,6 @@ public final class isc_blob_handle_impl implements isc_blob_handle {
     private long blob_id;
 //    private isc_blob_handle_impl next;
     private int rbl_flags;
-    private int position;
 
     isc_blob_handle_impl() {};
 
@@ -83,15 +84,6 @@ public final class isc_blob_handle_impl implements isc_blob_handle {
     public void rbl_flagsRemove(int value) {
         rbl_flags &= ~value;
     }
-    
-    public int getPosition() {
-        return position;
-    }
-    
-    public void setPosition(int position) {
-        this.position = position;
-    }
-    
     // only used in the tests
     public boolean isEof() {
         return (rbl_flags & ISCConstants.RBL_eof_pending) != 0;

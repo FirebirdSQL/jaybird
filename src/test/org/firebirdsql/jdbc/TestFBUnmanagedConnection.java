@@ -22,12 +22,6 @@
  * CVS modification log:
 
  * $Log$
- * Revision 1.3  2003/06/04 13:51:00  brodsom
- * Remove unused vars and imports
- *
- * Revision 1.2  2002/08/29 13:41:16  d_jencks
- * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
- *
  * Revision 1.1  2002/08/14 13:22:46  d_jencks
  * Moved tests to separate directory. Removed need for jmx classes, and removed jmxri.jar
  *
@@ -69,18 +63,15 @@
  *
 
  */
+
+
+
 package org.firebirdsql.jdbc;
 
+import junit.framework.*;
+import java.sql.*;
+import org.firebirdsql.logging.Logger;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.Map;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * Describe class <code>TestFBUnmanagedConnection</code> here.
@@ -113,7 +104,7 @@ public class TestFBUnmanagedConnection extends BaseFBTest {
     public static final String DELETE_TEST_TABLE =
         "DELETE FROM connection_test;";
 
-    private Connection connection;
+    private java.sql.Connection connection;
 
     public TestFBUnmanagedConnection(String testName) {
         super(testName);
@@ -126,7 +117,8 @@ public class TestFBUnmanagedConnection extends BaseFBTest {
     protected void setUp() throws Exception {
        super.setUp();
         Class.forName(FBDriver.class.getName());
-        connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        connection =
+            java.sql.DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
     }
     protected void tearDown() throws Exception {
         try 
@@ -192,7 +184,7 @@ public class TestFBUnmanagedConnection extends BaseFBTest {
     }
 
     public void testGetTypeMap() throws Exception {
-        Map typeMap = connection.getTypeMap();
+        java.util.Map typeMap = connection.getTypeMap();
         assertTrue("TypeMap is null", typeMap != null);
     }
 

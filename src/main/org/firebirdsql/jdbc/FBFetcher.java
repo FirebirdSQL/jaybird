@@ -30,7 +30,9 @@ interface FBFetcher {
     static final int MAX_FETCH_ROWS = 400;
 	 
     Statement getStatement();
+
     boolean next() throws SQLException;
+
     void close() throws SQLException;
 
 	int getRowNum();

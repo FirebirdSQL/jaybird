@@ -23,6 +23,7 @@ package org.firebirdsql.jdbc;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
@@ -31,11 +32,14 @@ import java.sql.Clob;
 import java.sql.Date;
 import java.sql.Ref;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
+
+
 
 /**
  *
@@ -378,7 +382,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * is <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public Date getDate(int parameterIndex) throws SQLException {
+    public java.sql.Date getDate(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
         return getCurrentResultSet().getDate(parameterIndex);
     }
@@ -393,7 +397,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * is <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public Time getTime(int parameterIndex) throws SQLException {
+    public java.sql.Time getTime(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
         return getCurrentResultSet().getTime(parameterIndex);
     }
@@ -408,7 +412,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * is <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public Timestamp getTimestamp(int parameterIndex)
+    public java.sql.Timestamp getTimestamp(int parameterIndex)
         throws SQLException
     {
         assertHasData(getCurrentResultSet());
@@ -482,7 +486,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public Object getObject(int i, Map map) throws SQLException {
+    public Object getObject(int i, java.util.Map map) throws SQLException {
         assertHasData(getCurrentResultSet());
         return getCurrentResultSet().getObject(i, map);
     }
@@ -584,7 +588,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public Date getDate(int parameterIndex, Calendar cal)
+    public java.sql.Date getDate(int parameterIndex, Calendar cal)
         throws SQLException
     {
         assertHasData(getCurrentResultSet());
@@ -610,7 +614,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public Time getTime(int parameterIndex, Calendar cal)
+    public java.sql.Time getTime(int parameterIndex, Calendar cal)
         throws SQLException
     {
         assertHasData(getCurrentResultSet());
@@ -637,7 +641,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public Timestamp getTimestamp(int parameterIndex, Calendar cal)
+    public java.sql.Timestamp getTimestamp(int parameterIndex, Calendar cal)
         throws SQLException
     {
         assertHasData(getCurrentResultSet());

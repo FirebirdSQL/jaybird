@@ -19,9 +19,6 @@
 /*
  * CVS modification log:
  * $Log$
- * Revision 1.3  2002/12/20 12:36:02  brodsom
- * added read of test.db.lc_ctype parameter
- *
  * Revision 1.2  2002/08/29 13:41:16  d_jencks
  * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
  *
@@ -74,13 +71,10 @@
 
 package org.firebirdsql.jdbc;
 
-import java.util.Properties;
-
-import junit.framework.TestCase;
-
+import junit.framework.*;
+import org.firebirdsql.management.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
-import org.firebirdsql.management.FBManager;
 
 
 /**
@@ -129,8 +123,8 @@ public class BaseFBTest extends TestCase
     /**
      * Default properties for database connection
      */
-    public static final Properties DB_INFO =
-        new Properties();
+    public static final java.util.Properties DB_INFO =
+        new java.util.Properties();
 
     // set up info properties
     static{

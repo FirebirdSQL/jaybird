@@ -319,4 +319,3 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1close_1b
 }
 #endif
 #endif
-

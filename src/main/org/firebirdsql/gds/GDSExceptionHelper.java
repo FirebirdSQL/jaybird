@@ -20,9 +20,6 @@
 /*
  * CVS modification log:
  * $Log$
- * Revision 1.2  2003/03/09 16:30:48  rrokytskyy
- * removed some deprecations
- *
  * Revision 1.1  2002/08/29 13:41:01  d_jencks
  * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
  *
@@ -59,9 +56,6 @@ package org.firebirdsql.gds;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import java.util.Properties;
-import java.io.InputStream;
-
 /**
  * This class is supposed to return messages for the specified error code.
  * It loads all messages during the class initialization and keeps messages
@@ -77,7 +71,7 @@ public class GDSExceptionHelper {
    private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class,false);
 
     private static final String MESSAGES = "isc_error_msg";
-    private static Properties messages = new Properties();
+    private static java.util.Properties messages = new java.util.Properties();
 
     private static boolean initialized = false;
 
@@ -89,7 +83,7 @@ public class GDSExceptionHelper {
         try {
             ClassLoader cl = GDSException.class.getClassLoader();
             String res = MESSAGES.replace('.','/') + ".properties";
-			InputStream in = cl.getResourceAsStream(res);
+            java.io.InputStream in = cl.getResourceAsStream(res);
             
             if (in == null) {
                 cl = Thread.currentThread().getContextClassLoader();

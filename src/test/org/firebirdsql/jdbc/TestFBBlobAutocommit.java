@@ -18,14 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.io.ByteArrayInputStream;
-import java.sql.Blob;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.sql.Types;
+import java.io.*;
+import java.sql.*;
 import java.util.Arrays;
 
 /**
@@ -66,7 +60,7 @@ public class TestFBBlobAutocommit extends BaseFBTest {
         Class.forName(FBDriver.class.getName());
         connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
         
-        Statement stmt = connection.createStatement();
+        java.sql.Statement stmt = connection.createStatement();
         try {
             stmt.executeUpdate(DROP_TABLE);
         }
@@ -77,7 +71,7 @@ public class TestFBBlobAutocommit extends BaseFBTest {
     }
 
     protected void tearDown() throws Exception {
-        Statement stmt = connection.createStatement();
+        java.sql.Statement stmt = connection.createStatement();
         stmt.executeUpdate(DROP_TABLE);
         stmt.close();
         connection.close();

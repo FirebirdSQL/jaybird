@@ -5,7 +5,7 @@
  * The contents of this file are subject to the Interbase Public
  * License Version 1.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy
- * of the License at http://www.Inprise.com/IPL.html
+ * of the License at http:////www.Inprise.com/IPL.html
  *
  * Software distributed under the License is distributed on an
  * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
@@ -14,146 +14,18 @@
  *
  * The Original Code was created by Inprise Corporation
  * and its predecessors. Portions created by Inprise Corporation are
- * Copyright (C) Inprise Corporation.
  *
+ * Copyright (C) 2000 Inprise Corporation
  * All Rights Reserved.
  * Contributor(s): ______________________________________.
  */
 
-#ifndef JRD_IBASE_H
-#define JRD_IBASE_H
+#ifndef _JRD_IBASE_H_
+#define _JRD_IBASE_H_
 
-/******************************************************************/
-/* Define type, export and other stuff based on c/c++ and Windows */
-/******************************************************************/
-
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
-#ifndef __GNUC__
-typedef __int64				ISC_INT64;
-typedef unsigned __int64	ISC_UINT64;
-#define  ISC_INT64_DEFINED
+#ifndef HARBOR_MERGE
+#define HARBOR_MERGE
 #endif
-#define  ISC_EXPORT	__stdcall
-#define  ISC_EXPORT_VARARG	__cdecl
-#else
-#define  ISC_EXPORT
-#define  ISC_EXPORT_VARARG
-#endif
-
-/*******************************************************************/
-/* 64 bit Integers                                                 */
-/*******************************************************************/
-
-#ifdef  ISC_INT64_DEFINED
-#undef  ISC_INT64_DEFINED
-#else
-typedef long long int			ISC_INT64;
-typedef unsigned long long int	ISC_UINT64;
-#endif
-
-#if SIZEOF_LONG == 8
-	/* EKU: Firebird requires (S)LONG to be 32 bit */
-#   define LONG_DEFINED
-    typedef int SLONG;
-    typedef unsigned int ULONG;
-
-#   define SQUAD_DEFINED
-    typedef long SQUAD;
-    typedef unsigned long UQUAD;
-#   define NATIVE_QUAD
-#endif /* SIZEOF_LONG == 8 */
-
-
-
-/* Basic data types */
-
-
-#ifdef NOT_USED_OR_REPLACED
-typedef signed char SCHAR;
-#else
-/* TMN: TODO It seems SCHAR is used just about *everywhere* where a plain
- * "char" is really intended. This currently forces us to this bad definition.
- */
-typedef char SCHAR;
-#endif
-
-
-typedef unsigned char UCHAR;
-typedef short SSHORT;
-typedef unsigned short USHORT;
-
-
-#ifndef LONG_DEFINED			/* 32 bit */
-typedef long SLONG;
-typedef unsigned long ULONG;
-#else
-#undef LONG_DEFINED
-#endif
-
-
-#ifndef SQUAD_DEFINED			/* 64 bit */
-typedef struct {
-	SLONG high;
-	ULONG low;
-} SQUAD;
-#endif
-
-
-#ifndef DEFINED_GDS_QUAD
-#define DEFINED_GDS_QUAD
-struct GDS_QUAD_t {
-	SLONG gds_quad_high;
-	ULONG gds_quad_low;
-};
-
-typedef struct GDS_QUAD_t GDS_QUAD;
-
-#endif /* DEFINED_GDS_QUAD */
-
-//
-// TMN: some misc data types from all over the place
-//
-struct vary
-{
-	USHORT vary_length;
-	char   vary_string[1];
-};
-// TMN: Currently we can't do this, since remote uses a different
-// definition of VARY than the rest of the code! :-<
-//typedef vary* VARY;
-
-struct lstring
-{
-	ULONG	lstr_length;
-	ULONG	lstr_allocated;
-	UCHAR*	lstr_address;
-};
-typedef struct lstring LSTRING;
-
-
-typedef unsigned char BOOLEAN;
-typedef char TEXT;				// To be expunged over time
-//typedef unsigned char STEXT;	Signed text - not used
-//typedef unsigned char UTEXT;	Unsigned text - not used
-typedef unsigned char BYTE;		// Unsigned byte - common
-//typedef char SBYTE;			Signed byte - not used
-typedef long ISC_STATUS;
-typedef long IPTR;
-typedef unsigned long U_IPTR;
-typedef void (*FPTR_VOID) ();
-typedef void (*FPTR_VOID_PTR) (void *);
-typedef int (*FPTR_INT) ();
-typedef int (*FPTR_INT_VOID_PTR) (void *);
-typedef ULONG RCRD_OFFSET;
-typedef USHORT FLD_LENGTH;
-typedef int (*lock_ast_t)(void *);
-
-#define ISC_STATUS_LENGTH	20
-typedef ISC_STATUS ISC_STATUS_ARRAY[ISC_STATUS_LENGTH];
-
-/* Number of elements in an array */
-#define FB_NELEM(x)	((int)(sizeof(x) / sizeof(x[0])))
-#define FB_ALIGN(n,b) ((n+b-1)&~(b-1))
 
 #define isc_version4
 
@@ -164,691 +36,620 @@ typedef ISC_STATUS ISC_STATUS_ARRAY[ISC_STATUS_LENGTH];
 #define  ISC__FALSE	ISC_FALSE
 #endif
 
-#define ISC_FAR
-
-#if SIZEOF_LONG == 8
-typedef	int		ISC_LONG;
-typedef	unsigned int	ISC_ULONG;
+#if (defined __osf__ && defined __alpha)
+#define  ISC_LONG	int
+#define  ISC_ULONG	unsigned int
 #else
-typedef	signed long	ISC_LONG;
-typedef	unsigned long	ISC_ULONG;
+#define  ISC_LONG	long
+#define  ISC_ULONG	unsigned long
 #endif
 
-typedef	signed short	ISC_SHORT;
-typedef	unsigned short	ISC_USHORT;
-
-typedef	unsigned char	ISC_UCHAR;
+#define  ISC_USHORT	unsigned short
+#define  ISC_STATUS	long
 
 #define  DSQL_close     1
 #define  DSQL_drop      2
 
 
-/********************************/
-/* InterBase Handle Definitions */
-/********************************/
+/******************************************************************/
+/* Define type, export and other stuff based on c/c++ and Windows */
+/******************************************************************/
 
-#ifndef JRD_Y_REF_H
-#define FRBRD void
+#if (defined(_MSC_VER) && defined(_WIN32)) || \
+    (defined(__BORLANDC__) && (defined(__WIN32__) || defined(__OS2__)))
+#define  ISC_FAR
+#define  ISC_EXPORT	__stdcall
+#define  ISC_EXPORT_VARARG	__cdecl
+typedef           __int64  ISC_INT64;
+typedef  unsigned __int64  ISC_UINT64;
+#define  ISC_INT64_DEFINED
+#else					/* Not Windows/NT */
+#if (defined(__IBMC__) && defined(__OS2__))
+#define  ISC_FAR
+#define  ISC_EXPORT	_System
+#define  ISC_EXPORT_VARARG	ISC_EXPORT
+#else					/* not IBM C Set++ for OS/2 */
+#if ( defined( _Windows) || defined( _WINDOWS))
+#define  ISC_FAR	__far
+#define  ISC_EXPORT     ISC_FAR __cdecl __loadds __export
+#define  ISC_EXPORT_VARARG	ISC_EXPORT
+#else					/* Not Windows/NT, OS/2 or Windows */
+#define  ISC_FAR
+#define  ISC_EXPORT
+#define  ISC_EXPORT_VARARG
+#endif					/* Windows and Not Windows/NT or OS/2 */
+#endif					/* IBM C Set++ for OS/2 */
+#endif   				/* Windows/NT */
+
+/*******************************************************************/
+/* 64 bit Integers                                                 */
+/*******************************************************************/
+
+#ifndef  ISC_INT64_DEFINED              
+typedef           long long int  ISC_INT64;	
+typedef  unsigned long long int  ISC_UINT64;	
+#else
+#undef  ISC_INT64_DEFINED
 #endif
-
-typedef FRBRD * isc_att_handle;
-typedef FRBRD * isc_blob_handle;
-typedef FRBRD * isc_db_handle;
-typedef FRBRD * isc_req_handle;
-typedef FRBRD * isc_stmt_handle;
-typedef FRBRD * isc_svc_handle;
-typedef FRBRD * isc_tr_handle;
-typedef void (* isc_callback) ();
-typedef ISC_LONG isc_resv_handle;
 
 /*******************************************************************/
 /* Time & Date Support                                             */
 /*******************************************************************/
 
-#ifndef ISC_TIMESTAMP_DEFINED
-typedef long			ISC_DATE;
+#ifndef _ISC_TIMESTAMP_
+typedef long		ISC_DATE;
 typedef unsigned long	ISC_TIME;
-typedef struct
-{
-	ISC_DATE timestamp_date;
-	ISC_TIME timestamp_time;
+typedef struct {
+    ISC_DATE 	timestamp_date;
+    ISC_TIME	timestamp_time;
 } ISC_TIMESTAMP;
-#define ISC_TIMESTAMP_DEFINED
-#endif	/* ISC_TIMESTAMP_DEFINED */
+#define _ISC_TIMESTAMP_			1
+#endif
 
 #define ISC_TIME_SECONDS_PRECISION          10000L
-#define ISC_TIME_SECONDS_PRECISION_SCALE    (-4)
+#define ISC_TIME_SECONDS_PRECISION_SCALE    -4
 
 /*******************************************************************/
 /* Blob id structure                                               */
 /*******************************************************************/
 
+typedef struct {
+    ISC_LONG		gds_quad_high;
+    unsigned ISC_LONG	gds_quad_low;
+} GDS_QUAD;
 #if !(defined __cplusplus)
-typedef GDS_QUAD GDS__QUAD;
-#endif /* !(defined __cplusplus) */
+typedef GDS_QUAD	GDS__QUAD;
+#endif					/* !(defined __cplusplus) */
 
-typedef struct GDS_QUAD_t ISC_QUAD;
+#define	ISC_QUAD	GDS_QUAD
+#define	isc_quad_high	gds_quad_high
+#define	isc_quad_low	gds_quad_low
 
-
-typedef struct
-{
-	short array_bound_lower;
-	short array_bound_upper;
+typedef struct {
+    short       	array_bound_lower;
+    short       	array_bound_upper;
 } ISC_ARRAY_BOUND;
 
-typedef struct
-{
-	unsigned char	array_desc_dtype;
-	char			array_desc_scale;
-	unsigned short	array_desc_length;
-	char			array_desc_field_name[32];
-	char			array_desc_relation_name[32];
-	short			array_desc_dimensions;
-	short			array_desc_flags;
-	ISC_ARRAY_BOUND	array_desc_bounds[16];
+typedef struct {
+    unsigned char       array_desc_dtype;
+    char                array_desc_scale;
+    unsigned short      array_desc_length;
+    char                array_desc_field_name [32];
+    char                array_desc_relation_name [32];
+    short               array_desc_dimensions;
+    short               array_desc_flags;
+    ISC_ARRAY_BOUND     array_desc_bounds [16];
 } ISC_ARRAY_DESC;
 
-typedef struct
-{
-	short			blob_desc_subtype;
-	short			blob_desc_charset;
-	short			blob_desc_segment_size;
-	unsigned char	blob_desc_field_name[32];
-	unsigned char	blob_desc_relation_name[32];
+typedef struct {
+    short               blob_desc_subtype;
+    short               blob_desc_charset;
+    short               blob_desc_segment_size;
+    unsigned char       blob_desc_field_name [32];
+    unsigned char       blob_desc_relation_name [32];
 } ISC_BLOB_DESC;
 
-
-
+
 /***************************/
 /* Blob control structure  */
 /***************************/
 
-typedef struct isc_blob_ctl
-{
-	ISC_STATUS	(* ctl_source)();	/* Source filter */
-	struct isc_blob_ctl *	ctl_source_handle;	/* Argument to pass to source filter */
-	short					ctl_to_sub_type;		/* Target type */
-	short					ctl_from_sub_type;		/* Source type */
-	unsigned short			ctl_buffer_length;		/* Length of buffer */
-	unsigned short			ctl_segment_length;		/* Length of current segment */
-	unsigned short			ctl_bpb_length;			/* Length of blob parameter  block */
-	char *					ctl_bpb;				/* Address of blob parameter block */
-	unsigned char *			ctl_buffer;				/* Address of segment buffer */
-	ISC_LONG				ctl_max_segment;		/* Length of longest segment */
-	ISC_LONG				ctl_number_segments;	/* Total number of segments */
-	ISC_LONG				ctl_total_length;		/* Total length of blob */
-	ISC_STATUS *			ctl_status;				/* Address of status vector */
-	long					ctl_data[8];			/* Application specific data */
-} * ISC_BLOB_CTL;
+typedef struct isc_blob_ctl{
+    ISC_STATUS      (ISC_FAR *ctl_source)();	/* Source filter */
+    struct isc_blob_ctl ISC_FAR *ctl_source_handle; /* Argument to pass to source */
+						/* filter */
+    short		  ctl_to_sub_type;  	/* Target type */
+    short		  ctl_from_sub_type;	/* Source type */
+    unsigned short  	  ctl_buffer_length;	/* Length of buffer */
+    unsigned short  	  ctl_segment_length;  	/* Length of current segment */
+    unsigned short  	  ctl_bpb_length;	/* Length of blob parameter */
+					    	/* block */
+    char	  ISC_FAR *ctl_bpb;		/* Address of blob parameter */ 
+						/* block */
+    unsigned char ISC_FAR *ctl_buffer;		/* Address of segment buffer */
+    ISC_LONG     	  ctl_max_segment;	/* Length of longest segment */
+    ISC_LONG	 	  ctl_number_segments; 	/* Total number of segments */
+    ISC_LONG  		  ctl_total_length;  	/* Total length of blob */
+    ISC_STATUS	  ISC_FAR *ctl_status;		/* Address of status vector */
+    long		  ctl_data [8];	  	/* Application specific data */
+} ISC_FAR *ISC_BLOB_CTL;
 
 /***************************/
-/* Blob stream definitions */
+/* Blob stream definitions */ 
 /***************************/
 
-typedef struct bstream
-{
-	isc_blob_handle	bstr_blob;		/* Blob handle */
-	char *			bstr_buffer;	/* Address of buffer */
-	char *			bstr_ptr;		/* Next character */
-	short			bstr_length;	/* Length of buffer */
-	short			bstr_cnt;		/* Characters in buffer */
-	char			bstr_mode;		/* (mode) ? OUTPUT : INPUT */
+typedef struct bstream {
+    void	ISC_FAR *bstr_blob;  	/* Blob handle */
+    char	ISC_FAR *bstr_buffer;	/* Address of buffer */
+    char	ISC_FAR *bstr_ptr;	/* Next character */
+    short	  bstr_length;		/* Length of buffer */
+    short	  bstr_cnt;		/* Characters in buffer */
+    char      	  bstr_mode;  		/* (mode) ? OUTPUT : INPUT */
 } BSTREAM;
 
-/* Three ugly macros, one even using octal radix... sigh... */
 #define getb(p)	(--(p)->bstr_cnt >= 0 ? *(p)->bstr_ptr++ & 0377: BLOB_get (p))
 #define putb(x,p) (((x) == '\n' || (!(--(p)->bstr_cnt))) ? BLOB_put ((x),p) : ((int) (*(p)->bstr_ptr++ = (unsigned) (x))))
 #define putbx(x,p) ((!(--(p)->bstr_cnt)) ? BLOB_put ((x),p) : ((int) (*(p)->bstr_ptr++ = (unsigned) (x))))
-
-
-/********************************************************************/
-/* CVC: Public blob interface definition held in val.h.             */
-/* For some unknown reason, it was only documented in langRef       */
-/* and being the structure passed by the engine to UDFs it never    */
-/* made its way into this public definitions file.                  */
-/* Being its original name "blob", I renamed it blobcallback here.  */
-/* I did the full definition with the proper parameters instead of  */
-/* the weak C declaration with any number and type of parameters.   */
-/* Since the first parameter -BLB- is unknown outside the engine,   */
-/* it's more accurate to use void* than int* as the blob pointer    */
-/********************************************************************/
-
-#if !defined(JRD_VAL_H) && !defined(REQUESTER)
-/* Blob passing structure */
-
-enum lseek_mode {blb_seek_relative = 1, blb_seek_from_tail = 2};
-
-typedef struct blobcallback {
-    short ( *blob_get_segment)
-		(void * hnd, unsigned char* buffer, ISC_USHORT buf_size, ISC_USHORT* result_len);
-    void			*blob_handle;
-    ISC_LONG	blob_number_segments;
-    ISC_LONG	blob_max_segment;
-    ISC_LONG	blob_total_length;
-    void ( *blob_put_segment)
-		(void * hnd, unsigned char* buffer, ISC_USHORT buf_size);
-    ISC_LONG ( *blob_lseek)
-		(void * hnd, ISC_USHORT mode, ISC_LONG offset);
-}  *BLOBCALLBACK;
-#endif /* !defined(JRD_VAL_H) && !defined(REQUESTER) */
-
-
-
-/********************************************************************/
-/* CVC: Public descriptor interface held in dsc.h.                  */
-/* We need it documented to be able to recognize NULL in UDFs.      */
-/* Being its original name "dsc", I renamed it paramdsc here.       */
-/* Notice that I adjust to the original definition: contrary to     */
-/* other cases, the typedef is the same struct not the pointer.     */
-/* I included the enumeration of dsc_dtype possible values.         */
-/* Ultimately, dsc.h should be part of the public interface.        */
-/********************************************************************/
-
-#if !defined(JRD_DSC_H)
-/* This is the famous internal descriptor that UDFs can use, too. */
-typedef struct paramdsc {
-    unsigned char	dsc_dtype;
-    signed char		dsc_scale;
-    ISC_USHORT		dsc_length;
-    short		dsc_sub_type;
-    ISC_USHORT		dsc_flags;
-    unsigned char	*dsc_address;
-} PARAMDSC;
-
-#if !defined(JRD_VAL_H)
-/* This is a helper struct to work with varchars. */
-typedef struct paramvary {
-    ISC_USHORT		vary_length;
-    unsigned char	vary_string [1];
-} PARAMVARY;
-#endif /* !defined(JRD_VAL_H) */
-
-/* values for dsc_flags */
-/* Note: DSC_null is only reliably set for local variables
-   (blr_variable) */
-#define DSC_null		1
-#define DSC_no_subtype		2	/* dsc has no sub type specified */
-#define DSC_nullable  		4	/* not stored. instead, is derived
-                                	from metadata primarily to flag
-                                 	SQLDA (in DSQL)               */
-
-/* Overload text typing information into the dsc_sub_type field.
-   See intl.h for definitions of text types */ 
-
-#ifndef dsc_ttype
-#define dsc_ttype	dsc_sub_type
-#endif
-
-
-/* Note that dtype_null actually means that we do not yet know the
-   dtype for this descriptor.  A nice cleanup item would be to globally
-   change it to dtype_unknown.  --chrisj 1999-02-17 */
-
-#define dtype_null	0
-#define dtype_text	1
-#define dtype_cstring	2
-#define dtype_varying	3
-
-#define dtype_packed	6
-#define dtype_byte	7
-#define dtype_short	8
-#define dtype_long	9
-#define dtype_quad	10
-#define dtype_real	11
-#define dtype_double	12
-#define dtype_d_float	13
-#define dtype_sql_date	14
-#define dtype_sql_time	15
-#define dtype_timestamp	16
-#define dtype_blob	17
-#define dtype_array	18
-#define dtype_int64     19
-#define DTYPE_TYPE_MAX	20
-#endif /* !defined(JRD_DSC_H) */
-
-
+
 /***************************/
 /* Dynamic SQL definitions */
 /***************************/
-
+ 
 /******************************/
 /* Declare the extended SQLDA */
 /******************************/
 
-#ifndef FB_SQLDA
-
-typedef struct
-{
-	short			sqltype;			/* datatype of field */
-	short			sqlscale;			/* scale factor */
-	short			sqlsubtype;			/* datatype subtype - BLOBs & Text types only */
-	short			sqllen;				/* length of data area */
-	char *			sqldata;			/* address of data */
-	short *			sqlind;				/* address of indicator variable */
-	short			sqlname_length;		/* length of sqlname field */
-	char			sqlname[32];		/* name of field, name length + space for NULL */
-	short			relname_length;		/* length of relation name */
-	char			relname[32];		/* field's relation name + space for NULL */
-	short			ownname_length;		/* length of owner name */
-	char			ownname[32];		/* relation's owner name + space for  NULL */
-	short			aliasname_length;	/* length of alias name */
-	char			aliasname[32];		/* relation's alias name + space for NULL */
+typedef struct {
+    short	sqltype;		/* datatype of field */
+    short	sqlscale;		/* scale factor */
+    short	sqlsubtype;		/* datatype subtype - BLOBs & Text */
+					/* types only */
+    short	sqllen;			/* length of data area */
+    char  ISC_FAR *sqldata;		/* address of data */
+    short ISC_FAR *sqlind;		/* address of indicator variable */
+    short  	sqlname_length;		/* length of sqlname field */
+    char	sqlname [32];		/* name of field, name length + space */
+					/* for NULL */
+    short	relname_length;		/* length of relation name */
+    char	relname [32];		/* field's relation name + space for */
+					/* NULL */
+    short	ownname_length;		/* length of owner name */
+    char	ownname [32];		/* relation's owner name + space for */
+					/* NULL */
+    short	aliasname_length; 	/* length of alias name */
+    char	aliasname [32];		/* relation's alias name + space for */
+					/* NULL */
 } XSQLVAR;
 
-typedef struct
-{
-	short		version;			/* version of this XSQLDA */
-	char		sqldaid[8];			/* XSQLDA name field */
-	ISC_LONG	sqldabc;			/* length in bytes of SQLDA */
-	short		sqln;				/* number of fields allocated */
-	short		sqld;				/* actual number of fields */
-	XSQLVAR		sqlvar[1];			/* first field address */
+typedef struct {
+    short	version;		/* version of this XSQLDA */
+    char	sqldaid [8];		/* XSQLDA name field */
+    ISC_LONG	sqldabc;		/* length in bytes of SQLDA */
+    short	sqln;			/* number of fields allocated */
+    short	sqld;			/* actual number of fields */
+    XSQLVAR	sqlvar [1];		/* first field address */
 } XSQLDA;
 
 #define XSQLDA_LENGTH(n)	(sizeof (XSQLDA) + ((n)-1) * sizeof (XSQLVAR))
 
-#define SQLDA_VERSION1				1
+#define SQLDA_VERSION1			1
 
-#define SQL_DIALECT_V5				1	/* meaning is same as DIALECT_xsqlda */
-#define SQL_DIALECT_V6_TRANSITION	2	/* flagging anything that is delimited
-										   by double quotes as an error and
-										   flagging keyword DATE as an error */
-#define SQL_DIALECT_V6				3	/* supports SQL delimited identifier,
-										   SQLDATE/DATE, TIME, TIMESTAMP,
-										   CURRENT_DATE, CURRENT_TIME,
-										   CURRENT_TIMESTAMP, and 64-bit exact
-										   numeric type */
-#define SQL_DIALECT_CURRENT		SQL_DIALECT_V6	/* latest IB DIALECT */
+#define SQL_DIALECT_V5			1/* meaning is same as DIALECT_xsqlda */
+#define SQL_DIALECT_V6_TRANSITION	2/* flagging anything that is delimited
+                                            by double quotes as an error and
+                                            flagging keyword DATE as an error */
+#define SQL_DIALECT_V6			3/* supports SQL delimited identifier,
+                                            SQLDATE/DATE, TIME, TIMESTAMP,
+                                            CURRENT_DATE, CURRENT_TIME,
+                                            CURRENT_TIMESTAMP, and 64-bit exact
+                                            numeric type */
+#define SQL_DIALECT_CURRENT		SQL_DIALECT_V6/* latest IB DIALECT */
+
+/********************************/
+/* InterBase Handle Definitions */
+/********************************/
 
+typedef void     ISC_FAR *isc_att_handle;
 
-#define FB_SQLDA
-#endif
-
+typedef void     ISC_FAR *isc_blob_handle;
+typedef void     ISC_FAR *isc_db_handle;
+typedef void     ISC_FAR *isc_form_handle;
+typedef void     ISC_FAR *isc_req_handle;
+typedef void     ISC_FAR *isc_stmt_handle;
+typedef void     ISC_FAR *isc_svc_handle;
+typedef void     ISC_FAR *isc_tr_handle;
+typedef void     ISC_FAR *isc_win_handle;
+typedef void    (ISC_FAR *isc_callback)();
+typedef ISC_LONG	 isc_resv_handle;
+
 /***************************/
 /* OSRI database functions */
 /***************************/
+
+#if defined(__cplusplus) || defined(__STDC__) || defined(_Windows) || \
+    (defined(_MSC_VER) && defined(WIN32)) || defined( _WINDOWS) || \
+    (defined(__BORLANDC__) && (defined(__WIN32__) || defined(__OS2__))) || \
+    (defined(__IBMC__) && defined(__OS2__)) || defined(AIX_PPC)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-ISC_STATUS ISC_EXPORT isc_attach_database(ISC_STATUS *,
-										  short,
-										  char *,
-										  isc_db_handle *,
-										  short,
-										  char *);
-
-ISC_STATUS ISC_EXPORT isc_array_gen_sdl(ISC_STATUS *,
-										ISC_ARRAY_DESC *,
-										short *,
-										char *,
-										short *);
-
-ISC_STATUS ISC_EXPORT isc_array_get_slice(ISC_STATUS *,
-										  isc_db_handle *,
-										  isc_tr_handle *,
-										  ISC_QUAD *,
-										  ISC_ARRAY_DESC *,
-										  void *,
-										  ISC_LONG *);
-
-ISC_STATUS ISC_EXPORT isc_array_lookup_bounds(ISC_STATUS *,
-											  isc_db_handle *,
-											  isc_tr_handle *,
-											  char *,
-											  char *,
-											  ISC_ARRAY_DESC *);
-
-ISC_STATUS ISC_EXPORT isc_array_lookup_desc(ISC_STATUS *,
-											isc_db_handle *,
-											isc_tr_handle *,
-											char *,
-											char *,
-											ISC_ARRAY_DESC *);
-
-ISC_STATUS ISC_EXPORT isc_array_set_desc(ISC_STATUS *,
-										 char *,
-										 char *,
-										 short *,
-										 short *,
-										 short *,
-										 ISC_ARRAY_DESC *);
-
-ISC_STATUS ISC_EXPORT isc_array_put_slice(ISC_STATUS *,
-										  isc_db_handle *,
-										  isc_tr_handle *,
-										  ISC_QUAD *,
-										  ISC_ARRAY_DESC *,
-										  void *,
-										  ISC_LONG *);
-
-void ISC_EXPORT isc_blob_default_desc(ISC_BLOB_DESC *,
-									  unsigned char *,
-									  unsigned char *);
-
-ISC_STATUS ISC_EXPORT isc_blob_gen_bpb(ISC_STATUS *,
-									   ISC_BLOB_DESC *,
-									   ISC_BLOB_DESC *,
-									   unsigned short,
-									   unsigned char *,
-									   unsigned short *);
-
-ISC_STATUS ISC_EXPORT isc_blob_info(ISC_STATUS *,
-									isc_blob_handle *,
-									short,
-									char *,
-									short,
-									char *);
-
-ISC_STATUS ISC_EXPORT isc_blob_lookup_desc(ISC_STATUS *,
-										   isc_db_handle *,
-										   isc_tr_handle *,
-										   unsigned char *,
-										   unsigned char *,
-										   ISC_BLOB_DESC *,
-										   unsigned char *);
-
-ISC_STATUS ISC_EXPORT isc_blob_set_desc(ISC_STATUS *,
-										unsigned char *,
-										unsigned char *,
-										short,
-										short,
-										short,
-										ISC_BLOB_DESC *);
-
-ISC_STATUS ISC_EXPORT isc_cancel_blob(ISC_STATUS *,
-									  isc_blob_handle *);
-
-ISC_STATUS ISC_EXPORT isc_cancel_events(ISC_STATUS *,
-										isc_db_handle *,
-										ISC_LONG *);
-
-ISC_STATUS ISC_EXPORT isc_close_blob(ISC_STATUS *,
-									 isc_blob_handle *);
-
-ISC_STATUS ISC_EXPORT isc_commit_retaining(ISC_STATUS *,
-										   isc_tr_handle *);
-
-ISC_STATUS ISC_EXPORT isc_commit_transaction(ISC_STATUS *,
-											 isc_tr_handle *);
-
-ISC_STATUS ISC_EXPORT isc_create_blob(ISC_STATUS *,
-									  isc_db_handle *,
-									  isc_tr_handle *,
-									  isc_blob_handle *,
-									  ISC_QUAD *);
-
-ISC_STATUS ISC_EXPORT isc_create_blob2(ISC_STATUS *,
-									   isc_db_handle *,
-									   isc_tr_handle *,
-									   isc_blob_handle *,
-									   ISC_QUAD *,
-									   short,
-									   char *);
-
-ISC_STATUS ISC_EXPORT isc_create_database(ISC_STATUS *,
-										  short,
-										  char *,
-										  isc_db_handle *,
-										  short,
-										  char *,
-										  short);
-
-ISC_STATUS ISC_EXPORT isc_database_info(ISC_STATUS *,
-										isc_db_handle *,
-										short,
-										char *,
-										short,
-										char *);
-
-void ISC_EXPORT isc_decode_date(ISC_QUAD *,
-								void *);
-
-void ISC_EXPORT isc_decode_sql_date(ISC_DATE *,
-									void *);
-
-void ISC_EXPORT isc_decode_sql_time(ISC_TIME *,
-									void *);
-
-void ISC_EXPORT isc_decode_timestamp(ISC_TIMESTAMP *,
-									 void *);
-
-ISC_STATUS ISC_EXPORT isc_detach_database(ISC_STATUS *,
-										  isc_db_handle *);
-
-ISC_STATUS ISC_EXPORT isc_drop_database(ISC_STATUS *,
-										isc_db_handle *);
-
-ISC_STATUS ISC_EXPORT isc_dsql_allocate_statement(ISC_STATUS *,
-												  isc_db_handle *,
-												  isc_stmt_handle *);
-
-ISC_STATUS ISC_EXPORT isc_dsql_alloc_statement2(ISC_STATUS *,
-												isc_db_handle *,
-												isc_stmt_handle *);
-
-ISC_STATUS ISC_EXPORT isc_dsql_describe(ISC_STATUS *,
-										isc_stmt_handle *,
-										unsigned short,
-										XSQLDA *);
-
-ISC_STATUS ISC_EXPORT isc_dsql_describe_bind(ISC_STATUS *,
-											 isc_stmt_handle *,
-											 unsigned short,
-											 XSQLDA *);
-
-ISC_STATUS ISC_EXPORT isc_dsql_exec_immed2(ISC_STATUS *,
-										   isc_db_handle *,
-										   isc_tr_handle *,
-										   unsigned short,
-										   char *,
-										   unsigned short,
-										   XSQLDA *,
-										   XSQLDA *);
-
-ISC_STATUS ISC_EXPORT isc_dsql_execute(ISC_STATUS *,
-									   isc_tr_handle *,
-									   isc_stmt_handle *,
-									   unsigned short,
-									   XSQLDA *);
-
-ISC_STATUS ISC_EXPORT isc_dsql_execute2(ISC_STATUS *,
-										isc_tr_handle *,
-										isc_stmt_handle *,
-										unsigned short,
-										XSQLDA *,
-										XSQLDA *);
-
-ISC_STATUS ISC_EXPORT isc_dsql_execute_immediate(ISC_STATUS *,
-												 isc_db_handle *,
-												 isc_tr_handle *,
-												 unsigned short,
-												 char *,
-												 unsigned short,
-												 XSQLDA *);
-
-ISC_STATUS ISC_EXPORT isc_dsql_fetch(ISC_STATUS *,
-									 isc_stmt_handle *,
-									 unsigned short,
-									 XSQLDA *);
-
-ISC_STATUS ISC_EXPORT isc_dsql_finish(isc_db_handle *);
-
-ISC_STATUS ISC_EXPORT isc_dsql_free_statement(ISC_STATUS *,
-											  isc_stmt_handle *,
-											  unsigned short);
-
-ISC_STATUS ISC_EXPORT isc_dsql_insert(ISC_STATUS *,
-									  isc_stmt_handle *,
-									  unsigned short,
-									  XSQLDA *);
-
-ISC_STATUS ISC_EXPORT isc_dsql_prepare(ISC_STATUS *,
-									   isc_tr_handle *,
-									   isc_stmt_handle *,
-									   unsigned short,
-									   char *,
-									   unsigned short,
-									   XSQLDA *);
-
-ISC_STATUS ISC_EXPORT isc_dsql_set_cursor_name(ISC_STATUS *,
-											   isc_stmt_handle *,
-											   char *,
-											   unsigned short);
-
-ISC_STATUS ISC_EXPORT isc_dsql_sql_info(ISC_STATUS *,
-										isc_stmt_handle *,
-										short,
-										const char *,
-										short,
-										char *);
-
-void ISC_EXPORT isc_encode_date(void *,
-								ISC_QUAD *);
-
-void ISC_EXPORT isc_encode_sql_date(void *,
-									ISC_DATE *);
-
-void ISC_EXPORT isc_encode_sql_time(void *,
-									ISC_TIME *);
-
-void ISC_EXPORT isc_encode_timestamp(void *,
-									 ISC_TIMESTAMP *);
-
-ISC_LONG ISC_EXPORT_VARARG isc_event_block(char * *,
-										   char * *,
-										   unsigned short, ...);
-
-void ISC_EXPORT isc_event_counts(ISC_ULONG *,
-								 short,
-								 char *,
-								 char *);
-
-/* 17 May 2001 - isc_expand_dpb is DEPRECATED */
-void ISC_EXPORT_VARARG isc_expand_dpb(char * *,
-									  short *, ...);
-
-int ISC_EXPORT isc_modify_dpb(char * *,
-							  short *,
-							  unsigned short,
-							  char *,
-							  short);
-
-ISC_LONG ISC_EXPORT isc_free(char *);
-
-ISC_STATUS ISC_EXPORT isc_get_segment(ISC_STATUS *,
-									  isc_blob_handle *,
-									  unsigned short *,
-									  unsigned short,
-									  char *);
-
-ISC_STATUS ISC_EXPORT isc_get_slice(ISC_STATUS *,
-									isc_db_handle *,
-									isc_tr_handle *,
-									ISC_QUAD *,
-									short,
-									char *,
-									short,
-									ISC_LONG *,
-									ISC_LONG,
-									void *,
-									ISC_LONG *);
-
-ISC_STATUS ISC_EXPORT isc_interprete(char *,
-									 ISC_STATUS * *);
-
-ISC_STATUS ISC_EXPORT isc_open_blob(ISC_STATUS *,
-									isc_db_handle *,
-									isc_tr_handle *,
-									isc_blob_handle *,
-									ISC_QUAD *);
-
-ISC_STATUS ISC_EXPORT isc_open_blob2(ISC_STATUS *,
-									 isc_db_handle *,
-									 isc_tr_handle *,
-									 isc_blob_handle *,
-									 ISC_QUAD *,
-									 ISC_USHORT,
-									 ISC_UCHAR *);
-
-ISC_STATUS ISC_EXPORT isc_prepare_transaction2(ISC_STATUS *,
-											   isc_tr_handle *,
-											   ISC_USHORT,
-											   ISC_UCHAR *);
-
-void ISC_EXPORT isc_print_sqlerror(ISC_SHORT,
-								   ISC_STATUS *);
-
-ISC_STATUS ISC_EXPORT isc_print_status(ISC_STATUS *);
-
-ISC_STATUS ISC_EXPORT isc_put_segment(ISC_STATUS *,
-									  isc_blob_handle *,
-									  unsigned short,
-									  char *);
-
-ISC_STATUS ISC_EXPORT isc_put_slice(ISC_STATUS *,
-									isc_db_handle *,
-									isc_tr_handle *,
-									ISC_QUAD *,
-									short,
-									char *,
-									short,
-									ISC_LONG *,
-									ISC_LONG,
-									void *);
-
-ISC_STATUS ISC_EXPORT isc_que_events(ISC_STATUS *,
-									 isc_db_handle *,
-									 ISC_LONG *,
-									 ISC_USHORT,
-									 ISC_UCHAR *,
-									 isc_callback,
-									 void *);
-
-ISC_STATUS ISC_EXPORT isc_rollback_retaining(ISC_STATUS *,
-											 isc_tr_handle *);
-
-ISC_STATUS ISC_EXPORT isc_rollback_transaction(ISC_STATUS *,
-											   isc_tr_handle *);
-
-ISC_STATUS ISC_EXPORT isc_start_multiple(ISC_STATUS *,
-										 isc_tr_handle *,
-										 short,
-										 void *);
-
-ISC_STATUS ISC_EXPORT_VARARG isc_start_transaction(ISC_STATUS *,
-												   isc_tr_handle *,
-												   short, ...);
-
-ISC_LONG ISC_EXPORT isc_sqlcode(ISC_STATUS *);
-
-void ISC_EXPORT isc_sql_interprete(short,
-								   char *,
-								   short);
-
-ISC_STATUS ISC_EXPORT isc_transaction_info(ISC_STATUS *,
-										   isc_tr_handle *,
-										   short,
-										   char *,
-										   short,
-										   char *);
-
-ISC_STATUS ISC_EXPORT isc_transact_request(ISC_STATUS *,
-										   isc_db_handle *,
-										   isc_tr_handle *,
-										   unsigned short,
-										   char *,
-										   unsigned short,
-										   char *,
-										   unsigned short,
-										   char *);
-
-ISC_LONG ISC_EXPORT isc_vax_integer(char *,
-									short);
-
-ISC_INT64 ISC_EXPORT isc_portable_integer(unsigned char *,
-										  short);
+ISC_STATUS  ISC_EXPORT isc_attach_database (ISC_STATUS ISC_FAR *, 
+					    short, 
+					    char ISC_FAR *, 
+					    isc_db_handle ISC_FAR *, 
+					    short, 
+					    char ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_array_gen_sdl (ISC_STATUS ISC_FAR *, 
+					  ISC_ARRAY_DESC ISC_FAR *,
+					  short ISC_FAR *, 
+					  char ISC_FAR *, 
+					  short ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_array_get_slice (ISC_STATUS ISC_FAR *, 
+					    isc_db_handle ISC_FAR *, 
+					    isc_tr_handle ISC_FAR *, 
+					    ISC_QUAD ISC_FAR *, 
+					    ISC_ARRAY_DESC ISC_FAR *, 
+					    void ISC_FAR *, 
+					    ISC_LONG ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_array_lookup_bounds (ISC_STATUS ISC_FAR *, 
+						isc_db_handle ISC_FAR *, 
+						isc_tr_handle ISC_FAR *, 
+						char ISC_FAR *,
+						char ISC_FAR *, 
+						ISC_ARRAY_DESC ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_array_lookup_desc (ISC_STATUS ISC_FAR *, 
+					      isc_db_handle ISC_FAR *,
+					      isc_tr_handle ISC_FAR *, 
+					      char ISC_FAR *, 
+					      char ISC_FAR *, 
+					      ISC_ARRAY_DESC ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_array_set_desc (ISC_STATUS ISC_FAR *, 
+					   char ISC_FAR *, 
+					   char ISC_FAR *,
+					   short ISC_FAR *, 
+					   short ISC_FAR *, 
+					   short ISC_FAR *, 
+					   ISC_ARRAY_DESC ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_array_put_slice (ISC_STATUS ISC_FAR *, 
+					    isc_db_handle ISC_FAR *, 
+					    isc_tr_handle ISC_FAR *, 
+					    ISC_QUAD ISC_FAR *, 
+					    ISC_ARRAY_DESC ISC_FAR *, 
+					    void ISC_FAR *, 
+					    ISC_LONG ISC_FAR *);
+
+void       ISC_EXPORT isc_blob_default_desc (ISC_BLOB_DESC ISC_FAR *,
+                                        unsigned char ISC_FAR *,
+                                        unsigned char ISC_FAR *);
+
+ISC_STATUS ISC_EXPORT isc_blob_gen_bpb (ISC_STATUS ISC_FAR *,
+					ISC_BLOB_DESC ISC_FAR *,
+					ISC_BLOB_DESC ISC_FAR *,
+					unsigned short,
+					unsigned char ISC_FAR *,
+					unsigned short ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_blob_info (ISC_STATUS ISC_FAR *, 
+				      isc_blob_handle ISC_FAR *, 
+				      short,
+ 				      char ISC_FAR *, 
+				      short, 
+				      char ISC_FAR *);
+
+ISC_STATUS ISC_EXPORT isc_blob_lookup_desc (ISC_STATUS ISC_FAR *,
+					    isc_db_handle ISC_FAR *,
+					    isc_tr_handle ISC_FAR *,
+					    unsigned char ISC_FAR *,
+					    unsigned char ISC_FAR *,
+					    ISC_BLOB_DESC ISC_FAR *,
+					    unsigned char ISC_FAR *);
+
+ISC_STATUS ISC_EXPORT isc_blob_set_desc (ISC_STATUS ISC_FAR *,
+					 unsigned char ISC_FAR *,
+					 unsigned char ISC_FAR *,
+					 short,
+					 short,
+					 short,
+					 ISC_BLOB_DESC ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_cancel_blob (ISC_STATUS ISC_FAR *, 
+				        isc_blob_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_cancel_events (ISC_STATUS ISC_FAR *, 
+					  isc_db_handle ISC_FAR *, 
+					  ISC_LONG ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_close_blob (ISC_STATUS ISC_FAR *, 
+				       isc_blob_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_commit_retaining (ISC_STATUS ISC_FAR *, 
+					     isc_tr_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_commit_transaction (ISC_STATUS ISC_FAR *, 
+					       isc_tr_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_create_blob (ISC_STATUS ISC_FAR *, 
+					isc_db_handle ISC_FAR *, 
+					isc_tr_handle ISC_FAR *, 
+					isc_blob_handle ISC_FAR *, 
+					ISC_QUAD ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_create_blob2 (ISC_STATUS ISC_FAR *, 
+					 isc_db_handle ISC_FAR *, 
+					 isc_tr_handle ISC_FAR *, 
+					 isc_blob_handle ISC_FAR *, 
+					 ISC_QUAD ISC_FAR *, 
+					 short,  
+					 char ISC_FAR *); 
+
+ISC_STATUS  ISC_EXPORT isc_create_database (ISC_STATUS ISC_FAR *, 
+					    short, 
+					    char ISC_FAR *, 
+					    isc_db_handle ISC_FAR *, 
+					    short, 
+					    char ISC_FAR *, 
+					    short);
+
+ISC_STATUS  ISC_EXPORT isc_database_info (ISC_STATUS ISC_FAR *, 
+					  isc_db_handle ISC_FAR *, 
+					  short, 
+					  char ISC_FAR *, 
+					  short, 
+					  char ISC_FAR *);
+
+void        ISC_EXPORT isc_decode_date (ISC_QUAD ISC_FAR *, 
+					void ISC_FAR *);
+
+void        ISC_EXPORT isc_decode_sql_date (ISC_DATE ISC_FAR *, 
+					void ISC_FAR *);
+
+void        ISC_EXPORT isc_decode_sql_time (ISC_TIME ISC_FAR *, 
+					void ISC_FAR *);
+
+void        ISC_EXPORT isc_decode_timestamp (ISC_TIMESTAMP ISC_FAR *, 
+					void ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_detach_database (ISC_STATUS ISC_FAR *,  
+					    isc_db_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_drop_database (ISC_STATUS ISC_FAR *,  
+					  isc_db_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_allocate_statement (ISC_STATUS ISC_FAR *, 
+						    isc_db_handle ISC_FAR *, 
+						    isc_stmt_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_alloc_statement2 (ISC_STATUS ISC_FAR *, 
+						  isc_db_handle ISC_FAR *, 
+						  isc_stmt_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_describe (ISC_STATUS ISC_FAR *, 
+					  isc_stmt_handle ISC_FAR *, 
+					  unsigned short, 
+					  XSQLDA ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_describe_bind (ISC_STATUS ISC_FAR *, 
+					       isc_stmt_handle ISC_FAR *, 
+					       unsigned short, 
+					       XSQLDA ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_exec_immed2 (ISC_STATUS ISC_FAR *, 
+					     isc_db_handle ISC_FAR *, 
+					     isc_tr_handle ISC_FAR *, 
+					     unsigned short, 
+					     char ISC_FAR *, 
+					     unsigned short, 
+					     XSQLDA ISC_FAR *, 
+					     XSQLDA ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_execute (ISC_STATUS ISC_FAR *, 
+					 isc_tr_handle ISC_FAR *,
+					 isc_stmt_handle ISC_FAR *, 
+					 unsigned short, 
+					 XSQLDA ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_execute2 (ISC_STATUS ISC_FAR *, 
+					  isc_tr_handle ISC_FAR *,
+					  isc_stmt_handle ISC_FAR *, 
+					  unsigned short, 
+					  XSQLDA ISC_FAR *,
+					  XSQLDA ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_execute_immediate (ISC_STATUS ISC_FAR *, 
+						   isc_db_handle ISC_FAR *, 
+						   isc_tr_handle ISC_FAR *, 
+						   unsigned short, 
+						   char ISC_FAR *, 
+						   unsigned short, 
+						   XSQLDA ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_fetch (ISC_STATUS ISC_FAR *, 
+				       isc_stmt_handle ISC_FAR *, 
+				       unsigned short, 
+				       XSQLDA ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_finish (isc_db_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_free_statement (ISC_STATUS ISC_FAR *, 
+						isc_stmt_handle ISC_FAR *, 
+						unsigned short);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_insert (ISC_STATUS ISC_FAR *, 
+				       isc_stmt_handle ISC_FAR *, 
+				       unsigned short, 
+				       XSQLDA ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_prepare (ISC_STATUS ISC_FAR *, 
+					 isc_tr_handle ISC_FAR *, 
+					 isc_stmt_handle ISC_FAR *, 
+					 unsigned short, 
+					 char ISC_FAR *, 
+					 unsigned short, 
+				 	 XSQLDA ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_set_cursor_name (ISC_STATUS ISC_FAR *, 
+						 isc_stmt_handle ISC_FAR *, 
+						 char ISC_FAR *, 
+						 unsigned short);
+
+ISC_STATUS  ISC_EXPORT isc_dsql_sql_info (ISC_STATUS ISC_FAR *, 
+					  isc_stmt_handle ISC_FAR *, 
+					  short, 
+					  char ISC_FAR *, 
+					  short, 
+					  char ISC_FAR *);
+
+void        ISC_EXPORT isc_encode_date (void ISC_FAR *, 
+					ISC_QUAD ISC_FAR *);
+
+void        ISC_EXPORT isc_encode_sql_date (void ISC_FAR *, 
+					ISC_DATE ISC_FAR *);
+
+void        ISC_EXPORT isc_encode_sql_time (void ISC_FAR *, 
+					ISC_TIME ISC_FAR *);
+
+void        ISC_EXPORT isc_encode_timestamp (void ISC_FAR *, 
+					ISC_TIMESTAMP ISC_FAR *);
+
+ISC_LONG    ISC_EXPORT_VARARG isc_event_block (char ISC_FAR * ISC_FAR *, 
+					       char ISC_FAR * ISC_FAR *, 
+					       unsigned short, ...);
+
+void        ISC_EXPORT isc_event_counts (unsigned ISC_LONG ISC_FAR *, 
+					 short, 
+					 char ISC_FAR *,
+					 char ISC_FAR *);
+
+void        ISC_EXPORT_VARARG isc_expand_dpb (char ISC_FAR * ISC_FAR *, 
+					      short ISC_FAR *, 
+					      ...);
+
+int        ISC_EXPORT isc_modify_dpb (char ISC_FAR * ISC_FAR *, 
+					 short ISC_FAR *, unsigned short,
+					 char ISC_FAR *, short );
+
+ISC_LONG    ISC_EXPORT isc_free (char ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_get_segment (ISC_STATUS ISC_FAR *, 
+				        isc_blob_handle ISC_FAR *, 
+				        unsigned short ISC_FAR *, 
+				        unsigned short, 
+				        char ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_get_slice (ISC_STATUS ISC_FAR *, 
+				      isc_db_handle ISC_FAR *, 
+				      isc_tr_handle ISC_FAR *, 
+ 				      ISC_QUAD ISC_FAR *, 
+ 				      short, 
+				      char ISC_FAR *, 
+				      short, 
+				      ISC_LONG ISC_FAR *, 
+				      ISC_LONG, 
+				      void ISC_FAR *, 
+				      ISC_LONG ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_interprete (char ISC_FAR *, 
+				       ISC_STATUS ISC_FAR * ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_open_blob (ISC_STATUS ISC_FAR *, 
+				      isc_db_handle ISC_FAR *, 
+				      isc_tr_handle ISC_FAR *, 
+				      isc_blob_handle ISC_FAR *, 
+				      ISC_QUAD ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_open_blob2 (ISC_STATUS ISC_FAR *, 
+				       isc_db_handle ISC_FAR *, 
+				       isc_tr_handle ISC_FAR *,
+				       isc_blob_handle ISC_FAR *, 
+				       ISC_QUAD ISC_FAR *, 
+				       short,  
+				       char ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_prepare_transaction2 (ISC_STATUS ISC_FAR *, 
+						 isc_tr_handle ISC_FAR *, 
+						 short, 
+						 char ISC_FAR *);
+
+void        ISC_EXPORT isc_print_sqlerror (short, 
+					   ISC_STATUS ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_print_status (ISC_STATUS ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_put_segment (ISC_STATUS ISC_FAR *, 
+					isc_blob_handle ISC_FAR *, 
+					unsigned short, 
+					char ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_put_slice (ISC_STATUS ISC_FAR *, 
+				      isc_db_handle ISC_FAR *, 
+				      isc_tr_handle ISC_FAR *, 
+				      ISC_QUAD ISC_FAR *, 
+				      short, 
+				      char ISC_FAR *, 
+				      short, 
+				      ISC_LONG ISC_FAR *, 
+				      ISC_LONG, 
+				      void ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_que_events (ISC_STATUS ISC_FAR *, 
+				       isc_db_handle ISC_FAR *, 
+				       ISC_LONG ISC_FAR *, 
+				       short, 
+				       char ISC_FAR *, 
+				       isc_callback, 
+				       void ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_rollback_retaining (ISC_STATUS ISC_FAR *, 
+						 isc_tr_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_rollback_transaction (ISC_STATUS ISC_FAR *, 
+						 isc_tr_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_start_multiple (ISC_STATUS ISC_FAR *, 
+					   isc_tr_handle ISC_FAR *, 
+					   short, 
+					   void ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT_VARARG isc_start_transaction (ISC_STATUS ISC_FAR *, 
+						     isc_tr_handle ISC_FAR *,
+						     short, ...);
+
+ISC_LONG    ISC_EXPORT isc_sqlcode (ISC_STATUS ISC_FAR *);
+
+void        ISC_EXPORT isc_sql_interprete (short, 
+					   char ISC_FAR *, 
+					   short);
+
+ISC_STATUS  ISC_EXPORT isc_transaction_info (ISC_STATUS ISC_FAR *,  
+					     isc_tr_handle ISC_FAR *, 
+					     short, 
+					     char ISC_FAR *, 
+					     short,  
+					     char ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_transact_request (ISC_STATUS ISC_FAR *,  
+					     isc_db_handle ISC_FAR *, 
+					     isc_tr_handle ISC_FAR *,
+					     unsigned short, 
+					     char ISC_FAR *, 
+					     unsigned short,  
+					     char ISC_FAR *,
+					     unsigned short,
+					     char ISC_FAR *);
+
+ISC_LONG    ISC_EXPORT isc_vax_integer (char ISC_FAR *, 
+					short);
+
+ISC_INT64   ISC_EXPORT isc_portable_integer  (unsigned char ISC_FAR *,
+                                              short);
 
 /*************************************/
 /* Security Functions and structures */
@@ -867,417 +668,412 @@ ISC_INT64 ISC_EXPORT isc_portable_integer(unsigned char *,
 
 #define sec_protocol_tcpip            1
 #define sec_protocol_netbeui          2
-#define sec_protocol_spx              3 /* -- Deprecated Protocol. Declaration retained for compatibility   */
+#define sec_protocol_spx              3
 #define sec_protocol_local            4
 
 typedef struct {
-	short sec_flags;			/* which fields are specified */
-	int uid;					/* the user's id */
-	int gid;					/* the user's group id */
-	int protocol;				/* protocol to use for connection */
-	char *server;				/* server to administer */
-	char *user_name;			/* the user's name */
-	char *password;				/* the user's password */
-	char *group_name;			/* the group name */
-	char *first_name;			/* the user's first name */
-	char *middle_name;			/* the user's middle name */
-	char *last_name;			/* the user's last name */
-	char *dba_user_name;		/* the dba user name */
-	char *dba_password;			/* the dba password */
+    short  sec_flags;		     /* which fields are specified */
+    int    uid;			     /* the user's id */
+    int	   gid;			     /* the user's group id */
+    int    protocol;		     /* protocol to use for connection */
+    char   ISC_FAR *server;          /* server to administer */
+    char   ISC_FAR *user_name;       /* the user's name */
+    char   ISC_FAR *password;        /* the user's password */
+    char   ISC_FAR *group_name;      /* the group name */
+    char   ISC_FAR *first_name;	     /* the user's first name */
+    char   ISC_FAR *middle_name;     /* the user's middle name */
+    char   ISC_FAR *last_name;	     /* the user's last name */
+    char   ISC_FAR *dba_user_name;   /* the dba user name */
+    char   ISC_FAR *dba_password;    /* the dba password */
 } USER_SEC_DATA;
 
-int ISC_EXPORT isc_add_user(ISC_STATUS *, USER_SEC_DATA *);
+int ISC_EXPORT isc_add_user (ISC_STATUS ISC_FAR *, USER_SEC_DATA *);
 
-int ISC_EXPORT isc_delete_user(ISC_STATUS *, USER_SEC_DATA *);
+int ISC_EXPORT isc_delete_user (ISC_STATUS ISC_FAR *, USER_SEC_DATA *);
 
-int ISC_EXPORT isc_modify_user(ISC_STATUS *, USER_SEC_DATA *);
+int ISC_EXPORT isc_modify_user (ISC_STATUS ISC_FAR *, USER_SEC_DATA *);
 
 /**********************************/
 /*  Other OSRI functions          */
 /**********************************/
+                                          
+ISC_STATUS  ISC_EXPORT isc_compile_request (ISC_STATUS ISC_FAR *, 
+					    isc_db_handle ISC_FAR *,
+		  			    isc_req_handle ISC_FAR *, 
+					    short, 
+					    char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_compile_request(ISC_STATUS *,
-										  isc_db_handle *,
-										  isc_req_handle *,
-										  short,
-										  char *);
+ISC_STATUS  ISC_EXPORT isc_compile_request2 (ISC_STATUS ISC_FAR *, 
+					     isc_db_handle ISC_FAR *,
+					     isc_req_handle ISC_FAR *, 
+					     short, 
+					     char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_compile_request2(ISC_STATUS *,
-										   isc_db_handle *,
-										   isc_req_handle *,
-										   short,
-										   char *);
+ISC_STATUS  ISC_EXPORT isc_ddl (ISC_STATUS ISC_FAR *,
+			        isc_db_handle ISC_FAR *, 
+			        isc_tr_handle ISC_FAR *,
+			        short, 
+			        char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_ddl(ISC_STATUS *,
-							  isc_db_handle *,
-							  isc_tr_handle *,
-							  short,
-							  char *);
-
-ISC_STATUS ISC_EXPORT isc_prepare_transaction(ISC_STATUS *,
-											  isc_tr_handle *);
-
-
-ISC_STATUS ISC_EXPORT isc_receive(ISC_STATUS *,
-								  isc_req_handle *,
-								  short,
-								  short,
-								  void *,
-								  short);
-
-ISC_STATUS ISC_EXPORT isc_reconnect_transaction(ISC_STATUS *,
-												isc_db_handle *,
-												isc_tr_handle *,
-												short,
-												char *);
-
-ISC_STATUS ISC_EXPORT isc_release_request(ISC_STATUS *,
-										  isc_req_handle *);
-
-ISC_STATUS ISC_EXPORT isc_request_info(ISC_STATUS *,
-									   isc_req_handle *,
-									   short,
-									   short,
-									   char *,
-									   short,
-									   char *);
-
-ISC_STATUS ISC_EXPORT isc_seek_blob(ISC_STATUS *,
-									isc_blob_handle *,
-									short,
-									ISC_LONG,
-									ISC_LONG *);
-
-ISC_STATUS ISC_EXPORT isc_send(ISC_STATUS *,
-							   isc_req_handle *,
-							   short,
-							   short,
-							   void *,
-							   short);
-
-ISC_STATUS ISC_EXPORT isc_start_and_send(ISC_STATUS *,
-										 isc_req_handle *,
-										 isc_tr_handle *,
-										 short,
-										 short,
-										 void *,
-										 short);
-
-ISC_STATUS ISC_EXPORT isc_start_request(ISC_STATUS *,
-										isc_req_handle *,
-										isc_tr_handle *,
-										short);
-
-ISC_STATUS ISC_EXPORT isc_unwind_request(ISC_STATUS *,
-										 isc_tr_handle *,
-										 short);
-
-ISC_STATUS ISC_EXPORT isc_wait_for_event(ISC_STATUS *,
-										 isc_db_handle *,
-										 short,
-										 char *,
-										 char *);
+ISC_STATUS  ISC_EXPORT isc_prepare_transaction (ISC_STATUS ISC_FAR *, 
+						isc_tr_handle ISC_FAR *);
 
 
+ISC_STATUS  ISC_EXPORT isc_receive (ISC_STATUS ISC_FAR *, 
+				    isc_req_handle ISC_FAR *, 
+				    short, 
+			 	    short, 
+				    void ISC_FAR *, 
+				    short);
+
+ISC_STATUS  ISC_EXPORT isc_reconnect_transaction (ISC_STATUS ISC_FAR *,
+						  isc_db_handle ISC_FAR *, 
+						  isc_tr_handle ISC_FAR *, 
+						  short, 
+						  char ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_release_request (ISC_STATUS ISC_FAR *, 
+					    isc_req_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_request_info (ISC_STATUS ISC_FAR *,  
+					 isc_req_handle ISC_FAR *, 
+					 short, 
+	  				 short, 
+					 char ISC_FAR *, 
+					 short, 
+					 char ISC_FAR *);	 
+
+ISC_STATUS  ISC_EXPORT isc_seek_blob (ISC_STATUS ISC_FAR *, 
+				      isc_blob_handle ISC_FAR *, 
+				      short, 
+				      ISC_LONG, 
+				      ISC_LONG ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_send (ISC_STATUS ISC_FAR *, 
+				 isc_req_handle ISC_FAR *, 
+				 short, 
+				 short,
+				 void ISC_FAR *, 
+				 short);
+
+ISC_STATUS  ISC_EXPORT isc_start_and_send (ISC_STATUS ISC_FAR *, 
+					   isc_req_handle ISC_FAR *, 
+					   isc_tr_handle ISC_FAR *, 
+					   short, 
+					   short, 
+					   void ISC_FAR *, 
+					   short);
+
+ISC_STATUS  ISC_EXPORT isc_start_request (ISC_STATUS ISC_FAR *, 
+					  isc_req_handle ISC_FAR *,
+					  isc_tr_handle ISC_FAR *,
+					  short);
+
+ISC_STATUS  ISC_EXPORT isc_unwind_request (ISC_STATUS ISC_FAR *, 
+					   isc_tr_handle ISC_FAR *,
+					   short);
+
+ISC_STATUS  ISC_EXPORT isc_wait_for_event (ISC_STATUS ISC_FAR *, 
+					   isc_db_handle ISC_FAR *, 
+					   short, 
+					   char ISC_FAR *, 
+					   char ISC_FAR *);
+
 /*****************************/
 /* Other Sql functions       */
 /*****************************/
 
-ISC_STATUS ISC_EXPORT isc_close(ISC_STATUS *,
-								char *);
+ISC_STATUS  ISC_EXPORT isc_close (ISC_STATUS ISC_FAR *, 
+				  char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_declare(ISC_STATUS *,
-								  char *,
-								  char *);
+ISC_STATUS  ISC_EXPORT isc_declare (ISC_STATUS ISC_FAR *, 
+				    char ISC_FAR *, 
+				    char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_describe(ISC_STATUS *,
-								   char *,
-								   XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_describe (ISC_STATUS ISC_FAR *, 
+				    char ISC_FAR *, 
+				    XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_describe_bind(ISC_STATUS *,
-										char *,
-										XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_describe_bind (ISC_STATUS ISC_FAR *, 
+					  char ISC_FAR *, 
+					  XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_execute(ISC_STATUS *,
-								  isc_tr_handle *,
-								  char *,
-								  XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_execute (ISC_STATUS ISC_FAR *, 
+				    isc_tr_handle ISC_FAR *, 
+				    char ISC_FAR *, 
+				    XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_execute_immediate(ISC_STATUS *,
-											isc_db_handle *,
-											isc_tr_handle *,
-											short *,
-											char *);
+ISC_STATUS  ISC_EXPORT isc_execute_immediate (ISC_STATUS ISC_FAR *, 
+					      isc_db_handle ISC_FAR *,
+					      isc_tr_handle ISC_FAR *, 
+					      short ISC_FAR *, 
+					      char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_fetch(ISC_STATUS *,
-								char *,
-								XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_fetch (ISC_STATUS ISC_FAR *, 
+				  char ISC_FAR *, 
+				  XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_open(ISC_STATUS *,
-							   isc_tr_handle *,
-							   char *,
-							   XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_open (ISC_STATUS ISC_FAR *, 
+				 isc_tr_handle ISC_FAR *, 
+				 char ISC_FAR *, 
+				 XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_prepare(ISC_STATUS *,
-								  isc_db_handle *,
-								  isc_tr_handle *,
-								  char *,
-								  short *,
-								  char *,
-								  XSQLDA *);
-
-
+ISC_STATUS  ISC_EXPORT isc_prepare (ISC_STATUS ISC_FAR *, 
+				    isc_db_handle ISC_FAR *, 
+				    isc_tr_handle ISC_FAR *, 
+				    char ISC_FAR *, 
+				    short ISC_FAR *, 
+				    char ISC_FAR *, 
+				    XSQLDA ISC_FAR *);
+
 /*************************************/
 /* Other Dynamic sql functions       */
 /*************************************/
 
-ISC_STATUS ISC_EXPORT isc_dsql_execute_m(ISC_STATUS *,
-										 isc_tr_handle *,
-										 isc_stmt_handle *,
-										 unsigned short,
-										 char *,
-										 unsigned short,
-										 unsigned short,
-										 char *);
+ISC_STATUS  ISC_EXPORT isc_dsql_execute_m (ISC_STATUS ISC_FAR *, 
+					   isc_tr_handle ISC_FAR *,
+					   isc_stmt_handle ISC_FAR *, 
+					   unsigned short, 
+					   char ISC_FAR *, 
+					   unsigned short, 
+					   unsigned short, 
+					   char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_dsql_execute2_m(ISC_STATUS *,
-										  isc_tr_handle *,
-										  isc_stmt_handle *,
-										  unsigned short,
-										  char *,
-										  unsigned short,
-										  unsigned short,
-										  char *,
-										  unsigned short,
-										  char *,
-										  unsigned short,
-										  unsigned short,
-										  char *);
+ISC_STATUS  ISC_EXPORT isc_dsql_execute2_m (ISC_STATUS ISC_FAR *, 
+					   isc_tr_handle ISC_FAR *,
+					   isc_stmt_handle ISC_FAR *, 
+					   unsigned short, 
+					   char ISC_FAR *, 
+					   unsigned short, 
+					   unsigned short, 
+					   char ISC_FAR *,
+					   unsigned short, 
+					   char ISC_FAR *, 
+					   unsigned short, 
+					   unsigned short, 
+					   char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_dsql_execute_immediate_m(ISC_STATUS *,
-												   isc_db_handle *,
-												   isc_tr_handle *,
-												   unsigned short,
-												   char *,
-												   unsigned short,
-												   unsigned short,
-												   char *,
-												   unsigned short,
-												   unsigned short,
-												   char *);
+ISC_STATUS  ISC_EXPORT isc_dsql_execute_immediate_m (ISC_STATUS ISC_FAR *, 
+						     isc_db_handle ISC_FAR *, 
+						     isc_tr_handle ISC_FAR *, 
+						     unsigned short, 
+						     char ISC_FAR *, 
+						     unsigned short, 
+						     unsigned short, 
+						     char ISC_FAR *,
+						     unsigned short,
+						     unsigned short,
+						     char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_dsql_exec_immed3_m(ISC_STATUS *,
-											 isc_db_handle *,
-											 isc_tr_handle *,
-											 unsigned short,
-											 char *,
-											 unsigned short,
-											 unsigned short,
-											 char *,
-											 unsigned short,
-											 unsigned short,
-											 char *,
-											 unsigned short,
-											 char *,
-											 unsigned short,
-											 unsigned short,
-											 char *);
+ISC_STATUS  ISC_EXPORT isc_dsql_exec_immed3_m (ISC_STATUS ISC_FAR *, 
+					       isc_db_handle ISC_FAR *, 
+					       isc_tr_handle ISC_FAR *, 
+					       unsigned short, 
+					       char ISC_FAR *, 
+					       unsigned short, 
+					       unsigned short, 
+					       char ISC_FAR *,
+					       unsigned short,
+					       unsigned short,
+					       char ISC_FAR *,
+					       unsigned short, 
+					       char ISC_FAR *,
+					       unsigned short,
+					       unsigned short,
+					       char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_dsql_fetch_m(ISC_STATUS *,
-									   isc_stmt_handle *,
-									   unsigned short,
-									   char *,
-									   unsigned short,
-									   unsigned short,
-									   char *);
+ISC_STATUS  ISC_EXPORT isc_dsql_fetch_m (ISC_STATUS ISC_FAR *, 
+					 isc_stmt_handle ISC_FAR *, 
+					 unsigned short, 
+					 char ISC_FAR *, 
+					 unsigned short, 
+					 unsigned short, 
+					 char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_dsql_insert_m(ISC_STATUS *,
-										isc_stmt_handle *,
-										unsigned short,
-										char *,
-										unsigned short,
-										unsigned short,
-										char *);
+ISC_STATUS  ISC_EXPORT isc_dsql_insert_m (ISC_STATUS ISC_FAR *, 
+					  isc_stmt_handle ISC_FAR *, 
+					  unsigned short, 
+					  char ISC_FAR *, 
+					  unsigned short, 
+					  unsigned short, 
+					  char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_dsql_prepare_m(ISC_STATUS *,
-										 isc_tr_handle *,
-										 isc_stmt_handle *,
-										 unsigned short,
-										 char *,
-										 unsigned short,
-										 unsigned short,
-										 char *,
-										 unsigned short,
-										 char *);
+ISC_STATUS  ISC_EXPORT isc_dsql_prepare_m (ISC_STATUS ISC_FAR *, 
+					   isc_tr_handle ISC_FAR *,
+				 	   isc_stmt_handle ISC_FAR *, 
+					   unsigned short,  
+					   char ISC_FAR *, 
+					   unsigned short,
+					   unsigned short, 
+				  	   char ISC_FAR *, 
+				 	   unsigned short,
+					   char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_dsql_release(ISC_STATUS *,
-									   char *);
+ISC_STATUS  ISC_EXPORT isc_dsql_release (ISC_STATUS ISC_FAR *, 
+					 char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_embed_dsql_close(ISC_STATUS *,
-										   char *);
+ISC_STATUS  ISC_EXPORT isc_embed_dsql_close (ISC_STATUS ISC_FAR *, 
+					     char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_embed_dsql_declare(ISC_STATUS *,
-											 char *,
-											 char *);
+ISC_STATUS  ISC_EXPORT isc_embed_dsql_declare (ISC_STATUS ISC_FAR *, 
+					      char ISC_FAR *, 
+					      char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_embed_dsql_describe(ISC_STATUS *,
-											  char *,
-											  unsigned short,
-											  XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_embed_dsql_describe (ISC_STATUS ISC_FAR *, 
+						char ISC_FAR *, 
+						unsigned short, 
+						XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_embed_dsql_describe_bind(ISC_STATUS *,
-												   char *,
-												   unsigned short,
-												   XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_embed_dsql_describe_bind (ISC_STATUS ISC_FAR *, 
+						     char ISC_FAR *, 
+						     unsigned short, 
+						     XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_embed_dsql_execute(ISC_STATUS *,
-											 isc_tr_handle *,
-											 char *,
-											 unsigned short,
-											 XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_embed_dsql_execute (ISC_STATUS ISC_FAR *, 
+					       isc_tr_handle ISC_FAR *,
+					       char ISC_FAR *, 
+					       unsigned short, 
+					       XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_embed_dsql_execute2(ISC_STATUS *,
-											  isc_tr_handle *,
-											  char *,
-											  unsigned short,
-											  XSQLDA *,
-											  XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_embed_dsql_execute2 (ISC_STATUS ISC_FAR *,
+						isc_tr_handle ISC_FAR *,
+						char ISC_FAR *,
+						unsigned short,
+						XSQLDA ISC_FAR *,
+						XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_embed_dsql_execute_immed(ISC_STATUS *,
-												   isc_db_handle *,
-												   isc_tr_handle *,
-												   unsigned short,
-												   char *,
-												   unsigned short,
-												   XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_embed_dsql_execute_immed (ISC_STATUS ISC_FAR *, 
+						     isc_db_handle ISC_FAR *, 
+						     isc_tr_handle ISC_FAR *, 
+						     unsigned short, 
+						     char ISC_FAR *, 	
+						     unsigned short, 
+						     XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_embed_dsql_fetch(ISC_STATUS *,
-										   char *,
-										   unsigned short,
-										   XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_embed_dsql_fetch (ISC_STATUS ISC_FAR *, 
+					     char ISC_FAR *, 
+					     unsigned short, 
+					     XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_embed_dsql_open(ISC_STATUS *,
-										  isc_tr_handle *,
-										  char *,
-										  unsigned short,
-										  XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_embed_dsql_open (ISC_STATUS ISC_FAR *, 
+					    isc_tr_handle ISC_FAR *, 
+					    char ISC_FAR *, 
+					    unsigned short, 
+					    XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_embed_dsql_open2(ISC_STATUS *,
-										   isc_tr_handle *,
-										   char *,
-										   unsigned short,
-										   XSQLDA *,
-										   XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_embed_dsql_open2 (ISC_STATUS ISC_FAR *, 
+					     isc_tr_handle ISC_FAR *, 
+					     char ISC_FAR *, 
+					     unsigned short, 
+					     XSQLDA ISC_FAR *,
+					     XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_embed_dsql_insert(ISC_STATUS *,
-											char *,
-											unsigned short,
-											XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_embed_dsql_insert (ISC_STATUS ISC_FAR *, 
+					      char ISC_FAR *, 
+					      unsigned short, 
+					      XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_embed_dsql_prepare(ISC_STATUS *,
-											 isc_db_handle *,
-											 isc_tr_handle *,
-											 char *,
-											 unsigned short,
-											 char *,
-											 unsigned short,
-											 XSQLDA *);
+ISC_STATUS  ISC_EXPORT isc_embed_dsql_prepare (ISC_STATUS ISC_FAR *, 
+					       isc_db_handle ISC_FAR *,
+					       isc_tr_handle ISC_FAR *, 
+					       char ISC_FAR *, 
+					       unsigned short, 
+					       char ISC_FAR *, 
+					       unsigned short, 
+					       XSQLDA ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_embed_dsql_release(ISC_STATUS *,
-											 char *);
-
-
+ISC_STATUS  ISC_EXPORT isc_embed_dsql_release (ISC_STATUS ISC_FAR *, 
+					       char ISC_FAR *);
+
 /******************************/
 /* Other Blob functions       */
 /******************************/
 
-BSTREAM *ISC_EXPORT BLOB_open(isc_blob_handle,
-									  char *,
-									  int);
+BSTREAM     ISC_FAR * ISC_EXPORT BLOB_open (isc_blob_handle,  
+				        char ISC_FAR *,  
+				        int);
 
-int ISC_EXPORT BLOB_put(char,
-						BSTREAM *);
+int  	    ISC_EXPORT BLOB_put (char, 
+				 BSTREAM ISC_FAR *);
 
-int ISC_EXPORT BLOB_close(BSTREAM *);
+int  	    ISC_EXPORT BLOB_close (BSTREAM ISC_FAR *);
 
-int ISC_EXPORT BLOB_get(BSTREAM *);
+int  	    ISC_EXPORT BLOB_get (BSTREAM ISC_FAR *);
 
-int ISC_EXPORT BLOB_display(ISC_QUAD *,
-							isc_db_handle,
-							isc_tr_handle,
-							char *);
+int         ISC_EXPORT BLOB_display (ISC_QUAD ISC_FAR *, 
+				     isc_db_handle, 
+				     isc_tr_handle,
+				     char ISC_FAR *);
 
-int ISC_EXPORT BLOB_dump(ISC_QUAD *,
-						 isc_db_handle,
-						 isc_tr_handle,
-						 char *);
+int         ISC_EXPORT BLOB_dump (ISC_QUAD ISC_FAR *, 
+				  isc_db_handle, 
+				  isc_tr_handle,
+				  char ISC_FAR *);
 
-int ISC_EXPORT BLOB_edit(ISC_QUAD *,
-						 isc_db_handle,
-						 isc_tr_handle,
-						 char *);
+int         ISC_EXPORT BLOB_edit (ISC_QUAD ISC_FAR *, 
+				  isc_db_handle, 
+				  isc_tr_handle,
+				  char ISC_FAR *);
 
-int ISC_EXPORT BLOB_load(ISC_QUAD *,
-						 isc_db_handle,
-						 isc_tr_handle,
-						 char *);
+int         ISC_EXPORT BLOB_load (ISC_QUAD ISC_FAR *, 
+				  isc_db_handle, 
+				  isc_tr_handle,
+				  char ISC_FAR *);
 
-int ISC_EXPORT BLOB_text_dump(ISC_QUAD *,
-							  isc_db_handle,
-							  isc_tr_handle,
-							  char *);
+int         ISC_EXPORT BLOB_text_dump (ISC_QUAD ISC_FAR *, 
+				  isc_db_handle, 
+				  isc_tr_handle,
+				  char ISC_FAR *);
 
-int ISC_EXPORT BLOB_text_load(ISC_QUAD *,
-							  isc_db_handle,
-							  isc_tr_handle,
-							  char *);
+int         ISC_EXPORT BLOB_text_load (ISC_QUAD ISC_FAR *, 
+				  isc_db_handle, 
+				  isc_tr_handle,
+				  char ISC_FAR *);
 
-BSTREAM *ISC_EXPORT Bopen(ISC_QUAD *,
-								  isc_db_handle,
-								  isc_tr_handle,
-								  char *);
+BSTREAM     ISC_FAR * ISC_EXPORT Bopen (ISC_QUAD ISC_FAR *, 
+			       	    isc_db_handle, 
+			       	    isc_tr_handle,  
+			       	    char ISC_FAR *);
 
-BSTREAM *ISC_EXPORT Bopen2(ISC_QUAD *,
-								   isc_db_handle,
-								   isc_tr_handle,
-								   char *,
-								   unsigned short);
-
-
+BSTREAM     ISC_FAR * ISC_EXPORT Bopen2 (ISC_QUAD ISC_FAR *, 
+				     isc_db_handle,  
+				     isc_tr_handle,  
+				     char ISC_FAR *,
+				     unsigned short);
+
 /******************************/
 /* Other Misc functions       */
 /******************************/
 
-ISC_LONG ISC_EXPORT isc_ftof(char *,
-							 unsigned short,
-							 char *,
-							 unsigned short);
+ISC_LONG    ISC_EXPORT isc_ftof (char ISC_FAR *, 
+				 unsigned short, 
+				 char ISC_FAR *, 
+				 unsigned short);
 
-ISC_STATUS ISC_EXPORT isc_print_blr(char *,
-									isc_callback,
-									void *,
-									short);
+ISC_STATUS  ISC_EXPORT isc_print_blr (char ISC_FAR *, 
+				      isc_callback, 
+				      void ISC_FAR *, 
+				      short);
 
-void ISC_EXPORT isc_set_debug(int);
+void        ISC_EXPORT isc_set_debug (int);
 
-void ISC_EXPORT isc_qtoq(ISC_QUAD *,
-						 ISC_QUAD *);
+void        ISC_EXPORT isc_qtoq (ISC_QUAD ISC_FAR *, 
+				 ISC_QUAD ISC_FAR *);
 
-void ISC_EXPORT isc_vtof(char *,
-						 char *,
-						 unsigned short);
+void        ISC_EXPORT isc_vtof (char ISC_FAR *, 
+				 char ISC_FAR *,
+				 unsigned short);
 
-void ISC_EXPORT isc_vtov(char *,
-						 char *,
-						 short);
+void        ISC_EXPORT isc_vtov (char ISC_FAR *, 
+				 char ISC_FAR *, 
+				 short);
 
-int ISC_EXPORT isc_version(isc_db_handle *,
-						   isc_callback,
-						   void *);
+int         ISC_EXPORT isc_version (isc_db_handle ISC_FAR *, 
+				    isc_callback, 
+				    void ISC_FAR *);
 
-ISC_LONG ISC_EXPORT isc_reset_fpe(unsigned short);
-
-
+ISC_LONG    ISC_EXPORT isc_reset_fpe (unsigned short);
+
 /*****************************************/
 /* Service manager functions             */
 /*****************************************/
@@ -1285,51 +1081,242 @@ ISC_LONG ISC_EXPORT isc_reset_fpe(unsigned short);
 #define ADD_SPB_LENGTH(p, length)	{*(p)++ = (length); \
     					 *(p)++ = (length) >> 8;}
 
-#define ADD_SPB_NUMERIC(p, data)	{*(p)++ = (SCHAR) (data); \
-    					 *(p)++ = (SCHAR) ((data) >> 8); \
-					 *(p)++ = (SCHAR) ((data) >> 16); \
-					 *(p)++ = (SCHAR) ((data) >> 24);}
+#define ADD_SPB_NUMERIC(p, data)	{*(p)++ = (data); \
+    					 *(p)++ = (data) >> 8; \
+					 *(p)++ = (data) >> 16; \
+					 *(p)++ = (data) >> 24;}
 
-ISC_STATUS ISC_EXPORT isc_service_attach(ISC_STATUS *,
-										 unsigned short,
-										 char *,
-										 isc_svc_handle *,
-										 unsigned short,
-										 char *);
+ISC_STATUS  ISC_EXPORT isc_service_attach (ISC_STATUS ISC_FAR *, 
+					   unsigned short, 
+					   char ISC_FAR *,
+					   isc_svc_handle ISC_FAR *, 
+					   unsigned short, 
+					   char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_service_detach(ISC_STATUS *,
-										 isc_svc_handle *);
+ISC_STATUS  ISC_EXPORT isc_service_detach (ISC_STATUS ISC_FAR *, 
+					   isc_svc_handle ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_service_query(ISC_STATUS *,
-										isc_svc_handle *,
-										isc_resv_handle *,
-										unsigned short,
-										char *,
-										unsigned short,
-										char *,
-										unsigned short,
-										char *);
+ISC_STATUS  ISC_EXPORT isc_service_query (ISC_STATUS ISC_FAR *, 
+					  isc_svc_handle ISC_FAR *,
+                      		          isc_resv_handle ISC_FAR *,
+					  unsigned short, 
+					  char ISC_FAR *, 
+					  unsigned short, 
+					  char ISC_FAR *, 
+					  unsigned short, 
+					  char ISC_FAR *);
 
-ISC_STATUS ISC_EXPORT isc_service_start(ISC_STATUS *,
-										isc_svc_handle *,
-										isc_resv_handle *,
-										unsigned short,
-										char *);
+ISC_STATUS ISC_EXPORT isc_service_start (ISC_STATUS ISC_FAR *,
+    					 isc_svc_handle ISC_FAR *,
+                         		 isc_resv_handle ISC_FAR *,
+    					 unsigned short,
+    					 char ISC_FAR*);
+
+/*******************************/
+/* Forms functions             */
+/*******************************/
 
+ISC_STATUS  ISC_EXPORT isc_compile_map (ISC_STATUS ISC_FAR *, 
+					isc_form_handle ISC_FAR *,
+					isc_req_handle ISC_FAR *, 
+					short ISC_FAR *, 
+					char ISC_FAR *);
 
-/********************************/
-/* Client information functions */
-/********************************/
+ISC_STATUS  ISC_EXPORT isc_compile_menu (ISC_STATUS ISC_FAR *, 
+					 isc_form_handle ISC_FAR *,
+					 isc_req_handle ISC_FAR *, 
+					 short ISC_FAR *, 
+				 	 char ISC_FAR *);
 
-void ISC_EXPORT isc_get_client_version ( char  *);
-int  ISC_EXPORT isc_get_client_major_version ();
-int  ISC_EXPORT isc_get_client_minor_version ();
+ISC_STATUS  ISC_EXPORT isc_compile_sub_map (ISC_STATUS ISC_FAR *, 
+					    isc_win_handle ISC_FAR *,
+					    isc_req_handle ISC_FAR *, 
+					    short ISC_FAR *, 
+					    char ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_create_window (ISC_STATUS ISC_FAR *, 
+					  isc_win_handle ISC_FAR *, 
+					  short ISC_FAR *, 
+					  char ISC_FAR *, 
+					  short ISC_FAR *, 
+					  short ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_delete_window (ISC_STATUS ISC_FAR *, 
+					  isc_win_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_drive_form (ISC_STATUS ISC_FAR *, 
+				       isc_db_handle ISC_FAR *, 
+				       isc_tr_handle ISC_FAR *, 
+				       isc_win_handle ISC_FAR *, 
+				       isc_req_handle ISC_FAR *, 
+				       unsigned char ISC_FAR *, 
+				       unsigned char ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_drive_menu (ISC_STATUS ISC_FAR *, 
+				       isc_win_handle ISC_FAR *, 
+				       isc_req_handle ISC_FAR *, 
+				       short ISC_FAR *, 
+				       char ISC_FAR *, 
+				       short ISC_FAR *, 
+				       char ISC_FAR *,
+				       short ISC_FAR *, 
+				       short ISC_FAR *, 
+				       char ISC_FAR *, 
+				       ISC_LONG ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_form_delete (ISC_STATUS ISC_FAR *, 
+					isc_form_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_form_fetch (ISC_STATUS ISC_FAR *, 
+				       isc_db_handle ISC_FAR *, 
+				       isc_tr_handle ISC_FAR *, 
+				       isc_req_handle ISC_FAR *, 
+				       unsigned char ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_form_insert (ISC_STATUS ISC_FAR *, 
+					isc_db_handle ISC_FAR *, 
+					isc_tr_handle ISC_FAR *, 
+					isc_req_handle ISC_FAR *, 
+					unsigned char ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_get_entree (ISC_STATUS ISC_FAR *, 
+				       isc_req_handle ISC_FAR *, 
+				       short ISC_FAR *, 
+				       char ISC_FAR *, 
+				       ISC_LONG ISC_FAR *, 
+				       short ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_initialize_menu (ISC_STATUS ISC_FAR *, 
+					    isc_req_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_menu (ISC_STATUS ISC_FAR *, 
+				 isc_win_handle ISC_FAR *, 
+				 isc_req_handle ISC_FAR *, 
+			 	 short ISC_FAR *, 
+				 char ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_load_form (ISC_STATUS ISC_FAR *, 
+				      isc_db_handle ISC_FAR *, 
+				      isc_tr_handle ISC_FAR *, 
+				      isc_form_handle ISC_FAR *, 
+				      short ISC_FAR *, 
+				      char ISC_FAR *);
+																
+ISC_STATUS  ISC_EXPORT isc_pop_window (ISC_STATUS ISC_FAR *, 
+				       isc_win_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_put_entree (ISC_STATUS ISC_FAR *, 
+				       isc_req_handle ISC_FAR *, 
+				       short ISC_FAR *, 
+				       char ISC_FAR *, 
+				       ISC_LONG ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_reset_form (ISC_STATUS ISC_FAR *, 
+				       isc_req_handle ISC_FAR *);
+
+ISC_STATUS  ISC_EXPORT isc_suspend_window (ISC_STATUS ISC_FAR *, 
+					   isc_win_handle ISC_FAR *);
 
 #ifdef __cplusplus
-}	/* extern "C" */
+};
 #endif
+
+#else 					/* __cplusplus || __STDC__ */
+ 
+ISC_STATUS  ISC_EXPORT isc_attach_database();
+ISC_STATUS  ISC_EXPORT isc_array_gen_sdl();
+ISC_STATUS  ISC_EXPORT isc_array_get_slice();
+ISC_STATUS  ISC_EXPORT isc_array_lookup_bounds();
+ISC_STATUS  ISC_EXPORT isc_array_lookup_desc();
+ISC_STATUS  ISC_EXPORT isc_array_set_desc();
+ISC_STATUS  ISC_EXPORT isc_array_put_slice();
+ISC_STATUS  ISC_EXPORT isc_blob_gen_bpb();
+ISC_STATUS  ISC_EXPORT isc_blob_info();
+ISC_STATUS  ISC_EXPORT isc_blob_lookup_desc();
+ISC_STATUS  ISC_EXPORT isc_blob_set_desc();
+ISC_STATUS  ISC_EXPORT isc_cancel_blob();
+ISC_STATUS  ISC_EXPORT isc_cancel_events();
+ISC_STATUS  ISC_EXPORT isc_close_blob();
+ISC_STATUS  ISC_EXPORT isc_commit_retaining();
+ISC_STATUS  ISC_EXPORT isc_commit_transaction();
+ISC_STATUS  ISC_EXPORT isc_compile_request();
+ISC_STATUS  ISC_EXPORT isc_compile_request2();
+ISC_STATUS  ISC_EXPORT isc_create_blob();
+ISC_STATUS  ISC_EXPORT isc_create_blob2();
+ISC_STATUS  ISC_EXPORT isc_create_database();
+ISC_STATUS  ISC_EXPORT isc_database_info();
+ISC_STATUS  ISC_EXPORT isc_ddl();
+void        ISC_EXPORT isc_decode_date();
+void        ISC_EXPORT isc_decode_sql_date();
+void        ISC_EXPORT isc_decode_sql_time();
+void        ISC_EXPORT isc_decode_timestamp();
+ISC_STATUS  ISC_EXPORT isc_detach_database();
+ISC_STATUS  ISC_EXPORT isc_drop_database();
+void        ISC_EXPORT isc_encode_date();
+void        ISC_EXPORT isc_encode_sql_date();
+void        ISC_EXPORT isc_encode_sql_time();
+void        ISC_EXPORT isc_encode_timestamp();
+ISC_LONG    ISC_EXPORT isc_event_block();
+void        ISC_EXPORT isc_event_counts();
+void        ISC_EXPORT isc_expand_dpb();
+int         ISC_EXPORT isc_modify_dpb();
+ISC_LONG    ISC_EXPORT isc_free();
+ISC_STATUS  ISC_EXPORT isc_get_segment();
+ISC_STATUS  ISC_EXPORT isc_get_slice();
+ISC_STATUS  ISC_EXPORT isc_interprete();
+ISC_STATUS  ISC_EXPORT isc_open_blob();
+ISC_STATUS  ISC_EXPORT isc_open_blob2();
+ISC_STATUS  ISC_EXPORT isc_prepare_transaction();
+ISC_STATUS  ISC_EXPORT isc_prepare_transaction2();
+void        ISC_EXPORT isc_print_sqlerror();
+ISC_STATUS  ISC_EXPORT isc_print_status();
+ISC_STATUS  ISC_EXPORT isc_put_segment();
+ISC_STATUS  ISC_EXPORT isc_put_slice();
+ISC_STATUS  ISC_EXPORT isc_que_events();
+ISC_STATUS  ISC_EXPORT isc_receive();
+ISC_STATUS  ISC_EXPORT isc_reconnect_transaction();
+ISC_STATUS  ISC_EXPORT isc_release_request();
+ISC_STATUS  ISC_EXPORT isc_request_info();
+ISC_LONG    ISC_EXPORT isc_reset_fpe ();
+ISC_STATUS  ISC_EXPORT isc_rollback_transaction();
+ISC_STATUS  ISC_EXPORT isc_rollback_retaining();
+ISC_STATUS  ISC_EXPORT isc_seek_blob();
+ISC_STATUS  ISC_EXPORT isc_send();
+ISC_STATUS  ISC_EXPORT isc_service_attach();
+ISC_STATUS  ISC_EXPORT isc_service_detach();
+ISC_STATUS  ISC_EXPORT isc_service_query();
+ISC_STATUS  ISC_EXPORT isc_service_start();
+ISC_STATUS  ISC_EXPORT isc_start_and_send();
+ISC_STATUS  ISC_EXPORT isc_start_multiple();
+ISC_STATUS  ISC_EXPORT isc_start_request();
+ISC_STATUS  ISC_EXPORT isc_start_transaction();
+ISC_LONG    ISC_EXPORT isc_sqlcode();
+ISC_STATUS  ISC_EXPORT isc_transaction_info();
+ISC_STATUS  ISC_EXPORT isc_transact_request();
+ISC_STATUS  ISC_EXPORT isc_unwind_request();
+ISC_STATUS  ISC_EXPORT isc_wait_for_event();
+ISC_LONG    ISC_EXPORT isc_ftof();
+ISC_STATUS  ISC_EXPORT isc_print_blr();
+void        ISC_EXPORT isc_set_debug();
+void        ISC_EXPORT isc_qtoq();
+ISC_LONG    ISC_EXPORT isc_vax_integer();
+void        ISC_EXPORT isc_vtof();
+void        ISC_EXPORT isc_vtov();
+int         ISC_EXPORT isc_version();
 
+#ifndef __STDC__
 
+/******************/
+/* Blob functions */
+/******************/
+
+BSTREAM   ISC_FAR * ISC_EXPORT Bopen();
+BSTREAM   ISC_FAR * ISC_EXPORT BLOB_open();
+BSTREAM   ISC_FAR * ISC_EXPORT Bopen2();
+#endif					/* __STDC__ */
+
+#endif                                  /* __cplusplus || __STDC__ */
+
 /***************************************************/
 /* Actions to pass to the blob filter (ctl_source) */
 /***************************************************/
@@ -1347,264 +1334,244 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 /* Blr definitions */
 /*******************/
 
-#define blr_text		(unsigned char)14
-#define blr_text2		(unsigned char)15	/* added in 3.2 JPN */
-#define blr_short		(unsigned char)7
-#define blr_long		(unsigned char)8
-#define blr_quad		(unsigned char)9
-#define blr_float		(unsigned char)10
-#define blr_double		(unsigned char)27
-#define blr_d_float		(unsigned char)11
-#define blr_timestamp		(unsigned char)35
-#define blr_varying		(unsigned char)37
-#define blr_varying2		(unsigned char)38	/* added in 3.2 JPN */
-#define blr_blob		(unsigned short)261
-#define blr_cstring		(unsigned char)40     	
-#define blr_cstring2    	(unsigned char)41	/* added in 3.2 JPN */
-#define blr_blob_id     	(unsigned char)45	/* added from gds.h */
-#define blr_sql_date		(unsigned char)12
-#define blr_sql_time		(unsigned char)13
-#define blr_int64               (unsigned char)16
+#ifndef _JRD_BLR_H_
+
+#define blr_word(n) ((n) % 256), ((n) / 256)
+
+#define blr_text                           14
+#define blr_text2                          15
+#define blr_short                          7
+#define blr_long                           8
+#define blr_quad                           9
+#define blr_int64                          16
+#define blr_float                          10
+#define blr_double                         27
+#define blr_d_float                        11
+#define blr_timestamp                      35
+#define blr_varying                        37
+#define blr_varying2                       38
+#define blr_blob                           261
+#define blr_cstring                        40
+#define blr_cstring2                       41	
+#define blr_blob_id                        45
+#define blr_sql_date                       12
+#define blr_sql_time                       13
 
 /* Historical alias for pre V6 applications */
-#define blr_date		blr_timestamp
+#define blr_date                           blr_timestamp
 
-#define blr_inner		(unsigned char)0
-#define blr_left		(unsigned char)1
-#define blr_right		(unsigned char)2
-#define blr_full		(unsigned char)3
+#define blr_inner                          0
+#define blr_left                           1
+#define blr_right                          2
+#define blr_full                           3
 
-#define blr_gds_code		(unsigned char)0
-#define blr_sql_code		(unsigned char)1
-#define blr_exception		(unsigned char)2
-#define blr_trigger_code 	(unsigned char)3
-#define blr_default_code 	(unsigned char)4
-#define blr_raise			(unsigned char)5
-#define blr_exception_msg	(unsigned char)6
+#define blr_gds_code                       0
+#define blr_sql_code                       1
+#define blr_exception                      2
+#define blr_trigger_code                   3
+#define blr_default_code                   4
 
-#define blr_version4		(unsigned char)4
-#define blr_version5		(unsigned char)5
-#define blr_eoc			(unsigned char)76
-#define blr_end			(unsigned char)255	/* note: defined as -1 in gds.h */
+#define blr_version4                       4
+#define blr_version5                       5
+#define blr_eoc                            76
+#define blr_end                            255
 
-#define blr_assignment		(unsigned char)1
-#define blr_begin		(unsigned char)2
-#define blr_dcl_variable  	(unsigned char)3	/* added from gds.h */
-#define blr_message		(unsigned char)4
-#define blr_erase		(unsigned char)5
-#define blr_fetch		(unsigned char)6
-#define blr_for			(unsigned char)7
-#define blr_if			(unsigned char)8
-#define blr_loop		(unsigned char)9
-#define blr_modify		(unsigned char)10
-#define blr_handler		(unsigned char)11
-#define blr_receive		(unsigned char)12
-#define blr_select		(unsigned char)13
-#define blr_send		(unsigned char)14
-#define blr_store		(unsigned char)15
-#define blr_label		(unsigned char)17
-#define blr_leave		(unsigned char)18
-#define blr_store2		(unsigned char)19
-#define blr_post                (unsigned char)20
-#define blr_literal		(unsigned char)21
-#define blr_dbkey		(unsigned char)22
-#define blr_field		(unsigned char)23
-#define blr_fid			(unsigned char)24
-#define blr_parameter		(unsigned char)25
-#define blr_variable		(unsigned char)26
-#define blr_average		(unsigned char)27
-#define blr_count		(unsigned char)28
-#define blr_maximum		(unsigned char)29
-#define blr_minimum		(unsigned char)30
-#define blr_total		(unsigned char)31
-/* count 2
-#define blr_count2		32
-*/
-#define blr_add			(unsigned char)34
-#define blr_subtract		(unsigned char)35
-#define blr_multiply		(unsigned char)36
-#define blr_divide		(unsigned char)37
-#define blr_negate		(unsigned char)38
-#define blr_concatenate		(unsigned char)39
-#define blr_substring		(unsigned char)40
-#define blr_parameter2		(unsigned char)41
-#define blr_from		(unsigned char)42
-#define blr_via			(unsigned char)43
-#define blr_parameter2_old	(unsigned char)44	/* Confusion */
-#define blr_user_name   	(unsigned char)44	/* added from gds.h */
-#define blr_null		(unsigned char)45
+#define blr_assignment                     1
+#define blr_begin                          2
+#define blr_dcl_variable                   3
+#define blr_message                        4
+#define blr_erase                          5
+#define blr_fetch                          6
+#define blr_for                            7
+#define blr_if                             8
+#define blr_loop                           9
+#define blr_modify                         10
+#define blr_handler                        11
+#define blr_receive                        12
+#define blr_select                         13
+#define blr_send                           14
+#define blr_store                          15
+#define blr_label                          17
+#define blr_leave                          18
+#define blr_store2                         19
+#define blr_post                           20
 
-#define blr_eql			(unsigned char)47
-#define blr_neq			(unsigned char)48
-#define blr_gtr			(unsigned char)49
-#define blr_geq			(unsigned char)50
-#define blr_lss			(unsigned char)51
-#define blr_leq			(unsigned char)52
-#define blr_containing		(unsigned char)53
-#define blr_matching		(unsigned char)54
-#define blr_starting		(unsigned char)55
-#define blr_between		(unsigned char)56
-#define blr_or			(unsigned char)57
-#define blr_and			(unsigned char)58
-#define blr_not			(unsigned char)59
-#define blr_any			(unsigned char)60
-#define blr_missing		(unsigned char)61
-#define blr_unique		(unsigned char)62
-#define blr_like		(unsigned char)63
+#define blr_literal                        21
+#define blr_dbkey                          22
+#define blr_field                          23
+#define blr_fid                            24
+#define blr_parameter                      25
+#define blr_variable                       26
+#define blr_average                        27
+#define blr_count                          28
+#define blr_maximum                        29
+#define blr_minimum                        30
+#define blr_total                          31
+#define blr_add                            34
+#define blr_subtract                       35
+#define blr_multiply                       36
+#define blr_divide                         37
+#define blr_negate                         38
+#define blr_concatenate                    39
+#define blr_substring                      40
+#define blr_parameter2                     41
+#define blr_from                           42
+#define blr_via                            43
+#define blr_user_name                      44
+#define blr_null                           45
 
-#define blr_stream      	(unsigned char)65	/* added from gds.h */
-#define blr_set_index   	(unsigned char)66	/* added from gds.h */
+#define blr_eql                            47
+#define blr_neq                            48
+#define blr_gtr                            49
+#define blr_geq                            50
+#define blr_lss                            51
+#define blr_leq                            52
+#define blr_containing                     53
+#define blr_matching                       54
+#define blr_starting                       55
+#define blr_between                        56
+#define blr_or                             57
+#define blr_and                            58
+#define blr_not                            59
+#define blr_any                            60
+#define blr_missing                        61
+#define blr_unique                         62
+#define blr_like                           63
 
-#define blr_rse			(unsigned char)67
-#define blr_first		(unsigned char)68
-#define blr_project		(unsigned char)69
-#define blr_sort		(unsigned char)70
-#define blr_boolean		(unsigned char)71
-#define blr_ascending		(unsigned char)72
-#define blr_descending		(unsigned char)73
-#define blr_relation		(unsigned char)74
-#define blr_rid			(unsigned char)75
-#define blr_union		(unsigned char)76
-#define blr_map			(unsigned char)77
-#define blr_group_by		(unsigned char)78
-#define blr_aggregate		(unsigned char)79
-#define blr_join_type		(unsigned char)80
+#define blr_stream                         65
+#define blr_set_index                      66
+#define blr_rse                            67
+#define blr_first                          68
+#define blr_project                        69
+#define blr_sort                           70
+#define blr_boolean                        71
+#define blr_ascending                      72
+#define blr_descending                     73
+#define blr_relation                       74
+#define blr_rid                            75
+#define blr_union                          76
+#define blr_map                            77
+#define blr_group_by                       78
+#define blr_aggregate                      79
+#define blr_join_type                      80
 
-#define blr_agg_count		(unsigned char)83
-#define blr_agg_max		(unsigned char)84
-#define blr_agg_min		(unsigned char)85
-#define blr_agg_total		(unsigned char)86
-#define blr_agg_average		(unsigned char)87
-#define	blr_parameter3		(unsigned char)88	/* same as Rdb definition */
-#define blr_run_max		(unsigned char)89
-#define blr_run_min		(unsigned char)90
-#define blr_run_total		(unsigned char)91
-#define blr_run_average		(unsigned char)92
-#define blr_agg_count2		(unsigned char)93
-#define blr_agg_count_distinct	(unsigned char)94
-#define blr_agg_total_distinct	(unsigned char)95
-#define blr_agg_average_distinct (unsigned char)96
+#define blr_agg_count                      83
+#define blr_agg_max                        84
+#define blr_agg_min                        85
+#define blr_agg_total                      86
+#define blr_agg_average                    87
+#define blr_parameter3                     88
+#define	blr_run_count                      118
+#define	blr_run_max                        89
+#define	blr_run_min                        90
+#define	blr_run_total                      91
+#define	blr_run_average                    92
+#define blr_agg_count2                     93
+#define blr_agg_count_distinct             94
+#define blr_agg_total_distinct             95
+#define blr_agg_average_distinct           96
 
-#define blr_function		(unsigned char)100
-#define blr_gen_id		(unsigned char)101
-#define blr_prot_mask		(unsigned char)102
-#define blr_upcase		(unsigned char)103
-#define blr_lock_state		(unsigned char)104
-#define blr_value_if		(unsigned char)105
-#define blr_matching2		(unsigned char)106
-#define blr_index		(unsigned char)107
-#define blr_ansi_like		(unsigned char)108
-#define blr_bookmark		(unsigned char)109
-#define blr_crack		(unsigned char)110
-#define blr_force_crack		(unsigned char)111
-#define blr_seek		(unsigned char)112
-#define blr_find		(unsigned char)113
-                                 
-/* these indicate directions for blr_seek and blr_find */
+#define blr_function                       100
+#define blr_gen_id                         101
+#define blr_prot_mask                      102
+#define blr_upcase                         103
+#define blr_lock_state                     104
+#define blr_value_if                       105
+#define blr_matching2                      106
+#define blr_index                          107
+#define blr_ansi_like                      108
+#define blr_bookmark                       109
+#define blr_crack                          110
+#define blr_force_crack                    111
+#define blr_seek                           112
+#define blr_find                           113
 
-#define blr_continue		(unsigned char)0
-#define blr_forward		(unsigned char)1
-#define blr_backward		(unsigned char)2
-#define blr_bof_forward		(unsigned char)3
-#define blr_eof_backward	(unsigned char)4
+#define blr_continue                       0
+#define blr_forward                        1
+#define blr_backward                       2
+#define blr_bof_forward                    3
+#define blr_eof_backward                   4
 
-#define blr_lock_relation 	(unsigned char)114
-#define blr_lock_record		(unsigned char)115
-#define blr_set_bookmark 	(unsigned char)116
-#define blr_get_bookmark 	(unsigned char)117
+#define blr_lock_relation                  114
+#define blr_lock_record                    115
+#define blr_set_bookmark		   116
+#define blr_get_bookmark		   117
+#define blr_rs_stream                      119
+#define blr_exec_proc                      120
+#define blr_begin_range                    121
+#define blr_end_range                      122
+#define blr_delete_range                   123
+#define blr_procedure                      124
+#define blr_pid                            125
+#define blr_exec_pid                       126
+#define blr_singular                       127
+#define blr_abort                          128
+#define blr_block                          129
+#define blr_error_handler                  130
+#define blr_cast                           131
+#define blr_release_lock                   132
+#define blr_release_locks                  133
+#define blr_start_savepoint                134
+#define blr_end_savepoint                  135
+#define blr_find_dbkey                     136
+#define blr_range_relation                 137
+#define blr_delete_ranges                  138
 
-#define blr_run_count		(unsigned char)118	/* changed from 88 to avoid conflict with blr_parameter3 */
-#define blr_rs_stream		(unsigned char)119
-#define blr_exec_proc		(unsigned char)120
-#define blr_begin_range 	(unsigned char)121
-#define blr_end_range 		(unsigned char)122
-#define blr_delete_range 	(unsigned char)123
-#define blr_procedure		(unsigned char)124
-#define blr_pid			(unsigned char)125
-#define blr_exec_pid		(unsigned char)126
-#define blr_singular		(unsigned char)127
-#define blr_abort		(unsigned char)128
-#define blr_block	 	(unsigned char)129
-#define blr_error_handler	(unsigned char)130
+#define blr_plan                           139
+#define blr_merge                          140
+#define blr_join                           141
+#define blr_sequential                     142
+#define blr_navigational                   143
+#define blr_indices                        144
+#define blr_retrieve                       145
 
-#define blr_cast		(unsigned char)131
-#define blr_release_lock	(unsigned char)132
-#define blr_release_locks	(unsigned char)133
-#define blr_start_savepoint	(unsigned char)134
-#define blr_end_savepoint	(unsigned char)135
-#define blr_find_dbkey		(unsigned char)136
-#define blr_range_relation	(unsigned char)137
-#define blr_delete_ranges	(unsigned char)138
+#define blr_relation2                      146
+#define blr_rid2                           147
+#define blr_reset_stream                   148
+#define blr_release_bookmark               149
+#define blr_set_generator                  150
+#define blr_ansi_any			   151   
+#define blr_exists			   152
+#define blr_cardinality			   153
 
-#define blr_plan		(unsigned char)139	/* access plan items */
-#define blr_merge		(unsigned char)140
-#define blr_join		(unsigned char)141
-#define blr_sequential		(unsigned char)142
-#define blr_navigational	(unsigned char)143
-#define blr_indices		(unsigned char)144
-#define blr_retrieve		(unsigned char)145
+#define blr_record_version		   154		/* get tid of record */
+#define blr_stall			   155		/* fake server stall */
+#define blr_seek_no_warn		   156
+#define blr_find_dbkey_version		   157
+#define blr_ansi_all			   158   
 
-#define blr_relation2		(unsigned char)146
-#define blr_rid2		(unsigned char)147
-#define blr_reset_stream	(unsigned char)148
-#define blr_release_bookmark	(unsigned char)149
-
-#define blr_set_generator       (unsigned char)150
-
-#define blr_ansi_any		(unsigned char)151   /* required for NULL handling */
-#define blr_exists		(unsigned char)152   /* required for NULL handling */
-#define blr_cardinality		(unsigned char)153
-
-#define blr_record_version	(unsigned char)154	/* get tid of record */
-#define blr_stall		(unsigned char)155	/* fake server stall */
-
-#define blr_seek_no_warn	(unsigned char)156	
-#define blr_find_dbkey_version	(unsigned char)157   /* find dbkey with record version */
-#define blr_ansi_all		(unsigned char)158   /* required for NULL handling */
-
-#define blr_extract		(unsigned char)159
+#define blr_extract                        159
 
 /* sub parameters for blr_extract */
 
-#define blr_extract_year	(unsigned char)0
-#define blr_extract_month	(unsigned char)1
-#define blr_extract_day		(unsigned char)2
-#define blr_extract_hour	(unsigned char)3
-#define blr_extract_minute	(unsigned char)4
-#define blr_extract_second	(unsigned char)5
-#define blr_extract_weekday	(unsigned char)6
-#define blr_extract_yearday	(unsigned char)7
+#define blr_extract_year                   0
+#define blr_extract_month                  1
+#define blr_extract_day	                   2
+#define blr_extract_hour                   3
+#define blr_extract_minute                 4
+#define blr_extract_second                 5
+#define blr_extract_weekday                6
+#define blr_extract_yearday                7
 
-#define blr_current_date	(unsigned char)160
-#define blr_current_timestamp	(unsigned char)161
-#define blr_current_time	(unsigned char)162
+#define blr_current_date                   160
+#define blr_current_timestamp              161
+#define blr_current_time                   162
 
-/* FB 1.0 specific BLR */
+/* These verbs were added in 6.0, primarily to support 64-bit integers */
 
-#define blr_current_role	(unsigned char)174
-#define blr_skip		(unsigned char)175
-
-/* FB 1.5 specific BLR */
-
-#define blr_exec_sql		(unsigned char)176
-#define blr_internal_info	(unsigned char)177
-#define blr_nullsfirst		(unsigned char)178
-#define blr_writelock		(unsigned char)179
-
-/* These codes reuse BLR code space */
-
-#define blr_post_arg		(unsigned char)163
-#define blr_exec_into		(unsigned char)164
-#define blr_user_savepoint	(unsigned char)165
-
-/* These codes are actions for user-defined savepoints */
-
-#define blr_savepoint_set	(unsigned char)0
-#define blr_savepoint_release	(unsigned char)1
-#define blr_savepoint_undo	(unsigned char)2
-#define blr_savepoint_release_single	(unsigned char)3
-
-
+#define blr_add2	          163
+#define blr_subtract2	          164
+#define blr_multiply2             165
+#define blr_divide2	          166
+#define blr_agg_total2            167
+#define blr_agg_total_distinct2   168
+#define blr_agg_average2          169
+#define blr_agg_average_distinct2 170
+#define blr_average2		  171
+#define blr_gen_id2		  172
+#define blr_set_generator2        173
+#endif					/* _JRD_BLR_H_ */
+
 /**********************************/
 /* Database parameter block stuff */
 /**********************************/
@@ -1677,7 +1644,6 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 #define isc_dpb_set_db_sql_dialect        65
 #define isc_dpb_gfix_attach		  66
 #define isc_dpb_gstat_attach		  67
-#define isc_dpb_set_db_charset			68
 
 /*********************************/
 /* isc_dpb_verify specific flags */
@@ -1706,8 +1672,7 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 
 #define RDB_system                         1
 #define RDB_id_assigned                    2
-
-
+
 /*************************************/
 /* Transaction parameter block stuff */
 /*************************************/
@@ -1734,8 +1699,7 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 #define isc_tpb_no_rec_version		  18
 #define isc_tpb_restart_requests	  19
 #define isc_tpb_no_auto_undo              20
-
-
+
 /************************/
 /* Blob Parameter Block */
 /************************/
@@ -1750,8 +1714,7 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 
 #define isc_bpb_type_segmented            0
 #define isc_bpb_type_stream               1
-
-
+
 /*********************************/
 /* Service parameter block stuff */
 /*********************************/
@@ -1759,7 +1722,7 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 #define isc_spb_version1                  1
 #define isc_spb_current_version           2
 #define isc_spb_version			  isc_spb_current_version
-#define isc_spb_user_name                 isc_dpb_user_name
+#define isc_spb_user_name                 isc_dpb_user_name 
 #define isc_spb_sys_user_name             isc_dpb_sys_user_name
 #define isc_spb_sys_user_name_enc         isc_dpb_sys_user_name_enc
 #define isc_spb_password                  isc_dpb_password
@@ -1772,8 +1735,7 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 #define isc_spb_connect_timeout           isc_dpb_connect_timeout
 #define isc_spb_dummy_packet_interval     isc_dpb_dummy_packet_interval
 #define isc_spb_sql_role_name             isc_dpb_sql_role_name
-
-
+
 /*********************************/
 /* Information call declarations */
 /*********************************/
@@ -1792,187 +1754,116 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 /* Database information items */
 /******************************/
 
-enum db_info_types
-    {
-	isc_info_db_id = 4,
-	isc_info_reads = 5,
-	isc_info_writes = 6,
-	isc_info_fetches = 7,
-	isc_info_marks = 8,
-
-	isc_info_implementation = 11,
-	isc_info_isc_version = 12,
-	isc_info_base_level = 13,
-	isc_info_page_size = 14,
-	isc_info_num_buffers = 15,
-	isc_info_limbo = 16,
-	isc_info_current_memory = 17,
-	isc_info_max_memory = 18,
-	isc_info_window_turns = 19,
-	isc_info_license = 20,   
-
-	isc_info_allocation = 21,
-	isc_info_attachment_id = 22,
-	isc_info_read_seq_count = 23,
-	isc_info_read_idx_count = 24,
-	isc_info_insert_count = 25,
-	isc_info_update_count = 26,
-	isc_info_delete_count = 27,
-	isc_info_backout_count = 28,
-	isc_info_purge_count = 29,
-	isc_info_expunge_count = 30, 
-
-	isc_info_sweep_interval = 31,
-	isc_info_ods_version = 32,
-	isc_info_ods_minor_version = 33,
-	isc_info_no_reserve = 34,
-	isc_info_logfile = 35,
-	isc_info_cur_logfile_name = 36,
-	isc_info_cur_log_part_offset = 37,
-	isc_info_num_wal_buffers = 38,
-	isc_info_wal_buffer_size = 39,
-	isc_info_wal_ckpt_length = 40,   
-
-	isc_info_wal_cur_ckpt_interval = 41,  
-	isc_info_wal_prv_ckpt_fname = 42,
-	isc_info_wal_prv_ckpt_poffset = 43,
-	isc_info_wal_recv_ckpt_fname = 44,
-	isc_info_wal_recv_ckpt_poffset = 45,
-	isc_info_wal_grpc_wait_usecs = 47,
-	isc_info_wal_num_io = 48,
-	isc_info_wal_avg_io_size = 49,
-	isc_info_wal_num_commits = 50,  
-
-	isc_info_wal_avg_grpc_size = 51,
-	isc_info_forced_writes = 52,
-	isc_info_user_names = 53,
-	isc_info_page_errors = 54,
-	isc_info_record_errors = 55,
-	isc_info_bpage_errors = 56,
-	isc_info_dpage_errors = 57,
-	isc_info_ipage_errors = 58,
-	isc_info_ppage_errors = 59,
-	isc_info_tpage_errors = 60,
-
-	isc_info_set_page_buffers = 61,
-	isc_info_db_sql_dialect = 62,   
-	isc_info_db_read_only = 63,
-	isc_info_db_size_in_pages = 64,
-
-    /* Values 65 -100 unused to avoid conflict with InterBase */
-	
-	frb_info_att_charset = 101,
-	isc_info_db_class = 102,
-	isc_info_firebird_version = 103,
-	isc_info_oldest_transaction = 104,
-	isc_info_oldest_active = 105,
-	isc_info_oldest_snapshot = 106,
-	isc_info_next_transaction = 107,
-	isc_info_db_provider = 108,
-	isc_info_active_transactions = 109,
-
-	isc_info_db_last_value   /* Leave this LAST! */
-    };
-
-#define isc_info_version isc_info_isc_version
-
+#define isc_info_db_id                    4
+#define isc_info_reads                    5
+#define isc_info_writes                   6
+#define isc_info_fetches                  7
+#define isc_info_marks                    8
+#define isc_info_implementation           11
+#define isc_info_version                  12
+#define isc_info_base_level               13
+#define isc_info_page_size                14
+#define isc_info_num_buffers              15
+#define isc_info_limbo                    16
+#define isc_info_current_memory           17
+#define isc_info_max_memory               18
+#define isc_info_window_turns             19
+#define isc_info_license                  20
+#define isc_info_allocation               21
+#define isc_info_attachment_id            22
+#define isc_info_read_seq_count           23
+#define isc_info_read_idx_count           24
+#define isc_info_insert_count             25
+#define isc_info_update_count             26
+#define isc_info_delete_count             27
+#define isc_info_backout_count            28
+#define isc_info_purge_count              29
+#define isc_info_expunge_count            30
+#define isc_info_sweep_interval           31
+#define isc_info_ods_version              32
+#define isc_info_ods_minor_version        33
+#define isc_info_no_reserve               34
+#define isc_info_logfile                  35
+#define isc_info_cur_logfile_name         36
+#define isc_info_cur_log_part_offset      37
+#define isc_info_num_wal_buffers          38
+#define isc_info_wal_buffer_size          39
+#define isc_info_wal_ckpt_length          40
+#define isc_info_wal_cur_ckpt_interval    41
+#define isc_info_wal_prv_ckpt_fname       42
+#define isc_info_wal_prv_ckpt_poffset     43
+#define isc_info_wal_recv_ckpt_fname      44
+#define isc_info_wal_recv_ckpt_poffset    45
+#define isc_info_wal_grpc_wait_usecs      47
+#define isc_info_wal_num_io               48
+#define isc_info_wal_avg_io_size          49
+#define isc_info_wal_num_commits          50
+#define isc_info_wal_avg_grpc_size        51
+#define isc_info_forced_writes		  52
+#define isc_info_user_names		  53
+#define isc_info_page_errors		  54
+#define isc_info_record_errors		  55
+#define isc_info_bpage_errors		  56
+#define isc_info_dpage_errors	  	  57
+#define isc_info_ipage_errors	  	  58
+#define isc_info_ppage_errors		  59
+#define isc_info_tpage_errors	  	  60
+#define isc_info_set_page_buffers         61
+#define isc_info_db_sql_dialect           62
+#define isc_info_db_read_only             63
+#define isc_info_db_size_in_pages	  64
 
 /**************************************/
 /* Database information return values */
 /**************************************/
 
-enum  info_db_implementations
-    {
-	isc_info_db_impl_rdb_vms = 1,
-	isc_info_db_impl_rdb_eln = 2,
-	isc_info_db_impl_rdb_eln_dev = 3,
-	isc_info_db_impl_rdb_vms_y = 4,
-	isc_info_db_impl_rdb_eln_y = 5,
-	isc_info_db_impl_jri = 6,
-	isc_info_db_impl_jsv = 7,
+#define isc_info_db_impl_rdb_vms          1
+#define isc_info_db_impl_rdb_eln          2
+#define isc_info_db_impl_rdb_eln_dev      3
+#define isc_info_db_impl_rdb_vms_y        4
+#define isc_info_db_impl_rdb_eln_y        5
+#define isc_info_db_impl_jri              6
+#define isc_info_db_impl_jsv              7
+#define isc_info_db_impl_isc_a            25
+#define isc_info_db_impl_isc_u            26
+#define isc_info_db_impl_isc_v            27
+#define isc_info_db_impl_isc_s            28
+#define isc_info_db_impl_isc_apl_68K      25
+#define isc_info_db_impl_isc_vax_ultr     26
+#define isc_info_db_impl_isc_vms          27
+#define isc_info_db_impl_isc_sun_68k      28
+#define isc_info_db_impl_isc_os2          29
+#define isc_info_db_impl_isc_sun4         30
+#define isc_info_db_impl_isc_hp_ux        31
+#define isc_info_db_impl_isc_sun_386i     32
+#define isc_info_db_impl_isc_vms_orcl     33
+#define isc_info_db_impl_isc_mac_aux      34
+#define isc_info_db_impl_isc_rt_aix       35
+#define isc_info_db_impl_isc_mips_ult     36
+#define isc_info_db_impl_isc_xenix        37
+#define isc_info_db_impl_isc_dg           38
+#define isc_info_db_impl_isc_hp_mpexl     39
+#define isc_info_db_impl_isc_hp_ux68K     40
+#define isc_info_db_impl_isc_sgi          41
+#define isc_info_db_impl_isc_sco_unix     42
+#define isc_info_db_impl_isc_cray         43
+#define isc_info_db_impl_isc_imp          44
+#define isc_info_db_impl_isc_delta        45
+#define isc_info_db_impl_isc_next         46
+#define isc_info_db_impl_isc_dos          47
+#define isc_info_db_impl_isc_winnt        48
+#define isc_info_db_impl_isc_epson        49
 
-	isc_info_db_impl_isc_apl_68K = 25,
-	isc_info_db_impl_isc_vax_ultr = 26,
-	isc_info_db_impl_isc_vms = 27,
-	isc_info_db_impl_isc_sun_68k = 28,
-	isc_info_db_impl_isc_os2 = 29,
-	isc_info_db_impl_isc_sun4 = 30,	   /* 30 */
-	
-	isc_info_db_impl_isc_hp_ux = 31,
-	isc_info_db_impl_isc_sun_386i = 32,
-	isc_info_db_impl_isc_vms_orcl = 33,
-	isc_info_db_impl_isc_mac_aux = 34,
-	isc_info_db_impl_isc_rt_aix = 35,
-	isc_info_db_impl_isc_mips_ult = 36,
-	isc_info_db_impl_isc_xenix = 37,
-	isc_info_db_impl_isc_dg = 38,
-	isc_info_db_impl_isc_hp_mpexl = 39,
-	isc_info_db_impl_isc_hp_ux68K = 40,	  /* 40 */
-
-	isc_info_db_impl_isc_sgi = 41,
-	isc_info_db_impl_isc_sco_unix = 42,
-	isc_info_db_impl_isc_cray = 43,
-	isc_info_db_impl_isc_imp = 44,
-	isc_info_db_impl_isc_delta = 45,
-	isc_info_db_impl_isc_next = 46,
-	isc_info_db_impl_isc_dos = 47,
-	isc_info_db_impl_m88K = 48,
-	isc_info_db_impl_unixware = 49,
-	isc_info_db_impl_isc_winnt_x86 = 50,
-
-	isc_info_db_impl_isc_epson = 51,
-	isc_info_db_impl_alpha_osf = 52,
-	isc_info_db_impl_alpha_vms = 53,
-	isc_info_db_impl_netware_386 = 54, 
-	isc_info_db_impl_win_only = 55,
-	isc_info_db_impl_ncr_3000 = 56,
-	isc_info_db_impl_winnt_ppc = 57,
-	isc_info_db_impl_dg_x86 = 58,
-	isc_info_db_impl_sco_ev = 59,
-	isc_info_db_impl_i386 = 60,
-
-	isc_info_db_impl_freebsd = 61,
-	isc_info_db_impl_netbsd = 62,
-	isc_info_db_impl_darwin = 63,
-	isc_info_db_impl_sinixz = 64,
-
-	isc_info_db_impl_last_value   /* Leave this LAST! */
-    };
-
-#define isc_info_db_impl_isc_a            isc_info_db_impl_isc_apl_68K
-#define isc_info_db_impl_isc_u            isc_info_db_impl_isc_vax_ultr
-#define isc_info_db_impl_isc_v            isc_info_db_impl_isc_vms
-#define isc_info_db_impl_isc_s            isc_info_db_impl_isc_sun_68k
-
-
-enum info_db_class
-    {
-	isc_info_db_class_access = 1,
-	isc_info_db_class_y_valve = 2,
-	isc_info_db_class_rem_int = 3,
-	isc_info_db_class_rem_srvr = 4,
-	isc_info_db_class_pipe_int = 7,
-	isc_info_db_class_pipe_srvr = 8,
-	isc_info_db_class_sam_int = 9,
-	isc_info_db_class_sam_srvr = 10,
-	isc_info_db_class_gateway = 11,
-	isc_info_db_class_cache = 12,
-	isc_info_db_class_classic_access = 13,
-	isc_info_db_class_server_access = 14,
-
-	isc_info_db_class_last_value   /* Leave this LAST! */
-    };
-
-enum info_db_provider
-    {
-	isc_info_db_code_rdb_eln = 1,
-	isc_info_db_code_rdb_vms = 2,
-	isc_info_db_code_interbase = 3,
-	isc_info_db_code_firebird = 4,
-
-	isc_info_db_code_last_value   /* Leave this LAST! */
-    };
-
+#define isc_info_db_class_access          1
+#define isc_info_db_class_y_valve         2
+#define isc_info_db_class_rem_int         3
+#define isc_info_db_class_rem_srvr        4
+#define isc_info_db_class_pipe_int        7
+#define isc_info_db_class_pipe_srvr       8
+#define isc_info_db_class_sam_int         9
+#define isc_info_db_class_sam_srvr        10
+#define isc_info_db_class_gateway         11
+#define isc_info_db_class_cache           12
 
 /*****************************/
 /* Request information items */
@@ -1991,8 +1882,7 @@ enum info_db_provider
 #define isc_info_req_insert_count         14
 #define isc_info_req_update_count         15
 #define isc_info_req_delete_count         16
-
-
+
 /*********************/
 /* Access path items */
 /*********************/
@@ -2064,42 +1954,42 @@ enum info_db_provider
  * Service action items      *
  *****************************/
 
-#define isc_action_svc_backup          1	/* Starts database backup process on the server */
-#define isc_action_svc_restore         2	/* Starts database restore process on the server */
-#define isc_action_svc_repair          3	/* Starts database repair process on the server */
-#define isc_action_svc_add_user        4	/* Adds a new user to the security database */
-#define isc_action_svc_delete_user     5	/* Deletes a user record from the security database */
-#define isc_action_svc_modify_user     6	/* Modifies a user record in the security database */
-#define isc_action_svc_display_user    7	/* Displays a user record from the security database */
-#define isc_action_svc_properties      8	/* Sets database properties */
-#define isc_action_svc_add_license     9	/* Adds a license to the license file */
-#define isc_action_svc_remove_license 10	/* Removes a license from the license file */
-#define isc_action_svc_db_stats	      11	/* Retrieves database statistics */
-#define isc_action_svc_get_ib_log     12	/* Retrieves the InterBase log file from the server */
+#define isc_action_svc_backup          1 /* Starts database backup process on the server */ 
+#define isc_action_svc_restore         2 /* Starts database restore process on the server */ 
+#define isc_action_svc_repair          3 /* Starts database repair process on the server */ 
+#define isc_action_svc_add_user        4 /* Adds a new user to the security database */ 
+#define isc_action_svc_delete_user     5 /* Deletes a user record from the security database */ 
+#define isc_action_svc_modify_user     6 /* Modifies a user record in the security database */
+#define isc_action_svc_display_user    7 /* Displays a user record from the security database */
+#define isc_action_svc_properties      8 /* Sets database properties */ 
+#define isc_action_svc_add_license     9 /* Adds a license to the license file */ 
+#define isc_action_svc_remove_license 10 /* Removes a license from the license file */ 
+#define isc_action_svc_db_stats	      11 /* Retrieves database statistics */
+#define isc_action_svc_get_ib_log     12 /* Retrieves the InterBase log file from the server */
 
 /*****************************
  * Service information items *
  *****************************/
 
-#define isc_info_svc_svr_db_info      50	/* Retrieves the number of attachments and databases */
-#define isc_info_svc_get_license      51	/* Retrieves all license keys and IDs from the license file */
-#define isc_info_svc_get_license_mask 52	/* Retrieves a bitmask representing licensed options on the server */
-#define isc_info_svc_get_config       53	/* Retrieves the parameters and values for IB_CONFIG */
-#define isc_info_svc_version          54	/* Retrieves the version of the services manager */
-#define isc_info_svc_server_version   55	/* Retrieves the version of the InterBase server */
-#define isc_info_svc_implementation   56	/* Retrieves the implementation of the InterBase server */
-#define isc_info_svc_capabilities     57	/* Retrieves a bitmask representing the server's capabilities */
-#define isc_info_svc_user_dbpath      58	/* Retrieves the path to the security database in use by the server */
-#define isc_info_svc_get_env	      59	/* Retrieves the setting of $INTERBASE */
-#define isc_info_svc_get_env_lock     60	/* Retrieves the setting of $INTERBASE_LCK */
-#define isc_info_svc_get_env_msg      61	/* Retrieves the setting of $INTERBASE_MSG */
-#define isc_info_svc_line             62	/* Retrieves 1 line of service output per call */
-#define isc_info_svc_to_eof           63	/* Retrieves as much of the server output as will fit in the supplied buffer */
-#define isc_info_svc_timeout          64	/* Sets / signifies a timeout value for reading service information */
-#define isc_info_svc_get_licensed_users 65	/* Retrieves the number of users licensed for accessing the server */
-#define isc_info_svc_limbo_trans	66	/* Retrieve the limbo transactions */
-#define isc_info_svc_running		67	/* Checks to see if a service is running on an attachment */
-#define isc_info_svc_get_users		68	/* Returns the user information from isc_action_svc_display_users */
+#define isc_info_svc_svr_db_info      50 /* Retrieves the number of attachments and databases */ 
+#define isc_info_svc_get_license      51 /* Retrieves all license keys and IDs from the license file */
+#define isc_info_svc_get_license_mask 52 /* Retrieves a bitmask representing licensed options on the server */ 
+#define isc_info_svc_get_config       53 /* Retrieves the parameters and values for IB_CONFIG */ 
+#define isc_info_svc_version          54 /* Retrieves the version of the services manager */ 
+#define isc_info_svc_server_version   55 /* Retrieves the version of the InterBase server */ 
+#define isc_info_svc_implementation   56 /* Retrieves the implementation of the InterBase server */ 
+#define isc_info_svc_capabilities     57 /* Retrieves a bitmask representing the server's capabilities */ 
+#define isc_info_svc_user_dbpath      58 /* Retrieves the path to the security database in use by the server */ 
+#define isc_info_svc_get_env	      59 /* Retrieves the setting of $INTERBASE */
+#define isc_info_svc_get_env_lock     60 /* Retrieves the setting of $INTERBASE_LCK */
+#define isc_info_svc_get_env_msg      61 /* Retrieves the setting of $INTERBASE_MSG */
+#define isc_info_svc_line             62 /* Retrieves 1 line of service output per call */
+#define isc_info_svc_to_eof           63 /* Retrieves as much of the server output as will fit in the supplied buffer */
+#define isc_info_svc_timeout          64 /* Sets / signifies a timeout value for reading service information */
+#define isc_info_svc_get_licensed_users 65 /* Retrieves the number of users licensed for accessing the server */
+#define isc_info_svc_limbo_trans	66 /* Retrieve the limbo transactions */
+#define isc_info_svc_running		67 /* Checks to see if a service is running on an attachment */
+#define isc_info_svc_get_users		68 /* Returns the user information from isc_action_svc_display_users */
 
 /******************************************************
  * Parameters for isc_action_{add|delete|modify)_user *
@@ -2128,7 +2018,7 @@ enum info_db_provider
  * Parameters for isc_action_svc_backup  *
  *****************************************/
 
-#define isc_spb_bkp_file                 5
+#define isc_spb_bkp_file                 5 
 #define isc_spb_bkp_factor               6
 #define isc_spb_bkp_length               7
 #define isc_spb_bkp_ignore_checksums     0x01
@@ -2168,7 +2058,7 @@ enum info_db_provider
  ******************************************/
 
 #define isc_spb_prp_wm_async		37
-#define isc_spb_prp_wm_sync			38
+#define isc_spb_prp_wm_sync		38
 
 /******************************************
  * Parameters for isc_spb_prp_access_mode *
@@ -2183,46 +2073,46 @@ enum info_db_provider
 
 #define isc_spb_rpr_commit_trans		15
 #define isc_spb_rpr_rollback_trans		34
-#define isc_spb_rpr_recover_two_phase	17
-#define isc_spb_tra_id					18
+#define isc_spb_rpr_recover_two_phase		17
+#define isc_spb_tra_id                     	18
 #define isc_spb_single_tra_id			19
 #define isc_spb_multi_tra_id			20
-#define isc_spb_tra_state				21
+#define isc_spb_tra_state			21
 #define isc_spb_tra_state_limbo			22
 #define isc_spb_tra_state_commit		23
 #define isc_spb_tra_state_rollback		24
 #define isc_spb_tra_state_unknown		25
 #define isc_spb_tra_host_site			26
 #define isc_spb_tra_remote_site			27
-#define isc_spb_tra_db_path				28
-#define isc_spb_tra_advise				29
+#define isc_spb_tra_db_path			28
+#define isc_spb_tra_advise			29
 #define isc_spb_tra_advise_commit		30
 #define isc_spb_tra_advise_rollback		31
 #define isc_spb_tra_advise_unknown		33
 
 #define isc_spb_rpr_validate_db			0x01
 #define isc_spb_rpr_sweep_db			0x02
-#define isc_spb_rpr_mend_db				0x04
-#define isc_spb_rpr_list_limbo_trans	0x08
+#define isc_spb_rpr_mend_db			0x04
+#define isc_spb_rpr_list_limbo_trans		0x08
 #define isc_spb_rpr_check_db			0x10
 #define isc_spb_rpr_ignore_checksum		0x20
 #define isc_spb_rpr_kill_shadows		0x40
-#define isc_spb_rpr_full				0x80
+#define isc_spb_rpr_full			0x80
 
 /*****************************************
  * Parameters for isc_action_svc_restore *
  *****************************************/
 
-#define isc_spb_res_buffers				9
-#define isc_spb_res_page_size			10
-#define isc_spb_res_length				11
+#define isc_spb_res_buffers			9
+#define isc_spb_res_page_size			10 
+#define isc_spb_res_length			11
 #define isc_spb_res_access_mode			12
 #define isc_spb_res_deactivate_idx		0x0100
 #define isc_spb_res_no_shadow			0x0200
 #define isc_spb_res_no_validity			0x0400
 #define isc_spb_res_one_at_a_time		0x0800
-#define isc_spb_res_replace				0x1000
-#define isc_spb_res_create				0x2000
+#define isc_spb_res_replace			0x1000
+#define isc_spb_res_create			0x2000
 #define isc_spb_res_use_all_space		0x4000
 
 /******************************************
@@ -2236,15 +2126,15 @@ enum info_db_provider
  * Parameters for isc_info_svc_svr_db_info *
  *******************************************/
 
-#define isc_spb_num_att			5
-#define isc_spb_num_db			6
+#define isc_spb_num_att               5 
+#define isc_spb_num_db                6
 
 /*****************************************
  * Parameters for isc_info_svc_db_stats  *
  *****************************************/
 
 #define isc_spb_sts_data_pages		0x01
-#define isc_spb_sts_db_log			0x02
+#define isc_spb_sts_db_log		0x02
 #define isc_spb_sts_hdr_pages		0x04
 #define isc_spb_sts_idx_pages		0x08
 #define isc_spb_sts_sys_relations	0x10
@@ -2292,15 +2182,58 @@ enum info_db_provider
 #define isc_info_sql_stmt_rollback        11
 #define isc_info_sql_stmt_select_for_upd  12
 #define isc_info_sql_stmt_set_generator   13
-#define isc_info_sql_stmt_savepoint       14
-
-
+
 /***********************************/
 /* Server configuration key values */
 /***********************************/
 
-/* Not available in Firebird 1.5 */
+#define	ISCCFG_LOCKMEM_KEY	0
+#define ISCCFG_LOCKSEM_KEY	1
+#define ISCCFG_LOCKSIG_KEY	2
+#define ISCCFG_EVNTMEM_KEY	3
+#define ISCCFG_DBCACHE_KEY	4
+#define ISCCFG_PRIORITY_KEY	5
+#define ISCCFG_IPCMAP_KEY	6
+#define ISCCFG_MEMMIN_KEY	7
+#define ISCCFG_MEMMAX_KEY	8
+#define	ISCCFG_LOCKORDER_KEY	9
+#define	ISCCFG_ANYLOCKMEM_KEY	10
+#define ISCCFG_ANYLOCKSEM_KEY	11
+#define ISCCFG_ANYLOCKSIG_KEY	12
+#define ISCCFG_ANYEVNTMEM_KEY	13
+#define ISCCFG_LOCKHASH_KEY	14
+#define ISCCFG_DEADLOCK_KEY	15
+#define ISCCFG_LOCKSPIN_KEY	16
+#define ISCCFG_CONN_TIMEOUT_KEY 17
+#define ISCCFG_DUMMY_INTRVL_KEY 18
+#define ISCCFG_TRACE_POOLS_KEY  19   /* Internal Use only */
+#define ISCCFG_REMOTE_BUFFER_KEY	20
+
+/***************/
+/* Error codes */
+/***************/
 
+#define isc_facility                       20
+#define isc_err_base                       335544320L
+#define isc_err_factor                     1
+#define isc_arg_end                        0
+#define isc_arg_gds                        1
+#define isc_arg_string                     2
+#define isc_arg_cstring                    3
+#define isc_arg_number                     4
+#define isc_arg_interpreted                5
+#define isc_arg_vms                        6
+#define isc_arg_unix                       7
+#define isc_arg_domain                     8
+#define isc_arg_dos                        9
+#define isc_arg_mpexl                      10
+#define isc_arg_mpexl_ipc                  11
+#define isc_arg_next_mach		   15
+#define isc_arg_netware		           16
+#define isc_arg_win32                      17
+#define isc_arg_warning                    18
+
+#include <iberror.h>
 
 /**********************************************/
 /* Dynamic Data Definition Language operators */
@@ -2489,13 +2422,11 @@ enum info_db_provider
 
 #define isc_dyn_scl_acl                   121
 #define isc_dyn_grant_user                130
-#define isc_dyn_grant_user_explicit       219
 #define isc_dyn_grant_proc                186
 #define isc_dyn_grant_trig                187
 #define isc_dyn_grant_view                188
 #define isc_dyn_grant_options             132
 #define isc_dyn_grant_user_group          205
-#define isc_dyn_grant_role                218
 
 
 /**********************************/
@@ -2530,7 +2461,7 @@ enum info_db_provider
 /* Log specific attributes */
 /***************************/
 
-#define isc_dyn_log_group_commit_wait     189
+#define isc_dyn_log_group_commit_wait     189 
 #define isc_dyn_log_buffer_size           190
 #define isc_dyn_log_check_point_length    191
 #define isc_dyn_log_num_of_buffers        192
@@ -2550,8 +2481,8 @@ enum info_db_provider
 #define isc_dyn_filter_out_subtype        153
 
 
-#define isc_dyn_description2		  154
-#define isc_dyn_fld_computed_source2	  155
+#define isc_dyn_description2		  154	
+#define isc_dyn_fld_computed_source2	  155	
 #define isc_dyn_fld_edit_string2	  156
 #define isc_dyn_fld_query_header2	  157
 #define isc_dyn_fld_validation_source2	  158
@@ -2607,23 +2538,12 @@ enum info_db_provider
 #define isc_dyn_sql_role_name             212
 #define isc_dyn_grant_admin_options       213
 #define isc_dyn_del_sql_role              214
-/* 215 & 216 are used some lines above. */
-
-/**********************************************/
-/* Generators again                           */
-/**********************************************/
-
-#ifndef __cplusplus                     /* c definitions */
-#define gds_dyn_delete_generator          217
-#else                                   /* c++ definitions */
-const unsigned char gds_dyn_delete_generator       = 217;
-#endif
 
 /****************************/
 /* Last $dyn value assigned */
 /****************************/
 
-#define isc_dyn_last_dyn_value            219
+#define isc_dyn_last_dyn_value            216
 
 /******************************************/
 /* Array slice description language (SDL) */
@@ -2730,8 +2650,4 @@ const unsigned char gds_dyn_delete_generator       = 217;
 #define isc_dpb_SQL_dialect               63
 #define isc_dpb_set_db_SQL_dialect        65
 
-
-#include "iberror.h"
-
-#endif /* JRD_IBASE_H */
-
+#endif  				/* _JRD_IBASE_H_ */

@@ -24,15 +24,6 @@
  * CVS modification log:
 
  * $Log$
- * Revision 1.9  2003/06/05 23:40:46  brodsom
- * Substitute package and inline imports
- *
- * Revision 1.8  2003/06/04 13:51:01  brodsom
- * Remove unused vars and imports
- *
- * Revision 1.7  2002/12/12 23:32:21  rrokytskyy
- * removed unnecessary stack trace printing
- *
  * Revision 1.6  2002/11/20 15:04:57  d_jencks
  * Demonstrate problem with timestamps
  *
@@ -86,23 +77,13 @@
 package org.firebirdsql.jdbc;
 
 
-import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLWarning;
-import java.sql.Statement;
-import java.sql.Timestamp;
-
+import java.sql.*;
+import java.util.*;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.Properties;
 import java.util.TimeZone;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import junit.framework.*;
+import org.firebirdsql.logging.Logger;
 
 /**
  * Test suite for the FBDriver class implementation.
@@ -112,8 +93,8 @@ import junit.framework.TestSuite;
  */
 public class TestFBDriver extends BaseFBTest {
 
-    private Connection connection;
-    private Driver driver;
+    private java.sql.Connection connection;
+    private java.sql.Driver driver;
 
     public TestFBDriver(String testName) {
         super(testName);
@@ -128,7 +109,7 @@ public class TestFBDriver extends BaseFBTest {
     protected void setUp() throws Exception {
        super.setUp();
         Class.forName(org.firebirdsql.jdbc.FBDriver.class.getName());
-        driver = DriverManager.getDriver(DB_DRIVER_URL);
+        driver = java.sql.DriverManager.getDriver(DB_DRIVER_URL);
     }
 
 
@@ -164,39 +145,36 @@ public class TestFBDriver extends BaseFBTest {
         Properties info = (Properties)DB_INFO.clone();
         info.setProperty("set_db_sql_dialect", "1");
         
-        try {
-	        // open connection and convert DB to SQL dialect 1
-	        Connection dialect1Connection = 
-	            DriverManager.getConnection(DB_DRIVER_URL, info);
-	            
-	        Statement stmt = dialect1Connection.createStatement();
-	        
-	        // execute select statement, driver will pass SQL dialect 3 
-	        // for this statement and database server will return a warning
-	        stmt.executeQuery("SELECT 1 as col1 FROM rdb$database");
-	        
-	        stmt.close();
-	        
-	        SQLWarning warning = dialect1Connection.getWarnings();
-	        
-	        assertTrue("Connection should have at least one warning.", 
-	            warning != null);
-	            
-	        dialect1Connection.clearWarnings();
-	        
-	        assertTrue("After clearing no warnings should be present.",
-	            dialect1Connection.getWarnings() == null);
-	            
-	        dialect1Connection.close();
-        } finally {
+        // open connection and convert DB to SQL dialect 1
+        Connection dialect1Connection = 
+            DriverManager.getConnection(DB_DRIVER_URL, info);
+            
+        Statement stmt = dialect1Connection.createStatement();
         
-	        info.setProperty("set_db_sql_dialect", "3");
-	        
-	        Connection dialect3Connection = 
-	            DriverManager.getConnection(DB_DRIVER_URL, info);
-	            
-	        dialect3Connection.close();
-        }
+        // execute select statement, driver will pass SQL dialect 3 
+        // for this statement and database server will return a warning
+        stmt.executeQuery("SELECT 1 as col1 FROM rdb$database");
+        
+        stmt.close();
+        
+        SQLWarning warning = dialect1Connection.getWarnings();
+        
+        assertTrue("Connection should have at least one warning.", 
+            warning != null);
+            
+        dialect1Connection.clearWarnings();
+        
+        assertTrue("After clearing no warnings should be present.",
+            dialect1Connection.getWarnings() == null);
+            
+        dialect1Connection.close();
+        
+        info.setProperty("set_db_sql_dialect", "3");
+        
+        Connection dialect3Connection = 
+            DriverManager.getConnection(DB_DRIVER_URL, info);
+            
+        dialect3Connection.close();
     }
 
 
@@ -273,8 +251,8 @@ public class TestFBDriver extends BaseFBTest {
                 s.execute("CREATE TABLE DATETEST (DATEID INTEGER NOT NULL PRIMARY KEY, TESTDATE TIMESTAMP)");
                 PreparedStatement ps = c.prepareStatement("INSERT INTO DATETEST (DATEID, TESTDATE) VALUES (?,?)");
                 Calendar cal = new GregorianCalendar(timeZoneUTC);
-                Date d1 = new Date("Sat Feb 17 20:59:31 EST 1917");
-                Timestamp x = new Timestamp(d1.getTime());
+                java.util.Date d1 = new java.util.Date("Sat Feb 17 20:59:31 EST 1917");
+                java.sql.Timestamp x = new java.sql.Timestamp(d1.getTime());
                 try 
                 {
                     ps.setInt(1, 1);
@@ -293,7 +271,7 @@ public class TestFBDriver extends BaseFBTest {
                     {
                          
                         assertTrue("Should have one row!", rs.next());
-                        Timestamp x2 = rs.getTimestamp(1, cal);
+                        java.sql.Timestamp x2 = rs.getTimestamp(1, cal);
                         java.util.Date d2 = new java.util.Date(x2.getTime());
                         assertTrue("Retrieved wrong value! expected: " + d1 + ", actual: " + d2, d1.equals(d2));
                     }
