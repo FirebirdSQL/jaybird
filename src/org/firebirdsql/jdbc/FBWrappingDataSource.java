@@ -368,6 +368,10 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
       {
          try 
          {
+            if (getDatabaseName() == null)
+            {
+                throw new SQLException("DataSource has no databaseName");
+            }
           
             if (pooling) 
             {
