@@ -1111,7 +1111,7 @@ public class FBConnection implements Connection
     public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException {
         checkManagedConnection();
         mc.prepareSQL(stmt, sql, describeBind);
-	}
+    }
 	 
     public void registerStatement(FBStatement fbStatement) {
         mc.registerStatement(fbStatement);
@@ -1126,7 +1126,23 @@ public class FBConnection implements Connection
         checkManagedConnection();
         mc.getSqlCounts(stmt);
     }
-	 
+
+    public String getDatabaseProductName() {
+        return mc.getDatabaseProductName();
+    }
+
+    public String getDatabaseProductVersion() {
+        return mc.getDatabaseProductVersion();
+    }
+
+    public int getDatabaseProductMajorVersion() {
+        return mc.getDatabaseProductMajorVersion();
+    }
+
+    public int getDatabaseProductMinorVersion() {
+        return mc.getDatabaseProductMinorVersion();
+    }
+
     public Integer getBlobBufferLength() {
         /**@todo add check if mc is not null */
         return mc.getBlobBufferLength();

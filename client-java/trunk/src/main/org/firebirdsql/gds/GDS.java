@@ -245,6 +245,86 @@ public interface GDS {
     final static int isc_info_req_update_count       =  15;
     final static int isc_info_req_delete_count       =  16;
 
+    /*****************************/
+    /* Request information items */
+    /*****************************/
+	 
+    final static int isc_info_db_id = 4;
+    final static int isc_info_reads = 5;
+    final static int isc_info_writes = 6;
+    final static int isc_info_fetches = 7;
+    final static int isc_info_marks = 8;
+
+    final static int isc_info_implementation = 11;
+    final static int isc_info_isc_version = 12;
+    final static int isc_info_base_level = 13;
+    final static int isc_info_page_size = 14;
+    final static int isc_info_num_buffers = 15;
+    final static int isc_info_limbo = 16;
+    final static int isc_info_current_memory = 17;
+    final static int isc_info_max_memory = 18;
+    final static int isc_info_window_turns = 19;
+    final static int isc_info_license = 20;   
+
+    final static int isc_info_allocation = 21;
+    final static int isc_info_attachment_id = 22;
+    final static int isc_info_read_seq_count = 23;
+    final static int isc_info_read_idx_count = 24;
+    final static int isc_info_insert_count = 25;
+    final static int isc_info_update_count = 26;
+    final static int isc_info_delete_count = 27;
+    final static int isc_info_backout_count = 28;
+    final static int isc_info_purge_count = 29;
+    final static int isc_info_expunge_count = 30; 
+
+    final static int isc_info_sweep_interval = 31;
+    final static int isc_info_ods_version = 32;
+    final static int isc_info_ods_minor_version = 33;
+    final static int isc_info_no_reserve = 34;
+    final static int isc_info_logfile = 35;
+    final static int isc_info_cur_logfile_name = 36;
+    final static int isc_info_cur_log_part_offset = 37;
+    final static int isc_info_num_wal_buffers = 38;
+    final static int isc_info_wal_buffer_size = 39;
+    final static int isc_info_wal_ckpt_length = 40;   
+
+    final static int isc_info_wal_cur_ckpt_interval = 41;  
+    final static int isc_info_wal_prv_ckpt_fname = 42;
+    final static int isc_info_wal_prv_ckpt_poffset = 43;
+    final static int isc_info_wal_recv_ckpt_fname = 44;
+    final static int isc_info_wal_recv_ckpt_poffset = 45;
+    final static int isc_info_wal_grpc_wait_usecs = 47;
+    final static int isc_info_wal_num_io = 48;
+    final static int isc_info_wal_avg_io_size = 49;
+    final static int isc_info_wal_num_commits = 50;  
+
+    final static int isc_info_wal_avg_grpc_size = 51;
+    final static int isc_info_forced_writes = 52;
+    final static int isc_info_user_names = 53;
+    final static int isc_info_page_errors = 54;
+    final static int isc_info_record_errors = 55;
+    final static int isc_info_bpage_errors = 56;
+    final static int isc_info_dpage_errors = 57;
+    final static int isc_info_ipage_errors = 58;
+    final static int isc_info_ppage_errors = 59;
+    final static int isc_info_tpage_errors = 60;
+
+    final static int isc_info_set_page_buffers = 61;
+    final static int isc_info_db_sql_dialect = 62; 
+    final static int isc_info_db_read_only = 63;
+    final static int isc_info_db_size_in_pages = 64;
+
+    /* Values 65 -100 unused to avoid conflict with InterBase */
+	
+    final static int frb_info_att_charset = 101;
+    final static int isc_info_db_class = 102;
+    final static int isc_info_firebird_version = 103;
+    final static int isc_info_oldest_transaction = 104;
+    final static int isc_info_oldest_active = 105;
+    final static int isc_info_oldest_snapshot = 106;
+    final static int isc_info_next_transaction = 107;
+    final static int isc_info_db_provider = 108;
+	 
 /************************/
 /* Blob Parameter Block */
 /************************/

@@ -101,7 +101,7 @@ public final class XdrInputStream {
             row[i] = buffer;
         }
         if (stmt != null) 
-            stmt.rows[stmt.size++] = row;
+            stmt.addRow(row);
     }
 
     //

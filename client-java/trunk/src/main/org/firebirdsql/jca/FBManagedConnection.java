@@ -648,6 +648,26 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         mcf.gds.getSqlCounts(stmt);
     }
     //for DatabaseMetaData.
+    public String getDatabaseProductName() {
+        /**@todo add check if mc is not null */
+        return currentDbHandle.getDatabaseProductName();
+    }
+
+    public String getDatabaseProductVersion() {
+        /**@todo add check if mc is not null */
+        return currentDbHandle.getDatabaseProductVersion();
+    }
+
+    public int getDatabaseProductMajorVersion() {
+        /**@todo add check if mc is not null */
+        return currentDbHandle.getDatabaseProductMajorVersion();
+    }
+
+    public int getDatabaseProductMinorVersion() {
+        /**@todo add check if mc is not null */
+        return currentDbHandle.getDatabaseProductMinorVersion();
+    }
+
     public String getDatabase() {
         return mcf.getDatabase();
     }

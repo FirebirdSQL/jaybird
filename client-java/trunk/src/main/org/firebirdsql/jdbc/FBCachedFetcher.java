@@ -62,17 +62,17 @@ class FBCachedFetcher implements FBFetcher {
             if (fetchSize == 0)
                 fetchSize = MAX_FETCH_ROWS;
 				// the following if, is only for callable statement				
-				if (!stmt.allRowsFetched && stmt.size == 0) {
+				if (!stmt.getAllRowsFetched() && stmt.size() == 0) {
                 do {
-                    if (fbStatement.maxRows != 0 && fetchSize > fbStatement.maxRows - stmt.size)
-                        fetchSize = fbStatement.maxRows - stmt.size;
+                    if (fbStatement.maxRows != 0 && fetchSize > fbStatement.maxRows - stmt.size())
+                        fetchSize = fbStatement.maxRows - stmt.size();
                     c.fetch(stmt, fetchSize);
-                    if (stmt.size > 0){
-                        rowsSets.add(stmt.rows);
-                        rowsCount += stmt.size;
-                        stmt.rows = null;
+                    if (stmt.size() > 0){
+                        rowsSets.add(stmt.getRows());
+                        rowsCount += stmt.size();
+                        stmt.removeRows();
                     }
-                } while (!stmt.allRowsFetched && (fbStatement.maxRows==0 || rowsCount <fbStatement.maxRows));
+                } while (!stmt.getAllRowsFetched() && (fbStatement.maxRows==0 || rowsCount <fbStatement.maxRows));
                 // now create one list with known capacity					 
                 int rowCount = 0;
                 rowsArray  = new Object[rowsCount];
@@ -90,8 +90,8 @@ class FBCachedFetcher implements FBFetcher {
                 rowsSets.clear();
             }
             else {
-                rowsArray = stmt.rows;
-                stmt.rows = null;
+                rowsArray = stmt.getRows();
+                stmt.removeRows();
             }
             //
             if (hasBlobs){

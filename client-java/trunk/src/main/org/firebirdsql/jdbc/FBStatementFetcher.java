@@ -48,9 +48,9 @@ class FBStatementFetcher implements FBFetcher {
             
         try {
             // stored procedures
-            if (stmt.allRowsFetched){
-                rowsArray = stmt.rows;
-                size = stmt.size;
+            if (stmt.getAllRowsFetched()){
+                rowsArray = stmt.getRows();
+                size = stmt.size();
             }
             fetch();
             if (nextRow==null)
@@ -108,12 +108,12 @@ class FBStatementFetcher implements FBFetcher {
         if (maxRows != 0 && fetchSize > maxRows)
             fetchSize = maxRows;
         //
-        if (!stmt.allRowsFetched && (rowsArray == null || rowsArray.length == rowPosition)){
+        if (!stmt.getAllRowsFetched() && (rowsArray == null || rowsArray.length == rowPosition)){
             try {
                 c.fetch(stmt, fetchSize);
                 rowPosition = 0;
-					 rowsArray = stmt.rows;
-					 size = stmt.size;
+					 rowsArray = stmt.getRows();
+					 size = stmt.size();
             }
             catch (GDSException ge) {
                 throw new FBSQLException(ge);
