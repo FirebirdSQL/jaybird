@@ -141,4 +141,89 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
             rdb_warnings.clear();
         }
     }
+    //
+    //
+    //
+    int dialect = 0;
+    String version = null;
+    String FBVersion = null;
+    int ODSMajorVersion = 0;
+    int ODSMinorVersion = 0;
+
+    public void setDialect(int value){
+        dialect = value;
+    }
+
+    public int getDialect(){
+        return dialect;
+    }
+
+    public void setVersion(String value){
+        version = value;
+    }
+
+    public String getVersion(){
+        return version;
+    }
+
+    public String getDatabaseProductName(){
+        if (version.indexOf("Firebird") != -1)
+            return "Firebird";
+        else
+            return "Interbase";
+    }
+
+    public String getDatabaseProductVersion(){
+        return version;
+    }
+
+    public int getDatabaseProductMajorVersion(){
+        if (version.indexOf("Firebird") != -1){
+            if (version.indexOf("Firebird 1.0") != -1)
+                return 1;
+            else if (version.indexOf("Firebird 1.5") != -1)
+                return 1;
+            else 
+                return -1;
+        }
+        else
+            return -1;
+    }
+
+    public int getDatabaseProductMinorVersion(){
+        if (version.indexOf("Firebird") != -1){
+            if (version.indexOf("Firebird 1.0") != -1)
+                return 0;
+            else if (version.indexOf("Firebird 1.5") != -1)
+                return 5;
+            else 
+                return -1;
+        }
+        else
+            return -1;
+    }
+
+    public void setFBVersion(String value){
+        FBVersion = value;
+    }
+
+    public String getFBVersion(){
+        return FBVersion;
+    }
+
+    public void setODSMajorVersion(int value){
+        ODSMajorVersion = value;
+    }
+
+    public int getODSMajorVersion(){
+        return ODSMajorVersion;
+    }
+
+    public void setODSMinorVersion(int value){
+        ODSMinorVersion = value;
+    }
+
+    public int getODSMinorVersion(){
+        return ODSMinorVersion;
+    }
 }

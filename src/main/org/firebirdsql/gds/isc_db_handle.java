@@ -58,5 +58,32 @@ public interface isc_db_handle {
      */
     void clearWarnings();
 
+    void setDialect(int value);
+
+    int getDialect();
+
+    void setVersion(String value);
+
+    String getVersion();
+
+    String getDatabaseProductName();
+
+    String getDatabaseProductVersion();
+
+    int getDatabaseProductMajorVersion();
+
+    int getDatabaseProductMinorVersion();
+
+    void setFBVersion(String value);
+
+    String getFBVersion();
+
+    void setODSMajorVersion(int value);
+
+    int getODSMajorVersion();
+
+    void setODSMinorVersion(int value);
+
+    int getODSMinorVersion();
 }
 

@@ -68,18 +68,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
     FBConnection c;
 
-    //boolean transactionActive = false;
-
-//  LocalTransaction trans;
-
     HashMap statements = new HashMap();
 
     //PreparedStatement tables = null;
 
     FBDatabaseMetaData(FBConnection c) {
         this.c = c;
-        //use the spi LocalTransaction that does not notify the ConnectionManager.
-//        trans = c.getLocalTransaction();
     }
 
     void close() {
@@ -218,8 +212,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getDatabaseProductName() throws SQLException {
-        return "Firebird something == notyet impelemented";
-        //throw new SQLException("Not yet implemented");
+        return c.getDatabaseProductName();
     }
 
 
@@ -230,8 +223,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getDatabaseProductVersion() throws SQLException {
-        return "Firebird something == notyet impelemented";
-        //throw new SQLException("Not yet implemented");
+        return c.getDatabaseProductVersion();
     }
 
 

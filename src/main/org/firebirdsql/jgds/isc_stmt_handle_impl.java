@@ -39,14 +39,14 @@ import java.util.ArrayList;
  * @version 1.0
  */
 public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_handle {
-    int rsr_id;
-    isc_db_handle_impl rsr_rdb;
-    XSQLDA in_sqlda = null;
-    XSQLDA out_sqlda = null;
-    public Object[] rows;
-	 public int size;
-    public boolean allRowsFetched = false;
-    boolean isSingletonResult = false;
+    private int rsr_id;
+    private isc_db_handle_impl rsr_rdb;
+    private XSQLDA in_sqlda = null;
+    private XSQLDA out_sqlda = null;
+    private Object[] rows;
+    private int size;
+    private boolean allRowsFetched = false;
+    private boolean isSingletonResult = false;
 
     int statementType;
     int insertCount;
@@ -64,7 +64,15 @@ public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_
     public XSQLDA getOutSqlda() {
         return out_sqlda;
     }
-	 
+
+    public void setInSqlda(XSQLDA xsqlda) {
+        in_sqlda = xsqlda;
+    }
+
+    public void setOutSqlda(XSQLDA xsqlda) {
+        out_sqlda = xsqlda;
+    }
+
     public void ensureCapacity(int maxSize) {
         if (rows== null || rows.length<maxSize)
             rows = new Object[maxSize];
@@ -94,5 +102,54 @@ public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_
 
     public int getSelectCount() {
         return selectCount;
+    }
+
+    public boolean getAllRowsFetched() {
+        return allRowsFetched;
+    }
+
+    public void setAllRowsFetched(boolean value) {
+        allRowsFetched = value;
+    }
+
+    public boolean getIsSingletonResult() {
+        return isSingletonResult;
+    }
+
+    public void setIsSingletonResult(boolean value) {
+        isSingletonResult = value;
+    }
+
+    public int getRsr_id() {
+        return rsr_id;
+    }
+
+    public void setRsr_id(int value) {
+        rsr_id = value;
+    }
+
+    public isc_db_handle_impl getRsr_rdb() {
+        return rsr_rdb;
+    }
+
+    public void setRsr_rdb(isc_db_handle_impl value) {
+        rsr_rdb = value;
+    }
+
+    public int size() {
+        return size;
+    }
+
+    public Object[] getRows() {
+        return rows;
+    }
+
+    public void removeRows() {
+        rows = null;
+        size = 0;
+    }
+
+    public void addRow(byte[][] row) {
+        rows[size++] = row;
     }
 }
