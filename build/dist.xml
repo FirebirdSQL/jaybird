@@ -54,6 +54,9 @@
         <include name="firebirdsql.jar"/>
         <include name="firebirdjmx.jar"/>
       </fileset>
+      <fileset dir="${module.etc}">
+        <include name="release_notes.html"/>
+      </fileset>
       <zipfileset dir="${build.lib}" prefix="lib">
         <include name="mini-j2ee.jar"/>
         <include name="mini-concurrent.jar"/>
@@ -62,14 +65,16 @@
         <include name="log4j-core.jar"/>
         <include name="jaas.jar"/>
       </zipfileset>
-      <fileset dir="${module.etc}">
-        <include name="*.html"/>
-        <include name="FAQ.txt"/>
-      </fileset>
       <zipfileset dir="${source.examples}" prefix="examples">
       	<include name="*"/>
       </zipfileset>
-      <zipfileset dir="${build.docs}" prefix="docs">
+      <zipfileset dir="${module.etc}" prefix="docs">
+        <include name="*.html"/>
+        <exclude name="release_notes.html"/>
+        <exclude name="FAQ.*"/>
+        <exclude name="faq.*"/>
+      </zipfileset>
+      <zipfileset dir="${build.docs}" prefix="docs/api">
         <include name="**/*"/>
       </zipfileset>
     </zip>
