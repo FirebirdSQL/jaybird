@@ -24,6 +24,12 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2001/07/15 20:26:31  rrokytskyy
+ * Commit from public CVS
+ *
+ * Revision 1.1  2001/07/13 18:16:15  d_jencks
+ * Implementation of jdbc 1.0 Driver contributed by Roman Rokytskyy
+ *
  * Revision 1.1  2001/07/09 09:09:51  rrokytskyy
  * Initial revision
  *
@@ -119,9 +125,13 @@ public class FBUnmanagedConnection extends FBConnection {
      * @exception SQLException if a database access error occurs
      * @todo check if this implementation is correct.
      */
-    public String nativeSQL(String sql) throws SQLException {
-        return sql;
-    }
+    /* public String nativeSQL(String sql) throws SQLException {
+        try {
+            return new FBEscapedParser().parse(sql);
+        } catch(FBSQLParseException pex) {
+            throw new SQLException(pex.toString());
+        }
+        }*/
 
     /**
      * Returns the current state of the autoCommit behaviour.

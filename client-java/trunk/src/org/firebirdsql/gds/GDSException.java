@@ -12,6 +12,7 @@
  * Original developer David Jencks
  *
  * Contributor(s):
+ *  Roman Rokytskyy
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Lesser General Public License Version 2.1 or later
@@ -26,30 +27,67 @@
  * LGPL.
  */
 
+/*
+ * CVS modification log:
+ * $Log$
+ */
+
 package org.firebirdsql.gds;
 
 public class GDSException extends Exception {
 
-    protected int fbErrorCode = 0;
+    // protected int fbErrorCode = 0;
+    protected int type;
+    protected int intParam;
+    protected String strParam;
 
-    protected GDSException next;
-
-    public GDSException(int fbErrorCode) {
-        this.fbErrorCode = fbErrorCode;
-        //super(getErrorString(fbErrorCode));
+    /**
+     * Returns the parameter depending on the type of the
+     * error code.
+     */
+    protected String getParam() {
+        if ((type == GDS.isc_arg_interpreted) ||
+                (type == GDS.isc_arg_string))
+            return strParam;
+        else
+        if (type == GDS.isc_arg_number)
+            return "" + intParam;
+        else
+            return "";
     }
 
-    public GDSException(int fbErrorCode, String message) {
-        super(message);
-        this.fbErrorCode = fbErrorCode;
+    /**
+     * My child
+     */
+    protected GDSException next;
+
+    public GDSException(int type, int intParam) {
+        this.type = type;
+        this.intParam = intParam;
+    }
+
+    public GDSException(int type, String strParam) {
+        this.type = type;
+        this.strParam = strParam;
+    }
+
+    public GDSException(int fbErrorCode) {
+        // this.fbErrorCode = fbErrorCode;
+        this.intParam = fbErrorCode;
+        this.type = GDS.isc_arg_gds;
     }
 
     public GDSException(String message) {
         super(message);
+        this.type = GDS.isc_arg_string;
     }
 
     public int getFbErrorCode() {
-        return fbErrorCode;
+        //return fbErrorCode;
+        if (type == GDS.isc_arg_number)
+            return intParam;
+        else
+            return -1;
     }
 
     public void setNext(GDSException e) {
@@ -60,6 +98,7 @@ public class GDSException extends Exception {
         return next;
     }
 
+    /*
     public String toString() {
         //this should really include the message, too
         String s = "GDSException: " + fbErrorCode + ": ";
@@ -70,7 +109,41 @@ public class GDSException extends Exception {
         }
         return s;
     }
+    */
 
+    /**
+     * Returns a string representation of this exception.
+     */
+    public String toString() {
+        // If I represent a GDSMessage code, then let's format it nicely.
+        if (type == GDS.isc_arg_gds) {
+            // get message
+            GDSExceptionHelper.GDSMessage message =
+                GDSExceptionHelper.getMessage(intParam);
+
+            // substitute parameters using my children
+            int paramCount = message.getParamCount();
+            GDSException child = this.next;
+            for(int i = 0; i < paramCount; i++) {
+                message.setParameter(i, child.getParam());
+                child = child.next;
+                if (child == null) break;
+            }
+
+            // convert message to string
+            String msg = message.toString();
+
+            // Do we have more children? Then include them...
+            if (child != null)
+                msg += "\n" + child.toString();
+
+            // Ok, we have a message, so return it to the client.
+            return msg;
+        }
+        // ok, I'm not GDSMessage code, somebody invoked toString() method
+        // on me by mistake... :(
+        return "";
+    }
 
 
 }

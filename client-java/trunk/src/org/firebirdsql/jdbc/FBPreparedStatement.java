@@ -92,7 +92,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             if (fixedStmt == null) {
                 fixedStmt = mc.getAllocatedStatement();
             }
-            mc.prepareSQL(fixedStmt, sql, true);
+            mc.prepareSQL(fixedStmt, c.nativeSQL(sql), true);
         }
         catch (GDSException ge) {
             throw new SQLException("GDS exception: " + ge.toString());
