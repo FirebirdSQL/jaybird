@@ -162,7 +162,7 @@ public class GDS_Impl implements GDS {
     private byte[] resp_data;
 */
 
-    static final int MAX_BUFFER_SIZE = 8192;//4096; //max size for response for ??
+    static final int MAX_BUFFER_SIZE = 1024; //8192;//4096; //max size for response for ??
     static final int MAX_FETCH_ROWS = 200;     // Max number of rows in a fetch batch
     
     public GDS_Impl() {
@@ -597,7 +597,6 @@ public class GDS_Impl implements GDS {
                                                    isc_info_sql_alias,
                                                    isc_info_sql_describe_end };
 
-        int buffer_length = MAX_BUFFER_SIZE;
         byte[] buffer = isc_dsql_sql_info(stmt_handle,
                               describe_select_info.length, describe_select_info,
                               MAX_BUFFER_SIZE);
@@ -1082,7 +1081,6 @@ public class GDS_Impl implements GDS {
         if (blob == null) {
             throw new GDSException(isc_bad_segstr_handle);
         }
-        int buffer_length = MAX_BUFFER_SIZE;
         synchronized (db) {
             try {
 
@@ -1271,8 +1269,9 @@ public class GDS_Impl implements GDS {
             user_id[n++] = (byte) host.length();
             System.arraycopy(host.getBytes(), 0, user_id, n, host.length());
             n += host.length();
-            //user_id[n++] = 6;     // CNCT_user_verification
-            //user_id[n++] = 0;
+            
+            user_id[n++] = 6;     // CNCT_user_verification
+            user_id[n++] = 0;
 
             if (debug) {System.out.print("op_connect ");}
             db.out.writeInt(op_connect);
@@ -1857,6 +1856,7 @@ public class GDS_Impl implements GDS {
         XSQLDA xsqlda = new XSQLDA();
         int lastindex = 0;
         while ((lastindex = parseTruncSqlInfo(info, xsqlda, lastindex)) > 0) {
+            lastindex--;               // Is this OK ?
             byte[] new_items = new byte[4 + items.length];
             new_items[0] = isc_info_sql_sqlda_start;
             new_items[1] = 2;
@@ -2089,6 +2089,5 @@ if (debug) {System.out.println("isc_info_truncated ");}
         long resp_blob_id;
         byte[] resp_data;
     }
-
 
 }
