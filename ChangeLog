@@ -1,3 +1,16 @@
+2004-10-28 01:35  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractPreparedStatement.java, FBConnectionHelper.java,
+	FBDatabaseMetaData.java, FBEscapedParser.java,
+	FBProcedureCall.java, FBProcedureParam.java,
+	AbstractCallableStatement.java, AbstractConnection.java,
+	FBBlob.java, FBDataSource.java, FBResultSet.java,
+	FirebirdBlob.java, FBArray.java, FBClob.java, FBDriver.java,
+	FBDriverPropertyManager.java, FBEscapedFunctionHelper.java:
+	
+	applied fixes to javadoc by Gabriel Reid
+
 2004-10-25 23:05  rrokytskyy
 
 	* client-java/src/: main/org/firebirdsql/jdbc/FBBlob.java,
