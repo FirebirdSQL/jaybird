@@ -959,7 +959,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     }
 	 
     public void registerStatement(AbstractStatement fbStatement) {
-        mc.registerStatement(fbStatement);
+        mc.registerStatement(fbStatement.fixedStmt);
     }
 	 
     public void fetch(isc_stmt_handle stmt, int fetchSize) throws GDSException {

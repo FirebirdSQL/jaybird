@@ -1049,6 +1049,9 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
 
                     int op = nextOperation(db);
                     if (op == op_fetch_response) {
+                        
+                        stmt.notifyOpenResultSet();
+                        
                         int sqldata_status;
                         int sqldata_messages;
 

@@ -242,7 +242,8 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                             currentCachedResultSet = null;
 
                             //may need ensureTransaction?
-                            c.closeStatement(fixedStmt, true);
+                            if (fixedStmt.isValid())
+                                c.closeStatement(fixedStmt, true);
                         }
                     } catch (GDSException ge) {
                         throw new FBSQLException(ge);
@@ -974,7 +975,8 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         currentCachedResultSet = null;
         if (currentRs != null) {
             try {
-                c.closeStatement(fixedStmt, false);
+                if (fixedStmt.hasOpenResultSet())
+                    c.closeStatement(fixedStmt, false);
             }
             catch (GDSException ge) {
                 throw new FBSQLException(ge);
@@ -1033,6 +1035,11 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         if (fixedStmt == null) {
             fixedStmt = c.getAllocatedStatement();
         }
+        
+        if (!fixedStmt.isValid())
+            throw new FBSQLException("Corresponding connection is not valid.",
+                FBSQLException.SQL_STATE_CONNECTION_FAILURE_IN_TX);
+        
         c.prepareSQL(
             fixedStmt, 
             escapedProcessing ? c.nativeSQL(sql) : sql, 

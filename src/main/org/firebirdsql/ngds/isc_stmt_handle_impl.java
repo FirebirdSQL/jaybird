@@ -47,6 +47,7 @@ public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_
     private int size;
     private boolean allRowsFetched = false;
     private boolean isSingletonResult = false;
+    private boolean hasOpenResultSet = false;
 
     private int statementType;
     private int insertCount;
@@ -86,6 +87,7 @@ public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_
     public void clearRows() {
         size = 0;
         allRowsFetched = false;
+        hasOpenResultSet = false;
     }
 
     public void setStatementType(int value) {
@@ -171,6 +173,14 @@ public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_
 
     public boolean isValid() {
         return rsr_rdb != null && rsr_rdb.isValid();
+    }
+    
+    public boolean hasOpenResultSet() {
+        return hasOpenResultSet;
+    }
+    
+    void notifyOpenResultSet() {
+        hasOpenResultSet = true;
     }
     
     public int size() {
