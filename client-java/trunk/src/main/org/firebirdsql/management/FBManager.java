@@ -25,8 +25,6 @@ import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.isc_db_handle;
 
-import java.sql.SQLException;
-
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 

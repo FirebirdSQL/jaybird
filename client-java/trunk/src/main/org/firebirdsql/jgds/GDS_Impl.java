@@ -32,7 +32,6 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.*;
 import java.net.*;
-import java.util.*;
 
 /**
  * Describe class <code>GDS_Impl</code> here.
