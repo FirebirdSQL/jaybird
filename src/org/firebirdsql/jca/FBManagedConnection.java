@@ -371,10 +371,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      */
     public void commit(Xid id, boolean twoPhase) throws XAException {
         if (log!=null) log.debug("Commit called: " + id);
-        if (mcf.lookupXid(id) == null) {
+        isc_tr_handle committingTr = mcf.getTrHandleForXid(id);
+        if (committingTr == null) {
             throw new XAException("commit called with unknown transaction");
         }
-        if (mcf.lookupXid(id) == currentTr) {
+        if (committingTr == currentTr) {
             throw new XAException("commit called with current xid");
         }
         mcf.commit(id);
@@ -386,21 +387,34 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     Occurs when the state was not correct (end called twice), or the
      *     transaction ID is wrong.
      */
-     //what do we do with flags?????
-    public void end(Xid id, int flags) throws javax.transaction.xa.XAException {
-       if (log!=null) log.debug("End called: " + id);
-        if (currentTr == null) {
-            //XAException xae = new XAException("end called with no transaction associated");
-           if (log!=null) log.debug("end called with no transaction associated: " + id + ", flags: " + flags);//, new Exception());
-
-           //throw xae;
-
-           return;
-        }
-        if (mcf.lookupXid(id) != currentTr) {
-            throw new XAException("end called with wrong xid");
-        }
-        currentTr = null;
+    public void end(Xid id, int flags) throws javax.transaction.xa.XAException 
+    {
+        if (flags != XAResource.TMSUSPEND
+            && flags != XAResource.TMSUCCESS
+            && flags != XAResource.TMFAIL) 
+        {
+            throw new XAException(XAException.XAER_INVAL);
+        } // end of if ()
+        
+        if (log!=null) log.debug("End called: " + id);
+        isc_tr_handle endingTr = mcf.getTrHandleForXid(id);
+        if (endingTr == null) 
+        {
+            //we don't know about it.
+            throw new XAException(XAException.XAER_NOTA);
+        } // end of if ()
+        if (endingTr == currentTr) 
+        {
+            currentTr = null;
+        } // end of if ()
+        else if (flags == XAResource.TMSUSPEND) 
+        {
+            //trying to suspend a tx that is not the current one.
+            throw new XAException(XAException.XAER_INVAL);
+        } // end of if ()
+        
+        //Otherwise, it is fail or success for a tx that will be committed or 
+        //rolled back shortly.
     }
 
     /**
@@ -412,14 +426,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     transaction ID is wrong.
      */
     public void forget(Xid id) throws javax.transaction.xa.XAException {
-        if (log!=null) log.debug("forget called: " + id);
-        if (mcf.lookupXid(id) == null) {
-            throw new XAException("forget called with unknown transaction");
-        }
-        if (mcf.lookupXid(id) == currentTr) {
-            throw new XAException("forget called with current xid");
-        }
-        mcf.forgetXid(id);
+        throw new XAException("Not yet implemented");
     }
 
     /**
@@ -442,10 +449,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      */
     public int prepare(Xid id) throws javax.transaction.xa.XAException {
         if (log!=null) log.debug("prepare called: " + id);
-        if (mcf.lookupXid(id) == null) {
+        isc_tr_handle committingTr = mcf.getTrHandleForXid(id);
+        if (committingTr == null) {
             throw new XAException("prepare called with unknown transaction");
         }
-        if (mcf.lookupXid(id) == currentTr) {
+        if (committingTr == currentTr) {
             throw new XAException("prepare called with current xid");
         }
         mcf.prepare(id);
@@ -511,11 +519,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      */
     public void rollback(Xid id) throws javax.transaction.xa.XAException {
         if (log!=null) log.debug("rollback called: " + id);
-        if (mcf.lookupXid(id) == null) {
+        isc_tr_handle committingTr = mcf.getTrHandleForXid(id);
+        if (committingTr == null) {
             if (log!=null) log.warn("rollback called with unknown transaction: " + id);
             return;
         }
-        if (mcf.lookupXid(id) == currentTr) {
+        if (committingTr == currentTr) {
             throw new XAException("rollback called with current xid");
         }
         mcf.rollback(id);

@@ -38,10 +38,10 @@ import java.util.ArrayList;
 
 
 public class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_handle {
-    int rtr_id;
-    isc_db_handle_impl rtr_rdb;
-    isc_tr_handle_impl rtr_next;
-    Collection blobs = new ArrayList();
+    private int rtr_id;
+    private isc_db_handle_impl rtr_rdb;
+    //isc_tr_handle_impl rtr_next;
+    private final Collection blobs = new ArrayList();
     //    isc_blob_handle_impl rbl_next;
 
     private int state = NOTRANSACTION;
@@ -61,7 +61,29 @@ public class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_handle {
         return state;
     }
 
-    void addBlob(isc_blob_handle_impl blob) {
+    void setTransactionId(final int rtr_id)
+    {
+        this.rtr_id = rtr_id;
+    }
+
+    int getTransactionId()
+    {
+        return rtr_id;
+    }
+
+    void setDbHandle(final isc_db_handle_impl db)
+    {
+        this.rtr_rdb = db;
+        rtr_rdb.addTransaction(this);
+    }
+
+    void unsetDbHandle()
+    {
+        rtr_rdb.removeTransaction(this);
+        rtr_rdb = null;
+    }
+
+    void addBlob(final isc_blob_handle_impl blob) {
     blobs.add(blob);
     //        blob.next = rbl_next;
     //        rbl_next = blob;

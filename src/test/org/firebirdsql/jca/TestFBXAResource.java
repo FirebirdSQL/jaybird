@@ -93,14 +93,14 @@ public class TestFBXAResource extends TestXABase {
         if (fbmc.getIscDBHandle() == null) {
             throw new Exception("no db handle after start xid");
         }
-        xa.end(xid, XAResource.TMNOFLAGS);
+        xa.end(xid, XAResource.TMSUCCESS);
         xa.commit(xid, true);
         mc.destroy();
     }
 
     public void testRollbackXATrans() throws Exception {
         
-        if (log != null) log.info("testStartXATrans");
+        if (log != null) log.info("testRollbackXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc = (FBManagedConnection)mc;
@@ -110,14 +110,14 @@ public class TestFBXAResource extends TestXABase {
         if (fbmc.getIscDBHandle() == null) {
             throw new Exception("no db handle after start xid");
         }
-        xa.end(xid, XAResource.TMNOFLAGS);
+        xa.end(xid, XAResource.TMSUCCESS);
         xa.rollback(xid);
         mc.destroy();
     }
 
     public void test2PCXATrans() throws Exception {
         
-        if (log != null) log.info("testStartXATrans");
+        if (log != null) log.info("test2PCXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc = (FBManagedConnection)mc;
@@ -127,7 +127,7 @@ public class TestFBXAResource extends TestXABase {
         if (fbmc.getIscDBHandle() == null) {
             throw new Exception("no db handle after start xid");
         }
-        xa.end(xid, XAResource.TMNOFLAGS);
+        xa.end(xid, XAResource.TMSUCCESS);
         xa.prepare(xid);
         xa.commit(xid, false);
         mc.destroy();
@@ -135,7 +135,7 @@ public class TestFBXAResource extends TestXABase {
 
     public void testRollback2PCXATrans() throws Exception {
         
-        if (log != null) log.info("testStartXATrans");
+        if (log != null) log.info("testRollback2PCXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc = (FBManagedConnection)mc;
@@ -145,7 +145,7 @@ public class TestFBXAResource extends TestXABase {
         if (fbmc.getIscDBHandle() == null) {
             throw new Exception("no db handle after start xid");
         }
-        xa.end(xid, XAResource.TMNOFLAGS);
+        xa.end(xid, XAResource.TMSUCCESS);
         xa.prepare(xid);
         xa.rollback(xid);
         mc.destroy();
@@ -172,9 +172,9 @@ public class TestFBXAResource extends TestXABase {
             throw new Exception("no db handle after start xid");
         }
         //commit each tr on other xares
-        xa1.end(xid1, XAResource.TMNOFLAGS);
+        xa1.end(xid1, XAResource.TMSUCCESS);
         xa2.commit(xid1, true);
-        xa2.end(xid2, XAResource.TMNOFLAGS);
+        xa2.end(xid2, XAResource.TMSUCCESS);
         xa1.commit(xid2, true);
         mc1.destroy();
         mc2.destroy();

@@ -114,7 +114,7 @@ import org.firebirdsql.logging.LoggerFactory;
          
          synchronized(mc) {
              try {
-                 mc.end(xid, XAResource.TMNOFLAGS);  //FBManagedConnection is its own XAResource
+                 mc.end(xid, XAResource.TMSUCCESS);  //FBManagedConnection is its own XAResource
                  mc.commit(xid, true);
              }
              catch (XAException e) {
@@ -148,7 +148,7 @@ import org.firebirdsql.logging.LoggerFactory;
          
          synchronized(mc) {
              try {
-                 mc.end(xid, XAResource.TMNOFLAGS);  //??? on flags --FBManagedConnection is its own XAResource
+                 mc.end(xid, XAResource.TMSUCCESS);  //??? on flags --FBManagedConnection is its own XAResource
                  mc.rollback(xid);
              }
              catch (XAException e) {

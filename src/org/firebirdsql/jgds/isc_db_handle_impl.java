@@ -40,7 +40,7 @@ import javax.security.auth.Subject;
 public class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_handle {
     private int rdb_id;
     private Subject subject;
-    Vector rdb_transactions = new Vector();
+    private Collection rdb_transactions = new ArrayList();
     Vector rdb_sql_requests = new Vector();
     Socket socket;
     XdrOutputStream out;
@@ -66,4 +66,18 @@ public class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_handle {
         return subject;
     }
 
+    public boolean hasTransactions()
+    {
+        return !rdb_transactions.isEmpty();
+    }
+
+    void addTransaction(isc_tr_handle_impl tr)
+    {
+        rdb_transactions.add(tr);
+    }
+
+    void removeTransaction(isc_tr_handle_impl tr)
+    {
+        rdb_transactions.remove(tr);
+    }
 }
