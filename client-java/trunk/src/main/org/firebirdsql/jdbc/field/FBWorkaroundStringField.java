@@ -65,6 +65,9 @@ public class FBWorkaroundStringField extends FBStringField {
     public void setString(String value) throws SQLException {
         setStringForced(value);
 
+        if (value == null)
+            return;
+        
         if (field.sqldata.length > field.sqllen && !isSystemTable(field.relname))
             throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);
     }    
