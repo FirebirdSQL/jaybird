@@ -1,3 +1,26 @@
+2003-11-20 20:45  rrokytskyy
+
+	*
+	
+	fixed JDBC CTS compatibility tests
+	client-java/src/test/org/firebirdsql/jdbc/field/TestFBFloatField.ja
+	va:
+
+2003-11-20 20:26  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBBlobParams.java:
+	
+	removed extra newlines
+
+2003-11-20 17:36  ryanbaldwin
+
+	*
+	
+	Added test case which demonstrates recently discovered (probable)
+	bug in pooling code.
+	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
+	ource.java:
+
 2003-11-19 20:02  rrokytskyy
 
 	* client-java/src/pool/org/firebirdsql/pool/:
