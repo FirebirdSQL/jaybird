@@ -31,7 +31,7 @@
 
 SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name)
 	{
-    SHARED_LIBRARY_HANDLE handle = dlopen(name);
+    SHARED_LIBRARY_HANDLE handle = dlopen(name, RTLD_LAZY);
 	if (handle == NULL) 
 			{ 
 			throw InternalException("FirebirdApiBinding::Initialize - Could not find or load the firebird client library."); 
