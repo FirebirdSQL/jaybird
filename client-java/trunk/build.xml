@@ -18,13 +18,14 @@
 
     <property name="Name" value="FirebirdSQL"/>
     <property name="name" value="firebirdsql"/>
-    <property name="version" value="1.0_RC1a"/>
 
     <property name="version.major" value="1"/>
     <property name="version.minor" value="0"/>
     <property name="version.revision" value="0"/>
     <property name="version.tag" value="RC2"/>
     <property name="version.name" value="RC2"/>
+
+    <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}"/>
 
     <!-- This must be set to the CVS tag for any release -->
     <property name="version.cvstag" value="HEAD"/>
@@ -37,7 +38,7 @@
     <property name="implementation.title" value="JayBird [${version.name}]"/>
     <property name="implementation.url" value="http://www.firebirdsql.org"/>
     <property name="implementation.version" 
-            value="${version.major}.${version.minor}.${version.revision}${version.tag} (build: CVSTag=${version.cvstag} date=${build.id})"/>
+            value="${version.full} (build: CVSTag=${version.cvstag} date=${build.id})"/>
     <property name="implementation.vendor" value="FirebirdSQL"/>
     <property name="implementation.vendor.id" value="${implementation.url}"/>
 
@@ -256,6 +257,9 @@
     <copy todir="${build.etc}" filtering="yes">
       <fileset dir="${source.etc}">
          <include name="default.mf"/>
+         <include name="JDBC20_conformance.html"/>
+         <include name="faq.html"/>
+         <include name="release_notes.html"/>
       </fileset>
       <filterset>
         <filter token="java.vm.version" value="${java.vm.version}"/>
@@ -558,9 +562,9 @@
   <!-- =================================================================== -->
   <!-- Creates the distribution                                            -->
   <!-- =================================================================== -->
-  <target name="dist" depends="rar">
+  <target name="dist" depends="jars">
     <mkdir dir="${build.dist}"/>
-    <zip zipfile="${build.dist}/${Name}-${version}.zip">
+    <zip zipfile="${build.dist}/${Name}-${version.full}.zip">
       <fileset dir="${build.lib}">
         <include name="firebirdsql.rar"/>
         <include name="firebirdsql-test.jar"/>
@@ -576,7 +580,7 @@
         <include name="jaas.jar"/>
       </zipfileset>
       <fileset dir="${module.etc}">
-        <include name="release_notes.html"/>
+        <include name="*.html"/>
       </fileset>
     </zip>
   </target>
@@ -585,22 +589,22 @@
   <!-- Packages the source files with ZIP                                  -->
   <!-- =================================================================== -->
   <target name="src-zip" depends="init">
-    <zip zipfile="${Name}-src-${version}.zip" basedir="../.." includes="clients/java/**" excludes="clients/java/**.zip"/>
+    <zip zipfile="${Name}-src-${version.full}.zip" basedir="../.." includes="clients/java/**" excludes="clients/java/**.zip"/>
   </target>
 
   <!-- =================================================================== -->
   <!-- Packages the distribution with ZIP                                  -->
   <!-- =================================================================== -->
   <target name="dist-zip" depends="dist">
-    <zip zipfile="${Name}-${version}.zip" basedir="${dist.dir}" includes="src/**"/>
+    <zip zipfile="${Name}-${version.full}.zip" basedir="${dist.dir}" includes="src/**"/>
   </target>
 
   <!-- =================================================================== -->
   <!-- Packages the distribution with TAR-GZIP                             -->
   <!-- =================================================================== -->
   <target name="dist-tgz" depends="dist">
-    <tar tarfile="${Name}-${version}.tar" basedir="${dist.dir}" includes="src/**"/>
-    <gzip zipfile="${Name}-${version}.tar.gz" src="${Name}-${version}.tar"/>
+    <tar tarfile="${Name}-${version.full}.tar" basedir="${dist.dir}" includes="src/**"/>
+    <gzip zipfile="${Name}-${version.full}.tar.gz" src="${Name}-${version}.tar"/>
   </target>
 
   <!-- =================================================================== -->
