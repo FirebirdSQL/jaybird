@@ -37,12 +37,12 @@ import java.util.*;
 
 public abstract class BaseTestFBField extends TestCase {
     protected FBField field;
-    static byte TEST_BYTE = Byte.MAX_VALUE - 1;
-    static short TEST_SHORT = Short.MAX_VALUE - 1;
-    static int TEST_INT = Integer.MAX_VALUE - 1;
-    static long TEST_LONG = Long.MAX_VALUE - 1;
-    static float TEST_FLOAT = Float.MAX_VALUE - 1;
-    static double TEST_DOUBLE = Double.MAX_VALUE - 1;
+    static byte TEST_BYTE = Byte.MAX_VALUE;
+    static short TEST_SHORT = Short.MAX_VALUE;
+    static int TEST_INT = Integer.MAX_VALUE;
+    static long TEST_LONG = Long.MAX_VALUE;
+    static float TEST_FLOAT = Float.MAX_VALUE;
+    static double TEST_DOUBLE = Double.MAX_VALUE;
     static int TEST_BOOLEAN_INT = 1;
     static byte[] TEST_BYTES = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 

@@ -89,7 +89,7 @@ class FBIntegerField extends FBField {
     java.math.BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return BIGDECIMAL_NULL_VALUE;
 
-        return new java.math.BigDecimal(((Integer)field.sqldata).intValue());
+        return BigDecimal.valueOf(((Integer)field.sqldata).longValue());
     }
     Object getObject() throws SQLException {
         if (isNull()) return OBJECT_NULL_VALUE;
@@ -166,8 +166,8 @@ class FBIntegerField extends FBField {
         }
 
         // check if value is within bounds
-        if (value.compareTo(new BigDecimal(MAX_INT_VALUE)) > 0 ||
-            value.compareTo(new BigDecimal(MIN_INT_VALUE)) < 0)
+        if (value.compareTo(BigDecimal.valueOf(MAX_INT_VALUE)) > 0 ||
+            value.compareTo(BigDecimal.valueOf(MIN_INT_VALUE)) < 0)
                 throw (SQLException)createException(
                     BIGDECIMAL_CONVERSION_ERROR+" "+value).fillInStackTrace();
 

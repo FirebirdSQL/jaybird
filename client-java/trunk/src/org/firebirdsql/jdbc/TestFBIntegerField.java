@@ -97,7 +97,7 @@ public class TestFBIntegerField extends BaseTestFBField {
 	}
 	public void testBigDecimal() throws java.sql.SQLException {
 		java.math.BigDecimal testBigDecimal =
-			new java.math.BigDecimal((double)TEST_INT);
+			java.math.BigDecimal.valueOf((long)TEST_INT);
 		field.setBigDecimal(testBigDecimal);
 		assertTrue(field.getBigDecimal().equals(testBigDecimal));
 	}
