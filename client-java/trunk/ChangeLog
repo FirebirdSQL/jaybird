@@ -1,3 +1,21 @@
+2003-10-04 17:48  rrokytskyy
+
+	*
+	
+	fixed memory leak
+	client-java/src/pool/org/firebirdsql/pool/XPreparedStatementCache.j
+	ava:
+
+2003-10-04 14:16  ryanbaldwin
+
+	* client-java/src/: main/org/firebirdsql/management/FBManager.java,
+	test/org/firebirdsql/jca/TestFBTpbMapper.java,
+	test/org/firebirdsql/jca/TestXABase.java,
+	test/org/firebirdsql/management/TestFBManager.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+	
+	Fixed a bunch of build errors I introduced yesterday.
+
 2003-10-02 14:37  ryanbaldwin
 
 	* client-java/src/main/org/firebirdsql/management/FBManager.java:
