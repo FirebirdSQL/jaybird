@@ -1,3 +1,98 @@
+2004-10-09 00:43  rrokytskyy
+
+	*
+	
+	removed unused code and added LGPL license
+	client-java/src/main/org/firebirdsql/encodings/CharacterTranslator.
+	java:
+
+2004-10-09 00:41  rrokytskyy
+
+	* client-java/src/resources/translation/hpux.properties:
+	
+	added mapping between HP-UX and Cp1252 encodings
+
+2004-10-09 00:41  rrokytskyy
+
+	*
+	
+	removed a test case that is not defined for this type of pool
+	client-java/src/test/org/firebirdsql/pool/TestDriverConnectionPoolD
+	ataSource.java:
+
+2004-10-09 00:39  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/encodings/Encoding.java,
+	main/org/firebirdsql/encodings/EncodingFactory.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1251.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1252.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1254.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1255.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1256.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1257.java,
+	main/org/firebirdsql/encodings/Encoding_Cp437.java,
+	main/org/firebirdsql/encodings/Encoding_Cp775.java,
+	main/org/firebirdsql/encodings/Encoding_Cp850.java,
+	main/org/firebirdsql/encodings/Encoding_Cp852.java,
+	main/org/firebirdsql/encodings/Encoding_Cp857.java,
+	main/org/firebirdsql/encodings/Encoding_Cp858.java,
+	main/org/firebirdsql/encodings/Encoding_Cp860.java,
+	main/org/firebirdsql/encodings/Encoding_Cp861.java,
+	main/org/firebirdsql/encodings/Encoding_Cp862.java,
+	main/org/firebirdsql/encodings/Encoding_Cp864.java,
+	main/org/firebirdsql/encodings/Encoding_Cp865.java,
+	main/org/firebirdsql/encodings/Encoding_Cp866.java,
+	main/org/firebirdsql/encodings/Encoding_Cp869.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_1.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_2.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_3.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_4.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_5.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_6.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_7.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_8.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_9.java,
+	main/org/firebirdsql/encodings/Encoding_NotOneByte.java,
+	main/org/firebirdsql/encodings/Encoding_OneByte.java,
+	main/org/firebirdsql/encodings/CharacterTranslator.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1250.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1253.java,
+	main/org/firebirdsql/encodings/Encoding_Cp737.java,
+	main/org/firebirdsql/encodings/Encoding_Cp863.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_13.java,
+	main/org/firebirdsql/gds/DatabaseParameterBuffer.java,
+	main/org/firebirdsql/gds/GDS.java,
+	main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/gds/XSQLVAR.java,
+	main/org/firebirdsql/gds/XdrOutputStream.java,
+	test/org/firebirdsql/encodings/TestCharacterTranslation.java,
+	test/org/firebirdsql/encodings/testTranslation.properties,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/FBDriver.java,
+	main/org/firebirdsql/jdbc/field/FBBlobField.java,
+	main/org/firebirdsql/jdbc/field/FBField.java,
+	main/org/firebirdsql/jdbc/field/FBLongVarCharField.java,
+	main/org/firebirdsql/jdbc/field/FBStringField.java,
+	main/org/firebirdsql/jdbc/field/FBWorkaroundStringField.java,
+	main/org/firebirdsql/jgds/GDS_Impl.java,
+	test/org/firebirdsql/jdbc/TestFBEncodings.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/ngds/GDS_Impl.java,
+	main/org/firebirdsql/ngds/XSQLVARLittleEndianImpl.java,
+	test/org/firebirdsql/jgds/TestGdsAttach.java,
+	test/org/firebirdsql/ngds/TestNgdsBlobReadBug.java:
+	
+	added code to solve the issue when database has encoding NONE and
+	there is no chance to control regional settings of the host OS
+	added possibility to translate characters if there are some
+	encoding issues
+
+2004-10-09 00:30  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/GDSExceptionHelper.java:
+	
+	removed CVS history from file
+
 2004-10-03 23:01  rrokytskyy
 
 	* client-java/src/:
