@@ -23,6 +23,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.5  2003/03/09 17:34:36  rrokytskyy
+ * removed some deprecations
+ *
  * Revision 1.4  2002/11/21 20:33:54  brodsom
  * 1.- Make stmt_handle vars private.
  * 2.- Increase sleep time in TestPoolingConnectionManager and FBWrappingDataSource
@@ -168,8 +171,8 @@ public class TestFBWrappingDataSource extends BaseFBTest {
         connection = ds.getConnection();//DB_USER, DB_PASSWORD);
         assertTrue("Connection is null", connection != null);
         Thread.sleep(3000);
-        int ccount = ds.getConnectionCount();
-        assertTrue("Wrong number of connections! " + ccount + ", expected " + ds.getMinSize(), ccount == ds.getMinSize());
+        int ccount = ds.getConnectionCount(); // should be 2, 3 total, but one is working
+        assertTrue("Wrong number of connections! " + ccount + ", expected " + (ds.getMinSize() - 1), ccount == (ds.getMinSize() - 1));
         connection.close();
         ArrayList cs = new ArrayList();
         for (int i = 0; i < ds.getMaxSize(); i++)
