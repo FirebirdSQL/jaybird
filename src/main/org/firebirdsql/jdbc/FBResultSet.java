@@ -1886,7 +1886,7 @@ public class FBResultSet implements ResultSet {
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnName the name of the column
-     * @param x the new column value
+     * @param reader the new column value
      * @param length the length of the stream
      * @exception SQLException if a database access error occurs
      * @since 1.2
@@ -2355,7 +2355,6 @@ public class FBResultSet implements ResultSet {
      * @param columnName the SQL name of the column
      * @param cal the <code>java.util.Calendar</code> object
      * to use in constructing the time
-     * @param cal the calendar to use in constructing the time
      * @return the column value as a <code>java.sql.Time</code> object;
      * if the value is SQL <code>NULL</code>,
      * the value returned is <code>null</code> in the Java programming language

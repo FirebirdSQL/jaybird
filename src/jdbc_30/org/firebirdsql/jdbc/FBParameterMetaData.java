@@ -17,18 +17,6 @@
  * All rights reserved.
  */
 
-/*
- * CVS modification log:
- * $Log$
- * Revision 1.2  2003/10/18 07:21:47  rrokytskyy
- * removed unused imports
- *
- * Revision 1.1  2003/10/05 18:14:55  skidder
- * Implement getParameterMetaData and fix minor issue in getResultSetMetaData.
- *
- *
- *
-*/
 package org.firebirdsql.jdbc;
 
 
@@ -116,7 +104,7 @@ public class FBParameterMetaData implements ParameterMetaData {
     /**
      * Retrieves whether values for the designated parameter can be signed numbers.
      *
-     * @param param the first parameter is 1, the second is 2, ...
+     * @param parameter the first parameter is 1, the second is 2, ...
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      * @since 1.4
@@ -139,7 +127,7 @@ public class FBParameterMetaData implements ParameterMetaData {
     /**
      * Retrieves the designated parameter's number of decimal digits.
      *
-     * @param param the first parameter is 1, the second is 2, ...
+     * @param parameter the first parameter is 1, the second is 2, ...
      * @return precision
      * @exception SQLException if a database access error occurs
      * @since 1.4
@@ -200,7 +188,7 @@ public class FBParameterMetaData implements ParameterMetaData {
     /**
      * Retrieves the designated parameter's SQL type.
      *
-     * @param param the first parameter is 1, the second is 2, ...
+     * @param parameter the first parameter is 1, the second is 2, ...
      * @return SQL type from <code>java.sql.Types</code>
      * @exception SQLException if a database access error occurs
      * @since 1.4
@@ -271,7 +259,7 @@ public class FBParameterMetaData implements ParameterMetaData {
     /**
      * Retrieves the designated parameter's database-specific type name.
      *
-     * @param param the first parameter is 1, the second is 2, ...
+     * @param parameter the first parameter is 1, the second is 2, ...
      * @return type the name used by the database. If the parameter type is
      * a user-defined type, then a fully-qualified type name is returned.
      * @exception SQLException if a database access error occurs
@@ -344,7 +332,7 @@ public class FBParameterMetaData implements ParameterMetaData {
      * Retrieves the fully-qualified name of the Java class whose instances
      * should be passed to the method <code>PreparedStatement.setObject</code>.
      *
-     * @param param the first parameter is 1, the second is 2, ...
+     * @param parameter the first parameter is 1, the second is 2, ...
      * @return the fully-qualified name of the class in the Java programming
      *         language that would be used by the method
      *         <code>PreparedStatement.setObject</code> to set the value

@@ -26,18 +26,8 @@ import java.util.List;
  */
 public interface isc_svc_handle
     {
-    /**
-     *
-     *
-     * @return
-     */
     boolean isValid();
 
-    /**
-     *
-     *
-     * @return
-     */
     boolean isNotValid();
 
     /**

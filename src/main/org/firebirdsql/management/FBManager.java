@@ -85,9 +85,6 @@ public class FBManager implements FBManagerMBean
 
 	//Service methods
     /**
-     * Describe <code>start</code> method here.
-     *
-     * @exception Exception if an error occurs
      * @jmx.managed-operation
      */
     public void start() throws Exception {
@@ -107,9 +104,6 @@ public class FBManager implements FBManagerMBean
     }
 
     /**
-     * Describe <code>stop</code> method here.
-     *
-     * @exception Exception if an error occurs
      * @jmx.managed-operation
      */
     public void stop() throws Exception {
@@ -120,15 +114,12 @@ public class FBManager implements FBManagerMBean
 
         c = null;
         gds.close();
-	gds = null;
+        gds = null;
         state = STOPPED;
     }
 
 
     /**
-     * Describe <code>getState</code> method here.
-     *
-     * @return a <code>String</code> value
      * @jmx.managed-attribute
      */
     public String getState()
@@ -138,9 +129,6 @@ public class FBManager implements FBManagerMBean
 
 
     /**
-     * Describe <code>getName</code> method here.
-     *
-     * @return a <code>String</code> value
      * @jmx.managed-attribute
      */
     public String getName() {
@@ -156,9 +144,6 @@ public class FBManager implements FBManagerMBean
     //Which server are we connecting to?
 
     /**
-     * Describe <code>setServer</code> method here.
-     *
-     * @param host a <code>String</code> value
      * @jmx.managed-attribute
      */
     public void setServer(final String host) {
@@ -166,27 +151,17 @@ public class FBManager implements FBManagerMBean
     }
 
     /**
-     * Describe <code>getServer</code> method here.
-     *
-     * @return a <code>String</code> value
      * @jmx.managed-attribute
      */
     public String getServer() {
         return host;
     }
 
-    /**
-     *
-     * @return
-     */
     public String getType() {
         return this.type.toString();
     }
 
     /**
-     * Describe <code>setPort</code> method here.
-     *
-     * @param port an <code>int</code> value
      * @jmx.managed-attribute
      */
     public void setPort(final int port) {
@@ -194,9 +169,6 @@ public class FBManager implements FBManagerMBean
     }
 
     /**
-     * Describe <code>getPort</code> method here.
-     *
-     * @return an <code>int</code> value
      * @jmx.managed-attribute
      */
     public int getPort() {
@@ -217,13 +189,6 @@ public class FBManager implements FBManagerMBean
         return fileName;
     }
 
-    /**
-     *
-     * @param type
-     *
-     *
-     *
-     */
     public void setType(String type) {
         final GDSType gdsType = GDSType.getType(type);
 
@@ -378,37 +343,26 @@ public class FBManager implements FBManagerMBean
     //Meaningful management methods
 
     /**
-     * Describe <code>createDatabase</code> method here.
-     *
-     * @param fileName a <code>String</code> value
-     * @param user a <code>String</code> value
-     * @param password a <code>String</code> value
-     * @exception Exception if an error occurs
-     *
      * @jmx.managed-operation
      */
     public void createDatabase (String fileName, String user, String password)
         throws Exception
     {
         isc_db_handle db = null;
-	if (!forceCreate) {
-	    db = gds.get_new_isc_db_handle();
-	    try {
-		DatabaseParameterBuffer dpb = c.deepCopy();
-                dpb.addArgument(DatabaseParameterBuffer.user_name, user);
-                dpb.addArgument(DatabaseParameterBuffer.password, password);
-		gds.isc_attach_database(getConnectString(fileName), db, dpb);
-		gds.isc_detach_database(db);
-		return; //database exists, don't wipe it out.
-	    }
-	    catch (Exception e)
-	    {
-		//db does not exist, create it.
-	    }
+        if (!forceCreate) {
+            db = gds.get_new_isc_db_handle();
+            try {
+                DatabaseParameterBuffer dpb = c.deepCopy();
+                    dpb.addArgument(DatabaseParameterBuffer.user_name, user);
+                    dpb.addArgument(DatabaseParameterBuffer.password, password);
+                gds.isc_attach_database(getConnectString(fileName), db, dpb);
+                gds.isc_detach_database(db);
+                return; //database exists, don't wipe it out.
+    	    } catch (Exception e) {
+    	    }
+    	} // end of if ()
 
-	} // end of if ()
-
-	db = gds.get_new_isc_db_handle();
+    	db = gds.get_new_isc_db_handle();
         try {
             DatabaseParameterBuffer dpb = c.deepCopy();
             dpb.addArgument(DatabaseParameterBuffer.user_name, user);
@@ -417,21 +371,15 @@ public class FBManager implements FBManagerMBean
             gds.isc_detach_database(db);
         }
         catch (Exception e) {
-	    if (log!=null)
-	    {
-		log.error("Exception creating database", e);
-	    }
-	    throw e;
+    	    if (log!=null)
+    	    {
+    		log.error("Exception creating database", e);
+    	    }
+    	    throw e;
         }
     }
 
     /**
-     * Describe <code>dropDatabase</code> method here.
-     *
-     * @param fileName a <code>String</code> value
-     * @param user a <code>String</code> value
-     * @param password a <code>String</code> value
-     * @exception Exception if an error occurs
      * @jmx.managed-operation
      */
     public void dropDatabase(String fileName, String user, String password)

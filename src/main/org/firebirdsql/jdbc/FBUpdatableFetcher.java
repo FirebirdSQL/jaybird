@@ -24,7 +24,7 @@ import org.firebirdsql.gds.isc_stmt_handle;
 /**
  * Statement fetcher for updatable cursor case. This fetcher keeps cursor 
  * position consistent, however we cannot tell now if we are on the last
- * record. Method {@link #getIsLast()} throws exception now.
+ * record. Method {@link #isLast()} throws exception now.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */

@@ -596,7 +596,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
      * standard interface.
      *
      * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the java reader which contains the UNICODE data
+     * @param reader the java reader which contains the UNICODE data
      * @param length the number of characters in the stream
      * @exception SQLException if a database access error occurs
      * @since 1.2
@@ -629,8 +629,8 @@ public abstract class AbstractPreparedStatement extends FBStatement
      * Sets the designated parameter to the given
      *  <code>Blob</code> object.
      *
-     * @param i the first parameter is 1, the second is 2, ...
-     * @param x a <code>Blob</code> object that maps an SQL <code>BLOB</code> value
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param blob a <code>Blob</code> object that maps an SQL <code>BLOB</code> value
      * @exception SQLException if a database access error occurs
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
@@ -762,7 +762,6 @@ public abstract class AbstractPreparedStatement extends FBStatement
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
-     * @todo change all the methods called to take a Calendar instead of Date object.
      */
     public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) 
         throws  SQLException {

@@ -251,7 +251,7 @@ public class FBManagedConnectionFactory
 
     /**
      * Set the BlobBufferLength value.
-     * @param newBlobBufferLength The new BlobBufferLength value.
+     * @param blobBufferLengthWrapper The new BlobBufferLength value.
      */
     public void setBlobBufferLength(final Integer blobBufferLengthWrapper)
     {

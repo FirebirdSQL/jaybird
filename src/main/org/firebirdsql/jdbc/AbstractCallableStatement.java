@@ -637,7 +637,7 @@ public abstract class AbstractCallableStatement
      * <code>registerOutParameter</code>.  By registering the target
      * JDBC type as <code>java.sql.Types.OTHER</code>, this method can
      * be used to read database-specific abstract data types.
-     * @param i the first parameter is 1, the second is 2, and so on
+     * @param parameterIndex the first parameter is 1, the second is 2, and so on
      * @param map the mapping from SQL type names to Java classes
      * @return a <code>java.lang.Object</code> holding the OUT parameter value
      * @exception SQLException if a database access error occurs
@@ -655,7 +655,7 @@ public abstract class AbstractCallableStatement
      *
      * Gets the value of a JDBC <code>REF(&lt;structured-type&gt;)</code>
      * parameter as a {@link Ref} object in the Java programming language.
-     * @param i the first parameter is 1, the second is 2,
+     * @param parameterIndex the first parameter is 1, the second is 2,
      * and so on
      * @return the parameter value as a <code>Ref</code> object in the
      * Java programming language.  If the value was SQL <code>NULL</code>, the value
@@ -675,7 +675,7 @@ public abstract class AbstractCallableStatement
      *
      * Gets the value of a JDBC <code>BLOB</code> parameter as a
      * {@link Blob} object in the Java programming language.
-     * @param i the first parameter is 1, the second is 2, and so on
+     * @param parameterIndex the first parameter is 1, the second is 2, and so on
      * @return the parameter value as a <code>Blob</code> object in the
      * Java programming language.  If the value was SQL <code>NULL</code>, the value
      * <code>null</code> is returned.
@@ -694,7 +694,7 @@ public abstract class AbstractCallableStatement
      *
      * Gets the value of a JDBC <code>CLOB</code> parameter as a
      * <code>Clob</code> object in the Java programming language.
-     * @param i the first parameter is 1, the second is 2, and
+     * @param parameterIndex the first parameter is 1, the second is 2, and
      * so on
      * @return the parameter value as a <code>Clob</code> object in the
      * Java programming language.  If the value was SQL <code>NULL</code>, the
@@ -714,7 +714,7 @@ public abstract class AbstractCallableStatement
      *
      * Gets the value of a JDBC <code>ARRAY</code> parameter as an
      * {@link Array} object in the Java programming language.
-     * @param i the first parameter is 1, the second is 2, and
+     * @param parameterIndex the first parameter is 1, the second is 2, and
      * so on
      * @return the parameter value as an <code>Array</code> object in
      * the Java programming language.  If the value was SQL <code>NULL</code>, the

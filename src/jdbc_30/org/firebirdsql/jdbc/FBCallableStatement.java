@@ -28,7 +28,7 @@ import java.util.Calendar;
 import java.util.Map;
 
 /**
- * JDBC 3.0 compliant implementation of {@link CallableStatement}.
+ * JDBC 3.0 compliant implementation of {@link java.sql.CallableStatement}.
  */
 public class FBCallableStatement extends AbstractCallableStatement {
 
@@ -57,11 +57,11 @@ public class FBCallableStatement extends AbstractCallableStatement {
      * when it sends it to the database.
      *
      * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the <code>java.net.URL</code> object to be set
+     * @param url the <code>java.net.URL</code> object to be set
      * @exception SQLException if a database access error occurs
      * @since 1.4
      */ 
-    public void setURL(int param1, URL param2) throws SQLException {
+    public void setURL(int parameterIndex, URL url) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -347,7 +347,7 @@ public class FBCallableStatement extends AbstractCallableStatement {
 	 * @since 1.2
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
 	 */
-	public void registerOutParameter(int paramIndex, int sqlType, String typeName) throws SQLException {
+	public void registerOutParameter(int parameterIndex, int sqlType, String typeName) throws SQLException {
 	    throw new FBDriverNotCapableException();
 	}
 

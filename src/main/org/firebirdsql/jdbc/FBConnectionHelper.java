@@ -478,7 +478,7 @@ public class FBConnectionHelper {
     /**
      * Get size of a character for the specified character set.
      *
-     * @param ID of the character set.
+     * @param characterSetId of the character set.
      * @return maximum size of the character in bytes or 1 if charset was 
      * not found.
      */

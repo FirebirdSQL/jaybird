@@ -207,7 +207,7 @@ public abstract class FBField {
     }
     
     /**
-     * Set the required type for {@link getObject()} conversion.
+     * Set the required type for {@link #getObject()} conversion.
      * 
      * @param requiredType required type, one of the {@link java.sql.Types}
      * constants.

@@ -318,8 +318,9 @@ public class FBTpb implements Serializable
     /**
      * Set Firebird transaction isolation level. 
      * 
-     * @param isolation one of the {@link ISCConstants.isc_tpb_consistency}, 
-     * {@link ISCConstants.isc_tpb_concurrency} or {@link ISCConstants.isc_tpb_read_committed}.
+     * @param isolation one of the {@link ISCConstants#isc_tpb_consistency}, 
+     * {@link ISCConstants#isc_tpb_concurrency} or 
+     * {@link ISCConstants#isc_tpb_read_committed}.
      * 
      * @deprecated This method does not handle correctly JDBC-TPB mapping and
      * should not be called if custom mapping is used.

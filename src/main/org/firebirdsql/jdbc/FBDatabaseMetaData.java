@@ -4659,7 +4659,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      *
      * Indicates whether a result set's own updates are visible.
      *
-     * @param result set type, i.e. ResultSet.TYPE_XXX
+     * @param type result set type, i.e. ResultSet.TYPE_XXX
      * @return <code>true</code> if updates are visible for the result set type;
      *        <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
@@ -4676,7 +4676,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      *
      * Indicates whether a result set's own deletes are visible.
      *
-     * @param result set type, i.e. ResultSet.TYPE_XXX
+     * @param type result set type, i.e. ResultSet.TYPE_XXX
      * @return <code>true</code> if deletes are visible for the result set type;
      *        <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
@@ -4693,7 +4693,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      *
      * Indicates whether a result set's own inserts are visible.
      *
-     * @param result set type, i.e. ResultSet.TYPE_XXX
+     * @param type result set type, i.e. ResultSet.TYPE_XXX
      * @return <code>true</code> if inserts are visible for the result set type;
      *        <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
@@ -4710,7 +4710,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      *
      * Indicates whether updates made by others are visible.
      *
-     * @param result set type, i.e. ResultSet.TYPE_XXX
+     * @param type result set type, i.e. ResultSet.TYPE_XXX
      * @return <code>true</code> if updates made by others
      * are visible for the result set type;
      *        <code>false</code> otherwise
@@ -4728,7 +4728,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      *
      * Indicates whether deletes made by others are visible.
      *
-     * @param result set type, i.e. ResultSet.TYPE_XXX
+     * @param type result set type, i.e. ResultSet.TYPE_XXX
      * @return <code>true</code> if deletes made by others
      * are visible for the result set type;
      *        <code>false</code> otherwise
@@ -4746,7 +4746,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      *
      * Indicates whether inserts made by others are visible.
      *
-     * @param result set type, i.e. ResultSet.TYPE_XXX
+     * @param type result set type, i.e. ResultSet.TYPE_XXX
      * @return true if updates are visible for the result set type
      * @return <code>true</code> if inserts made by others
      * are visible for the result set type;
@@ -4766,7 +4766,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * Indicates whether or not a visible row update can be detected by
      * calling the method <code>ResultSet.rowUpdated</code>.
      *
-     * @param result set type, i.e. ResultSet.TYPE_XXX
+     * @param type result set type, i.e. ResultSet.TYPE_XXX
      * @return <code>true</code> if changes are detected by the result set type;
      *         <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
@@ -4785,7 +4785,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * calling ResultSet.rowDeleted().  If deletesAreDetected()
      * returns false, then deleted rows are removed from the result set.
      *
-     * @param result set type, i.e. ResultSet.TYPE_XXX
+     * @param type result set type, i.e. ResultSet.TYPE_XXX
      * @return true if changes are detected by the resultset type
      * @exception SQLException if a database access error occurs
      * @since 1.2
@@ -4802,7 +4802,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * Indicates whether or not a visible row insert can be detected
      * by calling ResultSet.rowInserted().
      *
-     * @param result set type, i.e. ResultSet.TYPE_XXX
+     * @param type result set type, i.e. ResultSet.TYPE_XXX
      * @return true if changes are detected by the resultset type
      * @exception SQLException if a database access error occurs
      * @since 1.2
