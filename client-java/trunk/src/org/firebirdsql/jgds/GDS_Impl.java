@@ -835,14 +835,6 @@ public class GDS_Impl implements GDS {
                             if (sqldata_messages > 0 && sqldata_status == 0) {
                                 stmt.rows.add(readSQLData(db, xsqlda));
 
-                                /*                            XSQLDA batch_xsqlda = new XSQLDA(xsqlda.sqln);
-                                                              for (int i = 0; i < xsqlda.sqln; i++) {
-                                                              batch_xsqlda.sqlvar[i] =
-                                                              new XSQLVAR(xsqlda.sqlvar[i].sqldata);
-                                                              xsqlda.sqlvar[i].sqldata = null;
-                                                              }
-
-                                                              stmt.rows.addElement(batch_xsqlda);*/
                             }
 
                         } while (sqldata_messages > 0 && sqldata_status == 0);
@@ -867,17 +859,13 @@ public class GDS_Impl implements GDS {
             Object[] row = (Object[])stmt.rows.remove(0);
             for (int i = 0; i < xsqlda.sqld; i++) {
                 xsqlda.sqlvar[i].sqldata = row[i];
+                xsqlda.sqlvar[i].sqlind = (row[i] == null ? -1 : 0);
             }
             for (int i = xsqlda.sqld; i< xsqlda.sqln; i++) {
                 //is this really necessary?
                 xsqlda.sqlvar[i].sqldata = null;
             }
             return row;
-/*            XSQLDA out_xsqlda = (XSQLDA) stmt.rows.elementAt(0);
-            stmt.rows.removeElementAt(0);
-            for (int i = 0; i < xsqlda.sqln; i++) {
-                xsqlda.sqlvar[i].sqldata = out_xsqlda.sqlvar[i].sqldata;
-            }*/
         }
         else {
             for (int i = 0; i< xsqlda.sqln; i++) {
@@ -899,7 +887,7 @@ public class GDS_Impl implements GDS {
         }
 
         //Does not seem to be possible or necessary to close
-        //an execute proceure statement.
+        //an execute procedure statement.
         if (stmt.isSingletonResult && option == DSQL_close) 
         {
             return;        
@@ -921,8 +909,6 @@ public class GDS_Impl implements GDS {
                     stmt.out_sqlda = null;
                 }
                 stmt.clearRows();
-                //            stmt.rows.clear();
-                //            stmt.allRowsFetched = false;
             } catch (IOException ex) {
                 throw new GDSException(isc_net_read_err);
             }
@@ -1162,8 +1148,6 @@ public class GDS_Impl implements GDS {
                 if (log != null) log.debug("op_get_segment ");
                 db.out.writeInt(op_get_segment);
                 db.out.writeInt(blob.rbl_id); //short???
-                // if (log != null) log.debug("trying to read bytes: " + ((blob.rbl_buffer_length< maxread)?blob.rbl_buffer_length:maxread) + 2);
-                //db.out.writeInt(((blob.rbl_buffer_length< maxread)?blob.rbl_buffer_length:maxread) + 2); //Actually needs to be less than max short value
                 if (log != null) log.debug("trying to read bytes: " +((requested + 2 < Short.MAX_VALUE) ? requested+2: Short.MAX_VALUE));
                 db.out.writeInt((requested + 2 < Short.MAX_VALUE) ? requested+2 : Short.MAX_VALUE);
                 db.out.writeInt(0);//writeBuffer for put segment;
@@ -1202,9 +1186,6 @@ public class GDS_Impl implements GDS {
         }
     }
 
-    //    private final int byteToUchar(byte b) {
-    //return (0x7f & b) + (((0x80 & b) == 0) ? 0: 0x80);
-    //}
 
     public void isc_put_segment(isc_blob_handle blob_handle, byte[] buffer) throws GDSException {
         isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
@@ -1653,11 +1634,6 @@ public class GDS_Impl implements GDS {
                     db.out.writeInt(((byte[])sqldata).length);
                     db.out.writeOpaque((byte[])sqldata, ((byte[])sqldata).length);
 
-//                  int len = ((((String) sqldata).length()<xsqlvar.sqllen) 
-//                  ? ((String) sqldata).length() : xsqlvar.sqllen);
-//                  db.out.writeInt(len);
-//                  buffer = ((String) sqldata).substring(0, len).getBytes();
-//                  db.out.writeOpaque(buffer, buffer.length);
                     break;
                 case SQL_SHORT:
                     db.out.writeInt(((Short) sqldata).shortValue());
