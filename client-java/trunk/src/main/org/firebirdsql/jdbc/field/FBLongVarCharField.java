@@ -76,10 +76,10 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (blob != null)
             return blob;
         
-        if (getRow(numCol)==null)
+        if (getFieldData()==null)
             return BLOB_NULL_VALUE;
 
-        blob = new FBBlob(c, field.decodeLong(getRow(numCol)));
+        blob = new FBBlob(c, field.decodeLong(getFieldData()));
         return blob;
     }
     
@@ -134,7 +134,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     }
 
     public byte[] getCachedObject() throws SQLException {
-        if (getRow(numCol)==null) 
+        if (getFieldData()==null) 
             return BYTES_NULL_VALUE;
 
           return getBytes();
@@ -150,7 +150,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     }
 
     public void setBlob(FBBlob blob) throws SQLException {
-        field.sqldata = field.encodeLong(blob.getBlobId());
+        setFieldData(field.encodeLong(blob.getBlobId()));
     }
     
     public void setString(String value) throws SQLException {
@@ -183,7 +183,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         
         FBBlob blob =  new FBBlob(c, 0);
         blob.copyStream(in, length);
-        field.sqldata = field.encodeLong(blob.getBlobId());
+        setFieldData(field.encodeLong(blob.getBlobId()));
     }
 
     public void setBinaryStream(InputStream in, int length) throws SQLException {

@@ -40,27 +40,27 @@ class FBTimeField extends FBField {
     }
 
     public String getString() throws SQLException {
-        if (getRow(numCol)==null) return STRING_NULL_VALUE;
+        if (getFieldData()==null) return STRING_NULL_VALUE;
 
-        return String.valueOf(field.decodeTime(getRow(numCol)));
+        return String.valueOf(field.decodeTime(getFieldData()));
     }
     public Time getTime(Calendar cal) throws SQLException {
-        if (getRow(numCol)==null) return TIME_NULL_VALUE;
+        if (getFieldData()==null) return TIME_NULL_VALUE;
 
         return field.decodeTime(getTime(),cal, isInvertTimeZone());
     }
     public Time getTime() throws SQLException {
-        if (getRow(numCol)==null) return TIME_NULL_VALUE;
+        if (getFieldData()==null) return TIME_NULL_VALUE;
 
-        return field.decodeTime(getRow(numCol));
+        return field.decodeTime(getFieldData());
     }
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        if (getRow(numCol)==null) return TIMESTAMP_NULL_VALUE;
+        if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
 		  
         return field.decodeTimestamp(getTimestamp(),cal);
     }
     public Timestamp getTimestamp() throws SQLException {
-        if (getRow(numCol)==null) return TIMESTAMP_NULL_VALUE;
+        if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
 
         return new Timestamp(getTime().getTime());
     }
@@ -101,6 +101,6 @@ class FBTimeField extends FBField {
             return;
         }
 
-        field.sqldata = field.encodeTime(value);
+        setFieldData(field.encodeTime(value));
     }
 }

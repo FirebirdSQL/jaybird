@@ -74,7 +74,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         if (blob != null)
             return blob;
 
-        final byte[] bytes = getRow(numCol);
+        final byte[] bytes = getFieldData();
 
         if (bytes == null)
             return BLOB_NULL_VALUE;
@@ -164,7 +164,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
     */
 
     public byte[] getCachedObject() throws SQLException {
-        if (getRow(numCol)==null) 
+        if (getFieldData()==null) 
             return BYTES_NULL_VALUE;
 
 		  return getBytesInternal();
@@ -283,7 +283,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         
         FBBlob blob =  new FBBlob(c);
         blob.copyStream(in, length);
-        field.sqldata = field.encodeLong(blob.getBlobId());
+        setFieldData(field.encodeLong(blob.getBlobId()));
     }
 
     private void copyCharacterStream(Reader in, int length, String encoding) throws SQLException {
@@ -294,7 +294,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         
         FBBlob blob =  new FBBlob(c);
         blob.copyCharacterStream(in, length, encoding);
-        field.sqldata = field.encodeLong(blob.getBlobId());
+        setFieldData(field.encodeLong(blob.getBlobId()));
     }
     
     public void setBytes(byte[] value) throws SQLException {
@@ -321,6 +321,6 @@ public class FBBlobField extends FBField implements FBFlushableField {
     }
 
     public void setBlob(FBBlob blob) throws SQLException {
-        field.sqldata = field.encodeLong(blob.getBlobId());
+        setFieldData(field.encodeLong(blob.getBlobId()));
     }
 }

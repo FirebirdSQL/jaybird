@@ -56,7 +56,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     public byte getByte() throws SQLException {
-        if (getRow(numCol)==null) return BYTE_NULL_VALUE;
+        if (getFieldData()==null) return BYTE_NULL_VALUE;
 
         long longValue = getLong();
 
@@ -71,7 +71,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     public double getDouble() throws SQLException {
-        if (getRow(numCol)==null) return DOUBLE_NULL_VALUE;
+        if (getFieldData()==null) return DOUBLE_NULL_VALUE;
 
         BigDecimal value = getBigDecimal();
         
@@ -82,7 +82,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     public float getFloat() throws SQLException {
-        if (getRow(numCol)==null) return FLOAT_NULL_VALUE;
+        if (getFieldData()==null) return FLOAT_NULL_VALUE;
 
         double doubleValue = getDouble();
 
@@ -98,7 +98,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     public int getInt() throws SQLException {
-        if (getRow(numCol)==null) return INT_NULL_VALUE;
+        if (getFieldData()==null) return INT_NULL_VALUE;
 
         long longValue = getLong();
 
@@ -130,7 +130,7 @@ public class FBBigDecimalField extends FBField {
     */
 
     public short getShort() throws SQLException {
-        if (getRow(numCol)==null) return SHORT_NULL_VALUE;
+        if (getFieldData()==null) return SHORT_NULL_VALUE;
 
         long longValue = getLong();
 
@@ -145,7 +145,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     public String getString() throws SQLException {
-        if (getRow(numCol)==null) return STRING_NULL_VALUE;
+        if (getFieldData()==null) return STRING_NULL_VALUE;
         
         BigDecimal value = getBigDecimal();
         
@@ -156,18 +156,18 @@ public class FBBigDecimalField extends FBField {
     }
 
     public BigDecimal getBigDecimal() throws SQLException {
-        if (getRow(numCol)==null) return BIGDECIMAL_NULL_VALUE;
+        if (getFieldData()==null) return BIGDECIMAL_NULL_VALUE;
 
         long longValue;
 
         if (fieldType==2)
-            longValue = field.decodeInt(getRow(numCol));
+            longValue = field.decodeInt(getFieldData());
         else
         if (fieldType==3)
-            longValue = field.decodeLong(getRow(numCol));
+            longValue = field.decodeLong(getFieldData());
         else
         if (fieldType==1)
-            longValue = field.decodeShort(getRow(numCol));
+            longValue = field.decodeShort(getFieldData());
         else
             throw (SQLException)createException(
                 BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
@@ -235,7 +235,7 @@ public class FBBigDecimalField extends FBField {
                     throw (SQLException)createException(
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
-            field.sqldata = field.encodeShort(value.unscaledValue().shortValue());
+            setFieldData(field.encodeShort(value.unscaledValue().shortValue()));
         } else
         if (fieldType == 2) {
 
@@ -245,7 +245,7 @@ public class FBBigDecimalField extends FBField {
                     throw (SQLException)createException(
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
-            field.sqldata = field.encodeInt(value.unscaledValue().intValue());
+            setFieldData(field.encodeInt(value.unscaledValue().intValue()));
         } else
         if (fieldType == 3) {
             
@@ -255,7 +255,7 @@ public class FBBigDecimalField extends FBField {
                     throw (SQLException)createException(
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
             
-            field.sqldata = field.encodeLong(value.unscaledValue().longValue());
+            setFieldData(field.encodeLong(value.unscaledValue().longValue()));
         } else
             throw (SQLException)createException(
                 BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
