@@ -475,13 +475,13 @@ public class FBManagedConnectionFactory
 
 
     isc_tr_handle getCurrentIscTrHandle(Xid xid, FBManagedConnection mc, int flags) 
-        throws XAException, GDSException
+        throws GDSException
     {
         isc_tr_handle tr = getTrHandleForXid(xid);
         if (tr == null) {
             if (flags != XAResource.TMNOFLAGS) {
                 //We don't know this xid, should come with no flags.
-                throw new XAException(XAException.XAER_INVAL);
+                throw GDSException.createWithXAErrorCode("You are trying to resume a transaction that has is new", XAException.XAER_INVAL);
             }
             //new xid for us
             isc_db_handle db = mc.getIscDBHandle(waitingToClose);
@@ -504,45 +504,37 @@ public class FBManagedConnectionFactory
             if (flags != XAResource.TMJOIN && flags != XAResource.TMRESUME) {
                 //this xid is already known, should have join or resume flag.
                 //DUPID might be better?
-                throw new XAException(XAException.XAER_INVAL);
+                throw GDSException.createWithXAErrorCode("You are trying to start a transaction as new that is already known to this XAResource", XAException.XAER_INVAL);
             }
         }
         return tr;
     }
 
 
-    isc_db_handle getDbHandle(FBConnectionRequestInfo cri) throws XAException 
+    isc_db_handle getDbHandle(FBConnectionRequestInfo cri) throws GDSException 
     {
         try 
         {
-            try 
+            LinkedList freeDbHandles = null;
+            synchronized (criToFreeDbHandlesMap)
             {
-                LinkedList freeDbHandles = null;
-                synchronized (criToFreeDbHandlesMap)
-                {
-                    freeDbHandles = (LinkedList)criToFreeDbHandlesMap.get(cri);
-                }
-                if (freeDbHandles != null) 
-                {
-                    isc_db_handle db = null;
-                    synchronized (freeDbHandles) 
-                    {
-                        db = (isc_db_handle)freeDbHandles.removeLast();
-                    }
-                    return db;
-                } // end of if ()
-                return createDbHandle(cri);
-            } 
-            catch (NoSuchElementException e) 
-            {
-                return createDbHandle(cri);
+                freeDbHandles = (LinkedList)criToFreeDbHandlesMap.get(cri);
             }
-        }
-        catch (GDSException ge)
+            if (freeDbHandles != null) 
+            {
+                isc_db_handle db = null;
+                synchronized (freeDbHandles) 
+                {
+                    db = (isc_db_handle)freeDbHandles.removeLast();
+                }
+                return db;
+            } // end of if ()
+            return createDbHandle(cri);
+        } 
+        catch (NoSuchElementException e) 
         {
-            if (log!=null) log.error("GDS Exception in getDbHandle", ge);
-            throw new XAException(XAException.XAER_RMERR);
-        } // end of try-catch
+            return createDbHandle(cri);
+        }
     }
 
     isc_db_handle createDbHandle(FBConnectionRequestInfo cri) throws GDSException

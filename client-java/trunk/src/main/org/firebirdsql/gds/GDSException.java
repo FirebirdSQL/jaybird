@@ -21,6 +21,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.6  2002/12/12 18:54:02  d_jencks
+ * Added fatal error checking, so ConnectionErrorOccurred notifications are sent when a connection becomes unusable.  Improved the ability  to destroy a dead or dying connection.  Throw more correct XAExceptions.  Fixed npe in ResultSetMetaData.
+ *
  * Revision 1.5  2002/11/22 02:30:38  brodsom
  * 1.- Make most variables private in stmt_handle, blob_handle, db_handle and others
  * 2.- Move constants from GDS to ISCConstants (class,1100 lines)
@@ -72,16 +75,32 @@ package org.firebirdsql.gds;
  */
 public class GDSException extends Exception {
 
-
-    // protected int fbErrorCode = 0;
     protected int type;
     protected int intParam;
     protected String strParam;
 
     /**
+     * The variable <code>xaErrorCode</code> is used to allow the same
+     * code to be used for transaction control from the XAResource,
+     * LocalTransaction, and Connection.  This code may be added to
+     * the GDSException without obscuring the message: only at the
+     * final level is the GDSException converted to the spec-required
+     * exception.
+     *
+     */
+    protected int xaErrorCode;
+
+    /**
      * My child
      */
     protected GDSException next;
+
+    public static GDSException createWithXAErrorCode(String message, int xaErrorCode)
+    {
+        GDSException gdse = new GDSException(message);
+        gdse.setXAErrorCode(xaErrorCode);
+        return gdse;
+    }
 
     public GDSException(int type, int intParam) {
         this.type = type;
@@ -135,6 +154,27 @@ public class GDSException extends Exception {
     public int getIntParam() {
         return intParam;
     }
+
+
+    /**
+     * Get the XaErrorCode value.
+     * @return the XaErrorCode value.
+     */
+    public int getXAErrorCode()
+    {
+        return xaErrorCode;
+    }
+
+    /**
+     * Set the XaErrorCode value.
+     * @param newXaErrorCode The new XaErrorCode value.
+     */
+    public void setXAErrorCode(int xaErrorCode)
+    {
+        this.xaErrorCode = xaErrorCode;
+    }
+
+    
     
     public void setNext(GDSException e) {
         next = e;

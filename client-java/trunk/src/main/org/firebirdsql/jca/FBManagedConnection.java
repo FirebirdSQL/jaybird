@@ -372,15 +372,36 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     differs depending on the exact situation.
      */
     public void commit(Xid id, boolean twoPhase) throws XAException {
+        try 
+        {
+            internalCommit(id, twoPhase);
+        }
+        catch (GDSException ge)
+        {
+            throw new XAException(ge.getXAErrorCode());
+        } // end of try-catch
+    }
+
+    /**
+     * The <code>internalCommit</code> method performs the requested
+     * commit and may throw a GDSException to be interpreted by the
+     * caller.
+     *
+     * @param id a <code>Xid</code> value
+     * @param twoPhase a <code>boolean</code> value
+     * @exception GDSException if an error occurs
+     */
+    void internalCommit(Xid id, boolean twoPhase) throws GDSException
+    {
         if (log!=null) log.debug("Commit called: " + id);
         isc_tr_handle committingTr = mcf.getTrHandleForXid(id);
-        if (committingTr == null) {
-            //"commit called with unknown transaction"
-            throw new XAException(XAException.XAER_NOTA);
+        if (committingTr == null)
+        {
+            throw GDSException.createWithXAErrorCode("commit called with unknown transaction", XAException.XAER_NOTA);
         }
-        if (committingTr == currentTr) {
-            //"commit called with current xid"
-            throw new XAException(XAException.XAER_PROTO);
+        if (committingTr == currentTr)
+        {
+            throw GDSException.createWithXAErrorCode("commit called with current xid", XAException.XAER_PROTO);
         }
         isc_db_handle committingDbHandle = committingTr.getDbHandle();
 
@@ -392,7 +413,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         {
             checkFatalXA(ge, committingDbHandle);
             if (log!=null) log.debug("Fatal error committing, ", ge);
-            throw new XAException(XAException.XAER_RMERR);
+            ge.setXAErrorCode(XAException.XAER_RMERR);
+            throw ge;
         }
 
     }
@@ -403,21 +425,42 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     Occurs when the state was not correct (end called twice), or the
      *     transaction ID is wrong.
      */
-    public void end(Xid id, int flags) throws javax.transaction.xa.XAException 
+    public void end(Xid id, int flags) throws XAException 
+    {
+        try 
+        {
+            internalEnd(id, flags);
+        }
+        catch (GDSException ge)
+        {
+            throw new XAException(ge.getXAErrorCode());
+        } // end of try-catch
+    }
+
+    /**
+     * The <code>internalEnd</code> method ends the xid as requested
+     * if approprriate and throws a GDSException including the
+     * appropriate XA error code and a message if not.  The caller can
+     * decode the exception as necessary.
+     *
+     * @param id a <code>Xid</code> value
+     * @param flags an <code>int</code> value
+     * @exception GDSException if an error occurs
+     */
+    void internalEnd(Xid id, int flags) throws GDSException 
     {
         if (flags != XAResource.TMSUSPEND
             && flags != XAResource.TMSUCCESS
             && flags != XAResource.TMFAIL) 
         {
-            throw new XAException(XAException.XAER_INVAL);
+            throw GDSException.createWithXAErrorCode("Invalid flag in end: must be TMSUSPEND, TMSUCCESS, or TMFAIL", XAException.XAER_INVAL);
         } // end of if ()
         
         if (log!=null) log.debug("End called: " + id);
         isc_tr_handle endingTr = mcf.getTrHandleForXid(id);
         if (endingTr == null) 
         {
-            //we don't know about it.
-            throw new XAException(XAException.XAER_NOTA);
+            throw GDSException.createWithXAErrorCode("Unrecognized transaction", XAException.XAER_NOTA);
         } // end of if ()
         if (endingTr == currentTr) 
         {
@@ -425,8 +468,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } // end of if ()
         else if (flags == XAResource.TMSUSPEND) 
         {
-            //trying to suspend a tx that is not the current one.
-            throw new XAException(XAException.XAER_INVAL);
+            throw GDSException.createWithXAErrorCode("You are trying to suspend a transaction that is not the current transaction", XAException.XAER_INVAL);
         } // end of if ()
         
         //Otherwise, it is fail or success for a tx that will be committed or 
@@ -550,16 +592,30 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     or the rollback on the underlying connection fails.  The error code
      *     differs depending on the exact situation.
      */
-    public void rollback(Xid id) throws javax.transaction.xa.XAException {
+    public void rollback(Xid id) throws XAException
+    {
+        try 
+        {
+            internalRollback(id);
+        }
+        catch (GDSException ge)
+        {
+            throw new XAException(ge.getXAErrorCode());
+        } // end of try-catch
+    }
+
+    void internalRollback(Xid id) throws GDSException
+    {
         if (log!=null) log.debug("rollback called: " + id);
         isc_tr_handle committingTr = mcf.getTrHandleForXid(id);
-        if (committingTr == null) {
+        if (committingTr == null)
+        {
             if (log!=null) log.warn("rollback called with unknown transaction: " + id);
             return;
         }
-        if (committingTr == currentTr) {
-            //"rollback called with current xid"
-            throw new XAException(XAException.XAER_PROTO);
+        if (committingTr == currentTr)
+        {
+            throw GDSException.createWithXAErrorCode("Rollback called with current xid", XAException.XAER_PROTO);
         }
         isc_db_handle committingDbHandle = committingTr.getDbHandle();
 
@@ -571,7 +627,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         {
             checkFatalXA(ge, committingDbHandle);
             if (log!=null) log.debug("Exception in rollback", ge);
-            throw new XAException(XAException.XAER_RMERR);
+            ge.setXAErrorCode(XAException.XAER_RMERR);
+            throw ge;
         }
     }
 
@@ -597,10 +654,23 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     Occurs when the state was not correct (start called twice), the
      *     transaction ID is wrong, or the instance has already been closed.
      */
-    public void start(Xid id, int flags) throws XAException {
+    public void start(Xid id, int flags) throws XAException 
+    {
+        try 
+        {
+            internalStart(id, flags);
+        }
+        catch (GDSException ge)
+        {
+            throw new XAException(ge.getXAErrorCode());
+        } // end of try-catch
+    }
+
+    public void internalStart(Xid id, int flags) throws GDSException {
         if (log!=null) log.debug("start called: " + id);
-        if (currentTr != null) {
-            throw new XAException(XAException.XAER_PROTO);
+        if (currentTr != null) 
+        {
+            throw GDSException.createWithXAErrorCode("start called while there is an active transaction", XAException.XAER_PROTO);
         }
         findIscTrHandle(id, flags);
     }
@@ -954,7 +1024,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     //--------------------------------------------------------------------
 
     private void findIscTrHandle(Xid xid, int flags)
-        throws XAException
+        throws GDSException
     {
         try 
         {
@@ -978,7 +1048,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             //Notify the connection manager.
             ConnectionEvent ce = new ConnectionEvent(this, ConnectionEvent.CONNECTION_ERROR_OCCURRED, ge);
             notify(connectionErrorOccurredNotifier, ce);
-            throw new XAException(XAException.XAER_RMERR);
+            ge.setXAErrorCode(XAException.XAER_RMERR);
+            throw ge;
         } // end of try-catch
         
 
@@ -990,14 +1061,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             }
             catch (GDSException ge)
             {
-                throw new XAException(XAException.XAER_RMERR);
+                ge.setXAErrorCode(XAException.XAER_RMERR);
+                throw ge;
             } // end of try-catch
             
             currentDbHandle = currentTr.getDbHandle();
         }
     }
 
-    isc_db_handle getIscDBHandle(Set reserved) throws XAException, GDSException {
+    isc_db_handle getIscDBHandle(Set reserved) throws GDSException {
         if (currentDbHandle == null) {
             currentDbHandle = mcf.getDbHandle(cri);
         }
