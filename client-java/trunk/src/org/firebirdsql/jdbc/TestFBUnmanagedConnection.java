@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.8  2002/02/02 18:58:24  d_jencks
+ * converted to log4j logging and cleaned up some test problems.  If you do not wish to use log4j, you may leave out the log4j-core.jar and get no logging
+ *
  * Revision 1.7  2002/01/07 06:59:54  d_jencks
  * Revised FBManager to create dialect 3 databases, and the tests to use a newly created database. Simplified and unified test constants. Test targets are now all-tests for all tests and one-test for one test: specify the test as -Dtest=Gds one-test for the TestGds.class test.  Made a few other small changes to improve error messages
  *
@@ -185,6 +188,19 @@ public class TestFBUnmanagedConnection extends BaseFBTest {
     public void testNativeSQL() throws Exception {
         String nativeSQL = connection.nativeSQL("SELECT * FROM RDB$DATABASE");
         assertTrue("NativeSQL is null", nativeSQL != null);
+    }
+
+    /**
+     * Describe <code>testCommitsWithNoWork</code> method here.
+     * Make sure commit can be called repeatedly with no work done.
+     * @exception Exception if an error occurs
+     */
+    public void testCommitsWithNoWork() throws Exception
+    {
+        connection.setAutoCommit(false);
+        connection.commit();
+        connection.commit();
+        connection.commit();
     }
 
 }

@@ -102,6 +102,11 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
     }
 
     public void setManagedConnection(FBManagedConnection mc) {
+        //close any prepared statements we may have executed.
+        if (this.mc != mc && metaData != null) {
+            metaData.close();
+            metaData = null;
+        }
         this.mc = mc;
     }
 
@@ -170,8 +175,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public PreparedStatement prepareStatement(String sql)
         throws SQLException {
-        //return new FBPreparedStatement(this, sql);
-        return new FBPreparedStatementWithFields(this, sql);        
+        return new FBPreparedStatement(this, sql);
     }
 
 
@@ -352,8 +356,10 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
         } // end of if ()
         
         try {
-            getLocalTransaction().commit();
-            //getLocalTransaction().begin();
+            if (inTransaction()) 
+            {
+                getLocalTransaction().commit();
+            } // end of if ()
         } catch(javax.resource.ResourceException resex) {
             throw new SQLException(resex.toString());
         }
@@ -408,11 +414,6 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      */
     public void close() {
-        //close any prepared statements we may have executed.
-        if (metaData != null) {
-            metaData.close();
-            metaData = null;
-        }
         if (mc != null) {
             mc.close(this);
             mc = null;
@@ -824,11 +825,21 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
             autoTransaction = false;
             return;        
         } // end of if ()
-        //We have to start out own transaction
+        //We have to start our own transaction
         getLocalTransaction().begin();
         autoTransaction = true;
     }
 
+    /**
+     * The <code>willEndTransaction</code> method determines if the current transaction should be
+     * automatically ended when the current statement executes.
+     * for use in jca contexts, autocommit is always true, and autoTransaction is true if the current
+     * transaction was started automatically.
+     * Using jdbc transaction control, if autocommit is false, transactions are started automatically
+     * but not ended automatically.
+     *
+     * @return a <code>boolean</code> value
+     */
     boolean willEndTransaction()
     {
         return getAutoCommit() && autoTransaction;

@@ -1,25 +1,27 @@
-/*   The contents of this file are subject to the Mozilla Public
- *   License Version 1.1 (the "License"); you may not use this file
- *   except in compliance with the License. You may obtain a copy of
- *   the License at http://www.mozilla.org/MPL/
- *   Alternatively, the contents of this file may be used under the
- *   terms of the GNU Lesser General Public License Version 2 or later (the
- *   "LGPL"), in which case the provisions of the GPL are applicable
- *   instead of those above. You may obtain a copy of the Licence at
- *   http://www.gnu.org/copyleft/lgpl.html
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
  *
- *    This program is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *    relevant License for more details.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- *    This file was created by members of the firebird development team.
- *    All individual contributions remain the Copyright (C) of those
- *    individuals.  Contributors to this file are either listed here or
- *    can be obtained from a CVS history command.
+ * Contributor(s): David Jencks, Roman Rokytskyy
  *
- *    All rights reserved.
-
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU Lesser General Public License Version 2.1 or later
+ * (the "LGPL"), in which case the provisions of the LGPL are applicable
+ * instead of those above.  If you wish to allow use of your
+ * version of this file only under the terms of the LGPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the LGPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * LGPL.
  */
 
 package org.firebirdsql.jdbc;
@@ -29,11 +31,13 @@ package org.firebirdsql.jdbc;
 
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.Date;
 import java.sql.DataTruncation;
 import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
@@ -42,6 +46,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Calendar;
 import javax.resource.ResourceException;
 import org.firebirdsql.gds.GDS;
@@ -54,37 +61,11 @@ import org.firebirdsql.logging.Logger;
  *
  *   @see <related>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  *   @version $ $
  */
 
 
-/**
- * An object that represents a precompiled SQL statement.
- * <P>A SQL statement is precompiled and stored in a
- * <code>PreparedStatement</code> object. This object can then be used to
- * efficiently execute this statement multiple times.
- *
- * <P><B>Note:</B> The setXXX methods for setting IN parameter values
- * must specify types that are compatible with the defined SQL type of
- * the input parameter. For instance, if the IN parameter has SQL type
- * <code>Integer</code>, then the method <code>setInt</code> should be used.
- *
- * <p>If arbitrary parameter type conversions are required, the method
- * <code>setObject</code> should be used with a target SQL type.
- * <br>
- * Example of setting a parameter; <code>con</code> is an active connection
- * <pre><code>
- *   PreparedStatement pstmt = con.prepareStatement("UPDATE EMPLOYEES
- *                                     SET SALARY = ? WHERE ID = ?");
- *   pstmt.setBigDecimal(1, 153833.00)
- *   pstmt.setInt(2, 110592)
- * </code></pre>
- *
- * @see Connection#prepareStatement
- * @see ResultSet
- * <P>
- * Some of the methods in this interface are new in the JDBC 2.0 API.
- */
 
 public class FBPreparedStatement extends FBStatement implements PreparedStatement {
 
@@ -189,298 +170,87 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqldata = null;
     }
 
-
-    /**
-     * Sets the designated parameter to a Java <code>boolean</code> value.
-     * The driver converts this
-     * to an SQL <code>BIT</code> value when it sends it to the database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
-     * @exception SQLException if a database access error occurs
-     */
-    public void setBoolean(int parameterIndex, boolean x) throws  SQLException {
-        fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqlind = 0;
-        //not quite
-        fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqldata = new Boolean(x);
+    public void setBinaryStream(int parameterIndex, InputStream inputStream, int length) throws SQLException {
+        //super.setBinaryStream(parameterIndex, inputStream, length);
+        getField(parameterIndex).setBinaryStream(inputStream, length);
+    }
+    
+    public void setBytes(int parameterIndex, byte[] x) throws SQLException {
+        getField(parameterIndex).setBytes(x);
     }
 
-
-    /**
-     * Sets the designated parameter to a Java <code>byte</code> value.
-     * The driver converts this
-     * to an SQL <code>TINYINT</code> value when it sends it to the database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
-     * @exception SQLException if a database access error occurs
-     */
-    public void setByte(int parameterIndex, byte x) throws  SQLException {
-        fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqlind = 0;
-//not quite        fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqldata = x;
+    public void setBoolean(int parameterIndex, boolean x) throws SQLException {
+        getField(parameterIndex).setBoolean(x);
     }
 
-
-    /**
-     * Sets the designated parameter to a Java <code>short</code> value.
-     * The driver converts this
-     * to an SQL <code>SMALLINT</code> value when it sends it to the database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
-     * @exception SQLException if a database access error occurs
-     */
-    public void setShort(int parameterIndex, short x) throws  SQLException {
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        if ((sqlvar.sqltype & ~1) != GDS.SQL_SHORT) {
-            throw new SQLException("Not a short, type: " + sqlvar.sqltype);
-        }
-        sqlvar.sqlind = 0;
-        sqlvar.sqldata = new Short(x);
+    public void setByte(int parameterIndex, byte x) throws SQLException {
+        getField(parameterIndex).setByte(x);
     }
 
-
-    /**
-     * Sets the designated parameter to a Java <code>int</code> value.
-     * The driver converts this
-     * to an SQL <code>INTEGER</code> value when it sends it to the database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
-     * @exception SQLException if a database access error occurs
-     */
-    public void setInt(int parameterIndex, int x) throws  SQLException {
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        if ((sqlvar.sqltype & ~1) != GDS.SQL_LONG) {
-            throw new SQLException("Not an int, type: " + sqlvar.sqltype);
-        }
-        sqlvar.sqlind = 0;
-        sqlvar.sqldata = new Integer(x);
+    public void setDate(int parameterIndex, Date x) throws SQLException {
+        getField(parameterIndex).setDate(x);
     }
 
-
-    /**
-     * Sets the designated parameter to a Java <code>long</code> value.
-     * The driver converts this
-     * to an SQL <code>BIGINT</code> value when it sends it to the database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
-     * @exception SQLException if a database access error occurs
-     */
-    public void setLong(int parameterIndex, long x) throws  SQLException {
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        if ((sqlvar.sqltype & ~1) != GDS.SQL_INT64) {
-            throw new SQLException("Not a long, type: " + sqlvar.sqltype);
-        }
-        sqlvar.sqlind = 0;
-        sqlvar.sqldata = new Long(x);
+    public void setDouble(int parameterIndex, double x) throws SQLException {
+        getField(parameterIndex).setDouble(x);
     }
 
-
-    /**
-     * Sets the designated parameter to a Java <code>float</code> value.
-     * The driver converts this
-     * to an SQL <code>FLOAT</code> value when it sends it to the database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
-     * @exception SQLException if a database access error occurs
-     */
-    public void setFloat(int parameterIndex, float x) throws  SQLException {
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        if ((sqlvar.sqltype & ~1) != GDS.SQL_FLOAT) {
-            throw new SQLException("Not a float field, type: " + sqlvar.sqltype);
-        }
-        sqlvar.sqlind = 0;
-        sqlvar.sqldata = new Float(x);
+    public void setFloat(int parameterIndex, float x) throws SQLException {
+        getField(parameterIndex).setFloat(x);
     }
 
-
-    /**
-     * Sets the designated parameter to a Java <code>double</code> value.
-     * The driver converts this
-     * to an SQL <code>DOUBLE</code> value when it sends it to the database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
-     * @exception SQLException if a database access error occurs
-     */
-    public void setDouble(int parameterIndex, double x) throws  SQLException {
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        if ((sqlvar.sqltype & ~1) != GDS.SQL_DOUBLE) {
-            throw new SQLException("Not a double, type: " + sqlvar.sqltype);
-        }
-        sqlvar.sqlind = 0;
-        sqlvar.sqldata = new Double(x);
+    public void setInt(int parameterIndex, int x) throws SQLException {
+        getField(parameterIndex).setInteger(x);
     }
 
+    public void setLong(int parameterIndex, long x) throws SQLException {
+        getField(parameterIndex).setLong(x);
+    }
 
-    /**
-     * Sets the designated parameter to a <code>java.math.BigDecimal</code> value.
-     * The driver converts this to an SQL <code>NUMERIC</code> value when
-     * it sends it to the database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
-     * @exception SQLException if a database access error occurs
-     */
+    public void setObject(int parameterIndex, Object x) throws SQLException {
+        getField(parameterIndex).setObject(x);
+    }
+
+    public void setShort(int parameterIndex, short x) throws SQLException {
+        getField(parameterIndex).setShort(x);
+    }
+
+    public void setString(int parameterIndex, String x) throws SQLException {
+        getField(parameterIndex).setString(x);
+    }
+
+    public void setTime(int parameterIndex, Time x) throws SQLException {
+        getField(parameterIndex).setTime(x);
+    }
+
+    public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
+        getField(parameterIndex).setTimestamp(x);
+    }
+
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws  SQLException {
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        if ((sqlvar.sqltype & ~1) != GDS.SQL_INT64) {
-            throw new SQLException("Not a BigDecimal, type: " + sqlvar.sqltype);
-        }
-        sqlvar.sqlind = 0;
-        //not quite
-        sqlvar.sqldata = x;
+        getField(parameterIndex).setBigDecimal(x);
     }
-
+    /**
+     * Returns the XSQLVAR structure for the specified column.
+     */
+    protected XSQLVAR getXsqlvar(int columnIndex) {
+        return fixedStmt.getInSqlda().sqlvar[columnIndex - 1];
+    }
 
     /**
-     * Sets the designated parameter to a Java <code>String</code> value.
-     * The driver converts this
-     * to an SQL <code>VARCHAR</code> or <code>LONGVARCHAR</code> value
-     * (depending on the argument's
-     * size relative to the driver's limits on <code>VARCHAR</code> values)
-     * when it sends it to the database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
-     * @exception SQLException if a database access error occurs
+     * Factory method for the field access objects
      */
-    public void setString(int parameterIndex, String x) throws  SQLException {
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        if ((sqlvar.sqltype & ~1) == GDS.SQL_TEXT) {
-            byte[] supplied = x.getBytes();//Should be using encoding??
-            if (supplied.length > sqlvar.sqllen) {
-                throw new DataTruncation(parameterIndex, true, false, supplied.length, sqlvar.sqllen);
-            }
-            if (supplied.length == sqlvar.sqllen) {
-                sqlvar.sqlind = 0;
-                sqlvar.sqldata = supplied;
-                return;
-            }
-            //else pad with spaces
-            StringBuffer padded = new StringBuffer(sqlvar.sqllen);
-            padded.append(x);
-            for (int i = 0; i < sqlvar.sqllen - supplied.length; i++) {
-                padded.append(' ');
-            }
-            sqlvar.sqlind = 0;
-            sqlvar.sqldata = padded.toString().getBytes();
-            //log.debug("padded: /" + x + "/ to /" + padded + "/ length: " + ((byte[])sqlvar.sqldata).length);
-            return;
-        }
+    protected FBField getField(int columnIndex) throws SQLException {
+        FBField thisField = FBField.createField(getXsqlvar(columnIndex));
 
+        if (thisField instanceof FBBlobField)
+            ((FBBlobField)thisField).setConnection(c);
 
-        if ((sqlvar.sqltype & ~1) == GDS.SQL_VARYING){
-            sqlvar.sqlind = 0;
-            sqlvar.sqldata = x.getBytes();//Should be using encoding??
-            return;
-        }
-        throw new SQLException("Not a String, type: " + sqlvar.sqltype);
-
+        return thisField;
     }
 
 
-    /**
-     * Sets the designated parameter to a Java array of bytes.  The driver converts
-     * this to an SQL <code>VARBINARY</code> or <code>LONGVARBINARY</code>
-     * (depending on the argument's size relative to the driver's limits on
-     * <code>VARBINARY</code> values) when it sends it to the database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
-     * @exception SQLException if a database access error occurs
-     */
-    public void setBytes(int parameterIndex, byte[] x) throws  SQLException {
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        //Added to allow input to blobs
-        if ((sqlvar.sqltype & ~1) == GDS.SQL_BLOB) {
-            setBinaryStream(parameterIndex, new ByteArrayInputStream(x), x.length);
-            return;
-        }
-        //otherwise, a string, check length is ok.
-        if (x.length > sqlvar.sqllen) {
-            throw new DataTruncation(parameterIndex, true, false, x.length, sqlvar.sqllen);
-        }
-        if ((sqlvar.sqltype & ~1) == GDS.SQL_TEXT) {
-            if (x.length == sqlvar.sqllen) {
-                sqlvar.sqlind = 0;
-                sqlvar.sqldata = x;
-                return;
-            }
-            //else pad with nulls
-            byte[] padded = new byte[sqlvar.sqllen];
-            System.arraycopy(x, 0, padded, 0, x.length);
-            sqlvar.sqlind = 0;
-            sqlvar.sqldata = padded;
-            return;
-        }
-        if ((sqlvar.sqltype & ~1) == GDS.SQL_VARYING) {
-            sqlvar.sqlind = 0;
-            sqlvar.sqldata = x;
-            return;
-        }
-    }
 
-
-    /**
-     * Sets the designated parameter to a <code<java.sql.Date</code> value.
-     * The driver converts this
-     * to an SQL <code>DATE</code> value when it sends it to the database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
-     * @exception SQLException if a database access error occurs
-     */
-    public void setDate(int parameterIndex, java.sql.Date x) throws  SQLException {
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        if ((sqlvar.sqltype & ~1) != GDS.SQL_TYPE_DATE){
-            throw new SQLException("Not a Date, type: " + sqlvar.sqltype);
-        }
-        sqlvar.sqlind = 0;
-        sqlvar.sqldata = x;
-    }
-
-
-    /**
-     * Sets the designated parameter to a <code>java.sql.Time</code> value.
-     * The driver converts this
-     * to an SQL <code>TIME</code> value when it sends it to the database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
-     * @exception SQLException if a database access error occurs
-     */
-    public void setTime(int parameterIndex, java.sql.Time x) throws  SQLException {
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        if ((sqlvar.sqltype & ~1) != GDS.SQL_TYPE_TIME){
-            throw new SQLException("Not a Time, type: " + sqlvar.sqltype);
-        }
-        sqlvar.sqlind = 0;
-        sqlvar.sqldata = x;
-    }
-
-
-    /**
-     * Sets the designated parameter to a <code>java.sql.Timestamp</code> value.
-     * The driver
-     * converts this to an SQL <code>TIMESTAMP</code> value when it sends it to the
-     * database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
-     * @exception SQLException if a database access error occurs
-     */
-    public void setTimestamp(int parameterIndex, java.sql.Timestamp x) throws  SQLException {
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        if ((sqlvar.sqltype & ~1) != GDS.SQL_TIMESTAMP){
-            throw new SQLException("Not a Timestamp, type: " + sqlvar.sqltype);
-        }
-        sqlvar.sqlind = 0;
-        sqlvar.sqldata = x;
-    }
 
 
     /**
@@ -533,37 +303,6 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     public void setUnicodeStream(int parameterIndex, java.io.InputStream x,
               int length) throws  SQLException {
         setBinaryStream(parameterIndex, x, length);
-    }
-
-
-    /**
-     * Sets the designated parameter to the given input stream, which will have
-     * the specified number of bytes.
-     * When a very large binary value is input to a <code>LONGVARBINARY</code>
-     * parameter, it may be more practical to send it via a
-     * <code>java.io.InputStream</code> object. The data will be read from the stream
-     * as needed until end-of-file is reached.
-     *
-     * <P><B>Note:</B> This stream object can either be a standard
-     * Java stream object or your own subclass that implements the
-     * standard interface.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the java input stream which contains the binary parameter value
-     * @param length the number of bytes in the stream
-     * @exception SQLException if a database access error occurs
-     */
-    public void setBinaryStream(int parameterIndex, java.io.InputStream inputStream,
-             int length) throws  SQLException {
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        if ((sqlvar.sqltype & ~1) != GDS.SQL_BLOB){
-            throw new SQLException("Not a Blob, type: " + sqlvar.sqltype);
-        }
-        //get a new blob object
-        FBBlob blob = (FBBlob)c.createBlob();
-        blob.copyStream(inputStream, length);
-        sqlvar.sqlind = 0;
-        sqlvar.sqldata = new Long(blob.getBlobId());
     }
 
 
@@ -641,215 +380,6 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 
 
     /**
-     * <p>Sets the value of the designated parameter using the given object.
-     * The second parameter must be of type <code>Object</code>; therefore, the
-     * <code>java.lang</code> equivalent objects should be used for built-in types.
-     *
-     * <p>The JDBC specification specifies a standard mapping from
-     * Java <code>Object</code> types to SQL types.  The given argument
-     * will be converted to the corresponding SQL type before being
-     * sent to the database.
-     *
-     * <p>Note that this method may be used to pass datatabase-
-     * specific abstract data types, by using a driver-specific Java
-     * type.
-     *
-     * If the object is of a class implementing the interface <code>SQLData</code>,
-     * the JDBC driver should call the method <code>SQLData.writeSQL</code>
-     * to write it to the SQL data stream.
-     * If, on the other hand, the object is of a class implementing
-     * Ref, Blob, Clob, Struct,
-     * or Array, then the driver should pass it to the database as a value of the
-     * corresponding SQL type.
-     *
-     * This method throws an exception if there is an ambiguity, for example, if the
-     * object is of a class implementing more than one of the interfaces named above.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the object containing the input parameter value
-     * @exception SQLException if a database access error occurs
-     */
-    public void setObject(int parameterIndex, Object x) throws  SQLException {
-        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        int sqltype = sqlvar.sqltype & ~1;
-        int sqlscale = sqlvar.sqlscale;
-        
-        if (sqlscale < 0 || sqltype == GDS.SQL_INT64) {
-            switch (sqltype) {
-                case GDS.SQL_SHORT: 
-                case GDS.SQL_LONG: 
-                case GDS.SQL_INT64: 
-                case GDS.SQL_DOUBLE: 
-                    BigDecimal value;
-                    if (x instanceof BigDecimal) {
-                        value = (BigDecimal) x;
-                    } else if (x instanceof Number) {
-                        value = new BigDecimal(((Number) x).doubleValue());
-                    } else if (x instanceof Boolean) {
-                       if (((Boolean) x).booleanValue()) {
-                            value = new BigDecimal((double) 1);
-                        } else {
-                            value = new BigDecimal((double) 0);
-                        }
-                    } else if (x instanceof String) {
-                        value = new BigDecimal((String) x);
-                    } else {
-                        throw new SQLException("Invalid conversion to decimal");
-                    }
-                    
-                    value = value.setScale(sqlscale * (-1), BigDecimal.ROUND_HALF_UP);
-                    x = new Long(value.unscaledValue().longValue());
-                    break;
-                default:
-                    throw new SQLException("Invalid conversion to decimal");
-            }
-        }
-        
-        switch (sqltype) {
-        case GDS.SQL_SHORT:
-            sqlvar.sqlind = 0;
-            if (x instanceof Short) {
-                sqlvar.sqldata = x;
-            } else if (x instanceof Number) {
-                sqlvar.sqldata = new Short(((Number) x).shortValue());
-            } else if (x instanceof Boolean) {
-                if (((Boolean) x).booleanValue()) {
-                    sqlvar.sqldata = new Short((short) 1);
-                } else {
-                    sqlvar.sqldata = new Short((short) 0);
-                }
-            } else if (x instanceof String) {
-                sqlvar.sqldata = new Short((String) x);
-            } else {
-                throw new SQLException("Invalid conversion to short");
-            }
-            break;
-        case GDS.SQL_LONG:
-            sqlvar.sqlind = 0;
-            if (x instanceof Integer) {
-                sqlvar.sqldata = x;
-            } else if (x instanceof Number) {
-                sqlvar.sqldata = new Integer(((Number) x).intValue());
-            } else if (x instanceof Boolean) {
-                if (((Boolean) x).booleanValue()) {
-                    sqlvar.sqldata = new Integer((int) 1);
-                } else {
-                    sqlvar.sqldata = new Integer((int) 0);
-                }
-            } else if (x instanceof String) {
-                sqlvar.sqldata = new Integer((String) x);
-            } else {
-                throw new SQLException("Invalid conversion to integer");
-            }
-            break;
-        case GDS.SQL_INT64:
-            sqlvar.sqlind = 0;
-            if (x instanceof Long) {
-                sqlvar.sqldata = x;
-            } else {
-                throw new SQLException("Invalid conversion to decimal");
-            }
-            break;
-        case GDS.SQL_FLOAT:
-            sqlvar.sqlind = 0;
-            if (x instanceof Float) {
-                sqlvar.sqldata = x;
-            } else if (x instanceof Number) {
-                sqlvar.sqldata = new Float(((Number) x).floatValue());
-            } else if (x instanceof Boolean) {
-                if (((Boolean) x).booleanValue()) {
-                    sqlvar.sqldata = new Float((float) 1);
-                } else {
-                    sqlvar.sqldata = new Float((float) 0);
-                }
-            } else if (x instanceof String) {
-                sqlvar.sqldata = new Float((String) x);
-            } else {
-                throw new SQLException("Invalid conversion to float");
-            }
-            break;
-        case GDS.SQL_DOUBLE:
-            sqlvar.sqlind = 0;
-            if (x instanceof Double) {
-                sqlvar.sqldata = x;
-            } else if (x instanceof Number) {
-                sqlvar.sqldata = new Double(((Number) x).doubleValue());
-            } else if (x instanceof Boolean) {
-                if (((Boolean) x).booleanValue()) {
-                    sqlvar.sqldata = new Double((double) 1);
-                } else {
-                    sqlvar.sqldata = new Double((double) 0);
-                }
-            } else if (x instanceof String) {
-                sqlvar.sqldata = new Double((String) x);
-            } else {
-                throw new SQLException("Invalid conversion to double");
-            }
-            break;
-        case GDS.SQL_D_FLOAT:
-            throw new SQLException("not yet implemented");
-        case GDS.SQL_TEXT:
-        case GDS.SQL_VARYING:
-            if (x instanceof String) {
-                setString(parameterIndex, (String) x);
-            } else if (x instanceof byte[]) {
-                setBytes(parameterIndex, (byte[]) x);
-            } else {
-                setString(parameterIndex, x.toString());
-            }
-            break;
-        case GDS.SQL_BLOB:
-            if (x instanceof byte[]) {
-                setBytes(parameterIndex, (byte[]) x);
-            } else {
-                throw new SQLException("Invalid conversion to blob");
-            }
-            break;
-        case GDS.SQL_TYPE_DATE:
-            if (x instanceof java.sql.Date) {
-                setDate(parameterIndex, (java.sql.Date) x);
-            } else if (x instanceof java.sql.Timestamp) {
-                setDate(parameterIndex, new java.sql.Date(((java.sql.Timestamp) x).getTime()));
-            } else  if (x instanceof String) {
-                setDate(parameterIndex, java.sql.Date.valueOf((String) x));
-            } else {
-                throw new SQLException("Invalid conversion to date");
-            }
-            break;
-        case GDS.SQL_TYPE_TIME:
-            if (x instanceof java.sql.Time) {
-                setTime(parameterIndex, (java.sql.Time) x);
-            } else if (x instanceof java.sql.Timestamp) {
-                setTime(parameterIndex, new java.sql.Time(((java.sql.Timestamp) x).getTime()));
-            } else if (x instanceof String) {
-                setTime(parameterIndex, java.sql.Time.valueOf((String) x));
-            } else {
-                throw new SQLException("Invalid conversion to time");
-            }
-            break;
-        case GDS.SQL_TIMESTAMP:
-            if (x instanceof java.sql.Timestamp) {
-                setTimestamp(parameterIndex, (java.sql.Timestamp) x);
-            } else if (x instanceof java.sql.Date) {
-                setTimestamp(parameterIndex, new java.sql.Timestamp(((java.sql.Date) x).getTime()));
-            } else if (x instanceof String) {
-                setTimestamp(parameterIndex, java.sql.Timestamp.valueOf((String) x));
-            } else {
-                throw new SQLException("Invalid conversion to timestamp");
-            }
-            break;
-        case GDS.SQL_ARRAY:
-            throw new SQLException("not yet implemented");
-        case GDS.SQL_QUAD:
-            throw new SQLException("not yet implemented");
-        default:
-            throw new SQLException("Invalid type in sqlvar!!");
-
-        }
-    }
-
-
-    /**
      * Executes any kind of SQL statement.
      * Some prepared statements return multiple results; the <code>execute</code>
      * method handles these complex statements as well as the simpler
@@ -880,7 +410,18 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         } // end of finally
     }
 
-    protected boolean internalExecute(boolean sendOutParams) throws  SQLException {
+    protected boolean internalExecute(boolean sendOutParams) throws  SQLException 
+    {
+        XSQLVAR[] inVars = fixedStmt.getInSqlda().sqlvar;
+            
+        for(int i = 0; i < inVars.length; i++) 
+        {
+            if (FBField.isType(inVars[i], Types.BLOB)) 
+            {
+                FBBlobField blobField = (FBBlobField)getField(i + 1);
+                blobField.flushCachedData();
+            }
+        }
         try {
             closeResultSet();
             mc.executeStatement(fixedStmt, sendOutParams);

@@ -15,19 +15,9 @@
 
     <property name="lib.dir" value="${basedir}/lib"/>
 
-    <!--property name="build.dir" value="${basedir}/build"/>
-    <property name="build.bin.dir" value="${build.dir}/bin"/>
-    <property name="build.lib.dir" value="${build.dir}/lib"/>
-    <property name="build.classes" value="${build.dir}/classes"/>
-    <property name="build.docs.dir" value="${build.dir}/docs"/>
-    <property name="build.javadocs.dir" value="${build.dir}/docs/api"/>
-    <property name="build.jar-ra.dir" value="${build.dir}/jar"/>
-    <property name="dist.dir" value="dist"/>
-    <property name="external.dir" value="${dist.dir}/external"/>
-    <property name="db.dir" value="${basedir}/db"/>
-    <property name="dbsrc.dir" value="${basedir}/dbsrc"/-->
 <!--you will presumably need to change this if you want to use it.-->
-    <property name="jboss.base.dir" value="/usr/java/jboss/co4/jboss-all/build/output/jboss-3.0.0alpha"/>
+    <property name="jboss.base.dir" value="/mnt/otherlinux/usr/java/jboss/co12/jboss-all/build/output/jboss-3.0.0beta2"/>
+    <property name="jboss.deploy.dir" value="${jboss.base.dir}/server/default/deploy"/>
 
     <!-- Setup the module environment. -->
     <property name="module.root" value="${basedir}"/>
@@ -37,6 +27,7 @@
     <property name="module.output" value="${module.root}/output"/>
     <property name="module.tools" value="${module.root}/lib"/>
     <property name="module.thirdparty" value="${module.source}/lib"/>
+    <property name="module.etc" value="${module.source}/etc"/>
 
     <!-- Where source files live -->
     <property name="source.java" value="${module.source}"/>
@@ -54,6 +45,7 @@
     <property name="build.stylesheets" value="${module.output}/stylesheets"/>
     <property name="build.reports" value="${module.output}/reports"/>
     <property name="build.testlog" value="${module.output}/log"/>
+    <property name="build.dist" value="${module.output}/dist"/>
 
     <property name="junit.timeout" value="600000"/> <!-- 10 minutes -->
     <property name="junit.batchtest.todir" value="${build.reports}"/>
@@ -165,7 +157,7 @@
     <jar jarfile="${build.lib}/firebirdsql.jar">
        <fileset dir="${build.classes}">
          <include name="org/firebirdsql/**"/>
-         <exclude name="**/Test*.java"/>
+         <exclude name="**/**Test**.class"/>
        </fileset>
        <fileset dir="${build.resources}">
          <include name="*.properties"/>
@@ -183,7 +175,7 @@
     <jar jarfile="${build.lib}/firebirdjmx.jar">
        <fileset dir="${build.classes}">
          <include name="org/firebirdsql/**"/>
-         <exclude name="**/Test*.java"/>
+         <exclude name="**/*Test*.class"/>
          <exclude name="**/jca/**"/>
          <exclude name="**/jdbc/**"/>
        </fileset>
@@ -219,11 +211,11 @@
   <!-- (my location of) JBoss                                              -->
   <!-- =================================================================== -->
   <target name="deploy-rar" depends="rar">
-    <delete file="${jboss.base.dir}/deploy/firebird-service.xml"/>
-    <delete file="${jboss.base.dir}/deploy/firebirdsql.rar"/>
+    <delete file="${jboss.deploy.dir}/firebird-service.xml"/>
+    <delete file="${jboss.deploy.dir}/firebirdsql.rar"/>
     <!--sleep seconds="2"/coming with ant 1.4.1-->
-    <copy todir="${jboss.base.dir}/deploy" file="${dist.dir}/firebirdsql.rar"/>
-    <copy todir="${jboss.base.dir}/deploy" file="${build.dir}/firebird-service.xml"/>
+    <copy todir="${jboss.deploy.dir}" file="${build.lib}/firebirdsql.rar"/>
+    <!--copy todir="${jboss.deploy.dir}" file="${build.dir}/firebird-service.xml"/-->
   </target>
 
 
@@ -388,22 +380,20 @@
   <!-- =================================================================== -->
   <!-- Creates the distribution                                            -->
   <!-- =================================================================== -->
-  <target name="dist" depends="jar-ra,javadocs">
-     <mkdir dir="${dist.dir}/docs"/>
-     <mkdir dir="${dist.dir}/docs/api"/>
-     <!--copy todir="${dist.dir}/docs">
-        <fileset dir="${docs.dir}"/>
-     </copy-->
-     <copy todir="${dist.dir}/docs/api">
-        <fileset dir="${build.javadocs.dir}"/>
-     </copy>
-
-     <mkdir dir="${dist.dir}/src"/>
-     <copy todir="${dist.dir}/src">
-        <fileset dir="${source.java}">
-           <exclude name="**/*.jar"/>
-        </fileset>
-     </copy>
+  <target name="dist" depends="rar">
+    <mkdir dir="${build.dist}"/>
+    <zip zipfile="${build.dist}/${Name}-${version}.zip">
+      <fileset dir="${build.lib}">
+        <include name="firebirdsql.rar"/>
+        <include name="firebirdsql.jar"/>
+      </fileset>
+      <zipfileset dir="${module.thirdparty}" prefix="lib">
+        <include name="*.jar"/>
+      </zipfileset>
+      <fileset dir="${module.etc}">
+        <include name="release-notes.txt"/>
+      </fileset>
+    </zip>
   </target>
 
   <!-- =================================================================== -->
