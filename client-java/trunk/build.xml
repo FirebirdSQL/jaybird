@@ -37,7 +37,7 @@
 
     <property name="implementation.title" value="JayBird"/>
     <property name="implementation.url" value="http://www.firebirdsql.org"/>
-    <property name="implementation.version" 
+    <property name="implementation.version"
             value="${version.full} (build: CVSTag=${version.cvstag} date=${build.id})"/>
     <property name="implementation.vendor" value="FirebirdSQL"/>
     <property name="implementation.vendor.id" value="${implementation.url}"/>
@@ -95,7 +95,7 @@
 
     <property name="junit.formatter.type" value="xml"/>
     <property name="junit.formatter.usefile" value="true"/>
-    <property name="junit.printsummary" value="true"/> 
+    <property name="junit.printsummary" value="true"/>
     <property name="junit.haltonerror"  value="true"/>
     <property name="junit.haltonfailure"  value="true"/>
     <property name="junit.fork" value="true"/>
@@ -111,7 +111,7 @@
     <property name="test.db.dir" value="${module.output}/db"/>
     <property name="test.db.lc_ctype" value="NONE"/>
 
-	 
+
     <property name="packages" value="org.firebirdsql.*"/>
 
     <property name="build.compiler" value="classic"/>
@@ -137,13 +137,33 @@
       <path refid="javac.driver.classpath"/>
       <pathelement location="${build.classes}"/>
     </path>
-    
+
     <path id="javac.test.classpath">
       <path refid="javac.driver.classpath"/>
       <pathelement location="${build.classes}"/>
       <pathelement location="${lib.dir}/junit.jar"/>
     </path>
 
+    <!--
+    Determin if native code has been built and if so set 'native_library_present' property
+    -->
+    <property name="native.library.name" value="jaybird"/>
+    <property name="native.library.location" value="${module.output}/native"/>
+    <condition property="native_library_present">
+        <available file="${native.library.location}/${native.library.name}.dll"/>
+    </condition>
+    <condition property="native_library_present">
+        <available file="${native.library.location}/${native.library.name}.so"/>
+    </condition>
+    <condition property="no_type2_tests">
+        <not><isset property="native_library_present"/></not>
+    </condition>
+
+  </target>
+
+  <target name="copy_native_to_test_path">
+    <copy file="${native.library.location}/${native.library.name}.dll" tofile="${module.output}/${native.library.name}.dll" failonerror="false" overwrite="true" />
+    <copy file="${native.library.location}/${native.library.name}.so" tofile="${module.output}/${native.library.name}.so" failonerror="false" overwrite="true" />
   </target>
 
   <!-- =================================================================== -->
@@ -197,7 +217,7 @@
         <include name="EDU/oswego/cs/dl/util/concurrent/QueuedSemaphore$WaitQueue$WaitNode.class"/>
         <include name="EDU/oswego/cs/dl/util/concurrent/Semaphore.class"/>
         <include name="EDU/oswego/cs/dl/util/concurrent/Sync.class"/>
-        	
+
         <include name="EDU/oswego/cs/dl/util/concurrent/LinkedQueue.class"/>
         <include name="EDU/oswego/cs/dl/util/concurrent/LinkedNode.class"/>
         <include name="EDU/oswego/cs/dl/util/concurrent/Channel.class"/>
@@ -205,6 +225,11 @@
         <include name="EDU/oswego/cs/dl/util/concurrent/Takable.class"/>
       </patternset>
     </unjar>
+  </target>
+
+
+  <target name="compile-native" depends="init">
+    <ant antfile="build_native.xml"/>
   </target>
 
   <target name="compile-j2ee" depends="init, checkout-j2ee">
@@ -217,7 +242,7 @@
            optimize="on">
       <classpath refid="javac.j2ee.classpath"/>
       <src path="${jboss.source.root}/jboss-j2ee/src/main"/>
-        
+
       <include name="javax/resource/*.java"/>
       <include name="javax/resource/cci/ConnectionSpec.java"/>
       <include name="javax/resource/cci/LocalTransaction.java"/>
@@ -242,7 +267,7 @@
       <classpath refid="javac.driver.classpath"/>
     </javac>
   </target>
-  
+
   <target name="compile-pool" depends="compile-driver">
     <javac srcdir="${source.pool}"
            destdir="${build.classes}"
@@ -449,8 +474,9 @@
   <!-- runs the junit tests                                                -->
   <!-- =================================================================== -->
 
-  <target name="all-tests" depends="jars">
-    <!-- Override JUnit defaults -->
+  <target name="all-tests" depends="jars,copy_native_to_test_path">
+
+   <!-- Override JUnit defaults -->
 
     <!--create local db dir, if you are running on remote machine
       you must provide it yourself -->
@@ -458,9 +484,9 @@
     <mkdir dir="${build.reports}"/>
     <mkdir dir="${build.testlog}"/>
     <junit dir="${module.output}"
-	   printsummary="${junit.printsummary}" 
-	   haltonerror="${junit.haltonerror}" 
-	   haltonfailure="${junit.haltonfailure}" 
+	   printsummary="${junit.printsummary}"
+	   haltonerror="${junit.haltonerror}"
+	   haltonfailure="${junit.haltonfailure}"
 	   fork="${junit.fork}"
 	   timeout="${junit.timeout}"
 	   jvm="${junit.jvm}">
@@ -477,14 +503,14 @@
         <!-- pathelement location="${build.classes}"/ -->
         <!-- pathelement location="${build.test}"/ -->
         <!-- pathelement location="${build.resources}"/ -->
-        
+
         <pathelement location="${build.lib}/firebirdsql.jar"/>
         <pathelement location="${build.lib}/firebirdsql-test.jar"/>
         <pathelement location="${build.lib}/mini-concurrent.jar"/>
         <pathelement location="${build.lib}/mini-j2ee.jar"/>
         <pathelement location="${build.lib}/firebirdsql-test.jar"/>
-        
-        
+
+
         <pathelement location="${lib.dir}/ant.jar"/>
         <pathelement location="${lib.dir}/optional.jar"/>
         <path refid="javac.test.classpath"/>
@@ -494,12 +520,13 @@
 		 usefile="${junit.formatter.usefile}"/>
 
       <batchtest todir="${build.reports}"
-		 haltonerror="${junit.batchtest.haltonerror}" 
-		 haltonfailure="${junit.batchtest.haltonfailure}" 
+		 haltonerror="${junit.batchtest.haltonerror}"
+		 haltonfailure="${junit.batchtest.haltonfailure}"
 		 fork="${junit.fork}">
 
         <fileset dir="${build.test}">
           <include name="**/Test*.class"/>
+          <exclude name="**/ngds/Test*.class" if="no_type2_tests"/>
           <exclude name="**/TestAll.class"/>
           <exclude name="**/TestXABase*.class"/>
           <exclude name="**/TestConst.class"/>
@@ -511,7 +538,7 @@
   </target>
 
   <!--
-     | Run a single testcase by specifing the part of the test name after Test before the .class 
+     | Run a single testcase by specifing the part of the test name after Test before the .class
      | of the unit test using the test property, -Dtest=Gds one-test
      | Here you specify the testcase class, not the directory
    -->
@@ -522,9 +549,9 @@
     <mkdir dir="${build.reports}"/>
     <mkdir dir="${build.testlog}"/>
     <junit dir="${module.output}"
-	   printsummary="${junit.printsummary}" 
-	   haltonerror="${junit.haltonerror}" 
-	   haltonfailure="${junit.haltonfailure}" 
+	   printsummary="${junit.printsummary}"
+	   haltonerror="${junit.haltonerror}"
+	   haltonfailure="${junit.haltonfailure}"
 	   fork="${junit.fork}"
 	   timeout="${junit.timeout}"
 	   jvm="${junit.jvm}">
@@ -550,8 +577,8 @@
 		 usefile="${junit.formatter.usefile}"/>
 
       <batchtest todir="${build.reports}"
-		 haltonerror="${junit.batchtest.haltonerror}" 
-		 haltonfailure="${junit.batchtest.haltonfailure}" 
+		 haltonerror="${junit.batchtest.haltonerror}"
+		 haltonfailure="${junit.batchtest.haltonfailure}"
 		 fork="${junit.batchtest.fork}">
 
         <fileset dir="${build.test}">
@@ -570,7 +597,7 @@
       <fileset dir="${build.reports}">
         <include name="TEST-*.xml"/>
       </fileset>
-      <report format="frames" 
+      <report format="frames"
               todir="${build.reports}/html"
               styledir="${build.stylesheets}"
       />

@@ -35,7 +35,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
         try
             {
-            System.loadLibrary("fbjclient");
+            System.loadLibrary("jaybird");
             }
         catch( SecurityException ex )
             {
