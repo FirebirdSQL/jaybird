@@ -20,6 +20,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.12  2003/06/23 21:51:20  rrokytskyy
+ * code cleanup
+ *
  * Revision 1.11  2003/06/05 23:22:31  brodsom
  * Substitute package and inline imports
  *
@@ -78,7 +81,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @todo Need another constructor for metadata from constructed
      * result set, where we supply the ext field info.
      */
-    FBResultSetMetaData(XSQLVAR[] xsqlvars, FBConnection connection) throws SQLException {
+    protected FBResultSetMetaData(XSQLVAR[] xsqlvars, FBConnection connection) throws SQLException {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
     }

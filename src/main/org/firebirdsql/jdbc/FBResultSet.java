@@ -78,7 +78,7 @@ public class FBResultSet implements ResultSet {
      * @param fbstatement a <code>FBStatement</code> value
      * @param stmt an <code>isc_stmt_handle</code> value
      */
-    FBResultSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt, 
+    protected FBResultSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt, 
         FBObjectListener.ResultSetListener listener) throws SQLException 
     {
         this.c = c;
@@ -107,7 +107,7 @@ public class FBResultSet implements ResultSet {
      * in {@link FBDatabaseMetaData} class).
      * @throws SQLException if database access error occurs
      */
-    FBResultSet(FBConnection c, FBStatement fbStatement,isc_stmt_handle stmt, 
+    protected FBResultSet(FBConnection c, FBStatement fbStatement,isc_stmt_handle stmt, 
         boolean trimStrings, FBObjectListener.ResultSetListener listener) 
         throws SQLException 
     {
@@ -127,7 +127,7 @@ public class FBResultSet implements ResultSet {
         }
     }
 
-    FBResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
+    protected FBResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
         maxRows = 0;
         fbFetcher = new FBCachedFetcher(rows,this);
         this.xsqlvars = xsqlvars;
