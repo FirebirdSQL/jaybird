@@ -27,6 +27,7 @@ package org.firebirdsql.jca;
 
 // imports --------------------------------------
 import javax.resource.spi.ConnectionRequestInfo;
+import javax.resource.cci.ConnectionSpec;
 
 import javax.resource.ResourceException;
 
@@ -56,7 +57,7 @@ ManagedConnectionFactory instance, resource adapter uses this additional per-req
 to do connection creation and matching.
 **/
 
-public class FBConnectionRequestInfo implements ConnectionRequestInfo {
+public class FBConnectionRequestInfo implements ConnectionRequestInfo, ConnectionSpec {
 
     private Clumplet c = null;
 

@@ -36,6 +36,7 @@ import java.io.Serializable;
 import java.sql.Connection;
 import javax.sql.DataSource;
 import java.sql.SQLException;
+import java.util.Set;
 import javax.naming.Reference;
 import javax.resource.Referenceable;
 import javax.resource.ResourceException;
@@ -161,6 +162,16 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
    public void setConnectionRequestInfo(FBConnectionRequestInfo cri)
    {
       mcf.setConnectionRequestInfo(cri);
+   }
+
+   public Set getTransactionParameters()
+   {
+      return mcf.getTpb();
+   }
+
+   public void setTransactionParameters(Set tpb)
+   {
+      mcf.setTpb(tpb);
    }
 
    public int getConnectionCount()
