@@ -67,7 +67,7 @@ public class FBTpb
         tpb.add(ISC_TPB_READ_COMMITTED);
         tpb.add(ISC_TPB_REC_VERSION);
         //tpt.add(ISC_TPB_CONCURRENCY);
-        //tpb.add(ISC_TPB_WAIT);
+        tpb.add(ISC_TPB_WAIT);
     }
 
     public boolean equals(Object other)
