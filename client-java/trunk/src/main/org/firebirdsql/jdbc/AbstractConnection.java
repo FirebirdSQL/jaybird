@@ -39,6 +39,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     //so the transaction may be committed automatically after a
     //statement is executed.
     private boolean autoTransaction = false;
+    private int transactionCount;
     
     // This flag is set tu true in close() method to indicate that this 
     // instance is invalid and cannot be used anymore
@@ -849,16 +850,20 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return a <code>boolean</code> value, true if transaction was started.
      */
     public synchronized void ensureInTransaction() throws SQLException {
+        if (autoTransaction)
+            transactionCount++;
+        
         synchronized (mc) {
             try {
                 if (inTransaction()) {
-                    autoTransaction = false;
+                    // autoTransaction = false;
                     return;
                 }
 
                 //We have to start our own transaction
                 getLocalTransaction().begin();
                 autoTransaction = true;
+                transactionCount = 1;
 
             } catch (ResourceException re) {
                 throw new FBSQLException(re);
@@ -902,7 +907,10 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @throws SQLException if a database access error occurrs
      */
     public synchronized void checkEndTransaction(boolean commit) throws SQLException {
-        if (willEndTransaction())
+        if (autoTransaction)
+            transactionCount--;
+        
+        if (willEndTransaction() && transactionCount == 0)
         {
             autoTransaction = false;
             synchronized(mc) {
