@@ -70,7 +70,7 @@ class FBLongField extends FBField {
         if (value.longValue() > MAX_INT_VALUE ||
             value.longValue() < MIN_INT_VALUE)
                 throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
+                    INT_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         return value.intValue();
     }
