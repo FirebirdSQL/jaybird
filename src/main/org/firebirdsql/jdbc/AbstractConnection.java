@@ -984,7 +984,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return s;
     }
 	 
-    public ResultSet doQuery(String sql, List params,HashMap statements) 
+    public synchronized ResultSet doQuery(String sql, List params,HashMap statements) 
 	 throws SQLException
     {
         boolean ourTransaction = false;
