@@ -112,7 +112,10 @@ public class TestFBCallableStatement extends FBTestBase {
         "DROP PROCEDURE set_emp_proj;";
 
     public static final String EXECUTE_PROCEDURE_EMP_INSERT =
-        "{call set_emp_proj(?, ?, ? ,?)}";
+        "{call set_emp_proj (?,?,?,?)}";
+
+    public static final String EXECUTE_PROCEDURE_EMP_INSERT_1 =
+        "EXECUTE PROCEDURE set_emp_proj (?,?,?,?)";
 
 	 public static final String CREATE_EMPLOYEE_PROJECT = ""
 	     + "CREATE TABLE employee_project( "
@@ -380,8 +383,35 @@ public class TestFBCallableStatement extends FBTestBase {
           rs.close();
         } finally {
           stmt.close();
-          connection.setAutoCommit(false);
         }
+        
+        cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT_1);
+        try {
+          cstmt.setInt(1, 44);
+          cstmt.setString(2, "DGPII");
+          cstmt.setString(3, "Smith");
+          cstmt.setString(4, "Automap");
+          cstmt.execute();
+          cstmt.setInt(1, 44);
+          cstmt.setString(2, "VBASE");
+          cstmt.setString(3, "Jenner");
+          cstmt.setString(4, "Video Database");
+          cstmt.execute();
+          cstmt.setInt(1, 44);
+          cstmt.setString(2, "HWRII");
+          cstmt.setString(3, "Stevens");
+          cstmt.setString(4, "Translator upgrade");
+          cstmt.execute();           
+          cstmt.setInt(1, 22);
+          cstmt.setString(2, "OTHER");
+          cstmt.setString(3, "Smith");
+          cstmt.setString(4, "Automap");
+          cstmt.execute();
+        } finally {
+          cstmt.close();
+        }
+
+        connection.setAutoCommit(false);
     }
 
     public void testFatalError() throws Exception {
