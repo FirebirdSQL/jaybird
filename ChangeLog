@@ -1,3 +1,19 @@
+2004-01-16 15:41  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBConnection.java:
+	
+	initial revision
+
+2004-01-16 14:52  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jca/FBManagedConnection.java, jca/FBManagedConnectionFactory.java,
+	jca/FBTpb.java, jca/FBTpbMapper.java, jdbc/AbstractConnection.java,
+	jdbc/FirebirdConnection.java:
+	
+	added possibility to specify TPB mapping through the
+	FirebirdConnection interface
+
 2004-01-09 23:23  rfincher
 
 	* client-java/src/etc/: faq.PDF, FAQ.txt:
