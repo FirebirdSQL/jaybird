@@ -1043,14 +1043,18 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      * for this database connection.
      */
     public List getWarnings() {
-        return currentDbHandle.getWarnings();
+        if (currentDbHandle == null)
+            return Collections.EMPTY_LIST;
+        else
+            return currentDbHandle.getWarnings();
     }
 
     /**
      * Clear warnings for this database connection.
      */
     public void clearWarnings() {
-        currentDbHandle.clearWarnings();
+        if (currentDbHandle != null)
+            currentDbHandle.clearWarnings();
     }
 
     /**
