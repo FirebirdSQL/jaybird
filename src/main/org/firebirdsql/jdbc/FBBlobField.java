@@ -151,7 +151,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         if (blob == BLOB_NULL_VALUE)
             return STRING_NULL_VALUE;
 
-        return XSQLVAR.decodeString(getBytes(), javaEncoding);
+        return field.decodeString(getBytes(), javaEncoding);
     }
 
     InputStream getUnicodeStream() throws SQLException {
@@ -266,7 +266,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
             return;
         }
         
-        setBytes(XSQLVAR.encodeString(value,javaEncoding));
+        setBytes(field.encodeString(value,javaEncoding));
     }
 
     void setUnicodeStream(InputStream in, int length) throws SQLException {

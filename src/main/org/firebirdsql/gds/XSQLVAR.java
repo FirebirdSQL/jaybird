@@ -28,6 +28,8 @@
 
 package org.firebirdsql.gds;
 
+import org.firebirdsql.encodings.*;
+
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 /**
@@ -48,12 +50,10 @@ public class XSQLVAR {
     public String relname;
     public String ownname;
     public String aliasname;
-
+    //
+	 private Encoding coder;
+	 
     public XSQLVAR() {
-    }
-
-    public XSQLVAR(byte[] sqldata) {
-        this.sqldata = sqldata;
     }
     //
     // numbers
@@ -127,7 +127,8 @@ public class XSQLVAR {
     //
     // Strings
     //
-    public final static byte[] encodeString(String value, String encoding){
+    public byte[] encodeString(String value, String encoding) throws java.sql.SQLException {
+/* Old encoding method 		 
         if (encoding==null){
             return value.getBytes();
         }
@@ -138,8 +139,13 @@ public class XSQLVAR {
                 return value.getBytes();
             }
         }
+*/		  
+		  if (coder == null)
+  	         coder = EncodingFactory.getEncoding(encoding);
+		  return coder.encodeToCharset(value);
 	 }
-    public final static byte[] encodeString(byte[] value, String encoding){
+    public byte[] encodeString(byte[] value, String encoding)throws java.sql.SQLException {
+/* Old encoding method		 
         if (encoding == null)
             return value;
         else {
@@ -149,8 +155,14 @@ public class XSQLVAR {
                 return value;
             }
 		  }
+*/		  
+		  if (coder == null)
+  	         coder = EncodingFactory.getEncoding(encoding);
+		  return coder.encodeToCharset(coder.decodeFromCharset(value));		 
 	 }
-    public final static String decodeString(byte[] value, String encoding){
+	 
+    public final String decodeString(byte[] value, String encoding){
+/*		 
         if (encoding == null)
             return new String(value);
         else {
@@ -160,6 +172,10 @@ public class XSQLVAR {
                 return new String(value);
             }
         }
+ */
+		  if (coder == null)
+  	         coder = EncodingFactory.getEncoding(encoding);
+		  return coder.decodeFromCharset(value);
 	 }
     // 
     // times,dates...
