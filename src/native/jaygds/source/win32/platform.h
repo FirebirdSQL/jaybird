@@ -51,10 +51,12 @@
 // Defines for fb_binding.h and fb_binding.cpp
 typedef HMODULE SHARED_LIBRARY_HANDLE;
 
+void processFailedEntryPoint(const char* const message);
+
 
 #define FB_ENTRYPOINT(X) \
 			if ((##X = (prototype_##X*)GetProcAddress(sHandle, #X)) == NULL) \
-				throw InternalException("FirebirdApiBinding:Initialize() - Entry-point "#X" not found")
+				processFailedEntryPoint("FirebirdApiBinding:Initialize() - Entry-point "#X" not found")
 
 SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name);
 

@@ -411,6 +411,34 @@ typedef ISC_STATUS ISC_EXPORT prototype_isc_seek_blob(ISC_STATUS *,
 
 
 
+typedef ISC_STATUS ISC_EXPORT prototype_isc_service_attach(ISC_STATUS *,
+										 unsigned short,
+										 char *,
+										 isc_svc_handle *,
+										 unsigned short,
+										 char *);
+
+typedef ISC_STATUS ISC_EXPORT prototype_isc_service_detach(ISC_STATUS *,
+										 isc_svc_handle *);
+
+typedef ISC_STATUS ISC_EXPORT prototype_isc_service_query(ISC_STATUS *,
+										isc_svc_handle *,
+										isc_resv_handle *,
+										unsigned short,
+										char *,
+										unsigned short,
+										char *,
+										unsigned short,
+										char *);
+
+typedef ISC_STATUS ISC_EXPORT prototype_isc_service_start(ISC_STATUS *,
+										isc_svc_handle *,
+										isc_resv_handle *,
+										unsigned short,
+										char *);
+
+
+
 
 
 
@@ -501,6 +529,10 @@ class FirebirdApiBinding
 		static prototype_isc_transact_request*		isc_transact_request;
 		static prototype_isc_vax_integer*			isc_vax_integer;
 		static prototype_isc_seek_blob*				isc_seek_blob;
+		static prototype_isc_service_attach*			isc_service_attach;
+		static prototype_isc_service_detach*			isc_service_detach;
+		static prototype_isc_service_query*			isc_service_query;
+		static prototype_isc_service_start*			isc_service_start;
 
 	
 

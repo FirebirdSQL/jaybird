@@ -154,6 +154,218 @@ public final class ISCConstants {
     public final static int isc_tpb_restart_requests        = 19;
     public final static int isc_tpb_no_auto_undo            = 20;
 
+    /*************************************/
+    /* Service parameter block stuff */
+    /*************************************/
+
+    public final static int isc_spb_version1                = 1;
+    public final static int isc_spb_current_version         = 2;
+    public final static int isc_spb_version			        = isc_spb_current_version;
+    public final static int isc_spb_user_name               = isc_dpb_user_name;
+    public final static int isc_spb_sys_user_name           = isc_dpb_sys_user_name;
+    public final static int isc_spb_sys_user_name_enc       = isc_dpb_sys_user_name_enc;
+    public final static int isc_spb_password                = isc_dpb_password;
+    public final static int isc_spb_password_enc            = isc_dpb_password_enc;
+    public final static int isc_spb_command_line            = 105;
+    public final static int isc_spb_dbname                  = 106;
+    public final static int isc_spb_verbose                 = 107;
+    public final static int isc_spb_options                 = 108;
+
+    public final static int isc_spb_connect_timeout         = isc_dpb_connect_timeout;
+    public final static int isc_spb_dummy_packet_interval   = isc_dpb_dummy_packet_interval;
+    public final static int isc_spb_sql_role_name           = isc_dpb_sql_role_name;
+
+    /*****************************
+     * Service action items      *
+     *****************************/
+
+    public final static int isc_action_svc_backup         = 1;	/* Starts database backup process on the server */
+    public final static int isc_action_svc_restore        = 2;	/* Starts database restore process on the server */
+    public final static int isc_action_svc_repair         = 3;	/* Starts database repair process on the server */
+    public final static int isc_action_svc_add_user       = 4;	/* Adds a new user to the security database */
+    public final static int isc_action_svc_delete_user    = 5;	/* Deletes a user record from the security database */
+    public final static int isc_action_svc_modify_user    = 6;	/* Modifies a user record in the security database */
+    public final static int isc_action_svc_display_user   = 7;	/* Displays a user record from the security database */
+    public final static int isc_action_svc_properties     = 8;	/* Sets database properties */
+    public final static int isc_action_svc_add_license    = 9;	/* Adds a license to the license file */
+    public final static int isc_action_svc_remove_license =10;	/* Removes a license from the license file */
+    public final static int isc_action_svc_db_stats	      =11;	/* Retrieves database statistics */
+    public final static int isc_action_svc_get_ib_log     =12;	/* Retrieves the InterBase log file from the server */
+
+    /*****************************
+     * Service information items *
+     *****************************/
+
+    public final static int isc_info_svc_svr_db_info      =50;	/* Retrieves the number of attachments and databases */
+    public final static int isc_info_svc_get_license      =51;	/* Retrieves all license keys and IDs from the license file */
+    public final static int isc_info_svc_get_license_mask =52;	/* Retrieves a bitmask representing licensed options on the server */
+    public final static int isc_info_svc_get_config       =53;	/* Retrieves the parameters and values for IB_CONFIG */
+    public final static int isc_info_svc_version          =54;	/* Retrieves the version of the services manager */
+    public final static int isc_info_svc_server_version   =55;	/* Retrieves the version of the InterBase server */
+    public final static int isc_info_svc_implementation   =56;	/* Retrieves the implementation of the InterBase server */
+    public final static int isc_info_svc_capabilities     =57;	/* Retrieves a bitmask representing the server's capabilities */
+    public final static int isc_info_svc_user_dbpath      =58;	/* Retrieves the path to the security database in use by the server */
+    public final static int isc_info_svc_get_env	      =59;	/* Retrieves the setting of $INTERBASE */
+    public final static int isc_info_svc_get_env_lock     =60;	/* Retrieves the setting of $INTERBASE_LCK */
+    public final static int isc_info_svc_get_env_msg      =61;	/* Retrieves the setting of $INTERBASE_MSG */
+    public final static int isc_info_svc_line             =62;	/* Retrieves 1 line of service output per call */
+    public final static int isc_info_svc_to_eof           =63;	/* Retrieves as much of the server output as will fit in the supplied buffer */
+    public final static int isc_info_svc_timeout          =64;	/* Sets / signifies a timeout value for reading service information */
+    public final static int isc_info_svc_get_licensed_users =65;	/* Retrieves the number of users licensed for accessing the server */
+    public final static int isc_info_svc_limbo_trans	=66;	/* Retrieve the limbo transactions */
+    public final static int isc_info_svc_running		=67;	/* Checks to see if a service is running on an attachment */
+    public final static int isc_info_svc_get_users		=68;/* Returns the user information from isc_action_svc_display_users */
+
+    /******************************************************
+     * Parameters for isc_action_{add|delete|modify)_user *
+     ******************************************************/
+
+    public final static int isc_spb_sec_userid           = 5;
+    public final static int isc_spb_sec_groupid          = 6;
+    public final static int isc_spb_sec_username         = 7;
+    public final static int isc_spb_sec_password         = 8;
+    public final static int isc_spb_sec_groupname        = 9;
+    public final static int isc_spb_sec_firstname        = 10;
+    public final static int isc_spb_sec_middlename       = 11;
+    public final static int isc_spb_sec_lastname         = 12;
+
+    /*******************************************************
+     * Parameters for isc_action_svc_(add|remove)_license, *
+     * isc_info_svc_get_license                            *
+     *******************************************************/
+
+    public final static int isc_spb_lic_key              = 5;
+    public final static int isc_spb_lic_id               = 6;
+    public final static int isc_spb_lic_desc             = 7;
+
+
+    /*****************************************
+     * Parameters for isc_action_svc_backup  *
+     *****************************************/
+
+    public final static int isc_spb_bkp_file               =  5;
+    public final static int isc_spb_bkp_factor             =  6;
+    public final static int isc_spb_bkp_length             =  7;
+    public final static int isc_spb_bkp_ignore_checksums   =  0x01;
+    public final static int isc_spb_bkp_ignore_limbo       =  0x02;
+    public final static int isc_spb_bkp_metadata_only      =  0x04;
+    public final static int isc_spb_bkp_no_garbage_collect =  0x08;
+    public final static int isc_spb_bkp_old_descriptions   =  0x10;
+    public final static int isc_spb_bkp_non_transportable  =  0x20;
+    public final static int isc_spb_bkp_convert            =  0x40;
+    public final static int isc_spb_bkp_expand		       =  0x80;
+
+    /********************************************
+     * Parameters for isc_action_svc_properties *
+     ********************************************/
+
+    public final static int isc_spb_prp_page_buffers		=5;
+    public final static int isc_spb_prp_sweep_interval		=6;
+    public final static int isc_spb_prp_shutdown_db			=7;
+    public final static int isc_spb_prp_deny_new_attachments	=9;
+    public final static int isc_spb_prp_deny_new_transactions	=10;
+    public final static int isc_spb_prp_reserve_space		=11;
+    public final static int isc_spb_prp_write_mode			=12;
+    public final static int isc_spb_prp_access_mode			=13;
+    public final static int isc_spb_prp_set_sql_dialect		=14;
+    public final static int isc_spb_prp_activate			=0x0100;
+    public final static int isc_spb_prp_db_online			=0x0200;
+
+    /********************************************
+     * Parameters for isc_spb_prp_reserve_space *
+     ********************************************/
+
+    public final static int isc_spb_prp_res_use_full	=35;
+    public final static int isc_spb_prp_res			    =36;
+
+    /******************************************
+     * Parameters for isc_spb_prp_write_mode  *
+     ******************************************/
+
+    public final static int isc_spb_prp_wm_async		=37;
+    public final static int isc_spb_prp_wm_sync			=38;
+
+    /******************************************
+     * Parameters for isc_spb_prp_access_mode *
+     ******************************************/
+
+    public final static int isc_spb_prp_am_readonly		=39;
+    public final static int isc_spb_prp_am_readwrite	=40;
+
+    /*****************************************
+     * Parameters for isc_action_svc_repair  *
+     *****************************************/
+
+    public final static int isc_spb_rpr_commit_trans	=	15;
+    public final static int isc_spb_rpr_rollback_trans	=	34;
+    public final static int isc_spb_rpr_recover_two_phase=	17;
+    public final static int isc_spb_tra_id				 =  18;
+    public final static int isc_spb_single_tra_id		 =  19;
+    public final static int isc_spb_multi_tra_id		=	20;
+    public final static int isc_spb_tra_state			=	21;
+    public final static int isc_spb_tra_state_limbo		=	22;
+    public final static int isc_spb_tra_state_commit	=   23;
+    public final static int isc_spb_tra_state_rollback	=	24;
+    public final static int isc_spb_tra_state_unknown	=   25;
+    public final static int isc_spb_tra_host_site		=	26;
+    public final static int isc_spb_tra_remote_site		=	27;
+    public final static int isc_spb_tra_db_path			=	28;
+    public final static int isc_spb_tra_advise			=	29;
+    public final static int isc_spb_tra_advise_commit	=	30;
+    public final static int isc_spb_tra_advise_rollback	=	31;
+    public final static int isc_spb_tra_advise_unknown	=	33;
+
+    public final static int isc_spb_rpr_validate_db		=	0x01;
+    public final static int isc_spb_rpr_sweep_db		=	0x02;
+    public final static int isc_spb_rpr_mend_db			=	0x04;
+    public final static int isc_spb_rpr_list_limbo_trans=	0x08;
+    public final static int isc_spb_rpr_check_db		=	0x10;
+    public final static int isc_spb_rpr_ignore_checksum	=	0x20;
+    public final static int isc_spb_rpr_kill_shadows	=	0x40;
+    public final static int isc_spb_rpr_full			=	0x80;
+
+    /*****************************************
+     * Parameters for isc_action_svc_restore *
+     *****************************************/
+
+    public final static int isc_spb_res_buffers			=	9;
+    public final static int isc_spb_res_page_size		=	10;
+    public final static int isc_spb_res_length			=	11;
+    public final static int isc_spb_res_access_mode		=	12;
+    public final static int isc_spb_res_deactivate_idx	=	0x0100;
+    public final static int isc_spb_res_no_shadow		=	0x0200;
+    public final static int isc_spb_res_no_validity		=	0x0400;
+    public final static int isc_spb_res_one_at_a_time	=	0x0800;
+    public final static int isc_spb_res_replace			=	0x1000;
+    public final static int isc_spb_res_create			=	0x2000;
+    public final static int isc_spb_res_use_all_space	=	0x4000;
+
+    /******************************************
+     * Parameters for isc_spb_res_access_mode  *
+     ******************************************/
+
+    public final static int isc_spb_res_am_readonly		=	isc_spb_prp_am_readonly;
+    public final static int isc_spb_res_am_readwrite	=	isc_spb_prp_am_readwrite;
+
+    /*******************************************
+     * Parameters for isc_info_svc_svr_db_info *
+     *******************************************/
+
+    public final static int isc_spb_num_att		=	5;
+    public final static int isc_spb_num_db		=	6;
+
+    /*****************************************
+     * Parameters for isc_info_svc_db_stats  *
+     *****************************************/
+
+    public final static int isc_spb_sts_data_pages	=	0x01;
+    public final static int isc_spb_sts_db_log		=	0x02;
+    public final static int isc_spb_sts_hdr_pages	=	0x04;
+    public final static int isc_spb_sts_idx_pages	=	0x08;
+    public final static int isc_spb_sts_sys_relations=	0x10;
+
+
+
     /*public final static Integer isc_tpb_version1                = 1;
     public final static Integer isc_tpb_version3                = 3;
     public final static Integer isc_tpb_consistency             = 1;

@@ -331,6 +331,41 @@ JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1bl
 JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1seek_1blob
   (JNIEnv *, jobject, jobject, jint, jint);
 
+
+
+
+/*
+ * Class:     org_firebirdsql_ngds_GDS_0005fImpl
+ * Method:    native_isc_service_attach
+ * Signature: (Lorg/firebirdsql/gds/isc_blob_handle;)V
+ */
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1service_1attach
+  (JNIEnv *, jobject, jstring, jobject, jbyteArray);
+
+/*
+ * Class:     org_firebirdsql_ngds_GDS_0005fImpl
+ * Method:    native_isc_service_detach
+ * Signature: (Lorg/firebirdsql/gds/isc_blob_handle;)V
+ */
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1service_1detach
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     org_firebirdsql_ngds_GDS_0005fImpl
+ * Method:    native_isc_service_start
+ * Signature: (Lorg/firebirdsql/gds/isc_blob_handle;)V
+ */
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1service_1start
+  (JNIEnv *, jobject, jobject, jbyteArray);
+
+/*
+ * Class:     org_firebirdsql_ngds_GDS_0005fImpl
+ * Method:    native_isc_service_query
+ * Signature: (Lorg/firebirdsql/gds/isc_blob_handle;)V
+ */
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1service_1query
+  (JNIEnv *, jobject, jobject, jbyteArray, jbyteArray, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif
