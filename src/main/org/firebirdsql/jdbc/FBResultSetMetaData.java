@@ -219,6 +219,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                 return 17;
             case Types.INTEGER:
                 return 11;
+            case Types.BIGINT:
+                return 21;
             case Types.SMALLINT:
                 return 6;
             case Types.DATE:
@@ -311,6 +313,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                 return 15;
             case Types.INTEGER:
                 return 10;
+            case Types.BIGINT:
+                return 20;
             case Types.SMALLINT:
                 return 5;
             case Types.DATE:
@@ -382,6 +386,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                 case ISCConstants.SQL_LONG:
                 case ISCConstants.SQL_INT64:
                 case ISCConstants.SQL_DOUBLE:
+                    // NOTE: can't be BIGINT because of scale
                     if (sqlsubtype == 2)
                         return Types.DECIMAL;
                     else
@@ -412,10 +417,12 @@ public class FBResultSetMetaData implements ResultSetMetaData {
             case ISCConstants.SQL_TYPE_DATE:
                 return Types.DATE;
             case ISCConstants.SQL_INT64:
-                if (sqlsubtype == 2)
+                if (sqlsubtype == 1)
+                    return Types.NUMERIC;
+                else if (sqlsubtype == 2)
                     return Types.DECIMAL;
                 else
-                    return Types.NUMERIC;
+                    return Types.BIGINT;
             case ISCConstants.SQL_BLOB:
                 if (sqlsubtype < 0)
                     return Types.BLOB;
@@ -453,6 +460,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                 case ISCConstants.SQL_LONG:
                 case ISCConstants.SQL_INT64:
                 case ISCConstants.SQL_DOUBLE:
+                    // NOTE: can't be BIGINT because of scale
                     if (sqlsubtype == 2)
                         return "DECIMAL";
                     else
@@ -483,10 +491,12 @@ public class FBResultSetMetaData implements ResultSetMetaData {
             case ISCConstants.SQL_TYPE_DATE:
                 return "DATE";
             case ISCConstants.SQL_INT64:
-                if (sqlsubtype == 2)
+                if (sqlsubtype == 1)
+                    return "NUMERIC";
+                else if (sqlsubtype == 2)
                     return "DECIMAL";
                 else
-                    return "NUMERIC";
+                    return "BIGINT";
             case ISCConstants.SQL_BLOB:
                 if (sqlsubtype < 0)
                     return "BLOB SUB_TYPE <0";

@@ -2721,11 +2721,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private int getDataType (short fieldType, short fieldSubType, short fieldScale) {
         if (fieldScale < 0) {
             switch (fieldType) {
-                //This might need some help for long mapping.
                 case smallint_type:
                 case integer_type:
                 case int64_type:
                 case double_type:
+                    // NOTE: can't be BIGINT because of scale
                     if (fieldSubType == 2)
                         return Types.DECIMAL;
                     else
@@ -2757,10 +2757,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                 return Types.DATE;
             case int64_type:
                 //This might need some help for long mapping
-                if (fieldSubType == 2)
+                if (fieldSubType == 1)
+                    return Types.NUMERIC;
+                else if (fieldSubType == 2)
                     return Types.DECIMAL;
                 else
-                    return Types.NUMERIC;
+                    return Types.BIGINT;
             case blob_type:
                 if (fieldSubType < 0)
                     return Types.BLOB;
@@ -2780,11 +2782,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private String getDataTypeName (short fieldType, short fieldSubType, short fieldScale) {
         if (fieldScale < 0) {
             switch (fieldType) {
-                //this might need some help for long mapping
                 case smallint_type:
                 case integer_type:
                 case int64_type:
                 case double_type:
+                    // NOTE: can't be BIGINT because of scale
                     if (fieldSubType == 2)
                         return "DECIMAL";
                     else
@@ -2816,10 +2818,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                 return "DATE";
             case int64_type:
                 //this might need some help for long mapping
-                if (fieldSubType == 2)
+                if (fieldSubType == 1)
+                    return "NUMERIC";
+                else if (fieldSubType == 2)
                     return "DECIMAL";
                 else
-                    return "NUMERIC";
+                    return "BIGINT";
             case blob_type:
                 if (fieldSubType < 0)
                     return "BLOB SUB_TYPE <0";
