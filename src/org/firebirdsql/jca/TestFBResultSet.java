@@ -372,5 +372,50 @@ public class TestFBResultSet extends TestXABase {
         }
         
     }
+
+    public void xtestUseResultSetWithCount() throws Exception {
+        System.out.println();
+        System.out.println("testUseResultSetWithCount");
+        FBManagedConnectionFactory mcf = initMcf();
+        DataSource ds = (DataSource)mcf.createConnectionFactory();
+        FBConnection c = (FBConnection)ds.getConnection();
+        Statement s = c.createStatement();
+        LocalTransaction t = c.getLocalTransaction();
+        Exception ex = null;
+        t.begin();
+        try {
+            s.execute(" CREATE TABLE Customer (name VARCHAR(256),accounts VARCHAR(2000),id VARCHAR(256))"); 
+            //s.close();
+        }
+        catch (Exception e) {
+            ex = e;
+        }
+        t.commit();
+        
+        t.begin();
+        PreparedStatement p = c.prepareStatement("SELECT COUNT(*) FROM Customer WHERE id=? AND name=?");
+        p.setString(1, "1");
+        p.setString(2, "First Customer");
+        
+        assert("execute returned false for insert statement", p.execute()); 
+        ResultSet rs = p.getResultSet();
+        while (rs.next()) {
+            System.out.println("count: " + rs.getInt(1) );
+        }
+//        rs.close(); //should be automatic
+        p.close();
+        t.commit();   
+        
+        t.begin();
+        s.execute("DROP TABLE Customer"); 
+        s.close();
+        t.commit();
+        c.close();
+        if (ex != null) {
+            throw ex;
+        }
+        
+    }
+    
     
 }

@@ -355,6 +355,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      */
     public void setBytes(int parameterIndex, byte[] x) throws  SQLException {
         XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        //Added to allow input to blobs
+        if ((sqlvar.sqltype & ~1) == GDS.SQL_BLOB) {
+            setBinaryStream(parameterIndex, new ByteArrayInputStream(x), x.length);
+            return;
+        }
+        //otherwise, a string, check length is ok.
         if (x.length > sqlvar.sqllen) {
             throw new DataTruncation(parameterIndex, true, false, x.length, sqlvar.sqllen);
         }
@@ -375,10 +381,6 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             sqlvar.sqlind = 0;
             sqlvar.sqldata = x;
             return;
-        }
-        //Added to allow input to blobs
-        if ((sqlvar.sqltype & ~1) == GDS.SQL_BLOB) {
-            setBinaryStream(parameterIndex, new ByteArrayInputStream(x), x.length);
         }
     }
 

@@ -309,7 +309,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         }
         if (currentDbHandle != null) {
             try {
-                //mcf.gds.isc_detach_database(currentDbHandle);
+                //(new Exception()).printStackTrace();//Useful to find how we got here.
                 mcf.releaseDbHandle(currentDbHandle);
             }
             catch (GDSException ge) {
@@ -367,7 +367,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public void end(Xid id, int flags) throws javax.transaction.xa.XAException {
         log.println("End called: " + id);
         if (currentTr == null) {
-            throw new XAException("end called with no transaction associated");
+            //throw new XAException("end called with no transaction associated");
+            log.println("end called with no transaction associated: " + id + ", flags: " + flags);
+            (            new Exception()).printStackTrace();
+throw new XAException("end called with no transaction associated");
+
+//return;
         }
         if (mcf.lookupXid(id) != currentTr) {
             throw new XAException("end called with wrong xid");
@@ -444,7 +449,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public void rollback(Xid id) throws javax.transaction.xa.XAException {
         log.println("rollback called: " + id);
         if (mcf.lookupXid(id) == null) {
-            throw new XAException("rollback called with unknown transaction");
+            System.out.println("____________WARNING_____________");
+            System.out.println("____________WARNING_____________");
+            System.out.println("rollback called with unknown transaction");
+            System.out.println("____________WARNING_____________");
+            System.out.println("____________WARNING_____________");
+            return;
+            //throw new XAException("rollback called with unknown transaction");
         }
         if (mcf.lookupXid(id) == currentTr) {
             throw new XAException("rollback called with current xid");
@@ -525,8 +536,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     }
     
     public void close(FBConnection c) {
-        notify(ConnectionEvent.CONNECTION_CLOSED, c, null);
         connectionHandles.remove(c);
+        notify(ConnectionEvent.CONNECTION_CLOSED, c, null);
     }
     
     public void registerStatement(FBStatement fbStatement) {
@@ -593,6 +604,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     
 
     void notify(int type, FBConnection c, Exception e) {
+        //(new Exception()).printStackTrace();
         ConnectionEvent ce = new ConnectionEvent(this, type, e);
         ce.setConnectionHandle(c);
         //avoid a concurrent modification exception - notification modifies list.
@@ -603,27 +615,44 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
                 while (i.hasNext()) {
                     ((ConnectionEventListener)i.next()).connectionClosed(ce);
                 }
+                break;
             case ConnectionEvent.CONNECTION_ERROR_OCCURRED:
                 while (i.hasNext()) {
                     ((ConnectionEventListener)i.next()).connectionErrorOccurred(ce);
                 }
+                break;
             case ConnectionEvent.LOCAL_TRANSACTION_STARTED:
                 while (i.hasNext()) {
                     ((ConnectionEventListener)i.next()).localTransactionStarted(ce);
                 }
+                break;
             case ConnectionEvent.LOCAL_TRANSACTION_COMMITTED:
                 while (i.hasNext()) {
                     ((ConnectionEventListener)i.next()).localTransactionCommitted(ce);
                 }
+                break;
             case ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK:
                 while (i.hasNext()) {
                     ((ConnectionEventListener)i.next()).localTransactionRolledback(ce);
                 }
-                
+                break;
             default:
 //                throw new 
+                break;
         }
     }
+
+
+    boolean matches(Subject subj, FBConnectionRequestInfo cri) {
+        if (s == null) {
+            if (subj != null) {
+                return false;
+            }
+            return this.cri.equals(cri);
+        }
+        return s.equals(subj) && this.cri.equals(cri);
+    }
+
 
     //-----------------------------------------
     //Private methods

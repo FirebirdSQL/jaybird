@@ -107,4 +107,16 @@ public class ClumpletImpl implements Clumplet, Xdrable {
         return (c.next == null); //contents the same, we have no next, == if c has no next.
     }
     
+
+    public int hashCode() {
+        int arrayhash = type;
+        for (int i = 0; i< content.length; i++) {
+            arrayhash ^= ((int)content[i])<<(8 * (i % 4));
+        }
+        if (next != null) {
+            arrayhash ^= next.hashCode();
+        }
+        return arrayhash;
+    }
+
 }
