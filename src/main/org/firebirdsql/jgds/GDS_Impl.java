@@ -313,9 +313,13 @@ public class GDS_Impl implements GDS {
                 db.out.flush();            
                 if (log != null) log.debug("sent");
                 receiveResponse(db);
+                
+                // lars 2002-10-30: Explicitely close socket to server
+                disconnect(db);
+                
             } catch (IOException ex) {
                 throw new GDSException(isc_network_error);
-            }
+            } 
 
             //db.rdb_transactions = new Vector();
         }
@@ -1350,7 +1354,7 @@ public class GDS_Impl implements GDS {
     }
 
     private void disconnect(isc_db_handle_impl db) throws IOException {
-        db.socket.close();
+        db.invalidate();
     }
 
     private byte[][] receiveSqlResponse(isc_db_handle_impl db,
