@@ -228,7 +228,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          IllegalStateException - Illegal state for invoking this method
          ResourceAdapterInternalException - Resource adapter internal error condition
 */
-    public void associateConnection(java.lang.Object connection) throws ResourceException {
+    public void associateConnection(Object connection) throws ResourceException {
         try {
             ((FBConnection)connection).setManagedConnection(this);
             connectionHandles.add(connection);
