@@ -48,15 +48,20 @@ public final class DataSourceExample
 	
     // this some kind of equivalent to dataSource.setNetworkProtocol(String)
     // possible values are "type4", "type2" and "embedded".
-	dataSource.setType("type4");
+	dataSource.setType("TYPE4");
     
-    dataSource.setSqlRole("USER");
+    // SQL Role can be set like this:
+    // 
+    // dataSource.setRoleName("USER");
+    
+    // Character encoding for the connection is set to NONE
     dataSource.setEncoding("NONE");
     
     // other non-standard properties do not have setters
     // you can pass any DPB parameter
-    dataSource.setNonStandardProperty("isc_dpb_sweep", null);
-    dataSource.setNonStandardProperty("isc_dpb_num_buffers", "75");
+    //
+    // dataSource.setNonStandardProperty("isc_dpb_sweep", null);
+    // dataSource.setNonStandardProperty("isc_dpb_num_buffers", "75");
 	
     // Connect to the Firebird DataSource
     try {
