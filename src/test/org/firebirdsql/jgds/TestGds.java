@@ -93,14 +93,14 @@ public class TestGds extends BaseFBTest {
 
     protected void setUp() {
        //super.setUp(); we will create our own db's directly
-        gds = GDSFactory.newGDS();
-        c = (ClumpletImpl)GDSFactory.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
-        c.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
+        gds = GDSFactory.getDefaultGDS();
+        c = (ClumpletImpl)gds.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
+        c.append(gds.newClumplet(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
         //c.append(GDSFactory.newClumplet(gds.isc_dpb_overwrite, 0));
       //now dialect 3
-      c.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
-      c.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_user_name, DB_USER));
-      c.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_password, DB_PASSWORD));
+      c.append(gds.newClumplet(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
+      c.append(gds.newClumplet(ISCConstants.isc_dpb_user_name, DB_USER));
+      c.append(gds.newClumplet(ISCConstants.isc_dpb_password, DB_PASSWORD));
 
         tpb.add(new Integer(ISCConstants.isc_tpb_write));
         tpb.add(new Integer(ISCConstants.isc_tpb_read_committed));
@@ -208,15 +208,15 @@ public class TestGds extends BaseFBTest {
 
    public void testCreateDropD3DB() throws Exception
    {
-      GDS gds = GDSFactory.newGDS();
+      GDS gds = GDSFactory.getDefaultGDS();
 
-      Clumplet c = (Clumplet)GDSFactory.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
+      Clumplet c = (Clumplet)gds.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
            
-      c.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
-      c.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_user_name, DB_USER));
-      c.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_password, DB_PASSWORD));
-      c.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_overwrite, 0));
-      c.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
+      c.append(gds.newClumplet(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
+      c.append(gds.newClumplet(ISCConstants.isc_dpb_user_name, DB_USER));
+      c.append(gds.newClumplet(ISCConstants.isc_dpb_password, DB_PASSWORD));
+      c.append(gds.newClumplet(ISCConstants.isc_dpb_overwrite, 0));
+      c.append(gds.newClumplet(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
 
       isc_db_handle db = gds.get_new_isc_db_handle();
 
@@ -357,13 +357,13 @@ public class TestGds extends BaseFBTest {
         XSQLVAR xsqlvar = new XSQLVAR();
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
         xsqlvar.sqllen = 2;
-        xsqlvar.sqldata = XSQLVAR.encodeShort((short) 3);
+        xsqlvar.sqldata = xsqlvar.encodeShort((short) 3);
         xsqlda.sqlvar[0] = xsqlvar;
 
         xsqlvar = new XSQLVAR();
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
         xsqlvar.sqllen = 2;
-        xsqlvar.sqldata = XSQLVAR.encodeShort((short) 4);
+        xsqlvar.sqldata = xsqlvar.encodeShort((short) 4);
         xsqlda.sqlvar[1] = xsqlvar;
         GDS_Impl.calculateBLR(xsqlda);
         GDS_Impl.calculateIOLength(xsqlda);
@@ -448,7 +448,7 @@ public class TestGds extends BaseFBTest {
         for (int rowNum=0; rowNum < size; rowNum++){
            row = (byte[][]) rows[rowNum];
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Short data =  new Short(XSQLVAR.decodeShort(row[i]));
+                Short data =  new Short(new XSQLVAR().decodeShort(row[i]));
                 out += data.shortValue() + "    ";
             }
             out += System.getProperty("line.separator");
@@ -486,7 +486,7 @@ public class TestGds extends BaseFBTest {
         t1 = startTransaction(db1);
     isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
 
-    Clumplet bpb = GDSFactory.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
+    Clumplet bpb = gds.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
     gds.isc_create_blob2(db1, t1, blob1, bpb);
     if (log!=null) log.info("test- test- new blob_id: " + blob1.getBlob_id());
     gds.isc_put_segment(blob1, testbuf);
@@ -494,13 +494,13 @@ public class TestGds extends BaseFBTest {
         XSQLVAR xsqlvar = new XSQLVAR();
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
         xsqlvar.sqllen = 2;
-        xsqlvar.sqldata = XSQLVAR.encodeShort((short) 3);
+        xsqlvar.sqldata = xsqlvar.encodeShort((short) 3);
         xsqlda.sqlvar[0] = xsqlvar;
 
         xsqlvar = new XSQLVAR();
         xsqlvar.sqltype = ISCConstants.SQL_BLOB;
         xsqlvar.sqllen = 8;
-        xsqlvar.sqldata = XSQLVAR.encodeLong(blob1.getBlob_id());
+        xsqlvar.sqldata = xsqlvar.encodeLong(blob1.getBlob_id());
         xsqlda.sqlvar[1] = xsqlvar;
         GDS_Impl.calculateBLR(xsqlda);
         GDS_Impl.calculateIOLength(xsqlda);
@@ -535,7 +535,7 @@ public class TestGds extends BaseFBTest {
         
             if (log!=null) log.info("fetch returned: " + out);
 
-            blob2.setBlob_id(XSQLVAR.decodeLong(row[1]));
+            blob2.setBlob_id(xsqlvar.decodeLong(row[1]));
             //blob2.rbl_buffer_length = 30;//1024;
             gds.isc_open_blob2(db1, t1, blob2, null);
             byte[] answer = gds.isc_get_segment(blob2, 32);//1026);
@@ -562,7 +562,7 @@ public class TestGds extends BaseFBTest {
         t1 = startTransaction(db1);
     isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
 
-    Clumplet bpb = GDSFactory.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
+    Clumplet bpb = gds.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
     //Clumplet bpb = GDSFactory.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
     gds.isc_create_blob2(db1, t1, blob1, bpb);
     if (log!=null) log.info("test- new blob_id: " + blob1.getBlob_id());
@@ -574,13 +574,13 @@ public class TestGds extends BaseFBTest {
         XSQLVAR xsqlvar = new XSQLVAR();
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
         xsqlvar.sqllen = 2;
-        xsqlvar.sqldata = XSQLVAR.encodeShort((short) 3);
+        xsqlvar.sqldata = xsqlvar.encodeShort((short) 3);
         xsqlda.sqlvar[0] = xsqlvar;
 
         xsqlvar = new XSQLVAR();
         xsqlvar.sqltype = ISCConstants.SQL_BLOB;
         xsqlvar.sqllen = 8;
-        xsqlvar.sqldata = XSQLVAR.encodeLong(blob1.getBlob_id());
+        xsqlvar.sqldata = xsqlvar.encodeLong(blob1.getBlob_id());
         xsqlda.sqlvar[1] = xsqlvar;
         GDS_Impl.calculateBLR(xsqlda);
         GDS_Impl.calculateIOLength(xsqlda);
@@ -613,7 +613,7 @@ public class TestGds extends BaseFBTest {
                 out += "column: " + i + ", value: " + data;
             }
             if (log!=null) log.info(out);
-            blob2.setBlob_id(XSQLVAR.decodeLong(row[1]));
+            blob2.setBlob_id(xsqlvar.decodeLong(row[1]));
             //blob2.rbl_buffer_length = 1050;//1024;
             gds.isc_open_blob2(db1, t1, blob2, bpb);
             int readcount = 0;
@@ -648,7 +648,7 @@ public class TestGds extends BaseFBTest {
     isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
 
     //Clumplet bpb = GDSFactory.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
-    Clumplet bpb = GDSFactory.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
+    Clumplet bpb = gds.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
     gds.isc_create_blob2(db1, t1, blob1, bpb);
     if (log!=null) log.info("test- new blob_id: " + blob1.getBlob_id());
     for (int i = 0; i< 10; i++) {
@@ -659,13 +659,13 @@ public class TestGds extends BaseFBTest {
         XSQLVAR xsqlvar = new XSQLVAR();
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
         xsqlvar.sqllen = 2;
-        xsqlvar.sqldata = XSQLVAR.encodeShort((short) 3);
+        xsqlvar.sqldata = xsqlvar.encodeShort((short) 3);
         xsqlda.sqlvar[0] = xsqlvar;
 
         xsqlvar = new XSQLVAR();
         xsqlvar.sqltype = ISCConstants.SQL_BLOB;
         xsqlvar.sqllen = 8;
-        xsqlvar.sqldata = XSQLVAR.encodeLong(blob1.getBlob_id());
+        xsqlvar.sqldata = xsqlvar.encodeLong(blob1.getBlob_id());
         xsqlda.sqlvar[1] = xsqlvar;
         GDS_Impl.calculateBLR(xsqlda);
         GDS_Impl.calculateIOLength(xsqlda);
@@ -698,7 +698,7 @@ public class TestGds extends BaseFBTest {
                 out += "column: " + i + ", value: " + data;
             }
             if (log!=null) log.info(out);
-            blob2.setBlob_id(XSQLVAR.decodeLong(row[1]));
+            blob2.setBlob_id(xsqlvar.decodeLong(row[1]));
             // blob2.rbl_buffer_length = 10;//1024;
             gds.isc_open_blob2(db1, t1, blob2, bpb);
             int readcount = 0;
@@ -731,7 +731,7 @@ public class TestGds extends BaseFBTest {
         t1 = startTransaction(db1);
     isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
 
-    Clumplet bpb = GDSFactory.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
+    Clumplet bpb = gds.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
     //Clumplet bpb = GDSFactory.newClumplet(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
     gds.isc_create_blob2(db1, t1, blob1, bpb);
     if (log!=null) log.info("test- new blob_id: " + blob1.getBlob_id());
@@ -743,13 +743,13 @@ public class TestGds extends BaseFBTest {
         XSQLVAR xsqlvar = new XSQLVAR();
         xsqlvar.sqltype = ISCConstants.SQL_SHORT;
         xsqlvar.sqllen = 2;
-        xsqlvar.sqldata = XSQLVAR.encodeShort((short) 3);
+        xsqlvar.sqldata = xsqlvar.encodeShort((short) 3);
         xsqlda.sqlvar[0] = xsqlvar;
 
         xsqlvar = new XSQLVAR();
         xsqlvar.sqltype = ISCConstants.SQL_BLOB;
         xsqlvar.sqllen = 8;
-        xsqlvar.sqldata = XSQLVAR.encodeLong(blob1.getBlob_id());
+        xsqlvar.sqldata = xsqlvar.encodeLong(blob1.getBlob_id());
         xsqlda.sqlvar[1] = xsqlvar;
         GDS_Impl.calculateBLR(xsqlda);
         GDS_Impl.calculateIOLength(xsqlda);
@@ -782,7 +782,7 @@ public class TestGds extends BaseFBTest {
                 out += "column: " + i + ", value: " + data;
             }
             if (log!=null) log.info(out);
-            blob2.setBlob_id(XSQLVAR.decodeLong(row[1]));
+            blob2.setBlob_id(xsqlvar.decodeLong(row[1]));
             // blob2.rbl_buffer_length = 10;//1024;
             gds.isc_open_blob2(db1, t1, blob2, bpb);
             int readcount = 0;
@@ -860,3 +860,4 @@ public class TestGds extends BaseFBTest {
     }
    */
 }
+
