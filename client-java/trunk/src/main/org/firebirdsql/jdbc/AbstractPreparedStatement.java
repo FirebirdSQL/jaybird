@@ -575,7 +575,11 @@ public abstract class AbstractPreparedStatement extends FBStatement
             	int updateCount = executeUpdate();
                 results.add(new Integer(updateCount));
             } catch(SQLException ex) {
-            	throw new BatchUpdateException(ex.getMessage(), toArray(results));
+            	throw new BatchUpdateException(
+                        ex.getMessage(),
+                        ex.getSQLState(),
+                        ex.getErrorCode(),
+                        toArray(results));
             }
         }
         
