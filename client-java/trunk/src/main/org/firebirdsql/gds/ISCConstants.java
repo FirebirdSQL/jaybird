@@ -118,6 +118,7 @@ public final class ISCConstants {
     public final static int isc_dpb_set_db_sql_dialect      = 65;
     public final static int isc_dpb_gfix_attach             = 66;
     public final static int isc_dpb_gstat_attach            = 67;
+    public final static int isc_dpb_set_db_charset          = 68;
 
     /*************************************/
     /* Transaction parameter block stuff */
