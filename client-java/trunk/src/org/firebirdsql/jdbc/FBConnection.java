@@ -36,6 +36,8 @@ import java.sql.Statement;
 
 import javax.resource.cci.LocalTransaction;
 
+import org.firebirdsql.gds.GDS;
+
 import org.firebirdsql.jca.FBLocalTransaction;
 import org.firebirdsql.jca.FBManagedConnection;
 
@@ -524,9 +526,15 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public void setTransactionIsolation(int level) throws SQLException {
         switch (level) {
-            TRANSACTION_SERIALIAZABLE : mc.setTransactionIsolation(GDS.isc_tpb_consistency);
-            TRANSACTION_REPEATABLE_READ : mc.setTransactionIsolation(GDS.isc_tpb_concurrency);
-            TRANSACTION_READ_COMMITTED : mc.setTransactionIsolation(GDS.isc_tpb_read_committed);
+            case TRANSACTION_SERIALIZABLE : 
+                mc.setTransactionIsolation(GDS.isc_tpb_consistency);
+                break;
+            case TRANSACTION_REPEATABLE_READ : 
+                mc.setTransactionIsolation(GDS.isc_tpb_concurrency);
+                break;
+            case TRANSACTION_READ_COMMITTED : 
+                mc.setTransactionIsolation(GDS.isc_tpb_read_committed);
+                break;
             default: throw new SQLException("Unsupported transaction isolation level");
         }
     }
@@ -540,9 +548,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public int getTransactionIsolation() throws SQLException {
         switch (mc.getTransactionIsolation()) {
-            GDS.isc_tpb_consistency : return TRANSACTION_SERIALIAZABLE;
-            GDS.isc_tpb_concurrency : return TRANSACTION_REPEATABLE_READ;
-            GDS.isc_tpb_read_committed : return TRANSACTION_READ_COMMITTED;
+            case GDS.isc_tpb_consistency : return TRANSACTION_SERIALIZABLE;
+            case GDS.isc_tpb_concurrency : return TRANSACTION_REPEATABLE_READ;
+            case GDS.isc_tpb_read_committed : return TRANSACTION_READ_COMMITTED;
             default: throw new SQLException("Unknown transaction isolation level");
         }
     }

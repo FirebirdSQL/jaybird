@@ -90,6 +90,8 @@ public class TestXABase extends TestCase {
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
         mcf.setDatabase(dbName);
         FBConnectionRequestInfo cri = new FBConnectionRequestInfo();
+        cri.setProperty(GDS.isc_dpb_user_name, "SYSDBA");
+        cri.setProperty(GDS.isc_dpb_password, "masterkey");
         cri.setProperty(GDS.isc_dpb_num_buffers, new byte[] {90});
         cri.setProperty(GDS.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
         mcf.setConnectionRequestInfo(cri);

@@ -131,7 +131,13 @@ public class TestGds extends TestCase {
 
     private void commit(isc_tr_handle tr) throws Exception {
         System.out.println("test- isc_commit_transaction");
-        gds.isc_commit_transaction(tr);
+        try {
+           gds.isc_commit_transaction(tr);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     private void doSQLImmed(isc_db_handle db, isc_tr_handle tr, String sql) throws Exception {
