@@ -21,24 +21,15 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
-import org.firebirdsql.jca.FBConnectionRequestInfo;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
-import org.firebirdsql.jca.FBPoolingConnectionManager;
-import org.firebirdsql.jca.ManagedConnectionPool;
-
-import java.io.PrintWriter;
-import java.io.Serializable;
-import java.sql.Connection;
-import javax.sql.DataSource;
 import java.sql.SQLException;
-import java.util.Set;
-import javax.naming.Reference;
-import javax.resource.Referenceable;
-import javax.resource.ResourceException;
-import javax.resource.spi.ConnectionManager;
-import javax.resource.spi.ManagedConnectionFactory;
 
+import javax.resource.ResourceException;
+import javax.sql.DataSource;
+
+import org.firebirdsql.jca.FBConnectionRequestInfo;
+import org.firebirdsql.jca.FBPoolingConnectionManager;
 import org.firebirdsql.jca.FBTpb;
+import org.firebirdsql.jca.ManagedConnectionPool;
 
 
 
@@ -53,7 +44,7 @@ import org.firebirdsql.jca.FBTpb;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBWrappingDataSource extends FBSimpleDataSource implements DataSource, Serializable, Referenceable {
+public class FBWrappingDataSource extends FBSimpleDataSource {
 
    transient private FBPoolingConnectionManager cm;
 
