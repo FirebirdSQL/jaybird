@@ -324,7 +324,7 @@ public class FBManagedConnectionFactory
      * @return a <code>java.lang.Object</code> value
      * @exception ResourceException if an error occurs
      */
-    public java.lang.Object createConnectionFactory(ConnectionManager cxManager) throws ResourceException {
+    public Object createConnectionFactory(ConnectionManager cxManager) throws ResourceException {
         start();
         return new FBDataSource(this, cxManager);
     }
@@ -337,7 +337,7 @@ public class FBManagedConnectionFactory
      * @return a <code>java.lang.Object</code> value
      * @exception ResourceException if an error occurs
      */
-    public java.lang.Object createConnectionFactory() throws ResourceException {
+    public Object createConnectionFactory() throws ResourceException {
         start();
         return new FBDataSource(this, new FBStandAloneConnectionManager());
     }
@@ -400,7 +400,7 @@ public class FBManagedConnectionFactory
 
 **/
 
-    public ManagedConnection matchManagedConnections(java.util.Set connectionSet,
+    public ManagedConnection matchManagedConnections(Set connectionSet,
                                                  javax.security.auth.Subject subject,
                                                  ConnectionRequestInfo cxRequestInfo)
                                           throws ResourceException {

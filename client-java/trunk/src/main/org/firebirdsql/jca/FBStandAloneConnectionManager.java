@@ -54,7 +54,7 @@ public class FBStandAloneConnectionManager
 
      //javax.resource.spi.ConnectionManager implementation
 
-    public java.lang.Object allocateConnection(ManagedConnectionFactory mcf,
+    public Object allocateConnection(ManagedConnectionFactory mcf,
        ConnectionRequestInfo cxRequestInfo)
        throws ResourceException {
 
