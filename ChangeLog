@@ -1,3 +1,37 @@
+2004-10-10 02:03  rrokytskyy
+
+	* client-java/src/messages/org/firebirdsql/util/MessageDump.java:
+	
+	initial revision
+
+2004-10-10 01:36  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	encodings/CharacterTranslator.java, jdbc/FBDriver.java,
+	jdbc/FBDriverPropertyManager.java:
+	
+	added code to handle missing translations
+
+2004-10-10 01:24  rrokytskyy
+
+	* client-java/src/:
+	jdbccts/org/firebirdsql/jdbc/cts/CTSTestCase.java,
+	main/org/firebirdsql/jdbc/FBConnectionHelper.java,
+	main/org/firebirdsql/jdbc/FBDriver.java,
+	main/org/firebirdsql/jdbc/FBDriverPropertyManager.java,
+	resources/driver_property_info.properties,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java,
+	pool/org/firebirdsql/pool/DriverConnectionPoolDataSource.java:
+	
+	added code to support property infos and modified the way
+	properties are handled
+
+2004-10-10 01:22  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	
+	fixed bug where SQL statements were passed without terminating 0
+
 2004-10-09 00:43  rrokytskyy
 
 	*
