@@ -44,9 +44,19 @@ public class GDSSynchronizationPolicy {
         
         AbstractSynchronizationPolicy syncPolicy = null;
         
+        // if this is local mode, use thread-per-library policy
         if (gdsType == GDSType.NATIVE_LOCAL) 
             syncPolicy = new ClientLibrarySyncPolicy(gds);
 
+        // if this is embedded mode, use thread-per-library policy
+        // on all platforms except windows
+        if (gdsType == GDSType.NATIVE_EMBEDDED) {
+            String osName = System.getProperty("os.name");
+            if (osName != null && osName.indexOf("Windows") == -1)
+                syncPolicy = new ClientLibrarySyncPolicy(gds);
+        }
+
+        // no policy specified, use default sync policy (thread-per-connection)
         if (syncPolicy == null) 
             return gds;
         
