@@ -30,12 +30,14 @@ public final class GDSType implements Serializable {
     public static final String NATIVE_STR = "NATIVE";
     public static final String TYPE2_STR = "TYPE2";
     public static final String EMBEDDED_STR = "EMBEDDED";
+    public static final String LOCAL_STR = "LOCAL";
     
     private static int nextOrdinal = 0;
 
     public static final GDSType PURE_JAVA = new GDSType(PURE_JAVA_STR);
     public static final GDSType NATIVE = new GDSType(NATIVE_STR);
     public static final GDSType NATIVE_EMBEDDED = new GDSType(EMBEDDED_STR);
+    public static final GDSType NATIVE_LOCAL = new GDSType(LOCAL_STR);
 
     private static final GDSType[] PRIVATE_VALUES = {
         PURE_JAVA, NATIVE, NATIVE_EMBEDDED
@@ -48,6 +50,7 @@ public final class GDSType implements Serializable {
         STRING_MAP.put(NATIVE_STR, NATIVE);
         STRING_MAP.put(TYPE2_STR, NATIVE);
         STRING_MAP.put(EMBEDDED_STR, NATIVE_EMBEDDED);
+        STRING_MAP.put(LOCAL_STR, NATIVE_LOCAL);
     }
     
     /**

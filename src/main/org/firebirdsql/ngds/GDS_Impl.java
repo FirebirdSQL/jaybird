@@ -70,7 +70,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
         if(logging) log.info( "Attempting to initilize native library." );
 
-        if( this.getGdsType() == GDSType.NATIVE )
+        if( this.getGdsType() == GDSType.NATIVE || this.getGdsType() == GDSType.NATIVE_LOCAL )
             attemptToLoadAClientLibraryFromList(LIST_OF_CLIENT_LIBRARIES_TO_TRY);
         else if( this.getGdsType() == GDSType.NATIVE_EMBEDDED )
             attemptToLoadAClientLibraryFromList(LIST_OF_EMBEDDED_SERVER_LIBRARIES_TO_TRY);
@@ -1206,7 +1206,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
 		{
         if( this.getGdsType() == GDSType.NATIVE )
             return getRemoteServerUrl(file_name);
-        else if(this.getGdsType() == GDSType.NATIVE_EMBEDDED)
+        else if(this.getGdsType() == GDSType.NATIVE_LOCAL || this.getGdsType() == GDSType.NATIVE_EMBEDDED)
             return getEmbeddedServerUrl(file_name);
         else
             throw new RuntimeException("Unrecognized gds type.");
