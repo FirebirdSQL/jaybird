@@ -86,6 +86,8 @@ public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_
 
     public void clearRows() {
         size = 0;
+        if (rows != null)
+            rows = null;
         allRowsFetched = false;
         hasOpenResultSet = false;
     }
