@@ -59,8 +59,8 @@ public class TestFBManager extends FBTestBase {
         m.setServer("localhost");
         m.setPort(3050);
         m.start();
-        m.createDatabase(DB_NAME, DB_USER, DB_PASSWORD);
-        m.dropDatabase(DB_NAME, DB_USER, DB_PASSWORD);
+        m.createDatabase(getdbpath(DB_NAME), DB_USER, DB_PASSWORD);
+        m.dropDatabase(getdbpath(DB_NAME), DB_USER, DB_PASSWORD);
         m.stop();
     }
 
