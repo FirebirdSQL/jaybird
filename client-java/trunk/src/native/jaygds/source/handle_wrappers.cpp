@@ -485,5 +485,93 @@ void JIscBlobHandle::SetIsEndOfFile( bool isEnd)
 	sFieldBinding_IsEof.SetBoolean( mJavaEnvironment, mJavaObjectHandle, isEnd );
 	}
 
+
+// JIscServiceHandle Class -------------------------------------------------------------------------------------
+
+// Static Members
+
+
+JClassBinding  JIscServiceHandle::sClassBinding;
+	
+JMethodBinding JIscServiceHandle::sMethodBinding_GetHandle;
+JMethodBinding JIscServiceHandle::sMethodBinding_SetHandle;
+
+JMethodBinding JIscServiceHandle::sMethodBinding_AddWarning;
+
+bool	JIscServiceHandle::sIsInitilized = false;
+
+// Static Methods
+
+/*
+ *
+ */
+void		JIscServiceHandle::Initilize( JNIEnv* javaEnvironment )
+	{
+	if( sIsInitilized )
+		throw InternalException("Initilize has been called twice without an unitilize.");
+
+	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/isc_svc_handle_impl" );
+
+	sMethodBinding_SetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "setHandle", "(I)V" );
+	sMethodBinding_GetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "getHandle", "()I" );
+
+	sMethodBinding_AddWarning = sClassBinding.GetMethodBinding( javaEnvironment, "addWarning", "(Lorg/firebirdsql/gds/GDSException;)V" );
+
+	sIsInitilized = true;
+	}
+
+
+// Members
+
+/*
+ *
+ */
+JIscServiceHandle::JIscServiceHandle( JNIEnv* javaEnvironment, jobject objectHandlle ) :
+	mJavaEnvironment( javaEnvironment )	,
+	mJavaObjectHandle( objectHandlle )
+	{
+	}
+
+/*
+ *
+ */
+JIscServiceHandle::JIscServiceHandle( JNIEnv* javaEnvironment ) :
+	mJavaEnvironment(javaEnvironment)	
+	{
+	mJavaObjectHandle = sClassBinding.CreateNewInstance(javaEnvironment, "()v");
+	}
+
+/*
+ *
+ */
+JIscServiceHandle::~JIscServiceHandle()
+	{
+	}
+
+/*
+ *
+ */
+void JIscServiceHandle::SetHandleValue( isc_svc_handle handle )
+	{
+	sMethodBinding_SetHandle.CallVoid( mJavaEnvironment, mJavaObjectHandle, handle );
+	}
+
+/*
+ *
+ */	
+isc_svc_handle		JIscServiceHandle::GetHandleValue()
+	{
+	return (isc_blob_handle)sMethodBinding_GetHandle.CallInteger( mJavaEnvironment, mJavaObjectHandle );
+	}
+
+/*
+ *
+ */	
+void		JIscServiceHandle::AddWarning( jthrowable warning )
+	{
+	sMethodBinding_AddWarning.CallVoid( mJavaEnvironment, mJavaObjectHandle, warning );
+	}
+	
+
 	
 	

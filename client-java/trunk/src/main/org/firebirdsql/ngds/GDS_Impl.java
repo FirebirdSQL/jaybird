@@ -20,6 +20,7 @@
 package org.firebirdsql.ngds;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.logging.Logger;
 
@@ -153,7 +154,17 @@ public class GDS_Impl extends AbstractGDS implements GDS
         return ((ClumpletImpl)c).cloneClumplet();
     }
 
-      // Handle declaration methods
+    public ServiceParameterBuffer newServiceParameterBuffer()
+        {
+        return new ServiceParameterBufferImp();
+        }
+
+    public ServiceRequestBuffer newServiceRequestBuffer(int taskIdentifier)
+        {
+        return new ServiceRequestBufferImp(taskIdentifier);
+        }
+
+    // Handle declaration methods
     public synchronized isc_db_handle get_new_isc_db_handle()
       {
       return new isc_db_handle_impl();
@@ -173,6 +184,11 @@ public class GDS_Impl extends AbstractGDS implements GDS
     public synchronized isc_blob_handle get_new_isc_blob_handle()
         {
         return new isc_blob_handle_impl();
+        }
+
+    public isc_svc_handle get_new_isc_svc_handle()
+        {
+        return new isc_svc_handle_impl();
         }
 
     private byte[] clupletToBytes(Clumplet bpb)
@@ -276,10 +292,6 @@ public class GDS_Impl extends AbstractGDS implements GDS
             {
             throw new GDSException(ISCConstants.isc_bad_db_handle);
             }
-
-
-
-
 
         final byte[] dpbBytes = clupletToBytes(c);
 
@@ -1137,10 +1149,82 @@ public class GDS_Impl extends AbstractGDS implements GDS
 		    }
         }
 
+
+
     public native void native_isc_seek_blob(isc_blob_handle_impl handle, int position, int mode)
 		throws GDSException;
 
 
+
+
+   // Services API
+
+
+   public void isc_service_attach(String service, isc_svc_handle serviceHandle, ServiceParameterBuffer serviceParameterBuffer) throws GDSException
+        {
+        if(serviceHandle.isValid())
+            throw new GDSException("serviceHandle is already attached.");
+
+        final ServiceParameterBufferImp serviceParameterBufferImp = (ServiceParameterBufferImp)serviceParameterBuffer;
+        final byte[] serviceParameterBufferBytes = serviceParameterBufferImp == null ? null : serviceParameterBufferImp.toByteArray();
+
+
+        synchronized(serviceHandle)
+            {
+            native_isc_service_attach(service, serviceHandle, serviceParameterBufferBytes);
+            }
+        }
+
+    public void isc_service_detach(isc_svc_handle serviceHandle) throws GDSException
+        {
+        if(serviceHandle.isNotValid())
+            throw new GDSException("serviceHandle is not attached.");
+
+        synchronized(serviceHandle)
+            {
+            native_isc_service_detach(serviceHandle);
+            }
+        }
+
+    public void isc_service_start(isc_svc_handle serviceHandle, ServiceRequestBuffer serviceRequestBuffer) throws GDSException
+        {
+        if(serviceHandle.isNotValid())
+            throw new GDSException("serviceHandle is not attached.");
+
+        final ServiceRequestBufferImp serviceRequestBufferImp = (ServiceRequestBufferImp)serviceRequestBuffer;
+        final byte[] serviceRequestBufferBytes = serviceRequestBufferImp == null ? null : serviceRequestBufferImp.toByteArray();
+
+        synchronized(serviceHandle)
+            {
+            native_isc_service_start(serviceHandle, serviceRequestBufferBytes);
+            }
+        }
+
+    public void isc_service_query(isc_svc_handle serviceHandle, ServiceParameterBuffer serviceParameterBuffer, ServiceRequestBuffer serviceRequestBuffer, byte[] resultBuffer) throws GDSException
+        {
+        if(serviceHandle.isNotValid())
+            throw new GDSException("serviceHandle is not attached.");
+
+        final ServiceParameterBufferImp serviceParameterBufferImp = (ServiceParameterBufferImp)serviceParameterBuffer;
+        final byte[] serviceParameterBufferBytes = serviceParameterBufferImp == null ? null : serviceParameterBufferImp.toByteArray();
+
+        final ServiceRequestBufferImp serviceRequestBufferImp = (ServiceRequestBufferImp)serviceRequestBuffer;
+        final byte[] serviceRequestBufferBytes = serviceRequestBufferImp == null ? null : serviceRequestBufferImp.toByteArray();
+
+        synchronized(serviceHandle)
+            {
+            native_isc_service_query(serviceHandle, serviceParameterBufferBytes, serviceRequestBufferBytes, resultBuffer);
+            }
+        }
+
+    // Services API native methods
+    public native void native_isc_service_attach(String service, isc_svc_handle serviceHandle, byte[] serviceParameterBuffer) throws GDSException;
+    public native void native_isc_service_detach(isc_svc_handle serviceHandle) throws GDSException;
+    public native void native_isc_service_start(isc_svc_handle serviceHandle, byte[] serviceParameterBuffer) throws GDSException;
+    public native void native_isc_service_query(isc_svc_handle serviceHandle, byte[] sendServiceParameterBuffer, byte[] requestServiceParameterBuffer, byte[] resultBuffer) throws GDSException;
+
+
+    // STATIC CLASSES --------------------------------------------------------------------------------------------------
 
     protected static class DbAttachInfo {
         private String server = "localhost";

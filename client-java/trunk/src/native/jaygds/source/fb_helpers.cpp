@@ -103,6 +103,16 @@ void		FirebirdStatusVector::IssueExceptionsAndOrAddWarnings(JNIEnv* javaEnvironm
 /*
  *
  */
+void		FirebirdStatusVector::IssueExceptionsAndOrAddWarnings(JNIEnv* javaEnvironment, JIscServiceHandle& databaseHandle)
+	{
+	jthrowable warning = IssueExceptionsAndOrAddWarnings(javaEnvironment);
+		if( warning != NULL )
+			databaseHandle.AddWarning(warning);
+	}
+
+/*
+ *
+ */
 jthrowable FirebirdStatusVector::IssueExceptionsAndOrAddWarnings(JNIEnv* javaEnvironment)
 	{
 		

@@ -47,6 +47,13 @@ public interface GDS {
 
     public  Clumplet cloneClumplet(Clumplet c) ;
 
+    // NOTE - In current ngds implementation ServiceParameterBuffer and ServiceRequestBuffer must be created and used on
+    // a single thread.
+
+    public ServiceParameterBuffer newServiceParameterBuffer();
+
+    public ServiceRequestBuffer   newServiceRequestBuffer(int taskIdentifier);
+
 
     // Database functions
 
@@ -206,6 +213,21 @@ public interface GDS {
     void isc_seek_blob(isc_blob_handle handle, int position, int seekMode) 
         throws GDSException;
 
+
+    //-----------------------------------------------
+    //Services API methods
+    //-----------------------------------------------
+
+    void isc_service_attach(String service, isc_svc_handle serviceHandle, ServiceParameterBuffer serviceParameterBuffer ) throws GDSException;
+
+    void isc_service_detach(isc_svc_handle serviceHandle) throws GDSException;
+
+    void isc_service_start(isc_svc_handle serviceHandle, ServiceRequestBuffer serviceRequestBuffer) throws GDSException;
+
+    void isc_service_query(isc_svc_handle serviceHandle, ServiceParameterBuffer serviceParameterBuffer, ServiceRequestBuffer serviceRequestBuffer, byte[] resultBuffer) throws GDSException;
+
+
+
     // Handle declaration methods
     isc_db_handle get_new_isc_db_handle();
 
@@ -214,6 +236,8 @@ public interface GDS {
     isc_stmt_handle get_new_isc_stmt_handle();
 
     isc_blob_handle get_new_isc_blob_handle();
+
+    isc_svc_handle get_new_isc_svc_handle();
 
     void close();
 

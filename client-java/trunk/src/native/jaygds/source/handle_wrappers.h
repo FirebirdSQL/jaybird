@@ -318,4 +318,66 @@ class JIscBlobHandle
 	
 	};
 
+/*
+ *	
+ */
+class JIscServiceHandle
+	{
+	public:
+	
+	/*
+	 *	
+	 */
+	JIscServiceHandle( JNIEnv* jEnv, jobject handle );
+
+	/*
+	 *	
+	 */
+	JIscServiceHandle( JNIEnv* jEnv );
+	
+	/*
+	 *	
+	 */
+	virtual ~JIscServiceHandle();
+
+	/*
+	 *	
+	 */
+	void SetHandleValue( isc_svc_handle handle );
+
+	/*
+	 *	
+	 */
+	void AddWarning( jthrowable warning );
+	
+	/*
+	 *	
+	 */
+	isc_svc_handle	GetHandleValue();
+
+	/*
+	 *	
+	 */
+	static void		Initilize( JNIEnv* jEnv );
+		
+
+	
+	private:
+
+	JNIEnv* mJavaEnvironment;
+	jobject mJavaObjectHandle;
+
+
+	static JClassBinding  sClassBinding;
+	
+	static JMethodBinding sMethodBinding_GetHandle;
+	static JMethodBinding sMethodBinding_SetHandle;
+
+	static JMethodBinding sMethodBinding_AddWarning;
+
+	// static
+	static bool		sIsInitilized;
+	
+	};
+
 #endif

@@ -36,6 +36,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 
+
 /**
  * Describe class <code>GDS_Impl</code> here.
  *
@@ -44,10 +45,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * @version 1.0
  */
 public final class GDS_Impl extends AbstractGDS implements GDS {
-
-
-
-   private static Logger log = LoggerFactory.getLogger(GDS_Impl.class,false);
+    private static Logger log = LoggerFactory.getLogger(GDS_Impl.class,false);
 
     /* Operation (packet) types */
 
@@ -2187,5 +2185,43 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
         }
         return ((ClumpletImpl)c).cloneClumplet();
     }
+
+
+
+    // Services API methods - all currently un-implemented.
+    public ServiceParameterBuffer newServiceParameterBuffer()
+        {
+        throw new UnsupportedOperationException();
+        }
+
+    public ServiceRequestBuffer newServiceRequestBuffer(int taskIdentifier)
+        {
+        throw new UnsupportedOperationException();
+        }
+
+    public void isc_service_attach(String service, isc_svc_handle serviceHandle, ServiceParameterBuffer serviceParameterBuffer) throws GDSException
+        {
+        throw new UnsupportedOperationException();
+        }
+
+    public void isc_service_detach(isc_svc_handle serviceHandle) throws GDSException
+        {
+        throw new UnsupportedOperationException();
+        }
+
+    public void isc_service_start(isc_svc_handle serviceHandle, ServiceRequestBuffer serviceRequestBuffer) throws GDSException
+        {
+        throw new UnsupportedOperationException();
+        }
+
+    public void isc_service_query(isc_svc_handle serviceHandle, ServiceParameterBuffer serviceParameterBuffer, ServiceRequestBuffer serviceRequestBuffer, byte[] resultBuffer) throws GDSException
+        {
+        throw new UnsupportedOperationException();
+        }
+
+    public isc_svc_handle get_new_isc_svc_handle()
+        {
+        throw new UnsupportedOperationException();
+        }
 
 }

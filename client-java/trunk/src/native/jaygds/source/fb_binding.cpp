@@ -104,6 +104,11 @@ prototype_isc_transaction_info*		FirebirdApiBinding::isc_transaction_info  = NUL
 prototype_isc_transact_request*		FirebirdApiBinding::isc_transact_request  = NULL;
 prototype_isc_vax_integer*			FirebirdApiBinding::isc_vax_integer  = NULL;
 prototype_isc_seek_blob*			FirebirdApiBinding::isc_seek_blob  = NULL;
+prototype_isc_service_attach*		FirebirdApiBinding::isc_service_attach  = NULL;
+prototype_isc_service_detach*		FirebirdApiBinding::isc_service_detach  = NULL;
+prototype_isc_service_query*		FirebirdApiBinding::isc_service_query  = NULL;
+prototype_isc_service_start*		FirebirdApiBinding::isc_service_start  = NULL;
+
 
 
 // Static methods
@@ -191,8 +196,10 @@ void FirebirdApiBinding::Load(const char* const firebirdDllName)
 		FB_ENTRYPOINT(isc_transact_request);
 		FB_ENTRYPOINT(isc_vax_integer);
 		FB_ENTRYPOINT(isc_seek_blob);
-
-	
+		FB_ENTRYPOINT(isc_service_attach);
+		FB_ENTRYPOINT(isc_service_detach);
+		FB_ENTRYPOINT(isc_service_query);
+		FB_ENTRYPOINT(isc_service_start);
 
 		sIsLoaded = true;
 		}

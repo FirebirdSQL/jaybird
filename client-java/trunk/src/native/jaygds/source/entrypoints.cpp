@@ -114,6 +114,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_nativeInitilize
 			JIscTransactionHandle::Initilize(javaEnvironment);
 			JIscStatementHandle::Initilize(javaEnvironment);
 			JIscBlobHandle::Initilize(javaEnvironment);
+			JIscServiceHandle::Initilize(javaEnvironment);
 			JXSqlda::Initilize(javaEnvironment);
 			FirebirdStatusVector::Initilize(javaEnvironment);
 
@@ -971,5 +972,91 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1seek_1bl
 		blobHandle.SetId(rawBlobId);
 			
 		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, blobHandle);
+	LEAVE_PROTECTED_BLOCK
+	}
+
+
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1service_1attach
+  (JNIEnv *javaEnvironment, jobject jThis, jstring jServiceString, jobject jServiceHandle, jbyteArray jServiceParameterBuffer)
+	{
+	ENTER_PROTECTED_BLOCK
+		JIscServiceHandle serviceHandle(javaEnvironment, jServiceHandle);
+		JString serviceString(javaEnvironment, jServiceString);
+		JByteArray serviceParameterBuffer(javaEnvironment, jServiceParameterBuffer);
+
+		FirebirdStatusVector status;
+
+		isc_svc_handle rawServiceHandle = serviceHandle.GetHandleValue();
+
+		FirebirdApiBinding::isc_service_attach( status.RawAccess(), serviceString.GetLength(), (char*)serviceString.AsCString(),
+			&rawServiceHandle, serviceParameterBuffer.Size(), serviceParameterBuffer.Read() );
+
+
+		serviceHandle.SetHandleValue(rawServiceHandle);
+
+		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, serviceHandle);
+	LEAVE_PROTECTED_BLOCK
+	}
+
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1service_1detach
+  (JNIEnv *javaEnvironment, jobject jThis, jobject jServiceHandle)
+	{
+	ENTER_PROTECTED_BLOCK
+		JIscServiceHandle serviceHandle(javaEnvironment, jServiceHandle);
+
+		FirebirdStatusVector status;
+
+		isc_svc_handle rawServiceHandle = serviceHandle.GetHandleValue();
+
+		FirebirdApiBinding::isc_service_detach( status.RawAccess(), &rawServiceHandle );
+
+		serviceHandle.SetHandleValue(rawServiceHandle);
+
+		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, serviceHandle);
+	LEAVE_PROTECTED_BLOCK
+	}
+
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1service_1start
+  (JNIEnv *javaEnvironment, jobject jThis, jobject jServiceHandle, jbyteArray jServiceParameterBuffer)
+	{
+	ENTER_PROTECTED_BLOCK
+		JIscServiceHandle serviceHandle(javaEnvironment, jServiceHandle);
+		JByteArray serviceParameterBuffer(javaEnvironment, jServiceParameterBuffer);
+
+		FirebirdStatusVector status;
+
+		isc_svc_handle rawServiceHandle = serviceHandle.GetHandleValue();
+
+		FirebirdApiBinding::isc_service_start( status.RawAccess(), &rawServiceHandle, NULL, serviceParameterBuffer.Size(), serviceParameterBuffer.Read() );
+
+		serviceHandle.SetHandleValue(rawServiceHandle);
+
+		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, serviceHandle);
+	LEAVE_PROTECTED_BLOCK
+	}
+
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1service_1query
+  (JNIEnv *javaEnvironment, jobject jThis, jobject jServiceHandle, jbyteArray jSendServiceParameterBuffer, 
+   jbyteArray jRequestServiceParameterBuffer, jbyteArray jResultBuffer)
+	{
+	ENTER_PROTECTED_BLOCK
+		JIscServiceHandle serviceHandle(javaEnvironment, jServiceHandle);
+
+		JByteArray sendParameterBuffer(javaEnvironment, jSendServiceParameterBuffer);
+		JByteArray requestParameterBuffer(javaEnvironment, jRequestServiceParameterBuffer);
+
+		JByteArray resultBuffer(javaEnvironment, jResultBuffer);
+
+		FirebirdStatusVector status;
+
+		isc_svc_handle rawServiceHandle = serviceHandle.GetHandleValue();
+
+		FirebirdApiBinding::isc_service_query( status.RawAccess(), &rawServiceHandle, NULL, sendParameterBuffer.Size(), sendParameterBuffer.Read(),
+			requestParameterBuffer.Size(), requestParameterBuffer.Read(), resultBuffer.Size(), resultBuffer.Read());
+
+
+		serviceHandle.SetHandleValue(rawServiceHandle);
+
+		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, serviceHandle);
 	LEAVE_PROTECTED_BLOCK
 	}

@@ -16,21 +16,31 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.ngds;
 
+package org.firebirdsql.gds;
 
 /**
- * Thrown from native code when unexpected errors occur.
+ * The interface <code>ServiceRequestBuffer</code> models represents the interbase Service Request Buffer.
  */
-public class InternalError extends RuntimeException
+public interface ServiceRequestBuffer
     {
-    public InternalError(String message)
-        {
-        super(message);
-        }
+    /**
+     *
+     * @param argumentType
+     */
+    public void addArgument(int argumentType);
 
-    public InternalError(String message, Throwable cause)
-        {
-        super(message, cause);
-        }
+    /**
+     *
+     * @param argumentType
+     * @param value
+     */
+    public void addArgument(int argumentType, String value);
+
+    /**
+     *
+     * @param argumentType
+     * @param value
+     */
+    public void addArgument(int argumentType, int value);
     }

@@ -40,6 +40,7 @@ class FirebirdStatusVector
 	void		IssueExceptionsAndOrAddWarnings(JNIEnv* javaEnvironment, JIscStatementHandle& databaseHandle);
 	void		IssueExceptionsAndOrAddWarnings(JNIEnv* javaEnvironment, JIscTransactionHandle& databaseHandle);
 	void		IssueExceptionsAndOrAddWarnings(JNIEnv* javaEnvironment, JIscBlobHandle& databaseHandle);
+	void		IssueExceptionsAndOrAddWarnings(JNIEnv* javaEnvironment, JIscServiceHandle& databaseHandle);
 
 	static void		Initilize( JNIEnv* jEnv );
 			
