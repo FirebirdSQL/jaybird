@@ -2785,10 +2785,10 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     static String getDataTypeName(short sqltype, short sqlsubtype, short sqlscale) {
         if (sqlscale < 0) {
             switch (sqltype) {
-                case ISCConstants.SQL_SHORT:
-                case ISCConstants.SQL_LONG:
-                case ISCConstants.SQL_INT64:
-                case ISCConstants.SQL_DOUBLE:
+                case smallint_type:
+                case integer_type:
+                case int64_type:
+                case double_type:
                     // NOTE: can't be BIGINT because of scale
                     if (sqlsubtype == 2)
                         return "DECIMAL";
@@ -2800,42 +2800,43 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         }
 
         switch (sqltype) {
-            case ISCConstants.SQL_SHORT:
+            case smallint_type:
                 return "SMALLINT";
-            case ISCConstants.SQL_LONG:
+            case integer_type:
                 return "INTEGER";
-            case ISCConstants.SQL_DOUBLE:
-            case ISCConstants.SQL_D_FLOAT:
+            case double_type:
+            case d_float_type:
                 return "DOUBLE PRECISION";
-            case ISCConstants.SQL_FLOAT:
+            case float_type:
                 return "FLOAT";
-            case ISCConstants.SQL_TEXT:
+            case char_type:
                 return "CHAR";
-            case ISCConstants.SQL_VARYING:
+            case varchar_type:
                 return "VARCHAR";
-            case ISCConstants.SQL_TIMESTAMP:
+            case timestamp_type:
                 return "TIMESTAMP";
-            case ISCConstants.SQL_TYPE_TIME:
+            case time_type:
                 return "TIME";
-            case ISCConstants.SQL_TYPE_DATE:
+            case date_type:
                 return "DATE";
-            case ISCConstants.SQL_INT64:
+            case int64_type:
+                //this might need some help for long mapping
                 if (sqlsubtype == 1)
                     return "NUMERIC";
                 else if (sqlsubtype == 2)
                     return "DECIMAL";
                 else
                     return "BIGINT";
-            case ISCConstants.SQL_BLOB:
+            case blob_type:
                 if (sqlsubtype < 0)
-                    return "BLOB SUB_TYPE " + sqlsubtype;
+                    return "BLOB SUB_TYPE <0";
                 else if (sqlsubtype == 0)
                     return "BLOB SUB_TYPE 0";
                 else if (sqlsubtype == 1)
                     return "BLOB SUB_TYPE 1";
                 else
                     return "BLOB SUB_TYPE " + sqlsubtype;
-            case ISCConstants.SQL_QUAD:
+            case quad_type:
                 return "ARRAY";
             default:
                 return "NULL";

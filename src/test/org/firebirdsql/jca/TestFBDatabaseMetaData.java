@@ -648,6 +648,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
             
             assertTrue("Should have rows", rs.next());
             assertTrue("Column name should be C1", "C1".equals(rs.getString(2)));
+            assertTrue("Column type should be INTEGER", "INTEGER".equals(rs.getString(4)));
             assertTrue("Should have only one row", !rs.next());
             
             rs.close();
