@@ -70,7 +70,9 @@ public class FBSQLException extends SQLException {
     }
 
     public FBSQLException(ResourceException ex) {
-        super(ex.getMessage(), ex.getErrorCode());
+        super(ex.getMessage(), 
+                ex.getErrorCode() != null ? ex.getErrorCode() : 
+                                          SQL_STATE_GENERAL_ERROR);
         
         // try to unwrap wrapped exception
         if (ex instanceof FBResourceException) {
