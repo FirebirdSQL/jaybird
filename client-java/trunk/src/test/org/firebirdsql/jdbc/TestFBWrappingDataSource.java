@@ -61,6 +61,18 @@ public class TestFBWrappingDataSource extends FBTestBase {
         connection = ds.getConnection(DB_USER, DB_PASSWORD);
         assertTrue("Connection is null", connection != null);
     }
+    
+    public void testPersonalizedConnect() throws Exception {
+        ds = createFBWrappingDataSource();
+        ds.setDatabase(DB_DATASOURCE_URL);
+        ds.setSqlRole("USER");
+        ds.setEncoding("NONE");
+        //ds.setNonStandardProperty("isc_dpb_sweep", null);
+        ds.setNonStandardProperty("isc_dpb_num_buffers", "75");
+        ds.setLoginTimeout(5);
+        connection = ds.getConnection(DB_USER, DB_PASSWORD);
+        assertTrue("Connection is null", connection != null);
+    }
 
     public void testOneConnectionWithPooling() throws Exception {
         if (log != null) log.info("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
