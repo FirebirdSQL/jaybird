@@ -156,7 +156,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
     implements PooledConnectionManager, ConnectionPoolDataSource, 
-    XADataSource, ConnectionEventListener
+    XADataSource, PooledConnectionEventListener
 {
     
     public static final String USER_NAME_PROPERTY = FBDriver.USER;
@@ -425,6 +425,18 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
         pooledObjectReleased(event);
 	}
 
+    /**
+     * Notify about physical connection being closed.
+     * 
+     * @param connectionEvent instance of {@link ConnectionEvent}.
+     */
+    public void physicalConnectionClosed(ConnectionEvent connectionEvent) {
+        PooledObjectEvent event = 
+            new PooledObjectEvent(connectionEvent.getSource(), true);
+            
+        pooledObjectReleased(event);
+    }
+    
 	/**
 	 * Notify about serious error when using the connection. Currently
 	 * these events are ignored.

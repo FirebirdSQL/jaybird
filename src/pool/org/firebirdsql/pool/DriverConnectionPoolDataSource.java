@@ -40,7 +40,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class DriverConnectionPoolDataSource extends BasicAbstractConnectionPool 
-    implements ConnectionPoolDataSource, ConnectionEventListener
+    implements ConnectionPoolDataSource, PooledConnectionEventListener
 {
 
     private static final Logger logger = LoggerFactory.getLogger(
@@ -216,7 +216,19 @@ public class DriverConnectionPoolDataSource extends BasicAbstractConnectionPool
             
         pooledObjectReleased(event);
     }
-
+    
+    /**
+     * Notify about physical connection being closed.
+     * 
+     * @param connectionEvent instance of {@link ConnectionEvent}.
+     */
+    public void physicalConnectionClosed(ConnectionEvent connectionEvent) {
+        PooledObjectEvent event = 
+            new PooledObjectEvent(connectionEvent.getSource(), true);
+            
+        pooledObjectReleased(event);
+    }
+    
     /**
      * Notify about serious error when using the connection. Currently
      * these events are ignored.

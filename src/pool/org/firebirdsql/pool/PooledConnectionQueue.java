@@ -211,7 +211,19 @@ class PooledConnectionQueue {
      */
     public void destroyConnection(PooledObject connection) {
         connection.deallocate();
+        
         totalConnections--;
+    }
+    
+    /**
+     * Notify queue that a physical connection was deallocated.
+     * 
+     * @param connection connection that was deallocated.
+     */
+    public synchronized void physicalConnectionDeallocated(PooledObject connection) {
+        totalConnections--;
+        connectionIdleTime.remove(connection);
+        workingConnections.remove(connection);
     }
 
     /**

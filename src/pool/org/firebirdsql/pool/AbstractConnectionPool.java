@@ -269,8 +269,13 @@ public abstract class AbstractConnectionPool implements PooledObjectListener {
                         " does not have corresponding queue");
                 else
                     connection.deallocate();
-            } else
-                queue.put(connection);
+            } else {
+                
+                if (event.isDeallocated())
+                    queue.physicalConnectionDeallocated(connection);
+                else
+                    queue.put(connection);
+            }
                 
         } catch (SQLException ex) {
     
