@@ -76,6 +76,12 @@ public interface GDS {
     public BlobParameterBuffer     newBlobParameterBuffer();
 
 
+    /**
+     * Get the type of the GDS implementation.
+     * 
+     * @return instance of {@link GDSType}.
+     */
+    GDSType getType();
 
 
     // --------------------  Database functions -----------------------

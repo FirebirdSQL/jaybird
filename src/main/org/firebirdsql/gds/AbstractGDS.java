@@ -45,12 +45,18 @@ public abstract class AbstractGDS implements GDS, Externalizable
      * value will be equal to one of the static final fields of
      * {@link GDSType}.
      *
-     * @return The type of the current <code>GDS</code> implementation 
+     * @return The type of the current <code>GDS</code> implementation
+     * 
+     * @deprecated use {@link #getType()} instead. 
      */
     public GDSType getGdsType()
         {
-        return gdsType;
+        return getType();
         }
+    
+    public GDSType getType() {
+        return gdsType;
+    }
 
     public void close()
         {
