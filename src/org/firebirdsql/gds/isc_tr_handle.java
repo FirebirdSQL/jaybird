@@ -32,6 +32,20 @@
 
 package org.firebirdsql.gds;
 
+
 public interface isc_tr_handle {
+    
+    public final static int NOTRANSACTION = 0;
+    public final static int TRANSACTIONSTARTING = 1;
+    public final static int TRANSACTIONSTARTED = 2;
+    public final static int TRANSACTIONPREPARING = 3;
+    public final static int TRANSACTIONPREPARED = 4;
+    public final static int TRANSACTIONCOMMITTING = 5;
+    public final static int TRANSACTIONROLLINGBACK = 6;
+    
+    isc_db_handle getDbHandle();
+    
+    int getState();
+
 
 }

@@ -9,11 +9,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the Firebird Java GDS implementation.
- * 
- * The Initial Developer of the Original Code is Alejandro Alberola.
- * Portions created by Alejandro Alberola are Copyright (C) 2001
- * Boix i Oltra, S.L. All Rights Reserved.
+ * Original developer David Jencks
  * 
  * Contributor(s):
  * 
@@ -32,11 +28,47 @@
 
 package org.firebirdsql.gds;
 
-import javax.security.auth.Subject;
-
-public interface isc_db_handle {
+public class GDSException extends Exception {
     
-    public Subject getSubject();
+    protected int fbErrorCode = 0;
+    
+    protected GDSException next;
+    
+    public GDSException(int fbErrorCode) {
+        this.fbErrorCode = fbErrorCode;
+        //super(getErrorString(fbErrorCode));
+    }
+    
+    public GDSException(int fbErrorCode, String message) {
+        super(message);
+        this.fbErrorCode = fbErrorCode;
+    }
+    
+    public GDSException(String message) {
+        super(message);
+    }
+    
+    public int getFbErrorCode() {
+        return fbErrorCode;
+    }
+    
+    public void setNext(GDSException e) {
+        next = e;
+    }
+    
+    public GDSException getNext() {
+        return next;
+    }
+    
+    public String toString() {
+        String s = "GDSException: " + fbErrorCode + super.toString();
+        if (next != null) {
+            s += next.toString();
+        }
+        return s;
+    }
+    
+
 
 }
 

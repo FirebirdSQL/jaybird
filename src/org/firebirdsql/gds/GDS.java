@@ -1,6 +1,6 @@
 /* 
  * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
+ * License Version 1.1 (the "License") throws GDSException; you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
  * 
@@ -31,6 +31,10 @@
  */
 
 package org.firebirdsql.gds;
+
+import java.sql.SQLException;
+import java.util.Set;
+
 
 
 public interface GDS {
@@ -942,139 +946,119 @@ public interface GDS {
     
     // Database functions
     
-    int isc_create_database(Object[] status,
-                            String file_name,
+    void isc_create_database(String file_name,
                             isc_db_handle db_handle,
-                            int dpb_length,
-                            byte[] dpb);
+                            Clumplet c
+                           /* int dpb_length,
+                            byte[] dpb*/) throws GDSException;
    
-    int isc_attach_database(Object[] status,
-                            String file_name,
+    void isc_attach_database(String file_name,
                             isc_db_handle db_handle,
-                            int dpb_length,
-                            byte[] dpb);
+                            Clumplet c
+                           /* int dpb_length,
+                            byte[] dpb*/) throws GDSException;
    
-    int isc_database_info(Object[] status,
-                            isc_db_handle db_handle,
+    void isc_database_info(isc_db_handle db_handle,
                             int item_length,
                             byte[] items,
                             int buffer_length,
-                            byte[] buffer);
+                            byte[] buffer) throws GDSException;
         
-    int isc_detach_database(Object[] status, isc_db_handle db_handle);
+    void isc_detach_database(isc_db_handle db_handle) throws GDSException;
     
-    int isc_drop_database(Object[] status, isc_db_handle db_handle);
+    void isc_drop_database(isc_db_handle db_handle) throws GDSException;
     
     byte[] isc_expand_dpb(byte[] dpb, int dpb_length,
-                          int param, Object[] params);
+                          int param, Object[] params) throws GDSException;
     
     
     // Transactions
     
-    int isc_start_transaction(Object[] status,
-                                isc_tr_handle tr_handle,
+    void isc_start_transaction(    isc_tr_handle tr_handle,
                                 isc_db_handle db_handle,
-                                int tpb_length,
-                                byte[] tpb);
+                                Set tpb
+                                /*int tpb_length,
+                                byte[] tpb*/) throws GDSException;
                                         
     
-    int isc_commit_transaction(Object[] status,
-                                isc_tr_handle tr_handle);
+    void isc_commit_transaction(    isc_tr_handle tr_handle) throws GDSException;
     
-    int isc_commit_retaining(Object[] status,
-                               isc_tr_handle tr_handle);
+    void isc_commit_retaining(isc_tr_handle tr_handle) throws GDSException;
     
-    int isc_prepare_transaction(Object[] status,
-                                   isc_tr_handle tr_handle);
+    void isc_prepare_transaction(isc_tr_handle tr_handle) throws GDSException;
     
-    int isc_prepare_transaction2(Object[] status,
-                                   isc_tr_handle tr_handle,
-                                   int msg_length,
-                                   String message);
-    
-    int isc_rollback_transaction(Object[] status,
-                                    isc_tr_handle tr_handle);
+    void isc_prepare_transaction2(isc_tr_handle tr_handle,
+                                   byte[] bytes) throws GDSException;
+                                   
+    void isc_rollback_transaction(isc_tr_handle tr_handle) throws GDSException;
     
     
     // Dynamic SQL
     
-    int isc_dsql_allocate_statement(Object[] status,
-                                       isc_db_handle db_handle,
-                                       isc_stmt_handle stmt_handle);
+    void isc_dsql_allocate_statement(isc_db_handle db_handle,
+                                       isc_stmt_handle stmt_handle) throws GDSException;
     
-    int isc_dsql_alloc_statement2(Object[] status,
-                                     isc_db_handle db_handle,
-                                     isc_stmt_handle stmt_handle);
+    void isc_dsql_alloc_statement2(isc_db_handle db_handle,
+                                     isc_stmt_handle stmt_handle) throws GDSException;
     
-    int isc_dsql_describe(Object[] status,
-                            isc_stmt_handle stmt_handle,
+    void isc_dsql_describe(isc_stmt_handle stmt_handle,
                             int da_version,
-                            XSQLDA xsqlda);
+                            XSQLDA xsqlda) throws GDSException;
     
-    int isc_dsql_describe_bind(Object[] status,
-                                  isc_stmt_handle stmt_handle,
+    void isc_dsql_describe_bind(isc_stmt_handle stmt_handle,
                                   int da_version,
-                                  XSQLDA xsqlda);
+                                  XSQLDA xsqlda) throws GDSException;
     
-    int isc_dsql_execute(Object[] status,
-                           isc_tr_handle tr_handle,
+    void isc_dsql_execute(isc_tr_handle tr_handle,
                            isc_stmt_handle stmt_handle,
                            int da_version,
-                           XSQLDA xsqlda);
+                           XSQLDA xsqlda) throws GDSException;
 
-    int isc_dsql_execute2(Object[] status,
-                            isc_tr_handle tr_handle,
+    void isc_dsql_execute2(isc_tr_handle tr_handle,
                             isc_stmt_handle stmt_handle,
                             int da_version,
                             XSQLDA in_xsqlda,
-                            XSQLDA out_xsqlda);
+                            XSQLDA out_xsqlda) throws GDSException;
 
-    int isc_dsql_execute_inmediate(Object[] status,
-                                      isc_db_handle db_handle,
+    void isc_dsql_execute_inmediate(isc_db_handle db_handle,
                                       isc_tr_handle tr_handle,
 //                                      int length,
                                       String statement,
                                       int dialect,
-                                      XSQLDA xsqlda);
+                                      XSQLDA xsqlda) throws GDSException;
     
-    int isc_dsql_exec_inmed2(Object[] status,
-                               isc_db_handle db_handle,
+    void isc_dsql_exec_inmed2(isc_db_handle db_handle,
                                isc_tr_handle tr_handle,
 //                                      int length,
                                String statement,
                                int dialect,
                                XSQLDA in_xsqlda,
-                               XSQLDA out_xsqlda);
+                               XSQLDA out_xsqlda) throws GDSException;
     
-    int isc_dsql_fetch(Object[] status,
-                         isc_stmt_handle stmt_handle,
+    void isc_dsql_fetch(isc_stmt_handle stmt_handle,
                          int da_version,
-                         XSQLDA xsqlda);
+                         XSQLDA xsqlda) throws GDSException;
     
-    int isc_dsql_free_statement(Object[] status,
-                                   isc_stmt_handle stmt_handle,
-                                   int option);
+    void isc_dsql_free_statement(isc_stmt_handle stmt_handle,
+                                   int option) throws GDSException;
     
-    int isc_dsql_prepare(Object[] status,
-                           isc_tr_handle tr_handle,
+    void isc_dsql_prepare(isc_tr_handle tr_handle,
                            isc_stmt_handle stmt_handle,
 //                                      int length,
                            String statement,
                            int dialect,
-                           XSQLDA xsqlda);
+                           XSQLDA xsqlda) throws GDSException;
 
-    int isc_dsql_set_cursor_name(Object[] status,
-                                    isc_stmt_handle stmt_handle,
+    void isc_dsql_set_cursor_name(isc_stmt_handle stmt_handle,
                                     String cursor_name,
-                                    int type);
+                                    int type) throws GDSException;
                                    
                                    
-    int isc_dsql_sql_info(Object[] status,
-                            isc_stmt_handle stmt_handle,
+    void isc_dsql_sql_info(isc_stmt_handle stmt_handle,
                             int item_length,
                             byte[] items,
                             int buffer_length,
-                            byte[] buffer);
+                            byte[] buffer) throws GDSException;
     
     
     int isc_vax_integer(byte[] buffer, int pos, int length);
@@ -1085,5 +1069,12 @@ public interface GDS {
     isc_tr_handle get_new_isc_tr_handle();
     
     isc_stmt_handle get_new_isc_stmt_handle();
+    
+    Clumplet newClumplet(int type, String content);
+    Clumplet newClumplet(int type);
+    Clumplet newClumplet(int type, int content);
+    Clumplet newClumplet(int type, byte[] content);
+    
+    
 }
 
