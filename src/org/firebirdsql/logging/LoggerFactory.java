@@ -30,7 +30,7 @@ public class LoggerFactory{
     public static Logger getLogger(String name,boolean def) {
         if (!checked){
             try {
-                Class verify = Class.forName("org.apache.log4j.Logger");
+                Class verify = Class.forName("org.apache.log4j.Category");
                 log4j = true;
             }
             catch (ClassNotFoundException cnfe){
