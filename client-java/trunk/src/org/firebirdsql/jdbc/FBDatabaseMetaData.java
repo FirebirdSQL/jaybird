@@ -1671,34 +1671,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     }
 
 
-
-    /**
-     * A possible value for column <code>PROCEDURE_TYPE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getProcedures</code>.
-     * <p> Indicates that it is not known whether the procedure returns
-     * a result.
-     */
-    //int procedureResultUnknown    = 0;
-
-    /**
-     * A possible value for column <code>PROCEDURE_TYPE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getProcedures</code>.
-     * <p> Indicates that the procedure does not return
-     * a result.
-     */
-    //int procedureNoResult     = 1;
-
-    /**
-     * A possible value for column <code>PROCEDURE_TYPE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getProcedures</code>.
-     * <p> Indicates that the procedure returns
-     * a result.
-     */
-    //int procedureReturnsResult    = 2;
-
     private static final String GET_PROCEDURE_COLUMNS_START = "select"
         + " null as PROCEDURE_CAT,"
         + " null as PROCEDURE_SCHEM,"
@@ -1803,89 +1775,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         }
         return c.doQuery(sql, params, statements);
     }
-
-
-
-    /**
-     * Indicates that type of the column is unknown.
-     * A possible value for the column
-     * <code>COLUMN_TYPE</code>
-     * in the <code>ResultSet</code>
-     * returned by the method <code>getProcedureColumns</code>.
-     */
-    //int procedureColumnUnknown = 0;
-
-    /**
-     * Indicates that the column stores IN parameters.
-     * A possible value for the column
-     * <code>COLUMN_TYPE</code>
-     * in the <code>ResultSet</code>
-     * returned by the method <code>getProcedureColumns</code>.
-     */
-    //int procedureColumnIn = 1;
-
-    /**
-     * Indicates that the column stores INOUT parameters.
-     * A possible value for the column
-     * <code>COLUMN_TYPE</code>
-     * in the <code>ResultSet</code>
-     * returned by the method <code>getProcedureColumns</code>.
-     */
-    //int procedureColumnInOut = 2;
-
-    /**
-     * Indicates that the column stores OUT parameters.
-     * A possible value for the column
-     * <code>COLUMN_TYPE</code>
-     * in the <code>ResultSet</code>
-     * returned by the method <code>getProcedureColumns</code>.
-     */
-    //int procedureColumnOut = 4;
-    /**
-     * Indicates that the column stores return values.
-     * A possible value for the column
-     * <code>COLUMN_TYPE</code>
-     * in the <code>ResultSet</code>
-     * returned by the method <code>getProcedureColumns</code>.
-     */
-    //int procedureColumnReturn = 5;
-
-    /**
-     * Indicates that the column stores results.
-     * A possible value for the column
-     * <code>COLUMN_TYPE</code>
-     * in the <code>ResultSet</code>
-     * returned by the method <code>getProcedureColumns</code>.
-     */
-    //int procedureColumnResult = 3;
-
-    /**
-     * Indicates that <code>NULL</code> values are not allowed.
-     * A possible value for the column
-     * <code>NULLABLE</code>
-     * in the <code>ResultSet</code>
-     * returned by the method <code>getProcedureColumns</code>.
-     */
-    //int procedureNoNulls = 0;
-
-    /**
-     * Indicates that <code>NULL</code> values are allowed.
-     * A possible value for the column
-     * <code>NULLABLE</code>
-     * in the <code>ResultSet</code>
-     * returned by the method <code>getProcedureColumns</code>.
-     */
-    //int procedureNullable = 1;
-
-    /**
-     * Indicates that whether <code>NULL</code> values are allowed
-     * is unknown.
-     * A possible value for the column
-     * <code>NULLABLE</code>
-     * in the <code>ResultSet</code>
-     * returned by the method <code>getProcedureColumns</code>.
-     */
-    //int procedureNullableUnknown = 2;
 
     public static final String TABLE = "TABLE";
     public static final String SYSTEM_TABLE = "SYSTEM TABLE";
@@ -2361,8 +2250,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             int dataType = getDataType(fieldType, fieldSubType, fieldScale);
 
             row[4] = new Short((short) dataType);
-
-            row[5] = null;
+            row[5] = getDataTypeName(fieldType, fieldSubType, fieldScale);
 
             if (dataType == java.sql.Types.DECIMAL ||
                 dataType == java.sql.Types.NUMERIC)
@@ -2390,18 +2278,31 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
             rows.add(row);
         }
-//        rows.add(null);
-        //return new FBResultSet(xsqlvars, rows);
         return new FBResultSet(xsqlvars, rows);
     }
 
+    private static final short smallint_type = 7;
+    private static final short integer_type = 8;
+    private static final short quad_type = 9;
+    private static final short float_type = 10;
+    private static final short d_float_type = 11;
+    private static final short date_type = 12;
+    private static final short time_type = 13;
+    private static final short char_type = 14;
+    private static final short int64_type = 16;
+    private static final short double_type = 27;
+    private static final short timestamp_type = 35;
+    private static final short varchar_type = 37;
+    private static final short cstring_type = 40;
+    private static final short blob_type = 261;
+	 
     private int getDataType (short fieldType, short fieldSubType, short fieldScale) {
         if (fieldScale < 0) {
             switch (fieldType) {
-                case 7:
-                case 8:
-                case 16:
-                case 27:
+                case smallint_type:
+                case integer_type:
+                case int64_type:
+                case double_type:
                     if (fieldSubType == 2)
                         return java.sql.Types.DECIMAL;
                     else
@@ -2412,72 +2313,103 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         }
 
         switch (fieldType) {
-            case 7:
+            case smallint_type:
                 return java.sql.Types.SMALLINT;
-            case 8:
+            case integer_type:
                 return java.sql.Types.INTEGER;
-            case 27:
-            case 11:
+            case double_type:
+            case d_float_type:
                 return java.sql.Types.DOUBLE;
-            case 10:
+            case float_type:
                 return java.sql.Types.FLOAT;
-            case 14:
+            case char_type:
                 return java.sql.Types.CHAR;
-            case 37:
+            case varchar_type:
                 return java.sql.Types.VARCHAR;
-            case 35:
+            case timestamp_type:
                 return java.sql.Types.TIMESTAMP;
-            case 13:
+            case time_type:
                 return java.sql.Types.TIME;
-            case 12:
+            case date_type:
                 return java.sql.Types.DATE;
-            case 16:
+            case int64_type:
                 if (fieldSubType == 2)
                     return java.sql.Types.DECIMAL;
                 else
                     return java.sql.Types.NUMERIC;
-            case 261:
+            case blob_type:
                 if (fieldSubType < 0)
                     return java.sql.Types.BLOB;
-                if (fieldSubType == 1)
+                else if (fieldSubType == 0)
+                    return java.sql.Types.LONGVARBINARY;
+                else if (fieldSubType == 1)
                     return java.sql.Types.LONGVARCHAR;
                 else
-                    return java.sql.Types.LONGVARBINARY;
-            case 9:
+                    return java.sql.Types.OTHER;
+            case quad_type:
                 return java.sql.Types.OTHER;
             default:
                 return java.sql.Types.NULL;
         }
     }
 
+    private String getDataTypeName (short fieldType, short fieldSubType, short fieldScale) {
+        if (fieldScale < 0) {
+            switch (fieldType) {
+                case smallint_type:
+                case integer_type:
+                case int64_type:
+                case double_type:
+                    if (fieldSubType == 2)
+                        return "DECIMAL";
+                    else
+                        return "NUMERIC";
+                default:
+                    break;
+            }
+        }
 
-    /**
-     * Indicates that the column might not allow NULL values.
-     * A possible value for the column
-     * <code>NULLABLE</code>
-     * in the <code>ResultSet</code> returned by the method
-     * <code>getColumns</code>.
-     */
-    //int columnNoNulls = 0;
-
-    /**
-     * Indicates that the column definitely allows <code>NULL</code> values.
-     * A possible value for the column
-     * <code>NULLABLE</code>
-     * in the <code>ResultSet</code> returned by the method
-     * <code>getColumns</code>.
-     */
-    //int columnNullable = 1;
-
-    /**
-     * Indicates that the nullability of columns is unknown.
-     * A possible value for the column
-     * <code>NULLABLE</code>
-     * in the <code>ResultSet</code> returned by the method
-     * <code>getColumns</code>.
-     */
-    //int columnNullableUnknown = 2;
-
+        switch (fieldType) {
+            case smallint_type:
+                return "SMALLINT";
+            case integer_type:
+                return "INTEGER";
+            case double_type:
+            case d_float_type:
+                return "DOUBLE PRECISION";
+            case float_type:
+                return "FLOAT";
+            case char_type:
+                return "CHAR";
+            case varchar_type:
+                return "VARCHAR";
+            case timestamp_type:
+                return "TIMESTAMP";
+            case time_type:
+                return "TIME";
+            case date_type:
+                return "DATE";
+            case int64_type:
+                if (fieldSubType == 2)
+                    return "DECIMAL";
+                else
+                    return "NUMERIC";
+            case blob_type:
+                if (fieldSubType < 0)
+                    return "BLOB SUB_TYPE <0";
+                else if (fieldSubType == 0)
+                    return "BLOB SUB_TYPE 0";
+                else if (fieldSubType == 1)
+                    return "BLOB SUB_TYPE 1";
+                else
+                    return "BLOB SUB_TYPE >1";
+            case quad_type:
+                return "ARRAY";
+            default:
+                return "NULL";
+        }
+    }
+	 
     private static final String GET_COLUMN_PRIVILEGES_START = "select "
 	     + "null as TABLE_CAT,"
 		  + "null as TABLE_SCHEM,"
@@ -2548,8 +2480,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
 
     private static final String GET_TABLE_PRIVILEGES_START = "select"
-		  + " null as TABLE_CAT, "
-		  + " null as TABLE_SCHEM,"
+        + " null as TABLE_CAT, "
+        + " null as TABLE_SCHEM,"
         + " RDB$RELATION_NAME as TABLE_NAME,"
         + " RDB$GRANTOR as GRANTOR, "
         + " RDB$USER as GRANTEE, "
@@ -2741,14 +2673,14 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0].sqltype = GDS.SQL_SHORT;
         xsqlvars[0].sqlname = "SCOPE";
         xsqlvars[0].relname = "ROWIDENTIFIER";
-		  
+
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlind = 0;
         xsqlvars[1].sqlname = "COLUMN_NAME";
         xsqlvars[1].relname = "ROWIDENTIFIER";
-		  
+
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = GDS.SQL_SHORT;
         xsqlvars[2].sqlname = "DATA_TYPE";
@@ -2760,7 +2692,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[3].sqlind = -1;
         xsqlvars[3].sqlname = "TYPE_NAME";
         xsqlvars[3].relname = "ROWIDENTIFIER";
-		  
+
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = GDS.SQL_LONG;
         xsqlvars[4].sqlname = "COLUMN_SIZE";
@@ -2770,7 +2702,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[5].sqltype = GDS.SQL_LONG;
         xsqlvars[5].sqlname = "BUFFER_LENGTH";
         xsqlvars[5].relname = "ROWIDENTIFIER";
-		  
+
         xsqlvars[6] = new XSQLVAR();
         xsqlvars[6].sqltype = GDS.SQL_SHORT;
         xsqlvars[6].sqlname = "DECIMAL_DIGITS";
@@ -2780,71 +2712,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[7].sqltype = GDS.SQL_SHORT;
         xsqlvars[7].sqlname = "PSEUDO_COLUMN";
         xsqlvars[7].relname = "ROWIDENTIFIER";
-		  
+
         ArrayList rows = new ArrayList(0);
 
         return new FBResultSet(xsqlvars, rows);
     }
 
-
-
-    /**
-     * Indicates that the scope of the best row identifier is
-     * very temporary, lasting only while the
-     * row is being used.
-     * A possible value for the column
-     * <code>SCOPE</code>
-     * in the <code>ResultSet</code> object
-     * returned by the method <code>getBestRowIdentifier</code>.
-     */
-    int bestRowTemporary   = 0;
-
-    /**
-     * Indicates that the scope of the best row identifier is
-     * the remainder of the current transaction.
-     * A possible value for the column
-     * <code>SCOPE</code>
-     * in the <code>ResultSet</code> object
-     * returned by the method <code>getBestRowIdentifier</code>.
-     */
-    int bestRowTransaction = 1;
-
-    /**
-     * Indicates that the scope of the best row identifier is
-     * the remainder of the current session.
-     * A possible value for the column
-     * <code>SCOPE</code>
-     * in the <code>ResultSet</code> object
-     * returned by the method <code>getBestRowIdentifier</code>.
-     */
-    int bestRowSession     = 2;
-
-    /**
-     * Indicates that the best row identifier may or may not be a pseudo column.
-     * A possible value for the column
-     * <code>PSEUDO_COLUMN</code>
-     * in the <code>ResultSet</code> object
-     * returned by the method <code>getBestRowIdentifier</code>.
-     */
-    int bestRowUnknown  = 0;
-
-    /**
-     * Indicates that the best row identifier is NOT a pseudo column.
-     * A possible value for the column
-     * <code>PSEUDO_COLUMN</code>
-     * in the <code>ResultSet</code> object
-     * returned by the method <code>getBestRowIdentifier</code>.
-     */
-    int bestRowNotPseudo    = 1;
-
-    /**
-     * Indicates that the best row identifier is a pseudo column.
-     * A possible value for the column
-     * <code>PSEUDO_COLUMN</code>
-     * in the <code>ResultSet</code> object
-     * returned by the method <code>getBestRowIdentifier</code>.
-     */
-    int bestRowPseudo   = 2;
 
     /**
      * Gets a description of a table's columns that are automatically
@@ -2884,14 +2757,14 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0].sqltype = GDS.SQL_SHORT;
         xsqlvars[0].sqlname = "SCOPE";
         xsqlvars[0].relname = "VERSIONCOL";
-		  
+
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlind = 0;
         xsqlvars[1].sqlname = "COLUMN_NAME";
         xsqlvars[1].relname = "VERSIONCOL";
-		  
+
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = GDS.SQL_SHORT;
         xsqlvars[2].sqlname = "DATA_TYPE";
@@ -2903,17 +2776,17 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[3].sqlind = -1;
         xsqlvars[3].sqlname = "TYPE_NAME";
         xsqlvars[3].relname = "VERSIONCOL";
-		  
+
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = GDS.SQL_LONG;
         xsqlvars[4].sqlname = "COLUMN_SIZE";
         xsqlvars[4].relname = "VERSIONCOL";
-		  
+
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = GDS.SQL_LONG;
         xsqlvars[5].sqlname = "BUFFER_LENGTH";
         xsqlvars[5].relname = "VERSIONCOL";
-		  
+
         xsqlvars[6] = new XSQLVAR();
         xsqlvars[6].sqltype = GDS.SQL_SHORT;
         xsqlvars[6].sqlname = "DECIMAL_DIGITS";
@@ -2923,40 +2796,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[7].sqltype = GDS.SQL_SHORT;
         xsqlvars[7].sqlname = "PSEUDO_COLUMN";
         xsqlvars[7].relname = "VERSIONCOL";
-		  
+
         ArrayList rows = new ArrayList(0);
 
         return new FBResultSet(xsqlvars, rows);
     }
 
-
-
-    /**
-     * Indicates that this version column may or may not be a pseudo column.
-     * A possible value for the column
-     * <code>PSEUDO_COLUMN</code>
-     * in the <code>ResultSet</code> object
-     * returned by the method <code>getVersionColumns</code>.
-     */
-    int versionColumnUnknown    = 0;
-
-    /**
-     * Indicates that this version column is NOT a pseudo column.
-     * A possible value for the column
-     * <code>PSEUDO_COLUMN</code>
-     * in the <code>ResultSet</code> object
-     * returned by the method <code>getVersionColumns</code>.
-     */
-    int versionColumnNotPseudo  = 1;
-
-    /**
-     * Indicates that this version column is a pseudo column.
-     * A possible value for the column
-     * <code>PSEUDO_COLUMN</code>
-     * in the <code>ResultSet</code> object
-     * returned by the method <code>getVersionColumns</code>.
-     */
-    int versionColumnPseudo = 2;
 
     private static final String GET_PRIMARY_KEYS_START = "select "
         + " null as TABLE_CAT, "
@@ -2968,8 +2813,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         + "from "
         + "RDB$RELATION_CONSTRAINTS RC, "
         + "RDB$INDEX_SEGMENTS ISGMT "
-        + "where ";		  
-	 
+        + "where ";
+
     private static final String GET_PRIMARY_KEYS_END = 
         "RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME and "
         + "RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
@@ -3000,7 +2845,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     public ResultSet getPrimaryKeys(String catalog, String schema,
                 String table) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
-		  
+
         Clause tableClause = new Clause("RC.RDB$RELATION_NAME", table);
         String sql = GET_PRIMARY_KEYS_START;
         sql += tableClause.getCondition();
@@ -3009,11 +2854,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getValue());
         }
-/*
-        String sql = GET_PRIMARY_KEYS;
-        ArrayList params = new ArrayList();
-        params.add(table);
-*/
         ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[6];
@@ -3070,8 +2910,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
             rows.add(row);
         }
-//        rows.add(null);
-        // return new FBResultSet(xsqlvars, rows);
         return new FBResultSet(xsqlvars, rows);
     }
 
@@ -3081,35 +2919,35 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 	  */
 
     private static final String GET_IMPORTED_KEYS_START = "select"
-	 +" null as PKTABLE_CAT "
-	 +" ,null as PKTABLE_SCHEM "
-	 +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
-	 +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
-	 +" ,null as FKTABLE_CAT "
-	 +" ,null as FKTABLE_SCHEM "
-	 +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
-	 +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
-	 +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
-	 +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
-	 +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
-	 +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
-	 +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
-	 +" ,null as DEFERRABILITY "
-	 +" from "
-	 +" RDB$RELATION_CONSTRAINTS PK "
-	 +" ,RDB$RELATION_CONSTRAINTS FK "
-	 +" ,RDB$REF_CONSTRAINTS RC "
-	 +" ,RDB$INDEX_SEGMENTS ISP "
-	 +" ,RDB$INDEX_SEGMENTS ISF "
-	 +" WHERE ";
-	 
+    +" null as PKTABLE_CAT "
+    +" ,null as PKTABLE_SCHEM "
+    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
+    +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
+    +" ,null as FKTABLE_CAT "
+    +" ,null as FKTABLE_SCHEM "
+    +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
+    +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
+    +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
+    +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
+    +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
+    +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
+    +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
+    +" ,null as DEFERRABILITY "
+    +" from "
+    +" RDB$RELATION_CONSTRAINTS PK "
+    +" ,RDB$RELATION_CONSTRAINTS FK "
+    +" ,RDB$REF_CONSTRAINTS RC "
+    +" ,RDB$INDEX_SEGMENTS ISP "
+    +" ,RDB$INDEX_SEGMENTS ISF "
+    +" WHERE ";
+
     private static final String GET_IMPORTED_KEYS_END = 
-	 " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
-	 +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
-	 +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
-	 +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-	 +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION ";
-	 
+    " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+    +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
+    +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
+    +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
+    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION ";
+
     /**
      * Gets a description of the primary key columns that are
      * referenced by a table's foreign key columns (the primary keys
@@ -3253,7 +3091,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[7].sqlind = 0;
         xsqlvars[7].sqlname = "FKCOLUMN_NAME";
         xsqlvars[7].relname = "COLUMNINFO";
-		  
+
         xsqlvars[8] = new XSQLVAR();
         xsqlvars[8].sqltype = GDS.SQL_SHORT;
         xsqlvars[8].sqlname = "KEY_SEQ";
@@ -3268,7 +3106,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[10].sqltype = GDS.SQL_SHORT;
         xsqlvars[10].sqlname = "DELETE_RULE";
         xsqlvars[10].relname = "COLUMNINFO";
-		  
+
         xsqlvars[11] = new XSQLVAR();
         xsqlvars[11].sqltype = GDS.SQL_VARYING;
         xsqlvars[11].sqllen = 31;
@@ -3287,7 +3125,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[13].sqltype = GDS.SQL_SHORT;
         xsqlvars[13].sqlname = "DEFERRABILITY";
         xsqlvars[13].relname = "COLUMNINFO";
-		  
+
         ArrayList rows = new ArrayList();
         while (rs.next()) {
             Object[] row = new Object[14];
@@ -3323,146 +3161,40 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[13] = new Short((short) DatabaseMetaData.importedKeyNotDeferrable);
             rows.add(row);
         }
-//        rows.add(null);
-        // return new FBResultSet(xsqlvars, rows);
         return new FBResultSet(xsqlvars, rows);
     }
 
 
-
-    /**
-     * A possible value for the columns <code>UPDATE_RULE</code>
-     * and <code>DELETE_RULE</code> in the
-     * <code>ResultSet</code> objects returned by the methods
-     * <code>getImportedKeys</code>,  <code>getExportedKeys</code>,
-     * and <code>getCrossReference</code>.
-     * <P>For the column <code>UPDATE_RULE</code>,
-     * it indicates that
-     * when the primary key is updated, the foreign key (imported key)
-     * is changed to agree with it.
-     * <P>For the column <code>DELETE_RULE</code>,
-     * it indicates that
-     * when the primary key is deleted, rows that imported that key
-     * are deleted.
-     */
-    int importedKeyCascade  = 0;
-
-    /**
-     * A possible value for the columns <code>UPDATE_RULE</code>
-     * and <code>DELETE_RULE</code> in the
-     * <code>ResultSet</code> objects returned by the methods
-     * <code>getImportedKeys</code>,  <code>getExportedKeys</code>,
-     * and <code>getCrossReference</code>.
-     * <P>For the column <code>UPDATE_RULE</code>, it indicates that
-     * a primary key may not be updated if it has been imported by
-     * another table as a foreign key.
-     * <P>For the column <code>DELETE_RULE</code>, it indicates that
-     * a primary key may not be deleted if it has been imported by
-     * another table as a foreign key.
-     */
-    int importedKeyRestrict = 1;
-
-    /**
-     * A possible value for the columns <code>UPDATE_RULE</code>
-     * and <code>DELETE_RULE</code> in the
-     * <code>ResultSet</code> objects returned by the methods
-     * <code>getImportedKeys</code>,  <code>getExportedKeys</code>,
-     * and <code>getCrossReference</code>.
-     * <P>For the columns <code>UPDATE_RULE</code>
-     * and <code>DELETE_RULE</code>,
-     * it indicates that
-     * when the primary key is updated or deleted, the foreign key (imported key)
-     * is changed to <code>NULL</code>.
-     */
-    int importedKeySetNull  = 2;
-
-    /**
-     * A possible value for the columns <code>UPDATE_RULE</code>
-     * and <code>DELETE_RULE</code> in the
-     * <code>ResultSet</code> objects returned by the methods
-     * <code>getImportedKeys</code>,  <code>getExportedKeys</code>,
-     * and <code>getCrossReference</code>.
-     * <P>For the columns <code>UPDATE_RULE</code>
-     * and <code>DELETE_RULE</code>,
-     * it indicates that
-     * if the primary key has been imported, it cannot be updated or deleted.
-     */
-    int importedKeyNoAction = 3;
-
-    /**
-     * A possible value for the columns <code>UPDATE_RULE</code>
-     * and <code>DELETE_RULE</code> in the
-     * <code>ResultSet</code> objects returned by the methods
-     * <code>getImportedKeys</code>,  <code>getExportedKeys</code>,
-     * and <code>getCrossReference</code>.
-     * <P>For the columns <code>UPDATE_RULE</code>
-     * and <code>DELETE_RULE</code>,
-     * it indicates that
-     * if the primary key is updated or deleted, the foreign key (imported key)
-     * is set to the default value.
-     */
-    int importedKeySetDefault  = 4;
-
-    /**
-     * A possible value for the column <code>DEFERRABILITY</code>
-     * in the
-     * <code>ResultSet</code> objects returned by the methods
-     * <code>getImportedKeys</code>,  <code>getExportedKeys</code>,
-     * and <code>getCrossReference</code>.
-     * <P>Indicates deferrability.  See SQL-92 for a definition.
-     */
-    int importedKeyInitiallyDeferred  = 5;
-
-    /**
-     * A possible value for the column <code>DEFERRABILITY</code>
-     * in the
-     * <code>ResultSet</code> objects returned by the methods
-     * <code>getImportedKeys</code>,  <code>getExportedKeys</code>,
-     * and <code>getCrossReference</code>.
-     * <P>Indicates deferrability.  See SQL-92 for a definition.
-     */
-    int importedKeyInitiallyImmediate  = 6;
-
-    /**
-     * A possible value for the column <code>DEFERRABILITY</code>
-     * in the
-     * <code>ResultSet</code> objects returned by the methods
-     * <code>getImportedKeys</code>,  <code>getExportedKeys</code>,
-     * and <code>getCrossReference</code>.
-     * <P>Indicates deferrability.  See SQL-92 for a definition.
-     */
-    int importedKeyNotDeferrable  = 7;
-
     private static final String GET_EXPORTED_KEYS_START = "select"
-	 +" null as PKTABLE_CAT "
-	 +" ,null as PKTABLE_SCHEM "
-	 +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
-	 +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
-	 +" ,null as FKTABLE_CAT "
-	 +" ,null as FKTABLE_SCHEM "
-	 +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
-	 +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
-	 +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
-	 +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
-	 +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
-	 +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
-	 +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
-	 +" ,null as DEFERRABILITY "
-	 +" from "
-	 +" RDB$RELATION_CONSTRAINTS PK "
-	 +" ,RDB$RELATION_CONSTRAINTS FK "
-	 +" ,RDB$REF_CONSTRAINTS RC "
-	 +" ,RDB$INDEX_SEGMENTS ISP "
-	 +" ,RDB$INDEX_SEGMENTS ISF "
-	 +" WHERE ";
-	 
+    +" null as PKTABLE_CAT "
+    +" ,null as PKTABLE_SCHEM "
+    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
+    +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
+    +" ,null as FKTABLE_CAT "
+    +" ,null as FKTABLE_SCHEM "
+    +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
+    +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
+    +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
+    +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
+    +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
+    +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
+    +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
+    +" ,null as DEFERRABILITY "
+    +" from "
+    +" RDB$RELATION_CONSTRAINTS PK "
+    +" ,RDB$RELATION_CONSTRAINTS FK "
+    +" ,RDB$REF_CONSTRAINTS RC "
+    +" ,RDB$INDEX_SEGMENTS ISP "
+    +" ,RDB$INDEX_SEGMENTS ISF "
+    +" WHERE ";
+
     private static final String GET_EXPORTED_KEYS_END = 
-	 " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
-	 +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
-	 +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
-	 +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-	 +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION ";
-	 
+    " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+    +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
+    +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
+    +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
+    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION ";
+
     /**
      * Gets a description of the foreign key columns that reference a
      * table's primary key columns (the foreign keys exported by a
@@ -3542,7 +3274,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getValue());
         }
-		  
+
         ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
@@ -3602,7 +3334,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[7].sqlind = 0;
         xsqlvars[7].sqlname = "FKCOLUMN_NAME";
         xsqlvars[7].relname = "COLUMNINFO";
-		  
+
         xsqlvars[8] = new XSQLVAR();
         xsqlvars[8].sqltype = GDS.SQL_SHORT;
         xsqlvars[8].sqlname = "KEY_SEQ";
@@ -3617,7 +3349,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[10].sqltype = GDS.SQL_SHORT;
         xsqlvars[10].sqlname = "DELETE_RULE";
         xsqlvars[10].relname = "COLUMNINFO";
-		  
+
         xsqlvars[11] = new XSQLVAR();
         xsqlvars[11].sqltype = GDS.SQL_VARYING;
         xsqlvars[11].sqllen = 31;
@@ -3631,12 +3363,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[12].sqlind = 0;
         xsqlvars[12].sqlname = "PK_NAME";
         xsqlvars[12].relname = "COLUMNINFO";
-		  
+
         xsqlvars[13] = new XSQLVAR();
         xsqlvars[13].sqltype = GDS.SQL_SHORT;
         xsqlvars[13].sqlname = "DEFERRABILITY";
         xsqlvars[13].relname = "COLUMNINFO";
-		  
+
         ArrayList rows = new ArrayList();
         while (rs.next()) {
             Object[] row = new Object[14];
@@ -3673,43 +3405,41 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
             rows.add(row);
         }
-//        rows.add(null);
-        // return new FBResultSet(xsqlvars, rows);
         return new FBResultSet(xsqlvars, rows);
     }
 
 
 
     private static final String GET_CROSS_KEYS_START = "select"
-	 +" null as PKTABLE_CAT "
-	 +" ,null as PKTABLE_SCHEM "
-	 +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
-	 +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
-	 +" ,null as FKTABLE_CAT "
-	 +" ,null as FKTABLE_SCHEM "
-	 +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
-	 +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
-	 +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
-	 +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
-	 +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
-	 +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
-	 +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
-	 +" ,null as DEFERRABILITY "
-	 +" from "
-	 +" RDB$RELATION_CONSTRAINTS PK "
-	 +" ,RDB$RELATION_CONSTRAINTS FK "
-	 +" ,RDB$REF_CONSTRAINTS RC "
-	 +" ,RDB$INDEX_SEGMENTS ISP "
-	 +" ,RDB$INDEX_SEGMENTS ISF "
-	 +" WHERE ";
-	 
+    +" null as PKTABLE_CAT "
+    +" ,null as PKTABLE_SCHEM "
+    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME " 
+    +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
+    +" ,null as FKTABLE_CAT "
+    +" ,null as FKTABLE_SCHEM "
+    +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
+    +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
+    +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
+    +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
+    +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
+    +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
+    +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
+    +" ,null as DEFERRABILITY "
+    +" from "
+    +" RDB$RELATION_CONSTRAINTS PK "
+    +" ,RDB$RELATION_CONSTRAINTS FK "
+    +" ,RDB$REF_CONSTRAINTS RC "
+    +" ,RDB$INDEX_SEGMENTS ISP "
+    +" ,RDB$INDEX_SEGMENTS ISF "
+    +" WHERE ";
+
     private static final String GET_CROSS_KEYS_END =
-	 " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
-	 +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
-	 +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
-	 +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-	 +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION ";
-	 
+    " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+    +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
+    +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
+    +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
+    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION ";
+
     /**
      * Gets a description of the foreign key columns in the foreign key
      * table that reference the primary key columns of the primary key
@@ -3792,7 +3522,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         ) throws SQLException {
         checkCatalogAndSchema(primaryCatalog, primarySchema);
         checkCatalogAndSchema(foreignCatalog, foreignSchema);
-		  
+
         Clause primaryTableClause = new Clause("PK.RDB$RELATION_NAME", primaryTable);
         Clause foreignTableClause = new Clause("FK.RDB$RELATION_NAME", foreignTable);
         String sql = GET_CROSS_KEYS_START;
@@ -3806,7 +3536,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!foreignTableClause.getCondition().equals("")) {
             params.add(foreignTableClause.getValue());
         }
-		  
+
         ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
@@ -3866,7 +3596,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[7].sqlind = 0;
         xsqlvars[7].sqlname = "FKCOLUMN_NAME";
         xsqlvars[7].relname = "COLUMNINFO";
-		  
+
         xsqlvars[8] = new XSQLVAR();
         xsqlvars[8].sqltype = GDS.SQL_SHORT;
         xsqlvars[8].sqlname = "KEY_SEQ";
@@ -3881,7 +3611,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[10].sqltype = GDS.SQL_SHORT;
         xsqlvars[10].sqlname = "DELETE_RULE";
         xsqlvars[10].relname = "COLUMNINFO";
-		  
+
         xsqlvars[11] = new XSQLVAR();
         xsqlvars[11].sqltype = GDS.SQL_VARYING;
         xsqlvars[11].sqllen = 31;
@@ -3895,12 +3625,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[12].sqlind = 0;
         xsqlvars[12].sqlname = "PK_NAME";
         xsqlvars[12].relname = "COLUMNINFO";
-		  
+
         xsqlvars[13] = new XSQLVAR();
         xsqlvars[13].sqltype = GDS.SQL_SHORT;
         xsqlvars[13].sqlname = "DEFERRABILITY";
         xsqlvars[13].relname = "COLUMNINFO";
-		  
+
         ArrayList rows = new ArrayList();
         while (rs.next()) {
             Object[] row = new Object[14];
@@ -3942,19 +3672,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         return new FBResultSet(xsqlvars, rows);
     }
 
-    private static final Short shortZero = new Short((short)0);
-    private static final String CASESENSITIVE = "T";
-    private static final String CASEINSENSITIVE = "F";
-    private static final String UNSIGNED = "T";
-    private static final String SIGNED = "F";
-    private static final String FIXEDSCALE = "T";
-    private static final String VARIABLESCALE = "F";
-    private static final String NOTAUTOINC = "F";
-    private static final Short PREDNONE = new Short((short)0);//typePredNone);
-    private static final Short PREDBASIC = new Short((short)2);//typePredBasic);
-    private static final Short SEARCHABLE = new Short((short)3);//typeSearchable);
-    private static final Short NULLABLE = new Short((short)1);//typeNullable);
-    private static final Integer BINARY = new Integer(2);
 
     /**
      * Simple convertor function to convert integer values to Short objects.
@@ -4016,6 +3733,19 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getTypeInfo() throws SQLException {
+        Short shortZero = new Short((short)0);
+        String CASESENSITIVE = "T";
+        String CASEINSENSITIVE = "F";
+        String UNSIGNED = "T";
+        String SIGNED = "F";
+        String FIXEDSCALE = "T";
+        String VARIABLESCALE = "F";
+        String NOTAUTOINC = "F";
+        Integer BINARY = new Integer(2);
+        Short PREDNONE = new Short((short) DatabaseMetaData.typePredNone);
+        Short PREDBASIC = new Short((short) DatabaseMetaData.typePredBasic);
+        Short SEARCHABLE = new Short((short) DatabaseMetaData.typeSearchable);
+        Short NULLABLE = new Short((short) DatabaseMetaData.typeNullable);
         //need to construct xsqlvar[] for ResultSetMetaData.
         XSQLVAR[] xsqlvars = new XSQLVAR[18];
 
@@ -4170,69 +3900,29 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TIMESTAMP), null, BINARY});
 
-        rows.add(new Object[] {"BLOB", createShort(Types.BLOB), new Integer(0), null, null, null,
+        rows.add(new Object[] {"BLOB SUB_TYPE <0 ", createShort(Types.BLOB), new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+        rows.add(new Object[] {"BLOB SUB_TYPE 0", createShort(Types.LONGVARBINARY), new Integer(0), null, null, null,
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+        rows.add(new Object[] {"BLOB SUB_TYPE 1", createShort(Types.LONGVARCHAR), new Integer(0), null, null, null,
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+        rows.add(new Object[] {"BLOB SUB_TYPE >1", createShort(Types.OTHER), new Integer(0), null, null, null,
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+        rows.add(new Object[] {"ARRAY", createShort(Types.OTHER), new Integer(0), null, null, null,
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_ARRAY), null, BINARY});
 
         return new FBResultSet(xsqlvars, rows);
 
     }
-
-
-
-    /**
-     * A possible value for column <code>NULLABLE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getTypeInfo</code>.
-     * <p>Indicates that a <code>NULL</code> value is NOT allowed for this
-     * data type.
-     */
-    //int typeNoNulls = 0;
-
-    /**
-     * A possible value for column <code>NULLABLE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getTypeInfo</code>.
-     * <p>Indicates that a <code>NULL</code> value is allowed for this
-     * data type.
-     */
-    //int typeNullable = 1;
-
-    /**
-     * A possible value for column <code>NULLABLE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getTypeInfo</code>.
-     * <p>Indicates that it is not known whether a <code>NULL</code> value
-     * is allowed for this data type.
-     */
-    //int typeNullableUnknown = 2;
-
-    /**
-     * A possible value for column <code>SEARCHABLE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getTypeInfo</code>.
-     * <p>Indicates that <code>WHERE</code> search clauses are not supported
-     * for this type.
-     */
-    //int typePredNone = 0;
-
-    /**
-     * A possible value for column <code>SEARCHABLE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getTypeInfo</code>.
-     * <p>Indicates that the only <code>WHERE</code> search clause that can
-     * be based on this type is <code>WHERE . . .LIKE</code>.
-     */
-    //int typePredChar = 1;
-
-    /**
-     * A possible value for column <code>SEARCHABLE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getTypeInfo</code>.
-     * <p>Indicates that one can base all <code>WHERE</code> search clauses
-     * except <code>WHERE . . .LIKE</code> on this data type.
-     */
-    //int typePredBasic = 2;
 
     /**
      * A possible value for column <code>SEARCHABLE</code> in the
@@ -4244,22 +3934,22 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     //int typeSearchable  = 3;
 
     private static final String GET_INDEX_INFO = "select"
-		+" null as TABLE_CAT "
-		+" ,null as TABLE_SCHEM "
-		+" ,ind.RDB$RELATION_NAME AS TABLE_NAME "
-		+" ,ind.RDB$UNIQUE_FLAG AS NON_UNIQUE "
-		+" ,null as INDEX_QUALIFIER "
-		+" ,ind.RDB$INDEX_NAME as INDEX_NAME "
-		+" ,null as ITYPE "
-		+" ,ise.rdb$field_position+1 as ORDINAL_POSITION "
-		+" ,ise.rdb$field_name as COLUMN_NAME "
-		+" ,'A' as ASC_OR_DESC "
-		+" ,0 as CARDINALITY "
-		+" ,0 as IPAGES "
-		+" ,null as FILTER_CONDITION "
-		+" from rdb$indices ind, rdb$index_segments ise "
-		+" where ind.rdb$index_name = ise.rdb$index_name "
-		+" and ind.rdb$relation_name = ? ";
+    +" null as TABLE_CAT "
+    +" ,null as TABLE_SCHEM "
+    +" ,ind.RDB$RELATION_NAME AS TABLE_NAME "
+    +" ,ind.RDB$UNIQUE_FLAG AS NON_UNIQUE "
+    +" ,null as INDEX_QUALIFIER "
+    +" ,ind.RDB$INDEX_NAME as INDEX_NAME "
+    +" ,null as ITYPE "
+    +" ,ise.rdb$field_position+1 as ORDINAL_POSITION "
+    +" ,ise.rdb$field_name as COLUMN_NAME "
+    +" ,'A' as ASC_OR_DESC "
+    +" ,0 as CARDINALITY "
+    +" ,0 as IPAGES "
+    +" ,null as FILTER_CONDITION "
+    +" from rdb$indices ind, rdb$index_segments ise "
+    +" where ind.rdb$index_name = ise.rdb$index_name "
+    +" and ind.rdb$relation_name = ? ";
     /**
      * Gets a description of a table's indices and statistics. They are
      * ordered by NON_UNIQUE, TYPE, INDEX_NAME, and ORDINAL_POSITION.
@@ -4318,7 +4008,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         String sql = GET_INDEX_INFO;
         ArrayList params = new ArrayList();
         params.add(table.toUpperCase());
-		  
+
         ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[13];
@@ -4349,7 +4039,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[3].sqllen = 1;
         xsqlvars[3].sqlname = "NON_UNIQUE";
         xsqlvars[3].relname = "INDEXINFO";
-		  
+
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = GDS.SQL_VARYING;
         xsqlvars[4].sqllen = 31;
@@ -4387,7 +4077,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[9].sqlind = -1;
         xsqlvars[9].sqlname = "ASC_OR_DESC";
         xsqlvars[9].relname = "INDEXINFO";
-		  
+
         xsqlvars[10] = new XSQLVAR();
         xsqlvars[10].sqltype = GDS.SQL_LONG;
         xsqlvars[10].sqlname = "CARDINALITY";
@@ -4404,7 +4094,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[12].sqlind = -1;
         xsqlvars[12].sqlname = "FILTER_CONDITION";
         xsqlvars[12].relname = "INDEXINFO";
-		  
+
         ArrayList rows = new ArrayList();
         while (rs.next()) {
             Object[] row = new Object[13];
@@ -4433,43 +4123,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         return new FBResultSet(xsqlvars, rows);
     }
 
-
-
-    /**
-     * A possible value for column <code>TYPE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getIndexInfo</code>.
-     * <P>Indicates that this column contains table statistics that
-     * are returned in conjunction with a table's index descriptions.
-     */
-    short tableIndexStatistic = 0;
-
-    /**
-     * A possible value for column <code>TYPE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getIndexInfo</code>.
-     * <P>Indicates that this table index is a clustered index.
-     */
-    short tableIndexClustered = 1;
-
-    /**
-     * A possible value for column <code>TYPE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getIndexInfo</code>.
-     * <P>Indicates that this table index is a hashed index.
-     */
-    short tableIndexHashed    = 2;
-
-    /**
-     * A possible value for column <code>TYPE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getIndexInfo</code>.
-     * <P>Indicates that this table index is not a clustered
-     * index, a hashed index, or table statistics;
-     * it is something other than these.
-     */
-    short tableIndexOther     = 3;
-
     //--------------------------JDBC 2.0-----------------------------
 
     /**
@@ -4483,12 +4136,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean supportsResultSetType(int type) throws SQLException {
-		 switch (type){
-			case java.sql.ResultSet.TYPE_FORWARD_ONLY:
-				return true;
-			default:
-				return false;
-		 }
+        switch (type){
+            case java.sql.ResultSet.TYPE_FORWARD_ONLY:
+                return true;
+            default:
+                return false;
+        }
     }
 
 
@@ -4506,11 +4159,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean supportsResultSetConcurrency(int type, int concurrency) throws SQLException {
-		 if (type==java.sql.ResultSet.TYPE_FORWARD_ONLY 
-		 && concurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
-			return true;
-		 else
-			return false;
+        if (type==java.sql.ResultSet.TYPE_FORWARD_ONLY 
+        && concurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
+            return true;
+        else
+            return false;
     }
 
 
@@ -4527,7 +4180,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean ownUpdatesAreVisible(int type) throws SQLException {
-		 return false;
+        return false;
     }
 
 
@@ -4544,7 +4197,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean ownDeletesAreVisible(int type) throws SQLException {
-		 return false;
+        return false;
     }
 
 
@@ -4561,7 +4214,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean ownInsertsAreVisible(int type) throws SQLException {
-		 return false;
+        return false;
     }
 
 
@@ -4579,7 +4232,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean othersUpdatesAreVisible(int type) throws SQLException {
-		 return false;
+        return false;
     }
 
 
@@ -4597,7 +4250,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean othersDeletesAreVisible(int type) throws SQLException {
-		 return false;
+        return false;
     }
 
 
@@ -4616,7 +4269,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean othersInsertsAreVisible(int type) throws SQLException {
-		 return false;
+        return false;
     }
 
 
@@ -4634,7 +4287,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean updatesAreDetected(int type) throws SQLException {
-		 return false;
+        return false;
     }
 
 
@@ -4652,7 +4305,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean deletesAreDetected(int type) throws SQLException {
-		 return false;
+        return false;
     }
 
 
@@ -4669,7 +4322,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean insertsAreDetected(int type) throws SQLException {
-		 return false;
+        return false;
     }
 
 
@@ -4736,21 +4389,21 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[0].sqlind = -1;
         xsqlvars[0].sqlname = "TYPE_CAT";
         xsqlvars[0].relname = "UDT";
-		  
+
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = GDS.SQL_VARYING;
         xsqlvars[1].sqllen = 31;
         xsqlvars[1].sqlind = -1;
         xsqlvars[1].sqlname = "TYPE_SCHEM";
         xsqlvars[1].relname = "UDT";
-		  
+
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = GDS.SQL_VARYING;
         xsqlvars[2].sqllen = 31;
         xsqlvars[2].sqlind = 0;
         xsqlvars[2].sqlname = "TYPE_NAME";
         xsqlvars[2].relname = "UDT";
-		  
+
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = GDS.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
@@ -4771,7 +4424,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[5].sqlind = -1;
         xsqlvars[5].sqlname = "REMARKS";
         xsqlvars[5].relname = "UDT";
-		  
+
         ArrayList rows = new ArrayList(0);
 
         return new FBResultSet(xsqlvars, rows);

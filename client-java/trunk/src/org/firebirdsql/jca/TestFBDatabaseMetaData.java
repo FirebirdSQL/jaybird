@@ -383,7 +383,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
             out += System.getProperty("line.separator");
         }
         if (log != null) log.info("getTablePrivileges returned: " + out);
-        assertTrue("Not enough TypeInfo rows fetched: " + count, count >= 12);
+        assertTrue("Not enough TypeInfo rows fetched: " + count, count >= 16);
     }
 
 
