@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.1  2001/07/13 18:16:15  d_jencks
+ * Implementation of jdbc 1.0 Driver contributed by Roman Rokytskyy
+ *
  * Revision 1.1  2001/07/09 09:09:51  rrokytskyy
  * Initial revision
  *
@@ -93,9 +96,9 @@ public class TestFBUnmanagedConnection extends TestCase {
             ResultSet rs = null;
             try {
                 rs = statement.executeQuery(SELECT_TEST_TABLE);
-                assert("ResultSet is empty", rs.next());
+                assertTrue("ResultSet is empty", rs.next());
                 int value = rs.getInt(1);
-                assert("Commit failed: expecting value=1, received value=" + value, value == 1);
+                assertTrue("Commit failed: expecting value=1, received value=" + value, value == 1);
             } finally {
                 if (rs != null) rs.close();
             }
@@ -103,35 +106,35 @@ public class TestFBUnmanagedConnection extends TestCase {
             connection.commit();
         } catch(Exception ex) {
             ex.printStackTrace();
-            assert(ex.getMessage(), false);
+            assertTrue(ex.getMessage(), false);
         }
     }
 
     public void testCreateStatement() throws Exception {
         Statement statement = connection.createStatement();
-        assert("Statement is null", statement != null);
+        assertTrue("Statement is null", statement != null);
     }
 
     public void testGetAutoCommit() throws Exception {
         connection.setAutoCommit(true);
-        assert("AutoCommit is false", connection.getAutoCommit());
+        assertTrue("AutoCommit is false", connection.getAutoCommit());
         connection.setAutoCommit(false);
-        assert("AutoCommit is false", !connection.getAutoCommit());
+        assertTrue("AutoCommit is false", !connection.getAutoCommit());
     }
 
     public void testGetMetaData() throws Exception {
         DatabaseMetaData metaData = connection.getMetaData();
-        assert("Metadata is null", metaData != null);
+        assertTrue("Metadata is null", metaData != null);
     }
 
     public void testGetTypeMap() throws Exception {
         java.util.Map typeMap = connection.getTypeMap();
-        assert("TypeMap is null", typeMap != null);
+        assertTrue("TypeMap is null", typeMap != null);
     }
 
     public void testNativeSQL() throws Exception {
         String nativeSQL = connection.nativeSQL("SELECT * FROM RDB$DATABASE");
-        assert("NativeSQL is null", nativeSQL != null);
+        assertTrue("NativeSQL is null", nativeSQL != null);
     }
 
     public void testSetAutoCommit() throws Exception {

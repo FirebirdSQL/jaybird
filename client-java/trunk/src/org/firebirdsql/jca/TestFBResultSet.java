@@ -83,9 +83,9 @@ public class TestFBResultSet extends TestXABase {
 
         xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assert("execute returned true for insert statement", !s.execute("insert into T1 values (1, 1)")); 
-        assert("executeUpdate did not return 1 for single row insert", s.executeUpdate("insert into T1 values (2, 2)") == 1); 
-        assert("execute returned false for select statement", s.execute("select C1, C2 from T1"));
+        assertTrue("execute returned true for insert statement", !s.execute("insert into T1 values (1, 1)")); 
+        assertTrue("executeUpdate did not return 1 for single row insert", s.executeUpdate("insert into T1 values (2, 2)") == 1); 
+        assertTrue("execute returned false for select statement", s.execute("select C1, C2 from T1"));
         ResultSet rs = s.getResultSet();
         while (rs.next()) {
             System.out.println("C1: " + rs.getShort(1) + " C2: " + rs.getShort(2));
@@ -131,12 +131,12 @@ public class TestFBResultSet extends TestXABase {
 
         xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assert("execute returned true for insert statement", 
+        assertTrue("execute returned true for insert statement", 
             !s.execute("insert into T1 values (1, 1, 1, 1.0, 1.0, 'one', 'one', '8:00:03.1234', '2002-JAN-11', '2001-JAN-6:8:00:03.1223')")); 
         //s.close();
         // s.execute("insert into T1 values (2, 2,2,  2.0, 2.0, 'two', 'two')"); 
         //s.close();
-        assert("execute returned false for select statement", s.execute("select C1, C2, C3,  C4, C5, C6, C7, C8, C9, C10 from T1"));
+        assertTrue("execute returned false for select statement", s.execute("select C1, C2, C3,  C4, C5, C6, C7, C8, C9, C10 from T1"));
         ResultSet rs = s.getResultSet();
         while (rs.next()) {
             System.out.println("C1: " + rs.getInt(1) 
@@ -207,7 +207,7 @@ public class TestFBResultSet extends TestXABase {
         p.setString(6, "one");
         p.setString(7, "one");
         
-        assert("execute returned true for insert statement", !p.execute()); 
+        assertTrue("execute returned true for insert statement", !p.execute()); 
         p.setInt(1, 2);
         p.setShort(2, (short)2);
         p.setLong(3, 2);
@@ -215,7 +215,7 @@ public class TestFBResultSet extends TestXABase {
         p.setDouble(5, 2.0);
         p.setString(6, "two");
         p.setString(7, "two");
-        assert("executeUpdate count != 1", p.executeUpdate() == 1);
+        assertTrue("executeUpdate count != 1", p.executeUpdate() == 1);
         
         p.close();
         p = c.prepareStatement("select * from T1 where C1 = ?");
@@ -303,7 +303,7 @@ public class TestFBResultSet extends TestXABase {
         p.setString(6, "one");
         p.setString(7, "one");
         
-        assert("execute returned true for insert statement", !p.execute()); 
+        assertTrue("execute returned true for insert statement", !p.execute()); 
         p.setInt(1, 2);
         p.setShort(2, (short)2);
         p.setLong(3, 2);
@@ -311,7 +311,7 @@ public class TestFBResultSet extends TestXABase {
         p.setDouble(5, 2.0);
         p.setString(6, "two");
         p.setString(7, "two");
-        assert("executeUpdate count != 1", p.executeUpdate() == 1);
+        assertTrue("executeUpdate count != 1", p.executeUpdate() == 1);
         
         p.close();
         p = c.prepareStatement("select * from T1 where C1 = ?");
@@ -397,7 +397,7 @@ public class TestFBResultSet extends TestXABase {
         p.setString(1, "1");
         p.setString(2, "First Customer");
         
-        assert("execute returned false for insert statement", p.execute()); 
+        assertTrue("execute returned false for insert statement", p.execute()); 
         ResultSet rs = p.getResultSet();
         while (rs.next()) {
             System.out.println("count: " + rs.getInt(1) );

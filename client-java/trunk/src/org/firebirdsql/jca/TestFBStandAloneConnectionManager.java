@@ -64,7 +64,9 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
         System.out.println("testCreateDCM");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
+        assertTrue("Could not get DataSource", ds != null);
         Connection c = ds.getConnection();
+        assertTrue("Could not get Connection", c != null);
         c.close();
     }
 
@@ -76,6 +78,7 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
         DataSource ds = (DataSource)mcf.createConnectionFactory();
         Connection c = ds.getConnection();
         Statement s = c.createStatement();
+        assertTrue("Could not get Statement", s != null);
         c.close();
     }
 
@@ -87,6 +90,7 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
         FBConnection c = (FBConnection)ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
+        assertTrue("Could not get LocalTransaction", t != null);
         Exception ex = null;
         t.begin();
         try {

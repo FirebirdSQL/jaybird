@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.1  2001/07/13 18:16:15  d_jencks
+ * Implementation of jdbc 1.0 Driver contributed by Roman Rokytskyy
+ *
  * Revision 1.1  2001/07/09 09:09:51  rrokytskyy
  * Initial revision
  *
@@ -59,16 +62,16 @@ public class TestFBDriver extends TestCase {
     }
 
     public void testAcceptsURL() throws Exception {
-        assert(driver.acceptsURL(TestConst.DB_URL));
+        assertTrue(driver.acceptsURL(TestConst.DB_URL));
     }
     public void testConnect() throws Exception {
         System.out.println(TestConst.DB_URL);
         connection = driver.connect(TestConst.DB_URL, TestConst.DB_INFO);
-        assert("Connection is null", connection != null);
+        assertTrue("Connection is null", connection != null);
     }
     public void testJdbcCompliant() {
         // current driver is not JDBC compliant.
-        assert(!driver.jdbcCompliant());
+        assertTrue(!driver.jdbcCompliant());
     }
 
 }
