@@ -108,7 +108,7 @@ public class FBStandAloneConnectionManager implements ConnectionManager , Connec
 
        ManagedConnection mc = ((FBManagedConnectionFactory)mcf).createManagedConnection(null, cxRequestInfo);
        mc.addConnectionEventListener(this);
-       return mc.getConnection(null, null);
+       return mc.getConnection(null, cxRequestInfo);
     }
 
 
