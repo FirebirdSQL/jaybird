@@ -95,10 +95,14 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
      }
 
      public void internalBegin() throws ResourceException {
-         if (xid != null) 
-             throw new FBResourceTransactionException(
+         if (xid != null) {
+             
+             // throw exception only if xid is known to the managed connection 
+             if (mc.isXidActive(xid))
+                 throw new FBResourceTransactionException(
                      "Local transaction active: can't begin another",
                      FBResourceTransactionException.SQL_STATE_TRANSACTION_ACTIVE);
+         }
          
          xid = new FBLocalXid();
          
