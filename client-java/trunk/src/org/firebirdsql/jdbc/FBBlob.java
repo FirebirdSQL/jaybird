@@ -282,7 +282,7 @@ public class FBBlob implements Blob{
         int chunk;
         try {
             while (length >0) {
-                chunk =inputStream.read(buffer, 0, Math.min(length, bufferlength));
+                chunk =inputStream.read(buffer, 0, ((length<bufferlength) ? length:bufferlength));
                 os.write(buffer, 0, chunk);
                 length -= chunk;
             }
