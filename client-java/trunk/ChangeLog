@@ -1,3 +1,19 @@
+2003-12-29 19:57  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractCallableStatement.java, AbstractPreparedStatement.java,
+	FBProcedureCall.java, FBResultSet.java,
+	field/FBBigDecimalField.java, field/FBBlobField.java,
+	field/FBCachedBlobField.java, field/FBCachedLongVarCharField.java,
+	field/FBDateField.java, field/FBDoubleField.java,
+	field/FBField.java, field/FBFloatField.java,
+	field/FBIntegerField.java, field/FBLongField.java,
+	field/FBLongVarCharField.java, field/FBShortField.java,
+	field/FBStringField.java, field/FBTimeField.java,
+	field/FBTimestampField.java:
+	
+	added possibility to specify type for getObject() operation
+
 2003-12-28 00:56  rrokytskyy
 
 	* client-java/src/jdbccts/ddl.properties:
