@@ -44,19 +44,19 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
         super(name);
     }
 
-    private FBConnectionPoolConfiguration config;
+    private FBConnectionPoolDataSource pool;
     
     protected void setUp() throws Exception {
         super.setUp();
         
-        config = new FBConnectionPoolConfiguration();
+        pool = new FBConnectionPoolDataSource();
         
-        config.setJdbcUrl(DB_DRIVER_URL);
-        config.setMinConnections(DEFAULT_MIN_CONNECTIONS);
-        config.setMaxConnections(DEFAULT_MAX_CONNECTIONS);
-        config.setPingInterval(DEFAULT_PING_INTERVAL);
+        pool.setDatabase(DB_DATASOURCE_URL);
+        pool.setMinConnections(DEFAULT_MIN_CONNECTIONS);
+        pool.setMaxConnections(DEFAULT_MAX_CONNECTIONS);
+        pool.setPingInterval(DEFAULT_PING_INTERVAL);
         
-        config.setProperties(DB_INFO);
+        pool.setProperties(DB_INFO);
     }
 
     protected void tearDown() throws Exception {
@@ -69,10 +69,8 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
      * @throws Exception if something went wrong.
      */
     public void testPoolStart() throws Exception {
-        FBConnectionPoolDataSource pool = new FBConnectionPoolDataSource(config);
-        
         try {
-            pool.start();
+            PooledConnection pooledConnection = pool.getPooledConnection();
         } catch(SQLException ex) {
             fail("Pool should have been started.");
         } finally {
@@ -86,10 +84,7 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
      * @throws Exception if something is wrong.
      */
     public void testConnection() throws Exception {
-        FBConnectionPoolDataSource pool = new FBConnectionPoolDataSource(config);
         DataSource dataSource = new SimpleDataSource(pool);
-        
-        pool.start();
         
         Connection con = dataSource.getConnection();
         
@@ -112,6 +107,8 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
             fail("No exception should be thrown.");
         } finally {
             con.close();
+            
+            pool.shutdown();
         }
     }
     
@@ -121,22 +118,23 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
      * @throws Exception if something went wrong.
      */
     public void testFalseConnectionUsage() throws Exception {
-        FBConnectionPoolDataSource pool = new FBConnectionPoolDataSource(config);
         DataSource dataSource = new SimpleDataSource(pool);
         
-        pool.start();
-        
         Connection con = dataSource.getConnection();
-        
-        // release connection
-        con.close();
-        
         try {
-            Statement stmt = con.createStatement();
+        
+            // release connection
+            con.close();
             
-            fail("Should not be able to create statement with closed connection.");
-        } catch(SQLException ex) {
-            // everything is ok
+            try {
+                Statement stmt = con.createStatement();
+                
+                fail("Should not be able to create statement with closed connection.");
+            } catch(SQLException ex) {
+                // everything is ok
+            } 
+        }finally {
+            pool.shutdown();
         }
     }
     
@@ -146,10 +144,7 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
      * @throws Exception if something went wrong.
      */
     public void testPreparedStatement() throws Exception {
-        FBConnectionPoolDataSource pool = new FBConnectionPoolDataSource(config);
         DataSource dataSource = new SimpleDataSource(pool);
-        
-        pool.start();
         
         Connection con = dataSource.getConnection();
         
@@ -212,7 +207,8 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
             } finally {
                 con.close();
             }
-
+            
+            pool.shutdown();
         }
     }
     
@@ -223,15 +219,11 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
      */
     public void testBlocking() throws Exception {
         
-        config.setBlockingTimeout(2 * 1000);
-        
-        final FBConnectionPoolDataSource pool = new FBConnectionPoolDataSource(config);
+        pool.setBlockingTimeout(2 * 1000);
         
         try {
-            pool.start();
-            
             PooledConnection[] connections = 
-                new PooledConnection[config.getMaxConnections()];
+                new PooledConnection[pool.getMaxConnections()];
                 
             // take all connections, so next access will block
             for (int i = 0; i < connections.length; i++) {
@@ -274,15 +266,42 @@ public class TestFBConnectionPoolDataSource extends BaseFBTest {
             t.start();
             
             // sleep for blocking timeout + 1 sec.
-            Thread.sleep(config.getBlockingTimeout() + 1000);
+            Thread.sleep(pool.getBlockingTimeout() + 1000);
             
             assertTrue("Blocked thread should have failed on timeout.", 
                 tester.failedOnTimeout);
                 
             assertTrue("Exception should not have been thrown too early.", 
-                tester.duration >= config.getBlockingTimeout());
+                tester.duration >= pool.getBlockingTimeout());
         } finally {
             pool.shutdown();    
+        }
+    }
+    
+    public void testIdleRemover() throws Exception {
+        pool.setIdleTimeout(1 * 1000);
+        
+        try {
+            Connection con = pool.getPooledConnection().getConnection();
+            
+            assertTrue("Should have totally 1 connection", 
+                pool.getTotalSize() == 1);
+                
+            assertTrue("Should have 1 working connection", 
+                pool.getWorkingSize() == 1);
+            
+            con.close();
+            
+            assertTrue("Working size should be 0", 
+                pool.getWorkingSize() == 0);
+            
+            Thread.sleep(10 * 1000 + 5 * 1000);
+            
+            assertTrue("Total size should be 0",
+                pool.getTotalSize() == 0);
+            
+        } finally {
+            pool.shutdown();
         }
     }
 }
