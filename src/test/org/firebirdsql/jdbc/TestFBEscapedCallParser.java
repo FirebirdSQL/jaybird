@@ -42,23 +42,23 @@ public class TestFBEscapedCallParser extends TestCase {
         "EXECUTE PROCEDURE my_proc(?, '11-dec-2001');";
     
     public static final String CALL_TEST_5 =
-        "my_proc in ?, in '11-dec-2001', out 'test'";
+        "EXECUTE PROCEDURE my_proc in ?, in '11-dec-2001', out 'test string, with comma'";
 
     public TestFBEscapedCallParser(String testName) {
         super(testName);
     }
     
-    protected FBEscapedCallParser.FBProcedureCall testProcedureCall; 
+    protected FBProcedureCall testProcedureCall; 
     
     protected void setUp() {
-        testProcedureCall = new FBEscapedCallParser.FBProcedureCall();
+        testProcedureCall = new FBProcedureCall();
         testProcedureCall.setName("my_proc");
         testProcedureCall.addInputParam(
-                new FBEscapedCallParser.FBProcedureCallParam(1, "?"));
+                new FBProcedureParam(1, "?"));
         testProcedureCall.addInputParam(
-                new FBEscapedCallParser.FBProcedureCallParam(2, "'11-dec-2001'"));
+                new FBProcedureParam(2, "'11-dec-2001'"));
         testProcedureCall.addOutputParam(
-                new FBEscapedCallParser.FBProcedureCallParam(3, "'test'"));
+                new FBProcedureParam(3, "'test string, with comma'"));
     }
     
     protected void tearDown() {
@@ -67,10 +67,10 @@ public class TestFBEscapedCallParser extends TestCase {
     public void testProcessEscapedCall() throws Exception {
         FBEscapedCallParser parser = new FBEscapedCallParser();
         
-        FBEscapedCallParser.FBProcedureCall procedureCall = 
+        FBProcedureCall procedureCall = 
             parser.parseCall(CALL_TEST_5);
         
-        assertTrue("Should correctly parse call", 
+        assertTrue("Should correctly parse call. " + testProcedureCall.getSQL(), 
                 testProcedureCall.equals(procedureCall));
     }
 
