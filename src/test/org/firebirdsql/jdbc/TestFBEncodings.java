@@ -29,6 +29,9 @@ import java.sql.*;
  */
 public class TestFBEncodings extends BaseFBTest {
     
+	 java.util.Vector encJava = new java.util.Vector();
+	 java.util.Vector encFB = new java.util.Vector();
+
     public static String CREATE_TABLE = 
         "CREATE TABLE test_encodings (" + 
         "  id INTEGER, " +
@@ -51,12 +54,15 @@ public class TestFBEncodings extends BaseFBTest {
         "  unicode_field VARCHAR(50) CHARACTER SET UNICODE_FSS " +
         ")"
         ;
-	 
+
     public static String DROP_TABLE = 
         "DROP TABLE test_encodings";
 
     public static String DROP_TABLE_CYRL = 
         "DROP TABLE test_encodings_cyrl";
+
+    public static String DROP_TABLE_UNIVERSAL = 
+        "DROP TABLE test_encodings_universal";
 	 
     public TestFBEncodings(String testName) {
         super(testName);
@@ -67,6 +73,61 @@ public class TestFBEncodings extends BaseFBTest {
     }
     protected String getCreateTableStatement_cyrl() {
         return CREATE_TABLE_CYRL;
+    }
+    protected String getCreateTableStatement_universal() {
+
+				encJava.add("Cp437"); encFB.add("DOS437");				
+				encJava.add("Cp850"); encFB.add("DOS850");
+				encJava.add("Cp852"); encFB.add("DOS852");
+				encJava.add("Cp857"); encFB.add("DOS857");			
+				encJava.add("Cp860"); encFB.add("DOS860");
+				encJava.add("Cp861"); encFB.add("DOS861");
+				encJava.add("Cp863"); encFB.add("DOS863");
+				encJava.add("Cp865"); encFB.add("DOS865");
+				encJava.add("Cp869"); encFB.add("DOS869");
+
+				encJava.add("Cp1250"); encFB.add("WIN1250");
+				encJava.add("Cp1251"); encFB.add("WIN1251");
+				encJava.add("Cp1252"); encFB.add("WIN1252");
+				encJava.add("Cp1253"); encFB.add("WIN1253");
+				encJava.add("Cp1254"); encFB.add("WIN1254");
+
+				encJava.add("ISO8859_1"); encFB.add("ISO8859_1");
+				encJava.add("ISO8859_2"); encFB.add("ISO8859_2");
+// New cs				
+/*				
+				encJava.add("Cp737"); encFB.add("DOS737");
+				encJava.add("Cp775"); encFB.add("DOS775");
+				encJava.add("Cp858"); encFB.add("DOS858");
+				encJava.add("Cp862"); encFB.add("DOS862");
+				encJava.add("Cp864"); encFB.add("DOS864");
+				encJava.add("Cp866"); encFB.add("DOS866");
+
+				encJava.add("Cp1255"); encFB.add("WIN1255");
+				encJava.add("Cp1256"); encFB.add("WIN1256");
+				encJava.add("Cp1257"); encFB.add("WIN1257");
+
+				encJava.add("ISO8859_3"); encFB.add("ISO8859_3");
+				encJava.add("ISO8859_4"); encFB.add("ISO8859_4");
+				encJava.add("ISO8859_5"); encFB.add("ISO8859_5");
+				encJava.add("ISO8859_6"); encFB.add("ISO8859_6");
+				encJava.add("ISO8859_7"); encFB.add("ISO8859_7");
+				encJava.add("ISO8859_8"); encFB.add("ISO8859_8");
+				encJava.add("ISO8859_9"); encFB.add("ISO8859_9");
+				encJava.add("ISO8859_13"); encFB.add("ISO8859_13");
+*/
+        String CREATE_TABLE_UNIVERSAL = "CREATE TABLE test_encodings_universal (" + 
+        "  id INTEGER ";
+		  for (int encN = 0; encN < encJava.size(); encN++){
+			  CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + "," + (String) encJava.elementAt(encN) 
+			  +"_field VARCHAR(50) CHARACTER SET "+ (String) encFB.elementAt(encN);
+		  }
+		  for (int encN = 0; encN < encJava.size(); encN++){
+			  CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + ", uc_" + (String) encJava.elementAt(encN) 
+			  +"_field VARCHAR(50) CHARACTER SET UNICODE_FSS ";
+		  }
+		  CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + ")";
+        return CREATE_TABLE_UNIVERSAL;
     }
     
     protected void setUp() throws Exception {
@@ -85,12 +146,14 @@ public class TestFBEncodings extends BaseFBTest {
         try {
             stmt.executeUpdate(DROP_TABLE);
             stmt.executeUpdate(DROP_TABLE_CYRL);
+            stmt.executeUpdate(DROP_TABLE_UNIVERSAL);
         }
         catch (Exception e) {}
 
         try {
             stmt.executeUpdate(getCreateTableStatement());
             stmt.executeUpdate(getCreateTableStatement_cyrl());
+            stmt.executeUpdate(getCreateTableStatement_universal());
             stmt.close();        
         } catch(Exception ex) {
         }
@@ -98,6 +161,7 @@ public class TestFBEncodings extends BaseFBTest {
         try {
             stmt.executeUpdate("DELETE FROM test_encodings");
             stmt.executeUpdate("DELETE FROM test_encodings_cyrl");
+            stmt.executeUpdate("DELETE FROM test_encodings_universal");
             stmt.close();        
         } catch(Exception ex) {
         }
@@ -534,6 +598,71 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
                 // everything is ok
             }
             
+            stmt.close();
+        } finally {
+            connection.close();
+        }
+    }    
+
+    public static byte[] UNIVERSAL_TEST_BYTES = new byte[] {
+        (byte)0xE0, (byte)0xE1, (byte)0xE2, /* (byte)0xE3, CANT MAP IN ISO_8859_3 */
+        (byte)0xE4, (byte)0xE5, (byte)0xE6, /* (byte)0xE7, CANT MAP IN DOS857 */
+        (byte)0xE8, (byte)0xE9, (byte)0xEA, (byte)0xEB, 
+        (byte)0xEC, (byte)0xED, (byte)0xEC, (byte)0xEF
+    };
+	 
+    public static int UNIVERSAL_TEST_ID = 1;
+    
+    public void testUniversal() throws Exception {
+		 
+        java.util.Properties props = new java.util.Properties();
+        props.putAll(DB_INFO);
+        props.put("lc_ctype", "UNICODE_FSS");
+        
+        Connection connection = 
+            DriverManager.getConnection(DB_DRIVER_URL, props);
+
+        try {
+			   String insert = "INSERT INTO test_encodings_universal VALUES(? ";
+				for (int col=0; col<encJava.size()*2; col++){
+					insert = insert + ",?";
+				}
+				insert = insert + ")";
+            PreparedStatement stmt = connection.prepareStatement(insert);
+            				
+            stmt.setInt(1, UNIVERSAL_TEST_ID);
+				for (int col=0; col<encJava.size(); col++){
+					stmt.setString(col+2, new String(UNIVERSAL_TEST_BYTES,(String) encJava.elementAt(col)));
+					stmt.setString(col+encJava.size()+2, new String(UNIVERSAL_TEST_BYTES,(String) encJava.elementAt(col)));
+				}
+								
+            int updated = stmt.executeUpdate();
+            stmt.close();
+            
+            assertTrue("Should insert one row", updated == 1);
+				// 
+				// Test each column
+				//
+				stmt = connection.prepareStatement(
+                "SELECT * " + 
+                "FROM test_encodings_universal WHERE id = ?");
+            stmt.setInt(1, UNIVERSAL_TEST_ID);
+                
+            ResultSet rs = stmt.executeQuery();
+				assertTrue("Should have at least one row", rs.next());
+
+				for (int col=0; col<encJava.size(); col++){
+					String charsetValue = rs.getString(col+2);
+					String unicodeValue = rs.getString(col+encJava.size()+2);
+					
+					assertTrue("charsetValue "+encJava.elementAt(col)+" should be the same that unicode", 
+                charsetValue.equals(unicodeValue));
+					assertTrue("charsetValue "+encJava.elementAt(col)+" should be == string", 
+                charsetValue.equals(new String(UNIVERSAL_TEST_BYTES,(String) encJava.elementAt(col))));
+				}
+            assertTrue("Should have exactly one row", !rs.next());
+            
+            rs.close();
             stmt.close();
         } finally {
             connection.close();
