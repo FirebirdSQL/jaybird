@@ -4831,7 +4831,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean supportsBatchUpdates() throws SQLException {
-        return false;
+        return true;
     }
 
 
