@@ -1,3 +1,26 @@
+2004-12-12 17:43  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FBResultSet.java,
+	FBUpdatableCursorFetcher.java, FBUpdatableFetcher.java:
+	
+	renamed FBUpdatableFetcher into FBUpdatableCursorFetcher
+
+2004-12-12 17:31  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+	
+	implemented DatabaseMetaData.getBestRowIdentifier
+
+2004-12-12 17:31  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
+	
+	removed commented out code
+
 2004-12-11 23:36  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/management/FBUser.java:
