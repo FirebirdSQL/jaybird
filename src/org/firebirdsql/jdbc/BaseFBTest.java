@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2002/01/07 16:32:04  d_jencks
+ * Fixed FBManager to require user and password to create a db: added these to setup/teardown for tests.
+ *
  * Revision 1.1  2002/01/07 06:59:54  d_jencks
  * Revised FBManager to create dialect 3 databases, and the tests to use a newly created database. Simplified and unified test constants. Test targets are now all-tests for all tests and one-test for one test: specify the test as -Dtest=Gds one-test for the TestGds.class test.  Made a few other small changes to improve error messages
  *
@@ -45,6 +48,7 @@ package org.firebirdsql.jdbc;
 
 import junit.framework.*;
 import org.firebirdsql.management.*;
+import org.firebirdsql.logging.Logger;
 
 
 /**
@@ -52,9 +56,12 @@ import org.firebirdsql.management.*;
  * on the particular environment.
  *
  * @author Roman Rokytskyy (rrokytskyy@yahoo.co.uk)
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  */
 public class BaseFBTest extends TestCase
 {
+
+
     /**
      * Default URL for the test
      */
@@ -95,6 +102,8 @@ public class BaseFBTest extends TestCase
 
    private final FBManager fbManager = new FBManager();
 
+   protected final Logger log = Logger.getLogger(getClass());
+
     public BaseFBTest(String testName) {
         super(testName);
     }
@@ -110,8 +119,7 @@ public class BaseFBTest extends TestCase
       }
       catch (Exception e)
       {
-         System.out.println("exception in setup of " + getName() + ": " + e);
-         e.printStackTrace(); 
+         log.warn("exception in setup of " + getName() + ": ", e);
       } // end of try-catch
    }
 
@@ -124,8 +132,7 @@ public class BaseFBTest extends TestCase
       }
       catch (Exception e)
       {
-         System.out.println("exception in teardown of " + getName() + ": " + e);
-         e.printStackTrace(); 
+         log.warn("exception in teardown of " + getName() + ": ", e);
       } // end of try-catch
       
    }

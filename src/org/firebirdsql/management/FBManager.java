@@ -10,8 +10,11 @@ import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import org.firebirdsql.logging.Logger;
 
 public class FBManager implements FBManagerMBean, MBeanRegistration {
+
+   private final Logger log = Logger.getLogger(getClass());
 
     // Constants -----------------------------------------------------
     public static final String[] states = {"Stopped","Stopping","Starting","Started"};
@@ -51,7 +54,6 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
     public ObjectName preRegister(MBeanServer server, ObjectName name)
         throws java.lang.Exception
     {
-        System.out.println("in FBManager preRegister");
         name = getObjectName(server, name);
         this.server = server;
         return name;
@@ -137,8 +139,8 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
             gds.isc_detach_database(db);
         }
         catch (Exception e) {
-            e.printStackTrace();
-            throw e;
+           log.error("Exception creating database", e);
+           throw e;
         }
     }
 
@@ -153,14 +155,15 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
 
         }
         catch (Exception e) {
-            e.printStackTrace();
+           log.error("Exception dropping database", e);
+
             throw e;
         }
     }
 
     //private methods
     private String getConnectString(String filename) {
-        String fileString = getURL() + "/" + getPort() + ":" + filename;// + getPort() + ":"
+        String fileString = getURL() + "/" + getPort() + ":" + filename;
         return fileString;
     }
 

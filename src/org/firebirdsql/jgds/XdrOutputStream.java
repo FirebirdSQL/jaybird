@@ -38,8 +38,11 @@ import java.util.Iterator;
 
 
 import org.firebirdsql.gds.Clumplet;
+import org.firebirdsql.logging.Logger;
 
 class XdrOutputStream extends FilterOutputStream {
+
+   private final Logger log = Logger.getLogger(getClass());
 
     public XdrOutputStream(OutputStream out) {
         super(out);
@@ -89,7 +92,7 @@ class XdrOutputStream extends FilterOutputStream {
 
     public final void writeBlobBuffer(byte[] buffer) throws IOException {
     int len = buffer.length ; // 2 for short for buffer length
-    //System.out.println("writeBlobBuffer len: " + len);
+    if (log.isDebugEnabled()) {log.debug("writeBlobBuffer len: " + len);}
     if (len > Short.MAX_VALUE) {
         throw new IOException(""); //Need a value???
     }
@@ -98,7 +101,7 @@ class XdrOutputStream extends FilterOutputStream {
     write((len >> 0) & 0xff);
     write((len >> 8) & 0xff);
     write(buffer, 0, len);
-    //System.out.println("writeBlobBuffer wrotebuffer bytes: " + len);
+    if (log.isDebugEnabled()) {log.debug("writeBlobBuffer wrotebuffer bytes: " + len);}
     even(len + 2);
     }
 
@@ -107,7 +110,7 @@ class XdrOutputStream extends FilterOutputStream {
         writeBuffer(buffer, buffer.length);
     }
     public final void writeSet(int type, Set s) throws IOException {
-        //System.out.println("writeSet: type: " + type);
+       if (log.isDebugEnabled()) {log.debug("writeSet: type: " + type);}
         if (s == null) {
             writeInt(1);
             out.write(type); //e.g. gds.isc_tpb_version3
@@ -119,9 +122,9 @@ class XdrOutputStream extends FilterOutputStream {
             while (i.hasNext()) {
                 int n = ((Integer)i.next()).intValue();
                 out.write(n);
-                //System.out.println("writeSet: value: " + n);
+                if (log.isDebugEnabled()) {log.debug("writeSet: value: " + n);}
             }
-            //System.out.println("writeSet: padding 0 : " + ((4 - (s.size() + 1)) & 3));
+            if (log.isDebugEnabled()) {log.debug("writeSet: padding 0 : " + ((4 - (s.size() + 1)) & 3));}
             for (int j = 0; j < ((4 - (s.size() + 1)) & 3); j++) {
                 out.write(0);
             }

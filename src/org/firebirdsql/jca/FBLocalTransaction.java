@@ -38,6 +38,8 @@ import javax.transaction.xa.Xid;
 
 import org.firebirdsql.jdbc.FBConnection;
 
+import org.firebirdsql.logging.Logger;
+
 
 /**
  *
@@ -47,6 +49,8 @@ import org.firebirdsql.jdbc.FBConnection;
  */
 
  public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.LocalTransaction {
+
+    private static final Logger log = Logger.getLogger(FBLocalTransaction.class);
 
      private FBManagedConnection mc;
 
@@ -82,8 +86,8 @@ import org.firebirdsql.jdbc.FBConnection;
              mc.start(xid, XAResource.TMNOFLAGS);  //FBManagedConnection is its own XAResource
          }
          catch (XAException e) {
-            e.printStackTrace();
-             throw new ResourceException("couldn't start local transaction: " + e);
+            log.warn("couldn't start local transaction: " , e);
+            throw new ResourceException("couldn't start local transaction: " + e);
          }
          if (c != null) {
              mc.notify(ConnectionEvent.LOCAL_TRANSACTION_STARTED, c, null);

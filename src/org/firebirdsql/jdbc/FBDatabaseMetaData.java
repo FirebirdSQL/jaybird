@@ -41,6 +41,8 @@ import java.util.List;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.XSQLVAR;
 
+import org.firebirdsql.logging.Logger;
+
 /**
  *
  *   @see <related>
@@ -72,6 +74,7 @@ import org.firebirdsql.gds.XSQLVAR;
  */
 public class FBDatabaseMetaData implements DatabaseMetaData {
 
+   private final Logger log = Logger.getLogger(getClass());
     private static final String SPACES = "                               ";//31 spaces
 
     FBConnection c;
@@ -102,8 +105,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                 }*/
         }
         catch (SQLException e) {
-            //yuckola
-            e.printStackTrace();
+           log.warn("error in DatabaseMetaData.close", e);
         }
     }
 

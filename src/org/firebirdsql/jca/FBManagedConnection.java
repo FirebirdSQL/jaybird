@@ -61,11 +61,12 @@ import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.isc_tr_handle;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBStatement;
+import org.firebirdsql.logging.Logger;
 
 /**
  *
  *   @see <related>
- *   @author David Jencks (davidjencks@earthlink.net)
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *   @version $ $
  */
 
@@ -79,13 +80,13 @@ import org.firebirdsql.jdbc.FBStatement;
 
 public class FBManagedConnection implements ManagedConnection, XAResource {
 
+   private final Logger log = Logger.getLogger(getClass());
+
     private FBManagedConnectionFactory mcf;
 
     private ArrayList connectionEventListeners = new ArrayList();
 
     private ArrayList connectionHandles = new ArrayList();
-
-    private PrintWriter log;
 
     private int timeout = 0;
 
@@ -105,7 +106,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     {
         this.mcf = mcf;
         this.cri = getCombinedConnectionRequestInfo(subject, cri);//cri;
-        this.log = mcf.getLogWriter();
         this.tpb = mcf.getTpb(); //getTpb supplies a copy.
     }
 
@@ -166,7 +166,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          ResourceAdapterInternalException - resource adapter related error condition
     **/
     public void setLogWriter(PrintWriter out){
-        this.log = out;
+       //ignore, we are using log4j.
     }
 
 
@@ -189,7 +189,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     **/
 
     public PrintWriter getLogWriter() {
-        return log;
+       return null;//we are using log4j.
     }
 
   /**<P> Add an event listener.
@@ -324,7 +324,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         }
         if (currentDbHandle != null) {
             try {
-                //(new Exception()).printStackTrace();//Useful to find how we got here.
+               //if (log.isDebugEnabled()) {log.debug("in ManagedConnection.destroy",new Exception());}
                 mcf.releaseDbHandle(currentDbHandle);
             }
             catch (GDSException ge) {
@@ -344,8 +344,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
    * @exception SQLException if a database-access error occurs
    */
     public javax.transaction.xa.XAResource getXAResource() throws ResourceException {
-        log.println("XAResource requested from FBManagedConnection");
-        return this;
+       if (log.isDebugEnabled()) 
+       {
+          log.debug("XAResource requested from FBManagedConnection");
+       } // end of if ()
+       return this;
     }
 
     //--------------------------------------------------------------
@@ -362,7 +365,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     differs depending on the exact situation.
      */
     public void commit(Xid id, boolean twoPhase) throws XAException {
-        log.println("Commit called: " + id);
+       if (log.isDebugEnabled()) 
+       {
+          log.debug("Commit called: " + id);
+       } // end of if ()
         if (mcf.lookupXid(id) == null) {
             throw new XAException("commit called with unknown transaction");
         }
@@ -379,13 +385,18 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     transaction ID is wrong.
      */
      //what do we do with flags?????
-    public void end(Xid id, int flags) throws javax.transaction.xa.XAException {
-        log.println("End called: " + id);
+    public void end(Xid id, int flags) throws javax.transaction.xa.XAException {       if (log.isDebugEnabled()) 
+       {
+          log.debug("End called: " + id);
+       } // end of if ()
         if (currentTr == null) {
-            //throw new XAException("end called with no transaction associated");
-            log.println("end called with no transaction associated: " + id + ", flags: " + flags);
-            (            new Exception()).printStackTrace();
-throw new XAException("end called with no transaction associated");
+           XAException xae = new XAException("end called with no transaction associated");
+           if (log.isDebugEnabled()) 
+           {
+              log.debug("end called with no transaction associated: " + id + ", flags: " + flags, xae);
+           } // end of if ()
+
+           throw xae;
 
 //return;
         }
@@ -404,7 +415,10 @@ throw new XAException("end called with no transaction associated");
      *     transaction ID is wrong.
      */
     public void forget(Xid id) throws javax.transaction.xa.XAException {
-        log.println("forget called: " + id);
+       if (log.isDebugEnabled()) 
+       {
+          log.debug("forget called: " + id);
+       } // end of if ()
         if (mcf.lookupXid(id) == null) {
             throw new XAException("forget called with unknown transaction");
         }
@@ -433,7 +447,10 @@ throw new XAException("end called with no transaction associated");
      *     transaction ID is wrong, or the connection was set to Auto-Commit.
      */
     public int prepare(Xid id) throws javax.transaction.xa.XAException {
-        log.println("prepare called: " + id);
+       if (log.isDebugEnabled()) 
+       {
+          log.debug("prepare called: " + id);
+       } // end of if ()
         if (mcf.lookupXid(id) == null) {
             throw new XAException("prepare called with unknown transaction");
         }
@@ -502,15 +519,13 @@ throw new XAException("end called with no transaction associated");
      *     differs depending on the exact situation.
      */
     public void rollback(Xid id) throws javax.transaction.xa.XAException {
-        log.println("rollback called: " + id);
+       if (log.isDebugEnabled()) 
+       {
+          log.debug("rollback called: " + id);
+       } // end of if ()
         if (mcf.lookupXid(id) == null) {
-            System.out.println("____________WARNING_____________");
-            System.out.println("____________WARNING_____________");
-            System.out.println("rollback called with unknown transaction");
-            System.out.println("____________WARNING_____________");
-            System.out.println("____________WARNING_____________");
+            log.warn("rollback called with unknown transaction: " + id);
             return;
-            //throw new XAException("rollback called with unknown transaction");
         }
         if (mcf.lookupXid(id) == currentTr) {
             throw new XAException("rollback called with current xid");
@@ -541,7 +556,10 @@ throw new XAException("end called with no transaction associated");
      *     transaction ID is wrong, or the instance has already been closed.
      */
     public void start(Xid id, int flags) throws XAException {
-        log.println("start called: " + id);
+       if (log.isDebugEnabled()) 
+       {
+          log.debug("start called: " + id);
+       } // end of if ()
         if (currentTr != null) {
             throw new XAException("start called with transaction associated");
         }
@@ -565,7 +583,10 @@ throw new XAException("end called with no transaction associated");
     }
 
     public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException {
-        log.println("preparing sql: " + sql);
+       if (log.isDebugEnabled()) 
+       {
+          log.debug("preparing sql: " + sql);
+       } // end of if ()
         //Should we test for dbhandle?
         XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, sql, GDS.SQL_DIALECT_CURRENT);
         if (out.sqld != out.sqln) {
@@ -715,7 +736,7 @@ throw new XAException("end called with no transaction associated");
 
 
     void notify(int type, FBConnection c, Exception e) {
-        //(new Exception()).printStackTrace();
+       //if (log.isDebugEnabled()) {log.debug("in ManagedConnection.notify",new Exception());}
         ConnectionEvent ce = new ConnectionEvent(this, type, e);
         ce.setConnectionHandle(c);
         //avoid a concurrent modification exception - notification modifies list.

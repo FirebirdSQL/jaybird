@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.7  2002/01/07 06:59:54  d_jencks
+ * Revised FBManager to create dialect 3 databases, and the tests to use a newly created database. Simplified and unified test constants. Test targets are now all-tests for all tests and one-test for one test: specify the test as -Dtest=Gds one-test for the TestGds.class test.  Made a few other small changes to improve error messages
+ *
  * Revision 1.6  2002/01/06 23:37:58  d_jencks
  * added a connection test to datasource test, cleaned up constants a bit.
  *
@@ -61,6 +64,7 @@ package org.firebirdsql.jdbc;
 
 import junit.framework.*;
 import java.sql.*;
+import org.firebirdsql.logging.Logger;
 
 
 /**
@@ -120,8 +124,7 @@ public class TestFBUnmanagedConnection extends BaseFBTest {
         } catch (Exception e) 
         {
             //these messages are too annoying.
-            //System.out.println("Possible problem committing before close of connection-- possibly not a problem");
-            // e.printStackTrace();
+            //log.debug("Possible problem committing before close of connection-- possibly not a problem", e);
         } // end of try-catch
 
         connection.close();
@@ -152,7 +155,7 @@ public class TestFBUnmanagedConnection extends BaseFBTest {
             statement.executeUpdate(DROP_TEST_TABLE);
             connection.commit();
         } catch(Exception ex) {
-            ex.printStackTrace();
+           log.warn("failing testCommit",  ex);
             assertTrue(ex.getMessage(), false);
         }
     }

@@ -17,6 +17,7 @@ import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.jgds.GDS_Impl;
 import org.firebirdsql.management.FBManager;
+import org.firebirdsql.logging.Logger;
 
 import java.io.*;
 import java.util.Properties;
@@ -33,7 +34,7 @@ import junit.framework.*;
 /**
  *
  *   @see <related>
- *   @author David Jencks (davidjencks@earthlink.net)
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *   @version $ $
  */
 
@@ -58,8 +59,7 @@ public class TestFBConnection extends TestXABase {
 
 
     public void testCreateC() throws Exception {
-        System.out.println();
-        System.out.println("testCreateC");
+        log.info("testCreateC");
         FBManagedConnectionFactory mcf = initMcf();
         assertTrue("Could not get FBManagedConnectionFactory", mcf != null);
         ManagedConnection mc = mcf.createManagedConnection(null, null);
@@ -70,8 +70,7 @@ public class TestFBConnection extends TestXABase {
     }
 
     public void testAssociateC() throws Exception {
-        System.out.println();
-        System.out.println("testAssociateC");
+        log.info("testAssociateC");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc1 = mcf.createManagedConnection(null, null);
         Connection c1 = (Connection)mc1.getConnection(null, null);
@@ -84,8 +83,7 @@ public class TestFBConnection extends TestXABase {
     }
 
     public void testCreateStatement() throws Exception {
-        System.out.println();
-        System.out.println("testCreateStatement");
+        log.info("testCreateStatement");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         Connection c = (Connection)mc.getConnection(null, null);
@@ -95,8 +93,7 @@ public class TestFBConnection extends TestXABase {
     }
 
     public void testUseStatement() throws Exception {
-        System.out.println();
-        System.out.println("testUseStatement");
+        log.info("testUseStatement");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         Connection c = (Connection)mc.getConnection(null, null);

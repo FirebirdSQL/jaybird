@@ -20,6 +20,7 @@ import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.jgds.GDS_Impl;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.logging.Logger;
 
 import java.io.*;
 import java.util.Properties;
@@ -36,16 +37,12 @@ import junit.framework.*;
 /**
  *
  *   @see <related>
- *   @author David Jencks (davidjencks@earthlink.net)
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *   @version $ $
  */
 
 
 
-/**
- *This is a class that hands out connections.  Initial implementation uses DriverManager.getConnection,
- *future enhancements will use datasources/ managed stuff.
- */
 public class TestFBManagedConnectionFactory extends TestXABase {
 
 
@@ -58,15 +55,14 @@ public class TestFBManagedConnectionFactory extends TestXABase {
 
 
     public void testCreateMcf() throws Exception {
-        System.out.println();
-        System.out.println("testCreateMcf");
+        log.info("testCreateMcf");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnectionFactory realMcf = mcf;
     }
 
     public void testCreateMc() throws Exception {
-        System.out.println();
-        System.out.println("testCreateMc");
+        
+        log.info("testCreateMc");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         mc.destroy();
@@ -75,8 +71,8 @@ public class TestFBManagedConnectionFactory extends TestXABase {
 
 
     public void testSqlInfo() throws Exception {
-        System.out.println();
-        System.out.println("testSqlInfo");
+        
+        log.info("testSqlInfo");
         byte[] testbuffer = {
 23, //isc_info_sql_records
 29,  //length

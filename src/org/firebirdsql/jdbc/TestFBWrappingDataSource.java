@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.4  2002/01/07 06:59:54  d_jencks
+ * Revised FBManager to create dialect 3 databases, and the tests to use a newly created database. Simplified and unified test constants. Test targets are now all-tests for all tests and one-test for one test: specify the test as -Dtest=Gds one-test for the TestGds.class test.  Made a few other small changes to improve error messages
+ *
  * Revision 1.3  2002/01/06 23:37:58  d_jencks
  * added a connection test to datasource test, cleaned up constants a bit.
  *
@@ -52,6 +55,7 @@ import java.util.ArrayList;
 import javax.resource.ResourceException;
 import java.sql.*;
 import junit.framework.*;
+import org.firebirdsql.logging.Logger;
 
 /**
  * Test suite for the FBWrappingDataSource  class implementation.
@@ -70,7 +74,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
 
 
     public void testConnect() throws Exception {
-        System.out.println("Testing FBWrapping DataSource on db: " + DB_DATASOURCE_URL);
+        log.info("Testing FBWrapping DataSource on db: " + DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
         ds.setDatabaseName(DB_DATASOURCE_URL);
@@ -83,7 +87,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
     }
 
     public void testOneConnectionWithPooling() throws Exception {
-        System.out.println("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
+        log.info("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
         ds.setDatabaseName(DB_DATASOURCE_URL);
@@ -121,7 +125,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
 
 
    public void testPooling() throws Exception {
-        System.out.println("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
+        log.info("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
         ds.setDatabaseName(DB_DATASOURCE_URL);
