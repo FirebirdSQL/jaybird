@@ -11,7 +11,7 @@
     <tstamp/>
     <property name="Name" value="FirebirdSQL"/>
     <property name="name" value="firebirdsql"/>
-    <property name="version" value="0.0"/>
+    <property name="version" value="1.0_beta_1"/>
 
     <property name="lib.dir" value="${basedir}/lib"/>
 
@@ -392,7 +392,7 @@
         <include name="*.jar"/>
       </zipfileset>
       <fileset dir="${module.etc}">
-        <include name="release-notes.txt"/>
+        <include name="release_notes.html"/>
       </fileset>
     </zip>
   </target>
