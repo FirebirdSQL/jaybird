@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.io.*;
 import java.sql.*;
 import java.util.Arrays;
 
@@ -70,14 +71,20 @@ public class TestFBBlobAutocommit extends BaseFBTest {
     }
 
     protected void tearDown() throws Exception {
-        //java.sql.Statement stmt = connection.createStatement();
-        //stmt.executeUpdate(DROP_TABLE);
-        //stmt.close();
+        java.sql.Statement stmt = connection.createStatement();
+        stmt.executeUpdate(DROP_TABLE);
+        stmt.close();
         connection.close();
         super.tearDown();
     }
     
-    public void test() throws Exception {
+    /**
+     * Test if correct object types are returned from {@link ResultSet#getObject()}
+     * depending on column type.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testFieldTypes() throws Exception {
         PreparedStatement stmt = connection.prepareStatement(
             "INSERT INTO test_blob VALUES (?, ?, ?, ?)");
             
@@ -98,33 +105,73 @@ public class TestFBBlobAutocommit extends BaseFBTest {
         
         ResultSet rs = stmt.executeQuery();
         
-        assertTrue("Result set should have at least 1 row", rs.next());
-        
-        assertTrue("ID should be the same.", rs.getInt(1) == TEST_ID);
-        assertTrue("getObject() on binary field should return byte[]", 
-            rs.getObject(2) instanceof byte[]);
-        assertTrue("getObject() on text field should return byte[]", 
-            rs.getObject(3) instanceof byte[]);
-        assertTrue("getObject() on blob field should return java.sql.Blob", 
-            rs.getObject(4) instanceof Blob);
+        try {
+            assertTrue("Result set should have at least 1 row", rs.next());
             
-        assertTrue("content of binary field should be same to written", 
-            Arrays.equals(rs.getBytes(2), TEST_BYTES));
-        assertTrue("content of text field should be same to written", 
-            Arrays.equals(rs.getBytes(3), TEST_BYTES));
+            assertTrue("ID should be the same.", rs.getInt(1) == TEST_ID);
+            assertTrue("getObject() on binary field should return byte[]", 
+                rs.getObject(2) instanceof byte[]);
+            assertTrue("getObject() on text field should return byte[]", 
+                rs.getObject(3) instanceof byte[]);
+            assertTrue("getObject() on blob field should return java.sql.Blob", 
+                rs.getObject(4) instanceof Blob);
+                
+            assertTrue("content of binary field should be same to written", 
+                Arrays.equals(rs.getBytes(2), TEST_BYTES));
+            assertTrue("content of text field should be same to written", 
+                Arrays.equals(rs.getBytes(3), TEST_BYTES));
+                
+            assertTrue("string values should be the same",
+                TEST_STRING.equals(rs.getString(3)));
             
-        assertTrue("string values should be the same",
-            TEST_STRING.equals(rs.getString(3)));
-        
-        assertTrue("content of blob field should be same to written", 
-            Arrays.equals(
-                rs.getBlob(4).getBytes(1, TEST_BYTES.length), 
-                TEST_BYTES));
-
-        
-        assertTrue("Result set should contain only one row.", !rs.next());
-        
-        rs.close();
+            assertTrue("content of blob field should be same to written", 
+                Arrays.equals(
+                    rs.getBlob(4).getBytes(1, TEST_BYTES.length), 
+                    TEST_BYTES));
+    
+            
+            assertTrue("Result set should contain only one row.", !rs.next());
+        } finally {
+            rs.close();
+            stmt.close();
+        }
+    }
+    
+    /**
+     * Test if {@link PreparedStatement#setBinaryStream(int, InputStream)} stores
+     * data correctly in auto-commit case.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testSetBinaryStream() throws Exception {
+        PreparedStatement stmt = connection.prepareStatement(
+            "INSERT INTO test_blob(id, bin_data) VALUES(?, ?)");
+          
+        stmt.setInt(1, 2);
+        stmt.setBinaryStream(2, 
+            new ByteArrayInputStream(TEST_BYTES), TEST_BYTES.length);
+            
+        int insertedCount = stmt.executeUpdate();
         stmt.close();
+        
+        assertTrue("Should insert one row", insertedCount == 1);
+        
+        stmt = connection.prepareStatement(
+            "SELECT bin_data FROM test_blob WHERE id = ?");
+        stmt.setInt(1, 2);
+        
+        ResultSet rs = stmt.executeQuery();
+        
+        try {
+            assertTrue("Should get at least one record.", rs.next());
+            
+            byte[] bytes = rs.getBytes(1);
+            
+            assertTrue("Should read peviously saved data", Arrays.equals(TEST_BYTES, bytes));
+            assertTrue("Should have exactly one record.", !rs.next());
+        } finally {
+            rs.close();
+            stmt.close();
+        }
     }
 }
