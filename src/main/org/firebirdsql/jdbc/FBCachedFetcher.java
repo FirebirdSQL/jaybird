@@ -176,13 +176,25 @@ class FBCachedFetcher implements FBFetcher {
     }
     
     public boolean absolute(int row) throws SQLException {
+        if (forwardOnly)
+            throw new FBDriverNotCapableException(
+                    "Result set is TYPE_FORWARD_ONLY");
+
+        return absolute(row, false);
+    }
+    
+    private boolean absolute(int row, boolean internal) throws SQLException {
         
-        if (forwardOnly && row > rowNum)
+        if (forwardOnly && !internal)
             throw new FBDriverNotCapableException(
                     "Result set is TYPE_FORWARD_ONLY");
         
         if (row < 0)
             row = rowsArray.length + row + 1;
+        
+        if (row == 0 && !internal)
+            throw new FBSQLException(
+                "You cannot position to the row 0 with absolute() method.");
         
         if (isEmpty())
             return false;
@@ -209,15 +221,30 @@ class FBCachedFetcher implements FBFetcher {
     }
 
     public boolean first() throws SQLException {
-        return absolute(1);
+        if (forwardOnly)
+            throw new FBDriverNotCapableException(
+                    "Result set is TYPE_FORWARD_ONLY");
+        
+        
+        return absolute(1, true);
     }
 
     public boolean last() throws SQLException {
-        return absolute(-1);
+        if (forwardOnly)
+            throw new FBDriverNotCapableException(
+                    "Result set is TYPE_FORWARD_ONLY");
+        
+        
+        return absolute(-1, true);
     }
 
     public boolean relative(int row) throws SQLException {
-        return absolute(rowNum + row);
+        if (forwardOnly)
+            throw new FBDriverNotCapableException(
+                    "Result set is TYPE_FORWARD_ONLY");
+        
+        
+        return absolute(rowNum + row, true);
     }
     
     public void beforeFirst() throws SQLException {

@@ -509,4 +509,100 @@ public class TestFBResultSet extends FBTestBase {
             stmt.close();
         }
     }
+    
+    /**
+     * Test if result set type and concurrency is correct.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testBugReport2() throws Exception {
+        int recordCount = 10;
+        
+        PreparedStatement ps = 
+        connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+
+        try {
+            for(int i = 0; i < recordCount; i++) {
+                ps.setInt(1, i);
+                ps.setInt(2, i);
+                ps.executeUpdate();
+            }
+        } finally {
+            ps.close();
+        }
+        
+        connection.setAutoCommit(false);
+        
+        Statement stmt = connection.createStatement(
+                ResultSet.TYPE_SCROLL_INSENSITIVE, 
+                ResultSet.CONCUR_READ_ONLY);
+        
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table");
+            
+            assertTrue("Should have at least one row", rs.next());
+            
+            assertTrue("ResultSet type should be TYPE_SCROLL_INSENSITIVE",
+                rs.getType() == ResultSet.TYPE_SCROLL_INSENSITIVE);
+            
+            assertTrue("ResultSet concurrency should be CONCUR_READ_ONLY",
+                rs.getConcurrency() == ResultSet.CONCUR_READ_ONLY);
+            
+            rs.last();
+            
+            assertTrue("ResultSet type should not change.",
+                rs.getType() == ResultSet.TYPE_SCROLL_INSENSITIVE);
+            
+        } finally {
+            stmt.close();
+        }
+    }
+    
+    public void testBugReport3() throws Exception {
+        int recordCount = 10;
+        
+        PreparedStatement ps = 
+        connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+
+        try {
+            for(int i = 0; i < recordCount; i++) {
+                ps.setInt(1, i);
+                ps.setInt(2, i);
+                ps.executeUpdate();
+            }
+        } finally {
+            ps.close();
+        }
+        
+        connection.setAutoCommit(true);
+        
+        Statement stmt = connection.createStatement(
+                ResultSet.TYPE_FORWARD_ONLY, 
+                ResultSet.CONCUR_READ_ONLY);
+        
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table");
+            
+            try {
+                rs.first();
+                fail("first() should not work in TYPE_FORWARD_ONLY result sets");
+            } catch(SQLException ex) {
+                // should fail, everything is fine.
+            }
+            
+            while(rs.next()) {
+                // do nothing, just loop.
+            }
+            
+            try {
+                rs.first();
+                fail("first() should not work in TYPE_FORWARD_ONLY result sets.");
+            } catch(SQLException ex) {
+                // everything is fine
+            }
+            
+        } finally {
+            stmt.close();
+        }
+    }
 }
