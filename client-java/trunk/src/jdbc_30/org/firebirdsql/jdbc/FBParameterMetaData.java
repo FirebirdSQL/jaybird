@@ -235,10 +235,13 @@ public class FBParameterMetaData implements ParameterMetaData {
             case ISCConstants.SQL_TYPE_DATE:
                 return Types.DATE;
             case ISCConstants.SQL_INT64:
+                if (sqlsubtype == 1)
+                    return Types.NUMERIC;
+                else
                 if (sqlsubtype == 2)
                     return Types.DECIMAL;
                 else
-                    return Types.NUMERIC;
+                    return Types.BIGINT;
             case ISCConstants.SQL_BLOB:
                 if (sqlsubtype < 0)
                     return Types.BLOB;
@@ -307,10 +310,12 @@ public class FBParameterMetaData implements ParameterMetaData {
             case ISCConstants.SQL_TYPE_DATE:
                 return "DATE";
             case ISCConstants.SQL_INT64:
-                if (sqlsubtype == 2)
+                if (sqlsubtype == 1)
+                    return "NUMERIC";
+                else if (sqlsubtype == 2)
                     return "DECIMAL";
                 else
-                    return "NUMERIC";
+                    return "BIGINT";
             case ISCConstants.SQL_BLOB:
                 if (sqlsubtype < 0)
                     return "BLOB SUB_TYPE <0";
@@ -343,32 +348,47 @@ public class FBParameterMetaData implements ParameterMetaData {
      */
     public String getParameterClassName(int parameter) throws  SQLException {
         switch (getXsqlvar(parameter).sqltype & ~1) {
+
             case ISCConstants.SQL_TEXT:
-                return String.class.getName();
             case ISCConstants.SQL_VARYING:
                 return String.class.getName();
+            
             case ISCConstants.SQL_SHORT:
-                return Short.class.getName();
             case ISCConstants.SQL_LONG:
-                return Long.class.getName();
+                return Integer.class.getName();
+            
             case ISCConstants.SQL_FLOAT:
-                return Float.class.getName();
             case ISCConstants.SQL_DOUBLE:
-                return Double.class.getName();
             case ISCConstants.SQL_D_FLOAT:
                 return Double.class.getName();
+            
             case ISCConstants.SQL_TIMESTAMP:
                 return Timestamp.class.getName();
+            
             case ISCConstants.SQL_BLOB:
-                return Blob.class.getName();
+                XSQLVAR field = getXsqlvar(parameter);
+            
+                if (field.sqlsubtype < 0)
+                    return Blob.class.getName();
+                
+                if (field.sqlsubtype == 1)
+                    return String.class.getName();
+                
+                else
+                    return byte[].class.getName();
+            
             case ISCConstants.SQL_ARRAY:
                 return Array.class.getName();
+            
             case ISCConstants.SQL_QUAD:
                 return Long.class.getName();
+            
             case ISCConstants.SQL_TYPE_TIME:
                 return Time.class.getName();
+            
             case ISCConstants.SQL_TYPE_DATE:
                 return Date.class.getName();
+            
             case ISCConstants.SQL_INT64:
                 if (getXsqlvar(parameter).sqlscale == 0) {
                     return Long.class.getName();
@@ -376,8 +396,10 @@ public class FBParameterMetaData implements ParameterMetaData {
                 else {
                     return BigDecimal.class.getName();
                 }
+            
             default:
-                throw new SQLException("Unkown sql type");
+                throw new SQLException("Unkown SQL type", 
+                        FBSQLException.SQL_STATE_INVALID_PARAM_TYPE);
         }
     }
 
