@@ -725,6 +725,8 @@ public class GDS_Impl extends AbstractGDS implements GDS
                               int da_version,
                               XSQLDA xsqlda, int fetchSize) throws GDSException
         {
+        fetchSize = 1;
+
         isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
         isc_db_handle_impl db = stmt.getRsr_rdb();
 
