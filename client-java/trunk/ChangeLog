@@ -1,3 +1,29 @@
+2003-12-02 15:24  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
+	
+	added finalize() method to allow closing orphan statements before
+	connection is closed.
+
+2003-12-01 18:11  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBCachedFetcher.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	jdbc_20/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_20/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_20/org/firebirdsql/jdbc/FBStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBStatement.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	initial implementation of TYPE_SCROLL_INSENSITIVE
+
 2003-12-01 00:02  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/: FBCachedFetcher.java,
