@@ -31,6 +31,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.text.NumberFormat;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.jdbc.FBConnectionHelper;
@@ -164,7 +165,7 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
     static final int MAX_BUFFER_SIZE = 1024; //8192;//4096; //max size for response for ??
 
     public GDS_Impl() {
-	super(GDSType.PURE_JAVA);
+        super(GDSType.PURE_JAVA);
     }
 
 
@@ -2219,51 +2220,323 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
     }
 
 
-    public DatabaseParameterBuffer newDatabaseParameterBuffer()
-        {
+    public DatabaseParameterBuffer newDatabaseParameterBuffer() {
         return new DatabaseParameterBufferImp();
-        }
+    }
 
-    public BlobParameterBuffer newBlobParameterBuffer()
-        {
+    public BlobParameterBuffer newBlobParameterBuffer() {
         return new BlobParameterBufferImp();
-        }
-
+    }
 
     // Services API methods - all currently un-implemented.
-    public ServiceParameterBuffer newServiceParameterBuffer()
-        {
-        throw new UnsupportedOperationException();
+    public ServiceParameterBuffer newServiceParameterBuffer() {
+        return new ServiceParameterBufferImp();
+    }
+
+    public ServiceRequestBuffer newServiceRequestBuffer(int taskIdentifier) {
+        return new ServiceRequestBufferImp(taskIdentifier);
+    }
+
+    public void isc_service_attach(String service,
+            isc_svc_handle serviceHandle,
+            ServiceParameterBuffer serviceParameterBuffer) throws GDSException {
+        
+        boolean debug = log != null && log.isDebugEnabled();
+        isc_svc_handle_impl svc = (isc_svc_handle_impl) serviceHandle;
+
+        if (svc == null) {
+            throw new GDSException(ISCConstants.isc_bad_svc_handle);
         }
 
-    public ServiceRequestBuffer newServiceRequestBuffer(int taskIdentifier)
-        {
-        throw new UnsupportedOperationException();
+        String serviceMgrStr = "service_mgr";
+        
+        int mgrIndex = service.indexOf(serviceMgrStr);
+        if (mgrIndex == -1 || mgrIndex + serviceMgrStr.length() != service.length())
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_svcnotdef, service);
+        
+        String server = service.substring(0, mgrIndex - 1);
+        int port = 3050;
+        String host = server;
+        
+        int portIndex = server.indexOf('/');
+        if (portIndex != -1) {
+            try {
+                port = Integer.parseInt(server.substring(portIndex + 1));
+                host = server.substring(0, portIndex);
+            } catch(NumberFormatException ex) {
+                // ignore, nothing happened, we try to connect directly
+            }
+            
         }
+        
+        synchronized (svc) {
+            try {
+                try {
+                    svc.socket = new Socket(host, port);
+                    svc.socket.setTcpNoDelay(true);
+    
+//                    if (socketBufferSize != -1) {
+//                        svc.socket.setReceiveBufferSize(socketBufferSize);
+//                        svc.socket.setSendBufferSize(socketBufferSize);
+//                    }
+                    if (debug) log.debug("Got socket");
+                } catch (UnknownHostException ex2) {
+                    String message = "Cannot resolve host " + host;
+                    if (debug) log.error(message, ex2);
+                    throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_network_error, host);
+                }
+                
+                svc.out = new XdrOutputStream(svc.socket.getOutputStream());
+                svc.in = new XdrInputStream(svc.socket.getInputStream());
+            
+                if (debug) log.debug("op_service_attach ");
+                svc.out.writeInt(op_service_attach);
+                svc.out.writeInt(0);                
+                svc.out.writeString(host + ":" + serviceMgrStr);
 
-    public void isc_service_attach(String service, isc_svc_handle serviceHandle, ServiceParameterBuffer serviceParameterBuffer) throws GDSException
-        {
-        throw new UnsupportedOperationException();
-        }
+                ServiceParameterBufferImp spb = (ServiceParameterBufferImp)serviceParameterBuffer;
+                
+                svc.out.writeTyped(ISCConstants.isc_spb_version, (Xdrable)serviceParameterBuffer);
+                svc.out.flush();
+                
+                if (debug) log.debug("sent");
 
-    public void isc_service_detach(isc_svc_handle serviceHandle) throws GDSException
-        {
-        throw new UnsupportedOperationException();
+                try {
+                    receiveResponse(svc,-1);
+                    svc.setHandle(svc.getHandle());
+                }
+                catch (GDSException ge) {
+                    if (log!=null) log.debug("About to invalidate db handle");
+                    svc.invalidate();
+                    if (log!=null) log.debug("successfully invalidated db handle");
+                    throw ge;
+                }
+            } catch (IOException ex) {
+                throw new GDSException(ISCConstants.isc_net_write_err);
+            }
         }
+        
+    }
+    
 
-    public void isc_service_start(isc_svc_handle serviceHandle, ServiceRequestBuffer serviceRequestBuffer) throws GDSException
-        {
-        throw new UnsupportedOperationException();
+    public void receiveResponse(isc_svc_handle_impl svc, int op) throws GDSException {
+        boolean debug = log != null && log.isDebugEnabled();
+        // when used directly
+        try {
+            if (op == -1)
+                op = nextOperation(svc);
+            if (debug) log.debug("op_response ");
+            if (op == op_response) {
+                svc.setResp_object(svc.in.readInt());
+                svc.setResp_blob_id(svc.in.readLong());
+                svc.setResp_data(svc.in.readBuffer());
+                if (debug) {
+                    log.debug("op_response resp_object: " + svc.getResp_object());
+                }
+                readStatusVector(svc);
+                if (debug){
+                    log.debug("received");
+                }
+            } else {
+                if (debug){
+                    log.debug("not received: op is " + op);
+                }
+            }
+        } catch (IOException ex) {
+           if (debug) log.warn("IOException in receiveResponse", ex);
+            // ex.getMessage() makes little sense here, it will not be displayed
+            // because error message for isc_net_read_err does not accept params
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_net_read_err, ex.getMessage());
         }
+    }
 
-    public void isc_service_query(isc_svc_handle serviceHandle, ServiceParameterBuffer serviceParameterBuffer, ServiceRequestBuffer serviceRequestBuffer, byte[] resultBuffer) throws GDSException
-        {
-        throw new UnsupportedOperationException();
-        }
+    private int nextOperation(isc_svc_handle_impl svc) throws IOException {
+        boolean debug = log != null && log.isDebugEnabled();
+        int op = 0;
+        do {
+            op = svc.in.readInt();
+            if (debug){
+                if (op == op_dummy) {
+                    log.debug("op_dummy received");
+                }
+            }
+        } while (op == op_dummy);
+        return op;
+    }
 
-    public isc_svc_handle get_new_isc_svc_handle()
-        {
-        throw new UnsupportedOperationException();
+    private void readStatusVector(isc_svc_handle_impl svc)
+            throws GDSException {
+        boolean debug = log != null && log.isDebugEnabled();
+        try {
+            GDSException head = null;
+            GDSException tail = null;
+            while (true) {
+                int arg = svc.in.readInt();
+                switch (arg) {
+                    case ISCConstants.isc_arg_gds:
+                        int er = svc.in.readInt();
+                        if (debug)log.debug("readStatusVector arg:isc_arg_gds int: " + er);
+                        if (er != 0) {
+                            GDSException td = new GDSException(arg, er);
+                            if (head == null) {
+                                head = td;
+                                tail = td;
+                            }
+                            else {
+                                tail.setNext(td);
+                                tail = td;
+                            }
+                        }
+                        break;
+                    case ISCConstants.isc_arg_end:
+                        if (head != null && !head.isWarning())
+                            throw head;
+                        else
+                        if (head != null && head.isWarning())
+                            svc.addWarning(head);
+
+                        return;
+                    case ISCConstants.isc_arg_interpreted:
+                    case ISCConstants.isc_arg_string:
+                        GDSException ts = new GDSException(arg, svc.in.readString());
+                        if (debug) log.debug("readStatusVector string: " + ts.getMessage());
+                        if (head == null) {
+                            head = ts;
+                            tail = ts;
+                        }
+                        else {
+                            tail.setNext(ts);
+                            tail = ts;
+                        }
+                        break;
+                    case ISCConstants.isc_arg_number:
+                        {
+                            int arg_value = svc.in.readInt();
+                            if (debug)log.debug("readStatusVector arg:isc_arg_number int: " + arg_value);
+                            GDSException td = new GDSException(arg, arg_value);
+                            if (head == null) {
+                                head = td;
+                                tail = td;
+                            }
+                            else {
+                                tail.setNext(td);
+                                tail = td;
+                            }
+                            break;
+                        }
+                    default:
+                        int e = svc.in.readInt();
+                        if (debug)log.debug("readStatusVector arg: "+arg+" int: " + e);
+                        if (e != 0) {
+                            GDSException td = new GDSException(arg, e);
+                            if (head == null) {
+                                head = td;
+                                tail = td;
+                            }
+                            else {
+                                tail.setNext(td);
+                                tail = td;
+                            }
+                        }
+                        break;
+                }
+            }
         }
+        catch (IOException ioe) {
+            // ioe.getMessage() makes little sense here, it will not be displayed
+            // because error message for isc_net_read_err does not accept params
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_net_read_err, ioe.getMessage());
+        }
+    }
+
+    public void isc_service_detach(isc_svc_handle serviceHandle)
+            throws GDSException {
+        
+        isc_svc_handle_impl svc = (isc_svc_handle_impl)serviceHandle;
+        
+        if (svc == null || svc.out == null)
+            throw new GDSException(ISCConstants.isc_bad_svc_handle);
+        
+        try {
+            try {
+                svc.out.writeInt(op_service_detach);
+                svc.out.writeInt(svc.getHandle());
+                svc.out.flush();
+                
+                receiveResponse(svc, -1);
+            } finally {
+                svc.invalidate();
+            }
+        } catch(IOException ex) {
+            if (log != null && log.isDebugEnabled()) log.warn("IOException in isc_service_detach", ex);
+            // ex.getMessage() makes little sense here, it will not be displayed
+            // because error message for isc_net_read_err does not accept params
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_net_read_err, ex.getMessage());
+        }
+    }
+
+    public void isc_service_start(isc_svc_handle serviceHandle,
+            ServiceRequestBuffer serviceRequestBuffer) throws GDSException {
+
+        isc_svc_handle_impl svc = (isc_svc_handle_impl)serviceHandle;
+        ServiceRequestBufferImp svcBuff = (ServiceRequestBufferImp)serviceRequestBuffer;
+        
+        if (svc == null || svc.out == null)
+            throw new GDSException(ISCConstants.isc_bad_svc_handle);
+        try {
+            svc.out.writeInt(op_service_start);
+            svc.out.writeInt(svc.getHandle());
+            svc.out.writeInt(0);
+            
+            svc.out.writeBuffer(svcBuff.toByteArray());
+            svc.out.flush();
+            
+            receiveResponse(svc, -1);
+        } catch(IOException ex) {
+            if (log != null && log.isDebugEnabled()) log.warn("IOException in isc_service_start", ex);
+            // ex.getMessage() makes little sense here, it will not be displayed
+            // because error message for isc_net_read_err does not accept params
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_net_read_err, ex.getMessage());
+        }
+    }
+
+    public void isc_service_query(isc_svc_handle serviceHandle,
+            ServiceParameterBuffer serviceParameterBuffer,
+            ServiceRequestBuffer serviceRequestBuffer, byte[] resultBuffer)
+            throws GDSException {
+
+        isc_svc_handle_impl svc = (isc_svc_handle_impl)serviceHandle;
+        ServiceParameterBufferImp spb = (ServiceParameterBufferImp)serviceParameterBuffer;
+        ServiceRequestBufferImp srb = (ServiceRequestBufferImp)serviceRequestBuffer;
+        
+        if (svc == null || svc.out == null)
+            throw new GDSException(ISCConstants.isc_bad_svc_handle);
+
+        try {
+            svc.out.writeInt(op_service_info);
+            svc.out.writeInt(svc.getHandle());
+            svc.out.writeInt(0);
+            svc.out.writeBuffer(spb.toByteArray());
+            svc.out.writeBuffer(srb.toByteArray());
+            svc.out.writeInt(resultBuffer.length);
+            svc.out.flush();
+            
+            receiveResponse(svc, -1);
+            
+            int toCopy = Math.min(resultBuffer.length, svc.getResp_data().length);
+            System.arraycopy(svc.getResp_data(), 0, resultBuffer, 0, toCopy);
+        } catch(IOException ex) {
+            if (log != null && log.isDebugEnabled()) log.warn("IOException in isc_service_query", ex);
+            // ex.getMessage() makes little sense here, it will not be displayed
+            // because error message for isc_net_read_err does not accept params
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_net_read_err, ex.getMessage());
+        }
+    }
+    
+    
+
+    public isc_svc_handle get_new_isc_svc_handle() {
+        return new isc_svc_handle_impl();
+    }
 
 }
