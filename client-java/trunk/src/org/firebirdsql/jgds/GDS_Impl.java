@@ -42,7 +42,7 @@ import java.util.*;
 import java.sql.SQLException;
 
 public class GDS_Impl implements GDS {
-    public static final boolean debug = true; //turn on and off for excessive logging to System.out.
+    public static final boolean debug = false; //turn on and off for excessive logging to System.out.
 
     /* Operation (packet) types */
 
@@ -162,8 +162,9 @@ public class GDS_Impl implements GDS {
     private byte[] resp_data;
 */
 
-    static final int MAX_BUFFER_SIZE = 2024;//4096; //max size for response for ??
-
+    static final int MAX_BUFFER_SIZE = 8192;//4096; //max size for response for ??
+    static final int MAX_FETCH_ROWS = 200;     // Max number of rows in a fetch batch
+    
     public GDS_Impl() {
     }
 
@@ -227,6 +228,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeString(dbai.getFileName());
                 db.out.writeTyped(isc_dpb_version1, (Xdrable)c);
                 //            db.out.writeBuffer(dpb, dpb_length);
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
 
                 try {
@@ -268,6 +270,7 @@ public class GDS_Impl implements GDS {
                 //            db.out.writeInt(c.getLength());
                 //            c.write(db.out);
                 //            db.out.writeBuffer(dpb, dpb_length);
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
 
                 try {
@@ -305,6 +308,7 @@ public class GDS_Impl implements GDS {
                 if (debug) {System.out.print("op_detach ");}
                 db.out.writeInt(op_detach);
                 db.out.writeInt(db.getRdb_id());
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
                 receiveResponse(db);
             } catch (IOException ex) {
@@ -329,6 +333,7 @@ public class GDS_Impl implements GDS {
                 if (debug) {System.out.print("op_drop_database ");}
                 db.out.writeInt(op_drop_database);
                 db.out.writeInt(db.getRdb_id());
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
                 receiveResponse(db);
             } catch (IOException ex) {
@@ -374,6 +379,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(db.getRdb_id());
                 db.out.writeSet(isc_tpb_version3, tpb);
                 //            db.out.writeBuffer(tpb, tpb_length);
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
                 //out.flush();
                 Response r = receiveResponse(db);
@@ -406,6 +412,7 @@ public class GDS_Impl implements GDS {
                 if (debug) {System.out.print("tr.rtr_id: " + tr.rtr_id);}
                 db.out.writeInt(op_commit);
                 db.out.writeInt(tr.rtr_id);
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
                 receiveResponse(db);
             } catch (IOException ex) {
@@ -433,6 +440,7 @@ public class GDS_Impl implements GDS {
                 if (debug) {System.out.print("op_commit_retaining ");}
                 db.out.writeInt(op_commit_retaining);
                 db.out.writeInt(tr.rtr_id);
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
                 receiveResponse(db);
             } catch (IOException ex) {
@@ -460,6 +468,7 @@ public class GDS_Impl implements GDS {
                 if (debug) {System.out.print("op_prepare ");}
                 db.out.writeInt(op_prepare);
                 db.out.writeInt(tr.rtr_id);
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
                 receiveResponse(db);
             } catch (IOException ex) {
@@ -487,6 +496,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(op_prepare2);
                 db.out.writeInt(tr.rtr_id);
                 db.out.writeBuffer(bytes, bytes.length);
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
                 receiveResponse(db);
             } catch (IOException ex) {
@@ -517,6 +527,7 @@ public class GDS_Impl implements GDS {
                 if (debug) {System.out.print("op_rollback ");}
                 db.out.writeInt(op_rollback);
                 db.out.writeInt(tr.rtr_id);
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
                 receiveResponse(db);
             } catch (IOException ex) {
@@ -550,6 +561,7 @@ public class GDS_Impl implements GDS {
                 if (debug) {System.out.print("op_allocate_statement ");}
                 db.out.writeInt(op_allocate_statement);
                 db.out.writeInt(db.getRdb_id());
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
                 Response r =receiveResponse(db);
                 stmt.rsr_id = r.resp_object;
@@ -668,6 +680,7 @@ public class GDS_Impl implements GDS {
                     writeBLR(db, out_xsqlda);
                     db.out.writeInt(0); //out_message_number = out_message_type
                 }
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
 
                 if (nextOperation(db) == op_sql_response) {
@@ -735,6 +748,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeString(statement);
                 db.out.writeString("");
                 db.out.writeInt(0);
+                db.out.flush();            
 
                 if (debug) {System.out.println("sent");}
 
@@ -773,8 +787,9 @@ public class GDS_Impl implements GDS {
                     db.out.writeInt(op_fetch);
                     db.out.writeInt(stmt.rsr_id);
                     writeBLR(db, xsqlda);
-                    db.out.writeInt(0);     // p_sqldata_message_number
-                    db.out.writeInt(1);     // p_sqldata_messages
+                    db.out.writeInt(0);              // p_sqldata_message_number
+                    db.out.writeInt(MAX_FETCH_ROWS); // p_sqldata_messages
+                    db.out.flush();            
                     if (debug) {System.out.println("sent");}
 
                     if (nextOperation(db) == op_fetch_response) {
@@ -857,6 +872,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(op_free_statement);
                 db.out.writeInt(stmt.rsr_id);
                 db.out.writeInt(option);
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
 
                 receiveResponse(db);
@@ -920,6 +936,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeString(statement);
                 db.out.writeBuffer(sql_prepare_info, sql_prepare_info.length);
                 db.out.writeInt(MAX_BUFFER_SIZE);
+                db.out.flush();            
 
                 if (debug) {System.out.println("sent");}
                 Response r = receiveResponse(db);
@@ -958,6 +975,7 @@ public class GDS_Impl implements GDS {
 
                 db.out.writeBuffer(buffer, buffer.length);
                 db.out.writeInt(0);
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
 
                 receiveResponse(db);
@@ -986,6 +1004,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(0);
                 db.out.writeBuffer(items, item_length);
                 db.out.writeInt(buffer_length);
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
                 Response r = receiveResponse(db);
                 return r.resp_data;
@@ -1063,6 +1082,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(tr.rtr_id); //??really a short?
                 if (debug) {System.out.println("sending blob_id: " + blob.blob_id);}
                 db.out.writeLong(blob.blob_id);
+                db.out.flush();            
 
                 if (debug) {System.out.println("sent");}
                 Response r = receiveResponse(db);
@@ -1100,6 +1120,7 @@ public class GDS_Impl implements GDS {
                 if (debug) {System.out.println("trying to read bytes: " +Math.min(requested + 2, Short.MAX_VALUE));}
                 db.out.writeInt(Math.min(requested + 2, Short.MAX_VALUE));
                 db.out.writeInt(0);//writeBuffer for put segment;
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
                 Response resp = receiveResponse(db);
                 blob.rbl_flags &= ~RBL_segment;
@@ -1157,6 +1178,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(blob.rbl_id); //short???
                 if (debug) {System.out.print("buffer.length " + buffer.length);}
                 db.out.writeBlobBuffer(buffer);
+                db.out.flush();            
                 if (debug) {System.out.println("sent");}
                 Response resp = receiveResponse(db);
             }
@@ -1210,9 +1232,8 @@ public class GDS_Impl implements GDS {
                 throw new GDSException("Can't get socket: " + ex2);
             }
 
-            db.out = new XdrOutputStream(db.socket.getOutputStream());
-            db.in = new XdrInputStream(db.socket.getInputStream());
-
+            db.out = new XdrOutputStream(new BufferedOutputStream(db.socket.getOutputStream()));
+            db.in = new XdrInputStream(new BufferedInputStream(db.socket.getInputStream()));
 
             //Here we identify the user to the engine.  This may or may not be used 
             //as login info to a database.
@@ -1256,6 +1277,7 @@ public class GDS_Impl implements GDS {
             db.out.writeInt(2);                    // ptype_rpc
             db.out.writeInt(3);                    // ptype_batch_send
             db.out.writeInt(2);
+            db.out.flush();            
             if (debug) {System.out.println("sent");}
 
             if (debug) {System.out.print("op_accept ");}
@@ -1858,44 +1880,69 @@ if (debug) {System.out.println("xsqlda.sqln read as " + xsqlda.sqln);}
 
         while (info[i] != isc_info_end) {
             while ((item = info[i++]) != isc_info_sql_describe_end) {
-                len = isc_vax_integer(info, i, 2);
-                i += 2;
                 switch (item) {
                     case isc_info_sql_sqlda_seq:
+                        len = isc_vax_integer(info, i, 2);
+                        i += 2;
                         index = isc_vax_integer(info, i, len);
+                        i += len;
                         xsqlda.sqlvar[index - 1] = new XSQLVAR();
 if (debug) {System.out.println("new xsqlvar " + (index - 1));}
                         break;
                     case isc_info_sql_type:
+                        len = isc_vax_integer(info, i, 2);
+                        i += 2;
                         xsqlda.sqlvar[index - 1].sqltype = isc_vax_integer (info, i, len);
+                        i += len;
 if (debug) {System.out.println("isc_info_sql_type " + xsqlda.sqlvar[index - 1].sqltype);}
                         break;
                     case isc_info_sql_sub_type:
+                        len = isc_vax_integer(info, i, 2);
+                        i += 2;
                         xsqlda.sqlvar[index - 1].sqlsubtype = isc_vax_integer (info, i, len);
+                        i += len;
 if (debug) {System.out.println("isc_info_sql_sub_type " + xsqlda.sqlvar[index - 1].sqlsubtype);}
                         break;
                     case isc_info_sql_scale:
+                        len = isc_vax_integer(info, i, 2);
+                        i += 2;
                         xsqlda.sqlvar[index - 1].sqlscale = isc_vax_integer (info, i, len);
+                        i += len;
 if (debug) {System.out.println("isc_info_sql_scale " + xsqlda.sqlvar[index - 1].sqlscale);}
                         break;
                     case isc_info_sql_length:
+                        len = isc_vax_integer(info, i, 2);
+                        i += 2;
                         xsqlda.sqlvar[index - 1].sqllen = isc_vax_integer (info, i, len);
+                        i += len;
 if (debug) {System.out.println("isc_info_sql_length " + xsqlda.sqlvar[index - 1].sqllen);}
                         break;
                     case isc_info_sql_field:
+                        len = isc_vax_integer(info, i, 2);
+                        i += 2;
                         xsqlda.sqlvar[index - 1].sqlname = new String(info, i, len);
+                        i += len;
 if (debug) {System.out.println("isc_info_sql_field " + xsqlda.sqlvar[index - 1].sqlname);}
                         break;
                     case isc_info_sql_relation:
+                        len = isc_vax_integer(info, i, 2);
+                        i += 2;
                         xsqlda.sqlvar[index - 1].relname = new String(info, i, len);
+                        i += len;
 if (debug) {System.out.println("isc_info_sql_relation " + xsqlda.sqlvar[index - 1].relname);}
                         break;
                     case isc_info_sql_owner:
+                        len = isc_vax_integer(info, i, 2);
+                        i += 2;
                         xsqlda.sqlvar[index - 1].ownname = new String(info, i, len);
+                        i += len;
 if (debug) {System.out.println("isc_info_sql_owner " + xsqlda.sqlvar[index - 1].ownname);}
                         break;
                     case isc_info_sql_alias:
+                        len = isc_vax_integer(info, i, 2);
+                        i += 2;
                         xsqlda.sqlvar[index - 1].aliasname = new String(info, i, len);
+                        i += len;
 if (debug) {System.out.println("isc_info_sql_alias " + xsqlda.sqlvar[index - 1].aliasname);}
                         break;
                     case isc_info_truncated:
@@ -1905,7 +1952,6 @@ if (debug) {System.out.println("isc_info_truncated ");}
                     default:
                         throw new GDSException(isc_dsql_sqlda_err);
                 }
-                i += len;
             }
             lastindex = index;
         }
@@ -1935,6 +1981,7 @@ if (debug) {System.out.println("isc_info_truncated ");}
             try {
                 db.out.writeInt(op);
                 db.out.writeInt(id);
+                db.out.flush();            
                 receiveResponse(db);
             }
             catch (IOException ioe) {
