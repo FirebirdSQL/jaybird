@@ -29,7 +29,6 @@ import javax.naming.*;
 
 import EDU.oswego.cs.dl.util.concurrent.*;
 import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * This class provides JDBC connection pooling capabilities for Java 
@@ -593,7 +592,7 @@ public abstract class AbstractConnectionPoolDataSource
 
                         }
 
-                        if (connectionAdded) {
+                        if (!connectionAdded) {
                             String message =
                                 "Pool "
                                     + queueName
@@ -619,7 +618,7 @@ public abstract class AbstractConnectionPoolDataSource
                             getLogger().warn("No connection in pool. Thread " +
                                 Thread.currentThread().getName());
                         else
-                        if (result != null && getLogger() != null)
+                        if (result != null && !connectionAdded && getLogger() != null)
                             getLogger().info("Obtained connection. Thread " + 
                                 Thread.currentThread().getName());
                     }
