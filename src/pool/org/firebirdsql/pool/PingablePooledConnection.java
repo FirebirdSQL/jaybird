@@ -235,7 +235,10 @@ public class PingablePooledConnection implements PooledConnection,
 
         if (generateEvents) {
             ConnectionEvent event = new ConnectionEvent(this);
-            Iterator iter = eventListeners.iterator();
+            
+            List tempListeners = new ArrayList(eventListeners);
+            
+            Iterator iter = tempListeners.iterator();
             while (iter.hasNext()) {
                 ConnectionEventListener listener = 
                     (ConnectionEventListener)iter.next();
@@ -450,7 +453,10 @@ public class PingablePooledConnection implements PooledConnection,
         currentConnection = null;
 
         ConnectionEvent event = new ConnectionEvent(this);
-        Iterator iter = eventListeners.iterator();
+        
+        List tempListeners = new ArrayList(eventListeners);
+        
+        Iterator iter = tempListeners.iterator();
         while (iter.hasNext()) {
             ((ConnectionEventListener)iter.next()).connectionClosed(event);
         }
@@ -459,7 +465,9 @@ public class PingablePooledConnection implements PooledConnection,
     public void connectionErrorOccured(PooledConnectionHandler connection, SQLException ex) {
         ConnectionEvent event = new ConnectionEvent(this, ex);
 
-        Iterator iter = eventListeners.iterator();
+        List tempListeners = new ArrayList(eventListeners);
+        
+        Iterator iter = tempListeners.iterator();
         while (iter.hasNext()) {
             ((ConnectionEventListener)iter.next()).connectionErrorOccurred(
                 event);
