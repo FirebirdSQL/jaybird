@@ -24,6 +24,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.4  2002/11/15 00:13:15  rrokytskyy
+ * fixed bug with committing transaction when connection is closed
+ *
  * Revision 1.3  2002/10/18 14:22:26  rrokytskyy
  * fixed warnings handling
  *
@@ -166,6 +169,68 @@ public class TestFBDriver extends BaseFBTest {
             
         dialect3Connection.close();
     }
+
+
+    public void testLongRange() throws Exception
+    {
+        Connection c = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        try 
+        {
+            Statement s = c.createStatement();
+            try 
+            {
+                s.execute("CREATE TABLE LONGTEST (LONGID DECIMAL(18,0) NOT NULL PRIMARY KEY)");
+                try 
+                {
+                    s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MAX_VALUE + ")");
+                    ResultSet rs = s.executeQuery("SELECT LONGID FROM LONGTEST");
+                    try 
+                    {
+                         
+                        assertTrue("Should have one row!", rs.next());
+                        assertTrue("Retrieved wrong value!", rs.getLong(1) == Long.MAX_VALUE);
+                    }
+                    finally
+                    {
+                        rs.close();
+                    } // end of try-finally
+                    s.execute("DELETE FROM LONGTEST");
+                    s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MIN_VALUE + ")");
+                    rs = s.executeQuery("SELECT LONGID FROM LONGTEST");
+                    try 
+                    {
+                         
+                        assertTrue("Should have one row!", rs.next());
+                        assertTrue("Retrieved wrong value!", rs.getLong(1) == Long.MIN_VALUE);
+                    }
+                    finally
+                    {
+                        rs.close();
+                    } // end of try-finally
+                    
+                    
+                }
+                finally
+                {
+                    s.execute("DROP TABLE LONGTEST");
+                } // end of try-finally
+                
+
+            }
+            finally
+            {
+                s.close();
+            } // end of try-catch
+            
+
+        }
+        finally
+        {
+            c.close();
+        } // end of try-catch
+        
+    }
+
     
     /**
      * This test checks if transaction is rolled back when connection is closed, 
@@ -204,5 +269,6 @@ public class TestFBDriver extends BaseFBTest {
         stmt.close();
         connection.close();
     }
+
 }
 
