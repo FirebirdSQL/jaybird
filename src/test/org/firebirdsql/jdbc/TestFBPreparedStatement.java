@@ -49,11 +49,13 @@ public class TestFBPreparedStatement extends FBTestBase{
         
     public static final String CREATE_TEST_CHARS_TABLE = ""
         + "CREATE TABLE TESTTAB ("
+        + "ID INTEGER, "
         + "FIELD1 VARCHAR(10) NOT NULL PRIMARY KEY,"
         + "FIELD2 VARCHAR(30),"
         + "FIELD3 VARCHAR(20),"
         + "FIELD4 FLOAT,"
-        + "FIELD5 CHAR"
+        + "FIELD5 CHAR,"
+        + "FIELD6 VARCHAR(5)"
         + ")"
         ;
     
@@ -274,4 +276,37 @@ public class TestFBPreparedStatement extends FBTestBase{
         }
     }
     
+    /**
+     * Test if parameters are correctly checked for their length.
+     * @throws Exception if something went wrong.
+     */
+    public void testLongParameter() throws Exception {
+        con.setAutoCommit(true);
+        Statement stmt = con.createStatement();
+        try {
+            stmt.execute("INSERT INTO testtab(id, field1, field6) VALUES(1, '', 'a')");
+        } finally {
+            stmt.close();
+        }
+        
+        con.setAutoCommit(false);
+        
+        PreparedStatement ps = 
+            con.prepareStatement("UPDATE testtab SET field6=? WHERE id = 1");
+        try {
+            try {
+                ps.setString(1, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                ps.execute();
+                con.commit();
+            } catch(SQLException ex) {
+                con.rollback();
+            }
+        } catch(SQLException ex) {
+            ex.printStackTrace();
+            
+            fail("No exception should be thrown.");
+        } finally {
+            ps.close();
+        }
+    }
 }
