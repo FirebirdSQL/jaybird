@@ -108,6 +108,21 @@ public class TestFBCallableStatement extends FBTestBase {
 
 	 public static final String DROP_EMPLOYEE_PROJECT = 
 	     "DROP TABLE employee_project;";
+     
+     public static final String CREATE_SIMPLE_OUT_PROC = ""
+         + "CREATE PROCEDURE test_out (inParam INTEGER) RETURNS (outParam INTEGER) "
+         + "AS BEGIN "
+         + "    outParam = inParam; "
+         + "END"
+         ;
+     
+     public static final String DROP_SIMPLE_OUT_PROC = ""
+         + "DROP PROCEDURE test_out"
+         ;
+     
+     public static final String EXECUTE_SIMPLE_OUT_PROCEDURE = ""
+         + "{call test_out(?)}";
+         ;
 
     private Connection connection;
 
@@ -137,11 +152,17 @@ public class TestFBCallableStatement extends FBTestBase {
             stmt.executeUpdate(DROP_EMPLOYEE_PROJECT);
         }
         catch (Exception e) {}
+        try {
+            stmt.executeUpdate(DROP_SIMPLE_OUT_PROC);
+        }
+        catch (Exception e) {}
+        
 
         stmt.executeUpdate(CREATE_PROCEDURE);
         stmt.executeUpdate(CREATE_EMPLOYEE_PROJECT);
         stmt.executeUpdate(CREATE_PROCEDURE_EMP_SELECT);
         stmt.executeUpdate(CREATE_PROCEDURE_EMP_INSERT);
+        stmt.executeUpdate(CREATE_SIMPLE_OUT_PROC);
         stmt.close();
     }
     protected void tearDown() throws Exception {
@@ -150,6 +171,7 @@ public class TestFBCallableStatement extends FBTestBase {
         stmt.executeUpdate(DROP_PROCEDURE_EMP_SELECT);
         stmt.executeUpdate(DROP_PROCEDURE_EMP_INSERT);
         stmt.executeUpdate(DROP_EMPLOYEE_PROJECT);
+        stmt.executeUpdate(DROP_SIMPLE_OUT_PROC);
         stmt.close();
         connection.close();
         super.tearDown();
@@ -284,4 +306,16 @@ public class TestFBCallableStatement extends FBTestBase {
         }
     }
 	 
+    public void testOutProcedure() throws Exception {
+        CallableStatement stmt = 
+            connection.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        try {
+            stmt.setInt(1, 1);
+            stmt.execute();
+            assertTrue("Should return correct value", stmt.getInt(1) == 1);
+        } finally {
+            stmt.close();
+        }
+        
+    }
 }
