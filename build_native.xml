@@ -159,7 +159,7 @@
     -->
     <target name="prepare_mingw" if="use.mingw">
     
-    	<property name="output.file" value="${build.native.output}/${build.output.name}.dll"/>
+    	<property name="output.file" value="${build.native.output}/${build.native.name}.dll"/>
     	
         <compiler id="jaybird.compiler" name="g++">
         	<defineset>
