@@ -103,6 +103,7 @@ prototype_isc_sql_interprete*		FirebirdApiBinding::isc_sql_interprete  = NULL;
 prototype_isc_transaction_info*		FirebirdApiBinding::isc_transaction_info  = NULL;
 prototype_isc_transact_request*		FirebirdApiBinding::isc_transact_request  = NULL;
 prototype_isc_vax_integer*			FirebirdApiBinding::isc_vax_integer  = NULL;
+prototype_isc_seek_blob*			FirebirdApiBinding::isc_seek_blob  = NULL;
 
 
 // Static methods
@@ -189,7 +190,9 @@ void FirebirdApiBinding::Load(const char* const firebirdDllName)
 		FB_ENTRYPOINT(isc_transaction_info);
 		FB_ENTRYPOINT(isc_transact_request);
 		FB_ENTRYPOINT(isc_vax_integer);
+		FB_ENTRYPOINT(isc_seek_blob);
 
+	
 
 		sIsLoaded = true;
 		}

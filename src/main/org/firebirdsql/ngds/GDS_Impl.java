@@ -129,7 +129,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
 
     public synchronized  Clumplet newClumplet(int type, int c){
-        return new ClumpletImpl(type, new byte[] {(byte)(c>>24), (byte)(c>>16), (byte)(c>>8), (byte)c});
+        return new ClumpletImpl(type, new byte[] {(byte)(c>>8), (byte)c});
     }
 
     public synchronized  Clumplet newClumplet(int type, byte[] content) {
@@ -970,7 +970,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
     public void isc_create_blob2(isc_db_handle db_handle,
                                  isc_tr_handle tr_handle,
                                  isc_blob_handle blob_handle,
-                                 Clumplet bpb) throws GDSException
+                                 Clumplet bpbClumpet) throws GDSException
         {
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
@@ -986,11 +986,11 @@ public class GDS_Impl extends AbstractGDS implements GDS
             throw new GDSException(ISCConstants.isc_bad_segstr_handle);
         }
 
+        final byte[] bpb = blobParameterClumpetToBuffer(bpbClumpet);
+
         synchronized(db)
             {
-            final byte[] dpbBytes = clupletToBytes(bpb);
-
-            native_isc_create_blob2( db_handle, tr_handle, blob_handle, dpbBytes );
+            native_isc_create_blob2( db_handle, tr_handle, blob_handle, bpb );
 
 
             blob.setDb(db);
@@ -998,6 +998,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
             tr.addBlob(blob);
             }
         }
+
 
     private native void native_isc_create_blob2(isc_db_handle db, isc_tr_handle tr, isc_blob_handle blob, byte[] dpbBytes);
 
@@ -1007,7 +1008,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
     public void isc_open_blob2(isc_db_handle db_handle,
                                isc_tr_handle tr_handle,
                                isc_blob_handle blob_handle,
-                               Clumplet bpb) throws GDSException
+                               Clumplet bpbClumpet) throws GDSException
         {
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
@@ -1023,11 +1024,11 @@ public class GDS_Impl extends AbstractGDS implements GDS
             throw new GDSException(ISCConstants.isc_bad_segstr_handle);
         }
 
-        final byte[] dpbBytes = clupletToBytes(bpb);
+        final byte[] bpb = blobParameterClumpetToBuffer(bpbClumpet);
 
         synchronized(db)
             {
-            native_isc_open_blob2( db_handle, tr_handle, blob_handle, dpbBytes );
+            native_isc_open_blob2( db_handle, tr_handle, blob_handle, bpb );
 
             blob.setDb(db);
             blob.setTr(tr);
@@ -1036,6 +1037,24 @@ public class GDS_Impl extends AbstractGDS implements GDS
         }
 
     private native void native_isc_open_blob2(isc_db_handle db, isc_tr_handle tr, isc_blob_handle blob, byte[] dpbBytes);
+
+
+    private byte[] blobParameterClumpetToBuffer(Clumplet bpbClumpet)
+        {
+        final byte[] bpbBytes = clupletToBytes(bpbClumpet);
+        if(bpbBytes == null)
+            return null;
+        else
+            {
+            final byte[] bpb = new byte[bpbBytes.length+1];
+
+            bpb[0] = 1;
+            System.arraycopy( bpbBytes, 0, bpb, 1, bpbBytes.length );
+
+            return bpb;
+            }
+        }
+
 
     // isc_get_segment ---------------------------------------------------------------------------------------------
     public byte[] isc_get_segment(isc_blob_handle blob, int maxread) throws GDSException
@@ -1086,14 +1105,29 @@ public class GDS_Impl extends AbstractGDS implements GDS
 	public byte[] isc_blob_info(isc_blob_handle handle, byte[] items, int buffer_length)
 		throws GDSException
 		{
-		throw new java.lang.UnsupportedOperationException();
+		isc_blob_handle_impl blob = (isc_blob_handle_impl) handle;
+        synchronized (blob)
+            {
+            return native_isc_blob_info(blob, items, buffer_length);
+            }
 		}
+
+    public native byte[] native_isc_blob_info(isc_blob_handle_impl handle, byte[] items, int buffer_length)
+		throws GDSException;
 
 	public void isc_seek_blob(isc_blob_handle handle, int position, int mode)
 		throws GDSException
 		{
-		throw new java.lang.UnsupportedOperationException();
-		}
+		isc_blob_handle_impl blob = (isc_blob_handle_impl) handle;
+        synchronized (handle)
+            {
+            native_isc_seek_blob(blob, position, mode);
+		    }
+        }
+
+    public native void native_isc_seek_blob(isc_blob_handle_impl handle, int position, int mode)
+		throws GDSException;
+
 
 
     protected static class DbAttachInfo {

@@ -918,3 +918,58 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1close_1b
 	LEAVE_PROTECTED_BLOCK
 
 	}
+
+
+JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1blob_1info
+  (JNIEnv *javaEnvironment, jobject jThis, jobject jBlobHandle, jbyteArray jItemsArrayHandle, jint jBufferLength)
+	{
+	ENTER_PROTECTED_BLOCK
+		JIscBlobHandle blobHandle(javaEnvironment, jBlobHandle);
+	    JByteArray bytesToWrite(javaEnvironment, jItemsArrayHandle);
+	
+		FirebirdStatusVector status;
+		
+		
+		isc_blob_handle rawBlobHandle = blobHandle.GetHandleValue();
+		ISC_QUAD rawBlobId = blobHandle.GetId();
+
+		char* resultBuffer = (char*)_alloca(jBufferLength);
+		
+		FirebirdApiBinding::isc_blob_info( status.RawAccess(), &rawBlobHandle, bytesToWrite.Size(), bytesToWrite.Read(), jBufferLength, resultBuffer );
+	
+
+		blobHandle.SetHandleValue(rawBlobHandle);
+		blobHandle.SetId(rawBlobId);
+
+		JByteArray returnBytes(javaEnvironment, resultBuffer, jBufferLength);
+			
+		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, blobHandle);
+
+		return returnBytes.GetHandle();
+	LEAVE_PROTECTED_BLOCK
+	return NULL;
+	}
+
+
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1seek_1blob
+  (JNIEnv *javaEnvironment, jobject jThis, jobject jBlobHandle, jint position, jint mode)
+	{
+	ENTER_PROTECTED_BLOCK
+		JIscBlobHandle blobHandle(javaEnvironment, jBlobHandle);
+	
+		FirebirdStatusVector status;
+		
+		
+		isc_blob_handle rawBlobHandle = blobHandle.GetHandleValue();
+		ISC_QUAD rawBlobId = blobHandle.GetId();
+
+		ISC_LONG result;
+		
+		FirebirdApiBinding::isc_seek_blob( status.RawAccess(), &rawBlobHandle, mode, position, &result );
+	
+		blobHandle.SetHandleValue(rawBlobHandle);
+		blobHandle.SetId(rawBlobId);
+			
+		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, blobHandle);
+	LEAVE_PROTECTED_BLOCK
+	}
