@@ -175,7 +175,7 @@
 
   </target>
 
-  <target name="copy_native_to_test_path">
+  <target name="copy_native_to_test_path" depends="compile-native">
     <copy file="${native.library.location}/${native.library.name}.dll" tofile="${module.output}/${native.library.name}.dll" failonerror="false" overwrite="true" />
     <copy file="${native.library.location}/lib${native.library.name}.so" tofile="${module.output}/lib${native.library.name}.so" failonerror="false" overwrite="true" />
   </target>
@@ -513,7 +513,7 @@
   <!-- runs the junit tests                                                -->
   <!-- =================================================================== -->
 
-  <target name="all-tests-pure-java" depends="jars,copy_native_to_test_path">
+  <target name="all-tests-pure-java" depends="jars">
 
    <!-- Override JUnit defaults -->
 
