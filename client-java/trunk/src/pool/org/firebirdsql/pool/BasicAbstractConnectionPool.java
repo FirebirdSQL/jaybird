@@ -207,10 +207,10 @@ public abstract class BasicAbstractConnectionPool
     private static final String REF_BLOCKING_TIMEOUT = "blockingTimeout";
     private static final String REF_IDLE_TIMEOUT = "idleTimeout";
     private static final String REF_LOGIN_TIMEOUT = "loginTimeout";
-    private static final String REF_MAX_SIZE = "maxSize";
-    private static final String REF_MIN_SIZE = "minSize";
+    private static final String REF_MAX_SIZE = "maxConnections";
+    private static final String REF_MIN_SIZE = "minConnections";
     private static final String REF_PING_INTERVAL = "pingInterval";
-    private static final String REF_TX_ISOLATION = "txIsolation";
+    private static final String REF_TX_ISOLATION = "isolation";
 
     protected abstract BasicAbstractConnectionPool createObjectInstance();
     
@@ -232,35 +232,48 @@ public abstract class BasicAbstractConnectionPool
     
         BasicAbstractConnectionPool ds = createObjectInstance();
         
-        String addr;
-    
-        addr = getRefAddr(ref, REF_BLOCKING_TIMEOUT);
-        if (addr != null)
-            ds.setBlockingTimeout(Integer.parseInt(addr));
-            
-        addr = getRefAddr(ref, REF_IDLE_TIMEOUT);
-        if (addr != null)
-            ds.setIdleTimeout(Integer.parseInt(addr));
-            
-        addr = getRefAddr(ref, REF_LOGIN_TIMEOUT);
-        if (addr != null)
-            ds.setLoginTimeout(Integer.parseInt(addr));
-            
-        addr = getRefAddr(ref, REF_MAX_SIZE);
-        if (addr != null)
-            ds.setMaxConnections(Integer.parseInt(addr));
-            
-        addr = getRefAddr(ref, REF_MIN_SIZE);
-        if (addr != null)
-            ds.setMinConnections(Integer.parseInt(addr));
-    
-        addr = getRefAddr(ref, REF_PING_INTERVAL);
-        if (addr != null)
-            ds.setPingInterval(Integer.parseInt(addr));
+        int[] addressesToRemove = new int[ref.size()];
         
-        addr = getRefAddr(ref, REF_TX_ISOLATION);
-        if (addr != null)
-            ds.setTransactionIsolationLevel(Integer.parseInt(addr));
+        for (int i = 0; i < ref.size(); i++) {
+            RefAddr element = ref.get(i);
+            
+            String type = element.getType();
+            String addr = element.getContent().toString();
+            
+            if (REF_BLOCKING_TIMEOUT.equals(type))
+                ds.setBlockingTimeout(Integer.parseInt(addr));
+            else
+            if (REF_IDLE_TIMEOUT.equals(type))
+                ds.setIdleTimeout(Integer.parseInt(addr));
+            else
+            if (REF_LOGIN_TIMEOUT.equals(type))
+                ds.setLoginTimeout(Integer.parseInt(addr));
+            else
+            if (REF_MAX_SIZE.equals(type))
+                ds.setMaxConnections(Integer.parseInt(addr));
+            else
+            if (REF_MIN_SIZE.equals(type))
+                ds.setMinConnections(Integer.parseInt(addr));
+            else
+            if (REF_PING_INTERVAL.equals(type))
+                ds.setPingInterval(Integer.parseInt(addr));
+            else
+            if (REF_TX_ISOLATION.equals(type))
+                ds.setTransactionIsolationLevel(Integer.parseInt(addr));
+            else
+                continue;
+            
+            // set flag that we matched the address, so it has to be removed
+            // we rely on fact that if none address was matched, last else
+            // clause will be executed and next code will not be executed.
+            addressesToRemove[i] = 1;
+        }
+        
+        // removed matched addresses
+        for (int i = 0; i < addressesToRemove.length; i++) {
+            if (addressesToRemove[i] == 1)
+                ref.remove(i);
+        }
             
         return ds;
     }
@@ -331,7 +344,7 @@ public abstract class BasicAbstractConnectionPool
         return ref;
     }
 
-    protected byte[] serialize(Object obj) {
+    public static byte[] serialize(Object obj) {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         
         try {
@@ -345,7 +358,7 @@ public abstract class BasicAbstractConnectionPool
         return bout.toByteArray();
     }
 
-    protected Object deserialize(byte[] data) {
+    public static Object deserialize(byte[] data) {
         ByteArrayInputStream bin = new ByteArrayInputStream(data);
         
         try {

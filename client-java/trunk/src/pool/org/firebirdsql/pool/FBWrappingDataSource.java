@@ -23,13 +23,13 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Hashtable;
+import java.util.Properties;
 
 import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
 import javax.resource.Referenceable;
 import javax.sql.DataSource;
 
-import org.firebirdsql.jdbc.FBConnectionDefaults;
 import org.firebirdsql.jdbc.FBConnectionHelper;
 
 /**
@@ -326,6 +326,10 @@ public class FBWrappingDataSource implements DataSource,
         getPool().setNonStandardProperty(key, value);
     }
     
+    public void setNonStandardProperty(String propertyMapping) {
+        getPool().setNonStandardProperty(propertyMapping);
+    }
+    
     /**
      * @deprecated use {@link #isPooling()} method.
      */
@@ -369,27 +373,27 @@ public class FBWrappingDataSource implements DataSource,
         getPool().setIsolation(isolation);
     }
     
+    public void setProperties(Properties props) {
+        getPool().setProperties(props);
+    }
+    
     /*
      * JNDI-related code. 
      */
 
-    private static final String REF_BLOB_BUFFER_SIZE = "blobBufferSize";
     private static final String REF_BLOCKING_TIMEOUT = "blockingTimeout";
     private static final String REF_DATABASE = "database";
     private static final String REF_DESCRIPTION = "description";
-    private static final String REF_ENCODING = "encoding";
     private static final String REF_IDLE_TIMEOUT = "idleTimeout";
     private static final String REF_LOGIN_TIMEOUT = "loginTimeout";
-    private static final String REF_MAX_SIZE = "maxSize";
-    private static final String REF_MIN_SIZE = "minSize";
-    private static final String REF_PASSWORD = "password";
+    private static final String REF_MAX_SIZE = "maxConnections";
+    private static final String REF_MIN_SIZE = "minConnections";
     private static final String REF_PING_INTERVAL = "pingInterval";
-    private static final String REF_SOCKET_BUFFER_SIZE = "socketBufferSize";
-    private static final String REF_SQL_ROLE = "sqlRole";
-    private static final String REF_TPB_MAPPING = "tpbMapping";
     private static final String REF_TYPE = "type";
-    private static final String REF_USER_NAME = "userName";
-    private static final String REF_TX_ISOLATION = "txIsolation";
+    private static final String REF_TX_ISOLATION = "transactionIsolationLevel";
+    private static final String REF_ISOLATION = "isolation";
+    private static final String REF_PROPERTIES = "properties";
+    private static final String REF_NON_STANDARD_PROPERTY = "nonStandard";
 
     /**
      * Get object instance for the specified name in the specified context.
@@ -402,80 +406,64 @@ public class FBWrappingDataSource implements DataSource,
         if (!(obj instanceof Reference)) return null;
 
         Reference ref = (Reference)obj;
+        ref = (Reference)ref.clone();
 
         if (!getClass().getName().equals(ref.getClassName()))
             return null;
 
         FBWrappingDataSource ds = new FBWrappingDataSource();
         
-        String addr = getRefAddr(ref, REF_BLOB_BUFFER_SIZE);
-        if (addr != null)
-            ds.setBlobBufferSize(Integer.parseInt(addr));
+        for(int i = 0; i < ref.size(); i++) {
+            RefAddr element = ref.get(i);
             
-        addr = getRefAddr(ref, REF_BLOCKING_TIMEOUT);
-        if (addr != null)
-            ds.setBlockingTimeout(Integer.parseInt(addr));
+            String type = element.getType();
+            if (REF_BLOCKING_TIMEOUT.equals(type))
+                ds.setBlockingTimeout(Integer.parseInt(element.getContent().toString()));
+            else
+            if (REF_DATABASE.equals(type))
+                ds.setDatabase(element.getContent().toString());
+            else
+            if (REF_DESCRIPTION.equals(type))
+                ds.setDescription(element.getContent().toString());
+            else
+            if (REF_IDLE_TIMEOUT.equals(type))
+                ds.setIdleTimeout(Integer.parseInt(element.getContent().toString()));
+            else
+            if (REF_LOGIN_TIMEOUT.equals(type))
+                ds.setLoginTimeout(Integer.parseInt(element.getContent().toString()));
+            else
+            if (REF_MAX_SIZE.equals(type))
+                ds.setMaxConnections(Integer.parseInt(element.getContent().toString()));
+            else
+            if (REF_MIN_SIZE.equals(type))
+                ds.setMinConnections(Integer.parseInt(element.getContent().toString()));
+            else
+            if (REF_PING_INTERVAL.equals(type))
+                ds.setPingInterval(Integer.parseInt(element.getContent().toString()));
+            else
+            if (REF_TYPE.equals(type))
+                ds.setType(element.getContent().toString());
+            else
+            if (REF_TX_ISOLATION.equals(type))
+                ds.setTransactionIsolationLevel(Integer.parseInt(element.getContent().toString()));
+            else
+            if (REF_ISOLATION.equals(type))
+                ds.setIsolation(element.getContent().toString());
+            else
+            if (REF_NON_STANDARD_PROPERTY.equals(type))
+                ds.setNonStandardProperty(element.getContent().toString());
+            else
+            if (REF_PROPERTIES.equals(type)) {
+                byte[] data = (byte[])element.getContent();
+                Properties props = (Properties)BasicAbstractConnectionPool.deserialize(data);
+                if (props != null) 
+                    ds.setProperties(props);
+            } else
+            if (element.getContent() instanceof String) 
+                ds.setNonStandardProperty(type, element.getContent().toString());
             
-        addr = getRefAddr(ref, REF_DATABASE);
-        if (addr != null)
-            ds.setDatabase(addr);
-            
-        addr = getRefAddr(ref, REF_DESCRIPTION);
-        if (addr != null)
-            ds.setDescription(addr);
-            
-        addr = getRefAddr(ref, REF_ENCODING);
-        if (addr != null)
-            ds.setEncoding(addr);
-            
-        addr = getRefAddr(ref, REF_IDLE_TIMEOUT);
-        if (addr != null)
-            ds.setIdleTimeout(Integer.parseInt(addr));
-            
-        addr = getRefAddr(ref, REF_LOGIN_TIMEOUT);
-        if (addr != null)
-            ds.setLoginTimeout(Integer.parseInt(addr));
-            
-        addr = getRefAddr(ref, REF_MAX_SIZE);
-        if (addr != null)
-            ds.setMaxConnections(Integer.parseInt(addr));
-            
-        addr = getRefAddr(ref, REF_MIN_SIZE);
-        if (addr != null)
-            ds.setMinConnections(Integer.parseInt(addr));
-
-        addr = getRefAddr(ref, REF_PASSWORD);
-        if (addr != null)
-            ds.setPassword(addr);
-            
-        addr = getRefAddr(ref, REF_PING_INTERVAL);
-        if (addr != null)
-            ds.setPingInterval(Integer.parseInt(addr));
-            
-        addr = getRefAddr(ref, REF_SOCKET_BUFFER_SIZE);
-        if (addr != null)
-            ds.setSocketBufferSize(Integer.parseInt(addr));
-            
-        addr = getRefAddr(ref, REF_SQL_ROLE);
-        if (addr != null)
-            ds.setSqlRole(addr);
-            
-        addr = getRefAddr(ref, REF_TPB_MAPPING);
-        if (addr != null)
-            ds.setTpbMapping(addr);
-            
-        addr = getRefAddr(ref, REF_TYPE);
-        if (addr != null)
-            ds.setType(addr);
-            
-        addr = getRefAddr(ref, REF_USER_NAME);
-        if (addr != null)
-            ds.setUserName(addr);
+        }
         
-        addr = getRefAddr(ref, REF_TX_ISOLATION);
-        if (addr != null)
-            ds.setPingInterval(Integer.parseInt(addr));
-            
         return ds;
     }
     
@@ -518,10 +506,6 @@ public class FBWrappingDataSource implements DataSource,
     public Reference getDefaultReference() {
         Reference ref = new Reference(getClass().getName());
         
-        if (getBlobBufferSize() != FBConnectionDefaults.DEFAULT_BLOB_BUFFER_SIZE)
-            ref.add(new StringRefAddr(REF_BLOB_BUFFER_SIZE, 
-                String.valueOf(getBlobBufferSize())));
-            
         if (getBlockingTimeout() != FBPoolingDefaults.DEFAULT_BLOCKING_TIMEOUT)
             ref.add(new StringRefAddr(REF_BLOCKING_TIMEOUT, 
                 String.valueOf(getBlockingTimeout())));
@@ -531,10 +515,7 @@ public class FBWrappingDataSource implements DataSource,
             
         if (getDescription() != null)
             ref.add(new StringRefAddr(REF_DESCRIPTION, getDescription()));
-            
-        if (getEncoding() != null)
-            ref.add(new StringRefAddr(REF_ENCODING, getEncoding()));
-
+          
         if (getIdleTimeout() != FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT)
             ref.add(new StringRefAddr(REF_IDLE_TIMEOUT,
                 String.valueOf(getIdleTimeout())));
@@ -550,33 +531,21 @@ public class FBWrappingDataSource implements DataSource,
         if (getMinConnections() != FBPoolingDefaults.DEFAULT_MIN_SIZE)
             ref.add(new StringRefAddr(REF_MIN_SIZE,
                 String.valueOf(getMinConnections())));
-            
-        if (getPassword() != null)
-            ref.add(new StringRefAddr(REF_PASSWORD, getPassword()));
 
         if (getPingInterval() != FBPoolingDefaults.DEFAULT_PING_INTERVAL)
             ref.add(new StringRefAddr(REF_PING_INTERVAL, 
                 String.valueOf(getPingInterval())));
         
-        if (getSocketBufferSize() != FBConnectionDefaults.DEFAULT_SOCKET_BUFFER_SIZE)
-            ref.add(new StringRefAddr(REF_SOCKET_BUFFER_SIZE, 
-            	String.valueOf(getSocketBufferSize())));
-        	
-        if (getSqlRole() != null)
-       	    ref.add(new StringRefAddr(REF_SQL_ROLE, getSqlRole()));
-       	
-        if (getTpbMapping() != null)
-       	    ref.add(new StringRefAddr(REF_TPB_MAPPING, getTpbMapping()));
-            
         if (getType() != null)
        	    ref.add(new StringRefAddr(REF_TYPE, getType()));
-        
-        if (getUserName() != null)
-       	    ref.add(new StringRefAddr(REF_USER_NAME, getUserName()));
         
         if (getTransactionIsolationLevel() != FBPoolingDefaults.DEFAULT_ISOLATION)
             ref.add(new StringRefAddr(REF_TX_ISOLATION, 
                 String.valueOf(getTransactionIsolationLevel())));
+        
+        byte[] data = 
+            BasicAbstractConnectionPool.serialize(getPool().getProperties());
+        ref.add(new BinaryRefAddr(REF_PROPERTIES, data));
         
         return ref;
     }
