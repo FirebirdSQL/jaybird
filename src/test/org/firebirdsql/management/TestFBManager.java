@@ -18,7 +18,7 @@
  */
 package org.firebirdsql.management;
 
-import org.firebirdsql.jdbc.BaseFBTest;
+
 import org.firebirdsql.common.FBTestBase;
 
 import junit.framework.Test;

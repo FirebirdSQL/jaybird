@@ -24,7 +24,6 @@ import javax.transaction.xa.Xid;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDSFactory;
 
-import org.firebirdsql.jdbc.BaseFBTest;
 import org.firebirdsql.common.FBTestBase;
 
 //for embedded xid implementation
