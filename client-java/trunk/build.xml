@@ -65,6 +65,7 @@
     <property name="source.resources" value="${module.source}/resources"/>
     <property name="source.stylesheets" value="${module.source}/stylesheets"/>
     <property name="source.test" value="${module.source}/test"/>
+    <property name="source.pool" value="${module.source}/pool"/>
 
     <property name="thirdparty" value="${module.root}/thirdparty"/>
     <property name="jboss.source.root"
@@ -132,6 +133,11 @@
       <pathelement location="${module.thirdparty}/log4j-core.jar"/>
     </path>
 
+    <path id="javac.pool.classpath">
+      <path refid="javac.driver.classpath"/>
+      <pathelement location="${build.classes}"/>
+    </path>
+    
     <path id="javac.test.classpath">
       <path refid="javac.driver.classpath"/>
       <pathelement location="${build.classes}"/>
@@ -175,7 +181,7 @@
   <!-- =================================================================== -->
   <!-- Compiles the source code                                            -->
   <!-- =================================================================== -->
-  <target name="compile" depends="compile-concurrent, compile-j2ee, compile-driver, compile-tests, compile-etc, compile-resources, compile-stylesheets"/>
+  <target name="compile" depends="compile-concurrent, compile-j2ee, compile-driver, compile-pool, compile-tests, compile-etc, compile-resources, compile-stylesheets"/>
 
   <!-- calling this unjar a compile is stretching the truth a bit-->
   <target name="compile-concurrent" depends="init">
@@ -191,6 +197,12 @@
         <include name="EDU/oswego/cs/dl/util/concurrent/QueuedSemaphore$WaitQueue$WaitNode.class"/>
         <include name="EDU/oswego/cs/dl/util/concurrent/Semaphore.class"/>
         <include name="EDU/oswego/cs/dl/util/concurrent/Sync.class"/>
+        	
+        <include name="EDU/oswego/cs/dl/util/concurrent/LinkedQueue.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/LinkedNode.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/Channel.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/Puttable.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/Takable.class"/>
       </patternset>
     </unjar>
   </target>
@@ -230,8 +242,22 @@
       <classpath refid="javac.driver.classpath"/>
     </javac>
   </target>
+  
+  <target name="compile-pool" depends="compile-driver">
+    <javac srcdir="${source.pool}"
+           destdir="${build.classes}"
+           target="1.2"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+           includes="org/**"
+           excludes="**/temp*"
+    >
+      <classpath refid="javac.pool.classpath"/>
+    </javac>
+  </target>
 
-  <target name="compile-tests" depends="compile-driver">
+  <target name="compile-tests" depends="compile-pool">
     <mkdir dir="${build.test}"/>
     <javac srcdir="${source.test}"
            destdir="${build.test}"
