@@ -24,6 +24,8 @@ import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
 import org.firebirdsql.jca.FBResourceException;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.GDSFactory;
+import org.firebirdsql.gds.GDS;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -107,8 +109,8 @@ public class FBConnectionHelper {
 
     }
 
-    public static FBConnectionRequestInfo getDefaultCri() {
-        FBConnectionRequestInfo result = new FBConnectionRequestInfo();
+    public static FBConnectionRequestInfo getDefaultCri(GDS gds) {
+        FBConnectionRequestInfo result = new FBConnectionRequestInfo(gds);
         //
         // Important for performance on inserts. the charset code must not be none
         //
@@ -151,7 +153,7 @@ public class FBConnectionHelper {
         if (baseCri != null)
             cri = new FBConnectionRequestInfo(baseCri);
         else
-            cri = new FBConnectionRequestInfo(getDefaultCri());
+            cri = new FBConnectionRequestInfo(getDefaultCri(GDSFactory.getDefaultGDS()));
 
         // process all set keys
         Iterator keys = info.keySet().iterator();

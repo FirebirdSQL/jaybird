@@ -39,27 +39,27 @@ class FBTimeField extends FBField {
     Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return XSQLVAR.decodeTime(rs.row[numCol]);
+        return field.decodeTime(rs.row[numCol]);
     }
     String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return String.valueOf(XSQLVAR.decodeTime(rs.row[numCol]));
+        return String.valueOf(field.decodeTime(rs.row[numCol]));
     }
     Time getTime(Calendar cal) throws SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
-        return XSQLVAR.decodeTime(getTime(),cal);
+        return field.decodeTime(getTime(),cal);
     }
     Time getTime() throws SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
-        return XSQLVAR.decodeTime(rs.row[numCol]);
+        return field.decodeTime(rs.row[numCol]);
     }
     Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 		  
-        return XSQLVAR.decodeTimestamp(getTimestamp(),cal);
+        return field.decodeTimestamp(getTimestamp(),cal);
     }
     Timestamp getTimestamp() throws SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
@@ -80,7 +80,7 @@ class FBTimeField extends FBField {
             field.sqldata = null;
             return;
         }
-        setTimestamp(XSQLVAR.encodeTimestamp(value,cal));
+        setTimestamp(field.encodeTimestamp(value,cal));
     }
     void setTimestamp(Timestamp value) throws SQLException {
         if (value == null) {
@@ -95,7 +95,7 @@ class FBTimeField extends FBField {
             return;
         }
 
-        setTime(XSQLVAR.encodeTime(value,cal));
+        setTime(field.encodeTime(value,cal));
     }
     void setTime(Time value) throws SQLException {
         if (value == null) {
@@ -103,6 +103,6 @@ class FBTimeField extends FBField {
             return;
         }
 
-        field.sqldata = XSQLVAR.encodeTime(value);
+        field.sqldata = field.encodeTime(value);
     }
 }

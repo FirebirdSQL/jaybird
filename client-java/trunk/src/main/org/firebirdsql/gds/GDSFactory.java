@@ -23,6 +23,10 @@ package org.firebirdsql.gds;
 
 import org.firebirdsql.jgds.GDS_Impl;
 
+import java.util.Map;
+import java.util.HashMap;
+import java.io.Serializable;
+
 
 
 /**
@@ -32,33 +36,72 @@ import org.firebirdsql.jgds.GDS_Impl;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class GDSFactory {
+public class GDSFactory
+	{
+	public static class GdsType implements Serializable
+		{
+		private static int nextOrdinal = 0;
 
-    public static GDS newGDS() {
-        return new GDS_Impl();
-    }
+		/**
+		 * Type 4 GDS Implementation.
+		 */
+		public static final GdsType PURE_JAVA = new GdsType();
+
+		/**
+		 * Type 2 GDS Implementation. Expects to be able to find fbembed.dll
+		 */
+		public static final GdsType NATIVE_EMBEDED = new GdsType();
+
+		/**
+		 * Type 2 GDS Implementation. Expects to be able to find fbclient.dll or gds32.dll in that order.
+		 */
+		public static final GdsType NATIVE = new GdsType();
 
 
-    public static Clumplet newClumplet(int type, String content) {
-        return GDS_Impl.newClumplet(type, content);
-    }
 
-    public static Clumplet newClumplet(int type){
-        return GDS_Impl.newClumplet(type);
-    }
+		private static final GdsType[] PRIVATE_VALUES = new GdsType[]{ PURE_JAVA, NATIVE_EMBEDED, NATIVE };
+
+		private GdsType()
+			{
+			ordinal = nextOrdinal++;
+			}
+
+		public Object readResolve()
+			{
+			return PRIVATE_VALUES[ordinal];
+			}
+
+		final int ordinal;
+		}
 
 
-    public static Clumplet newClumplet(int type, int c){
-        return GDS_Impl.newClumplet(type, c);
-    }
+	public static GDS getDefaultGDS(  )
+		{
+		return getGDSForType(GdsType.PURE_JAVA);
+		}
 
-    public static Clumplet newClumplet(int type, byte[] content) {
-        return GDS_Impl.newClumplet(type, content);
-    }
+    public synchronized static GDS getGDSForType( GdsType gdsType )
+		{
+		GDS gds = (GDS) gdsTypeToGdsInstanceMap.get(gdsType);
+		if( gds == null )
+			{
+			gds = createGDSForType(gdsType);
+			gdsTypeToGdsInstanceMap.put(gdsType, gds);
+			}
 
-    public static Clumplet cloneClumplet(Clumplet c) {
-        return GDS_Impl.cloneClumplet(c);
-    }
+        return gds;
+    	}
 
-}
+	private static GDS createGDSForType(GdsType gdsType)
+		{
+		if( gdsType == GdsType.PURE_JAVA )
+			return new GDS_Impl();
+		else if( gdsType == GdsType.NATIVE )
+			return new org.firebirdsql.ngds.GDS_Impl(gdsType);
+		else
+			throw new java.lang.IllegalArgumentException("gdsType not recognized.");
+		}
+
+	private static final Map gdsTypeToGdsInstanceMap = new HashMap();
+	}
 

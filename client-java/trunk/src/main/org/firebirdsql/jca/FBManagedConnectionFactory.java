@@ -52,6 +52,7 @@ import org.firebirdsql.jdbc.FBConnectionHelper;
 import org.firebirdsql.jdbc.FBDataSource;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.management.FBManager;
 
 /**
  * FBManagedConnectionFactory implements the jca ManagedConnectionFactory
@@ -108,7 +109,9 @@ public class FBManagedConnectionFactory
     //These hold non-serializable stuff.
     private transient final static Logger log = LoggerFactory.getLogger(FBManagedConnectionFactory.class,true);
 
-    transient final GDS gds = GDSFactory.newGDS();
+    GDS gds;
+
+    private Type type;
 
     /**
      * The <code>criToFreeDbHandlesMap</code> maps cri to lists of physical
@@ -135,9 +138,65 @@ public class FBManagedConnectionFactory
 
     private volatile int hashCode = 0;
 
+
+
+    public static final class Type implements Serializable
+        {
+        private static int nextOrdinal = 0;
+
+        public static final Type FOUR = new Type("type 4");
+        public static final Type TWO = new Type("type 2");
+        public static final Type TWO_EMBEDED = new Type("type 2 embeded");
+
+        private static final Type[] PRIVATE_VALUES = {FOUR, TWO, TWO_EMBEDED};
+
+        private Type(String s)
+            {
+            name = s;
+            ordinal = nextOrdinal++;
+            }
+
+        public Object readResolve()
+            {
+            return PRIVATE_VALUES[ordinal];
+            }
+
+        public String toString()
+            {
+            return name;
+            }
+
+        private final String name;
+        private final int ordinal;
+        }
+
+
+    private static final Map internalTypeToGdsTypeMap = new HashMap();
+    static
+        {
+        internalTypeToGdsTypeMap.put( Type.FOUR, GDSFactory.GdsType.PURE_JAVA );
+        internalTypeToGdsTypeMap.put( Type.TWO, GDSFactory.GdsType.NATIVE );
+        internalTypeToGdsTypeMap.put( Type.TWO_EMBEDED, GDSFactory.GdsType.NATIVE_EMBEDED );
+        }
+
+
+		//Default constructor.
     public FBManagedConnectionFactory() {
-        defaultCri = FBConnectionHelper.getDefaultCri();
-    }  //Default constructor.
+        this(Type.FOUR);
+        }
+
+    public FBManagedConnectionFactory(Type type) {
+        this.type = type;
+        gds = GDSFactory.getGDSForType((GDSFactory.GdsType)internalTypeToGdsTypeMap.get(type));
+        defaultCri = FBConnectionHelper.getDefaultCri(gds);
+        }
+
+    public Type getType()
+        {
+        return this.type;
+        }
+
+
 
     //rar properties
 
@@ -294,6 +353,7 @@ public class FBManagedConnectionFactory
         result = 37 * result + defaultCri.hashCode();
         result = 37 * result + tpb.hashCode();
         result = 37 * result + blobBufferLength;
+        result = 37 * result + type.hashCode();
         hashCode = result;
         return hashCode;
     }
@@ -313,7 +373,8 @@ public class FBManagedConnectionFactory
             (dbAlias == null ? mcf.dbAlias == null : dbAlias.equals(mcf.dbAlias))
             && (defaultCri.equals(mcf.defaultCri))
             && (tpb.equals(mcf.tpb))
-            && (blobBufferLength == mcf.blobBufferLength);
+            && (blobBufferLength == mcf.blobBufferLength)
+            && (type == mcf.type);
     }
 
     /**
@@ -748,7 +809,7 @@ public class FBManagedConnectionFactory
         {
             return mcf;
         } // end of if ()
-        mcf = new FBManagedConnectionFactory();
+        mcf = new FBManagedConnectionFactory(type);
         mcf.setDatabase(this.getDatabase());
         mcf.setConnectionRequestInfo(this.getDefaultConnectionRequestInfo());
         mcf.setTpb(this.getTpb());

@@ -32,7 +32,7 @@ class FBCachedFetcher implements FBFetcher {
         ArrayList rowsSets = new ArrayList(100);
         ArrayList rows = new ArrayList(100);
 
-        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
+        isc_stmt_handle stmt =  stmt_handle;
         byte[][] localRow = null;
             
         this.fbStatement = fbStatement;

@@ -25,20 +25,24 @@ import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.isc_db_handle;
 
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.HashMap;
+
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * The class <code>FBManager</code> is a simple jmx mbean that allows you
- * to create and drop databases.  in particular, they can be created and 
+ * to create and drop databases.  in particular, they can be created and
  * dropped using the jboss service lifecycle operations start and stop.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  * @jmx.mbean
  */
-public class FBManager implements FBManagerMBean {
-
+public class FBManager implements FBManagerMBean
+	{
     private final static Logger log = LoggerFactory.getLogger(FBManager.class,true);
 
     private GDS gds;
@@ -67,11 +71,54 @@ public class FBManager implements FBManagerMBean {
     private static final String STOPPED = "Stopped";
     private static final String STARTED = "Started";
 
+    public static final class Type
+        {
+        private Type(String s)
+            {
 
-    public FBManager() {}
+            name = s;
+            }
+
+        public static final Type FOUR = new Type("type 4");
+        public static final Type TWO = new Type("type 2");
+        public static final Type TWO_EMBEDED = new Type("type 2 embeded");
+
+        public String toString()
+            {
+            return name;
+            }
+
+        private final String name;
+        }
+
+    private static final Map internalTypeToGdsTypeMap = new HashMap();
+    static
+        {
+        internalTypeToGdsTypeMap.put( Type.FOUR, GDSFactory.GdsType.PURE_JAVA );
+        internalTypeToGdsTypeMap.put( Type.TWO, GDSFactory.GdsType.NATIVE );
+        internalTypeToGdsTypeMap.put( Type.TWO_EMBEDED, GDSFactory.GdsType.NATIVE_EMBEDED );
+        }
 
 
-    //Service methods
+    private final Type type;
+
+
+    public FBManager()
+        {
+        this(Type.FOUR);
+        }
+
+    public FBManager(Type type)
+        {
+        this.type = type;
+        }
+
+
+
+
+
+
+	//Service methods
     /**
      * Describe <code>start</code> method here.
      *
@@ -79,17 +126,17 @@ public class FBManager implements FBManagerMBean {
      * @jmx.managed-operation
      */
     public void start() throws Exception {
-        gds = GDSFactory.newGDS();
-        c = GDSFactory.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
-        c.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
-        c.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
+        gds = GDSFactory.getGDSForType((GDSFactory.GdsType)internalTypeToGdsTypeMap.get(type));
+        c = gds.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
+        c.append(gds.newClumplet(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
+        c.append(gds.newClumplet(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
 
         state = STARTED;
-        if (isCreateOnStart()) 
+        if (isCreateOnStart())
         {
             createDatabase(getFileName(), getUserName(), getPassword());
         } // end of if ()
-        
+
     }
 
     /**
@@ -99,13 +146,14 @@ public class FBManager implements FBManagerMBean {
      * @jmx.managed-operation
      */
     public void stop() throws Exception {
-        if (isDropOnStop()) 
+        if (isDropOnStop())
         {
             dropDatabase(getFileName(), getUserName(), getPassword());
         } // end of if ()
-        
+
         c = null;
-        gds = null;
+        gds.close();
+	gds = null;
         state = STOPPED;
     }
 
@@ -176,8 +224,8 @@ public class FBManager implements FBManagerMBean {
         return port;
     }
 
-    
-    
+
+
     /**
      * mbean get-set pair for field fileName
      * Get the value of fileName
@@ -189,8 +237,8 @@ public class FBManager implements FBManagerMBean {
     {
         return fileName;
     }
-    
-    
+
+
     /**
      * Set the value of fileName
      * @param fileName  Value to assign to fileName
@@ -201,10 +249,10 @@ public class FBManager implements FBManagerMBean {
     {
         this.fileName = fileName;
     }
-    
-    
-    
-    
+
+
+
+
     /**
      * mbean get-set pair for field userName
      * Get the value of userName
@@ -216,8 +264,8 @@ public class FBManager implements FBManagerMBean {
     {
         return userName;
     }
-    
-    
+
+
     /**
      * Set the value of userName
      * @param userName  Value to assign to userName
@@ -228,9 +276,9 @@ public class FBManager implements FBManagerMBean {
     {
         this.userName = userName;
     }
-    
-    
-    
+
+
+
     /**
      * mbean get-set pair for field password
      * Get the value of password
@@ -242,8 +290,8 @@ public class FBManager implements FBManagerMBean {
     {
         return password;
     }
-    
-    
+
+
     /**
      * Set the value of password
      * @param password  Value to assign to password
@@ -254,10 +302,10 @@ public class FBManager implements FBManagerMBean {
     {
         this.password = password;
     }
-    
-    
-    
-    
+
+
+
+
     /**
      * mbean get-set pair for field createOnStart
      * Get the value of createOnStart
@@ -269,8 +317,8 @@ public class FBManager implements FBManagerMBean {
     {
         return createOnStart;
     }
-    
-    
+
+
     /**
      * Set the value of createOnStart
      * @param createOnStart  Value to assign to createOnStart
@@ -281,10 +329,10 @@ public class FBManager implements FBManagerMBean {
     {
         this.createOnStart = createOnStart;
     }
-    
-    
-    
-    
+
+
+
+
     /**
      * mbean get-set pair for field dropOnStop
      * Get the value of dropOnStop
@@ -296,8 +344,8 @@ public class FBManager implements FBManagerMBean {
     {
         return dropOnStop;
     }
-    
-    
+
+
     /**
      * Set the value of dropOnStop
      * @param dropOnStop  Value to assign to dropOnStop
@@ -308,7 +356,7 @@ public class FBManager implements FBManagerMBean {
     {
         this.dropOnStop = dropOnStop;
     }
-    
+
 
     /**
      * Get the ForceCreate value.
@@ -330,7 +378,7 @@ public class FBManager implements FBManagerMBean {
 	this.forceCreate = forceCreate;
     }
 
-    
+
 
     //Meaningful management methods
 
@@ -345,31 +393,31 @@ public class FBManager implements FBManagerMBean {
      * @jmx.managed-operation
      */
     public void createDatabase (String fileName, String user, String password)
-        throws Exception 
+        throws Exception
     {
         isc_db_handle db = null;
 	if (!forceCreate) {
 	    db = gds.get_new_isc_db_handle();
 	    try {
-		Clumplet dpb = GDSFactory.cloneClumplet(c);
-		dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_user_name, user));
-		dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_password, password));
+		Clumplet dpb = gds.cloneClumplet(c);
+		dpb.append(gds.newClumplet(ISCConstants.isc_dpb_user_name, user));
+		dpb.append(gds.newClumplet(ISCConstants.isc_dpb_password, password));
 		gds.isc_attach_database(getConnectString(fileName), db, dpb);
 		gds.isc_detach_database(db);
 		return; //database exists, don't wipe it out.
 	    }
 	    catch (Exception e)
 	    {
-		//db does not exist, create it. 
+		//db does not exist, create it.
 	    }
-	    
+
 	} // end of if ()
-	
+
 	db = gds.get_new_isc_db_handle();
         try {
-            Clumplet dpb = GDSFactory.cloneClumplet(c);
-            dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_user_name, user));
-            dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_password, password));
+            Clumplet dpb = gds.cloneClumplet(c);
+            dpb.append(gds.newClumplet(ISCConstants.isc_dpb_user_name, user));
+            dpb.append(gds.newClumplet(ISCConstants.isc_dpb_password, password));
             gds.isc_create_database(getConnectString(fileName), db, dpb);
             gds.isc_detach_database(db);
         }
@@ -391,14 +439,14 @@ public class FBManager implements FBManagerMBean {
      * @exception Exception if an error occurs
      * @jmx.managed-operation
      */
-    public void dropDatabase(String fileName, String user, String password) 
-        throws Exception 
+    public void dropDatabase(String fileName, String user, String password)
+        throws Exception
     {
         try {
             isc_db_handle db = gds.get_new_isc_db_handle();
-            Clumplet dpb = GDSFactory.cloneClumplet(c);
-            dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_user_name, user));
-            dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_password, password));
+            Clumplet dpb = gds.cloneClumplet(c);
+            dpb.append(gds.newClumplet(ISCConstants.isc_dpb_user_name, user));
+            dpb.append(gds.newClumplet(ISCConstants.isc_dpb_password, password));
             gds.isc_attach_database(getConnectString(fileName), db, dpb);
             gds.isc_drop_database(db);
 

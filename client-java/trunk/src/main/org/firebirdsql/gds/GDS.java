@@ -40,6 +40,17 @@ package org.firebirdsql.gds;
  */
 public interface GDS {
 
+    public  Clumplet newClumplet(int type, String content);
+
+    public  Clumplet newClumplet(int type);
+
+    public  Clumplet newClumplet(int type, int c);
+
+    public  Clumplet newClumplet(int type, byte[] content) ;
+
+    public  Clumplet cloneClumplet(Clumplet c) ;
+
+
     // Database functions
 
     void isc_create_database(String file_name,
@@ -206,4 +217,6 @@ public interface GDS {
     isc_stmt_handle get_new_isc_stmt_handle();
 
     isc_blob_handle get_new_isc_blob_handle();
-}
+
+    void close();
+    }

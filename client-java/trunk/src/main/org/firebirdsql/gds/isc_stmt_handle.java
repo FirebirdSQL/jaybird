@@ -47,4 +47,12 @@ public interface isc_stmt_handle {
     int getUpdateCount();
 
     int getDeleteCount();
-}
+
+    boolean getAllRowsFetched();
+
+    Object[] getRows();
+
+    int size();
+
+    void removeRows();
+    }

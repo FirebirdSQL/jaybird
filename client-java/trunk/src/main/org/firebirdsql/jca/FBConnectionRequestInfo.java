@@ -29,6 +29,7 @@ import javax.resource.spi.ConnectionRequestInfo;
 import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDSFactory;
+import org.firebirdsql.gds.GDS;
 
 
 
@@ -46,12 +47,15 @@ public class FBConnectionRequestInfo
 {
 
     private Clumplet c = null;
+    private final GDS gds;
 
-    public FBConnectionRequestInfo() {
+    public FBConnectionRequestInfo( GDS gds ) {
+	this.gds = gds;
     }
 
     public FBConnectionRequestInfo(FBConnectionRequestInfo src) {
-        c = GDSFactory.cloneClumplet(src.c);
+        this.gds = src.gds;
+        c = gds.cloneClumplet(src.c);
     }
 
     Clumplet getDpb() {
@@ -59,19 +63,19 @@ public class FBConnectionRequestInfo
     }
 
     public void setProperty(int type, String content) {
-        append(GDSFactory.newClumplet(type, content));
+        append(gds.newClumplet(type, content));
     }
 
     public void setProperty(int type) {
-        append(GDSFactory.newClumplet(type));
+        append(gds.newClumplet(type));
     }
 
     public void setProperty(int type, int content) {
-        append(GDSFactory.newClumplet(type, content));
+        append(gds.newClumplet(type, content));
     }
 
     public void setProperty(int type, byte[] content) {
-        append(GDSFactory.newClumplet(type, content));
+        append(gds.newClumplet(type, content));
     }
 
     public String getStringProperty(int type)

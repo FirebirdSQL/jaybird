@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.12  2003/06/05 23:22:31  brodsom
+ * Substitute package and inline imports
+ *
  * Revision 1.11  2003/06/04 13:04:34  brodsom
  * Remove unused vars and imports
  * Comment unused private method
@@ -123,6 +126,7 @@ import org.firebirdsql.jca.FBTpbMapper;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.GDSFactory;
 
 /**
  * Describe class <code>FBDriver</code> here.
@@ -135,6 +139,9 @@ public class FBDriver implements Driver {
     private final static Logger log;
 
     public static final String FIREBIRD_PROTOCOL = "jdbc:firebirdsql:";
+    public static final String FIREBIRD_PROTOCOL_NATIVE= FIREBIRD_PROTOCOL + "native:";
+    public static final String FIREBIRD_PROTOCOL_NATIVE_EMBEDED = FIREBIRD_PROTOCOL + "native_embeded";
+
     public static final String USER = "user";
     public static final String PASSWORD = "password";
     public static final String DATABASE = "database";
@@ -190,6 +197,9 @@ public class FBDriver implements Driver {
         {
             return null;
         } // end of if ()
+
+        final FBManagedConnectionFactory.Type type = getDriverType(url);
+
         Integer blobBufferLength = null;
         try {
             int iQuestionMark = url.indexOf("?");
@@ -222,8 +232,11 @@ public class FBDriver implements Driver {
                 url = url.substring(0,iQuestionMark);
             }
 
+
+            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
+
             FBConnectionRequestInfo conCri =
-                FBConnectionHelper.getCri(info, FBConnectionHelper.getDefaultCri());
+                FBConnectionHelper.getCri(info, mcf.getDefaultConnectionRequestInfo());
                 
             FBTpbMapper tpbMapper = FBConnectionHelper.getTpbMapper(info);
 
@@ -248,9 +261,15 @@ public class FBDriver implements Driver {
                     "Password for database connection not specified.");
 
             // extract the database URL
-            String databaseURL = url.substring(FIREBIRD_PROTOCOL.length());
 
-            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
+            String databaseURL;
+            if( url.startsWith(FIREBIRD_PROTOCOL_NATIVE) )
+                databaseURL = url.substring(FIREBIRD_PROTOCOL_NATIVE.length());
+            else if( url.startsWith(FIREBIRD_PROTOCOL_NATIVE_EMBEDED) )
+                databaseURL = url.substring(FIREBIRD_PROTOCOL_NATIVE_EMBEDED.length());
+            else
+                databaseURL = url.substring(FIREBIRD_PROTOCOL.length());
+
             mcf.setDatabase(databaseURL);
             mcf.setConnectionRequestInfo(conCri);
             
@@ -279,6 +298,29 @@ public class FBDriver implements Driver {
             throw new SQLException(resex.getMessage());
         }
     }
+
+
+    /**
+	 *
+	 *
+	 * @param url
+	 * @return
+	 */
+    private FBManagedConnectionFactory.Type getDriverType(String url)
+    {
+        if(url.startsWith(FIREBIRD_PROTOCOL_NATIVE))
+        {
+            return FBManagedConnectionFactory.Type.TWO;
+        }
+        if(url.startsWith(FIREBIRD_PROTOCOL_NATIVE_EMBEDED))
+        {
+            return FBManagedConnectionFactory.Type.TWO_EMBEDED;
+        }
+        else
+        {
+        return FBManagedConnectionFactory.Type.FOUR;
+        }
+     }
 
 
     /**

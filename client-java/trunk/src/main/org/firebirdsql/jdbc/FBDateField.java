@@ -41,7 +41,7 @@ class FBDateField extends FBField {
     Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 		  
-        return XSQLVAR.decodeTimestamp(getTimestamp(),cal);
+        return field.decodeTimestamp(getTimestamp(),cal);
     }
     Timestamp getTimestamp() throws SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
@@ -51,22 +51,22 @@ class FBDateField extends FBField {
     Date getDate(Calendar cal) throws SQLException {
         if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
-        return XSQLVAR.decodeDate(getDate(),cal);
+        return field.decodeDate(getDate(),cal);
     }
     Date getDate() throws SQLException {
         if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
-        return XSQLVAR.decodeDate(rs.row[numCol]);
+        return field.decodeDate(rs.row[numCol]);
     }
     String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return XSQLVAR.decodeDate(rs.row[numCol]).toString();
+        return field.decodeDate(rs.row[numCol]).toString();
     }
     Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return XSQLVAR.decodeDate(rs.row[numCol]);
+        return field.decodeDate(rs.row[numCol]);
     }
 
     //--- setXXX methods
@@ -85,7 +85,7 @@ class FBDateField extends FBField {
             return;
         }
 
-        setTimestamp(XSQLVAR.encodeTimestamp(value,cal));
+        setTimestamp(field.encodeTimestamp(value,cal));
     }
     void setTimestamp(Timestamp value) throws SQLException {
         if (value == null) {
@@ -101,7 +101,7 @@ class FBDateField extends FBField {
             return;
         }
 
-        setDate(XSQLVAR.encodeDate(value,cal));
+        setDate(field.encodeDate(value,cal));
     }
     void setDate(Date value) throws SQLException {
         if (value == null) {
@@ -109,6 +109,6 @@ class FBDateField extends FBField {
             return;
         }
 
-        field.sqldata = XSQLVAR.encodeDate(value);
+        field.sqldata = field.encodeDate(value);
     }
 }
