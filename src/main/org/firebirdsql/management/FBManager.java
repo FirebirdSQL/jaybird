@@ -58,6 +58,8 @@ public class FBManager implements FBManagerMBean {
 
     private String password;
 
+    private boolean forceCreate = false;
+
     private boolean createOnStart = false;
 
     private boolean dropOnStop = false;
@@ -310,6 +312,28 @@ public class FBManager implements FBManagerMBean {
     }
     
 
+    /**
+     * Get the ForceCreate value.
+     * @return the ForceCreate value.
+     *
+     * @jmx:managed-attribute
+     */
+    public boolean isForceCreate() {
+	return forceCreate;
+    }
+
+    /**
+     * Set the ForceCreate value.
+     * @param forceCreate The new ForceCreate value.
+     *
+     * @jmx:managed-attribute
+     */
+    public void setForceCreate(boolean forceCreate) {
+	this.forceCreate = forceCreate;
+    }
+
+    
+
     //Meaningful management methods
 
     /**
@@ -325,19 +349,25 @@ public class FBManager implements FBManagerMBean {
     public void createDatabase (String fileName, String user, String password)
         throws Exception 
     {
-        isc_db_handle db = gds.get_new_isc_db_handle();
-	try {
-	    Clumplet dpb = GDSFactory.cloneClumplet(c);
-	    dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_user_name, user));
-	    dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_password, password));
-	    gds.isc_attach_database(getConnectString(fileName), db, dpb);
-	    gds.isc_detach_database(db);
-	    return; //database exists, don't wipe it out.
-	}
-	catch (Exception e)
-	{
-	    //db does not exist, create it. 
-	}
+        isc_db_handle db = null;
+	if (!forceCreate) {
+	    db = gds.get_new_isc_db_handle();
+	    try {
+		Clumplet dpb = GDSFactory.cloneClumplet(c);
+		dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_user_name, user));
+		dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_password, password));
+		gds.isc_attach_database(getConnectString(fileName), db, dpb);
+		gds.isc_detach_database(db);
+		return; //database exists, don't wipe it out.
+	    }
+	    catch (Exception e)
+	    {
+		//db does not exist, create it. 
+	    }
+	    
+	} // end of if ()
+	
+	db = gds.get_new_isc_db_handle();
         try {
             Clumplet dpb = GDSFactory.cloneClumplet(c);
             dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_user_name, user));
@@ -346,11 +376,11 @@ public class FBManager implements FBManagerMBean {
             gds.isc_detach_database(db);
         }
         catch (Exception e) {
-           if (log!=null)
-           {
-               log.error("Exception creating database", e);
-           }
-           throw e;
+	    if (log!=null)
+	    {
+		log.error("Exception creating database", e);
+	    }
+	    throw e;
         }
     }
 

@@ -140,6 +140,10 @@ public interface FBManagerMBean {
      */
     public void setDropOnStop(final boolean dropOnStop);   
     
+    public boolean isForceCreate();
+
+    public void setForceCreate(boolean forceCreate);
+
     public void createDatabase (String filename, String user, String password) throws Exception;
 
     public void dropDatabase(String fileName, String user, String password) throws Exception;
