@@ -794,9 +794,18 @@ public class TestFBResultSet extends FBTestBase {
                 String longStr = rs.getString(2);
                 assertTrue(("newString" + counter).equals(longStr));
                 counter++;
+                
+                if (counter == recordCount + 1)
+                    rs.deleteRow();
             }
             
             assertTrue(counter == recordCount + 1);
+            
+            rs = stmt.executeQuery("SELECT count(*) FROM test_table");
+            
+            assertTrue(rs.next());
+            assertTrue(rs.getInt(1) == recordCount);
+            
         } finally {
             stmt.close();
         }
