@@ -32,7 +32,6 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
 import javax.resource.ResourceException;
-import javax.resource.spi.LocalTransaction;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.isc_blob_handle;
