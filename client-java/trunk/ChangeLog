@@ -1,3 +1,19 @@
+2004-05-29 00:58  rrokytskyy
+
+	*
+	
+	exported few properties, updated javadoc
+	client-java/src/pool/org/firebirdsql/pool/FBWrappingDataSource.java
+	:
+
+2004-05-27 23:51  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FBEscapedCallParser.java,
+	test/org/firebirdsql/jdbc/TestFBCallableStatement.java:
+	
+	fixed bug with trailing spaces in the callable statement
+
 2004-05-20 21:04  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/field/FBField.java:
