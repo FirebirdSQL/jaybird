@@ -32,6 +32,7 @@ package org.firebirdsql.jdbc;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Array;
@@ -191,6 +192,13 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         parameterWasSet(parameterIndex);
     }
 
+    public void setTextStream(int parameterIndex, Reader reader,
+        int length) throws SQLException
+    {
+        getField(parameterIndex).setCharacterStream(reader, length);
+        parameterWasSet(parameterIndex);
+    }
+	 
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
         getField(parameterIndex).setBytes(x);
         parameterWasSet(parameterIndex);
@@ -534,7 +542,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     public void setCharacterStream(int parameterIndex,
                   java.io.Reader reader,
               int length) throws  SQLException {
-        throw new SQLException("not yet implemented");
+        setCharacterStream(parameterIndex, reader, length);
     }
 
 
