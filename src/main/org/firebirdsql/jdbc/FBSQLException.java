@@ -57,6 +57,12 @@ public class FBSQLException extends SQLException {
     
     private String sqlState;
     
+    public FBSQLException(Exception ex) {
+        super(ex.getMessage(), SQL_STATE_GENERAL_ERROR);
+        original = ex;
+        message = "Exception. " + ex.getMessage();
+    }
+    
     public FBSQLException(IOException ioex) {
         super(ioex.getMessage(), SQL_STATE_GENERAL_ERROR);
         original = ioex;
