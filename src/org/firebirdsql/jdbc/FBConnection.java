@@ -121,7 +121,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public Statement createStatement(int param1, int param2, int param3) throws SQLException {
         // TODO: implement this java.sql.Connection method
-        return null;
+        throw new SQLException("not yet implemented");;
     }
 
 
@@ -273,7 +273,11 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      */
     public String nativeSQL(String sql) throws SQLException {
-        return null;
+        try {
+            return new FBEscapedParser().parse(sql);
+        } catch(FBSQLParseException pex) {
+            throw new SQLException(pex.toString());
+        }
     }
 
 

@@ -387,7 +387,7 @@ public class FBStatement implements Statement {
             if (fixedStmt == null) {
                 fixedStmt = mc.getAllocatedStatement();
             }
-            mc.prepareSQL(fixedStmt, sql, false);
+            mc.prepareSQL(fixedStmt, c.nativeSQL(sql), false);
             mc.executeStatement(fixedStmt, false);
             return (fixedStmt.getOutSqlda().sqld > 0);
         }

@@ -103,7 +103,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
 
     FBCallableStatement(FBConnection c, String sql) throws SQLException {
-        //Need to rewrite sql to "call x" syntax here
+        //rewriting the "call x" syntax is done in the FBPreparedStatement constructor.
         super(c, sql);
     }
 

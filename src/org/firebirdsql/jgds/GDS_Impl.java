@@ -1362,7 +1362,7 @@ public class GDS_Impl implements GDS {
                         return;
                     case isc_arg_interpreted:
                     case isc_arg_string:
-                        GDSException ts = new GDSException(db.in.readString());
+                        GDSException ts = new GDSException(arg, db.in.readString());
             if (debug) {System.out.println("readStatusVector string: " + ts.getMessage());}
                         if (head == null) {
                             head = ts;
@@ -1378,7 +1378,7 @@ public class GDS_Impl implements GDS {
                         int e = db.in.readInt();
             if (debug) {System.out.println("readStatusVector int: " + e);}
                         if (e != 0) {
-                            GDSException td = new GDSException(e);
+                            GDSException td = new GDSException(arg, e);
                             if (head == null) {
                                 head = td;
                                 tail = td;
