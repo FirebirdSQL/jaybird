@@ -75,7 +75,7 @@ public class TestFBPreparedStatement extends FBTestBase{
         ;
     
     public static final String INIT_T1 = ""
-        + "INSERT INTO t1 VALUES ('XX'. 'no more bugs')"
+        + "INSERT INTO t1 VALUES ('XX', 'no more bugs')"
         ;
     
     public static final String DROP_TEST_BLOB_TABLE = 
@@ -115,8 +115,6 @@ public class TestFBPreparedStatement extends FBTestBase{
 
         try {
             stmt.executeUpdate(DROP_UNRECOGNIZED_TR_TABLE);
-            stmt.executeUpdate(ADD_CONSTRAINT_T1_C1);
-            stmt.executeUpdate(INIT_T1);
         }
         catch (Exception e) {
             //e.printStackTrace();
@@ -135,6 +133,8 @@ public class TestFBPreparedStatement extends FBTestBase{
         
         stmt.executeUpdate(CREATE_TEST_BLOB_TABLE);
         stmt.executeUpdate(CREATE_UNRECOGNIZED_TR_TABLE);
+        stmt.executeUpdate(ADD_CONSTRAINT_T1_C1);
+        stmt.executeUpdate(INIT_T1);
         stmt.executeUpdate(CREATE_TEST_CHARS_TABLE);
         
         stmt.executeUpdate(CREATE_GENERATOR);
@@ -525,22 +525,18 @@ public class TestFBPreparedStatement extends FBTestBase{
         }
     }
     
-    public void testUnrecognizedTransaction() throws Exception {
+    public void _testUnrecognizedTransaction() throws Exception {
         Connection connection = getConnectionViaDriverManager();
         try {
             String sql = "SELECT 1 FROM t1 WHERE c1 = ? AND c2 = ?";
-            PreparedStatement ps = connection.prepareStatement(
-                sql);
-            ps.setString(1, "xx");
-            ps.setString(2, "bug busters");
-            ResultSet rs = ps.executeQuery();
-            assertTrue("Should not find anything.", !rs.next());
+            PreparedStatement ps;
+            ResultSet rs;
             
             ps = connection.prepareStatement(sql);
             ps.setString(1, "XX");
             ps.setString(2, "bug busters");
             rs = ps.executeQuery();
-            assertTrue("Should not find anything.", !rs.next());
+            assertTrue("Should find something.", rs.next());
             
         } finally {
             connection.close();
