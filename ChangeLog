@@ -1,3 +1,46 @@
+2004-03-17 23:17  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/AbstractConnectionPool.java,
+	pool/org/firebirdsql/pool/BasicAbstractConnectionPool.java,
+	pool/org/firebirdsql/pool/ConnectionPoolConfiguration.java,
+	pool/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBPooledConnection.java,
+	pool/org/firebirdsql/pool/FBWrappingDataSource.java,
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	pool/org/firebirdsql/pool/PooledObject.java,
+	pool/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java,
+	test/org/firebirdsql/pool/TestDriverConnectionPoolDataSource.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+	
+	introduced connection pool that can work with arbitrary JDBC driver
+
+2004-03-17 23:13  rrokytskyy
+
+	*
+	
+	added test to check obtaining connection with the specified
+	credentials
+	client-java/src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.
+	java:
+
+2004-03-17 23:11  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/FBEscapedCallParser.java,
+	test/org/firebirdsql/jdbc/TestFBCallableStatement.java:
+	
+	fixed some bug in escaped call parser, reworked some result set
+	handling in base class
+
+2004-03-17 23:10  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBSQLException.java:
+	
+	added possibility to encapsulate arbitrary exceptions
+
 2004-02-07 12:04  ryanbaldwin
 
 	* client-java/src/native/jaygds/source/: fb_binding.h,
