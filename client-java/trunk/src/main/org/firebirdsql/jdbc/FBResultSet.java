@@ -98,10 +98,21 @@ public class FBResultSet implements ResultSet {
         if (!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE)
             fbFetcher = new FBCachedFetcher(this.c, fbstatement, stmt, this);
         else {
-            rsType = ResultSet.TYPE_FORWARD_ONLY;
-            rsConcurrency = ResultSet.CONCUR_READ_ONLY;
-            
-            c.addWarning(new FBSQLWarning("resultSetType or resultSetConcurrency changed"));
+            if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
+                c.addWarning(new FBSQLWarning(
+                    "Result set concurrency changed. " +
+                    "Only ResultSet.CONCUR_READ_ONLY concurrency is supported."));
+                    
+                rsConcurrency = ResultSet.CONCUR_READ_ONLY;
+            }
+                    
+            if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
+                c.addWarning(new FBSQLWarning(
+                    "Result set type changed. " +
+                    "ResultSet.TYPE_SCROLL_SENSITIVE is not supported."));
+                    
+                rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+            }
             
             if (updatableCursor)  
                 fbFetcher = new FBUpdatableFetcher(this.c, fbstatement, stmt, this);
@@ -333,7 +344,8 @@ public class FBResultSet implements ResultSet {
         FBField field = getField(columnIndex, true);
 
         wasNullValid = true;
-        wasNull = field.isNull();
+        // wasNull = field.isNull();
+        wasNull = (row[columnIndex - 1] == null);
         
         return field;
     }
@@ -344,12 +356,12 @@ public class FBResultSet implements ResultSet {
     public FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
         if (closed) throw new FBSQLException("The resultSet is closed");
         
-        if (checkRowPosition && (isBeforeFirst() || isAfterLast()))
+        if (checkRowPosition && row == null)
             throw new FBSQLException(
                     "The resultSet is not in a row, use next",
                     FBSQLException.SQL_STATE_NO_ROW_AVAIL);
         
-        if (columnIndex> xsqlvars.length)
+        if (columnIndex > xsqlvars.length)
              throw new FBSQLException(
                     "Invalid column index.",
                     FBSQLException.SQL_STATE_INVALID_COLUMN);
@@ -360,7 +372,7 @@ public class FBResultSet implements ResultSet {
     public FBField getField(String columnName) throws SQLException {
         if (closed) throw new FBSQLException("The resultSet is closed");
         
-        if (isBeforeFirst() || isAfterLast())
+        if (row == null)
             throw new FBSQLException(
                     "The resultSet is not in a row, use next",
                     FBSQLException.SQL_STATE_NO_ROW_AVAIL);
@@ -371,23 +383,18 @@ public class FBResultSet implements ResultSet {
                     FBSQLException.SQL_STATE_INVALID_COLUMN);
         }
 
-        FBField field = (FBField) colNames.get(columnName);
+        Integer fieldNum = (Integer) colNames.get(columnName);
         // If it is the first time the columnName is used
-        if (field == null){
+        if (fieldNum == null){
             int colNum = findColumn(columnName);
-            colNames.put(columnName,fields[colNum-1]);
-            field = fields[colNum-1];
+            fieldNum = new Integer(colNum);
+            colNames.put(columnName, fieldNum);
         }
-        //
-        if (field == null)
-            throw new FBSQLException(
-                    "Column name " + columnName + " not found in result set.",
-                    FBSQLException.SQL_STATE_INVALID_COLUMN);
-        else{
-            wasNullValid = true;
-            wasNull = field.isNull();
-            return field;
-        }
+        int colNum = fieldNum.intValue();
+        FBField field = fields[colNum - 1];
+        wasNullValid = true;
+        wasNull = (row[colNum - 1] == null);
+        return field;
     }
      /**
      * Gets the value of the designated column in the current row
