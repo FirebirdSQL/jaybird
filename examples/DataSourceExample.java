@@ -56,8 +56,14 @@ public final class DataSourceExample
 	 
 	FBConnectionRequestInfo cri = dataSource.getConnectionRequestInfo();
 	cri.setProperty(GDS.isc_dpb_lc_ctype, "NONE");
-	cri.setProperty(GDS.isc_dpb_num_buffers, 1);
     cri.setProperty(GDS.isc_dpb_sql_dialect, 1);
+	
+    /*
+     * Note, next line works only with SuperServer architecture,
+     * ClassicServer will hang if this line is uncommented.
+     */
+    
+    //cri.setProperty(GDS.isc_dpb_num_buffers, 1);
 	
 	dataSource.setConnectionRequestInfo(cri);
 
