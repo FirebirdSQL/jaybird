@@ -93,11 +93,19 @@ public class TestFBEscapedCallParser extends TestCase {
         procedureCall.getInputParam(2).setValue("test value");
         try {
         	procedureCall.registerOutParam(3, Types.CHAR);
-            assertTrue("Should not allow registering param 3 as output, " +
-                    "since it does not exist.", false);
+            fail("Should not allow registering param 3 as output, " +
+                    "since it does not exist.");
             
         } catch(SQLException ex) {
         	// everything is ok
+        }
+        assertEquals(1, procedureCall.mapOutParamIndexToPosition(1, false));
+        try {
+            int outPosition = procedureCall.mapOutParamIndexToPosition(2, false);
+            fail("Should not allow to obtain position when no compatibility " +
+                    "mode is specified.");
+        } catch(SQLException ex) {
+            // everything is ok
         }
 
         procedureCall = parser.parseCall(CALL_TEST_5_1);

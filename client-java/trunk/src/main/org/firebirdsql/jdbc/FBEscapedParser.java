@@ -54,7 +54,7 @@ public class FBEscapedParser {
         {?= call procedure_name[(arg1, arg2, ...)]}
      */
     public static final String ESCAPE_CALL_KEYWORD = "call";
-    public static final String ESCAPE_CALL_KEYWORD2 = "?=";
+    public static final String ESCAPE_CALL_KEYWORD3 = "?";
     public static final String ESCAPE_DATE_KEYWORD = "d";
     public static final String ESCAPE_TIME_KEYWORD = "t";
     public static final String ESCAPE_TIMESTAMP_KEYWORD = "ts";
@@ -68,7 +68,7 @@ public class FBEscapedParser {
      * SQL statement does not contain any of the substrings.
      */
     protected static final String CHECK_CALL_1 = "{call";
-    protected static final String CHECK_CALL_2 = "{?=";
+    protected static final String CHECK_CALL_2 = "{?";
     protected static final String CHECK_DATE = "{d";
     protected static final String CHECK_TIME = "{t";
     protected static final String CHECK_TIMESTAMP = "{ts";
@@ -262,8 +262,7 @@ public class FBEscapedParser {
         /*
          * Handle keywords.
          */
-        if (keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD) || 
-                keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD2)) {
+        if (keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD)){
             
             StringBuffer call = new StringBuffer();
             call
@@ -275,6 +274,18 @@ public class FBEscapedParser {
             
             return convertProcedureCall(call.toString());
         
+        } else
+        if (keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD3)) {
+            
+            StringBuffer call = new StringBuffer();
+            
+            call
+                .append('{')
+                .append(ESCAPE_CALL_KEYWORD3)
+                .append(payload)
+                .append('}');
+            
+            return convertProcedureCall(call.toString());
         } else
         if (keyword.toString().equalsIgnoreCase(ESCAPE_DATE_KEYWORD))
             return toDateString(payload.toString().trim());
