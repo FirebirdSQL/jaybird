@@ -21,10 +21,15 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.FBTestBase;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
+import java.util.Random;
+
+import junit.textui.TestRunner;
 
 public class TestFBResultSet extends FBTestBase {
     
@@ -40,7 +45,8 @@ public class TestFBResultSet extends FBTestBase {
         + "CREATE TABLE test_table(" 
         + "  id INTEGER, " 
         + "  str VARCHAR(10), " 
-        + "  long_str VARCHAR(255)" 
+        + "  long_str VARCHAR(255), "
+        + "  very_long_str VARCHAR(20000)"
         + ")"
         ;
         
@@ -604,5 +610,128 @@ public class TestFBResultSet extends FBTestBase {
         } finally {
             stmt.close();
         }
+    }
+    
+    public void testMemoryGrowth() throws Exception {
+        
+        connection.setAutoCommit(false);
+        
+        System.out.println("Inserting...");
+        int recordCount = 1;
+        PreparedStatement ps = connection
+                .prepareStatement("INSERT INTO test_table("
+                        + "id, very_long_str) VALUES (?, ?)");
+
+        try {
+
+            Random rnd = new Random();
+            byte[] string = new byte[19000];
+            rnd.nextBytes(string);
+
+            for (int i = 0; i < recordCount; i++) {
+                ps.setInt(1, i);
+                ps.setString(2, new String(string));
+                ps.executeUpdate();
+            }
+        } finally {
+            ps.close();
+        }
+
+        connection.commit();
+
+        System.gc();
+
+        long memoryBeforeSelects = Runtime.getRuntime().totalMemory()
+                - Runtime.getRuntime().freeMemory();
+
+        System.out.println("Selecting...");
+        int selectRuns = 10000;
+        for (int i = 0; i < selectRuns; i++) {
+            if ((i % 1000) == 0) System.out.println("Select no. " + i);
+
+            Statement stmt = connection.createStatement();
+            try {
+                ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
+                while (rs.next()) {
+                    // just loop through result set
+                }
+
+            } finally {
+                stmt.close();
+            }
+        }
+        System.gc();
+
+        long memoryAfterSelects = Runtime.getRuntime().totalMemory()
+                - Runtime.getRuntime().freeMemory();
+
+        connection.commit();
+
+        System.gc();
+
+        long memoryAfterCommit = Runtime.getRuntime().totalMemory()
+                - Runtime.getRuntime().freeMemory();
+
+        System.out.println("Memory before selects " + memoryBeforeSelects);
+        System.out.println("Memory after selects " + memoryAfterSelects);
+        System.out.println("Memory after commit " + memoryAfterCommit);
+        System.out.println("Commit freed "
+                + (memoryAfterSelects - memoryAfterCommit));
+        
+    }
+
+    public void testResultSetNotClosed() throws Exception {
+        
+
+        System.setProperty("test.gds_type", "NATIVE");
+        
+        connection.setAutoCommit(false);
+        
+        int recordCount = 1;
+        PreparedStatement ps = connection
+                .prepareStatement("INSERT INTO test_table("
+                        + "id, very_long_str) VALUES (?, ?)");
+
+        try {
+
+            Random rnd = new Random();
+            byte[] string = new byte[19000];
+            rnd.nextBytes(string);
+
+            for (int i = 0; i < recordCount; i++) {
+                ps.setInt(1, i);
+                ps.setString(2, new String(string));
+                ps.executeUpdate();
+            }
+        } finally {
+            ps.close();
+        }
+
+        connection.commit();
+
+        connection.setAutoCommit(false);
+        
+        PreparedStatement stmt = connection.prepareStatement(
+            "SELECT * FROM test_table WHERE id = ?");
+        try {
+            stmt.setInt(1, recordCount + 10);
+            
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Should not find any record", !rs.next());
+            rs.close();
+            
+            stmt.setInt(1, recordCount - 1);
+            rs = stmt.executeQuery();
+
+            assertTrue("Should find a record", rs.next());
+            rs.close();
+            
+        } finally {
+            stmt.close();
+        }
+    }
+    
+    public static void main(String[] args) {
+        TestRunner.run(new TestFBResultSet("testMemoryGrowth"));
     }
 }
