@@ -40,6 +40,13 @@ import javax.resource.ResourceException;
 
  public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
 
+    private final FBManagedConnection mc;
+
+    FBManagedConnectionMetaData(final FBManagedConnection mc)
+    {
+       this.mc = mc;
+    }
+
     /**
      Returns Product name of the underlying EIS instance connected through the
      ManagedConnection.
@@ -47,7 +54,7 @@ import javax.resource.ResourceException;
          Product name of the EIS instance.
     **/
      public java.lang.String getEISProductName() throws ResourceException {
-         return "Firebird database system";
+        throw new ResourceException("Not yet implemented");;
      }
 
      /**
@@ -83,7 +90,7 @@ import javax.resource.ResourceException;
     **/
 
     public java.lang.String getUserName() throws ResourceException {
-        throw new ResourceException("not yet implemented");
+        return mc.getUserName();
     }
 
  }
