@@ -568,30 +568,49 @@ public abstract class AbstractPreparedStatement extends FBStatement
      */
     public int[] executeBatch() throws SQLException {
         
+        Object syncObject = getSynchronizationObject();
+        
         LinkedList results = new LinkedList();
 		Iterator iter = batchList.iterator();
-        while(iter.hasNext()) {
-        	XSQLVAR[] vars = (XSQLVAR[])iter.next();
-            
-            fixedStmt.getInSqlda().sqlvar = vars;
-            
-            for (int i = 0; i < isParamSet.length; i++) {
-				isParamSet[i] = true;
-			}
         
+        boolean commit = false;
+        synchronized(syncObject) {
+            c.ensureInTransaction();
             try {
-            	int updateCount = executeUpdate();
-                results.add(new Integer(updateCount));
-            } catch(SQLException ex) {
-            	throw new BatchUpdateException(
-                        ex.getMessage(),
-                        ex.getSQLState(),
-                        ex.getErrorCode(),
-                        toArray(results));
+                while(iter.hasNext()) {
+                	XSQLVAR[] vars = (XSQLVAR[])iter.next();
+                    
+                    fixedStmt.getInSqlda().sqlvar = vars;
+                    
+                    for (int i = 0; i < isParamSet.length; i++) {
+        				isParamSet[i] = true;
+        			}
+                
+                    try {
+                        if (internalExecute(isExecuteProcedureStatement)) 
+                            throw new BatchUpdateException(toArray(results));
+    
+                        int updateCount = getUpdateCount();
+                        
+                        results.add(new Integer(updateCount));
+    
+                    } catch(SQLException ex) {
+                    	throw new BatchUpdateException(
+                                ex.getMessage(),
+                                ex.getSQLState(),
+                                ex.getErrorCode(),
+                                toArray(results));
+                    }
+                }
+                
+                commit = true;
+                
+                return toArray(results);
+                
+            } finally {
+                c.checkEndTransaction(commit);
             }
         }
-        
-        return toArray(results);
 	}
 
     /**
