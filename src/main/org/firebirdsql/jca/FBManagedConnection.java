@@ -1222,9 +1222,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } // end of try-catch
     }
 
-    FBTpb getTpb(){
+    public FBTpb getTpb(){
         return tpb;
     }
+    
+    /*
+    public void setTpb(FBTpb tpb) {
+    	this.t
+    }
+    */
 
 
     //-----------------------------------------

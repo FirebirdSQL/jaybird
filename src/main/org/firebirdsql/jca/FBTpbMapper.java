@@ -257,6 +257,33 @@ public class FBTpbMapper implements Serializable {
     }
     
     /**
+     * Set mapping for the specified transaction isolation.
+     * 
+     * @param transactionIsolation transaction isolation level.
+     * @param tpb TPB parameters.
+     * 
+     * @throws FBResourceException if incorrect isolation level is specified.
+     */
+    public void setMapping(int transactionIsolation, Set tpb) 
+        throws FBResourceException 
+    {
+        switch(transactionIsolation) {
+        
+            case Connection.TRANSACTION_SERIALIZABLE: 
+            case Connection.TRANSACTION_REPEATABLE_READ:
+            case Connection.TRANSACTION_READ_COMMITTED:
+                mapping.put(new Integer(transactionIsolation), tpb);
+                break;
+                
+            case Connection.TRANSACTION_READ_UNCOMMITTED:
+            case Connection.TRANSACTION_NONE:
+            default:
+                throw new FBResourceException(
+                        "Transaction isolation level " + transactionIsolation + 
+                        " is not supported.");
+        }
+    }
+    /**
      * Get default mapping. Default mapping represents a TPB mapping for the
      * default transaction isolation level (read committed).
      * 

@@ -22,14 +22,55 @@ package org.firebirdsql.jdbc;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.firebirdsql.gds.ISCConstants;
+
 /**
  * Extension of {@link Connection} interface providing access to Firebird
- * specific features. It also includes methods from JDBC 3.0 that cannot be 
- * resolved during runtime, because java.sql.* classes are already defined.
+ * specific features. 
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public interface FirebirdConnection extends Connection {
+    
+    int TPB_READ_COMMITTED = ISCConstants.isc_tpb_read_committed;
+    int TPB_CONCURRENCY = ISCConstants.isc_tpb_concurrency;
+    int TPB_CONSISTENCY = ISCConstants.isc_tpb_consistency;
+    
+    int TPB_READ = ISCConstants.isc_tpb_read;
+    int TPB_WRITE = ISCConstants.isc_tpb_write;
+    
+    int TPB_WAIT = ISCConstants.isc_tpb_wait;
+    int TPB_NOWAIT = ISCConstants.isc_tpb_nowait;
+    
+    int TPB_REC_VERSION = ISCConstants.isc_tpb_rec_version;
+    int TPB_NO_REC_VERSION = ISCConstants.isc_tpb_no_rec_version;
+    
+    /*
+
+        // Following TPB parameters require additional API
+        // for table reservation, to be done
+
+        public final static int isc_tpb_shared                  = 3;
+        public final static int isc_tpb_protected               = 4;
+        public final static int isc_tpb_exclusive               = 5;
+        
+        public final static int isc_tpb_lock_read               = 10;
+        public final static int isc_tpb_lock_write              = 11;
+        
+
+        // Following TPB parameters are not described in documentation
+
+        public final static int isc_tpb_verb_time               = 12;
+        public final static int isc_tpb_commit_time             = 13;
+        
+        public final static int isc_tpb_ignore_limbo            = 14;
+        
+        public final static int isc_tpb_autocommit              = 16;
+        
+        public final static int isc_tpb_restart_requests        = 19;
+        
+        public final static int isc_tpb_no_auto_undo            = 20;
+     */
     
     /**
      * Create Blob object.
@@ -46,4 +87,16 @@ public interface FirebirdConnection extends Connection {
      * @return current ISC encoding.
      */
     String getIscEncoding();
+    
+    /**
+     * Set transaction parameters for the specified isolation level. They will 
+     * take effect only on the newly started transaction.
+     * 
+     * @param isolationLevel JDBC isolation level.
+     * @param parameters array of TPB parameters, see all TPB_* constants.
+     * 
+     * @throws SQLException if specified transaction parameters cannot be set.
+     */
+    void setTransactionParameters(int isolationLevel, int[] parameters)
+        throws SQLException;
 }

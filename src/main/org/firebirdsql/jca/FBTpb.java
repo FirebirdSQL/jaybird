@@ -77,8 +77,14 @@ public class FBTpb implements Serializable
         createArray();
     }
     
-    public void setMapper(FBTpbMapper mapper) {
+    public FBTpbMapper getMapper() {
+    	return mapper;
+    }
+    
+    public void setMapper(FBTpbMapper mapper) throws FBResourceException {
         this.mapper = mapper;
+        this.tpb = mapper.getMapping(txIsolation);
+        createArray();
     }
 
     public boolean equals(Object other)

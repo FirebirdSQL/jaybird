@@ -153,6 +153,28 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return mc.getConnectionRequestInfo().getDpb();
     }
 
+    
+	public void setTransactionParameters(int isolationLevel, int[] parameters)
+		throws SQLException {
+        
+        try {
+            FBTpb tpb = mc.getTpb();
+            FBTpbMapper tpbMapper = tpb.getMapper();
+            
+            Set tpbParams = new HashSet();
+            for (int i = 0; i < parameters.length; i++) {
+    			tpbParams.add(new Integer(parameters[i]));
+    		}
+            
+            tpbMapper.setMapping(isolationLevel, tpbParams);
+            
+            tpb.setMapper(tpbMapper);
+            
+        } catch(FBResourceException ex) {
+        	throw new FBSQLException(ex);   
+        }
+	}
+
     /**
      * Creates a <code>Statement</code> object for sending
      * SQL statements to the database.
