@@ -196,7 +196,7 @@ public class FBManagedConnectionFactory
         return new FBTpb(tpb);
     }
 
-    public void setTpbMapper(FBTpbMapper mapper) {
+    public void setTpbMapper(FBTpbMapper mapper) throws FBResourceException {
         this.tpb.setMapper(mapper);
     }
 
