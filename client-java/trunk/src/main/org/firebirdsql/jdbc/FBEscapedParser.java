@@ -350,8 +350,78 @@ public class FBEscapedParser {
      */
     private static final HashMap FUNCTION_MAP = new HashMap();
     static {
-        FUNCTION_MAP.put("LCASE", "LOWER");
-        FUNCTION_MAP.put("UCASE", "UPPER");
+        
+        /* Numeric Functions */
+        FUNCTION_MAP.put("ABS", "ABS({1})");
+        FUNCTION_MAP.put("ACOS", null);
+        FUNCTION_MAP.put("ASIN", null);
+        FUNCTION_MAP.put("ATAN", null);
+        FUNCTION_MAP.put("ATAN2", null);
+        FUNCTION_MAP.put("CEILING", null);
+        FUNCTION_MAP.put("COS", null);
+        FUNCTION_MAP.put("COT", null);
+        FUNCTION_MAP.put("DEGREES", null);
+        FUNCTION_MAP.put("EXP", null);
+        FUNCTION_MAP.put("FLOOR", null);
+        FUNCTION_MAP.put("LOG", null);
+        FUNCTION_MAP.put("LOG10", null);
+        FUNCTION_MAP.put("MOD", null);
+        FUNCTION_MAP.put("PI", null);
+        FUNCTION_MAP.put("POWER", null);
+        FUNCTION_MAP.put("RADIANS", null);
+        FUNCTION_MAP.put("RAND", null);
+        FUNCTION_MAP.put("ROUND", null);
+        FUNCTION_MAP.put("SIGN", null);
+        FUNCTION_MAP.put("SIN", null);
+        FUNCTION_MAP.put("SQRT", null);
+        FUNCTION_MAP.put("TAN", null);
+        FUNCTION_MAP.put("TRUNCATE", null);
+        
+        /* String Functions */
+        FUNCTION_MAP.put("ASCII", null);
+        FUNCTION_MAP.put("CHAR", null);
+        FUNCTION_MAP.put("CONCAT", "{1}||{2}");
+        FUNCTION_MAP.put("DIFFERENCE", null);
+        FUNCTION_MAP.put("INSERT", null);
+        FUNCTION_MAP.put("LCASE", "LOWER({1})");
+        FUNCTION_MAP.put("LEFT", null);
+        FUNCTION_MAP.put("LENGTH", null);
+        FUNCTION_MAP.put("LOCATE", null);
+        FUNCTION_MAP.put("LTRIM", null);
+        FUNCTION_MAP.put("REPEAT", null);
+        FUNCTION_MAP.put("REPLACE", null);
+        FUNCTION_MAP.put("RIGHT", null);
+        FUNCTION_MAP.put("RTRIM", null);
+        FUNCTION_MAP.put("SOUNDEX", null);
+        FUNCTION_MAP.put("SPACE", null);
+        FUNCTION_MAP.put("SUBSTRING", "SUBSTRING({1} FROM {2} FOR {3})");
+        FUNCTION_MAP.put("UCASE", "UPPER({1})");
+        
+        /* Time and Date Functions */
+        FUNCTION_MAP.put("CURDATE", null);
+        FUNCTION_MAP.put("CURRENT_TIME", null);
+        FUNCTION_MAP.put("DAYNAME", null);
+        FUNCTION_MAP.put("DAYOFMONTH", null);
+        FUNCTION_MAP.put("DAYOFWEEK", null);
+        FUNCTION_MAP.put("DAYOFYEAR", null);
+        FUNCTION_MAP.put("HOUR", null);
+        FUNCTION_MAP.put("MINUTE", null);
+        FUNCTION_MAP.put("MONTH", null);
+        FUNCTION_MAP.put("MONTHNAME", null);
+        FUNCTION_MAP.put("NOW", null);
+        FUNCTION_MAP.put("QUARTER", null);
+        FUNCTION_MAP.put("SECOND", null);
+        FUNCTION_MAP.put("TIMESTAMPADD", null);
+        FUNCTION_MAP.put("TIMESTAMPDIFF", null);
+        FUNCTION_MAP.put("WEEK", null);
+        FUNCTION_MAP.put("YEAR", null);
+        
+        /* System Functions */
+        FUNCTION_MAP.put("DATABASE", null);
+        FUNCTION_MAP.put("IFNULL", null);
+        
+        /* Conversion Functions */
+        FUNCTION_MAP.put("CONVERT", null);
     }
 
     /**
