@@ -158,13 +158,13 @@ public class TestFBTimestampField extends BaseTestFBField {
 	public void testString() throws java.sql.SQLException {
 		field.setString(TEST_TIMESTAMP.toString());
 		field.copyOI();
-		assertTrue("String value test failure",
+		assertTrue("String value test failure: expected: " + TEST_TIMESTAMP + ", actual: " + field.getTimestamp(),
 			field.getTimestamp().equals(TEST_TIMESTAMP));
 	}
 	public void testObject() throws java.sql.SQLException {
 		field.setObject(TEST_TIMESTAMP);
 		field.copyOI();
-		assertTrue("Object value test failure",
+		assertTrue("Object value test failure: expected: " + TEST_TIMESTAMP + ", actual: " + field.getTimestamp(),
 			field.getTimestamp().equals(TEST_TIMESTAMP));
 	}
 
