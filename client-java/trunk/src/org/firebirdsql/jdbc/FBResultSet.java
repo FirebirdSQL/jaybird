@@ -624,7 +624,11 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public java.io.Reader getCharacterStream(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        InputStream is =  getField(columnIndex).getUnicodeStream();
+        if (is==null)
+            return null;
+        else
+            return new java.io.InputStreamReader(getField(columnIndex).getUnicodeStream());
     }
 
 
