@@ -41,7 +41,7 @@ public class XSQLVAR {
     public int sqlsubtype;
     public int sqllen;
     public Object sqldata;
-    public int sqlind;
+//    public int sqlind;
     public String sqlname;
     public String relname;
     public String ownname;

@@ -33,55 +33,55 @@ import org.firebirdsql.gds.XSQLVAR;
  */
 class FBDateField extends FBField {
 
-    FBDateField(XSQLVAR field) throws SQLException {
-        super(field);
+    FBDateField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
+        super(field, row, numCol);
     }
 
     Timestamp getTimestamp() throws java.sql.SQLException {
-        if (isNull()) return TIMESTAMP_NULL_VALUE;
+        if (row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
         return new Timestamp(getDate().getTime());
     }
     Date getDate() throws java.sql.SQLException {
-        if (isNull()) return DATE_NULL_VALUE;
+        if (row[numCol]==null) return DATE_NULL_VALUE;
 
-        return (Date)field.sqldata;
+        return (Date)row[numCol];
     }
     String getString() throws java.sql.SQLException {
-        if (isNull()) return STRING_NULL_VALUE;
+        if (row[numCol]==null) return STRING_NULL_VALUE;
 
-        return ((Date)field.sqldata).toString();
+        return ((Date)row[numCol]).toString();
     }
     Object getObject() throws java.sql.SQLException {
-        if (isNull()) return OBJECT_NULL_VALUE;
+        if (row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return field.sqldata;
+        return row[numCol];
     }
+
+    //--- setXXX methods
+	 
     void setString(String value) throws java.sql.SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
 
         setDate(Date.valueOf(value));
-        setNull(false);
     }
     void setTimestamp(Timestamp value) throws java.sql.SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
 
         setDate(new Date(value.getTime()));
-        setNull(false);
     }
     void setDate(Date value) throws java.sql.SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
 
         field.sqldata = (Date)value;
-        setNull(false);
     }
 }

@@ -41,17 +41,19 @@ public class TestFBDoubleField extends BaseTestFBField {
 	}
 	protected void setUp() throws SQLException{
 		XSQLVAR doubleField = new XSQLVAR();
-		doubleField.sqldata = new Double(TEST_DOUBLE);
-		doubleField.sqlind = 0;
+      Object[] row = new Object[1];
+//		doubleField.sqldata = new Double(TEST_DOUBLE);
+//		doubleField.sqlind = 0;
 		doubleField.sqltype = GDS.SQL_DOUBLE;
 
-		field = FBField.createField(doubleField);
+		field = FBField.createField(doubleField,row,0);
 	}
 	protected void tearDown() {
 	}
 
 	public void testObject() throws java.sql.SQLException {
 		field.setObject(new Double(TEST_DOUBLE));
+		field.copyOI();		
 		assertTrue(field.getObject().equals(new Double(TEST_DOUBLE)));
 	}
 	public void testUnicodeStream() throws java.sql.SQLException {
@@ -76,6 +78,7 @@ public class TestFBDoubleField extends BaseTestFBField {
 	}
 	public void testString() throws java.sql.SQLException {
 		field.setString(Float.toString(TEST_FLOAT));
+		field.copyOI();		
 		assertTrue(field.getString().equals(Float.toString(TEST_FLOAT)));
 	}
 	public void testAsciiStream() throws java.sql.SQLException {
@@ -98,6 +101,7 @@ public class TestFBDoubleField extends BaseTestFBField {
 		java.math.BigDecimal testBigDecimal =
 			new java.math.BigDecimal((double)TEST_DOUBLE);
 		field.setBigDecimal(testBigDecimal);
+		field.copyOI();		
 		assertTrue(field.getBigDecimal().equals(testBigDecimal));
 	}
 	public void testDate() throws java.sql.SQLException {
@@ -129,6 +133,7 @@ public class TestFBDoubleField extends BaseTestFBField {
 		// unfortunately (long)((double)myLong) != myLong....
 		// so we can test only float values...
 		field.setLong(TEST_LONG);
+		field.copyOI();		
 		assertTrue(field.getFloat() == (float)TEST_LONG);
 	}
 }

@@ -32,15 +32,15 @@ import java.sql.SQLException;
  */
 class FBShortField extends FBField {
 
-    FBShortField(XSQLVAR field) throws SQLException {
-        super(field);
+    FBShortField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
+        super(field, row, numCol);
     }
 
 
     byte getByte() throws SQLException {
-        if (isNull()) return BYTE_NULL_VALUE;
+        if (row[numCol]==null) return BYTE_NULL_VALUE;
 
-        Short value = (Short)field.sqldata;
+        Short value = (Short)row[numCol];
 
         // check if value is withing bounds
         if (value.shortValue() > MAX_BYTE_VALUE ||
@@ -51,56 +51,56 @@ class FBShortField extends FBField {
         return value.byteValue();
     }
     short getShort() throws SQLException {
-        if (isNull()) return SHORT_NULL_VALUE;
+        if (row[numCol]==null) return SHORT_NULL_VALUE;
 
-        return ((Short)field.sqldata).shortValue();
+        return ((Short)row[numCol]).shortValue();
     }
     int getInt() throws SQLException {
-        if (isNull()) return INT_NULL_VALUE;
+        if (row[numCol]==null) return INT_NULL_VALUE;
 
-        return ((Short)field.sqldata).intValue();
+        return ((Short)row[numCol]).intValue();
     }
     long getLong() throws SQLException {
-        if (isNull()) return LONG_NULL_VALUE;
+        if (row[numCol]==null) return LONG_NULL_VALUE;
 
-        return ((Short)field.sqldata).longValue();
+        return ((Short)row[numCol]).longValue();
     }
     float getFloat() throws SQLException {
-        if (isNull()) return FLOAT_NULL_VALUE;
+        if (row[numCol]==null) return FLOAT_NULL_VALUE;
 
-        return ((Short)field.sqldata).floatValue();
+        return ((Short)row[numCol]).floatValue();
     }
     double getDouble() throws SQLException {
-        if (isNull()) return DOUBLE_NULL_VALUE;
+        if (row[numCol]==null) return DOUBLE_NULL_VALUE;
 
-        return ((Short)field.sqldata).doubleValue();
+        return ((Short)row[numCol]).doubleValue();
     }
     BigDecimal getBigDecimal() throws SQLException {
-        if (isNull()) return BIGDECIMAL_NULL_VALUE;
+        if (row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
-        return BigDecimal.valueOf(((Short)field.sqldata).longValue());
+        return BigDecimal.valueOf(((Short)row[numCol]).longValue());
     }
     Object getObject() throws SQLException {
-        if (isNull()) return OBJECT_NULL_VALUE;
+        if (row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return field.sqldata;
+        return row[numCol];
     }
     boolean getBoolean() throws java.sql.SQLException {
-        if (isNull()) return BOOLEAN_NULL_VALUE;
+        if (row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
-        return ((Short)field.sqldata).intValue() == 1;
+        return ((Short)row[numCol]).intValue() == 1;
     }
     String getString() throws SQLException {
-        if (isNull()) return STRING_NULL_VALUE;
+        if (row[numCol]==null) return STRING_NULL_VALUE;
 
-        return ((Short)field.sqldata).toString();
+        return ((Short)row[numCol]).toString();
     }
 
     //--- setXXX methods
 
     void setString(String value) throws java.sql.SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
 
@@ -113,7 +113,6 @@ class FBShortField extends FBField {
     }
     void setShort(short value) throws java.sql.SQLException {
         field.sqldata = new Short((short)value);
-        setNull(false);
     }
     void setBoolean(boolean value) throws java.sql.SQLException {
         setShort((short)(value ? 1 : 0));
@@ -159,7 +158,7 @@ class FBShortField extends FBField {
     }
     void setBigDecimal(BigDecimal value) throws SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
 

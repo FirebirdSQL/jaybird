@@ -41,17 +41,19 @@ public class TestFBIntegerField extends BaseTestFBField {
 	}
 	protected void setUp() throws SQLException{
 		XSQLVAR intField = new XSQLVAR();
-		intField.sqldata = new Integer(TEST_INT);
-		intField.sqlind = 0;
+		Object[] row = new Object[1];		
+//		intField.sqldata = new Integer(TEST_INT);
+//		intField.sqlind = 0;
 		intField.sqltype = GDS.SQL_LONG;
 
-		field = FBField.createField(intField);
+		field = FBField.createField(intField,row,0);
 	}
 	protected void tearDown() {
 	}
 
 	public void testObject() throws java.sql.SQLException {
 		field.setObject(new Integer(TEST_INT));
+		field.copyOI();
 		assertTrue(field.getObject().equals(new Integer(TEST_INT)));
 	}
 	public void testUnicodeStream() throws java.sql.SQLException {
@@ -76,6 +78,7 @@ public class TestFBIntegerField extends BaseTestFBField {
 	}
 	public void testString() throws java.sql.SQLException {
 		field.setString(Integer.toString(TEST_INT));
+		field.copyOI();
 		assertTrue(field.getString().equals(Integer.toString(TEST_INT)));
 	}
 	public void testAsciiStream() throws java.sql.SQLException {
@@ -98,6 +101,7 @@ public class TestFBIntegerField extends BaseTestFBField {
 		java.math.BigDecimal testBigDecimal =
 			java.math.BigDecimal.valueOf((long)TEST_INT);
 		field.setBigDecimal(testBigDecimal);
+		field.copyOI();
 		assertTrue(field.getBigDecimal().equals(testBigDecimal));
 	}
 	public void testDate() throws java.sql.SQLException {

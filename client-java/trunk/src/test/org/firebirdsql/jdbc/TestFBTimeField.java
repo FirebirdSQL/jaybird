@@ -42,11 +42,12 @@ public class TestFBTimeField extends BaseTestFBField {
 	}
 	protected void setUp() throws SQLException{
 		XSQLVAR stringField = new XSQLVAR();
-		stringField.sqldata = TEST_TIME;
-		stringField.sqlind = 0;
+		Object[] row = new Object[1];
+//		stringField.sqldata = TEST_TIME;
+//		stringField.sqlind = 0;
 		stringField.sqltype = GDS.SQL_TYPE_TIME;
 
-		field = FBField.createField(stringField);
+		field = FBField.createField(stringField,row,0);
 	}
 	protected void tearDown() {
 	}
@@ -160,7 +161,7 @@ public class TestFBTimeField extends BaseTestFBField {
 	public void testTimestamp() throws java.sql.SQLException {
 		String timeStr = new Time(TEST_TIMESTAMP.getTime()).toString();
 		field.setTimestamp(TEST_TIMESTAMP);
-
+		field.copyOI();
 		// we have to test string representation, because of conversion problem
 		assertTrue("Timestamp value test failure.",
 			field.getTime().toString().equals(timeStr));
@@ -172,6 +173,7 @@ public class TestFBTimeField extends BaseTestFBField {
 		// usually loses it after some conversions. So, date might
 		// be the same, by object will differ. String comparison produces
 		// stable results.
+		field.copyOI();
 		assertTrue("String value test failure",
 			field.getString().equals(TEST_TIME.toString()));
 	}
@@ -182,6 +184,7 @@ public class TestFBTimeField extends BaseTestFBField {
 		// usually loses it after some conversions. So, date might
 		// be the same, by object will differ. String comparison produces
 		// stable results.
+		field.copyOI();
 		assertTrue("Object value test failure",
 			field.getString().equals(TEST_TIME.toString()));
 	}

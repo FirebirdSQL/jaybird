@@ -133,11 +133,15 @@ abstract class FBField {
     static final double MIN_DOUBLE_VALUE = -1 * MAX_DOUBLE_VALUE;
     
     XSQLVAR field;
+    Object[] row;
+    int numCol;
 	 
-    FBField(XSQLVAR field) throws SQLException {
+    FBField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
         if (field == null) throw new SQLException(
             "Cannot create FBField instance for null as XSQLVAR.");
         this.field = field;
+        this.row = row;
+        this.numCol = numCol;
     }
 
     /**
@@ -150,22 +154,15 @@ abstract class FBField {
 
     /**
      * @return <code>true</code> if the corresponding <code>field</code>
-     * is <code>null</code> or <code>field.sqlind == -1</code>, otherwise
-     * <code>false</code>.
+     * is <code>null</code>, otherwise <code>false</code>.
      */
     boolean isNull() {
-        return (field.sqldata == null);
+        return (row[numCol] == null);
     }
 
-    /**
-     * Sets the "null" flag for the field.
-     */
-    void setNull(boolean value) {
-        field.sqlind = value ? -1 : 0;
-        if (value)
-            field.sqldata = null;
+    void setNull() {
+        field.sqldata = null;
     }
-
     /**
      * @return <code>true</code> if the field is of type <code>type</code>.
      * @todo write correct GDS.SQL_QUAD support
@@ -304,50 +301,50 @@ abstract class FBField {
      * <code>FBField</code> class according to the SQL datatype. This instance
      * knows how to perform all necessary type conversions.
      */
-    final static FBField createField(XSQLVAR field) throws SQLException {
+    final static FBField createField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
         if (isType(field, Types.SMALLINT))
             if (field.sqlscale == 0)
-                return new FBShortField(field);
+                return new FBShortField(field, row, numCol);
             else
-                return new FBBigDecimalField(field);
+                return new FBBigDecimalField(field, row, numCol);
         else
         if (isType(field, Types.INTEGER))
             if (field.sqlscale == 0)
-                return new FBIntegerField(field);
+                return new FBIntegerField(field, row, numCol);
             else
-                return new FBBigDecimalField(field);
+                return new FBBigDecimalField(field, row, numCol);
         else
         if (isType(field, Types.BIGINT))
             if (field.sqlscale == 0)
-                return new FBLongField(field);
+                return new FBLongField(field, row, numCol);
             else
-                return new FBBigDecimalField(field);
+                return new FBBigDecimalField(field, row, numCol);
         else
         if (isType(field, Types.FLOAT))
-            return new FBFloatField(field);
+            return new FBFloatField(field, row, numCol);
         else
         if (isType(field, Types.DOUBLE))
-            return new FBDoubleField(field);
+            return new FBDoubleField(field, row, numCol);
         else
         if (isType(field, Types.CHAR))
-            return new FBStringField(field);
+            return new FBStringField(field, row, numCol);
         else
         if (isType(field, Types.VARCHAR))
-            return new FBStringField(field);
+            return new FBStringField(field, row, numCol);
         else
         if (isType(field, Types.DATE))
-            return new FBDateField(field);
+            return new FBDateField(field, row, numCol);
         else
         if (isType(field, Types.TIME))
-            return new FBTimeField(field);
+            return new FBTimeField(field, row, numCol);
         else
         if (isType(field, Types.TIMESTAMP))
-            return new FBTimestampField(field);
+            return new FBTimestampField(field, row, numCol);
         else
         if (isType(field, Types.BLOB) || 
             isType(field, Types.LONGVARBINARY) ||
             isType(field, Types.LONGVARCHAR))
-                return new FBBlobField(field);
+                return new FBBlobField(field, row, numCol);
         else
             throw (SQLException)createException(
                 SQL_TYPE_NOT_SUPPORTED);
@@ -640,7 +637,7 @@ abstract class FBField {
             OBJECT_CONVERSION_ERROR).fillInStackTrace();
         */
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
 
@@ -729,5 +726,11 @@ abstract class FBField {
     void setBlob(FBBlob blob) throws SQLException {
         throw (SQLException)createException(
             BLOB_CONVERSION_ERROR).fillInStackTrace();
+    }
+    //
+    // This method is only for the tests
+    //
+    void copyOI(){
+        row[numCol] = field.sqldata;
     }
 }

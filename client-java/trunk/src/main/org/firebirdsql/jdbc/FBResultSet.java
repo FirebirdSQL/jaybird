@@ -69,7 +69,7 @@ public class FBResultSet implements ResultSet {
 
     private XSQLVAR[] xsqlvars;
 
-    private Object[] row = null;
+    public Object[] row = null;
 
     protected int rowNum = 0;
     protected int maxRows = 0;
@@ -82,7 +82,6 @@ public class FBResultSet implements ResultSet {
     private boolean isLast = false;
     private boolean isAfterLast = false;
     
-//    private int wasNullColumnIndex = -1;
     private boolean wasNull = false;
     private boolean wasNullValid = false;
 
@@ -144,8 +143,9 @@ public class FBResultSet implements ResultSet {
     private void prepareVars() throws SQLException {
         fields = new FBField[xsqlvars.length];
         colNames = new java.util.HashMap(xsqlvars.length,1);
+        row = new Object[xsqlvars.length];
         for (int i=0; i<xsqlvars.length; i++){
-            fields[i] = FBField.createField(xsqlvars[i]);
+            fields[i] = FBField.createField(xsqlvars[i], row, i);
             if (fields[i] instanceof FBBlobField)
                 ((FBBlobField)fields[i]).setConnection(c);
             else{
@@ -212,7 +212,6 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public boolean wasNull() throws  SQLException {
-//        if (wasNullColumnIndex == -1) {
         if (!wasNullValid) {
             throw new SQLException("look at a column before testing null!");
         }
@@ -220,7 +219,6 @@ public class FBResultSet implements ResultSet {
             throw new SQLException("No row available for wasNull!");
         }
         return wasNull;		  
-//        return row[wasNullColumnIndex - 1] == null;
     }
 
     public InputStream getAsciiStream(int columnIndex) throws SQLException {
@@ -236,19 +234,6 @@ public class FBResultSet implements ResultSet {
     }
 
     public Blob getBlob(int columnIndex) throws SQLException {
-        /*
-        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_BLOB) {
-            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
-        }
-        setWasNullColumnIndex(columnIndex);
-        if (row[columnIndex - 1] == null) {
-            return null;
-        }
-        if (log!=null) log.debug("retrieved blob_id: " + row[columnIndex - 1]);
-        return new FBBlob(mc, ((Long)row[columnIndex - 1]).longValue());
-        //return super.getBlob(columnIndex);
-        */
-        
         return getField(columnIndex).getBlob();
     }
 
@@ -947,36 +932,6 @@ public class FBResultSet implements ResultSet {
     //---------------------------------------------------------------------
 
     /**
-     * The constant indicating that the rows in a result set will be
-     * processed in a forward direction; first-to-last.
-     * This constant is used by the method <code>setFetchDirection</code>
-     * as a hint to the driver, which the driver may ignore.
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
-    int FETCH_FORWARD = 1000;
-
-    /**
-     * The constant indicating that the rows in a result set will be
-     * processed in a reverse direction; last-to-first.
-     * This constant is used by the method <code>setFetchDirection</code>
-     * as a hint to the driver, which the driver may ignore.
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
-    int FETCH_REVERSE = 1001;
-
-    /**
-     * The constant indicating that the order in which rows in a
-     * result set will be processed is unknown.
-     * This constant is used by the method <code>setFetchDirection</code>
-     * as a hint to the driver, which the driver may ignore.
-     */
-    int FETCH_UNKNOWN = 1002;
-
-    /**
      * Gives a hint as to the direction in which the rows in this
      * <code>ResultSet</code> object will be processed.
      * The initial value is determined by the
@@ -1057,34 +1012,6 @@ public class FBResultSet implements ResultSet {
 
 
     /**
-     * The constant indicating the type for a <code>ResultSet</code> object
-     * whose cursor may move only forward.
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
-    int TYPE_FORWARD_ONLY = 1003;
-
-    /**
-     * The constant indicating the type for a <code>ResultSet</code> object
-     * that is scrollable but generally not sensitive to changes made by others.
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     *
-     */
-    int TYPE_SCROLL_INSENSITIVE = 1004;
-
-    /**
-     * The constant indicating the type for a <code>ResultSet</code> object
-     * that is scrollable and generally sensitive to changes made by others.
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
-    int TYPE_SCROLL_SENSITIVE = 1005;
-
-    /**
      * Returns the type of this <code>ResultSet</code> object.
      * The type is determined by the <code>Statement</code> object
      * that created the result set.
@@ -1100,27 +1027,6 @@ public class FBResultSet implements ResultSet {
     public int getType() throws  SQLException {
         return java.sql.ResultSet.TYPE_FORWARD_ONLY;
     }
-
-
-    /**
-     * The constant indicating the concurrency mode for a
-     * <code>ResultSet</code> object that may NOT be updated.
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     *
-     */
-    int CONCUR_READ_ONLY = 1007;
-
-    /**
-     * The constant indicating the concurrency mode for a
-     * <code>ResultSet</code> object that may be updated.
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     *
-     */
-    int CONCUR_UPDATABLE = 1008;
 
     /**
      * Returns the concurrency mode of this <code>ResultSet</code> object.
@@ -2622,10 +2528,9 @@ public class FBResultSet implements ResultSet {
             }
             else {
                 try {
-                    row = nextRow;
+                    System.arraycopy(nextRow,0,row,0,row.length);
                     nextRow = c.fetch(stmt);
                     rowNum++;
-                    copyToSQLVAR(row);
                     
                     if(rowNum==1)
                         isFirst=true;
@@ -2648,14 +2553,7 @@ public class FBResultSet implements ResultSet {
         public Statement getStatement() {
             return fbStatement;
         }
-
-        private void copyToSQLVAR(Object[] row) {
-            for(int i = 0; i < xsqlvars.length; i++) {
-                xsqlvars[i].sqldata = row[i];
-            }
-        }
     }
-
     class FBCachedFetcher  implements FBFetcher {
 
         ArrayList rows;
@@ -2689,12 +2587,12 @@ public class FBResultSet implements ResultSet {
                                 
                             if (blobField && localRow[i] != null ) 
                             {
-                                xsqlvars[i].sqldata = localRow[i];
-                                FBBlobField blob = (FBBlobField)FBField.createField(xsqlvars[i]);
+                                System.arraycopy(localRow, 0, row,0, row.length);
+                                FBBlobField blob = (FBBlobField)FBField.createField(xsqlvars[i], row, i);
                                 blob.setConnection(c);
-                                localRow[i] = blob.getCachedObject();                                
+                                localRow[i] = blob.getCachedObject();
                             } // end of if ()                            
-                        } // end of for ()                        
+                        } // end of for ()
                         rows.add(localRow);
                     }
                 } while  (localRow != null && (fbStatement.maxRows==0 || rows.size()<fbStatement.maxRows));
@@ -2702,7 +2600,6 @@ public class FBResultSet implements ResultSet {
                          isEmpty = true;
                      else
                          isBeforeFirst = true;
-                // rows.add(null);
                 c.closeStatement(stmt, false);
             }
             catch (GDSException ge) {
@@ -2749,10 +2646,8 @@ public class FBResultSet implements ResultSet {
                 if (rowNum == rows.size())
                     isLast = true;
 
-                row = (Object[])rows.get(rowNum-1);
+                System.arraycopy((Object[])rows.get(rowNum-1),0,row,0,row.length);
                 
-                copyToSQLVAR(row);
-
                 return true;
             }
         }
@@ -2763,18 +2658,8 @@ public class FBResultSet implements ResultSet {
         public Statement getStatement() {
             return fbStatement;
         }
+    }
 
-        private void copyToSQLVAR(Object[] row) {
-            for(int i = 0; i < xsqlvars.length; i++) {
-                xsqlvars[i].sqldata = row[i];
-            }
-        }
-    }
-/*
-    protected void setWasNullColumnIndex(int columnIndex) {
-        wasNullColumnIndex = columnIndex;
-    }
-*/
      protected void addWarning(java.sql.SQLWarning warning){
          if (firstWarning == null)
              firstWarning = warning;

@@ -37,8 +37,8 @@ public class FBBlobField extends FBField {
 
     FBConnection c;
 
-    FBBlobField(XSQLVAR field) throws SQLException {
-        super(field);
+    FBBlobField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
+        super(field, row, numCol);
     }
 
     void setConnection(FBConnection c) {
@@ -54,13 +54,13 @@ public class FBBlobField extends FBField {
     }
 
     Blob getBlob(boolean create) throws SQLException {
-        if (isNull())
+        if (row[numCol]==null)
             return BLOB_NULL_VALUE;
 
-        if (field.sqldata instanceof Blob)
-            return (Blob)field.sqldata;
+        if (row[numCol] instanceof Blob)
+            return (Blob)row[numCol];
 
-        Long blobId = (Long)field.sqldata;
+        Long blobId = (Long)row[numCol];
 
         if (blobId == null)
             blobId = new Long(0);
@@ -143,7 +143,7 @@ public class FBBlobField extends FBField {
     }
 
     Object getCachedObject() throws SQLException {
-        if (isNull())
+        if (row[numCol]==null)
             return BLOB_NULL_VALUE;
 
         return new FBCachedBlob(getBytesInternal());
@@ -166,6 +166,8 @@ public class FBBlobField extends FBField {
     InputStream getUnicodeStream() throws SQLException {
         return getBinaryStream();
     }
+
+    //--- setXXX methods
 
     void setAsciiStream(InputStream in, int length) throws SQLException {
         setBinaryStream(in, length);
@@ -194,7 +196,6 @@ public class FBBlobField extends FBField {
             }
             
             field.sqldata = bout.toByteArray();
-            setNull(false);
             field.sqllen = ((byte[])field.sqldata).length;
         }
     }
@@ -220,7 +221,6 @@ public class FBBlobField extends FBField {
             }
             
             field.sqldata = bout.toByteArray();
-            setNull(false);
             field.sqllen = ((byte[])field.sqldata).length;
         }
     }
@@ -236,14 +236,12 @@ public class FBBlobField extends FBField {
         FBBlob blob =  new FBBlob(c, 0);
         blob.copyStream(in, length);
         field.sqldata = new Long(blob.getBlobId());
-        setNull(false);
     }
 
     private void copyCharacterStream(Reader in, int length) throws SQLException {
         FBBlob blob =  new FBBlob(c, 0);
         blob.copyCharacterStream(in, length);
         field.sqldata = new Long(blob.getBlobId());
-        setNull(false);
     }
     
     void setBytes(byte[] value) throws SQLException {
@@ -259,7 +257,6 @@ public class FBBlobField extends FBField {
 
     void setBlob(FBBlob blob) throws SQLException {
         field.sqldata = new Long(blob.getBlobId());
-        setNull(false);
     }
 
     /**

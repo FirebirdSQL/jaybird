@@ -32,14 +32,14 @@ import java.math.BigDecimal;
  */
 class FBIntegerField extends FBField {
 
-    FBIntegerField(XSQLVAR field) throws SQLException {
-        super(field);
+    FBIntegerField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
+        super(field, row, numCol);
     }
 
     byte getByte() throws SQLException {
-        if (isNull()) return BYTE_NULL_VALUE;
+        if (row[numCol]==null) return BYTE_NULL_VALUE;
 
-        Integer value = (Integer)field.sqldata;
+        Integer value = (Integer)row[numCol];
 
         // check if value is withing bounds
         if (value.intValue() > MAX_BYTE_VALUE ||
@@ -47,12 +47,12 @@ class FBIntegerField extends FBField {
                 throw (SQLException)createException(
                     BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return ((Integer)field.sqldata).byteValue();
+        return ((Integer)row[numCol]).byteValue();
     }
     short getShort() throws SQLException {
-        if (isNull()) return SHORT_NULL_VALUE;
+        if (row[numCol]==null) return SHORT_NULL_VALUE;
 
-        Integer value = (Integer)field.sqldata;
+        Integer value = (Integer)row[numCol];
 
         // check if value is withing bounds
         if (value.intValue() > MAX_SHORT_VALUE ||
@@ -60,51 +60,54 @@ class FBIntegerField extends FBField {
                 throw (SQLException)createException(
                     BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return ((Integer)field.sqldata).shortValue();
+        return ((Integer)row[numCol]).shortValue();
     }
     int getInt() throws SQLException {
-        if (isNull()) return INT_NULL_VALUE;
+        if (row[numCol]==null) return INT_NULL_VALUE;
 
-        return ((Integer)field.sqldata).intValue();
+        return ((Integer)row[numCol]).intValue();
     }
     long getLong() throws SQLException {
-        if (isNull()) return LONG_NULL_VALUE;
+        if (row[numCol]==null) return LONG_NULL_VALUE;
 
-        return ((Integer)field.sqldata).longValue();
+        return ((Integer)row[numCol]).longValue();
     }
     float getFloat() throws SQLException {
-        if (isNull()) return FLOAT_NULL_VALUE;
+        if (row[numCol]==null) return FLOAT_NULL_VALUE;
 
-        return ((Integer)field.sqldata).floatValue();
+        return ((Integer)row[numCol]).floatValue();
     }
     double getDouble() throws SQLException {
-        if (isNull()) return DOUBLE_NULL_VALUE;
+        if (row[numCol]==null) return DOUBLE_NULL_VALUE;
 
-        return ((Integer)field.sqldata).doubleValue();
+        return ((Integer)row[numCol]).doubleValue();
     }
     java.math.BigDecimal getBigDecimal() throws SQLException {
-        if (isNull()) return BIGDECIMAL_NULL_VALUE;
+        if (row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
-        return BigDecimal.valueOf(((Integer)field.sqldata).longValue());
+        return BigDecimal.valueOf(((Integer)row[numCol]).longValue());
     }
     Object getObject() throws SQLException {
-        if (isNull()) return OBJECT_NULL_VALUE;
+        if (row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return field.sqldata;
+        return row[numCol];
     }
     boolean getBoolean() throws java.sql.SQLException {
-        if (isNull()) return BOOLEAN_NULL_VALUE;
+        if (row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
-        return ((Integer)field.sqldata).intValue() == 1;
+        return ((Integer)row[numCol]).intValue() == 1;
     }
     String getString() throws SQLException {
-        if (isNull()) return STRING_NULL_VALUE;
+        if (row[numCol]==null) return STRING_NULL_VALUE;
 
-        return ((Integer)field.sqldata).toString();
+        return ((Integer)row[numCol]).toString();
     }
+
+    //--- setXXX methods
+
     void setString(String value) throws java.sql.SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
 
@@ -150,14 +153,13 @@ class FBIntegerField extends FBField {
     }
     void setInteger(int value) throws java.sql.SQLException {
         field.sqldata = new Integer((int)value);
-        setNull(false);
     }
     void setByte(byte value) throws java.sql.SQLException {
         setInteger((int)value);
     }
     void setBigDecimal(java.math.BigDecimal value) throws SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
 

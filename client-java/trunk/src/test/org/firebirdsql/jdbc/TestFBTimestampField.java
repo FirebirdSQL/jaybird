@@ -42,11 +42,12 @@ public class TestFBTimestampField extends BaseTestFBField {
 	}
 	protected void setUp() throws SQLException{
 		XSQLVAR stringField = new XSQLVAR();
-		stringField.sqldata = TEST_TIMESTAMP;
-		stringField.sqlind = 0;
+		Object[] row = new Object[1];
+//		stringField.sqldata = TEST_TIMESTAMP;
+//		stringField.sqlind = 0;
 		stringField.sqltype = GDS.SQL_TIMESTAMP;
 
-		field = FBField.createField(stringField);
+		field = FBField.createField(stringField,row,0);
 	}
 	protected void tearDown() {
 	}
@@ -151,11 +152,13 @@ public class TestFBTimestampField extends BaseTestFBField {
 
 	public void testString() throws java.sql.SQLException {
 		field.setString(TEST_TIMESTAMP.toString());
+		field.copyOI();
 		assertTrue("String value test failure",
 			field.getTimestamp().equals(TEST_TIMESTAMP));
 	}
 	public void testObject() throws java.sql.SQLException {
 		field.setObject(TEST_TIMESTAMP);
+		field.copyOI();
 		assertTrue("Object value test failure",
 			field.getTimestamp().equals(TEST_TIMESTAMP));
 	}

@@ -34,37 +34,40 @@ import org.firebirdsql.gds.XSQLVAR;
  * @version 1.0
  */
 class FBTimestampField extends FBField {
-    FBTimestampField(XSQLVAR field) throws SQLException {
-        super(field);
+    FBTimestampField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
+        super(field, row, numCol);
     }
     Object getObject() throws java.sql.SQLException {
-        if (isNull()) return OBJECT_NULL_VALUE;
+        if (row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return field.sqldata;
+        return row[numCol];
     }
     String getString() throws java.sql.SQLException {
-        if (isNull()) return STRING_NULL_VALUE;
+        if (row[numCol]==null) return STRING_NULL_VALUE;
 
-        return field.sqldata.toString();
+        return row[numCol].toString();
     }
     Date getDate() throws java.sql.SQLException {
-        if (isNull()) return DATE_NULL_VALUE;
+        if (row[numCol]==null) return DATE_NULL_VALUE;
 
         return new Date(getTimestamp().getTime());
     }
     Time getTime() throws java.sql.SQLException {
-        if (isNull()) return TIME_NULL_VALUE;
+        if (row[numCol]==null) return TIME_NULL_VALUE;
 
         return new Time(getTimestamp().getTime());
     }
     Timestamp getTimestamp() throws java.sql.SQLException {
-        if (isNull()) return TIMESTAMP_NULL_VALUE;
+        if (row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
-        return (Timestamp)field.sqldata;
+        return (Timestamp)row[numCol];
     }
+
+    //--- setXXX methods
+
     void setString(String value) throws java.sql.SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
 
@@ -72,7 +75,7 @@ class FBTimestampField extends FBField {
     }
     void setDate(Date value) throws java.sql.SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
 
@@ -80,7 +83,7 @@ class FBTimestampField extends FBField {
     }
     void setTime(Time value) throws java.sql.SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
 
@@ -88,11 +91,10 @@ class FBTimestampField extends FBField {
     }
     void setTimestamp(Timestamp value) throws java.sql.SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
 
         field.sqldata = value;
-        setNull(false);
     }
 }

@@ -41,17 +41,19 @@ public class TestFBFloatField extends BaseTestFBField {
 	}
 	protected void setUp() throws SQLException{
 		XSQLVAR floatField = new XSQLVAR();
-		floatField.sqldata = new Float(TEST_FLOAT);
-		floatField.sqlind = 0;
+		Object[] row = new Object[1];
+//		floatField.sqldata = new Float(TEST_FLOAT);
+//		floatField.sqlind = 0;
 		floatField.sqltype = GDS.SQL_FLOAT;
 
-		field = FBField.createField(floatField);
+		field = FBField.createField(floatField, row, 0);
 	}
 	protected void tearDown() {
 	}
 
 	public void testObject() throws java.sql.SQLException {
 		field.setObject(new Float(TEST_FLOAT));
+		field.copyOI();
 		assertTrue(field.getObject().equals(new Float(TEST_FLOAT)));
 	}
 	public void testUnicodeStream() throws java.sql.SQLException {
@@ -76,6 +78,7 @@ public class TestFBFloatField extends BaseTestFBField {
 	}
 	public void testString() throws java.sql.SQLException {
 		field.setString(Float.toString(TEST_FLOAT));
+		field.copyOI();		
 		assertTrue(field.getString().equals(Float.toString(TEST_FLOAT)));
 	}
 	public void testAsciiStream() throws java.sql.SQLException {
@@ -98,6 +101,7 @@ public class TestFBFloatField extends BaseTestFBField {
 		java.math.BigDecimal testBigDecimal =
 			new java.math.BigDecimal((double)TEST_FLOAT);
 		field.setBigDecimal(testBigDecimal);
+		field.copyOI();		
 		assertTrue(field.getBigDecimal().equals(testBigDecimal));
 	}
 	public void testDate() throws java.sql.SQLException {
@@ -128,12 +132,14 @@ public class TestFBFloatField extends BaseTestFBField {
 		// unfortunately (long)((float)myLong) != myLong....
 		// so we can test only float values...
 		field.setLong(TEST_INT);
+		field.copyOI();		
 		assertTrue(field.getFloat() == (float)TEST_INT);
 	}
 	public void testLong() throws java.sql.SQLException {
 		// unfortunately (long)((float)myLong) != myLong....
 		// so we can test only float values...
 		field.setLong(TEST_LONG);
+		field.copyOI();		
 		assertTrue(field.getFloat() == (float)TEST_LONG);
 	}
 	public void testDouble() throws java.sql.SQLException {

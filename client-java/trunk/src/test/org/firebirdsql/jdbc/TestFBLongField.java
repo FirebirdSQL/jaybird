@@ -41,18 +41,21 @@ public class TestFBLongField extends BaseTestFBField {
         return new TestSuite(TestFBLongField.class);
     }
     protected void setUp() throws SQLException{
+		 
         XSQLVAR longField = new XSQLVAR();
-        longField.sqldata = new Long(TEST_LONG);
-        longField.sqlind = 0;
+        Object[] row = new Object[1];
+//        longField.sqldata = new Long(TEST_LONG);
+//        longField.sqlind = 0;
         longField.sqltype = GDS.SQL_INT64;
 
-        field = FBField.createField(longField);
+        field = FBField.createField(longField,row,0);
     }
     protected void tearDown() {
     }
 
     public void testObject() throws java.sql.SQLException {
         field.setObject(new Long(TEST_LONG));
+        field.copyOI();
         assertTrue(field.getObject().equals(new Long(TEST_LONG)));
     }
     public void testUnicodeStream() throws java.sql.SQLException {
@@ -77,6 +80,7 @@ public class TestFBLongField extends BaseTestFBField {
     }
     public void testString() throws java.sql.SQLException {
         field.setString(Long.toString(TEST_LONG));
+        field.copyOI();
         assertTrue(field.getString().equals(Long.toString(TEST_LONG)));
     }
     public void testAsciiStream() throws java.sql.SQLException {
@@ -101,6 +105,7 @@ public class TestFBLongField extends BaseTestFBField {
         java.math.BigDecimal testBigDecimal =
             java.math.BigDecimal.valueOf(TEST_LONG);
         field.setBigDecimal(testBigDecimal);
+        field.copyOI();
         assertTrue(field.getLong() == testBigDecimal.longValue());
     }
     public void testDate() throws java.sql.SQLException {
@@ -133,6 +138,7 @@ public class TestFBLongField extends BaseTestFBField {
         // between float and long, so we have to test long values
         try {
             field.setFloat(TEST_FLOAT);
+            field.copyOI();
             assertTrue("Float values test failure", field.getLong() == (long)TEST_FLOAT);
         } catch(SQLException sqlex) {
             // everything is ok

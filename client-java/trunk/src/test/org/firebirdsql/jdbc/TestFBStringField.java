@@ -49,12 +49,13 @@ public class TestFBStringField extends BaseTestFBField {
     }
     protected void setUp() throws SQLException{
         XSQLVAR stringField = new XSQLVAR();
-        stringField.sqldata = new byte[TEST_STRING_SIZE];
-        stringField.sqlind = 0;
+        Object[] row = new Object[1];        
+//        stringField.sqldata = new byte[TEST_STRING_SIZE];
+//        stringField.sqlind = 0;
         stringField.sqllen = TEST_STRING_SIZE;
         stringField.sqltype = GDS.SQL_TEXT;
 
-        field = FBField.createField(stringField);
+        field = FBField.createField(stringField,row,0);
     }
     protected void tearDown() {
     }
@@ -62,6 +63,7 @@ public class TestFBStringField extends BaseTestFBField {
         java.math.BigDecimal testBigDecimal =
             new java.math.BigDecimal((double)TEST_LONG);
         field.setBigDecimal(testBigDecimal);
+        field.copyOI();
         assertTrue(field.getBigDecimal().equals(testBigDecimal));
     }
 
@@ -69,6 +71,7 @@ public class TestFBStringField extends BaseTestFBField {
         field.setString(TEST_STRING_SHORT);		  
 //        assertTrue("String was not completed with spaces or is longer.",
 //            field.getString().length() == TEST_STRING_SIZE);
+        field.copyOI();
         assertTrue("String does not equal to assigned one.",
             field.getString().trim().equals(TEST_STRING_SHORT));
         try {
@@ -82,6 +85,7 @@ public class TestFBStringField extends BaseTestFBField {
         field.setObject(TEST_STRING_SHORT);
 //        assertTrue("String was not completed with spaces or is longer.",
 //            field.getString().length() == TEST_STRING_SIZE);
+        field.copyOI();
         assertTrue("String does not equal to assigned one.",
             field.getString().trim().equals(TEST_STRING_SHORT));
     }
@@ -89,6 +93,7 @@ public class TestFBStringField extends BaseTestFBField {
     public void testUnicodeStream() throws java.sql.SQLException {
         byte[] bytes = TEST_STRING_SHORT.getBytes();
         field.setUnicodeStream(new ByteArrayInputStream(bytes), bytes.length);
+        field.copyOI();
         String fromStream = new String(readInputStream(field.getUnicodeStream()));
         assertTrue("ASCII stream values test failure",
             TEST_STRING_SHORT.equals(fromStream.trim()));
@@ -103,6 +108,7 @@ public class TestFBStringField extends BaseTestFBField {
     public void testBinaryStream() throws java.sql.SQLException {
         byte[] bytes = TEST_STRING_SHORT.getBytes();
         field.setBinaryStream(new ByteArrayInputStream(bytes), bytes.length);
+        field.copyOI();
         String fromStream = new String(readInputStream(field.getBinaryStream()));
         assertTrue("ASCII stream values test failure",
             TEST_STRING_SHORT.equals(fromStream.trim()));
@@ -117,6 +123,7 @@ public class TestFBStringField extends BaseTestFBField {
     public void testAsciiStream() throws java.sql.SQLException {
         byte[] bytes = TEST_STRING_SHORT.getBytes();
         field.setAsciiStream(new ByteArrayInputStream(bytes), bytes.length);
+        field.copyOI();
         String fromStream = new String(readInputStream(field.getAsciiStream()));
         assertTrue("ASCII stream values test failure",
             TEST_STRING_SHORT.equals(fromStream.trim()));
@@ -130,6 +137,7 @@ public class TestFBStringField extends BaseTestFBField {
     }
     public void testBytes() throws java.sql.SQLException {
         field.setBytes(TEST_STRING_SHORT.getBytes());
+        field.copyOI();
         String fromBytes = new String(field.getBytes());
         assertTrue("ASCII stream values test failure",
             TEST_STRING_SHORT.equals(fromBytes.trim()));
@@ -145,6 +153,7 @@ public class TestFBStringField extends BaseTestFBField {
         // because of the date-string-date conversion we loose the
         // time part of java.util.Date, and strictly speaking
         // TEST_DATE and field.getDate() objects are not equal.
+        field.copyOI();
         assertTrue("Date values test failure",
             field.getDate().toString().equals(TEST_DATE.toString()));
     }
@@ -153,6 +162,7 @@ public class TestFBStringField extends BaseTestFBField {
         // because of the time-string-time conversion we loose the
         // date part of java.util.Date, and strictly speaking
         // TEST_TIME and field.getTime() objects are not equal.
+        field.copyOI();
         assertTrue("Time values test failure",
             field.getTime().toString().equals(TEST_TIME.toString()));
     }

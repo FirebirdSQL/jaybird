@@ -42,11 +42,12 @@ public class TestFBDateField extends BaseTestFBField {
 	}
 	protected void setUp() throws SQLException{
 		XSQLVAR stringField = new XSQLVAR();
-		stringField.sqldata = TEST_DATE;
-		stringField.sqlind = 0;
+		Object[] row = new Object[1];
+//		stringField.sqldata = TEST_DATE;
+//		stringField.sqlind = 0;
 		stringField.sqltype = GDS.SQL_TYPE_DATE;
 
-		field = FBField.createField(stringField);
+		field = FBField.createField(stringField, row, 0);
 	}
 	protected void tearDown() {
 	}
@@ -160,13 +161,14 @@ public class TestFBDateField extends BaseTestFBField {
 	public void testTimestamp() throws java.sql.SQLException {
 		String dateStr = new Date(TEST_TIMESTAMP.getTime()).toString();
 		field.setTimestamp(TEST_TIMESTAMP);
-
+      field.copyOI();
 		// we have to test string representation, because of conversion problem
 		assertTrue("Timestamp value test failure.",
 			field.getDate().toString().equals(dateStr));
 	}
 	public void testString() throws java.sql.SQLException {
 		field.setString(TEST_DATE.toString());
+      field.copyOI();
 		// we have to test string representation, because java.sql.Date
 		// keeps the time part of the timestamp after creation, but
 		// usually loses it after some conversions. So, date might
@@ -177,6 +179,7 @@ public class TestFBDateField extends BaseTestFBField {
 	}
 	public void testObject() throws java.sql.SQLException {
 		field.setObject(TEST_DATE);
+      field.copyOI();
 		// we have to test string representation, because java.sql.Date
 		// keeps the time part of the timestamp after creation, but
 		// usually loses it after some conversions. So, date might
