@@ -12,7 +12,7 @@
 <h1 ALIGN=CENTER><font size="6" style="font-size: 20pt"><a name="top"></a>Frequently 
   Asked Questions</font></h1>
 <p ALIGN=CENTER><font size="4">JayBird JCA/JDBC Driver for Firebird</font></p>
-<P ALIGN=CENTER>- Last Updated 6/17/03 -<BR>
+<P ALIGN=CENTER>- Last Updated 7/19/03 -<BR>
 </P>
 <table width="90%" border="0" cellspacing="0" cellpadding="5">
   <tr>
@@ -121,97 +121,143 @@ drop).</P>
   in the src/etc folder.</P>
 <P><FONT SIZE=4>The following optional features are NOT supported:</FONT></P>
 <UL>
-	<LI><P>Batch Updates. 
-	</P>
-	<LI><P>Scrollable cursors. 
-	</P>
-	<LI><P>Updatable cursors. 
-	</P>
-	<LI><P>Cursors/Positioned update/delete 
-	</P>
-	<LI><P>Ref, Clob and Array types 
-	</P>
-	<LI><P>User Defined Types/Type Maps.</P>
+  The following optional features and the methods that support it are not implemented:
+  <li><b>Batch Updates.</b></li>
+  <ul>
+    <li>java.sql.Statement</li>
+    <ul>
+      <li>addBatch(String sql)</li>
+      <li>clearBatch()</li>
+      <li>executeBatch()</li>
+    </ul>
+    <li>java.sql.Statement</li>
+    <ul>
+      <li>addBatch()</li>
+    </ul>
+  </ul>
+  <li><b>Scrollable cursors.</b></li>
+  <ul>
+    <li>java.sql.ResultSet</li>
+    <ul>
+      <li>beforeFirst()</li>
+      <li>afterLast()</li>
+      <li>first()</li>
+      <li>last()</li>
+      <li>absolute(int row)</li>
+      <li>relative(int rows)</li>
+      <li>previous()</li>
+    </ul>
+  </ul>
+  <li><b>Updatable cursors.</b></li>
+  <ul>
+    <li>java.sql.ResultSet</li>
+    <ul>
+      <li>rowUpdated()</li>
+      <li>rowInserted()</li>
+      <li>rowDeleted()</li>
+      <li>updateXXX(....)</li>
+      <li>insertRow()</li>
+      <li>updateRow()</li>
+      <li>deleteRow()</li>
+      <li>refreshRow()</li>
+      <li>cancelRowUpdates()</li>
+      <li>moveToInsertRow()</li>
+      <li>moveToCurrentRow()</li>
+    </ul>
+  </ul>
+  <li><b>Cursors/Positioned update/delete</b></li>
+  <ul>
+    <li>java.sql.Statement</li>
+    <ul>
+      <li>setCursorName()</li>
+    </ul>
+    <li>java.sql.ResultSet</li>
+    <ul>
+      <li>getCursorName()</li>
+    </ul>
+  </ul>
+  <li><b>Ref, Clob and Array types.</b></li>
+  <ul>
+    <li>java.sql.PreparedStatement</li>
+    <ul>
+      <li>setRef(int i, Ref x)</li>
+      <li>setClob (int i, Clob x)</li>
+      <li>setArray(int i, Array x)</li>
+    </ul>
+    <li>java.sql.ResultSet</li>
+    <ul>
+      <li>getArray(int i)</li>
+      <li>getArray(String columnName)</li>
+      <li>getRef(int i)</li>
+      <li>getRef(String columnName)</li>
+      <li>getClob(int i)</li>
+      <li>getClob(String columnName)</li>
+    </ul>
+  </ul>
+  <li><b>User Defined Types/Type Maps.</b></li>
+  <ul>
+    <li>java.sql.ResultSet</li>
+    <ul>
+      <li>getObject(int i, java.util.Map map)</li>
+      <li>getObject(String columnName, java.util.Map map)</li>
+    </ul>
+    <li>java.sql.Connection</li>
+    <ul>
+      <li>getTypeMap()</li>
+      <li>setTypeMap(java.util.Map map)</li>
+    </ul>
+  </ul>
 </UL>
-<P>The methods that support those features return SQLExceptions when used.<BR>
-</P>
-<P><FONT SIZE=4>In addition to the non supported features above, the
-following methods are not implemented:</FONT></P>
+<p>Excluding the unsupported features, the following methods are not yet implemented:</p>
+<ul>
+  <li><b>java.sql.Statement</b></li>
+  <ul>
+    <li>cancel()</li>
+  </ul>
+  <li><b>java.sql.CallableStatement</b></li>
+  <ul>
+    <li>registerOutParameter(int parameterIndex, int sqlType)</li>
+    <li>registerOutParameter(int parameterIndex, int sqlType, int scale)</li>
+    <li>wasNull()</li>
+  </ul>
+  <li><b>java.sql.Blob</b></li>
+  <ul>
+    <li>length()</li>
+    <li>getBytes(long pos, int length)</li>
+    <li>position(byte pattern[], long start)</li>
+    <li>position(Blob pattern, long start)</li>
+  </ul>
+</ul>
+<p>The following methods are implemented, but do not work as expected:</p>
+<ul>
+  <li><b>java.sql.Statement</b></li>
+  <ul>
+    <li>get/setMaxFieldSize does nothing</li>
+    <li>get/setQueryTimeout does nothing</li>
+  </ul>
+  <li><b>java.sql.PreparedStatement</b></li>
+  <ul>
+    <li>setObject(index,object,type) This method is implemented but behaves as
+      setObject(index,object)</li>
+    <li>setObject(index,object,type,scale) This method is implemented but behaves
+      as setObject(index,object)</li>
+  </ul>
+  <li><b>java.sql.ResultSetMetaData</b></li>
+  <ul>
+    <li>isReadOnly(i) always returns false</li>
+    <li>isWritable(i) always returns true</li>
+    <li>isDefinitivelyWritable(i) always returns true</li>
+  </ul>
+  <li><b>java.sql.DatabaseMetaData</b></li>
+  <ul>
+    <li>getBestRowIdentifier(i) always returns empty resultSet</li>
+  </ul>
+</ul>
 <UL>
-	<LI><P><FONT FACE="Courier, monospace">java.sql.ResultSetMetaData </FONT>
-	</P>
+  <p>&nbsp;
+  </p>
 </UL>
-<P STYLE="margin-left: 2cm"><FONT FACE="Courier, monospace"> isReadOnly(i)<br>
-  isWritable(i)<br>
-  isDefinitivelyWritable(i)</FONT></P>
-
-  <ul>
-    <li> 
-      <p><font face="Courier, monospace">java.sql.Statement</font> </p>
-  </ul>
-  <P STYLE="margin-left: 2cm"><FONT FACE="Courier, monospace"> setEscapeProcessing(boolean)<br>
-    cancel() </FONT> </P>
-  <UL>
-    <LI> 
-      <P><FONT FACE="Courier, monospace">java.sql.PreparedStatement </FONT> </P>
-  </UL>
-  
-<P STYLE="margin-left: 2cm"><FONT FACE="Courier, monospace">setObject(index,object,type,scale)<br>
-  setCharacterStream(i)<br>
-  setDate(i,date,calendar)<br>
-  setTime(i,time,calendar)<br>
-  setTimestamp(i,timestamp,calendar) </FONT> </P>
-  <UL>
-    <LI> 
-      <P><FONT FACE="Courier, monospace">java.sql.ResultSet </FONT> </P>
-  </UL>
-  
-<P STYLE="margin-left: 2cm"><FONT FACE="Courier, monospace">getDate(i,calendar)<br>
-  getTime(i,calendar)<br>
-  getTimestamp(i,calendar)<BR>
-  </font> </P>
-  <ul>
-    <li> 
-      <p><font face="Courier, monospace">java.sql.Blob</font></p>
-  </ul>
-  <P STYLE="margin-left: 2cm"><font face="Courier, monospace">
-  java.sql.Blob.setBytes(long, byte[], int, int)<br>
-  java.sql.Blob.setBytes(long, byte[])<br>
-    java.sql.Blob.truncate(long)<br>
-    java.sql.Blob.position(java.sql.Blob, long)<br>
-    java.sql.Blob.position(byte[], long)<br>
-    java.sql.Blob.getBytes(long, int)<br>
-    java.sql.Blob.length()<br>
-	</FONT>
-    <BR>
-</P>
-<P><font size="4">The following methods are implemented but do not work as expected</font></P>
-  <UL>
-    <LI> 
-      <P><font face="Courier, monospace">java.sql.ResultSet </FONT></P>
-  </UL>
-  
-<P STYLE="margin-left: 2cm"><font face="Courier, monospace">get/setFetchSize() 
-  </FONT>-does nothing</P>
-  <UL>
-    <LI> 
-      <P><font face="Courier, monospace">java.sql.Statement </FONT></P>
-  </UL>
-  
-<P STYLE="margin-left: 2cm"><font face="Courier, monospace"> get/setFetchSize()</FONT> 
-  -does nothing <br>
-  <font face="Courier, monospace">get/setMaxFieldSize() </FONT>-does nothing <br>
-  <font face="Courier, monospace">get/setQueryTimeout() </FONT>-does nothing </P>
-  <UL>
-    <LI> 
-      <P><font face="Courier, monospace">java.sql.PreparedStatement </FONT></P>
-  </UL>
-  <P STYLE="margin-left: 2cm"><font face="Courier, monospace">setObject(index,object,type) </FONT>This method is supported 
-    but behaves as <font face="Courier, monospace">setObject(index,object)</FONT></P>
-  <P><BR>
-    <BR>
-  </P>
-  <hr>
+<hr>
 <BR>
 <P ALIGN=CENTER><FONT SIZE=4 STYLE="font-size: 16pt"><a name="3"></a><font size="5">3- 
   Where do I get JayBird?</font></FONT></P>
@@ -259,9 +305,9 @@ following methods are not implemented:</FONT></P>
     <LI> 
       <P>log4j-core.jar (if you want logging available)</P>
   </UL>
-  
 <P><BR>
-  </P>
+The firebirdsql-full.jar file has all of the needed files in one archive for
+  ease of use.</P>
   
 <P>These archives are included in the binary package.<BR>
 </P>
@@ -282,7 +328,7 @@ following methods are not implemented:</FONT></P>
   <P ALIGN=CENTER><a href="#top">return to top</a></P>
   
 <P><BR>
-  </P>
+</P>
   
 <P>JayBird features built-in connection pooling. This is very useful because it 
   eliminates the need for external connection pooling routines like Poolman or 
@@ -1081,7 +1127,7 @@ following methods are not implemented:</FONT></P>
   code to the daily build for that day.<br>
 </p>
 <P><BR>
-  </P>
+</P>
   <hr>
   <P><BR>
   </P>
