@@ -484,15 +484,20 @@ public class TestFBResultSet extends FBTestBase {
             } catch(SQLException ex) {
                 // it is ok as well, since substr is declared as CSTRING(80)
                 // and truncation error happens
+                System.out.println("First query generated exception" + ex.getMessage());
             }
 
             try  {
                 rs = stmt.executeQuery(query);
                 assertTrue("Should have at least one row", rs.next());
+                
+                Object tempObj = rs.getObject(1);
+                
                 rs.close();
             } catch(SQLException ex) {
                 // it is ok as well, since substr is declared as CSTRING(80)
                 // and truncation error happens
+                System.out.println("Second query generated exception" + ex.getMessage());
             }
             
         } finally {
