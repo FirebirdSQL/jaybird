@@ -9,9 +9,9 @@
 </HEAD>
 
 <BODY>
-<h2>CORE JDBC Features</h2>
+<h2>JDBC Features</h2>
 <p>The driver comply with JDBC 2.0 core with some features and methods not implemented, some of it required by the specification and some optional.</p>
-   The following optional features was not supported<br>
+<p>The following optional features are not supported</p>
 <ul>
 <li>Batch Updates.</li>
 <li>Scrollable cursors.</li>
@@ -20,10 +20,8 @@
 <li>Ref, Clob and Array types</li>
 <li>User Defined Types/Type Maps.</li>
 </ul>
-The methods that support those features return SQLExceptions when used.<br><br>
-
-Excluding the non supported features, the following methods are not implemented<br>
-
+<p>The methods that support those features return SQLExceptions when used.</p>
+<p>Excluding the non supported features, the following methods are not implemented</p>
 <ul>
 	<li><b>java.sql.ResultSetMetaData</b></li>
 	<ul>
@@ -51,7 +49,7 @@ Excluding the non supported features, the following methods are not implemented<
 		<li>getTimestamp(i,calendar)</li>
 	</ul>
 </ul>
-The folowing methods was implemented but does not work as expected
+<p>The following methods are implemented but does not work as expected</p>
 <ul>
 	<li><b>java.sql.ResultSet</b></li>
 	<ul>
@@ -68,10 +66,95 @@ The folowing methods was implemented but does not work as expected
 		<li>setObject(index,object,type) This method are supported but behaves as setObject(index,object)</li>
 	</ul>
 </ul>
-<br><br>
-The driver was tested with jDataMaster.<br>
+<h2>Compliance Tests</h2>
+<p>The compliance was check with <a href="http://www.jDataMaster.com">jDataMaster</a>,
+which include more than 1000 tests, excluding:</p>
+	<ul>
+		<li>CallableStatements</li>
+		<li>Escape Syntax</li>
+	</ul>
+<p>FB type 4 driver pass all the tests excluding</p>
+<ul>
+		<li>ResultSetMetaData.isReadOnly(i)</li>
+		<li>ResultSetMetaData.isWritable(i)</li>
+		<li>ResultSetMetaData.isDefinitivelyWritable(i)</li>
+</ul>
+<p>The set/get tests don't include Blobs.</p>
+<p>Firebird driver is the most JDBC compliant driver of those tested with this tool, 
+the next one fails on 90 tests, including all of the most known RDBMS.</p>
+<h2>Performance tests compared with Interclient</h2>
+<p>The results of the jDataMaster basic performance tests, are the following</p>
+<p>Local test</p>
+<p>Duron 800MHz with 512MB and FB 1.0 without forced Writes</p>
+<table cellspacing="5" border="1">
+	<tr>
+		<td>&nbsp;</td>
+		<td>Interclient</td>
+		<td>Firebird Type 4</td>
+		<td>FB as % of Interclient</td>
+	</tr>
+	<tr>
+		<td>Insert 5000 records with autocommit</td>
+		<td>8510 ms</td>
+		<td>14307 ms</td>		
+		<td>168 %</td>
+	</tr>
+	<tr>
+		<td>Read 5000 records with autocommit (x5)</td>
+		<td>3052 ms</td>
+		<td>3056 ms</td>
+		<td>100 %</td>
+	</tr>
+	<tr>
+		<td>Insert 5000 records with one transaction</td>
+		<td>6650 ms</td>
+		<td>5552 ms</td>
+		<td>83 %</td>
+	</tr>
+	<tr>
+		<td>Read 5000 records inside one transaction(x5)</td>
+		<td>3990 ms</td>
+		<td>3819 ms</td>
+		<td>95 %</td>
+	</tr>
+</table>
+<p>Remote test</p>
+<p>Client: Windows 2000 on Duron 800MHz with 512MB.<br>
+Server: Suse 7.2 on AMD 500MHz with 256MB and FB 1.0.</p>
+<table cellspacing="5" border="1">
+	<tr>
+		<td>&nbsp;</td>
+		<td>Interclient</td>
+		<td>Firebird Type 4</td>
+		<td>FB as % of Interclient</td>
+	</tr>
+	<tr>
+		<td>Insert 5000 records with autocommit</td>
+		<td>16588 ms</td>
+		<td>17525 ms</td>		
+		<td>106 %</td>
+	</tr>
+	<tr>
+		<td>Read 5000x5 records with autocommit</td>
+		<td>8082 ms</td>
+		<td>6247 ms</td>
+		<td>77 %</td>
+	</tr>
+	<tr>
+		<td>Insert 5000 records with one transaction</td>
+		<td>13009 ms</td>
+		<td>6311 ms</td>
+		<td>49 %</td>
+	</tr>
+	<tr>
+		<td>Read 5000x5 records inside one transaction</td>
+		<td>11639 ms</td>
+		<td>8670 ms</td>
+		<td>75 %</td>
+	</tr>
+</table>
+<p>The time in each test is the average of 5 executions.</p>
 <br>
-<p>May-16-2002<br>
-Blas Rodriguez Somoza</p>
+<p>June-24-2002<br>
 </BODY>
 </HTML>
