@@ -32,18 +32,12 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.sql.Types;
 
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.net.URL;
-import java.net.MalformedURLException;
 import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 
 
@@ -59,8 +53,6 @@ import java.util.ArrayList;
 
 
 public class FBResultSet implements ResultSet {
-
-    private final static Logger log = LoggerFactory.getLogger(FBResultSet.class,false);
 
     private FBFetcher fbFetcher;
 

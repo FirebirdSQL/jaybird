@@ -23,13 +23,10 @@ import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
 import org.firebirdsql.jca.FBResourceException;
-import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
 
 import java.util.Properties;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Collection;
 import java.util.Iterator;
 
 import java.lang.reflect.*;

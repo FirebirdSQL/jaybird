@@ -26,10 +26,6 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.SQLException;
 import java.sql.DataTruncation;
-import java.sql.Types;
-
-import java.text.DateFormat;
-import java.text.ParseException;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -89,9 +85,8 @@ public class FBStringField extends FBField {
     private static final String LONG_TRUE = "TRUE";
     private static final String LONG_FALSE = "FALSE";
     private static final String SHORT_TRUE_2 = "T";
-    private static final String SHORT_FALSE_2 = "F";
+//    private static final String SHORT_FALSE_2 = "F";
     
-//    private char[] cBuff;
 
     FBStringField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
         super(field, rs, numCol);

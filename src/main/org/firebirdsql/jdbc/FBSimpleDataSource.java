@@ -19,24 +19,17 @@
  
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
-import org.firebirdsql.jca.FBPoolingConnectionManager;
-import org.firebirdsql.jca.ManagedConnectionPool;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.sql.Connection;
 import javax.sql.DataSource;
 import java.sql.SQLException;
-import java.util.Set;
 import javax.naming.Reference;
 import javax.resource.Referenceable;
 import javax.resource.ResourceException;
-import javax.resource.spi.ConnectionManager;
-import javax.resource.spi.ManagedConnectionFactory;
 
-import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
 import org.firebirdsql.jca.FBResourceException;
 import javax.naming.NamingException;

@@ -21,7 +21,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.XSQLVAR;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
