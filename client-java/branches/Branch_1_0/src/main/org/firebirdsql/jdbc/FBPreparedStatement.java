@@ -421,9 +421,10 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             c.executeStatement(fixedStmt, sendOutParams);
             isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
             return (fixedStmt.getOutSqlda().sqld > 0);
-        }
-        catch (GDSException ge) {
+        } catch (GDSException ge) {
             throw new FBSQLException(ge);
+        } finally {
+            hasMoreResults = true;
         }
     }
 

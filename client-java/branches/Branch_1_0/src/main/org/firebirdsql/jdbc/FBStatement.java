@@ -71,6 +71,7 @@ public class FBStatement implements Statement {
 
 	 // If the last executedStatement returns ResultSet or UpdateCount
 	 protected boolean isResultSet;
+    protected boolean hasMoreResults;
     //Holds a result set from an execute call using autocommit.
     //This is a cached result set and is used to allow a call to getResultSet()
     private ResultSet currentCachedResultSet;
@@ -634,7 +635,7 @@ public class FBStatement implements Statement {
      * @see #execute
      */
     public int getUpdateCount() throws  SQLException {
-        if (isResultSet)
+        if (isResultSet || !hasMoreResults)
             return -1;
         else {
             try {
@@ -648,6 +649,8 @@ public class FBStatement implements Statement {
             }
             catch (GDSException ge) {
                 throw new FBSQLException(ge);
+            } finally {
+                hasMoreResults = false;
             }
         }
     }
@@ -670,8 +673,24 @@ public class FBStatement implements Statement {
      * @see #execute
      */
     public boolean getMoreResults() throws  SQLException {
-//        throw new SQLException("Not yet implemented");
-          return false;
+        hasMoreResults = false;
+        
+        if (currentRs != null) {
+            try {
+                currentRs.close();
+            } finally {
+                currentRs = null;
+            }
+        } else
+        if (currentCachedResultSet != null) {
+            try {
+                currentCachedResultSet.close();
+            } finally {
+                currentCachedResultSet = null;
+            }
+        }
+        
+        return hasMoreResults;
     }
 
     /**
@@ -986,6 +1005,7 @@ public class FBStatement implements Statement {
         prepareFixedStatement(sql, false);
         c.executeStatement(fixedStmt, isExecuteProcedureStatement(sql));
         isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
+        hasMoreResults = true;
         return (fixedStmt.getOutSqlda().sqld > 0);
     }
 
