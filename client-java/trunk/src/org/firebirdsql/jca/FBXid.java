@@ -128,14 +128,12 @@ class FBXid implements Xid {
             {
                 throw new ResourceException("Wrong TDR_XID_GLOBAL_ID for xid");
             }
-            int globalIdLength = in.read();
-            globalId = in.readOpaque(globalIdLength);
+            globalId = in.readBuffer();
             if (in.read() != TDR_XID_BRANCH_ID)
             {
                 throw new ResourceException("Wrong TDR_XID_BRANCH_ID for xid");
             }
-            int branchIdLength = in.read();
-            branchId = in.readOpaque(branchIdLength);
+            branchId = in.readBuffer();
         } 
         catch (IOException ioe) 
         {
