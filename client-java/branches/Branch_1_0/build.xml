@@ -62,6 +62,7 @@
     <!-- Where source files live -->
     <property name="source.java" value="${module.source}/main"/>
     <property name="source.etc" value="${module.source}/etc"/>
+    <property name="source.examples" value="${module.root}/examples"/>
     <property name="source.resources" value="${module.source}/resources"/>
     <property name="source.stylesheets" value="${module.source}/stylesheets"/>
     <property name="source.test" value="${module.source}/test"/>
@@ -79,6 +80,7 @@
     <property name="build.lib" value="${module.output}/lib"/>
     <property name="build.api" value="${module.output}/api"/>
     <property name="build.etc" value="${module.output}/etc"/>
+    <property name="build.examples" value="${module.output}/examples"/>
     <property name="build.bin" value="${module.output}/bin"/>
     <property name="build.docs" value="${module.output}/docs"/>
     <property name="build.resources" value="${module.output}/resources"/>
@@ -175,7 +177,7 @@
   <!-- =================================================================== -->
   <!-- Compiles the source code                                            -->
   <!-- =================================================================== -->
-  <target name="compile" depends="compile-concurrent, compile-j2ee, compile-driver, compile-tests, compile-etc, compile-resources, compile-stylesheets"/>
+  <target name="compile" depends="compile-concurrent, compile-j2ee, compile-driver, compile-tests, compile-etc, compile-examples, compile-resources, compile-stylesheets"/>
 
   <!-- calling this unjar a compile is stretching the truth a bit-->
   <target name="compile-concurrent" depends="init">
@@ -252,6 +254,15 @@
     </copy>
 
   </target>
+  
+  <target name="compile-examples">
+  	<mkdir dir="${build.examples}"/>
+  	<copy todir="${build.examples}">
+  		<fileset dir="${source.examples}">
+  			<include name="*.java"/>
+  		</fileset>
+  	</copy>
+  </target>
 
   <!-- Compile etc files (manifest) -->
   <target name="compile-etc" depends="init">
@@ -306,7 +317,7 @@
   <!-- Creates the jar archives                                            -->
   <!-- =================================================================== -->
   <target name="jars" depends="jar-concurrent, jar-j2ee, jar-jmx, rar, jar-test"/>
-
+  
   <target name="jar-concurrent" depends="compile">
 
     <mkdir dir="${build.lib}"/>
@@ -619,6 +630,9 @@
         <include name="*.html"/>
         <include name="FAQ.txt"/>
       </fileset>
+      <zipfileset dir="${build.examples}" prefix="examples">
+      	<include name="*"/>
+      </zipfileset>
     </zip>
   </target>
 
