@@ -65,7 +65,7 @@ public class FBWorkaroundStringField extends FBStringField {
     public void setString(String value) throws SQLException {
         setStringForced(value);
 
-        if (value == null)
+        if (value == STRING_NULL_VALUE)
             return;
         
         if (field.sqldata.length > field.sqllen && !isSystemTable(field.relname))
@@ -81,8 +81,8 @@ public class FBWorkaroundStringField extends FBStringField {
      * @throws SQLException if something went wrong.
      */
     public void setStringForced(String value) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == STRING_NULL_VALUE) {
+            setNull();
             return;
         }
         field.sqldata = field.encodeString(value,javaEncoding);

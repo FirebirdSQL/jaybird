@@ -191,6 +191,11 @@ public class FBBigDecimalField extends FBField {
     }
 
     public void setString(String value) throws SQLException {
+        if (value == STRING_NULL_VALUE) {
+            setNull();
+            return;
+        }
+        
         try {
             setBigDecimal(new BigDecimal(value));
         } catch(NumberFormatException nex) {
@@ -200,6 +205,11 @@ public class FBBigDecimalField extends FBField {
     }
 
     public void setBigDecimal(BigDecimal value) throws SQLException {
+        if (value == BIGDECIMAL_NULL_VALUE) {
+            setNull();
+            return;
+        }
+        
         value = value.setScale(-field.sqlscale, BigDecimal.ROUND_HALF_UP);
 
         if (fieldType == 1) {
