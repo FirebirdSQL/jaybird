@@ -1,3 +1,18 @@
+2003-11-07 19:40  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/ResultSetHandler.java,
+	test/org/firebirdsql/ngds/TestServicesAPI.java:
+	
+	made JDK 1.3 happy
+
+2003-11-07 19:35  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jdbc/FBDatabaseMetaData.java, ngds/InternalError.java:
+	
+	made JDK 1.3 happy
+
 2003-11-06 13:16  rrokytskyy
 
 	* client-java/src/:
