@@ -51,7 +51,7 @@ import org.firebirdsql.gds.isc_stmt_handle;
  * @see Connection#createStatement
  * @see ResultSet
  */
-public class FBStatement implements Statement {
+public class FBStatement implements Statement, Synchronizable {
 
     protected FBConnection c;
 
@@ -80,6 +80,22 @@ public class FBStatement implements Statement {
         this.c = c;
         closed = false;
     }
+    
+    /**
+     * Get synchronization object for this statement object.
+     * 
+     * @return object that will be used for synchronization.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    public Object getSynchronizationObject() throws SQLException {
+        synchronized(c) {
+            if (c.getAutoCommit())
+                return c;
+            else
+                return this;
+        }
+    }
 
     /**
      * Executes an SQL statement that returns a single <code>ResultSet</code> object.
@@ -92,32 +108,29 @@ public class FBStatement implements Statement {
     public ResultSet executeQuery(String sql) throws  SQLException {
         if (closed)
             throw new SQLException("Statement is closed");
-        try
-        {
-            c.ensureInTransaction();
-            if (!internalExecute(sql)) {
-                throw new SQLException("query did not return a result set: " + sql);
-            }
-            if (c.willEndTransaction())
-            {
-                ResultSet rs = getCachedResultSet(false);
-                //autocommits.
-                return rs;
-            } // end of if ()
-            else
-            {
-                return getResultSet();
-            } // end of else
+            
+        Object syncObject = getSynchronizationObject();
+            
+        synchronized(syncObject) {
+            try {
+                c.ensureInTransaction();
+                if (!internalExecute(sql)) {
+                    throw new SQLException(
+                        "query did not return a result set: " + sql);
+                }
+                if (c.willEndTransaction()) {
+                    ResultSet rs = getCachedResultSet(false);
+                    //autocommits.
+                    return rs;
+                } else { // end of if ()
+                    return getResultSet();
+                } // end of else
+            } catch (GDSException ge) {
+                throw new FBSQLException(ge);
+            } finally { // end of try-catch
+                c.checkEndTransaction();
+            } // end of finally
         }
-        catch (GDSException ge)
-        {
-            throw new FBSQLException(ge);
-        } // end of try-catch
-        finally
-        {
-            c.checkEndTransaction();
-        } // end of finally
-
     }
 
 
@@ -136,22 +149,22 @@ public class FBStatement implements Statement {
     public int executeUpdate(String sql) throws  SQLException {
         if(closed)
             throw new SQLException("Statement is closed");
-        try
-        {
-            c.ensureInTransaction();
-            if (internalExecute(sql)) {
-                throw new SQLException("update statement returned results!");
-            }
-            return getUpdateCount();
+            
+        Object syncObject = getSynchronizationObject();
+            
+        synchronized(syncObject) {
+            try {
+                c.ensureInTransaction();
+                if (internalExecute(sql)) {
+                    throw new SQLException("update statement returned results!");
+                }
+                return getUpdateCount();
+            } catch (GDSException ge) {
+                throw new FBSQLException(ge);
+            } finally { // end of try-catch
+                c.checkEndTransaction();
+            } // end of finally
         }
-        catch (GDSException ge)
-        {
-            throw new FBSQLException(ge);
-        } // end of try-catch
-        finally
-        {
-            c.checkEndTransaction();
-        } // end of finally
     }
 
     /**
@@ -206,27 +219,28 @@ public class FBStatement implements Statement {
     public void close() throws  SQLException {
         if (closed)
             throw new SQLException("This statement is already closed.");
-
-        try {
-            if (fixedStmt != null) {
-                try {
-                    //may need ensureTransaction?
-                    c.closeStatement(fixedStmt, true);
-                }
-                catch (GDSException ge) {
-                    throw new FBSQLException(ge);
-                }
-                finally {
-                    fixedStmt = null;
-                    currentRs = null;
-                    currentCachedResultSet = null;
+            
+        Object syncObject = getSynchronizationObject();
+        
+        synchronized(syncObject) {
+            try {
+                if (fixedStmt != null) {
+                    try {
+                        //may need ensureTransaction?
+                        c.closeStatement(fixedStmt, true);
+                    } catch (GDSException ge) {
+                        throw new FBSQLException(ge);
+                    } finally {
+                        fixedStmt = null;
+                        currentRs = null;
+                        currentCachedResultSet = null;
+                        closed = true;
+                    }
+                } else
                     closed = true;
-                }
+            } finally {
+                c.notifyStatementClosed(this);
             }
-            else
-                closed = true;
-        } finally {
-            c.notifyStatementClosed(this);
         }
     }
     
@@ -461,23 +475,23 @@ public class FBStatement implements Statement {
     public boolean execute(String sql) throws SQLException {
         if (closed)
             throw new SQLException("Statement is closed");
-        try {
-            c.ensureInTransaction();
-            boolean hasResultSet = internalExecute(sql);
-            if (hasResultSet && c.willEndTransaction())
-            {
-                getCachedResultSet(false);
-            } // end of if ()
-            return hasResultSet;
+        
+        Object syncObject = getSynchronizationObject();
+            
+        synchronized(syncObject) {
+            try {
+                c.ensureInTransaction();
+                boolean hasResultSet = internalExecute(sql);
+                if (hasResultSet && c.willEndTransaction()) {
+                    getCachedResultSet(false);
+                } // end of if ()
+                return hasResultSet;
+            } catch (GDSException ge) {
+                throw new FBSQLException(ge);
+            } finally { // end of try-catch
+                c.checkEndTransaction();
+            } // end of finally
         }
-        catch (GDSException ge)
-        {
-            throw new FBSQLException(ge);
-        } // end of try-catch
-        finally
-        {
-            c.checkEndTransaction();
-        } // end of finally
     }
 
     /**

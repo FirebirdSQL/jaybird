@@ -19,28 +19,15 @@
 
 package org.firebirdsql.jdbc;
 
-import java.io.InputStream;
-import java.io.Reader;
-import java.math.BigDecimal;
-import java.net.URL;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
+import java.io.*;
+import java.math.*;
+import java.net.*;
+import java.sql.*;
 import java.sql.Date;
-import java.sql.ParameterMetaData;
-import java.sql.PreparedStatement;
-import java.sql.Ref;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.util.Calendar;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
+import java.util.*;
+
+import org.firebirdsql.gds.*;
+import org.firebirdsql.logging.*;
 
 /**
  *
@@ -71,15 +58,21 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     
     FBPreparedStatement(FBConnection c, String sql) throws SQLException {
         super(c);
-        try {
-            c.ensureInTransaction();
-            prepareFixedStatement(sql, true);
-        } catch (GDSException ge) {
-            if (log!=null) log.info("GDSException in PreparedStatement constructor", ge);
-            throw new FBSQLException(ge);
-        } finally {
-            c.checkEndTransaction();
-        }// end of try-catch-finally
+        
+        Object syncObject = getSynchronizationObject();
+        synchronized(syncObject) {
+            try {
+                c.ensureInTransaction();
+                prepareFixedStatement(sql, true);
+            } catch (GDSException ge) {
+                if (log != null)
+                    log.info("GDSException in PreparedStatement constructor",
+                        ge);
+                throw new FBSQLException(ge);
+            } finally {
+                c.checkEndTransaction();
+            } // end of try-catch-finally
+        }
     }
 
 
@@ -93,26 +86,23 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public ResultSet executeQuery() throws  SQLException {
-        try
-        {
-            c.ensureInTransaction();
-            if (!internalExecute(isExecuteProcedureStatement))
-            {
-                throw new SQLException("No resultset for sql");
+        Object syncObject = getSynchronizationObject();
+        
+        synchronized(syncObject) {
+            try {
+                c.ensureInTransaction();
+                if (!internalExecute(isExecuteProcedureStatement)) {
+                    throw new SQLException("No resultset for sql");
+                }
+                if (c.willEndTransaction()) {
+                    return getCachedResultSet(false);
+                } else { 
+                    return getResultSet();
+                }
+            } finally {
+                c.checkEndTransaction();
             }
-            if (c.willEndTransaction())
-            {
-                return getCachedResultSet(false);
-            } // end of if ()
-            else
-            {
-                return getResultSet();
-            } // end of else
         }
-        finally
-        {
-            c.checkEndTransaction();
-        } // end of finally
     }
 
 
@@ -128,18 +118,20 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public int executeUpdate() throws  SQLException {
-        try
-        {
-            c.ensureInTransaction();
-            if (internalExecute(isExecuteProcedureStatement)) {
-                throw new SQLException("update statement returned results!");
+        
+        Object syncObject = getSynchronizationObject();
+        
+        synchronized(syncObject) {
+            try {
+                c.ensureInTransaction();
+                if (internalExecute(isExecuteProcedureStatement)) {
+                    throw new SQLException("update statement returned results!");
+                }
+                return getUpdateCount();
+            } finally {
+                c.checkEndTransaction();
             }
-            return getUpdateCount();
         }
-        finally
-        {
-            c.checkEndTransaction();
-        } // end of finally
     }
 
 
@@ -376,20 +368,22 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see Statement#execute
      */
     public boolean execute() throws  SQLException {
-        try
-        {
-            c.ensureInTransaction();
-            boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
-            if (hasResultSet && c.willEndTransaction())
-            {
-                getCachedResultSet(false);
-            } // end of if ()
-            return hasResultSet;
+        
+        Object syncObject = getSynchronizationObject();
+        
+        synchronized(syncObject) {
+            try {
+                c.ensureInTransaction();
+                boolean hasResultSet = internalExecute(
+                    isExecuteProcedureStatement);
+                if (hasResultSet && c.willEndTransaction()) {
+                    getCachedResultSet(false);
+                }
+                return hasResultSet;
+            } finally {
+                c.checkEndTransaction();
+            }
         }
-        finally
-        {
-            c.checkEndTransaction();
-        } // end of finally
     }
 
     protected boolean internalExecute(boolean sendOutParams) throws  SQLException
@@ -403,24 +397,28 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             throw new SQLException("Not all parameters were set. " +
                 "Cannot execute query.");
 
-        if (hasBlobs){
-            for(int i = 0; i < isParamSet.length; i++){
-                if (isBlob[i]){
-                    FBFlushableField flushableField = 
-                        (FBFlushableField)getField(i + 1);
-                        
-                    flushableField.flushCachedData();
+        Object syncObject = getSynchronizationObject();
+        
+        synchronized(syncObject) {
+            if (hasBlobs) {
+                for (int i = 0; i < isParamSet.length; i++) {
+                    if (isBlob[i]) {
+                        FBFlushableField flushableField =
+                            (FBFlushableField)getField(i + 1);
+
+                        flushableField.flushCachedData();
+                    }
                 }
             }
-        }
-        try {
-            closeResultSet();
-            c.executeStatement(fixedStmt, sendOutParams);
-            isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
-            return (fixedStmt.getOutSqlda().sqld > 0);
-        }
-        catch (GDSException ge) {
-            throw new FBSQLException(ge);
+            
+            try {
+                closeResultSet();
+                c.executeStatement(fixedStmt, sendOutParams);
+                isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
+                return (fixedStmt.getOutSqlda().sqld > 0);
+            } catch (GDSException ge) {
+                throw new FBSQLException(ge);
+            }
         }
     }
 
