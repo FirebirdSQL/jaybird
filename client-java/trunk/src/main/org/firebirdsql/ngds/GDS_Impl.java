@@ -128,9 +128,19 @@ public class GDS_Impl extends AbstractGDS implements GDS
     }
 
 
-    public synchronized  Clumplet newClumplet(int type, int c){
+    public synchronized  Clumplet newClumplet(int type, int c)
+        {
+        // Unfortuanatly firebird does not seem to read items in the blob parameter buffer
+        // correclly if they are encoded in more then two bytes.
+
+        // As a temporary work around I have only used two bytes to encode these values and
+        // put a simple check in to catch most potential problems. I have made a note to myself
+        // to come back and review this soon.
+        if( c >= 65536 )
+            throw new RuntimeException("Clumplet value out of range.");
+
         return new ClumpletImpl(type, new byte[] {(byte)(c>>8), (byte)c});
-    }
+        }
 
     public synchronized  Clumplet newClumplet(int type, byte[] content) {
         return new ClumpletImpl(type, content);
