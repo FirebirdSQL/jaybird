@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
-import java.sql.Statement;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
@@ -78,11 +77,6 @@ class FBStatementFetcher implements FBFetcher {
             rowsArray = stmt.getRows();
             size = stmt.size();
         }
-//            fetch();
-//            if (nextRow==null)
-//                isEmpty = true;
-//            else 
-//                isBeforeFirst = true;
     }
 
     protected byte[][] getNextRow() throws SQLException {
@@ -112,7 +106,7 @@ class FBStatementFetcher implements FBFetcher {
         setIsLast(false);
         setIsAfterLast(false);
 
-        if (getIsEmpty())
+        if (isEmpty())
             return false;
         else if (getNextRow() == null || (fbStatement.maxRows!=0 && getRowNum()==fbStatement.maxRows)){
             setIsAfterLast(true);
@@ -139,6 +133,26 @@ class FBStatementFetcher implements FBFetcher {
         }
     }
 
+    public boolean absolute(int row) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public boolean first() throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public boolean last() throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public boolean previous() throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public boolean relative(int row) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+    
     public void fetch() throws SQLException {
         int maxRows = 0;
         
@@ -177,7 +191,7 @@ class FBStatementFetcher implements FBFetcher {
     public void close() throws SQLException {
         fbStatement.closeResultSet();
     }
-    public Statement getStatement() {
+    public AbstractStatement getStatement() {
         return fbStatement;
     }
     public int getRowNum() {
@@ -187,7 +201,7 @@ class FBStatementFetcher implements FBFetcher {
     public void setRowNum(int rowNumValue) {
         this.rowNum = rowNumValue;
     }
-    public boolean getIsEmpty() throws SQLException {
+    public boolean isEmpty() throws SQLException {
         if (!wasFetched)
             fetch();
         
@@ -197,7 +211,7 @@ class FBStatementFetcher implements FBFetcher {
     public void setIsEmpty(boolean isEmptyValue) {
         this.isEmpty = isEmptyValue;
     }
-    public boolean getIsBeforeFirst() throws SQLException {
+    public boolean isBeforeFirst() throws SQLException {
         if (!wasFetched)
             fetch();
         
@@ -207,7 +221,7 @@ class FBStatementFetcher implements FBFetcher {
     public void setIsBeforeFirst(boolean isBeforeFirstValue) {
         this.isBeforeFirst = isBeforeFirstValue;
     }
-    public boolean getIsFirst() throws SQLException {
+    public boolean isFirst() throws SQLException {
         if (!wasFetched)
             fetch();
         
@@ -218,7 +232,7 @@ class FBStatementFetcher implements FBFetcher {
         this.isFirst = isFirstValue;
     }
 
-    public boolean getIsLast() throws SQLException {
+    public boolean isLast() throws SQLException {
         if (!wasFetched)
             fetch();
         
@@ -229,7 +243,7 @@ class FBStatementFetcher implements FBFetcher {
         this.isLast = isLastValue;
     }
     
-    public boolean getIsAfterLast() throws SQLException {
+    public boolean isAfterLast() throws SQLException {
         
         if (!wasFetched)
             fetch();

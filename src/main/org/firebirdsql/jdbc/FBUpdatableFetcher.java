@@ -38,7 +38,7 @@ public class FBUpdatableFetcher extends FBStatementFetcher {
 
     public boolean next() throws SQLException {
         
-        if (getIsBeforeFirst()) {
+        if (isBeforeFirst()) {
             setIsBeforeFirst(false);
             setIsEmpty(false);
             setIsFirst(true);
@@ -54,7 +54,7 @@ public class FBUpdatableFetcher extends FBStatementFetcher {
         setIsLast(false);
         setIsAfterLast(false);
 
-        if (getIsEmpty())
+        if (isEmpty())
             return false;
         else 
         if (getNextRow() == null || (fbStatement.maxRows!=0 && getRowNum()==fbStatement.maxRows)){
@@ -86,7 +86,7 @@ public class FBUpdatableFetcher extends FBStatementFetcher {
     }
 
 
-    public boolean getIsLast() throws SQLException {
+    public boolean isLast() throws SQLException {
         throw new FBDriverNotCapableException(
             "isLast() operation is not defined in case of " +
             "updatable cursors, because server cannot determine cursor position " +
