@@ -4,7 +4,7 @@
   <target name="javadocs" depends="init">
     <mkdir dir="${build.docs}"/>
     <javadoc packagenames="${packages}"
-             sourcepath="${source.java}"
+             sourcepath="${source.java};${source.pool}"
              destdir="${build.docs}"
              author="true"
              version="true"
@@ -12,7 +12,8 @@
              doctitle="${Name}"
              extdirs="${module.thirdparty}"
              bottom="Copyright &#169; 2001 David Jencks and other authors. All rights reserved.">
-      <classpath refid="javac.classpath"/>
+      <classpath refid="javac.driver.classpath"/>
+      <classpath refid="javac.pool.classpath"/>
     </javadoc>
   </target>
 
@@ -42,7 +43,7 @@
   <!-- =================================================================== -->
   <!-- Creates the distribution                                            -->
   <!-- =================================================================== -->
-  <target name="dist" depends="jars">
+  <target name="dist" depends="jars,javadocs">
     <mkdir dir="${build.dist}"/>
     <zip zipfile="${build.dist}/${Name}-${version.full}.zip">
       <fileset dir="${build.lib}">
@@ -66,6 +67,9 @@
       </fileset>
       <zipfileset dir="${source.examples}" prefix="examples">
       	<include name="*"/>
+      </zipfileset>
+      <zipfileset dir="${build.docs}" prefix="docs">
+        <include name="**/*"/>
       </zipfileset>
     </zip>
   </target>

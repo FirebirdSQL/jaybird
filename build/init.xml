@@ -120,7 +120,7 @@
     <property name="test.db.lc_ctype" value="NONE"/>
 
 
-    <property name="packages" value="org.firebirdsql.*"/>
+    <property name="packages" value="org.firebirdsql.gds,org.firebirdsql.jca,org.firebirdsql.jdbc,org.firebirdsql.management,org.firebirdsql.pool"/>
 
     <property name="build.compiler" value="classic"/>
 
