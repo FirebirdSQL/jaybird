@@ -440,6 +440,18 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
             
         pooledObjectReleased(event);
     }
+
+    /**
+     * Notify about the deallocation of the physical connection.
+     * 
+     * @param connectionEvent instance of {@link ConnectionEvent}.
+     */
+    public void physicalConnectionDeallocated(ConnectionEvent connectionEvent) {
+        PooledObjectEvent event = 
+            new PooledObjectEvent(connectionEvent.getSource(), true);
+        
+        physicalConnectionDeallocated(event);
+    }
     
 	/**
 	 * Notify about serious error when using the connection. Currently
