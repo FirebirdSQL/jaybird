@@ -58,6 +58,9 @@
         <include name="release_notes.pdf"/>
         <include name="release_notes.html"/>
       </fileset>
+      <fileset dir=".">
+        <include name="ChangeLog"/>
+      </fileset>
       <zipfileset dir="${build.lib}" prefix="lib">
         <include name="mini-j2ee.jar"/>
         <include name="mini-concurrent.jar"/>
@@ -70,11 +73,7 @@
       	<include name="*"/>
       </zipfileset>
       <zipfileset dir="${module.etc}" prefix="docs">
-        <!-- include name="*.html"/ -->
         <include name="faq.html"/>
-        <exclude name="release_notes.html"/>
-        <!--exclude name="FAQ.*"/>
-        <exclude name="faq.*"/-->
       </zipfileset>
       <zipfileset dir="${build.docs}" prefix="docs/api">
         <include name="**/*"/>
