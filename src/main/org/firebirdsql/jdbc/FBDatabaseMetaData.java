@@ -2454,7 +2454,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         "where ";
 
     public static final String GET_COLUMNS_END = " RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME " +
-        "order by 1, 10";
+        "order by 1, 11";
 
     /**
      * Gets a description of table columns available in
