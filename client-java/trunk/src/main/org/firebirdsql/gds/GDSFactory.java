@@ -56,7 +56,7 @@ public class GDSFactory
         {
         if (gdsType == GDSType.PURE_JAVA)
             return new GDS_Impl();
-        else if (gdsType == GDSType.NATIVE || gdsType == GDSType.NATIVE_EMBEDDED)
+        else if (gdsType == GDSType.NATIVE || gdsType == GDSType.NATIVE_LOCAL || gdsType == GDSType.NATIVE_EMBEDDED)
             return new org.firebirdsql.ngds.GDS_Impl(gdsType);
         else
             throw new java.lang.IllegalArgumentException("gdsType not recognized.");
