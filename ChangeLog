@@ -1,3 +1,52 @@
+2003-02-28  rfincher
+	* src/etc/faq.PDF:
+		FAQ in Adobe Acrobat pdf format
+
+	* output/etc/faq.html:
+	* output/etc/release_notes.html:
+	* src/etc/FAQ.txt:
+	* src/etc/faq.html:
+		*** empty log message ***
+
+2003-02-26  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBLongVarCharField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBBlobAccess.java:
+		bug with creating blobs without transaction fixed
+
+2003-02-22  skidder
+	* src/main/org/firebirdsql/gds/GDS.java:
+	* src/main/org/firebirdsql/gds/ISCConstants.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+		Fix isc_database_info bugs, give public access to this method
+		and add support for one more new Firebird 1.5 info token
+
+2003-02-05  rfincher
+	* src/etc/faq.html:
+	* src/etc/release_notes.html:
+		*** empty log message ***
+
+	* src/etc/FAQ.txt:
+		rc3 faq.txt
+
+2003-02-05  d_jencks
+	* build.xml:
+		Added text FAQ, updated build id
+
+2003-02-02  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBBlob.java:
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedLongVarCharField.java:
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBLongVarCharField.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBSQLException.java:
+		added field closing in ResultSet.next() and ResultSet.close()
+
 2003-02-01  brodsom
 	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
 	* src/main/org/firebirdsql/jgds/XdrInputStream.java:
