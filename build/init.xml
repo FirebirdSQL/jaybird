@@ -149,6 +149,8 @@
       <pathelement location="${build.classes}"/>
       <pathelement location="${build.pool}"/>
       <pathelement location="${lib.dir}/junit.jar"/>
+      <pathelement location="${module.thirdparty}/fscontext.jar"/>
+      <pathelement location="${module.thirdparty}/providerutil.jar"/>
     </path>
 
     <path id="javac.examples.classpath">
