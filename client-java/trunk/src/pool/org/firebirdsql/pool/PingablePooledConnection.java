@@ -159,7 +159,8 @@ public class PingablePooledConnection implements PooledConnection,
             return false;
         }
 
-        if (System.currentTimeMillis() - lastPingTime > pingInterval &&
+        if (pingInterval > 0 &&
+            (System.currentTimeMillis() - lastPingTime) > pingInterval &&
             pingStatement != null) {
             return ping();
         } else {
