@@ -234,6 +234,16 @@ public class FBStatement implements Statement {
             c.notifyStatementClosed(this);
         }
     }
+    
+    /**
+     * Check if this statement was closed. This is quick workaround to avoid
+     * additional {@link #close()} in our cleanup code.
+     * 
+     * @return <code>true</code> if this statement was already closed.
+     */
+    boolean isClosed() {
+        return closed;
+    }
 
 
     //----------------------------------------------------------------------

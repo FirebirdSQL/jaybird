@@ -1029,56 +1029,73 @@ public class FBConnection implements Connection
 	 }
 	 
 	 //******** Proxies of ManagedConnection methods for jdbc methods
+     
+    private void checkManagedConnection() throws GDSException {
+        if (mc == null)
+            throw new GDSException(GDS.isc_arg_gds, GDS.isc_req_no_trans);
+    }
 	 
     public isc_stmt_handle getAllocatedStatement() throws GDSException {
-		  return mc.getAllocatedStatement();
+        checkManagedConnection();    
+        return mc.getAllocatedStatement();
     }
 
     public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda) throws GDSException {
+        checkManagedConnection();
         mc.executeStatement(stmt,sendOutSqlda);
     }
 	 	 
     public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
+        checkManagedConnection();
         mc.closeStatement(stmt,deallocate);
     }	 
 
     public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException {
-		 mc.prepareSQL(stmt, sql, describeBind);
-	 }
+        checkManagedConnection();
+        mc.prepareSQL(stmt, sql, describeBind);
+	}
 	 
     public void registerStatement(FBStatement fbStatement) {
-		 mc.registerStatement(fbStatement);
+        mc.registerStatement(fbStatement);
     }
 	 
     public Object[] fetch(isc_stmt_handle stmt) throws GDSException {
+        checkManagedConnection();
         return mc.fetch(stmt);
     }
 
     public SqlInfo getSqlInfo(isc_stmt_handle stmt) throws GDSException {
+        checkManagedConnection();
         return mc.getSqlInfo(stmt);
     }
 	 
-    public Integer getBlobBufferLength(){
+    public Integer getBlobBufferLength() {
+        /**@todo add check if mc is not null */
         return mc.getBlobBufferLength();
     }
 	 
     public isc_blob_handle openBlobHandle(long blob_id) throws GDSException {
+        checkManagedConnection();
         return mc.openBlobHandle(blob_id);
     }	 
 	 
     public byte[] getBlobSegment(isc_blob_handle blob, int len) throws GDSException {
+        checkManagedConnection();
         return mc.getBlobSegment(blob,len);
     }
 	 
     public void closeBlob(isc_blob_handle blob) throws GDSException {
+        checkManagedConnection();
         mc.closeBlob(blob);
     }
 	 
     public isc_blob_handle createBlobHandle() throws GDSException {
+        checkManagedConnection();
         return mc.createBlobHandle();
     }
 	 
     public void putBlobSegment(isc_blob_handle blob, byte[] buf) throws GDSException {
+        checkManagedConnection();
         mc.putBlobSegment(blob, buf);
     }
 
