@@ -231,6 +231,12 @@ public class FBManagedConnectionFactory
         checkNotStarted();
         hashCode = 0;
         defaultCri.setProperty(ISCConstants.isc_dpb_lc_ctype, encoding);
+        
+        String localEncoding = defaultCri.getStringProperty(ISCConstants.isc_dpb_local_encoding);
+        if (localEncoding == null) {
+            localEncoding = FBConnectionHelper.getJavaEncoding(encoding);
+            defaultCri.setProperty(ISCConstants.isc_dpb_local_encoding, localEncoding);
+        }
     }
 
     public String getEncoding() {
@@ -238,6 +244,22 @@ public class FBManagedConnectionFactory
         if (result == null)
             result = "NONE";
         return result;
+    }
+    
+    public void setLocalEncoding(String localEncoding) {
+        checkNotStarted();
+        hashCode = 0;
+        
+        defaultCri.setProperty(ISCConstants.isc_dpb_local_encoding, localEncoding);
+        String iscEncoding = defaultCri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);
+        if (iscEncoding == null) {
+            iscEncoding = FBConnectionHelper.getIscEncoding(localEncoding);
+            defaultCri.setProperty(ISCConstants.isc_dpb_lc_ctype, iscEncoding);
+        }
+    }
+    
+    public String getLocalEncoding() {
+        return defaultCri.getStringProperty(ISCConstants.isc_dpb_local_encoding);
     }
 
     /**
