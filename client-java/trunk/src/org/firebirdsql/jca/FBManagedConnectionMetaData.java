@@ -54,7 +54,7 @@ import javax.resource.ResourceException;
          Product name of the EIS instance.
     **/
      public java.lang.String getEISProductName() throws ResourceException {
-        throw new ResourceException("Not yet implemented");;
+        throw new ResourceException("Not yet implemented");
      }
 
      /**
