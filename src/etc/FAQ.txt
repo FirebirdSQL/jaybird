@@ -95,7 +95,6 @@ The following optional features are NOT supported:
   Batch Updates. 
   Scrollable cursors. 
   Updatable cursors. 
-  Cursors/Positioned update/delete 
   Ref, Clob and Array types 
   User Defined Types/Type Maps.
 The methods that support those features return SQLExceptions when used.
