@@ -30,6 +30,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.4  2002/01/07 06:59:54  d_jencks
+ * Revised FBManager to create dialect 3 databases, and the tests to use a newly created database. Simplified and unified test constants. Test targets are now all-tests for all tests and one-test for one test: specify the test as -Dtest=Gds one-test for the TestGds.class test.  Made a few other small changes to improve error messages
+ *
  * Revision 1.3  2001/10/24 16:59:43  alberola
  * Fixed bug in ClassLoader
  *
@@ -128,10 +131,13 @@ public class GDSExceptionHelper {
             for(int i = 0; i < params.length; i++) {
                 String param = "{" + i + "}";
                 int pos = message.indexOf(param);
-                String temp = message.substring(0, pos);
-                temp += (params[i] == null) ? "" : params[i];
-                temp += message.substring(pos + param.length());
-                message = temp;
+                if (pos > -1) 
+                {
+                   String temp = message.substring(0, pos);
+                   temp += (params[i] == null) ? "" : params[i];
+                   temp += message.substring(pos + param.length());
+                   message = temp;
+                } // end of if ()
             }
             return message;
         }
