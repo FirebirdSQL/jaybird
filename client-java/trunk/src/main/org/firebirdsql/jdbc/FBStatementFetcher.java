@@ -1,3 +1,21 @@
+/*
+ * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.GDSException;
@@ -8,18 +26,24 @@ import java.sql.Statement;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+/**
+ * Statement fetcher for read-only case. It differs from updatable cursor case
+ * by the cursor position after {@link #next()} call. This class changes cursor
+ * position to point to the next row.
+ */
 class FBStatementFetcher implements FBFetcher {
 
     private FBConnection c;
 
-    private FBStatement fbStatement;
-    private FBResultSet rs;
+    protected FBStatement fbStatement;
+    protected FBResultSet rs;
 
     private isc_stmt_handle stmt;
           
     private Object[] rowsArray;
     private int size;
-    private byte[][] nextRow;
+
+    protected byte[][] nextRow;
 
     private final static Logger log = LoggerFactory.getLogger(FBStatementFetcher.class,false);
 
@@ -65,32 +89,30 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     public boolean next() throws SQLException {
-        isBeforeFirst = false;
-        isFirst = false;
-        isLast = false;
-        isAfterLast = false;
-                
-        if (log!=null) log.debug("FBResultSet next - FBStatementFetcher");
-                    
-        if (isEmpty)
+        setIsBeforeFirst(false);
+        setIsFirst(false);
+        setIsLast(false);
+        setIsAfterLast(false);
+
+        if (getIsEmpty())
             return false;
-        else if (nextRow == null || (fbStatement.maxRows!=0 && rowNum==fbStatement.maxRows)){
-            isAfterLast = true;
-            rowNum=0;
+        else if (nextRow == null || (fbStatement.maxRows!=0 && getRowNum()==fbStatement.maxRows)){
+            setIsAfterLast(true);
+            setRowNum(0);
             return false;
         }
         else {
             try {
                 rs.row = nextRow;
                 fetch();
-                rowNum++;
-                    
-                if(rowNum==1)
-                    isFirst=true;
-                    
-                if((nextRow==null) || (fbStatement.maxRows!=0 && rowNum==fbStatement.maxRows))
-                    isLast = true;
-                        
+                setRowNum(getRowNum() + 1);
+
+                if(getRowNum() == 1)
+                    setIsFirst(true);
+
+                if((nextRow==null) || (fbStatement.maxRows!=0 && getRowNum() == fbStatement.maxRows))
+                    setIsLast(true);
+
                 return true;
             }
             catch (SQLException sqle) {
@@ -113,8 +135,8 @@ class FBStatementFetcher implements FBFetcher {
             try {
                 c.fetch(stmt, fetchSize);
                 rowPosition = 0;
-					 rowsArray = stmt.getRows();
-					 size = stmt.size();
+                rowsArray = stmt.getRows();
+                size = stmt.size();
             }
             catch (GDSException ge) {
                 throw new FBSQLException(ge);
@@ -139,19 +161,46 @@ class FBStatementFetcher implements FBFetcher {
     public int getRowNum() {
         return rowNum;
     }
+
+    public void setRowNum(int rowNumValue) {
+        this.rowNum = rowNumValue;
+    }
     public boolean getIsEmpty() {
         return isEmpty;
+    }
+
+    public void setIsEmpty(boolean isEmptyValue) {
+        this.isEmpty = isEmptyValue;
     }
     public boolean getIsBeforeFirst() {
         return isBeforeFirst;
     }
+
+    public void setIsBeforeFirst(boolean isBeforeFirstValue) {
+        this.isBeforeFirst = isBeforeFirstValue;
+    }
     public boolean getIsFirst() {
         return isFirst;
     }
-    public boolean getIsLast() {
+
+    public void setIsFirst(boolean isFirstValue) {
+        this.isFirst = isFirstValue;
+    }
+
+    public boolean getIsLast() throws SQLException {
         return isLast;
+    }
+    
+    public void setIsLast(boolean isLastValue) {
+        this.isLast = isLastValue;
     }
     public boolean getIsAfterLast() {
         return isAfterLast;
     }
+
+    public void setIsAfterLast(boolean isAfterLastValue) {
+        this.isAfterLast = isAfterLastValue;
+    }
+    
+    
 }

@@ -75,11 +75,18 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      */
     private int bufferlength;
 
+    private boolean isNew;
     private long blob_id;
     private FBConnection c;
 
     private Collection inputStreams = new HashSet();
     private FBBlobOutputStream blobOut = null;
+
+    private FBBlob(FBConnection c, boolean isNew) {
+        this.c = c;
+        this.isNew = isNew;
+        this.bufferlength = c.getBlobBufferLength().intValue();
+    }
 
     /**
      * Create new Blob instance. This constructor creates new fresh Blob, only
@@ -88,7 +95,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @param c connection that will be used to write data to blob.
      */
     FBBlob(FBConnection c) {
-        this(c, 0);
+        this(c, true);
     }
 
     /**
@@ -99,9 +106,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @param blob_id ID of the Blob.
      */
     FBBlob(FBConnection c, long blob_id) {
-        this.c = c;
+        this(c, false);
         this.blob_id = blob_id;
-        this.bufferlength = c.getBlobBufferLength().intValue();
     }
     
     /**
@@ -416,7 +422,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         if (pos < 0) {
             throw new SQLException("You can't start before the beginning of the blob");
         }
-        if ((blob_id == 0) && (pos > 0)) {
+        if ((isNew) && (pos > 0)) {
             throw new SQLException("previous value was null, you must start at position 0");
         }
         blobOut = new FBBlobOutputStream();
@@ -432,11 +438,15 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     //package methods
 
     long getBlobId() throws SQLException {
-        if (blob_id == 0) {
+        if (isNew) 
             throw new SQLException("No Blob ID is available in new Blob object.");
-        }
-        
+
         return blob_id;
+    }
+    
+    void setBlobId(long blob_id) {
+        this.blob_id = blob_id;
+        this.isNew = false;
     }
 
     void copyStream(InputStream inputStream, int length) throws SQLException {
@@ -511,7 +521,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             
             closed = false;
             
-            if (blob_id == 0) {
+            if (isNew) {
                 throw new SQLException("You can't read a new blob");
             }
             
@@ -683,8 +693,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                 }
             }
             
-            if (blob_id == 0) {
-                blob_id = blob.getBlob_id();
+            if (isNew) {
+                setBlobId(blob.getBlob_id());
             }
         }
         
@@ -760,7 +770,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                         c.closeBlob(blob);
                     }
                     
-                    blob_id = blob.getBlob_id();
+                    setBlobId(blob.getBlob_id());
                     
                 } catch (GDSException ge) {
                     throw new IOException("could not close blob: " + ge);
