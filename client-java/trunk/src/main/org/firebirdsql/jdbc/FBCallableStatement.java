@@ -647,7 +647,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         return getCurrentResultSet().getTimestamp(parameterIndex, cal);
     }
 
-
+    //--------------------------JDBC 3.0-----------------------------
 
     /**
      *
@@ -793,7 +793,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -804,7 +804,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -814,30 +814,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
-     * @param param1 <description>
-     * @param param2 <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public void setTime(int param1, Time param2) throws SQLException {
-        // TODO: implement this java.sql.PreparedStatement method
-        throw new SQLException("not yet implemented");
-    }
-
-    /**
-     *
-     * @param param1 <description>
-     * @param param2 <description>
-     * @param param3 <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public void setTime(int param1, Time param2, Calendar param3) throws SQLException {
-        // TODO: implement this java.sql.PreparedStatement method
-        throw new SQLException("not yet implemented");
-    }
-
-    /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -848,7 +825,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @param param3 <description>
@@ -860,7 +837,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -870,7 +847,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @return <description>
@@ -883,7 +860,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -894,7 +871,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -905,7 +882,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @param param3 <description>
@@ -917,7 +894,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -927,7 +904,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @return <description>
@@ -938,7 +915,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -948,7 +925,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @return <description>
@@ -959,7 +936,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -970,7 +947,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -980,7 +957,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -990,7 +967,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -1000,7 +977,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -1010,7 +987,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -1021,7 +998,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @param param3 <description>
@@ -1033,7 +1010,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @param param3 <description>
@@ -1045,7 +1022,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -1056,7 +1033,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -1067,7 +1044,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @param param3 <description>
@@ -1079,7 +1056,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -1090,7 +1067,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -1100,7 +1077,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -1111,7 +1088,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -1122,7 +1099,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-     * Describe <code>setNull</code> method here.
+     * jdbc 3
      *
      * @param param1 a <code>String</code> value
      * @param param2 an <code>int</code> value
@@ -1136,7 +1113,7 @@ throws SQLException {
      }
  
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -1146,7 +1123,7 @@ throws SQLException {
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -1156,7 +1133,7 @@ throws SQLException {
         throw new SQLException("not yet implemented");    }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -1166,7 +1143,7 @@ throws SQLException {
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -1177,7 +1154,7 @@ throws SQLException {
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -1189,7 +1166,7 @@ throws SQLException {
 
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @param param3 <description>
@@ -1200,7 +1177,7 @@ throws SQLException {
         throw new SQLException("not yet implemented");    }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -1210,7 +1187,7 @@ throws SQLException {
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -1220,7 +1197,7 @@ throws SQLException {
         throw new SQLException("not yet implemented");    }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -1230,7 +1207,7 @@ throws SQLException {
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @return <description>
@@ -1242,7 +1219,7 @@ throws SQLException {
 
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -1255,7 +1232,7 @@ throws SQLException {
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -1265,7 +1242,7 @@ throws SQLException {
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
@@ -1275,7 +1252,7 @@ throws SQLException {
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @param param2 <description>
      * @exception java.sql.SQLException <description>
@@ -1286,7 +1263,7 @@ throws SQLException {
     }
 
     /**
-     *
+     * jdbc 3
      * @param param1 <description>
      * @return <description>
      * @exception java.sql.SQLException <description>
