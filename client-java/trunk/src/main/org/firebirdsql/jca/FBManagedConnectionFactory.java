@@ -42,7 +42,7 @@ import javax.security.auth.Subject;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
-import org.firebirdsql.gds.Clumplet;
+//import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.GDSFactory;
@@ -196,7 +196,7 @@ public class FBManagedConnectionFactory
 
 
     public FBTpb getTpb() {
-        return new FBTpb(tpb);
+        return tpb;
     }
 
     public void setTransactionIsolation(Integer level) throws ResourceException
@@ -480,7 +480,7 @@ public class FBManagedConnectionFactory
             {
                 isc_db_handle db = mc.getIscDBHandle(waitingToClose);
                 tr = gds.get_new_isc_tr_handle();
-                gds.isc_start_transaction(tr, db, mc.getTpb());
+                gds.isc_start_transaction(tr, db, mc.getTpb().getArray());
             }
             catch (GDSException ge) {
                 throw new XAException(ge.getMessage());

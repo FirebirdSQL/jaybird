@@ -26,7 +26,7 @@ import java.util.Set;
 import javax.resource.ResourceException;
 import org.firebirdsql.gds.GDS;
 
-
+import java.util.Iterator;
 /**
  * FBTpb.java
  *
@@ -37,9 +37,9 @@ import org.firebirdsql.gds.GDS;
  * @version
  */
 
-public class FBTpb 
-    implements Serializable
+public class FBTpb implements Serializable
 {
+    private byte[] byteArray = null;
 
     public static final String TRANSACTION_SERIALIZABLE = "TRANSACTION_SERIALIZABLE";
 
@@ -58,6 +58,8 @@ public class FBTpb
 
     public final static Integer ISC_TPB_REC_VERSION = new Integer(GDS.isc_tpb_rec_version);
 
+    public final static Integer ISC_TPB_NO_REC_VERSION = new Integer(GDS.isc_tpb_no_rec_version);
+	 
     public final static Integer ISC_TPB_WAIT = new Integer(GDS.isc_tpb_wait);
 
     public final static Integer ISC_TPB_READ = new Integer(GDS.isc_tpb_read);
@@ -75,6 +77,7 @@ public class FBTpb
         tpb.add(ISC_TPB_REC_VERSION);
         //tpt.add(ISC_TPB_CONCURRENCY);
         tpb.add(ISC_TPB_WAIT);
+        createArray();
     }
 
     public boolean equals(Object other)
@@ -99,12 +102,14 @@ public class FBTpb
     public FBTpb(FBTpb tpb)
     {
         this.tpb.addAll(tpb.tpb);
+        createArray();
     }
 
     public void setTpb(FBTpb tpb)
     {
         this.tpb.clear();
         this.tpb.addAll(tpb.tpb);
+        createArray();
     }
 
     public void add(Integer key)
@@ -121,11 +126,13 @@ public class FBTpb
             || key.equals(ISC_TPB_READ_COMMITTED)
             || key.equals(ISC_TPB_CONCURRENCY)
             || key.equals(ISC_TPB_REC_VERSION)
+            || key.equals(ISC_TPB_NO_REC_VERSION)
             || key.equals(ISC_TPB_WAIT)
             || key.equals(ISC_TPB_READ)
             || key.equals(ISC_TPB_WRITE)) 
         {
             tpb.add(key);
+            createArray();
             return;
         } // end of if ()
         else
@@ -287,6 +294,7 @@ public class FBTpb
                 break;
             default: break;
         }
+        createArray();
     }
 
     public void setReadOnly(boolean readOnly) {
@@ -298,6 +306,7 @@ public class FBTpb
         else {
             tpb.add(ISC_TPB_WRITE);
         }
+        createArray();
     }
 
     public boolean isReadOnly() {
@@ -310,4 +319,19 @@ public class FBTpb
     {
         return tpb;
     }
+	 
+    void createArray(){
+        java.io.ByteArrayOutputStream bao = new java.io.ByteArrayOutputStream();
+        Iterator i = tpb.iterator();
+        while (i.hasNext()) {
+            int n = ((Integer)i.next()).intValue();
+            bao.write(n);
+//            if (log != null) log.debug("writeSet: value: " + n);
+        }
+        byteArray = bao.toByteArray();
+	 }
+	 
+	 public byte[] getArray(){
+	     return byteArray;
+	 }
 }// FBTpb

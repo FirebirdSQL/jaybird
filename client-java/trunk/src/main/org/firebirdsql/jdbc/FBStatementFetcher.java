@@ -16,11 +16,14 @@ class FBStatementFetcher implements FBFetcher {
 
     private isc_stmt_handle_impl stmt;
           
+    private Object[] rowsArray;
+    private int size;
     private byte[][] nextRow;
 
     private final static Logger log = LoggerFactory.getLogger(FBStatementFetcher.class,false);
 
     private int rowNum = 0;
+    private int rowPosition = 0;
     private boolean isEmpty = false;     
     private boolean isBeforeFirst = false;
     private boolean isFirst = false;
@@ -28,11 +31,11 @@ class FBStatementFetcher implements FBFetcher {
     private boolean isAfterLast = false;
 	 
     FBStatementFetcher(FBConnection c, FBStatement fbStatement, 
-        isc_stmt_handle stmt, FBResultSet rs) throws SQLException 
+        isc_stmt_handle stmth, FBResultSet rs) throws SQLException 
     {
         this.c = c;
         this.fbStatement = fbStatement;
-        this.stmt = (isc_stmt_handle_impl) stmt;
+        this.stmt = (isc_stmt_handle_impl) stmth;
         this.rs = rs;
             
         c.registerStatement(fbStatement);
@@ -44,6 +47,11 @@ class FBStatementFetcher implements FBFetcher {
         isAfterLast = false;
             
         try {
+            // stored procedures
+            if (stmt.allRowsFetched){
+                rowsArray = stmt.rows;
+                size = stmt.size;
+            }
             fetch();
             if (nextRow==null)
                 isEmpty = true;
@@ -72,8 +80,7 @@ class FBStatementFetcher implements FBFetcher {
         }
         else {
             try {
-//                System.arraycopy(nextRow,0,row,0,row.length);
-                rs.row = nextRow;						 
+                rs.row = nextRow;
                 fetch();
                 rowNum++;
                     
@@ -92,16 +99,31 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     public void fetch() throws SQLException {
-        if (!stmt.allRowsFetched && stmt.rows.size() == 0){
+        int maxRows = 0;
+        if (fbStatement.maxRows != 0)
+            maxRows = fbStatement.maxRows - rowNum;
+        int fetchSize = fbStatement.fetchSize;
+        if (fetchSize == 0)
+            fetchSize = MAX_FETCH_ROWS;				
+        if (maxRows != 0 && fetchSize > maxRows)
+            fetchSize = maxRows;
+        //
+        if (!stmt.allRowsFetched && (rowsArray == null || rowsArray.length == rowPosition)){
             try {
-                c.fetch(stmt);
-				}
+                c.fetch(stmt, fetchSize);
+                rowPosition = 0;
+					 rowsArray = stmt.rows;
+					 size = stmt.size;
+            }
             catch (GDSException ge) {
                 throw new FBSQLException(ge);
             }
         }
-        if (stmt.rows.size() > 0) {
-            nextRow = (byte[][]) stmt.rows.remove(0);
+        if (rowsArray!=null && size > rowPosition) {
+            nextRow = (byte[][]) rowsArray[rowPosition];
+            // help the garbage collector
+            rowsArray[rowPosition] = null;
+            rowPosition++;
         }
         else
             nextRow = null;

@@ -1035,7 +1035,8 @@ public interface GDS {
 
     void isc_start_transaction(    isc_tr_handle tr_handle,
                                 isc_db_handle db_handle,
-                                Set tpb) throws GDSException;
+//                                Set tpb) throws GDSException;
+                                byte[] tpb) throws GDSException;
 
 
     void isc_commit_transaction(    isc_tr_handle tr_handle) throws GDSException;
@@ -1107,7 +1108,7 @@ public interface GDS {
 //    byte[][] isc_dsql_fetch(isc_stmt_handle stmt_handle,
     void isc_dsql_fetch(isc_stmt_handle stmt_handle,
                          int da_version,
-                         XSQLDA xsqlda) throws GDSException;
+                         XSQLDA xsqlda, int fetchSize) throws GDSException;
 
     void isc_dsql_free_statement(isc_stmt_handle stmt_handle,
                                    int option) throws GDSException;
@@ -1129,7 +1130,7 @@ public interface GDS {
 
 
     byte[] isc_dsql_sql_info(isc_stmt_handle stmt_handle,
-                            int item_length,
+                            /* int item_length, */
                             byte[] items,
                             int buffer_length) throws GDSException;
 

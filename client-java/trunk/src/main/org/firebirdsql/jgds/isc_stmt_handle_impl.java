@@ -43,7 +43,8 @@ public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_
     isc_db_handle_impl rsr_rdb;
     XSQLDA in_sqlda = null;
     XSQLDA out_sqlda = null;
-    public ArrayList rows = new ArrayList();
+    public Object[] rows;
+	 public int size;
     public boolean allRowsFetched = false;
     boolean isSingletonResult = false;
 
@@ -63,9 +64,15 @@ public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_
     public XSQLDA getOutSqlda() {
         return out_sqlda;
     }
+	 
+    public void ensureCapacity(int maxSize) {
+        if (rows== null || rows.length<maxSize)
+            rows = new Object[maxSize];
+        size=0;
+    }
 
     public void clearRows() {
-        rows.clear();
+        size = 0;
         allRowsFetched = false;
     }
 

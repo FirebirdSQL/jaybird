@@ -39,6 +39,8 @@ public class XSQLDA {
     public int sqln;
     public int sqld;
     public XSQLVAR[] sqlvar;
+    public byte[] blr;
+    public int[] ioLength;	 // 0 varchar, >0 char, -4 int etc, -8 long etc
 
     public XSQLDA() {
         version = GDS.SQLDA_VERSION1;

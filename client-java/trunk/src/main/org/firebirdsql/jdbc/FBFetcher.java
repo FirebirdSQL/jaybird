@@ -6,6 +6,8 @@ interface FBFetcher {
 
     void close() throws java.sql.SQLException;
 
+	 static final int MAX_FETCH_ROWS = 400;
+	 
     java.sql.Statement getStatement();
 
 	 public int getRowNum();
