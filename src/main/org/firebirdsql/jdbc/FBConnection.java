@@ -87,9 +87,9 @@ public class FBConnection implements Connection
      * used anymore.
      */
     private void checkValidity() throws SQLException {
-        if (invalid)
+        if (invalid || isClosed())
             throw new SQLException(
-                "This connection is closed and cannot be used anymore.");
+                "This connection is closed and cannot be used now.");
     }
     
     /**
@@ -387,10 +387,8 @@ public class FBConnection implements Connection
     public synchronized void setAutoCommit(boolean autoCommit) 
         throws SQLException 
     {
-        if (isClosed())
-        {
-            throw new SQLException("You cannot setAutocommit on a closed connection.");
-        }
+        checkValidity();
+        
         if (mc.autoCommit != autoCommit)
         {
             try {
@@ -453,9 +451,9 @@ public class FBConnection implements Connection
             {
                 getLocalTransaction().commit();
             } // end of if ()
-            getLocalTransaction().begin();
+            // getLocalTransaction().begin();
         } catch(javax.resource.ResourceException resex) {
-            throw new SQLException(resex.toString());
+            throw new FBSQLException(resex);
         }
     }
 
@@ -483,9 +481,9 @@ public class FBConnection implements Connection
             {
                 getLocalTransaction().rollback();
             } // end of if ()
-            getLocalTransaction().begin();
+            // getLocalTransaction().begin();
         } catch(javax.resource.ResourceException resex) {
-            throw new SQLException(resex.toString());
+            throw new FBSQLException(resex);
         }
     }
 
@@ -517,37 +515,33 @@ public class FBConnection implements Connection
             freeStatements();
         } finally {
             
-            try {
-                if (mc != null) {
-                    //if we are in a transaction started 
-                    //automatically because autocommit = false, roll it back.
-                    
-                    //leave managed transactions alone, they are normally
-                    //committed after the Connection handle is closed.
-                    
-                    if (!getAutoCommit()) 
-                    {
-                        //autocommit is always true for managed tx.
-                        try {
-                            if (inTransaction())
-                            {
-                                getLocalTransaction().rollback();
-                            }
-                        } catch(javax.resource.ResourceException resex) {
-                            throw new FBSQLException(resex);
-                        }
-                        finally
+            if (mc != null) {
+                //if we are in a transaction started 
+                //automatically because autocommit = false, roll it back.
+                
+                //leave managed transactions alone, they are normally
+                //committed after the Connection handle is closed.
+                
+                if (!getAutoCommit()) 
+                {
+                    //autocommit is always true for managed tx.
+                    try {
+                        if (inTransaction())
                         {
-                            //always reset Autocommit for the next user.
-                            setAutoCommit(true);
+                            getLocalTransaction().rollback();
                         }
-                    } // end of if ()
-                    
-                    mc.close(this);
-                    mc = null;
-                }
-            } finally {
-                invalidate();
+                    } catch(javax.resource.ResourceException resex) {
+                        throw new FBSQLException(resex);
+                    }
+                    finally
+                    {
+                        //always reset Autocommit for the next user.
+                        setAutoCommit(true);
+                    }
+                } // end of if ()
+                
+                mc.close(this);
+                mc = null;
             }
         }
     }
@@ -698,14 +692,21 @@ public class FBConnection implements Connection
     public synchronized void setTransactionIsolation(int level) 
         throws SQLException 
     {
-        try 
-        {
-            mc.setTransactionIsolation(level);
+        if (isClosed())
+            throw new SQLException("Connection has being closed.");
+        
+        if (getTransactionIsolation() != level) {
+            try {
+
+                if (inTransaction())
+                    getLocalTransaction().commit();
+                
+                mc.setTransactionIsolation(level);
+                
+            } catch (ResourceException e) {
+                throw new FBSQLException(e);
+            } 
         }
-        catch (ResourceException e)
-        {
-            throw new SQLException(e.getMessage());
-        } // end of try-catch
     }
 
 
