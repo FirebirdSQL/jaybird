@@ -36,31 +36,45 @@ import java.sql.Statement;
  */
 public class TestFBCallableStatement extends FBTestBase {
     public static final String CREATE_PROCEDURE = ""
-        + "CREATE PROCEDURE factorial(number INTEGER, mode INTEGER) RETURNS (result INTEGER) " 
-        + "AS " 
-        + "  DECLARE VARIABLE temp INTEGER; " 
-        + "BEGIN " 
-        + "  temp = number - 1; " 
-        + "  IF (NOT temp IS NULL) THEN BEGIN " 
-        + "    IF (temp > 0) THEN " 
-        + "      EXECUTE PROCEDURE factorial(:temp, 0) RETURNING_VALUES :temp; " 
-        + "    ELSE " 
-        + "      temp = 1; " 
-        + "    result = number * temp; " 
+        + "CREATE PROCEDURE factorial( " 
+        + "  max_rows INTEGER, "
+        + "  mode INTEGER "
+        + ") RETURNS ( "
+        + "  row_num INTEGER, "
+        + "  factorial INTEGER "
+        + ") AS "
+        + "  DECLARE VARIABLE temp INTEGER; "
+        + "  DECLARE VARIABLE counter INTEGER; "
+        + "BEGIN "
+        + "  counter = 0; "
+        + "  temp = 1; "
+        + "  WHILE (counter <= max_rows) DO BEGIN "
+        + "    row_num = counter; " 
+        + "    IF (row_num = 0) THEN "
+        + "      temp = 1; "
+        + "    ELSE "
+        + "      temp = temp * row_num; "
+        + "    factorial = temp; "
+        + "    counter = counter + 1; "
+        + "    IF (mode = 1) THEN "
+        + "      SUSPEND; "
         + "  END "
-        + "  IF (mode = 1) THEN "
+        + "  IF (mode = 2) THEN "
         + "    SUSPEND; "
-        + "END"
+        + "END " 
         ;
 
     public static final String DROP_PROCEDURE =
         "DROP PROCEDURE factorial;";
 
     public static final String SELECT_PROCEDURE =
-        "SELECT * FROM factorial(?, 1)";
+        "SELECT * FROM factorial(?, 2)";
+    
+    public static final String CALL_SELECT_PROCEDURE =
+        "{call factorial(?, 1, ?, ?)}";
 
     public static final String EXECUTE_PROCEDURE =
-        "{call factorial(?, ?, ?)}";
+        "{call factorial(?, ?, ?, ?)}";
     
     public static final String EXECUTE_PROCEDURE_AS_STMT =
         "{call factorial(?, 0)}";
@@ -127,6 +141,10 @@ public class TestFBCallableStatement extends FBTestBase {
          + "{call test_out ?, ? }"
          ;
          
+     public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_1 = ""
+         + "{?=CALL test_out(?)}"
+         ;
+     
      public static final String EXECUTE_IN_OUT_PROCEDURE = ""
          + "{call test_out ?}"
          ;
@@ -225,10 +243,11 @@ public class TestFBCallableStatement extends FBTestBase {
         CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE);
         try {
           cstmt.registerOutParameter(2, Types.INTEGER);
+          cstmt.registerOutParameter(4, Types.INTEGER);
           cstmt.setInt(1, 5);
           cstmt.setInt(3, 0);
           cstmt.execute();
-          int ans = cstmt.getInt(2);
+          int ans = cstmt.getInt(4);
           assertTrue("got wrong answer, expected 120: " + ans, ans == 120);
         } finally {
           cstmt.close();
@@ -239,7 +258,7 @@ public class TestFBCallableStatement extends FBTestBase {
           stmt.setInt(1, 5);
           ResultSet rs = stmt.executeQuery();
           assertTrue("Should have at least one row", rs.next());
-          int result = rs.getInt(1);
+          int result = rs.getInt(2);
           assertTrue("Wrong result: expecting 120, received " + result, result == 120);
                 
           assertTrue("Should have exactly one row.", !rs.next());
@@ -247,6 +266,30 @@ public class TestFBCallableStatement extends FBTestBase {
         } finally {
           stmt.close();
         }
+        
+        CallableStatement cs = connection.prepareCall(CALL_SELECT_PROCEDURE);
+        try {
+          ((FirebirdCallableStatement)cs).setSelectableProcedure(true);
+          cs.registerOutParameter(2, Types.INTEGER);
+          cs.registerOutParameter(3, Types.INTEGER);
+          cs.setInt(1, 5);
+          cs.execute();
+          ResultSet rs = cs.getResultSet();
+          assertTrue("Should have at least one row", rs.next());
+          int result = cs.getInt(3);
+          assertTrue("Wrong result: expecting 120, received " + result, result == 1);
+                
+          int counter = 1;
+          while(rs.next()) {
+              assertTrue(rs.getInt(2) == cs.getInt(3));
+              counter++;
+          }
+          
+          assertTrue("Should have 6 rows", counter == 6);
+          rs.close();
+        } finally {
+          cs.close();
+        }        
     }
 
     public void testRun_emp_cs() throws Exception {
@@ -283,9 +326,9 @@ public class TestFBCallableStatement extends FBTestBase {
         try {
           cstmt.setInt(1, 44);
           ResultSet rs = cstmt.executeQuery();
-          assertTrue("Should have three rows", rs.next());
+          assertTrue("Should have at least one row", rs.next());
 			 assertTrue("First row value must be DGPII", rs.getString(1).equals("DGPII"));
-          assertTrue("Should have three rows", !rs.next());
+          //assertTrue("Should have three rows", !rs.next());
 			 
           cstmt.setInt(1, 22);			 
           rs = cstmt.executeQuery();
@@ -347,7 +390,7 @@ public class TestFBCallableStatement extends FBTestBase {
           stmt.setInt(1, 5);
           ResultSet rs = stmt.executeQuery();
           assertTrue("Should have at least one row", rs.next());
-          int result = rs.getInt(1);
+          int result = rs.getInt(2);
           assertTrue("Wrong result: expecting 120, received " + result, result == 120);
 
           assertTrue("Should have exactly one row.", !rs.next());
@@ -370,7 +413,7 @@ public class TestFBCallableStatement extends FBTestBase {
         }
         
     }
-
+    
     public void testOutProcedureWithConst() throws Exception {
         CallableStatement stmt = 
             connection.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST);

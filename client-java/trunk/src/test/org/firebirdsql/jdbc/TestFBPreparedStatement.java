@@ -26,6 +26,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Calendar;
+import java.util.Properties;
+import java.util.TimeZone;
 
 /**
  * Describe class <code>TestFBPreparedStatement</code> here.
@@ -44,7 +47,8 @@ public class TestFBPreparedStatement extends FBTestBase{
     public static final String CREATE_TEST_BLOB_TABLE = 
         "CREATE TABLE test_blob (" + 
         "  ID INTEGER, " + 
-        "  OBJ_DATA BLOB " + 
+        "  OBJ_DATA BLOB, " +
+        "  TS_FIELD TIMESTAMP " +
         ")";
         
     public static final String CREATE_TEST_CHARS_TABLE = ""
@@ -162,7 +166,7 @@ public class TestFBPreparedStatement extends FBTestBase{
     
     public void testMixedExecution() throws Throwable {
         PreparedStatement ps = con.prepareStatement(
-            "INSERT INTO test_blob VALUES(?, NULL)");
+            "INSERT INTO test_blob (id, obj_data) VALUES(?, NULL)");
         
         try {
 
@@ -337,6 +341,62 @@ public class TestFBPreparedStatement extends FBTestBase{
             ps.clearBatch();
         } finally {
             c.close();
+        }
+    }
+    
+    public void testTimestampWithCalendar() throws Exception {
+        //Connection connection = getConnectionViaDriverManager();
+        
+        Properties props = new Properties(getDefaultPropertiesForConnection());
+        props.setProperty("invert_time_zone", "");
+        
+        Connection connection = DriverManager.getConnection(getUrl(), props);
+        try {
+            PreparedStatement stmt = connection.prepareStatement(
+                "INSERT INTO test_blob(id, ts_field) VALUES (?, ?)");
+            
+            try {
+                Calendar calendar = Calendar.getInstance();
+                
+                Timestamp ts = new Timestamp(calendar.getTimeInMillis());
+                
+                stmt.setInt(1, 1);
+                stmt.setTimestamp(2, ts);
+                
+                stmt.execute();
+                
+                stmt.setInt(1, 2);
+                stmt.setTimestamp(2, ts, calendar);
+                
+                stmt.execute();
+
+                stmt.setInt(1, 2);
+                stmt.setTimestamp(2, ts, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+                
+                stmt.execute();
+                
+                
+                Statement selectStmt = connection.createStatement();
+                try {
+                    ResultSet rs = selectStmt.executeQuery(
+                        "SELECT id, CAST(ts_field AS VARCHAR(35)), ts_field FROM test_blob");
+                    
+                    while(rs.next()) {
+                        System.out.println("ID " + rs.getInt(1) + 
+                            ", time_str '" + rs.getString(2) + 
+                            "', time ts " + rs.getTimestamp(3) + 
+                            ", time ts_cal " + rs.getTimestamp(3, Calendar.getInstance()));
+                    }
+                } finally {
+                    selectStmt.close();
+                }
+                
+            } finally {
+                stmt.close();
+            }
+            
+        } finally {
+            connection.close();
         }
     }
 }

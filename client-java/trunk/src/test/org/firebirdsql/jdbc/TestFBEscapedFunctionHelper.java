@@ -69,20 +69,24 @@ public class TestFBEscapedFunctionHelper extends TestCase {
     }
     
     public static final String LCASE_FUNCTION_CALL = "{fn lcase('some name')}";
-    public static final String LCASE_FUNCTION_TEST = "LOWER('some name')";
+    public static final String LCASE_FUNCTION_TEST = "lower('some name')";
     
     public static final String UCASE_FUNCTION_CALL = "{fn ucase(some_identifier)}";
     public static final String UCASE_FUNCTION_TEST = "UPPER(some_identifier)";
     
     public void testEscapedFunctionCall() throws SQLException {
-        FBEscapedParser parser = new FBEscapedParser();
-        
-        String lcaseTest = parser.parse(LCASE_FUNCTION_CALL);
-        assertTrue("lcase function parsing should be correct",
-                LCASE_FUNCTION_TEST.equals(lcaseTest));
+        FBEscapedParser parser = new FBEscapedParser(FBEscapedParser.USE_BUILT_IN);
         
         String ucaseTest = parser.parse(UCASE_FUNCTION_CALL);
         assertTrue("ucase function parsing should be correct",
                 UCASE_FUNCTION_TEST.equals(ucaseTest));
-       }
+    }
+    
+    public void testUseStandardUdf() throws SQLException {
+        FBEscapedParser parser = new FBEscapedParser(FBEscapedParser.USE_STANDARD_UDF);
+        
+        String lcaseTest = parser.parse(LCASE_FUNCTION_CALL);
+        assertTrue("lcase function parsing should be correct",
+                LCASE_FUNCTION_TEST.equals(lcaseTest));
+    }
 }

@@ -48,7 +48,7 @@ public class TestFBEscapedCallParser extends TestCase {
         "{? = call my_proc(UPPER(?), '11-dec-2001',out 'test string, with comma')}";
     
     public static final String CALL_TEST_5_1 =
-        "{?= call my_proc(UPPER(?), '11-dec-2001',out 'test string, with comma')}";
+        "{?=call my_proc(UPPER(?), '11-dec-2001',out 'test string, with comma')}";
     
     public static final String CALL_TEST_6 =
         "{call my_proc(?, {fn ucase(?)}, '11-dec-2001',out 'test string, with comma')}";
@@ -86,7 +86,7 @@ public class TestFBEscapedCallParser extends TestCase {
     }
     
     public void testProcessEscapedCall() throws Exception {
-        FBEscapedCallParser parser = new FBEscapedCallParser();
+        FBEscapedCallParser parser = new FBEscapedCallParser(FBEscapedParser.USE_BUILT_IN);
         
         FBProcedureCall procedureCall = parser.parseCall(CALL_TEST_5);
         procedureCall.registerOutParam(1, Types.INTEGER);
@@ -112,18 +112,18 @@ public class TestFBEscapedCallParser extends TestCase {
             // everything is ok
         }
         
-        assertTrue("Should correctly parse call. " + procedureCall.getSQL(), 
+        assertTrue("Should correctly parse call. " + procedureCall.getSQL(false), 
                 testProcedureCall.equals(procedureCall));
         
         procedureCall = parser.parseCall(CALL_TEST_6);
         procedureCall.registerOutParam(1, Types.INTEGER);
         procedureCall.getInputParam(2).setValue("test value");
-        assertTrue("Should correctly parse call. " + procedureCall.getSQL(), 
+        assertTrue("Should correctly parse call. " + procedureCall.getSQL(false), 
                 testProcedureCall.equals(procedureCall));
         
         procedureCall = parser.parseCall(CALL_TEST_7);
-        assertTrue("Should correctly parse call. " + procedureCall.getSQL(), 
-                testProcedureCall.getSQL().equals(procedureCall.getSQL()));
+        assertTrue("Should correctly parse call. " + procedureCall.getSQL(false), 
+                testProcedureCall.getSQL(false).equals(procedureCall.getSQL(false)));
     }
 
 }
