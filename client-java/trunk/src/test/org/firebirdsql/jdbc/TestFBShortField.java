@@ -38,14 +38,18 @@ public class TestFBShortField extends BaseTestFBField {
 	}
 
 	protected void setUp() throws SQLException {
-
-		XSQLVAR shortField = new XSQLVAR();
-		Object[] row = new Object[1];
+        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_SHORT;
+        Object[] row = new Object[1];
+        java.util.ArrayList rows = new java.util.ArrayList();
+        rows.add(row);		  
+        FBResultSet rs = new FBResultSet(xsqlvars,rows);
+		  rs.next();
 //		shortField.sqldata = new Short(TEST_SHORT);
 //		shortField.sqlind = 0;
-		shortField.sqltype = GDS.SQL_SHORT;
 
-		field = FBField.createField(shortField,row,0);
+		field = FBField.createField(xsqlvars[0],rs,0, false);
 	}
 
 	protected void tearDown() {

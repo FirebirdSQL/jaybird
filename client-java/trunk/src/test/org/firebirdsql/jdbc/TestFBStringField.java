@@ -48,14 +48,19 @@ public class TestFBStringField extends BaseTestFBField {
         return new TestSuite(TestFBStringField.class);
     }
     protected void setUp() throws SQLException{
-        XSQLVAR stringField = new XSQLVAR();
-        Object[] row = new Object[1];        
+        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_TEXT;
+        xsqlvars[0].sqllen = TEST_STRING_SIZE;
+        Object[] row = new Object[1];
+        java.util.ArrayList rows = new java.util.ArrayList();
+        rows.add(row);		  
+        FBResultSet rs = new FBResultSet(xsqlvars,rows);
+		  rs.next();
 //        stringField.sqldata = new byte[TEST_STRING_SIZE];
 //        stringField.sqlind = 0;
-        stringField.sqllen = TEST_STRING_SIZE;
-        stringField.sqltype = GDS.SQL_TEXT;
 
-        field = FBField.createField(stringField,row,0);
+        field = FBField.createField(xsqlvars[0],rs,0, false);
     }
     protected void tearDown() {
     }

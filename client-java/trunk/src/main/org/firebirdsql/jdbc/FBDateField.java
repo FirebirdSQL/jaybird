@@ -33,29 +33,29 @@ import org.firebirdsql.gds.XSQLVAR;
  */
 class FBDateField extends FBField {
 
-    FBDateField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
-        super(field, row, numCol);
+    FBDateField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
+        super(field, rs, numCol);
     }
 
     Timestamp getTimestamp() throws java.sql.SQLException {
-        if (row[numCol]==null) return TIMESTAMP_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
         return new Timestamp(getDate().getTime());
     }
     Date getDate() throws java.sql.SQLException {
-        if (row[numCol]==null) return DATE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
-        return (Date)row[numCol];
+        return (Date)rs.row[numCol];
     }
     String getString() throws java.sql.SQLException {
-        if (row[numCol]==null) return STRING_NULL_VALUE;
+        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return ((Date)row[numCol]).toString();
+        return ((Date)rs.row[numCol]).toString();
     }
     Object getObject() throws java.sql.SQLException {
-        if (row[numCol]==null) return OBJECT_NULL_VALUE;
+        if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return row[numCol];
+        return rs.row[numCol];
     }
 
     //--- setXXX methods

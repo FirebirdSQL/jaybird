@@ -415,8 +415,10 @@ public class GDS_Impl implements GDS {
             tr.setState(isc_tr_handle.TRANSACTIONCOMMITTING);
 
             try {
-                if (log != null) log.debug("op_commit ");
-                if (log != null) log.debug("tr.rtr_id: " + tr.getTransactionId());
+                if (log != null) {
+                    log.debug("op_commit ");
+                    log.debug("tr.rtr_id: " + tr.getTransactionId());
+                }
                 db.out.writeInt(op_commit);
                 db.out.writeInt(tr.getTransactionId());
                 db.out.flush();            
@@ -883,8 +885,7 @@ public class GDS_Impl implements GDS {
 
         if (stmt.rows.size() > 0) {
             //Return next row from cache.
-            Object[] row = (Object[])stmt.rows.remove(0);
-            return row;
+            return (Object[])stmt.rows.remove(0);
         }
         else {
             return null; //no rows fetched
@@ -1125,8 +1126,10 @@ public class GDS_Impl implements GDS {
         synchronized (db) {
             try {
 
-                if (log != null) log.debug((bpb == null)? "op_open/create_blob ": "op_open/create_blob2 ");
-                if (log != null) log.debug("op: " + op);
+                if (log != null) {
+                    log.debug((bpb == null)? "op_open/create_blob ": "op_open/create_blob2 ");
+                    log.debug("op: " + op);
+                }
                 db.out.writeInt(op);
                 if (bpb != null) {
                     db.out.writeTyped(isc_bpb_version1, (Xdrable)bpb);
@@ -1391,12 +1394,16 @@ public class GDS_Impl implements GDS {
 //                  if (log != null) log.debug("byte: " + r.resp_data[i]);
 //              }
                 readStatusVector(db);
-                if (log != null) log.debug("received");
-                if (log != null) checkAllRead(db.in);//DEBUG
+                if (log != null){
+                    log.debug("received");
+                    checkAllRead(db.in);//DEBUG
+                }
                 return r;
             } else {
-                if (log != null) log.debug("not received: op is " + op);
-                if (log != null) checkAllRead(db.in);
+                if (log != null){
+                    log.debug("not received: op is " + op);
+                    checkAllRead(db.in);
+                }
                 return null;
 //                throw new GDSException(isc_net_read_err);
             }
@@ -1607,8 +1614,6 @@ public class GDS_Impl implements GDS {
                 if (xsqlvar.sqldata == null) {
                     log.debug("sqldata null in writeSQLDatum: " + xsqlvar);
                 }
-            }
-            if (log != null) {
                 if (xsqlvar.sqldata == null) {
                     log.debug("sqldata still null in writeSQLDatum: " + xsqlvar);
                 }
@@ -1768,12 +1773,9 @@ public class GDS_Impl implements GDS {
                            decodeTime(db.in.readInt()).getTime());
                        break;
                    case SQL_BLOB:
-                       row[i] = new Long(db.in.readLong());
-                       break;
                    case SQL_ARRAY:
-                       row[i] = new Long(db.in.readLong());
-                       break;
                    case SQL_QUAD:
+                   case SQL_INT64:
                        row[i] = new Long(db.in.readLong());
                        break;
                    case SQL_TYPE_TIME:
@@ -1781,9 +1783,6 @@ public class GDS_Impl implements GDS {
                        break;
                    case SQL_TYPE_DATE:
                        row[i] = decodeDate(db.in.readInt());
-                       break;
-                   case SQL_INT64:
-                       row[i] = new Long(db.in.readLong());
                        break;
                }
 

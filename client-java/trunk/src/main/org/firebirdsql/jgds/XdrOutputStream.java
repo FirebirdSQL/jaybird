@@ -152,10 +152,10 @@ class XdrOutputStream extends DataOutputStream {
     // This method fill the char up to len with bytes 
     // 
     public final void writeChar(byte[] buffer, int len) throws IOException {
-        if (buffer != null && len > 0) {
+        if (buffer != null) {
             if (buffer.length >=len)
                 write(buffer, 0, len);
-				else{
+            else{
                 write(buffer, 0, buffer.length);
                 write(textPad, 0, len-buffer.length);
             }

@@ -33,27 +33,27 @@ import java.sql.Time;
  * @version 1.0
  */
 class FBTimeField extends FBField {
-    FBTimeField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
-        super(field, row, numCol);
+    FBTimeField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
+        super(field, rs, numCol);
     }
 
     Object getObject() throws java.sql.SQLException {
-        if (row[numCol]==null) return OBJECT_NULL_VALUE;
+        if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return row[numCol];
+        return rs.row[numCol];
     }
     String getString() throws java.sql.SQLException {
-        if (row[numCol]==null) return STRING_NULL_VALUE;
+        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return row[numCol].toString();
+        return rs.row[numCol].toString();
     }
     Time getTime() throws java.sql.SQLException {
-        if (row[numCol]==null) return TIME_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
-        return (Time)row[numCol];
+        return (Time)rs.row[numCol];
     }
     Timestamp getTimestamp() throws java.sql.SQLException {
-        if (row[numCol]==null) return TIMESTAMP_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
         return new Timestamp(getTime().getTime());
     }
