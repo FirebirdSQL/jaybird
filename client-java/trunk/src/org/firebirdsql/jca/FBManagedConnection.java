@@ -128,7 +128,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     **/
 
     public LocalTransaction getLocalTransaction() throws ResourceException {
-        throw new ResourceException("not yet implemented");
+       return new FBLocalTransaction(this, null);
     }
 
 
@@ -144,7 +144,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          NotSupportedException - if the operation is not supported
     **/
     public ManagedConnectionMetaData getMetaData() throws ResourceException {
-        throw new ResourceException("not yet implemented");
+        return new FBManagedConnectionMetaData(this);
     }
 
     /**
