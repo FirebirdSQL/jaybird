@@ -38,7 +38,8 @@ public class FirebirdStatementInfoFactory {
 
     private static final byte[] REQUEST =
         new byte[] { ISCConstants.isc_info_sql_get_plan,
-            ISCConstants.isc_info_sql_stmt_type };
+            ISCConstants.isc_info_sql_stmt_type,
+            ISCConstants.isc_info_end };
 
     private static final int BUFFER_SIZE = 1024;
 
