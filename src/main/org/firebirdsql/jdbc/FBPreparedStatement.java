@@ -45,6 +45,7 @@ import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  *
@@ -66,6 +67,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     private FBField[] fields= null;
     private boolean[] isBlob = null;
     private boolean hasBlobs = false;
+    private final static Logger log = LoggerFactory.getLogger(FBStatement.class,false);
 
     FBPreparedStatement(FBConnection c, String sql) throws SQLException {
         super(c);

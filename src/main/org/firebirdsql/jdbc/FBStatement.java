@@ -27,7 +27,6 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
-import org.firebirdsql.gds.SqlInfo;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -56,7 +55,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public class FBStatement implements Statement {
 
-   protected final static Logger log = LoggerFactory.getLogger(FBStatement.class,false);
+    private final static Logger log = LoggerFactory.getLogger(FBStatement.class,false);
 
     protected FBConnection c;
 
