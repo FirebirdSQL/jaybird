@@ -21,8 +21,13 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2003/01/23 01:40:50  brodsom
+ * Encodings patch
+ *
  */
 package org.firebirdsql.encodings;
+
+import java.io.UnsupportedEncodingException;
 
 public class Encoding_NotOneByte implements Encoding{
 
@@ -37,7 +42,7 @@ public class Encoding_NotOneByte implements Encoding{
         try {
             result = in.getBytes(encoding);
         }
-        catch (java.io.UnsupportedEncodingException uee){
+        catch (UnsupportedEncodingException uee){
         }            
         return result;
     }
@@ -47,7 +52,7 @@ public class Encoding_NotOneByte implements Encoding{
             by = new String(in).getBytes(encoding);
             System.arraycopy(by, 0, out, 0, by.length);
         }
-        catch (java.io.UnsupportedEncodingException uee){
+        catch (UnsupportedEncodingException uee){
         }
         return by.length;
     }
@@ -57,7 +62,7 @@ public class Encoding_NotOneByte implements Encoding{
         try {
             result = new String(in,encoding);
         }
-        catch (java.io.UnsupportedEncodingException uee){
+        catch (UnsupportedEncodingException uee){
         }
         return result;
     }
@@ -67,7 +72,7 @@ public class Encoding_NotOneByte implements Encoding{
             str = new String(in, encoding);
             str.getChars(0, str.length(), out, 0);
         }
-        catch (java.io.UnsupportedEncodingException uee){
+        catch (UnsupportedEncodingException uee){
         }
         return str.length();
     }

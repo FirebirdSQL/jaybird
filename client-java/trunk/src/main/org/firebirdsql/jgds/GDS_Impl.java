@@ -26,12 +26,24 @@
 
 package org.firebirdsql.jgds;
 
-import org.firebirdsql.gds.*;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+
+import org.firebirdsql.gds.Clumplet;
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.XSQLDA;
+import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.isc_blob_handle;
+import org.firebirdsql.gds.isc_db_handle;
+import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.isc_tr_handle;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import java.io.*;
-import java.net.*;
 
 /**
  * Describe class <code>GDS_Impl</code> here.

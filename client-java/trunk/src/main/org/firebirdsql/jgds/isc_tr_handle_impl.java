@@ -27,10 +27,11 @@
 package org.firebirdsql.jgds;
 
 import org.firebirdsql.gds.isc_db_handle;
-import java.util.Collection;
-import java.util.ArrayList;
+import org.firebirdsql.gds.isc_tr_handle;
 import org.firebirdsql.jdbc.FBStatement;
 
+import java.util.Collection;
+import java.util.ArrayList;
 
 /**
  * Describe class <code>isc_tr_handle_impl</code> here.
@@ -39,7 +40,7 @@ import org.firebirdsql.jdbc.FBStatement;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_handle {
+public final class isc_tr_handle_impl implements isc_tr_handle {
     private int rtr_id;
     private isc_db_handle_impl rtr_rdb;
     //isc_tr_handle_impl rtr_next;
@@ -100,7 +101,7 @@ public final class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_hand
             blobs.remove(blob);
     }
 	 
-    public synchronized void registerStatementWithTransaction(org.firebirdsql.jdbc.FBStatement stmt) {
+    public synchronized void registerStatementWithTransaction(FBStatement stmt) {
 		  if (stmt == null)
             this.stmt = stmt;
 		  else {
