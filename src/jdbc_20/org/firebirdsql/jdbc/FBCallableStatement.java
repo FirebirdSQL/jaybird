@@ -41,5 +41,10 @@ public class FBCallableStatement extends AbstractCallableStatement {
     {
         super(c, sql, rsType, rsConcurrency);
     }
-    
+
+    public void registerOutParameter(int paramIndex, int sqlType, 
+                                     String typeName) throws SQLException
+    {
+        registerOutParameter(paramIndex, sqlType);
+    }
 }
