@@ -25,6 +25,10 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.11  2002/06/07 02:34:09  skywalker
+ * Fixed setCharacterStream bug (was a recursive call in PrepairedStatement)
+ * also added a bit to allow setCharacterStream to work with blob fields.
+ *
  * Revision 1.10  2002/06/06 11:24:07  brodsom
  * Performance patch. Log if log4j is in the classpath, don't log if the enviroment variable FBLog4j is false.
  *
@@ -138,7 +142,7 @@ public class FBDriver implements Driver {
     private Map urlToDataSourceMap = new HashMap();
 
     static{
-       log = LoggerFactory.getLogger(FBDriver.class);
+       log = LoggerFactory.getLogger(FBDriver.class,false);
         try{
             java.sql.DriverManager.registerDriver(new FBDriver());
         } catch(Exception ex) {

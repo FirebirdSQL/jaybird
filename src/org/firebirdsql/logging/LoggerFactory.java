@@ -27,19 +27,29 @@ public class LoggerFactory{
     private static boolean checked = false;
     private static boolean log4j = false;
 	
-    public static Logger getLogger(String name) {
+    public static Logger getLogger(String name,boolean def) {
         if (!checked){
-            String sLog4j = System.getProperty("FBLog4j");
-            if (sLog4j!=null && sLog4j.equals("false"))
+            try {
+                Class verify = Class.forName("org.apache.log4j.Logger");
+                log4j = true;
+            }
+            catch (ClassNotFoundException cnfe){
                 log4j = false;
-            else{
-                try {
-                    Class verify = Class.forName("org.apache.log4j.Logger");
-                    log4j = true;
-                }
-                catch (ClassNotFoundException cnfe){
-                    log4j = false;
-                }
+            }
+            if (log4j){
+				    String sLog4j = System.getProperty("FBLog4j");
+                if (!def){
+                    if (sLog4j != null && sLog4j.equals("true"))
+                        log4j = true;
+						  else
+                        log4j = false;
+					 }
+                else{
+                    if (sLog4j != null && sLog4j.equals("false"))
+                        log4j = false;
+						  else
+                        log4j = true;
+					 }
             }
             checked = true;
         }
@@ -49,7 +59,7 @@ public class LoggerFactory{
             return null;
     }
 	
-    public static Logger getLogger(Class clazz) {
-        return getLogger(clazz.getName());
+    public static Logger getLogger(Class clazz, boolean def) {
+        return getLogger(clazz.getName(), def);
     }
 }

@@ -30,6 +30,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.8  2002/06/06 11:24:07  brodsom
+ * Performance patch. Log if log4j is in the classpath, don't log if the enviroment variable FBLog4j is false.
+ *
  * Revision 1.7  2002/06/04 01:17:49  brodsom
  * performance patches
  *
@@ -64,7 +67,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public class GDSExceptionHelper {
 
-   private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class);
+   private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class,false);
 
     private static final String MESSAGES = "isc_error_msg";
     private static java.util.Properties messages = new java.util.Properties();
