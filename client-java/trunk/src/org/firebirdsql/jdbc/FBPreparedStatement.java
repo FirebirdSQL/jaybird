@@ -838,9 +838,13 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see Statement#execute
      */
     public boolean execute() throws  SQLException {
+        return execute(false);
+    }
+
+    protected boolean execute(boolean sendOutParams) throws  SQLException {
         try {
             closeResultSet();
-            mc.executeStatement(fixedStmt);
+            mc.executeStatement(fixedStmt, sendOutParams);
             return (fixedStmt.getOutSqlda().sqld > 0); 
         }
         catch (GDSException ge) {
