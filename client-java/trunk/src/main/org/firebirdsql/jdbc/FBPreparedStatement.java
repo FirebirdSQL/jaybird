@@ -339,7 +339,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see Types
      */
     public void setObject(int parameterIndex, Object x, int targetSqlType, int scale) throws  SQLException {
-        throw new SQLException("not yet implemented");
+        // Workaround for JBuilder DataSets		 
+        setObject(parameterIndex, x);
     }
 
 
