@@ -19,7 +19,6 @@
  *    can be obtained from a CVS history command.
  *
  *    All rights reserved.
-
  */
 
 package org.firebirdsql.jdbc;
@@ -63,21 +62,9 @@ import org.firebirdsql.jca.FBTpb;
  */
 
 
-public class FBWrappingDataSource implements DataSource, Serializable, Referenceable {
-
-    transient private FBManagedConnectionFactory mcf;
+public class FBWrappingDataSource extends FBSimpleDataSource implements DataSource, Serializable, Referenceable {
 
    transient private FBPoolingConnectionManager cm;
-
-    transient private FBDataSource ds;
-
-    transient private PrintWriter log;
-
-    private Reference jndiReference;
-
-    private int loginTimeout = 0;
-
-    private String description;
 
    private boolean pooling = false;
 
@@ -85,15 +72,6 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
 
     public FBWrappingDataSource() throws ResourceException {
         mcf = new FBManagedConnectionFactory();
-    }
-
-
-    public void setReference(Reference ref) {
-        this.jndiReference = ref;
-    }
-
-    public Reference getReference() {
-        return jndiReference;
     }
 
    public void setPooling(final boolean pooling)
@@ -191,184 +169,13 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
       return cm.getConnectionCount();
    }
 
-  /**
-   * <p>Attempt to establish a database connection.
-   *
-   * @return  a Connection to the database
-   * @exception SQLException if a database-access error occurs.
-   */
-    public Connection getConnection() throws  SQLException {
-       checkStarted();
-        return ds.getConnection();
-    }
-
-
-  /**
-   * <p>Attempt to establish a database connection.
-   *
-   * @param user the database user on whose behalf the Connection is
-   *  being made
-   * @param password the user's password
-   * @return  a Connection to the database
-   * @exception SQLException if a database-access error occurs.
-   */
-    public Connection getConnection(String userName, String userPassword) throws  SQLException {
-       checkStarted();
-        return ds.getConnection(userName, userPassword);
-    }
-
-
-  /**
-   * <p>Get the log writer for this data source.
-   *
-   * <p>The log writer is a character output stream to which all logging
-   * and tracing messages for this data source object instance will be
-   * printed.  This includes messages printed by the methods of this
-   * object, messages printed by methods of other objects manufactured
-   * by this object, and so on.  Messages printed to a data source
-   * specific log writer are not printed to the log writer associated
-   * with the java.sql.Drivermanager class.  When a DataSource object is
-   * created the log writer is initially null, in other words, logging
-   * is disabled.
-   *
-   * @return the log writer for this data source, null if disabled
-   * @exception SQLException if a database-access error occurs.
-   */
-    public PrintWriter getLogWriter() throws  SQLException {
-        return log;
-    }
-
-
-  /**
-   * <p>Set the log writer for this data source.
-   *
-   * <p>The log writer is a character output stream to which all logging
-   * and tracing messages for this data source object instance will be
-   * printed.  This includes messages printed by the methods of this
-   * object, messages printed by methods of other objects manufactured
-   * by this object, and so on.  Messages printed to a data source
-   * specific log writer are not printed to the log writer associated
-   * with the java.sql.Drivermanager class. When a DataSource object is
-   * created the log writer is initially null, in other words, logging
-   * is disabled.
-   *
-   * @param out the new log writer; to disable, set to null
-   * @exception SQLException if a database-access error occurs.
-   */
-    public void setLogWriter(PrintWriter out) throws  SQLException {
-        log = out;
-    }
-
-
-  /**
-   * <p>Sets the maximum time in seconds that this data source will wait
-   * while attempting to connect to a database.  A value of zero
-   * specifies that the timeout is the default system timeout
-   * if there is one; otherwise it specifies that there is no timeout.
-   * When a DataSource object is created the login timeout is
-   * initially zero.
-   *
-   * @param seconds the data source login time limit
-   * @exception SQLException if a database access error occurs.
-   */
-    public void setLoginTimeout(int seconds) throws  SQLException {
-       //loginTimeout = seconds;
-       setBlockingTimeout(seconds * 1000);
-    }
-
-
-  /**
-   * Gets the maximum time in seconds that this data source can wait
-   * while attempting to connect to a database.  A value of zero
-   * means that the timeout is the default system timeout
-   * if there is one; otherwise it means that there is no timeout.
-   * When a DataSource object is created the login timeout is
-   * initially zero.
-   *
-   * @return the data source login time limit
-   * @exception SQLException if a database access error occurs.
-   */
-    public int getLoginTimeout() throws  SQLException {
-       //return loginTimeout;
-       return getBlockingTimeout()/1000;
-    }
-
-    //Now the useful properties for the DataSource.
-
-
-    public void setDatabaseName(String database) throws ResourceException
-    {
-        mcf.setDatabase(database);
-    }
-
-    public String getDatabaseName()
-    {
-        return mcf.getDatabase();
-    }
-
-    public void setUser(String userName)
-    {
-        FBConnectionRequestInfo cri = mcf.getDefaultConnectionRequestInfo();
-        cri.setUser(userName);
-        mcf.setConnectionRequestInfo(cri);
-    }
-
-    public String getUser()
-    {
-        return  mcf.getDefaultConnectionRequestInfo().getUser();
-    }
-
-    public void setPassword(String userPassword)
-    {
-        FBConnectionRequestInfo cri = mcf.getDefaultConnectionRequestInfo();
-        cri.setPassword(userPassword);
-        mcf.setConnectionRequestInfo(cri);
-    }
-
-    public String getPassword()
-    {
-        return  mcf.getDefaultConnectionRequestInfo().getPassword();
-    }
-
-    //This seems pretty useless, but the jdbc 3 spec says its required...
-    public void setDescription(String description)
-    {
-        this.description = description;
-    }
-
-    public String getDescription()
-    {
-        return description;
-    }
-
-
-    /**
-     * Get the BlobBufferLength value.
-     * @return the BlobBufferLength value.
-     */
-    public int getBlobBufferLength()
-    {
-        return mcf.getBlobBufferLength();
-    }
-
-    /**
-     * Set the BlobBufferLength value.
-     * @param newBlobBufferLength The new BlobBufferLength value.
-     */
-    public void setBlobBufferLength(final int blobBufferLength)
-    {
-        mcf.setBlobBufferLength(blobBufferLength);
-    }
-
-    
-
-   private void checkStarted() throws SQLException
+   protected DataSource getDataSource() throws SQLException
    {
       if (ds == null) 
       {
          try 
          {
-            if (getDatabaseName() == null)
+            if (getDatabase() == null)
             {
                 throw new SQLException("DataSource has no databaseName");
             }
@@ -389,6 +196,8 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
          } // end of try-catch
         
       } // end of if ()
+      
+      return ds;
    }      
 
 }
