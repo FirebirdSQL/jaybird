@@ -103,7 +103,7 @@ class FBFloatField extends FBField {
     public double getDouble() throws SQLException {
         if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
-        return field.decodeDouble(rs.row[numCol]);
+        return field.decodeFloat(rs.row[numCol]);
     }
     public BigDecimal getBigDecimal() throws SQLException {
         if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
