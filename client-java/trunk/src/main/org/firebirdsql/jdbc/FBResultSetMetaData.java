@@ -562,32 +562,48 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      */
     public String getColumnClassName(int column) throws  SQLException {
         switch (getXsqlvar(column).sqltype & ~1) {
+            
             case ISCConstants.SQL_TEXT:
-                return String.class.getName();
             case ISCConstants.SQL_VARYING:
                 return String.class.getName();
+            
             case ISCConstants.SQL_SHORT:
-                return Short.class.getName();
             case ISCConstants.SQL_LONG:
                 return Integer.class.getName();
+            
             case ISCConstants.SQL_FLOAT:
-                return Float.class.getName();
             case ISCConstants.SQL_DOUBLE:
-                return Double.class.getName();
             case ISCConstants.SQL_D_FLOAT:
                 return Double.class.getName();
+            
             case ISCConstants.SQL_TIMESTAMP:
                 return Timestamp.class.getName();
+            
             case ISCConstants.SQL_BLOB:
-                return Blob.class.getName();
+                
+                XSQLVAR field = getXsqlvar(column);
+                
+                if (field.sqlsubtype < 0)
+                    return Blob.class.getName();
+                
+                if (field.sqlsubtype == 1)
+                    return String.class.getName();
+                
+                else
+                    return byte[].class.getName();
+
             case ISCConstants.SQL_ARRAY:
                 return Array.class.getName();
+            
             case ISCConstants.SQL_QUAD:
                 return Long.class.getName();
+            
             case ISCConstants.SQL_TYPE_TIME:
                 return Time.class.getName();
+            
             case ISCConstants.SQL_TYPE_DATE:
                 return Date.class.getName();
+            
             case ISCConstants.SQL_INT64:
                 if (getXsqlvar(column).sqlscale == 0) {
                     return Long.class.getName();
