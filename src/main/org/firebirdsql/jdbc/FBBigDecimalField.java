@@ -23,6 +23,7 @@ import org.firebirdsql.gds.XSQLVAR;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 /**
  * Describe class <code>FBBigDecimalField</code> here.
@@ -31,6 +32,15 @@ import java.math.BigDecimal;
  * @version 1.0
  */
 public class FBBigDecimalField extends FBField {
+    
+    private static final BigInteger MAX_SHORT = BigInteger.valueOf(Short.MAX_VALUE);
+    private static final BigInteger MIN_SHORT = BigInteger.valueOf(Short.MIN_VALUE);
+    
+    private static final BigInteger MAX_INT = BigInteger.valueOf(Integer.MAX_VALUE);
+    private static final BigInteger MIN_INT = BigInteger.valueOf(Integer.MIN_VALUE);
+    
+    private static final BigInteger MAX_LONG = BigInteger.valueOf(Long.MAX_VALUE);
+    private static final BigInteger MIN_LONG = BigInteger.valueOf(Long.MIN_VALUE);
 
     FBBigDecimalField(XSQLVAR field) throws SQLException {
         super(field);
@@ -151,7 +161,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     void setDouble(double value) throws SQLException {
-        setBigDecimal(new BigDecimal(value));
+        setBigDecimal(new BigDecimal(Double.toString(value)));
     }
 
     void setFloat(float value) throws SQLException {
@@ -163,7 +173,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     void setLong(long value) throws SQLException {
-        setBigDecimal(BigDecimal.valueOf(value));
+        setBigDecimal(BigDecimal.valueOf(value, 0));
     }
 
     void setShort(short value) throws SQLException {
@@ -183,28 +193,33 @@ public class FBBigDecimalField extends FBField {
         value = value.setScale(-field.sqlscale, BigDecimal.ROUND_HALF_UP);
 
         if (isType(field, Types.SMALLINT)) {
-            long longValue = value.unscaledValue().longValue();
 
             // check if value is withing bounds
-            if (longValue > MAX_SHORT_VALUE ||
-                longValue < MIN_SHORT_VALUE)
+            if (value.unscaledValue().compareTo(MAX_SHORT) > 0 ||
+                value.unscaledValue().compareTo(MIN_SHORT) < 0)
                     throw (SQLException)createException(
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
-            field.sqldata = new Short((short)longValue);
+            field.sqldata = new Short(value.unscaledValue().shortValue());
         } else
         if (isType(field, Types.INTEGER)) {
-            long longValue = value.unscaledValue().longValue();
 
             // check if value is withing bounds
-            if (longValue > MAX_INT_VALUE ||
-                longValue < MIN_INT_VALUE)
+            if (value.unscaledValue().compareTo(MAX_INT) > 0 ||
+                value.unscaledValue().compareTo(MIN_INT) < 0)
                     throw (SQLException)createException(
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
-            field.sqldata = new Integer((int)longValue);
+            field.sqldata = new Integer(value.unscaledValue().intValue());
         } else
         if (isType(field, Types.BIGINT)) {
+            
+            // check if value is withing bounds
+            if (value.unscaledValue().compareTo(MAX_LONG) > 0 ||
+                value.unscaledValue().compareTo(MIN_LONG) < 0)
+                    throw (SQLException)createException(
+                        BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
+            
             field.sqldata = new Long(value.unscaledValue().longValue());
         } else
             throw (SQLException)createException(
