@@ -27,8 +27,6 @@
 
 package org.firebirdsql.gds;
 
-import java.util.Set;
-
 
 
 /**
