@@ -85,6 +85,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         } // end of try-catch
         catch (GDSException ge) 
         {
+            log.info("GDSException in PreparedStatement constructor", ge);
             throw new SQLException("GDSException: " + ge);
         } // end of try-catch
     }

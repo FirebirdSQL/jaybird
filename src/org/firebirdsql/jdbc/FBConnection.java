@@ -383,8 +383,10 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
         if (isClosed())
             throw new SQLException("You cannot rollback closed connection.");
         try{
-            getLocalTransaction().rollback();
-            //getLocalTransaction().begin();
+            if (inTransaction()) 
+            {
+                getLocalTransaction().rollback();
+            } // end of if ()
         } catch(javax.resource.ResourceException resex) {
             throw new SQLException(resex.toString());
         }
