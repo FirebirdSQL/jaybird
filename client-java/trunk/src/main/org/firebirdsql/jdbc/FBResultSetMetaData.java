@@ -17,6 +17,11 @@
  * All rights reserved.
  */
 
+/*
+ * CVS modification log:
+ * $Log$
+ *
+*/
 package org.firebirdsql.jdbc;
 
 
@@ -781,62 +786,68 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         
         if (connection == null) return Collections.EMPTY_MAP;
         
-        StringBuffer sb = new StringBuffer();
-        ArrayList params = new ArrayList();
-        for (int i = 0; i < xsqlvars.length; i++) {
-            
-            String relationName = xsqlvars[i].relname;
-            String fieldName = xsqlvars[i].sqlname;
-            
-            if (relationName == null || fieldName == null) continue;
-            
-            sb.append(GET_FIELD_INFO);
-            
-            
-            params.add(fieldName);
-            params.add(relationName);
-            
-            if (i < xsqlvars.length - 1)
-                sb.append("\n").append("UNION").append("\n");
-                
-        }
-        
-        ResultSet rs = connection.doQuery(
-            sb.toString(), 
-            params, 
-            ((FBDatabaseMetaData)connection.getMetaData()).statements);
-            
-        try {
-            HashMap result = new HashMap();
-                
-            while(rs.next()) {
-                ExtendedFieldInfo fieldInfo = new ExtendedFieldInfo();
-                
-                fieldInfo.relationName = rs.getString("RELATION_NAME");
-                fieldInfo.fieldName = rs.getString("FIELD_NAME");
-                fieldInfo.fieldLength = rs.getInt("FIELD_LENGTH");
-                fieldInfo.fieldPrecision = rs.getInt("FIELD_PRECISION");
-                fieldInfo.fieldScale = rs.getInt("FIELD_SCALE");
-                fieldInfo.fieldSubtype = rs.getInt("FIELD_SUB_TYPE");
-                fieldInfo.characterSetId = rs.getInt("CHARACTER_SET_ID");
-                fieldInfo.characterLength = rs.getInt("CHARACTER_LENGTH");
-                
-                if (rs.wasNull())
-                    fieldInfo.characterLength = 
-                        fieldInfo.fieldLength / 
-                        FBConnectionHelper.getCharacterSetSize(fieldInfo.characterSetId);
-                    
-                    
-                
-                result.put(
-                    new FieldKey(fieldInfo.relationName, fieldInfo.fieldName), 
-                    fieldInfo);
-            }
-            
-            return result;
-        } finally {
-            rs.close();
-        }
-    }
+        //
+        // Apparently there is a limit in the UNION 
+        // It is necesary to split in several querys
+        // Although the problem reported with 93 UNION use only 70
+        //
+        int pending = xsqlvars.length;
+        HashMap result = new HashMap();
+        while (pending > 0){
+            StringBuffer sb = new StringBuffer();
+            ArrayList params = new ArrayList();
 
+            int maxLength = (pending>70) ? 70 : pending;
+            for (int i = 0; i < maxLength; i++) {
+            
+                String relationName = xsqlvars[i].relname;
+                String fieldName = xsqlvars[i].sqlname;
+            
+                if (relationName == null || fieldName == null) continue;
+            
+                sb.append(GET_FIELD_INFO);
+                        
+                params.add(fieldName);
+                params.add(relationName);
+            
+                if (i < maxLength - 1)
+                    sb.append("\n").append("UNION").append("\n");
+                
+            }
+
+            ResultSet rs = connection.doQuery(
+                sb.toString(), 
+                params, 
+                ((FBDatabaseMetaData)connection.getMetaData()).statements);
+            
+            try {
+                
+                while(rs.next()) {
+                    ExtendedFieldInfo fieldInfo = new ExtendedFieldInfo();
+                
+                    fieldInfo.relationName = rs.getString("RELATION_NAME");
+                    fieldInfo.fieldName = rs.getString("FIELD_NAME");
+                    fieldInfo.fieldLength = rs.getInt("FIELD_LENGTH");
+                    fieldInfo.fieldPrecision = rs.getInt("FIELD_PRECISION");
+                    fieldInfo.fieldScale = rs.getInt("FIELD_SCALE");
+                    fieldInfo.fieldSubtype = rs.getInt("FIELD_SUB_TYPE");
+                    fieldInfo.characterSetId = rs.getInt("CHARACTER_SET_ID");
+                    fieldInfo.characterLength = rs.getInt("CHARACTER_LENGTH");
+                
+                    if (rs.wasNull())
+                        fieldInfo.characterLength = 
+                            fieldInfo.fieldLength / 
+                            FBConnectionHelper.getCharacterSetSize(fieldInfo.characterSetId);
+                
+                    result.put(
+                        new FieldKey(fieldInfo.relationName, fieldInfo.fieldName), 
+                        fieldInfo);
+                }
+            } finally {
+                rs.close();
+            }
+            pending -= maxLength;
+        }
+        return result;
+    }
 }
