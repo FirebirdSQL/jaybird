@@ -150,7 +150,15 @@ public class FBBlobField extends FBField {
         if (blob == BLOB_NULL_VALUE)
             return STRING_NULL_VALUE;
 
-        return toString(getBytes());
+        if (javaEncoding == null)
+            return new String(getBytes());
+        else {
+            try {
+                return new String(getBytes(), javaEncoding);
+            } catch(java.io.UnsupportedEncodingException ex) {
+                return new String(getBytes());
+            }
+        }
     }
 
     InputStream getUnicodeStream() throws SQLException {
@@ -243,7 +251,16 @@ public class FBBlobField extends FBField {
         setBinaryStream(new ByteArrayInputStream(value), value.length);
     }
     void setString(String value) throws SQLException {
-        setBytes(getBytes(value));
+        if (javaEncoding==null){
+            setBytes(value.getBytes());
+        }
+        else {
+            try {
+                setBytes(value.getBytes(javaEncoding));
+            } catch(java.io.UnsupportedEncodingException ex) {
+                setBytes(value.getBytes());
+            }
+        }
     }
 
     void setUnicodeStream(InputStream in, int length) throws SQLException {
