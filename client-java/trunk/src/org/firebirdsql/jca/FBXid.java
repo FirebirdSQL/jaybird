@@ -31,7 +31,6 @@ import java.io.InputStream;
 import javax.resource.ResourceException;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.Xid;
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.jgds.XdrInputStream;
 
 
