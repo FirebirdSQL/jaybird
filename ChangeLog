@@ -1,3 +1,110 @@
+2003-08-21 00:02  rrokytskyy
+
+	*
+	
+	removed CVS modification log changed minimum size of connections
+	client-java/src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.
+	java:
+
+2003-08-21 00:00  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/BaseFBTest.java:
+	
+	removed CVS modification log
+
+2003-08-21 00:00  rrokytskyy
+
+	*
+	
+	fixed possible NPE due to changes in logging subsystem
+	client-java/src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.jav
+	a:
+
+2003-08-20 23:59  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jca/:
+	pool/TestPoolingConnectionManager.java,
+	TestPoolingConnectionManager.java:
+	
+	moved into org.firebirdsql.jca.pool package, might be obsolete in
+	the future
+
+2003-08-20 23:58  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	AbstractConnectionPool.java, AbstractConnectionPoolDataSource.java,
+	FBConnectionPoolConfiguration.java,
+	FBConnectionPoolDataSource.java,
+	FBConnectionPoolObjectFactory.java, FBPooledConnection.java,
+	FBSimpleDataSource.java, FBWrappingDataSource.java,
+	GenericConnectionPoolConfiguration.java,
+	PingablePooledConnection.java, PooledConnectionHandler.java,
+	PooledConnectionManager.java, PooledConnectionQueue.java,
+	PooledObject.java, PooledObjectEvent.java,
+	PooledObjectListener.java, PooledPreparedStatementHandler.java,
+	UnknownDriverTypeException.java, XConnection.java,
+	XConnectionManager.java, XPreparedStatement.java:
+	
+	significant refactoring to make connection pools consistent
+
+2003-08-20 23:56  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/AbstractGDS.java,
+	gds/Clumplet.java, gds/GDS.java, gds/GDSFactory.java,
+	gds/GDSType.java, gds/ISCConstants.java, gds/XdrInputStream.java,
+	gds/XdrOutputStream.java, gds/Xdrable.java,
+	jca/FBManagedConnectionFactory.java, jca/FBXid.java,
+	jdbc/FBDriver.java, jgds/ClumpletImpl.java, jgds/GDS_Impl.java,
+	jgds/XdrInputStream.java, jgds/XdrOutputStream.java,
+	jgds/Xdrable.java, jgds/isc_db_handle_impl.java,
+	management/FBManager.java, ngds/GDS_Impl.java:
+	
+	moved xdr streams to gds package and switched to single GDS type
+	class
+
+2003-08-20 23:53  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FBResultSet.java,
+	FBResultSetMetaData.java:
+	
+	made constructors protected for rowset implementation
+
+2003-08-20 23:51  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	
+	fixed formatting
+
+2003-08-20 23:51  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FBRowSet.java,
+	FBRowSetInternal.java, FBRowSetListener.java,
+	FBRowSetMetaData.java, FBRowSetReader.java, FBRowSetWriter.java,
+	rowset/FBRowSet.java, rowset/FBRowSetInternal.java,
+	rowset/FBRowSetListener.java, rowset/FBRowSetMetaData.java,
+	rowset/FBRowSetReader.java, rowset/FBRowSetWriter.java:
+	
+	moved to org.firebirdsql.jdbc.rowset package
+
+2003-08-20 23:47  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBSimpleDataSource.java:
+	
+	moved to org.firebirdsql.pool package
+
+2003-08-20 23:46  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jca/:
+	FBPoolingConnectionManager.java, IdleRemover.java,
+	ManagedConnectionPool.java, PoolFiller.java,
+	pool/FBPoolingConnectionManager.java, pool/IdleRemover.java,
+	pool/ManagedConnectionPool.java, pool/PoolFiller.java:
+	
+	moved into org.firebirdsql.jca.pool package, might be obsolete in
+	the future
+
 2003-08-19 21:26  rrokytskyy
 
 	*
