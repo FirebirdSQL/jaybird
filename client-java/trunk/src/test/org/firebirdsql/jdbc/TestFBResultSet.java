@@ -752,7 +752,7 @@ public class TestFBResultSet extends FBTestBase {
 
         connection.commit();
 
-        connection.setAutoCommit(false);
+        connection.setAutoCommit(true);
         
         connection.clearWarnings();
         Statement stmt = connection.createStatement(
@@ -768,17 +768,19 @@ public class TestFBResultSet extends FBTestBase {
             while(rs.next()) {
                 
                 int id = rs.getInt(1);
-                assertTrue(id == counter);
+                assertEquals(counter, id);
                 
                 String longStr = rs.getString(2);
-                assertTrue(("oldString" + counter).equals(longStr));
+                assertEquals("oldString" + counter, longStr);
                 
                 rs.updateString(2, "newString" + counter);
                 
-                assertTrue(("newString" + counter).equals(rs.getString(2)));
+                assertEquals("newString" + counter, rs.getString(2));
                 rs.updateRow();
                 counter++;
             }
+            
+            assertTrue("Should process " + recordCount + " rows.", counter == recordCount);
             
             rs.moveToInsertRow();
             rs.updateInt(1, recordCount);
