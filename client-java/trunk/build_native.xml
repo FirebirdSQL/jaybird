@@ -121,7 +121,7 @@
         </condition>
 
         <condition property="jdks_platform_headers" value="solaris">
-            <os name="solaris"/>
+            <os name="SunOS"/>
         </condition>
 
         <condition property="jdks_platform_headers" value="linux">
