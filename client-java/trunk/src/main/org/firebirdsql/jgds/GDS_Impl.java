@@ -1484,6 +1484,7 @@ public final class GDS_Impl implements GDS {
         try {
             try {
                 db.socket = new Socket(dbai.getServer(), dbai.getPort());
+                db.socket.setTcpNoDelay(true);
                 if (log != null) log.debug("Got socket");
             } catch (UnknownHostException ex2) {
                 String message = "Cannot resolve host " + dbai.getServer();
