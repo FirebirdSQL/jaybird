@@ -39,6 +39,8 @@ public interface Clumplet
 
     byte[] find(int type);
 
+    String findString(int type);
+
     int getLength();
 
     boolean equals(Object o);

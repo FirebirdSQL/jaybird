@@ -1651,8 +1651,9 @@ public class GDS_Impl implements GDS {
 //            case SQL_D_FLOAT:
 //                break;
                 case SQL_TIMESTAMP:
-                    db.out.writeInt(encodeDate((java.sql.Timestamp) sqldata));
-                    db.out.writeInt(encodeTime((java.sql.Timestamp) sqldata));
+                    db.out.writeLong(((java.util.Date)sqldata).getTime());
+                    //db.out.writeInt(encodeDate((java.sql.Timestamp) sqldata));
+                    //db.out.writeInt(encodeTime((java.sql.Timestamp) sqldata));
                     break;
                 case SQL_BLOB:
                     db.out.writeLong(((Long) sqldata).longValue());
@@ -1829,8 +1830,9 @@ public class GDS_Impl implements GDS {
 //                break;
                 case SQL_TIMESTAMP:
                     xsqlvar.sqldata = new java.sql.Timestamp(
-                        decodeDate(db.in.readInt()).getTime() +
-                        decodeTime(db.in.readInt()).getTime());
+                        db.in.readLong());
+                    //decodeDate(db.in.readInt()).getTime() +
+                    //decodeTime(db.in.readInt()).getTime());
                     break;
                 case SQL_BLOB:
                     xsqlvar.sqldata = new Long(db.in.readLong());
@@ -1870,7 +1872,7 @@ public class GDS_Impl implements GDS {
     }
 
     private java.sql.Time decodeTime(int sql_time) {
-        return new java.sql.Time((sql_time / 10000) * 1000);
+        return new java.sql.Time(sql_time / 10);
     }
 
     private java.sql.Date decodeDate(int sql_date) {
@@ -2150,7 +2152,7 @@ public class GDS_Impl implements GDS {
 
 
     public static Clumplet newClumplet(int type, String content) {
-        return new ClumpletImpl(type, content.getBytes());
+        return new StringClumplet(type, content);
     }
 
     public static Clumplet newClumplet(int type){
@@ -2170,7 +2172,7 @@ public class GDS_Impl implements GDS {
         if (c == null) {
             return null;
         }
-        return new ClumpletImpl((ClumpletImpl)c);
+        return ((ClumpletImpl)c).cloneClumplet();
     }
 
     private static class Response {
