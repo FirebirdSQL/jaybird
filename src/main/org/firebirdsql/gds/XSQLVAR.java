@@ -29,6 +29,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.15  2003/11/15 22:45:06  rrokytskyy
+ * fixed bug in time decoding
+ *
  * Revision 1.14  2003/06/25 00:01:08  ryanbaldwin
  * Initial type 2 jdbc driver support.
  *
@@ -48,6 +51,7 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.*;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -62,6 +66,7 @@ import org.firebirdsql.encodings.EncodingFactory;
  * @version 1.0
  */
 public class XSQLVAR {
+    
     public int sqltype;
     public int sqlscale;
     public int sqlsubtype;
@@ -211,7 +216,10 @@ public class XSQLVAR {
             return value;
         }
         else {
-            long time = value.getTime() - cal.getTimeZone().getRawOffset();
+            long time = value.getTime() - 
+                (cal.getTimeZone().getRawOffset() - 
+                Calendar.getInstance().getTimeZone().getRawOffset());
+            
             return new Timestamp(time);
         }
     }
@@ -244,7 +252,10 @@ public class XSQLVAR {
             return value;
         }
         else {
-            long time = value.getTime() + cal.getTimeZone().getRawOffset();				
+            long time = value.getTime() + 
+                (cal.getTimeZone().getRawOffset() - 
+                 Calendar.getInstance().getTimeZone().getRawOffset());
+            
             return new Timestamp(time);
         }
     }
