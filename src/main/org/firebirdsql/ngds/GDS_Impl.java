@@ -366,6 +366,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
                 }
 
             native_isc_detach_database(db_handle);
+            ((isc_db_handle_impl)db_handle).invalidate();
             }
         }
 
@@ -801,6 +802,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
                 boolean isRowPresent = native_isc_dsql_fetch( stmt_handle, da_version, xsqlda, fetchSize );
                 if( isRowPresent )
                     {
+                    stmt.hasOpenResultSet();
                     readSQLData( xsqlda, stmt );
                     }
                 else

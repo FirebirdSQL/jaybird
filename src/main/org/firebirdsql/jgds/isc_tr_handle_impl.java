@@ -27,10 +27,9 @@
 package org.firebirdsql.jgds;
 
 import org.firebirdsql.gds.isc_db_handle;
+import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.isc_tr_handle;
-import org.firebirdsql.jdbc.AbstractStatement;
 
-import java.util.Collection;
 import java.util.ArrayList;
 
 /**
@@ -43,11 +42,8 @@ import java.util.ArrayList;
 public final class isc_tr_handle_impl implements isc_tr_handle {
     private int rtr_id;
     private isc_db_handle_impl rtr_rdb;
-    //isc_tr_handle_impl rtr_next;
-    private Collection blobs = null;
-    //    isc_blob_handle_impl rbl_next;
-    private AbstractStatement stmt = null;
-    private ArrayList stmts = null;
+    private ArrayList blobs = new ArrayList();
+    private ArrayList stmts = new ArrayList();
 
     private int state = NOTRANSACTION;
 
@@ -89,37 +85,36 @@ public final class isc_tr_handle_impl implements isc_tr_handle {
     }
 
     void addBlob(final isc_blob_handle_impl blob) {
-        if (blobs==null)
-            blobs = new ArrayList();
         blobs.add(blob);
-    //        blob.next = rbl_next;
-    //        rbl_next = blob;
     }
 
     void removeBlob(isc_blob_handle_impl blob) {
-        if (blobs!=null)
-            blobs.remove(blob);
+        blobs.remove(blob);
     }
 	 
-    public synchronized void registerStatementWithTransaction(AbstractStatement stmt) {
-		  if (stmt == null)
-            this.stmt = stmt;
-		  else {
-            if (stmts == null)
-                stmts = new ArrayList();
+    public void registerStatementWithTransaction(isc_stmt_handle stmt) {
+        synchronized(stmts) {
             stmts.add(stmt);
-		  }
+        }
     }
 
     public void forgetResultSets() {
-        if (stmt != null){
-            stmt.forgetResultSet();
-            stmt = null;				
-        }
-		  if (stmts != null) {
-		      for (int i=0; i< stmts.size(); i++)
-                ((AbstractStatement)stmts.get(i)).forgetResultSet();
+        synchronized(stmts) {
+            for (int i = 0; i < stmts.size(); i++)
+                ((isc_stmt_handle) stmts.get(i)).clearRows();
+            
             stmts.clear();
-		  }
+        }
+    }
+    
+    public int hashCode() {
+        return rtr_id;
+    }
+    
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (!(obj instanceof isc_tr_handle_impl)) return false;
+        isc_tr_handle_impl that = (isc_tr_handle_impl)obj;
+        return this.rtr_id == that.rtr_id;
     }
 }

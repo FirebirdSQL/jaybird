@@ -167,7 +167,7 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
 
     public static final String ENCODING_PROPERTY = "lc_ctype";
     public static final String SOCKET_BUFFER_PROPERTY = "socket_buffer_size";
-    public static final String SQL_ROLE_PROPERTY = "sql_role_property";
+    public static final String SQL_ROLE_PROPERTY = "sql_role_name";
 
     private static final HashMap PROPERTY_NAME_MAPPING = new HashMap();
     static {

@@ -57,4 +57,6 @@ public interface isc_stmt_handle {
     void removeRows();
     
     boolean isValid();
+    
+    boolean hasOpenResultSet();
 }

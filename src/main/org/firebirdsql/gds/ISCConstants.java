@@ -1330,7 +1330,7 @@ public final class ISCConstants {
      *
      * This list has been kindly reviewed by Ann Harrison, 12/13/2002
      */
-    public final static int[] FATAL_ERRORS = new int[] {
+    static int[] FATAL_ERRORS = new int[] {
         isc_bad_db_format,   //probably not a firebird db
         isc_bad_db_handle,   //couldn't get a connection
         isc_bad_dpb_content, //couldn't get a connection
