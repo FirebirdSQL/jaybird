@@ -30,18 +30,26 @@ import org.firebirdsql.gds.GDSException;
  */
 
 public class FBSQLException extends SQLException {
-    private GDSException original = null;
+    private Exception original;
+    private String message;
 
     public FBSQLException(GDSException ex) {
-        super("GDS Exception: " + ex);
         original = ex;
+        message = "GDS Exception. " + ex.getMessage();
     }
     
     public int getErrorCode() {
-        return original.getIntParam();
+        if (original instanceof GDSException)
+            return ((GDSException)original).getIntParam();
+        else
+            return 0;
     }
     
     public Exception getInternalException() {
         return original;
+    }
+
+    public String getMessage() {
+        return message;
     }    
 }
