@@ -87,7 +87,7 @@ public class FBDataSourceObjectFactory
 
       ds.setMinSize(Integer.parseInt(get(ref, "MinSize", "0")));
 
-      ds.setMaxSize(Integer.parseInt(get(ref, "MaxSize", "0")));
+      ds.setMaxSize(Integer.parseInt(get(ref, "MaxSize", "10")));
 
       ds.setBlockingTimeout(Integer.parseInt(get(ref, "BlockingTimeout", "5000")));
 
