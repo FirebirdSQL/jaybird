@@ -41,6 +41,9 @@ import javax.security.auth.Subject;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
+
+import org.firebirdsql.gds.Clumplet;
+import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLDA;
@@ -845,12 +848,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         currentTr.registerStatementWithTransaction(fbStatement);
     }
 
-    public isc_blob_handle openBlobHandle(long blob_id) throws GDSException {
+    public isc_blob_handle openBlobHandle(long blob_id, boolean segmented) throws GDSException {
         try
         {
             isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
             blob.setBlob_id(blob_id);
-            mcf.gds.isc_open_blob2(currentDbHandle, currentTr, blob, null);//no bpb for now, segmented
+            Clumplet c = GDSFactory.newClumplet(
+                ISCConstants.isc_bpb_type, 
+                segmented ? ISCConstants.isc_bpb_type_segmented : ISCConstants.isc_bpb_type_stream);
+            mcf.gds.isc_open_blob2(currentDbHandle, currentTr, blob, c);
             return blob;
         }
         catch (GDSException ge)
@@ -861,11 +867,16 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
-    public isc_blob_handle createBlobHandle() throws GDSException {
+    public isc_blob_handle createBlobHandle(boolean segmented) throws GDSException {
         try
         {
             isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
-            mcf.gds.isc_create_blob2(currentDbHandle, currentTr, blob, null);//no bpb for now, segmented
+
+            Clumplet c = GDSFactory.newClumplet(
+                ISCConstants.isc_bpb_type, 
+                segmented ? ISCConstants.isc_bpb_type_segmented : ISCConstants.isc_bpb_type_stream);
+
+            mcf.gds.isc_create_blob2(currentDbHandle, currentTr, blob, c);//no bpb for now, segmented
             return blob;
         }
         catch (GDSException ge)

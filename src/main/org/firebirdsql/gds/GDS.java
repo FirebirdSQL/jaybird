@@ -29,6 +29,7 @@ package org.firebirdsql.gds;
 
 
 
+
 /**
  * The interface <code>GDS</code> has most of the C client interface functions
  * lightly mapped to java, as well as the constants returned from the server..
@@ -190,6 +191,12 @@ public interface GDS {
              byte[] buffer) throws GDSException;
 
     void isc_close_blob(isc_blob_handle blob) throws GDSException;
+    
+    byte[] isc_blob_info(isc_blob_handle handle, byte[] items, int buffer_length) 
+        throws GDSException;
+        
+    void isc_seek_blob(isc_blob_handle handle, int position) 
+        throws GDSException;
 
     // Handle declaration methods
     isc_db_handle get_new_isc_db_handle();
