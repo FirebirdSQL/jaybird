@@ -16,29 +16,19 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.pool;
 
-import java.sql.SQLException;
-
 /**
- * Manager of pooled connections. Class implementing this interface allocates 
- * physical connections to the database.
- *
+ * Represents an object that can be stored in the pool.
+ * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public interface PooledConnectionManager {
+public interface PooledObject {
 
     /**
-     * Allocate pooled connection using specified user name and password.
-     * 
-     * @param userName user name that will be used to access database.
-     * @param password password corresponding to the specified user name.
-     * 
-     * @return instance of {@link PooledConnection}.
-     * 
-     * @throws SQLException if something went wrong.
+     * Deallocate this object. This method deallocated the object
+     * and releases all associated resources. This method is invoked when
+     * object pool is shutdown and is needed to gracefully release resources.
      */
-    PooledObject allocateConnection(Object key)
-        throws SQLException;
+    void deallocate();
 }

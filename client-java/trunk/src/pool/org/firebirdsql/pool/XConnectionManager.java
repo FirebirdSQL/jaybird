@@ -44,7 +44,7 @@ interface XConnectionManager {
 	 * @return <code>true</code> if connection owner is still valid, 
 	 * <code>false</code> otherwise.
 	 */
-	boolean isValid(XConnection connection);
+	boolean isValid(PooledConnectionHandler connection);
 	
 	/**
 	 * Ping physical connection.
@@ -86,7 +86,7 @@ interface XConnectionManager {
 	 * 
 	 * @param connection instance of {@link XConnection} that initiated the call.
 	 */
-	void connectionClosed(XConnection connection) throws SQLException;
+	void connectionClosed(PooledConnectionHandler connection) throws SQLException;
 	
 	/**
 	 * Notify connection owner about the {@link SQLException} that happened
@@ -96,19 +96,19 @@ interface XConnectionManager {
 	 * 
 	 * @param ex instance of {@link SQLException} that was thrown.
 	 */
-	void connectionErrorOccured(XConnection connection, SQLException ex);
+	void connectionErrorOccured(PooledConnectionHandler connection, SQLException ex);
     
     /**
      * Notify connection owner about transaction commit.
      * 
      * @param connection instance of {@link XConnection} that initiated the call.
      */
-    void connectionCommitted(XConnection connection) throws SQLException;
+    void connectionCommitted(PooledConnectionHandler connection) throws SQLException;
     
     /**
      * Notify connection owner about transaction rollback.
      * 
      * @param connection instance of {@link XConnection} that initiated the call.
      */
-    void connectionRolledBack(XConnection connection) throws SQLException;
+    void connectionRolledBack(PooledConnectionHandler connection) throws SQLException;
 }

@@ -16,29 +16,24 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.pool;
 
-import java.sql.SQLException;
+import java.util.EventObject;
 
 /**
- * Manager of pooled connections. Class implementing this interface allocates 
- * physical connections to the database.
- *
+ * Event object for object pool events.
+ * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public interface PooledConnectionManager {
+public class PooledObjectEvent extends EventObject {
+    
+	/**
+     * Create instance of this object for the specified event source.
+     * 
+	 * @param eventSource event source.
+	 */
+	public PooledObjectEvent(Object eventSource) {
+		super(eventSource);
+	}
 
-    /**
-     * Allocate pooled connection using specified user name and password.
-     * 
-     * @param userName user name that will be used to access database.
-     * @param password password corresponding to the specified user name.
-     * 
-     * @return instance of {@link PooledConnection}.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    PooledObject allocateConnection(Object key)
-        throws SQLException;
 }

@@ -18,22 +18,19 @@
  */
 package org.firebirdsql.pool;
 
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
+import javax.resource.Referenceable;
+import javax.sql.DataSource;
 
 import org.firebirdsql.jdbc.FBConnectionDefaults;
 import org.firebirdsql.jdbc.FBDriver;
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.SQLException;
-
-import javax.resource.Referenceable;
-import javax.sql.DataSource;
 
 /**
  * Implementation of {@link javax.sql.DataSource} including connection pooling.
@@ -67,14 +64,14 @@ import javax.sql.DataSource;
  * <li><code>type</code> type of connection that will be created. There are 
  * three possible types: pure Java (or type 4), type 2 that will use Firebird
  * client library to connect to the database, and embedded that will use 
- * embedded engine (access to local databases). Possible values are:
+ * embedded engine (access to local databases). Possible values are (case 
+ * insensitive):
  * <ul> 
- * <li><code>"pure"</code> or <code>"type4"</code> for pure Java (type 4) JDBC
- * connections;
- * <li><code>"native"</code> or <code>"type2"</code> to use Firebird client
+ * <li><code>"PURE_JAVA"</code> or <code>"TYPE4"</code> for pure Java (type 4) 
+ * JDBC connections;
+ * <li><code>"NATIVE"</code> or <code>"TYPE2"</code> to use Firebird client
  * library;
- * <li><code>"embedded"</code> or <code>"native_embedded"</code> to use
- * embedded engine.
+ * <li><code>"EMBEDDED"</code> to use embedded engine.
  * </ul>
  * <li><code>userName</code> name of the user that will be used to access the 
  * database.
@@ -88,15 +85,6 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
     public static final String TYPE2_PREFIX = FBDriver.FIREBIRD_PROTOCOL_NATIVE;
     public static final String EMBEDDED_PREFIX = FBDriver.FIREBIRD_PROTOCOL_NATIVE_EMBEDDED;
 
-    public static final String USER_NAME_PROPERTY = FBDriver.USER;
-    public static final String PASSWORD_PROPERTY = FBDriver.PASSWORD;
-    public static final String TPB_MAPPING_PROPERTY = FBDriver.TPB_MAPPING;
-    public static final String BLOB_BUFFER_PROPERTY = FBDriver.BLOB_BUFFER_LENGTH;
-
-    public static final String ENCODING_PROPERTY = "lc_ctype";
-    public static final String SOCKET_BUFFER_PROPERTY = "socket_buffer_size";
-    public static final String SQL_ROLE_PROPERTY = "sql_role_property";
-
     public static final String TYPE4 = "type4";
     public static final String PURE_JAVA = "pure";
 
@@ -108,11 +96,8 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
 
     private Object configSyncObject = new Object();
     private FBConnectionPoolDataSource pool;
-    private DataSource dataSource;
     
     private Reference reference;
-
-    private PrintWriter logWriter;
 
     private String userName;
     private String password;
@@ -139,7 +124,8 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
     /**
      * Create instance of this class.
      */
-    public FBWrappingDataSource() {
+    public FBWrappingDataSource() throws SQLException {
+        pool = new FBConnectionPoolDataSource();
     }
 
     /**
@@ -156,30 +142,6 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
     }
 
     /**
-     * Get data source instance. This method will instantiate a connection
-     * pool if necessary.
-     * 
-     * @return instance of {@link DataSource}.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    protected DataSource getDataSource() throws SQLException {
-        synchronized (configSyncObject) {
-            if (pool == null) {
-                FBConnectionPoolConfiguration config = getConfiguration();
-                pool = new FBConnectionPoolDataSource(config);
-                pool.start();
-
-                dataSource = new SimpleDataSource(pool);
-                dataSource.setLogWriter(logWriter);
-                dataSource.setLoginTimeout(getBlockingTimeout() / 60 / 1000);
-            }
-        }
-
-        return dataSource;
-    }
-
-    /**
      * Get JDBC connection from this data source.
      * 
      * @return instance of {@link Connection}.
@@ -187,7 +149,7 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
      * @throws SQLException if connection cannot be obtained due to some reason.
      */
     public Connection getConnection() throws SQLException {
-        return getDataSource().getConnection();
+        return pool.getPooledConnection().getConnection();
     }
 
     /**
@@ -200,7 +162,7 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
     public Connection getConnection(String user, String password) 
         throws SQLException 
     {
-        return getDataSource().getConnection(user, password);
+        return pool.getPooledConnection(user, password).getConnection();
     }
 
     /**
@@ -218,7 +180,7 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
      * @return instance of {@link PrintWriter}.
      */
     public PrintWriter getLogWriter() {
-        return logWriter;
+        return pool.getLogWriter();
     }
 
     /**
@@ -236,67 +198,7 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
      * @param printWriter instance of {@link PrintWriter}.
      */
     public void setLogWriter(PrintWriter printWriter) {
-        logWriter = printWriter;
-    }
-
-    /**
-     * Get pool configuration corrsponding to the configuration of this 
-     * data source.
-     * 
-     * @return instance of {@link FBConnectionPoolConfiguration}.
-     */
-    protected FBConnectionPoolConfiguration getConfiguration() {
-        FBConnectionPoolConfiguration config =
-            new FBConnectionPoolConfiguration();
-
-        config.setBlockingTimeout(blockingTimeout);
-        config.setMaxConnections(maxSize);
-        config.setMinConnections(minSize);
-        config.setPingInterval(pingInterval);
-
-        if (userName != null)
-            config.setProperty(USER_NAME_PROPERTY, userName);
-        
-        if (password != null)
-            config.setProperty(PASSWORD_PROPERTY, password);
-        
-        if (blobBufferSize != FBConnectionDefaults.DEFAULT_BLOB_BUFFER_SIZE)
-            config.setProperty(BLOB_BUFFER_PROPERTY, 
-                Integer.toString(blobBufferSize));
-            
-        if (encoding != null)
-            config.setProperty(ENCODING_PROPERTY, encoding);
-            
-        if (tpbMapping != null)
-            config.setProperty(TPB_MAPPING_PROPERTY, tpbMapping);
-
-        if (database != null) {
-            String url;
-    
-            if (TYPE4.equals(type) || PURE_JAVA.equals(type)) {
-                url = TYPE4_PREFIX + database;
-            } else
-            if (TYPE2.equals(type) || NATIVE.equals(type)) {
-                url = TYPE2_PREFIX + database;
-            } else
-            if (NATIVE_EMBEDDED.equals(type) || EMBEDDED.equals(type)) {
-                url = EMBEDDED_PREFIX + database;
-            } else {
-                url = TYPE4_PREFIX + database;
-            }
-            
-            config.setJdbcUrl(url);
-        }
-        
-        // set non-standard properties
-        Iterator iter = nonStandardProperties.entrySet().iterator();
-        while(iter.hasNext()) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            config.setProperty(
-                (String)entry.getKey(), (String)entry.getValue());
-        }
-
-        return config;
+        pool.setLogWriter(printWriter);
     }
 
     /*
@@ -304,19 +206,19 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
      */
 
     public int getBlockingTimeout() {
-        return blockingTimeout;
+        return pool.getBlockingTimeout();
     }
 
     public void setBlockingTimeout(int blockingTimeoutValue) {
-        this.blockingTimeout = blockingTimeoutValue;
+        pool.setBlockingTimeout(blockingTimeoutValue);
     }
 
     public String getDatabase() {
-        return database;
+        return pool.getDatabase();
     }
 
     public void setDatabase(String databaseValue) {
-        this.database = databaseValue;
+        pool.setDatabase(databaseValue);
     }
 
     public String getDescription() {
@@ -328,103 +230,103 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
     }
 
     public String getEncoding() {
-        return encoding;
+        return pool.getEncoding();
     }
 
     public void setEncoding(String encodingValue) {
-        this.encoding = encodingValue;
+        pool.setEncoding(encodingValue);
     }
 
     public int getIdleTimeout() {
-        return idleTimeout;
+        return pool.getIdleTimeout();
     }
 
     public void setIdleTimeout(int idleTimeoutValue) {
-        this.idleTimeout = idleTimeoutValue;
+        pool.setIdleTimeout(idleTimeoutValue);
     }
 
     public int getMaxSize() {
-        return maxSize;
+        return pool.getMaxConnections();
     }
 
     public void setMaxSize(int maxSizeValue) {
-        this.maxSize = maxSizeValue;
+        pool.setMaxConnections(maxSizeValue);
     }
 
     public int getMinSize() {
-        return minSize;
+        return pool.getMinConnections();
     }
 
     public void setMinSize(int minSizeValue) {
-        this.minSize = minSizeValue;
+        pool.setMinConnections(minSizeValue);
     }
 
     public String getPassword() {
-        return password;
+        return pool.getPassword();
     }
 
     public void setPassword(String passwordValue) {
-        this.password = passwordValue;
+        pool.setPassword(passwordValue);
     }
 
     public String getTpbMapping() {
-        return tpbMapping;
+        return pool.getTpbMapping();
     }
 
     public void setTpbMapping(String tpbMappingValue) {
-        this.tpbMapping = tpbMappingValue;
+        pool.setTpbMapping(tpbMappingValue);
     }
 
     public String getUserName() {
-        return userName;
+        return pool.getUserName();
     }
 
     public void setUserName(String userNameValue) {
-        this.userName = userNameValue;
+        pool.setUserName(userNameValue);
     }
 
     public int getBlobBufferSize() {
-        return blobBufferSize;
+        return pool.getBlobBufferSize();
     }
 
     public void setBlobBufferSize(int blobBufferSizeValue) {
-        this.blobBufferSize = blobBufferSizeValue;
+        pool.setBlobBufferSize(blobBufferSizeValue);
     }
 
     public String getType() {
-        return type;
+        return pool.getType();
     }
 
-    public void setType(String typeValue) {
-        this.type = typeValue;
+    public void setType(String typeValue) throws SQLException {
+        pool.setType(type);
     }
 
     public int getPingInterval() {
-        return pingInterval;
+        return pool.getPingInterval();
     }
 
     public void setPingInterval(int pingIntervalValue) {
-        this.pingInterval = pingIntervalValue;
+        pool.setPingInterval(pingIntervalValue);
     }
 
     public int getSocketBufferSize() {
-        return socketBufferSize;
+        return pool.getSocketBufferSize();
     }
 
     public String getSqlRole() {
-        return sqlRole;
+        return pool.getSqlRole();
     }
 
     public void setSocketBufferSize(int socketBufferSize) {
-        this.socketBufferSize = socketBufferSize;
+        pool.setSocketBufferSize(socketBufferSize);
     }
 
     public void setSqlRole(String sqlRole) {
-        this.sqlRole = sqlRole;
+        pool.setSqlRole(sqlRole);
     }
     
     public String getNonStandardProperty(String key) {
-        return nonStandardProperties.getProperty(key);
+        return pool.getNonStandardProperty(key);
     }
     
     public void setNonStandardProperty(String key, String value) {
@@ -434,7 +336,7 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
         if (value == null)
             value = "";
             
-        nonStandardProperties.setProperty(key, value);
+        pool.setNonStandardProperty(key, value);
     }
     
     /*
@@ -459,7 +361,7 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
         setIdleTimeout(timeout * 60 * 1000);
     }
     
-    public int getConnectionCount() {
+    public int getConnectionCount() throws SQLException {
         if (pool != null)
             return pool.getFreeSize();
         else

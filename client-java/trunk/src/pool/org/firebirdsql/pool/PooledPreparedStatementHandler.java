@@ -32,7 +32,7 @@ import java.sql.SQLException;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class XPreparedStatement implements InvocationHandler {
+public class PooledPreparedStatementHandler implements InvocationHandler {
     
     /**
      * Flag whether check is performed in tolerant mode or not. In tolerant 
@@ -42,7 +42,7 @@ public class XPreparedStatement implements InvocationHandler {
     private static final boolean TOLERANT_CHECK_MODE = false;
     
     public static Method findMethod(Class clazz, String name, Class[] params) {
-        return XConnection.findMethod(clazz, name, params);
+        return PooledConnectionHandler.findMethod(clazz, name, params);
     }
     
     private final static Method PREPARED_STATEMENT_CLOSE = findMethod(
@@ -81,7 +81,7 @@ public class XPreparedStatement implements InvocationHandler {
      * @param owner instance of {@link XConnection} that created prepared
      * statement.
      */
-    XPreparedStatement(String statement, PreparedStatement preparedStatement, 
+    PooledPreparedStatementHandler(String statement, PreparedStatement preparedStatement, 
         XStatementManager owner) 
     {
         this.statement = statement;
