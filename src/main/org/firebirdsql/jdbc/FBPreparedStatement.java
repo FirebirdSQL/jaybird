@@ -63,6 +63,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     // will throw an exception if this array contains at least one false value.
     protected boolean[] isParamSet;
      
+    private FBField[] fields= null;
+
     FBPreparedStatement(FBConnection c, String sql) throws SQLException {
         super(c);
         try {
@@ -147,7 +149,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setNull(int parameterIndex, int sqlType) throws  SQLException {
-         if (parameterIndex > fixedStmt.getInSqlda().sqlvar.length)
+         if (parameterIndex > fields.length)
             throw new SQLException("invalid column index");
              
         fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqlind = -1;
@@ -242,24 +244,11 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * Factory method for the field access objects
      */
     protected FBField getField(int columnIndex) throws SQLException {
-         if (columnIndex > fixedStmt.getInSqlda().sqlvar.length)
+         if (columnIndex > fields.length)
             throw new SQLException("invalid column index");
             
-        FBField thisField = FBField.createField(getXsqlvar(columnIndex));
-
-        if (thisField instanceof FBBlobField)
-            ((FBBlobField)thisField).setConnection(c);
-        else
-        if (thisField instanceof FBStringField)
-            ((FBStringField)thisField).setConnection(c);
-
-
-        return thisField;
+        return fields[columnIndex-1];
     }
-
-
-
-
 
     /**
      * Sets the designated parameter to the given input stream, which will have
@@ -771,10 +760,18 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 
         // initialize isParamSet member
         isParamSet = new boolean[fixedStmt.getInSqlda().sqln];
-
+        fields = new FBField[fixedStmt.getInSqlda().sqln];		  
         // this is probably redundant, JVM initializes members to false
-        for (int i = 0; i < isParamSet.length; i++)
+        for (int i = 0; i < isParamSet.length; i++){
             isParamSet[i] = false;
+      		fields[i] = FBField.createField(getXsqlvar(i+1));
+
+      		if (fields[i] instanceof FBBlobField)
+      		    ((FBBlobField)fields[i]).setConnection(c);
+      		else
+      		    if (fields[i] instanceof FBStringField)
+      		        ((FBStringField)fields[i]).setConnection(c);            
+        }
     }
 
     /**
