@@ -16,13 +16,14 @@ import java.sql.Connection;
 //import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSFactory;
-//import org.firebirdsql.jgds.GDS_Impl;
 import org.firebirdsql.management.FBManager;
 
 import java.io.*;
 import java.util.Properties;
 import java.util.HashSet;
 import java.sql.*;
+
+import org.firebirdsql.jdbc.BaseFBTest;
 
 //for embedded xid implementation
     import java.net.InetAddress;
@@ -41,64 +42,26 @@ import junit.framework.*;
 
 
 /**
- *This is a class that hands out connections.  Initial implementation uses DriverManager.getConnection,
- *future enhancements will use datasources/ managed stuff.
+ *This base test case includes and Xid implementation class
  */
-public class TestXABase extends TestCase {
+public class TestXABase extends BaseFBTest {
 
-    //static final String DBNAME = "/usr/java/jboss/dev/jboss/dist/db/firebird/jbosstest.gdb";
-    static final String DBNAME = "/usr/local/firebird/dev/client-java/db/fbmctest.gdb";
-    static final String dbName = "localhost/3050:" + DBNAME;
-//    static final String dbName = "localhost/3050:/usr/local/firebird/dev/client-java/db/jbosstest.gdb";
-//    static final String dbName2 = "localhost:/usr/local/firebird/dev/client-java/db/testdb2.gdb";
-
-//    private FBManagedConnectionFactory mcf;
-
-//    private Clumplet dpb;
-
-//    private HashSet tpb;
 
     public TestXABase(String name) {
         super(name);
     }
 
-/*    public static Test suite() {
-
-        return new TestSuite(TestFBManagedConnectionFactory.class);
-    }*/
-
-    public void _setUp() throws Exception {
-        FBManager m = new FBManager();
-        m.setURL("localhost");
-        m.setPort(3050);
-        m.start();
-        m.createDatabase(DBNAME);
-        m.stop();
-    }
-
-    public void _tearDown() throws Exception {
-        FBManager m = new FBManager();
-        m.setURL("localhost");
-        m.setPort(3050);
-        m.start();
-        m.dropDatabase(DBNAME);
-        m.stop();
-    }
 
     public FBManagedConnectionFactory initMcf() {
 
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
-        mcf.setDatabase(dbName);
+        mcf.setDatabase(DB_DATASOURCE_URL);
         FBConnectionRequestInfo cri = new FBConnectionRequestInfo();
         cri.setProperty(GDS.isc_dpb_user_name, "SYSDBA");
         cri.setProperty(GDS.isc_dpb_password, "masterkey");
         cri.setProperty(GDS.isc_dpb_num_buffers, new byte[] {90});
         cri.setProperty(GDS.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
         mcf.setConnectionRequestInfo(cri);
-//        GDS gds = new GDS_Impl();
-//        Clumplet dpb = GDSFactory.newClumplet(GDS.isc_dpb_num_buffers, new byte[] {90});
-//        dpb.append(GDSFactory.newClumplet(GDS.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
-//        mcf.setDpb(dpb);
         HashSet tpb = new HashSet();
         tpb.add(new Integer(GDS.isc_tpb_write));
         tpb.add(new Integer(GDS.isc_tpb_read_committed));

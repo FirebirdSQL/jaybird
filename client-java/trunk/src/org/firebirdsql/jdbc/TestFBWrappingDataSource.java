@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.3  2002/01/06 23:37:58  d_jencks
+ * added a connection test to datasource test, cleaned up constants a bit.
+ *
  * Revision 1.2  2002/01/05 05:34:06  d_jencks
  * added Doug Lea's concurrent.jar, classes from Concurrent Programming in java, 2nd edition
  *
@@ -56,7 +59,7 @@ import junit.framework.*;
  * @author Roman Rokytskyy (rrokytskyy@yahoo.co.uk)
  */
 
-public class TestFBWrappingDataSource extends TestCase {
+public class TestFBWrappingDataSource extends BaseFBTest {
 
     private java.sql.Connection connection;
     private FBWrappingDataSource ds;
@@ -65,40 +68,31 @@ public class TestFBWrappingDataSource extends TestCase {
         super(testName);
     }
 
-    //public static Test suite() {
-    //    return new TestSuite(TestFBDriver.class);
-    // }
-
-
-
-
-
-
 
     public void testConnect() throws Exception {
-        System.out.println("Testing FBWrapping DataSource on db: " + TestConst.DB_DATASOURCE_URL);
+        System.out.println("Testing FBWrapping DataSource on db: " + DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
-        ds.setDatabaseName(TestConst.DB_DATASOURCE_URL);
-        connection = ds.getConnection(TestConst.DB_USER, TestConst.DB_PASSWORD);
+        ds.setDatabaseName(DB_DATASOURCE_URL);
+        connection = ds.getConnection(DB_USER, DB_PASSWORD);
         assertTrue("Connection is null", connection != null);
-        ds.setUser(TestConst.DB_USER);
-        ds.setPassword(TestConst.DB_PASSWORD);
+        ds.setUser(DB_USER);
+        ds.setPassword(DB_PASSWORD);
         connection = ds.getConnection();
         assertTrue("Connection is null", connection != null);
     }
 
     public void testOneConnectionWithPooling() throws Exception {
-        System.out.println("Testing FBWrapping DataSource Pooling on db: " + TestConst.DB_DATASOURCE_URL);
+        System.out.println("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
-        ds.setDatabaseName(TestConst.DB_DATASOURCE_URL);
+        ds.setDatabaseName(DB_DATASOURCE_URL);
         ds.setMinSize(3);
         ds.setMaxSize(5);
         ds.setBlockingTimeout(100);
         ds.setIdleTimeout(1000);
         ds.setPooling(true);
-        connection = ds.getConnection(TestConst.DB_USER, TestConst.DB_PASSWORD);
+        connection = ds.getConnection(DB_USER, DB_PASSWORD);
         //connection.setAutoCommit(false);
         assertTrue("Connection is null", connection != null);
         Statement s = connection.createStatement();
@@ -127,16 +121,16 @@ public class TestFBWrappingDataSource extends TestCase {
 
 
    public void testPooling() throws Exception {
-        System.out.println("Testing FBWrapping DataSource Pooling on db: " + TestConst.DB_DATASOURCE_URL);
+        System.out.println("Testing FBWrapping DataSource Pooling on db: " + DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
-        ds.setDatabaseName(TestConst.DB_DATASOURCE_URL);
+        ds.setDatabaseName(DB_DATASOURCE_URL);
         ds.setMinSize(3);
         ds.setMaxSize(5);
         ds.setBlockingTimeout(100);
         ds.setIdleTimeout(1000);
         ds.setPooling(true);
-        connection = ds.getConnection(TestConst.DB_USER, TestConst.DB_PASSWORD);
+        connection = ds.getConnection(DB_USER, DB_PASSWORD);
         assertTrue("Connection is null", connection != null);
         Thread.sleep(500);
         int ccount = ds.getConnectionCount();
@@ -145,11 +139,11 @@ public class TestFBWrappingDataSource extends TestCase {
         ArrayList cs = new ArrayList();
         for (int i = 0; i < ds.getMaxSize(); i++)
         {
-           cs.add(ds.getConnection(TestConst.DB_USER, TestConst.DB_PASSWORD));      
+           cs.add(ds.getConnection(DB_USER, DB_PASSWORD));      
         } // end of for ()
         try 
         {
-           ds.getConnection(TestConst.DB_USER, TestConst.DB_PASSWORD);              
+           ds.getConnection(DB_USER, DB_PASSWORD);              
            fail("got a connection more than maxsize!");
         }
         catch (SQLException re)
@@ -157,8 +151,8 @@ public class TestFBWrappingDataSource extends TestCase {
            //got a blocking timeout, good    
         } // end of try-catch
         
-        ds.setUser(TestConst.DB_USER);
-        ds.setPassword(TestConst.DB_PASSWORD);
+        ds.setUser(DB_USER);
+        ds.setPassword(DB_PASSWORD);
         connection = ds.getConnection();
         assertTrue("Connection is null", connection != null);
         connection.close();

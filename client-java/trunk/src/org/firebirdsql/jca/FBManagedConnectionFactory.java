@@ -370,7 +370,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
                 gds.isc_start_transaction(tr, db, mc.getTpb());
             }
             catch (GDSException ge) {
-                throw new XAException(ge.toString());
+                throw new XAException(ge.getMessage());
             }
             xidMap.put(xid, tr);
         }
@@ -408,7 +408,9 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
                 gds.isc_attach_database(dbAlias, db, cri.getDpb());
             }
             catch (GDSException ge) {
-                throw new XAException(ge.toString());
+               System.out.println("GDS Exception: " + ge);
+               ge.printStackTrace();
+                throw new XAException(ge.getMessage());
             }
             dbHandleUsage.put(db, new Integer(1));
             return db;
@@ -443,7 +445,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             gds.isc_commit_transaction(tr);
         }
         catch (GDSException ge) {
-            throw new XAException(ge.toString());
+            throw new XAException(ge.getMessage());
         }
         finally {
             forgetXid(xid);
@@ -464,7 +466,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         catch (GDSException ge) {
             ge.printStackTrace();
             forgetXid(xid);
-            throw new XAException(ge.toString());
+            throw new XAException(ge.getMessage());
         }
     }
 
@@ -475,7 +477,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             gds.isc_rollback_transaction(tr);
         }
         catch (GDSException ge) {
-            throw new XAException(ge.toString());
+            throw new XAException(ge.getMessage());
         }
         finally {
             forgetXid(xid);

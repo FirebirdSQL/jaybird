@@ -47,7 +47,9 @@ import junit.framework.*;
  */
 public class TestFBManager extends TestCase {
 
-    public static String DBNAME = "/usr/local/firebird/dev/client-java/db/fbmtest.gdb";
+   private static String dbPath = System.getProperty("test.db.dir");
+
+    public static String DBNAME = dbPath + "/fbmtest.gdb";
 
     public TestFBManager(String name) {
         super(name);

@@ -30,7 +30,7 @@ package org.firebirdsql.jdbc;
 
 import junit.framework.*;
 
-public class TestFBCallableStatement extends TestCase {
+public class TestFBCallableStatement extends BaseFBTest {
     public static final String CREATE_PROCEDURE =
         "CREATE PROCEDURE notfactorial(number INTEGER) RETURNS (result INTEGER) " +
         "AS " +
@@ -63,13 +63,13 @@ public class TestFBCallableStatement extends TestCase {
     public TestFBCallableStatement(String testName) {
         super(testName);
     }
-    public static Test suite() {
-        return new TestSuite(TestFBCallableStatement.class);
-    }
+
+
     protected void setUp() throws Exception {
+       super.setUp();
         Class.forName(FBDriver.class.getName());
         connection =
-            java.sql.DriverManager.getConnection(TestConst.DB_DRIVER_URL, TestConst.DB_INFO);
+            java.sql.DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
         java.sql.Statement stmt = connection.createStatement();
         try {
             stmt.executeUpdate(DROP_PROCEDURE);
@@ -84,6 +84,7 @@ public class TestFBCallableStatement extends TestCase {
         stmt.executeUpdate(DROP_PROCEDURE);
         stmt.close();
         connection.close();
+        super.tearDown();
     }
 
     public void testRun() throws Exception {

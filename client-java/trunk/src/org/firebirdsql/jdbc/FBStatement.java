@@ -107,6 +107,8 @@ public class FBStatement implements Statement {
         }
         catch (ResourceException re) 
         {
+           System.out.println("resource exception");
+           re.printStackTrace();
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
         catch (GDSException ge) 
@@ -115,6 +117,7 @@ public class FBStatement implements Statement {
         } // end of try-catch
         finally 
         {
+           System.out.println("in finally block, of executeQuery");
             c.checkEndTransaction();
         } // end of finally
 

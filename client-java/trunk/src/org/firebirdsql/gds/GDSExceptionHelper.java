@@ -30,6 +30,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.3  2001/10/24 16:59:43  alberola
+ * Fixed bug in ClassLoader
+ *
  * Revision 1.2  2001/07/18 20:07:31  d_jencks
  * Added better GDSExceptions, new NativeSQL, and CallableStatement test from Roman Rokytskyy
  *
@@ -45,7 +48,7 @@ package org.firebirdsql.gds;
  * in the static <code>java.util.Properties</code> variable.
  */
 public class GDSExceptionHelper {
-    private static final String MESSAGES = "org.firebirdsql.gds.isc_error_msg";
+    private static final String MESSAGES = "isc_error_msg";
     private static java.util.Properties messages = new java.util.Properties();
 
     private static boolean initialized = false;

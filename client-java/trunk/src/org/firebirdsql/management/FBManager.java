@@ -80,6 +80,7 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
         gds = GDSFactory.newGDS();
         c = GDSFactory.newClumplet(gds.isc_dpb_num_buffers, new byte[] {90});
         c.append(GDSFactory.newClumplet(gds.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
+        c.append(GDSFactory.newClumplet(gds.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
 
         state = STARTED;
     }
@@ -128,12 +129,8 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
 
     public void createDatabase (String fileName) throws Exception {
         isc_db_handle db = gds.get_new_isc_db_handle();
-//        isc_tr_handle tr = gds.get_new_isc_tr_handle();
         try {
-//            gds.isc_dsql_execute_immediate(db, tr, "CREATE DATABASE '" + fileName + "' USER 'sysdba' PASSWORD 'masterkey'", GDS.SQL_DIALECT_CURRENT, null);
-//            gds.isc_dsql_execute_immediate(db, tr, "CREATE DATABASE '" + fileName + "'", 1, null);
-//            gds.isc_create_database2(getConnectString(fileName), db);//Only creates dialect 1!!!
-            gds.isc_create_database(getConnectString(fileName), db, c);//Only creates dialect 1!!!
+            gds.isc_create_database(getConnectString(fileName), db, c);
             gds.isc_detach_database(db);
         }
         catch (Exception e) {
@@ -158,7 +155,6 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
     //private methods
     private String getConnectString(String filename) {
         String fileString = getURL() + "/" + getPort() + ":" + filename;// + getPort() + ":"
-        System.out.println("file string: " + fileString);
         return fileString;
     }
 
