@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.6  2002/11/24 18:50:18  rrokytskyy
+ * added TPB mapping and fixed ResultSetMetaData
+ *
  * Revision 1.5  2002/11/22 17:53:58  brodsom
  * Important performance patch
  *
