@@ -1,3 +1,11 @@
+2004-07-31 19:25  rrokytskyy
+
+	*
+	
+	added test to check if {?= call ...} is correctly parsed
+	client-java/src/test/org/firebirdsql/jdbc/TestFBEscapedCallParser.j
+	ava:
+
 2004-07-27 11:45  rrokytskyy
 
 	* client-java/src/:
