@@ -29,6 +29,7 @@ package org.firebirdsql.jgds;
 import org.firebirdsql.gds.isc_db_handle;
 import java.util.Collection;
 import java.util.ArrayList;
+import org.firebirdsql.jdbc.FBStatement;
 
 
 /**
@@ -42,8 +43,10 @@ public class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_handle {
     private int rtr_id;
     private isc_db_handle_impl rtr_rdb;
     //isc_tr_handle_impl rtr_next;
-    private final Collection blobs = new ArrayList();
+    private Collection blobs = null;
     //    isc_blob_handle_impl rbl_next;
+    private FBStatement stmt = null;
+    private ArrayList stmts = null;
 
     private int state = NOTRANSACTION;
 
@@ -85,12 +88,37 @@ public class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_handle {
     }
 
     void addBlob(final isc_blob_handle_impl blob) {
-    blobs.add(blob);
+        if (blobs==null)
+            blobs = new ArrayList();
+        blobs.add(blob);
     //        blob.next = rbl_next;
     //        rbl_next = blob;
     }
 
     void removeBlob(isc_blob_handle_impl blob) {
-    blobs.remove(blob);
+        if (blobs!=null)
+            blobs.remove(blob);
+    }
+	 
+    public synchronized void registerStatementWithTransaction(org.firebirdsql.jdbc.FBStatement stmt) {
+		  if (stmt == null)
+            this.stmt = stmt;
+		  else {
+            if (stmts == null)
+                stmts = new ArrayList();
+            stmts.add(stmt);
+		  }
+    }
+
+    public void forgetResultSets() {
+        if (stmt != null){
+            stmt.forgetResultSet();
+            stmt = null;				
+        }
+		  if (stmts != null) {
+		      for (int i=0; i< stmts.size(); i++)
+                ((FBStatement)stmts.get(i)).forgetResultSet();
+            stmts.clear();
+		  }
     }
 }

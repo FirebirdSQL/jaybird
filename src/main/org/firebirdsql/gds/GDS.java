@@ -1104,7 +1104,8 @@ public interface GDS {
                                XSQLDA in_xsqlda,
                                XSQLDA out_xsqlda) throws GDSException;
 
-    byte[][] isc_dsql_fetch(isc_stmt_handle stmt_handle,
+//    byte[][] isc_dsql_fetch(isc_stmt_handle stmt_handle,
+    void isc_dsql_fetch(isc_stmt_handle stmt_handle,
                          int da_version,
                          XSQLDA xsqlda) throws GDSException;
 
@@ -1132,6 +1133,7 @@ public interface GDS {
                             byte[] items,
                             int buffer_length) throws GDSException;
 
+    void getSqlCounts(isc_stmt_handle stmt) throws GDSException;
 
     int isc_vax_integer(byte[] buffer, int pos, int length);
 

@@ -126,7 +126,8 @@ public class XSQLVAR {
     }
 
     public final static byte[] encodeTimestamp(java.sql.Timestamp value){
-        return encodeLong(value.getTime() + value.getNanos() / 1000000);
+//        return encodeLong(value.getTime() + value.getNanos() / 1000000);
+        return encodeLong(value.getTime() );
     }
 
     public final static java.sql.Timestamp decodeTimestamp(byte[] byte_int){
