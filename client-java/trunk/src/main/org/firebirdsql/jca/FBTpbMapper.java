@@ -40,6 +40,7 @@ public class FBTpbMapper implements java.io.Serializable {
     private static final String TRANSACTION_REPEATABLE_READ = FBTpb.TRANSACTION_REPEATABLE_READ;
     private static final String TRANSACTION_READ_COMMITTED = FBTpb.TRANSACTION_READ_COMMITTED;
     private static final String TRANSACTION_READ_UNCOMMITTED = FBTpb.TRANSACTION_READ_UNCOMMITTED;
+    private static final String TRANSACTION_NONE = FBTpb.TRANSACTION_NONE;
     
     private HashMap mapping = new HashMap();
     
@@ -229,9 +230,15 @@ public class FBTpbMapper implements java.io.Serializable {
             case Connection.TRANSACTION_SERIALIZABLE: 
             case Connection.TRANSACTION_REPEATABLE_READ:
             case Connection.TRANSACTION_READ_COMMITTED:
-            case Connection.TRANSACTION_READ_UNCOMMITTED:
-                return new HashSet((Set)mapping.get(new Integer(transactionIsolation)));
+                return new HashSet((Set)mapping.get(
+                    new Integer(transactionIsolation)));
                 
+            // promote transaction 
+            case Connection.TRANSACTION_READ_UNCOMMITTED:
+                return new HashSet((Set)mapping.get(
+                    new Integer(Connection.TRANSACTION_READ_COMMITTED)));
+                
+            case Connection.TRANSACTION_NONE:
             default:
                 throw new FBResourceException(
                     "Transaction isolation level " + transactionIsolation + 
