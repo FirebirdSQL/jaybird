@@ -55,4 +55,6 @@ public interface isc_stmt_handle {
     int size();
 
     void removeRows();
-    }
+    
+    boolean isValid();
+}

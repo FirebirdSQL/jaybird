@@ -910,11 +910,15 @@ public abstract class AbstractConnection implements FirebirdConnection {
 
     public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda) throws GDSException {
         checkManagedConnection();
+        if (stmt == null || !stmt.isValid())
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
         mc.executeStatement(stmt,sendOutSqlda);
     }
 	 	 
     public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
         checkManagedConnection();
+        if (stmt == null || !stmt.isValid())
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
         mc.closeStatement(stmt,deallocate);
     }	 
 
@@ -929,16 +933,22 @@ public abstract class AbstractConnection implements FirebirdConnection {
 	 
     public void fetch(isc_stmt_handle stmt, int fetchSize) throws GDSException {
         checkManagedConnection();
+        if (stmt == null || !stmt.isValid())
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
         mc.fetch(stmt, fetchSize);
     }
     
     public void setCursorName(isc_stmt_handle stmt, String cursorName) throws GDSException {
         checkManagedConnection();
+        if (stmt == null || !stmt.isValid())
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
         mc.setCursorName(stmt, cursorName);
     }
 
     public void getSqlCounts(isc_stmt_handle stmt) throws GDSException {
         checkManagedConnection();
+        if (stmt == null || !stmt.isValid())
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
         mc.getSqlCounts(stmt);
     }
 

@@ -146,6 +146,10 @@ public final class isc_stmt_handle_impl implements isc_stmt_handle {
         rsr_id = value;
     }
 
+    public boolean isValid() {
+        return rsr_rdb != null && rsr_rdb.isValid();
+    }
+    
     public isc_db_handle_impl getRsr_rdb() {
         return rsr_rdb;
     }
