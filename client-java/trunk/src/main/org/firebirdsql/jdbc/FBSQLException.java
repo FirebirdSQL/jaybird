@@ -58,15 +58,15 @@ public class FBSQLException extends SQLException {
     private String sqlState;
     
     public FBSQLException(IOException ioex) {
-        super(ioex.getMessage());
+        super(ioex.getMessage(), SQL_STATE_GENERAL_ERROR);
         original = ioex;
         message = "I/O Exception. " + ioex.getMessage();
     }
 
     public FBSQLException(GDSException ex) {
-        super(ex.getMessage());
+        super(ex.getMessage(), SQL_STATE_GENERAL_ERROR);
         original = ex;
-        message = "GDS Exception "+ ex.getIntParam() + ". " + ex.getMessage();
+        message = "GDS Exception. "+ ex.getIntParam() + ". " + ex.getMessage();
     }
 
     public FBSQLException(ResourceException ex) {
