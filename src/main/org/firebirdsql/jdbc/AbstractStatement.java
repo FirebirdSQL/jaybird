@@ -964,6 +964,26 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         return c;
     }
 
+    /**
+     * Returns the <code>StatementInfo</code> for this statement. The statement
+     * must either be a PreparedStatement, or have already had SQL executed
+     * through it.
+     *
+     * @return The <code>StatementInfo</code> describing the execution
+     *         of this statement
+     * @throws SQLException if a database access error occurs
+     */
+    public FirebirdStatementInfo getStatementInfo() throws SQLException {
+        FirebirdStatementInfoFactory statementFactory = 
+            FirebirdStatementInfoFactory.getInstance(
+                    c.getInternalAPIHandler());
+        try {
+            return statementFactory.getStatementInfo(this);
+        } catch (GDSException e){
+            throw new FBSQLException(e);
+        }
+    }
+
     //package level
 
     void closeResultSet() throws SQLException {
