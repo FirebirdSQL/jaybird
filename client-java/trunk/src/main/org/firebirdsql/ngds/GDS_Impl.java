@@ -131,7 +131,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
                 continue;
                 }
 
-            if(logging) log.info( "Failed to load client library # "+i+" - \""+currentClientLibraryToTry+"\"." );
+            if(logging) log.info( "Successfully loaded client library # "+i+" - \""+currentClientLibraryToTry+"\"." );
 
             // If we get here we have been loaded a client library so we stop here.
             break;
