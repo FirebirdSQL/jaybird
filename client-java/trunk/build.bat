@@ -1,4 +1,4 @@
-@echo on
+@echo off
 
 REM check JAVA_HOME
 if "%JAVA_HOME%" == "" goto noJavaHome
@@ -13,6 +13,8 @@ goto end
 REM Slurp the command line arguments.  This loop allows for an unlimited number of 
 REM arguments (up to the command line limit, anyway).
 :slurpArgs
+set ANT= bin/ant.bat
+
 set ANT_CMD_LINE_ARGS=
 
 :setupArgs
@@ -42,6 +44,6 @@ set ANT_CMD_LINE_ARGS=%ANT_CMD_LINE_ARGS% -Djavax.xml.parsers.SAXParserFactory=%
 
 :RunAnt
 echo on
-ANT %ANT_CMD_LINE_ARGS%
+%ANT% %ANT_CMD_LINE_ARGS%
 
 :end
