@@ -503,8 +503,9 @@ public class FBWrappingDataSource implements DataSource,
             ref.add(new StringRefAddr(REF_BLOB_BUFFER_SIZE, 
                 String.valueOf(getBlobBufferSize())));
             
-        ref.add(new StringRefAddr(REF_BLOCKING_TIMEOUT, 
-            String.valueOf(getBlockingTimeout())));
+        if (getBlockingTimeout() != FBPoolingDefaults.DEFAULT_BLOCKING_TIMEOUT)
+            ref.add(new StringRefAddr(REF_BLOCKING_TIMEOUT, 
+                String.valueOf(getBlockingTimeout())));
 
         if (getDatabase() != null)            
             ref.add(new StringRefAddr(REF_DATABASE, getDatabase()));
@@ -515,26 +516,32 @@ public class FBWrappingDataSource implements DataSource,
         if (getEncoding() != null)
             ref.add(new StringRefAddr(REF_ENCODING, getEncoding()));
 
-        ref.add(new StringRefAddr(REF_IDLE_TIMEOUT,
-            String.valueOf(getIdleTimeout())));
+        if (getIdleTimeout() != FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT)
+            ref.add(new StringRefAddr(REF_IDLE_TIMEOUT,
+                String.valueOf(getIdleTimeout())));
             
-        ref.add(new StringRefAddr(REF_LOGIN_TIMEOUT,
-            String.valueOf(getLoginTimeout())));
-            
-        ref.add(new StringRefAddr(REF_MAX_SIZE, 
-            String.valueOf(getMaxSize())));
-            
-        ref.add(new StringRefAddr(REF_MIN_SIZE,
-            String.valueOf(getMinSize())));
+        if (getLoginTimeout() != FBPoolingDefaults.DEFAULT_LOGIN_TIMEOUT)
+            ref.add(new StringRefAddr(REF_LOGIN_TIMEOUT,
+                String.valueOf(getLoginTimeout())));
+
+        if (getMaxSize() != FBPoolingDefaults.DEFAULT_MAX_SIZE)
+            ref.add(new StringRefAddr(REF_MAX_SIZE, 
+                String.valueOf(getMaxSize())));
+
+        if (getMinSize() != FBPoolingDefaults.DEFAULT_MIN_SIZE)
+            ref.add(new StringRefAddr(REF_MIN_SIZE,
+                String.valueOf(getMinSize())));
             
         if (getPassword() != null)
             ref.add(new StringRefAddr(REF_PASSWORD, getPassword()));
 
-        ref.add(new StringRefAddr(REF_PING_INTERVAL, 
-            String.valueOf(getPingInterval())));
-            
-        ref.add(new StringRefAddr(REF_SOCKET_BUFFER_SIZE, 
-        	String.valueOf(getSocketBufferSize())));
+        if (getPingInterval() != FBPoolingDefaults.DEFAULT_PING_INTERVAL)
+            ref.add(new StringRefAddr(REF_PING_INTERVAL, 
+                String.valueOf(getPingInterval())));
+        
+        if (getSocketBufferSize() != FBConnectionDefaults.DEFAULT_SOCKET_BUFFER_SIZE)
+            ref.add(new StringRefAddr(REF_SOCKET_BUFFER_SIZE, 
+            	String.valueOf(getSocketBufferSize())));
         	
         if (getSqlRole() != null)
        	    ref.add(new StringRefAddr(REF_SQL_ROLE, getSqlRole()));
