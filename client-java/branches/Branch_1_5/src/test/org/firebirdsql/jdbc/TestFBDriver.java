@@ -135,6 +135,28 @@ public class TestFBDriver extends FBTestBase {
         }
     }
     
+    public void testDialect1() throws Exception {
+        Properties info = (Properties)getDefaultPropertiesForConnection().clone();
+        info.setProperty("sqlDialect", "1");
+        
+        Connection dialect1Connection = DriverManager.getConnection(getUrl(), info);
+        try {
+            
+            Statement stmt = dialect1Connection.createStatement();
+            try {
+                ResultSet rs = stmt.executeQuery("SELECT  CAST(\"NOW\" AS DATE) FROM rdb$database");
+                assertTrue("Should have at least one row.", rs.next());
+            } catch(SQLException ex) {
+                fail("In dialect doublequotes are allowed.");
+            } finally {
+                stmt.close();
+            }
+            
+        } finally {
+            dialect1Connection.close();
+        }
+    }
+    
     public void testGetSQLState() throws Exception {
         Connection connection = getConnectionViaDriverManager();
         

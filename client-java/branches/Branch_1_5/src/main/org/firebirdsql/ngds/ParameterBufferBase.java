@@ -66,6 +66,16 @@ abstract class ParameterBufferBase implements java.io.Serializable
         return null;
         }
     
+    public int getArgumentAsInt(int type) {
+        final List argumentsList = getArgumentsList();
+        for (int i = 0, n = argumentsList.size(); i < n; i++) {
+            final Argument argument = (Argument) argumentsList.get(i);
+            if (argument.getType() == type) { 
+                return argument.getValueAsInt(); }
+        }
+        return 0;
+    }
+    
     public boolean hasArgument(int type) {
         final List argumentsList = getArgumentsList();
         
@@ -147,6 +157,11 @@ abstract class ParameterBufferBase implements java.io.Serializable
             throw new RuntimeException("Cannot get the value for this argument type as a string");
             }
 
+        int getValueAsInt()
+        {
+            throw new RuntimeException("Cannot get the value of this argument type as int");
+        }
+        
         abstract void writeTo(ByteArrayOutputStream outputStream);
         }
 
@@ -180,6 +195,10 @@ abstract class ParameterBufferBase implements java.io.Serializable
             {
             return value;
             }
+        
+        int getValueAsInt() {
+            return Integer.parseInt(value);
+        }
 
         protected void writeLength(int length, ByteArrayOutputStream outputStream)
             {
@@ -245,6 +264,10 @@ abstract class ParameterBufferBase implements java.io.Serializable
             {
             return type;
             }
+        
+        int getValueAsInt() {
+            return value;
+        }
 
         public int hashCode()
             {
@@ -296,6 +319,14 @@ abstract class ParameterBufferBase implements java.io.Serializable
             {
             return type;
             }
+        
+        int getValueAsInt() {
+            if (value.length == 1)
+                return value[0];
+            else
+                throw new UnsupportedOperationException("This method is not " +
+                    "supported for byte arrays with length > 1");
+        }
 
         public int hashCode()
             {
