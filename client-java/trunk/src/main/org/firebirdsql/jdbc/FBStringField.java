@@ -102,6 +102,8 @@ class FBStringField extends FBField {
         this.c = c;
         if (c!=null)
             IscEncoding = c.getIscEncoding();
+        if (IscEncoding!= null && IscEncoding.equalsIgnoreCase("NONE"))
+            IscEncoding = null;
     }
 
     //----- Math code
