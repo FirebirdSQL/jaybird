@@ -42,7 +42,7 @@ public class FBSQLException extends SQLException {
         original = ex;
         message = "GDS Exception. " + ex.getMessage();
     }
-    
+
     public FBSQLException(ResourceException ex) {
         super(ex.getMessage());
         
@@ -61,7 +61,7 @@ public class FBSQLException extends SQLException {
             
         message = "Resource Exception. " + ex.getMessage();
     }
-    
+
     public int getErrorCode() {
         if (original instanceof GDSException)
             return ((GDSException)original).getIntParam();

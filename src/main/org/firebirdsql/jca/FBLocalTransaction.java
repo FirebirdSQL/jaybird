@@ -29,6 +29,8 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
+import org.firebirdsql.gds.GDSException;
+
 import org.firebirdsql.jdbc.FBConnection;
 
 import org.firebirdsql.logging.Logger;
@@ -37,9 +39,11 @@ import org.firebirdsql.logging.LoggerFactory;
 
 
 /**
- * The class <code>FBLocalTransaction</code> implements LocalTransaction both
- * in the cci and spi meanings.  A flag is used to distinguish the current
- * functionality..
+ * The class <code>FBLocalTransaction</code> implements
+ * LocalTransaction both in the cci and spi meanings.  A flag is used
+ * to distinguish the current functionality. This class works by
+ * delegating the operations to the internal implementations of the
+ * XAResource functionality in FBManagedConnection.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
@@ -52,9 +56,10 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
 
      private Xid xid = null;
 
-     //used to determine if local transaction events notify ConnectionEventListeners
-     //see jca spec section 6.8.  Basically not null means this is cci LocalTransaction,
-     //null means spi.LocalTransaction.
+     //used to determine if local transaction events notify
+     //ConnectionEventListeners see jca spec section 6.8.  Basically
+     //not null means this is cci LocalTransaction, null means
+     //spi.LocalTransaction.
      private final ConnectionEvent beginEvent;
      private final ConnectionEvent commitEvent;
      private final ConnectionEvent rollbackEvent;
@@ -84,27 +89,33 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
 
 
     /**
-     Begin a local transaction
-     Throws:
-         ResourceException - generic exception if operation fails
-         LocalTransactionException - error condition related to local transaction management
-         ResourceAdapterInternalException - error condition internal to resource adapter
-         EISSystemException - EIS instance specific error condition
-    **/
-     public void begin() throws ResourceException {
+     * Begin a local transaction
+     *  Throws:
+     *    ResourceException - generic exception if operation fails
+     *    LocalTransactionException - error condition related to local transaction management
+     *    ResourceAdapterInternalException - error condition internal to resource adapter
+     *    EISSystemException - EIS instance specific error condition
+     **/
+     public void begin() throws ResourceException
+    {
+        try 
+        {
+            internalBegin();
+        }
+        catch (GDSException ge)
+        {
+            throw new FBResourceException(ge);
+        } // end of try-catch
+     }
+
+     public void internalBegin() throws GDSException {
          if (xid != null) {
-             throw new FBResourceException("local transaction active: can't begin another");
+             throw new GDSException("local transaction active: can't begin another");
          }
          xid = new FBLocalXid();
          
          synchronized(mc) {
-             try {
-                 mc.start(xid, XAResource.TMNOFLAGS);  //FBManagedConnection is its own XAResource
-             }
-             catch (XAException e) {
-                if (log != null) log.warn("couldn't start local transaction: " , e);
-                throw new FBResourceException("couldn't start local transaction", e);
-             }
+             mc.internalStart(xid, XAResource.TMNOFLAGS);
              if (beginEvent != null) {
                  mc.notify(mc.localTransactionStartedNotifier, beginEvent);
              }
@@ -121,17 +132,28 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
          EISSystemException - EIS instance specific error condition
     **/
      public void commit() throws ResourceException {
+         try 
+         {
+             internalCommit();             
+         }
+         catch (GDSException ge)
+         {
+             throw new FBResourceException("Problem committing local tx: " + ge.getMessage(), ge);
+         } // end of try-catch
+     }
+
+
+     public void internalCommit() throws GDSException {
          if (xid == null) {
-             throw new ResourceException("no local transaction active: can't commit");
+             throw new GDSException("no local transaction active: can't commit");
          }
          
-         synchronized(mc) {
-             try {
-                 mc.end(xid, XAResource.TMSUCCESS);  //FBManagedConnection is its own XAResource
-                 mc.commit(xid, true);
-             }
-             catch (XAException e) {
-                 throw new FBResourceException("couldn't commit local transaction.", e);
+         synchronized(mc)
+         {
+             try 
+             {
+                 mc.internalEnd(xid, XAResource.TMSUCCESS);
+                 mc.internalCommit(xid, true);
              }
              finally {
                  xid = null;
@@ -154,18 +176,28 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
          EISSystemException - EIS instance specific error condition
     **/
 
-    public void rollback() throws ResourceException {
+    public void rollback() throws ResourceException
+    {
+        try 
+        {
+            internalRollback();
+        }
+        catch (GDSException ge)
+        {
+            throw new FBResourceException("Problem rolling back local tx: " + ge.getMessage(), ge);
+        } // end of try-catch
+     }
+
+
+    public void internalRollback() throws GDSException {
          if (xid == null) {
-             throw new FBResourceException("no local transaction active: can't rollback");
+             throw new GDSException("no local transaction active: can't rollback");
          }
          
          synchronized(mc) {
              try {
-                 mc.end(xid, XAResource.TMSUCCESS);  //??? on flags --FBManagedConnection is its own XAResource
-                 mc.rollback(xid);
-             }
-             catch (XAException e) {
-                 throw new FBResourceException("couldn't commit local transaction.", e);
+                 mc.internalEnd(xid, XAResource.TMSUCCESS);  //??? on flags --FBManagedConnection is its own XAResource
+                 mc.internalRollback(xid);
              }
              finally {
                  xid = null;

@@ -394,7 +394,7 @@ public class FBConnection implements Connection
             try {
                 if (inTransaction())
                 {
-                    getLocalTransaction().commit();
+                    getLocalTransaction().internalCommit();
                 }
 
                 this.mc.autoCommit = autoCommit;
@@ -407,8 +407,8 @@ public class FBConnection implements Connection
                     getLocalTransaction().begin();
                 } // end of if ()
                 */
-            } catch(javax.resource.ResourceException resex) {
-                throw new SQLException(resex.toString());
+            } catch(GDSException ge) {
+                throw new FBSQLException(ge);
             }
         } // end of if ()
         
@@ -453,11 +453,11 @@ public class FBConnection implements Connection
         try {
             if (inTransaction())
             {
-                getLocalTransaction().commit();
+                getLocalTransaction().internalCommit();
             } // end of if ()
             // getLocalTransaction().begin();
-        } catch(javax.resource.ResourceException resex) {
-            throw new FBSQLException(resex);
+        } catch(GDSException ge) {
+            throw new FBSQLException(ge);
         }
     }
 
@@ -483,11 +483,11 @@ public class FBConnection implements Connection
         try{
             if (inTransaction())
             {
-                getLocalTransaction().rollback();
+                getLocalTransaction().internalRollback();
             } // end of if ()
             // getLocalTransaction().begin();
-        } catch(javax.resource.ResourceException resex) {
-            throw new FBSQLException(resex);
+        } catch(GDSException ge) {
+            throw new FBSQLException(ge);
         }
     }
 
@@ -532,10 +532,10 @@ public class FBConnection implements Connection
                     try {
                         if (inTransaction())
                         {
-                            getLocalTransaction().rollback();
+                            getLocalTransaction().internalRollback();
                         }
-                    } catch(javax.resource.ResourceException resex) {
-                        throw new FBSQLException(resex);
+                    } catch(GDSException ge) {
+                        throw new FBSQLException(ge);
                     }
                     finally
                     {
@@ -634,49 +634,6 @@ public class FBConnection implements Connection
     }
 
 
-    /**
-     * Indicates that transactions are not supported.
-     */
-//    int TRANSACTION_NONE       = 0;
-
-    /**
-     * Dirty reads, non-repeatable reads and phantom reads can occur.
-     * This level allows a row changed by one transaction to be read
-     * by another transaction before any changes in that row have been
-     * committed (a "dirty read").  If any of the changes are rolled back,
-     * the second transaction will have retrieved an invalid row.
-     */
-//    int TRANSACTION_READ_UNCOMMITTED = 1;
-
-    /**
-     * Dirty reads are prevented; non-repeatable reads and phantom
-     * reads can occur.  This level only prohibits a transaction
-     * from reading a row with uncommitted changes in it.
-     */
-//    int TRANSACTION_READ_COMMITTED   = 2;
-
-    /**
-     * Dirty reads and non-repeatable reads are prevented; phantom
-     * reads can occur.  This level prohibits a transaction from
-     * reading a row with uncommitted changes in it, and it also
-     * prohibits the situation where one transaction reads a row,
-     * a second transaction alters the row, and the first transaction
-     * rereads the row, getting different values the second time
-     * (a "non-repeatable read").
-     */
-//    int TRANSACTION_REPEATABLE_READ  = 4;
-
-    /**
-     * Dirty reads, non-repeatable reads and phantom reads are prevented.
-     * This level includes the prohibitions in
-     * TRANSACTION_REPEATABLE_READ and further prohibits the
-     * situation where one transaction reads all rows that satisfy
-     * a WHERE condition, a second transaction inserts a row that
-     * satisfies that WHERE condition, and the first transaction
-     * rereads for the same condition, retrieving the additional
-     * "phantom" row in the second read.
-     */
-//    int TRANSACTION_SERIALIZABLE     = 8;
 
     /**
      * Attempts to change the transaction
@@ -684,8 +641,7 @@ public class FBConnection implements Connection
      * The constants defined in the interface <code>Connection</code>
      * are the possible transaction isolation levels.
      *
-     * <P><B>Note:</B> This method cannot be called while
-     * in the middle of a transaction.
+     * <P>Calling this method will commit any current transaction.
      *
      * @param level one of the TRANSACTION_* isolation values with the
      * exception of TRANSACTION_NONE; some databases may not support
@@ -699,16 +655,24 @@ public class FBConnection implements Connection
         if (isClosed())
             throw new SQLException("Connection has being closed.");
         
-        if (getTransactionIsolation() != level) {
-            try {
+        if (getTransactionIsolation() != level) 
+        {
+            try 
+            {
 
                 if (inTransaction())
-                    getLocalTransaction().commit();
-                
+                {
+                    getLocalTransaction().internalCommit();
+                }
                 mc.setTransactionIsolation(level);
-                
-            } catch (ResourceException e) {
-                throw new FBSQLException(e);
+            }
+            catch (ResourceException re)
+            {
+                throw new FBSQLException(re);
+            }
+            catch (GDSException ge)
+            {
+                throw new FBSQLException(ge);
             } 
         }
     }
@@ -1037,11 +1001,11 @@ public class FBConnection implements Connection
             autoTransaction = false;
             try
             {
-                getLocalTransaction().commit();
+                getLocalTransaction().internalCommit();
             }
-            catch (ResourceException re)
+            catch (GDSException ge)
             {
-                throw new FBSQLException(re);
+                throw new FBSQLException(ge);
             } // end of catch
 
         } // end of if ()
@@ -1193,36 +1157,46 @@ public class FBConnection implements Connection
     }
 	 
     public ResultSet doQuery(String sql, List params,HashMap statements) 
-	 throws SQLException {
+	 throws SQLException
+    {
         boolean ourTransaction = false;
- 	     LocalTransaction trans = null;
-        if (!inTransaction()) {
-				trans = getLocalTransaction();
+        FBLocalTransaction trans = null;
+        if (!inTransaction())
+        {
+            trans = getLocalTransaction();
 				 
-            try {
-                trans.begin();
+            try 
+            {
+                trans.internalBegin();
                 ourTransaction = true;
             }
-            catch (ResourceException re) {
-                throw new SQLException("couldn't work with local transaction: " + re);
+            catch (GDSException ge)
+            {
+                throw new FBSQLException(ge);
             }
         }
         PreparedStatement s = getStatement(sql,statements);
-        for (int i = 0; i < params.size(); i++) {
+        for (int i = 0; i < params.size(); i++)
+        {
             s.setString(i + 1, (String)params.get(i));
         }
         ResultSet rs = null;
-        try {
+        try
+        {
             s.execute();
             rs = ((FBStatement)s).getCachedResultSet(true); //trim strings
         }
-        finally {
-            if (ourTransaction) {
-                try {
-                    trans.commit();
+        finally
+        {
+            if (ourTransaction) 
+            {
+                try 
+                {
+                    trans.internalCommit();
                 }
-                catch (ResourceException re) {
-                    throw new SQLException("couldn't work with local transaction: " + re);
+                catch (GDSException ge) 
+                {
+                    throw new FBSQLException(ge);
                 }
             }
         }
