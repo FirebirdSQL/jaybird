@@ -20,6 +20,7 @@
 package org.firebirdsql.pool;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -40,7 +41,13 @@ class PooledConnectionQueue {
     private static final boolean SHOW_STACK_ON_BLOCK = false;
     
 
-    private AbstractConnectionPoolDataSource owner;
+    private PooledConnectionManager connectionManager;
+    private Logger logger;
+    private ConnectionPoolConfiguration configuration;
+    
+    private String userName;
+    private String password;
+    private boolean personalized;
 
     private String queueName;
     private int blockingTimeout;
@@ -48,28 +55,53 @@ class PooledConnectionQueue {
     private int size;
     private LinkedQueue queue = new LinkedQueue();
     private boolean blocked;
+    
+    private Object takeMutex = new Object();
+    
+    private IdleRemover idleRemover;
 
     private int totalConnections;
 
     private HashSet workingConnections = new HashSet();
+    private HashMap connectionIdleTime = new HashMap();
 
     /**
      * Create instance of this queue.
      * 
-     * @param owner instance of {@link AbstractConnectionPoolDataSource} that
-     * owns this queue.
-     * 
+     * @param connectionManager instance of {@link PooledConnectionManager}.
+     * @param logger instance of {@link Logger}.
+     * @param configuration instance of {@link Configuration}.
      * @param queueName name of this queue.
-     * 
-     * @param blockingTimeout number of milliseconds during which current thread
-     * will still wait for free connection in {@link #take()} method.
      */
-    public PooledConnectionQueue(AbstractConnectionPoolDataSource owner, 
-        String queueName, int blockingTimeout) 
+    public PooledConnectionQueue(PooledConnectionManager connectionManager,
+        Logger logger, ConnectionPoolConfiguration configuration, 
+        String queueName) 
     {
-        this.owner = owner;
+        this.connectionManager = connectionManager;
+        this.logger = logger;
+        this.configuration = configuration;
+        
         this.queueName = queueName;
-        this.blockingTimeout = blockingTimeout;
+        this.blockingTimeout = configuration.getBlockingTimeout();
+    }
+    
+    /**
+     * Create instance of this queue for the specified user name and password.
+     * 
+     * @param connectionManager instance of {@link PooledConnectionManager}.
+     * @param logger instance of {@link Logger}.
+     * @param configuration instance of {@link Configuration}.
+     * @param queueName name of this queue.
+     */
+    public PooledConnectionQueue(PooledConnectionManager connectionManager,
+        Logger logger, ConnectionPoolConfiguration configuration, 
+        String queueName, String userName, String password)
+    {
+        this(connectionManager, logger, configuration, queueName);
+        
+        this.userName = userName;
+        this.password = password;
+        this.personalized = true;
     }
     
     /**
@@ -79,12 +111,12 @@ class PooledConnectionQueue {
      * @return instance of {@link Logger}.
      */
     protected Logger getLogger() {
-        return owner.getLogger();
+        return logger;
     }
     
     
     private ConnectionPoolConfiguration getConfiguration() {
-        return owner.getConfiguration();
+        return configuration;
     }
 
     /**
@@ -123,39 +155,50 @@ class PooledConnectionQueue {
      * could not be created.
      */
     public void start() throws SQLException {
-        for (int i = 0; i < getConfiguration().getMinConnections(); i++)
+        for (int i = 0; i < getConfiguration().getMinConnections(); i++) {
             try {
-                addConnection();
+                addConnection(queue);
             } catch (InterruptedException iex) {
                 throw new SQLException("Could not start connection queue.");
             }
+        }
+        
+        idleRemover = new IdleRemover();
+        Thread t = new Thread(idleRemover, "Pool " + queueName + " idleRemover");
+        t.setDaemon(true);
+        t.start();
     }
 
     /**
      * Shutdown this queue.
      */
     public void shutdown() {
-        // close all working connections.
-        Iterator iter = workingConnections.iterator();
-        while (iter.hasNext()) {
-            PooledConnection item = (PooledConnection) iter.next();
-
-            try {
-                item.close();
-            } catch (SQLException ex) {
-                getLogger().warn("Could not close connection.", ex);
+        try {
+            // close all working connections.
+            Iterator iter = workingConnections.iterator();
+            while (iter.hasNext()) {
+                PooledConnection item = (PooledConnection) iter.next();
+    
+                try {
+                    item.close();
+                } catch (SQLException ex) {
+                    getLogger().warn("Could not close connection.", ex);
+                }
             }
+    
+            // close all free connections
+            while (size() > 0)
+                try {
+                    take().close();
+                } catch (SQLException ex) {
+                    getLogger().warn("Could not close connection.", ex);
+                }
+    
+            totalConnections = 0;
+        } finally {
+            idleRemover.stop();
+            idleRemover = null;
         }
-
-        // close all free connections
-        while (size() > 0)
-            try {
-                take().close();
-            } catch (SQLException ex) {
-                getLogger().warn("Could not close connection.", ex);
-            }
-
-        totalConnections = 0;
     }
     
     /**
@@ -179,9 +222,9 @@ class PooledConnectionQueue {
             connection.close();
         } catch(SQLException ex) {
             // do nothing, connection is invalid anyway
+        } finally {
+            totalConnections--;
         }
-        
-        size++;
     }
 
     /**
@@ -198,6 +241,10 @@ class PooledConnectionQueue {
                 getLogger().warn("Pool " + queueName + " will be unblocked");
 
             queue.put(connection);
+            
+            // save timestamp when connection was returned to queue
+            connectionIdleTime.put(
+                connection, new Long(System.currentTimeMillis()));
 
             size++;
             blocked = false;
@@ -246,63 +293,65 @@ class PooledConnectionQueue {
 
         try {
 
-            if (queue.isEmpty()) {
-
-                while (result == null) {
-                    
-                    if (!keepBlocking(startTime))
-                        throw new SQLException(
-                            "Could not obtain connection during " + 
-                            "blocking timeout (" + blockingTimeout + " ms)");
-
-                    boolean connectionAdded = false;
-
-                    try {
-                        connectionAdded = addConnection();
-                    } catch (SQLException sqlex) {
-                        if (getLogger() != null)
-                            getLogger().warn(
-                                "Could not create connection."
-                                + sqlex.getMessage());
-
-                        // could not add connection... bad luck
-                        // let's wait more
-
-                    }
-
-                    if (!connectionAdded) {
-                        String message =
-                            "Pool "
-                                + queueName
-                                + " is empty and will block here."
-                                + " Thread "
-                                + Thread.currentThread().getName();
-
-                        if (SHOW_STACK_ON_BLOCK) {
-                            if (getLogger() != null)
-                                getLogger().warn(message, new Exception());
-                        } else {
-                            if (getLogger() != null)
-                                getLogger().warn(message);
-                        }
-
-                        blocked = true;
-                    }
-                    
-                    result = (PooledConnection) queue.poll(
-                        getConfiguration().getRetryInterval());
+            synchronized(takeMutex) {
+                if (queue.isEmpty()) {
+    
+                    while (result == null) {
                         
-                    if (result == null && getLogger() != null)
-                        getLogger().warn("No connection in pool. Thread " +
-                            Thread.currentThread().getName());
-                    else
-                    if (result != null && !connectionAdded && getLogger() != null)
-                        getLogger().info("Obtained connection. Thread " + 
-                            Thread.currentThread().getName());
+                        if (!keepBlocking(startTime))
+                            throw new SQLException(
+                                "Could not obtain connection during " + 
+                                "blocking timeout (" + blockingTimeout + " ms)");
+    
+                        boolean connectionAdded = false;
+    
+                        try {
+                            connectionAdded = addConnection(queue);
+                        } catch (SQLException sqlex) {
+                            if (getLogger() != null)
+                                getLogger().warn(
+                                    "Could not create connection."
+                                    + sqlex.getMessage());
+    
+                            // could not add connection... bad luck
+                            // let's wait more
+    
+                        }
+    
+                        if (!connectionAdded) {
+                            String message =
+                                "Pool "
+                                    + queueName
+                                    + " is empty and will block here."
+                                    + " Thread "
+                                    + Thread.currentThread().getName();
+    
+                            if (SHOW_STACK_ON_BLOCK) {
+                                if (getLogger() != null)
+                                    getLogger().warn(message, new Exception());
+                            } else {
+                                if (getLogger() != null)
+                                    getLogger().warn(message);
+                            }
+    
+                            blocked = true;
+                        }
+                        
+                        result = (PooledConnection) queue.poll(
+                            getConfiguration().getRetryInterval());
+                            
+                        if (result == null && getLogger() != null)
+                            getLogger().warn("No connection in pool. Thread " +
+                                Thread.currentThread().getName());
+                        else
+                        if (result != null && !connectionAdded && getLogger() != null)
+                            getLogger().info("Obtained connection. Thread " + 
+                                Thread.currentThread().getName());
+                    }
+    
+                } else {
+                    result = (PooledConnection)queue.take();
                 }
-
-            } else {
-                result = (PooledConnection)queue.take();
             }
 
         } catch (InterruptedException iex) {
@@ -332,7 +381,7 @@ class PooledConnectionQueue {
      * @throws SQLException if new connection cannot be opened.
      * @throws InterruptedException if thread was interrupted.
      */
-    private boolean addConnection()
+    private boolean addConnection(LinkedQueue queue)
         throws SQLException, InterruptedException {
 
         synchronized (this) {
@@ -353,7 +402,10 @@ class PooledConnectionQueue {
                 return false;
             }
 
-            PooledConnection pooledConnection = owner.allocateConnection();
+            PooledConnection pooledConnection = !personalized ?
+                connectionManager.allocateConnection() :
+                connectionManager.allocateConnection(userName, password)
+                ;
 
             if (LOG_DEBUG_INFO && getLogger() != null)
                 getLogger().debug(
@@ -368,6 +420,84 @@ class PooledConnectionQueue {
 
             return true;
         }
+    }
+
+    /**
+     * Release first connection in the queue if it was idle longer than idle
+     * timeout interval.
+     * 
+     * @return <code>true</code> if method removed idle connection, otherwise
+     * <code>false</code>
+     * 
+     * @throws SQLException if exception happened when releasing the connection.
+     */
+    private boolean releaseNextIdleConnection() throws SQLException {
+                  
+        synchronized(takeMutex) {  
+            PooledConnection candidate = (PooledConnection)queue.peek();
+            
+            if (candidate == null)
+                return false;
+            
+            Long lastUsageTime = (Long)connectionIdleTime.get(candidate);
+            if (lastUsageTime == null)
+                return false;
+            
+            long idleTime = System.currentTimeMillis() - lastUsageTime.longValue();
+            
+            if (idleTime < getConfiguration().getIdleTimeout()) 
+                return false;
+            
+            try {    
+                take().close();
+            } finally {
+                workingConnections.remove(candidate);
+                connectionIdleTime.remove(candidate);
+                totalConnections--;
+            }
+            
+            return true;
+        }
+    }
+
+    /**
+     * Implementation of {@link Runnable} interface responsible for removing
+     * idle connections.
+     */
+    private class IdleRemover implements Runnable {
+        
+        private boolean running;
+        
+        public IdleRemover() {
+            running = true;
+        }
+        
+        public void stop() {
+            running = false;
+        }
+        
+        public void run() {
+            while (running) {
+                
+                try {
+                    while(releaseNextIdleConnection()) {
+                        // do nothing, we already released connection
+                        // next one, please :)
+                    }
+                } catch(SQLException ex) {
+                    // do nothing, we hardly can handle this situation
+                }
+                
+                try {
+                    int idleTimeout = getConfiguration().getIdleTimeout();
+                    int maxConnections =  getConfiguration().getMaxConnections();
+                    Thread.sleep(idleTimeout / maxConnections);
+                } catch(InterruptedException ex) {
+                    // do nothing
+                }
+            }
+        }
+        
     }
 }
 

@@ -21,10 +21,13 @@ package org.firebirdsql.pool;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import javax.sql.PooledConnection;
+
+import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.jdbc.FirebirdConnection;
 
 /**
@@ -32,7 +35,11 @@ import org.firebirdsql.jdbc.FirebirdConnection;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBConnectionPoolDataSource extends AbstractConnectionPoolDataSource {
+public class FBConnectionPoolDataSource extends AbstractConnectionPoolDataSource
+    implements PooledConnectionManager 
+{
+    public static final String USER_NAME = FBDriver.USER;
+    public static final String PASSWORD = FBDriver.PASSWORD;
     
     private static final Logger LOG =
         LoggerFactory.getLogger(FBConnectionPoolDataSource.class, false);
@@ -68,7 +75,10 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPoolDataSource
     public ConnectionPoolConfiguration getConfiguration() {
         return config;
     }
-
+    
+    protected PooledConnectionManager getConnectionManager() {
+        return this;
+    }
 
     /**
      * Allocate new physical connection. This implementation uses 
@@ -79,12 +89,43 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPoolDataSource
      * 
      * @throws SQLException if connection cannot be allocated.
      */
-    protected PooledConnection allocateConnection() throws SQLException {
+    public PooledConnection allocateConnection() throws SQLException {
         FBConnectionPoolConfiguration config = 
             (FBConnectionPoolConfiguration)getConfiguration();
+            
+        String userName = config.getProperty(USER_NAME);
+        String password = config.getProperty(PASSWORD);
         
+        return allocateConnection(userName, password);
+        
+    }
+    
+    /**
+     * Allocate new physical connection for the specified user name and 
+     * password.
+     * 
+     * @param userName user name.
+     * @param password password.
+     *  
+     * @return instance of {@link PooledConnection}.
+     * 
+     * @throws SQLException if connection cannot be allocated.
+     */
+    public PooledConnection allocateConnection(String userName, String password)
+        throws SQLException
+    {
+
+        FBConnectionPoolConfiguration config = 
+            (FBConnectionPoolConfiguration)getConfiguration();
+            
+        Properties props = new Properties();
+        props.putAll(config.getProperties());
+        
+        props.setProperty(USER_NAME, userName);
+        props.setProperty(PASSWORD, password);
+
         Connection connection = 
-            DriverManager.getConnection(config.getUrl(), config.getProperties());
+            DriverManager.getConnection(config.getUrl(), props);
             
         PingablePooledConnection pooledConnection = null;
 

@@ -66,6 +66,14 @@ public interface ConnectionPoolConfiguration {
      */    
     int getRetryInterval();
     
+    /**
+     * Get time after which idle connections will be deallocated.
+     * 
+     * @return idle timeout in milliseconds, {@link Integer#MAX_VALUE}
+     * indicates that idle connections are not removed.
+     */
+    int getIdleTimeout();
+    
 	/**
 	 * Check if this pool supports pingable connections. Pingable connections
 	 * are used to correctly check if connection is still alive or not.

@@ -52,6 +52,9 @@ public
         
         private static Logger LOG = 
             LoggerFactory.getLogger(XPreparedStatementCache.class, false);
+            
+        public static final String REF_CLASS_NAME = 
+            FBConnectionPoolConfiguration.REF_TYPE;
         
 	
 		private static HashMap pools = new HashMap();
@@ -86,6 +89,11 @@ public
 			throws Exception {
 				
 				if (!(refObj instanceof Reference)) return null;
+                
+                Reference ref = (Reference)refObj;
+                
+                if (!REF_CLASS_NAME.equals(ref.getClassName()))
+                    return null;
 				
 				RefAddr address = ((Reference)refObj).get(
 				    FBConnectionPoolConfiguration.REF_TYPE);

@@ -34,7 +34,7 @@ interface XConnectionManager {
      * 
      * @return array of interfaces that should be implemented by dynamic proxy.
      */
-    Class[] getImplementedInterfaces();
+    // Class[] getImplementedInterfaces();
 	
 	/**
 	 * Check if specified connection is still valid. 

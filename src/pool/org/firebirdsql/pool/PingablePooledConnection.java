@@ -31,7 +31,7 @@ import java.util.*;
 /**
  * This class implements {@link javax.sql.PooledConnection} interface.
  *
-     * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class PingablePooledConnection implements PooledConnection,
     XConnectionManager,
@@ -65,11 +65,13 @@ public class PingablePooledConnection implements PooledConnection,
         return log;
     }
 
+    /*
     public Class[] getImplementedInterfaces() {
         return new Class[] {
             Connection.class
         };
     }
+    */
 
     protected PingablePooledConnection(Connection connection) throws
         SQLException {
@@ -295,15 +297,29 @@ public class PingablePooledConnection implements PooledConnection,
         }
         PreparedStatement stmt = jdbcConnection.prepareStatement(
             statement, resultSetType, resultSetConcurrency);
+            
+        Class[] implementedInterfaces = stmt.getClass().getInterfaces();
 
         XPreparedStatement handler =
             new XPreparedStatement(statement, stmt, this);
 
+        // copy all implemented interfaces from the original prepared statement
+        // and add XCachablePreparedStatement interface
+        Class[] interfacesToImplement = 
+            new Class[implementedInterfaces.length + 1];
+            
+        System.arraycopy(
+            implementedInterfaces, 0, 
+            interfacesToImplement, 0, 
+            implementedInterfaces.length);
+            
+        interfacesToImplement[implementedInterfaces.length] = 
+            XCachablePreparedStatement.class;     
+        
+        // create a dynamic proxy for the specified handler
         return (XCachablePreparedStatement)Proxy.newProxyInstance(
             getClass().getClassLoader(),
-            new Class[] {
-            XCachablePreparedStatement.class}
-            ,
+            interfacesToImplement,
             handler);
     }
 
