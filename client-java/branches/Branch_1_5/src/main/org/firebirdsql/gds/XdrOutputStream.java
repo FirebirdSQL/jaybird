@@ -99,6 +99,10 @@ public final class XdrOutputStream {
         }
     }
 
+    /**
+     * @deprecated due to character translation feature use of this method
+     * is discouraged
+     */
     public void writeString(String s, String encoding) throws IOException {
         String javaEncoding = null;
         

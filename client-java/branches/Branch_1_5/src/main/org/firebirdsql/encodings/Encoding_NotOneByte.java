@@ -21,6 +21,13 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.4  2004/10/08 22:39:10  rrokytskyy
+ * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
+ * added possibility to translate characters if there are some encoding issues
+ *
+ * Revision 1.3  2003/06/05 22:36:07  brodsom
+ * Substitute package and inline imports
+ *
  * Revision 1.2  2003/01/23 01:40:50  brodsom
  * Encodings patch
  *
@@ -32,14 +39,24 @@ import java.io.UnsupportedEncodingException;
 public class Encoding_NotOneByte implements Encoding{
 
     String encoding = null;
+    char[] charMapping;
 
     public Encoding_NotOneByte(String encoding){
         this.encoding = encoding;
+    }
+    
+    public Encoding_NotOneByte(String encoding, char[] charMapping) {
+        this.encoding = encoding;
+        this.charMapping = charMapping;
     }
     // encode
     public byte[] encodeToCharset(String in){
         byte[] result = null;
         try {
+            
+            if (charMapping != null)
+                in = new String(translate(in.toCharArray()));
+            
             result = in.getBytes(encoding);
         }
         catch (UnsupportedEncodingException uee){
@@ -49,6 +66,10 @@ public class Encoding_NotOneByte implements Encoding{
     public int encodeToCharset(char[] in, int off, int len, byte[] out){
         byte[] by = null;
         try {
+            
+            if (charMapping != null)
+                in = translate(in);
+            
             by = new String(in).getBytes(encoding);
             System.arraycopy(by, 0, out, 0, by.length);
         }
@@ -61,6 +82,9 @@ public class Encoding_NotOneByte implements Encoding{
         String result = null;
         try {
             result = new String(in,encoding);
+            
+            if (charMapping != null)
+                return new String(translate(result.toCharArray()));
         }
         catch (UnsupportedEncodingException uee){
         }
@@ -71,9 +95,19 @@ public class Encoding_NotOneByte implements Encoding{
         try {
             str = new String(in, encoding);
             str.getChars(0, str.length(), out, 0);
+            
+            if (charMapping != null)
+                translate(out);
         }
         catch (UnsupportedEncodingException uee){
         }
         return str.length();
+    }
+    private char[] translate(char[] chars) {
+        for (int i = 0; i < chars.length; i++) {
+            chars[i] = charMapping[chars[i]];
+        }
+        
+        return chars;
     }
 }

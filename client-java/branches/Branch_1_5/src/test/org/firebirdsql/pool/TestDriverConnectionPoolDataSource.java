@@ -96,4 +96,8 @@ public class TestDriverConnectionPoolDataSource extends
     public void testSqlRole() throws Exception {
         // test is not defined for this type of pool
     }
+    
+    public void testReleaseResultSet() throws Exception {
+        // test is not defined for this type of pool
+    }
 }

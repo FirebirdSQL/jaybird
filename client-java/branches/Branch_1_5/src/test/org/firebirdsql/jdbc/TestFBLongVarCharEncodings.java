@@ -19,6 +19,13 @@
 
 package org.firebirdsql.jdbc;
 
+import java.io.Reader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Properties;
+
 /**
  * This test case tests encodings in text blobs.
  *
@@ -63,5 +70,63 @@ public class TestFBLongVarCharEncodings extends TestFBEncodings {
     
     public void testPadding() throws Exception {
         // test is not relevant
+    }
+    
+    /**
+     * Test whether character translation code works correctly.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testTranslation() throws Exception {
+        
+        Properties props = new Properties();
+        props.putAll(getDefaultPropertiesForConnection());
+        props.put("lc_ctype", "NONE");
+        props.put("charSet", "Cp1252");
+        props.put("useTranslation", "translation.hpux");
+        
+        Connection connection = 
+            DriverManager.getConnection(getUrl(), props);
+
+        try {
+            PreparedStatement stmt = connection.prepareStatement(
+                "INSERT INTO test_encodings(" + 
+                "  id, none_field) " +
+                "VALUES(?, ?)");
+            
+            stmt.setInt(1, UNIVERSAL_TEST_ID);
+            stmt.setBytes(2, TRANSLATION_TEST_BYTES);
+            
+            int updated = stmt.executeUpdate();
+            stmt.close();
+            
+            assertTrue("Should insert one row", updated == 1);
+            
+            // 
+            // Test each column
+            //
+            stmt = connection.prepareStatement("SELECT none_field " + 
+                "FROM test_encodings WHERE id = ?");
+            
+            stmt.setInt(1, UNIVERSAL_TEST_ID);
+            
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Should have at least one row", rs.next());
+            
+            Reader in = rs.getCharacterStream(1);
+            char[] buffer = new char[8192]; // should be enough
+            
+            int readChars = in.read(buffer);
+            
+            String str = new String(buffer, 0, readChars);
+            
+            assertTrue("Value should be correct.", TRANSLATION_TEST.equals(str));
+            
+            stmt.close();
+
+            
+        } finally {
+            connection.close();
+        }
     }
 }

@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.ngds;
 
+import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -124,27 +125,49 @@ public double decodeDouble(byte[] byte_int){
 // Strings
 //
 
-public byte[] encodeString(String value, String encoding) throws java.sql.SQLException
-    {
-     if (coder == null)
-        coder = EncodingFactory.getEncoding(encoding);
+//public byte[] encodeString(String value, String encoding) throws java.sql.SQLException
+//    {
+//     if (coder == null)
+//        coder = EncodingFactory.getEncoding(encoding);
+//    return coder.encodeToCharset(value);
+//    }
+//
+//public byte[] encodeString( byte[] value, String encoding)throws java.sql.SQLException {
+//    if (encoding == null)
+//        return value;
+//    else {
+//        if (coder == null)
+//            coder = EncodingFactory.getEncoding(encoding);
+//        return coder.encodeToCharset(coder.decodeFromCharset(value));
+//    }
+//}
+//
+//public final String decodeString( byte[] value, String encoding){
+//
+//     if (coder == null)
+//        coder = EncodingFactory.getEncoding(encoding);
+//    return coder.decodeFromCharset(value);
+//}
+//
+// Strings with mapping
+//
+public byte[] encodeString(String value, String encoding, String mappingPath) throws SQLException {
+    if (coder == null)
+        coder = EncodingFactory.getEncoding(encoding, mappingPath);
     return coder.encodeToCharset(value);
-    }
-
-public byte[] encodeString( byte[] value, String encoding)throws java.sql.SQLException {
+}
+public byte[] encodeString(byte[] value, String encoding, String mappingPath)throws SQLException {
     if (encoding == null)
         return value;
     else {
         if (coder == null)
-            coder = EncodingFactory.getEncoding(encoding);
+            coder = EncodingFactory.getEncoding(encoding, mappingPath);
         return coder.encodeToCharset(coder.decodeFromCharset(value));
     }
 }
-
-public final String decodeString( byte[] value, String encoding){
-
-     if (coder == null)
-        coder = EncodingFactory.getEncoding(encoding);
+public String decodeString(byte[] value, String encoding, String mappingPath) throws SQLException{
+    if (coder == null)
+        coder = EncodingFactory.getEncoding(encoding, mappingPath);
     return coder.decodeFromCharset(value);
 }
 //
