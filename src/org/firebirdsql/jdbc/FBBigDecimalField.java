@@ -179,7 +179,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     void setBigDecimal(BigDecimal value) throws SQLException {
-        value.setScale(-field.sqlscale);
+        value = value.setScale(-field.sqlscale, BigDecimal.ROUND_HALF_UP);
 
         if (isType(field, Types.SMALLINT)) {
             long longValue = value.unscaledValue().longValue();
