@@ -40,16 +40,10 @@
 package org.firebirdsql.management;
 
 import java.sql.SQLException;
-import java.io.IOException;
 
 import org.firebirdsql.gds.GDSType;
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.isc_svc_handle;
-
-import org.firebirdsql.jdbc.FBSQLException;
 
 
 /**
@@ -86,10 +80,9 @@ public class FBStatisticsManager extends FBServiceManager
      * @throws SQLException if a database access error occurs
      */
     public void getHeaderPage() throws SQLException {
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getSRB(gds, 
-                                            ISCConstants.isc_spb_sts_hdr_pages);
-        executeVoidOperation(gds, srb);
+        ServiceRequestBuffer srb = createStatsSRB(
+                ISCConstants.isc_spb_sts_hdr_pages);
+        executeServicesOperation(srb);
     }
 
     /**
@@ -111,9 +104,8 @@ public class FBStatisticsManager extends FBServiceManager
      * @throws SQLException if a database access error occurs
      */
     public void getDatabaseStatistics() throws SQLException {
-        GDS gds = getGds();
-        ServiceRequestBuffer srb = getDefaultSRB(gds);
-        executeVoidOperation(gds, srb);
+        ServiceRequestBuffer srb = createDefaultStatsSRB();
+        executeServicesOperation(srb);
     }
 
     /**
@@ -145,66 +137,38 @@ public class FBStatisticsManager extends FBServiceManager
                     + "SYSTEM_TABLE_STATISTICS, INDEX_STATISTICS, or 0");
         }
         
-        GDS gds = getGds();
         if (options == 0){
             options = ISCConstants.isc_spb_sts_db_log;
         }
-        ServiceRequestBuffer srb = getSRB(gds, options);
-        executeVoidOperation(gds, srb);
+        ServiceRequestBuffer srb = createStatsSRB(options);
+        executeServicesOperation(srb);
     }
+
+
+
+
+    //---------- Private implementation methods -----------------
+    
 
     /**
      * Get a mostly empty buffer that can be filled in as needed. 
      * The buffer created by this method cannot have the options bitmask
      * set on it.
-     *
-     * @param gds The GDS implementation to be used
      */
-    private ServiceRequestBuffer getDefaultSRB(GDS gds){
-        return getSRB(gds, 0);
+    private ServiceRequestBuffer createDefaultStatsSRB(){
+        return createStatsSRB(0);
     }
 
     /**
-     * Get a mostly-empty request buffer that can be filled as needed.
+     * Get a mostly-empty repair-operation request buffer that can be
+     * filled as needed.
      *
-     * @param gds The GDS implementation to be used
      * @param options The options bitmask for the request buffer
      */
-    private ServiceRequestBuffer getSRB(GDS gds, int options){
-
-        ServiceRequestBuffer srb = gds.newServiceRequestBuffer(
-                                        ISCConstants.isc_action_svc_db_stats);
-        srb.addArgument(ISCConstants.isc_spb_dbname, getDatabase());
-        srb.addArgument(ISCConstants.isc_spb_options, options);
-        return srb;
+    private ServiceRequestBuffer createStatsSRB(int options){
+        return createRequestBuffer(
+                ISCConstants.isc_action_svc_db_stats, 
+                options);
     }
-
-
-    /**
-     * Execute a void (no return value) operation in the database.
-     *
-     * @param gds The GDS implementation for communication with the database
-     * @param srb The buffer containing the task request
-     * @throws FBSQLException if a database access error occurs or 
-     *         incorrect parameters are supplied
-     */
-    private void executeVoidOperation(GDS gds, ServiceRequestBuffer srb)
-            throws FBSQLException {
-
-        try {
-            isc_svc_handle svcHandle = attachServiceManager(gds);
-            try {
-                gds.isc_service_start(svcHandle, srb);
-                queueService(gds, svcHandle);
-            } finally {
-                detachServiceManager(gds, svcHandle);
-            }
-        } catch (GDSException gdse){
-            throw new FBSQLException(gdse);
-        } catch (IOException ioe){
-            throw new FBSQLException(ioe);
-        }
-    }
-
 
 }
