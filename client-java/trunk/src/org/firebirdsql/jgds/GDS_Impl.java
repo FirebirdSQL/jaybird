@@ -1301,6 +1301,7 @@ public class GDS_Impl implements GDS {
                 throw new GDSException(isc_connect_reject);
             }
         } catch (IOException ex) {
+            log.info("IOException while trying to connect to db:", ex);
             throw new GDSException(isc_network_error);
         }
     }
