@@ -20,6 +20,7 @@
 package org.firebirdsql.pool;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -65,6 +66,9 @@ public class XPreparedStatement implements InvocationHandler {
     private PreparedStatement preparedStatement;
     private XStatementManager owner;
     private Connection associatedConnection;
+    
+    private boolean invalid;
+    private String invalidateStackTrace = "";
         
     /**
      * Create instance of this class.
@@ -83,6 +87,7 @@ public class XPreparedStatement implements InvocationHandler {
         this.statement = statement;
         this.preparedStatement = preparedStatement;
         this.owner = owner;
+        this.invalid = false;
     }
     
     /**
@@ -99,6 +104,13 @@ public class XPreparedStatement implements InvocationHandler {
         throws SQLException 
     {
         owner.statementClosed(statement, proxy);
+    }
+    
+    protected void handleForceClose() throws SQLException {
+        preparedStatement.close();
+        associatedConnection = null;
+        invalid = true;
+        invalidateStackTrace = XConnectionUtil.getStackTrace(new Exception());
     }
         
     /**
@@ -119,25 +131,29 @@ public class XPreparedStatement implements InvocationHandler {
     {
         checkCorrectness(method);
         
-        if (method.equals(PREPARED_STATEMENT_CLOSE)) {
-            handleStatementClose(statement, proxy);
-            return Void.TYPE;
-        } else
-        if (method.equals(PREPARED_STATEMENT_GET_CONNECTION)) {
-            return associatedConnection;
-        } else
-        if (method.equals(PREPARED_STATEMENT_SET_CONNECTION)) {
-            this.associatedConnection = (Connection)args[0];
-            return Void.TYPE;
-        } else
-        if (method.equals(PREPARED_STATEMENT_GET_ORIGINAL)) {
-            return preparedStatement;
-        } else
-        if (method.equals(PREPARED_STATEMENT_FORCE_CLOSE)) {
-            preparedStatement.close();
-            return Void.TYPE;
-        } else
-            return method.invoke(preparedStatement, args);
+        try {
+            if (method.equals(PREPARED_STATEMENT_CLOSE)) {
+                handleStatementClose(statement, proxy);
+                return Void.TYPE;
+            } else
+            if (method.equals(PREPARED_STATEMENT_GET_CONNECTION)) {
+                return associatedConnection;
+            } else
+            if (method.equals(PREPARED_STATEMENT_SET_CONNECTION)) {
+                this.associatedConnection = (Connection)args[0];
+                return Void.TYPE;
+            } else
+            if (method.equals(PREPARED_STATEMENT_GET_ORIGINAL)) {
+                return preparedStatement;
+            } else
+            if (method.equals(PREPARED_STATEMENT_FORCE_CLOSE)) {
+                preparedStatement.close();
+                return Void.TYPE;
+            } else
+                return method.invoke(preparedStatement, args);
+        } catch(InvocationTargetException ex) {
+            throw ex.getCause();
+        }
     }
     
     /**
@@ -157,10 +173,14 @@ public class XPreparedStatement implements InvocationHandler {
             "Usually this means that Statement.getConnection() " + 
             "method was called on a closed statement that currently " + 
             "lives in a statement pool.";
+            
+        if (invalid)
+            message += "\n" + invalidateStackTrace;
         
         boolean incorrectState = 
-            associatedConnection == null &&
-            method.getDeclaringClass().equals(PreparedStatement.class);
+            (associatedConnection == null &&
+             method.getDeclaringClass().equals(PreparedStatement.class)) ||
+             invalid;
             
         if (incorrectState)
             if (TOLERANT_CHECK_MODE)
