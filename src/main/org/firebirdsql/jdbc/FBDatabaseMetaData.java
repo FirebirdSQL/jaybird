@@ -3533,7 +3533,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             else if (updateRule.equals("SET DEFAULT"))
                 row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetDefault);
             String deleteRule = rs.getString("DELETE_RULE");
-            if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
+            if (deleteRule.equals("NO ACTION") || deleteRule.equals("RESTRICT"))
                 row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyNoAction);
             else if (deleteRule.equals("CASCADE"))
                 row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyCascade);
@@ -3767,7 +3767,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             else if (updateRule.equals("SET DEFAULT"))
                 row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetDefault);
             String deleteRule = rs.getString("DELETE_RULE");
-            if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
+            if (deleteRule.equals("NO ACTION") || deleteRule.equals("RESTRICT"))
                 row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyNoAction);
             else if (deleteRule.equals("CASCADE"))
                 row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyCascade);
@@ -4020,7 +4020,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             else if (updateRule.equals("SET DEFAULT"))
                 row[9] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeySetDefault);
             String deleteRule = rs.getString("DELETE_RULE");
-            if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
+            if (deleteRule.equals("NO ACTION") || deleteRule.equals("RESTRICT"))
                 row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyNoAction);
             else if (deleteRule.equals("CASCADE"))
                 row[10] = XSQLVAR.encodeShort((short) DatabaseMetaData.importedKeyCascade);
