@@ -1041,7 +1041,7 @@ public class FBConnection implements Connection
             }
             catch (ResourceException re)
             {
-                throw new SQLException("Error during autocommit: " + re);
+                throw new FBSQLException(re);
             } // end of catch
 
         } // end of if ()
