@@ -19,9 +19,11 @@
  
 package org.firebirdsql.pool;
 
+import java.lang.reflect.*;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -60,7 +62,15 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
 
     private final static Method PREPARED_STATEMENT_GET_ORIGINAL = findMethod(
         XCachablePreparedStatement.class, "getOriginal", new Class[0]);
+        
+    private final static Method PREPARED_STATEMENT_EXECUTE_QUERY_1 = findMethod(
+        PreparedStatement.class, "executeQuery", new Class[0]);
 
+    private final static Method PREPARED_STATEMENT_EXECUTE_QUERY_2 = findMethod(
+        PreparedStatement.class, "executeQuery", new Class[]{String.class});
+        
+    private final static Method PREPARED_STATEMENT_GET_RESULT_SET = findMethod(
+        PreparedStatement.class, "getResultSet", new Class[0]);
     
     private String statement;
     private PreparedStatement preparedStatement;
@@ -103,6 +113,9 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
     protected void handleStatementClose(String statement, Object proxy) 
         throws SQLException 
     {
+        if (invalid)
+            throw new SQLException("Statement is already closed.");
+            
         owner.statementClosed(statement, proxy);
     }
     
@@ -147,10 +160,30 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
                 return preparedStatement;
             } else
             if (method.equals(PREPARED_STATEMENT_FORCE_CLOSE)) {
-                preparedStatement.close();
+                handleForceClose();
                 return Void.TYPE;
-            } else
-                return method.invoke(preparedStatement, args);
+            } else {
+                
+                Object result = method.invoke(preparedStatement, args);
+                
+                if (result instanceof ResultSet) {
+                    
+                    ResultSetHandler handler = new ResultSetHandler(
+                        (PreparedStatement)proxy, 
+                        (ResultSet)result
+                        );
+                        
+                    result = Proxy.newProxyInstance(
+                        getClass().getClassLoader(),
+                        new Class[]{ResultSet.class},
+                        handler
+                        );
+                    
+                } 
+                
+                return result;
+            }
+            
         } catch(InvocationTargetException ex) {
             throw ex.getTargetException();
         }

@@ -159,6 +159,7 @@ class XPreparedStatementCache {
                 ((XCachablePreparedStatement)reference).setConnection(null);
                 
                 freeReferences.put(reference);
+                workingReferences.remove(reference);
 
                 if (LOG_STATEMENT_IN_POOL)
                     logChannel.info("Returned prepared statement to pool.");
@@ -206,7 +207,7 @@ class XPreparedStatementCache {
             try {
                 item.forceClose();
             } catch(SQLException ex) {
-                if (error != null)
+                if (error == null)
                     error = ex;
                 else
                     error.setNextException(ex);
