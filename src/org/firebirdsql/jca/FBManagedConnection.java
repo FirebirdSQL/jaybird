@@ -99,6 +99,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     private isc_db_handle currentDbHandle;
 
+    //Autocommit flag.  This should be left true if you are using Local or
+    //XATransactions and want to execute statements outside a transaction.
+    //Set it false only if you use the Connection.commit and rollback methods.
+
+    public boolean autoCommit = true;
+
     private final FBTpb tpb;
 
     FBManagedConnection(final Subject subject, 
