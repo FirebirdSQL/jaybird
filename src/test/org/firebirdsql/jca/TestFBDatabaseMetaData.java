@@ -531,24 +531,31 @@ public class TestFBDatabaseMetaData extends TestXABase {
         }
     }
 
-    private void createTable(String tableName) throws Exception {
+    private void createTable(String tableName, String constraint) throws Exception {
         dropTable(tableName);
         t.begin();
         try {
-            s.execute(
-                    "CREATE TABLE " + tableName + " ( " +
-                    "C1 INTEGER not null primary key, " +
+            String sql = "CREATE TABLE " + tableName + " ( " +
+                    "C1 INTEGER not null, " +
                     "C2 SMALLINT, " +
                     "C3 DECIMAL(18,0), " +
                     "C4 FLOAT, " +
                     "C5 DOUBLE PRECISION, " +
                     "\"my column1\" CHAR(10), " +
-                    "\"my_ column2\" VARCHAR(20))");
+                    "\"my_ column2\" VARCHAR(20)" +
+                    (constraint != null ? 
+                            ", " + constraint  + ")": ")");
+            
+            s.execute(sql);
         }
         catch (Exception e) {
             ex = e;
         }
         t.commit();
+    }
+    
+    private void createTable(String tableName) throws Exception {
+        createTable(tableName, "PRIMARY KEY (c1)");
     }
 
     private void createProcedure(String procedureName, boolean returnsData) throws Exception {
@@ -625,6 +632,38 @@ public class TestFBDatabaseMetaData extends TestXABase {
             String remarks = rs.getString("REMARKS");
 
             System.out.println(".getAllTables() found table"+tn+", type="+tt+", remarks="+remarks);
+        }
+    }
+    
+    public void testGetBestRowIdentifier() throws Exception {
+        try {
+            createTable("best_row_pk");
+            createTable("best_row_no_pk", null);
+            
+            DatabaseMetaData dmd = c.getMetaData();
+            c.setAutoCommit(true);
+            
+            ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_PK",
+                DatabaseMetaData.bestRowSession, true);
+            
+            assertTrue("Should have rows", rs.next());
+            assertTrue("Column name should be C1", "C1".equals(rs.getString(2)));
+            assertTrue("Should have only one row", !rs.next());
+            
+            rs.close();
+            
+            rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_NO_PK", 
+                DatabaseMetaData.bestRowSession, true);
+
+            assertTrue("Should have rows", rs.next());
+            assertTrue("Column name should be RDB$DB_KEY", "RDB$DB_KEY".equals(rs.getString(2)));
+            assertTrue("Should have only one row", !rs.next());
+
+            rs.close();
+            
+        } finally {
+            dropTable("best_row_pk");
+            dropTable("best_row_no_pk");
         }
     }
 }

@@ -454,64 +454,10 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         int sqlscale = getXsqlvar(column).sqlscale;
         int sqlsubtype = getXsqlvar(column).sqlsubtype;
 
-        if (sqlscale < 0) {
-            switch (sqltype) {
-                case ISCConstants.SQL_SHORT:
-                case ISCConstants.SQL_LONG:
-                case ISCConstants.SQL_INT64:
-                case ISCConstants.SQL_DOUBLE:
-                    // NOTE: can't be BIGINT because of scale
-                    if (sqlsubtype == 2)
-                        return "DECIMAL";
-                    else
-                        return "NUMERIC";
-                default:
-                    break;
-            }
-        }
-
-        switch (sqltype) {
-            case ISCConstants.SQL_SHORT:
-                return "SMALLINT";
-            case ISCConstants.SQL_LONG:
-                return "INTEGER";
-            case ISCConstants.SQL_DOUBLE:
-            case ISCConstants.SQL_D_FLOAT:
-                return "DOUBLE PRECISION";
-            case ISCConstants.SQL_FLOAT:
-                return "FLOAT";
-            case ISCConstants.SQL_TEXT:
-                return "CHAR";
-            case ISCConstants.SQL_VARYING:
-                return "VARCHAR";
-            case ISCConstants.SQL_TIMESTAMP:
-                return "TIMESTAMP";
-            case ISCConstants.SQL_TYPE_TIME:
-                return "TIME";
-            case ISCConstants.SQL_TYPE_DATE:
-                return "DATE";
-            case ISCConstants.SQL_INT64:
-                if (sqlsubtype == 1)
-                    return "NUMERIC";
-                else if (sqlsubtype == 2)
-                    return "DECIMAL";
-                else
-                    return "BIGINT";
-            case ISCConstants.SQL_BLOB:
-                if (sqlsubtype < 0)
-                    return "BLOB SUB_TYPE " + sqlsubtype;
-                else if (sqlsubtype == 0)
-                    return "BLOB SUB_TYPE 0";
-                else if (sqlsubtype == 1)
-                    return "BLOB SUB_TYPE 1";
-                else
-                    return "BLOB SUB_TYPE " + sqlsubtype;
-            case ISCConstants.SQL_QUAD:
-                return "ARRAY";
-            default:
-                return "NULL";
-        }
+        return FBDatabaseMetaData.getDataTypeName((short) sqltype,
+            (short) sqlscale, (short) sqlsubtype);
     }
+
 
 
     /**

@@ -2782,15 +2782,15 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         }
     }
 
-    private String getDataTypeName (short fieldType, short fieldSubType, short fieldScale) {
-        if (fieldScale < 0) {
-            switch (fieldType) {
-                case smallint_type:
-                case integer_type:
-                case int64_type:
-                case double_type:
+    static String getDataTypeName(short sqltype, short sqlsubtype, short sqlscale) {
+        if (sqlscale < 0) {
+            switch (sqltype) {
+                case ISCConstants.SQL_SHORT:
+                case ISCConstants.SQL_LONG:
+                case ISCConstants.SQL_INT64:
+                case ISCConstants.SQL_DOUBLE:
                     // NOTE: can't be BIGINT because of scale
-                    if (fieldSubType == 2)
+                    if (sqlsubtype == 2)
                         return "DECIMAL";
                     else
                         return "NUMERIC";
@@ -2799,44 +2799,43 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             }
         }
 
-        switch (fieldType) {
-            case smallint_type:
+        switch (sqltype) {
+            case ISCConstants.SQL_SHORT:
                 return "SMALLINT";
-            case integer_type:
+            case ISCConstants.SQL_LONG:
                 return "INTEGER";
-            case double_type:
-            case d_float_type:
+            case ISCConstants.SQL_DOUBLE:
+            case ISCConstants.SQL_D_FLOAT:
                 return "DOUBLE PRECISION";
-            case float_type:
+            case ISCConstants.SQL_FLOAT:
                 return "FLOAT";
-            case char_type:
+            case ISCConstants.SQL_TEXT:
                 return "CHAR";
-            case varchar_type:
+            case ISCConstants.SQL_VARYING:
                 return "VARCHAR";
-            case timestamp_type:
+            case ISCConstants.SQL_TIMESTAMP:
                 return "TIMESTAMP";
-            case time_type:
+            case ISCConstants.SQL_TYPE_TIME:
                 return "TIME";
-            case date_type:
+            case ISCConstants.SQL_TYPE_DATE:
                 return "DATE";
-            case int64_type:
-                //this might need some help for long mapping
-                if (fieldSubType == 1)
+            case ISCConstants.SQL_INT64:
+                if (sqlsubtype == 1)
                     return "NUMERIC";
-                else if (fieldSubType == 2)
+                else if (sqlsubtype == 2)
                     return "DECIMAL";
                 else
                     return "BIGINT";
-            case blob_type:
-                if (fieldSubType < 0)
-                    return "BLOB SUB_TYPE <0";
-                else if (fieldSubType == 0)
+            case ISCConstants.SQL_BLOB:
+                if (sqlsubtype < 0)
+                    return "BLOB SUB_TYPE " + sqlsubtype;
+                else if (sqlsubtype == 0)
                     return "BLOB SUB_TYPE 0";
-                else if (fieldSubType == 1)
+                else if (sqlsubtype == 1)
                     return "BLOB SUB_TYPE 1";
                 else
-                    return "BLOB SUB_TYPE >1";
-            case quad_type:
+                    return "BLOB SUB_TYPE " + sqlsubtype;
+            case ISCConstants.SQL_QUAD:
                 return "ARRAY";
             default:
                 return "NULL";
@@ -3138,7 +3137,31 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         return new FBResultSet(xsqlvars, rows);
     }
 
-
+    private static final String GET_BEST_ROW_IDENT = "" +
+        "select " +
+        "    rf.rdb$field_name as column_name, " +
+        "    f.rdb$field_type as field_type, " +
+        "    f.rdb$field_sub_type as field_sub_type, " +
+        "    f.rdb$field_scale as field_scale, " +
+        "    f.rdb$field_precision as field_precision " +
+        "from " +
+        "    rdb$relation_constraints rc," +
+        "    rdb$index_segments idx," +
+        "    rdb$relation_fields rf," +
+        "    rdb$fields f " +
+        "where " +
+        "    rc.rdb$relation_name = ? " +
+        "and " +
+        "    rc.rdb$constraint_type = 'PRIMARY KEY' " +
+        "and " +
+        "    idx.rdb$index_name = rc.rdb$index_name " +
+        "and " +
+        "    rf.rdb$field_name = idx.rdb$field_name " +
+        "and " +
+        "    rf.rdb$relation_name = ? " +
+        "and " +
+        "    f.rdb$field_name = rf.rdb$field_source"
+        ;
 
     /**
      * Gets a description of a table's optimal set of columns that
@@ -3223,11 +3246,70 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[7].sqlname = "PSEUDO_COLUMN";
         xsqlvars[7].relname = "ROWIDENTIFIER";
 
-        ArrayList rows = new ArrayList(0);
+        ResultSet tables = getTables(catalog, schema, table, null);
+        
+        if (!tables.next())
+            return new FBResultSet(xsqlvars, new ArrayList());
+        
+        ArrayList rows = getPrimaryKeyIdentifier(table, scope, xsqlvars);
 
+        // if no primary key exists, add RDB$DB_KEY as pseudo-column
+        if (rows.size() == 0) {
+            byte[][] row = new byte[8][];
+            row[0] = xsqlvars[0].encodeShort((short)scope);
+            row[1] = getBytes("RDB$DB_KEY");
+            row[2] = xsqlvars[0].encodeShort((short)getDataType(char_type, (short)0, (short)0));
+            row[3] = getBytes(getDataTypeName(char_type, (short)0, (short)0));
+            row[4] = xsqlvars[0].encodeInt(0);
+            row[5] = null;
+            row[6] = xsqlvars[0].encodeShort((short)0);
+            row[7] = xsqlvars[0].encodeShort((short)bestRowPseudo);
+
+            rows.add(row);
+        }
+        
         return new FBResultSet(xsqlvars, rows);
     }
 
+
+    /**
+     * Get primary key of the table as best row identifier.
+     * 
+     * @param table name of the table.
+     * @param scope scope, we just include it in the result set.
+     * @param xsqlvars array of {@link XSQLVAR} instances describing result set.
+     * 
+     * @return list of result set values, when size is 0, no primary key has 
+     * been defined for a table.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    private ArrayList getPrimaryKeyIdentifier(String table, int scope, XSQLVAR[] xsqlvars) throws SQLException {
+        ArrayList rows = new ArrayList(0);
+
+        ArrayList params = new ArrayList(2);
+        params.add(table);
+        params.add(table);
+        
+        ResultSet rs = c.doQuery(GET_BEST_ROW_IDENT, params, statements);
+        
+        while (rs.next()) {
+            byte[][] row = new byte[8][];
+            row[0] = xsqlvars[0].encodeShort((short)scope);
+            row[1] = getBytes(rs.getString("COLUMN_NAME").trim());
+            row[2] = xsqlvars[0].encodeShort((short)getDataType(rs.getShort("FIELD_TYPE"), 
+                rs.getShort("FIELD_SUB_TYPE"), rs.getShort("FIELD_SCALE")));
+            row[3] = getBytes(getDataTypeName(rs.getShort("FIELD_TYPE"), 
+                rs.getShort("FIELD_SUB_TYPE"), rs.getShort("FIELD_SCALE")));
+            row[4] = xsqlvars[0].encodeInt(rs.getInt("FIELD_PRECISION"));
+            row[5] = null;
+            row[6] = xsqlvars[0].encodeShort(rs.getShort("FIELD_SCALE"));
+            row[7] = xsqlvars[0].encodeShort((short)bestRowNotPseudo);
+
+            rows.add(row);
+        }
+        return rows;
+    }
 
     /**
      * Gets a description of a table's columns that are automatically
