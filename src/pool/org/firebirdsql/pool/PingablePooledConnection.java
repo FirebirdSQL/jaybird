@@ -363,7 +363,8 @@ public class PingablePooledConnection implements PooledConnection,
         PreparedStatement stmt = jdbcConnection.prepareStatement(
             statement, resultSetType, resultSetConcurrency);
             
-        Class[] implementedInterfaces = stmt.getClass().getInterfaces();
+        Class[] implementedInterfaces = 
+            PooledConnectionHandler.getAllInterfaces(stmt.getClass());
 
         PooledPreparedStatementHandler handler =
             new PooledPreparedStatementHandler(statement, stmt, this, cached);
