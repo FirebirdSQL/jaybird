@@ -8,7 +8,7 @@
  next to db and create an empty dialect 3 database in it called fbmctest.gdb.
 Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
 
-<project name="FirebirdSQL" default="jmx.jar" basedir="../..">
+<project name="FirebirdSQL" default="rar" basedir="../..">
 
     <property name="Name" value="FirebirdSQL"/>
     <property name="name" value="firebirdsql"/>
@@ -31,8 +31,8 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
     <property name="external.dir" value="${dist.dir}/external"/>
     <property name="db.dir" value="${basedir}/db"/>
     <property name="dbsrc.dir" value="${basedir}/dbsrc"/>
-    <property name="jdbctest.dir" value="${basedir}/jdbcTest"/>
-    <property name="src.jdbctest.resources.dir" value="${src.dir}/jdbcTestResources"/>
+<!--you will presumably need to change this if you want to use it.-->
+    <property name="jboss.base.dir" value="/usr/java/jboss/co4/jboss-all/build/output/jboss-3.0.0alpha"/>
 
 
 
@@ -90,7 +90,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
            debug="off"
            deprecation="off"
            optimize="on"
-           includes="org/**,jdbcTest/**"
+           includes="org/**"
            excludes="**/temp*"
     >
       <classpath refid="cp"/>
@@ -98,6 +98,16 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
     <copy todir="${build.classes.dir}">
         <fileset dir="${src.dir}" includes="**/*.properties"/>
     </copy>
+
+    <!--mkdir dir="${build.dir}/META-INF"/-->
+    <copy todir="${build.dir}/META-INF">
+        <fileset dir="${src.resources.dir}" includes="**/ra.xml"/>
+    </copy>
+
+    <copy todir="${build.dir}">
+        <fileset dir="${src.resources.dir}" includes="**/firebird-service.xml"/>
+    </copy>
+
   </target>
   <!-- =================================================================== -->
   <!-- Creates the jar archives                                            -->
@@ -108,9 +118,59 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
     <jar jarfile="${build.jar-ra.dir}/firebirdsql.jar"
          basedir="${build.classes.dir}"
          includes="org/firebirdsql/**"
+         excludes="**/Test*.java"
     />
   </target>
 
+
+  <!-- =================================================================== -->
+  <!-- Creates the jmx-jar archives                                            -->
+  <!-- =================================================================== -->
+  <target name="jmx.jar" depends="compile">
+
+    <jar jarfile="${dist.dir}/firebirdjmx.jar"
+         basedir="${build.classes.dir}"
+         includes="**/gds/**, **/jgds/**, **/management/**, **/META-INF/**"
+         excludes="**/test/**"
+    />
+    <copy todir="/usr/java/jboss/dev/jboss/dist/lib/ext">
+        <fileset dir="${dist.dir}" includes="firebirdjmx.jar"/>
+    </copy>
+  </target>
+
+
+
+  <!-- =================================================================== -->
+  <!-- Creates the rar archives                                            -->
+  <!-- =================================================================== -->
+  <target name="rar" depends="jar-ra">
+    <mkdir dir="${build.jar-ra.dir}/META-INF"/>
+    <copy todir="${build.jar-ra.dir}/META-INF">
+        <fileset dir="${src.resources.dir}"/>
+    </copy>
+
+    <jar jarfile="${dist.dir}/firebirdsql.rar"
+         basedir="${build.jar-ra.dir}"
+         includes="firebirdsql.jar,META-INF/ra.xml"
+    />
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- deploys the rar and example ConnectionFactoryLoader to              -->
+  <!-- (my location of) JBoss                                              -->
+  <!-- =================================================================== -->
+  <target name="deploy-rar" depends="rar">
+    <delete file="${jboss.base.dir}/deploy/firebird-service.xml"/>
+    <delete file="${jboss.base.dir}/deploy/firebirdsql.rar"/>
+    <!--sleep seconds="2"/coming with ant 1.4.1-->
+    <copy todir="${jboss.base.dir}/deploy" file="${dist.dir}/firebirdsql.rar"/>
+    <copy todir="${jboss.base.dir}/deploy" file="${build.dir}/firebird-service.xml"/>
+  </target>
+
+
+  <!-- =================================================================== -->
+  <!-- runs the junit tests                                                -->
+  <!-- =================================================================== -->
   <target name="junit" depends="jmx.jar">
     <delete file="${db.dir}/fbmctest.gdb"/>
     <copy todir="${db.dir}">
@@ -153,80 +213,6 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
   </target>
 
   <!-- =================================================================== -->
-  <!-- Creates the jmx-jar archives                                            -->
-  <!-- =================================================================== -->
-  <target name="jmx.jar" depends="compile">
-    <mkdir dir="${build.dir}/META-INF"/>
-    <copy todir="${build.dir}/META-INF">
-        <fileset dir="${src.resources.dir}"/>
-    </copy>
-
-    <jar jarfile="${dist.dir}/firebirdjmx.jar"
-         basedir="${build.classes.dir}"
-         includes="**/gds/**, **/jgds/**, **/management/**, **/META-INF/**"
-         excludes="**/test/**"
-    />
-    <copy todir="/usr/java/jboss/dev/jboss/dist/lib/ext">
-        <fileset dir="${dist.dir}" includes="firebirdjmx.jar"/>
-    </copy>
-  </target>
-
-
-
-  <!-- =================================================================== -->
-  <!-- Creates the rar archives                                            -->
-  <!-- =================================================================== -->
-  <target name="rar" depends="jar-ra">
-    <mkdir dir="${build.jar-ra.dir}/META-INF"/>
-    <copy todir="${build.jar-ra.dir}/META-INF">
-        <fileset dir="${src.resources.dir}"/>
-    </copy>
-
-    <jar jarfile="${dist.dir}/firebirdsql.rar"
-         basedir="${build.jar-ra.dir}"
-         includes="firebirdsql.jar,META-INF/ra.xml"
-    />
-  </target>
-
-  <target name="deploy-rar" depends="rar">
-    <copy todir="/usr/java/jboss/dev/jboss/dist/deploy/lib/" file="${dist.dir}/firebirdsql.rar"/>
-</target>
-
-
-  <!-- =================================================================== -->
-  <!-- Creates the jdbctest jar archives                                   -->
-  <!-- Sorry, this is not in cvs due to licence problems                   -->
-  <!-- =================================================================== -->
-  <target name="jdbctestjar" depends="compile">
-
-    <mkdir dir="${jdbctest.dir}"/>
-    <jar jarfile="${jdbctest.dir}/jdbcTest.jar"
-         basedir="${build.classes.dir}"
-         includes="jdbcTest/**"
-    />
-  </target>
-
-  <!-- =================================================================== -->
-  <!-- sets up jdbcTest                                           -->
-  <!-- =================================================================== -->
-
-  <target name="dist-jdbc" depends="jar-ra">
-    <copy todir="${dist.dir}" file="${build.jar-ra.dir}/firebirdsql.jar"/>
-  </target>
-
-  <target name="jdbctest" depends="jdbctestjar,dist-jdbc">
-    <copy todir="${jdbctest.dir}">
-        <fileset dir="${src.jdbctest.resources.dir}"/>
-    </copy>
-
-    <mkdir dir="${jdbctest.dir}"/>
-    <jar jarfile="${jdbctest.dir}/jdbcTest.jar"
-         basedir="${build.classes.dir}"
-         includes="jdbcTest/**"
-    />
-  </target>
-
-  <!-- =================================================================== -->
   <!-- Creates the API documentation                                       -->
   <!-- =================================================================== -->
   <target name="javadocs" depends="prepare">
@@ -240,7 +226,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
              windowtitle="${Name} API"
              doctitle="${Name}"
              extdirs="${src.lib.dir}"
-             bottom="Copyright &#169; 2001 The JBoss Organization. All Rights Reserved."
+             bottom="Copyright &#169; 2001 David Jencks and other authors. All rights reserved."
     />
   </target>
 
