@@ -39,7 +39,7 @@ public interface FirebirdCallableStatement extends FirebirdPreparedStatement, Ca
      * Mark this callable statement as a call of the selectable procedure. By
      * default callable statement uses "EXECUTE PROCEDURE" SQL statement to 
      * invoke stored procedures that return single row of output parameters or
-     * a result set. In latter case it retrieves only the first row of the 
+     * a result set. In former case it retrieves only the first row of the 
      * result set.
      *  
      * @param selectable <code>true</code> if the called procedure is selectable.
