@@ -50,6 +50,7 @@
         <include name="firebirdsql.rar"/>
         <include name="firebirdsql-test.jar"/>
         <include name="firebirdsql-full.jar"/>
+        <include name="firebirdsql-pool.jar"/>
         <include name="firebirdsql.jar"/>
         <include name="firebirdjmx.jar"/>
       </fileset>
