@@ -47,7 +47,8 @@ public class FBBigDecimalField extends FBField {
         long longValue = getLong();
 
         // check if value is withing bounds
-        if (Math.abs(longValue) > Byte.MAX_VALUE)
+        if (longValue > MAX_BYTE_VALUE ||
+            longValue < MIN_BYTE_VALUE)
                 throw (SQLException)createException(
                     BYTE_CONVERSION_ERROR).fillInStackTrace();
 
@@ -67,7 +68,8 @@ public class FBBigDecimalField extends FBField {
         double doubleValue = getDouble();
 
         // check if value is withing bounds
-        if (Math.abs(doubleValue) > Float.MAX_VALUE)
+        if (doubleValue > MAX_FLOAT_VALUE ||
+            doubleValue < MIN_FLOAT_VALUE)
                 throw (SQLException)createException(
                     FLOAT_CONVERSION_ERROR).fillInStackTrace();
 
@@ -82,7 +84,8 @@ public class FBBigDecimalField extends FBField {
         long longValue = getLong();
 
         // check if value is withing bounds
-        if (Math.abs(longValue) > Integer.MAX_VALUE)
+        if (longValue > MAX_INT_VALUE ||
+            longValue < MIN_INT_VALUE)
                 throw (SQLException)createException(
                     INT_CONVERSION_ERROR).fillInStackTrace();
 
@@ -105,7 +108,8 @@ public class FBBigDecimalField extends FBField {
         long longValue = getLong();
 
         // check if value is withing bounds
-        if (Math.abs(longValue) > Short.MAX_VALUE)
+        if (longValue > MAX_SHORT_VALUE ||
+            longValue < MIN_SHORT_VALUE)
                 throw (SQLException)createException(
                     SHORT_CONVERSION_ERROR).fillInStackTrace();
 
@@ -181,7 +185,8 @@ public class FBBigDecimalField extends FBField {
             long longValue = value.unscaledValue().longValue();
 
             // check if value is withing bounds
-            if (Math.abs(longValue) > Short.MAX_VALUE)
+            if (longValue > MAX_SHORT_VALUE ||
+                longValue < MIN_SHORT_VALUE)
                     throw (SQLException)createException(
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
@@ -191,7 +196,8 @@ public class FBBigDecimalField extends FBField {
             long longValue = value.unscaledValue().longValue();
 
             // check if value is withing bounds
-            if (Math.abs(longValue) > Integer.MAX_VALUE)
+            if (longValue > MAX_INT_VALUE ||
+                longValue < MIN_INT_VALUE)
                     throw (SQLException)createException(
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
