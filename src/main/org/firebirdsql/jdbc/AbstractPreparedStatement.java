@@ -30,16 +30,15 @@ import org.firebirdsql.jdbc.field.*;
 import org.firebirdsql.logging.*;
 
 /**
- *
- *   @see <related>
+ * Implementation of {@link java.sql.PreparedStatement} interface. This class
+ * contains all methods from the JDBC 2.0 specification. 
+ * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- *   @version $ $
  */
-
-
-
-public abstract class AbstractPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
+public abstract class AbstractPreparedStatement extends FBStatement 
+    implements FirebirdPreparedStatement 
+{
 
     // this array contains either true or false indicating if parameter
     // was initialized, executeQuery, executeUpdate and execute methods
@@ -54,9 +53,12 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     // because in this case we must send out_xsqlda to the server.
     private boolean isExecuteProcedureStatement;
     
-    private final static Logger log = LoggerFactory.getLogger(AbstractStatement.class,false);
+    private final static Logger log = 
+        LoggerFactory.getLogger(AbstractStatement.class,false);
     
-    protected AbstractPreparedStatement(AbstractConnection c, String sql) throws SQLException {
+    protected AbstractPreparedStatement(AbstractConnection c, String sql) 
+        throws SQLException 
+    {
         super(c, ResultSet.CONCUR_READ_ONLY);
         
         Object syncObject = getSynchronizationObject();
@@ -293,6 +295,11 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     public void clearParameters() throws  SQLException {
         for (int i = 0; i < isParamSet.length; i++)
             isParamSet[i] = false;
+        
+        XSQLVAR[] xsqlvar = fixedStmt.getInSqlda().sqlvar;
+        for (int i = 0; i < xsqlvar.length; i++) {
+            xsqlvar[i].sqldata = null;
+        }
     }
 
 
@@ -423,6 +430,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     //--------------------------JDBC 2.0-----------------------------
 
+    private LinkedList batchList = new LinkedList();
+    
     /**
      * Adds a set of parameters to this <code>PreparedStatement</code>
      * object's batch of commands.
@@ -434,9 +443,122 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *      2.0 API</a>
      */
     public void addBatch() throws  SQLException {
-        throw new SQLException("not yet implemented");
+        
+        boolean allParamsSet = true;
+        for (int i = 0; i < isParamSet.length; i++) {
+			allParamsSet &= isParamSet[i];
+		}
+        
+        if (!allParamsSet)
+            throw new SQLException("Not all parameters set.");
+        
+        XSQLVAR[] oldXsqlvar = fixedStmt.getInSqlda().sqlvar;
+        
+        XSQLVAR[] newXsqlvar = new XSQLVAR[oldXsqlvar.length];
+        for (int i = 0; i < newXsqlvar.length; i++) {
+			newXsqlvar[i] = new XSQLVAR();
+            
+            newXsqlvar[i].aliasname = oldXsqlvar[i].aliasname;
+            newXsqlvar[i].ownname = oldXsqlvar[i].ownname;
+            newXsqlvar[i].relname = oldXsqlvar[i].relname;
+            newXsqlvar[i].sqllen = oldXsqlvar[i].sqllen;
+            newXsqlvar[i].sqlname = oldXsqlvar[i].sqlname;
+            newXsqlvar[i].sqlscale = oldXsqlvar[i].sqlscale;
+            newXsqlvar[i].sqlsubtype = oldXsqlvar[i].sqlsubtype;
+            newXsqlvar[i].sqltype = oldXsqlvar[i].sqltype;
+            newXsqlvar[i].sqldata = oldXsqlvar[i].sqldata;
+		}
+        
+        batchList.add(newXsqlvar);
     }
 
+    /**
+     * Makes the set of commands in the current batch empty.
+     * This method is optional.
+     *
+     * @exception SQLException if a database access error occurs or the
+     * driver does not support batch statements
+     * @since 1.2
+     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
+     *      2.0 API</a>
+     */
+    public void clearBatch() throws SQLException {
+        batchList.clear();
+	}
+
+    /**
+     * Submits a batch of commands to the database for execution and
+     * if all commands execute successfully, returns an array of update counts.
+     * The <code>int</code> elements of the array that is returned are ordered
+     * to correspond to the commands in the batch, which are ordered
+     * according to the order in which they were added to the batch.
+     * The elements in the array returned by the method <code>executeBatch</code>
+     * may be one of the following:
+     * <OL>
+     * <LI>A number greater than or equal to zero -- indicates that the
+     * command was processed successfully and is an update count giving the
+     * number of rows in the database that were affected by the command's
+     * execution
+     * <LI>A value of <code>-2</code> -- indicates that the command was
+     * processed successfully but that the number of rows affected is
+     * unknown
+     * <P>
+     * If one of the commands in a batch update fails to execute properly,
+     * this method throws a <code>BatchUpdateException</code>, and a JDBC
+     * driver may or may not continue to process the remaining commands in
+     * the batch.  However, the driver's behavior must be consistent with a
+     * particular DBMS, either always continuing to process commands or never
+     * continuing to process commands.  If the driver continues processing
+     * after a failure, the array returned by the method
+     * <code>BatchUpdateException.getUpdateCounts</code>
+     * will contain as many elements as there are commands in the batch, and
+     * at least one of the elements will be the following:
+     * <P>
+     * <LI>A value of <code>-3</code> -- indicates that the command failed
+     * to execute successfully and occurs only if a driver continues to
+     * process commands after a command fails
+     * </OL>
+     * <P>
+     * A driver is not required to implement this method.
+     * The possible implementations and return values have been modified in
+     * the Java 2 SDK, Standard Edition, version 1.3 to
+     * accommodate the option of continuing to proccess commands in a batch
+     * update after a <code>BatchUpdateException</code> obejct has been thrown.
+     *
+     * @return an array of update counts containing one element for each
+     * command in the batch.  The elements of the array are ordered according
+     * to the order in which commands were added to the batch.
+     * @exception SQLException if a database access error occurs or the
+     * driver does not support batch statements. Throws {@link BatchUpdateException}
+     * (a subclass of <code>SQLException</code>) if one of the commands sent to the
+     * database fails to execute properly or attempts to return a result set.
+     * @since 1.3
+     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
+     *      2.0 API</a>
+     */
+    public int[] executeBatch() throws SQLException {
+        
+        LinkedList results = new LinkedList();
+		Iterator iter = batchList.iterator();
+        while(iter.hasNext()) {
+        	XSQLVAR[] vars = (XSQLVAR[])iter.next();
+            
+            fixedStmt.getInSqlda().sqlvar = vars;
+            
+            for (int i = 0; i < isParamSet.length; i++) {
+				isParamSet[i] = true;
+			}
+        
+            try {
+            	int updateCount = executeUpdate();
+                results.add(new Integer(updateCount));
+            } catch(SQLException ex) {
+            	throw new BatchUpdateException(ex.getMessage(), toArray(results));
+            }
+        }
+        
+        return toArray(results);
+	}
 
     /**
      * Sets the designated parameter to the given <code>Reader</code>
@@ -477,7 +599,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *      2.0 API</a>
      */
     public void setRef (int i, Ref x) throws  SQLException {
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -512,7 +634,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *      2.0 API</a>
      */
     public void setClob (int i, Clob x) throws  SQLException {
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -529,7 +651,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *      2.0 API</a>
      */
     public void setArray (int i, Array x) throws  SQLException {
-        throw new SQLException("Arrays are not supported.");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -700,35 +822,4 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         
         this.isExecuteProcedureStatement = isExecuteProcedureStatement(sql);
     }
-
-    /**
-     * Execute statement internally. This method checks if all parameters
-     * were set.
-     */
-/*	 
-    protected boolean internalExecute(String sql) throws GDSException, SQLException {
-        boolean canExecute = true;
-        for (int i = 0; i < isParamSet.length; i++){
-            canExecute = canExecute && isParamSet[i];
-          }
-
-        if (!canExecute)
-            throw new SQLException("Not all parameters were set. " +
-                "Cannot execute query.");
-
-        return super.internalExecute(sql);
-    }
-*/
-    /**
-     * Marks that parameter was set.
-     */
-/*
-    protected void parameterWasSet(int parameterIndex) throws SQLException {
-        if (parameterIndex < 1 || parameterIndex > isParamSet.length)
-            throw new SQLException("Internal driver consistency check: " +
-                "Number of available params does not correspond to prepared.");
-
-        isParamSet[parameterIndex - 1] = true;
-    }
-*/
 }
