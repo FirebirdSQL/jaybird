@@ -585,7 +585,7 @@ public class FBStatement implements Statement {
                 int insCount = i.getInsertCount();
                 int updCount = i.getUpdateCount();
                 int delCount = i.getDeleteCount();
-                int resCount = Math.max(insCount,Math.max(updCount,delCount);
+                int resCount = Math.max(insCount,Math.max(updCount,delCount));
                 log.debug("InsertCount: " + insCount);
                 log.debug("UpdateCount: " + updCount);
                 log.debug("DeleteCount: " + delCount);

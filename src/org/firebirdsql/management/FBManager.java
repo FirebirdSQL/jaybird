@@ -11,10 +11,11 @@ import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 public class FBManager implements FBManagerMBean, MBeanRegistration {
 
-   private final Logger log = Logger.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass());
 
     // Constants -----------------------------------------------------
     public static final String[] states = {"Stopped","Stopping","Starting","Started"};

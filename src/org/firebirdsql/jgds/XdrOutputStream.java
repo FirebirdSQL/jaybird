@@ -37,10 +37,11 @@ import java.util.Set;
 import java.util.Iterator;
 
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 class XdrOutputStream extends FilterOutputStream {
 
-   private final Logger log = Logger.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass());
 
     public XdrOutputStream(OutputStream out) {
         super(out);
@@ -90,7 +91,7 @@ class XdrOutputStream extends FilterOutputStream {
 
     public final void writeBlobBuffer(byte[] buffer) throws IOException {
     int len = buffer.length ; // 2 for short for buffer length
-    if (log.isDebugEnabled()) {log.debug("writeBlobBuffer len: " + len);}
+    log.debug("writeBlobBuffer len: " + len);
     if (len > Short.MAX_VALUE) {
         throw new IOException(""); //Need a value???
     }
@@ -99,7 +100,7 @@ class XdrOutputStream extends FilterOutputStream {
     write((len >> 0) & 0xff);
     write((len >> 8) & 0xff);
     write(buffer, 0, len);
-    if (log.isDebugEnabled()) {log.debug("writeBlobBuffer wrotebuffer bytes: " + len);}
+    log.debug("writeBlobBuffer wrotebuffer bytes: " + len);
     even(len + 2);
     }
 
@@ -108,7 +109,7 @@ class XdrOutputStream extends FilterOutputStream {
         writeBuffer(buffer, buffer.length);
     }
     public final void writeSet(int type, Set s) throws IOException {
-       if (log.isDebugEnabled()) {log.debug("writeSet: type: " + type);}
+//      log.debug("writeSet: type: " + type);
         if (s == null) {
             writeInt(1);
             out.write(type); //e.g. gds.isc_tpb_version3
@@ -120,9 +121,9 @@ class XdrOutputStream extends FilterOutputStream {
             while (i.hasNext()) {
                 int n = ((Integer)i.next()).intValue();
                 out.write(n);
-                if (log.isDebugEnabled()) {log.debug("writeSet: value: " + n);}
+//              log.debug("writeSet: value: " + n);
             }
-            if (log.isDebugEnabled()) {log.debug("writeSet: padding 0 : " + ((4 - (s.size() + 1)) & 3));}
+//          log.debug("writeSet: padding 0 : " + ((4 - (s.size() + 1)) & 3));
             for (int j = 0; j < ((4 - (s.size() + 1)) & 3); j++) {
                 out.write(0);
             }

@@ -36,6 +36,7 @@ import java.util.Arrays;
 import junit.framework.*;
 
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.jdbc.BaseFBTest;
 
 /**
@@ -52,7 +53,7 @@ import org.firebirdsql.jdbc.BaseFBTest;
  */
 public class TestGds extends BaseFBTest {
 
-   private Logger log = Logger.getLogger(getClass());
+   private Logger log = LoggerFactory.getLogger(getClass());
 
 
     static final String dbName = "testdb.gdb";

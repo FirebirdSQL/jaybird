@@ -22,35 +22,31 @@
  */
 package org.firebirdsql.logging;
 
-public abstract class Logger{
+public class LoggerFactory{
 	
-	abstract public boolean isDebugEnabled();
+	private static boolean loggingAvailable = true;
 	
-	abstract public void debug(Object message);
+	public static Logger getLogger(String name) {
+		String log4j = System.getProperty("FBLog4j");
+		if (log4j == null){
+			try {
+				Class verify = Class.forName("org.apache.log4j.Logger");				
+				log4j = "true";
+				System.out.println("log4j is in the classpath");
+			}
+			catch (ClassNotFoundException cnfe){
+				log4j = "false";
+				System.out.println("log4j is not in the classpath");
+			}
+			System.setProperty("FBLog4j",log4j);
+		}
+		if (log4j.equals("true"))
+			return new Log4jLogger(name);
+		else
+			return new NullLogger(name);
+	}
 	
-	abstract public void debug(Object message, Throwable t);
-	
-	abstract public boolean isInfoEnabled();
-	
-	abstract public void info(Object message);
-	
-	abstract public void info(Object message, Throwable t);
-	
-	abstract public boolean isWarnEnabled();
-	
-	abstract public void warn(Object message);
-	
-	abstract public void warn(Object message, Throwable t);
-	
-	abstract public boolean isErrorEnabled();
-	
-	abstract public void error(Object message);
-	
-	abstract public void error(Object message, Throwable t);
-	
-	abstract public boolean isFatalEnabled();
-	
-	abstract public void fatal(Object message);
-	
-	abstract public void fatal(Object message, Throwable t);
+	public static Logger getLogger(Class clazz) {
+		return getLogger(clazz.getName());
+	}
 }
