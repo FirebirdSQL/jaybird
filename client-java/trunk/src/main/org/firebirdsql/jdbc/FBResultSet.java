@@ -996,7 +996,7 @@ public class FBResultSet implements ResultSet {
     public void setFetchSize(int rows) throws  SQLException {
          if (rows < 0)
              throw new SQLException("can't set negative fetch size");
-         else if (rows > maxRows)
+         else if (maxRows > 0 && rows > maxRows)
              throw new SQLException("can't set fetch size > maxRows");
          else
         fetchSize = rows;
