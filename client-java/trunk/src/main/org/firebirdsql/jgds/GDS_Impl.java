@@ -722,7 +722,7 @@ public class GDS_Impl implements GDS {
                                           int dialect,
                                           XSQLDA xsqlda) throws GDSException {
         isc_dsql_exec_immed2(db_handle, tr_handle, statement, 
-            "NONE", dialect, xsqlda, null);
+            encoding, dialect, xsqlda, null);
     }
 
 
