@@ -1,0 +1,289 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
+	<TITLE>Release Notes</TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 641  (Win32)">
+	<META NAME="CREATED" CONTENT="20020909;21125147">
+	<META NAME="CHANGEDBY" CONTENT="Rick Fincher">
+	<META NAME="CHANGED" CONTENT="20020916;15223738">
+</HEAD>
+<BODY LANG="en-US">
+<P ALIGN=CENTER><FONT SIZE=6> JayBird Release Notes</FONT></P>
+<P ALIGN=CENTER><font size="5">Type 4 JCA/JDBC Driver for Firebird</font><FONT SIZE=6> 
+  </FONT></P>
+<P ALIGN=CENTER>- Last Updated 2/3/03 -<BR>
+</P>
+<P ALIGN=CENTER><FONT SIZE=5 STYLE="font-size: 20pt"><a name="top"></a>CONTENTS</FONT><BR>
+</P>
+<div align="center">
+  <table width="90%" border="0" cellspacing="0" cellpadding="5">
+    <tr> 
+      <td width="30%">&nbsp;</td>
+      <td nowrap> 
+        <p><a href="#1">1. Introduction</a></p>
+        <p><a href="#2">2. Where to get more information on JayBird</a></p>
+        <p><a href="#3">3. Where to get the driver</a></p>
+        <p><a href="#4">4. Installing the driver</a></p>
+        <p><a href="#5">5. Reporting Bugs</a></p>
+        <p><a href="#6">6. Participating in the Development Project</a></p>
+        <p><a href="#7">7. Where to get help</a></p>
+        <p><a href="#8">8. Known Bugs</a></p>
+        <p><a href="#9">9. Joining the mailing list</a></p>
+        <p><a href="#10">10. Frequently Asked Questions</a></p>
+        <p><a href="#11">11. Corrrections/Additions To Release Notes</a></p>
+      </td>
+      <td width="25%">&nbsp;</td>
+    </tr>
+  </table>
+</div>
+<p>&nbsp;</P>
+<p>&nbsp;</P>
+<P><BR>
+</P>
+<hr>
+<P><BR>
+</P>
+<P><BR><BR>
+</P>
+<P ALIGN=CENTER><FONT SIZE=4 STYLE="font-size: 16pt"><a name="1"></a><font size="5">1- 
+  Introduction</font></FONT></P>
+<P ALIGN=CENTER><a href="#top">return to table of contents</a><BR>
+</P>
+<P>The firebird team has implemented a pure java driver for
+firebirdsql. This driver allows a Java program to connect to, send
+queries to, and get results from a Firebird SQL Database. It is an
+alternative to the Interclient JDBC Driver. The open source version
+of Interclient is not actively supported at this time. This makes the
+JCA-JDBC Driver the best option for Java development with an open
+source driver.</P>
+<P>This driver is based on both the new JCA standard for application
+server connections to enterprise information systems and the well
+known JDBC standard. The JCA standard specifies an architecture in
+which an application server can cooperate with a driver so that the
+application server manages transactions, security, and resource
+pooling, and the driver supplies only the connection functionality.
+While similar to the JDBC 2 XADataSource idea, the JCA specification
+is considerably clearer on the division of responsibility between the
+application server and driver.</P>
+<P>The JCA-JDBC driver has several major advantages over Interclient.
+Because it Implements the JCA specification, it can be used
+seamlessly with J2EE containers that support JCA functionality.</P>
+<P>It also has a built-in connection pooling capability for use with
+stand-alone programs or J2EE containers that don't support connection
+pooling internally. Java programs run much faster with connection
+pooling because the overhead of connection setup and teardown is
+greatly reduced.</P>
+<P>Perhaps the biggest advantage is that Interserver is not needed
+with this driver. Interserver had to be installed on the
+Firebird/Interbase server machine for the Interclient JDBC driver to
+work. The elimination of Interserver simplifies the installation of
+the Firebird database, and reduces the load on and maintenance of the
+database server system.</P>
+<P>The driver implements much of the JDBC 2 Specification. More
+information on the JDBC 2 Specification can be found on the net at
+http://java.sun.com.</P>
+<P><BR>
+</P>
+<hr>
+<P><BR>
+</P>
+<P ALIGN=CENTER><FONT SIZE=4 STYLE="font-size: 16pt"><a name="2"></a><font size="5">2- 
+  Where to get more information on JayBird</font></FONT></P>
+<P ALIGN=CENTER><a href="#top">return to table of contents</a></P>
+<P><BR>
+  The most detailed information can be found in the JayBird Frequently Asked Questions 
+  (FAQ). The FAQ is included in the distribution, and is available online in several 
+  places. See <a href="file:///C|/JayBird/client-java/output/etc/10">Frequently Asked Questions</a> below for details.<BR>
+</P>
+<hr>
+<BR>
+<BR>
+<P ALIGN=CENTER><FONT SIZE=4 STYLE="font-size: 16pt"><a name="3"></a><font size="5">3- 
+  Where to Get the Driver</font></FONT></P>
+  
+<P ALIGN=CENTER><a href="#top">return to table of contents</a></P>
+  <P>In your browser go to:</P>
+  
+<P><a href="http://sourceforge.net/projects/firebird/">http://sourceforge.net/projects/firebird/</a></P>
+  <P>Scroll down the page and find the row containing:</P>
+  <P>firebird-jca-jdbc-driver</P>
+  <P>Click the link &quot;Download&quot; in the rightmost column of the table 
+    in that row. This links you to another page with the zip files of the various 
+    versions of the driver available to be downloaded. The driver will have the 
+    heading &quot;firebird-jca-jdbc-driver&quot;. Click on the version you wish 
+    to download. It looks something like: FirebirdSQL-1.x.zip.</P>
+  <P>This will download the driver files to your system. Unzip the file and copy 
+    the contents to the appropriate directories on your system as described in 
+    #4 &quot;Installing the Driver&quot; below.</P>
+  
+<P>More recent bugfix versions of the driver can be obtained by downloading the 
+  daily snapshot of the project through CVS and building the project. See the 
+  FAQ for details.<BR>
+  <BR>
+</P>
+  <hr>
+<BR>
+<P ALIGN=CENTER><FONT SIZE=4 STYLE="font-size: 16pt"><a name="4"></a><font size="5">4- 
+  Installing the Driver</font></FONT></P>
+  
+<P ALIGN=CENTER><a href="#top">return to table of contents</a></P>
+<P ALIGN=CENTER>&nbsp;</P>
+  <P>The classes from firebirdsql.jar must be in the classpath of the Java application 
+    being compiled, or otherwise made available to your application. The classes 
+    from the following packages must also be available:</P>
+  
+<UL>
+  <LI> 
+    <P>mini-concurrent.jar</P>
+  <LI> 
+    <P>jaas.jar (built into jdk 1.4, this jar is not needed if you are running 
+      JDK 1.4 or higher)</P>
+  
+  <LI> 
+    <P>mini-j2ee.jar</P>
+  <LI> 
+    <P>log4j-core.jar (if you want logging available)</P>
+  <LI>
+    <P>firebirdjmx.jar (if you want to use the management utilities)<BR>
+    </P>
+</UL>
+<P>These archives are included in the binary package.<BR>
+</P>
+  <P>You can use the jmx management mbean either in a jmx agent (MBeanServer) 
+    or as a standalone class. So far it has been tested in jbossmx and the jmxri, 
+    although since it is extremely simple it should have no problems in any jmx 
+    implementation. Use of jbossmx is highly recommended due to its smaller bug 
+    count and because it is in active development.</P>
+  <P>For use in a managed environment as a JCA resource adapter, deploy firebirdsql.rar 
+    according to the environment's deployment mechanism.</P>
+  
+<P>For installation in Tomcat, JBoss, JBuilder, and for use with stand alone Java 
+  programs see the corresponding sections in the FAQ.</P>
+  <hr>
+<BR>
+<P ALIGN=CENTER><FONT SIZE=5><a name="5"></a>5- Reporting Bugs</FONT></P>
+  <P ALIGN=CENTER><a href="#top">return to table of contents</a><BR>
+  <BR>
+</P>
+  
+<P>The developers attempt to follow the <a href="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</a> 
+  list. Join the list (see <a href="file:///C|/JayBird/client-java/output/etc/9">#9</a> below) and post information about 
+  suspected bugs. This is a good idea because what is often thought to be a bug 
+  turns out to be something else. List members may be able o help out and get 
+  you going again, whereas bug fixes might take awhile.</P>
+  <P>You may also report bugs in the firebird bugtracker at:</P>
+  
+<P><a href="http://sourceforge.net/tracker/?group_id=9028&atid=109028">http://sourceforge.net/tracker/?group_id=9028&amp;atid=109028</a></P>
+  <P><BR>
+  </P>
+  <hr>
+<BR>
+<P ALIGN=CENTER><FONT SIZE=5><a name="6"></a>6- Participating in the Development 
+  Project</FONT></P>
+<P ALIGN=CENTER><a href="#top">return to table of contents</a><BR>
+  <BR>
+</P>
+  
+<P>Use the <a href="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</a> 
+  list to contact the developers about helping out (see<a href="file:///C|/JayBird/client-java/output/etc/9"> #9</a> below). 
+  Perhaps the most crucial need right now is for more and better setup and usage 
+  guides, and to produce a reasonable section of the Firebird web site devoted 
+  to this driver. Work on this would be greatly appreciated.<BR>
+</P>
+  <hr>
+<BR>
+<P ALIGN=CENTER><FONT SIZE=5><a name="7"></a>7- Where to get help</FONT></P>
+  <P ALIGN=CENTER><a href="#top">return to table of contents</a></P>
+  <P><BR>
+  The best place to start is the FAQ. Many details for using JayBird with various 
+  programs are located there. Below are some links to useful web sites.<BR>
+  </P>
+  
+<P>The Firebird-Java mail list: <a href="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</a>.</P>
+  <P>The code for Firebird and this driver are on <A HREF="http://www.sourceforge.net/">www.sourceforge.net</A> 
+    under the Firebird project.</P>
+  <P>The SourceForge Firebird project home page <a href="http://www.firebirdsql.com">www.firebirdsql.com</a> 
+    or <a href="http://firebird.sourceforge.net">firebird.sourceforge.net</a>.</P>
+  
+<P>The IBPhoenix Firebird web site: <A HREF="http://www.IBPhoenix.com/">www.IBPhoenix.com</A></P>
+  <P>The Sun Java web site: <A HREF="http://java.sun.com/">java.sun.com</A></P>
+  <P>The Jboss web site: <A HREF="http://www.jboss.org/">www.jboss.org</A></P>
+  
+<P>The Jakarta Project Web Sites for Ant and Tomcat: <A HREF="http://jakarta.apache.org/">jakarta.apache.org</A><BR>
+</P>
+  <hr>
+<P>&nbsp; </P>
+<p align=CENTER><font size=5><a name="8"></a>8- Known Bugs</font></p>
+<p align=CENTER><a href="#top">return to table of contents</a></p>
+<p>&nbsp;</p>
+<p>1) 575397: SERIALIZABLE is not isc_tpb_consistency - there is no final agreement 
+  between developers about mapping.<br>
+</p>
+<p>2) 630749: implement isc_info_sql_stmt_savepoint - will be implemented in JayBird 
+  1.5.<br>
+  <br>
+  3) 631090: Calling stored procedures - cannot be fixed with current Firebird 
+  implementation.<br>
+  <br>
+  4) 638074: JUnit Errors in JayBird Build - known issue, not driver problem, 
+  but test case problem.<br>
+  <br>
+  5) 645725: getBestRowIdentifier() not working - not yet implemented.<br>
+</p>
+<p>Monitor firebird-java@yahoogroups.com for daily updates</p>
+<p>For details concerning which parts of the JDBC 2.0 specification are implemented, 
+  see the FAQ.<br>
+</p>
+<p>You may report bugs in the firebird bugtracker at <a href="http://sourceforge.net/tracker/?group_id=9028&atid=109028">http://sourceforge.net/tracker/?group_id=9028&amp;atid=109028</a> 
+</p>
+<hr>
+<P><BR>
+</P>
+  
+<P ALIGN=CENTER><FONT SIZE=5><a name="9"></a>9- Joining the Mailing List</FONT></P>
+  <P ALIGN=CENTER><a href="#top">return to table of contents</a></P>
+  
+<P><BR>
+  </P>
+  
+<P>To join the Firebird-java mailing list, go to <a href="file:///C|/JayBird/client-java/output/etc/www.yahoogroups.com">www.yahoogroups.com</a>. 
+  Follow the instructions there for joining a group. The name of the group is 
+  Firebird-java.</P>
+  
+<P>Please set your Yahoo settings to use plain text instead of HTML. All the ads 
+  drive some folks nuts and cause an automatic internet hookup for some folks 
+  in Europe who have to pay for outgoing phone calls.<BR>
+</P>
+  <hr>
+<BR>
+<P ALIGN=CENTER><FONT SIZE=5><a name="10"></a>10- Frequently Asked Questions</FONT></P>
+  <P ALIGN=CENTER><a href="#top">return to table of contents</a></P>
+  
+<P><BR>
+  The list of <a href="file:///C|/JayBird/client-java/output/etc/faq.html">Frequently Asked Questions (FAQ)</a> is included 
+  with the distribution. </P>
+<P>Online versions of it that may be more up-to-date are available on the project 
+  home page at <a href="http://firebird.sourceforge.net">http://firebird.sourceforge.net</a>.</P>
+<P>The following link takes you to the JayBird FAQ at www.IBPhoenix.com:<BR>
+</P>
+  
+<P><a href="http://www.ibphoenix.com/main.nfs?a=ibphoenix&l=;IBPHOENIX.FAQS;NAME=%27JayBird%27">http://www.ibphoenix.com/main.nfs?a=ibphoenix&amp;l=;IBPHOENIX.FAQS;NAME='JayBird'</a></P>
+  <P><BR>
+    <BR>
+  </P>
+  <hr>
+<P ALIGN=center><font size="+2"><a name="11"></a><font size="5">11- Corrections/Additions 
+  To Release Notes</font></font></P>
+  <P ALIGN=center><a href="#top">return to table of contents</a><BR>
+  </P>
+  <P ALIGN=left>&nbsp;</P>
+  <P ALIGN=left>Please send corrections, suggestions, or additions to these Release 
+    Notes to Rick Fincher at <a href="mailto:rnf@tbird.com">rnf@tbird.com</a>, 
+    or to the developers on the SourceForge site, or post them to the newsgroup 
+    at <a href="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</a>.<br>
+  </P>
+  <hr>
+  <P ALIGN=left>&nbsp; </P>
+</BODY>
+</HTML>
