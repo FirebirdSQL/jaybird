@@ -33,6 +33,8 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 class FBStatementFetcher implements FBFetcher {
 
+    private boolean wasFetched;
+    
     private AbstractConnection c;
 
     protected AbstractStatement fbStatement;
@@ -43,7 +45,7 @@ class FBStatementFetcher implements FBFetcher {
     private Object[] rowsArray;
     private int size;
 
-    protected byte[][] nextRow;
+    protected byte[][] _nextRow;
 
     private final static Logger log = LoggerFactory.getLogger(FBStatementFetcher.class,false);
 
@@ -71,24 +73,40 @@ class FBStatementFetcher implements FBFetcher {
         isLast = false;
         isAfterLast = false;
             
-        try {
-            // stored procedures
-            if (stmt.getAllRowsFetched()){
-                rowsArray = stmt.getRows();
-                size = stmt.size();
-            }
-            fetch();
-            if (nextRow==null)
-                isEmpty = true;
-            else 
-                isBeforeFirst = true;
+        // stored procedures
+        if (stmt.getAllRowsFetched()){
+            rowsArray = stmt.getRows();
+            size = stmt.size();
         }
-        catch (SQLException sqle) {
-            throw sqle;
-        }
+//            fetch();
+//            if (nextRow==null)
+//                isEmpty = true;
+//            else 
+//                isBeforeFirst = true;
     }
 
+    protected byte[][] getNextRow() throws SQLException {
+        if (!wasFetched)
+            fetch();
+        
+        return _nextRow;
+    }
+    
+    protected void setNextRow(byte[][] nextRow) {
+        _nextRow = nextRow;
+        
+        if (!wasFetched) {
+            wasFetched = true;
+            
+            if (_nextRow == null)
+                isEmpty = true;
+            else
+                isBeforeFirst = true;
+        }
+    }
+    
     public boolean next() throws SQLException {
+        
         setIsBeforeFirst(false);
         setIsFirst(false);
         setIsLast(false);
@@ -96,21 +114,21 @@ class FBStatementFetcher implements FBFetcher {
 
         if (getIsEmpty())
             return false;
-        else if (nextRow == null || (fbStatement.maxRows!=0 && getRowNum()==fbStatement.maxRows)){
+        else if (getNextRow() == null || (fbStatement.maxRows!=0 && getRowNum()==fbStatement.maxRows)){
             setIsAfterLast(true);
             setRowNum(0);
             return false;
         }
         else {
             try {
-                rs.row = nextRow;
+                rs.row = getNextRow();
                 fetch();
                 setRowNum(getRowNum() + 1);
-
+                
                 if(getRowNum() == 1)
                     setIsFirst(true);
 
-                if((nextRow==null) || (fbStatement.maxRows!=0 && getRowNum() == fbStatement.maxRows))
+                if((getNextRow()==null) || (fbStatement.maxRows!=0 && getRowNum() == fbStatement.maxRows))
                     setIsLast(true);
 
                 return true;
@@ -123,14 +141,17 @@ class FBStatementFetcher implements FBFetcher {
 
     public void fetch() throws SQLException {
         int maxRows = 0;
+        
         if (fbStatement.maxRows != 0)
             maxRows = fbStatement.maxRows - rowNum;
+        
         int fetchSize = fbStatement.fetchSize;
         if (fetchSize == 0)
-            fetchSize = MAX_FETCH_ROWS;				
+            fetchSize = MAX_FETCH_ROWS;
+        
         if (maxRows != 0 && fetchSize > maxRows)
             fetchSize = maxRows;
-        //
+
         if (!stmt.getAllRowsFetched() && (rowsArray == null || size == rowPosition)){
             try {
                 c.fetch(stmt, fetchSize);
@@ -142,14 +163,15 @@ class FBStatementFetcher implements FBFetcher {
                 throw new FBSQLException(ge);
             }
         }
+        
         if (rowsArray!=null && size > rowPosition) {
-            nextRow = (byte[][]) rowsArray[rowPosition];
+            setNextRow((byte[][]) rowsArray[rowPosition]);
             // help the garbage collector
             rowsArray[rowPosition] = null;
             rowPosition++;
         }
         else
-            nextRow = null;
+            setNextRow(null);
     }
 	 
     public void close() throws SQLException {
@@ -165,21 +187,30 @@ class FBStatementFetcher implements FBFetcher {
     public void setRowNum(int rowNumValue) {
         this.rowNum = rowNumValue;
     }
-    public boolean getIsEmpty() {
+    public boolean getIsEmpty() throws SQLException {
+        if (!wasFetched)
+            fetch();
+        
         return isEmpty;
     }
 
     public void setIsEmpty(boolean isEmptyValue) {
         this.isEmpty = isEmptyValue;
     }
-    public boolean getIsBeforeFirst() {
+    public boolean getIsBeforeFirst() throws SQLException {
+        if (!wasFetched)
+            fetch();
+        
         return isBeforeFirst;
     }
 
     public void setIsBeforeFirst(boolean isBeforeFirstValue) {
         this.isBeforeFirst = isBeforeFirstValue;
     }
-    public boolean getIsFirst() {
+    public boolean getIsFirst() throws SQLException {
+        if (!wasFetched)
+            fetch();
+        
         return isFirst;
     }
 
@@ -188,13 +219,21 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     public boolean getIsLast() throws SQLException {
+        if (!wasFetched)
+            fetch();
+        
         return isLast;
     }
     
     public void setIsLast(boolean isLastValue) {
         this.isLast = isLastValue;
     }
-    public boolean getIsAfterLast() {
+    
+    public boolean getIsAfterLast() throws SQLException {
+        
+        if (!wasFetched)
+            fetch();
+        
         return isAfterLast;
     }
 
