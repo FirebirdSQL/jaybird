@@ -25,7 +25,6 @@ import java.util.*;
 
 import javax.resource.ResourceException;
 
-import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jca.*;
@@ -124,7 +123,7 @@ public class FBDriver implements Driver {
             FBConnectionRequestInfo conCri =
                 FBConnectionHelper.getCri(info, mcf.getDefaultConnectionRequestInfo());
 
-            handleEncoding(info, conCri);
+            //handleEncoding(info, conCri);
 
             FBTpbMapper tpbMapper = FBConnectionHelper.getTpbMapper(info);
 
@@ -209,66 +208,6 @@ public class FBDriver implements Driver {
                     FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
         }
     }
-
-
-    /**
-     * Handle character encoding parameters. This method ensures that both
-     * java encoding an client connection encodings are correctly set. 
-     * Additionally method handles the character translation stuff.
-     * 
-     * @param info connection properties
-     * @param cri mapping connection request info.
-     * 
-     * @throws SQLException if both isc_dpb_local_encoding and charSet are
-     * specified.
-     */
-    private void handleEncoding(Properties info, FBConnectionRequestInfo cri) throws SQLException {
-        String iscEncoding = cri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);
-        String localEncoding = cri.getStringProperty(ISCConstants.isc_dpb_local_encoding);
-        String charSet = info.getProperty(CHARSET);
-        
-        if (localEncoding != null && charSet != null && !localEncoding.equals(charSet))
-            throw new FBSQLException("Property charSet is an alias to " +
-                    "isc_dpb_local_encoding, but specified values are different.");
-
-        // charSet is actually an alias for isc_dpb_local_encoding
-        if (localEncoding == null && charSet != null) {
-            localEncoding = charSet;
-            cri.setProperty(ISCConstants.isc_dpb_local_encoding, localEncoding);
-        }
-        
-        if (iscEncoding != null && (charSet == null && localEncoding == null)) {
-            String javaEncoding = FBConnectionHelper.getJavaEncoding(iscEncoding);
-            
-            if (javaEncoding != null)
-                cri.setProperty(ISCConstants.isc_dpb_local_encoding, javaEncoding);
-        }
-        
-        if (iscEncoding == null && localEncoding != null) {
-            iscEncoding = FBConnectionHelper.getIscEncoding(charSet); 
-            cri.setProperty(ISCConstants.isc_dpb_lc_ctype, iscEncoding);
-        }
-        
-        // handle the character translation: mapping_path property specifies
-        // a path to the resource with the character mapping
-        
-        String useTranslation = info.getProperty(USE_TRANSLATION);
-        String mappingPath = cri.getStringProperty(ISCConstants.isc_dpb_mapping_path);
-        
-        if (useTranslation != null && mappingPath == null) {
-            mappingPath = useTranslation;
-            cri.setProperty(ISCConstants.isc_dpb_mapping_path, mappingPath);
-        }
-        
-        if (useTranslation != null && mappingPath != null && !useTranslation.equals(mappingPath))
-            throw new FBSQLException("Property useTranslation is an alias to " +
-            "isc_dpb_mapping_path, but specified values are different.");
-        
-        if (mappingPath != null) {
-            EncodingFactory.getEncoding(localEncoding, mappingPath);
-        }
-    }
-
 
     /**
 	 *
