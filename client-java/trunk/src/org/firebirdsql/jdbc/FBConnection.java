@@ -581,21 +581,14 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @see DatabaseMetaData#supportsTransactionIsolationLevel
      */
     public void setTransactionIsolation(int level) throws SQLException {
-        switch (level) {
-            case TRANSACTION_SERIALIZABLE :
-                mc.setTransactionIsolation(GDS.isc_tpb_consistency);
-                break;
-            case TRANSACTION_REPEATABLE_READ :
-                mc.setTransactionIsolation(GDS.isc_tpb_concurrency);
-                break;
-            case TRANSACTION_READ_COMMITTED :
-                mc.setTransactionIsolation(GDS.isc_tpb_read_committed);
-                break;
-            case TRANSACTION_READ_UNCOMMITTED :
-                mc.setTransactionIsolation(GDS.isc_tpb_read_committed);
-                break;
-            default: throw new SQLException("Unsupported transaction isolation level");
+        try 
+        {
+            mc.setTransactionIsolation(level);
         }
+        catch (ResourceException e)
+        {
+            throw new SQLException(e.getMessage());
+        } // end of try-catch
     }
 
 
@@ -606,12 +599,14 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      */
     public int getTransactionIsolation() throws SQLException {
-        switch (mc.getTransactionIsolation()) {
-            case GDS.isc_tpb_consistency : return TRANSACTION_SERIALIZABLE;
-            case GDS.isc_tpb_concurrency : return TRANSACTION_REPEATABLE_READ;
-            case GDS.isc_tpb_read_committed : return TRANSACTION_READ_COMMITTED;
-            default: throw new SQLException("Unknown transaction isolation level");
+        try 
+        {
+            return mc.getTransactionIsolation();
         }
+        catch (ResourceException e)
+        {
+            throw new SQLException(e.getMessage());
+        } // end of try-catch
     }
 
 

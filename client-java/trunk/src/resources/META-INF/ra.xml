@@ -33,6 +33,16 @@
       <config-property-value></config-property-value>
     </config-property>
     <config-property>
+      <config-property-name>TransactionIsolation</config-property-name>
+      <config-property-type>java.lang.Integer</config-property-type>
+      <config-property-value></config-property-value>
+    </config-property>
+    <config-property>
+      <config-property-name>TransactionIsolationName</config-property-name>
+      <config-property-type>java.lang.String</config-property-type>
+      <config-property-value>TRANSACTION_READ_COMMITTED</config-property-value>
+    </config-property>
+    <config-property>
       <config-property-name>UserName</config-property-name>
       <config-property-type>java.lang.String</config-property-type>
       <config-property-value></config-property-value>

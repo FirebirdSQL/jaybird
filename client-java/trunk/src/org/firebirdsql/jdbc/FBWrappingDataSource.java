@@ -43,6 +43,8 @@ import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionManager;
 import javax.resource.spi.ManagedConnectionFactory;
 
+import org.firebirdsql.jca.FBTpb;
+
 
 /**
  *
@@ -164,15 +166,25 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
       mcf.setConnectionRequestInfo(cri);
    }
 
-   public Set getTransactionParameters()
+   public FBTpb getTransactionParameters()
    {
       return mcf.getTpb();
    }
 
-   public void setTransactionParameters(Set tpb)
+   public void setTransactionParameters(FBTpb tpb)
    {
       mcf.setTpb(tpb);
    }
+
+    public Integer getTransactionIsolation() throws ResourceException
+    {
+        return mcf.getTransactionIsolation();
+    }
+
+    public void setTransactionIsolation(Integer level) throws ResourceException
+    {
+        mcf.setTransactionIsolation(level);
+    }
 
    public int getConnectionCount()
    {
