@@ -1,3 +1,53 @@
+2004-04-17 23:46  rrokytskyy
+
+	* client-java/src/etc/connection_pool.html:
+	
+	initial revision
+
+2004-04-17 23:08  rrokytskyy
+
+	*
+	
+	updated to reflect changes in FBWrappingDataSource class
+	client-java/src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.
+	java:
+
+2004-04-17 23:07  rrokytskyy
+
+	*
+	
+	added to make driver compatible with 1.0.1
+	client-java/src/compatibility/org/firebirdsql/jdbc/FBWrappingDataSo
+	urce.java:
+
+2004-04-17 23:03  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	BasicAbstractConnectionPool.java, FBConnectionPoolDataSource.java,
+	FBPooledConnection.java, FBPoolingDefaults.java,
+	FBWrappingDataSource.java, PingablePooledConnection.java,
+	DriverConnectionPoolDataSource.java:
+	
+	added possibility to specify transaction isolation
+
+2004-04-17 14:59  rrokytskyy
+
+	*
+	
+	added test for "operation was cancelled"
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
+	ava:
+
+2004-04-17 14:58  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jca/FBXAException.java,
+	pool/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	test/org/firebirdsql/pool/TestXADataSource.java:
+	
+	added implementation of javax.sql.XADataSource
+
 2004-04-16 23:54  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/:
