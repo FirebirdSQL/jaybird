@@ -1,289 +1,633 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <HTML>
 <HEAD>
 	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
 	<TITLE>Release Notes</TITLE>
-	<META NAME="GENERATOR" CONTENT="OpenOffice.org 641  (Win32)">
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.1  (Win32)">
 	<META NAME="CREATED" CONTENT="20020909;21125147">
-	<META NAME="CHANGEDBY" CONTENT="Rick Fincher">
-	<META NAME="CHANGED" CONTENT="20020916;15223738">
+	<META NAME="CHANGED" CONTENT="20040419;393339">
+	<STYLE>
+	<!--
+		@page { size: 21cm 29.7cm }
+		CODE.western { font-size: 10pt; so-language:  }
+	-->
+	</STYLE>
 </HEAD>
-<BODY LANG="en-US">
-<P ALIGN=CENTER><FONT SIZE=6> JayBird Release Notes</FONT></P>
-<P ALIGN=CENTER><font size="5">Type 4 JCA/JDBC Driver for Firebird</font><FONT SIZE=6> 
-  </FONT></P>
-<P ALIGN=CENTER>- Last Updated 2/3/03 -<BR>
+<BODY LANG="en-US" DIR="LTR">
+<P ALIGN=CENTER><FONT SIZE=6>JayBird 1.5 Release Notes</FONT></P>
+<P ALIGN=CENTER><FONT SIZE=5>JCA/JDBC Driver Suite for Firebird</FONT>
 </P>
-<P ALIGN=CENTER><FONT SIZE=5 STYLE="font-size: 20pt"><a name="top"></a>CONTENTS</FONT><BR>
+<P ALIGN=CENTER><A NAME="top"></A><FONT SIZE=5 STYLE="font-size: 20pt">CONTENTS</FONT></P>
+<CENTER>
+	<TABLE WIDTH=90% BORDER=0 CELLPADDING=5 CELLSPACING=0>
+		<TR>
+			<TD WIDTH=30%>
+				<P>&nbsp;</P>
+			</TD>
+			<TD>
+				<P><A HREF="#1">1. Introduction</A></P>
+				<P><A HREF="#2">2. What's new in JayBird 1.5</A></P>
+				<P><A HREF="#3">3. Where to get more information on JayBird</A></P>
+				<P><A HREF="#4">4. Where to get the driver</A></P>
+				<P><A HREF="#5">5. Installing the driver</A></P>
+				<P><A HREF="#6">6. Reporting Bugs</A></P>
+				<P><A HREF="#7">7. Participating in the Development Project</A></P>
+				<P><A HREF="#8">8. Where to get help</A></P>
+				<P><A HREF="#9">9. Known Bugs</A></P>
+				<P><A HREF="#10">10. Joining the mailing list</A></P>
+				<P><A HREF="#11">11. Frequently Asked Questions</A></P>
+				<P><A HREF="#12">12. Corrrections/Additions To Release Notes</A></P>
+			</TD>
+			<TD WIDTH=25%>
+				<P>&nbsp;</P>
+			</TD>
+		</TR>
+	</TABLE>
+</CENTER>
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+<P><BR><BR>
 </P>
-<div align="center">
-  <table width="90%" border="0" cellspacing="0" cellpadding="5">
-    <tr> 
-      <td width="30%">&nbsp;</td>
-      <td nowrap> 
-        <p><a href="#1">1. Introduction</a></p>
-        <p><a href="#2">2. Where to get more information on JayBird</a></p>
-        <p><a href="#3">3. Where to get the driver</a></p>
-        <p><a href="#4">4. Installing the driver</a></p>
-        <p><a href="#5">5. Reporting Bugs</a></p>
-        <p><a href="#6">6. Participating in the Development Project</a></p>
-        <p><a href="#7">7. Where to get help</a></p>
-        <p><a href="#8">8. Known Bugs</a></p>
-        <p><a href="#9">9. Joining the mailing list</a></p>
-        <p><a href="#10">10. Frequently Asked Questions</a></p>
-        <p><a href="#11">11. Corrrections/Additions To Release Notes</a></p>
-      </td>
-      <td width="25%">&nbsp;</td>
-    </tr>
-  </table>
-</div>
-<p>&nbsp;</P>
-<p>&nbsp;</P>
-<P><BR>
-</P>
-<hr>
-<P><BR>
+<HR>
+<P><BR><BR>
 </P>
 <P><BR><BR>
 </P>
-<P ALIGN=CENTER><FONT SIZE=4 STYLE="font-size: 16pt"><a name="1"></a><font size="5">1- 
-  Introduction</font></FONT></P>
-<P ALIGN=CENTER><a href="#top">return to table of contents</a><BR>
-</P>
-<P>The firebird team has implemented a pure java driver for
-firebirdsql. This driver allows a Java program to connect to, send
-queries to, and get results from a Firebird SQL Database. It is an
-alternative to the Interclient JDBC Driver. The open source version
-of Interclient is not actively supported at this time. This makes the
-JCA-JDBC Driver the best option for Java development with an open
-source driver.</P>
+<P ALIGN=CENTER><A NAME="1"></A><FONT SIZE=5>1- Introduction</FONT></P>
+<P ALIGN=CENTER><A HREF="#top">return to table of contents</A></P>
+<P>JayBird is JCA/JDBC driver suite to connect to Firebird database
+server. Historically Borland opened sources of type 3 JDBC driver
+called InterClient. However due to some inherent limitations of
+Firebird client library it was decided that type 3 driver is a dead
+end, and Firebird team developed pure Java implementation of wire
+protocol. This implementation became basis for JayBird, pure Java
+driver for Firebird relational database.</P>
 <P>This driver is based on both the new JCA standard for application
 server connections to enterprise information systems and the well
 known JDBC standard. The JCA standard specifies an architecture in
 which an application server can cooperate with a driver so that the
 application server manages transactions, security, and resource
 pooling, and the driver supplies only the connection functionality.
-While similar to the JDBC 2 XADataSource idea, the JCA specification
-is considerably clearer on the division of responsibility between the
-application server and driver.</P>
-<P>The JCA-JDBC driver has several major advantages over Interclient.
-Because it Implements the JCA specification, it can be used
-seamlessly with J2EE containers that support JCA functionality.</P>
-<P>It also has a built-in connection pooling capability for use with
-stand-alone programs or J2EE containers that don't support connection
-pooling internally. Java programs run much faster with connection
-pooling because the overhead of connection setup and teardown is
-greatly reduced.</P>
-<P>Perhaps the biggest advantage is that Interserver is not needed
-with this driver. Interserver had to be installed on the
-Firebird/Interbase server machine for the Interclient JDBC driver to
-work. The elimination of Interserver simplifies the installation of
-the Firebird database, and reduces the load on and maintenance of the
-database server system.</P>
-<P>The driver implements much of the JDBC 2 Specification. More
-information on the JDBC 2 Specification can be found on the net at
-http://java.sun.com.</P>
-<P><BR>
+While similar to the JDBC 2 <CODE CLASS="western">XADataSource</CODE>
+idea, the JCA specification is considerably clearer on the division
+of responsibility between the application server and driver.</P>
+<H4>Supported Firebird versions</H4>
+<P>JayBird 1.5 supports Firebird 1.0.x SuperServer and Classic,
+Firebird 1.5 SuperServer and Classic independently of the platform on
+which server runs when type 4 JDBC driver is used. Type 2 and
+embedded server JDBC drivers have precompiled binaries for Win32 and
+Linux platforms, other platforms require porting/building JNI library
+for that platform. Firebird 0.9.x and InterBase 6.0.x OpenSource can
+be used with JayBird 1.5, but are not officially supported by it.</P>
+<H4>Specification support</H4>
+<P>Driver supports following specifications:</P>
+<TABLE WIDTH=100% BORDER=1 CELLPADDING=4 CELLSPACING=0 STYLE="page-break-inside: avoid">
+	<COL WIDTH=82*>
+	<COL WIDTH=174*>
+	<THEAD>
+		<TR>
+			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP>
+				<P>Supported specifications</P>
+			</TH>
+		</TR>
+	</THEAD>
+	<TBODY>
+		<TR VALIGN=TOP>
+			<TD WIDTH=32%>
+				<P>JDBC 2.0</P>
+			</TD>
+			<TD WIDTH=68%>
+				<P>Driver passed complete JDBC compatibility test suite, though
+				some features are not implemented. It is not officially JDBC
+				compliant, because of high certification costs.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=32%>
+				<P>JDBC 2.0 Standard Extensions</P>
+			</TD>
+			<TD WIDTH=68%>
+				<P>JayBird provides implementation of following interfaces from
+				<CODE CLASS="western">javax.sql.*</CODE> package:</P>
+				<UL>
+					<LI><P><CODE CLASS="western">ConnectionPoolDataSource</CODE>
+					implementation provides connection and prepared statement
+					pooling.</P>
+					<LI><P><CODE CLASS="western">DataSource</CODE> implementation
+					provides seamless integration with major web and application
+					servers.</P>
+					<LI><P><CODE CLASS="western">XADataSource</CODE> implementation
+					provides means to use driver in distributed transactions.</P>
+				</UL>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=32%>
+				<P>JCA 1.0</P>
+			</TD>
+			<TD WIDTH=68%>
+				<P>JayBird provides implementation of
+				<CODE CLASS="western">javax.resource.spi.ManagedConnectionFactory</CODE>
+				and related interfaces. CCI interfaces are not supported.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=32%>
+				<P>JTA 1.0.1</P>
+			</TD>
+			<TD WIDTH=68%>
+				<P>Driver provides implementation of
+				<CODE CLASS="western">javax.transaction.xa.XAResource</CODE>
+				interface via JCA framework and <CODE CLASS="western">XADataSource</CODE>
+				implementation.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=32%>
+				<P>JMX 1.2</P>
+			</TD>
+			<TD WIDTH=68%>
+				<P>JayBird provides MBean that allows creating and dropping
+				databases via JMX agent.</P>
+			</TD>
+		</TR>
+	</TBODY>
+</TABLE>
+<H4>Using JayBird with InterBase</H4>
+<P>JayBird 1.5 can be used with InterBase 6.0, 6.5 and 7.1 (not
+tested with versions with applied service packs). Above mentioned
+servers implement same wire protocol as Firebird 1.0 and 1.5. JayBird
+passes almost all JDBC 2.0 compatibility tests when used with
+InterBase, failed tests are caused by the unavailability of some
+Firebird features in InterBase. JayBird 1.5 provides much more better
+JDBC compatibility compared to InterClient 4 shipped with InterBase
+7.1 and provides many features that are not available in InterClient
+4.</P>
+<HR>
+<P><BR><BR>
 </P>
-<hr>
-<P><BR>
+<P ALIGN=CENTER><A NAME="2"></A><FONT SIZE=5>2- What's new in JayBird
+1.5</FONT></P>
+<P ALIGN=CENTER><A HREF="#top">return to table of contents</A></P>
+<P ALIGN=LEFT>JayBird 1.5 introduces number of new features and
+improvements.</P>
+<H4>Type 2 and embedded mode</H4>
+<P ALIGN=LEFT>JayBird 1.0 provided only pure Java wire protocol
+implementation. While being most effective in client-server setups
+(even more effective than native client libraries), it performed
+worser when connected to the server residing on the same host
+compared to native (C/C++/Delphi/etc) solutions. Reason is that type
+4 driver communicates with the server using network sockets, which
+introduce additional overhead. Native client library has possibility
+to use IPC when connecting to the database on the same host. This
+might increase performance even by 100%. 
 </P>
-<P ALIGN=CENTER><FONT SIZE=4 STYLE="font-size: 16pt"><a name="2"></a><font size="5">2- 
-  Where to get more information on JayBird</font></FONT></P>
-<P ALIGN=CENTER><a href="#top">return to table of contents</a></P>
-<P><BR>
-  The most detailed information can be found in the JayBird Frequently Asked Questions 
-  (FAQ). The FAQ is included in the distribution, and is available online in several 
-  places. See <a href="file:///C|/JayBird/client-java/output/etc/10">Frequently Asked Questions</a> below for details.<BR>
+<P ALIGN=LEFT>JayBird 1.5 provides also type 2 JDBC driver that uses
+native client library to connect to the databases. Additionally
+JayBird 1.5 can use embedded version of Firebird relational database
+allowing to create Java applications that does not require separate
+server setup.</P>
+<P ALIGN=LEFT>However type 2 driver has also limitations. Due to
+multi-threading issues in Firebird client library as well as in
+embedded server version, it is not possible to access them from
+different threads simultaneously. When using client library only one
+thread is allowed to access connection at a time, however it is
+allowed to access different connections from different threads.
+<EM>Embedded version of the server cannot be used on POSIX systems in
+multi-threaded applications. In particular this makes embedded
+version of the server unusable for web applications, where usually
+each request is served in separate thread.</EM></P>
+<P>Driver provides different JDBC URLs for different usage scenarios:</P>
+<TABLE WIDTH=100% BORDER=1 CELLPADDING=4 CELLSPACING=3 STYLE="page-break-inside: avoid">
+	<COL WIDTH=20*>
+	<COL WIDTH=121*>
+	<COL WIDTH=114*>
+	<THEAD>
+		<TR>
+			<TH COLSPAN=3 WIDTH=100% VALIGN=TOP>
+				<P>JDBC URLs</P>
+			</TH>
+		</TR>
+	</THEAD>
+	<TBODY>
+		<TR VALIGN=TOP>
+			<TD WIDTH=8%>
+				<P>1)</P>
+			</TD>
+			<TD WIDTH=47%>
+				<P><CODE CLASS="western">jdbc:firebirdsql:host[/port]:/path/to/db.fdb<BR>jdbc:firebirdsql://host[:port]/path/to/db.fdb</CODE></P>
+			</TD>
+			<TD WIDTH=45%>
+				<P>Default URL, will connect to the database using type 4 JDBC
+				driver. Best suited for client-server applications with dedicated
+				database server. Port can be omitted (default value is 3050),
+				host name must be present. 
+				</P>
+				<P>First format is considered official, second &ndash;
+				compatibility mode for InterClient migration.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=8%>
+				<P>2)</P>
+			</TD>
+			<TD WIDTH=47%>
+				<P><CODE CLASS="western">jdbc:firebirdsql:native:host[/port]:/path/to/db.fdb<BR>jdbc:firebirdsql:native://host[:port]/path/to/b.fdb</CODE></P>
+			</TD>
+			<TD WIDTH=45%>
+				<P>Type 2 driver, will connect to the database using client
+				library (either fbclient.dll or gds32.dll on Windows, and
+				libfbclient.so or libgds.so on Linux). Requires correct
+				installation of the client library.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=8%>
+				<P>3)</P>
+			</TD>
+			<TD WIDTH=47%>
+				<P><CODE CLASS="western">jdbc:firebirdsql:local:/path/to/db.fdb</CODE></P>
+			</TD>
+			<TD WIDTH=45%>
+				<P>Type 2 driver in local mode. Uses client library as in case
+				2), however will not use socket communication, but rather access
+				database directly. Requires correct installation of the client
+				library.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=8%>
+				<P>4)</P>
+			</TD>
+			<TD WIDTH=47%>
+				<P><CODE CLASS="western">jdbc:firebirdsql:embedded:/path/to/db.fdb</CODE></P>
+			</TD>
+			<TD WIDTH=45%>
+				<P>Similar to the case 3), however fbembedded.dll on Windows and
+				libfbembedded.so on Linux are used. Does not require installation
+				of embedded server, will load library from the path.</P>
+			</TD>
+		</TR>
+	</TBODY>
+</TABLE>
+<P><BR><BR>
 </P>
-<hr>
-<BR>
-<BR>
-<P ALIGN=CENTER><FONT SIZE=4 STYLE="font-size: 16pt"><a name="3"></a><font size="5">3- 
-  Where to Get the Driver</font></FONT></P>
-  
-<P ALIGN=CENTER><a href="#top">return to table of contents</a></P>
-  <P>In your browser go to:</P>
-  
-<P><a href="http://sourceforge.net/projects/firebird/">http://sourceforge.net/projects/firebird/</a></P>
-  <P>Scroll down the page and find the row containing:</P>
-  <P>firebird-jca-jdbc-driver</P>
-  <P>Click the link &quot;Download&quot; in the rightmost column of the table 
-    in that row. This links you to another page with the zip files of the various 
-    versions of the driver available to be downloaded. The driver will have the 
-    heading &quot;firebird-jca-jdbc-driver&quot;. Click on the version you wish 
-    to download. It looks something like: FirebirdSQL-1.x.zip.</P>
-  <P>This will download the driver files to your system. Unzip the file and copy 
-    the contents to the appropriate directories on your system as described in 
-    #4 &quot;Installing the Driver&quot; below.</P>
-  
-<P>More recent bugfix versions of the driver can be obtained by downloading the 
-  daily snapshot of the project through CVS and building the project. See the 
-  FAQ for details.<BR>
-  <BR>
+<H4>Support of IN and OUT stored procedure parameters</H4>
+<P ALIGN=LEFT>JayBird 1.5 parses procedure call statement and
+converts it into corresponding SQL call. JayBird 1.0 supported only
+IN procedure parameters, new version provides full support for OUT
+parameters too (<CODE CLASS="western">CallableStatement.registerOutParameter(...)</CODE>
+methods).</P>
+<H4>New connection pooling framework</H4>
+<P ALIGN=LEFT>JayBird 1.0 provided built-in connection pooling using
+<CODE CLASS="western">FBWrappingDataSource</CODE> class. JayBird 1.5
+provides new connection and prepared statement pooling framework. For
+more information see separate <A HREF="connection_pool.html">document</A>.</P>
+<H4>Firebird specific extensions</H4>
+<P ALIGN=LEFT>JayBird 1.5 provides extensions to some JDBC
+interfaces. All extension interfaces are released under modified BSD
+license, on &ldquo;AS IS&rdquo; basis, this should make linking to
+these classes safe from the legal point of view. All classes belong
+to <CODE CLASS="western">org.firebirdsql.jdbc.*</CODE> package.</P>
+<TABLE WIDTH=100% BORDER=1 CELLPADDING=4 CELLSPACING=0 STYLE="page-break-inside: avoid">
+	<COL WIDTH=64*>
+	<COL WIDTH=88*>
+	<COL WIDTH=104*>
+	<THEAD>
+		<TR>
+			<TH COLSPAN=3 WIDTH=100% VALIGN=TOP>
+				<P>JDBC extensions</P>
+			</TH>
+		</TR>
+	</THEAD>
+	<TBODY>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P ALIGN=LEFT><CODE CLASS="western">FirebirdConnection</CODE></P>
+			</TD>
+			<TD WIDTH=34%>
+				<P ALIGN=LEFT><CODE CLASS="western">createBlob()</CODE></P>
+			</TD>
+			<TD WIDTH=41%>
+				<P ALIGN=LEFT>Create new BLOB in the database. Later this BLOB
+				can be passed as a parameter into <CODE CLASS="western">PreparedStatement</CODE>
+				or <CODE CLASS="western">CallableStatement</CODE>.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=34%>
+				<P ALIGN=LEFT><CODE CLASS="western">getIscEncoding()</CODE></P>
+			</TD>
+			<TD WIDTH=41%>
+				<P ALIGN=LEFT>Get connection character encoding.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=34%>
+				<P ALIGN=LEFT><CODE CLASS="western">setTransactionParameters(<BR>
+				 int isolationLevel, <BR>  int[] tpbParams<BR>)</CODE></P>
+			</TD>
+			<TD WIDTH=41%>
+				<P ALIGN=LEFT>Set TPB parameters for the specified transaction
+				isolation level.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P ALIGN=LEFT><CODE CLASS="western">FirebirdStatement</CODE></P>
+			</TD>
+			<TD WIDTH=34%>
+				<P ALIGN=LEFT><CODE CLASS="western">getInsertedRowsCount()<BR>getUpdatedRowsCount()<BR>getDeletedRowsCount()</CODE></P>
+			</TD>
+			<TD WIDTH=41%>
+				<P ALIGN=LEFT>Extension that allows to get more precise
+				information about outcome of some statement.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=34%>
+				<P ALIGN=LEFT><CODE CLASS="western">hasOpenResultSet()</CODE></P>
+			</TD>
+			<TD WIDTH=41%>
+				<P ALIGN=LEFT>Check if this statement has open result set.
+				Correctly works only when auto-commit is disabled. Check method
+				documentation for details.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=34%>
+				<P ALIGN=LEFT><CODE CLASS="western">isValid()</CODE></P>
+			</TD>
+			<TD WIDTH=41%>
+				<P ALIGN=LEFT>Check if this statement is still valid. Statement
+				might be invalidated when connection is automatically recycled
+				between transactions due to some irrecoverable error.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P ALIGN=LEFT><CODE CLASS="western">FirebirdBlob</CODE></P>
+			</TD>
+			<TD WIDTH=34%>
+				<P ALIGN=LEFT><CODE CLASS="western">detach()</CODE></P>
+			</TD>
+			<TD WIDTH=41%>
+				<P ALIGN=LEFT>Method &ldquo;detaches&rdquo; a BLOB object from
+				the underlying result set. Lifetime of &ldquo;detached&rdquo;
+				BLOB is limited by the lifetime of the connection.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=34%>
+				<P ALIGN=LEFT><CODE CLASS="western">isSegmented()</CODE></P>
+			</TD>
+			<TD WIDTH=41%>
+				<P ALIGN=LEFT>Check if this BLOB is segmented. Seek operation is
+				not defined for the segmented BLOBs.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=34%>
+				<P ALIGN=LEFT><CODE CLASS="western">setBinaryStream(<BR>  long
+				position<BR>)</CODE></P>
+			</TD>
+			<TD WIDTH=41%>
+				<P ALIGN=LEFT>Opens an output stream at the specified position,
+				allows modifying BLOB content. Due to server limitations only
+				position 0 is supported.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P ALIGN=LEFT><CODE CLASS="western">FirebirdBlob.BlobInputStream</CODE></P>
+			</TD>
+			<TD WIDTH=34%>
+				<P ALIGN=LEFT><CODE CLASS="western">getBlob()</CODE></P>
+			</TD>
+			<TD WIDTH=41%>
+				<P ALIGN=LEFT>Get corresponding BLOB instance.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P ALIGN=LEFT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=34%>
+				<P ALIGN=LEFT><CODE CLASS="western">seek(int position)</CODE></P>
+			</TD>
+			<TD WIDTH=41%>
+				<P ALIGN=LEFT>Change the position from which BLOB content will be
+				read.</P>
+			</TD>
+		</TR>
+	</TBODY>
+</TABLE>
+<H4>Batch executions</H4>
+<P>JayBird 1.5 supports batch execution of update statements. Batch
+is executed until first failure. If error happens during batch
+execution and auto-commit is enabled, whole batch is rolled back.</P>
+<H4>Multi-threading fixes</H4>
+<P>JayBird 1.5 connections can safely be used from multiple threads.
+All necessary synchronization is performed internally.</P>
+<H4>Scrollable result sets</H4>
+<P>JayBird 1.5 provides support for
+<CODE CLASS="western">ResultSet.TYPE_SCROLL_INSENSITIVE</CODE>. This
+feature provides scrollable result sets on the client. However use it
+with care &ndash; complete result set is fetched to the client. Big
+result sets might decrease speed of the application and cause
+<CODE CLASS="western">java.lang.OutOfMemoryException</CODE>. Also
+note that result sets in Firebird are not updatable in terms of
+<CODE CLASS="western">ResultSet.updateXXX(...)</CODE> methods. Also
+scrollable result sets cannot be combined with named cursors.</P>
+<H4>JDBC 2.0 compatibility</H4>
+<P>JayBird 1.5 includes number of fixes that allow it pass JDBC 2.0
+compatibility suite. It successfully passes 1216 tests, 60 tests were
+excluded, because they are either not applicable to Firebird or fail
+due to some server problems (math rounding issues, limitations of
+NUMERIC data type, etc.). 
 </P>
-  <hr>
-<BR>
-<P ALIGN=CENTER><FONT SIZE=4 STYLE="font-size: 16pt"><a name="4"></a><font size="5">4- 
-  Installing the Driver</font></FONT></P>
-  
-<P ALIGN=CENTER><a href="#top">return to table of contents</a></P>
+<HR>
+<P><BR><BR>
+</P>
+<P ALIGN=CENTER><A NAME="3"></A><FONT SIZE=5>3- Where to get more
+information on JayBird</FONT></P>
+<P ALIGN=CENTER><A HREF="#top">return to table of contents</A></P>
+<P><BR>The most detailed information can be found in the JayBird
+Frequently Asked Questions (FAQ). The FAQ is included in the
+distribution, and is available online in several places. See
+<A HREF="../../../../JayBird/client-java/output/etc/10">Frequently
+Asked Questions</A> below for details.</P>
+<HR>
+<P><BR><BR>
+</P>
+<P ALIGN=CENTER><A NAME="4"></A><FONT SIZE=5>4- Where to Get the
+Driver</FONT></P>
+<P ALIGN=CENTER><A HREF="#top">return to table of contents</A></P>
+<P>In your browser go to:</P>
+<P><A HREF="http://sourceforge.net/projects/firebird/">http://sourceforge.net/projects/firebird/</A></P>
+<P>Scroll down the page and find the row containing:</P>
+<P>firebird-jca-jdbc-driver</P>
+<P>Click the link &quot;Download&quot; in the rightmost column of the
+table in that row. This links you to another page with the zip files
+of the various versions of the driver available to be downloaded. The
+driver will have the heading &quot;firebird-jca-jdbc-driver&quot;.
+Click on the version you wish to download. It looks something like:
+FirebirdSQL-1.x.zip.</P>
+<P>This will download the driver files to your system. Unzip the file
+and copy the contents to the appropriate directories on your system
+as described in #4 &quot;Installing the Driver&quot; below.</P>
+<P>More recent bugfix versions of the driver can be obtained by
+downloading the daily snapshot of the project through CVS and
+building the project. See the FAQ for details.</P>
+<HR>
+<P><BR><BR>
+</P>
+<P ALIGN=CENTER><A NAME="5"></A><FONT SIZE=5>5- Installing the Driver</FONT></P>
+<P ALIGN=CENTER><A HREF="#top">return to table of contents</A></P>
 <P ALIGN=CENTER>&nbsp;</P>
-  <P>The classes from firebirdsql.jar must be in the classpath of the Java application 
-    being compiled, or otherwise made available to your application. The classes 
-    from the following packages must also be available:</P>
-  
+<P>The classes from firebirdsql.jar must be in the classpath of the
+Java application being compiled, or otherwise made available to your
+application. The classes from the following packages must also be
+available:</P>
 <UL>
-  <LI> 
-    <P>mini-concurrent.jar</P>
-  <LI> 
-    <P>jaas.jar (built into jdk 1.4, this jar is not needed if you are running 
-      JDK 1.4 or higher)</P>
-  
-  <LI> 
-    <P>mini-j2ee.jar</P>
-  <LI> 
-    <P>log4j-core.jar (if you want logging available)</P>
-  <LI>
-    <P>firebirdjmx.jar (if you want to use the management utilities)<BR>
-    </P>
+	<LI><P>mini-concurrent.jar</P>
+	<LI><P>jaas.jar (built into jdk 1.4, this jar is not needed if you
+	are running JDK 1.4 or higher)</P>
+	<LI><P>mini-j2ee.jar</P>
+	<LI><P>log4j-core.jar (if you want logging available)</P>
+	<LI><P>firebirdjmx.jar (if you want to use the management utilities)</P>
 </UL>
-<P>These archives are included in the binary package.<BR>
+<P>These archives are included in the binary package.</P>
+<P>You can use the jmx management mbean either in a jmx agent
+(MBeanServer) or as a standalone class. So far it has been tested in
+jbossmx and the jmxri, although since it is extremely simple it
+should have no problems in any jmx implementation. Use of jbossmx is
+highly recommended due to its smaller bug count and because it is in
+active development.</P>
+<P>For use in a managed environment as a JCA resource adapter, deploy
+firebirdsql.rar according to the environment's deployment mechanism.</P>
+<P>For installation in Tomcat, JBoss, JBuilder, and for use with
+stand alone Java programs see the corresponding sections in the FAQ.</P>
+<HR>
+<P><BR><BR>
 </P>
-  <P>You can use the jmx management mbean either in a jmx agent (MBeanServer) 
-    or as a standalone class. So far it has been tested in jbossmx and the jmxri, 
-    although since it is extremely simple it should have no problems in any jmx 
-    implementation. Use of jbossmx is highly recommended due to its smaller bug 
-    count and because it is in active development.</P>
-  <P>For use in a managed environment as a JCA resource adapter, deploy firebirdsql.rar 
-    according to the environment's deployment mechanism.</P>
-  
-<P>For installation in Tomcat, JBoss, JBuilder, and for use with stand alone Java 
-  programs see the corresponding sections in the FAQ.</P>
-  <hr>
-<BR>
-<P ALIGN=CENTER><FONT SIZE=5><a name="5"></a>5- Reporting Bugs</FONT></P>
-  <P ALIGN=CENTER><a href="#top">return to table of contents</a><BR>
-  <BR>
+<P ALIGN=CENTER><A NAME="6"></A><FONT SIZE=5>6- Reporting Bugs</FONT></P>
+<P ALIGN=CENTER><A HREF="#top">return to table of contents</A></P>
+<P>The developers attempt to follow the <A HREF="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</A>
+list. Join the list (see <A HREF="../../../../JayBird/client-java/output/etc/9">#9</A>
+below) and post information about suspected bugs. This is a good idea
+because what is often thought to be a bug turns out to be something
+else. List members may be able o help out and get you going again,
+whereas bug fixes might take awhile.</P>
+<P>You may also report bugs in the firebird bugtracker at:</P>
+<P><A HREF="http://sourceforge.net/tracker/?group_id=9028&amp;atid=109028">http://sourceforge.net/tracker/?group_id=9028&amp;atid=109028</A></P>
+<P><BR><BR>
 </P>
-  
-<P>The developers attempt to follow the <a href="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</a> 
-  list. Join the list (see <a href="file:///C|/JayBird/client-java/output/etc/9">#9</a> below) and post information about 
-  suspected bugs. This is a good idea because what is often thought to be a bug 
-  turns out to be something else. List members may be able o help out and get 
-  you going again, whereas bug fixes might take awhile.</P>
-  <P>You may also report bugs in the firebird bugtracker at:</P>
-  
-<P><a href="http://sourceforge.net/tracker/?group_id=9028&atid=109028">http://sourceforge.net/tracker/?group_id=9028&amp;atid=109028</a></P>
-  <P><BR>
-  </P>
-  <hr>
-<BR>
-<P ALIGN=CENTER><FONT SIZE=5><a name="6"></a>6- Participating in the Development 
-  Project</FONT></P>
-<P ALIGN=CENTER><a href="#top">return to table of contents</a><BR>
-  <BR>
+<HR>
+<P><BR><BR>
 </P>
-  
-<P>Use the <a href="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</a> 
-  list to contact the developers about helping out (see<a href="file:///C|/JayBird/client-java/output/etc/9"> #9</a> below). 
-  Perhaps the most crucial need right now is for more and better setup and usage 
-  guides, and to produce a reasonable section of the Firebird web site devoted 
-  to this driver. Work on this would be greatly appreciated.<BR>
+<P ALIGN=CENTER><A NAME="7"></A><FONT SIZE=5>7- Participating in the
+Development Project</FONT></P>
+<P ALIGN=CENTER><A HREF="#top">return to table of contents</A></P>
+<P>Use the <A HREF="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</A>
+list to contact the developers about helping out (see<A HREF="../../../../JayBird/client-java/output/etc/9">
+#9</A> below). Perhaps the most crucial need right now is for more
+and better setup and usage guides, and to produce a reasonable
+section of the Firebird web site devoted to this driver. Work on this
+would be greatly appreciated.</P>
+<HR>
+<P><BR><BR>
 </P>
-  <hr>
-<BR>
-<P ALIGN=CENTER><FONT SIZE=5><a name="7"></a>7- Where to get help</FONT></P>
-  <P ALIGN=CENTER><a href="#top">return to table of contents</a></P>
-  <P><BR>
-  The best place to start is the FAQ. Many details for using JayBird with various 
-  programs are located there. Below are some links to useful web sites.<BR>
-  </P>
-  
-<P>The Firebird-Java mail list: <a href="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</a>.</P>
-  <P>The code for Firebird and this driver are on <A HREF="http://www.sourceforge.net/">www.sourceforge.net</A> 
-    under the Firebird project.</P>
-  <P>The SourceForge Firebird project home page <a href="http://www.firebirdsql.com">www.firebirdsql.com</a> 
-    or <a href="http://firebird.sourceforge.net">firebird.sourceforge.net</a>.</P>
-  
-<P>The IBPhoenix Firebird web site: <A HREF="http://www.IBPhoenix.com/">www.IBPhoenix.com</A></P>
-  <P>The Sun Java web site: <A HREF="http://java.sun.com/">java.sun.com</A></P>
-  <P>The Jboss web site: <A HREF="http://www.jboss.org/">www.jboss.org</A></P>
-  
-<P>The Jakarta Project Web Sites for Ant and Tomcat: <A HREF="http://jakarta.apache.org/">jakarta.apache.org</A><BR>
+<P ALIGN=CENTER><A NAME="8"></A><FONT SIZE=5>8- Where to get help</FONT></P>
+<P ALIGN=CENTER><A HREF="#top">return to table of contents</A></P>
+<P><BR>The best place to start is the FAQ. Many details for using
+JayBird with various programs are located there. Below are some links
+to useful web sites.</P>
+<P>The Firebird-Java mail list: <A HREF="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</A>.</P>
+<P>The code for Firebird and this driver are on <A HREF="http://www.sourceforge.net/">www.sourceforge.net</A>
+under the Firebird project.</P>
+<P>The SourceForge Firebird project home page <A HREF="http://www.firebirdsql.com/">www.firebirdsql.com</A>
+or <A HREF="http://firebird.sourceforge.net/">firebird.sourceforge.net</A>.</P>
+<HR>
+<P>&nbsp; 
 </P>
-  <hr>
-<P>&nbsp; </P>
-<p align=CENTER><font size=5><a name="8"></a>8- Known Bugs</font></p>
-<p align=CENTER><a href="#top">return to table of contents</a></p>
-<p>&nbsp;</p>
-<p>1) 575397: SERIALIZABLE is not isc_tpb_consistency - there is no final agreement 
-  between developers about mapping.<br>
-</p>
-<p>2) 630749: implement isc_info_sql_stmt_savepoint - will be implemented in JayBird 
-  1.5.<br>
-  <br>
-  3) 631090: Calling stored procedures - cannot be fixed with current Firebird 
-  implementation.<br>
-  <br>
-  4) 638074: JUnit Errors in JayBird Build - known issue, not driver problem, 
-  but test case problem.<br>
-  <br>
-  5) 645725: getBestRowIdentifier() not working - not yet implemented.<br>
-</p>
-<p>Monitor firebird-java@yahoogroups.com for daily updates</p>
-<p>For details concerning which parts of the JDBC 2.0 specification are implemented, 
-  see the FAQ.<br>
-</p>
-<p>You may report bugs in the firebird bugtracker at <a href="http://sourceforge.net/tracker/?group_id=9028&atid=109028">http://sourceforge.net/tracker/?group_id=9028&amp;atid=109028</a> 
-</p>
-<hr>
-<P><BR>
+<P ALIGN=CENTER><A NAME="9"></A><FONT SIZE=5>9- Known Bugs</FONT></P>
+<P ALIGN=CENTER><A HREF="#top">return to table of contents</A></P>
+<P>&nbsp;</P>
+<P>1) 575397: SERIALIZABLE is not isc_tpb_consistency - there is no
+final agreement between developers about mapping.</P>
+<P>2) 645725: getBestRowIdentifier() not working - not yet
+implemented.</P>
+<P>Monitor firebird-java@yahoogroups.com for daily updates</P>
+<P>For details concerning which parts of the JDBC 2.0 specification
+are implemented, see the appropriate document.</P>
+<HR>
+<P><BR><BR>
 </P>
-  
-<P ALIGN=CENTER><FONT SIZE=5><a name="9"></a>9- Joining the Mailing List</FONT></P>
-  <P ALIGN=CENTER><a href="#top">return to table of contents</a></P>
-  
-<P><BR>
-  </P>
-  
-<P>To join the Firebird-java mailing list, go to <a href="file:///C|/JayBird/client-java/output/etc/www.yahoogroups.com">www.yahoogroups.com</a>. 
-  Follow the instructions there for joining a group. The name of the group is 
-  Firebird-java.</P>
-  
-<P>Please set your Yahoo settings to use plain text instead of HTML. All the ads 
-  drive some folks nuts and cause an automatic internet hookup for some folks 
-  in Europe who have to pay for outgoing phone calls.<BR>
+<P ALIGN=CENTER><A NAME="10"></A><FONT SIZE=5>10- Joining the Mailing
+List</FONT></P>
+<P ALIGN=CENTER><A HREF="#top">return to table of contents</A></P>
+<P><BR><BR>
 </P>
-  <hr>
-<BR>
-<P ALIGN=CENTER><FONT SIZE=5><a name="10"></a>10- Frequently Asked Questions</FONT></P>
-  <P ALIGN=CENTER><a href="#top">return to table of contents</a></P>
-  
-<P><BR>
-  The list of <a href="file:///C|/JayBird/client-java/output/etc/faq.html">Frequently Asked Questions (FAQ)</a> is included 
-  with the distribution. </P>
-<P>Online versions of it that may be more up-to-date are available on the project 
-  home page at <a href="http://firebird.sourceforge.net">http://firebird.sourceforge.net</a>.</P>
-<P>The following link takes you to the JayBird FAQ at www.IBPhoenix.com:<BR>
+<P>To join the Firebird-java mailing list, go to <A HREF="../../../../JayBird/client-java/output/etc/www.yahoogroups.com">www.yahoogroups.com</A>.
+Follow the instructions there for joining a group. The name of the
+group is Firebird-java.</P>
+<P>Please set your Yahoo settings to use plain text instead of HTML.
+All the ads drive some folks nuts and cause an automatic internet
+hookup for some folks in Europe who have to pay for outgoing phone
+calls.</P>
+<HR>
+<P><BR><BR>
 </P>
-  
-<P><a href="http://www.ibphoenix.com/main.nfs?a=ibphoenix&l=;IBPHOENIX.FAQS;NAME=%27JayBird%27">http://www.ibphoenix.com/main.nfs?a=ibphoenix&amp;l=;IBPHOENIX.FAQS;NAME='JayBird'</a></P>
-  <P><BR>
-    <BR>
-  </P>
-  <hr>
-<P ALIGN=center><font size="+2"><a name="11"></a><font size="5">11- Corrections/Additions 
-  To Release Notes</font></font></P>
-  <P ALIGN=center><a href="#top">return to table of contents</a><BR>
-  </P>
-  <P ALIGN=left>&nbsp;</P>
-  <P ALIGN=left>Please send corrections, suggestions, or additions to these Release 
-    Notes to Rick Fincher at <a href="mailto:rnf@tbird.com">rnf@tbird.com</a>, 
-    or to the developers on the SourceForge site, or post them to the newsgroup 
-    at <a href="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</a>.<br>
-  </P>
-  <hr>
-  <P ALIGN=left>&nbsp; </P>
+<P ALIGN=CENTER><A NAME="11"></A><FONT SIZE=5>11- Frequently Asked
+Questions</FONT></P>
+<P ALIGN=CENTER><A HREF="#top">return to table of contents</A></P>
+<P><BR>The list of <A HREF="../../../../JayBird/client-java/output/etc/faq.html">Frequently
+Asked Questions (FAQ)</A> is included with the distribution. 
+</P>
+<P>Online versions of it that may be more up-to-date are available on
+the project home page at <A HREF="http://firebird.sourceforge.net/">http://firebird.sourceforge.net</A>.</P>
+<P>The following link takes you to the JayBird FAQ at
+www.IBPhoenix.com:</P>
+<P><A HREF="http://www.ibphoenix.com/main.nfs?a=ibphoenix&amp;l=;IBPHOENIX.FAQS;NAME='JayBird'">http://www.ibphoenix.com/main.nfs?a=ibphoenix&amp;l=;IBPHOENIX.FAQS;NAME='JayBird'</A></P>
+<P><BR><BR>
+</P>
+<HR>
+<P ALIGN=CENTER><A NAME="12"></A><FONT SIZE=5>12-
+Corrections/Additions To Release Notes</FONT></P>
+<P ALIGN=CENTER><A HREF="#top">return to table of contents</A></P>
+<P ALIGN=LEFT>&nbsp;</P>
+<P ALIGN=LEFT>Please send corrections, suggestions, or additions to
+these Release Notes to Rick Fincher at <A HREF="mailto:rnf@tbird.com">rnf@tbird.com</A>,
+or to the developers on the SourceForge site, or post them to the
+newsgroup at <A HREF="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</A>.</P>
+<HR>
+<P ALIGN=LEFT>&nbsp; 
+</P>
 </BODY>
 </HTML>
