@@ -62,6 +62,8 @@ class FBStringField extends FBField {
     static final String SHORT_FALSE = "N";
     static final String LONG_TRUE = "TRUE";
     static final String LONG_FALSE = "FALSE";
+    static final String SHORT_TRUE_2 = "T";
+    static final String SHORT_FALSE_2 = "F";
     
     FBConnection c;
     char[] cBuff;
@@ -159,7 +161,8 @@ class FBStringField extends FBField {
         if (isNull()) return BOOLEAN_NULL_VALUE;
 
         return getString().trim().equalsIgnoreCase(LONG_TRUE) ||
-                getString().trim().equalsIgnoreCase(SHORT_TRUE);
+                getString().trim().equalsIgnoreCase(SHORT_TRUE) ||
+                getString().trim().equalsIgnoreCase(SHORT_TRUE_2);
     }
     String getString() throws java.sql.SQLException {
         if (isNull()) return STRING_NULL_VALUE;

@@ -4125,50 +4125,16 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
         //dialect 3 only
         ArrayList rows = new ArrayList();
-        /*
-        rows.add(new Object[] {"SMALLINT", createShort(Types.BIT), new Integer(1), null, null, null,
-            NULLABLE, CASEINSENSITIVE, PREDBASIC, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_SHORT), null, BINARY});
-        */
 
-        /*
-        rows.add(new Object[] {"TINYINT", new Short((short)-6), new Integer(8), null, null, null,
-            NULLABLE, CASEINSENSITIVE, PREDBASIC, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_SHORT), null, BINARY});
-        */
-
-        rows.add(new Object[] {"NUMERIC", createShort(Types.BIGINT), new Integer(18), null, null, null,
-            NULLABLE, CASEINSENSITIVE, PREDBASIC, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_INT64), null, BINARY});
-
-        rows.add(new Object[] {"BLOB", createShort(Types.LONGVARBINARY), new Integer(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
-
-        rows.add(new Object[] {"BLOB", createShort(Types.VARBINARY), new Integer(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
-
-        rows.add(new Object[] {"BLOB", createShort(Types.BINARY), new Integer(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
-
-        /*
-                   //??should this be varchar???
-        rows.add(new Object[] {"LONGVARCHAR", new Short((short)-2), new Integer(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
-        */
-
-        rows.add(new Object[] {"CHAR", createShort(Types.CHAR), new Integer(0), "'", "'", null,
+        rows.add(new Object[] {"CHAR", createShort(Types.CHAR), new Integer(0), "'", "'", "length",
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TEXT), null, BINARY});
 
-        rows.add(new Object[] {"NUMERIC", createShort(Types.NUMERIC), new Integer(18), null, null, null,
+        rows.add(new Object[] {"NUMERIC", createShort(Types.NUMERIC), new Integer(18), null, null, "precision,scale",
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, createShort(18), new Integer(GDS.SQL_INT64), null, BINARY});
 
-        rows.add(new Object[] {"DECIMAL", createShort(Types.DECIMAL), new Integer(18), null, null, null,
+        rows.add(new Object[] {"DECIMAL", createShort(Types.DECIMAL), new Integer(18), null, null, "precision,scale",
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, createShort(18), new Integer(GDS.SQL_INT64), null, BINARY});
 
@@ -4184,17 +4150,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
             NOTAUTOINC, null, createShort(0), createShort(7), new Integer(GDS.SQL_FLOAT), null, BINARY});
 
-        /*
-        rows.add(new Object[] {"REAL", createShort((short)7), new Integer(32), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
-            NOTAUTOINC, null, new Short((short)-38), new Short((short)38), new Integer(GDS.SQL_FLOAT), null, BINARY});
-        */
-
         rows.add(new Object[] {"DOUBLE PRECISION", createShort(Types.DOUBLE), new Integer(15), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
             NOTAUTOINC, null, createShort(0), createShort(15), new Integer(GDS.SQL_DOUBLE), null, BINARY});
 
-        rows.add(new Object[] {"VARCHAR", createShort(Types.VARCHAR), new Integer(0), "'", "'", null,
+        rows.add(new Object[] {"VARCHAR", createShort(Types.VARCHAR), new Integer(0), "'", "'", "length",
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_VARYING), null, BINARY});
 
@@ -4210,42 +4170,10 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TIMESTAMP), null, BINARY});
 
-                 /*rows.add(new Object[] {"OTHER", new Short((short)1111), new Integer(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
-
-        rows.add(new Object[] {"JAVA_OBJECT", new Short((short)2000), new Integer(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
-
-        rows.add(new Object[] {"DISTINCT", new Short((short)2001), new Integer(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
-
-        rows.add(new Object[] {"STRUCT", new Short((short)2002), new Integer(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
-
-        rows.add(new Object[] {"ARRAY", new Short((short)2003), new Integer(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
-                 */
         rows.add(new Object[] {"BLOB", createShort(Types.BLOB), new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
 
-        /*
-        rows.add(new Object[] {"CLOB", new Short((short)2005), new Integer(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
-        */
-
-                 /*rows.add(new Object[] {"REF", new Short((short)2006), new Integer(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});*/
-
-        //rows.add(null);
-        // return new FBResultSet(xsqlvars, rows);
         return new FBResultSet(xsqlvars, rows);
 
     }
