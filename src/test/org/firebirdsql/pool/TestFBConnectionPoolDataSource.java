@@ -201,7 +201,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
      * 
      * @param ds data source to check
      */
-    private void assertPoolConfiguration(FirebirdPoolConfiguration ds) {
+    private void assertPoolConfiguration(FirebirdPool ds) {
         assertEquals(DB_DATASOURCE_URL, ds.getDatabase());
         assertEquals(DB_USER, ds.getUserName());
         assertEquals(DB_PASSWORD, ds.getPassword());
