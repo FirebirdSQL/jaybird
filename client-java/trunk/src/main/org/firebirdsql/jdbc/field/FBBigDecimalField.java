@@ -17,9 +17,11 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.FBResultSet;
+
 import java.sql.SQLException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -48,11 +50,11 @@ public class FBBigDecimalField extends FBField {
         this.fieldType = fieldType;
     }
 
-    boolean getBoolean() throws SQLException {
+    public boolean getBoolean() throws SQLException {
         return getByte() == 1;
     }
 
-    byte getByte() throws SQLException {
+    public byte getByte() throws SQLException {
         if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
 
         long longValue = getLong();
@@ -67,13 +69,13 @@ public class FBBigDecimalField extends FBField {
         return (byte)longValue;
     }
 
-    double getDouble() throws SQLException {
+    public double getDouble() throws SQLException {
         if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
         return getBigDecimal().doubleValue();
     }
 
-    float getFloat() throws SQLException {
+    public float getFloat() throws SQLException {
         if (rs.row[numCol]==null) return FLOAT_NULL_VALUE;
 
         double doubleValue = getDouble();
@@ -89,7 +91,7 @@ public class FBBigDecimalField extends FBField {
 
     }
 
-    int getInt() throws SQLException {
+    public int getInt() throws SQLException {
         if (rs.row[numCol]==null) return INT_NULL_VALUE;
 
         long longValue = getLong();
@@ -105,15 +107,15 @@ public class FBBigDecimalField extends FBField {
 
     }
 
-    long getLong() throws SQLException {
+    public long getLong() throws SQLException {
         return getBigDecimal().longValue();
     }
 
-    Object getObject() throws SQLException {
+    public Object getObject() throws SQLException {
         return getBigDecimal();
     }
 
-    short getShort() throws SQLException {
+    public short getShort() throws SQLException {
         if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
 
         long longValue = getLong();
@@ -128,28 +130,25 @@ public class FBBigDecimalField extends FBField {
         return (short)longValue;
     }
 
-    String getString() throws SQLException {
+    public String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
         
         return getBigDecimal().toString();
     }
 
-    BigDecimal getBigDecimal() throws SQLException {
+    public BigDecimal getBigDecimal() throws SQLException {
         if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
         long longValue;
 
         if (fieldType==2)
             longValue = field.decodeInt(rs.row[numCol]);
-//            longValue = ((Integer)rs.row[numCol]).longValue();
         else
         if (fieldType==3)
             longValue = field.decodeLong(rs.row[numCol]);
-//            longValue = ((Long)rs.row[numCol]).longValue();
         else
         if (fieldType==1)
             longValue = field.decodeShort(rs.row[numCol]);
-//            longValue = ((Short)rs.row[numCol]).longValue();
         else
             throw (SQLException)createException(
                 BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
@@ -159,35 +158,35 @@ public class FBBigDecimalField extends FBField {
 
     //--- setXXX methods
 
-    void setBoolean(boolean value) throws SQLException {
+    public void setBoolean(boolean value) throws SQLException {
         setInteger(value ? 1 : 0);
     }
 
-    void setByte(byte value) throws SQLException {
+    public void setByte(byte value) throws SQLException {
         setLong(value);
     }
 
-    void setDouble(double value) throws SQLException {
+    public void setDouble(double value) throws SQLException {
         setBigDecimal(new BigDecimal(Double.toString(value)));
     }
 
-    void setFloat(float value) throws SQLException {
+    public void setFloat(float value) throws SQLException {
         setDouble(value);
     }
 
-    void setInteger(int value) throws SQLException {
+    public void setInteger(int value) throws SQLException {
         setLong(value);
     }
 
-    void setLong(long value) throws SQLException {
+    public void setLong(long value) throws SQLException {
         setBigDecimal(BigDecimal.valueOf(value, 0));
     }
 
-    void setShort(short value) throws SQLException {
+    public void setShort(short value) throws SQLException {
         setLong(value);
     }
 
-    void setString(String value) throws SQLException {
+    public void setString(String value) throws SQLException {
         try {
             setBigDecimal(new BigDecimal(value));
         } catch(NumberFormatException nex) {
@@ -196,7 +195,7 @@ public class FBBigDecimalField extends FBField {
         }
     }
 
-    void setBigDecimal(BigDecimal value) throws SQLException {
+    public void setBigDecimal(BigDecimal value) throws SQLException {
         value = value.setScale(-field.sqlscale, BigDecimal.ROUND_HALF_UP);
 
         if (fieldType == 1) {
@@ -208,7 +207,6 @@ public class FBBigDecimalField extends FBField {
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
             field.sqldata = field.encodeShort(value.unscaledValue().shortValue());
-//            field.sqldata = new Short(value.unscaledValue().shortValue());
         } else
         if (fieldType == 2) {
 
@@ -219,7 +217,6 @@ public class FBBigDecimalField extends FBField {
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
             field.sqldata = field.encodeInt(value.unscaledValue().intValue());
-//            field.sqldata = new Integer(value.unscaledValue().intValue());
         } else
         if (fieldType == 3) {
             
@@ -230,7 +227,6 @@ public class FBBigDecimalField extends FBField {
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
             
             field.sqldata = field.encodeLong(value.unscaledValue().longValue());
-//            field.sqldata = new Long(value.unscaledValue().longValue());
         } else
             throw (SQLException)createException(
                 BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();

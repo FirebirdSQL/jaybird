@@ -20,6 +20,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2003/06/05 23:22:31  brodsom
+ * Substitute package and inline imports
+ *
  * Revision 1.1  2002/08/29 13:41:05  d_jencks
  * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
  *
@@ -28,7 +31,7 @@
  *
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.field;
 
 import java.sql.SQLException;
 /**

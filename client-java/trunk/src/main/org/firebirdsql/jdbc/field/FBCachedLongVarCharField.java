@@ -17,33 +17,33 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.field;
 
 import java.sql.SQLException;
+import java.sql.Blob;
+import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.FBCachedBlob;
+import org.firebirdsql.jdbc.FBResultSet;
 
 /**
- * Instances of this field cache data in auto-commit case if no transaction is
- * yet available and must be flushed before transaction is committed.
+ * This is Blob-based implementation of {@link FBStringField} for auto-commit case. 
+ * It should be used for fields declared in database as <code>BLOB SUB_TYPE 1</code>. 
+ * This implementation provides all conversion routines {@link FBStringField} has.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public interface FBFlushableField {
-    
-    /**
-     * Flush cached data to the database server.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    void flushCachedData() throws SQLException;
-    
-    /**
-     * Get cached object.
-     * 
-     * @return cached object of this field.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    byte[] getCachedObject() throws SQLException;
-    
+
+public class FBCachedLongVarCharField extends FBLongVarCharField {
+
+    FBCachedLongVarCharField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
+        super(field, rs, numCol);
+    }
+
+    public Blob getBlob() throws SQLException {
+        if (rs.row[numCol]==null)
+            return BLOB_NULL_VALUE;
+
+        return new FBCachedBlob(rs.row[numCol]);
+    }
 }

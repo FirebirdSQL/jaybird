@@ -77,12 +77,12 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
 
     private boolean isNew;
     private long blob_id;
-    private FBConnection c;
+    private AbstractConnection c;
 
     private Collection inputStreams = new HashSet();
     private FBBlobOutputStream blobOut = null;
 
-    private FBBlob(FBConnection c, boolean isNew) {
+    private FBBlob(AbstractConnection c, boolean isNew) {
         this.c = c;
         this.isNew = isNew;
         this.bufferlength = c.getBlobBufferLength().intValue();
@@ -94,7 +94,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * 
      * @param c connection that will be used to write data to blob.
      */
-    FBBlob(FBConnection c) {
+    public FBBlob(AbstractConnection c) {
         this(c, true);
     }
 
@@ -105,7 +105,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * 
      * @param blob_id ID of the Blob.
      */
-    FBBlob(FBConnection c, long blob_id) {
+    public FBBlob(AbstractConnection c, long blob_id) {
         this(c, false);
         this.blob_id = blob_id;
     }
@@ -126,7 +126,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @throws IOException if at least one of the stream raised an exception
      * when closed.
      */
-    void close() throws IOException {
+    public void close() throws IOException {
         
         IOException error = null;
         
@@ -379,7 +379,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @exception java.sql.SQLException <description>
      */
     public void truncate(long param1) throws SQLException {
-        // TODO: implement this java.sql.Blob method
         throw new SQLException("Not yet implemented");
     }
 
@@ -391,7 +390,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @exception java.sql.SQLException <description>
      */
     public int setBytes(long param1, byte[] param2) throws SQLException {
-        // TODO: implement this java.sql.Blob method
         throw new SQLException("Not yet implemented");
     }
 
@@ -405,7 +403,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @exception java.sql.SQLException <description>
      */
     public int setBytes(long param1, byte[] param2, int param3, int param4) throws SQLException {
-        // TODO: implement this java.sql.Blob method
         throw new SQLException("Not yet implemented");
     }
 
@@ -437,7 +434,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
 
     //package methods
 
-    long getBlobId() throws SQLException {
+    public long getBlobId() throws SQLException {
         if (isNew) 
             throw new SQLException("No Blob ID is available in new Blob object.");
 
@@ -449,7 +446,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         this.isNew = false;
     }
 
-    void copyStream(InputStream inputStream, int length) throws SQLException {
+    public void copyStream(InputStream inputStream, int length) throws SQLException {
         OutputStream os = setBinaryStream(0);
         byte[] buffer = new byte[bufferlength];
         int chunk;
@@ -466,7 +463,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
     }
 
-    void copyCharacterStream(Reader inputStream, int length) throws SQLException {
+    public void copyCharacterStream(Reader inputStream, int length) throws SQLException {
         OutputStream os = setBinaryStream(0);
         OutputStreamWriter osw = new OutputStreamWriter(os);
         char[] buffer = new char[bufferlength];

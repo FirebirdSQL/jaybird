@@ -6,13 +6,14 @@ import java.util.ArrayList;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.jdbc.field.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 class FBCachedFetcher implements FBFetcher {
 
     private Object[] rowsArray;
-    private FBStatement fbStatement;
+    private AbstractStatement fbStatement;
     private FBResultSet rs;
     private int rowNum = 0;
     private boolean isEmpty = false;     
@@ -24,7 +25,7 @@ class FBCachedFetcher implements FBFetcher {
 
     private final static Logger log = LoggerFactory.getLogger(FBCachedFetcher.class,false);
           
-    FBCachedFetcher(FBConnection c, FBStatement fbStatement
+    FBCachedFetcher(AbstractConnection c, AbstractStatement fbStatement
     , isc_stmt_handle stmt_handle, FBResultSet rs) throws SQLException {
         ArrayList rowsSets = new ArrayList(100);
         ArrayList rows = new ArrayList(100);

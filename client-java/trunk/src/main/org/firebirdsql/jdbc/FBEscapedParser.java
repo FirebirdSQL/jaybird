@@ -329,7 +329,7 @@ public class FBEscapedParser {
         throws FBSQLParseException
     {
         FBEscapedParser tempParser = new FBEscapedParser();
-        return FBCallableStatement.NATIVE_CALL_COMMAND + " " +
+        return AbstractCallableStatement.NATIVE_CALL_COMMAND + " " +
             tempParser.parse(procedureCall);
     }
 

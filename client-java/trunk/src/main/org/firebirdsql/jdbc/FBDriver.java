@@ -340,6 +340,6 @@ public class FBDriver implements Driver {
 
     /** @link dependency
      * @stereotype instantiate*/
-    /*#FBConnection lnkFBConnection;*/
+    /*#AbstractConnection lnkFBConnection;*/
 }
 

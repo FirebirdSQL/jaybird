@@ -25,7 +25,7 @@ import javax.sql.RowSetMetaData;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.AbstractConnection;
 import org.firebirdsql.jdbc.FBResultSetMetaData;
 
 
@@ -37,7 +37,7 @@ import org.firebirdsql.jdbc.FBResultSetMetaData;
  */
 public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaData {
 
-    FBRowSetMetaData(XSQLVAR[] xsqlvars, FBConnection connection) throws SQLException {
+    FBRowSetMetaData(XSQLVAR[] xsqlvars, AbstractConnection connection) throws SQLException {
         super(xsqlvars, connection);
     }
 

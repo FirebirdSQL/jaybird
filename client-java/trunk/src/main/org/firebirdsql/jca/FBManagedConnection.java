@@ -52,10 +52,9 @@ import org.firebirdsql.gds.isc_blob_handle;
 import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.isc_tr_handle;
-
-
-import org.firebirdsql.jdbc.FBConnection;
-import org.firebirdsql.jdbc.FBStatement;
+import org.firebirdsql.jdbc.*;
+import org.firebirdsql.jdbc.AbstractConnection;
+import org.firebirdsql.jdbc.AbstractStatement;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -235,7 +234,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 */
     public void associateConnection(Object connection) throws ResourceException {
         try {
-            ((FBConnection)connection).setManagedConnection(this);
+            ((AbstractConnection)connection).setManagedConnection(this);
             connectionHandles.add(connection);
         }
         catch (ClassCastException cce) {
@@ -274,7 +273,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     {
         for (Iterator i = connectionHandles.iterator(); i.hasNext();)
         {
-            ((FBConnection)i.next()).setManagedConnection(null);
+            ((AbstractConnection)i.next()).setManagedConnection(null);
         } // end of for ()
         connectionHandles.clear();
     }
@@ -313,7 +312,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             throw new FBResourceException("Incompatible subject or ConnectionRequestInfo in getConnection!");
         } // end of if ()
 
-        FBConnection c = new FBConnection(this);
+        AbstractConnection c = new FBConnection(this);
         connectionHandles.add(c);
         return c;
     }
@@ -862,7 +861,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
-    public void close(FBConnection c) {
+    public void close(AbstractConnection c) {
         c.setManagedConnection(null);
         connectionHandles.remove(c);
         ConnectionEvent ce = new ConnectionEvent(this, ConnectionEvent.CONNECTION_CLOSED, null);
@@ -870,7 +869,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         notify(connectionClosedNotifier, ce);
     }
 
-    public void registerStatement(FBStatement fbStatement) {
+    public void registerStatement(AbstractStatement fbStatement) {
         if (currentTr == null) {
             throw new IllegalStateException("registerStatement called with no transaction");
         }

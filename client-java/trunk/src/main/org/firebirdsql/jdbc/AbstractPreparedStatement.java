@@ -21,12 +21,12 @@ package org.firebirdsql.jdbc;
 
 import java.io.*;
 import java.math.*;
-import java.net.*;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.jdbc.field.*;
 import org.firebirdsql.logging.*;
 
 /**
@@ -39,7 +39,7 @@ import org.firebirdsql.logging.*;
 
 
 
-public class FBPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
+public abstract class AbstractPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
 
     // this array contains either true or false indicating if parameter
     // was initialized, executeQuery, executeUpdate and execute methods
@@ -54,9 +54,9 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     // because in this case we must send out_xsqlda to the server.
     private boolean isExecuteProcedureStatement;
     
-    private final static Logger log = LoggerFactory.getLogger(FBStatement.class,false);
+    private final static Logger log = LoggerFactory.getLogger(AbstractStatement.class,false);
     
-    FBPreparedStatement(FBConnection c, String sql) throws SQLException {
+    protected AbstractPreparedStatement(AbstractConnection c, String sql) throws SQLException {
         super(c, ResultSet.CONCUR_READ_ONLY);
         
         Object syncObject = getSynchronizationObject();
@@ -74,8 +74,6 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             } // end of try-catch-finally
         }
     }
-
-
 
     /**
      * Executes the SQL query in this <code>PreparedStatement</code> object
@@ -659,41 +657,6 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      public void setNull (int parameterIndex, int sqlType, String typeName) throws  SQLException {
          setNull(parameterIndex, sqlType); //all nulls are represented the same... a null reference
     }
-
-    //------------------------- JDBC 3.0 -----------------------------------
-
-    /**
-     * Sets the designated parameter to the given <code>java.net.URL</code> value. 
-     * The driver converts this to an SQL <code>DATALINK</code> value
-     * when it sends it to the database.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the <code>java.net.URL</code> object to be set
-     * @exception SQLException if a database access error occurs
-     * @since 1.4
-     */ 
-    public void setURL(int param1, URL param2) throws SQLException {
-        // TODO: implement this java.sql.PreparedStatement method
-        throw new SQLException("Not yet implemented");
-    }
-
-
-    /**
-     * Retrieves the number, types and properties of this 
-     * <code>PreparedStatement</code> object's parameters.
-     *
-     * @return a <code>ParameterMetaData</code> object that contains information
-     *         about the number, types and properties of this 
-     *         <code>PreparedStatement</code> object's parameters
-     * @exception SQLException if a database access error occurs
-     * @see ParameterMetaData
-     * @since 1.4
-     */
-    public ParameterMetaData getParameterMetaData() throws SQLException {
-        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, c);
-    }
-
-
 
     /**
      * Prepare fixed statement and initialize parameters.
