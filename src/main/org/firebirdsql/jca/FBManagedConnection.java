@@ -58,7 +58,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 
 /**
- * The class <code>FBManagedConnection</code> implements both the 
+ * The class <code>FBManagedConnection</code> implements both the
  * ManagedConnection and XAResource interfaces.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
@@ -95,8 +95,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     private final FBTpb tpb;
 
-    FBManagedConnection(final Subject subject, 
-                        final ConnectionRequestInfo cri, 
+    FBManagedConnection(final Subject subject,
+                        final ConnectionRequestInfo cri,
                         final FBManagedConnectionFactory mcf)
         throws ResourceException
     {
@@ -104,7 +104,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         this.cri = getCombinedConnectionRequestInfo(subject, cri);//cri;
         this.tpb = mcf.getTpb(); //getTpb supplies a copy.
         //Make sure we can get a connection to the db.
-        try 
+        try
         {
             currentDbHandle =  mcf.createDbHandle(this.cri);
         }
@@ -113,7 +113,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             if (log!=null) log.debug("Could not get a db connection!", ge);
             throw new FBResourceException(ge);
         } // end of try-catch
-        
+
     }
 
 
@@ -267,7 +267,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          IllegalStateException - Illegal state for calling connection cleanup. Example - if a
          localtransaction is in progress that doesn't allow connection cleanup
 */
-    public void cleanup() throws ResourceException 
+    public void cleanup() throws ResourceException
     {
         for (Iterator i = connectionHandles.iterator(); i.hasNext();)
         {
@@ -303,13 +303,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          involved in setting state of ManagedConnection
 **/
     public Object getConnection(Subject subject, ConnectionRequestInfo cri)
-        throws ResourceException 
+        throws ResourceException
     {
-        if (!matches(subject, cri)) 
+        if (!matches(subject, cri))
         {
-            throw new FBResourceException("Incompatible subject or ConnectionRequestInfo in getConnection!");        
+            throw new FBResourceException("Incompatible subject or ConnectionRequestInfo in getConnection!");
         } // end of if ()
-        
+
         FBConnection c = new FBConnection(this);
         connectionHandles.add(c);
         return c;
@@ -373,7 +373,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     differs depending on the exact situation.
      */
     public void commit(Xid id, boolean twoPhase) throws XAException {
-        try 
+        try
         {
             internalCommit(id, twoPhase);
         }
@@ -406,11 +406,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         }
         isc_db_handle committingDbHandle = committingTr.getDbHandle();
 
-        try 
+        try
         {
-            mcf.commit(id);            
+            mcf.commit(id);
         }
-        catch (GDSException ge) 
+        catch (GDSException ge)
         {
             checkFatalXA(ge, committingDbHandle);
             if (log!=null) log.debug("Fatal error committing, ", ge);
@@ -426,9 +426,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     Occurs when the state was not correct (end called twice), or the
      *     transaction ID is wrong.
      */
-    public void end(Xid id, int flags) throws XAException 
+    public void end(Xid id, int flags) throws XAException
     {
-        try 
+        try
         {
             internalEnd(id, flags);
         }
@@ -448,31 +448,31 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      * @param flags an <code>int</code> value
      * @exception GDSException if an error occurs
      */
-    void internalEnd(Xid id, int flags) throws GDSException 
+    void internalEnd(Xid id, int flags) throws GDSException
     {
         if (flags != XAResource.TMSUSPEND
             && flags != XAResource.TMSUCCESS
-            && flags != XAResource.TMFAIL) 
+            && flags != XAResource.TMFAIL)
         {
             throw GDSException.createWithXAErrorCode("Invalid flag in end: must be TMSUSPEND, TMSUCCESS, or TMFAIL", XAException.XAER_INVAL);
         } // end of if ()
-        
+
         if (log!=null) log.debug("End called: " + id);
         isc_tr_handle endingTr = mcf.getTrHandleForXid(id);
-        if (endingTr == null) 
+        if (endingTr == null)
         {
             throw GDSException.createWithXAErrorCode("Unrecognized transaction", XAException.XAER_NOTA);
         } // end of if ()
-        if (endingTr == currentTr) 
+        if (endingTr == currentTr)
         {
             currentTr = null;
         } // end of if ()
-        else if (flags == XAResource.TMSUSPEND) 
+        else if (flags == XAResource.TMSUSPEND)
         {
             throw GDSException.createWithXAErrorCode("You are trying to suspend a transaction that is not the current transaction", XAException.XAER_INVAL);
         } // end of if ()
-        
-        //Otherwise, it is fail or success for a tx that will be committed or 
+
+        //Otherwise, it is fail or success for a tx that will be committed or
         //rolled back shortly.
     }
 
@@ -521,11 +521,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         }
         isc_db_handle committingDbHandle = committingTr.getDbHandle();
 
-        try 
+        try
         {
-            mcf.prepare(id);            
+            mcf.prepare(id);
         }
-        catch (GDSException ge) 
+        catch (GDSException ge)
         {
             checkFatalXA(ge, committingDbHandle);
             if (log!=null) log.debug("Exception in prepare", ge);
@@ -536,48 +536,48 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     private static final String RECOVERY_QUERY = "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE = 1";
 
-    public Xid[] recover(int flag) throws javax.transaction.xa.XAException 
+    public Xid[] recover(int flag) throws javax.transaction.xa.XAException
     {
         ArrayList xids = new ArrayList();
         Connection conn = null;
-        try 
+        try
         {
             conn = (Connection)getConnection(null, null);
-       
-            try 
+
+            try
             {
 
                 Statement statement = conn.createStatement();
                 ResultSet recoveredRS = statement.executeQuery(RECOVERY_QUERY);
-                while (recoveredRS.next()) 
+                while (recoveredRS.next())
                 {
-                    try 
+                    try
                     {
                         long transactionID = recoveredRS.getLong(1);
                         InputStream xidIn = recoveredRS.getBinaryStream(2);
                         FBXid xid = new FBXid(xidIn);
                         xids.add(xid);
                         //what do we do with the Firebird transactionID?
-                    } 
-                    catch (SQLException sqle) 
+                    }
+                    catch (SQLException sqle)
                     { } // end of try-catch
-                    catch (ResourceException sqle) 
+                    catch (ResourceException sqle)
                     { } // end of try-catch
 
                 } // end of while ()
                 return (Xid[])xids.toArray(new Xid[xids.size()]);
             }
-            finally 
+            finally
             {
                 conn.close();
             } // end of finally
-        } 
-        catch (SQLException sqle) 
+        }
+        catch (SQLException sqle)
         {
             if (log!=null) log.debug("can't perform query to fetch xids", sqle);
             throw new XAException(XAException.XAER_RMFAIL);
         } // end of try-catch
-        catch (ResourceException re) 
+        catch (ResourceException re)
         {
             if (log!=null) log.debug("can't perform query to fetch xids", re);
             throw new XAException(XAException.XAER_RMFAIL);
@@ -595,7 +595,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      */
     public void rollback(Xid id) throws XAException
     {
-        try 
+        try
         {
             internalRollback(id);
         }
@@ -620,11 +620,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         }
         isc_db_handle committingDbHandle = committingTr.getDbHandle();
 
-        try 
+        try
         {
             mcf.rollback(id);
         }
-        catch (GDSException ge) 
+        catch (GDSException ge)
         {
             checkFatalXA(ge, committingDbHandle);
             if (log!=null) log.debug("Exception in rollback", ge);
@@ -655,9 +655,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     Occurs when the state was not correct (start called twice), the
      *     transaction ID is wrong, or the instance has already been closed.
      */
-    public void start(Xid id, int flags) throws XAException 
+    public void start(Xid id, int flags) throws XAException
     {
-        try 
+        try
         {
             internalStart(id, flags);
         }
@@ -669,7 +669,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     public void internalStart(Xid id, int flags) throws GDSException {
         if (log!=null) log.debug("start called: " + id);
-        if (currentTr != null) 
+        if (currentTr != null)
         {
             throw GDSException.createWithXAErrorCode("start called while there is an active transaction", XAException.XAER_PROTO);
         }
@@ -691,21 +691,21 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      */
     private void checkFatalXA(GDSException ge, isc_db_handle committingDbHandle)
     {
-        if (ge.isFatal()) 
+        if (ge.isFatal())
         {
             //all db handles associated with a tx will have the
             //same cri, so we can use ours.
             mcf.destroyDbHandle(committingDbHandle, cri);
 
-            if (currentDbHandle == committingDbHandle) 
+            if (currentDbHandle == committingDbHandle)
             {
                 //lose the current tx if any
                 currentTr = null;
                 ConnectionEvent ce = new ConnectionEvent(this, ConnectionEvent.CONNECTION_ERROR_OCCURRED, ge);
                 notify(connectionErrorOccurredNotifier, ce);
-                    
+
             } // end of if ()
-                
+
         } // end of if ()
     }
 
@@ -721,8 +721,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      */
     private void checkFatal(GDSException ge)
     {
-        if (ge.isFatal()) 
+        if (ge.isFatal())
         {
+            //Since it is fatal we destroy the actual db handle immediately.
+            mcf.destroyDbHandle(currentDbHandle, cri);
+            //lose the current tx if any
+            currentTr = null;
             ConnectionEvent ce = new ConnectionEvent(this, ConnectionEvent.CONNECTION_ERROR_OCCURRED, ge);
             notify(connectionErrorOccurredNotifier, ce);
         } // end of if ()
@@ -736,7 +740,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             throw new GDSException("No transaction started for allocate statement");
         }
         isc_stmt_handle stmt = mcf.gds.get_new_isc_stmt_handle();
-        try 
+        try
         {
             mcf.gds.isc_dsql_allocate_statement(currentTr.getDbHandle(), stmt);
         }
@@ -755,7 +759,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException {
         if (log!=null) log.debug("preparing sql: " + sql);
         //Should we test for dbhandle?
-        
+
         String encoding = cri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);
 
         try
@@ -774,7 +778,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             throw ge;
         } // end of catch
     }
-    
+
     public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda)
         throws GDSException
     {
@@ -950,7 +954,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         return mcf.getDatabase();
     }
 
-    public String getUserName() 
+    public String getUserName()
     {
         return cri.getUser();
     }
@@ -1000,7 +1004,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     {
         return mcf.getBlobBufferLength();
     }
-    
+
     public String getIscEncoding() {
         try {
             String result = cri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);
@@ -1010,10 +1014,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             return "NONE";
         }
     }
-    
+
     /**
      * Get all warnings associated with current connection.
-     * 
+     *
      * @return list of {@link GDSException} instances representing warnings
      * for this database connection.
      */
@@ -1055,17 +1059,17 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     private void findIscTrHandle(Xid xid, int flags)
         throws GDSException
     {
-        try 
+        try
         {
             currentTr = mcf.getCurrentIscTrHandle(xid, this, flags);
         }
         catch (GDSException ge)
         {
-            //All errors are fatal, kill the connection.  
+            //All errors are fatal, kill the connection.
             //First check if currentDbHandle is still ok, return if possible
-            if (currentDbHandle.isValid()) 
+            if (currentDbHandle.isValid())
             {
-                try 
+                try
                 {
                     mcf.returnDbHandle(currentDbHandle, cri);
                 }
@@ -1080,11 +1084,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             ge.setXAErrorCode(XAException.XAER_RMERR);
             throw ge;
         } // end of try-catch
-        
+
 
         if (currentTr.getDbHandle() != currentDbHandle)
         {
-            try 
+            try
             {
                 mcf.returnDbHandle(currentDbHandle, cri);
             }
@@ -1093,7 +1097,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
                 ge.setXAErrorCode(XAException.XAER_RMERR);
                 throw ge;
             } // end of try-catch
-            
+
             currentDbHandle = currentTr.getDbHandle();
         }
     }
@@ -1102,22 +1106,22 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         if (currentDbHandle == null) {
             currentDbHandle = mcf.getDbHandle(cri);
         }
-        else if (reserved.contains(currentDbHandle)) 
+        else if (reserved.contains(currentDbHandle))
         {
             mcf.releaseDbHandle(currentDbHandle, cri);
             currentDbHandle = mcf.getDbHandle(cri);
         } // end of if ()
-        
+
         return currentDbHandle;
     }
 
     void notify(CELNotifier notifier, ConnectionEvent ce)
     {
-        if (connectionEventListeners.size() == 0) 
+        if (connectionEventListeners.size() == 0)
         {
             return;
         }
-        if (connectionEventListeners.size() == 1) 
+        if (connectionEventListeners.size() == 1)
         {
             ConnectionEventListener cel = (ConnectionEventListener)connectionEventListeners.get(0);
             notifier.notify(cel, ce);
@@ -1176,15 +1180,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         };
 
 
-    boolean matches(Subject subj, ConnectionRequestInfo cri) 
+    boolean matches(Subject subj, ConnectionRequestInfo cri)
     {
-        try 
+        try
         {
             return this.cri.equals(getCombinedConnectionRequestInfo(subj, cri));
-        } 
-        catch (ResourceException re) 
+        }
+        catch (ResourceException re)
         {
-            return false;   
+            return false;
         } // end of try-catch
     }
 
@@ -1203,35 +1207,35 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         if (cri == null) {
             cri = mcf.getDefaultConnectionRequestInfo();
         }
-        try 
+        try
         {
             FBConnectionRequestInfo fbcri = (FBConnectionRequestInfo)cri;
-            if (subject != null) 
+            if (subject != null)
             {
                //see connector spec, section 8.2.6, contract for ManagedConnectinFactory, option A.
                for (Iterator i = subject.getPrivateCredentials().iterator(); i.hasNext(); )
                {
                   Object cred = i.next();
-                  if (cred instanceof PasswordCredential && mcf.equals(((PasswordCredential)cred).getManagedConnectionFactory())) 
+                  if (cred instanceof PasswordCredential && mcf.equals(((PasswordCredential)cred).getManagedConnectionFactory()))
                   {
                      PasswordCredential pcred = (PasswordCredential)cred;
                      String user = pcred.getUserName();
                      String password = new String(pcred.getPassword());
                      fbcri.setPassword(password);
                      fbcri.setUser(user);
-                     break;                        
+                     break;
                   } // end of if ()
                } // end of for ()
             } // end of if ()
-            
+
             return fbcri;
-        } 
-        catch (ClassCastException cce) 
+        }
+        catch (ClassCastException cce)
         {
             throw new FBResourceException("Incorrect ConnectionRequestInfo class supplied");
         } // end of try-catch
 
     }
 
-     
+
 }
