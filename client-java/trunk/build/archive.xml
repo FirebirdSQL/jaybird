@@ -49,6 +49,9 @@
        <fileset dir="${build.pool}">
          <include name="org/firebirdsql/**"/>
        </fileset>
+       <fileset dir="${build.compatibility}">
+         <include name="org/firebirdsql/**"/>
+       </fileset>
        <fileset dir="${build.resources}">
          <exclude name="log4j.properties"/>
          <include name="*.properties"/>
