@@ -86,7 +86,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         try {
             Iterator i = statements.values().iterator();
             while(i.hasNext()) {
-                ((PreparedStatement)i.next()).close();
+                FBStatement stmt = (FBPreparedStatement)i.next();
+                if (!stmt.isClosed())
+                    stmt.close();
             }
             statements.clear();
             /*if (tables != null) {
