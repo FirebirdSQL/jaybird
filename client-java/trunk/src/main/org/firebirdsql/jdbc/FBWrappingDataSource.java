@@ -157,10 +157,15 @@ public class FBWrappingDataSource extends FBSimpleDataSource implements DataSour
 
    public int getConnectionCount()
    {
-      return cm.getConnectionCount();
+       if (cm == null) 
+       {
+           return 0;
+       } // end of if ()
+       
+       return cm.getConnectionCount();
    }
 
-   protected DataSource getDataSource() throws SQLException
+   protected synchronized DataSource getDataSource() throws SQLException
    {
       if (ds == null) 
       {

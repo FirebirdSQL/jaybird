@@ -321,7 +321,7 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
      * 
      * @throws SQLException if something went wrong.
      */
-    protected DataSource getDataSource() throws SQLException {
+    protected synchronized DataSource getDataSource() throws SQLException {
         if (ds != null)
             return ds;
             
