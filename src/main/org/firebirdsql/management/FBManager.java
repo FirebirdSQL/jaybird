@@ -88,9 +88,9 @@ public class FBManager implements FBManagerMBean
     private static final Map internalTypeToGdsTypeMap = new HashMap();
     static
         {
-        internalTypeToGdsTypeMap.put( Type.FOUR, GDSFactory.GdsType.PURE_JAVA );
-        internalTypeToGdsTypeMap.put( Type.TWO, GDSFactory.GdsType.NATIVE );
-        internalTypeToGdsTypeMap.put( Type.TWO_EMBEDED, GDSFactory.GdsType.NATIVE_EMBEDDED );
+        internalTypeToGdsTypeMap.put( Type.FOUR, GDSType.PURE_JAVA );
+        internalTypeToGdsTypeMap.put( Type.TWO, GDSType.NATIVE );
+        internalTypeToGdsTypeMap.put( Type.TWO_EMBEDED, GDSType.NATIVE_EMBEDDED );
         }
 
 
@@ -120,7 +120,7 @@ public class FBManager implements FBManagerMBean
      * @jmx.managed-operation
      */
     public void start() throws Exception {
-        gds = GDSFactory.getGDSForType((GDSFactory.GdsType)internalTypeToGdsTypeMap.get(type));
+        gds = GDSFactory.getGDSForType((GDSType)internalTypeToGdsTypeMap.get(type));
         c = gds.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
         c.append(gds.newClumplet(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
         c.append(gds.newClumplet(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));

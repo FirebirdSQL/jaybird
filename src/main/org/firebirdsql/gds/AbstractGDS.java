@@ -35,13 +35,13 @@ public abstract class AbstractGDS implements GDS, Externalizable
         {
         }
 
-    public AbstractGDS(GDSFactory.GdsType gdsType)
+    public AbstractGDS(GDSType gdsType)
         {
         this.gdsType = gdsType;
         }
 
 
-    public GDSFactory.GdsType getGdsType()
+    public GDSType getGdsType()
         {
         return gdsType;
         }
@@ -58,7 +58,7 @@ public abstract class AbstractGDS implements GDS, Externalizable
 
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException
         {
-        gdsType = (GDSFactory.GdsType) in.readObject();
+        gdsType = (GDSType) in.readObject();
         }
 
     public Object readResolve()
@@ -67,5 +67,5 @@ public abstract class AbstractGDS implements GDS, Externalizable
         }
 
 
-    private GDSFactory.GdsType gdsType;
+    private GDSType gdsType;
     }

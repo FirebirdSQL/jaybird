@@ -54,6 +54,8 @@ public interface Clumplet
      */
     Clumplet remove(int type);
 
+    /** @link dependency */
+    /*# ISCConstants lnkISCConstants; */
 //    public void write(OutputStream out) throws IOException;
 
 }

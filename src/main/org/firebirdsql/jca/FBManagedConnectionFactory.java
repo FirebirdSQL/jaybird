@@ -42,6 +42,7 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
+import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
@@ -112,7 +113,7 @@ public class FBManagedConnectionFactory
 
     GDS gds;
 
-    private Type type;
+    private GDSType type;
 
     /**
      * The <code>criToFreeDbHandlesMap</code> maps cri to lists of physical
@@ -139,60 +140,19 @@ public class FBManagedConnectionFactory
 
     private volatile int hashCode = 0;
 
-
-
-    public static final class Type implements Serializable
-        {
-        private static int nextOrdinal = 0;
-
-        public static final Type FOUR = new Type("type 4");
-        public static final Type TWO = new Type("type 2");
-        public static final Type TWO_EMBEDDED = new Type("type 2 embeded");
-
-        private static final Type[] PRIVATE_VALUES = {FOUR, TWO, TWO_EMBEDDED};
-
-        private Type(String s)
-            {
-            name = s;
-            ordinal = nextOrdinal++;
-            }
-
-        public Object readResolve()
-            {
-            return PRIVATE_VALUES[ordinal];
-            }
-
-        public String toString()
-            {
-            return name;
-            }
-
-        private final String name;
-        private final int ordinal;
-        }
-
-
-    private static final Map internalTypeToGdsTypeMap = new HashMap();
-    static
-        {
-        internalTypeToGdsTypeMap.put( Type.FOUR, GDSFactory.GdsType.PURE_JAVA );
-        internalTypeToGdsTypeMap.put( Type.TWO, GDSFactory.GdsType.NATIVE );
-        internalTypeToGdsTypeMap.put( Type.TWO_EMBEDDED, GDSFactory.GdsType.NATIVE_EMBEDDED );
-        }
-
-
 		//Default constructor.
     public FBManagedConnectionFactory() {
-        this(Type.FOUR);
+        this(GDSType.PURE_JAVA);
         }
 
-    public FBManagedConnectionFactory(Type type) {
+    public FBManagedConnectionFactory(GDSType type) {
         this.type = type;
-        gds = GDSFactory.getGDSForType((GDSFactory.GdsType)internalTypeToGdsTypeMap.get(type));
+        //gds = GDSFactory.getGDSForType((GDSFactory.GdsType)internalTypeToGdsTypeMap.get(type));
+        gds = GDSFactory.getGDSForType(type);
         defaultCri = FBConnectionHelper.getDefaultCri(gds);
         }
 
-    public Type getType()
+    public GDSType getType()
         {
         return this.type;
         }

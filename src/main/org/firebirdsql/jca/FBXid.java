@@ -23,7 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import javax.resource.ResourceException;
 import javax.transaction.xa.Xid;
-import org.firebirdsql.jgds.XdrInputStream;
+
+import org.firebirdsql.gds.XdrInputStream;
 
 
 

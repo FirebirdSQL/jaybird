@@ -26,11 +26,13 @@
  *
  */
 
-package org.firebirdsql.jgds;
+package org.firebirdsql.gds;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+
+import org.firebirdsql.jgds.isc_stmt_handle_impl;
 
 /**
  * Describe class <code>XdrInputStream</code> here.

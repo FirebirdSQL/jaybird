@@ -27,9 +27,6 @@
 
 package org.firebirdsql.gds;
 
-
-
-
 /**
  * The interface <code>GDS</code> has most of the C client interface functions
  * lightly mapped to java, as well as the constants returned from the server..
@@ -39,7 +36,7 @@ package org.firebirdsql.gds;
  * @version 1.0
  */
 public interface GDS {
-
+    
     public  Clumplet newClumplet(int type, String content);
 
     public  Clumplet newClumplet(int type);
@@ -219,4 +216,26 @@ public interface GDS {
     isc_blob_handle get_new_isc_blob_handle();
 
     void close();
-    }
+
+    /** @link dependency */
+    /*# XSQLDA lnkXSQLDA; */
+
+    /** @link dependency */
+    /*# XSQLVAR lnkXSQLVAR; */
+
+    /** @link dependency */
+    /*# isc_blob_handle lnkisc_blob_handle; */
+
+    /** @link dependency */
+    /*# isc_tr_handle lnkisc_tr_handle; */
+
+    /** @link dependency */
+    /*# isc_stmt_handle lnkisc_stmt_handle; */
+
+    /** @link dependency */
+    /*# isc_db_handle lnkisc_db_handle; */
+
+    /** @link dependency */
+    /*# Clumplet lnkClumplet; */
+}
+
