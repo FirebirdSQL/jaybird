@@ -152,6 +152,11 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         
         try {
             
+            assertTrue("Autocommit should be true.", con.getAutoCommit());
+            assertTrue("Read-only should be false.", !con.isReadOnly());
+            assertTrue("Tx isolation level should be read committed.",
+                    con.getTransactionIsolation() == Connection.TRANSACTION_READ_COMMITTED);
+            
             Statement stmt = con.createStatement();
             
             try {
