@@ -1,3 +1,63 @@
+2003-12-01 00:02  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FBCachedFetcher.java,
+	FBFetcher.java, FBResultSet.java, FBUpdatableFetcher.java,
+	FBStatementFetcher.java:
+	
+	first step to implement ResultSet.TYPE_SCROLL_INSENSITIVE
+
+2003-11-30 23:26  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBSQLWarning.java:
+	
+	added new constructor
+
+2003-11-30 23:26  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBSQLException.java:
+	
+	added check if error code is null
+
+2003-11-30 23:25  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
+	
+	reformatted text
+
+2003-11-30 23:11  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jca/:
+	FBManagedConnection.java, FBManagedConnectionFactory.java,
+	FBManagedConnectionMetaData.java, FBResourceException.java,
+	FBTpb.java, FBXAException.java, FBLocalTransaction.java,
+	FBResourceTransactionException.java,
+	FBStandAloneConnectionManager.java:
+	
+	added SQLState codes to exceptions
+
+2003-11-30 23:06  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	FBDatabaseMetaData.java, AbstractPreparedStatement.java,
+	FBSQLWarning.java, AbstractCallableStatement.java,
+	AbstractConnection.java, AbstractStatement.java, FBArray.java,
+	FBBlob.java, FBCachedBlob.java, FBClob.java, FBDataSource.java,
+	FBDriver.java, FBDriverNotCapableException.java, FBResultSet.java,
+	FBResultSetMetaData.java, FBSQLException.java,
+	FBSQLParseException.java, FBUpdatableFetcher.java,
+	field/FBBlobField.java, field/FBField.java,
+	field/FBLongVarCharField.java, field/FBStringField.java,
+	field/TypeConvertionException.java:
+	
+	added SQLState codes to exceptions
+
+2003-11-30 23:03  rrokytskyy
+
+	* client-java/src/etc/JDBC20_conformance.html:
+	
+	updated JDBC conformance info
+
 2003-11-27 17:54  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/:
