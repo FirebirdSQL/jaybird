@@ -596,8 +596,14 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                 pos += counter;
             }
             
+            /*
+            // Commented out by R.Rokytskyy on 24-06-2003
+            // as this code does not consider current position
+            // in the blob. If no fix is provided, remove it.
+            
             if (pos < length())
                 throw new EOFException();
+            */
         }
         
         public void readFully(byte[] b) throws IOException {
