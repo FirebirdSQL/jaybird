@@ -58,7 +58,6 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
     private int dialect = 0;
     private int protocol = 0;
     private String version = null;
-    private String FBVersion = null;
     private int ODSMajorVersion = 0;
     private int ODSMinorVersion = 0;
 	 
@@ -210,14 +209,6 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
         }
         else
             return -1;
-    }
-
-    public void setFBVersion(String value){
-        FBVersion = value;
-    }
-
-    public String getFBVersion(){
-        return FBVersion;
     }
 
     public void setODSMajorVersion(int value){
