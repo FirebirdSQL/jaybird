@@ -118,21 +118,24 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * when closed.
      */
     public void close() throws IOException {
-        
-        IOException error = null;
-        
-        Iterator i = inputStreams.iterator();
-        while (i.hasNext()) {
-            try {
-                ((FBBlobInputStream)i.next()).close();
-            } catch(IOException ex) {
-                error = ex;
+        Object syncObject = getSynchronizationObject();
+        synchronized(syncObject) {
+
+            IOException error = null;
+            
+            Iterator i = inputStreams.iterator();
+            while (i.hasNext()) {
+                try {
+                    ((FBBlobInputStream)i.next()).close();
+                } catch(IOException ex) {
+                    error = ex;
+                }
             }
+            inputStreams.clear();
+
+            if (error != null)
+                throw error;
         }
-        inputStreams.clear();
-        
-        if (error != null)
-            throw error;
     }
 
     /**
@@ -318,9 +321,13 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public InputStream getBinaryStream () throws SQLException {
-        FBBlobInputStream blobstream = new FBBlobInputStream(this);
-        inputStreams.add(blobstream);
-        return blobstream;
+        
+        Object syncObject = getSynchronizationObject();
+        synchronized(syncObject) {
+            FBBlobInputStream blobstream = new FBBlobInputStream(this);
+            inputStreams.add(blobstream);
+            return blobstream;
+        }
     }
 
   /**
@@ -489,24 +496,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     {
 
 
-        /**
-         * buffer holds the last result of calling isc_get_segment.
-         *
-         */
         private byte[] buffer = null;
-
-
-        /**
-         * blob is the isc_blob_handle actually refencing the database;
-         *
-         */
         private isc_blob_handle blob;
-
-
-        /**
-         * pos is the position of the next byte to read in the buffer.
-         *
-         */
         private int pos = 0;
         
         private boolean closed;
@@ -521,7 +512,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             if (isNew) 
                 throw new FBSQLException("You can't read a new blob");
             
-            Object syncObject = getSynchronizationObject();
+            Object syncObject = FBBlob.this.getSynchronizationObject();
             
             synchronized(syncObject) {
                 try {
@@ -530,6 +521,22 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                     throw new FBSQLException(ge);
                 }
             }
+        }
+        
+        /**
+         * Disgusting usage of method overloading. We need this method to avoid
+         * adding check if this stream is closed in each method, since
+         * {@link FBBlob#getSynchronizationObject()} is called there anyway.
+         * 
+         * @return synchronization object as described in 
+         * {@link FBBlob#getSynchronizationObject()} method.
+         * 
+         * @throws IOException if this stream is already closed.
+         */
+        private Object getSynchronizationObject1() throws IOException {
+            checkClosed();
+            
+            return FBBlob.this.getSynchronizationObject();
         }
         
         public FirebirdBlob getBlob() {
@@ -545,6 +552,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             Object syncObject = getSynchronizationObject();
             
             synchronized(syncObject) {
+                checkClosed();
                 try {
                     c.getInternalAPIHandler().isc_seek_blob(blob, position, seekMode);
                 } catch (GDSException ex) {
@@ -559,6 +567,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             Object syncObject = getSynchronizationObject();
             
             synchronized(syncObject) {
+                checkClosed();
                 try {
                     byte[] info = c.getInternalAPIHandler().isc_blob_info(
                         blob, new byte[] {ISCConstants.isc_info_blob_total_length}, 20);
@@ -573,14 +582,15 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
 
         public int available() throws IOException {
-            checkClosed();
-            if (buffer == null) {
-                if (blob.isEof()) {
-                    return -1;
-                }
-                
-                Object syncObject = getSynchronizationObject();
-                synchronized(syncObject) {
+            
+            Object syncObject = getSynchronizationObject();
+            synchronized(syncObject) {
+                checkClosed();
+                if (buffer == null) {
+                    if (blob.isEof()) {
+                        return -1;
+                    }
+                    
                     try {
                         //bufferlength is in FBBlob enclosing class
                         buffer = c.getBlobSegment(blob, bufferlength);
@@ -588,18 +598,17 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                         throw new IOException("Blob read problem: " +
                             ge.toString());
                     }
+                    
+                    pos = 0;
+                    if (buffer.length == 0) {
+                       return -1;
+                    }
                 }
-                
-                pos = 0;
-                if (buffer.length == 0) {
-                   return -1;
-                }
+                return buffer.length - pos;
             }
-            return buffer.length - pos;
         }
 
         public int read() throws IOException {
-            checkClosed();
             if (available() <= 0) {
                 return -1;
             }
@@ -611,7 +620,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
 
         public int read(byte[] b, int off, int len) throws IOException {
-            checkClosed();
             int result = available();
             if (result <= 0) {
                 return -1;
