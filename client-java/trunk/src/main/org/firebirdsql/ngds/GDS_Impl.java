@@ -106,8 +106,6 @@ public class GDS_Impl extends AbstractGDS implements GDS
      };
 
     private static final String[] LIST_OF_ORACLE_MODE_LIBRARIES_TO_TRY = {
-        "isc_api.dll",
-        "libisc_api.so",
         "fyracle.dll",
         "libfyracle.so"
     };
