@@ -29,13 +29,6 @@ interface FBFetcher {
     static final int MAX_FETCH_ROWS = 400;
 	
     /**
-     * Get statement to which this fetcher belongs to.
-     * 
-     * @return instance of {@link AbstractStatement}.
-     */
-    AbstractStatement getStatement();
-    
-    /**
      * Move cursor to the rist row.
      * 
      * @return <code>true</code> if cursor was moved to the first row.

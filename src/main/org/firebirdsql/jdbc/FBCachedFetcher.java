@@ -14,7 +14,6 @@ class FBCachedFetcher implements FBFetcher {
 
     private boolean forwardOnly;
     private Object[] rowsArray;
-    private AbstractStatement fbStatement;
     private FBResultSet rs;
     private int rowNum = 0;
 
@@ -32,7 +31,6 @@ class FBCachedFetcher implements FBFetcher {
         isc_stmt_handle stmt =  stmt_handle;
         byte[][] localRow = null;
             
-        this.fbStatement = fbStatement;
         this.rs = rs;
             
         //
@@ -266,9 +264,6 @@ class FBCachedFetcher implements FBFetcher {
     public void close() throws SQLException {
     }
 
-    public AbstractStatement getStatement() {
-        return fbStatement;
-    }
     public int getRowNum() {
         return rowNum;
     }

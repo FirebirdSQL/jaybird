@@ -40,6 +40,7 @@ import org.firebirdsql.jdbc.field.*;
  */
 public class FBResultSet implements ResultSet {
 
+    private AbstractStatement fbStatement;
     private FBFetcher fbFetcher;
     private FBRowUpdater rowUpdater;
 
@@ -77,11 +78,11 @@ public class FBResultSet implements ResultSet {
      * Creates a new <code>FBResultSet</code> instance.
      *
      * @param c a <code>AbstractConnection</code> value
-     * @param fbstatement a <code>AbstractStatement</code> value
+     * @param fbStatement a <code>AbstractStatement</code> value
      * @param stmt an <code>isc_stmt_handle</code> value
      */
     protected FBResultSet(AbstractConnection c, 
-                          AbstractStatement fbstatement, 
+                          AbstractStatement fbStatement, 
                           isc_stmt_handle stmt, 
                           FBObjectListener.ResultSetListener listener,
                           boolean trimStrings, 
@@ -91,7 +92,7 @@ public class FBResultSet implements ResultSet {
     throws SQLException {
         
         this.c = c;
-        this.cursorName = fbstatement.getCursorName();
+        this.cursorName = fbStatement.getCursorName();
         
         this.listener = listener;
         
@@ -104,19 +105,21 @@ public class FBResultSet implements ResultSet {
         checkParanoiaMode(c);
         
         this.xsqlvars = stmt.getOutSqlda().sqlvar;
-        this.maxRows = fbstatement.getMaxRows();
+        this.maxRows = fbStatement.getMaxRows();
         
-        boolean updatableCursor = fbstatement.isUpdatableCursor();
+        this.fbStatement = fbStatement;
+        
+        boolean updatableCursor = fbStatement.isUpdatableCursor();
 
         //prepareVars((!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE) || cached);
         
         if (cached) {
             prepareVars(true);
-            fbFetcher = new FBCachedFetcher(this.c, fbstatement, stmt, this);
+            fbFetcher = new FBCachedFetcher(this.c, fbStatement, stmt, this);
         } else
         if (!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE) {
             prepareVars(true);
-            fbFetcher = new FBCachedFetcher(this.c, fbstatement, stmt, this);
+            fbFetcher = new FBCachedFetcher(this.c, fbStatement, stmt, this);
         } else {
             prepareVars(false);
             
@@ -140,9 +143,9 @@ public class FBResultSet implements ResultSet {
             }
             
             if (updatableCursor)  
-                fbFetcher = new FBUpdatableCursorFetcher(this.c, fbstatement, stmt, this);
+                fbFetcher = new FBUpdatableCursorFetcher(this.c, fbStatement, stmt, this);
             else
-                fbFetcher = new FBStatementFetcher(this.c, fbstatement, stmt, this);
+                fbFetcher = new FBStatementFetcher(this.c, fbStatement, stmt, this);
         }
     }
 
@@ -2621,7 +2624,7 @@ public class FBResultSet implements ResultSet {
      * if the result set was produced some other way
      */
     public Statement getStatement() {
-        return fbFetcher.getStatement();
+        return fbStatement;
     }
 
 
