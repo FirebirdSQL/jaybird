@@ -2106,7 +2106,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getTableTypes() throws SQLException {
-        /*
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
 
         xsqlvars[0] = new XSQLVAR();
@@ -2121,8 +2120,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
           rows.add(new Object[] {ALL_TYPES[i]});
 
         return new FBResultSet(xsqlvars, rows);
-        */
-        throw new SQLException("Not yet implemented");
+        // throw new SQLException("Not yet implemented");
     }
 
 
