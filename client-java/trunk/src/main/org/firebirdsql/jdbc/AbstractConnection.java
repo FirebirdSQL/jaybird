@@ -255,11 +255,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public synchronized String nativeSQL(String sql) throws SQLException {
-        try {
-            return new FBEscapedParser().parse(sql);
-        } catch(FBSQLParseException pex) {
-            throw new FBSQLException(pex.toString());
-        }
+        return new FBEscapedParser().parse(sql);
     }
 
     /**

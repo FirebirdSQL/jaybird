@@ -25,6 +25,8 @@ import java.util.*;
  * Represents procedure call.
  */
 public class FBProcedureCall {
+    
+    private static final boolean OLD_CALLABLE_STATEMENT_COMPATIBILITY = true;
 
     private String name;
     private Vector inputParams = new Vector();
@@ -84,7 +86,7 @@ public class FBProcedureCall {
      * @return mapped column number or <code>-1</code> if no output parameter
      * with the specified index found.
      */
-    public int mapOutParamIndexToPosition(int index) {
+    public int mapOutParamIndexToPosition(int index) throws FBSQLException {
     	int position = -1;
         
         Iterator iter = outputParams.iterator();
@@ -99,7 +101,18 @@ public class FBProcedureCall {
             }
         }
         
-        return position;
+        // hack: if we did not find the right parameter we return
+        // an index that was asked if we run in compatibilty mode
+        // 
+        // we should switch it off as soon as people convert applications
+        if (position == -1 && OLD_CALLABLE_STATEMENT_COMPATIBILITY)
+            return index;
+        else 
+        if (position == -1)
+            throw new FBSQLException("Specified parameter does not exist.", 
+                    FBSQLException.SQL_STATE_INVALID_COLUMN);
+        else
+        	return position;
     }
     
     public List getInputParams() {
@@ -111,7 +124,9 @@ public class FBProcedureCall {
     }
     
     public void addOutputParam(FBProcedureParam param) {
-        outputParams.setSize(param.getPosition() + 1);
+        if (outputParams.size() < param.getPosition() + 1)
+        	outputParams.setSize(param.getPosition() + 1);
+        
     	outputParams.set(param.getPosition(), param);
     }
     
@@ -159,7 +174,9 @@ public class FBProcedureCall {
         else
             params = outputParams;
 
-        params.setSize(position + 1);
+        if (params.size() < position + 1)
+        	params.setSize(position + 1);
+        
         params.set(position, callParam);
         
         return callParam;
@@ -178,15 +195,17 @@ public class FBProcedureCall {
     public void registerOutParam(int index, int type) throws SQLException {
         FBProcedureParam param = getInputParam(index);
         
-        if (param == null)
+        if (param == null || param == NullParam.NULL_PARAM)
             param = getOutputParam(index);
         else {
-            outputParams.setSize(param.getPosition() + 1);
+            if (outputParams.size() < param.getPosition() + 1)
+            	outputParams.setSize(param.getPosition() + 1);
+            
             outputParams.set(param.getPosition(), param);
             inputParams.remove(param.getPosition());
         }
         
-        if (param == null)
+        if (param == null || param == NullParam.NULL_PARAM)
             throw new FBSQLException(
                     "Cannot find parameter with the specified position.",
                     FBSQLException.SQL_STATE_INVALID_COLUMN);
@@ -216,10 +235,7 @@ public class FBProcedureCall {
                 else
                     firstParam = false;
                 
-                if (param.isParam())
-                    sb.append('?');
-                else
-                    sb.append(param.getValue());
+                sb.append(param.getParamValue());
             }
         }
         sb.append(")");

@@ -28,6 +28,7 @@ public class FBProcedureParam {
     
     private boolean isParam;
     private Object value;
+    private String paramValue;
     private int position;
     private int type;
     private int index = -1;
@@ -38,7 +39,7 @@ public class FBProcedureParam {
     public FBProcedureParam(int position, String paramValue) {
         this.position = position;
         this.isParam = paramValue.indexOf('?') >= 0;
-        this.value = paramValue.trim(); 
+        this.paramValue = paramValue.trim(); 
     }
     
     public boolean isParam() {
@@ -55,6 +56,10 @@ public class FBProcedureParam {
     
     public void setIndex(int index) {
         this.index = index;
+    }
+    
+    public String getParamValue() {
+    	return paramValue;    
     }
     
     public Object getValue() {

@@ -317,6 +317,7 @@ public abstract class AbstractCallableStatement
      */
     public String getString(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getString(parameterIndex);
     }
 
@@ -332,6 +333,7 @@ public abstract class AbstractCallableStatement
      */
     public boolean getBoolean(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getBoolean(parameterIndex);
     }
 
@@ -347,6 +349,7 @@ public abstract class AbstractCallableStatement
      */
     public byte getByte(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getByte(parameterIndex);
     }
 
@@ -362,6 +365,7 @@ public abstract class AbstractCallableStatement
      */
     public short getShort(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getShort(parameterIndex);
     }
 
@@ -377,6 +381,7 @@ public abstract class AbstractCallableStatement
      */
     public int getInt(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getInt(parameterIndex);
     }
 
@@ -392,6 +397,7 @@ public abstract class AbstractCallableStatement
      */
     public long getLong(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getInt(parameterIndex);
     }
 
@@ -407,6 +413,7 @@ public abstract class AbstractCallableStatement
      */
     public float getFloat(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getFloat(parameterIndex);
     }
 
@@ -422,6 +429,7 @@ public abstract class AbstractCallableStatement
      */
     public double getDouble(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getDouble(parameterIndex);
     }
 
@@ -442,6 +450,7 @@ public abstract class AbstractCallableStatement
         throws SQLException
     {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getBigDecimal(parameterIndex, scale);
     }
 
@@ -458,6 +467,7 @@ public abstract class AbstractCallableStatement
      */
     public byte[] getBytes(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getBytes(parameterIndex);
     }
 
@@ -473,6 +483,7 @@ public abstract class AbstractCallableStatement
      */
     public java.sql.Date getDate(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getDate(parameterIndex);
     }
 
@@ -488,6 +499,7 @@ public abstract class AbstractCallableStatement
      */
     public Time getTime(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getTime(parameterIndex);
     }
 
@@ -505,6 +517,7 @@ public abstract class AbstractCallableStatement
         throws SQLException
     {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getTimestamp(parameterIndex);
     }
 
@@ -530,6 +543,7 @@ public abstract class AbstractCallableStatement
      */
     public Object getObject(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getObject(parameterIndex);
     }
 
@@ -552,6 +566,7 @@ public abstract class AbstractCallableStatement
      */
     public BigDecimal getBigDecimal(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getBigDecimal(parameterIndex);
     }
 
@@ -574,9 +589,10 @@ public abstract class AbstractCallableStatement
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public Object getObject(int i, Map map) throws SQLException {
+    public Object getObject(int parameterIndex, Map map) throws SQLException {
         assertHasData(getCurrentResultSet());
-        return getCurrentResultSet().getObject(i, map);
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return getCurrentResultSet().getObject(parameterIndex, map);
     }
 
 
@@ -593,9 +609,10 @@ public abstract class AbstractCallableStatement
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public Ref getRef (int i) throws SQLException {
+    public Ref getRef (int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
-        return getCurrentResultSet().getRef(i);
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return getCurrentResultSet().getRef(parameterIndex);
     }
 
 
@@ -611,9 +628,10 @@ public abstract class AbstractCallableStatement
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public Blob getBlob (int i) throws SQLException {
+    public Blob getBlob (int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
-        return getCurrentResultSet().getBlob(i);
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return getCurrentResultSet().getBlob(parameterIndex);
     }
 
 
@@ -630,9 +648,10 @@ public abstract class AbstractCallableStatement
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public Clob getClob (int i) throws SQLException {
+    public Clob getClob (int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
-        return getCurrentResultSet().getClob(i);
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return getCurrentResultSet().getClob(parameterIndex);
     }
 
 
@@ -649,9 +668,10 @@ public abstract class AbstractCallableStatement
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public Array getArray (int i) throws SQLException {
+    public Array getArray (int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
-        return getCurrentResultSet().getArray(i);
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return getCurrentResultSet().getArray(parameterIndex);
     }
 
 
@@ -677,6 +697,7 @@ public abstract class AbstractCallableStatement
         throws SQLException
     {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getDate(parameterIndex, cal);
     }
 
@@ -703,6 +724,7 @@ public abstract class AbstractCallableStatement
         throws SQLException
     {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getTime(parameterIndex, cal);
     }
 
@@ -730,6 +752,7 @@ public abstract class AbstractCallableStatement
         throws SQLException
     {
         assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getTimestamp(parameterIndex, cal);
     }
 

@@ -44,10 +44,12 @@ public class FBEscapedCallParser {
     private boolean isNameProcessed;
     private boolean isExecuteWordProcessed;
     private boolean isProcedureWordProcessed;
+    private boolean isCallWordProcessed;
     
     private int openBraceCount;
 
     private FBProcedureCall procedureCall;
+    private FBEscapedParser escapedParser = new FBEscapedParser();
     
     /**
      * Returns the current state.
@@ -129,6 +131,52 @@ public class FBEscapedCallParser {
     
     
     /**
+     * Clean the SQL statement. This method removes leading and trailing spaces
+     * and removes leading and trailing curly braces if any.
+     * 
+     * @param sql SQL statement to clean up.
+     * 
+     * @return cleaned up statement.
+     * 
+     * @throws FBSQLParseException if cleanup resulted in empty statement.
+     */
+    private String cleanUpCall(String sql) throws FBSQLParseException {
+        StringBuffer cleanupBuffer = new StringBuffer(sql);
+        
+        // remove spaces at the beginning
+        while(cleanupBuffer.length() > 0 && 
+                Character.isSpaceChar(cleanupBuffer.charAt(0)))
+            cleanupBuffer.deleteCharAt(0);
+        
+        // remove spaces at the end
+        while(cleanupBuffer.length() > 0 && 
+                Character.isSpaceChar(cleanupBuffer.charAt(cleanupBuffer.length() - 1)))
+            cleanupBuffer.deleteCharAt(cleanupBuffer.length() - 1);
+        
+        if (cleanupBuffer.length() == 0)
+            throw new FBSQLParseException(
+                    "Escaped call statement was empty.");
+        
+        if (cleanupBuffer.charAt(0) == '{')
+        	cleanupBuffer.deleteCharAt(0);
+        
+        if (cleanupBuffer.charAt(cleanupBuffer.length() - 1) == '}')
+            cleanupBuffer.deleteCharAt(cleanupBuffer.length() - 1);
+        
+        return cleanupBuffer.toString();
+    }
+    
+    /**
+     * Check if either "call" keyword or "EXECUTE PROCEDURE" keyword processed.
+     * 
+     * @return <code>true</code> if either one or another keyword were processed.
+     */
+    private boolean isCallKeywordProcessed() {
+    	return isCallWordProcessed || 
+            (isExecuteWordProcessed && isProcedureWordProcessed);
+    }
+    
+    /**
      * Converts escaped parts in the passed SQL to native representation.
      * @param sql to parse
      * 
@@ -136,10 +184,13 @@ public class FBEscapedCallParser {
      */
     public FBProcedureCall parseCall(String sql) throws FBSQLParseException {
         
+    	sql = cleanUpCall(sql);
+        
         procedureCall = new FBProcedureCall();
         
         isExecuteWordProcessed = false;
         isProcedureWordProcessed = false;
+        isCallWordProcessed = false;
         isNameProcessed = false;
         
         isFirstOutParam = false;
@@ -164,29 +215,27 @@ public class FBEscapedCallParser {
                  // no brace is open and if buffer contains only '?'
                  if (sqlbuff[i] == '=') {
                      
-                     if (openBraceCount > 0) {
-                         buffer.append(sqlbuff[i]);
-                         continue;
-                     }
+                     if (openBraceCount <= 0) {
                      
-                     String token = buffer.toString().trim();
-
-                     if ("?".equals(token) && !isFirstOutParam && !isNameProcessed) {
-                         
-                         FBProcedureParam param = 
-                             procedureCall.addParam(paramPosition, token);
-                         
-                         paramCount++;
-                         param.setIndex(paramCount);
-                         
-                         isFirstOutParam = true;
-                         paramPosition++;
-                         
-                         buffer = new StringBuffer();
-                         continue;
-                     } 
-                 } 
-                 
+                         String token = buffer.toString().trim();
+    
+                         if ("?".equals(token) && !isFirstOutParam && !isNameProcessed) {
+                             
+                             FBProcedureParam param = 
+                                 procedureCall.addParam(paramPosition, token);
+                             
+                             paramCount++;
+                             param.setIndex(paramCount);
+                             
+                             isFirstOutParam = true;
+                             paramPosition++;
+                             
+                             buffer = new StringBuffer();
+                             continue;
+                         }
+                     }
+                 }
+                     
                  buffer.append(sqlbuff[i]);
                  
              } else
@@ -209,8 +258,9 @@ public class FBEscapedCallParser {
                  // the token; we look for the sequence EXECUTE PROCEDURE <name>
                  // otherwise go into normal state to enable next transitions.
                  if (!isNameProcessed) {
-                     processToken(token);
-                     buffer = new StringBuffer();
+                     boolean tokenProcessed = processToken(token);
+                     if (tokenProcessed)
+                     	buffer = new StringBuffer();
                  } else {
                      buffer.append(sqlbuff[i]);
                      setState(NORMAL_STATE);
@@ -226,8 +276,7 @@ public class FBEscapedCallParser {
                  
                  boolean isProcedureName = 
                      sqlbuff[i] == '(' &&
-                     isExecuteWordProcessed &&
-                     isProcedureWordProcessed &&
+                     isCallKeywordProcessed() &&
                      !isNameProcessed;
                  
                  if (isProcedureName) {
@@ -254,6 +303,12 @@ public class FBEscapedCallParser {
                  setState(NORMAL_STATE);
                  
              } else
+             if (isInState(CURLY_BRACE_STATE)) {
+                
+                buffer.append(sqlbuff[i]);
+                setState(NORMAL_STATE);
+                
+             } else
              if (isInState(COMMA_STATE)) {
                  
                  if (openBraceCount > 0) {
@@ -261,7 +316,7 @@ public class FBEscapedCallParser {
                      continue;
                  }
                  
-                 String param = buffer.toString();
+                 String param = processParam(buffer.toString());
                  buffer = new StringBuffer();
                  
                  FBProcedureParam callParam = 
@@ -305,18 +360,53 @@ public class FBEscapedCallParser {
         return procedureCall;
     }
     
-    protected void processToken(String token) throws FBSQLParseException {
+    /**
+     * Process token. This method detects procedure call keywords and sets 
+     * appropriate flags. Also it detects procedure name and sets appropriate 
+     * filed in the procedure call object.
+     * 
+     * @param token token to process.
+     * 
+     * @return <code>true</code> if token was understood and processed.
+     */
+    protected boolean processToken(String token) {
         if ("EXECUTE".equalsIgnoreCase(token) && 
-                  !isExecuteWordProcessed && !isProcedureWordProcessed && !isNameProcessed) 
+                !isExecuteWordProcessed && !isProcedureWordProcessed && !isNameProcessed) {
             isExecuteWordProcessed = true;
-        else
+            return true;
+        }
+        
         if ("PROCEDURE".equalsIgnoreCase(token) &&
-                isExecuteWordProcessed && !isProcedureWordProcessed && !isNameProcessed)
+                isExecuteWordProcessed && !isProcedureWordProcessed && !isNameProcessed) {
             isProcedureWordProcessed = true;
-        else
-        if (isExecuteWordProcessed && isProcedureWordProcessed && !isNameProcessed) {
+            return true;
+        }
+        
+        if ("call".equalsIgnoreCase(token) && !isCallWordProcessed && !isNameProcessed) {
+        	isCallWordProcessed = true;
+            return true;
+        }
+        
+        if (isCallWordProcessed && !isNameProcessed) {
             procedureCall.setName(token);
             isNameProcessed = true;
+            return true;
         }
+        
+        return false;
+    }
+    
+    /**
+     * Pre-process parameter. This method checks if there is escaped call inside
+     * and converts it to the native one.
+     * 
+     * @param param parameter to process.
+     * 
+     * @return processed parameter.
+     * 
+     * @throws FBSQLParseException if parameter cannot be correctly parsed.
+     */
+    protected String processParam(String param) throws FBSQLParseException {
+        return escapedParser.parse(param);
     }
 }
