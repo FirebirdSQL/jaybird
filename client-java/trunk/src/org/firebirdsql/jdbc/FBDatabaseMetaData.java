@@ -1931,7 +1931,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
     private static final String GET_TABLES_LIKE = "select null as TABLE_CAT,"
         + " null as TABLE_SCHEM,"
-        + " RDB$RELATION_NAME TABLE_NAME,"
+        + " RDB$RELATION_NAME as TABLE_NAME,"
         + " cast('" + SYSTEM_TABLE + "' as varchar(31)) as TABLE_TYPE,"
         + " RDB$DESCRIPTION as REMARKS,"
         + " RDB$OWNER_NAME as OWNER_NAME"
