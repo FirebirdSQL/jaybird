@@ -1,3 +1,10 @@
+2005-03-10 00:36  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBRowUpdater.java:
+	
+	fixed a bug when fields that were not updated were set to null
+	after updateRow() call.
+
 2005-03-08 19:52  gab_reid
 
 	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
