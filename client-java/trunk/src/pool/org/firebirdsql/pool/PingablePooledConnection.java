@@ -59,6 +59,8 @@ public class PingablePooledConnection implements PooledConnection,
     private boolean supportsStatementsAccrossCommit;
     private boolean supportsStatementsAccrossRollback;
     private boolean statementPooling;
+    
+    private int transactionIsolation;
 
     private HashMap statements = new HashMap();
 
@@ -67,11 +69,13 @@ public class PingablePooledConnection implements PooledConnection,
     }
 
     protected PingablePooledConnection(Connection connection, 
-                                       boolean statementPooling) 
+                                       boolean statementPooling, 
+                                       int transactionIsolation) 
         throws SQLException 
     {
         this.jdbcConnection = connection;
         this.statementPooling = statementPooling;
+        this.transactionIsolation = transactionIsolation;
 
         this.supportsStatementsAccrossCommit =
             connection.getMetaData().supportsOpenStatementsAcrossCommit();
@@ -94,10 +98,11 @@ public class PingablePooledConnection implements PooledConnection,
     }
 
     protected PingablePooledConnection(Connection connection,
-        String pingStatement, int pingInterval, boolean statementPooling) 
+        String pingStatement, int pingInterval, boolean statementPooling, 
+        int transactionIsolation) 
         throws SQLException 
     {
-        this(connection, statementPooling);
+        this(connection, statementPooling, transactionIsolation);
         this.pingStatement = pingStatement;
         this.pingInterval = pingInterval;
     }
@@ -253,7 +258,7 @@ public class PingablePooledConnection implements PooledConnection,
         Connection result = currentConnection.getProxy();
         result.setAutoCommit(true);
         result.setReadOnly(false);
-        result.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+        result.setTransactionIsolation(transactionIsolation);
 
         return result;
     }

@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.pool;
 
+import java.sql.Connection;
+
 /**
  * Default values for the connection pool.
  *
@@ -33,5 +35,7 @@ public class FBPoolingDefaults {
     
     public static final int DEFAULT_MAX_SIZE = 10;
     public static final int DEFAULT_MIN_SIZE = 0;
+    
+    public static final int DEFAULT_ISOLATION = Connection.TRANSACTION_READ_COMMITTED;
     
 }

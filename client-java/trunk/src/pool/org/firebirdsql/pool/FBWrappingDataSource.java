@@ -232,20 +232,20 @@ public class FBWrappingDataSource implements DataSource,
         getPool().setIdleTimeout(idleTimeoutValue);
     }
 
-    public int getMaxSize() {
+    public int getMaxConnections() {
         return getPool().getMaxConnections();
     }
-
-    public void setMaxSize(int maxSizeValue) {
-        getPool().setMaxConnections(maxSizeValue);
+    
+    public void setMaxConnections(int maxConnections) {
+        getPool().setMaxConnections(maxConnections);
     }
-
-    public int getMinSize() {
+    
+    public int getMinConnections() {
         return getPool().getMinConnections();
     }
-
-    public void setMinSize(int minSizeValue) {
-        getPool().setMinConnections(minSizeValue);
+    
+    public void setMinConnections(int minConnections) {
+        getPool().setMinConnections(minConnections);
     }
 
     public String getPassword() {
@@ -349,16 +349,24 @@ public class FBWrappingDataSource implements DataSource,
         getPool().setStatementPooling(statementPooling);
     }
     
-    public int getIdleTimeoutMinutes() {
-        return getIdleTimeout() / 60 / 1000;
-    }
-    
-    public void setIdleTimeoutMinutes(int timeout) {
-        setIdleTimeout(timeout * 60 * 1000);
-    }
-    
     public int getConnectionCount() throws SQLException {
         return getPool().getFreeSize();
+    }
+    
+    public int getTransactionIsolationLevel() {
+        return getPool().getTransactionIsolationLevel();
+    }
+    
+    public void setTransactionIsolationLevel(int level) {
+        getPool().setTransactionIsolationLevel(level);
+    }
+    
+    public String getIsolation() {
+        return getPool().getIsolation();
+    }
+    
+    public void setIsolation(String isolation) throws SQLException {
+        getPool().setIsolation(isolation);
     }
     
     /*
@@ -381,6 +389,7 @@ public class FBWrappingDataSource implements DataSource,
     private static final String REF_TPB_MAPPING = "tpbMapping";
     private static final String REF_TYPE = "type";
     private static final String REF_USER_NAME = "userName";
+    private static final String REF_TX_ISOLATION = "txIsolation";
 
     /**
      * Get object instance for the specified name in the specified context.
@@ -429,11 +438,11 @@ public class FBWrappingDataSource implements DataSource,
             
         addr = getRefAddr(ref, REF_MAX_SIZE);
         if (addr != null)
-            ds.setMaxSize(Integer.parseInt(addr));
+            ds.setMaxConnections(Integer.parseInt(addr));
             
         addr = getRefAddr(ref, REF_MIN_SIZE);
         if (addr != null)
-            ds.setMinSize(Integer.parseInt(addr));
+            ds.setMinConnections(Integer.parseInt(addr));
 
         addr = getRefAddr(ref, REF_PASSWORD);
         if (addr != null)
@@ -462,6 +471,10 @@ public class FBWrappingDataSource implements DataSource,
         addr = getRefAddr(ref, REF_USER_NAME);
         if (addr != null)
             ds.setUserName(addr);
+        
+        addr = getRefAddr(ref, REF_TX_ISOLATION);
+        if (addr != null)
+            ds.setPingInterval(Integer.parseInt(addr));
             
         return ds;
     }
@@ -530,13 +543,13 @@ public class FBWrappingDataSource implements DataSource,
             ref.add(new StringRefAddr(REF_LOGIN_TIMEOUT,
                 String.valueOf(getLoginTimeout())));
 
-        if (getMaxSize() != FBPoolingDefaults.DEFAULT_MAX_SIZE)
+        if (getMaxConnections() != FBPoolingDefaults.DEFAULT_MAX_SIZE)
             ref.add(new StringRefAddr(REF_MAX_SIZE, 
-                String.valueOf(getMaxSize())));
+                String.valueOf(getMaxConnections())));
 
-        if (getMinSize() != FBPoolingDefaults.DEFAULT_MIN_SIZE)
+        if (getMinConnections() != FBPoolingDefaults.DEFAULT_MIN_SIZE)
             ref.add(new StringRefAddr(REF_MIN_SIZE,
-                String.valueOf(getMinSize())));
+                String.valueOf(getMinConnections())));
             
         if (getPassword() != null)
             ref.add(new StringRefAddr(REF_PASSWORD, getPassword()));
@@ -560,6 +573,10 @@ public class FBWrappingDataSource implements DataSource,
         
         if (getUserName() != null)
        	    ref.add(new StringRefAddr(REF_USER_NAME, getUserName()));
+        
+        if (getTransactionIsolationLevel() != FBPoolingDefaults.DEFAULT_ISOLATION)
+            ref.add(new StringRefAddr(REF_TX_ISOLATION, 
+                String.valueOf(getTransactionIsolationLevel())));
         
         return ref;
     }

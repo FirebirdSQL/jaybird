@@ -47,16 +47,19 @@ class FBPooledConnection extends PingablePooledConnection
      * 
      * @param managedConnection instance of {@link FBManagedConnection}
      * @param cri connection request information.
+     * @param statementPooling <code>true</code> if statement pooling is enabled.
+     * @param transactionIsolation transaction isolation for connection.
      * 
      * @throws SQLException if some SQL error happened.
      * @throws ResourceException if resource management error happened.
      */
     public FBPooledConnection(FBManagedConnection managedConnection, 
-        FBConnectionRequestInfo cri, boolean statementPooling) 
+        FBConnectionRequestInfo cri, boolean statementPooling, 
+        int transactionIsolation) 
         throws SQLException, ResourceException 
     {
         super((Connection)managedConnection.getConnection(null, cri), 
-            statementPooling);
+            statementPooling, transactionIsolation);
         
         this.managedConnection = managedConnection;
         this.cri = cri;
@@ -70,17 +73,19 @@ class FBPooledConnection extends PingablePooledConnection
      * @param cri connection request information.
      * @param pingStatement ping statement.
      * @param pingInterval interval after which connection will be pinged. 
+     * @param statementPooling <code>true</code> if statement pooling is enabled.
+     * @param transactionIsolation transaction isolation for connection.
      * 
      * @throws SQLException if SQL error happened.
      * @throws ResourceException if resource management error happened.
      */
     protected FBPooledConnection(FBManagedConnection managedConnection, 
         FBConnectionRequestInfo cri, String pingStatement, int pingInterval, 
-        boolean statementPooling) 
+        boolean statementPooling, int transactionIsolation) 
         throws SQLException, ResourceException 
     {
         super((Connection)managedConnection.getConnection(null, cri), 
-            pingStatement, pingInterval, statementPooling);
+            pingStatement, pingInterval, statementPooling, transactionIsolation);
         
         this.managedConnection = managedConnection;
         this.cri = cri;
