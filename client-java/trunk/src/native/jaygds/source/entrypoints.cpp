@@ -33,6 +33,11 @@
 
 #include <new>
 
+// Dll Entrypoints
+
+
+
+
 // First some basic helper functions for error handling and a macro to use for the
 // catch block in each JNI entrypoint.
 
@@ -84,20 +89,6 @@ void MaybeIssueOutOfMemory(JNIEnv * javaEnvironment, std::bad_alloc& badAlloc)
 										EnsureJavaExceptionIssued( javaEnvironment );				\
 										} 
 
-// Dll Entrypoints
-
-BOOL APIENTRY DllMain( HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved )
-	{
-    switch (ul_reason_for_call)
-		{
-		case DLL_PROCESS_ATTACH:
-		case DLL_THREAD_ATTACH:
-		case DLL_THREAD_DETACH:
-		case DLL_PROCESS_DETACH:
-			break;
-		}
-		return TRUE;
-	}
 
 
 JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_nativeInitilize

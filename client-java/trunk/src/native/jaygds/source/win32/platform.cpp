@@ -17,33 +17,24 @@
  * All rights reserved.
  */
 
-#ifndef _JNGDS__Platform
-#define _JNGDS__Platform
+/* win32/platform.cpp
+ * 
+ * Platform specific code for win32
+ */
+
+#include "platform.h"
 
 
-// Windows includes and stuff 
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
-#define WIN32_LEAN_AND_MEAN	
-
-#include <windows.h>
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-
-// Defines for fb_binding.h and fb_binding.cpp
-#define SHARED_LIBRARY_HANDLE HMODULE
+#include "exceptions.h"
 
 
-#define FB_ENTRYPOINT(X) \
-			if ((##X = (prototype_##X*)GetProcAddress(sHandle, #X)) == NULL) \
-				throw InternalException("FirebirdApiBinding:Initialize() - Entry-point "#X" not found")
 
-SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name);
-
-
-#endif // ifndef(_JNGDS__Platform)
+SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name)
+	{
+    SHARED_LIBRARY_HANDLE handle = LoadLibrary(name);
+	if (handle == NULL) 
+			{ 
+			throw InternalException("FirebirdApiBinding::Initialize - Could not find or load the GDS32.DLL"); 
+			}
+	return handle; 
+	}

@@ -499,7 +499,7 @@ class FirebirdApiBinding
 		~FirebirdApiBinding() ;
 		
 
-		static HMODULE	sHandle;
+		static SHARED_LIBRARY_HANDLE sHandle;
 		static bool		sIsLoaded;
 		};
 
