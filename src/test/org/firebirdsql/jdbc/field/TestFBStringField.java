@@ -80,12 +80,17 @@ public class TestFBStringField extends BaseTestFBField {
         field.copyOI();
         assertTrue("String does not equal to assigned one.",
             field.getString().trim().equals(TEST_STRING_SHORT));
+        /*
+        // Commented out by R.Rokytskyy: FBStringField was changed to allow
+        // server complain about data truncation, not the driver. This was done
+        // in order to avoid problems in case of multi-byte character fields.
         try {
             field.setString(TEST_STRING_LONG);
             assertTrue("String longer than available space should not be allowed", false);
         } catch(SQLException sqlex) {
             // everything is ok
         }
+        */
     }
     public void testObject() throws SQLException {
         field.setObject(TEST_STRING_SHORT);
