@@ -47,9 +47,13 @@ public final class StringClumplet extends ClumpletImpl
         ClumpletImpl newClumplet = new StringClumplet(type, stringContent);
         if (next != null) {
             newClumplet.next = next.cloneClumplet();
-            newClumplet.next.prev = newClumplet;
+//            newClumplet.next.prev = newClumplet;
         }
         return newClumplet;        
+    }
+    
+    protected ClumpletImpl getCopy() {
+        return new StringClumplet(this.type, this.stringContent);
     }
 
     public String findString(int type)
@@ -69,7 +73,7 @@ public final class StringClumplet extends ClumpletImpl
         }
         else if (next == null) {
             next = ci;
-            ci.prev = this;
+//            ci.prev = this;
         }
         else {
             next.append(c);

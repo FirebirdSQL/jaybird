@@ -43,7 +43,6 @@ public class ClumpletImpl
     int type;
     byte[] content;
     ClumpletImpl next;
-    ClumpletImpl prev;
 
     ClumpletImpl(int type, byte[] content) {
         this.type = type;
@@ -54,7 +53,6 @@ public class ClumpletImpl
         ClumpletImpl newClumplet = new ClumpletImpl(type, content);
         if (next != null) {
             newClumplet.next = next.cloneClumplet();
-            newClumplet.next.prev = newClumplet;
         }
         return newClumplet;
     }
@@ -67,7 +65,6 @@ public class ClumpletImpl
         }
         else if (next == null) {
             next = ci;
-            ci.prev = this;
         }
         else {
             next.append(c);
@@ -101,26 +98,28 @@ public class ClumpletImpl
     }
     
     public Clumplet remove(int type) {
-        if (type == this.type) {
-            if (this.prev != null) {
-                this.prev.next = this.next;
-                return prev;
-            } else
-                return this.next;
-        } else
-        if (next == null)
-            return this;
-        else
-        if (next.type == type) {
-            this.next = this.next.next;
-            return this;
-        } else {
-            ClumpletImpl temp = (ClumpletImpl)next.remove(type);
-            if (temp != null)
-                return temp.prev;
-            else
-                return this;
+        ClumpletImpl c = this;
+        ClumpletImpl result = null;
+        if (this.type == type)
+            c = this.next;
+            
+        while(c != null) {
+            if (c.type != type) {
+                ClumpletImpl clone = c.getCopy();
+                if (result != null)
+                    result.append(clone);
+                else
+                    result = clone;
+            }
+            
+            c = c.next;
         }
+        
+        return result;
+    }
+    
+    protected ClumpletImpl getCopy() {
+        return new ClumpletImpl(this.type, this.content);
     }
 
     public int getLength() {

@@ -199,12 +199,15 @@ public final class GDS_Impl implements GDS {
 
 
             DbAttachInfo dbai = new DbAttachInfo(file_name);
-            connect(db, dbai, null);
+            connect(db, dbai, c);
             try {
                 if (debug) log.debug("op_create ");
                 db.out.writeInt(op_create);
                 db.out.writeInt(0);           // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
+                
+                c = removeInternalDPB(c);
+                
                 db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable)c);
                 //            db.out.writeBuffer(dpb, dpb_length);
                 db.out.flush();            
@@ -222,6 +225,14 @@ public final class GDS_Impl implements GDS {
             }
         }
 
+    }
+    
+    private Clumplet removeInternalDPB(Clumplet dpb) {
+        Clumplet result = dpb;
+        
+        result = result.remove(ISCConstants.isc_dpb_socket_buffer_size);
+        
+        return result;
     }
 
     public void isc_attach_database(String host,
@@ -269,7 +280,7 @@ public final class GDS_Impl implements GDS {
                 db.out.writeInt(0);                // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
                 
-                dpb = removeInternalDPBParams(dpb);
+                dpb = removeInternalDPB(dpb);
                 
                 db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable)dpb);
                 db.out.flush();            
@@ -289,14 +300,6 @@ public final class GDS_Impl implements GDS {
                 throw new GDSException(ISCConstants.isc_net_write_err);
             }
         }
-    }
-    
-    private Clumplet removeInternalDPBParams(Clumplet dpb) {
-        Clumplet result = GDSFactory.cloneClumplet(dpb);
-        
-        result.remove(ISCConstants.isc_dpb_socket_buffer_size);
-        
-        return result;
     }
 
     public byte[] isc_database_info(isc_db_handle handle,
@@ -1499,16 +1502,18 @@ public final class GDS_Impl implements GDS {
                             DbAttachInfo dbai, Clumplet dpb) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
         
+        
         int socketBufferSize = -1;
-        
-        String iscSocketBufferLength = dpb.findString(ISCConstants.isc_dpb_socket_buffer_size);
-        
+
+        String iscSocketBufferLength = dpb.findString(
+            ISCConstants.isc_dpb_socket_buffer_size);
+
         if (iscSocketBufferLength != null) {
             try {
                 socketBufferSize = Integer.parseInt(iscSocketBufferLength);
             } catch(NumberFormatException ex) {
                 throw new GDSException(
-                    ISCConstants.isc_arg_gds, 
+                    ISCConstants.isc_arg_gds,
                     ISCConstants.isc_bad_dpb_content);
             }
         }
