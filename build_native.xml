@@ -112,6 +112,9 @@
             </not>
         </condition>
 
+        <condition property="buildon-solaris">
+            <os family="solaris"/>
+        </condition>
 
         <!-- set 'jaybirds_platform_headers' - this should be fairly easy -->
 
@@ -220,6 +223,7 @@
 
             <defineset>
                 <define name="JAVA_GDS_EXPORTS"/>
+                <define name="ARCH_IS_BIG_ENDIAN=1" if="buildon-solaris"/>
             </defineset>
         </compiler>
         
@@ -270,13 +274,13 @@
 
         </cc>
 
-        <delete>
+        <!-- delete>
             <fileset dir="${build.native.output}" includes="*.obj"/>
             <fileset dir="${build.native.output}" includes="*.o"/>
             <fileset dir="${build.native.output}" includes="*.exp"/>
             <fileset dir="${build.native.output}" includes="*.lib"/>
             <fileset dir="${build.native.output}" includes="*.xml"/>
-        </delete>
+        </delete -->
         
     </target>
 
