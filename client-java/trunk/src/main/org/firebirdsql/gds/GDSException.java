@@ -21,6 +21,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.1  2002/08/29 13:41:01  d_jencks
+ * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
+ *
  * Revision 1.9  2002/08/09 21:25:56  rrokytskyy
  * improved exception handling
  *
@@ -185,10 +188,11 @@ public class GDSException extends Exception {
         }
   
         // Do we have more children? Then include their messages too.
-        while (child != null) {
+        //while (child != null) {
+        if (child != null)
             msg += "\n" + child.getMessage();
-            child = child.next;
-        }
+        //    child = child.next;
+        //}
  
         return msg;
     }
