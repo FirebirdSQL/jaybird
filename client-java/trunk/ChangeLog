@@ -1,3 +1,23 @@
+2004-11-10 20:01  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/GDS.java,
+	gds/AbstractGDS.java, gds/ServiceRequestBuffer.java,
+	gds/isc_tr_handle.java, gds/DatabaseParameterBuffer.java,
+	gds/XdrInputStream.java, gds/isc_blob_handle.java,
+	gds/isc_db_handle.java, gds/BlobParameterBuffer.java,
+	gds/GDSException.java, gds/GDSFactory.java,
+	gds/ServiceParameterBuffer.java, gds/XSQLDA.java, gds/XSQLVAR.java,
+	gds/XdrOutputStream.java, gds/Xdrable.java,
+	gds/isc_stmt_handle.java, gds/isc_svc_handle.java,
+	jca/FBXAException.java, jca/FBManagedConnection.java,
+	jca/FBTpb.java, jca/FBManagedConnectionFactory.java,
+	jca/FBManagedConnectionMetaData.java, jca/FBResourceException.java,
+	jca/FBConnectionRequestInfo.java, jca/FBLocalTransaction.java,
+	jca/FBResourceTransactionException.java,
+	jca/FBStandAloneConnectionManager.java:
+	
+	applied patch to javadoc submitted by Gabriel Reid
+
 2004-10-29 23:49  rrokytskyy
 
 	*
