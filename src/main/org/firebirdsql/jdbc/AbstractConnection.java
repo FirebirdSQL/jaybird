@@ -308,9 +308,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public boolean getAutoCommit() throws SQLException {
         if (isClosed())
-        {
-            throw new SQLException("You cannot getAutomcommit on an unassociated closed connection.");
-        }
+            throw new SQLException("You cannot getAutomcommit on an " +
+                    "unassociated closed connection.");
+
         return mc.autoCommit;
     }
 
@@ -335,8 +335,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
             if (inTransaction())
                 getLocalTransaction().internalCommit();
             
-            //invalidateSavepoints();
-                        
         } catch(GDSException ge) {
             throw new FBSQLException(ge);
         }
@@ -363,8 +361,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
             if (inTransaction())
                 getLocalTransaction().internalRollback();
                 
-            //invalidateSavepoints();
-            
         } catch(GDSException ge) {
             throw new FBSQLException(ge);
         }
@@ -521,28 +517,22 @@ public abstract class AbstractConnection implements FirebirdConnection {
         if (isClosed())
             throw new SQLException("Connection has being closed.");
         
-        if (getTransactionIsolation() != level) 
-        {
-            try 
-            {
+        if (getTransactionIsolation() != level) {
+            try {
 
                 if (inTransaction())
-                {
                     getLocalTransaction().internalCommit();
-                }
+
                 mc.setTransactionIsolation(level);
-            }
-            catch (ResourceException re)
-            {
+
+            } catch (ResourceException re) {
                 throw new FBSQLException(re);
-            }
-            catch (GDSException ge)
-            {
+                
+            } catch (GDSException ge) {
                 throw new FBSQLException(ge);
             } 
         }
     }
-
 
     /**
      * Gets this Connection's current transaction isolation level.
@@ -723,7 +713,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public synchronized void setTypeMap(Map map) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     //-------------------------------------------
