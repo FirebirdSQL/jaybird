@@ -69,26 +69,31 @@ import org.firebirdsql.logging.Logger;
 
 public class FBPreparedStatement extends FBStatement implements PreparedStatement {
 
+    // this array contains either true or false indicating if parameter
+    // was initialized, executeQuery, executeUpdate and execute methods
+    // will throw an exception if this array contains at least one false value.
+    protected boolean[] isParamSet;
+
     FBPreparedStatement(FBConnection c, String sql) throws SQLException {
         super(c);
         try {
             c.ensureInTransaction();
-            if (fixedStmt == null) {
-                fixedStmt = mc.getAllocatedStatement();
-            }
-            mc.prepareSQL(fixedStmt, c.nativeSQL(sql), true);
+            prepareFixedStatement(sql, true);
+
             c.checkEndTransaction();
         }
-        catch (ResourceException re) 
+        catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
-        catch (GDSException ge) 
+        catch (GDSException ge)
         {
             log.info("GDSException in PreparedStatement constructor", ge);
             throw new SQLException("GDSException: " + ge);
         } // end of try-catch
     }
+
+
 
     /**
      * Executes the SQL query in this <code>PreparedStatement</code> object
@@ -99,27 +104,27 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public ResultSet executeQuery() throws  SQLException {
-        try 
+        try
         {
             c.ensureInTransaction();
-            if (!internalExecute(false)) 
+            if (!internalExecute(false))
             {
                 throw new SQLException("No resultset for sql");
             }
-            if (c.willEndTransaction()) 
+            if (c.willEndTransaction())
             {
                 return getCachedResultSet(false);
             } // end of if ()
-            else 
+            else
             {
                 return getResultSet();
             } // end of else
         }
-        catch (ResourceException re) 
+        catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
-        finally 
+        finally
         {
             c.checkEndTransaction();
         } // end of finally
@@ -138,7 +143,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public int executeUpdate() throws  SQLException {
-        try 
+        try
         {
             c.ensureInTransaction();
             if (internalExecute(false)) {
@@ -146,11 +151,11 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             }
             return getUpdateCount();
         }
-        catch (ResourceException re) 
+        catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
-        finally 
+        finally
         {
             c.checkEndTransaction();
         } // end of finally
@@ -169,67 +174,84 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     public void setNull(int parameterIndex, int sqlType) throws  SQLException {
         fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqlind = -1;
         fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqldata = null;
+        parameterWasSet(parameterIndex);
     }
 
-    public void setBinaryStream(int parameterIndex, InputStream inputStream, int length) throws SQLException {
-        //super.setBinaryStream(parameterIndex, inputStream, length);
+    public void setBinaryStream(int parameterIndex, InputStream inputStream,
+        int length) throws SQLException
+    {
         getField(parameterIndex).setBinaryStream(inputStream, length);
+        parameterWasSet(parameterIndex);
     }
-    
+
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
         getField(parameterIndex).setBytes(x);
+        parameterWasSet(parameterIndex);
     }
 
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
         getField(parameterIndex).setBoolean(x);
+        parameterWasSet(parameterIndex);
     }
 
     public void setByte(int parameterIndex, byte x) throws SQLException {
         getField(parameterIndex).setByte(x);
+        parameterWasSet(parameterIndex);
     }
 
     public void setDate(int parameterIndex, Date x) throws SQLException {
         getField(parameterIndex).setDate(x);
+        parameterWasSet(parameterIndex);
     }
 
     public void setDouble(int parameterIndex, double x) throws SQLException {
         getField(parameterIndex).setDouble(x);
+        parameterWasSet(parameterIndex);
     }
 
     public void setFloat(int parameterIndex, float x) throws SQLException {
         getField(parameterIndex).setFloat(x);
+        parameterWasSet(parameterIndex);
     }
 
     public void setInt(int parameterIndex, int x) throws SQLException {
         getField(parameterIndex).setInteger(x);
+        parameterWasSet(parameterIndex);
     }
 
     public void setLong(int parameterIndex, long x) throws SQLException {
         getField(parameterIndex).setLong(x);
+        parameterWasSet(parameterIndex);
     }
 
     public void setObject(int parameterIndex, Object x) throws SQLException {
         getField(parameterIndex).setObject(x);
+        parameterWasSet(parameterIndex);
     }
 
     public void setShort(int parameterIndex, short x) throws SQLException {
         getField(parameterIndex).setShort(x);
+        parameterWasSet(parameterIndex);
     }
 
     public void setString(int parameterIndex, String x) throws SQLException {
         getField(parameterIndex).setString(x);
+        parameterWasSet(parameterIndex);
     }
 
     public void setTime(int parameterIndex, Time x) throws SQLException {
         getField(parameterIndex).setTime(x);
+        parameterWasSet(parameterIndex);
     }
 
     public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
         getField(parameterIndex).setTimestamp(x);
+        parameterWasSet(parameterIndex);
     }
 
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws  SQLException {
         getField(parameterIndex).setBigDecimal(x);
+        parameterWasSet(parameterIndex);
     }
     /**
      * Returns the XSQLVAR structure for the specified column.
@@ -249,7 +271,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         else
         if (thisField instanceof FBStringField)
             ((FBStringField)thisField).setConnection(c);
-        
+
 
         return thisField;
     }
@@ -276,7 +298,9 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @param length the number of bytes in the stream
      * @exception SQLException if a database access error occurs
      */
-    public void setAsciiStream(int parameterIndex, java.io.InputStream x, int length) throws  SQLException {
+    public void setAsciiStream(int parameterIndex, java.io.InputStream x,
+        int length) throws  SQLException
+    {
         setBinaryStream(parameterIndex, x, length);
     }
 
@@ -322,9 +346,13 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void clearParameters() throws  SQLException {
+        /*
         for (int i = 1; i <= fixedStmt.getInSqlda().sqln; i++) {
             setNull(i, 0);
         }
+        */
+        for (int i = 0; i < isParamSet.length; i++)
+            isParamSet[i] = false;
     }
 
 
@@ -395,38 +423,38 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see Statement#execute
      */
     public boolean execute() throws  SQLException {
-        try 
+        try
         {
             c.ensureInTransaction();
             boolean hasResultSet = internalExecute(false);
-            if (hasResultSet && c.willEndTransaction()) 
+            if (hasResultSet && c.willEndTransaction())
             {
-                getCachedResultSet(false);   
+                getCachedResultSet(false);
             } // end of if ()
             return hasResultSet;
         }
-        catch (ResourceException re) 
+        catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
-        finally 
+        finally
         {
             c.checkEndTransaction();
         } // end of finally
     }
 
-    protected boolean internalExecute(boolean sendOutParams) throws  SQLException 
+    protected boolean internalExecute(boolean sendOutParams) throws  SQLException
     {
         XSQLVAR[] inVars = fixedStmt.getInSqlda().sqlvar;
-            
-        for(int i = 0; i < inVars.length; i++) 
+
+        for(int i = 0; i < inVars.length; i++)
         {
-            boolean isBlobField = 
+            boolean isBlobField =
                 FBField.isType(inVars[i], Types.BLOB) ||
                 FBField.isType(inVars[i], Types.BINARY) ||
                 FBField.isType(inVars[i], Types.LONGVARCHAR);
-                
-            if (isBlobField) 
+
+            if (isBlobField)
             {
                 FBBlobField blobField = (FBBlobField)getField(i + 1);
                 blobField.flushCachedData();
@@ -553,6 +581,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      *      2.0 API</a>
      */
     public void setArray (int i, Array x) throws  SQLException {
+        throw new SQLException("Arrays are not supported.");
     }
 
 
@@ -697,14 +726,48 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         throw new SQLException("Not yet implemented");
     }
 
+
+
+    /**
+     * Prepare fixed statement and initialize parameters.
+     */
+    protected void prepareFixedStatement(String sql, boolean describeBind)
+        throws GDSException, SQLException
+    {
+        super.prepareFixedStatement(sql, describeBind);
+
+        // initialize isParamSet member
+        isParamSet = new boolean[fixedStmt.getInSqlda().sqln];
+
+        // this is probably redundant, JVM initializes members to false
+        for (int i = 0; i < isParamSet.length; i++)
+            isParamSet[i] = false;
+    }
+
+    /**
+     * Execute statement internally. This method checks if all parameters
+     * were set.
+     */
+    protected boolean internalExecute(String sql) throws GDSException, SQLException {
+        boolean canExecute = true;
+        for (int i = 0; i < isParamSet.length; i++)
+            canExecute = canExecute && isParamSet[i];
+
+        if (!canExecute)
+            throw new SQLException("Not all parameters were set. " +
+                "Cannot execute query.");
+
+        return super.internalExecute(sql);
+    }
+
+    /**
+     * Marks that parameter was set.
+     */
+    protected void parameterWasSet(int parameterIndex) throws SQLException {
+        if (parameterIndex < 1 || parameterIndex > isParamSet.length)
+            throw new SQLException("Internal driver consistency check: " +
+                "Number of available params does not correspond to prepared.");
+
+        isParamSet[parameterIndex - 1] = true;
+    }
 }
-
-
-
-
-
-
-
-
-
-

@@ -323,7 +323,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     }
 
     /**
-     * 
+     *
      * @return a <code>boolean</code> value
      * @exception SQLException if an error occurs
      * @todo implement statemet pooling on the server.. then in the driver
@@ -2015,6 +2015,10 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getTables(String catalog, String schemaPattern,
         String tableNamePattern, String types[]) throws SQLException {
+
+        if (tableNamePattern == null || "".equals(tableNamePattern))
+            tableNamePattern = "%";
+
         checkCatalogAndSchema(catalog, schemaPattern);
         if (types == null) {
             types = ALL_TYPES;
@@ -2066,7 +2070,18 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getSchemas() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = -1;
+        xsqlvars[0].sqlname = "TABLE_SCHEM";
+        xsqlvars[0].relname = "TABLESCHEMAS";
+
+        ArrayList rows = new ArrayList(0);
+
+        return new FBResultSet(xsqlvars, rows);
     }
 
 
@@ -2085,7 +2100,18 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getCatalogs() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = -1;
+        xsqlvars[0].sqlname = "TABLE_CAT";
+        xsqlvars[0].relname = "TABLECATALOGS";
+
+        ArrayList rows = new ArrayList(0);
+
+        return new FBResultSet(xsqlvars, rows);
     }
 
 
@@ -4091,6 +4117,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
 
     public boolean hasNoWildcards(String pattern) {
+        if (pattern == null)
+            return true;
+
         int scannedTo = 0;
         int pos;
         while ((pos = pattern.indexOf('%', scannedTo)) < pattern.length()) {
