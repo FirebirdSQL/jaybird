@@ -717,6 +717,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     }
 
 
+    public int getBlobBufferLength()
+    {
+        return mcf.getBlobBufferLength();
+    }
+
 
     //--------------------------------------------------------------------
     //package visibility

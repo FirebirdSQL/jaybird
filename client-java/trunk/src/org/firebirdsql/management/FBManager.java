@@ -39,6 +39,16 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
 
     private int port = 3050;
 
+    private String fileName;
+
+    private String userName;
+
+    private String password;
+
+    private boolean createOnStart = false;
+
+    private boolean dropOnStop = false;
+
 
     public FBManager() {}
 
@@ -85,9 +95,19 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
         c.append(GDSFactory.newClumplet(gds.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
 
         state = STARTED;
+        if (isCreateOnStart()) 
+        {
+            createDatabase(getFileName(), getUserName(), getPassword());
+        } // end of if ()
+        
     }
 
-    public void stop() {
+    public void stop() throws Exception {
+        if (isDropOnStop()) 
+        {
+            dropDatabase(getFileName(), getUserName(), getPassword());
+        } // end of if ()
+        
         state = STOPPING;
         c = null;
         gds = null;
@@ -111,7 +131,7 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
     //Firebird specific methods
     //Which server are we connecting to?
 
-    public void setURL(String host) {
+    public void setURL(final String host) {
         this.host = host;
     }
 
@@ -119,13 +139,149 @@ public class FBManager implements FBManagerMBean, MBeanRegistration {
         return host;
     }
 
-    public void setPort(int port) {
+    public void setPort(final int port) {
         this.port = port;
     }
 
     public int getPort() {
         return port;
     }
+
+    
+    
+    /**
+     * mbean get-set pair for field fileName
+     * Get the value of fileName
+     * @return value of fileName
+     *
+     * @jmx:managed-attribute
+     */
+    public String getFileName()
+    {
+        return fileName;
+    }
+    
+    
+    /**
+     * Set the value of fileName
+     * @param fileName  Value to assign to fileName
+     *
+     * @jmx:managed-attribute
+     */
+    public void setFileName(final String fileName)
+    {
+        this.fileName = fileName;
+    }
+    
+    
+    
+    
+    /**
+     * mbean get-set pair for field userName
+     * Get the value of userName
+     * @return value of userName
+     *
+     * @jmx:managed-attribute
+     */
+    public String getUserName()
+    {
+        return userName;
+    }
+    
+    
+    /**
+     * Set the value of userName
+     * @param userName  Value to assign to userName
+     *
+     * @jmx:managed-attribute
+     */
+    public void setUserName(final String userName)
+    {
+        this.userName = userName;
+    }
+    
+    
+    
+    /**
+     * mbean get-set pair for field password
+     * Get the value of password
+     * @return value of password
+     *
+     * @jmx:managed-attribute
+     */
+    public String getPassword()
+    {
+        return password;
+    }
+    
+    
+    /**
+     * Set the value of password
+     * @param password  Value to assign to password
+     *
+     * @jmx:managed-attribute
+     */
+    public void setPassword(final String password)
+    {
+        this.password = password;
+    }
+    
+    
+    
+    
+    /**
+     * mbean get-set pair for field createOnStart
+     * Get the value of createOnStart
+     * @return value of createOnStart
+     *
+     * @jmx:managed-attribute
+     */
+    public boolean isCreateOnStart()
+    {
+        return createOnStart;
+    }
+    
+    
+    /**
+     * Set the value of createOnStart
+     * @param createOnStart  Value to assign to createOnStart
+     *
+     * @jmx:managed-attribute
+     */
+    public void setCreateOnStart(final boolean createOnStart)
+    {
+        this.createOnStart = createOnStart;
+    }
+    
+    
+    
+    
+    /**
+     * mbean get-set pair for field dropOnStop
+     * Get the value of dropOnStop
+     * @return value of dropOnStop
+     *
+     * @jmx:managed-attribute
+     */
+    public boolean isDropOnStop()
+    {
+        return dropOnStop;
+    }
+    
+    
+    /**
+     * Set the value of dropOnStop
+     * @param dropOnStop  Value to assign to dropOnStop
+     *
+     * @jmx:managed-attribute
+     */
+    public void setDropOnStop(final boolean dropOnStop)
+    {
+        this.dropOnStop = dropOnStop;
+    }
+    
+    
+
 
     //Meaningful management methods
 
