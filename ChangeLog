@@ -1,3 +1,69 @@
+2004-12-15 23:43  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jdbc/AbstractPreparedStatement.java, gds/XSQLVAR.java,
+	ngds/XSQLVARBigEndianImpl.java, ngds/XSQLVARLittleEndianImpl.java:
+	
+	fixed possible problem when incorrect endiannes could have been
+	used to encode values
+
+2004-12-15 21:40  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/field/:
+	FBBigDecimalField.java, FBBlobField.java, FBCachedBlobField.java,
+	FBCachedLongVarCharField.java, FBDateField.java,
+	FBDoubleField.java, FBField.java, FBFloatField.java,
+	FBIntegerField.java, FBLongField.java, FBLongVarCharField.java,
+	FBShortField.java, FBStringField.java, FBTimeField.java,
+	FBTimestampField.java, FBWorkaroundStringField.java:
+	
+	finished decoupling of the fields and XSQLVAR.sqldata field
+
+2004-12-15 20:47  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/field/FBDateField.java,
+	main/org/firebirdsql/jdbc/field/FBWorkaroundStringField.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/field/FBBigDecimalField.java,
+	main/org/firebirdsql/jdbc/field/FBBlobField.java,
+	main/org/firebirdsql/jdbc/field/FBCachedBlobField.java,
+	main/org/firebirdsql/jdbc/field/FBCachedLongVarCharField.java,
+	main/org/firebirdsql/jdbc/field/FBDoubleField.java,
+	main/org/firebirdsql/jdbc/field/FBField.java,
+	main/org/firebirdsql/jdbc/field/FBFloatField.java,
+	main/org/firebirdsql/jdbc/field/FBIntegerField.java,
+	main/org/firebirdsql/jdbc/field/FBLongField.java,
+	main/org/firebirdsql/jdbc/field/FBLongVarCharField.java,
+	main/org/firebirdsql/jdbc/field/FBShortField.java,
+	main/org/firebirdsql/jdbc/field/FBStringField.java,
+	main/org/firebirdsql/jdbc/field/FBTimeField.java,
+	main/org/firebirdsql/jdbc/field/FBTimestampField.java,
+	main/org/firebirdsql/jdbc/field/FieldDataProvider.java,
+	main/org/firebirdsql/jdbc/FBCachedFetcher.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	test/org/firebirdsql/jdbc/field/BaseTestFBField.java,
+	test/org/firebirdsql/jdbc/field/TestFBDateField.java,
+	test/org/firebirdsql/jdbc/field/TestFBDoubleField.java,
+	test/org/firebirdsql/jdbc/field/TestFBFloatField.java,
+	test/org/firebirdsql/jdbc/field/TestFBIntegerField.java,
+	test/org/firebirdsql/jdbc/field/TestFBLongField.java,
+	test/org/firebirdsql/jdbc/field/TestFBShortField.java,
+	test/org/firebirdsql/jdbc/field/TestFBStringField.java,
+	test/org/firebirdsql/jdbc/field/TestFBTimeField.java,
+	test/org/firebirdsql/jdbc/field/TestFBTimestampField.java:
+	
+	changed the way fields access the underlying data (refactoring as
+	preparation for updatable cursors)
+
+2004-12-15 20:39  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+	
+	fixed a bug introduced in previous version
+
 2004-12-14 13:00  rrokytskyy
 
 	*
