@@ -27,6 +27,7 @@
 package org.firebirdsql.jgds;
 
 import org.firebirdsql.gds.XSQLDA;
+import org.firebirdsql.gds.isc_stmt_handle;
 
 /**
  * Describe class <code>isc_stmt_handle_impl</code> here.
@@ -35,7 +36,7 @@ import org.firebirdsql.gds.XSQLDA;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_handle {
+public final class isc_stmt_handle_impl implements isc_stmt_handle {
     private int rsr_id;
     private isc_db_handle_impl rsr_rdb;
     private XSQLDA in_sqlda = null;
