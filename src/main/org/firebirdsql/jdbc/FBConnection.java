@@ -1118,18 +1118,11 @@ public class FBConnection implements Connection
         mc.registerStatement(fbStatement);
     }
 	 
-//    public byte[][] fetch(isc_stmt_handle stmt) throws GDSException {
-    public void fetch(isc_stmt_handle stmt) throws GDSException {
+    public void fetch(isc_stmt_handle stmt, int fetchSize) throws GDSException {
         checkManagedConnection();
-//        return mc.fetch(stmt);
-        mc.fetch(stmt);
+        mc.fetch(stmt, fetchSize);
     }
-/*
-    public SqlInfo getSqlInfo(isc_stmt_handle stmt) throws GDSException {
-        checkManagedConnection();
-        return mc.getSqlInfo(stmt);
-    }
-*/
+
     public void getSqlCounts(isc_stmt_handle stmt) throws GDSException {
         checkManagedConnection();
         mc.getSqlCounts(stmt);

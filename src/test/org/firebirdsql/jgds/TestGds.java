@@ -34,6 +34,7 @@ import junit.framework.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.jdbc.BaseFBTest;
+import org.firebirdsql.jca.FBTpb;
 
 
 /**
@@ -82,7 +83,7 @@ public class TestGds extends BaseFBTest {
 
     private ClumpletImpl c;
 
-    private HashSet tpb = new HashSet();
+    private FBTpb tpb = new FBTpb();
 
     public TestGds(String name) {
         super(name);
@@ -127,7 +128,7 @@ public class TestGds extends BaseFBTest {
         isc_tr_handle tr = gds.get_new_isc_tr_handle();
 
         if (log!=null) log.info("test- isc_start_transaction");
-        gds.isc_start_transaction(tr, db, tpb);
+        gds.isc_start_transaction(tr, db, tpb.getArray());
         return tr;
     }
 
@@ -173,8 +174,7 @@ public class TestGds extends BaseFBTest {
         x.writeTyped(gds.isc_dpb_version1, (Xdrable)c);
         byte[] bac = b.toByteArray();
         b.reset();
-//        x.writeInt(c.getLength());
-        x.writeBuffer(dpb, dpb_length);
+        x.writeBuffer(dpb);
         byte[] bap = b.toByteArray();
 
 
@@ -364,7 +364,8 @@ public class TestGds extends BaseFBTest {
         xsqlvar.sqllen = 2;
         xsqlvar.sqldata = XSQLVAR.encodeShort((short) 4);
         xsqlda.sqlvar[1] = xsqlvar;
-
+        GDS_Impl.calculateBLR(xsqlda);
+        GDS_Impl.calculateIOLength(xsqlda);
         if (log!=null) log.info("test- isc_dsql_exec_immed2");
         gds.isc_dsql_exec_immed2(db1, t1, "INSERT INTO R1 VALUES (?, ?)",
                                  GDS.SQL_DIALECT_CURRENT, xsqlda, null);
@@ -382,6 +383,8 @@ public class TestGds extends BaseFBTest {
         xsqlvar.sqllen = 2;
         xsqlvar.sqldata = null;
         xsqlda.sqlvar[1] = xsqlvar;
+        GDS_Impl.calculateBLR(xsqlda);
+        GDS_Impl.calculateIOLength(xsqlda);
 
         if (log!=null) log.info("test- isc_dsql_exec_immed2");
         gds.isc_dsql_exec_immed2(db1, t1, "SELECT COL1, COL2 FROM R1 WHERE COL1 = 3",
@@ -437,14 +440,11 @@ public class TestGds extends BaseFBTest {
 
 //        int fetch_stat;
         String out = "";
-//        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
         byte[][] row = null;
-//        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
-        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda);
-		  for (int rowNum=0; rowNum < stmt1.rows.size(); rowNum++){
-           row = (byte[][]) stmt1.rows.get(rowNum);
+        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda,200);
+        for (int rowNum=0; rowNum < stmt1.size; rowNum++){
+           row = (byte[][]) stmt1.rows[rowNum];
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-//                Short data = (Short) out_xsqlda.sqlvar[i].sqldata;
                 Short data =  new Short(XSQLVAR.decodeShort(row[i]));
                 out += data.shortValue() + "    ";
             }
@@ -499,6 +499,8 @@ public class TestGds extends BaseFBTest {
         xsqlvar.sqllen = 8;
         xsqlvar.sqldata = XSQLVAR.encodeLong(blob1.blob_id);
         xsqlda.sqlvar[1] = xsqlvar;
+        GDS_Impl.calculateBLR(xsqlda);
+        GDS_Impl.calculateIOLength(xsqlda);
     gds.isc_close_blob(blob1);
 
         if (log!=null) log.info("test- isc_dsql_exec_immed2");
@@ -516,22 +518,18 @@ public class TestGds extends BaseFBTest {
         gds.isc_dsql_execute2(t1, stmt1, 1, null, null);
 
         isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
-//        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
         byte[][] row = null;
-//        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
-        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda);
-		  for (int rowNum=0; rowNum < stmt1.rows.size(); rowNum++){
-           row = (byte[][]) stmt1.rows.get(rowNum);
+        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda, 200);
+        for (int rowNum=0; rowNum < stmt1.size; rowNum++){
+           row = (byte[][]) stmt1.rows[rowNum];
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-//                Object data =  out_xsqlda.sqlvar[i].sqldata;
                 Object data =  row[i];
                 out += "column: " + i + ", value: " + data;
             }
         
             if (log!=null) log.info("fetch returned: " + out);
 
-//            blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
             blob2.blob_id = XSQLVAR.decodeLong(row[1]);
             //blob2.rbl_buffer_length = 30;//1024;
             gds.isc_open_blob2(db1, t1, blob2, null);
@@ -579,7 +577,9 @@ public class TestGds extends BaseFBTest {
         xsqlvar.sqllen = 8;
         xsqlvar.sqldata = XSQLVAR.encodeLong(blob1.blob_id);
         xsqlda.sqlvar[1] = xsqlvar;
-    gds.isc_close_blob(blob1);
+        GDS_Impl.calculateBLR(xsqlda);
+        GDS_Impl.calculateIOLength(xsqlda);
+        gds.isc_close_blob(blob1);
 
         if (log!=null) log.info("test- isc_dsql_exec_immed2");
         gds.isc_dsql_exec_immed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
@@ -596,20 +596,16 @@ public class TestGds extends BaseFBTest {
         gds.isc_dsql_execute2(t1, stmt1, 1, null, null);
 
         isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
-//        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
         byte[][] row = null;
-//        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
-        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda);
-		  for (int rowNum=0; rowNum < stmt1.rows.size(); rowNum++){
-           row = (byte[][]) stmt1.rows.get(rowNum);
+        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda, 200);
+        for (int rowNum=0; rowNum < stmt1.size; rowNum++){
+           row = (byte[][]) stmt1.rows[rowNum];
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-//                Object data =  out_xsqlda.sqlvar[i].sqldata;
                 Object data =  row[i];
                 out += "column: " + i + ", value: " + data;
             }
             if (log!=null) log.info(out);
-//            blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
             blob2.blob_id = XSQLVAR.decodeLong(row[1]);
             //blob2.rbl_buffer_length = 1050;//1024;
             gds.isc_open_blob2(db1, t1, blob2, bpb);
@@ -664,7 +660,9 @@ public class TestGds extends BaseFBTest {
         xsqlvar.sqllen = 8;
         xsqlvar.sqldata = XSQLVAR.encodeLong(blob1.blob_id);
         xsqlda.sqlvar[1] = xsqlvar;
-    gds.isc_close_blob(blob1);
+        GDS_Impl.calculateBLR(xsqlda);
+        GDS_Impl.calculateIOLength(xsqlda);
+        gds.isc_close_blob(blob1);
 
         if (log!=null) log.info("test- isc_dsql_exec_immed2");
         gds.isc_dsql_exec_immed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
@@ -681,20 +679,16 @@ public class TestGds extends BaseFBTest {
         gds.isc_dsql_execute2(t1, stmt1, 1, null, null);
 
     isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
-//        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
         byte[][] row = null;
-//        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
-        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda);
-		  for (int rowNum=0; rowNum < stmt1.rows.size(); rowNum++){
-           row = (byte[][]) stmt1.rows.get(rowNum);
+        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda, 200);
+        for (int rowNum=0; rowNum < stmt1.size; rowNum++){
+           row = (byte[][]) stmt1.rows[rowNum];
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-//                Object data =  out_xsqlda.sqlvar[i].sqldata;
                 Object data =  row[i];
                 out += "column: " + i + ", value: " + data;
             }
             if (log!=null) log.info(out);
-//            blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
             blob2.blob_id = XSQLVAR.decodeLong(row[1]);
             // blob2.rbl_buffer_length = 10;//1024;
             gds.isc_open_blob2(db1, t1, blob2, bpb);
@@ -748,7 +742,9 @@ public class TestGds extends BaseFBTest {
         xsqlvar.sqllen = 8;
         xsqlvar.sqldata = XSQLVAR.encodeLong(blob1.blob_id);
         xsqlda.sqlvar[1] = xsqlvar;
-    gds.isc_close_blob(blob1);
+        GDS_Impl.calculateBLR(xsqlda);
+        GDS_Impl.calculateIOLength(xsqlda);
+        gds.isc_close_blob(blob1);
 
         if (log!=null) log.info("test- isc_dsql_exec_immed2");
         gds.isc_dsql_exec_immed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
@@ -765,20 +761,16 @@ public class TestGds extends BaseFBTest {
         gds.isc_dsql_execute2(t1, stmt1, 1, null, null);
 
         isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
-//        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
         byte[][] row = null;
-//        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
-        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda);
-		  for (int rowNum=0; rowNum < stmt1.rows.size(); rowNum++){
-           row = (byte[][]) stmt1.rows.get(rowNum);
+        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda, 200);
+        for (int rowNum=0; rowNum < stmt1.size; rowNum++){
+           row = (byte[][]) stmt1.rows[rowNum];
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-//                Object data =  out_xsqlda.sqlvar[i].sqldata;
                 Object data =  row[i];
                 out += "column: " + i + ", value: " + data;
             }
             if (log!=null) log.info(out);
-//            blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
             blob2.blob_id = XSQLVAR.decodeLong(row[1]);
             // blob2.rbl_buffer_length = 10;//1024;
             gds.isc_open_blob2(db1, t1, blob2, bpb);

@@ -32,6 +32,8 @@ import java.util.Set;
 import java.util.Iterator;
 
 import org.firebirdsql.jdbc.FBConnectionHelper;
+import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.XSQLDA;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -43,30 +45,32 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class XdrOutputStream extends DataOutputStream {
+public final class XdrOutputStream {
 
     private static Logger log = LoggerFactory.getLogger(XdrOutputStream.class,false);
-    private static byte[] pad = {0,0,0,0};
     private static byte[] textPad = new byte[32767];
+    private static byte[] zero = XSQLVAR.encodeInt(0);
+    private static byte[] minusOne = XSQLVAR.encodeInt(-1);
+
+    private static byte[] buf = new byte[32767];
+    private int count;
+
+    OutputStream out = null;
 
     public XdrOutputStream(OutputStream out) {
-        super(out);
+        this.out = out;
+        count=0;
         // fill the padding with blanks
         java.util.Arrays.fill(textPad,(byte) 32);
     }
-	 
-    public void writeOpaque(byte[] buffer, int len) throws IOException {
-        if (buffer != null && len > 0) {
-            write(buffer, 0, len);
-            write(pad,0,((4 - len) & 3));
-        }
-    }
 
-    public void writeBuffer(byte[] buffer, int len) throws IOException {
-        writeInt(len);
-        if (buffer != null && len > 0) {
-            write(buffer, 0, len);
-            write(pad,0,((4 - len) & 3));
+    public void writeBuffer(byte[] buffer) throws IOException {
+        if (buffer == null)
+            writeInt(0);
+        else {
+            int len = buffer.length;
+            writeInt(len);
+            write(buffer, len, (4 - len) & 3);
         }
     }
 
@@ -78,23 +82,21 @@ public final class XdrOutputStream extends DataOutputStream {
         }
         writeInt(len + 2);
         writeInt(len + 2); //bizarre but true! three copies of the length
-        write((len >> 0) & 0xff);
-        write((len >> 8) & 0xff);
-        write(buffer, 0, len);
+        buf[count++] = (byte) ((len >> 0) & 0xff);
+        buf[count++] = (byte) ((len >> 8) & 0xff);
+        write(buffer, len, ((4 - len+2)&3));
         if (log != null) log.debug("writeBlobBuffer wrotebuffer bytes: " + len);
-        write(pad,0,((4 - len+2) & 3));
     }
 
     public void writeString(String s) throws IOException {
         byte[] buffer = s.getBytes();
-		  int len = buffer.length;
+        int len = buffer.length;
         writeInt(len);
         if (len > 0) {
-            write(buffer, 0, len);
-            write(pad,0,((4 - len) & 3));
-        }		
+            write(buffer, len, (4 - len) & 3);
+        }
     }
-    
+
     public void writeString(String s, String encoding) throws IOException {
         String javaEncoding = null;
         
@@ -108,26 +110,19 @@ public final class XdrOutputStream extends DataOutputStream {
         else
             buffer = s.getBytes();
             
-        writeBuffer(buffer, buffer.length);
+        writeBuffer(buffer);
     }
-    
-    public void writeSet(int type, Set s) throws IOException {
-//      if (log != null) log.debug("writeSet: type: " + type);
+
+    public void writeSet(int type, byte[] s) throws IOException {
         if (s == null) {
             writeInt(1);
-            write(type); //e.g. gds.isc_tpb_version3
+            buf[count++] = (byte) type; //e.g. gds.isc_tpb_version3
         }
         else {
-            writeInt(s.size() + 1);
-            write(type);
-            Iterator i = s.iterator();
-            while (i.hasNext()) {
-                int n = ((Integer)i.next()).intValue();
-                write(n);
-//              if (log != null) log.debug("writeSet: value: " + n);
-            }
-//          if (log != null) log.debug("writeSet: padding 0 : " + ((4 - (s.size() + 1)) & 3));
-            write(pad,0,((4 - (s.size() + 1)) & 3));
+            int len = s.length;
+            writeInt(len + 1);
+            buf[count++] = (byte) type;
+            write(s, len, (4 - (len+1)) & 3);
         }
     }
 
@@ -135,30 +130,142 @@ public final class XdrOutputStream extends DataOutputStream {
         int size;
         if (item == null) {
             writeInt(1);
-            write(type); //e.g. gds.isc_tpb_version3
+            buf[count++] = (byte) type; //e.g. gds.isc_tpb_version3
             size = 1;
         }
         else {
             size = item.getLength() + 1;
             writeInt(size);
-            write(type);
+            buf[count++] = (byte) type; //e.g. gds.isc_tpb_version3
             item.write(this);
         }
-        write(pad,0,((4 - size) & 3));
+        count += (4 - size) & 3;
     }
+
     // 
-    // This method fill the char up to len with bytes 
+    // WriteSQLData methods
     // 
-    public void writeChar(byte[] buffer, int len) throws IOException {
-        if (buffer != null) {
-            if (buffer.length >=len)
-                write(buffer, 0, len);
-            else{
-                write(buffer, 0, buffer.length);
-                write(textPad, 0, len-buffer.length);
+    public void writeSQLData(XSQLDA xsqlda) throws IOException {
+        for (int i = 0; i < xsqlda.sqld; i++) {
+            XSQLVAR xsqlvar = xsqlda.sqlvar[i];
+            if (log != null) {
+                if (out == null) {
+                    log.debug("db.out null in writeSQLDatum");
+                }
+                if (xsqlvar.sqldata == null) {
+                    log.debug("sqldata null in writeSQLDatum: " + xsqlvar);
+                }
+                if (xsqlvar.sqldata == null) {
+                    log.debug("sqldata still null in writeSQLDatum: " + xsqlvar);
+                }
             }
-            write(pad,0,((4 - len) & 3));
+            int len = xsqlda.ioLength[i];
+            byte[] buffer = xsqlvar.sqldata;
+            if (len==0) {
+                if (buffer != null) {
+                    len = buffer.length;
+                    writeInt(len);
+                    write(buffer, len, (4 - len) & 3);
+                    // sqlind
+                    write(zero, 4, 0);
+                }
+                else{
+                    writeInt(0);
+                    // sqlind
+                    write(minusOne, 4, 0);
+                }
+            }
+            else if (len < 0){
+                if (buffer != null) {
+                    write(buffer, -len, 0);
+                    // sqlind
+                    write(zero,4, 0);
+                }
+                else{
+                    write(textPad, -len, 0);
+                    // sqlind
+                    write(minusOne, 4, 0);
+                }
+            }
+            else {
+                if (buffer != null) {
+                    int buflen = buffer.length;
+                    if (buflen >=len){
+                        write(buffer, len, (4 - len) & 3);
+                    }
+                    else{
+                        write(buffer, buflen, 0);
+                        write(textPad, len- buflen, (4 - len) & 3);
+                    }
+                    // sqlind
+                    write(zero, 4, 0);
+                }
+                else{
+                    write(textPad, len, (4 - len) & 3);
+                    // sqlind
+                    write(minusOne, 4, 0);
+                }
+            }
         }
     }
-	 
+
+    //
+    // DataOutputStream methods
+    // 
+    public final void writeLong(long v) throws IOException {
+        buf[count++] = (byte) (v >>> 56 & 0xFF);
+        buf[count++] = (byte) (v >>> 48 & 0xFF);
+        buf[count++] = (byte) (v >>> 40 & 0xFF);
+        buf[count++] = (byte) (v >>> 32 & 0xFF);
+        buf[count++] = (byte) (v >>> 24 & 0xFF);
+        buf[count++] = (byte) (v >>> 16 & 0xFF);
+        buf[count++] = (byte) (v >>>  8 & 0xFF);
+        buf[count++] = (byte) (v >>>  0 & 0xFF);
+    }
+
+    public final void writeInt(int v) throws IOException {
+        buf[count++] = (byte) (v >>> 24);
+        buf[count++] = (byte) (v >>> 16);
+        buf[count++] = (byte) (v >>>  8);
+        buf[count++] = (byte) (v >>>  0);
+    }
+
+    //
+    // Buffering 
+    // If the piece to write is greater than 128 bytes, write it directly
+    //
+
+    public void write(byte[] b, int len, int pad) throws java.io.IOException {
+        if (len > 256){
+            if (count > 0)
+                out.write(buf, 0, count);
+            out.write(b, 0, len);
+            out.write(textPad, 0, pad);
+            count = 0;
+        }
+        else {
+            System.arraycopy(b, 0, buf, count, len);
+            count += len + pad;
+        }
+    }
+
+    public void write(int b) throws java.io.IOException {
+        buf[count++] = (byte)b;
+    }
+
+    public void write(byte b[]) throws java.io.IOException{
+        write(b,b.length, 0);
+    }
+
+    public void flush() throws IOException {
+        if (count > 0){
+            out.write(buf,0,count);
+        }
+        count=0;
+        out.flush();
+    }
+
+    public void close() throws IOException {
+        out.close();
+    }
 }

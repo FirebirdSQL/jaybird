@@ -76,7 +76,7 @@ public class FBStatement implements Statement {
     private ResultSet currentCachedResultSet;
 
     protected int maxRows = 0;	 
-    private int fetchSize = 0;
+    protected int fetchSize = 0;
     private int maxFieldSize = 0;
     private int queryTimeout = 0;
 

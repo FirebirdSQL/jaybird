@@ -595,8 +595,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
-    public void fetch(isc_stmt_handle stmt) throws GDSException {
-        mcf.gds.isc_dsql_fetch(stmt, GDS.SQLDA_VERSION1, stmt.getOutSqlda());
+    public void fetch(isc_stmt_handle stmt, int fetchSize) throws GDSException {
+        mcf.gds.isc_dsql_fetch(stmt, GDS.SQLDA_VERSION1, stmt.getOutSqlda(), fetchSize);
     }
 
     public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
@@ -833,8 +833,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } // end of try-catch
     }
 
-    Set getTpb() {
-        return tpb.getInternalTpb();
+    FBTpb getTpb(){
+        return tpb;
     }
 
 

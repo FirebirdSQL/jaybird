@@ -9,9 +9,10 @@ import java.util.ArrayList;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-class FBCachedFetcher  implements FBFetcher {
+class FBCachedFetcher implements FBFetcher {
 
-    java.util.ArrayList rows;
+    Object[] rowsArray;
+    byte[][] row;
     private FBStatement fbStatement;
     private FBResultSet rs;
     private int rowNum = 0;
@@ -26,6 +27,9 @@ class FBCachedFetcher  implements FBFetcher {
           
     FBCachedFetcher(FBConnection c, FBStatement fbStatement
     , isc_stmt_handle stmt_handle, FBResultSet rs) throws SQLException {
+        java.util.ArrayList rowsSets = new ArrayList(100);
+        java.util.ArrayList rows = new ArrayList(100);
+
         isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
         byte[][] localRow = null;
             
@@ -37,7 +41,6 @@ class FBCachedFetcher  implements FBFetcher {
         isFirst = false;
         isLast = false;
         isAfterLast = false;
-        rows = new ArrayList();
         //
         // Check if there is blobs to catch
         //
@@ -52,19 +55,48 @@ class FBCachedFetcher  implements FBFetcher {
         }
         //
         // load all rows from statement
-        //		  
+        //
+        int rowsCount = 0;
         try {
-            do {
-                c.fetch(stmt);
-                if (stmt.rows.size() > 0){
-                    rows.addAll(stmt.rows);
-                    stmt.rows.clear();
-					 }
-            } while (!stmt.allRowsFetched && (fbStatement.maxRows==0 || rows.size()<fbStatement.maxRows));
+            int fetchSize = fbStatement.fetchSize;
+            if (fetchSize == 0)
+                fetchSize = MAX_FETCH_ROWS;
+				// the following if, is only for callable statement				
+				if (!stmt.allRowsFetched && stmt.size == 0) {
+                do {
+                    if (fbStatement.maxRows != 0 && fetchSize > fbStatement.maxRows - stmt.size)
+                        fetchSize = fbStatement.maxRows - stmt.size;
+                    c.fetch(stmt, fetchSize);
+                    if (stmt.size > 0){
+                        rowsSets.add(stmt.rows);
+                        rowsCount += stmt.size;
+                        stmt.rows = null;
+                    }
+                } while (!stmt.allRowsFetched && (fbStatement.maxRows==0 || rowsCount <fbStatement.maxRows));
+                // now create one list with known capacity					 
+                int rowCount = 0;
+                rowsArray  = new Object[rowsCount];
+                for (int i=0; i<rowsSets.size(); i++){
+                    Object[] oneSet = (Object[]) rowsSets.get(i);
+                    if (oneSet.length > rowsCount-rowCount){
+                        System.arraycopy(oneSet, 0, rowsArray, rowCount, rowsCount-rowCount);
+                        rowCount = rowsCount;
+                    }
+						  else{
+                        System.arraycopy(oneSet, 0, rowsArray, rowCount, oneSet.length);
+                        rowCount += oneSet.length;
+                    }
+                }
+                rowsSets.clear();
+            }
+            else {
+                rowsArray = stmt.rows;
+                stmt.rows = null;
+            }
             //
             if (hasBlobs){
-                for (int i=0;i< rows.size(); i++){
-                    localRow = (byte[][]) rows.get(i);
+                for (int i=0;i< rowsArray.length; i++){
+                    localRow = (byte[][])rowsArray[i];
                     //ugly blob caching workaround.
                     for (int j = 0; i < localRow.length; i++){                   
                         if (isBlob[i] && localRow[i] != null ) {
@@ -77,7 +109,7 @@ class FBCachedFetcher  implements FBFetcher {
                     }
                 }
             }
-            if (rows.size()==0)
+            if (rowsArray.length==0)
                  isEmpty = true;
             else
                  isBeforeFirst = true;
@@ -89,7 +121,7 @@ class FBCachedFetcher  implements FBFetcher {
     }
 
     FBCachedFetcher(ArrayList rows, FBResultSet rs) throws SQLException {
-        this.rows = rows;
+        rowsArray = rows.toArray();
         this.rs = rs;
             
         isEmpty = false;
@@ -98,7 +130,7 @@ class FBCachedFetcher  implements FBFetcher {
         isLast = false;
         isAfterLast = false;
             
-        if (rows.size()==0)
+        if (rowsArray.length==0)
             isEmpty = true;
         else
             isBeforeFirst = true;
@@ -114,7 +146,7 @@ class FBCachedFetcher  implements FBFetcher {
         if (isEmpty)
             return false;
         else 
-        if(rowNum == rows.size()) {
+        if(rowNum == rowsArray.length) {
             rs.row = null;
             rowNum = 0;
             isAfterLast = true;
@@ -125,12 +157,12 @@ class FBCachedFetcher  implements FBFetcher {
                 
             if (rowNum == 1)
                 isFirst = true;
-            if (rowNum == rows.size())
+            if (rowNum == rowsArray.length)
                 isLast = true;
-            rs.row = (byte[][])rows.get(rowNum-1);
-            // clean the rows element as it is used					 
-            rows.set(rowNum-1,null);
-                
+            rs.row = (byte[][])rowsArray[rowNum-1];		  
+            // help the garbage collector
+            rowsArray[rowNum-1] = null;
+               
             return true;
         }
     }
