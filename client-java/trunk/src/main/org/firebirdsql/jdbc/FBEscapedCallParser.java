@@ -49,7 +49,11 @@ public class FBEscapedCallParser {
     private int openBraceCount;
 
     private FBProcedureCall procedureCall;
-    private FBEscapedParser escapedParser = new FBEscapedParser();
+    private FBEscapedParser escapedParser;
+    
+    public FBEscapedCallParser(int mode) {
+        this.escapedParser = new FBEscapedParser(mode);
+    }
     
     /**
      * Returns the current state.

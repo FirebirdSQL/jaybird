@@ -18,10 +18,10 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Helper class for escaped functions.
@@ -68,8 +68,8 @@ public class FBEscapedFunctionHelper {
         FUNCTION_MAP.put("CONCAT", "{0}||{1}");
         FUNCTION_MAP.put("DIFFERENCE", null);
         FUNCTION_MAP.put("INSERT", null);
-        FUNCTION_MAP.put("LCASE", "LOWER({0})");
-        FUNCTION_MAP.put("LEFT", null);
+        FUNCTION_MAP.put("LCASE", null);
+        FUNCTION_MAP.put("LEFT", "SUBSTRING({0} FROM 1 FOR {1}");
         FUNCTION_MAP.put("LENGTH", null);
         FUNCTION_MAP.put("LOCATE", null);
         FUNCTION_MAP.put("LTRIM", null);
@@ -86,9 +86,9 @@ public class FBEscapedFunctionHelper {
         FUNCTION_MAP.put("CURDATE", "CURRENT_DATE");
         FUNCTION_MAP.put("CURTIME", "CURRENT_TIME");
         FUNCTION_MAP.put("DAYNAME", null);
-        FUNCTION_MAP.put("DAYOFMONTH", null);
+        FUNCTION_MAP.put("DAYOFMONTH", "EXTRACT(DAY FROM {0})");
         FUNCTION_MAP.put("DAYOFWEEK", null);
-        FUNCTION_MAP.put("DAYOFYEAR", "EXTRACT(DAY FROM {0})");
+        FUNCTION_MAP.put("DAYOFYEAR", null );
         FUNCTION_MAP.put("HOUR", "EXTRACT(HOUR FROM {0})");
         FUNCTION_MAP.put("MINUTE", "EXTRACT(MINUTE FROM {0})");
         FUNCTION_MAP.put("MONTH", "EXTRACT(MONTH FROM {0})");
@@ -106,7 +106,7 @@ public class FBEscapedFunctionHelper {
         FUNCTION_MAP.put("IFNULL", "COALESCE({0}, {1})");
         
         /* Conversion Functions */
-        FUNCTION_MAP.put("CONVERT", null);
+        FUNCTION_MAP.put("CONVERT", "CAST({0} AS {1})");
     }
     
     
@@ -241,15 +241,341 @@ public class FBEscapedFunctionHelper {
      *  
      * @throws FBSQLParseException if escaped function call has incorrect syntax.
      */
-    public static String convertTemplate(String functionCall) throws FBSQLParseException {
+    public static String convertTemplate(String functionCall, int mode) throws FBSQLParseException {
         String name = parseFunction(functionCall);
-        List params = parseArguments(functionCall);
+        String[] params = (String[])parseArguments(functionCall).toArray(new String[0]);
         
         String firebirdTemplate = (String)FUNCTION_MAP.get(name.toUpperCase());
 
-        if (firebirdTemplate == null) 
-            return null;
+        if (firebirdTemplate != null) 
+            return MessageFormat.format(firebirdTemplate, params);
         
-        return MessageFormat.format(firebirdTemplate, params.toArray());
+        if (mode == FBEscapedParser.USE_STANDARD_UDF)
+            return convertUsingStandardUDF(name, params);
+            
+        return null;
     }
+    
+    /*
+     * Functions below are conversion routines of the escaped function calls
+     * into the standard UDF library functions. The conversion function must
+     * have the name equal to the function name in the escaped syntax in the
+     * lower case and should take array of strings as parameter and it may throw
+     * the FBSQLParseException and must be declared as static and have public
+     * visibility. It should return a string of the converted function call.
+     */
+    
+    private static String convertUsingStandardUDF(String name, String[] params) throws FBSQLParseException {
+        
+        try {
+            
+            name = name.toLowerCase();
+            
+            // workaround for the {fn char()} function, since we cannot use
+            // "char" as name of the function - it is reserved word. 
+            if ("char".equals(name))
+                name = "_char";
+            
+            Method method = FBEscapedFunctionHelper.class.getMethod(
+                name.toLowerCase(), new Class[] { String[].class});
+            
+            return (String)method.invoke(null, new Object[]{params});
+            
+        } catch(NoSuchMethodException ex) {
+            return null;
+        } catch (IllegalArgumentException ex) {
+            throw new FBSQLParseException("Error when converting function " 
+                + name + ". Error " + ex.getClass().getName() + 
+                " : " + ex.getMessage());
+        } catch (IllegalAccessException ex) {
+            throw new FBSQLParseException("Error when converting function " 
+                + name + ". Error " + ex.getClass().getName() + 
+                " : " + ex.getMessage());
+        } catch (InvocationTargetException ex) {
+            throw new FBSQLParseException("Error when converting function " 
+                + name + ". Error " + ex.getClass().getName() + 
+                " : " + ex.getMessage());
+        }
+        
+    }
+    
+    
+    /*
+     * Mathematical functions
+     */
+    
+    /*
+     * {fn abs(number)}
+     */
+    public static String abs(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function abs : " + params.length);
+        
+        return "abs(" + params[0] + ")";
+    }
+    
+    /*
+     * {fn acos(float)}
+     */
+    public static String acos(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function acos : " + params.length);
+        
+        return "acos(" + params[0] + ")";
+    }
+    
+    /*
+     * {fn asin(float)}
+     */
+    public static String asin(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function asin : " + params.length);
+        
+        return "asin(" + params[0] + ")";
+    }
+    
+    /*
+     * {fn atan(float)}
+     */
+    public static String atan(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function atan : " + params.length);
+        
+        return "atan(" + params[0] + ")";
+    }
+    
+    /*
+     * {fn atan2(float1, float2)}
+     */
+    public static String atan2(String[] params) throws FBSQLParseException {
+        if (params.length != 2)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function atan2 : " + params.length);
+        
+        return "atan2(" + params[0] + ", " + params[1] + ")";
+    }
+    
+    /*
+     * {fn ceiling(number)}
+     */
+    public static String ceiling(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function ceiling : " + params.length);
+        
+        return "ceiling(" + params[0] + ")";
+    }
+
+    /*
+     * {fn cos(float)}
+     */
+    public static String cos(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function cos : " + params.length);
+        
+        return "cos(" + params[0] + ")";
+    }
+
+    /*
+     * {fn cot(float)}
+     */
+    public static String cot(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function cot : " + params.length);
+        
+        return "cot(" + params[0] + ")";
+    }
+    
+    /*
+     * {fn floor(number)}
+     */
+    public static String floor(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function floor : " + params.length);
+        
+        return "floor(" + params[0] + ")";
+    }
+
+    /*
+     * {fn log(number)}
+     */
+    public static String log(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function log : " + params.length);
+        
+        return "ln(" + params[0] + ")";
+    }
+    
+    /*
+     * {fn log10(number)}
+     */
+    public static String log10(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function log10 : " + params.length);
+        
+        return "log10(" + params[0] + ")";
+    }
+    
+    /*
+     * {fn mod(integer1, integer2)}
+     */
+    public static String mod(String[] params) throws FBSQLParseException {
+        if (params.length != 2)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function mod : " + params.length);
+        
+        return "mod(" + params[0] + ", " + params[1] + ")";
+    }
+    
+    /*
+     * {fn pi()}
+     */
+    public static String pi(String[] params) throws FBSQLParseException {
+        if (params.length != 0)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function pi : " + params.length);
+        
+        return "pi()";
+    }
+    
+    /*
+     * {fn rand()}
+     */
+    public static String rand(String[] params) throws FBSQLParseException {
+        if (params.length != 0)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function rand : " + params.length);
+        
+        return "rand()";
+    }
+    
+    /*
+     * {fn sign(number)}
+     */
+    public static String sign(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function sign : " + params.length);
+        
+        return "sign(" + params[0] + ")";
+    }
+    
+    /*
+     * {fn sin(float)}
+     */
+    public static String sin(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function sin : " + params.length);
+        
+        return "sin(" + params[0] + ")";
+    }
+    
+    /*
+     * {fn sqrt(number)}
+     */
+    public static String sqrt(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function sqrt : " + params.length);
+        
+        return "sqrt(" + params[0] + ")";
+    }
+    
+    /*
+     * {fn tan(float)}
+     */
+    public static String tan(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function tan : " + params.length);
+        
+        return "tan(" + params[0] + ")";
+    }
+    
+    
+    /*
+     * String functions.
+     */
+    
+    
+    /*
+     * {fn ascii(string)}
+     */
+    public static String ascii(String[] params) throws FBSQLParseException {
+        if (params.length != 1 )
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function ascii : " + params.length);
+        
+        if (params[0] == null || params[0].length() < 1)
+            throw new FBSQLParseException("Parameter must not be " +
+                    "empty or null");
+        
+        return "ascii_val(" + params[0].charAt(0) + ")";
+    }
+    
+    /*
+     * {fn char(integer)}
+     */
+    public static String _char(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function char : " + params.length);
+        
+        return "char(" + params[0] + ")";
+    }
+
+    /*
+     * {fn lcase(string)}
+     */
+    public static String lcase(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function lcase : " + params.length);
+        
+        return "lower(" + params[0] + ")";
+    }
+
+    /*
+     * {fn length(string)}
+     */
+    public static String length(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function length : " + params.length);
+        
+        return "strlen(" + params[0] + ")";
+    }
+    
+    /*
+     * {fn ltrim(string)}
+     */
+    public static String ltrim(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function ltrim : " + params.length);
+        
+        return "ltrim(" + params[0] + ")";
+    }
+    
+    /*
+     * {fn rtrim(string)}
+     */
+    public static String rtrim(String[] params) throws FBSQLParseException {
+        if (params.length != 1)
+            throw new FBSQLParseException("Incorrect number of " +
+                    "parameters of function rtrim : " + params.length);
+        
+        return "rtrim(" + params[0] + ")";
+    }
+    
 }
