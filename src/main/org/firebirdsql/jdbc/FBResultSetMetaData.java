@@ -20,6 +20,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.11  2003/06/05 23:22:31  brodsom
+ * Substitute package and inline imports
+ *
  * Revision 1.10  2003/06/04 13:04:34  brodsom
  * Remove unused vars and imports
  * Comment unused private method
@@ -64,12 +67,6 @@ public class FBResultSetMetaData implements ResultSetMetaData {
     private final XSQLVAR[] xsqlvars;
     private Map extendedInfo;
     private final FBConnection connection;
-    //private FBResultSet rs;
-    //private FBPreparedStatement ps;
-
-    /*    FBResultSetMetaData(isc_stmt_handle stmt) {
-        this.stmt = stmt;
-        }*/
 
     /**
      * Creates a new <code>FBResultSetMetaData</code> instance.
@@ -85,13 +82,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
     }
-    /*
-    FBResultSetMetaData(XSQLVAR[] xsqlvars, FBPreparedStatement ps) throws SQLException {
-        this.xsqlvars = xsqlvars;
-        this.ps = ps;
-        this.extendedInfo = getExtendedFieldInfo(ps.c);
-    }
-    */
+
     private String getIscEncoding() {
         if (connection != null)
             return connection.getIscEncoding();
@@ -106,7 +97,6 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getColumnCount() {
-        //return stmt.getOutSqlda().sqln;;
         return xsqlvars.length;
     }
 

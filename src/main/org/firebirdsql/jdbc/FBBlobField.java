@@ -67,26 +67,10 @@ public class FBBlobField extends FBField implements FBFlushableField {
         if (blob != null)
             return blob;
     
-    /*
-    // This code was commented by R.Rokytskyy
-    // since getBlob(boolean) was used only in getBlob() method.
-    // and it makes a little sense to keep two methods.
-    
-        return getBlob(false);
-    }
-
-    Blob getBlob(boolean create) throws SQLException {
-    */
         if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 
         Long blobId = new Long(XSQLVAR.decodeLong(rs.row[numCol]));
-
-        
-        // Commented by R.Rokytskyy, this is dead code, remove before release
-        if (blobId == null)
-            blobId = new Long(0);
-        
 
         blob = new FBBlob(c, blobId.longValue());
         
@@ -280,7 +264,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         if (!c.getAutoCommit())
             c.ensureInTransaction();
         
-        FBBlob blob =  new FBBlob(c, 0);
+        FBBlob blob =  new FBBlob(c);
         blob.copyStream(in, length);
         field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
     }
@@ -291,7 +275,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         if (!c.getAutoCommit())
             c.ensureInTransaction();
         
-        FBBlob blob =  new FBBlob(c, 0);
+        FBBlob blob =  new FBBlob(c);
         blob.copyCharacterStream(in, length);
         field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
     }
