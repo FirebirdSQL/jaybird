@@ -24,6 +24,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.3  2002/10/18 14:22:26  rrokytskyy
+ * fixed warnings handling
+ *
  * Revision 1.2  2002/08/29 13:41:16  d_jencks
  * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
  *
@@ -162,6 +165,44 @@ public class TestFBDriver extends BaseFBTest {
             DriverManager.getConnection(DB_DRIVER_URL, info);
             
         dialect3Connection.close();
+    }
+    
+    /**
+     * This test checks if transaction is rolled back when connection is closed, 
+     * but still has an active transaction associated with it.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testClose() throws Exception {
+        connection = driver.connect(DB_DRIVER_URL, DB_INFO);
+        
+        Statement stmt = connection.createStatement();
+        
+        stmt.executeUpdate("CREATE TABLE test(id INTEGER, test_value INTEGER)");
+        stmt.executeUpdate("INSERT INTO test VALUES (1, 1)");
+        
+        connection.setAutoCommit(false);
+        
+        stmt.executeUpdate("UPDATE test SET test_value = 2 WHERE id = 1");
+        
+        stmt.close();
+        
+        connection.close();
+        
+        connection = driver.connect(DB_DRIVER_URL, DB_INFO);
+        
+        stmt = connection.createStatement();
+        
+        ResultSet rs = stmt.executeQuery("SELECT test_value FROM test WHERE id = 1");
+        
+        assertTrue("Should have at least one row", rs.next());
+        assertTrue("Value should be 1.", rs.getInt(1) == 1);
+        assertTrue("Should have only one row.", !rs.next());
+        
+        rs.close();
+        stmt.executeUpdate("DROP TABLE test");
+        stmt.close();
+        connection.close();
     }
 }
 
