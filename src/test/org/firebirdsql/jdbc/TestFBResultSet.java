@@ -474,7 +474,7 @@ public class TestFBResultSet extends FBTestBase {
         
         Statement stmt = connection.createStatement();
         try {
-            String query = "SELECT id, long_str FROM test_table";
+            String query = "SELECT id, substr(long_str,1,2) FROM test_table ORDER BY id DESC";
             ResultSet rs;
             
             try {
