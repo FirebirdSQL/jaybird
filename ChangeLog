@@ -1,3 +1,25 @@
+2003-10-14 16:40  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/jdbc/FBConnection.java,
+	test/org/firebirdsql/jdbc/TestFBSavepoint.java:
+	
+	fixed issue with releasing savepoints and changed savepoint
+	invalidation
+
+2003-10-14 14:05  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBSavepoint.java:
+	
+	added savepoint support
+
+2003-10-14 13:55  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jca/FBManagedConnection.java, jdbc/FBConnection.java,
+	jdbc/FBDatabaseMetaData.java, jdbc/FBSavepoint.java:
+	
+	added savepoint support
+
 2003-10-09 15:20  rrokytskyy
 
 	*
