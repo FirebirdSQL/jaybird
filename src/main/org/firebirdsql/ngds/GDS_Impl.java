@@ -1162,49 +1162,45 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
    public void isc_service_attach(String service, isc_svc_handle serviceHandle, ServiceParameterBuffer serviceParameterBuffer) throws GDSException
         {
-        if(serviceHandle.isValid())
-            throw new GDSException("serviceHandle is already attached.");
-
         final ServiceParameterBufferImp serviceParameterBufferImp = (ServiceParameterBufferImp)serviceParameterBuffer;
         final byte[] serviceParameterBufferBytes = serviceParameterBufferImp == null ? null : serviceParameterBufferImp.toByteArray();
 
-
         synchronized(serviceHandle)
             {
+            if(serviceHandle.isValid())
+                throw new GDSException("serviceHandle is already attached.");
+
             native_isc_service_attach(service, serviceHandle, serviceParameterBufferBytes);
             }
         }
 
     public void isc_service_detach(isc_svc_handle serviceHandle) throws GDSException
         {
-        if(serviceHandle.isNotValid())
-            throw new GDSException("serviceHandle is not attached.");
-
-        synchronized(serviceHandle)
+       synchronized(serviceHandle)
             {
+            if(serviceHandle.isNotValid())
+                throw new GDSException("serviceHandle is not attached.");
+
             native_isc_service_detach(serviceHandle);
             }
         }
 
     public void isc_service_start(isc_svc_handle serviceHandle, ServiceRequestBuffer serviceRequestBuffer) throws GDSException
         {
-        if(serviceHandle.isNotValid())
-            throw new GDSException("serviceHandle is not attached.");
-
         final ServiceRequestBufferImp serviceRequestBufferImp = (ServiceRequestBufferImp)serviceRequestBuffer;
         final byte[] serviceRequestBufferBytes = serviceRequestBufferImp == null ? null : serviceRequestBufferImp.toByteArray();
 
         synchronized(serviceHandle)
             {
+            if(serviceHandle.isNotValid())
+                throw new GDSException("serviceHandle is not attached.");
+
             native_isc_service_start(serviceHandle, serviceRequestBufferBytes);
             }
         }
 
     public void isc_service_query(isc_svc_handle serviceHandle, ServiceParameterBuffer serviceParameterBuffer, ServiceRequestBuffer serviceRequestBuffer, byte[] resultBuffer) throws GDSException
         {
-        if(serviceHandle.isNotValid())
-            throw new GDSException("serviceHandle is not attached.");
-
         final ServiceParameterBufferImp serviceParameterBufferImp = (ServiceParameterBufferImp)serviceParameterBuffer;
         final byte[] serviceParameterBufferBytes = serviceParameterBufferImp == null ? null : serviceParameterBufferImp.toByteArray();
 
@@ -1213,6 +1209,9 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
         synchronized(serviceHandle)
             {
+            if(serviceHandle.isNotValid())
+                throw new GDSException("serviceHandle is not attached.");
+
             native_isc_service_query(serviceHandle, serviceParameterBufferBytes, serviceRequestBufferBytes, resultBuffer);
             }
         }
