@@ -26,52 +26,34 @@
  * LGPL.
  */
 
+/*
+ * CVS modification log:
+ * $Log$
+ */
 package org.firebirdsql.gds;
 
-public class GDSException extends Exception {
+/**
+ * This class is supposed to return messages for the specified error code.
+ * It loads all messages during the class initialization and keeps messages
+ * in the static <code>java.util.Properties</code> variable.
+ */
+public class GDSExceptionHelper {
+    private static final String MESSAGES = "org.firebirdsql.gds.isc_error_msg";
+    private static java.util.Properties messages = new java.util.Properties();
 
-    protected int fbErrorCode = 0;
-
-    protected GDSException next;
-
-    public GDSException(int fbErrorCode) {
-        this.fbErrorCode = fbErrorCode;
-        //super(getErrorString(fbErrorCode));
-    }
-
-    public GDSException(int fbErrorCode, String message) {
-        super(message);
-        this.fbErrorCode = fbErrorCode;
-    }
-
-    public GDSException(String message) {
-        super(message);
-    }
-
-    public int getFbErrorCode() {
-        return fbErrorCode;
-    }
-
-    public void setNext(GDSException e) {
-        next = e;
-    }
-
-    public GDSException getNext() {
-        return next;
-    }
-
-    public String toString() {
-        //this should really include the message, too
-        String s = "GDSException: " + fbErrorCode + ": ";
-        s += GDSExceptionHelper.getMessage(fbErrorCode);
-        s += "\n";
-        if (next != null) {
-            s += next.toString();
+    static {
+        try {
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            String res = MESSAGES.replace('.','/') + ".properties";
+            java.io.InputStream in = cl.getResourceAsStream(res);
+            messages.load(in);
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        return s;
     }
 
-
-
+    public static String getMessage(int code) {
+        return messages.getProperty(
+            "" + code, "No message for code " + code + "found.");
+    }
 }
-
