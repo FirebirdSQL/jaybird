@@ -160,7 +160,7 @@ public class FBTestBase extends SimpleFBTestBase
 
     protected GDSType getGdsType()
         {
-        final GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type"));
+        final GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type", "PURE_JAVA"));
         if( gdsType == null )
             throw new RuntimeException("Unrecoginzed value for 'test.gds_type' property.");
 
@@ -178,6 +178,7 @@ public class FBTestBase extends SimpleFBTestBase
 
             fbManager.setServer(DB_SERVER_URL);
             fbManager.setPort(DB_SERVER_PORT);
+            fbManager.setType(getGdsType().toString());
             fbManager.start();
             fbManager.createDatabase(DB_PATH + "/" + DB_NAME, DB_USER, DB_PASSWORD);
             }
