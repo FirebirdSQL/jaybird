@@ -1,3 +1,108 @@
+2004-07-18 15:12  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
+	
+	fixed bug when incorrect type could be set if concurrency was
+	updatable
+
+2004-07-18 14:36  rrokytskyy
+
+	* client-java/src/etc/: JDBC20_conformance.html,
+	connection_pool.html, release_notes.html, connection_pool.html:
+	
+	docs update
+
+2004-07-18 12:43  rrokytskyy
+
+	* client-java/src/native/jaygds/source/generic_unix/platform.h:
+	
+	fixed compilation problem with gcc >= 3.3.x (it was warning in
+	3.2.x)
+
+2004-07-18 11:30  rrokytskyy
+
+	* client-java/examples/DataSourceExample.java:
+	
+	commented some properties out because they do not work in all
+	setups
+
+2004-07-18 11:26  rrokytskyy
+
+	*
+	
+	applied fixes re. data type handling
+	client-java/src/jdbc_30/org/firebirdsql/jdbc/FBParameterMetaData.ja
+	va:
+
+2004-07-18 11:26  rrokytskyy
+
+	*
+	
+	fixed NPE
+	client-java/src/jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.ja
+	va:
+
+2004-07-18 11:24  rrokytskyy
+
+	* client-java/src/native/jaygds/source/xsqlda_wrapper.cpp:
+	
+	added correct handling of big endian platforms
+
+2004-07-18 11:19  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/ngds/XSQLVARBigEndianImpl.java,
+	main/org/firebirdsql/ngds/XSQLVARImpl.java,
+	main/org/firebirdsql/ngds/XSQLVARLittleEndianImpl.java,
+	test/org/firebirdsql/jdbc/field/BaseTestFBField.java,
+	test/org/firebirdsql/ngds/TestNgds.java:
+	
+	added correct handling of big endian platforms
+
+2004-07-18 10:52  rrokytskyy
+
+	*
+	
+	added debug method to print row (in release version not used)
+	client-java/src/main/org/firebirdsql/jgds/isc_stmt_handle_impl.java
+	:
+
+2004-07-18 10:50  rrokytskyy
+
+	*
+	
+	added catalogs and schema test
+	client-java/src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.jav
+	a:
+
+2004-07-18 10:47  rrokytskyy
+
+	*
+	
+	initial revision
+	client-java/src/test/org/firebirdsql/jdbc/TestMultithreadedAccess.j
+	ava:
+
+2004-07-18 10:44  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBBlobAccess.java:
+	
+	added test for blob access via views
+
+2004-07-18 10:41  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestDDL.java:
+	
+	reformatting: fixed new line issues
+
+2004-07-18 10:29  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractPreparedStatement.java, AbstractStatement.java:
+	
+	fixed the bug that batches were not cleared after execution
+
 2004-07-15 10:35  rrokytskyy
 
 	*
