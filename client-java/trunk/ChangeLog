@@ -1,3 +1,16 @@
+2003-12-03 23:51  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	added test for TYPE_SCROLL_INSENSITIVE
+
+2003-12-03 23:49  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FBCachedFetcher.java,
+	FBFetcher.java, FBResultSet.java, FBStatementFetcher.java:
+	
+	added beforeFirst() and afterLast() methods
+
 2003-12-02 15:24  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
