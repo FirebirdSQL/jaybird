@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.common;
 
+import org.firebirdsql.gds.GDSType;
+
 import junit.framework.TestCase;
 
 /**
@@ -63,7 +65,10 @@ public class SimpleFBTestBase extends TestCase
      */
     protected String getdbpath(String name)
        {
-       return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + DB_PATH + "/" + name;
+       if (GDSType.EMBEDDED_STR.equals(System.getProperty("test.gds_type")))
+           return DB_PATH + "/" + name;
+       else
+           return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + DB_PATH + "/" + name;
        }
 
     /**
