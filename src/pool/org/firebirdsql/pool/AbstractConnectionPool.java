@@ -167,7 +167,9 @@ public abstract class AbstractConnectionPool implements PooledObjectListener {
                 long lastPingTime = pingableConnection.getLastPingTime();
                 long pingInterval = System.currentTimeMillis() - lastPingTime;
                 
-                isValid = pingInterval < getConfiguration().getPingInterval();
+                isValid = true;
+                if (getConfiguration().getPingInterval() > 0)
+                    isValid &= pingInterval < getConfiguration().getPingInterval();
                 
                 if (!isValid && !pingableConnection.ping()) {
                     if (getLogger() != null)
