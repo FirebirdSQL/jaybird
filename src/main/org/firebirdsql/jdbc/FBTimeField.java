@@ -33,51 +33,53 @@ import java.sql.Time;
  * @version 1.0
  */
 class FBTimeField extends FBField {
-    FBTimeField(XSQLVAR field) throws SQLException {
-        super(field);
+    FBTimeField(XSQLVAR field, Object[] row, int numCol) throws SQLException {
+        super(field, row, numCol);
     }
 
     Object getObject() throws java.sql.SQLException {
-        if (isNull()) return OBJECT_NULL_VALUE;
+        if (row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return field.sqldata;
+        return row[numCol];
     }
     String getString() throws java.sql.SQLException {
-        if (isNull()) return STRING_NULL_VALUE;
+        if (row[numCol]==null) return STRING_NULL_VALUE;
 
-        return field.sqldata.toString();
+        return row[numCol].toString();
     }
     Time getTime() throws java.sql.SQLException {
-        if (isNull()) return TIME_NULL_VALUE;
+        if (row[numCol]==null) return TIME_NULL_VALUE;
 
-        return (Time)field.sqldata;
+        return (Time)row[numCol];
     }
     Timestamp getTimestamp() throws java.sql.SQLException {
-        if (isNull()) return TIMESTAMP_NULL_VALUE;
+        if (row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
         return new Timestamp(getTime().getTime());
     }
+
+    //--- setXXX methods
+
     void setString(String value) throws java.sql.SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
         setTime(Time.valueOf(value));
     }
     void setTimestamp(Timestamp value) throws java.sql.SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
         setTime(new Time(value.getTime()));
     }
     void setTime(Time value) throws java.sql.SQLException {
         if (value == null) {
-            setNull(true);
+            field.sqldata = null;
             return;
         }
 
         field.sqldata = value;
-        setNull(false);
     }
 }

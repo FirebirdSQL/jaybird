@@ -63,31 +63,37 @@ public abstract class BaseTestFBField extends TestCase {
 
     public void testByte() throws SQLException {
         field.setByte(TEST_BYTE);
+        field.copyOI();		  
         assertTrue("Byte values test failure", field.getByte() == TEST_BYTE);
     }
 
     public void testShort() throws SQLException {
         field.setShort(TEST_SHORT);
+        field.copyOI();		  
         assertTrue("Short values test failure", field.getShort() == TEST_SHORT);
     }
 
     public void testInteger() throws SQLException {
         field.setInteger(TEST_INT);
+        field.copyOI();		  
         assertTrue("Integer values test failure", field.getInt() == TEST_INT);
     }
 
     public void testLong() throws SQLException {
         field.setLong(TEST_LONG);
+        field.copyOI();		  
         assertTrue("Long values test failure", field.getLong() == TEST_LONG);
     }
 
     public void testFloat() throws SQLException {
         field.setFloat(TEST_FLOAT);
+        field.copyOI();		  
         assertTrue("Float values test failure", field.getFloat() == TEST_FLOAT);
     }
 
     public void testDouble() throws SQLException {
         field.setDouble(TEST_DOUBLE);
+        field.copyOI();		  
         assertTrue("Double values test failure", field.getDouble() == TEST_DOUBLE);
     }
 
@@ -95,6 +101,7 @@ public abstract class BaseTestFBField extends TestCase {
 
     public void testBoolean() throws SQLException {
         field.setBoolean(true);
+        field.copyOI();		  
         assertTrue("Boolean values test failure", field.getBoolean());
     }
 
@@ -104,30 +111,37 @@ public abstract class BaseTestFBField extends TestCase {
 
     public void testAsciiStream() throws SQLException {
         field.setAsciiStream(new ByteArrayInputStream(TEST_BYTES), TEST_BYTES.length);
+        field.copyOI();		  
         assertTrue("ASCII stream values test failure", Arrays.equals(TEST_BYTES, readInputStream(field.getAsciiStream())));
     }
     public void testUnicodeStream() throws SQLException {
         field.setUnicodeStream(new ByteArrayInputStream(TEST_BYTES), TEST_BYTES.length);
+        field.copyOI();		  
         assertTrue("Unicode stream values test failure", Arrays.equals(TEST_BYTES, readInputStream(field.getUnicodeStream())));
     }
     public void testBinaryStream() throws SQLException {
         field.setBinaryStream(new ByteArrayInputStream(TEST_BYTES), TEST_BYTES.length);
+        field.copyOI();		  
         assertTrue("Binary stream values test failure", Arrays.equals(TEST_BYTES, readInputStream(field.getBinaryStream())));
     }
     public void testBytes() throws SQLException {
         field.setBytes(TEST_BYTES);
+        field.copyOI();		  
         assertTrue("Byte array values test failure", Arrays.equals(TEST_BYTES, field.getBytes()));
     }
     public void testDate() throws SQLException {
         field.setDate(TEST_DATE);
+        field.copyOI();		  
         assertTrue("Date values test failure", field.getDate().toString().equals(TEST_DATE.toString()));
     }
     public void testTime() throws SQLException {
         field.setTime(TEST_TIME);
+        field.copyOI();		  
         assertTrue("Time values test failure", field.getTime().toString().equals(TEST_TIME.toString()));
     }
     public void testTimestamp() throws SQLException {
         field.setTimestamp(TEST_TIMESTAMP);
+        field.copyOI();		  
         assertTrue("Timestamp values test failure", field.getTimestamp().equals(TEST_TIMESTAMP));
     }
 

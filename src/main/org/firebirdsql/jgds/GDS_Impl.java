@@ -700,10 +700,6 @@ public class GDS_Impl implements GDS {
             try {
                 if (log != null) log.debug((out_xsqlda == null) ? "op_execute " : "op_execute2 ");
 
-                if (!isSQLDataOK(in_xsqlda)) {
-                    throw new GDSException(isc_dsql_sqlda_value_err);
-                }
-                
                 db.out.writeInt((out_xsqlda == null) ? op_execute : op_execute2);
                 db.out.writeInt(stmt.rsr_id);
                 db.out.writeInt(tr.getTransactionId());
@@ -784,11 +780,7 @@ public class GDS_Impl implements GDS {
         // Test Handles
 
         synchronized (db) {
-            try {
-                if (!isSQLDataOK(in_xsqlda)) {
-                    throw new GDSException(isc_dsql_sqlda_value_err);
-                }
-                
+            try {                
 
                 if (in_xsqlda == null && out_xsqlda == null) {
                     if (log != null) log.debug("op_exec_immediate ");
@@ -1602,18 +1594,6 @@ public class GDS_Impl implements GDS {
 
     }
 
-    private boolean isSQLDataOK(XSQLDA xsqlda) {
-        if (xsqlda != null) {
-            for (int i = 0; i < xsqlda.sqld; i++) {
-                if ((xsqlda.sqlvar[i].sqlind != -1) &&
-                    (xsqlda.sqlvar[i].sqldata == null)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
     private void writeSQLData(isc_db_handle_impl db,
                                  XSQLDA xsqlda) throws GDSException {
         // This only works if not (port->port_flags & PORT_symmetric)
@@ -1635,53 +1615,44 @@ public class GDS_Impl implements GDS {
             }
 
             try {
-//                Object sqldata = xsqlvar.sqldata;
+                int indNull = 0;
+                if (xsqlvar.sqldata == null)
+                    indNull = -1;
                 switch (xsqlvar.sqltype & ~1) {
                     case SQL_TEXT:
-                        if ((xsqlvar.sqlind == -1) && (xsqlvar.sqldata == null))
+                        if (xsqlvar.sqldata == null)
                             xsqlvar.sqldata = new byte[xsqlvar.sqllen];
-/*								
-                        if (((byte[])xsqlvar.sqldata).length != xsqlvar.sqllen) {
-                            throw new GDSException(isc_rec_size_err);
-                        }
-                        db.out.writeOpaque((byte[])xsqlvar.sqldata, xsqlvar.sqllen);
-*/
                         db.out.writeChar((byte[])xsqlvar.sqldata, xsqlvar.sqllen);
                         break;
                     case SQL_VARYING:
-                        if ((xsqlvar.sqlind == -1) && (xsqlvar.sqldata == null))
+                        if (xsqlvar.sqldata == null)
                             xsqlvar.sqldata = new byte[0];
-/*
-                        if (((byte[])xsqlvar.sqldata).length > xsqlvar.sqllen) {
-                            throw new GDSException(isc_rec_size_err);
-                        }
-*/
                         db.out.writeBuffer((byte[])xsqlvar.sqldata, ((byte[])xsqlvar.sqldata).length);    
                         break;
                     case SQL_SHORT:
-                        if ((xsqlvar.sqlind == -1) && (xsqlvar.sqldata == null))
+                        if (xsqlvar.sqldata == null)
                             xsqlvar.sqldata = new Short((short)0);
                         db.out.writeInt(((Short) xsqlvar.sqldata).shortValue());
                         break;
                     case SQL_LONG:
-                        if ((xsqlvar.sqlind == -1) && (xsqlvar.sqldata == null))
+                        if (xsqlvar.sqldata == null)
                             xsqlvar.sqldata = new Integer(0);
                         db.out.writeInt(((Integer) xsqlvar.sqldata).intValue());
                         break;
                     case SQL_FLOAT:
-                        if ((xsqlvar.sqlind == -1) && (xsqlvar.sqldata == null))
+                        if (xsqlvar.sqldata == null)
                             xsqlvar.sqldata = new Float(0);
                         db.out.writeFloat(((Float) xsqlvar.sqldata).floatValue());
                         break;
                     case SQL_DOUBLE:
-                        if ((xsqlvar.sqlind == -1) && (xsqlvar.sqldata == null))
+                        if (xsqlvar.sqldata == null)
                             xsqlvar.sqldata = new Double(0);
                         db.out.writeDouble(((Double) xsqlvar.sqldata).doubleValue());
                         break;
 //                case SQL_D_FLOAT:
 //                    break;
                     case SQL_TIMESTAMP:
-                        if ((xsqlvar.sqlind == -1) && (xsqlvar.sqldata == null))
+                        if (xsqlvar.sqldata == null)
                             xsqlvar.sqldata = new java.sql.Timestamp(0);
                         db.out.writeInt(encodeDate((java.sql.Timestamp) xsqlvar.sqldata));
                         db.out.writeInt(encodeTime((java.sql.Timestamp) xsqlvar.sqldata));
@@ -1690,17 +1661,17 @@ public class GDS_Impl implements GDS {
                     case SQL_ARRAY:
                     case SQL_QUAD:
                     case SQL_INT64:
-                        if ((xsqlvar.sqlind == -1) && (xsqlvar.sqldata == null))
+                        if (xsqlvar.sqldata == null)
                             xsqlvar.sqldata = new Long(0);
                         db.out.writeLong(((Long) xsqlvar.sqldata).longValue());
                         break;
                     case SQL_TYPE_TIME:
-                        if ((xsqlvar.sqlind == -1) && (xsqlvar.sqldata == null))
+                        if (xsqlvar.sqldata == null)
                             xsqlvar.sqldata = new java.sql.Time(0);
                         db.out.writeInt(encodeTime((java.sql.Time) xsqlvar.sqldata));
                         break;
                     case SQL_TYPE_DATE:
-                        if ((xsqlvar.sqlind == -1) && (xsqlvar.sqldata == null))
+                        if (xsqlvar.sqldata == null)
                             xsqlvar.sqldata = new java.sql.Date(0);
                         db.out.writeInt(encodeDate((java.sql.Date) xsqlvar.sqldata));
                         break;
@@ -1708,7 +1679,7 @@ public class GDS_Impl implements GDS {
                         throw new GDSException("Unknown sql data type: " + xsqlvar.sqltype);
                 }
 
-                db.out.writeInt(xsqlvar.sqlind);
+                db.out.writeInt(indNull);
 
             } catch (IOException ex) {
                 throw new GDSException(isc_net_write_err);
@@ -1763,8 +1734,7 @@ public class GDS_Impl implements GDS {
 
 
     //Now returns results in Object[] and in xsqlda.data
-    //Nulls are represented by null values in Object array,
-    //but by sqlind = -1 in xsqlda.
+    //Nulls are represented by null values in Object array
     private Object[] readSQLData(isc_db_handle_impl db,
                                 XSQLDA xsqlda) throws GDSException {
         // This only works if not (port->port_flags & PORT_symmetric)

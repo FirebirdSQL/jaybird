@@ -64,6 +64,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     protected boolean[] isParamSet;
      
     private FBField[] fields= null;
+    private Object[] row = null;
 
     FBPreparedStatement(FBConnection c, String sql) throws SQLException {
         super(c);
@@ -151,7 +152,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     public void setNull(int parameterIndex, int sqlType) throws  SQLException {
         if (parameterIndex > fields.length)
             throw new SQLException("invalid column index");
-        getField(parameterIndex).setNull(true);
+        getField(parameterIndex).setNull();
         parameterWasSet(parameterIndex);
     }
 
@@ -314,11 +315,6 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void clearParameters() throws  SQLException {
-        /*
-        for (int i = 1; i <= fixedStmt.getInSqlda().sqln; i++) {
-            setNull(i, 0);
-        }
-        */
         for (int i = 0; i < isParamSet.length; i++)
             isParamSet[i] = false;
     }
@@ -757,7 +753,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         // this is probably redundant, JVM initializes members to false
         for (int i = 0; i < isParamSet.length; i++){
             isParamSet[i] = false;
-      		fields[i] = FBField.createField(getXsqlvar(i+1));
+      		fields[i] = FBField.createField(getXsqlvar(i+1), null, i);
 
       		if (fields[i] instanceof FBBlobField)
       		    ((FBBlobField)fields[i]).setConnection(c);
