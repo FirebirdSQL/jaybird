@@ -2084,20 +2084,17 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     }
 
 
-    private static final String GET_COLUMNS_START = "select null as TABLE_CAT," +
-        " null as TABLE_SCHEM," +
-        " RF.RDB$RELATION_NAME," +
-        " RF.RDB$FIELD_NAME," +
-        " F.RDB$FIELD_TYPE," +
-        " F.RDB$FIELD_SUB_TYPE," +
-        " F.RDB$FIELD_SCALE," +
-        " F.RDB$FIELD_LENGTH," +
-        " F.RDB$NULL_FLAG," +
+    private static final String GET_COLUMNS_START = "select " +
+        " RF.RDB$RELATION_NAME as RELATION_NAME," +
+        " RF.RDB$FIELD_NAME as FIELD_NAME," +
+        " F.RDB$FIELD_TYPE as FIELD_TYPE," +
+        " F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE," +
+        " F.RDB$FIELD_SCALE as FIELD_SCALE," +
+        " F.RDB$FIELD_LENGTH as FIELD_LENGTH," +
         " RF.RDB$DESCRIPTION," +
         " RF.RDB$DEFAULT_SOURCE," +
-        " RF.RDB$FIELD_POSITION, " +
-        " RF.RDB$NULL_FLAG, " +
-        " F.RDB$DEFAULT_SOURCE " +
+        " RF.RDB$FIELD_POSITION as FIELD_POSITION, " +
+        " RF.RDB$NULL_FLAG as NULL_FLAG " +
         "from" +
         " RDB$RELATION_FIELDS RF," +
         " RDB$FIELDS F " +
@@ -2174,9 +2171,208 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!columnClause.getCondition().equals("")) {
             params.add(columnClause.getValue());
         }
-        return doQuery(sql, params);
+        
+        ResultSet rs = doQuery(sql, params);
+        
+        XSQLVAR[] xsqlvars = new XSQLVAR[18];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = -1;
+        xsqlvars[0].sqlname = "TABLE_CAT";
+        xsqlvars[0].relname = "COLUMNINFO";
+
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlind = -1;
+        xsqlvars[1].sqlname = "TABLE_SCHEM";
+        xsqlvars[1].relname = "COLUMNINFO";
+
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqlind = 0;
+        xsqlvars[2].sqlname = "TABLE_NAME";
+        xsqlvars[2].relname = "COLUMNINFO";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlind = 0;
+        xsqlvars[3].sqlname = "COLUMN_NAME";
+        xsqlvars[3].relname = "COLUMNINFO";
+
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = GDS.SQL_SHORT;
+        xsqlvars[4].sqlname = "DATA_TYPE";
+        xsqlvars[4].relname = "COLUMNINFO";
+
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = GDS.SQL_VARYING | 1;
+        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqlind = 0;
+        xsqlvars[5].sqlname = "TYPE_NAME";
+        xsqlvars[5].relname = "COLUMNINFO";
+
+        xsqlvars[6] = new XSQLVAR();
+        xsqlvars[6].sqltype = GDS.SQL_LONG;
+        xsqlvars[6].sqlname = "COLUMN_SIZE";
+        xsqlvars[6].relname = "COLUMNINFO";
+
+        xsqlvars[7] = new XSQLVAR();
+        xsqlvars[7].sqltype = GDS.SQL_SHORT;
+        xsqlvars[7].sqlname = "BUFFER_LENGTH";
+        xsqlvars[7].relname = "COLUMNINFO";
+
+        xsqlvars[8] = new XSQLVAR();
+        xsqlvars[8].sqltype = GDS.SQL_LONG;
+        xsqlvars[8].sqlname = "DECIMAL_DIGITS";
+        xsqlvars[8].relname = "COLUMNINFO";
+
+        xsqlvars[9] = new XSQLVAR();
+        xsqlvars[9].sqltype = GDS.SQL_LONG;
+        xsqlvars[9].sqlname = "NUM_PREC_RADIX";
+        xsqlvars[9].relname = "COLUMNINFO";
+
+        xsqlvars[10] = new XSQLVAR();
+        xsqlvars[10].sqltype = GDS.SQL_LONG;
+        xsqlvars[10].sqlname = "NULLABLE";
+        xsqlvars[10].relname = "COLUMNINFO";
+
+        xsqlvars[11] = new XSQLVAR();
+        xsqlvars[11].sqltype = GDS.SQL_VARYING | 1;
+        xsqlvars[11].sqllen = 31;
+        xsqlvars[11].sqlind = 0;
+        xsqlvars[11].sqlname = "REMARKS";
+        xsqlvars[11].relname = "COLUMNINFO";
+
+        xsqlvars[12] = new XSQLVAR();
+        xsqlvars[12].sqltype = GDS.SQL_VARYING | 1;
+        xsqlvars[12].sqllen = 31;
+        xsqlvars[12].sqlind = 0;
+        xsqlvars[12].sqlname = "COLUMN_DEF";
+        xsqlvars[12].relname = "COLUMNINFO";
+
+        xsqlvars[13] = new XSQLVAR();
+        xsqlvars[13].sqltype = GDS.SQL_LONG;
+        xsqlvars[13].sqlname = "SQL_DATA_TYPE";
+        xsqlvars[13].relname = "COLUMNINFO";
+
+        xsqlvars[14] = new XSQLVAR();
+        xsqlvars[14].sqltype = GDS.SQL_LONG;
+        xsqlvars[14].sqlname = "SQL_DATETIME_SUB";
+        xsqlvars[14].relname = "COLUMNINFO";
+
+        xsqlvars[15] = new XSQLVAR();
+        xsqlvars[15].sqltype = GDS.SQL_LONG;
+        xsqlvars[15].sqlname = "CHAR_OCTET_LENGTH";
+        xsqlvars[15].relname = "COLUMNINFO";
+
+        xsqlvars[16] = new XSQLVAR();
+        xsqlvars[16].sqltype = GDS.SQL_LONG;
+        xsqlvars[16].sqlname = "ORDINAL_POSITION";
+        xsqlvars[16].relname = "COLUMNINFO";
+
+        xsqlvars[17] = new XSQLVAR();
+        xsqlvars[17].sqltype = GDS.SQL_VARYING;
+        xsqlvars[17].sqllen = 3;
+        xsqlvars[17].sqlind = 0;
+        xsqlvars[17].sqlname = "IS_NULLABLE";
+        xsqlvars[17].relname = "COLUMNINFO";
+
+        ArrayList rows = new ArrayList();
+        while (rs.next()) {
+            Object[] row = new Object[18];
+            row[0] = null;
+            row[1] = null;
+            row[2] = rs.getString("RELATION_NAME").getBytes();
+            row[3] = rs.getString("FIELD_NAME").getBytes();
+            
+            short fieldType = rs.getShort("FIELD_TYPE");
+            short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
+            short fieldScale = rs.getShort("FIELD_SCALE");
+            
+            row[4] = new Short((short) getDataType(fieldType, fieldSubType, fieldScale));
+            
+            row[5] = null;
+            row[6] = new Integer(rs.getShort("FIELD_LENGTH"));
+            row[7] = new Short((short) 0);
+            row[8] = new Integer(fieldScale * (-1));
+            row[9] = new Integer(10);
+            
+            short nullFlag = rs.getShort("NULL_FLAG");
+            row[10] = (nullFlag == 1) ? new Integer(columnNoNulls) :
+                                        new Integer(columnNullable);
+
+            row[11] = null;
+            row[12] = null;
+            row[13] = null;
+            row[14] = null;
+            row[15] = new Integer(0);
+            row[16] = new Integer(rs.getShort("FIELD_POSITION") + 1);
+            row[17] = (nullFlag == 1) ? "NO" : "YES";
+            
+            rows.add(row);
+        }
+        rows.add(null);
+        return new FBResultSet(xsqlvars, rows);
     }
 
+    private int getDataType (short fieldType, short fieldSubType, short fieldScale) {
+        if (fieldScale < 0) {
+            switch (fieldType) {
+                case 7: 
+                case 8: 
+                case 16: 
+                case 27: 
+                    if (fieldSubType == 2)
+                        return java.sql.Types.DECIMAL;
+                    else
+                        return java.sql.Types.NUMERIC;
+                default:
+                    break;
+            }
+        }
+
+        switch (fieldType) {
+            case 7: 
+                return java.sql.Types.SMALLINT;
+            case 8: 
+                return java.sql.Types.INTEGER;
+            case 27: 
+            case 11:
+                return java.sql.Types.DOUBLE;
+            case 10: 
+                return java.sql.Types.FLOAT;
+            case 14: 
+                return java.sql.Types.CHAR;
+            case 37: 
+                return java.sql.Types.VARCHAR;
+            case 35: 
+                return java.sql.Types.TIMESTAMP;
+            case 13:
+                return java.sql.Types.TIME;
+            case 12:
+                return java.sql.Types.DATE;
+            case 16:
+                if (fieldSubType == 2)
+                    return java.sql.Types.DECIMAL;
+                else
+                    return java.sql.Types.NUMERIC;
+            case 261: 
+                if (fieldSubType == 1)
+                    return java.sql.Types.LONGVARCHAR;
+                else
+                    return java.sql.Types.LONGVARBINARY;
+            case 9: 
+                return java.sql.Types.OTHER;
+            default:
+                return java.sql.Types.NULL;      
+        }
+    }
+    
 
     /**
      * Indicates that the column might not allow NULL values.
@@ -2500,6 +2696,22 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     int versionColumnPseudo = 2;
 
+    private static final String GET_PRIMARY_KEYS = "select "
+        + " null as TABLE_CAT, "
+        + " null as TABLE_SCHEM, "
+	    + "RC.RDB$RELATION_NAME as TABLE_NAME, "
+	    + "ISGMT.RDB$FIELD_NAME as COLUMN_NAME, "
+	    + "CAST ((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ, "
+	    + "RC.RDB$CONSTRAINT_NAME as PK_NAME "
+	    + "from "
+	    + "RDB$RELATION_CONSTRAINTS RC, "
+	    + "RDB$INDEX_SEGMENTS ISGMT "
+	    + "where "
+	    + "RC.RDB$RELATION_NAME = ? and "
+	    + "RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME and "
+        + "RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
+        + "order by ISGMT.RDB$FIELD_NAME ";
+    
     /**
      * Gets a description of a table's primary key columns.  They
      * are ordered by COLUMN_NAME.
@@ -2524,7 +2736,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getPrimaryKeys(String catalog, String schema,
                 String table) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        checkCatalogAndSchema(catalog, schema);
+        String sql = GET_PRIMARY_KEYS;
+        ArrayList params = new ArrayList();
+        params.add(table);
+        return doQuery(sql, params);
     }
 
 
@@ -3870,7 +4086,10 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         private String value;
 
         public Clause (String columnName, String pattern) {
-            if (isAllCondition(pattern)) {
+            if (pattern == null) {
+                return;
+            }
+            else if (isAllCondition(pattern)) {
                 //do nothing to tableCondition
                 return;
             }
