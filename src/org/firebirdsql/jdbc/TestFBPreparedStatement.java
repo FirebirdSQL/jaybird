@@ -30,6 +30,12 @@ import java.sql.*;
 
 public class TestFBPreparedStatement extends BaseFBTest{
     
+    public static final String CREATE_GENERATOR = 
+        "CREATE GENERATOR test_generator";
+        
+    public static final String DROP_GENERATOR = 
+        "DROP GENERATOR test_generator";
+    
     public static final String CREATE_TEST_BLOB_TABLE = 
         "CREATE TABLE test_blob (" + 
         "  ID INTEGER, " + 
@@ -65,8 +71,15 @@ public class TestFBPreparedStatement extends BaseFBTest{
         catch (Exception e) {
             //e.printStackTrace();
         }
+        
+        try {
+            stmt.executeUpdate(DROP_GENERATOR);
+        } catch(Exception ex) {
+        }
 
         stmt.executeUpdate(CREATE_TEST_BLOB_TABLE);
+        
+        stmt.executeUpdate(CREATE_GENERATOR);
 
         stmt.close(); 
         
@@ -139,6 +152,22 @@ public class TestFBPreparedStatement extends BaseFBTest{
         
         rs.close();
         selectPs.close();
+    }
+    
+    public void testGenerator() throws Exception {
+        PreparedStatement ps = con.prepareStatement(
+            "SELECT gen_id(test_generator, 1) as new_value FROM rdb$database");
+            
+        ResultSet rs = ps.executeQuery();
+        
+        assertTrue("Should get at least one row", rs.next());
+        
+        long genValue = rs.getLong("new_value");
+        
+        assertTrue("should have only one row", !rs.next());
+        
+        rs.close();
+        ps.close();
     }
     
     
