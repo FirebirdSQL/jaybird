@@ -121,7 +121,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getURL() throws SQLException {
-        return FBDriver.FIREBIRD_PROTOCOL + c.getDatabase();
+        return FBDriver.FIREBIRD_PROTOCOL + c.mc.getDatabase();
     }
 
 
