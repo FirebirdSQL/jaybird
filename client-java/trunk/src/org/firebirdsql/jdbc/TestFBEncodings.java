@@ -237,32 +237,38 @@ public class TestFBEncodings extends BaseFBTest {
     };
     
     public static String HUNGARIAN_TEST_STRING_WIN1250;
+    public static String HUNGARIAN_NATIVE_UNICODE;
         
     public static int HUNGARIAN_TEST_ID = 3;
     
     public void testHungarian() throws Exception {
         HUNGARIAN_TEST_STRING_WIN1250 = 
             new String(HUNGARIAN_TEST_BYTES, "Cp1250");
+            
+        HUNGARIAN_NATIVE_UNICODE = new String(HUNGARIAN_TEST_BYTES);
 
         assertTrue("Strings should be equal.", 
             HUNGARIAN_TEST_STRING.equals(HUNGARIAN_TEST_STRING_WIN1250));
         
         java.util.Properties props = new java.util.Properties();
         props.putAll(DB_INFO);
-        props.put("lc_ctype", "WIN1250");
+        props.put("lc_ctype", "UNICODE_FSS");
         
         Connection connection = 
             DriverManager.getConnection(DB_DRIVER_URL, props);
 
         PreparedStatement stmt = connection.prepareStatement(
             "INSERT INTO test_encodings(" + 
-            "  id, win1250_field, unicode_field, none_field) " +
-            "VALUES(?, ?, ?, ?)");
+            "  id, win1250_field, win1251_field, win1252_field, " + 
+            "  unicode_field, none_field) " +
+            "VALUES(?, ?, ?, ?, ?, ?)");
         
         stmt.setInt(1, HUNGARIAN_TEST_ID);
         stmt.setString(2, HUNGARIAN_TEST_STRING_WIN1250);
-        stmt.setString(3, HUNGARIAN_TEST_STRING_WIN1250);
-        stmt.setString(4, HUNGARIAN_TEST_STRING_WIN1250);
+        stmt.setString(3, UKRAINIAN_TEST_STRING);
+        stmt.setString(4, GERMAN_TEST_STRING_WIN1252);
+        stmt.setString(5, HUNGARIAN_TEST_STRING);
+        stmt.setString(6, HUNGARIAN_TEST_STRING_WIN1250);
         
         int updated = stmt.executeUpdate();
         stmt.close();
@@ -270,7 +276,7 @@ public class TestFBEncodings extends BaseFBTest {
         assertTrue("Should insert one row", updated == 1);
         
         stmt = connection.prepareStatement(
-            "SELECT win1250_field, unicode_field " + 
+            "SELECT win1250_field, win1251_field, win1252_field, unicode_field " + 
             "FROM test_encodings WHERE id = ?");
             
         stmt.setInt(1, HUNGARIAN_TEST_ID);
@@ -280,13 +286,21 @@ public class TestFBEncodings extends BaseFBTest {
         assertTrue("Should have at least one row", rs.next());
         
         String win1250Value = rs.getString(1);
-        assertTrue("win1251_field value should be the same", 
+        assertTrue("win1250_field value should be the same", 
             win1250Value.equals(HUNGARIAN_TEST_STRING));
+
+        String win1251Value = rs.getString(2);
+        assertTrue("win1251_field value should be the same", 
+            win1251Value.equals(UKRAINIAN_TEST_STRING));
+
+        String win1252Value = rs.getString(3);
+        assertTrue("win1252_field value should be the same", 
+            win1252Value.equals(GERMAN_TEST_STRING_WIN1252));
             
-        String unicodeValue = rs.getString(2);
+        String unicodeValue = rs.getString(4);
         assertTrue("unicode_field value should be the same", 
             unicodeValue.equals(HUNGARIAN_TEST_STRING));
-            
+
         assertTrue("Should have exactly one row", !rs.next());
         
         rs.close();
