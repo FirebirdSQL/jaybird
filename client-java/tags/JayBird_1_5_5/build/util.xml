@@ -1,0 +1,50 @@
+  <target name="copy_native_to_test_path" depends="compile-native">
+    <copy file="${native.library.location}/${native.library.name}.dll" tofile="${module.output}/${native.library.name}.dll" failonerror="false" overwrite="true" />
+    <copy file="${native.library.location}/lib${native.library.name}.so" tofile="${module.output}/lib${native.library.name}.so" failonerror="false" overwrite="true" />
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Fix cr-lf                                                           -->
+  <!-- =================================================================== -->
+  <target name="pretty" depends="init">
+    <fixcrlf srcDir="${source.java}"
+       includes="**/*.java,**/*.xml,**/*.sh"
+       cr="remove"
+       tab="remove"
+       tablength="4"
+       eof="remove"/>
+  </target>
+
+  <target name="checkout-j2ee" depends="init" unless="j2ee.present">
+    <!-- property name="jboss.cvsroot"
+                  value=":pserver:anonymous@cvs.sourceforge.net:/cvsroot/jboss"/>
+    <property name="jboss.cvstag" value="Branch_3_2"/>
+
+    <cvspass cvsroot="${jboss.cvsroot}"
+                 password=""/>
+
+    <mkdir dir="${jboss.source.root}"/>
+    <cvs cvsRoot="${jboss.cvsroot}"
+         passfile=".cvspass"
+         command="checkout -P"
+         tag="${jboss.cvstag}"
+         dest="${jboss.source.root}"
+         package="jboss-j2ee"/ -->
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Cleans up generated stuff                                           -->
+  <!-- =================================================================== -->
+  <target name="clean" depends="init">
+    <delete dir="${module.output}"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Total cleanup                                                       -->
+  <!-- =================================================================== -->
+  <target name="total-clean" depends="clean">
+    <delete dir="${jboss.source.root}"/>
+    <delete file="${Name}-${version}.zip"/>
+    <delete file="${Name}-${version}.tar"/>
+    <delete file="${Name}-${version}.tar.gz"/>
+  </target>
