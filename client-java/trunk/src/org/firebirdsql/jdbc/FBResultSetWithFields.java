@@ -39,10 +39,11 @@ public class FBResultSetWithFields extends FBResultSet {
 
     FBConnection c;
     
-    FBResultSetWithFields(FBManagedConnection mc, FBStatement fbstatement,
+    FBResultSetWithFields(FBConnection c, FBStatement fbstatement,
         isc_stmt_handle stmt)
     {
-        super(mc, fbstatement, stmt);
+        super(c.mc, fbstatement, stmt);
+        this.c = c;
     }
 
     /**

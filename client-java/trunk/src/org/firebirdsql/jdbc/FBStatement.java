@@ -523,7 +523,7 @@ public class FBStatement implements Statement {
         else 
         {
             //currentRs = new FBResultSet(mc, this, fixedStmt);
-            currentRs = new FBResultSetWithFields(mc, this, fixedStmt);
+            currentRs = new FBResultSetWithFields(c, this, fixedStmt);
             return currentRs;
         } // end of else
     }
