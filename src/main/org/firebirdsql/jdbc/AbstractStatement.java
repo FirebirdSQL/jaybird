@@ -108,6 +108,11 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         return cursorName;
     }
     
+    
+    public boolean isValid() {
+        return fixedStmt != null && fixedStmt.isValid();
+    }
+    
     /**
      * Get synchronization object for this statement object.
      * 
