@@ -262,7 +262,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getColumnLabel(int column) throws  SQLException {
-        return (getXsqlvar(column).aliasname == null) ? getXsqlvar(column).sqlname: getXsqlvar(column).aliasname;
+        return (getXsqlvar(column).aliasname == null) ? 
+            getXsqlvar(column).sqlname: getXsqlvar(column).aliasname;
     }
 
 
@@ -274,7 +275,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getColumnName(int column) throws  SQLException {
-        return getXsqlvar(column).sqlname;
+        //return getXsqlvar(column).sqlname;
+        return getColumnLabel(column);
     }
 
 
