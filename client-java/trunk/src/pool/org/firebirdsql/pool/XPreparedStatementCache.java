@@ -202,7 +202,7 @@ class XPreparedStatementCache {
             } catch(InterruptedException ex) {
                 // ignore
             } catch(SQLException ex) {
-                if (error != null)
+                if (error == null)
                     error = ex;
                 else
                     error.setNextException(ex);
