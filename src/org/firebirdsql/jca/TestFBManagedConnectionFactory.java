@@ -53,30 +53,6 @@ public class TestFBManagedConnectionFactory extends TestXABase {
         super(name);
     }
 
-    public static Test suite() {
-
-        return new TestSuite(TestFBManagedConnectionFactory.class);
-    }
-
-    public void _setUp() throws Exception {
-        FBManager m = new FBManager();
-        m.setURL("localhost");
-        m.setPort(3050);
-        m.start();
-        m.createDatabase(DBNAME);
-        m.stop();
-    }
-
-    public void _tearDown() throws Exception {
-        FBManager m = new FBManager();
-        m.setURL("localhost");
-        m.setPort(3050);
-        m.start();
-        m.dropDatabase(DBNAME);
-        m.stop();
-    }
-
-
 
 
 

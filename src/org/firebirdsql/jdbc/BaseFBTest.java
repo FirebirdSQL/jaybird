@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.3  2002/01/06 23:37:58  d_jencks
+ * added a connection test to datasource test, cleaned up constants a bit.
+ *
  * Revision 1.2  2001/08/28 17:13:23  d_jencks
  * Improved formatting slightly, removed dos cr's
  *
@@ -37,26 +40,35 @@
 
 package org.firebirdsql.jdbc;
 
+import junit.framework.*;
+import org.firebirdsql.management.*;
+
+
 /**
  * Class containing test-related constants. It should be changed depending
  * on the particular environment.
  *
  * @author Roman Rokytskyy (rrokytskyy@yahoo.co.uk)
  */
-public class TestConst {
+public class BaseFBTest extends TestCase
+{
     /**
      * Default URL for the test
      */
+   private static final String dbPath = System.getProperty("test.db.dir");
 
-   private static final String PERSONAL_DB_LOCATION = "/usr/local/firebird/dev/client-java/db/fbmctest.gdb";
-        //someone elses...//"localhost:/home/rocky/data/interbase/jboss.gdb";
+   //static final String dbName = "localhost:" + dbPath + "/testdb.gdb";
+   //static final String dbName2 = "localhost:" + dbPath + "/testdb2.gdb";
+
+   //private static final String PERSONAL_DB_LOCATION = "/usr/local/firebird/dev/client-java/db/fbmctest.gdb";
 
 
    public static final String DB_SERVER_URL = "localhost";
-   public static final String DB_SERVER_PORT = "3050";
+   public static final int DB_SERVER_PORT = 3050;
 
-   public static final String DB_DATASOURCE_URL = DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + PERSONAL_DB_LOCATION;
+   public static final String DB_NAME = dbPath +  "/fbtest.gdb";
 
+   public static final String DB_DATASOURCE_URL = DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + DB_NAME;
    public static final String DB_DRIVER_URL = FBDriver.FIREBIRD_PROTOCOL + DB_DATASOURCE_URL;
 
 
@@ -83,4 +95,40 @@ public class TestConst {
         DB_INFO.setProperty(FBDriver.PASSWORD, DB_PASSWORD);
     }
 
+   private final FBManager fbManager = new FBManager();
+
+    public BaseFBTest(String testName) {
+        super(testName);
+    }
+
+   protected void setUp() throws Exception
+   {
+      try 
+      {
+         fbManager.setURL(DB_SERVER_URL);
+         fbManager.setPort(DB_SERVER_PORT);
+         fbManager.start();
+         fbManager.createDatabase(DB_NAME);
+      }
+      catch (Exception e)
+      {
+         System.out.println("exception in setup of " + getName() + ": " + e);
+         e.printStackTrace(); 
+      } // end of try-catch
+   }
+
+   protected void tearDown() throws Exception
+   {
+      try 
+      {
+         fbManager.dropDatabase(DB_NAME);
+         fbManager.stop();
+      }
+      catch (Exception e)
+      {
+         System.out.println("exception in teardown of " + getName() + ": " + e);
+         e.printStackTrace(); 
+      } // end of try-catch
+      
+   }
 }

@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.4  2002/01/06 23:37:58  d_jencks
+ * added a connection test to datasource test, cleaned up constants a bit.
+ *
  * Revision 1.3  2001/08/28 17:13:23  d_jencks
  * Improved formatting slightly, removed dos cr's
  *
@@ -58,7 +61,7 @@ import junit.framework.*;
  * @author Roman Rokytskyy (rrokytskyy@yahoo.co.uk)
  */
 
-public class TestFBDriver extends TestCase {
+public class TestFBDriver extends BaseFBTest {
 
     private java.sql.Connection connection;
     private java.sql.Driver driver;
@@ -74,24 +77,27 @@ public class TestFBDriver extends TestCase {
 
 
     protected void setUp() throws Exception {
+       super.setUp();
         Class.forName(org.firebirdsql.jdbc.FBDriver.class.getName());
-        driver = java.sql.DriverManager.getDriver(TestConst.DB_DRIVER_URL);
+        driver = java.sql.DriverManager.getDriver(DB_DRIVER_URL);
     }
 
 
 
-    protected void tearDown() {
+    protected void tearDown() throws Exception
+    {
+       super.tearDown();
     }
 
 
 
     public void testAcceptsURL() throws Exception {
-        assertTrue(driver.acceptsURL(TestConst.DB_DRIVER_URL));
+        assertTrue(driver.acceptsURL(DB_DRIVER_URL));
     }
 
     public void testConnect() throws Exception {
-        System.out.println(TestConst.DB_DRIVER_URL);
-        connection = driver.connect(TestConst.DB_DRIVER_URL, TestConst.DB_INFO);
+        System.out.println(DB_DRIVER_URL);
+        connection = driver.connect(DB_DRIVER_URL, DB_INFO);
         assertTrue("Connection is null", connection != null);
     }
 

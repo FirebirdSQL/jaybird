@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.6  2002/01/06 23:37:58  d_jencks
+ * added a connection test to datasource test, cleaned up constants a bit.
+ *
  * Revision 1.5  2001/11/25 23:15:55  d_jencks
  * Implemented autocommit that does not interfere with connections managed by XAResource or LocalTransaction.  Made Driver reuse ManagedConnectionFactory for same database url.
  *
@@ -66,7 +69,7 @@ import java.sql.*;
  * @author Roman Rokytskyy (rrokytskyy@yahoo.co.uk)
  */
 
-public class TestFBUnmanagedConnection extends TestCase {
+public class TestFBUnmanagedConnection extends BaseFBTest {
     public static final String CREATE_TEST_TABLE =
         "CREATE TABLE connection_test (" +
         "  test_int INTEGER" +
@@ -102,9 +105,10 @@ public class TestFBUnmanagedConnection extends TestCase {
     }
 
     protected void setUp() throws Exception {
+       super.setUp();
         Class.forName(FBDriver.class.getName());
         connection =
-            java.sql.DriverManager.getConnection(TestConst.DB_DRIVER_URL, TestConst.DB_INFO);
+            java.sql.DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
     }
     protected void tearDown() throws Exception {
         try 
@@ -121,6 +125,7 @@ public class TestFBUnmanagedConnection extends TestCase {
         } // end of try-catch
 
         connection.close();
+        super.tearDown();
     }
 
     public void testCommit() throws Exception {

@@ -50,35 +50,6 @@ public class TestFBXAResource extends TestXABase {
         super(name);
     }
 
-    public static Test suite() {
-
-        return new TestSuite(TestFBXAResource.class);
-    }
-
-    public void _setUp() throws Exception {
-        FBManager m = new FBManager();
-        m.setURL("localhost");
-        m.setPort(3050);
-        m.start();
-        m.createDatabase(DBNAME);
-        m.stop();
-    }
-
-    public void _tearDown() throws Exception {
-        FBManager m = new FBManager();
-        m.setURL("localhost");
-        m.setPort(3050);
-        m.start();
-        m.dropDatabase(DBNAME);
-        m.stop();
-    }
-
-
-
-
-
-
-
     public void testGetXAResource() throws Exception {
         System.out.println();
         System.out.println("testGetXAResource");

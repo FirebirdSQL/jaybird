@@ -45,15 +45,14 @@ import junit.framework.*;
 
 
 /**
- *This is a class that hands out connections.  Initial implementation uses DriverManager.getConnection,
- *future enhancements will use datasources/ managed stuff.
+ * Tests of plain gds functionality
  */
 public class TestGds extends TestCase {
 
-    static final String dbName = "localhost:/usr/local/firebird/dev/client-java/db/testdb.gdb";
-    static final String dbName2 = "localhost:/usr/local/firebird/dev/client-java/db/testdb2.gdb";
-//    static final String jsql1 = "file:/usr/local/firebird/dev/tools/jsql/src/build/jsq2-r.xml";
-//    static final String target1 = "t1";
+   private static String dbPath = System.getProperty("test.db.dir");
+
+    static final String dbName = "localhost:" + dbPath + "/testdb.gdb";
+    static final String dbName2 = "localhost:" + dbPath + "/testdb2.gdb";
 
     private GDS gds;
     private isc_db_handle db1;
@@ -71,9 +70,18 @@ public class TestGds extends TestCase {
         dpb[6] = (byte) 120;
         dpb[7] = (byte) 10;
         dpb[8] = (byte) 0;
-        dpb[9] = (byte) 0;}
-
-    private short dpb_length = 10;
+        dpb[9] = (byte) 0;
+        dpb[10] = (byte) 0;
+        dpb[11] = (byte) 0;
+        dpb[12] = (byte) 0;
+        dpb[13] = (byte) 0;
+        dpb[14] = (byte) 3;
+        dpb[15] = (byte) 0;
+        dpb[16] = (byte) 0;
+        dpb[17] = (byte) 0;
+        }
+   
+    private short dpb_length = (short)dpb.length;
 
     private ClumpletImpl c;
 
@@ -83,23 +91,16 @@ public class TestGds extends TestCase {
         super(name);
     }
 
-    public static Test suite() {
-/*      TestSuite suite= new TestSuite();
-        suite.addTest(
-            new TestGds("testPreparedSelect") {
-                 protected void runTest() throws Exception { super.testPreparedSelect(); }
-            }
-        );
-        return suite;*/
-
-        return new TestSuite(TestGds.class);
-    }
 
     public void setUp() {
 
         gds = GDSFactory.newGDS();
         c = (ClumpletImpl)GDSFactory.newClumplet(gds.isc_dpb_num_buffers, new byte[] {90});
         c.append(GDSFactory.newClumplet(gds.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
+      c.append(GDSFactory.newClumplet(gds.isc_dpb_overwrite, 0));
+      //now dialect 3
+      c.append(GDSFactory.newClumplet(gds.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
+
         tpb.add(new Integer(gds.isc_tpb_write));
         tpb.add(new Integer(gds.isc_tpb_read_committed));
         tpb.add(new Integer(gds.isc_tpb_no_rec_version));
@@ -112,7 +113,6 @@ public class TestGds extends TestCase {
 
         System.out.println("test- isc_create_database");
         gds.isc_create_database(name, db, c);
-//        gds.isc_create_database(name, db, dpb_length, dpb);
         return db;
     }
 
@@ -197,10 +197,34 @@ public class TestGds extends TestCase {
         gds.isc_detach_database(db1);
 
         System.out.println("test- isc_attach_database");
-//        gds.isc_attach_database(dbName, db1, dpb_length, dpb);
         gds.isc_attach_database(dbName, db1, c);
         dropDatabase(db1);
     }
+
+
+
+   public void testCreateDropD3DB() throws Exception
+   {
+      GDS gds = GDSFactory.newGDS();
+
+      Clumplet c = (Clumplet)GDSFactory.newClumplet(gds.isc_dpb_num_buffers, new byte[] {90});
+           
+      c.append(GDSFactory.newClumplet(gds.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
+      //c.append(GDSFactory.newClumplet(gds.isc_dpb_user_name, "alex"));
+      //c.append(GDSFactory.newClumplet(gds.isc_dpb_password, "elx"));
+      c.append(GDSFactory.newClumplet(gds.isc_dpb_overwrite, 0));
+      c.append(GDSFactory.newClumplet(gds.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
+
+      isc_db_handle db = gds.get_new_isc_db_handle();
+
+      gds.isc_create_database(dbName2, db, c);
+      gds.isc_detach_database(db);
+
+      System.out.println("test- isc_attach_database");
+      gds.isc_attach_database(dbName2, db, c);
+      dropDatabase(db);
+
+   }
 
 
     public void testDbHandleEquality() throws Exception {
@@ -209,7 +233,6 @@ public class TestGds extends TestCase {
         db1 = createDatabase(dbName);
 
         db2 = gds.get_new_isc_db_handle();
-//        gds.isc_attach_database(dbName, db2, dpb_length, dpb);
         gds.isc_attach_database(dbName, db2, c);
 
         System.out.println("test- rdb_id1: " + ((isc_db_handle_impl)db1).getRdb_id());
@@ -219,7 +242,6 @@ public class TestGds extends TestCase {
         gds.isc_detach_database(db2);
 
         System.out.println("test- isc_attach_database");
-//        gds.isc_attach_database(dbName, db1, dpb_length, dpb);
         gds.isc_attach_database(dbName, db1, c);
         dropDatabase(db1);
     }
@@ -231,8 +253,6 @@ public class TestGds extends TestCase {
         db1 = createDatabase(dbName);
 
         db2 = createDatabase(dbName2);
-//        db2 = gds.get_new_isc_db_handle();
-//        gds.isc_attach_database(dbName, db2, dpb_length, dpb);
 
         System.out.println("test- rdb_id1: " + ((isc_db_handle_impl)db1).getRdb_id());
         System.out.println("test- rdb_id2: " + ((isc_db_handle_impl)db2).getRdb_id());
@@ -254,7 +274,7 @@ public class TestGds extends TestCase {
         db1 = createDatabase(dbName);
 
         db2 = gds.get_new_isc_db_handle();
-//        gds.isc_attach_database(dbName, db2, dpb_length, dpb);
+
         gds.isc_attach_database(dbName, db2, c);
 
         System.out.println("test- rdb_id1: " + ((isc_db_handle_impl)db1).getRdb_id());
@@ -752,6 +772,7 @@ public class TestGds extends TestCase {
     //        dropDatabase(db1);
     }
 
+   /*this is redundant with other blob tests
     public void testReadBlob() throws Exception {
         System.out.println();
         System.out.println("test- testReadBlob");
@@ -802,5 +823,5 @@ public class TestGds extends TestCase {
     //  teardownTable2(db1);
     //        dropDatabase(db1);
     }
-
+   */
 }
