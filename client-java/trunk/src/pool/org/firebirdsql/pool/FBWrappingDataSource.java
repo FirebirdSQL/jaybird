@@ -107,7 +107,7 @@ import org.firebirdsql.jdbc.FBConnectionHelper;
  *      (especially when you transfer big BLOBs). Usually 8192 bytes provides 
  *      good results.
  * 
- * <li><code>sqlRole</code> 
+ * <li><code>roleName</code> 
  *      SQL role name.
  * 
  * <li><code>tpbMapping</code> 
@@ -407,18 +407,32 @@ public class FBWrappingDataSource implements DataSource,
         return getPool().getSocketBufferSize();
     }
 
-    public String getSqlRole() {
-        return getPool().getSqlRole();
-    }
-
     public void setSocketBufferSize(int socketBufferSize) {
         getPool().setSocketBufferSize(socketBufferSize);
     }
 
-    public void setSqlRole(String sqlRole) {
-        getPool().setSqlRole(sqlRole);
+    public String getRoleName() {
+        return getPool().getRoleName();
     }
     
+    public void setRoleName(String roleName) {
+        getPool().setRoleName(roleName);
+    }
+    
+    /**
+     * @deprecated please use {@link #getRoleName()} instead.
+     */
+    public String getSqlRole() {
+        return getRoleName();
+    }
+
+    /**
+     * @deprecated please use {@link #setRoleName(String)} instead. 
+     */
+    public void setSqlRole(String sqlRole) {
+        setRoleName(sqlRole);
+    }
+
     public String getNonStandardProperty(String key) {
         return getPool().getNonStandardProperty(key);
     }
