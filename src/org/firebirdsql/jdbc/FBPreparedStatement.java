@@ -72,7 +72,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     // was initialized, executeQuery, executeUpdate and execute methods
     // will throw an exception if this array contains at least one false value.
     protected boolean[] isParamSet;
-	 
+     
     FBPreparedStatement(FBConnection c, String sql) throws SQLException {
         super(c);
         try {
@@ -90,7 +90,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         catch (GDSException ge)
         {
             log.info("GDSException in PreparedStatement constructor", ge);
-            throw new SQLException("GDSException: " + ge);
+            throw new FBSQLException(ge);
         } // end of try-catch
     }
 
@@ -177,9 +177,9 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setNull(int parameterIndex, int sqlType) throws  SQLException {
-		 if (parameterIndex > fixedStmt.getInSqlda().sqlvar.length)
-			throw new SQLException("invalid column index");
-			 
+         if (parameterIndex > fixedStmt.getInSqlda().sqlvar.length)
+            throw new SQLException("invalid column index");
+             
         fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqlind = -1;
         fixedStmt.getInSqlda().sqlvar[parameterIndex - 1].sqldata = null;
         parameterWasSet(parameterIndex);
@@ -198,7 +198,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         getField(parameterIndex).setCharacterStream(reader, length);
         parameterWasSet(parameterIndex);
     }
-	 
+     
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
         getField(parameterIndex).setBytes(x);
         parameterWasSet(parameterIndex);
@@ -279,9 +279,9 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * Factory method for the field access objects
      */
     protected FBField getField(int columnIndex) throws SQLException {
-		 if (columnIndex > fixedStmt.getInSqlda().sqlvar.length)
-			throw new SQLException("invalid column index");
-			
+         if (columnIndex > fixedStmt.getInSqlda().sqlvar.length)
+            throw new SQLException("invalid column index");
+            
         FBField thisField = FBField.createField(getXsqlvar(columnIndex));
 
         if (thisField instanceof FBBlobField)
@@ -468,12 +468,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         boolean canExecute = true;
         for (int i = 0; i < isParamSet.length; i++){
             canExecute = canExecute && isParamSet[i];
-		  }
+          }
 
         if (!canExecute)
             throw new SQLException("Not all parameters were set. " +
                 "Cannot execute query.");
-		  
+          
         XSQLVAR[] inVars = fixedStmt.getInSqlda().sqlvar;
 
         for(int i = 0; i < inVars.length; i++)
@@ -492,7 +492,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         try {
             closeResultSet();
             c.executeStatement(fixedStmt, sendOutParams);
-				isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
+                isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
             return (fixedStmt.getOutSqlda().sqld > 0);
         }
         catch (GDSException ge) {
@@ -792,7 +792,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         boolean canExecute = true;
         for (int i = 0; i < isParamSet.length; i++){
             canExecute = canExecute && isParamSet[i];
-		  }
+          }
 
         if (!canExecute)
             throw new SQLException("Not all parameters were set. " +

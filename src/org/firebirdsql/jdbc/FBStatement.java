@@ -128,7 +128,7 @@ public class FBStatement implements Statement {
  */
         catch (GDSException ge)
         {
-            throw new SQLException("GDSException: " + ge);
+            throw new FBSQLException(ge);
         } // end of try-catch
         finally
         {
@@ -169,7 +169,7 @@ public class FBStatement implements Statement {
  */
         catch (GDSException ge)
         {
-            throw new SQLException("GDSException: " + ge);
+            throw new FBSQLException(ge);
         } // end of try-catch
         finally
         {
@@ -487,7 +487,7 @@ public class FBStatement implements Statement {
  */
         catch (GDSException ge)
         {
-            throw new SQLException("GDSException: " + ge);
+            throw new FBSQLException(ge);
         } // end of try-catch
         finally
         {
