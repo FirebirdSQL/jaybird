@@ -1,3 +1,10 @@
+2003-11-27 17:54  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	FBStatementFetcher.java, FBUpdatableFetcher.java:
+	
+	made fetching of the first row lazy
+
 2003-11-26 09:35  ryanbaldwin
 
 	*
