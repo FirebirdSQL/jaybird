@@ -103,8 +103,8 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
         tpbSet = new HashSet();
         tpbSet.add(new Integer(GDS.isc_tpb_write));
-        tpbSet.add(new Integer(GDS.isc_tpb_read_committed));
-        tpbSet.add(new Integer(GDS.isc_tpb_no_rec_version));
+        //tpbSet.add(new Integer(GDS.isc_tpb_read_committed));
+        //tpbSet.add(new Integer(GDS.isc_tpb_no_rec_version));
         tpbSet.add(new Integer(GDS.isc_tpb_wait));
 
     }  //Default constructor.
