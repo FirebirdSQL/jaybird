@@ -182,17 +182,6 @@ public final class FBStringField extends FBField {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
         return XSQLVAR.decodeString(rs.row[numCol], javaEncoding);
-/*		  
-        if (javaEncoding == null)
-            return new String(rs.row[numCol]);
-        else {
-            try {
-                return new String(rs.row[numCol], javaEncoding);
-            } catch(java.io.UnsupportedEncodingException ex) {
-                return new String(rs.row[numCol]);
-            }
-        }
- */
     }
     Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
@@ -297,18 +286,7 @@ public final class FBStringField extends FBField {
             return;
         }
         field.sqldata = XSQLVAR.encodeString(value,javaEncoding);
-/*		  
-        if (javaEncoding==null){
-            field.sqldata = value.getBytes();
-        }
-        else {
-            try {
-                field.sqldata = value.getBytes(javaEncoding);
-            } catch(java.io.UnsupportedEncodingException ex) {
-                field.sqldata = value.getBytes();
-            }
-        }
-*/
+
         if (field.sqldata.length > field.sqllen)
             throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);
     }
@@ -346,16 +324,14 @@ public final class FBStringField extends FBField {
 
             if (length > field.sqllen)
                 throw new DataTruncation(-1, true, false, length, field.sqllen);
+            field.sqldata = new byte[length];
             if (javaEncoding==null){
-                field.sqldata = new byte[length];
                 System.arraycopy(out.toByteArray(), 0, field.sqldata, 0, length);
             }
             else {
                 try {
-                    field.sqldata = new byte[length];
                     field.sqldata = (new String(out.toByteArray(), 0, length, javaEncoding)).getBytes();
                 } catch(java.io.UnsupportedEncodingException ex) {
-                    field.sqldata = new byte[length];
                     System.arraycopy(out.toByteArray(), 0, field.sqldata, 0, length);
                 }
             }
@@ -392,17 +368,7 @@ public final class FBStringField extends FBField {
         }
 
         field.sqldata = XSQLVAR.encodeString(value,javaEncoding);
-/*		  
-        if (javaEncoding == null)
-            field.sqldata = value;
-        else {
-            try {
-                field.sqldata = (new String(value, javaEncoding)).getBytes();
-            } catch(java.io.UnsupportedEncodingException ex) {
-                field.sqldata = value;
-            }
-        }		  
-*/
+
         if (field.sqldata.length > field.sqllen)
             throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);
     }
