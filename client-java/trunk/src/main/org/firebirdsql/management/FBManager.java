@@ -432,8 +432,10 @@ public class FBManager implements FBManagerMBean
     
     //private methods
     private String getConnectString(String filename) {
-        String fileString = getServer() + "/" + getPort() + ":" + filename;
-        return fileString;
+        if (type == GDSType.NATIVE_EMBEDDED || type == GDSType.NATIVE_LOCAL)
+            return filename;
+        else
+            return getServer() + "/" + getPort() + ":" + filename;
     }
 
 }
