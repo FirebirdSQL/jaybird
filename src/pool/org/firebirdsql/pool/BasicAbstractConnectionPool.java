@@ -98,26 +98,38 @@ public abstract class BasicAbstractConnectionPool
         this.blockingTimeout = blockingTimeout;
     }
 
+    /**
+     * @deprecated non-standard name, use {@link #getMaxIdleTime()}
+     */
     public int getIdleTimeout() {
         return getMaxIdleTime();
     }
 
+    /**
+     * @deprecated non-standard name, use {@link #setMaxIdleTime(int)}
+     */
     public void setIdleTimeout(int idleTimeout) {
-        setMaxIdleTimeout(idleTimeout);
+        setMaxIdleTime(idleTimeout);
     }
     
     public int getMaxIdleTime() {
         return maxIdleTime;
     }
     
-    public void setMaxIdleTimeout(int maxIdleTime) {
+    public void setMaxIdleTime(int maxIdleTime) {
         this.maxIdleTime = maxIdleTime;
     }
 
+    /**
+     * @deprecated non-standard name, use {@link #getMaxPoolSize()}
+     */
     public int getMaxConnections() {
         return getMaxPoolSize();
     }
 
+    /**
+     * @deprecated non-standard name, use {@link #setMaxPoolSize(int)}
+     */
     public void setMaxConnections(int maxConnections) {
         setMaxPoolSize(maxConnections);
     }
@@ -130,10 +142,16 @@ public abstract class BasicAbstractConnectionPool
         this.maxPoolSize = maxPoolSize;
     }
 
+    /**
+     * @deprecated non-standard name, use {@link #getMinPoolSize()}
+     */
     public int getMinConnections() {
         return getMinPoolSize();
     }
 
+    /**
+     * @deprecated non-standard name, use {@link #setMinPoolSize(int)}
+     */
     public void setMinConnections(int minConnections) {
         setMinPoolSize(minConnections);
     }
@@ -264,6 +282,10 @@ public abstract class BasicAbstractConnectionPool
     private static final String REF_MAX_POOL_SIZE = "maxPoolSize";
     private static final String REF_MIN_POOL_SIZE = "minPoolSize";
     private static final String REF_MAX_IDLE_TIME = "maxIdleTime";
+    
+    private static final String REF_MAX_CONNECTIONS = "maxConnections";
+    private static final String REF_MIN_CONNECTIONS = "minConnections";
+    private static final String REF_IDLE_TIMEOUT = "idleTimeout";
 
     protected abstract BasicAbstractConnectionPool createObjectInstance();
     
@@ -297,22 +319,31 @@ public abstract class BasicAbstractConnectionPool
                 ds.setBlockingTimeout(Integer.parseInt(addr));
             else
             if (REF_MAX_IDLE_TIME.equals(type))
+                ds.setMaxIdleTime(Integer.parseInt(addr));
+            else
+            if (REF_IDLE_TIMEOUT.equals(type))
                 ds.setIdleTimeout(Integer.parseInt(addr));
             else
             if (REF_LOGIN_TIMEOUT.equals(type))
                 ds.setLoginTimeout(Integer.parseInt(addr));
             else
             if (REF_MAX_POOL_SIZE.equals(type))
-                ds.setMaxConnections(Integer.parseInt(addr));
+                ds.setMaxPoolSize(Integer.parseInt(addr));
             else
             if (REF_MIN_POOL_SIZE.equals(type))
+                ds.setMinPoolSize(Integer.parseInt(addr));
+            else
+            if (REF_MAX_CONNECTIONS.equals(type))
+                ds.setMaxConnections(Integer.parseInt(addr));
+            else
+            if (REF_MIN_CONNECTIONS.equals(type))
                 ds.setMinConnections(Integer.parseInt(addr));
             else
             if (REF_PING_INTERVAL.equals(type))
                 ds.setPingInterval(Integer.parseInt(addr));
             else
             if (REF_TX_ISOLATION.equals(type))
-                ds.setTransactionIsolationLevel(Integer.parseInt(addr));
+                ds.setIsolation(addr);
             else
             if (REF_RETRY_INTERVAL.equals(type))
                 ds.setRetryInterval(Integer.parseInt(addr));
@@ -338,11 +369,11 @@ public abstract class BasicAbstractConnectionPool
         }
         
         // removed matched addresses
-        for (int i = 0; i < addressesToRemove.length; i++) {
+        for (int i = addressesToRemove.length - 1; i >= 0 ; i--) {
             if (addressesToRemove[i] == 1)
                 ref.remove(i);
         }
-            
+        
         return ds;
     }
 
