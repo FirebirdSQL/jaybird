@@ -21,8 +21,6 @@ package org.firebirdsql.jgds;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.isc_blob_handle;
-import org.firebirdsql.gds.isc_db_handle;
-import org.firebirdsql.gds.isc_tr_handle;
 
 /**
  * Describe class <code>isc_blob_handle_impl</code> here.

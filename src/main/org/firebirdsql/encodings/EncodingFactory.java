@@ -21,15 +21,15 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.3  2003/01/26 00:50:07  brodsom
+ * New character sets support
+ *
  * Revision 1.2  2003/01/23 01:37:05  brodsom
  * Encodings patch
  *
  */
 
 package org.firebirdsql.encodings;
-
-import org.firebirdsql.jgds.XdrInputStream;
-import org.firebirdsql.jgds.XdrOutputStream;
 
 public class EncodingFactory {
 

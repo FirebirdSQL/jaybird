@@ -20,8 +20,6 @@
 package org.firebirdsql.jgds;
 
 import java.io.IOException;
-import org.firebirdsql.gds.GDSException;
-
 
 /**
  * The interface <code>Xdrable</code> represents an object that can read

@@ -28,8 +28,6 @@
 package org.firebirdsql.jgds;
 
 import java.io.*;
-import java.util.Set;
-import java.util.Iterator;
 
 import org.firebirdsql.jdbc.FBConnectionHelper;
 import org.firebirdsql.gds.XSQLVAR;

@@ -28,9 +28,6 @@ package org.firebirdsql.jgds;
 
 import org.firebirdsql.gds.XSQLDA;
 
-import java.util.List;
-import java.util.ArrayList;
-
 /**
  * Describe class <code>isc_stmt_handle_impl</code> here.
  *

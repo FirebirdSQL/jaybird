@@ -29,7 +29,6 @@
 package org.firebirdsql.jgds;
 
 import java.io.*;
-import java.net.*;
 
 /**
  * Describe class <code>XdrInputStream</code> here.
