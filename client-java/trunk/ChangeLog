@@ -1,3 +1,92 @@
+2003-11-17 22:46  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/common/FBTestBase.java:
+	
+	fixed getting connection via driver manager
+
+2003-11-17 22:43  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/DatabaseParameterBuffer.java,
+	main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/jca/FBConnectionRequestInfo.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/FBBlob.java,
+	main/org/firebirdsql/jgds/GDS_Impl.java,
+	main/org/firebirdsql/jgds/ParameterBufferBase.java,
+	main/org/firebirdsql/ngds/ParameterBufferBase.java,
+	test/org/firebirdsql/jdbc/TestFBBlobStream.java:
+	
+	added possibility to specify if stream blobs should be used
+
+2003-11-17 21:31  rrokytskyy
+
+	*
+	
+	deprecated
+	client-java/src/test/org/firebirdsql/jca/pool/TestPoolingConnection
+	Manager.java:
+
+2003-11-17 21:30  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/AbstractConnectionPool.java,
+	pool/org/firebirdsql/pool/ConnectionPoolConfiguration.java,
+	pool/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBConnectionPoolObjectFactory.java,
+	pool/org/firebirdsql/pool/FBPooledConnection.java,
+	pool/org/firebirdsql/pool/FBSimpleDataSource.java,
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	pool/org/firebirdsql/pool/PooledConnectionManager.java,
+	pool/org/firebirdsql/pool/XStatementManager.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FBDataSource.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	main/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	main/org/firebirdsql/jdbc/FirebirdConnection.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jca/FBTpb.java,
+	main/org/firebirdsql/gds/DatabaseParameterBuffer.java,
+	main/org/firebirdsql/gds/GDSException.java:
+	
+	javadoc fixes
+
+2003-11-17 21:23  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/management/FBCommandLine.java:
+	
+	javadoc fixes
+
+2003-11-17 21:22  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jca/pool/FBPoolingConnectionManager.java,
+	jca/pool/IdleRemover.java, jca/pool/ManagedConnectionPool.java,
+	jca/pool/PoolFiller.java, jdbc/rowset/FBRowSet.java,
+	jdbc/rowset/FBRowSetInternal.java,
+	jdbc/rowset/FBRowSetListener.java,
+	jdbc/rowset/FBRowSetMetaData.java, jdbc/rowset/FBRowSetReader.java,
+	jdbc/rowset/FBRowSetWriter.java:
+	
+	deprecated
+
+2003-11-17 19:17  skidder
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBBlob.java:
+	
+	Remove unneeded code
+
+2003-11-17 10:52  rrokytskyy
+
+	* client-java/src/: test/org/firebirdsql/jgds/TestGds.java,
+	main/org/firebirdsql/ngds/GDS_Impl.java:
+	
+	removed unused imports
+
 2003-11-16 22:31  rrokytskyy
 
 	*
