@@ -169,6 +169,49 @@ public class TestFBSavepoint extends FBTestBase {
             stmt.close();
         }
     }
+    
+    /**
+     * Test if savepoints are released correctly.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testSavepointRelease() throws Exception {
+        connection.setAutoCommit(false);
+        
+        Savepoint svpt1 = connection.setSavepoint("test");
+        
+        connection.releaseSavepoint(svpt1);
+        
+        checkInvalidSavepoint(svpt1);
+        
+        Savepoint svpt2 = connection.setSavepoint();
+        
+        connection.releaseSavepoint(svpt2);
+        
+        checkInvalidSavepoint(svpt2);
+        
+        Savepoint svpt3 = connection.setSavepoint();
+        
+        connection.commit();
+        
+        checkInvalidSavepoint(svpt3);
+    }
+        
+    private void checkInvalidSavepoint(Savepoint savepoint) {
+        try {
+            connection.rollback(savepoint);
+            assertTrue("Released savepoint should not work.", false);
+        } catch(SQLException ex) {
+            // everything is fine
+        }
+
+        try {
+            connection.releaseSavepoint(savepoint);
+            assertTrue("Released savepoint should not work.", false);
+        } catch(SQLException ex) {
+            // everything is fine
+        }
+    }
 
     /**
      * Check if table contains correct number of rows.

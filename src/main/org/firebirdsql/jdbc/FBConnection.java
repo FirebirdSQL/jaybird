@@ -447,20 +447,17 @@ public class FBConnection implements Connection, FirebirdConnection
      */
     public synchronized void commit() throws SQLException {
         if (isClosed())
-        {
             throw new SQLException("You cannot commit a closed connection.");
-        }
+
         if (getAutoCommit())
-        {
             throw new SQLException("commit called with AutoCommit true!");
-        } // end of if ()
 
         try {
             if (inTransaction())
-            {
                 getLocalTransaction().internalCommit();
-            } // end of if ()
-            // getLocalTransaction().begin();
+            
+            invalidateSavepoints();
+                        
         } catch(GDSException ge) {
             throw new FBSQLException(ge);
         }
@@ -478,19 +475,17 @@ public class FBConnection implements Connection, FirebirdConnection
      */
     public synchronized void rollback() throws SQLException {
         if (getAutoCommit())
-        {
             throw new SQLException("rollback called with AutoCommit true!");
-        } // end of if ()
+
         if (isClosed())
-        {
             throw new SQLException("You cannot rollback closed connection.");
-        }
+
         try{
             if (inTransaction())
-            {
                 getLocalTransaction().internalRollback();
-            } // end of if ()
-            // getLocalTransaction().begin();
+                
+            invalidateSavepoints();
+            
         } catch(GDSException ge) {
             throw new FBSQLException(ge);
         }
@@ -881,6 +876,7 @@ public class FBConnection implements Connection, FirebirdConnection
      */
     
     private int savepointCounter = 0;
+    private LinkedList savepoints = new LinkedList();
 
     private int getNextSavepointCounter() {
         return savepointCounter++;
@@ -901,6 +897,8 @@ public class FBConnection implements Connection, FirebirdConnection
         
         setSavepoint(savepoint);
         
+        savepoints.addLast(savepoint);
+        
         return savepoint;
     }
         
@@ -917,6 +915,8 @@ public class FBConnection implements Connection, FirebirdConnection
                 "be used in auto-commit mode.");
 
         try {
+            ensureInTransaction();
+            
             mc.executeImmediate("SAVEPOINT " + savepoint.getServerSavepointId());
         } catch(GDSException ex) {
             throw new FBSQLException(ex);
@@ -1006,14 +1006,26 @@ public class FBConnection implements Connection, FirebirdConnection
 
         try {
 			mc.executeImmediate(
-			    "RELEASE SAVEPOINT " + fbSavepoint.getServerSavepointId());
+			    "RELEASE SAVEPOINT " + fbSavepoint.getServerSavepointId() + " ONLY");
 		} catch (GDSException ex) {
 			throw new FBSQLException(ex);
 		}
             
         fbSavepoint.invalidate();
+        
+        savepoints.remove(fbSavepoint);
     }
 
+    /**
+     * Invalidate all savepoints.
+     */
+    private synchronized void invalidateSavepoints() {
+        Iterator iter = savepoints.iterator();
+        while(iter.hasNext())
+            ((FBSavepoint)iter.next()).invalidate();
+            
+        savepoints.clear();
+    }
 
 
     //-------------------------------------------
