@@ -34,7 +34,7 @@ import java.util.*;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class PingablePooledConnection implements PooledConnection,
-    XConnectionManager,
+    PooledObject, XConnectionManager,
     XPingableConnection, XStatementManager {
 
     private static final boolean LOG_PREPARE_STATEMENT = false;
@@ -45,12 +45,12 @@ public class PingablePooledConnection implements PooledConnection,
     private static Logger log =
         LoggerFactory.getLogger(PingablePooledConnection.class, false);
 
-    private Connection jdbcConnection;
+    protected Connection jdbcConnection;
     private HashSet eventListeners = new HashSet();
 
     private boolean invalid;
 
-    private XConnection currentConnection;
+    private PooledConnectionHandler currentConnection;
 
     private String pingStatement;
     private long lastPingTime = System.currentTimeMillis();
@@ -64,14 +64,6 @@ public class PingablePooledConnection implements PooledConnection,
     protected Logger getLogChannel() {
         return log;
     }
-
-    /*
-    public Class[] getImplementedInterfaces() {
-        return new Class[] {
-            Connection.class
-        };
-    }
-    */
 
     protected PingablePooledConnection(Connection connection) throws
         SQLException {
@@ -214,6 +206,17 @@ public class PingablePooledConnection implements PooledConnection,
 
         invalidate();
     }
+    
+    /**
+     * Deallocate this object.
+	 */
+	public void deallocate() {
+        try {
+            close();
+        } catch(SQLException ex) {
+            log.warn("Could not cleanly deallocate connection.", ex);
+        }
+	}
 
     /**
      * Get JDBC connection corresponding to this pooled connection instance.
@@ -235,7 +238,7 @@ public class PingablePooledConnection implements PooledConnection,
             //currentConnection.close();
         }
 
-        currentConnection = new XConnection(jdbcConnection, this);
+        currentConnection = new PooledConnectionHandler(jdbcConnection, this);
 
         Connection result = currentConnection.getProxy();
         result.setAutoCommit(true);
@@ -300,8 +303,8 @@ public class PingablePooledConnection implements PooledConnection,
             
         Class[] implementedInterfaces = stmt.getClass().getInterfaces();
 
-        XPreparedStatement handler =
-            new XPreparedStatement(statement, stmt, this);
+        PooledPreparedStatementHandler handler =
+            new PooledPreparedStatementHandler(statement, stmt, this);
 
         // copy all implemented interfaces from the original prepared statement
         // and add XCachablePreparedStatement interface
@@ -383,7 +386,7 @@ public class PingablePooledConnection implements PooledConnection,
         }
     }
 
-    public void connectionClosed(XConnection connection) throws SQLException {
+    public void connectionClosed(PooledConnectionHandler connection) throws SQLException {
 
         if (connection != currentConnection) {
             throw new IllegalArgumentException(
@@ -401,7 +404,7 @@ public class PingablePooledConnection implements PooledConnection,
         }
     }
 
-    public void connectionErrorOccured(XConnection connection, SQLException ex) {
+    public void connectionErrorOccured(PooledConnectionHandler connection, SQLException ex) {
         ConnectionEvent event = new ConnectionEvent(this, ex);
 
         Iterator iter = eventListeners.iterator();
@@ -411,7 +414,7 @@ public class PingablePooledConnection implements PooledConnection,
         }
     }
 
-    public boolean isValid(XConnection connection) {
+    public boolean isValid(PooledConnectionHandler connection) {
         return connection == currentConnection;
     }
 
@@ -423,7 +426,7 @@ public class PingablePooledConnection implements PooledConnection,
      *
      * @see XConnectionManager#connectionCommitted(XConnection)
      */
-    public void connectionCommitted(XConnection connection) throws SQLException {
+    public void connectionCommitted(PooledConnectionHandler connection) throws SQLException {
 
         if (connection != currentConnection) {
             throw new IllegalArgumentException(
@@ -444,7 +447,7 @@ public class PingablePooledConnection implements PooledConnection,
      *
      * @see XConnectionManager#connectionRolledBack(XConnection)
      */
-    public void connectionRolledBack(XConnection connection) throws
+    public void connectionRolledBack(PooledConnectionHandler connection) throws
         SQLException {
         if (connection != currentConnection) {
             throw new IllegalArgumentException(

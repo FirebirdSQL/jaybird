@@ -31,7 +31,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-class XConnection implements InvocationHandler {
+class PooledConnectionHandler implements InvocationHandler {
 	
 	private static final boolean CACHE_PREPARED_STATEMENTS = true;
 	
@@ -41,7 +41,7 @@ class XConnection implements InvocationHandler {
 	private static final boolean LOG_META_DATA = false;
 	private static final boolean LOG_REENTRANT_ACCESS = false;
 	
-	private static Logger logChannel = LoggerFactory.getLogger(XConnection.class, false);
+	private static Logger logChannel = LoggerFactory.getLogger(PooledConnectionHandler.class, false);
     
     /**
      * Helper function to find specified method in a specified class.
@@ -106,7 +106,7 @@ class XConnection implements InvocationHandler {
      * @throws SQLException if something went wrong during initialization.
      */
     public 
-	    XConnection(Connection connection, XConnectionManager owner) 
+	    PooledConnectionHandler(Connection connection, XConnectionManager owner) 
             throws SQLException
         {
             
@@ -116,7 +116,7 @@ class XConnection implements InvocationHandler {
             Class[] implementedInterfaces = connection.getClass().getInterfaces();
 
             proxy = (Connection)Proxy.newProxyInstance(
-                XConnection.class.getClassLoader(),
+                PooledConnectionHandler.class.getClassLoader(),
                 implementedInterfaces,
                 this);
 		}

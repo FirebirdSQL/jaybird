@@ -18,34 +18,19 @@
  */
 package org.firebirdsql.pool;
 
-import java.sql.SQLException;
-
 /**
- * This is the implementation of {@link ConnectionPoolConfiguration} 
- * interface that allows using various JDBC drivers.
- * 
+ * Listener interface for object pools. Implementation of this interface can
+ * be registered to be notified about events that happen to pooled objects.
+ *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class GenericConnectionPoolConfiguration 
-    extends FBConnectionPoolConfiguration 
-{
-
+public interface PooledObjectListener {
+   
     /**
-     * Create instance of this class for the specified JDBC driver.
+     * Notify that pooled object was released and can be returned back to the 
+     * pool.
      * 
-     * @param driverClassName name of the driver class.
-     * 
-     * @throws SQLException if driver was not found.
-     */
-    public GenericConnectionPoolConfiguration(String driverClassName) 
-        throws SQLException 
-    {
-        try {
-            Class.forName(driverClassName);
-        } catch(ClassNotFoundException ex) {
-            throw new SQLException(
-                "Driver " + driverClassName + " not found.");
-        }
-    }
-
+     * @param event instance of {@link PooledObjectEvent}.
+     */ 
+    void pooledObjectReleased(PooledObjectEvent event);
 }

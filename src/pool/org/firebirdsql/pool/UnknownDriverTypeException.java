@@ -16,29 +16,22 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.pool;
 
 import java.sql.SQLException;
 
 /**
- * Manager of pooled connections. Class implementing this interface allocates 
- * physical connections to the database.
- *
+ * This exception is thrown when user tries to specify unknown type of driver. 
+ * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public interface PooledConnectionManager {
+public class UnknownDriverTypeException extends SQLException {
 
-    /**
-     * Allocate pooled connection using specified user name and password.
-     * 
-     * @param userName user name that will be used to access database.
-     * @param password password corresponding to the specified user name.
-     * 
-     * @return instance of {@link PooledConnection}.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    PooledObject allocateConnection(Object key)
-        throws SQLException;
+	/**
+	 * Create instance of this class.
+	 */
+	public UnknownDriverTypeException(String type) {
+		super("Type '" + type + "' is not known.");
+	}
+
 }

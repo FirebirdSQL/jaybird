@@ -53,8 +53,8 @@ public
         private static Logger LOG = 
             LoggerFactory.getLogger(XPreparedStatementCache.class, false);
             
-        public static final String REF_CLASS_NAME = 
-            FBConnectionPoolConfiguration.REF_TYPE;
+        public static final String REF_CLASS_NAME = "";
+            //FBConnectionPoolConfiguration.REF_TYPE;
         
 	
 		private static HashMap pools = new HashMap();
@@ -95,8 +95,8 @@ public
                 if (!REF_CLASS_NAME.equals(ref.getClassName()))
                     return null;
 				
-				RefAddr address = ((Reference)refObj).get(
-				    FBConnectionPoolConfiguration.REF_TYPE);
+				RefAddr address = ((Reference)refObj).get("");
+				    //FBConnectionPoolConfiguration.REF_TYPE);
 				
 				if (address == null) return null;
 				
@@ -107,19 +107,21 @@ public
 					 fullName.append(nameCtx.getNameInNamespace()).append("/");
 				fullName.append(name.toString());
 				
-				AbstractConnectionPoolDataSource pool = 
-					(AbstractConnectionPoolDataSource)pools.get(fullName.toString());
+				FBConnectionPoolDataSource pool = 
+					(FBConnectionPoolDataSource)pools.get(fullName.toString());
 					
 				if (pool == null) {
                     
-                    if (!(address.getContent() instanceof FBConnectionPoolConfiguration))
-                        return null;
+//                    if (!(address.getContent() instanceof FBConnectionPoolConfiguration))
+//                        return null;
                     
-					FBConnectionPoolConfiguration config = 
-						(FBConnectionPoolConfiguration)address.getContent();
+//					FBConnectionPoolConfiguration config = 
+//						(FBConnectionPoolConfiguration)address.getContent();
 						
-					pool = new FBConnectionPoolDataSource(config);
-					pool.start();
+                    if (true)
+                        throw new UnsupportedOperationException("Fix this");
+                         
+					// pool = new FBConnectionPoolDataSource(config);
 					
 					pools.put(fullName, pool);
 				}
@@ -144,13 +146,13 @@ public
 		 * or type specified in configuration is not known to this factory.
 		 */
 		private 
-			Object convertInterface(AbstractConnectionPoolDataSource pool) 
+			Object convertInterface(FBConnectionPoolDataSource pool) 
 			throws IllegalArgumentException {
 				
-                FBConnectionPoolConfiguration config = 
-                    (FBConnectionPoolConfiguration)pool.getConfiguration();
+//                FBConnectionPoolConfiguration config = 
+//                    (FBConnectionPoolConfiguration)pool.getConfiguration();
                 
-				Class type = config.getJNDIType();
+				Class type = Object.class; //config.getJNDIType();
 				
 				if (ConnectionPoolDataSource.class == type)
 					return pool;
