@@ -62,6 +62,7 @@ import org.firebirdsql.jdbc.FBConnectionHelper;
 import java.util.HashSet;
 
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  *
@@ -83,7 +84,7 @@ matching and creation of ManagedConnection instance.
 
 public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
-   private final Logger log = Logger.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass());
 
     final GDS gds = GDSFactory.newGDS();
 
@@ -129,10 +130,10 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
         tpbSet = new HashSet();
         tpbSet.add(new Integer(GDS.isc_tpb_write));
-        //tpbSet.add(new Integer(GDS.isc_tpb_read_committed));
-        //tpbSet.add(new Integer(GDS.isc_tpb_rec_version));
-        tpbSet.add(new Integer(GDS.isc_tpb_concurrency));
-        tpbSet.add(new Integer(GDS.isc_tpb_wait));
+        tpbSet.add(new Integer(GDS.isc_tpb_read_committed));
+        tpbSet.add(new Integer(GDS.isc_tpb_rec_version));
+//        tpbSet.add(new Integer(GDS.isc_tpb_concurrency));
+//        tpbSet.add(new Integer(GDS.isc_tpb_wait));
 
     }  //Default constructor.
 

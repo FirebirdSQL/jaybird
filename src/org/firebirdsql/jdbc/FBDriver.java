@@ -25,6 +25,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.8  2002/05/20 10:55:48  brodsom
+ * write jca imports by class
+ *
  * Revision 1.7  2002/05/09 12:18:29  rrokytskyy
  * fixed couple of issues with correct specification implementation
  * reported by Blas Rodriguez Somoza and Jan Aleman
@@ -75,6 +78,7 @@ import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jca.FBConnectionRequestInfo;
 
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.gds.GDS;
 
 /**
@@ -128,7 +132,7 @@ public class FBDriver implements Driver {
     private Map urlToDataSourceMap = new HashMap();
 
     static{
-       log = Logger.getLogger(FBDriver.class);
+       log = LoggerFactory.getLogger(FBDriver.class);
         try{
             java.sql.DriverManager.registerDriver(new FBDriver());
         } catch(Exception ex) {

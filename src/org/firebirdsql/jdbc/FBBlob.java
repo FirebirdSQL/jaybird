@@ -39,6 +39,7 @@ import java.util.HashSet;
 import org.firebirdsql.gds.isc_blob_handle;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.OutputStream;
 import java.io.BufferedOutputStream;
@@ -81,7 +82,7 @@ import java.io.BufferedOutputStream;
 
 public class FBBlob implements Blob{
 
-   private final Logger log = Logger.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * bufferlength is the size of the buffer for blob input and output streams,

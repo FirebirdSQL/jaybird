@@ -45,6 +45,7 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.net.URL;
 import java.net.MalformedURLException;
@@ -66,7 +67,7 @@ import java.util.ArrayList;
 
 public class FBResultSet implements ResultSet {
 
-   private final Logger log = Logger.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass());
 
     protected FBFetcher fbFetcher;
 
@@ -226,10 +227,7 @@ public class FBResultSet implements ResultSet {
         if (row[columnIndex - 1] == null) {
             return null;
         }
-        if (log.isDebugEnabled()) 
-        {
-            log.debug("retrieved blob_id: " + row[columnIndex - 1]);
-        } // end of if ()
+        log.debug("retrieved blob_id: " + row[columnIndex - 1]);
         return new FBBlob(mc, ((Long)row[columnIndex - 1]).longValue());
         //return super.getBlob(columnIndex);
         */
@@ -2576,8 +2574,7 @@ public class FBResultSet implements ResultSet {
             isLast = false;
             isAfterLast = false;
                 
-            if (log.isDebugEnabled())
-                log.debug("FBResultSet next - FBStatementFetcher");
+            log.debug("FBResultSet next - FBStatementFetcher");
                     
             if (isEmpty)
                 return false;

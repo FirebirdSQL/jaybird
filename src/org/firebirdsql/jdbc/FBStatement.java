@@ -36,6 +36,7 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.SqlInfo;
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  *
@@ -62,7 +63,7 @@ import org.firebirdsql.logging.Logger;
  */
 public class FBStatement implements Statement {
 
-   protected final Logger log = Logger.getLogger(getClass());
+   protected final Logger log = LoggerFactory.getLogger(getClass());
 
     protected FBConnection c;
 
@@ -119,13 +120,6 @@ public class FBStatement implements Statement {
                 return getResultSet();
             } // end of else
         }
-/*		  
-        catch (ResourceException re)
-        {
-           log.warn("resource exception", re);
-           throw new SQLException("ResourceException: " + re);
-        } // end of try-catch
- */
         catch (GDSException ge)
         {
             throw new FBSQLException(ge);
@@ -161,12 +155,6 @@ public class FBStatement implements Statement {
             }
             return getUpdateCount();
         }
-/*		  
-        catch (ResourceException re)
-        {
-            throw new SQLException("ResourceException: " + re);
-        } // end of try-catch
- */
         catch (GDSException ge)
         {
             throw new FBSQLException(ge);
@@ -589,27 +577,27 @@ public class FBStatement implements Statement {
      * @see #execute
      */
     public int getUpdateCount() throws  SQLException {
-		 if (isResultSet)
-			 return -1;
-		 else {
-        try {
-            SqlInfo i = c.getSqlInfo(fixedStmt);
-            if (log.isDebugEnabled())
-            {
-               log.debug("InsertCount: " + i.getInsertCount());
-               log.debug("UpdateCount: " + i.getUpdateCount());
-               log.debug("DeleteCount: " + i.getDeleteCount());
+        if (isResultSet)
+            return -1;
+        else {
+            try {
+                SqlInfo i = c.getSqlInfo(fixedStmt);
+                int insCount = i.getInsertCount();
+                int updCount = i.getUpdateCount();
+                int delCount = i.getDeleteCount();
+                int resCount = Math.max(insCount,Math.max(updCount,delCount);
+                log.debug("InsertCount: " + insCount);
+                log.debug("UpdateCount: " + updCount);
+                log.debug("DeleteCount: " + delCount);
 
-               log.debug("returning: " + Math.max(i.getInsertCount(), Math.max(i.getUpdateCount(), i.getDeleteCount())));
+                log.debug("returning: " + resCount);
 
-            } // end of if ()
-
-            return Math.max(i.getInsertCount(), Math.max(i.getUpdateCount(), i.getDeleteCount()));
+                return resCount;
+            }
+            catch (GDSException ge) {
+                throw new SQLException("Could not get UpdateCount: " + ge);
+            }
         }
-        catch (GDSException ge) {
-            throw new SQLException("Could not get UpdateCount: " + ge);
-        }
-		 }
     }
 
 

@@ -39,6 +39,7 @@ import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
 //import javax.security.auth.Subject;
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * ManagedConnectionPool.java
@@ -61,7 +62,7 @@ public class ManagedConnectionPool
 
    private /*final*/ FIFOSemaphore permits;
 
-   private final Logger log = Logger.getLogger(getClass());
+   private final Logger log = LoggerFactory.getLogger(getClass());
 
    private final Counter connectionCounter = new Counter();
 

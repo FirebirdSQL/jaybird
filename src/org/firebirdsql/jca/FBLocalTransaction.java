@@ -39,6 +39,7 @@ import javax.transaction.xa.Xid;
 import org.firebirdsql.jdbc.FBConnection;
 
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 
 /**
@@ -50,7 +51,7 @@ import org.firebirdsql.logging.Logger;
 
  public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.LocalTransaction {
 
-    private static final Logger log = Logger.getLogger(FBLocalTransaction.class);
+    private static final Logger log = LoggerFactory.getLogger(FBLocalTransaction.class);
 
      private FBManagedConnection mc;
 
