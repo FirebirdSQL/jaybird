@@ -32,7 +32,7 @@ import org.firebirdsql.gds.XSQLVAR;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class FBBlobField extends FBField {
+public class FBBlobField extends FBField implements FBFlushableField {
     private static final int BUFF_SIZE = 4096;
 
     private boolean isCachedData = false;
@@ -133,12 +133,11 @@ public class FBBlobField extends FBField {
             return getBytes();
     }
 
-    byte[] getCachedObject() throws SQLException {
-        if (rs.row[numCol]==null) return null;
-//            return BLOB_NULL_VALUE;
+    public byte[] getCachedObject() throws SQLException {
+        if (rs.row[numCol]==null) 
+            return BYTES_NULL_VALUE;
 
 		  return getBytesInternal();
-//        return new FBCachedBlob(getBytesInternal());
     }
 
     String getString() throws SQLException {
@@ -166,6 +165,12 @@ public class FBBlobField extends FBField {
     }
 
     void setCharacterStream(Reader in, int length) throws SQLException {
+        
+        if (in == READER_NULL_VALUE) {
+            setNull();
+            return;
+        }
+        
         if (!c.getAutoCommit()) {
             copyCharacterStream(in, length);
         } else {
@@ -194,6 +199,12 @@ public class FBBlobField extends FBField {
     }
     
     void setBinaryStream(InputStream in, int length) throws SQLException {
+        
+        if (in == STREAM_NULL_VALUE) {
+            setNull();
+            return;
+        }
+        
         if (!c.getAutoCommit()) {
             copyBinaryStream(in, length);
         } else {
@@ -219,14 +230,12 @@ public class FBBlobField extends FBField {
         }
     }
     
-    void flushCachedData() throws SQLException {
-//        if (field.sqldata instanceof byte[]) {
+    public void flushCachedData() throws SQLException {
         if (isCachedData){
             copyBinaryStream(
                 new ByteArrayInputStream((byte[])field.sqldata), field.sqllen);
             isCachedData=false;
         }
-//        }
     }
     
     private void copyBinaryStream(InputStream in, int length) throws SQLException {
@@ -242,10 +251,21 @@ public class FBBlobField extends FBField {
     }
     
     void setBytes(byte[] value) throws SQLException {
+        
+        if (value == BYTES_NULL_VALUE) {
+            setNull();
+            return;
+        }
+        
         setBinaryStream(new ByteArrayInputStream(value), value.length);
     }
 
     void setString(String value) throws SQLException {
+        if (value == STRING_NULL_VALUE) {
+            setNull();
+            return;
+        }
+        
         setBytes(XSQLVAR.encodeString(value,javaEncoding));
     }
 

@@ -111,6 +111,7 @@ abstract class FBField {
     static final Timestamp TIMESTAMP_NULL_VALUE = null;
 
     static final InputStream STREAM_NULL_VALUE = null;
+    static final Reader READER_NULL_VALUE = null;
     static final byte[] BYTES_NULL_VALUE = null;
     static final FBBlob BLOB_NULL_VALUE = null;
     
@@ -360,12 +361,17 @@ abstract class FBField {
             return new FBTimestampField(field, rs, numCol);
         else
         if (isType(field, Types.BLOB) || 
-            isType(field, Types.LONGVARBINARY) ||
-            isType(field, Types.LONGVARCHAR))
+            isType(field, Types.LONGVARBINARY))
             if (cached)
                 return new FBCachedBlobField(field, rs, numCol);
 				else		  
                 return new FBBlobField(field, rs, numCol);
+        else
+        if (isType(field, Types.LONGVARCHAR))
+            if (cached)
+                return new FBCachedLongVarCharField(field, rs, numCol);
+            else
+                return new FBLongVarCharField(field, rs, numCol);
         else
             throw (SQLException)createException(
                 SQL_TYPE_NOT_SUPPORTED);

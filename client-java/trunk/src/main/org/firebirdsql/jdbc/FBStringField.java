@@ -83,7 +83,7 @@ import org.firebirdsql.gds.XSQLVAR;
  * and "N", or "TRUE" and "FALSE").
  * @todo check if the setBinaryStream(null) is allowed by specs.
  */
-public final class FBStringField extends FBField {
+public class FBStringField extends FBField {
     private static final String SHORT_TRUE = "Y";
     private static final String SHORT_FALSE = "N";
     private static final String LONG_TRUE = "TRUE";
@@ -315,15 +315,22 @@ public final class FBStringField extends FBField {
             return;
         }
 
+        if (length > field.sqllen)
+            throw new DataTruncation(-1, true, false, length, field.sqllen);
+
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             byte[] buff = new byte[4096];
+            
             int counter = 0;
-            while ((counter = in.read(buff)) != -1)
+            int toRead = length;
+            
+            while ((counter = in.read(buff, 0, toRead > buff.length ? buff.length : toRead)) != -1) {
                 out.write(buff, 0, counter);
-
-            if (length > field.sqllen)
-                throw new DataTruncation(-1, true, false, length, field.sqllen);
+                toRead -= counter;
+            }
+            
+            /*
             field.sqldata = new byte[length];
             if (javaEncoding==null){
                 System.arraycopy(out.toByteArray(), 0, field.sqldata, 0, length);
@@ -335,6 +342,8 @@ public final class FBStringField extends FBField {
                     System.arraycopy(out.toByteArray(), 0, field.sqldata, 0, length);
                 }
             }
+            */
+            setBytes(out.toByteArray());
         }
         catch (IOException ioex) {
             throw (SQLException) createException(
