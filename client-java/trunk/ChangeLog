@@ -1,3 +1,26 @@
+2005-02-14 23:10  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBEscapedParser.java:
+	
+	added support for escape clause
+
+2005-02-14 22:58  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/management/BackupManager.java,
+	main/org/firebirdsql/management/FBBackupManager.java,
+	test/org/firebirdsql/management/TestBackupManager.java:
+	
+	modified code to support multifile backups and restores
+
+2005-02-14 22:57  rrokytskyy
+
+	*
+	
+	removed methods that should not be visible to public
+	client-java/src/main/org/firebirdsql/management/ServiceManager.java
+	:
+
 2005-02-13 12:38  rrokytskyy
 
 	*
