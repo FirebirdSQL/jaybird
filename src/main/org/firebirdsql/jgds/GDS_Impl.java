@@ -376,7 +376,6 @@ public final class GDS_Impl implements GDS {
                 db.out.flush();
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
-                if (debug) log.debug("parseSqlInfo: first 2 bytes are " + isc_vax_integer(db.getResp_data(), 0, 2) + " or: " + db.getResp_data()[0] + ", " + db.getResp_data()[1]);
                 blob.setPosition(db.getResp_object());
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_network_error);
@@ -2167,7 +2166,11 @@ public final class GDS_Impl implements GDS {
 
 
     public static Clumplet newClumplet(int type, int c){
-        return new ClumpletImpl(type, new byte[] {(byte)(c>>24), (byte)(c>>16), (byte)(c>>8), (byte)c});
+        return new ClumpletImpl(type, new byte[] {
+            (byte)(c >>  0), 
+            (byte)(c >>  8), 
+            (byte)(c >> 16), 
+            (byte)(c >> 24)});
     }
 
     public static Clumplet newClumplet(int type, byte[] content) {
