@@ -316,18 +316,19 @@ public abstract class AbstractConnection implements FirebirdConnection {
     {
         checkValidity();
         
-        if (mc.autoCommit != autoCommit)
-        {
-            try {
-                if (inTransaction())
-                    getLocalTransaction().internalCommit();
+        synchronized(mc) {
+            if (mc.autoCommit != autoCommit) {
+                try {
+                    if (inTransaction())
+                            getLocalTransaction().internalCommit();
 
-                this.mc.autoCommit = autoCommit;
-                
-            } catch(ResourceException ge) {
-                throw new FBSQLException(ge);
-            }
-        } 
+                    this.mc.autoCommit = autoCommit;
+
+                } catch (ResourceException ge) {
+                    throw new FBSQLException(ge);
+                }
+            } 
+        }
     }
 
 
@@ -365,13 +366,15 @@ public abstract class AbstractConnection implements FirebirdConnection {
         if (getAutoCommit())
             throw new FBSQLException("commit called with AutoCommit true!");
 
-        try {
-            if (inTransaction())
-                getLocalTransaction().internalCommit();
-            
-        } catch(ResourceException ge) {
-            throw new FBSQLException(ge);
-        }
+        synchronized(mc) {
+            try {
+                if (inTransaction())
+                    getLocalTransaction().internalCommit();
+                
+            } catch(ResourceException ge) {
+                throw new FBSQLException(ge);
+            }
+        } 
     }
 
 
@@ -393,12 +396,14 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 "You cannot rollback closed connection.",
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
 
-        try{
-            if (inTransaction())
-                getLocalTransaction().internalRollback();
-            
-        } catch(ResourceException ex) {
-            throw new FBSQLException(ex);
+        synchronized(mc) {
+            try{
+                if (inTransaction())
+                    getLocalTransaction().internalRollback();
+                
+            } catch(ResourceException ex) {
+                throw new FBSQLException(ex);
+            }
         }
     }
 
@@ -425,24 +430,23 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 //leave managed transactions alone, they are normally
                 //committed after the Connection handle is closed.
                 
-                if (!getAutoCommit()) 
-                {
-                    //autocommit is always true for managed tx.
-                    try {
-                        if (inTransaction())
-                            getLocalTransaction().internalRollback();
+                synchronized(mc) {
+                    if (!getAutoCommit()) {
+                        //autocommit is always true for managed tx.
+                        try {
+                            if (inTransaction())
+                                    getLocalTransaction().internalRollback();
 
-                    } catch(ResourceException ge) {
-                        throw new FBSQLException(ge);
-                    }
-                    finally
-                    {
-                        //always reset Autocommit for the next user.
-                        setAutoCommit(true);
-                    }
-                } // end of if ()
-                
-                mc.close(this);
+                        } catch (ResourceException ge) {
+                            throw new FBSQLException(ge);
+                        } finally {
+                            //always reset Autocommit for the next user.
+                            setAutoCommit(true);
+                        }
+                    } // end of if ()
+
+                    mc.close(this);
+                }
                 mc = null;
             }
         }
@@ -451,7 +455,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
 
     /**
      * Tests to see if a Connection is closed.
-     *
+     * 
      * @return true if the connection is closed; false if it's still open
      */
     public boolean isClosed() {
@@ -555,16 +559,18 @@ public abstract class AbstractConnection implements FirebirdConnection {
                     FBSQLException.SQL_STATE_CONNECTION_CLOSED);
         
         if (getTransactionIsolation() != level) {
-            try {
+            synchronized(mc) {
+                try {
 
-                if (inTransaction())
-                    getLocalTransaction().internalCommit();
+                    if (inTransaction())
+                            getLocalTransaction().internalCommit();
 
-                mc.setTransactionIsolation(level);
+                    mc.setTransactionIsolation(level);
 
-            } catch (ResourceException re) {
-                throw new FBSQLException(re);
-            } 
+                } catch (ResourceException re) {
+                    throw new FBSQLException(re);
+                } 
+            }
         }
     }
 
@@ -773,10 +779,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
     //Borrowed from javax.resource.cci.Connection
 
     public synchronized FBLocalTransaction getLocalTransaction() {
-        if (localTransaction == null) {
-            localTransaction = new FBLocalTransaction(mc, this);
+        synchronized(mc) {
+            if (localTransaction == null) {
+                localTransaction = new FBLocalTransaction(mc, this);
+            }
+            return localTransaction;
         }
-        return localTransaction;
     }
     /**
      * This non- interface method is included so you can
@@ -818,21 +826,22 @@ public abstract class AbstractConnection implements FirebirdConnection {
      *
      * @return a <code>boolean</code> value, true if transaction was started.
      */
-    public synchronized void ensureInTransaction() throws SQLException
-    {
-		 try {
-			if (inTransaction()) {
-				autoTransaction = false;
-				return;
-			}
+    public synchronized void ensureInTransaction() throws SQLException {
+        synchronized (mc) {
+            try {
+                if (inTransaction()) {
+                    autoTransaction = false;
+                    return;
+                }
 
-            //We have to start our own transaction
-			getLocalTransaction().begin();
-			autoTransaction = true;
-            
-		 } catch(ResourceException re){
-           throw new FBSQLException(re);
-		 }
+                //We have to start our own transaction
+                getLocalTransaction().begin();
+                autoTransaction = true;
+
+            } catch (ResourceException re) {
+                throw new FBSQLException(re);
+            }
+        }
     }
 
     /**
@@ -860,19 +869,18 @@ public abstract class AbstractConnection implements FirebirdConnection {
         if (willEndTransaction())
         {
             autoTransaction = false;
-            try
-            {
-                if (commit)
-                    getLocalTransaction().internalCommit();
-                else
-                    getLocalTransaction().internalRollback();
+            synchronized(mc) {
+                try {
+                    if (commit)
+                        getLocalTransaction().internalCommit();
+                    else
+                        getLocalTransaction().internalRollback();
+                } catch (ResourceException ge) {
+                    throw new FBSQLException(ge);
+                }
             }
-            catch (ResourceException ge)
-            {
-                throw new FBSQLException(ge);
-            } // end of catch
 
-        } // end of if ()
+        }
     }
 
 	 protected synchronized void addWarning(SQLWarning warning){
