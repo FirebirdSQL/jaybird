@@ -318,4 +318,77 @@ public class TestFBResultSet extends FBTestBase {
         connection.setAutoCommit(true);
     }
 
+    /**
+     * Test cursor scrolling in case of ResultSet.TEST_SCROLL_INSENSITIVE.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testScrollInsensitive() throws Exception {
+        int recordCount = 10;
+        
+        PreparedStatement ps = 
+        connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+
+        try {
+            for(int i = 0; i < recordCount; i++) {
+                ps.setInt(1, i);
+                ps.setInt(2, i);
+                ps.executeUpdate();
+            }
+        } finally {
+            ps.close();
+        }
+        
+        connection.setAutoCommit(false);
+        
+        Statement stmt = connection.createStatement(
+                ResultSet.TYPE_SCROLL_INSENSITIVE, 
+                ResultSet.CONCUR_READ_ONLY);
+        
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table");
+            
+            int testValue;
+            
+            rs.last();
+            testValue = recordCount - 1;
+            assertTrue("ID of last record should be equal to " + testValue,
+                    rs.getInt(1) == testValue );
+            assertTrue("isLast() should return true", rs.isLast());
+            
+            rs.absolute(recordCount / 2);
+            testValue = recordCount / 2 - 1;
+            assertTrue("ID after absolute positioning should return " + testValue,
+                    rs.getInt(1) == testValue);
+            
+            rs.absolute(-1);
+            testValue = recordCount - 1;
+            assertTrue("ID after absolute positioning with negative position " +
+                    "should return " + testValue, rs.getInt(1) == testValue);
+            
+            rs.first();
+            testValue = 0;
+            assertTrue("ID after first() should return " + testValue,
+                    rs.getInt(1) == testValue);
+            assertTrue("isFirst() should report true", rs.isFirst());
+            
+            boolean hasRow = rs.previous();
+            assertTrue("Should not point to the row", !hasRow);
+            assertTrue("isBeforeFirst() should return true", rs.isBeforeFirst());
+            
+            rs.relative(5);
+            rs.relative(-4);
+            testValue = 0;
+            assertTrue("ID after relative positioning should return " + testValue,
+                    rs.getInt(1) == testValue);
+            
+            rs.beforeFirst();
+            assertTrue("isBeforeFirst() should return true", rs.isBeforeFirst());
+            
+            rs.afterLast();
+            assertTrue("isAfterLast() should return true", rs.isAfterLast());
+        } finally {
+            stmt.close();
+        }
+    }
 }
