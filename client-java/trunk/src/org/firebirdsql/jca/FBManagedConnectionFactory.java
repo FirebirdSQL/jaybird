@@ -473,6 +473,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         }
     }
 
+
     void registerStatementWithTransaction(isc_tr_handle tr, FBStatement stmt) {
         ArrayList stmts = null;
         synchronized (tr) {

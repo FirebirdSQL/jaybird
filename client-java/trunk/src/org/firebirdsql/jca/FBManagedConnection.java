@@ -27,33 +27,38 @@ package org.firebirdsql.jca;
 
 // imports --------------------------------------
 
-import javax.resource.ResourceException;
-import javax.resource.spi.ManagedConnection;
-import javax.resource.spi.ManagedConnectionMetaData;
-import javax.resource.spi.LocalTransaction;
-import javax.resource.spi.ConnectionEvent;
-import javax.resource.spi.ConnectionEventListener;
-import javax.resource.spi.ConnectionRequestInfo;
-import javax.resource.spi.security.PasswordCredential;
 
+
+
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
+import javax.resource.ResourceException;
+import javax.resource.spi.ConnectionEvent;
+import javax.resource.spi.ConnectionEventListener;
+import javax.resource.spi.ConnectionRequestInfo;
+import javax.resource.spi.LocalTransaction;
+import javax.resource.spi.ManagedConnection;
+import javax.resource.spi.ManagedConnectionMetaData;
+import javax.resource.spi.security.PasswordCredential;
+import javax.security.auth.Subject;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
-
-import javax.security.auth.Subject;
-
-import org.firebirdsql.gds.isc_db_handle;
-import org.firebirdsql.gds.isc_stmt_handle;
-import org.firebirdsql.gds.isc_tr_handle;
-import org.firebirdsql.gds.isc_blob_handle;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.isc_blob_handle;
+import org.firebirdsql.gds.isc_db_handle;
+import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.isc_tr_handle;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBStatement;
 
@@ -434,13 +439,53 @@ throw new XAException("end called with no transaction associated");
         return XA_OK;
     }
 
-    public Xid[] recover(int flag) throws javax.transaction.xa.XAException {
-/*        if(fbmc.getCurrentXid() == null)
-            return new Xid[0];
-        else
-            return new Xid[]{fbmc.getCurrentXid()};*/
-         return null;
-    }
+    private static final String RECOVERY_QUERY = "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE = 1";
+
+    public Xid[] recover(int flag) throws javax.transaction.xa.XAException 
+    {
+        ArrayList xids = new ArrayList();
+        Connection conn = null;
+        try 
+        {
+            conn = (Connection)getConnection(null, null);
+       
+            try 
+            {
+
+                Statement statement = conn.createStatement();
+                ResultSet recoveredRS = statement.executeQuery(RECOVERY_QUERY);
+                while (recoveredRS.next()) 
+                {
+                    try 
+                    {
+                        long transactionID = recoveredRS.getLong(1);
+                        InputStream xidIn = recoveredRS.getBinaryStream(2);
+                        FBXid xid = new FBXid(xidIn);
+                        xids.add(xid);
+                        //what do we do with the Firebird transactionID?
+                    } 
+                    catch (SQLException sqle) 
+                    { } // end of try-catch
+                    catch (ResourceException sqle) 
+                    { } // end of try-catch
+
+                } // end of while ()
+                return (Xid[])xids.toArray(new Xid[xids.size()]);
+            }
+            finally 
+            {
+                conn.close();
+            } // end of finally
+        } 
+        catch (SQLException sqle) 
+        {
+            throw new XAException("can't perform query to fetch xids" + sqle);
+        } // end of try-catch
+        catch (ResourceException re) 
+        {
+            throw new XAException("can't perform query to fetch xids" + re);
+        } // end of try-catch
+     }
 
     /**
      * Rolls back the work, assuming it was done on behalf of the specified
