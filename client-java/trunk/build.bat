@@ -1,5 +1,7 @@
 @echo off
 
+set ANT_HOME=.
+
 REM check JAVA_HOME
 if "%JAVA_HOME%" == "" goto noJavaHome
 goto slurpArgs
@@ -40,6 +42,7 @@ REM set common ANT options
 set JAXP_DOM_FACTORY="org.apache.xerces.jaxp.DocumentBuilderFactoryImpl"
 set JAXP_SAX_FACTORY="org.apache.xerces.jaxp.SAXParserFactoryImpl"
 
+rem set ANT_CMD_LINE_ARGS=%ANT_CMD_LINE_ARGS% -Djava.library.path=.
 set ANT_CMD_LINE_ARGS=%ANT_CMD_LINE_ARGS% -Djavax.xml.parsers.DocumentBuilderFactory=%JAXP_DOM_FACTORY%
 set ANT_CMD_LINE_ARGS=%ANT_CMD_LINE_ARGS% -Djavax.xml.parsers.SAXParserFactory=%JAXP_SAX_FACTORY%
 
