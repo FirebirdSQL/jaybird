@@ -1,0 +1,209 @@
+  <!-- =================================================================== -->
+  <!-- Compiles the source code                                            -->
+  <!-- =================================================================== -->
+  <target name="compile" depends="compile-concurrent, compile-j2ee, compile-driver, compile-pool, compile-compatibility, compile-tests, compile-etc, compile-examples, compile-resources, compile-stylesheets"/>
+
+  <!-- calling this unjar a compile is stretching the truth a bit-->
+  <target name="compile-concurrent" depends="init">
+    <mkdir dir="${build.concurrent}"/>
+
+    <unjar src="${module.thirdparty}/concurrent.jar"
+           dest="${build.concurrent}">
+      <patternset>
+        <include name="EDU/oswego/cs/dl/util/concurrent/FIFOSemaphore.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/FIFOSemaphore$FIFOWaitQueue.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/QueuedSemaphore.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/QueuedSemaphore$WaitQueue.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/QueuedSemaphore$WaitQueue$WaitNode.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/Semaphore.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/Sync.class"/>
+
+        <include name="EDU/oswego/cs/dl/util/concurrent/LinkedQueue.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/LinkedNode.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/Channel.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/Puttable.class"/>
+        <include name="EDU/oswego/cs/dl/util/concurrent/Takable.class"/>
+      </patternset>
+    </unjar>
+  </target>
+
+
+  <target name="compile-native" depends="init">
+    <ant antfile="build_native.xml"/>
+  </target>
+
+  <target name="compile-j2ee" depends="init, checkout-j2ee">
+    <mkdir dir="${build.j2ee}"/>
+
+    <javac destdir="${build.j2ee}"
+           target="1.2"
+           debug="on"
+           deprecation="on"
+           optimize="on">
+      <classpath refid="javac.j2ee.classpath"/>
+      <src path="${jboss.source.root}/jboss-j2ee/src/main"/>
+
+      <include name="javax/resource/*.java"/>
+      <include name="javax/resource/cci/ConnectionSpec.java"/>
+      <include name="javax/resource/cci/LocalTransaction.java"/>
+      <include name="javax/resource/spi/**/*.java"/>
+      <include name="javax/transaction/xa/*.java"/>
+      <include name="javax/sql/*.java"/>
+    </javac>
+  </target>
+
+
+  <target name="compile-examples">
+  	<mkdir dir="${build.examples}"/>
+    <javac srcdir="${source.examples}"
+           destdir="${build.examples}"
+           target="1.2"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+           includes="*"
+           excludes="**/temp*"
+    >
+      <classpath refid="javac.examples.classpath"/>
+    </javac>
+  </target>
+
+  <target name="set-jdbc-20-src" unless="jdbc.30">
+    <path id="source.java.additional">
+      <pathelement path="${source.jdbc.20}"/>
+    </path>
+  </target>
+  
+  <target name="set-jdbc-30-src" if="jdbc.30">
+    <path id="source.java.additional">
+      <pathelement path="${source.jdbc.30}"/>
+    </path>
+  </target>
+
+  <target name="compile-driver" depends="compile-j2ee,set-jdbc-20-src,set-jdbc-30-src">
+    <mkdir dir="${build.classes}"/>
+    <javac destdir="${build.classes}"
+           target="1.2"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+           includes="org/**"
+           excludes="**/temp*"
+    >
+      <classpath refid="javac.driver.classpath"/>
+      <src path="${source.java}"/>
+      <src refid="source.java.additional"/>
+    </javac>
+  </target>
+
+  <target name="compile-pool" depends="compile-driver">
+    <mkdir dir="${build.pool}"/>
+    <javac srcdir="${source.pool}"
+           destdir="${build.pool}"
+           target="1.2"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+           includes="org/**"
+           excludes="**/temp*"
+    >
+      <classpath refid="javac.pool.classpath"/>
+    </javac>
+  </target>
+  
+  <target name="compile-compatibility" depends="compile-pool">
+  	<mkdir dir="${build.compatibility}"/>
+    <javac srcdir="${source.compatibility}"
+           destdir="${build.compatibility}"
+           target="1.2"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+    >
+      <classpath refid="javac.compatibility.classpath"/>
+    </javac>
+  </target>
+
+  <target name="set-jdbc-20-test" unless="jdbc.30">
+    <path id="source.test.additional">
+    </path>
+  </target>
+
+  <target name="set-jdbc-30-test" if="jdbc.30">
+    <path id="source.test.additional">
+      <pathelement path="${source.test.30}"/>
+    </path>
+  </target>
+
+  <target name="compile-tests" depends="compile-pool,set-jdbc-20-test,set-jdbc-30-test">
+    <mkdir dir="${build.test}"/>
+    <javac srcdir="${source.test}"
+           destdir="${build.test}"
+           target="1.2"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+           includes="org/**"
+           excludes="**/temp*"
+    >
+      <classpath refid="javac.test.classpath"/>
+      <src path="${source.test}"/>
+      <src refid="source.test.additional"/>
+    </javac>
+
+    <copy todir="${build.test}" filtering="no">
+      <fileset dir="${source.test}">
+         <include name="**/*.properties"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+  <!-- Compile etc files (manifest) -->
+  <target name="compile-etc" depends="init">
+    <mkdir dir="${build.etc}"/>
+    <copy todir="${build.etc}" filtering="yes">
+      <fileset dir="${source.etc}">
+         <include name="default.mf"/>
+         <include name="JDBC20_conformance.html"/>
+         <include name="faq.html"/>
+         <include name="FAQ.txt"/>
+         <include name="release_notes.html"/>
+      </fileset>
+      <filterset>
+        <filter token="java.vm.version" value="${java.vm.version}"/>
+        <filter token="java.vm.vendor" value="${java.vm.vendor}"/>
+
+        <filter token="specification.title" value="${specification.title}"/>
+        <filter token="specification.version" value="${specification.version}"/>
+        <filter token="specification.vendor" value="${specification.vendor}"/>
+
+        <filter token="implementation.title" value="${implementation.title}"/>
+        <filter token="implementation.url" value="${implementation.url}"/>
+        <filter token="implementation.version" value="${implementation.version}"/>
+        <filter token="implementation.vendor" value="${implementation.vendor}"/>
+        <filter token="implementation.vendor.id" value="${implementation.vendor.id}"/>
+
+      </filterset>
+    </copy>
+  </target>
+
+  <!-- Compile resource files -->
+  <target name="compile-resources" depends="init">
+    <mkdir dir="${build.resources}"/>
+    <copy todir="${build.resources}" filtering="no">
+      <fileset dir="${source.resources}">
+         <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- Compile stylesheets -->
+  <target name="compile-stylesheets" depends="init">
+    <mkdir dir="${build.stylesheets}"/>
+    <copy todir="${build.stylesheets}" filtering="yes">
+      <fileset dir="${source.stylesheets}">
+         <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>

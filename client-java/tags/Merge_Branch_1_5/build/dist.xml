@@ -1,0 +1,105 @@
+  <!-- =================================================================== -->
+  <!-- Creates the API documentation                                       -->
+  <!-- =================================================================== -->
+  <target name="javadocs" depends="init">
+    <mkdir dir="${build.docs}"/>
+    <javadoc packagenames="${packages}"
+             sourcepath="${source.java};${source.pool}"
+             destdir="${build.docs}"
+             author="true"
+             version="true"
+             windowtitle="${Name} API"
+             doctitle="${Name}"
+             extdirs="${module.thirdparty}"
+             bottom="Copyright &#169; 2001 David Jencks and other authors. All rights reserved.">
+      <classpath refid="javac.driver.classpath"/>
+      <classpath refid="javac.pool.classpath"/>
+    </javadoc>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the html documentation                                      -->
+  <!-- =================================================================== -->
+  <target name="docs" depends="init">
+
+    <!--echo message="Building html documentation. Please wait ..."/-->
+<!--    <style  basedir="${source.docs.dir}"
+             style="jboss.xsl"
+             destdir="${build.docs.dir}"
+             includes="jbossdocs.xml"
+    />
+    <move todir="${build.docs.dir}">
+      <fileset dir="${source.java}/build" includes="*.html"/>
+    </move>
+    <delete file="${build.docs.dir}/jbossdocs.html"/>-->
+
+    <!-- Stylesheets, images, and static HTML -->
+ <!--   <copy todir="${build.docs.dir}">
+       <fileset dir="${source.java}/docs" excludes="*.xml,*.xsl,**/docbook/**,**/docbookx/**"/>
+     </copy>
+     -->
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the distribution                                            -->
+  <!-- =================================================================== -->
+  <target name="dist" depends="jars,javadocs">
+    <mkdir dir="${build.dist}"/>
+    <zip zipfile="${build.dist}/${Name}-${version.full}.zip">
+      <fileset dir="${build.lib}">
+        <include name="firebirdsql.rar"/>
+        <include name="firebirdsql-test.jar"/>
+        <include name="firebirdsql-full.jar"/>
+        <include name="firebirdsql-pool.jar"/>
+        <include name="firebirdsql.jar"/>
+        <include name="firebirdjmx.jar"/>
+      </fileset>
+      <fileset dir="${module.etc}">
+        <include name="release_notes.pdf"/>
+        <include name="release_notes.html"/>
+      </fileset>
+      <zipfileset dir="${build.lib}" prefix="lib">
+        <include name="mini-j2ee.jar"/>
+        <include name="mini-concurrent.jar"/>
+      </zipfileset>
+      <zipfileset dir="${module.thirdparty}" prefix="lib">
+        <include name="log4j-core.jar"/>
+        <include name="jaas.jar"/>
+      </zipfileset>
+      <zipfileset dir="${source.examples}" prefix="examples">
+      	<include name="*"/>
+      </zipfileset>
+      <zipfileset dir="${module.etc}" prefix="docs">
+        <!-- include name="*.html"/ -->
+        <include name="faq.html"/>
+        <exclude name="release_notes.html"/>
+        <!--exclude name="FAQ.*"/>
+        <exclude name="faq.*"/-->
+      </zipfileset>
+      <zipfileset dir="${build.docs}" prefix="docs/api">
+        <include name="**/*"/>
+      </zipfileset>
+    </zip>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Packages the source files with ZIP                                  -->
+  <!-- =================================================================== -->
+  <target name="src-zip" depends="init">
+    <zip zipfile="${Name}-src-${version.full}.zip" basedir="../.." includes="clients/java/**" excludes="clients/java/**.zip"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Packages the distribution with ZIP                                  -->
+  <!-- =================================================================== -->
+  <target name="dist-zip" depends="dist">
+    <zip zipfile="${Name}-${version.full}.zip" basedir="${dist.dir}" includes="src/**"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Packages the distribution with TAR-GZIP                             -->
+  <!-- =================================================================== -->
+  <target name="dist-tgz" depends="dist">
+    <tar tarfile="${Name}-${version.full}.tar" basedir="${dist.dir}" includes="src/**"/>
+    <gzip zipfile="${Name}-${version.full}.tar.gz" src="${Name}-${version}.tar"/>
+  </target>

@@ -1,0 +1,287 @@
+<?xml version="1.0"?>
+<!--
+	JDBC-JCA Driver for Firebird build file for native code
+
+
+
+	This build file will build the code from:
+
+	src/native/jaygds
+
+	into a shared library named 'jaybird' in:
+
+	output/native
+
+  This file requires that either the environment variable JDK_HOME or the property java_home is set.
+
+
+
+	Current Supported Platforms:
+
+	Platform		    Compiler/Linker
+
+	Windows         MSVC 6
+	Solaris         GCC
+	Linux           GCC
+
+	These are platforms that this build file should in theory build on correctly. Not all these platforms have been tested.
+-->
+<project name="FirebirdSQL_native" default="compile" basedir=".">
+
+    <taskdef resource="cpptasks.tasks"/>
+    <typedef resource="cpptasks.types"/>
+
+    <!--
+    -->
+    <target name="init">
+        <!-- Setup the build timestamp & build identifer properties -->
+        <tstamp>
+            <format property="build.number" pattern="yyyyMMddHHmm"/>
+            <format property="YEAR" pattern="yyyy"/>
+        </tstamp>
+
+        <property environment="env"/>
+
+        <!--  -->
+        <property name="module.root" value="${basedir}"/>
+        <property name="module.source" value="${module.root}/src"/>
+        <property name="module.output" value="${module.root}/output"/>
+
+        <!--  -->
+        <property name="build.native" value="${module.output}/native"/>
+        <property name="build.native.output" value="${build.native}"/>
+        
+        
+        <!-- 
+        	Name of the output library. On Windows this will be 
+        	resolved to jaybird.dll, on Linux it will be libjaybird.so
+        -->
+        <property name="build.native.name" value="jaybird"/>
+
+        <!--  -->
+        <property name="source.native" value="${module.source}/native/jaygds/source"/>
+
+        <mkdir dir="${build.native.output}"/>
+
+
+        <!--
+        Set 'java_home' property to value of environment variable JAVA_HOME if java_home property is not already set.
+        -->
+        <condition property="java_home" value="${env.JAVA_HOME}">
+        <and>
+            <isset property="env.JAVA_HOME"/>
+            <not>
+                <isset property="java_home"/>
+            </not>
+        </and>
+        </condition>
+
+    </target>
+
+    <!--
+    There are three main pieces of infomation we need about the platform. This target extracts that infomation.
+
+    First we need to know if this platform is windows in which case we use msvc otherwise all other platforms
+    will use gcc. To do this we set the property:
+
+    buildon-windows
+
+    if the platform is windows otherwise we leave the property unset.
+
+
+    Next we need to know the name of the directory of the platform specific header files in the JDK. This name is placed
+    into:
+
+    jdks_platform_headers
+
+    Finally we need to know the name of the directory containg jaybirds platform specfic headers. This name is placed
+    into:
+
+    jaybirds_platform_headers
+    -->
+    <target name="set_platform_properties" depends="init">
+
+
+        <!-- set 'buildon-windows' - this should be all we ever need here  -->
+        <condition property="buildon-windows">
+            <os family="windows"/>
+        </condition>
+         <condition property="buildon-unix">
+            <not>
+                <isset property="buildon-windows"/>
+            </not>
+        </condition>
+
+        <condition property="buildon-solaris">
+            <equals arg1="${os.name}" arg2="Solaris" casesensitive="false"/>
+        </condition>
+
+        <!-- set 'jaybirds_platform_headers' - this should be fairly easy -->
+
+        <condition property="jaybirds_platform_headers" value="win32">
+            <isset property="buildon-windows"/>
+        </condition>
+
+        <condition property="jaybirds_platform_headers" value="generic_unix">
+            <not>
+                <isset property="buildon-windows"/>
+            </not>
+        </condition>
+
+
+        <!-- set 'jdks_platform_headers' -->
+
+        <condition property="jdks_platform_headers" value="win32">
+            <isset property="buildon-windows"/>
+        </condition>
+
+        <condition property="jdks_platform_headers" value="solaris">
+            <os name="SunOS"/>
+        </condition>
+
+        <condition property="jdks_platform_headers" value="linux">
+            <os name="linux"/>
+        </condition>
+        
+        
+        <!-- check if we should build using MinGW -->
+		<condition property="use.mingw" value="true">
+		<and>
+			<isset property="env.USE_MINGW"/>
+			<isset property="buildon-windows"/>
+		</and>
+		</condition>
+
+    </target>
+    
+    
+    <target name="prepare_compile" depends="prepare_mingw,prepare_msvc,prepare_gcc"/>
+    
+    <!-- 
+    	MinGW compiler and linker properties.
+    -->
+    <target name="prepare_mingw" if="use.mingw">
+    
+    	<property name="output.file" value="${build.native.output}/${build.native.name}.dll"/>
+    	
+        <compiler id="jaybird.compiler" name="g++">
+        	<defineset>
+        		<define name="JAVA_GDS_EXPORTS"/>
+        		<define name="WIN32"/>
+        		<define name="_JNI_IMPLEMENTATION_"/>
+        	</defineset>
+        </compiler>
+    	
+        <linker id="jaybird.linker" name="gcc" if="use.mingw">
+        	<linkerarg value="--add-stdcall-alias"/>
+        	<linkerarg value="-o${output.file}"/>
+        	<syslibset libs="stdc++"/>
+        </linker>
+    	
+    </target>
+    
+    <!--
+    	Microsoft Visual C++ compiler and linker definitions.
+    -->
+    <target name="prepare_msvc" if="buildon-windows" unless="use.mingw">
+    
+        <compiler id="jaybird.compiler" name="msvc">
+            <!--  target Pentium Pro   -->
+            <compilerarg value="/G6"/>
+            <!--  display many warnings   -->
+            <compilerarg value="/W3"/>
+            <!--  maximize speed     -->
+            <compilerarg value="/O2"/>
+            <!--  auto-inlining    -->
+            <compilerarg value="/Ob2"/>
+            <!--  mulithread dll crt    -->
+            <compilerarg value="/MD"/>
+
+            <defineset>
+                <define name="WIN32"/>
+                <define name="NDEBUG"/>
+                <define name="_WINDOWS"/>
+                <define name="_MBCS"/>
+                <define name="_USRDLL"/>
+                <define name="JAVA_GDS_EXPORTS"/>
+            </defineset>
+
+        </compiler>
+
+        <linker id="jaybird.linker" name="msvc" if="buildon-windows" unless="use.mingw">
+            <syslibset libs="kernel32,user32"/>
+        </linker>
+    
+    </target>
+    
+    <!--
+    	Generic GCC compiler and linker definitions.
+    -->
+    <target name="prepare_gcc" if="buildon-unix">
+    
+        <compiler id="jaybird.compiler" name="gcc" if="buildon-unix">
+
+            <defineset>
+                <define name="JAVA_GDS_EXPORTS"/>
+                <define name="ARCH_IS_BIG_ENDIAN=1" if="buildon-solaris"/>
+            </defineset>
+        </compiler>
+        
+
+        <linker id="jaybird.linker" name="gcc" if="buildon-unix">
+            <!--
+                These are set using linkerarg rather then syslibset because on some platforms I found that the code 
+                would not build using syslibset - The Ant task seemed too be creating an incorrect command line to
+                run the linker.
+            -->
+            <linkerarg value="-ldl"/>
+            <linkerarg value="-lc"/>
+            <linkerarg value="-lstdc++"/>
+        </linker>
+    
+    </target>
+
+
+    <!--
+    	Compile and link
+	-->
+    <target name="compile" depends="init,set_platform_properties,prepare_compile">
+
+        <cc debug="false"
+            link="shared"
+            objdir="${build.native.output}"
+            outfile="${build.native.output}/jaybird"
+            multithreaded="true"
+            exceptions="true">
+
+            <!-- jaybird include search paths -->
+            <includepath location="${source.native}"/>
+            <includepath location="${source.native}/${jaybirds_platform_headers}"/>
+            <includepath location="${source.native}/external"/>
+
+            <!-- jdk include search paths  -->
+            <includepath location="${java_home}/include"/>
+            <includepath location="${java_home}/include/${jdks_platform_headers}"/>
+
+            <!-- jaybird files to be compiles -->
+            <fileset dir="${source.native}">
+                <include name="*.cpp"/>
+                <include name="${jaybirds_platform_headers}/platform.cpp"/>
+            </fileset>
+            
+            <compiler refid="jaybird.compiler"/>
+            <linker refid="jaybird.linker"/>
+
+        </cc>
+
+        <!-- delete>
+            <fileset dir="${build.native.output}" includes="*.obj"/>
+            <fileset dir="${build.native.output}" includes="*.o"/>
+            <fileset dir="${build.native.output}" includes="*.exp"/>
+            <fileset dir="${build.native.output}" includes="*.lib"/>
+            <fileset dir="${build.native.output}" includes="*.xml"/>
+        </delete -->
+        
+    </target>
+
+</project>
