@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.9  2002/06/10 18:47:41  brodsom
+ * logging change, logging depends on the first class used, default to true for FBManagedConnectionFactory, FBManager and tests and false for other classes.
+ *
  * Revision 1.8  2002/06/06 11:24:07  brodsom
  * Performance patch. Log if log4j is in the classpath, don't log if the enviroment variable FBLog4j is false.
  *
@@ -139,7 +142,8 @@ public class BaseFBTest extends TestCase
    {
       try 
       {
-         fbManager.setURL(DB_SERVER_URL);
+         //fbManager.setURL(DB_SERVER_URL);
+         fbManager.setServer(DB_SERVER_URL);
          fbManager.setPort(DB_SERVER_PORT);
          fbManager.start();
          fbManager.createDatabase(DB_PATH + "/" + DB_NAME, DB_USER, DB_PASSWORD);
