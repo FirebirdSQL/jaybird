@@ -43,7 +43,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
     // this array contains either true or false indicating if parameter
     // was initialized, executeQuery, executeUpdate and execute methods
     // will throw an exception if this array contains at least one false value.
-    private boolean[] isParamSet;
+    protected boolean[] isParamSet;
      
     private FBField[] fields= null;
     private boolean[] isBlob = null;

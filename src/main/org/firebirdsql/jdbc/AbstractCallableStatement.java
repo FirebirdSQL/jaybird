@@ -386,6 +386,8 @@ public abstract class AbstractCallableStatement
                     
                 } else
                     field.setObject(value);
+                
+                isParamSet[counter - 1] = true;
             }
         }
 
