@@ -47,7 +47,6 @@ import org.firebirdsql.logging.LoggerFactory;
 public final class XdrOutputStream {
 
     private static final int BUF_SIZE = 32767;
-    private static final int BUF_MAX = (int)(BUF_SIZE * 0.8);
 
     private static Logger log = LoggerFactory.getLogger(XdrOutputStream.class,false);
     private static byte[] textPad = new byte[BUF_SIZE];
@@ -85,6 +84,7 @@ public final class XdrOutputStream {
         }
         writeInt(len + 2);
         writeInt(len + 2); //bizarre but true! three copies of the length
+        checkBufferSize(2);
         buf[count++] = (byte) ((len >> 0) & 0xff);
         buf[count++] = (byte) ((len >> 8) & 0xff);
         write(buffer, len, ((4 - len+2)&3));
@@ -118,11 +118,13 @@ public final class XdrOutputStream {
     public void writeSet(int type, byte[] s) throws IOException {
         if (s == null) {
             writeInt(1);
+            checkBufferSize(1);
             buf[count++] = (byte) type; //e.g. gds.isc_tpb_version3
         }
         else {
             int len = s.length;
             writeInt(len + 1);
+            checkBufferSize(1);
             buf[count++] = (byte) type;
             write(s, len, (4 - (len+1)) & 3);
         }
@@ -132,12 +134,14 @@ public final class XdrOutputStream {
         int size;
         if (item == null) {
             writeInt(1);
+            checkBufferSize(1);
             buf[count++] = (byte) type; //e.g. gds.isc_tpb_version3
             size = 1;
         }
         else {
             size = item.getLength() + 1;
             writeInt(size);
+            checkBufferSize(1);
             buf[count++] = (byte) type; //e.g. gds.isc_tpb_version3
             item.write(this);
         }
@@ -217,6 +221,7 @@ public final class XdrOutputStream {
     // DataOutputStream methods
     // 
     public final void writeLong(long v) throws IOException {
+        checkBufferSize(8);
         buf[count++] = (byte) (v >>> 56 & 0xFF);
         buf[count++] = (byte) (v >>> 48 & 0xFF);
         buf[count++] = (byte) (v >>> 40 & 0xFF);
@@ -228,6 +233,7 @@ public final class XdrOutputStream {
     }
 
     public final void writeInt(int v) throws IOException {
+        checkBufferSize(4);
         buf[count++] = (byte) (v >>> 24);
         buf[count++] = (byte) (v >>> 16);
         buf[count++] = (byte) (v >>>  8);
@@ -236,11 +242,11 @@ public final class XdrOutputStream {
 
     //
     // Buffering 
-    // If the piece to write is greater than 128 bytes, write it directly
+    // If the piece to write is greater than 256 bytes, write it directly
     //
 
     public void write(byte[] b, int len, int pad) throws IOException {
-        if (len > 256 || count + len >= BUF_MAX){
+        if (len > 256 || count + len >= BUF_SIZE){
             if (count > 0)
                 out.write(buf, 0, count);
             out.write(b, 0, len);
@@ -248,12 +254,14 @@ public final class XdrOutputStream {
             count = 0;
         }
         else {
+            checkBufferSize(len + pad);
             System.arraycopy(b, 0, buf, count, len);
             count += len + pad;
         }
     }
 
     public void write(int b) throws IOException {
+        checkBufferSize(1);
         buf[count++] = (byte)b;
     }
 
@@ -271,5 +279,19 @@ public final class XdrOutputStream {
 
     public void close() throws IOException {
         out.close();
+    }
+
+
+    /**
+     * Ensure that there is room in the buffer for a given number
+     * of direct writes to it.
+     * @param countToWrite The size of write that is being checked.
+     * @throws IOException If a write to the underlying OutputStream fails
+     */
+    private void checkBufferSize(int countToWrite) throws IOException {
+        if (BUF_SIZE - count <= countToWrite){
+            out.write(buf, 0, count);
+            count = 0;
+        }
     }
 }
