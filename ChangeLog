@@ -1,3 +1,11 @@
+2004-10-29 23:49  rrokytskyy
+
+	*
+	
+	fixed almost nedless loop if testUser is not defined
+	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
+	ource.java:
+
 2004-10-28 01:35  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/:
