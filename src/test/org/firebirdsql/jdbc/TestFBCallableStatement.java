@@ -109,4 +109,20 @@ public class TestFBCallableStatement extends BaseFBTest {
           stmt.close();
         }
     }
+    
+    public void testFatalError() throws Exception {
+        java.sql.PreparedStatement stmt = connection.prepareStatement(EXECUTE_PROCEDURE);
+        try {
+          stmt.setInt(1, 5);
+          java.sql.ResultSet rs = stmt.executeQuery();
+          assertTrue("Should have at least one row", rs.next());
+          int result = rs.getInt(1);
+          assertTrue("Wrong result: expecting 120, received " + result, result == 120);
+
+          assertTrue("Should have exactly one row.", !rs.next());
+          rs.close();
+        } finally {
+          stmt.close();
+        }
+    }
 }
