@@ -155,6 +155,13 @@ public interface DatabaseParameterBuffer
 	 */ 
 	String getArgumentAsString(int argumentType);
     
+    /**
+     * Get argument as int.
+     * @param argumentType type of argument to find.
+     * @return argument as string or <code>0</code> if nothing found.
+     */ 
+    int getArgumentAsInt(int argumentType);
+    
 	/**
      * Check if this parameter buffer has specified argument.
 	 * @param argumentType type of argument to find.

@@ -764,9 +764,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         
         Encoding encoding = EncodingFactory.getEncoding(localEncoding, mappingPath);
 
+        int dialect = ISCConstants.SQL_DIALECT_CURRENT;
+        if (cri.hasArgument(ISCConstants.isc_dpb_sql_dialect))
+            dialect = cri.getIntProperty(ISCConstants.isc_dpb_sql_dialect);
+        
         try
         {
-            XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, encoding.encodeToCharset(sql) , ISCConstants.SQL_DIALECT_CURRENT);
+            XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, encoding.encodeToCharset(sql) , dialect);
             if (out.sqld != out.sqln) {
                 throw new GDSException("Not all columns returned");
             }
