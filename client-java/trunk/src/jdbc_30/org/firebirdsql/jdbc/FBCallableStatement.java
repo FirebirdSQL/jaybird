@@ -27,6 +27,8 @@ import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Map;
 
+import org.firebirdsql.gds.GDSException;
+
 /**
  * JDBC 3.0 compliant implementation of {@link java.sql.CallableStatement}.
  */
@@ -79,10 +81,17 @@ public class FBCallableStatement extends AbstractCallableStatement {
      */
     public ParameterMetaData getParameterMetaData() throws SQLException {
         
-        if (fixedStmt == null)
-            throw new FBSQLException("CallableStatement.getParameterMetaData() " +
-                    "can be used only after executing a statement.", 
-                    FBSQLException.SQL_STATE_NO_RESULT_SET);
+        Object syncObject = getSynchronizationObject();
+        synchronized(syncObject) {
+            try {
+                c.ensureInTransaction();
+                prepareFixedStatement(procedureCall.getSQL(), true);
+            } catch (GDSException ge) {
+                throw new FBSQLException(ge);
+            } finally {
+                c.checkEndTransaction();
+            } 
+        }
         
         return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, c);
     }
