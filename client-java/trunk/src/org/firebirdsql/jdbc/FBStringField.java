@@ -64,6 +64,7 @@ class FBStringField extends FBField {
     static final String LONG_FALSE = "FALSE";
     
     FBConnection c;
+    char[] cBuff;
 
     FBStringField(XSQLVAR field) throws SQLException {
         super(field);
@@ -257,16 +258,12 @@ class FBStringField extends FBField {
 
         // Do we have to do this by hands? Or is this Firebird's job?
         if (isType(field, Types.CHAR) && (value.length() < field.sqllen)) {
-
-            StringBuffer padded = new StringBuffer(value);
-            padded.append(new char[field.sqllen-value.length()]);
-/*
-            StringBuffer padded = new StringBuffer(field.sqllen);
-            padded.append(value);
-            for (int i = 0; i < field.sqllen - value.length(); i++)
-                padded.append(' ');
-*/
-            value = padded.toString(); 
+            if (cBuff==null)
+                cBuff = new char[field.sqllen];
+            java.util.Arrays.fill(cBuff,value.length()
+               ,field.sqllen,' ');
+            value.getChars(0,value.length(),cBuff,0);
+            value = new String(cBuff);
         }
 
 
