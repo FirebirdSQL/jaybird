@@ -519,6 +519,17 @@ public class TestFBDatabaseMetaData extends TestXABase {
         }
     }
 
+    
+    public void testLongTableName() throws Exception {
+        String tableName = "PLANILLAS_PREVISION_MANTENIMIEN";
+        createTable(tableName);
+        try {
+            ResultSet rs = dmd.getPrimaryKeys(null, null, tableName);
+            assertTrue("Should return primary key information", rs.next());
+        } finally {
+            dropTable(tableName);
+        }
+    }
 
     private void createTable(String tableName) throws Exception {
         dropTable(tableName);
@@ -584,6 +595,6 @@ public class TestFBDatabaseMetaData extends TestXABase {
 	}
 	t.commit();
     }
-
+    
 }
 
