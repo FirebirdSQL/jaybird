@@ -194,7 +194,8 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
 
 
   <!-- =================================================================== -->
-  <!-- Creates the jdbctest jar archives                                            -->
+  <!-- Creates the jdbctest jar archives                                   -->
+  <!-- Sorry, this is not in cvs due to licence problems                   -->
   <!-- =================================================================== -->
   <target name="jdbctestjar" depends="compile">
 
