@@ -24,6 +24,7 @@ package org.firebirdsql.management;
  * A user in the Firebird Security Database.
  * 
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class FBUser implements User {
 
@@ -179,15 +180,52 @@ public class FBUser implements User {
      * 
      * @see java.lang.Object#equals(java.lang.Object)
      */
-    public boolean equals(Object ob1) {
-        User user = (User) ob1;
-        return user.getUserName().equals(getUserName())
-                && user.getFirstName().equals(getFirstName())
-                && user.getMiddleName().equals(getMiddleName())
-                && user.getLastName().equals(getLastName())
-                && user.getUserId() == getUserId()
-                && user.getGroupId() == getGroupId();
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        
+        if (!(obj instanceof User))
+            return false;
+        
+        User user = (User) obj;
+        boolean result = true;
 
+        result &= getUserName() != null ? 
+                getUserName().equals(user.getUserName()) : 
+                user.getUserName() == null;  
+
+        result &= getFirstName() != null ?
+                getFirstName().equals(user.getFirstName()) :
+                user.getFirstName() == null;
+                
+        result &= getMiddleName() != null ?
+                getMiddleName().equals(user.getMiddleName()) :
+                user.getMiddleName() == null;
+                
+        result &= getLastName() != null ?
+                getLastName().equals(user.getLastName()) :
+                user.getLastName() == null;
+                
+        result &= user.getUserId() == getUserId();
+        result &= user.getGroupId() == getGroupId();
+        
+        return result;
+    }
+    
+    
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    public int hashCode() {
+        int hashCode = 17;
+        
+        hashCode ^= userName != null ? userName.hashCode() : 0;
+        hashCode ^= firstName != null ? firstName.hashCode() : 0;
+        hashCode ^= middleName != null ? middleName.hashCode() : 0;
+        hashCode ^= lastName != null ? lastName.hashCode() : 0;
+        hashCode ^= userId != -1 ? userId : 0;
+        hashCode ^= groupId != -1 ? groupId : 0;
+        
+        return hashCode;
     }
 
     /*
