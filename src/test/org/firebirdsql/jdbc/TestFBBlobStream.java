@@ -35,12 +35,22 @@ public class TestFBBlobStream extends FBTestBase {
     public static final String CREATE_TABLE =
         "CREATE TABLE test_blob(" +
         "  id INTEGER, " +
-        "  bin_data BLOB " +
+        "  bin_data BLOB, " +
+        "  char_data BLOB SUB_TYPE 1  " +
         ")";
+    
+    public static final String CREATE_PROCEDURE = "" 
+        + "CREATE PROCEDURE test_procedure(id INTEGER, char_data BLOB SUB_TYPE 1) "
+        + "AS BEGIN "
+        + "  INSERT INTO test_blob(id, char_data) VALUES (:id, :char_data);"
+        + "END"
+        ;
 
     public static final String DROP_TABLE =
         "DROP TABLE test_blob";
 
+    public static final String DROP_PROCEDURE = 
+        "DROP PROCEDURE test_procedure";
 
     public static int TEST_ROW_COUNT = 100;
 
@@ -66,11 +76,19 @@ public class TestFBBlobStream extends FBTestBase {
 
         java.sql.Statement stmt = connection.createStatement();
         try {
+            stmt.execute(DROP_PROCEDURE);
+        } catch(SQLException ex) {
+            // empty
+        }
+
+        try {
             stmt.executeUpdate(DROP_TABLE);
         }
         catch (Exception e) {}
+        
 
         stmt.executeUpdate(CREATE_TABLE);
+        stmt.execute(CREATE_PROCEDURE);
         stmt.close();
 
         java.util.Random rnd = new java.util.Random();
@@ -91,6 +109,7 @@ public class TestFBBlobStream extends FBTestBase {
             connection.setAutoCommit(true);
         
         java.sql.Statement stmt = connection.createStatement();
+        stmt.execute(DROP_PROCEDURE);
         stmt.executeUpdate(DROP_TABLE);
         stmt.close();
         
@@ -331,5 +350,34 @@ public class TestFBBlobStream extends FBTestBase {
             ps.close();
         }
         
+    }
+    
+    public void testStreamForLongVarChar() throws Exception {
+
+        PreparedStatement ps = connection.prepareCall("{call test_procedure(?, ?)}");
+        
+        try {
+            ByteArrayInputStream in = new ByteArrayInputStream(testData[0]);
+            
+            ps.setInt(1, 1);
+            ps.setBinaryStream(2, in, testData[0].length);
+            
+            ps.execute();
+            
+            Statement stmt = connection.createStatement();
+            try {
+                ResultSet rs = stmt.executeQuery(
+                    "SELECT id, char_data FROM test_blob WHERE id = 1");
+                
+                assertTrue("Should select data from table", rs.next());
+                assertTrue("Value should be correct", Arrays.equals(rs.getBytes(2), testData[0]));
+                assertTrue("Should not have more rows.", !rs.next());
+            } finally {
+                stmt.close();
+            }
+            
+        } finally {
+            ps.close();
+        }
     }
 }
