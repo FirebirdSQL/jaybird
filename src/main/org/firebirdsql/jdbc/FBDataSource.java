@@ -29,6 +29,7 @@ import javax.naming.Reference;
 import javax.resource.Referenceable;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionManager;
+import javax.resource.spi.ManagedConnectionFactory;
 import javax.sql.DataSource;
 
 import org.firebirdsql.jca.FBConnectionRequestInfo;
@@ -53,6 +54,11 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
 
     private int loginTimeout = 0;
 
+    // this constructor is needed to make BES happy.
+    public FBDataSource(ManagedConnectionFactory mcf, ConnectionManager cm) {
+        this((FBManagedConnectionFactory)mcf, cm);
+    }
+    
     public FBDataSource(FBManagedConnectionFactory mcf, ConnectionManager cm) {
         this.mcf = mcf;
         this.cm = cm;
