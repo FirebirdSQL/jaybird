@@ -1408,6 +1408,20 @@ public class GDS_Impl implements GDS {
                         }
                         break;
                     case isc_arg_number:
+                        {
+                            int arg_value = db.in.readInt();
+                            if (log != null)log.debug("readStatusVector int: " + arg_value);
+                            GDSException td = new GDSException(arg, arg_value);
+                            if (head == null) {
+                                head = td;
+                                tail = td;
+                            }
+                            else {
+                                tail.setNext(td);
+                                tail = td;
+                            }
+                            break;
+                        }
                     default:
                         int e = db.in.readInt();
                         if (log != null)log.debug("readStatusVector int: " + e);
