@@ -7,6 +7,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
@@ -19,7 +20,14 @@ public class FBDriverPropertyManager {
 
     private static final String RES = "driver_property_info";
     
-    private static ResourceBundle info = ResourceBundle.getBundle(RES);
+    private static ResourceBundle info;
+    static {
+        try {
+            info = ResourceBundle.getBundle(RES);
+        } catch(MissingResourceException ex) {
+            info = null;
+        }
+    }
 
     /**
      * Container class for the driver properties.
@@ -73,36 +81,38 @@ public class FBDriverPropertyManager {
 
     static {
         // process aliases and descriptions first
-        for (Enumeration en = info.getKeys(); en.hasMoreElements();) {
-            String key = (String) en.nextElement();
-            String value = info.getString(key);
-            
-            int hashIndex = value.indexOf('#');
-            
-            String dpbName;
-            String description = "";
-            if (hashIndex != -1) {
-                dpbName = value.substring(0, hashIndex).trim();
-                description = value.substring(hashIndex + 1).trim();
-            } else
-                dpbName = value.trim();
-            
-            // skip incorrect mappings
-            if (!dpbName.startsWith(FBConnectionHelper.DPB_PREFIX))
-                continue;
-            
-            Integer dpbKey = FBConnectionHelper.getDpbKey(dpbName);
-            
-            // skip unknown elements
-            if (dpbKey == null)
-                continue;
-            
-            PropertyInfo propInfo = new PropertyInfo(key, dpbName, 
-                dpbKey, description);
-            
-            aliases.put(propInfo.alias, propInfo);
-            dpbMap.put(propInfo.dpbName, propInfo);
-            reversedDpbMap.put(dpbKey, propInfo);
+        if (info != null) {
+            for (Enumeration en = info.getKeys(); en.hasMoreElements();) {
+                String key = (String) en.nextElement();
+                String value = info.getString(key);
+                
+                int hashIndex = value.indexOf('#');
+                
+                String dpbName;
+                String description = "";
+                if (hashIndex != -1) {
+                    dpbName = value.substring(0, hashIndex).trim();
+                    description = value.substring(hashIndex + 1).trim();
+                } else
+                    dpbName = value.trim();
+                
+                // skip incorrect mappings
+                if (!dpbName.startsWith(FBConnectionHelper.DPB_PREFIX))
+                    continue;
+                
+                Integer dpbKey = FBConnectionHelper.getDpbKey(dpbName);
+                
+                // skip unknown elements
+                if (dpbKey == null)
+                    continue;
+                
+                PropertyInfo propInfo = new PropertyInfo(key, dpbName, 
+                    dpbKey, description);
+                
+                aliases.put(propInfo.alias, propInfo);
+                dpbMap.put(propInfo.dpbName, propInfo);
+                reversedDpbMap.put(dpbKey, propInfo);
+            }
         }
         
         // fill rest of the properties

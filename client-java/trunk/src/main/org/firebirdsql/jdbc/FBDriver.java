@@ -25,6 +25,7 @@ import java.util.*;
 
 import javax.resource.ResourceException;
 
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jca.*;
@@ -254,12 +255,18 @@ public class FBDriver implements Driver {
         String useTranslation = info.getProperty(USE_TRANSLATION);
         String mappingPath = cri.getStringProperty(ISCConstants.isc_dpb_mapping_path);
         
-        if (useTranslation != null && mappingPath == null)
-            cri.setProperty(ISCConstants.isc_dpb_mapping_path, useTranslation);
+        if (useTranslation != null && mappingPath == null) {
+            mappingPath = useTranslation;
+            cri.setProperty(ISCConstants.isc_dpb_mapping_path, mappingPath);
+        }
         
         if (useTranslation != null && mappingPath != null && !useTranslation.equals(mappingPath))
             throw new FBSQLException("Property useTranslation is an alias to " +
             "isc_dpb_mapping_path, but specified values are different.");
+        
+        if (mappingPath != null) {
+            EncodingFactory.getEncoding(localEncoding, mappingPath);
+        }
     }
 
 
