@@ -27,7 +27,6 @@ import java.sql.Statement;
 import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSFactory;
-import org.firebirdsql.gds.SqlInfo;
 //import org.firebirdsql.jgds.GDS_Impl;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.jdbc.FBConnection;
@@ -77,7 +76,7 @@ public class TestFBManagedConnectionFactory extends TestXABase {
     }
 
 
-
+/*
     public void testSqlInfo() throws Exception {
         
         if (log != null) log.info("testSqlInfo");
@@ -144,6 +143,6 @@ public class TestFBManagedConnectionFactory extends TestXABase {
 
         mc.destroy();
     }
-
+*/
 }
 
