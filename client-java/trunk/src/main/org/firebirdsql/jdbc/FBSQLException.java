@@ -92,10 +92,12 @@ public class FBSQLException extends SQLException {
     
     public FBSQLException(String message) {
         super(message, SQL_STATE_GENERAL_ERROR);
+        this.message = message;
     }
 
     public FBSQLException(String message, String sqlState) {
         super(message, sqlState);
+        this.message = message;
     }
     
     public int getErrorCode() {
