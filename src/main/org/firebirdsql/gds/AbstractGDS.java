@@ -43,8 +43,12 @@ public abstract class AbstractGDS implements GDS, Externalizable
 
     public GDSType getGdsType()
         {
-        return gdsType;
+        return getType();
         }
+    
+    public GDSType getType() {
+        return gdsType;
+    }
 
     public void close()
         {

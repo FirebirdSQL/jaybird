@@ -19,12 +19,14 @@
 package org.firebirdsql.gds;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jdbc.FirebirdConnection;
+import org.firebirdsql.pool.FBConnectionPoolDataSource;
 
 
 /**
@@ -257,6 +259,82 @@ public class TestFatalErrors extends FBTestBase {
             } catch(SQLException ex) {
                 fail("No exception should have been thrown here");
             }
+        }
+    }
+
+    public void testPingAfterFatalError() throws Exception {
+        FBConnectionPoolDataSource pool = new FBConnectionPoolDataSource();
+
+        pool.setType(getGdsType().toString());
+        
+        pool.setDatabase(DB_DATASOURCE_URL);
+        pool.setMinPoolSize(0);
+        pool.setMaxPoolSize(1);
+        pool.setPingInterval(10);
+        pool.setProperties(getDefaultPropertiesForConnection());
+
+        int[] savedFatalErrors = ISCConstants.FATAL_ERRORS;
+
+        try {
+            int[] newFatalErrors = new int[savedFatalErrors.length + 1];
+            newFatalErrors[0] = ISCConstants.isc_dsql_error;
+            System.arraycopy(savedFatalErrors, 0, newFatalErrors, 1, savedFatalErrors.length);
+            ISCConstants.FATAL_ERRORS = newFatalErrors;
+            
+            Connection connection = pool.getPooledConnection().getConnection();
+            
+            try {
+                Statement stmt = connection.createStatement();
+                
+                try {
+                    stmt.executeQuery("bla-bla");
+                } catch(SQLException ex) {
+                    // ignore
+                } finally {
+                    stmt.close();
+                }
+                
+                Thread.sleep(40);
+                
+                stmt = connection.createStatement();
+                try {
+                    stmt.executeQuery("SELECT 1 FROM rdb$database");
+                } finally {
+                    stmt.close();
+                }
+            
+            } finally {
+                try {
+                    connection.close();
+                } catch(SQLException ex) {
+                    throw ex;
+                }
+            }
+
+            // sleep, so we have enough time to mark connection 
+            // to require ping.
+            Thread.sleep(40);
+            
+            connection = pool.getPooledConnection().getConnection();
+            
+            try {
+                Statement stmt = connection.createStatement();
+                
+                ResultSet rs = stmt.executeQuery("SELECT 1 FROM rdb$database");
+                
+                assertTrue("Should select one row.", rs.next());
+                assertTrue("Should select correct value.", rs.getInt(1) == 1);
+                assertTrue("Should select only one row", !rs.next());
+                
+            } finally {
+                connection.close();
+            }
+            
+            
+        } finally {
+            ISCConstants.FATAL_ERRORS = savedFatalErrors;
+            
+            pool.shutdown();
         }
     }
 
