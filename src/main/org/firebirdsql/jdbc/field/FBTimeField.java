@@ -17,12 +17,14 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.field;
 
 import java.sql.Timestamp;
 import java.sql.SQLException;
 import java.util.Calendar;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.FBResultSet;
+
 import java.sql.Time;
 
 /**
@@ -36,60 +38,60 @@ class FBTimeField extends FBField {
         super(field, rs, numCol);
     }
 
-    Object getObject() throws SQLException {
+    public Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
         return field.decodeTime(rs.row[numCol]);
     }
-    String getString() throws SQLException {
+    public String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
         return String.valueOf(field.decodeTime(rs.row[numCol]));
     }
-    Time getTime(Calendar cal) throws SQLException {
+    public Time getTime(Calendar cal) throws SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
         return field.decodeTime(getTime(),cal);
     }
-    Time getTime() throws SQLException {
+    public Time getTime() throws SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
         return field.decodeTime(rs.row[numCol]);
     }
-    Timestamp getTimestamp(Calendar cal) throws SQLException {
+    public Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 		  
         return field.decodeTimestamp(getTimestamp(),cal);
     }
-    Timestamp getTimestamp() throws SQLException {
+    public Timestamp getTimestamp() throws SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
         return new Timestamp(getTime().getTime());
     }
     //--- setXXX methods
 
-    void setString(String value) throws SQLException {
+    public void setString(String value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
         }
         setTime(Time.valueOf(value));
     }
-    void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
+    public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
         }
         setTimestamp(field.encodeTimestamp(value,cal));
     }
-    void setTimestamp(Timestamp value) throws SQLException {
+    public void setTimestamp(Timestamp value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
         }
         setTime(new Time(value.getTime()));
     }
-    void setTime(Time value, Calendar cal) throws SQLException {
+    public void setTime(Time value, Calendar cal) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
@@ -97,7 +99,7 @@ class FBTimeField extends FBField {
 
         setTime(field.encodeTime(value,cal));
     }
-    void setTime(Time value) throws SQLException {
+    public void setTime(Time value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;

@@ -17,10 +17,11 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.jdbc.*;
 
 import java.sql.Array;
 import java.sql.Clob;
@@ -46,7 +47,7 @@ import java.io.Reader;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-abstract class FBField {
+public abstract class FBField {
     static String BYTE_CONVERSION_ERROR =
         "Error converting to byte.";
     static String SHORT_CONVERSION_ERROR =
@@ -141,7 +142,7 @@ abstract class FBField {
     protected XSQLVAR field;
     protected FBResultSet rs;
     protected int numCol;
-    protected FBConnection c = null;
+    protected AbstractConnection c = null;
     protected String IscEncoding = null;
     protected String javaEncoding	= null;
 
@@ -165,15 +166,15 @@ abstract class FBField {
      * @return <code>true</code> if the corresponding <code>field</code>
      * is <code>null</code>, otherwise <code>false</code>.
      */
-    boolean isNull() {
+    public boolean isNull() {
         return (rs.row[numCol] == null);
     }
 
-    void setNull() {
+    public void setNull() {
         field.sqldata = null;
     }
 
-    void setConnection(FBConnection c) {
+    public void setConnection(AbstractConnection c) {
         this.c = c;
         if (c!=null)
             IscEncoding = c.getIscEncoding();
@@ -182,7 +183,7 @@ abstract class FBField {
             IscEncoding = null;
         // Java encoding		  
         if (IscEncoding!= null)
-            javaEncoding = FBConnection.getJavaEncoding(IscEncoding);
+            javaEncoding = AbstractConnection.getJavaEncoding(IscEncoding);
         else
             javaEncoding = null;			  
         // this method only do something for FBStringField and FBBlobField
@@ -191,7 +192,7 @@ abstract class FBField {
      * @return <code>true</code> if the field is of type <code>type</code>.
      * @todo write correct ISCConstants.SQL_QUAD support
      */
-    final static boolean isType(XSQLVAR field, int type) {
+    public final static boolean isType(XSQLVAR field, int type) {
         // turn off null flag, in this case we're not interested in it.
         int tempType = field.sqltype & ~1;
         switch(tempType) {
@@ -253,7 +254,7 @@ abstract class FBField {
      * This method implements the type compatibility matrix from
      * "JDBC(tm): A Java SQL API, version 1.20" whitepaper, page 21.
      */
-    final static boolean isCompatible(XSQLVAR field, int type) {
+    public final static boolean isCompatible(XSQLVAR field, int type) {
         // turn off null flag, in this case we're not interested in it.
         int tempType = field.sqltype & ~1;
         switch(tempType) {
@@ -325,7 +326,7 @@ abstract class FBField {
      * <code>FBField</code> class according to the SQL datatype. This instance
      * knows how to perform all necessary type conversions.
      */
-    final static FBField createField(XSQLVAR field, FBResultSet rs, int numCol, boolean cached) 
+    public final static FBField createField(XSQLVAR field, FBResultSet rs, int numCol, boolean cached) 
     throws SQLException {
         if (isType(field, Types.SMALLINT))
             if (field.sqlscale == 0)
@@ -416,151 +417,151 @@ abstract class FBField {
 
     //--- getters
 
-    byte getByte() throws SQLException {
+    public byte getByte() throws SQLException {
         throw (SQLException)createException(
             BYTE_CONVERSION_ERROR).fillInStackTrace();
     }
-    short getShort() throws SQLException {
+    public short getShort() throws SQLException {
         throw (SQLException)createException(
             SHORT_CONVERSION_ERROR).fillInStackTrace();
     }
-    int getInt() throws SQLException {
+    public int getInt() throws SQLException {
         throw (SQLException)createException(
             INT_CONVERSION_ERROR).fillInStackTrace();
     }
-    long getLong() throws SQLException {
+    public long getLong() throws SQLException {
         throw (SQLException)createException(
             LONG_CONVERSION_ERROR).fillInStackTrace();
     }
-    float getFloat() throws SQLException {
+    public float getFloat() throws SQLException {
         throw (SQLException)createException(
             FLOAT_CONVERSION_ERROR).fillInStackTrace();
     }
-    double getDouble() throws SQLException {
+    public double getDouble() throws SQLException {
         throw (SQLException)createException(
             DOUBLE_CONVERSION_ERROR).fillInStackTrace();
     }
-    BigDecimal getBigDecimal() throws SQLException {
+    public BigDecimal getBigDecimal() throws SQLException {
         throw (SQLException)createException(
             BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
     }
-    BigDecimal getBigDecimal(int scale) throws SQLException {
+    public BigDecimal getBigDecimal(int scale) throws SQLException {
         return getBigDecimal();
     }
-    boolean getBoolean() throws SQLException {
+    public boolean getBoolean() throws SQLException {
         throw (SQLException)createException(
             BOOLEAN_CONVERSION_ERROR).fillInStackTrace();
     }
-    String getString() throws SQLException {
+    public String getString() throws SQLException {
         throw (SQLException)createException(
             STRING_CONVERSION_ERROR).fillInStackTrace();
     }
-    Object getObject() throws SQLException {
+    public Object getObject() throws SQLException {
         throw (SQLException)createException(
             OBJECT_CONVERSION_ERROR);
     }
     public Object getObject(Map map) throws  SQLException {
               throw new SQLException("Not yet implemented");
     }
-    InputStream getAsciiStream() throws SQLException {
+    public InputStream getAsciiStream() throws SQLException {
         throw (SQLException)createException(
             ASCII_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
-    InputStream getUnicodeStream() throws SQLException {
+    public InputStream getUnicodeStream() throws SQLException {
         throw (SQLException)createException(
             UNICODE_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
-    InputStream getBinaryStream() throws SQLException {
+    public InputStream getBinaryStream() throws SQLException {
         throw (SQLException)createException(
             BINARY_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
-    Reader getCharacterStream() throws  SQLException {
+    public Reader getCharacterStream() throws  SQLException {
         InputStream is =  getUnicodeStream();
         if (is==null)
             return null;
         else
             return new InputStreamReader(getUnicodeStream());
     }	 
-    byte[] getBytes() throws SQLException {
+    public byte[] getBytes() throws SQLException {
         throw (SQLException)createException(
             BYTES_CONVERSION_ERROR).fillInStackTrace();
     }
-    Blob getBlob() throws SQLException {
+    public Blob getBlob() throws SQLException {
         throw (SQLException)createException(
             BLOB_CONVERSION_ERROR).fillInStackTrace();
     }
-    Date getDate() throws SQLException {
+    public Date getDate() throws SQLException {
         throw (SQLException)createException(
             DATE_CONVERSION_ERROR).fillInStackTrace();
     }
-    Date getDate(Calendar cal) throws SQLException {
+    public Date getDate(Calendar cal) throws SQLException {
         throw (SQLException)createException(
             DATE_CONVERSION_ERROR).fillInStackTrace();
     }	 
-    Time getTime() throws SQLException {
+    public Time getTime() throws SQLException {
         throw (SQLException)createException(
             TIME_CONVERSION_ERROR).fillInStackTrace();
     }
-    Time getTime(Calendar cal) throws SQLException {
+    public Time getTime(Calendar cal) throws SQLException {
         throw (SQLException)createException(
             TIME_CONVERSION_ERROR).fillInStackTrace();
     }	 
-    Timestamp getTimestamp() throws SQLException {
+    public Timestamp getTimestamp() throws SQLException {
         throw (SQLException)createException(
             TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();
     }
-    Timestamp getTimestamp(Calendar cal) throws SQLException {
+    public Timestamp getTimestamp(Calendar cal) throws SQLException {
         throw (SQLException)createException(
             TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();		 
     }
-    Ref getRef() throws  SQLException {
+    public Ref getRef() throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
-    Clob getClob() throws  SQLException {
+    public Clob getClob() throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
-    Array getArray() throws  SQLException {
+    public Array getArray() throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
     //--- setters
 
-    void setByte(byte value) throws SQLException {
+    public void setByte(byte value) throws SQLException {
         throw (SQLException)createException(
             BYTE_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setShort(short value) throws SQLException {
+    public void setShort(short value) throws SQLException {
         throw (SQLException)createException(
             SHORT_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setInteger(int value) throws SQLException {
+    public void setInteger(int value) throws SQLException {
         throw (SQLException)createException(
             INT_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setLong(long value) throws SQLException {
+    public void setLong(long value) throws SQLException {
         throw (SQLException)createException(
             LONG_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setFloat(float value) throws SQLException {
+    public void setFloat(float value) throws SQLException {
         throw (SQLException)createException(
             FLOAT_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setDouble(double value) throws SQLException {
+    public void setDouble(double value) throws SQLException {
         throw (SQLException)createException(
             DOUBLE_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setBigDecimal(BigDecimal value) throws SQLException {
+    public void setBigDecimal(BigDecimal value) throws SQLException {
         throw (SQLException)createException(
             BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setBoolean(boolean value) throws SQLException {
+    public void setBoolean(boolean value) throws SQLException {
         throw (SQLException)createException(
             BOOLEAN_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setString(String value) throws SQLException {
+    public void setString(String value) throws SQLException {
         throw (SQLException)createException(
             STRING_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setObject(Object value) throws SQLException {
+    public void setObject(Object value) throws SQLException {
         /*
         throw (SQLException)createException(
             OBJECT_CONVERSION_ERROR).fillInStackTrace();
@@ -620,51 +621,51 @@ abstract class FBField {
                 OBJECT_CONVERSION_ERROR).fillInStackTrace();
         }
     }
-    void setAsciiStream(InputStream in, int length) throws SQLException {
+    public void setAsciiStream(InputStream in, int length) throws SQLException {
         throw (SQLException)createException(
             ASCII_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setUnicodeStream(InputStream in, int length) throws SQLException {
+    public void setUnicodeStream(InputStream in, int length) throws SQLException {
         throw (SQLException)createException(
             UNICODE_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setBinaryStream(InputStream in, int length) throws SQLException {
+    public void setBinaryStream(InputStream in, int length) throws SQLException {
         throw (SQLException)createException(
             BINARY_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setCharacterStream(Reader in, int length) throws SQLException {
+    public void setCharacterStream(Reader in, int length) throws SQLException {
         throw (SQLException)createException(
             ASCII_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setBytes(byte[] value) throws SQLException {
+    public void setBytes(byte[] value) throws SQLException {
         throw (SQLException)createException(
             BYTES_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setDate(Date value, Calendar cal) throws SQLException {
+    public void setDate(Date value, Calendar cal) throws SQLException {
         throw (SQLException)createException(
             DATE_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setDate(Date value) throws SQLException {
+    public void setDate(Date value) throws SQLException {
         throw (SQLException)createException(
             DATE_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setTime(Time value, Calendar cal) throws SQLException {
+    public void setTime(Time value, Calendar cal) throws SQLException {
         throw (SQLException)createException(
             TIME_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setTime(Time value) throws SQLException {
+    public void setTime(Time value) throws SQLException {
         throw (SQLException)createException(
             TIME_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
+    public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
         throw (SQLException)createException(
             TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setTimestamp(Timestamp value) throws SQLException {
+    public void setTimestamp(Timestamp value) throws SQLException {
         throw (SQLException)createException(
             TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setBlob(FBBlob blob) throws SQLException {
+    public void setBlob(FBBlob blob) throws SQLException {
         throw (SQLException)createException(
             BLOB_CONVERSION_ERROR).fillInStackTrace();
     }

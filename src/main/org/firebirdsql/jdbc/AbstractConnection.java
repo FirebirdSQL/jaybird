@@ -27,17 +27,13 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.jca.*;
 
 /**
- * The class <code>FBConnection</code> is a handle to a FBManagedConnection.
+ * The class <code>AbstractConnection</code> is a handle to a FBManagedConnection.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBConnection implements Connection, FirebirdConnection
-/*, javax.resource.cci.Connection
- * It is not possible to implement both Connection interfaces in one class
- * due to conflicting exception signatures.
- */ 
-{
+public abstract class AbstractConnection implements FirebirdConnection {
+
     //flag that is set to true when a transaction is started automatically,
     //so the transaction may be committed automatically after a
     //statement is executed.
@@ -48,7 +44,7 @@ public class FBConnection implements Connection, FirebirdConnection
     private boolean invalid = false;
 
 
-    private FBManagedConnection mc;
+    protected FBManagedConnection mc;
 
     private FBLocalTransaction localTransaction = null;
 
@@ -60,7 +56,7 @@ public class FBConnection implements Connection, FirebirdConnection
     // It is used to close them before the connection is closed
     private HashSet activeStatements = new HashSet();
 	 
-    public FBConnection(FBManagedConnection mc) {
+    public AbstractConnection(FBManagedConnection mc) {
         this.mc = mc;
     }
     
@@ -78,14 +74,6 @@ public class FBConnection implements Connection, FirebirdConnection
     }
     
     /**
-     * Invalidate this connection. This method makes connection unusable.
-     */
-/* Private and not used method    
-    private void invalidate() {
-        invalid = true;
-    }
-*/    
-    /**
      * This method should be invoked by each of the statements in the 
      * {@link Statement#close()} method. Here we remove statement from the
      * <code>activeStatements</code> set, so we do not need to close it 
@@ -93,7 +81,7 @@ public class FBConnection implements Connection, FirebirdConnection
      * 
      * @param stmt statement that was closed.
      */
-    void notifyStatementClosed(FBStatement stmt) {
+    void notifyStatementClosed(AbstractStatement stmt) {
         if (!activeStatements.remove(stmt))
             throw new IllegalArgumentException(
                 "Specified statement was not created by this connection.");
@@ -179,22 +167,6 @@ public class FBConnection implements Connection, FirebirdConnection
 
 
     /**
-     * jdbc 3
-     * @param param1 <description>
-     * @param param2 <description>
-     * @param param3 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public synchronized Statement createStatement(int param1, int param2, 
-        int param3) throws SQLException 
-    {
-        // TODO: implement this java.sql.Connection method
-        throw new SQLException("not yet implemented");
-    }
-
-
-    /**
      * Creates a <code>PreparedStatement</code> object for sending
      * parameterized SQL statements to the database.
      *
@@ -229,69 +201,6 @@ public class FBConnection implements Connection, FirebirdConnection
         activeStatements.add(stmt);
         return stmt;
     }
-
-
-    /**
-     *
-     * jdbc 3
-     * @param param1 <description>
-     * @param param2 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public synchronized PreparedStatement prepareStatement(String param1, 
-        int param2) throws SQLException 
-    {
-        // TODO: implement this java.sql.Connection method
-        throw new SQLException("not yet implemented");
-    }
-
-    /**
-     *
-     * jdbc 3
-     * @param param1 <description>
-     * @param param2 <description>
-     * @param param3 <description>
-     * @param param4 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public synchronized PreparedStatement prepareStatement(String param1, 
-        int param2, int param3, int param4) throws SQLException 
-    {
-        // TODO: implement this java.sql.Connection method
-        throw new SQLException("not yet implemented");
-    }
-
-
-    /**
-     * jdbc 3
-     * @param param1 <description>
-     * @param param2 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public synchronized PreparedStatement prepareStatement(String param1, 
-        int[] param2) throws SQLException 
-    {
-        // TODO: implement this java.sql.Connection method
-        throw new SQLException("not yet implemented");
-    }
-
-    /**
-     * jdbc 3
-     * @param param1 <description>
-     * @param param2 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public synchronized PreparedStatement prepareStatement(String param1, 
-        String[] param2) throws SQLException 
-    {
-        // TODO: implement this java.sql.Connection method
-        throw new SQLException("not yet implemented");
-    }
-
 
     /**
      * Creates a <code>CallableStatement</code> object for calling
@@ -328,24 +237,6 @@ public class FBConnection implements Connection, FirebirdConnection
         return stmt;
     }
 
-
-    /**
-     * jdbc 3
-     * @param param1 <description>
-     * @param param2 <description>
-     * @param param3 <description>
-     * @param param4 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public synchronized CallableStatement prepareCall(String param1, int param2, 
-        int param3, int param4) throws SQLException 
-    {
-        // TODO: implement this java.sql.Connection method
-        throw new SQLException("not yet implemented");
-    }
-
-
     /**
      * Converts the given SQL statement into the system's native SQL grammar.
      * A driver may convert the JDBC sql grammar into its system's
@@ -364,7 +255,6 @@ public class FBConnection implements Connection, FirebirdConnection
             throw new SQLException(pex.toString());
         }
     }
-
 
     /**
      * Sets this connection's auto-commit mode.
@@ -398,25 +288,14 @@ public class FBConnection implements Connection, FirebirdConnection
         {
             try {
                 if (inTransaction())
-                {
                     getLocalTransaction().internalCommit();
-                }
 
                 this.mc.autoCommit = autoCommit;
                 
-                /*
-                // commented out by R.Rokytskyy, we should not start
-                // tx if autocommit is off. 
-                if (!autoCommit) 
-                {
-                    getLocalTransaction().begin();
-                } // end of if ()
-                */
             } catch(GDSException ge) {
                 throw new FBSQLException(ge);
             }
-        } // end of if ()
-        
+        } 
     }
 
 
@@ -456,7 +335,7 @@ public class FBConnection implements Connection, FirebirdConnection
             if (inTransaction())
                 getLocalTransaction().internalCommit();
             
-            invalidateSavepoints();
+            //invalidateSavepoints();
                         
         } catch(GDSException ge) {
             throw new FBSQLException(ge);
@@ -484,7 +363,7 @@ public class FBConnection implements Connection, FirebirdConnection
             if (inTransaction())
                 getLocalTransaction().internalRollback();
                 
-            invalidateSavepoints();
+            //invalidateSavepoints();
             
         } catch(GDSException ge) {
             throw new FBSQLException(ge);
@@ -519,9 +398,8 @@ public class FBConnection implements Connection, FirebirdConnection
                     //autocommit is always true for managed tx.
                     try {
                         if (inTransaction())
-                        {
                             getLocalTransaction().internalRollback();
-                        }
+
                     } catch(GDSException ge) {
                         throw new FBSQLException(ge);
                     }
@@ -848,186 +726,6 @@ public class FBConnection implements Connection, FirebirdConnection
         throw new SQLException("Not yet implemented");
     }
 
-    /**
-     *
-     * jdbc 3
-     * @param param1 <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public synchronized void setHoldability(int param1) throws SQLException {
-        // TODO: implement this java.sql.Connection method
-        throw new SQLException("Not yet implemented");
-    }
-
-    /**
-     *
-     * jdbc 3
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public int getHoldability() throws SQLException {
-        // TODO: implement this java.sql.Connection method
-        throw new SQLException("Not yet implemented");
-    }
-
-    
-    /*
-     * Savepoint stuff.  
-     */
-    
-    private int savepointCounter = 0;
-    private LinkedList savepoints = new LinkedList();
-
-    private int getNextSavepointCounter() {
-        return savepointCounter++;
-    }
-    
-    /**
-     * Creates an unnamed savepoint in the current transaction and 
-     * returns the new <code>Savepoint</code> object that represents it.
-     *
-     * @return the new <code>Savepoint</code> object
-     * @exception SQLException if a database access error occurs
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     */
-    public synchronized Savepoint setSavepoint() throws SQLException {
-        FBSavepoint savepoint = new FBSavepoint(getNextSavepointCounter());
-        
-        setSavepoint(savepoint);
-        
-        savepoints.addLast(savepoint);
-        
-        return savepoint;
-    }
-        
-    /**
-     * Set the savepoint on the server.
-     * 
-     * @param savepoint savepoint to set.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    private void setSavepoint(FBSavepoint savepoint) throws SQLException {
-        if (getAutoCommit())
-            throw new SQLException("Connection.setSavepoint() method cannot " + 
-                "be used in auto-commit mode.");
-
-        try {
-            ensureInTransaction();
-            
-            mc.executeImmediate("SAVEPOINT " + savepoint.getServerSavepointId());
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
-        }
-    }
-
-    /**
-     * Creates a savepoint with the given name in the current transaction
-     * and returns the new <code>Savepoint</code> object that represents it.
-     *
-     * @param name a <code>String</code> containing the name of the savepoint
-     * @return the new <code>Savepoint</code> object
-     * @exception SQLException if a database access error occurs
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     */
-    public synchronized Savepoint setSavepoint(String name) throws SQLException {
-        FBSavepoint savepoint = new FBSavepoint(name);
-        
-        setSavepoint(savepoint);
-        
-        return savepoint;
-    }
-    
-    /**
-     * Undoes all changes made after the given <code>Savepoint</code> object
-     * was set. 
-     * <P>
-     * This method should be used only when auto-commit has been disabled.
-     *
-     * @param savepoint the <code>Savepoint</code> object to roll back to
-     * @exception SQLException if a database access error occurs,
-     *            the <code>Savepoint</code> object is no longer valid,
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     * @see #rollback
-     */
-    public synchronized void rollback(Savepoint savepoint) throws SQLException {
-        
-        if (getAutoCommit())
-            throw new SQLException("Connection.setSavepoint() method cannot " + 
-                "be used in auto-commit mode.");
-        
-        if (!(savepoint instanceof FBSavepoint))
-            throw new SQLException(
-                "Specified savepoint was not obtained from this connection.");
-        
-        FBSavepoint fbSavepoint = (FBSavepoint)savepoint;
-        
-        if (!fbSavepoint.isValid())
-            throw new SQLException("Savepoint is no longer valid.");
-        
-        try {
-			mc.executeImmediate(
-				"ROLLBACK TO " + fbSavepoint.getServerSavepointId());
-		} catch (GDSException ex) {
-			throw new FBSQLException(ex);
-		}
-    }
-
-    /**
-     * Removes the given <code>Savepoint</code> object from the current 
-     * transaction. Any reference to the savepoint after it have been removed 
-     * will cause an <code>SQLException</code> to be thrown.
-     *
-     * @param savepoint the <code>Savepoint</code> object to be removed
-     * @exception SQLException if a database access error occurs or
-     *            the given <code>Savepoint</code> object is not a valid 
-     *            savepoint in the current transaction
-     */
-    public synchronized void releaseSavepoint(Savepoint savepoint) throws SQLException {
-        
-        if (getAutoCommit())
-            throw new SQLException("Connection.setSavepoint() method cannot " + 
-                "be used in auto-commit mode.");
-        
-        if (!(savepoint instanceof FBSavepoint))
-            throw new SQLException(
-                "Specified savepoint was not obtained from this connection.");
-        
-        FBSavepoint fbSavepoint = (FBSavepoint)savepoint;
-        
-        if (!fbSavepoint.isValid())
-            throw new SQLException("Savepoint is no longer valid.");
-
-        try {
-			mc.executeImmediate(
-			    "RELEASE SAVEPOINT " + fbSavepoint.getServerSavepointId() + " ONLY");
-		} catch (GDSException ex) {
-			throw new FBSQLException(ex);
-		}
-            
-        fbSavepoint.invalidate();
-        
-        savepoints.remove(fbSavepoint);
-    }
-
-    /**
-     * Invalidate all savepoints.
-     */
-    private synchronized void invalidateSavepoints() {
-        Iterator iter = savepoints.iterator();
-        while(iter.hasNext())
-            ((FBSavepoint)iter.next()).invalidate();
-            
-        savepoints.clear();
-    }
-
-
     //-------------------------------------------
     //Borrowed from javax.resource.cci.Connection
 
@@ -1067,7 +765,7 @@ public class FBConnection implements Connection, FirebirdConnection
         return mc.getUserName();
     }
 
-    String getIscEncoding() {
+    public String getIscEncoding() {
         return mc.getIscEncoding();
     }
 
@@ -1077,41 +775,41 @@ public class FBConnection implements Connection, FirebirdConnection
      *
      * @return a <code>boolean</code> value, true if transaction was started.
      */
-    synchronized void ensureInTransaction() throws SQLException
+    public synchronized void ensureInTransaction() throws SQLException
     {
 		 try {
-			if (inTransaction())
-			{
-            autoTransaction = false;
-            return;
-        } // end of if ()
-        //We have to start our own transaction
-        getLocalTransaction().begin();
-        autoTransaction = true;
-		 }
-		 catch(ResourceException re){
-//           log.warn("resource exception", re);
-           throw new SQLException("ResourceException: " + re);
+			if (inTransaction()) {
+				autoTransaction = false;
+				return;
+			}
+
+            //We have to start our own transaction
+			getLocalTransaction().begin();
+			autoTransaction = true;
+            
+		 } catch(ResourceException re){
+           throw new FBSQLException(re);
 		 }
     }
 
     /**
-     * The <code>willEndTransaction</code> method determines if the current transaction should be
-     * automatically ended when the current statement executes.
-     * for use in jca contexts, autocommit is always true, and autoTransaction is true if the current
-     * transaction was started automatically.
-     * Using jdbc transaction control, if autocommit is false, transactions are started automatically
-     * but not ended automatically.
+     * The <code>willEndTransaction</code> method determines if the current 
+     * transaction should be automatically ended when the current statement 
+     * executes.
+     * 
+     * for use in jca contexts, autocommit is always true, and autoTransaction 
+     * is true if the current transaction was started automatically.
+     * 
+     * Using jdbc transaction control, if autocommit is false, transactions are 
+     * started automatically but not ended automatically.
      *
      * @return a <code>boolean</code> value
      */
-    synchronized boolean willEndTransaction() throws SQLException
-    {
+    public synchronized boolean willEndTransaction() throws SQLException {
         return getAutoCommit() && autoTransaction;
     }
 
-    synchronized void checkEndTransaction() throws SQLException
-    {
+    public synchronized void checkEndTransaction() throws SQLException {
         if (willEndTransaction())
         {
             autoTransaction = false;
@@ -1198,7 +896,7 @@ public class FBConnection implements Connection, FirebirdConnection
         mc.prepareSQL(stmt, sql, describeBind);
     }
 	 
-    public void registerStatement(FBStatement fbStatement) {
+    public void registerStatement(AbstractStatement fbStatement) {
         mc.registerStatement(fbStatement);
     }
 	 
@@ -1305,7 +1003,7 @@ public class FBConnection implements Connection, FirebirdConnection
         try
         {
             s.execute();
-            rs = ((FBStatement)s).getCachedResultSet(true); //trim strings
+            rs = ((AbstractStatement)s).getCachedResultSet(true); //trim strings
         }
         finally
         {

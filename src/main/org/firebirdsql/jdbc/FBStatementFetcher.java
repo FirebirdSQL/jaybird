@@ -33,9 +33,9 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 class FBStatementFetcher implements FBFetcher {
 
-    private FBConnection c;
+    private AbstractConnection c;
 
-    protected FBStatement fbStatement;
+    protected AbstractStatement fbStatement;
     protected FBResultSet rs;
 
     private isc_stmt_handle stmt;
@@ -55,7 +55,7 @@ class FBStatementFetcher implements FBFetcher {
     private boolean isLast = false;
     private boolean isAfterLast = false;
 	 
-    FBStatementFetcher(FBConnection c, FBStatement fbStatement, 
+    FBStatementFetcher(AbstractConnection c, AbstractStatement fbStatement, 
         isc_stmt_handle stmth, FBResultSet rs) throws SQLException 
     {
         this.c = c;

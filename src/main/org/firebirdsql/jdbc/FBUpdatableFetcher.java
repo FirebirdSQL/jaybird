@@ -30,7 +30,7 @@ import org.firebirdsql.gds.isc_stmt_handle;
  */
 public class FBUpdatableFetcher extends FBStatementFetcher {
 
-    FBUpdatableFetcher(FBConnection c, FBStatement fbStatement, 
+    FBUpdatableFetcher(AbstractConnection c, AbstractStatement fbStatement, 
         isc_stmt_handle stmth, FBResultSet rs) throws SQLException 
     {
         super(c, fbStatement, stmth, rs);

@@ -17,9 +17,11 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.FBResultSet;
+
 import java.sql.SQLException;
 import java.math.BigDecimal;
 
@@ -34,7 +36,7 @@ class FBDoubleField extends FBField {
         super(field, rs, numCol);
     }
 
-    byte getByte() throws SQLException {
+    public byte getByte() throws SQLException {
         if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
 
         Double value = new Double(field.decodeDouble(rs.row[numCol]));
@@ -47,7 +49,7 @@ class FBDoubleField extends FBField {
 
         return value.byteValue();
     }
-    short getShort() throws SQLException {
+    public short getShort() throws SQLException {
         if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
 
         Double value = new Double(field.decodeDouble(rs.row[numCol]));
@@ -60,7 +62,7 @@ class FBDoubleField extends FBField {
 
         return value.shortValue();
     }
-    int getInt() throws SQLException {
+    public int getInt() throws SQLException {
         if (rs.row[numCol]==null) return INT_NULL_VALUE;
 
         Double value = new Double(field.decodeDouble(rs.row[numCol]));
@@ -73,7 +75,7 @@ class FBDoubleField extends FBField {
 
         return value.intValue();
     }
-    long getLong() throws SQLException {
+    public long getLong() throws SQLException {
         if (rs.row[numCol]==null) return LONG_NULL_VALUE;
 
         Double value = new Double(field.decodeDouble(rs.row[numCol]));
@@ -86,7 +88,7 @@ class FBDoubleField extends FBField {
 
         return value.longValue();
     }
-    float getFloat() throws SQLException {
+    public float getFloat() throws SQLException {
         if (rs.row[numCol]==null) return FLOAT_NULL_VALUE;
 
         Double value = new Double(field.decodeDouble(rs.row[numCol]));
@@ -98,27 +100,27 @@ class FBDoubleField extends FBField {
 
         return value.floatValue();
     }
-    double getDouble() throws SQLException {
+    public double getDouble() throws SQLException {
         if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
         return field.decodeDouble(rs.row[numCol]);
     }
-    BigDecimal getBigDecimal() throws SQLException {
+    public BigDecimal getBigDecimal() throws SQLException {
         if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
         return new BigDecimal(field.decodeDouble(rs.row[numCol]));
     }
-    Object getObject() throws SQLException {
+    public Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
         return new Double(field.decodeDouble(rs.row[numCol]));
     }
-    boolean getBoolean() throws SQLException {
+    public boolean getBoolean() throws SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
         return field.decodeDouble(rs.row[numCol]) == 1;
     }
-    String getString() throws SQLException {
+    public String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
         return String.valueOf(field.decodeDouble(rs.row[numCol]));
@@ -126,7 +128,7 @@ class FBDoubleField extends FBField {
 
     //--- setXXX methods
 
-    void setString(String value) throws SQLException {
+    public void setString(String value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
@@ -139,28 +141,28 @@ class FBDoubleField extends FBField {
                 STRING_CONVERSION_ERROR+" "+value).fillInStackTrace();
         }
     }
-    void setShort(short value) throws SQLException {
+    public void setShort(short value) throws SQLException {
         setDouble((double)value);
     }
-    void setBoolean(boolean value) throws SQLException {
+    public void setBoolean(boolean value) throws SQLException {
         setDouble(value ? 1 : 0);
     }
-    void setFloat(float value) throws SQLException {
+    public void setFloat(float value) throws SQLException {
         setDouble((double)value);
     }
-    void setDouble(double value) throws SQLException {
+    public void setDouble(double value) throws SQLException {
         field.sqldata = field.encodeDouble(value);
     }
-    void setLong(long value) throws SQLException {
+    public void setLong(long value) throws SQLException {
         setDouble((double)value);
     }
-    void setInteger(int value) throws SQLException {
+    public void setInteger(int value) throws SQLException {
         setDouble((double)value);
     }
-    void setByte(byte value) throws SQLException {
+    public void setByte(byte value) throws SQLException {
         setDouble((double)value);
     }
-    void setBigDecimal(BigDecimal value) throws SQLException {
+    public void setBigDecimal(BigDecimal value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;

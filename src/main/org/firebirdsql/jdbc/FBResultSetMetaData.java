@@ -20,6 +20,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.14  2003/10/05 18:14:55  skidder
+ * Implement getParameterMetaData and fix minor issue in getResultSetMetaData.
+ *
  * Revision 1.13  2003/08/20 21:53:30  rrokytskyy
  * made constructors protected for rowset implementation
  *
@@ -72,19 +75,19 @@ public class FBResultSetMetaData implements ResultSetMetaData {
     // private isc_stmt_handle stmt;
     private final XSQLVAR[] xsqlvars;
     private Map extendedInfo;
-    private final FBConnection connection;
+    private final AbstractConnection connection;
 
     /**
      * Creates a new <code>FBResultSetMetaData</code> instance.
      *
      * @param xsqlvars a <code>XSQLVAR[]</code> value
-     * @param connection a <code>FBConnection</code> value
+     * @param connection a <code>AbstractConnection</code> value
      * @exception SQLException if an error occurs
      *
      * @todo Need another constructor for metadata from constructed
      * result set, where we supply the ext field info.
      */
-    protected FBResultSetMetaData(XSQLVAR[] xsqlvars, FBConnection connection) throws SQLException {
+    protected FBResultSetMetaData(XSQLVAR[] xsqlvars, AbstractConnection connection) throws SQLException {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
     }
@@ -786,7 +789,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      *
      * @throws SQLException if extended field information cannot be obtained.
      */
-    private Map getExtendedFieldInfo(FBConnection connection) throws SQLException {
+    private Map getExtendedFieldInfo(AbstractConnection connection) throws SQLException {
 
         if (connection == null) return Collections.EMPTY_MAP;
 

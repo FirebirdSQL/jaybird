@@ -28,6 +28,7 @@ import java.sql.Date;
 import java.util.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.jdbc.field.*;
 
 
 /**
@@ -45,7 +46,7 @@ public class FBResultSet implements ResultSet {
 
     private FBFetcher fbFetcher;
 
-    protected FBConnection c;
+    protected AbstractConnection c;
 
     public XSQLVAR[] xsqlvars;
 
@@ -74,11 +75,11 @@ public class FBResultSet implements ResultSet {
 	 /**
      * Creates a new <code>FBResultSet</code> instance.
      *
-     * @param c a <code>FBConnection</code> value
-     * @param fbstatement a <code>FBStatement</code> value
+     * @param c a <code>AbstractConnection</code> value
+     * @param fbstatement a <code>AbstractStatement</code> value
      * @param stmt an <code>isc_stmt_handle</code> value
      */
-    protected FBResultSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt, 
+    protected FBResultSet(AbstractConnection c, AbstractStatement fbstatement, isc_stmt_handle stmt, 
         FBObjectListener.ResultSetListener listener) throws SQLException 
     {
         this.c = c;
@@ -107,7 +108,7 @@ public class FBResultSet implements ResultSet {
      * in {@link FBDatabaseMetaData} class).
      * @throws SQLException if database access error occurs
      */
-    protected FBResultSet(FBConnection c, FBStatement fbStatement,isc_stmt_handle stmt, 
+    protected FBResultSet(AbstractConnection c, AbstractStatement fbStatement,isc_stmt_handle stmt, 
         boolean trimStrings, FBObjectListener.ResultSetListener listener) 
         throws SQLException 
     {

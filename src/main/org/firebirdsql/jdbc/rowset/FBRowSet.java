@@ -22,9 +22,9 @@ package org.firebirdsql.jdbc.rowset;
 
 // imports --------------------------------------
 import org.firebirdsql.gds.isc_stmt_handle;
-import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.AbstractConnection;
 import org.firebirdsql.jdbc.FBResultSet;
-import org.firebirdsql.jdbc.FBStatement;
+import org.firebirdsql.jdbc.AbstractStatement;
 
 import javax.sql.RowSet;
 import javax.sql.RowSetListener;
@@ -51,7 +51,7 @@ import java.util.Map;
  */
 public class FBRowSet extends FBResultSet implements RowSet {
 
-    FBRowSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt) throws SQLException{
+    FBRowSet(AbstractConnection c, AbstractStatement fbstatement, isc_stmt_handle stmt) throws SQLException{
         super(c, fbstatement, stmt, null);
     }
 

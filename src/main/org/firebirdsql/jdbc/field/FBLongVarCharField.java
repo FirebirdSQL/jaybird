@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.field;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,6 +27,7 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.*;
 
 
 /**
@@ -68,36 +69,19 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         }
     }
     
-    Blob getBlob() throws SQLException {
+    public Blob getBlob() throws SQLException {
         
         if (blob != null)
             return blob;
         
-    /*
-    // commented out by R.Rokytskyy since getBlob(boolean) is
-    // used only from getBlob() and it makes sense to join two
-    // methods
-        return getBlob(false);
-    }
-
-    Blob getBlob(boolean create) throws SQLException {
-    */
         if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 
-        Long blobId = new Long(field.decodeLong(rs.row[numCol]));
-        
-        /*
-        // commented out by R.Rokytskyy, it's dead code
-        if (blobId == null)
-            blobId = new Long(0);
-        */
-
-        blob = new FBBlob(c, blobId.longValue());
+        blob = new FBBlob(c, field.decodeLong(rs.row[numCol]));
         return blob;
     }
     
-    InputStream getBinaryStream() throws SQLException {
+    public InputStream getBinaryStream() throws SQLException {
         Blob blob = getBlob();
 
         if (blob == BLOB_NULL_VALUE)
@@ -106,7 +90,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         return blob.getBinaryStream();
     }
     
-    byte[] getBytes() throws SQLException {
+    public byte[] getBytes() throws SQLException {
 
         Blob blob = getBlob();
 
@@ -147,7 +131,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         return bout.toByteArray();
     }
 
-    Object getObject() throws SQLException {
+    public Object getObject() throws SQLException {
         return getString();
     }
     
@@ -158,7 +142,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
           return getBytes();
     }
 
-    String getString() throws SQLException {
+    public String getString() throws SQLException {
         byte[] data = getBytes();
         
         if (data == BYTES_NULL_VALUE)
@@ -167,7 +151,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         return field.decodeString(data, javaEncoding);
     }
 
-    void setString(String value) throws SQLException {
+    public void setString(String value) throws SQLException {
         
         if (value == STRING_NULL_VALUE) {
             setNull();
@@ -178,7 +162,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         setBinaryStream(new ByteArrayInputStream(data), data.length);
     }
 
-    void setBytes(byte[] value) throws SQLException {
+    public void setBytes(byte[] value) throws SQLException {
 
         if (value == BYTES_NULL_VALUE) {
             setNull();
@@ -200,7 +184,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         field.sqldata = field.encodeLong(blob.getBlobId());
     }
 
-    void setBinaryStream(InputStream in, int length) throws SQLException {
+    public void setBinaryStream(InputStream in, int length) throws SQLException {
         
         if (in == STREAM_NULL_VALUE) {
             setNull();

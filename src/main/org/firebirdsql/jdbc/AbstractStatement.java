@@ -29,14 +29,6 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
 
 /**
- *
- *   @see <related>
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- *   @version $ $
- */
-
-
-/**
  * <P>The object used for executing a static SQL statement
  * and obtaining the results produced by it.
  *
@@ -50,10 +42,12 @@ import org.firebirdsql.gds.isc_stmt_handle;
  *
  * @see Connection#createStatement
  * @see ResultSet
+ * 
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  */
-public class FBStatement implements Statement, Synchronizable {
+public abstract class AbstractStatement implements Statement, Synchronizable {
 
-    protected FBConnection c;
+    protected AbstractConnection c;
 
     protected isc_stmt_handle fixedStmt;
     
@@ -103,7 +97,7 @@ public class FBStatement implements Statement, Synchronizable {
         }
     }
 
-    FBStatement(FBConnection c, int rsConcurrency) {
+    protected AbstractStatement(AbstractConnection c, int rsConcurrency) {
         this.c = c;
         this.rsConcurrency = rsConcurrency;
         
@@ -198,42 +192,6 @@ public class FBStatement implements Statement, Synchronizable {
                 c.checkEndTransaction();
             } // end of finally
         }
-    }
-
-    /**
-     * jdbc 3
-     * @param param1 <description>
-     * @param param2 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public int executeUpdate(String param1, int param2) throws SQLException {
-        // TODO: implement this java.sql.Statement method
-        throw new SQLException("Not yet implemented");
-    }
-
-    /**
-     * jdbc 3
-     * @param param1 <description>
-     * @param param2 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public int executeUpdate(String param1, int[] param2) throws SQLException {
-        // TODO: implement this java.sql.Statement method
-        throw new SQLException("Not yet implemented");
-    }
-
-    /**
-     * jdbc 3
-     * @param param1 <description>
-     * @param param2 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public int executeUpdate(String param1, String[] param2) throws SQLException {
-        // TODO: implement this java.sql.Statement method
-        throw new SQLException("Not yet implemented");
     }
 
     /**
@@ -541,43 +499,6 @@ public class FBStatement implements Statement, Synchronizable {
     }
 
     /**
-     * jdbc 3
-     * @param param1 <description>
-     * @param param2 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public boolean execute(String param1, int param2) throws SQLException {
-        // TODO: implement this java.sql.Statement method
-        throw new SQLException("not yet implemented");
-    }
-
-    /**
-     * jdbc 3
-     * @param param1 <description>
-     * @param param2 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public boolean execute(String param1, int[] param2) throws SQLException {
-        // TODO: implement this java.sql.Statement method
-        throw new SQLException("not yet implemented");
-    }
-
-    /**
-     * jdbc 3
-     * @param param1 <description>
-     * @param param2 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public boolean execute(String param1, String[] param2) throws SQLException {
-        // TODO: implement this java.sql.Statement method
-        throw new SQLException("not yet implemented");
-    }
-
-
-    /**
      *  Returns the current result as a <code>ResultSet</code> object.
      *  This method should be called only once per result.
      * Calling this method twice with autocommit on and used will probably
@@ -699,18 +620,6 @@ public class FBStatement implements Statement, Synchronizable {
         
         return hasMoreResults;
     }
-
-    /**
-     * jdbc 3
-     * @param param1 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public boolean getMoreResults(int param1) throws SQLException {
-        // TODO: implement this java.sql.Statement method
-        throw new SQLException("not yet implemented");
-    }
-
 
 
     //--------------------------JDBC 2.0-----------------------------
@@ -935,28 +844,6 @@ public class FBStatement implements Statement, Synchronizable {
         return c;
     }
 
-    /**
-     * jdbc 3
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public int getResultSetHoldability() throws SQLException {
-        // TODO: implement this java.sql.Statement method
-        throw new SQLException("not yet implemented");
-    }
-
-    /**
-     * jdbc 3
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public ResultSet getGeneratedKeys() throws SQLException {
-        // TODO: implement this java.sql.Statement method
-        throw new SQLException("not yet implemented");
-    }
-
-
-
     //package level
 
     void closeResultSet() throws SQLException {
@@ -1039,4 +926,5 @@ public class FBStatement implements Statement, Synchronizable {
             lastWarning.setNextWarning(warning);
         }
     }
+
 }

@@ -65,13 +65,13 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
     private static final String SPACES = "                               ";//31 spaces
 
-    private FBConnection c;
+    private AbstractConnection c;
 
     HashMap statements = new HashMap();
 
     //PreparedStatement tables = null;
 
-    FBDatabaseMetaData(FBConnection c) {
+    FBDatabaseMetaData(AbstractConnection c) {
         this.c = c;
     }
 
@@ -79,7 +79,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         try {
             Iterator i = statements.values().iterator();
             while(i.hasNext()) {
-                FBStatement stmt = (FBPreparedStatement)i.next();
+                AbstractStatement stmt = (AbstractPreparedStatement)i.next();
                 if (!stmt.isClosed())
                     stmt.close();
             }
@@ -5268,7 +5268,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         ResultSet rs = null;
         try {
             s.execute();
-            rs = ((FBStatement)s).getCachedResultSet(true); //trim strings
+            rs = ((AbstractStatement)s).getCachedResultSet(true); //trim strings
         }
         finally {
             if (ourTransaction) {

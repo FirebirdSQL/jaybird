@@ -28,7 +28,7 @@ package org.firebirdsql.jgds;
 
 import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.isc_tr_handle;
-import org.firebirdsql.jdbc.FBStatement;
+import org.firebirdsql.jdbc.AbstractStatement;
 
 import java.util.Collection;
 import java.util.ArrayList;
@@ -46,7 +46,7 @@ public final class isc_tr_handle_impl implements isc_tr_handle {
     //isc_tr_handle_impl rtr_next;
     private Collection blobs = null;
     //    isc_blob_handle_impl rbl_next;
-    private FBStatement stmt = null;
+    private AbstractStatement stmt = null;
     private ArrayList stmts = null;
 
     private int state = NOTRANSACTION;
@@ -101,7 +101,7 @@ public final class isc_tr_handle_impl implements isc_tr_handle {
             blobs.remove(blob);
     }
 	 
-    public synchronized void registerStatementWithTransaction(FBStatement stmt) {
+    public synchronized void registerStatementWithTransaction(AbstractStatement stmt) {
 		  if (stmt == null)
             this.stmt = stmt;
 		  else {
@@ -118,7 +118,7 @@ public final class isc_tr_handle_impl implements isc_tr_handle {
         }
 		  if (stmts != null) {
 		      for (int i=0; i< stmts.size(); i++)
-                ((FBStatement)stmts.get(i)).forgetResultSet();
+                ((AbstractStatement)stmts.get(i)).forgetResultSet();
             stmts.clear();
 		  }
     }

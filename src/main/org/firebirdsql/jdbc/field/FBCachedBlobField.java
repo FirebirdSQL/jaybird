@@ -17,12 +17,14 @@
  * All rights reserved.
  */
  
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.field;
 
 import java.sql.SQLException;
 import java.sql.Blob;
 
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.FBCachedBlob;
+import org.firebirdsql.jdbc.FBResultSet;
 
 /**
  * Describe class <code>FBBlobField</code> here.
