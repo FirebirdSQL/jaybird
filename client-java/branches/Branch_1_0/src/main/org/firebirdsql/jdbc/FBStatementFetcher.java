@@ -64,6 +64,15 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     public boolean next() throws SQLException {
+        if (isBeforeFirst) {
+            isBeforeFirst = false;
+            isEmpty = false;
+            isFirst = true;
+            rowNum++;
+            rs.row = nextRow;
+            return true;
+        }
+        
         isBeforeFirst = false;
         isFirst = false;
         isLast = false;
@@ -73,22 +82,24 @@ class FBStatementFetcher implements FBFetcher {
                     
         if (isEmpty)
             return false;
-        else if (nextRow == null || (fbStatement.maxRows!=0 && rowNum==fbStatement.maxRows)){
+        else 
+        if (nextRow == null || (fbStatement.maxRows!=0 && rowNum==fbStatement.maxRows)){
             isAfterLast = true;
             rowNum=0;
             return false;
         }
         else {
             try {
-                rs.row = nextRow;
                 fetch();
+                
+                if((nextRow==null) || (fbStatement.maxRows!=0 && rowNum==fbStatement.maxRows)) {
+                    /** @todo fix this, isLast cannot be correctly set */
+                    // isLast = true;
+                    return false;
+                }
+
+                rs.row = nextRow;
                 rowNum++;
-                    
-                if(rowNum==1)
-                    isFirst=true;
-                    
-                if((nextRow==null) || (fbStatement.maxRows!=0 && rowNum==fbStatement.maxRows))
-                    isLast = true;
                         
                 return true;
             }
