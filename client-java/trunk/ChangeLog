@@ -1,3 +1,47 @@
+2003-08-11 23:55  rrokytskyy
+
+	*
+	
+	initial revision
+	client-java/src/main/org/firebirdsql/jdbc/FBConnectionDefaults.java
+	:
+
+2003-08-11 23:55  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/ngds/: ClumpletImpl.java,
+	GDS_Impl.java, isc_db_handle_impl.java, isc_stmt_handle_impl.java:
+	
+	removed unused imports
+
+2003-08-11 23:54  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/management/FBManager.java:
+	
+	made logging optional
+
+2003-08-11 23:53  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jca/:
+	FBConnectionRequestInfo.java, FBManagedConnection.java,
+	FBManagedConnectionFactory.java,
+	FBStandAloneConnectionManager.java:
+	
+	optimized imports and made logging optional
+
+2003-08-11 23:50  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FBDriver.java,
+	FBConnectionHelper.java:
+	
+	added possibility to set properties without values
+
+2003-08-11 23:49  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	modified version of the driver
+
 2003-08-08 14:18  ryanbaldwin
 
 	* client-java/src/native/jaygds/source/allocator.cpp:
