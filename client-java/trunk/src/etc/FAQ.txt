@@ -73,7 +73,7 @@ JayBird JCA/JDBC Driver for Firebird
 
 33. How do I create a database with JayBird?
 
-34. How do I use JayBird with Windows 98?
+34. How do I use JayBird with Windows 95/98?
 
 35. Why does building the CVS code fail?
 
@@ -1902,7 +1902,7 @@ fbManager.createDatabase(DB_PATH + "/" + DB_NAME, DB_USER, DB_PASSWORD);
 
 
 
-You must upgrade to Winsock 2.0 to use JayBird with Windows 98. See the Microsoft web site for details.
+You must upgrade to Winsock 2.0 to use JayBird with Windows 95. See the Microsoft web site for details. Windows 98 uses Winsock 2.0 by default, but in a very few cases when Windows is upgraded from 95 to 98, Winsock 2.0 is not installed.
 
 
 
