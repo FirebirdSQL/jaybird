@@ -81,12 +81,6 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 
             c.checkEndTransaction();
         }
-/*		  
-        catch (ResourceException re)
-        {
-            throw new SQLException("ResourceException: " + re);
-        } // end of try-catch
- */
         catch (GDSException ge)
         {
             log.info("GDSException in PreparedStatement constructor", ge);
@@ -121,12 +115,6 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
                 return getResultSet();
             } // end of else
         }
-/*		  
-        catch (ResourceException re)
-        {
-            throw new SQLException("ResourceException: " + re);
-        } // end of try-catch
- */
         finally
         {
             c.checkEndTransaction();
@@ -154,12 +142,6 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             }
             return getUpdateCount();
         }
-/*		  
-        catch (ResourceException re)
-        {
-            throw new SQLException("ResourceException: " + re);
-        } // end of try-catch
- */
         finally
         {
             c.checkEndTransaction();
@@ -191,14 +173,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         getField(parameterIndex).setBinaryStream(inputStream, length);
         parameterWasSet(parameterIndex);
     }
-
-    public void setTextStream(int parameterIndex, Reader reader,
-        int length) throws SQLException
-    {
-        getField(parameterIndex).setCharacterStream(reader, length);
-        parameterWasSet(parameterIndex);
-    }
-     
+	 
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
         getField(parameterIndex).setBytes(x);
         parameterWasSet(parameterIndex);
@@ -451,12 +426,6 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             } // end of if ()
             return hasResultSet;
         }
-/*		  
-        catch (ResourceException re)
-        {
-            throw new SQLException("ResourceException: " + re);
-        } // end of try-catch
- */
         finally
         {
             c.checkEndTransaction();
