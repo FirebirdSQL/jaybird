@@ -267,6 +267,7 @@
        </fileset>
        <fileset dir="${build.resources}">
          <include name="*.properties"/>
+         <exclude name="log4j.properties"/>
        </fileset>
     </jar>
   </target>
