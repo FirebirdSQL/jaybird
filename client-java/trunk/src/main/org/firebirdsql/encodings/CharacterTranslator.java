@@ -115,6 +115,7 @@ public class CharacterTranslator {
                 char javaChar = value.charAt(0);
                 
                 mapping[dbChar] = javaChar;
+                mapping[javaChar] = dbChar;
             }
         } catch(MissingResourceException ex) {
             throw new FBSQLException("Character translation " + mappingPath + 
