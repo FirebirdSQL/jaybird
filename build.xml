@@ -153,7 +153,7 @@
         <available file="${native.library.location}/${native.library.name}.dll"/>
     </condition>
     <condition property="native_library_present">
-        <available file="${native.library.location}/${native.library.name}.so"/>
+        <available file="${native.library.location}/lib${native.library.name}.so"/>
     </condition>
     <condition property="no_type2_tests">
         <not><isset property="native_library_present"/></not>
@@ -163,7 +163,7 @@
 
   <target name="copy_native_to_test_path">
     <copy file="${native.library.location}/${native.library.name}.dll" tofile="${module.output}/${native.library.name}.dll" failonerror="false" overwrite="true" />
-    <copy file="${native.library.location}/${native.library.name}.so" tofile="${module.output}/${native.library.name}.so" failonerror="false" overwrite="true" />
+    <copy file="${native.library.location}/lib${native.library.name}.so" tofile="${module.output}/lib${native.library.name}.so" failonerror="false" overwrite="true" />
   </target>
 
   <!-- =================================================================== -->
