@@ -1,5 +1,7 @@
 package org.firebirdsql.encodings;
 
+import java.util.Arrays;
+
 import junit.framework.TestCase;
 
 
@@ -37,5 +39,23 @@ public class TestCharacterTranslation extends TestCase {
         String checkStr = new String(translatedChars);
         
         assertTrue("Strings should be equal", testStr.equals(checkStr));
+    }
+    
+    protected static final byte[] TRANSLATION_TEST_BYTES = new byte[] {
+        (byte)0xde, (byte)0xbd, (byte)0xd8, (byte)0xda, (byte)0xdb, (byte)0xcc, (byte)0xce, (byte)0xcf
+    };
+    
+    protected static final String TRANSLATION_TEST = "\u00df\u00a7\u00c4\u00d6\u00dc\u00e4\u00f6\u00fc";
+    
+    public void testHPUXTranslations() throws Exception {
+        Encoding encoding = EncodingFactory.getEncoding("Cp1252", "translation.hpux");
+        
+        byte[] direct = encoding.encodeToCharset(TRANSLATION_TEST);
+        
+        assertTrue("Encoded content should be correct", Arrays.equals(direct, TRANSLATION_TEST_BYTES));
+        
+        String reverse = encoding.decodeFromCharset(TRANSLATION_TEST_BYTES);
+        
+        assertTrue("Decoded content shouls be correct", TRANSLATION_TEST.equals(reverse));
     }
 }
