@@ -24,27 +24,32 @@ package org.firebirdsql.logging;
 
 public class LoggerFactory{
 	
-	private static boolean loggingAvailable = true;
+    private static boolean checked = false;
+    private static boolean log4j = false;
 	
-	public static Logger getLogger(String name) {
-		String log4j = System.getProperty("FBLog4j");
-		if (log4j == null){
-			try {
-				Class verify = Class.forName("org.apache.log4j.Logger");
-				log4j = "true";
-			}
-			catch (ClassNotFoundException cnfe){
-				log4j = "false";
-			}
-			System.setProperty("FBLog4j",log4j);
-		}
-		if (log4j.equals("true"))
-			return new Log4jLogger(name);
-		else
-			return null;
-	}
+    public static Logger getLogger(String name) {
+        if (!checked){
+            String sLog4j = System.getProperty("FBLog4j");
+            if (sLog4j!=null && sLog4j.equals("false"))
+                log4j = false;
+            else{
+                try {
+                    Class verify = Class.forName("org.apache.log4j.Logger");
+                    log4j = true;
+                }
+                catch (ClassNotFoundException cnfe){
+                    log4j = false;
+                }
+            }
+            checked = true;
+        }
+        if (log4j)
+            return new Log4jLogger(name);
+        else
+            return null;
+    }
 	
-	public static Logger getLogger(Class clazz) {
-		return getLogger(clazz.getName());
-	}
+    public static Logger getLogger(Class clazz) {
+        return getLogger(clazz.getName());
+    }
 }
