@@ -1,3 +1,108 @@
+2004-10-10 14:32  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/encodings/CharacterTranslator.java,
+	main/org/firebirdsql/encodings/Encoding.java,
+	main/org/firebirdsql/encodings/EncodingFactory.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1250.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1251.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1252.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1253.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1254.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1255.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1256.java,
+	main/org/firebirdsql/encodings/Encoding_Cp1257.java,
+	main/org/firebirdsql/encodings/Encoding_Cp437.java,
+	main/org/firebirdsql/encodings/Encoding_Cp737.java,
+	main/org/firebirdsql/encodings/Encoding_Cp775.java,
+	main/org/firebirdsql/encodings/Encoding_Cp850.java,
+	main/org/firebirdsql/encodings/Encoding_Cp852.java,
+	main/org/firebirdsql/encodings/Encoding_Cp857.java,
+	main/org/firebirdsql/encodings/Encoding_Cp858.java,
+	main/org/firebirdsql/encodings/Encoding_Cp860.java,
+	main/org/firebirdsql/encodings/Encoding_Cp861.java,
+	main/org/firebirdsql/encodings/Encoding_Cp862.java,
+	main/org/firebirdsql/encodings/Encoding_Cp863.java,
+	main/org/firebirdsql/encodings/Encoding_Cp864.java,
+	main/org/firebirdsql/encodings/Encoding_Cp865.java,
+	main/org/firebirdsql/encodings/Encoding_Cp866.java,
+	main/org/firebirdsql/encodings/Encoding_Cp869.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_1.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_13.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_2.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_3.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_4.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_5.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_6.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_7.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_8.java,
+	main/org/firebirdsql/encodings/Encoding_ISO8859_9.java,
+	main/org/firebirdsql/encodings/Encoding_NotOneByte.java,
+	main/org/firebirdsql/encodings/Encoding_OneByte.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/FBConnectionHelper.java,
+	main/org/firebirdsql/jdbc/FBDriver.java,
+	main/org/firebirdsql/jdbc/FBDriverPropertyManager.java,
+	test/org/firebirdsql/jgds/TestGdsAttach.java,
+	resources/translation/hpux.properties,
+	test/org/firebirdsql/jdbc/TestFBEncodings.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java,
+	test/org/firebirdsql/ngds/TestNgdsBlobReadBug.java,
+	test/org/firebirdsql/pool/TestDriverConnectionPoolDataSource.java,
+	test/org/firebirdsql/jdbc/TestFBLongVarCharEncodings.java,
+	main/org/firebirdsql/gds/DatabaseParameterBuffer.java,
+	main/org/firebirdsql/gds/GDS.java,
+	main/org/firebirdsql/gds/GDSExceptionHelper.java,
+	main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/gds/XSQLVAR.java,
+	main/org/firebirdsql/gds/XdrOutputStream.java,
+	main/org/firebirdsql/jdbc/field/FBBlobField.java,
+	main/org/firebirdsql/jdbc/field/FBField.java,
+	main/org/firebirdsql/jdbc/field/FBLongVarCharField.java,
+	main/org/firebirdsql/jdbc/field/FBStringField.java,
+	main/org/firebirdsql/jdbc/field/FBWorkaroundStringField.java,
+	main/org/firebirdsql/jdbc/field/TranslatingReader.java,
+	main/org/firebirdsql/jgds/GDS_Impl.java,
+	main/org/firebirdsql/ngds/GDS_Impl.java,
+	main/org/firebirdsql/ngds/XSQLVARLittleEndianImpl.java,
+	pool/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	resources/driver_property_info.properties,
+	test/org/firebirdsql/encodings/TestCharacterTranslation.java,
+	test/org/firebirdsql/encodings/testTranslation.properties:
+	
+	merged with HEAD
+
+2004-10-10 14:21  rrokytskyy
+
+	* client-java/src/:
+	test/org/firebirdsql/encodings/TestCharacterTranslation.java,
+	main/org/firebirdsql/encodings/CharacterTranslator.java:
+	
+	fixed bug with symmetric translations
+
+2004-10-10 13:09  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
+	
+	added support for character translation to character streams
+
+2004-10-10 13:01  rrokytskyy
+
+	*
+	
+	added support for character translation to character streams
+	client-java/src/test/org/firebirdsql/jdbc/TestFBLongVarCharEncoding
+	s.java:
+
+2004-10-10 12:58  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	encodings/EncodingFactory.java, jdbc/field/FBField.java,
+	jdbc/field/TranslatingReader.java:
+	
+	added support for character translation to character streams
+
 2004-10-10 02:03  rrokytskyy
 
 	* client-java/src/messages/org/firebirdsql/util/MessageDump.java:
