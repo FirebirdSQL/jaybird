@@ -32,16 +32,11 @@ import org.firebirdsql.jdbc.field.*;
 
 
 /**
- * Describe class <code>FBResultSet</code> here.
+ * Implementation of {@link ResultSet} interface.
  *
- *   @see <related>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- *   @version $ $ 
  */
-
-
-
 public class FBResultSet implements ResultSet {
 
     private FBFetcher fbFetcher;

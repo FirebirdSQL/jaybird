@@ -17,30 +17,6 @@
  * All rights reserved.
  */
 
-/*
- * CVS modification log:
- * $Log$
- * Revision 1.14  2003/10/05 18:14:55  skidder
- * Implement getParameterMetaData and fix minor issue in getResultSetMetaData.
- *
- * Revision 1.13  2003/08/20 21:53:30  rrokytskyy
- * made constructors protected for rowset implementation
- *
- * Revision 1.12  2003/06/23 21:51:20  rrokytskyy
- * code cleanup
- *
- * Revision 1.11  2003/06/05 23:22:31  brodsom
- * Substitute package and inline imports
- *
- * Revision 1.10  2003/06/04 13:04:34  brodsom
- * Remove unused vars and imports
- * Comment unused private method
- *
- * Revision 1.9  2003/01/13 19:07:37  brodsom
- * Patch for problem with UNION's when retreiving column information when there are too much columns
- *
- *
-*/
 package org.firebirdsql.jdbc;
 
 
@@ -65,14 +41,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Describe class <code>FBResultSetMetaData</code> here.
+ * Implementation of {@link ResultSetMetaData} interface.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
 public class FBResultSetMetaData implements ResultSetMetaData {
 
-    // private isc_stmt_handle stmt;
     private final XSQLVAR[] xsqlvars;
     private Map extendedInfo;
     private final AbstractConnection connection;
