@@ -253,6 +253,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             ((AbstractConnection)i.next()).setManagedConnection(null);
         } // end of for ()
         connectionHandles.clear();
+        this.currentTr = null;
     }
 
 /**
