@@ -1560,9 +1560,9 @@ public final class GDS_Impl implements GDS {
     }
 
     private void disconnect(isc_db_handle_impl db) throws IOException {
-        log.info("About to invalidate db handle");
+        if (log!=null) log.info("About to invalidate db handle");
         db.invalidate();
-        log.info("successfully invalidated db handle");
+        if (log!=null) log.info("successfully invalidated db handle");
     }
 
     private void receiveSqlResponse(isc_db_handle_impl db,
