@@ -124,8 +124,8 @@ public class FBResultSet implements ResultSet {
         this.trimStrings = trimStrings;
         maxRows = fbStatement.getMaxRows();
         xsqlvars = stmt.getOutSqlda().sqlvar;
-        fbFetcher = new FBCachedFetcher(this.c, fbStatement,stmt);
         prepareVars();
+        fbFetcher = new FBCachedFetcher(this.c, fbStatement,stmt);
         //use willEndTransaction rather than getAutoCommit so blobs are cached only when transactions are
         //automatically ended.  Using jca framework, getAutoCommit is always true.
         if (c.willEndTransaction()) 
@@ -2652,7 +2652,6 @@ public class FBResultSet implements ResultSet {
         private void copyToSQLVAR(Object[] row) {
             for(int i = 0; i < xsqlvars.length; i++) {
                 xsqlvars[i].sqldata = row[i];
-                xsqlvars[i].sqlind = row[i] == null ? -1 : 0;
             }
         }
     }
@@ -2690,6 +2689,7 @@ public class FBResultSet implements ResultSet {
                                 
                             if (blobField && localRow[i] != null ) 
                             {
+                                xsqlvars[i].sqldata = localRow[i];
                                 FBBlobField blob = (FBBlobField)FBField.createField(xsqlvars[i]);
                                 blob.setConnection(c);
                                 localRow[i] = blob.getCachedObject();                                
@@ -2767,7 +2767,6 @@ public class FBResultSet implements ResultSet {
         private void copyToSQLVAR(Object[] row) {
             for(int i = 0; i < xsqlvars.length; i++) {
                 xsqlvars[i].sqldata = row[i];
-                xsqlvars[i].sqlind = row[i] == null ? -1 : 0;
             }
         }
     }
