@@ -170,7 +170,8 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public PreparedStatement prepareStatement(String sql)
         throws SQLException {
-        return new FBPreparedStatement(this, sql);
+        //return new FBPreparedStatement(this, sql);
+        return new FBPreparedStatementWithFields(this, sql);        
     }
 
 

@@ -252,9 +252,9 @@ public class FBResultSet implements ResultSet {
 
    private final Logger log = Logger.getLogger(getClass());
 
-    private FBFetcher fbFetcher;
+    protected FBFetcher fbFetcher;
 
-    private FBManagedConnection mc;
+    protected FBManagedConnection mc;
 
 //    private FBStatement fbstatement;
 
@@ -269,7 +269,7 @@ public class FBResultSet implements ResultSet {
     private int wasNullColumnIndex = -1;
 
     //might be a bit of a kludge, or a useful feature.
-    private boolean trimStrings;
+    protected boolean trimStrings;
 
     FBResultSet(FBManagedConnection mc, FBStatement fbstatement, isc_stmt_handle stmt) {
         fbFetcher = new FBStatementFetcher(mc, fbstatement, stmt);
@@ -1250,7 +1250,7 @@ public class FBResultSet implements ResultSet {
         if (columnName == null || columnName.equals("")) {
             throw new SQLException("zero length identifiers not allowed");
         }
-	columnName = columnName.toUpperCase();
+    columnName = columnName.toUpperCase();
         //XSQLVAR[] xsqlvars = stmt.getOutSqlda().sqlvar;
         for (int i = 0; i< xsqlvars.length; i++) {
             if (columnName.equals(xsqlvars[i].aliasname)) {
@@ -3256,6 +3256,10 @@ public class FBResultSet implements ResultSet {
             try {
                 row = mc.fetch(stmt);
                 rowNum++;
+
+                if (row != null)
+                    copyToSQLVAR(row);
+
                 return (row != null);
             }
             catch (GDSException ge) {
@@ -3270,20 +3274,29 @@ public class FBResultSet implements ResultSet {
         public Statement getStatement() {
             return fbStatement;
         }
+
+        private void copyToSQLVAR(Object[] row) {
+            for(int i = 0; i < xsqlvars.length; i++) {
+                xsqlvars[i].sqldata = row[i];
+                xsqlvars[i].sqlind = row[i] == null ? -1 : 0;
+            }
+        }
+
     }
 
     class FBCachedFetcher  implements FBFetcher {
 
-        private ArrayList rows;
+        ArrayList rows;
 
         FBCachedFetcher(FBManagedConnection mc, isc_stmt_handle stmt) throws SQLException {
             rows = new ArrayList();
             try {
                 do {
                     row = mc.fetch(stmt);
-                    rows.add(row);
+                    if (row != null)
+                        rows.add(row);
                 } while  (row != null);
-                rows.add(null);
+                // rows.add(null);
                 mc.closeStatement(stmt, false);
             }
             catch (GDSException ge) {
@@ -3302,6 +3315,8 @@ public class FBResultSet implements ResultSet {
             }
             row = (Object[])rows.get(rowNum);
             rowNum++;
+            if (row != null)
+                copyToSQLVAR(row);
             return row != null;
         }
 
@@ -3311,9 +3326,16 @@ public class FBResultSet implements ResultSet {
         public Statement getStatement() {
             return null;
         }
+
+        private void copyToSQLVAR(Object[] row) {
+            for(int i = 0; i < xsqlvars.length; i++) {
+                xsqlvars[i].sqldata = row[i];
+                xsqlvars[i].sqlind = row[i] == null ? -1 : 0;
+            }
+        }
     }
 
-    private void setWasNullColumnIndex(int columnIndex) {
+    protected void setWasNullColumnIndex(int columnIndex) {
         wasNullColumnIndex = columnIndex;
     }
 
