@@ -26,6 +26,12 @@
  *
  */
 
+/*
+ * CVS modification log:
+ * $Log$
+ */
+
+
 package org.firebirdsql.gds;
 
 import org.firebirdsql.encodings.*;
@@ -51,8 +57,8 @@ public class XSQLVAR {
     public String ownname;
     public String aliasname;
     //
-	 private Encoding coder;
-	 
+    private Encoding coder;
+
     public XSQLVAR() {
     }
     //
@@ -139,11 +145,11 @@ public class XSQLVAR {
                 return value.getBytes();
             }
         }
-*/		  
-		  if (coder == null)
-  	         coder = EncodingFactory.getEncoding(encoding);
-		  return coder.encodeToCharset(value);
-	 }
+*/
+        if (coder == null)
+            coder = EncodingFactory.getEncoding(encoding);
+        return coder.encodeToCharset(value);
+    }
     public byte[] encodeString(byte[] value, String encoding)throws java.sql.SQLException {
 /* Old encoding method		 
         if (encoding == null)
@@ -154,15 +160,19 @@ public class XSQLVAR {
             } catch(java.io.UnsupportedEncodingException ex) {
                 return value;
             }
-		  }
-*/		  
-		  if (coder == null)
-  	         coder = EncodingFactory.getEncoding(encoding);
-		  return coder.encodeToCharset(coder.decodeFromCharset(value));		 
-	 }
-	 
+        }
+*/
+        if (encoding == null)
+            return value;
+        else {
+            if (coder == null)
+                coder = EncodingFactory.getEncoding(encoding);
+            return coder.encodeToCharset(coder.decodeFromCharset(value));
+        }
+    }
+
     public final String decodeString(byte[] value, String encoding){
-/*		 
+/*
         if (encoding == null)
             return new String(value);
         else {
@@ -173,10 +183,10 @@ public class XSQLVAR {
             }
         }
  */
-		  if (coder == null)
-  	         coder = EncodingFactory.getEncoding(encoding);
-		  return coder.decodeFromCharset(value);
-	 }
+        if (coder == null)
+            coder = EncodingFactory.getEncoding(encoding);
+        return coder.decodeFromCharset(value);
+    }
     // 
     // times,dates...
     // 
@@ -185,11 +195,11 @@ public class XSQLVAR {
             return value;
         }
         else {
-            long time = value.getTime() - cal.getTimeZone().getRawOffset();				
+            long time = value.getTime() - cal.getTimeZone().getRawOffset();
             return new java.sql.Timestamp(time);
         }
-	 }
-	 
+    }
+
     public final static byte[] encodeTimestamp(java.sql.Timestamp value){
 
         // note, we cannot simply pass millis to the database, because
@@ -218,7 +228,7 @@ public class XSQLVAR {
             long time = value.getTime() + cal.getTimeZone().getRawOffset();				
             return new java.sql.Timestamp(time);
         }
-	 }
+    }
 
     public final static java.sql.Timestamp decodeTimestamp(byte[] byte_int){
         
@@ -247,7 +257,7 @@ public class XSQLVAR {
             return new java.sql.Time(cal.getTime().getTime());
         }
     }
-	 
+
     public final static byte[] encodeTime(java.sql.Time d) {
         datetime dt = new datetime(d);
         return dt.toTimeBytes();
@@ -262,7 +272,7 @@ public class XSQLVAR {
             return new java.sql.Time(cal.getTime().getTime());    
         }
     }
-	 
+
     public final static java.sql.Time decodeTime(byte[] int_byte) {
         datetime dt = new datetime(null,int_byte);
         return dt.toTime();
@@ -273,11 +283,11 @@ public class XSQLVAR {
             return (d);
         }
         else {
-            cal.setTime(d);            
+            cal.setTime(d);
             return new java.sql.Date(cal.getTime().getTime());
         }
     }
-	 
+
     public final static byte[] encodeDate(java.sql.Date d) {
         datetime dt = new datetime(d);
         return dt.toDateBytes();
@@ -289,19 +299,19 @@ public class XSQLVAR {
         } 
         else {
             cal.setTime(d);
-            return new java.sql.Date(cal.getTime().getTime());    
+            return new java.sql.Date(cal.getTime().getTime());
         }
     }
-	 
+
     public final static java.sql.Date decodeDate(byte[] byte_int) {
         datetime dt = new datetime(byte_int, null);
         return dt.toDate();
     }
 
-	 //
-	 // Helper Class to encode/decode times/dates
-	 //
-	 private static class datetime{
+    //
+    // Helper Class to encode/decode times/dates
+    //
+    private static class datetime{
         int year;
         int month;
         int day;
@@ -414,7 +424,7 @@ public class XSQLVAR {
             c.set(Calendar.HOUR_OF_DAY,hour);
             c.set(Calendar.MINUTE,minute);
             c.set(Calendar.SECOND,second);
-            c.set(Calendar.MILLISECOND,millisecond);			 
+            c.set(Calendar.MILLISECOND,millisecond);
             return new java.sql.Time(c.getTime().getTime());
         }
 
@@ -438,7 +448,7 @@ public class XSQLVAR {
             c.set(Calendar.HOUR_OF_DAY,0);
             c.set(Calendar.MINUTE,0);
             c.set(Calendar.SECOND,0);
-            c.set(Calendar.MILLISECOND,0);															
+            c.set(Calendar.MILLISECOND,0);
             return new java.sql.Date(c.getTime().getTime());
         }
     }

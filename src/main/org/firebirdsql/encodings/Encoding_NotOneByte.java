@@ -1,3 +1,27 @@
+/*
+ * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
+ */
+
+/* added by Blas Rodriguez Somoza:
+ *
+ * CVS modification log:
+ * $Log$
+ */
 package org.firebirdsql.encodings;
 
 public class Encoding_NotOneByte implements Encoding{
@@ -21,11 +45,11 @@ public class Encoding_NotOneByte implements Encoding{
         byte[] by = null;
         try {
             by = new String(in).getBytes(encoding);
-				System.arraycopy(by, 0, out, 0, by.length);
+            System.arraycopy(by, 0, out, 0, by.length);
         }
         catch (java.io.UnsupportedEncodingException uee){
         }
-		  return by.length;
+        return by.length;
     }
     // decode
     public String decodeFromCharset(byte[] in){
@@ -41,10 +65,10 @@ public class Encoding_NotOneByte implements Encoding{
         String str = null; 
         try {
             str = new String(in, encoding);
-				str.getChars(0, str.length(), out, 0);
+            str.getChars(0, str.length(), out, 0);
         }
         catch (java.io.UnsupportedEncodingException uee){
         }
-		  return str.length();
+        return str.length();
     }
 }
