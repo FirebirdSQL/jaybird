@@ -48,8 +48,10 @@ public class FBBlobField extends FBField implements FBFlushableField {
 	int length;
 	byte[] data;
 
-    FBBlobField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
-        super(field, rs, numCol);
+    FBBlobField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+        throws SQLException 
+    {
+        super(field, rs, numCol, requiredType);
     }
     
     public void close() throws SQLException {
@@ -149,6 +151,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         return bout.toByteArray();
     }
 
+    /*
     public Object getObject() throws SQLException {
         if (field.sqlsubtype < 0)
             return getBlob();
@@ -157,6 +160,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         else
             return getBytes();
     }
+    */
 
     public byte[] getCachedObject() throws SQLException {
         if (rs.row[numCol]==null) 

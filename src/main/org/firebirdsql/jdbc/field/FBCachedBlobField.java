@@ -34,8 +34,10 @@ import org.firebirdsql.jdbc.FBResultSet;
  */
 public class FBCachedBlobField extends FBBlobField {
 
-    FBCachedBlobField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
-        super(field, rs, numCol);
+    FBCachedBlobField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+        throws SQLException 
+    {
+        super(field, rs, numCol, requiredType);
     }
 
     public Blob getBlob() throws SQLException {

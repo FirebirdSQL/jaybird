@@ -89,8 +89,10 @@ public class FBStringField extends FBField {
     private static final String SHORT_TRUE_3 = "1";
     
 
-    FBStringField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
-        super(field, rs, numCol);
+    FBStringField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+        throws SQLException 
+    {
+        super(field, rs, numCol, requiredType);
     }
 	 
     //----- Math code
@@ -180,11 +182,14 @@ public class FBStringField extends FBField {
 
         return field.decodeString(rs.row[numCol], javaEncoding);
     }
+    
+    /*
     public Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
         return getString();
     }
+    */
 
     //----- getXXXStream code
 

@@ -145,8 +145,12 @@ public abstract class FBField {
     protected AbstractConnection c = null;
     protected String IscEncoding = null;
     protected String javaEncoding	= null;
+    protected int requiredType;
+    protected int scale = -1;
 
-    FBField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
+    FBField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+        throws SQLException 
+    {
         if (field == null) throw new FBSQLException(
             "Cannot create FBField instance for null as XSQLVAR.",
             FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
@@ -154,6 +158,7 @@ public abstract class FBField {
         this.field = field;
         this.rs = rs;
         this.numCol = numCol;
+        this.requiredType = requiredType;
     }
 
     /**
@@ -190,6 +195,17 @@ public abstract class FBField {
             javaEncoding = null;			  
         // this method only do something for FBStringField and FBBlobField
     }
+    
+    /**
+     * Set the required type for {@link getObject()} conversion.
+     * 
+     * @param requiredType required type, one of the {@link java.sql.Types}
+     * constants.
+     */
+    public void setRequiredType(int requiredType) {
+        this.requiredType =requiredType;
+    }
+    
     /**
      * @return <code>true</code> if the field is of type <code>type</code>.
      * @todo write correct ISCConstants.SQL_QUAD support
@@ -332,55 +348,60 @@ public abstract class FBField {
     throws SQLException {
         if (isType(field, Types.SMALLINT))
             if (field.sqlscale == 0)
-                return new FBShortField(field, rs, numCol);
+                return new FBShortField(field, rs, numCol, Types.SMALLINT);
             else
-                return new FBBigDecimalField(field, rs, numCol,1);
+                return new FBBigDecimalField(field, rs, numCol,1, Types.NUMERIC);
         else
         if (isType(field, Types.INTEGER))
             if (field.sqlscale == 0)
-                return new FBIntegerField(field, rs, numCol);
+                return new FBIntegerField(field, rs, numCol, Types.INTEGER);
             else
-                return new FBBigDecimalField(field, rs, numCol,2);
+                return new FBBigDecimalField(field, rs, numCol,2, Types.NUMERIC);
         else
         if (isType(field, Types.BIGINT))
             if (field.sqlscale == 0)
-                return new FBLongField(field, rs, numCol);
+                return new FBLongField(field, rs, numCol, Types.BIGINT);
             else
-                return new FBBigDecimalField(field, rs, numCol,3);
+                return new FBBigDecimalField(field, rs, numCol,3, Types.NUMERIC);
         else
         if (isType(field, Types.FLOAT))
-            return new FBFloatField(field, rs, numCol);
+            return new FBFloatField(field, rs, numCol, Types.FLOAT);
         else
         if (isType(field, Types.DOUBLE))
-            return new FBDoubleField(field, rs, numCol);
+            return new FBDoubleField(field, rs, numCol, Types.DOUBLE);
         else
         if (isType(field, Types.CHAR))
-            return new FBStringField(field, rs, numCol);
+            return new FBStringField(field, rs, numCol, Types.CHAR);
         else
         if (isType(field, Types.VARCHAR))
-            return new FBStringField(field, rs, numCol);
+            return new FBStringField(field, rs, numCol, Types.VARCHAR);
         else
         if (isType(field, Types.DATE))
-            return new FBDateField(field, rs, numCol);
+            return new FBDateField(field, rs, numCol, Types.DATE);
         else
         if (isType(field, Types.TIME))
-            return new FBTimeField(field, rs, numCol);
+            return new FBTimeField(field, rs, numCol, Types.TIME);
         else
         if (isType(field, Types.TIMESTAMP))
-            return new FBTimestampField(field, rs, numCol);
+            return new FBTimestampField(field, rs, numCol, Types.TIMESTAMP);
         else
-        if (isType(field, Types.BLOB) || 
-            isType(field, Types.LONGVARBINARY))
+        if (isType(field, Types.BLOB)) {
+                if (cached)
+                    return new FBCachedBlobField(field, rs, numCol, Types.BLOB);
+                else          
+                    return new FBBlobField(field, rs, numCol, Types.BLOB);
+        } else
+        if (isType(field, Types.LONGVARBINARY)) {
             if (cached)
-                return new FBCachedBlobField(field, rs, numCol);
-				else		  
-                return new FBBlobField(field, rs, numCol);
-        else
+                return new FBCachedBlobField(field, rs, numCol, Types.LONGVARBINARY);
+            else		  
+                return new FBBlobField(field, rs, numCol, Types.LONGVARBINARY);
+        } else
         if (isType(field, Types.LONGVARCHAR))
             if (cached)
-                return new FBCachedLongVarCharField(field, rs, numCol);
+                return new FBCachedLongVarCharField(field, rs, numCol, Types.LONGVARCHAR);
             else
-                return new FBLongVarCharField(field, rs, numCol);
+                return new FBLongVarCharField(field, rs, numCol, Types.LONGVARCHAR);
         else
             throw (SQLException)createException(
                 SQL_TYPE_NOT_SUPPORTED);
@@ -459,8 +480,70 @@ public abstract class FBField {
             STRING_CONVERSION_ERROR).fillInStackTrace();
     }
     public Object getObject() throws SQLException {
-        throw (SQLException)createException(
-            OBJECT_CONVERSION_ERROR);
+        
+        if (isNull())
+            return null;
+        
+        switch (requiredType) {
+            case Types.CHAR :
+            case Types.VARCHAR :
+            case Types.LONGVARCHAR :
+                return getString();
+                
+            case Types.NUMERIC :
+            case Types.DECIMAL :
+                if (scale == -1)
+                    return getBigDecimal();
+                else
+                    return getBigDecimal(scale);
+                
+            case Types.BIT :
+            case 16 : // 16 is a value of Types.BOOLEAN in JDBC 3.0
+                    return new Boolean(getBoolean());
+                
+            case Types.TINYINT :
+            case Types.SMALLINT :
+            case Types.INTEGER :
+                return new Integer(getInt());
+                
+            case Types.BIGINT :
+                return new Long(getLong());
+                
+            case Types.REAL :
+                return new Float(getFloat());
+                
+            case Types.FLOAT :
+            case Types.DOUBLE :
+                return new Double(getDouble());
+                
+            case Types.BINARY :
+            case Types.VARBINARY :
+            case Types.LONGVARBINARY :
+                return getBytes();
+                
+            case Types.DATE :
+                return getDate();
+                
+            case Types.TIME :
+                return getTime();
+                
+            case Types.TIMESTAMP :
+                return getTimestamp();
+                
+            case Types.CLOB :
+                return getClob();
+                
+            case Types.BLOB :
+                return getBlob();
+                
+            case Types.ARRAY :
+                return getArray();
+                
+            default :
+                throw (SQLException)createException(
+                    OBJECT_CONVERSION_ERROR);                
+        }
+        
     }
     public Object getObject(Map map) throws  SQLException {
               throw new FBDriverNotCapableException();

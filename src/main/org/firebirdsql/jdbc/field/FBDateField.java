@@ -35,8 +35,10 @@ import org.firebirdsql.jdbc.FBResultSet;
  */
 class FBDateField extends FBField {
 
-    FBDateField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
-        super(field, rs, numCol);
+    FBDateField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+        throws SQLException
+    {
+        super(field, rs, numCol, requiredType);
     }
 
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
@@ -64,11 +66,14 @@ class FBDateField extends FBField {
 
         return field.decodeDate(rs.row[numCol]).toString();
     }
+    
+    /*
     public Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
         return field.decodeDate(rs.row[numCol]);
     }
+    */
 
     //--- setXXX methods
 	 

@@ -34,15 +34,20 @@ import java.sql.Time;
  * @version 1.0
  */
 class FBTimeField extends FBField {
-    FBTimeField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
-        super(field, rs, numCol);
+    FBTimeField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+        throws SQLException 
+    {
+        super(field, rs, numCol, requiredType);
     }
 
+    /*
     public Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
         return field.decodeTime(rs.row[numCol]);
     }
+    */
+    
     public String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 

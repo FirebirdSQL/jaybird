@@ -33,8 +33,10 @@ import java.math.BigDecimal;
  * @version 1.0
  */
 class FBLongField extends FBField {
-    FBLongField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
-        super(field, rs, numCol);
+    FBLongField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
+        throws SQLException 
+    {
+        super(field, rs, numCol, requiredType);
     }
 
     public byte getByte() throws SQLException {
@@ -96,11 +98,15 @@ class FBLongField extends FBField {
 
         return BigDecimal.valueOf(field.decodeLong(rs.row[numCol]));
     }
+    
+    /*
     public Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
         return new Long(field.decodeLong(rs.row[numCol]));
     }
+    */
+    
     public boolean getBoolean() throws SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 

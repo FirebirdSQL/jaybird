@@ -45,8 +45,10 @@ public class FBBigDecimalField extends FBField {
 
     private int fieldType = 0; // 1.- Short, 2.- Integer, 3.- Long
 
-    FBBigDecimalField(XSQLVAR field, FBResultSet rs, int numCol, int fieldType) throws SQLException {
-        super(field, rs, numCol);
+    FBBigDecimalField(XSQLVAR field, FBResultSet rs, int numCol, int fieldType, 
+        int requiredType) throws SQLException 
+    {
+        super(field, rs, numCol, requiredType);
         this.fieldType = fieldType;
     }
 
@@ -111,9 +113,11 @@ public class FBBigDecimalField extends FBField {
         return getBigDecimal().longValue();
     }
 
+    /*
     public Object getObject() throws SQLException {
         return getBigDecimal();
     }
+    */
 
     public short getShort() throws SQLException {
         if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
