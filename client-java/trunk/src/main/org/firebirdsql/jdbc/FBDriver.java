@@ -323,7 +323,7 @@ public class FBDriver implements Driver {
          * @return this driver's major version number
      */
     public int getMajorVersion() {
-        return 0;
+        return 1;
     }
 
     /**
@@ -331,7 +331,7 @@ public class FBDriver implements Driver {
          * @return this driver's minor version number
      */
     public int getMinorVersion() {
-        return 1;
+        return 5;
     }
 
 
