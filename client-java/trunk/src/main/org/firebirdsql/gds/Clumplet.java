@@ -46,6 +46,15 @@ public interface Clumplet
     boolean equals(Object o);
 
     int hashCode();
+    
+    /**
+     * Remove clumplet of the specified type.
+     * 
+     * @param type type to remove.
+     * 
+     * @return head of the clumplet without removed clumplet.
+     */
+    Clumplet remove(int type);
 
 //    public void write(OutputStream out) throws IOException;
 

@@ -43,6 +43,7 @@ public class ClumpletImpl
     int type;
     byte[] content;
     ClumpletImpl next;
+    ClumpletImpl prev;
 
     ClumpletImpl(int type, byte[] content) {
         this.type = type;
@@ -65,6 +66,7 @@ public class ClumpletImpl
         }
         else if (next == null) {
             next = ci;
+            ci.prev = this;
         }
         else {
             next.append(c);
@@ -95,6 +97,25 @@ public class ClumpletImpl
             return null;        
         } // end of if ()
         return next.findString(type);
+    }
+    
+    public Clumplet remove(int type) {
+        if (type == this.type) {
+            if (this.prev != null) {
+                this.prev.next = this.next;
+            } else
+                return this.next;
+        }
+            
+        if (next == null)
+            return this;
+        else
+        if (next.type == type) {
+            this.next = this.next.next;
+            return this;
+        } else {
+            return ((ClumpletImpl)next.remove(type)).prev;
+        }
     }
 
     public int getLength() {
