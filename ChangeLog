@@ -1,3 +1,223 @@
+2003-08-07  ryanbaldwin
+	* src/main/org/firebirdsql/gds/AbstractGDS.java:
+	* src/main/org/firebirdsql/gds/GDSFactory.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jdbc/FBDriver.java:
+	* src/main/org/firebirdsql/management/FBManager.java:
+	* src/main/org/firebirdsql/ngds/GDS_Impl.java:
+		Added ability to load embedded server using 'embedded' url via DriverManager or through FBWrappingDatasource.
+		Corrected spelling mistake - embeded = embedded.
+
+	* src/native/jaygds/source/entrypoints.cpp:
+		Modified macros used to write try - catch block on entrypoints
+		as per Romans sugestion.
+
+2003-08-04  rfincher
+	* src/etc/FAQ.txt:
+	* src/etc/faq.html:
+		*** empty log message ***
+
+2003-08-03  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBObjectListener.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBRowSet.java:
+	* src/main/org/firebirdsql/jdbc/FBSimpleDataSource.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+		merged with Branch_1_0:
+		- fixed NPE in PreparedStatement.executeQuery(String)
+		- fixed deviation from spec in ResultSet.close() and Statement.close()
+
+	* examples/DataSourceExample.java:
+	* examples/DataSourceExample.java:
+		fixed compilation errors
+
+	* build.xml:
+	* build.xml:
+		added examples to the dist task
+
+	* src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+	* src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+		merged with Branch_1_0
+
+	* src/main/org/firebirdsql/jdbc/FBCachedFetcher.java:
+	* src/main/org/firebirdsql/jdbc/FBDriver.java:
+	* src/main/org/firebirdsql/jdbc/FBStatementFetcher.java:
+	* src/main/org/firebirdsql/management/FBManager.java:
+	* src/pool/org/firebirdsql/pool/AbstractConnectionPoolDataSource.java:
+	* src/pool/org/firebirdsql/pool/PooledConnectionQueue.java:
+	* src/pool/org/firebirdsql/pool/XConnection.java:
+	* src/test/org/firebirdsql/jdbc/TestFBBlobStream.java:
+		organized imports
+
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jca/FBStandAloneConnectionManager.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/management/FBManager.java:
+		fixed incorrect log4j initialization
+
+	* src/etc/faq.PDF:
+		deprecated
+
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+		finished merging with Branch_1_0:
+		- fixed deviation from spec in ResultSet.close() and Statement.close()
+
+	* build.bat:
+		fixed slashes
+
+2003-08-02  rfincher
+	* src/etc/FAQ.txt:
+	* src/etc/FAQ.txt:
+	* src/etc/faq.html:
+		*** empty log message ***
+
+2003-07-31  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+		fixed NPE if PreparedStatement.executeQuery(String) is executed
+
+	* build_native.xml:
+		fixed incorrect output name of the DLL
+
+	* src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+		added test case to check NPE
+
+2003-07-28  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBObjectListener.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBRowSet.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+		fixed recently introduced bug when result set is closed in
+		statement.close()
+
+	* src/main/org/firebirdsql/jdbc/FBObjectListener.java:
+		file FBObjectListener.java was initially added on branch
+		Branch_1_0.
+
+2003-07-27  ryanbaldwin
+	* src/main/org/firebirdsql/gds/AbstractGDS.java:
+	* src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	* src/main/org/firebirdsql/ngds/InternalError.java:
+	* src/main/org/firebirdsql/ngds/XSQLDAImpl.java:
+	* src/main/org/firebirdsql/ngds/XSQLVARImpl.java:
+		Added missing file headers and one or two additional comments.
+
+2003-07-22  rrokytskyy
+	* build_native.xml:
+		introduced different targets for different platforms
+
+	* src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+		added test to check if rs.close() fails after stmt.close()
+
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+		fixed specification deviation when result set could live event
+		after statement close
+
+2003-07-19  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+	* src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+		implemented some additional methods for positioned updates
+
+	* src/etc/JDBC20_conformance.html:
+		updated info in accordance with source code
+
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+		merged with head
+
+	* build.xml:
+		updated to v 1.0.1 and removed log4j.properties
+
+	* src/etc/FAQ.txt:
+	* src/etc/faq.PDF:
+	* src/etc/faq.html:
+		fixed info about positioned updates
+
+2003-07-19  rfincher
+	* src/etc/FAQ.txt:
+	* src/etc/faq.PDF:
+	* src/etc/faq.html:
+		*** empty log message ***
+
+2003-07-18  ryanbaldwin
+	* src/native/jaygds/source/entrypoints.cpp:
+	* src/native/jaygds/source/external/ib_util.h:
+	* src/native/jaygds/source/external/ibase.h:
+	* src/native/jaygds/source/external/iberror.h:
+	* src/native/jaygds/source/external/ibinstall.h:
+	* src/native/jaygds/source/fb_binding.h:
+		Replaced headers in external with headers from FB1.5 RC4.
+		Update prototypes in fb_binding.h to corispond exactly with new header from FB1.5 RC4.
+
+2003-07-16  ryanbaldwin
+	* src/native/jaygds/builds/msvc6/java_gds.dsp:
+	* src/native/jaygds/source/handle_wrappers.cpp:
+	* src/native/jaygds/source/handle_wrappers.h:
+		Temporary)fix for problem with BLOB_ID's on Big Endian
+		platforms.
+
+2003-07-14  ryanbaldwin
+	* src/native/jaygds/source/entrypoints.cpp:
+		Introduced a hack into nativeInitilize to allow this method to be called multiple
+		times with different client library names until one is sucsefully loaded.
+
+	* src/native/jaygds/source/allocator.cpp:
+		Fix for solaris sparc and other platforms where aligment is important.
+		
+		ScratchPadAllocator now allocates all memory on eight byte boundary.
+		Hopefully this will be OK for all platforms.
+
+	* src/main/org/firebirdsql/ngds/GDS_Impl.java:
+		Modified the way nativeInitilize is called to clean up code
+		make it easier to modify list of client librarys tried.
+
+	* build_native.xml:
+		Fixed build on unix platforms.
+
+2003-07-13  ryanbaldwin
+	* src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	* src/main/org/firebirdsql/ngds/GDS_Impl.java:
+		Dont specify .dll extension when loading firebird client
+		library.
+
+	* build.xml:
+		Fix unix builds.
+
+	* src/native/jaygds/source/generic_unix/platform.cpp:
+	* src/native/jaygds/source/generic_unix/platform.h:
+		Should hopefully be the same on unix like platforms.
+
+	* build_native.xml:
+	* build_native.xml:
+		Fix solaris build.
+
+	* build.xml:
+	* src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	* src/test/org/firebirdsql/ngds/TestNgds.java:
+		Added target 'compile-native' to build.xml that builds the native library.
+		This target invokes build_native.xml. For this to work either the JAVA_HOME
+		environment variable needs to be set when invoking ant or the java_home ant
+		property needs to be set too the root of the JDK.
+		
+		Added ngds package under src/test which contains a TesNgds test class which
+		is essentially the same class as TestGds except it tests the ngds package.
+		build.xml has been modified to make sure this test is not executed unless the
+		'compile-native' target has been run sucsesfully.
+
+2003-07-12  ryanbaldwin
+	* lib/cpptasks.jar:
+		Required by ANT build file for the native code.
+
+	* build_native.xml:
+		ANT build file for the native code.
+
 2003-07-10  rrokytskyy
 	* src/main/org/firebirdsql/jdbc/FBBlob.java:
 	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
