@@ -348,7 +348,7 @@ public class TestFBPreparedStatement extends FBTestBase{
         //Connection connection = getConnectionViaDriverManager();
         
         Properties props = new Properties(getDefaultPropertiesForConnection());
-        props.setProperty("invert_time_zone", "");
+        props.setProperty("timestamp_uses_local_timezone", "");
         
         Connection connection = DriverManager.getConnection(getUrl(), props);
         try {
@@ -356,9 +356,9 @@ public class TestFBPreparedStatement extends FBTestBase{
                 "INSERT INTO test_blob(id, ts_field) VALUES (?, ?)");
             
             try {
-                Calendar calendar = Calendar.getInstance();
+                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+01"));
                 
-                Timestamp ts = new Timestamp(calendar.getTimeInMillis());
+                Timestamp ts = new Timestamp(calendar.getTime().getTime());
                 
                 stmt.setInt(1, 1);
                 stmt.setTimestamp(2, ts);
@@ -370,7 +370,7 @@ public class TestFBPreparedStatement extends FBTestBase{
                 
                 stmt.execute();
 
-                stmt.setInt(1, 2);
+                stmt.setInt(1, 3);
                 stmt.setTimestamp(2, ts, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
                 
                 stmt.execute();
@@ -379,14 +379,58 @@ public class TestFBPreparedStatement extends FBTestBase{
                 Statement selectStmt = connection.createStatement();
                 try {
                     ResultSet rs = selectStmt.executeQuery(
-                        "SELECT id, CAST(ts_field AS VARCHAR(35)), ts_field FROM test_blob");
+                        "SELECT id, CAST(ts_field AS VARCHAR(30)), ts_field FROM test_blob");
+                    
+                    Timestamp ts1 = null;
+                    Timestamp ts2 = null;
+                    Timestamp ts3 = null;
+                    
+                    String ts1Str = null;
+                    String ts2Str = null;
+                    String ts3Str = null;
                     
                     while(rs.next()) {
+                        
+                        switch(rs.getInt(1)) {
+                            case 1 :
+                                ts1 = rs.getTimestamp(3);
+                                ts1Str = rs.getString(2).substring(0, 23);
+                                break;
+                                
+                            case 2 :
+                                ts2 = rs.getTimestamp(3);
+                                ts2Str = rs.getString(2).substring(0, 23);
+                                break;
+                                
+                            case 3 : 
+                                ts3 = rs.getTimestamp(3);
+                                ts3Str = rs.getString(2).substring(0, 23);
+                                break;
+                        }
+                        /*
                         System.out.println("ID " + rs.getInt(1) + 
                             ", time_str '" + rs.getString(2) + 
                             "', time ts " + rs.getTimestamp(3) + 
-                            ", time ts_cal " + rs.getTimestamp(3, Calendar.getInstance()));
+                            ", time ts_cal " + rs.getTimestamp(3, Calendar.getInstance(TimeZone.getTimeZone("GMT+01"))) +
+                            ", time ts_zone " + rs.getTimestamp(3, Calendar.getInstance(TimeZone.getTimeZone("UTC"))));
+                        */
                     }
+                    
+                    assertTrue("Timestamps 1 and 2 should be equal", 
+                        ts1.getTime() == ts2.getTime());
+                    
+                    assertTrue("Timestamps 1 and 3 should differ for 3600 seconds.",
+                        Math.abs(ts1.getTime() - ts3.getTime()) == 3600*1000);
+                    
+                    assertTrue("Server should see the same timestamp",
+                        ts1.toString().equals(ts1Str));
+
+                    assertTrue("Server should see the same timestamp",
+                        ts2.toString().equals(ts2Str));
+
+                    assertTrue("Server should see the same timestamp",
+                        ts3.toString().equals(ts3Str));
+
                 } finally {
                     selectStmt.close();
                 }
