@@ -1,3 +1,29 @@
+2005-02-13 12:38  rrokytskyy
+
+	*
+	
+	added main method to run JDBC CTS without Ant
+	client-java/src/jdbccts/org/firebirdsql/jdbc/cts/FirebirdSuite.java
+	:
+
+2005-02-13 11:52  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	updated to reflect updatable result sets change
+
+2005-02-13 11:27  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/jdbc/FBCachedFetcher.java,
+	main/org/firebirdsql/jdbc/FBFetcher.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	main/org/firebirdsql/jdbc/FBRowUpdater.java,
+	main/org/firebirdsql/jdbc/FBStatementFetcher.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	added support of the updatable cursors for cached result sets
+
 2005-02-10 23:31  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/: FBCachedFetcher.java,
