@@ -596,5 +596,36 @@ public class TestFBDatabaseMetaData extends TestXABase {
 	t.commit();
     }
     
+    
+    public void testCatalogsAndSchema() throws Exception {
+        DatabaseMetaData dmd = c.getMetaData();
+        c.setAutoCommit(true);
+        String catalog = null;
+        ResultSet rs = dmd.getSchemas();
+        while (rs.next()) {
+
+            String sn = rs.getString(1);
+            System.out.println(".getAllTables() schema="+sn);
+        }
+        rs.close();
+
+        rs = dmd.getCatalogs();
+        while (rs.next()) {
+            String sn = rs.getString(1);
+            System.out.println(".getAllTables() catalogs="+sn);
+        }
+        rs.close();
+
+        rs = dmd.getTables(null, null, "%", new String[]{"TABLE"}); 
+        System.out.println(".getAllTables() rs="+rs);
+
+        while (rs.next()) {
+            String tn = rs.getString("TABLE_NAME");
+            String tt = rs.getString("TABLE_TYPE");
+            String remarks = rs.getString("REMARKS");
+
+            System.out.println(".getAllTables() found table"+tn+", type="+tt+", remarks="+remarks);
+        }
+    }
 }
 
