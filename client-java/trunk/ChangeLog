@@ -1,3 +1,29 @@
+2003-11-05 23:13  rrokytskyy
+
+	*
+	
+	initial revision
+	client-java/src/main/org/firebirdsql/jdbc/FBEscapedFunctionHelper.j
+	ava:
+
+2003-11-05 16:33  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBEscapedParser.java:
+	
+	added a full list of functions from the specs
+
+2003-11-05 09:55  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBEscapedParser.java:
+	
+	added support for function mapping
+
+2003-11-05 00:22  rfincher
+
+	* client-java/src/etc/: faq.html, FAQ.txt:
+	
+	[no log message]
+
 2003-11-04 22:43  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/FBEscapedParser.java:
