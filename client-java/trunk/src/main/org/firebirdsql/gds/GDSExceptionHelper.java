@@ -20,6 +20,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.3  2003/06/05 22:57:47  brodsom
+ * Substitute package and inline imports
+ *
  * Revision 1.2  2003/03/09 16:30:48  rrokytskyy
  * removed some deprecations
  *
@@ -87,12 +90,11 @@ public class GDSExceptionHelper {
      */
     private static void init() {
         try {
-            ClassLoader cl = GDSException.class.getClassLoader();
             String res = MESSAGES.replace('.','/') + ".properties";
-			InputStream in = cl.getResourceAsStream(res);
+			InputStream in = GDSException.class.getResourceAsStream(res);
             
             if (in == null) {
-                cl = Thread.currentThread().getContextClassLoader();
+                ClassLoader cl = Thread.currentThread().getContextClassLoader();
                 in = cl.getResourceAsStream(res);
             }
             
