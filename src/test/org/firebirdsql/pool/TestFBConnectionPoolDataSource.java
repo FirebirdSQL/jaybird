@@ -670,4 +670,96 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             // everything is fine
         }
     }
+    
+    public void testPrepareWithError() throws Exception {
+        Connection con = pool.getPooledConnection().getConnection();
+        con.setAutoCommit(false);
+        try {
+            PreparedStatement stmt = con.prepareStatement("bla");
+            fail("Should not enter here.");
+        } catch(SQLException ex) {
+            // everything is fine
+        } finally {
+            con.close();
+        }
+    }
+    
+    public void testSqlRole() throws Exception {
+        
+        Connection ddlConnection = getConnectionViaDriverManager();
+        try {
+            Statement stmt = ddlConnection.createStatement();
+            
+            try {
+                try {
+                    stmt.execute("CREATE TABLE test_role_table (id INTEGER)");
+                } catch(SQLException ex) {
+                    // ignore
+                }
+                
+                try {
+                    stmt.execute("CREATE ROLE testRole");
+                } catch(SQLException ex) {
+                    // ignore
+                }
+                
+                stmt.execute("GRANT SELECT, INSERT, UPDATE ON test_role_table TO testRole");
+                
+                stmt.execute("GRANT testRole TO testUser");
+                
+            } finally {
+                stmt.close();
+            }
+            
+        } finally {
+            ddlConnection.close();
+        }
+        
+        try {
+            ((FirebirdPool)pool).setUserName("testUser");
+            ((FirebirdPool)pool).setRoleName("testRole");
+            
+            Connection connection = pool.getPooledConnection().getConnection();
+            
+            try {
+                Statement stmt = connection.createStatement();
+                
+                try {
+                    ResultSet rs = stmt.executeQuery("SELECT current_role FROM rdb$database");
+                    rs.next();
+                    
+                    assertTrue("Role should be correct : " + rs.getString(1), "TESTROLE".equalsIgnoreCase(rs.getString(1)));
+                    
+                    stmt.execute("INSERT INTO test_role_table VALUES(1)");
+                    
+                    rs = stmt.executeQuery("SELECT * FROM test_role_table");
+                    
+                    assertTrue("Result set should not be empty.", rs.next());
+                    assertTrue("First column in first row should be equal 1.", rs.getInt(1) == 1);
+                    assertTrue("Result set should contain only one row", !rs.next());
+                } finally {
+                    stmt.close();
+                }
+                
+            } finally {
+                connection.close();
+                pool.shutdown();
+            }
+                
+        } finally {
+            ddlConnection = getConnectionViaDriverManager();
+            try {
+                Statement ddlStatement = ddlConnection.createStatement();
+                try {
+                    ddlStatement.execute("DROP ROLE testRole");
+                    ddlStatement.execute("DROP TABLE test_role_table");
+                } finally {
+                    ddlStatement.close();
+                }
+            } finally {
+                ddlConnection.close();
+            }
+        }
+        
+    }
 }
