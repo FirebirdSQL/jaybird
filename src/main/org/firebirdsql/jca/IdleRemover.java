@@ -97,6 +97,7 @@ public class IdleRemover
                }
             }
          });
+      removerThread.setDaemon(true);
       removerThread.start();
       
    }

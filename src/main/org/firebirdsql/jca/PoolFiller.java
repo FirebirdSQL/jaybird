@@ -93,6 +93,7 @@ public class PoolFiller
                } // end of while ()
             }  
          });
+      fillerThread.setDaemon(true);
       fillerThread.start();
    }
 
