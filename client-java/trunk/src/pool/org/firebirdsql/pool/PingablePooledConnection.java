@@ -468,7 +468,6 @@ public class PingablePooledConnection implements PooledConnection,
      *
      * @param connection connection that was commited.
      *
-     *
      * @see XConnectionManager#connectionRolledBack(PooledConnectionHandler)
      */
     public void connectionRolledBack(PooledConnectionHandler connection) throws

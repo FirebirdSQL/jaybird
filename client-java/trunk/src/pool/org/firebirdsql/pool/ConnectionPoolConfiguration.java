@@ -34,8 +34,18 @@ public interface ConnectionPoolConfiguration {
 	 * when pool is started.
 	 * 
 	 * @return minimum number of open JDBC connections to open at startup.
+     * 
+     * @deprecated please use {@link #getMinPoolSize()} instead.
 	 */
 	int getMinConnections();
+    
+    /**
+     * Get minimum number of open JDBC connections that will be created
+     * when pool is started.
+     * 
+     * @return minimum number of open JDBC connections to open at startup.
+     */
+    int getMinPoolSize();
 	
 	/**
 	 * Get maximum number of physical connections that can be simultaneously
@@ -43,8 +53,19 @@ public interface ConnectionPoolConfiguration {
 	 * 
 	 * @return maximum number of simultaneously open physical database 
 	 * connections, 0 if no limit exists.
+     * 
+     * @deprecated please use {@link #getMaxPoolSize()} instead.
 	 */
 	int getMaxConnections();
+    
+    /**
+     * Get maximum number of physical connections that can be simultaneously
+     * open.
+     * 
+     * @return maximum number of simultaneously open physical database 
+     * connections, 0 if no limit exists.
+     */
+    int getMaxPoolSize();
     
     /**
      * Get time during which {@link javax.sql.ConnectionPoolDataSource#getPooledConnection()}
@@ -71,8 +92,18 @@ public interface ConnectionPoolConfiguration {
      * 
      * @return idle timeout in milliseconds, {@link Integer#MAX_VALUE}
      * indicates that idle connections are not removed.
+     * 
+     * @deprecated please use {@link #getMaxIdleTime()} instead.
      */
     int getIdleTimeout();
+
+    /**
+     * Get time after which idle connections will be deallocated.
+     * 
+     * @return idle timeout in milliseconds, {@link Integer#MAX_VALUE}
+     * indicates that idle connections are not removed.
+     */
+    int getMaxIdleTime();
     
     /**
      * Check if this connection pool uses connection pooling, or just implements

@@ -51,12 +51,12 @@ public abstract class BasicAbstractConnectionPool
     /*
      * Following fields contain information about the pool characteristics.
      */
-    private int minConnections = FBPoolingDefaults.DEFAULT_MIN_SIZE;
-    private int maxConnections = FBPoolingDefaults.DEFAULT_MAX_SIZE;
+    private int minPoolSize = FBPoolingDefaults.DEFAULT_MIN_SIZE;
+    private int maxPoolSize = FBPoolingDefaults.DEFAULT_MAX_SIZE;
 
     private int blockingTimeout = FBPoolingDefaults.DEFAULT_BLOCKING_TIMEOUT;
     private int retryInterval = FBPoolingDefaults.DEFAULT_RETRY_INTERVAL;
-    private int idleTimeout = FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT;
+    private int maxIdleTime = FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT;
 
     private int pingInterval = FBPoolingDefaults.DEFAULT_PING_INTERVAL;
     private String pingStatement;
@@ -99,51 +99,51 @@ public abstract class BasicAbstractConnectionPool
     }
 
     public int getIdleTimeout() {
-        return idleTimeout;
+        return getMaxIdleTime();
     }
 
     public void setIdleTimeout(int idleTimeout) {
-        this.idleTimeout = idleTimeout;
+        setMaxIdleTimeout(idleTimeout);
     }
     
     public int getMaxIdleTime() {
-        return getIdleTimeout();
+        return maxIdleTime;
     }
     
     public void setMaxIdleTimeout(int maxIdleTime) {
-        setIdleTimeout(maxIdleTime);
+        this.maxIdleTime = maxIdleTime;
     }
 
     public int getMaxConnections() {
-        return maxConnections;
+        return getMaxPoolSize();
     }
 
     public void setMaxConnections(int maxConnections) {
-        this.maxConnections = maxConnections;
+        setMaxPoolSize(maxConnections);
     }
     
     public int getMaxPoolSize() {
-        return getMaxConnections();
+        return maxPoolSize;
     }
     
     public void setMaxPoolSize(int maxPoolSize) {
-        setMaxConnections(maxPoolSize);
+        this.maxPoolSize = maxPoolSize;
     }
 
     public int getMinConnections() {
-        return minConnections;
+        return getMinPoolSize();
     }
 
     public void setMinConnections(int minConnections) {
-        this.minConnections = minConnections;
+        setMinPoolSize(minConnections);
     }
     
     public int getMinPoolSize() {
-        return getMinConnections();
+        return minPoolSize;
     }
     
     public void setMinPoolSize(int minPoolSize) {
-        setMinConnections(minPoolSize);
+        this.minPoolSize = minPoolSize;
     }
 
     public int getPingInterval() {
@@ -249,15 +249,18 @@ public abstract class BasicAbstractConnectionPool
     }
 
     private static final String REF_BLOCKING_TIMEOUT = "blockingTimeout";
-    private static final String REF_LOGIN_TIMEOUT = "loginTimeout";
-    private static final String REF_PING_INTERVAL = "pingInterval";
-    private static final String REF_TX_ISOLATION = "isolation";
     private static final String REF_RETRY_INTERVAL = "retryInterval";
+    private static final String REF_LOGIN_TIMEOUT = "loginTimeout";
+
+    private static final String REF_TX_ISOLATION = "isolation";
+    
+    private static final String REF_PING_INTERVAL = "pingInterval";
     private static final String REF_PING_STATEMENT = "pingStatement";
+    
     private static final String REF_POOLING = "pooling";
     private static final String REF_STATEMENT_POOLING = "statementPooling";
-    private static final String REF_MAX_STATEMENTS = "maxStatements";
     
+    private static final String REF_MAX_STATEMENTS = "maxStatements";
     private static final String REF_MAX_POOL_SIZE = "maxPoolSize";
     private static final String REF_MIN_POOL_SIZE = "minPoolSize";
     private static final String REF_MAX_IDLE_TIME = "maxIdleTime";

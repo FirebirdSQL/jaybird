@@ -143,7 +143,7 @@ public class DriverConnectionPoolDataSource extends BasicAbstractConnectionPool
      * Get connection manager that will allocate physical connections to the
      * database. 
      * 
-     * @return instance of {@link DriverPooledConnectionManager} class.
+     * @return instance of {@link PooledConnectionManager} class.
      */
     protected PooledConnectionManager getConnectionManager() throws SQLException {
         return connectionManager;

@@ -27,7 +27,7 @@ import java.sql.Statement;
 
 
 /**
- * Dynamic proxy handler that together with {@link PooledConnectionHandler}
+ * Dynamic proxy handler that together with {@link org.firebirdsql.pool.PooledConnectionHandler}
  * ensure that statements will be closed before connection is returned to the
  * pool.
  * 
@@ -49,7 +49,7 @@ public class StatementHandler implements InvocationHandler {
     /**
      * Create instance of this class for the specified connection handler and
      * 
-     * @param owner instance of {@link PooledConnectionHandler} that is 
+     * @param connectionHandler instance of {@link PooledConnectionHandler} that is 
      * responsible for a connection that created a statement to wrap.
      * 
      * @param wrappedObject instance of {@link Statement} to wrap.

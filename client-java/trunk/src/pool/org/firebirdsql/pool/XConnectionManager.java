@@ -31,7 +31,7 @@ interface XConnectionManager {
 	/**
 	 * Check if specified connection is still valid. 
 	 * 
-	 * @param connection instance of {@link XConnection} to check.
+	 * @param connection instance of {@link PooledConnectionHandler} to check.
 	 * 
 	 * @return <code>true</code> if connection owner is still valid, 
 	 * <code>false</code> otherwise.
