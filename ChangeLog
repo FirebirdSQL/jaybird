@@ -1,3 +1,10 @@
+2004-08-23 21:58  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/pool/TestXADataSource.java:
+	
+	fixed an issue when a test executed previously could affect the
+	outcome of this one
+
 2004-08-22 22:48  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/pool/TestXADataSource.java:
