@@ -1,3 +1,9 @@
+2005-03-08 19:52  gab_reid
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	Altered test to replicate updating rowset bug
+
 2005-03-05 21:44  rrokytskyy
 
 	* client-java/src/: main/org/firebirdsql/jdbc/FBEscapedParser.java,
