@@ -108,8 +108,9 @@
     <property name="test.db.host" value="localhost"/>
     <property name="test.db.port" value="3050"/>
     <property name="test.db.dir" value="${module.output}/db"/>
+    <property name="test.db.lc_ctype" value="NONE"/>
 
-
+	 
     <property name="packages" value="org.firebirdsql.*"/>
 
     <property name="build.compiler" value="classic"/>
@@ -423,6 +424,9 @@
       <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
       <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
       <sysproperty key="test.db.dir" value="${test.db.dir}"/>
+      <sysproperty key="test.db.host" value="${test.db.host}"/>
+      <sysproperty key="test.db.port" value="${test.db.port}"/>
+      <sysproperty key="test.db.lc_ctype" value="${test.db.lc_ctype}"/>
 
       <classpath>
         <pathelement location="${build.classes}"/>
@@ -476,7 +480,9 @@
       <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
       <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
       <sysproperty key="test.db.dir" value="${test.db.dir}"/>
-
+      <sysproperty key="test.db.host" value="${test.db.host}"/>
+      <sysproperty key="test.db.port" value="${test.db.port}"/>
+      <sysproperty key="test.db.lc_ctype" value="${test.db.lc_ctype}"/>
 
       <classpath>
         <pathelement location="${build.classes}"/>
