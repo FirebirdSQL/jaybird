@@ -28,10 +28,10 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
     public GDS_Impl(GDSFactory.GdsType gdsType)
         {
-		super(gdsType);
+		    super(gdsType);
 
         final boolean logging = log != null;
-        if(logging) log.info( "Attempting to loadLibrary for \""+"java_gds"+"\"" );
+        if(logging) log.info( "Attempting to loadLibrary for \""+"jaybird"+"\"" );
 
         try
             {
@@ -39,34 +39,54 @@ public class GDS_Impl extends AbstractGDS implements GDS
             }
         catch( SecurityException ex )
             {
-            if(logging) log.error( "Failed to load \""+"java_gds"+"\". SecurityException caught.", ex );
+            if(logging) log.error( "Failed to load native library. SecurityException caught.", ex );
 			throw ex;
             }
         catch( UnsatisfiedLinkError ex )
             {
-            if(logging) log.error( "Failed to load \""+"java_gds"+"\". UnsatisfiedLinkError caught.", ex );
+            if(logging) log.error( "Failed to load native library. UnsatisfiedLinkError caught.", ex );
 			throw ex;
             }
         if(logging) log.info( "loadLibrary for \""+"java_gds"+"\" returned OK." );
 
-        boolean hasInitilized = false;
 
-		if(hasInitilized == false)
-			{
-			try { nativeInitilize( "fbclient" ); hasInitilized = true; } catch( Throwable th ) { th.printStackTrace(); }
-			}
-		if(hasInitilized == false)
-			{
-			try { nativeInitilize( "gds32" ); hasInitilized = true; } catch( Throwable th ) { th.printStackTrace(); }
-			}
-    if(hasInitilized == false)
-			{
-			try { nativeInitilize( "gds" ); hasInitilized = true; } catch( Throwable th ) { th.printStackTrace(); }
-			}
+    if(logging) log.info( "Attempting to initilize native library." );
 
-		if(hasInitilized == false)
-			throw new RuntimeException("Failed to initilize java_gds");
+    for( int i = 0, n = LIST_OF_CLIENT_LIBRARIES_TO_TRY.length; i<n; i++ )
+        {
+        final String currentClientLibraryToTry = LIST_OF_CLIENT_LIBRARIES_TO_TRY[i];
+        try
+            {
+            nativeInitilize(currentClientLibraryToTry);
+            }
+        catch( Throwable th )
+            {
+            th.printStackTrace(); // Dont hide it completly
+
+            if(logging) log.debug( "Failed to load client library # "+i+" - \""+currentClientLibraryToTry+"\".", th );
+
+            // If we have just failed to load the last client library
+            // then we need to throw an exception.
+            if( i == LIST_OF_CLIENT_LIBRARIES_TO_TRY.length - 1 )
+                throw new RuntimeException("Failed to initilize jaybird native library. This is most likley due to a failure to load the firebird client library.");
+
+            // Otherwise we continue to next client library
+            continue;
+            }
+
+        if(logging) log.info( "Failed to load client library # "+i+" - \""+currentClientLibraryToTry+"\"." );
+
+        // If we get here we have been loaded a client library so we stop here.
+        break;
         }
+    }
+
+    private static final String[] LIST_OF_CLIENT_LIBRARIES_TO_TRY = {
+        "fbclient.dll",
+        "libfbclient.so",
+        "gds32.dll",
+        "libgds.so",
+    };
 
     public synchronized  Clumplet newClumplet(int type, String content) {
         return new StringClumplet(type, content);
