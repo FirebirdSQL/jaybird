@@ -89,7 +89,7 @@ class XPreparedStatementCache {
      * @throws SQLException if prepared statement cannot be obtained from the 
      * pool.
      */
-    synchronized XCachablePreparedStatement reference(Connection connection) 
+    synchronized XCachablePreparedStatement take(Connection connection) 
         throws SQLException 
     {
 
@@ -142,7 +142,7 @@ class XPreparedStatementCache {
      * @throws SQLException if prepared statement cannot be returned into the 
      * pool.
      */
-    synchronized void dereference(Object reference) throws SQLException {
+    synchronized void put(Object reference) throws SQLException {
 
         if (reference == null)
             throw new NullPointerException();
@@ -160,10 +160,9 @@ class XPreparedStatementCache {
 
             } else
                 ((XCachablePreparedStatement)reference).forceClose();
-        } catch(InterruptedException iex) {
-
-            // do nothing, we simply lost statement.
-
+                
+        } catch(InterruptedException ex) {
+            logChannel.warn("Could not put statement back to pool.", ex);
         }
     }
 
@@ -171,8 +170,19 @@ class XPreparedStatementCache {
      * Invalidate this reference guard. After invoking this method no other
      * method can be invoked.
      */
-    synchronized void invalidate() {
+    synchronized void invalidate() throws SQLException {
         sql = null;
+        
+        while(!freeReferences.isEmpty()) {
+            try {
+                XCachablePreparedStatement result =
+                    (XCachablePreparedStatement)freeReferences.take();
+
+                result.forceClose();
+            } catch(InterruptedException ex) {
+                // ignore
+            }
+        }
     }
 
 }
