@@ -1,4 +1,5 @@
 /*
+ *
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -40,6 +41,7 @@ import org.firebirdsql.jdbc.field.*;
 public class FBResultSet implements ResultSet {
 
     private FBFetcher fbFetcher;
+    private FBRowUpdater rowUpdater;
 
     protected AbstractConnection c;
 
@@ -119,11 +121,14 @@ public class FBResultSet implements ResultSet {
             prepareVars(false);
             
             if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
-                c.addWarning(new FBSQLWarning(
-                    "Result set concurrency changed. " +
-                    "Only ResultSet.CONCUR_READ_ONLY concurrency is supported."));
-                    
-                rsConcurrency = ResultSet.CONCUR_READ_ONLY;
+                try {
+                    rowUpdater = new FBRowUpdater(c, xsqlvars);
+                } catch (FBResultSetNotUpdatableException ex) {
+                    c.addWarning(new FBSQLWarning(
+                        "Result set concurrency changed to READ ONLY."));
+
+                    rsConcurrency = ResultSet.CONCUR_READ_ONLY;
+                }
             }
                     
             if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
@@ -200,6 +205,15 @@ public class FBResultSet implements ResultSet {
             fields[i].setConnection(c);
         }
     }
+    
+    /**
+     * Notify the row updater about the new row that was fetched. This method
+     * must be called after each change in cursor position.
+     */
+    private void notifyRowUpdater() {
+        if (rowUpdater != null)
+            rowUpdater.setRow(row);
+    }
 
     /**
      * Check if statement is open and prepare statement for cursor move.
@@ -233,7 +247,12 @@ public class FBResultSet implements ResultSet {
      */
     public boolean next() throws  SQLException {
         checkCursorMove();
-        return fbFetcher.next();
+        boolean result = fbFetcher.next();
+        
+        if (result)
+            notifyRowUpdater();
+        
+        return result;
     }
 
 
@@ -336,7 +355,7 @@ public class FBResultSet implements ResultSet {
      * @throws SQLException if this paramater cannot be retrieved as 
      * a binary InputStream 
      */
-public InputStream getBinaryStream(int columnIndex) throws SQLException {
+    public InputStream getBinaryStream(int columnIndex) throws SQLException {
         return getField(columnIndex).getBinaryStream();
     }
 
@@ -407,7 +426,7 @@ public InputStream getBinaryStream(int columnIndex) throws SQLException {
      * @throws SQLException if this paramater cannot be retrieved as 
      * a <code>Date</code> object
      */
-public Date getDate(int columnIndex) throws SQLException {
+    public Date getDate(int columnIndex) throws SQLException {
         return getField(columnIndex).getDate();
     }
 
@@ -587,7 +606,10 @@ public Date getDate(int columnIndex) throws SQLException {
                     "Invalid column index.",
                     FBSQLException.SQL_STATE_INVALID_COLUMN);
         
-        return fields[columnIndex-1];
+        if (rowUpdater != null)
+            return rowUpdater.getField(columnIndex - 1);
+        else
+            return fields[columnIndex-1];
     }
 
     /**
@@ -618,7 +640,8 @@ public Date getDate(int columnIndex) throws SQLException {
             colNames.put(columnName, fieldNum);
         }
         int colNum = fieldNum.intValue();
-        FBField field = fields[colNum - 1];
+        FBField field = rowUpdater != null ? rowUpdater.getField(colNum - 1)
+                : fields[colNum - 1];
         wasNullValid = true;
         wasNull = (row[colNum - 1] == null);
         return field;
@@ -1171,6 +1194,7 @@ public Date getDate(int columnIndex) throws SQLException {
     public void beforeFirst() throws  SQLException {
         checkCursorMove();
         fbFetcher.beforeFirst();
+        notifyRowUpdater();
     }
 
 
@@ -1187,6 +1211,7 @@ public Date getDate(int columnIndex) throws SQLException {
     public void afterLast() throws  SQLException {
         checkCursorMove();
         fbFetcher.afterLast();
+        notifyRowUpdater();
     }
 
 
@@ -1204,7 +1229,10 @@ public Date getDate(int columnIndex) throws SQLException {
      */
     public boolean first() throws  SQLException {
         checkCursorMove();
-        return fbFetcher.first();
+        boolean result = fbFetcher.first();
+        if (result)
+            notifyRowUpdater();
+        return result;
     }
 
 
@@ -1222,7 +1250,10 @@ public Date getDate(int columnIndex) throws SQLException {
      */
     public boolean last() throws  SQLException {
         checkCursorMove();
-        return fbFetcher.last();
+        boolean result = fbFetcher.last();
+        if (result)
+            notifyRowUpdater();
+        return result;
     }
 
 
@@ -1276,7 +1307,10 @@ public Date getDate(int columnIndex) throws SQLException {
      */
     public boolean absolute( int row ) throws  SQLException {
         checkCursorMove();
-        return fbFetcher.absolute(row);
+        boolean result = fbFetcher.absolute(row);
+        if (result)
+            notifyRowUpdater();
+        return result;
     }
 
 
@@ -1305,7 +1339,10 @@ public Date getDate(int columnIndex) throws SQLException {
      */
     public boolean relative( int rows ) throws  SQLException {
         checkCursorMove();
-        return fbFetcher.relative(rows);
+        boolean result = fbFetcher.relative(rows);
+        if (result)
+            notifyRowUpdater();
+        return result;
     }
 
 
@@ -1327,7 +1364,10 @@ public Date getDate(int columnIndex) throws SQLException {
      */
     public boolean previous() throws  SQLException {
         checkCursorMove();
-        return fbFetcher.previous();
+        boolean result = fbFetcher.previous();
+        if (result)
+            notifyRowUpdater();
+        return result;
     }
 
 
@@ -1470,7 +1510,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public boolean rowUpdated() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater != null)
+            return rowUpdater.rowUpdated();
+        else
+            throw new FBResultSetNotUpdatableException();
     }
 
 
@@ -1489,7 +1532,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public boolean rowInserted() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater != null)
+            return rowUpdater.rowUpdated();
+        else
+            throw new FBResultSetNotUpdatableException();
     }
 
 
@@ -1509,7 +1555,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public boolean rowDeleted() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater != null)
+            return rowUpdater.rowUpdated();
+        else
+            throw new FBResultSetNotUpdatableException();
     }
 
 
@@ -1528,7 +1577,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateNull(int columnIndex) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setNull();
     }
 
 
@@ -1547,7 +1599,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateBoolean(int columnIndex, boolean x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setBoolean(x);
     }
 
 
@@ -1567,7 +1622,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateByte(int columnIndex, byte x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setByte(x);
     }
 
 
@@ -1586,7 +1644,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateShort(int columnIndex, short x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setShort(x);
     }
 
 
@@ -1605,7 +1666,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateInt(int columnIndex, int x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setInteger(x);
     }
 
 
@@ -1624,7 +1688,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateLong(int columnIndex, long x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setLong(x);
     }
 
 
@@ -1643,7 +1710,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateFloat(int columnIndex, float x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setFloat(x);
     }
 
 
@@ -1662,7 +1732,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateDouble(int columnIndex, double x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setDouble(x);
     }
 
 
@@ -1682,7 +1755,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateBigDecimal(int columnIndex, BigDecimal x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setBigDecimal(x);
     }
 
 
@@ -1701,7 +1777,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateString(int columnIndex, String x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setString(x);
     }
 
 
@@ -1720,7 +1799,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateBytes(int columnIndex, byte x[]) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setBytes(x);
     }
 
 
@@ -1739,7 +1821,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateDate(int columnIndex, Date x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setDate(x);
     }
 
 
@@ -1758,7 +1843,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateTime(int columnIndex, Time x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setTime(x);
     }
 
 
@@ -1778,7 +1866,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateTimestamp(int columnIndex, Timestamp x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setTimestamp(x);
     }
 
 
@@ -1800,7 +1891,10 @@ public Date getDate(int columnIndex) throws SQLException {
     public void updateAsciiStream(int columnIndex, InputStream x,
                int length) throws  SQLException 
     {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setAsciiStream(x, length);
     }
 
 
@@ -1822,7 +1916,10 @@ public Date getDate(int columnIndex) throws SQLException {
     public void updateBinaryStream(int columnIndex, InputStream x,
                 int length) throws  SQLException 
     {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setBinaryStream(x, length);
     }
 
 
@@ -1844,7 +1941,10 @@ public Date getDate(int columnIndex) throws SQLException {
     public void updateCharacterStream(int columnIndex, Reader x,
                  int length) throws  SQLException 
     {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setCharacterStream(x, length);
     }
 
 
@@ -1869,7 +1969,10 @@ public Date getDate(int columnIndex) throws SQLException {
     public void updateObject(int columnIndex, Object x, int scale) 
         throws  SQLException 
     {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setObject(x);
     }
 
 
@@ -1888,7 +1991,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateObject(int columnIndex, Object x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnIndex).setObject(x);
     }
 
 
@@ -1906,7 +2012,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateNull(String columnName) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setNull();
     }
 
 
@@ -1925,7 +2034,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateBoolean(String columnName, boolean x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setBoolean(x);
     }
 
 
@@ -1944,7 +2056,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateByte(String columnName, byte x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setByte(x);
     }
 
 
@@ -1963,7 +2078,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateShort(String columnName, short x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setShort(x);
     }
 
 
@@ -1982,7 +2100,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateInt(String columnName, int x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setInteger(x);
     }
 
 
@@ -2001,7 +2122,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateLong(String columnName, long x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setLong(x);
     }
 
 
@@ -2020,7 +2144,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateFloat(String columnName, float x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setFloat(x);
     }
 
 
@@ -2039,7 +2166,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateDouble(String columnName, double x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setDouble(x);
     }
 
 
@@ -2059,7 +2189,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateBigDecimal(String columnName, BigDecimal x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setBigDecimal(x);
     }
 
 
@@ -2078,7 +2211,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateString(String columnName, String x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setString(x);
     }
 
 
@@ -2106,7 +2242,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateBytes(String columnName, byte x[]) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setBytes(x);
     }
 
 
@@ -2125,7 +2264,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateDate(String columnName, Date x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setDate(x);
     }
 
 
@@ -2144,7 +2286,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateTime(String columnName, Time x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setTime(x);
     }
 
 
@@ -2164,7 +2309,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateTimestamp(String columnName, Timestamp x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setTimestamp(x);
     }
 
 
@@ -2186,7 +2334,10 @@ public Date getDate(int columnIndex) throws SQLException {
     public void updateAsciiStream(String columnName, InputStream x,
                int length) throws  SQLException 
     {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setAsciiStream(x, length);
     }
 
 
@@ -2208,7 +2359,10 @@ public Date getDate(int columnIndex) throws SQLException {
     public void updateBinaryStream(String columnName, InputStream x,
                 int length) throws  SQLException 
     {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setBinaryStream(x, length);
     }
 
 
@@ -2230,7 +2384,10 @@ public Date getDate(int columnIndex) throws SQLException {
     public void updateCharacterStream(String columnName, Reader reader,
                  int length) throws  SQLException 
     {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setCharacterStream(reader, length);
     }
 
 
@@ -2255,7 +2412,10 @@ public Date getDate(int columnIndex) throws SQLException {
     public void updateObject(String columnName, Object x, int scale) 
         throws  SQLException 
     {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setObject(x);
     }
 
 
@@ -2274,7 +2434,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateObject(String columnName, Object x) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater == null)
+            throw new FBResultSetNotUpdatableException();
+        
+        getField(columnName).setObject(x);
     }
 
 
@@ -2292,7 +2455,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void insertRow() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater != null)
+            rowUpdater.insertRow();
+        else
+            throw new FBResultSetNotUpdatableException();
     }
 
 
@@ -2308,7 +2474,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void updateRow() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater != null)
+            rowUpdater.updateRow();
+        else
+            throw new FBResultSetNotUpdatableException();
     }
 
 
@@ -2324,7 +2493,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void deleteRow() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater != null)
+            rowUpdater.deleteRow();
+        else
+            throw new FBResultSetNotUpdatableException();
     }
 
 
@@ -2356,7 +2528,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void refreshRow() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater != null)
+            rowUpdater.refreshRow();
+        else
+            throw new FBResultSetNotUpdatableException();
     }
 
 
@@ -2377,7 +2552,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void cancelRowUpdates() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater != null)
+            rowUpdater.cancelRowUpdates();
+        else
+            throw new FBResultSetNotUpdatableException();
     }
 
 
@@ -2405,7 +2583,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void moveToInsertRow() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater != null)
+            rowUpdater.moveToInsertRow();
+        else
+            throw new FBResultSetNotUpdatableException();
     }
 
 
@@ -2421,7 +2602,10 @@ public Date getDate(int columnIndex) throws SQLException {
      *      2.0 API</a>
      */
     public void moveToCurrentRow() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        if (rowUpdater != null)
+            rowUpdater.moveToCurrentRow();
+        else
+            throw new FBResultSetNotUpdatableException();
     }
 
 

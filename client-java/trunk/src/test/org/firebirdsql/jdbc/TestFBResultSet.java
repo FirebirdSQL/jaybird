@@ -43,7 +43,7 @@ public class TestFBResultSet extends FBTestBase {
         
     public static final String CREATE_TABLE_STATEMENT = ""
         + "CREATE TABLE test_table(" 
-        + "  id INTEGER, " 
+        + "  id INTEGER NOT NULL PRIMARY KEY, " 
         + "  str VARCHAR(10), " 
         + "  long_str VARCHAR(255), "
         + "  very_long_str VARCHAR(20000)"
@@ -729,6 +729,78 @@ public class TestFBResultSet extends FBTestBase {
         } finally {
             stmt.close();
         }
+    }
+    
+    public void testUpdatableResultSet() throws Exception {
+        connection.setAutoCommit(false);
+        
+        int recordCount = 10;
+        PreparedStatement ps = connection
+                .prepareStatement("INSERT INTO test_table("
+                        + "id, long_str) VALUES (?, ?)");
+
+        try {
+
+            for (int i = 0; i < recordCount; i++) {
+                ps.setInt(1, i);
+                ps.setString(2, "oldString" + i);
+                ps.executeUpdate();
+            }
+        } finally {
+            ps.close();
+        }
+
+        connection.commit();
+
+        connection.setAutoCommit(false);
+        
+        connection.clearWarnings();
+        Statement stmt = connection.createStatement(
+            ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_UPDATABLE);
+        
+        try {
+            assertTrue("No warnings should be added", connection.getWarnings() == null);
+            
+            ResultSet rs = stmt.executeQuery("SELECT id, long_str FROM test_table ORDER BY id");
+            
+            int counter = 0;
+            while(rs.next()) {
+                
+                int id = rs.getInt(1);
+                assertTrue(id == counter);
+                
+                String longStr = rs.getString(2);
+                assertTrue(("oldString" + counter).equals(longStr));
+                
+                rs.updateString(2, "newString" + counter);
+                
+                assertTrue(("newString" + counter).equals(rs.getString(2)));
+                rs.updateRow();
+                counter++;
+            }
+            
+            rs.moveToInsertRow();
+            rs.updateInt(1, recordCount);
+            rs.updateString(2, "newString" + recordCount);
+            rs.insertRow();
+            
+            rs = stmt.executeQuery("SELECT id, long_str FROM test_table ORDER BY id");
+            
+            counter = 0;
+            while(rs.next()) {
+                int id = rs.getInt(1);
+                assertTrue(id == counter);
+                
+                String longStr = rs.getString(2);
+                assertTrue(("newString" + counter).equals(longStr));
+                counter++;
+            }
+            
+            assertTrue(counter == recordCount + 1);
+        } finally {
+            stmt.close();
+        }
+        
     }
     
     public static void main(String[] args) {

@@ -662,15 +662,13 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized Statement createStatement(int resultSetType, 
         int resultSetConcurrency) throws SQLException 
     {
-        if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE ||
-           resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) 
+        if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE) 
         {
             addWarning(new FBSQLWarning("Unsupported type and/or concurrency"));
             
             if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
                 resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
             
-            resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
         }			  
           
         Statement stmt =  new FBStatement(this, resultSetType, resultSetConcurrency);
@@ -699,15 +697,13 @@ public abstract class AbstractConnection implements FirebirdConnection {
         int resultSetType, int resultSetConcurrency) throws SQLException 
     {
           PreparedStatement stmt;
-		  if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE && 
-              resultSetConcurrency != ResultSet.CONCUR_READ_ONLY)
+		  if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
 		  {
 		      addWarning(new FBSQLWarning("resultSetType or resultSetConcurrency changed"));
               
               if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
                   resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
               
-              resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
 		  }
           
           stmt = new FBPreparedStatement(
