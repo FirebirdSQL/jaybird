@@ -1,3 +1,20 @@
+2003-12-15 15:50  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBProcedureCall.java:
+	
+	added support for registerOutParam
+
+2003-12-15 01:40  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/FBEscapedCallParser.java,
+	main/org/firebirdsql/jdbc/FBProcedureCall.java,
+	main/org/firebirdsql/jdbc/FBProcedureParam.java,
+	test/org/firebirdsql/jdbc/TestFBEscapedCallParser.java:
+	
+	second step to implement escaped callable statements
+
 2003-12-11 18:28  rrokytskyy
 
 	*
