@@ -67,51 +67,43 @@ class FBDateField extends FBField {
         return field.decodeDate(rs.row[numCol]).toString();
     }
     
-    /*
-    public Object getObject() throws SQLException {
-        if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
-
-        return field.decodeDate(rs.row[numCol]);
-    }
-    */
-
     //--- setXXX methods
 	 
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == STRING_NULL_VALUE) {
+            setNull();
             return;
         }
 
         setDate(Date.valueOf(value));
     }
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == TIMESTAMP_NULL_VALUE) {
+            setNull();
             return;
         }
 
         setTimestamp(field.encodeTimestamp(value,cal));
     }
     public void setTimestamp(Timestamp value) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == TIMESTAMP_NULL_VALUE) {
+            setNull();
             return;
         }
 
         setDate(new Date(value.getTime()));
     }
     public void setDate(Date value, Calendar cal) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == DATE_NULL_VALUE) {
+            setNull();
             return;
         }
 
         setDate(field.encodeDate(value,cal));
     }
     public void setDate(Date value) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == DATE_NULL_VALUE) {
+            setNull();
             return;
         }
 

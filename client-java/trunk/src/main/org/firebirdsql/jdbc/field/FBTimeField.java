@@ -40,14 +40,6 @@ class FBTimeField extends FBField {
         super(field, rs, numCol, requiredType);
     }
 
-    /*
-    public Object getObject() throws SQLException {
-        if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
-
-        return field.decodeTime(rs.row[numCol]);
-    }
-    */
-    
     public String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
@@ -76,37 +68,37 @@ class FBTimeField extends FBField {
     //--- setXXX methods
 
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == STRING_NULL_VALUE) {
+            setNull();
             return;
         }
         setTime(Time.valueOf(value));
     }
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == TIMESTAMP_NULL_VALUE) {
+            setNull();
             return;
         }
         setTimestamp(field.encodeTimestamp(value,cal));
     }
     public void setTimestamp(Timestamp value) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == TIMESTAMP_NULL_VALUE) {
+            setNull();
             return;
         }
         setTime(new Time(value.getTime()));
     }
     public void setTime(Time value, Calendar cal) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == TIME_NULL_VALUE) {
+            setNull();
             return;
         }
 
         setTime(field.encodeTime(value,cal));
     }
     public void setTime(Time value) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == TIME_NULL_VALUE) {
+            setNull();
             return;
         }
 

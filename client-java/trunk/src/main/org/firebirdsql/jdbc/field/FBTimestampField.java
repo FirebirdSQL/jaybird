@@ -87,56 +87,56 @@ class FBTimestampField extends FBField {
     //--- setXXX methods
 
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == STRING_NULL_VALUE) {
+            setNull();
             return;
         }
 
         setTimestamp(Timestamp.valueOf(value));
     }
     public void setDate(Date value, Calendar cal) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == DATE_NULL_VALUE) {
+            setNull();
             return;
         }
 
         setDate(field.encodeDate(value,cal));
     }
     public void setDate(Date value) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == DATE_NULL_VALUE) {
+            setNull();
             return;
         }
 
         setTimestamp(new Timestamp(value.getTime()));
     }
     public void setTime(Time value, Calendar cal) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == TIME_NULL_VALUE) {
+            setNull();
             return;
         }
 
         setTime(field.encodeTime(value,cal));
     }
     public void setTime(Time value) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == TIME_NULL_VALUE) {
+            setNull();
             return;
         }
 
         setTimestamp(new Timestamp(value.getTime()));
     }
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == TIMESTAMP_NULL_VALUE) {
+            setNull();
             return;
         }
 
         setTimestamp(field.encodeTimestamp(value,cal));
     }
     public void setTimestamp(Timestamp value) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == TIMESTAMP_NULL_VALUE) {
+            setNull();
             return;
         }
 

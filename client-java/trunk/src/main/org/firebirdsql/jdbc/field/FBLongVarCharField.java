@@ -133,12 +133,6 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         return bout.toByteArray();
     }
 
-    /*
-    public Object getObject() throws SQLException {
-        return getString();
-    }
-    */
-    
     public byte[] getCachedObject() throws SQLException {
         if (rs.row[numCol]==null) 
             return BYTES_NULL_VALUE;

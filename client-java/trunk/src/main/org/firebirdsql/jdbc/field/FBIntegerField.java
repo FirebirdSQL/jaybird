@@ -114,8 +114,8 @@ class FBIntegerField extends FBField {
     //--- setXXX methods
 
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == STRING_NULL_VALUE) {
+            setNull();
             return;
         }
 
@@ -166,8 +166,8 @@ class FBIntegerField extends FBField {
         setInteger((int)value);
     }
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        if (value == null) {
-            field.sqldata = null;
+        if (value == BIGDECIMAL_NULL_VALUE) {
+            setNull();
             return;
         }
 
