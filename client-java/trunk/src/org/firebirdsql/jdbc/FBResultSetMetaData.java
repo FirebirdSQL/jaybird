@@ -313,7 +313,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getScale(int column) throws  SQLException {
-        return getXsqlvar(column).sqlscale;
+        return getXsqlvar(column).sqlscale * (-1);
     }
 
 
@@ -350,42 +350,59 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @see Types
      */
     public  int getColumnType(int column) throws  SQLException {
-        switch (getXsqlvar(column).sqltype & ~1) {
-            case GDS.SQL_TEXT:
-                return Types.CHAR;
-            case GDS.SQL_VARYING:
-                return Types.VARCHAR;
-            case GDS.SQL_SHORT:
+        int sqltype = getXsqlvar(column).sqltype & ~1;
+        int sqlscale = getXsqlvar(column).sqlscale;
+        int sqlsubtype = getXsqlvar(column).sqlsubtype;
+        
+        if (sqlscale < 0) {
+            switch (sqltype) {
+                case GDS.SQL_SHORT: 
+                case GDS.SQL_LONG: 
+                case GDS.SQL_INT64: 
+                case GDS.SQL_DOUBLE: 
+                    if (sqlsubtype == 2)
+                        return Types.DECIMAL;
+                    else
+                        return Types.NUMERIC;
+                default:
+                    break;
+            }
+        }
+        
+        switch (sqltype) {
+            case GDS.SQL_SHORT: 
                 return Types.SMALLINT;
-            case GDS.SQL_LONG:
-                return Types.BIGINT;
-            case GDS.SQL_FLOAT:
-                return Types.FLOAT;
-            case GDS.SQL_DOUBLE:
-                return Types.DOUBLE;
+            case GDS.SQL_LONG: 
+                return Types.INTEGER;
+            case GDS.SQL_DOUBLE: 
             case GDS.SQL_D_FLOAT:
                 return Types.DOUBLE;
-            case GDS.SQL_TIMESTAMP:
+            case GDS.SQL_FLOAT: 
+                return Types.FLOAT;
+            case GDS.SQL_TEXT: 
+                return Types.CHAR;
+            case GDS.SQL_VARYING: 
+                return Types.VARCHAR;
+            case GDS.SQL_TIMESTAMP: 
                 return Types.TIMESTAMP;
-            case GDS.SQL_BLOB:
-                return Types.BLOB;
-            case GDS.SQL_ARRAY:
-                return Types.ARRAY;
-            case GDS.SQL_QUAD:
-                return Types.BIGINT;
             case GDS.SQL_TYPE_TIME:
                 return Types.TIME;
             case GDS.SQL_TYPE_DATE:
                 return Types.DATE;
             case GDS.SQL_INT64:
-                if (getXsqlvar(column).sqlscale == 0) {
-                    return Types.BIGINT;
-                }
-                else {
+                if (sqlsubtype == 2)
                     return Types.DECIMAL;
-                }
+                else
+                    return Types.NUMERIC;
+            case GDS.SQL_BLOB: 
+                if (sqlsubtype == 2)
+                    return Types.LONGVARCHAR;
+                else
+                    return Types.LONGVARBINARY;
+            case GDS.SQL_QUAD: 
+                return Types.OTHER;
             default:
-                throw new SQLException("Unkown sql type");
+                return Types.NULL;      
         }
     }
 
