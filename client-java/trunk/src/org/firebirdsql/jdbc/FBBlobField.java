@@ -143,25 +143,32 @@ public class FBBlobField extends FBField {
         return getBinaryStream();
     }
 
-    void setAsciiStream(InputStream in) throws SQLException {
-        setBinaryStream(in);
+    void setAsciiStream(InputStream in, int length) throws SQLException {
+        setBinaryStream(in, length);
     }
 
-    void setBinaryStream(InputStream in) throws SQLException {
-        ((FBBlob)getBlob(true)).copyStream(in, 0);
+    void setBinaryStream(InputStream in, int length) throws SQLException {
+        FBBlob blob =  new FBBlob(mc, 0);
+        blob.copyStream(in, length);
+        field.sqldata = new Long(blob.getBlobId());
+        setNull(false);
     }
 
     void setBytes(byte[] value) throws SQLException {
-        setBinaryStream(new ByteArrayInputStream(value));
+        setBinaryStream(new ByteArrayInputStream(value), value.length);
     }
     void setString(String value) throws SQLException {
         setBytes(value.getBytes());
     }
 
-    void setUnicodeStream(InputStream in) throws SQLException {
-        setBinaryStream(in);
+    void setUnicodeStream(InputStream in, int length) throws SQLException {
+        setBinaryStream(in, length);
     }
 
+    void setBlob(FBBlob blob) throws SQLException {
+        field.sqldata = new Long(blob.getBlobId());
+        setNull(false);
+    }
 
     /**
      * This class represents a cached blob field.
