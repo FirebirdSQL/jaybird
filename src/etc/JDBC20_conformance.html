@@ -15,7 +15,11 @@
 <h2>1.- Introduction</h2>
 <p>This document is focused on feature coverage of the JDBC 2.0 specification and performance.</p>
 <p>For more information about the driver and how to use it, please read the <a href="release_notes.html">release notes</a> and <a href="faq.html">FAQ</a>.</p>
-<p>For comments and corrections contact with <a href="mailto:blas@puertareal.com">Blas Rodriguez Somoza</a> or  with <a href="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</a>.
+<!-- 
+<p>For comments and corrections contact with 
+<a href="mailto:blas@puertareal.com">Blas Rodriguez Somoza</a> or  
+with <a href="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</a>.
+-->
 
 <h2>2.- Connection URL</h2>
 <p>The driver URL syntax has two forms:</p>
@@ -26,20 +30,13 @@ FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
 <p>The driver complies with the JDBC 2.0 core with some features and methods not implemented. Some of the unimplemented features are required by the specification and some are optional.</p>
 <p>The following optional features and the methods that support it are not implemented:</p>
 <ul>
-<li><b>Scrollable cursors.</b></li>
-	<ul>
-		<li>java.sql.ResultSet</li>
-		<ul>
-			<li>beforeFirst()</li>
-			<li>afterLast()</li>
-			<li>first()</li>
-			<li>last()</li>
-			<li>absolute(int row)</li>
-			<li>relative(int rows)</li>
-			<li>previous()</li>
-		</ul>
-	</ul>
-<li><b>Updatable cursors.</b></li>
+<li><b>ResultSet.TYPE_SCROLL_SENSITIVE</b>
+<p>Server does not support scrollable cursors, so we are not able to implement
+this feature correctly. When you create a statement with result set type
+TYPE_SCROLL_SENSITIVE, it is replaced with TYPE_SCROLL_INSENSITIVE and 
+corresponding warning is added to connection warnings.</p>
+</li>
+<li><b>ResultSet.CONCUR_UPDATABLE</b></li>
 	<ul>
 		<li>java.sql.ResultSet</li>
 		<ul>
@@ -94,12 +91,6 @@ FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
 	<ul>
 		<li>cancel()</li>
 	</ul>
-	<li><b>java.sql.CallableStatement</b></li>
-	<ul>
-		<li>registerOutParameter(int parameterIndex, int sqlType)</li>
-		<li>registerOutParameter(int parameterIndex, int sqlType, int scale)</li>
-		<li>wasNull()</li>
-	</ul>
 	<li><b>java.sql.Blob</b></li>
 	<ul>
 		<li>position(byte pattern[], long start)</li>
@@ -115,8 +106,10 @@ FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
 	</ul>
 	<li><b>java.sql.PreparedStatement</b></li>
 	<ul>
-		<li>setObject(index,object,type) This method is implemented but behaves as setObject(index,object)</li>
-		<li>setObject(index,object,type,scale) This method is implemented but behaves as setObject(index,object)</li>
+		<li>setObject(index,object,type) This method is implemented but behaves 
+		as setObject(index,object)</li>
+		<li>setObject(index,object,type,scale) This method is implemented but 
+		behaves as setObject(index,object)</li>
 	</ul>
 	<li><b>java.sql.ResultSetMetaData</b></li>
 	<ul>
@@ -130,15 +123,20 @@ FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
 	</ul>
 </ul>
 <h2>4.- Compliance Tests</h2>
-<p>JDBC 2.0 compliance was checked with Sun JDBC CTS 1.3.1 test suite. Callable
-statement tests  were excluded from run since driver does not support 
-registerOutParam() method and testing makes little sense.</p>
-<p>Driver does not conform JDBC specification in following areas:
-<ul>
-	<li>Support of ResultSet.TYPE_SCROLL_INSENSITIVE. JDBC specification requires
-	JDBC driver to fully support this type of result set, but JayBird does not.
-</ul>
-</p>
+<p>JDBC 2.0 compliance was checked with Sun JDBC CTS 1.3.1 test suite. Driver 
+passed all relevant tests (totally 1216 tests), excluded tests can be checked
+in the CVS in client-java/src/jdbccts/excludes.properties. This file also contains
+explanations why the test was exluded. There are two main groups of test cases
+that were excluded: BIT data type tests and tests that fail due to rounding
+problems in floating-point numbers within the Firebird itself. BIT data type is
+not yet supported by Firebird and rounding problems will be checked with server
+team. Some tests were excluded due to errors within the tests themselves, this 
+will be checked with Sun Microsystems later.</p>
+
+<!--
+
+This is related to version 1.0.x, new run is required for v1.5
+
 <p>Also the compliance was checked with <a href="http://www.jDataMaster.com">jDataMaster</a>, 
 which includes more than 1000 tests, excluding:</p>
 	<ul>
@@ -161,6 +159,9 @@ which includes more than 1000 tests, excluding:</p>
 </ul>
 <p>Firebird driver is the only driver of those tested with this tool which passed all the tests, 
 the next one fails on 90 tests, including all of the most well known RDBMS.</p>
+
+-->
+
 <h2>5.- Performance recomendations</h2>
 
 <p><b>Updates, deletes etc</b></p>
@@ -269,6 +270,7 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
  </tr>
 </table>
 
+<!--
 <h2>6.- Performance compared with Interclient</h2>
 <p>The results of the jDataMaster basic performance tests, are as follows:</p>
 <p><b>Local test (Server and driver on same system)</b></p>
@@ -921,6 +923,7 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
 </ul>
 <br/>
 <br/>
+-->
 
 </BODY>
 </HTML>
