@@ -25,6 +25,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.12  2002/06/10 18:47:41  brodsom
+ * logging change, logging depends on the first class used, default to true for FBManagedConnectionFactory, FBManager and tests and false for other classes.
+ *
  * Revision 1.11  2002/06/07 02:34:09  skywalker
  * Fixed setCharacterStream bug (was a recursive call in PrepairedStatement)
  * also added a bit to allow setCharacterStream to work with blob fields.
@@ -141,6 +144,8 @@ public class FBDriver implements Driver {
 
     private Map urlToDataSourceMap = new HashMap();
 
+    private Map urlToMCFMap = new HashMap();
+	 
     static{
        log = LoggerFactory.getLogger(FBDriver.class,false);
         try{
@@ -227,21 +232,25 @@ public class FBDriver implements Driver {
             // extract the database URL
             String databaseURL = url.substring(FIREBIRD_PROTOCOL.length());
 
+//          Datasource can't be cached alone because it is necessary to update 
+//          the cri in the ManagedConnectionFactory each time the driver get 
+//          a new connection from the DataSource
+            FBManagedConnectionFactory factory =
+                (FBManagedConnectionFactory)urlToMCFMap.get(databaseURL);
             FBDataSource dataSource =
                 (FBDataSource)urlToDataSourceMap.get(databaseURL);
 
-            if (dataSource == null) {
-                FBManagedConnectionFactory factory = new FBManagedConnectionFactory();
+            if (factory == null) {
+                factory = new FBManagedConnectionFactory();
                 factory.setDatabase(databaseURL);
-
-                // set connection request info
-                factory.setConnectionRequestInfo(FBConnectionHelper.getCri(
-                        info, factory.getDefaultConnectionRequestInfo()));
-                        
                 dataSource = (FBDataSource)factory.createConnectionFactory();
-                // urlToDataSourceMap.put(databaseURL, dataSource);
+                urlToDataSourceMap.put(databaseURL, dataSource);
+                urlToMCFMap.put(databaseURL, factory);
             } // end of if ()
 
+            // set connection request info
+            factory.setConnectionRequestInfo(FBConnectionHelper.getCri(
+                info, factory.getDefaultConnectionRequestInfo()));                    
 
             return dataSource.getConnection(user, password);
         } catch(javax.resource.ResourceException resex) {
