@@ -225,8 +225,14 @@
         
 
         <linker id="jaybird.linker" name="gcc" if="buildon-unix">
+            <!--
+                These are set using linkerarg rather then syslibset because on some platforms I found that the code 
+                would not build using syslibset - The Ant task seemed too be creating an incorrect command line to
+                run the linker.
+            -->
             <linkerarg value="-ldl"/>
             <linkerarg value="-lc"/>
+            <linkerarg value="-lstdc++"/>
         </linker>
     
     </target>
