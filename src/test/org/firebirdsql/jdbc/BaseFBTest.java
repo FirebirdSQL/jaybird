@@ -16,62 +16,6 @@
  *
  * All rights reserved.
  */
-/*
- * CVS modification log:
- * $Log$
- * Revision 1.3  2002/12/20 12:36:02  brodsom
- * added read of test.db.lc_ctype parameter
- *
- * Revision 1.2  2002/08/29 13:41:16  d_jencks
- * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
- *
- * Revision 1.1  2002/08/14 13:22:46  d_jencks
- * Moved tests to separate directory. Removed need for jmx classes, and removed jmxri.jar
- *
- * Revision 1.10  2002/08/09 21:24:32  rrokytskyy
- * fixed compile error
- *
- * Revision 1.9  2002/06/10 18:47:41  brodsom
- * logging change, logging depends on the first class used, default to true for FBManagedConnectionFactory, FBManager and tests and false for other classes.
- *
- * Revision 1.8  2002/06/06 11:24:07  brodsom
- * Performance patch. Log if log4j is in the classpath, don't log if the enviroment variable FBLog4j is false.
- *
- * Revision 1.7  2002/06/04 01:17:49  brodsom
- * performance patches
- *
- * Revision 1.6  2002/04/29 21:35:42  rrokytskyy
- * added lc_ctype to initial parameters
- *
- * Revision 1.5  2002/02/04 04:35:51  d_jencks
- * modified test setup to run against remote server using command line properties
- *
- * Revision 1.4  2002/02/03 02:45:39  d_jencks
- * Fixed the rest of the bugs! The testsuite now all passes
- *
- * Revision 1.3  2002/02/02 18:58:24  d_jencks
- * converted to log4j logging and cleaned up some test problems.  If you do not wish to use log4j, you may leave out the log4j-core.jar and get no logging
- *
- * Revision 1.2  2002/01/07 16:32:04  d_jencks
- * Fixed FBManager to require user and password to create a db: added these to setup/teardown for tests.
- *
- * Revision 1.1  2002/01/07 06:59:54  d_jencks
- * Revised FBManager to create dialect 3 databases, and the tests to use a newly created database. Simplified and unified test constants. Test targets are now all-tests for all tests and one-test for one test: specify the test as -Dtest=Gds one-test for the TestGds.class test.  Made a few other small changes to improve error messages
- *
- * Revision 1.3  2002/01/06 23:37:58  d_jencks
- * added a connection test to datasource test, cleaned up constants a bit.
- *
- * Revision 1.2  2001/08/28 17:13:23  d_jencks
- * Improved formatting slightly, removed dos cr's
- *
- * Revision 1.1  2001/07/13 18:16:15  d_jencks
- * Implementation of jdbc 1.0 Driver contributed by Roman Rokytskyy
- *
- * Revision 1.1  2001/07/09 09:09:51  rrokytskyy
- * Initial revision
- *
- */
-
 package org.firebirdsql.jdbc;
 
 import java.util.Properties;
@@ -166,7 +110,7 @@ public class BaseFBTest extends TestCase
    {
       try 
       {
-         fbManager.dropDatabase(DB_NAME, DB_USER, DB_PASSWORD);
+         fbManager.dropDatabase(DB_DATASOURCE_URL, DB_USER, DB_PASSWORD);
          fbManager.stop();
       }
       catch (Exception e)
