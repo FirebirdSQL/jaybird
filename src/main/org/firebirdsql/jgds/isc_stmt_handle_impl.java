@@ -86,6 +86,8 @@ public final class isc_stmt_handle_impl implements isc_stmt_handle {
 
     public void clearRows() {
         size = 0;
+        if (rows != null)
+            rows = null;
         allRowsFetched = false;
         hasOpenResultSet = false;
     }
