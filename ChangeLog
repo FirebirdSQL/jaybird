@@ -1,3 +1,66 @@
+2003-12-11 18:28  rrokytskyy
+
+	*
+	
+	fixed incorrect setup method
+	client-java/src/test/org/firebirdsql/jdbc/TestFBEscapedCallParser.j
+	ava:
+
+2003-12-11 18:27  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBEscapedCallParser.java:
+	
+	fixed equals() method and removed FBEscapedParser inheritance
+
+2003-12-11 16:13  rrokytskyy
+
+	*
+	
+	added test for escaped call parser
+	client-java/src/test/org/firebirdsql/jdbc/TestFBEscapedCallParser.j
+	ava:
+
+2003-12-11 16:13  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBEscapedCallParser.java:
+	
+	initial revision
+
+2003-12-11 14:11  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBDriver.java:
+	
+	added test case to check SQLState
+
+2003-12-11 14:10  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/management/TestFBManager.java:
+	
+	fixed problem of incorrect database path
+
+2003-12-11 14:05  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBSQLException.java:
+	
+	fixed missing SQLState in case of GDS and IO exceptions
+
+2003-12-11 13:19  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBBlobParams.java:
+	
+	disabled test cases that fail due to server bugs, not driver ones
+
+2003-12-11 13:18  rrokytskyy
+
+	*
+	
+	fixed test faliure
+	client-java/src/test/org/firebirdsql/jdbc/field/TestFBStringField.j
+	ava:
+
 2003-12-05 15:55  rrokytskyy
 
 	*
