@@ -74,7 +74,12 @@ public class FBBigDecimalField extends FBField {
     public double getDouble() throws SQLException {
         if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
-        return getBigDecimal().doubleValue();
+        BigDecimal value = getBigDecimal();
+        
+        if (value == BIGDECIMAL_NULL_VALUE)
+            return DOUBLE_NULL_VALUE;
+        
+        return value.doubleValue();
     }
 
     public float getFloat() throws SQLException {
@@ -110,7 +115,13 @@ public class FBBigDecimalField extends FBField {
     }
 
     public long getLong() throws SQLException {
-        return getBigDecimal().longValue();
+        
+        BigDecimal value = getBigDecimal();
+        
+        if (value == BIGDECIMAL_NULL_VALUE)
+            return LONG_NULL_VALUE;
+        
+        return value.longValue();
     }
 
     /*
@@ -137,7 +148,12 @@ public class FBBigDecimalField extends FBField {
     public String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
         
-        return getBigDecimal().toString();
+        BigDecimal value = getBigDecimal();
+        
+        if (value == BIGDECIMAL_NULL_VALUE)
+            return STRING_NULL_VALUE;
+        
+        return value.toString();
     }
 
     public BigDecimal getBigDecimal() throws SQLException {
