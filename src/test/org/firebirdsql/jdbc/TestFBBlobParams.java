@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
 
+import java.sql.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -43,7 +44,7 @@ public class TestFBBlobParams extends FBTestBase {
         
     public static final String DROP_TABLE = 
         "DROP TABLE ClassMap";
-        
+       
     public TestFBBlobParams(String testName) {
         super(testName);
     }
@@ -52,7 +53,7 @@ public class TestFBBlobParams extends FBTestBase {
         super.setUp();
         Class.forName(FBDriver.class.getName());
         Connection connection = getConnectionViaDriverManager();
-        
+       
         Statement stmt = connection.createStatement();
         try {
             stmt.executeUpdate(DROP_TABLE);
@@ -178,6 +179,9 @@ public class TestFBBlobParams extends FBTestBase {
                 assertTrue("OID value should be correct.",
                     "1".equals(rs.getString(1)));
                 assertTrue("Only one row should be selected", !rs.next());
+            } catch(SQLException ex) {
+                ex.printStackTrace();
+                throw ex;
             } finally {
                 ps.close();
             }
