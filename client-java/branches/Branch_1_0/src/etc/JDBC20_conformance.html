@@ -1,0 +1,943 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+<TITLE> New Document </TITLE>
+<META NAME="Generator" CONTENT="EditPlus">
+<META NAME="Author" CONTENT="">
+<META NAME="Keywords" CONTENT="">
+<META NAME="Description" CONTENT="">
+</HEAD>
+
+<BODY>
+<h1>JDBC 2.0 implementation</h1>
+<p>Last updated. December 17 2002</p>
+<hr/>
+<h2>1.- Introduction</h2>
+<p>This document is focused on feature coverage of the JDBC 2.0 specification and performance.</p>
+<p>For more information about the driver and how to use it, please read the <a href="release_notes.html">release notes</a> and <a href="faq.html">FAQ</a>.</p>
+<p>For comments and corrections contact with <a href="mailto:blas@puertareal.com">Blas Rodriguez Somoza</a> or  with <a href="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</a>.
+
+<h2>2.- Connection URL</h2>
+<p>The driver URL syntax has two forms:</p>
+<p>Standard format= jdbc:firebirdsql:[//host[:port]/]&lt;database&gt;    <br>
+FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
+
+<h2>3.- JDBC Features</h2>
+<p>The driver complies with the JDBC 2.0 core with some features and methods not implemented. Some of the unimplemented features are required by the specification and some are optional.</p>
+<p>The following optional features and the methods that support it are not implemented:</p>
+<ul>
+<li><b>Batch Updates.</b></li>
+	<ul>
+		<li>java.sql.Statement</li>
+		<ul>
+			<li>addBatch(String sql)</li>
+			<li>clearBatch()</li>
+			<li>executeBatch()</li>
+		</ul>
+		<li>java.sql.Statement</li>
+		<ul>
+			<li>addBatch()</li>
+		</ul>
+	</ul>
+<li><b>Scrollable cursors.</b></li>
+	<ul>
+		<li>java.sql.ResultSet</li>
+		<ul>
+			<li>beforeFirst()</li>
+			<li>afterLast()</li>
+			<li>first()</li>
+			<li>last()</li>
+			<li>absolute(int row)</li>
+			<li>relative(int rows)</li>
+			<li>previous()</li>
+		</ul>
+	</ul>
+<li><b>Updatable cursors.</b></li>
+	<ul>
+		<li>java.sql.ResultSet</li>
+		<ul>
+			<li>rowUpdated()</li>
+			<li>rowInserted()</li>
+			<li>rowDeleted()</li>
+			<li>updateXXX(....)</li>
+			<li>insertRow()</li>
+			<li>updateRow()</li>
+			<li>deleteRow()</li>
+			<li>refreshRow()</li>
+			<li>cancelRowUpdates()</li>
+			<li>moveToInsertRow()</li>
+			<li>moveToCurrentRow()</li>
+		</ul>
+	</ul>
+<li><b>Cursors/Positioned update/delete</b></li>
+	<ul>
+		<li>java.sql.Statement</li>
+		<ul>
+			<li>setCursorName()</li>
+		</ul>
+		<li>java.sql.ResultSet</li>
+		<ul>
+			<li>getCursorName()</li>
+		</ul>
+	</ul>
+<li><b>Ref, Clob and Array types.</b></li>
+	<ul>
+		<li>java.sql.PreparedStatement</li>
+		<ul>
+			<li>setRef(int i, Ref x)</li>
+			<li>setClob (int i, Clob x)</li>
+			<li>setArray(int i, Array x)</li>
+		</ul>
+		<li>java.sql.ResultSet</li>
+		<ul>
+			<li>getArray(int i)</li>
+			<li>getArray(String columnName)</li>
+			<li>getRef(int i)</li>
+			<li>getRef(String columnName)</li>
+			<li>getClob(int i)</li>
+			<li>getClob(String columnName)</li>
+		</ul>
+	</ul>
+<li><b>User Defined Types/Type Maps.</b></li>
+	<ul>
+		<li>java.sql.ResultSet</li>
+		<ul>
+			<li>getObject(int i, java.util.Map map)</li>
+			<li>getObject(String columnName, java.util.Map map)</li>
+		</ul>
+		<li>java.sql.Connection</li>
+		<ul>
+			<li>getTypeMap()</li>
+			<li>setTypeMap(java.util.Map map)</li>
+		</ul>
+	</ul>
+</ul>
+<p>Excluding the unsupported features, the following methods are not yet implemented:</p>
+<ul>
+	<li><b>java.sql.Statement</b></li>
+	<ul>
+		<li>cancel()</li>
+	</ul>
+	<li><b>java.sql.CallableStatement</b></li>
+	<ul>
+		<li>registerOutParameter(int parameterIndex, int sqlType)</li>
+		<li>registerOutParameter(int parameterIndex, int sqlType, int scale)</li>
+		<li>wasNull()</li>
+	</ul>
+	<li><b>java.sql.Blob</b></li>
+	<ul>
+		<li>length()</li>
+		<li>getBytes(long pos, int length)</li>
+		<li>position(byte pattern[], long start)</li>
+		<li>position(Blob pattern, long start)</li>
+	</ul>
+</ul>
+<p>The following methods are implemented, but do not work as expected:</p>
+<ul>
+	<li><b>java.sql.Statement</b></li>
+	<ul>
+		<li>get/setMaxFieldSize does nothing</li>
+		<li>get/setQueryTimeout does nothing</li>
+	</ul>
+	<li><b>java.sql.PreparedStatement</b></li>
+	<ul>
+		<li>setObject(index,object,type) This method is implemented but behaves as setObject(index,object)</li>
+		<li>setObject(index,object,type,scale) This method is implemented but behaves as setObject(index,object)</li>
+	</ul>
+	<li><b>java.sql.ResultSetMetaData</b></li>
+	<ul>
+		<li>isReadOnly(i) always returns false</li>
+		<li>isWritable(i) always returns true</li>
+		<li>isDefinitivelyWritable(i) always returns true</li>
+	</ul>
+	<li><b>java.sql.DatabaseMetaData</b></li>
+	<ul>
+		<li>getBestRowIdentifier(i) always returns empty resultSet</li>
+	</ul>
+</ul>
+<h2>4.- Compliance Tests</h2>
+<p>The compliance was checked with <a href="http://www.jDataMaster.com">jDataMaster</a>, 
+which includes more than 1000 tests, excluding:</p>
+	<ul>
+		<li>CallableStatements</li>
+		<li>Escape Syntax</li>
+	</ul>
+<p>FB type 4 driver (JayBird) passed all the tests.</p>
+<p>The set/get tests don't apply to the columns of the following java.sql.Types </p>
+<ul>
+	<li>BINARY (Don't exist in FB)</li>
+	<li>VARBINARY (Don't exist in FB)</li>
+	<li>LONGVARBINARY</li>
+	<li>TIME</li>
+	<li>DATE</li>
+	<li>TIMESTAMP</li>
+	<li>BLOB</li>
+	<li>CLOB (Don't exist in FB)</li>
+	<li>ARRAY (Not implemented in JayBird)</li>
+	<li>REF (Don't exist in FB)</li>
+</ul>
+<p>Firebird driver is the only driver of those tested with this tool which passed all the tests, 
+the next one fails on 90 tests, including all of the most well known RDBMS.</p>
+<h2>5.- Performance recomendations</h2>
+
+<p><b>Updates, deletes etc</b></p>
+<p>Don't use executeUpdate when you don't need the affected record count. Because the database doesn't send this information to the result, the driver must request it after the execution finishes, and it needs some time to do it . Use execute() instead of executeUpdate() when count is not needed.</p>
+
+<p><b>Character encoding</b></p>
+<p>In FB the client notifies the server which character set it will use in the communication. The server then converts all the incoming character information from this character set to the one of the field or database. In the output the server also does the conversion from the database/field character set to the one needed by the client.</p>
+<p>This driver sets as the default the NONE character set, the same that Interclient uses. It seems there are some performance problems in the engine and when the NONE character set is received it takes some time to convert it to the character set of the field/database. When using NONE, the theory is that the server only verifies that the characters received are valid characters.</p>
+<p>When using a character set other than NONE in the database, set the lc_ctype parameter equal to the database default charset. If you can, select the database default character set to be equivalent to the default character set of your JVM.</p>
+<p>Also you can set the default character set of the database to NONE, but this is not recommended since other tools that can be used with the database can't know which character set is in use.</p>
+<p>Apparently, there can be some problems if the database uses character set NONE and the lc_ctype parameter is set to WIN1252.</p>
+<table border=1 cellpadding=5 cellspacing=0>
+ <tr >
+  <td>&nbsp;</td>
+  <td>A) RC2</td>
+  <td>B) RC2</td>
+  <td>C) RC2</td>
+  <td>time B/A(%)</td>
+  <td>time C/A(%)</td>
+ </tr>
+ <tr >
+  <td>Client lc_ctype</td>
+  <td>NONE</td>
+  <td>WIN1252</td>
+  <td>NONE</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr >
+  <td >DB default charset</td>
+  <td>WIN1252</td>
+  <td>WIN1252</td>
+  <td>NONE</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td colspan=6 bgcolor="#cccccc">IMPLICIT TRANSACTION CONTROL</td>
+ </tr>
+ <tr >
+  <td >Insert short record of Char</td>
+  <td align=right>14719</td>
+  <td align=right>13547</td>
+  <td align=right>12844</td>
+  <td align=right>92</td>
+  <td align=right>87</td>
+ </tr>
+ <tr >
+  <td>Insert long record of Char</td>
+  <td align=right>10218</td>
+  <td align=right>8656</td>
+  <td align=right>8453</td>
+  <td align=right>85</td>
+  <td align=right>83</td>
+ </tr>
+ <tr >
+  <td>Insert short record of Varchar</td>
+  <td align=right>14016</td>
+  <td align=right>13484</td>
+  <td align=right>12828</td>
+  <td align=right>96</td>
+  <td align=right>92</td>
+ </tr>
+ <tr >
+  <td>Insert long record of Varchar</td>
+  <td align=right>9172</td>
+  <td align=right>8406</td>
+  <td align=right>8031</td>
+  <td align=right>92</td>
+  <td align=right>88</td>
+ </tr>
+ <tr >
+  <td colspan=6 bgcolor="#cccccc">EXPLICIT TRANSACTION CONTROL</td>
+ </tr>
+ <tr >
+  <td >Insert short record of Char</td>
+  <td align=right>4594</td>
+  <td align=right>3579</td>
+  <td align=right>3469</td>
+  <td align=right>78</td>
+  <td align=right>76</td>
+ </tr>
+ <tr >
+  <td>Insert long record of Char</td>
+  <td align=right>4500</td>
+  <td align=right>3110</td>
+  <td align=right>3063</td>
+  <td align=right>69</td>
+  <td align=right>68</td>
+ </tr>
+ <tr >
+  <td>Insert short record of Varchar</td>
+  <td align=right>4109</td>
+  <td align=right>3672</td>
+  <td align=right>3578</td>
+  <td align=right>89</td>
+  <td align=right>87</td>
+ </tr>
+ <tr >
+  <td>Insert long record of Varchar</td>
+  <td align=right>3609</td>
+  <td align=right>2985</td>
+  <td align=right>2922</td>
+  <td align=right>83</td>
+  <td align=right>81</td>
+ </tr>
+</table>
+
+<h2>6.- Performance compared with Interclient</h2>
+<p>The results of the jDataMaster basic performance tests, are as follows:</p>
+<p><b>Local test (Server and driver on same system)</b></p>
+<p>Conditions</p>
+<ul>
+<li>FB1.0 without forces writes on AMD 1,7 with 512MB/DDR and OS Windows 2000</li>
+<li>The JVM are the Sun j2sdk 1.4.1_02 with the parameters -Xms128 and -Xmx128.</li>
+<li>The default character set of the database is WIN1252</li>
+</ul>
+<p>Results</p>
+<table border="1" cellpadding=5 cellspacing=0>
+ <tr>
+  <td>&nbsp;</td>
+  <td>time ms</td>
+  <td>time ms</td>
+  <td>time (%)</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>IC 2.01</td>
+  <td>Jaybird 1.0</td>
+ </tr>
+ <tr>
+  <td colspan=8 bgcolor="#cccccc">IMPLICIT TRANSACTION CONTROL (Autocommit)</td>
+ </tr>
+ <tr>
+  <td>Insert short record of Num</td>
+  <td align=right>9203</td>
+  <td align=right>14156</td>
+  <td align=right><font color="#FF0000">154</font></td>
+ </tr>
+ <tr>
+  <td>Select short record of Num (by field name)</td>
+  <td align=right>2359</td>
+  <td align=right>422</td>
+  <td align=right>18</td>
+ </tr>
+ <tr>
+  <td>Select short record of Num (by field num)</td>
+  <td align=right>2297</td>
+  <td align=right>359</td>
+  <td align=right>16</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert long record of Num</td>
+  <td align=right>10610</td>
+  <td align=right>15047</td>
+  <td align=right><font color="#FF0000">142</font></td>
+ </tr>
+ <tr>
+  <td>Select long record of Num (name)</td>
+  <td align=right>7265</td>
+  <td align=right>922</td>
+  <td align=right>13</td>
+ </tr>
+ <tr>
+  <td>Select long record of Num (num)</td>
+  <td align=right>7110</td>
+  <td align=right>891</td>
+  <td align=right>13</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert short record of Char</td>
+  <td align=right>12078</td>
+  <td align=right>16359</td>
+  <td align=right><font color="#FF0000">135</font></td>
+ </tr>
+ <tr>
+  <td>Select short record of Char (name)</td>
+  <td align=right>766</td>
+  <td align=right>875</td>
+  <td align=right><font color="#FF0000">114</font></td>
+ </tr>
+ <tr>
+  <td>Select short record of Char (num)</td>
+  <td align=right>734</td>
+  <td align=right>875</td>
+  <td align=right><font color="#FF0000">119</font></td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert long record of Char</td>
+  <td align=right>8609</td>
+  <td align=right>10829</td>
+  <td align=right><font color="#FF0000">126</font></td>
+ </tr>
+ <tr>
+  <td>Select long record of Char (name)</td>
+  <td align=right>1000</td>
+  <td align=right>1156</td>
+  <td align=right><font color="#FF0000">116</font></td>
+ </tr>
+ <tr>
+  <td>Select long record of Char (num)</td>
+  <td align=right>969</td>
+  <td align=right>1125</td>
+  <td align=right><font color="#FF0000">116</font></td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert short record of Varchar</td>
+  <td align=right>11734</td>
+  <td align=right>15765</td>
+  <td align=right><font color="#FF0000">134</font></td>
+ </tr>
+ <tr>
+  <td>Select short record of Varchar (name)</td>
+  <td align=right>641</td>
+  <td align=right>610</td>
+  <td align=right>95</td>
+ </tr>
+ <tr>
+  <td>Select short record of Varchar (num)</td>
+  <td align=right>625</td>
+  <td align=right>594</td>
+  <td align=right>95</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert long record of Varchar</td>
+  <td align=right>7969</td>
+  <td align=right>9688</td>
+  <td align=right><font color="#FF0000">122</font></td>
+ </tr>
+ <tr>
+  <td>Select long record of Varchar (name)</td>
+  <td align=right>812</td>
+  <td align=right>719</td>
+  <td align=right>89</td>
+ </tr>
+ <tr>
+  <td>Select long record of Varchar (num)</td>
+  <td align=right>797</td>
+  <td align=right>750</td>
+  <td align=right>94</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td colspan=8 bgcolor="#CCCCCC">EXPLICIT TRANSACTION CONTROL</td>
+ </tr>
+ <tr>
+  <td>Insert short record of Num</td>
+  <td align=right>2953</td>
+  <td align=right>2516</td>
+  <td align=right>85</td>
+ </tr>
+ <tr>
+  <td>Select short record of Num (by field name)</td>
+  <td align=right>2203</td>
+  <td align=right>375</td>
+  <td align=right>17</td>
+ </tr>
+ <tr>
+  <td>Select short record of Num (by field num)</td>
+  <td align=right>2281</td>
+  <td align=right>329</td>
+  <td align=right>14</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert long record of Num</td>
+  <td align=right>3375</td>
+  <td align=right>3016</td>
+  <td align=right>89</td>
+ </tr>
+ <tr>
+  <td>Select long record of Num (name)</td>
+  <td align=right>7265</td>
+  <td align=right>843</td>
+  <td align=right>12</td>
+ </tr>
+ <tr>
+  <td>Select long record of Num (num)</td>
+  <td align=right>7219</td>
+  <td align=right>829</td>
+  <td align=right>11</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert short record of Char</td>
+  <td align=right>4344</td>
+  <td align=right>3906</td>
+  <td align=right>90</td>
+ </tr>
+ <tr>
+  <td>Select short record of Char (name)</td>
+  <td align=right>719</td>
+  <td align=right>797</td>
+  <td align=right><font color="#FF0000">111</font></td>
+ </tr>
+ <tr>
+  <td>Select short record of Char (num)</td>
+  <td align=right>703</td>
+  <td align=right>797</td>
+  <td align=right><font color="#FF0000">113</font></td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert long record of Char</td>
+  <td align=right>4203</td>
+  <td align=right>3781</td>
+  <td align=right>90</td>
+ </tr>
+ <tr>
+  <td>Select long record of Char (name)</td>
+  <td align=right>953</td>
+  <td align=right>1000</td>
+  <td align=right><font color="#FF0000">105</font></td>
+ </tr>
+ <tr>
+  <td>Select long record of Char (num)</td>
+  <td align=right>953</td>
+  <td align=right>1000</td>
+  <td align=right><font color="#FF0000">105</font></td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert short record of Varchar</td>
+  <td align=right>4094</td>
+  <td align=right>3485</td>
+  <td align=right>85</td>
+ </tr>
+ <tr>
+  <td>Select short record of Varchar (name)</td>
+  <td align=right>609</td>
+  <td align=right>563</td>
+  <td align=right>92</td>
+ </tr>
+ <tr>
+  <td>Select short record of Varchar (num)</td>
+  <td align=right>609</td>
+  <td align=right>531</td>
+  <td align=right>87</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert long record of Varchar</td>
+  <td align=right>3375</td>
+  <td align=right>3406</td>
+  <td align=right>90</td>
+ </tr>
+ <tr>
+  <td>Select long record of Varchar (name)</td>
+  <td align=right>781</td>
+  <td align=right>641</td>
+  <td align=right>82</td>
+ </tr>
+ <tr>
+  <td>Select long record of Varchar (num)</td>
+  <td align=right>766</td>
+  <td align=right>625</td>
+  <td align=right>82</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+</table>
+<p><b>Remote test (Server and driver on different machines)</b></p>
+<p>Conditions</p>
+<ul>
+<li>Client Jaybird on AMD 1,7 with 512MB/DDR with OS Windows 2000</li>
+<li>Server FB 1.0 on AMD 500MHz with 256MB with OS Suse 7.2</li>
+<li>Client and server are connected by a 100M Ethernet LAN</li>
+<li>The JVM are the Sun j2sdk 1.4.1_02 with the parameters -Xms128 and -Xmx128.</li>
+<li>The default character set of the database is WIN1252</li>
+</ul>
+<p>Results</p>
+<table border="1" cellpadding=5 cellspacing=0>
+ <tr>
+  <td>&nbsp;</td>
+  <td>time ms</td>
+  <td>time ms</td>
+  <td>time (%)</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>IC 2.01</td>
+  <td>JayBird 1.0</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td colspan=8 bgcolor="#cccccc">IMPLICIT TRANSACTION CONTROL (Autocommit)</td>
+ </tr>
+ <tr>
+  <td>Insert short record of Num</td>
+  <td align=right>50406</td>
+  <td align=right>50859</td>
+  <td align=right>101</td>
+ </tr>
+ <tr>
+  <td>Select short record of Num (by field name)</td>
+  <td align=right>4016</td>
+  <td align=right>2703</td>
+  <td align=right>67</td>
+ </tr>
+ <tr>
+  <td>Select short record of Num (by field num)</td>
+  <td align=right>4000</td>
+  <td align=right>2688</td>
+  <td align=right>67</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert long record of Num</td>
+  <td align=right>52969</td>
+  <td align=right>53078</td>
+  <td align=right>100</td>
+ </tr>
+ <tr>
+  <td>Select long record of Num (name)</td>
+  <td align=right>5906</td>
+  <td align=right>4141</td>
+  <td align=right>70</td>
+ </tr>
+ <tr>
+  <td>Select long record of Num (num)</td>
+  <td align=right>5906</td>
+  <td align=right>4109</td>
+  <td align=right>70</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert short record of Char</td>
+  <td align=right>57032</td>
+  <td align=right>56578</td>
+  <td align=right>99</td>
+ </tr>
+ <tr>
+  <td>Select short record of Char (name)</td>
+  <td align=right>6421</td>
+  <td align=right>4187</td>
+  <td align=right>65</td>
+ </tr>
+ <tr>
+  <td>Select short record of Char (num)</td>
+  <td align=right>6407</td>
+  <td align=right>4141</td>
+  <td align=right>65</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert long record of Char</td>
+  <td align=right>34907</td>
+  <td align=right>35688</td>
+  <td align=right>102</td>
+ </tr>
+ <tr>
+  <td>Select long record of Char (name)</td>
+  <td align=right>7656</td>
+  <td align=right>4281</td>
+  <td align=right>56</td>
+ </tr>
+ <tr>
+  <td>Select long record of Char (num)</td>
+  <td align=right>7234</td>
+  <td align=right>4172</td>
+  <td align=right>58</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert short record of Varchar</td>
+  <td align=right>56562</td>
+  <td align=right>54906</td>
+  <td align=right>97</td>
+ </tr>
+ <tr>
+  <td>Select short record of Varchar (name)</td>
+  <td align=right>5969</td>
+  <td align=right>3344</td>
+  <td align=right>56</td>
+ </tr>
+ <tr>
+  <td>Select short record of Varchar (num)</td>
+  <td align=right>5969</td>
+  <td align=right>3312</td>
+  <td align=right>55</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert long record of Varchar</td>
+  <td align=right>33484</td>
+  <td align=right>32469</td>
+  <td align=right>97</td>
+ </tr>
+ <tr>
+  <td>Select long record of Varchar (name)</td>
+  <td align=right>6750</td>
+  <td align=right>2875</td>
+  <td align=right>43</td>
+ </tr>
+ <tr>
+  <td>Select long record of Varchar (num)</td>
+  <td align=right>6672</td>
+  <td align=right>2953</td>
+  <td align=right>44</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td colspan=8 bgcolor="#CCCCCC">EXPLICIT TRANSACTION CONTROL</td>
+ </tr>
+ <tr>
+  <td>Insert short record of Num</td>
+  <td align=right>37282</td>
+  <td align=right>14656</td>
+  <td align=right>39</td>
+ </tr>
+ <tr>
+  <td>Select short record of Num (by field name)</td>
+  <td align=right>4031</td>
+  <td align=right>2813</td>
+  <td align=right>70</td>
+ </tr>
+ <tr>
+  <td>Select short record of Num (by field num)</td>
+  <td align=right>4032</td>
+  <td align=right>2750</td>
+  <td align=right>68</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert long record of Num</td>
+  <td align=right>40094</td>
+  <td align=right>17110</td>
+  <td align=right>43</td>
+ </tr>
+ <tr>
+  <td>Select long record of Num (name)</td>
+  <td align=right>5937</td>
+  <td align=right>4078</td>
+  <td align=right>69</td>
+ </tr>
+ <tr>
+  <td>Select long record of Num (num)</td>
+  <td align=right>5891</td>
+  <td align=right>4063</td>
+  <td align=right>69</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert short record of Char</td>
+  <td align=right>42578</td>
+  <td align=right>20953</td>
+  <td align=right>49</td>
+ </tr>
+ <tr>
+  <td>Select short record of Char (name)</td>
+  <td align=right>6359</td>
+  <td align=right>3921</td>
+  <td align=right>62</td>
+ </tr>
+ <tr>
+  <td>Select short record of Char (num)</td>
+  <td align=right>6312</td>
+  <td align=right>3875</td>
+  <td align=right>61</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert long record of Char</td>
+  <td align=right>28485</td>
+  <td align=right>19297</td>
+  <td align=right>68</td>
+ </tr>
+ <tr>
+  <td>Select long record of Char (name)</td>
+  <td align=right>7360</td>
+  <td align=right>4047</td>
+  <td align=right>55</td>
+ </tr>
+ <tr>
+  <td>Select long record of Char (num)</td>
+  <td align=right>7062</td>
+  <td align=right>3969</td>
+  <td align=right>56</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert short record of Varchar</td>
+  <td align=right>41625</td>
+  <td align=right>18953</td>
+  <td align=right>46</td>
+ </tr>
+ <tr>
+  <td>Select short record of Varchar (name)</td>
+  <td align=right>5875</td>
+  <td align=right>3250</td>
+  <td align=right>55</td>
+ </tr>
+ <tr>
+  <td>Select short record of Varchar (num)</td>
+  <td align=right>5797</td>
+  <td align=right>3375</td>
+  <td align=right>58</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+ <tr>
+  <td>Insert long record of Varchar</td>
+  <td align=right>26875</td>
+  <td align=right>14031</td>
+  <td align=right>52</td>
+ </tr>
+ <tr>
+  <td>Select long record of Varchar (name)</td>
+  <td align=right>6234</td>
+  <td align=right>2875</td>
+  <td align=right>46</td>
+ </tr>
+ <tr>
+  <td>Select long record of Varchar (num)</td>
+  <td align=right>6188</td>
+  <td align=right>2906</td>
+  <td align=right>47</td>
+ </tr>
+ <tr>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+ </tr>
+</table>
+<p><b>Comments</b></p>
+<p>According to the results, Jaybird is clearly better than Interclient on remote connections excluding inserts using implicit transaction control, when the two performs nearly equal.</p>
+<p>On local connections, when using implicit transaction control, Interclient performs better in the insert tests and the fixed character fields read, whether with explicit transaction, Interclient only performs better when reading char data.<p>
+<p>Some of the reasons that justify the difference between Jaybird and Interclient when used with implicit transaction control or reading character data, and which we hope we can solve as soon as posible are the following:</p>
+<ul>
+<li>Autocommit</li>
+<ul>
+	<li>Interclient uses the autocommit facility of the database and JayBird doesn't. Because that, Jaybird needs to close and open a transaction for each statement executed.</li>
+	<li>Jaybird uses JCA and managed transactions and Interclient doesn't. The use of managed transaction increase the time for autocommit inserts between 5 and 10%.
+</ul>
+<li>Character fields</li>
+<ul>
+	<li>Interclient uses a protocol in which the character values are received trimmed, JayBird doesn't.</li>
+</ul>
+</ul>
+<br/>
+<br/>
+
+</BODY>
+</HTML>
