@@ -23,8 +23,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
 
 import org.firebirdsql.pool.FBWrappingDataSource;
 import org.firebirdsql.common.FBTestBase;
@@ -138,6 +142,46 @@ public class TestFBWrappingDataSource extends FBTestBase {
         connection.close();
 
     }
+   
+   public void testJNDI() throws Exception {
+       String JNDI_FACTORY = "com.sun.jndi.fscontext.RefFSContextFactory";
 
+       ds = createFBWrappingDataSource();
+       ds.setDatabase(DB_DATASOURCE_URL);
+       ds.setUserName(DB_USER);
+       ds.setPassword(DB_PASSWORD);
+       
+       
+       Properties props = new Properties();
+       props.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
+       props.put(Context.OBJECT_FACTORIES, FBWrappingDataSource.class.getName());
+       
+       Context context = new InitialContext(props);
+
+       try {
+           context.bind("jdbc/test", ds);
+           FBWrappingDataSource testDS = 
+               (FBWrappingDataSource)context.lookup("jdbc/test");
+           
+           Connection testConnection = testDS.getConnection();
+           
+           try {
+               Statement stmt = testConnection.createStatement();
+               try {
+                   ResultSet rs = stmt.executeQuery("SELECT 1 FROM rdb$database");
+                   assertTrue("Result set should have at least one row.", rs.next());
+                   assertTrue("Should return correct value", rs.getInt(1) == 1);
+                   assertTrue("Result set should have only one row.", !rs.next());
+               } finally {
+                   stmt.close();
+               }
+           } finally {
+               testConnection.close();
+           }
+           
+       } finally {
+           context.unbind("jdbc/test");
+       }
+   }
 }
 

@@ -23,7 +23,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.sql.DataSource;
 import javax.sql.PooledConnection;
 
@@ -77,6 +80,46 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             fail("Pool should have been started.");
         } finally {
             pool.shutdown();
+        }
+    }
+    
+    /**
+     * Test correctness of JNDI serialization/deserialization.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testJNDI() throws Exception {
+        String JNDI_FACTORY = "com.sun.jndi.fscontext.RefFSContextFactory";
+
+        Properties props = new Properties();
+        props.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
+        props.put(Context.OBJECT_FACTORIES, FBConnectionPoolDataSource.class.getName());
+        
+        Context context = new InitialContext(props);
+
+        try {
+            context.bind("jdbc/test", pool);
+            FBConnectionPoolDataSource testPool = 
+                (FBConnectionPoolDataSource)context.lookup("jdbc/test");
+            
+            Connection testConnection = 
+                testPool.getPooledConnection().getConnection();
+            try {
+                Statement stmt = testConnection.createStatement();
+                try {
+                    ResultSet rs = stmt.executeQuery("SELECT 1 FROM rdb$database");
+                    assertTrue("Result set should have at least one row.", rs.next());
+                    assertTrue("Should return correct value", rs.getInt(1) == 1);
+                    assertTrue("Result set should have only one row.", !rs.next());
+                } finally {
+                    stmt.close();
+                }
+            } finally {
+                testConnection.close();
+            }
+            
+        } finally {
+            context.unbind("jdbc/test");
         }
     }
     
