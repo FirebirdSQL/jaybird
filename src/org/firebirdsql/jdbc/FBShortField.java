@@ -50,7 +50,7 @@ class FBShortField extends FBField {
         if (value.shortValue() > MAX_BYTE_VALUE ||
             value.shortValue() < MIN_BYTE_VALUE)
                 throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR).fillInStackTrace();
+                    BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         return value.byteValue();
     }
@@ -112,7 +112,7 @@ class FBShortField extends FBField {
             setShort(Short.parseShort(value));
         } catch(NumberFormatException nfex) {
             throw (SQLException)createException(
-                SHORT_CONVERSION_ERROR).fillInStackTrace();
+                SHORT_CONVERSION_ERROR+" "+value).fillInStackTrace();
         }
     }
     void setShort(short value) throws java.sql.SQLException {
@@ -127,7 +127,7 @@ class FBShortField extends FBField {
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
                 throw (SQLException)createException(
-                    LONG_CONVERSION_ERROR).fillInStackTrace();
+                    LONG_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setShort((short)value);
     }
@@ -136,7 +136,7 @@ class FBShortField extends FBField {
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
                 throw (SQLException)createException(
-                    DOUBLE_CONVERSION_ERROR).fillInStackTrace();
+                    DOUBLE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setShort((short)value);
     }
@@ -145,7 +145,7 @@ class FBShortField extends FBField {
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
                 throw (SQLException)createException(
-                    LONG_CONVERSION_ERROR).fillInStackTrace();
+                    LONG_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setShort((short)value);
     }
@@ -154,7 +154,7 @@ class FBShortField extends FBField {
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
                 throw (SQLException)createException(
-                    LONG_CONVERSION_ERROR).fillInStackTrace();
+                    LONG_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setShort((short)value);
     }
@@ -171,7 +171,7 @@ class FBShortField extends FBField {
         if (value.compareTo(new BigDecimal(MAX_SHORT_VALUE)) > 0 ||
             value.compareTo(new BigDecimal(MIN_SHORT_VALUE)) < 0)
                 throw (SQLException)createException(
-                    BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
+                    BIGDECIMAL_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setShort(value.shortValue());
     }

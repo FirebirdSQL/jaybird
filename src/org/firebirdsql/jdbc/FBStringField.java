@@ -87,7 +87,7 @@ class FBStringField extends FBField {
             return Byte.parseByte(getString().trim());
         } catch (NumberFormatException nfex) {
             throw (SQLException) createException(
-                BYTE_CONVERSION_ERROR).fillInStackTrace();
+                BYTE_CONVERSION_ERROR+" "+getString().trim()).fillInStackTrace();
         }
     }
     short getShort() throws SQLException {
@@ -97,7 +97,7 @@ class FBStringField extends FBField {
             return Short.parseShort(getString().trim());
         } catch (NumberFormatException nfex) {
             throw (SQLException) createException(
-                SHORT_CONVERSION_ERROR).fillInStackTrace();
+                SHORT_CONVERSION_ERROR+" "+getString().trim()).fillInStackTrace();
         }
     }
     int getInt() throws SQLException {
@@ -107,7 +107,7 @@ class FBStringField extends FBField {
             return Integer.parseInt(getString().trim());
         } catch (NumberFormatException nfex) {
             throw (SQLException) createException(
-                INT_CONVERSION_ERROR).fillInStackTrace();
+                INT_CONVERSION_ERROR+" "+getString().trim()).fillInStackTrace();
         }
     }
     long getLong() throws SQLException {
@@ -118,7 +118,7 @@ class FBStringField extends FBField {
         }
         catch (NumberFormatException nfex) {
             throw (SQLException) createException(
-                LONG_CONVERSION_ERROR).fillInStackTrace();
+                LONG_CONVERSION_ERROR+" "+getString().trim()).fillInStackTrace();
         }
     }
     BigDecimal getBigDecimal() throws java.sql.SQLException {
@@ -135,7 +135,7 @@ class FBStringField extends FBField {
         }
         catch (NumberFormatException nfex) {
             throw (SQLException) createException(
-                FLOAT_CONVERSION_ERROR).fillInStackTrace();
+                FLOAT_CONVERSION_ERROR+" "+getString().trim()).fillInStackTrace();
         }
     }
     double getDouble() throws java.sql.SQLException {
@@ -146,7 +146,7 @@ class FBStringField extends FBField {
         }
         catch (NumberFormatException nfex) {
             throw (SQLException) createException(
-                DOUBLE_CONVERSION_ERROR).fillInStackTrace();
+                DOUBLE_CONVERSION_ERROR+" "+getString().trim()).fillInStackTrace();
         }
     }
 
