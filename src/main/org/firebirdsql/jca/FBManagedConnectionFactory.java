@@ -267,7 +267,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             (dbAlias == null ? mcf.dbAlias == null : dbAlias.equals(mcf.dbAlias))
             && (defaultCri.equals(mcf.defaultCri))
             && (tpb.equals(mcf.tpb))
-            && (blobBufferLength == blobBufferLength);
+            && (blobBufferLength == mcf.blobBufferLength);
     }
 
     /**
