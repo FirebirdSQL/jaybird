@@ -95,9 +95,10 @@ public class FBResultSet implements ResultSet {
         
         xsqlvars = stmt.getOutSqlda().sqlvar;
         maxRows = fbstatement.getMaxRows();
-        prepareVars(false);
         
         boolean updatableCursor = fbstatement.isUpdatableCursor();
+
+        prepareVars(!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE);
         
         if (!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE)
             fbFetcher = new FBCachedFetcher(this.c, fbstatement, stmt, this);

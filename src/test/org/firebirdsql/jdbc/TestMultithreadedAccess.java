@@ -206,8 +206,12 @@ public class TestMultithreadedAccess extends FBTestBase {
         
         private boolean stopped;
         
-        protected RandomSelector(Statement stmt, String sqlTemplate, int maxId) {
+        protected RandomSelector(int maxId) {
             this.maxId = maxId;
+        }
+        
+        protected RandomSelector(Statement stmt, String sqlTemplate, int maxId) {
+            this(maxId);
             this.sqlTemplate = sqlTemplate;
             this.stmt = stmt;
         }
@@ -307,13 +311,25 @@ public class TestMultithreadedAccess extends FBTestBase {
      */
     private static class RandomPreparedSelector extends RandomSelector {
         
-        public RandomPreparedSelector(PreparedStatement stmt, int maxId) {
-            super(stmt, null, maxId);
+        private Connection connection;
+        private PreparedStatement stmt;
+        private String sql;
+        
+        public RandomPreparedSelector(Connection connection, String sql, int maxId) {
+            super(maxId);
+            this.connection = connection;
+            this.sql = sql;
         }
         
         
         public ResultSet executeQuery(int id) throws SQLException {
-            PreparedStatement stmt = (PreparedStatement)getStatement();
+            
+            // close previously executed statement
+            if (stmt != null)
+                stmt.close();
+            
+            stmt = connection.prepareStatement(
+                    sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             
             stmt.setInt(1, id);
 
@@ -335,21 +351,15 @@ public class TestMultithreadedAccess extends FBTestBase {
         
             String sql1 = MessageFormat.format(
                     SELECT_TABLE_1, new Object[]{"?"});
-
-            
-            PreparedStatement ps1 = connection.prepareStatement(sql1);
             
             String sql2 = MessageFormat.format(
                     SELECT_TABLE_2, new Object[]{"?"});
-
-            
-            PreparedStatement ps2 = connection.prepareStatement(sql2);
             
             RandomSelector selector1 = 
-                new RandomPreparedSelector(ps1, RECORD_COUNT);
+                new RandomPreparedSelector(connection, sql1, RECORD_COUNT);
             
             RandomSelector selector2 = 
-                new RandomPreparedSelector(ps2, RECORD_COUNT);
+                new RandomPreparedSelector(connection, sql2, RECORD_COUNT);
             
             Thread thread1 = new Thread(selector1, "Selector 1");
             Thread thread2 = new Thread(selector2, "Selector 2");
@@ -364,9 +374,6 @@ public class TestMultithreadedAccess extends FBTestBase {
             
             thread1.join();
             thread2.join();
-
-            ps1.close();
-            ps2.close();
             
         } finally {
             connection.close();
