@@ -401,6 +401,35 @@ public class FBConnectionHelper {
         return (String)javaEncodings.get(javaEncoding);
     }
     
+    private static final int[][] CHARSET_MAXIMUM_SIZE = new int[][] {
+          { 0, 1}   // NONE
+        , { 1, 1}   // OCTETS
+        , { 2, 1}   // ASCII
+        , { 3, 3}   // UNICODE_FSS
+        , { 5, 2}   // SJIS_0208
+        , { 6, 2}   // EUJC_0208
+        , {10, 1}   // DOS437
+        , {11, 1}   // DOS850
+        , {12, 1}   // DOS865
+        , {13, 1}   // DOS860
+        , {14, 1}   // DOS863
+        , {19, 1}   // NEXT
+        , {21, 1}   // ISO8859_1
+        , {22, 1}   // ISO8859_2
+        , {44, 2}   // KSC_5601
+        , {45, 1}   // DOS852
+        , {46, 1}   // DOS857
+        , {47, 1}   // DOS861
+        , {50, 1}   // CYRL
+        , {51, 1}   // WIN1250
+        , {52, 1}   // WIN1251
+        , {53, 1}   // WIN1252
+        , {54, 1}   // WIN1253
+        , {55, 1}   // WIN1254
+        , {56, 2}   // BIG_5
+        , {57, 2}   // GB2312
+    };
+    
     /**
      * Get size of a character for the specified InterBase encoding.
      *
@@ -408,7 +437,7 @@ public class FBConnectionHelper {
      * @return maximum size of the character in bytes or 1 if encoding was 
      * not found.
      */
-    public static byte getIscEncodingSize(String iscEncoding) {
+    public static int getIscEncodingSize(String iscEncoding) {
         if (!encodingSizesLoaded)
             loadEncodingSizes();
             
@@ -417,6 +446,24 @@ public class FBConnectionHelper {
             return 1;
         else
             return result.byteValue();
+    }
+    
+    /**
+     * Get size of a character for the specified character set.
+     *
+     * @param ID of the character set.
+     * @return maximum size of the character in bytes or 1 if charset was 
+     * not found.
+     */
+    public static int getCharacterSetSize(int characterSetId) {
+        
+        for (int i = 0; i < CHARSET_MAXIMUM_SIZE.length; i++) {
+            if (CHARSET_MAXIMUM_SIZE[i][0] == characterSetId)
+                return CHARSET_MAXIMUM_SIZE[i][1];
+        }
+
+        // let's assume that default length is 1
+        return 1;
     }
 
 }
