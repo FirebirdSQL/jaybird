@@ -41,8 +41,6 @@ import org.firebirdsql.jdbc.FBSQLException;
 public class FBServiceManager implements ServiceManager {
 
 
-    private GDSType gdsType;
-    
     private String user;
     private String password;
 
@@ -52,6 +50,8 @@ public class FBServiceManager implements ServiceManager {
     private int port = 3050;
     
     private OutputStream logger;
+
+    private GDS gds;
     
     public final static int BUFFER_SIZE = 1024; //1K
 
@@ -59,7 +59,7 @@ public class FBServiceManager implements ServiceManager {
      * 
      */
     protected FBServiceManager(GDSType gdsType) {
-        this.gdsType = gdsType;
+        this.gds = GDSFactory.getGDSForType(gdsType);
     }
 
     /**
@@ -148,7 +148,7 @@ public class FBServiceManager implements ServiceManager {
      * @return instance of {@link GDS}.
      */
     public GDS getGds() {
-        return GDSFactory.getGDSForType(gdsType);
+        return gds;
     }
     
     public String getServiceName() {
@@ -172,9 +172,6 @@ public class FBServiceManager implements ServiceManager {
         ServiceParameterBuffer serviceParameterBuffer = 
             gds.newServiceParameterBuffer();
     
-//        serviceParameterBuffer.addArgument(
-//            ISCConstants.isc_spb_current_version);
-        
         serviceParameterBuffer.addArgument(
             ISCConstants.isc_spb_user_name, getUser());
         
@@ -232,4 +229,45 @@ public class FBServiceManager implements ServiceManager {
             }
         }
     }
+
+    /**
+     * Execute a Services API operation in the database. All output from the
+     * operation is sent to this <code>ServiceManager</code>'s logger.
+     *
+     * @param srb The buffer containing the task request
+     * @throws FBSQLException if a database access error occurs or 
+     *         incorrect parameters are supplied
+     */
+    protected void executeServicesOperation(ServiceRequestBuffer srb)
+            throws FBSQLException {
+
+        try {
+            isc_svc_handle svcHandle = attachServiceManager(gds);
+            try {
+                gds.isc_service_start(svcHandle, srb);
+                queueService(gds, svcHandle);
+            } finally {
+                detachServiceManager(gds, svcHandle);
+            }
+        } catch (GDSException gdse){
+            throw new FBSQLException(gdse);
+        } catch (IOException ioe){
+            throw new FBSQLException(ioe);
+        }
+    }
+
+    /**
+     * Build up a request buffer for the specified operation.
+     *
+     * @param operation The isc_action_svc_* operation
+     * @param options The options bitmask for the request buffer
+     */
+    protected ServiceRequestBuffer createRequestBuffer(int operation, 
+                                                        int options){
+        ServiceRequestBuffer srb = gds.newServiceRequestBuffer(operation);
+        srb.addArgument(ISCConstants.isc_spb_dbname, getDatabase());
+        srb.addArgument(ISCConstants.isc_spb_options, options);
+        return srb;
+    }
+
 }
