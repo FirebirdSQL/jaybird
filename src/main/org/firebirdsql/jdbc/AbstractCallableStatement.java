@@ -31,6 +31,7 @@ import java.util.Map;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.jdbc.field.FBField;
+import org.firebirdsql.jdbc.field.TypeConvertionException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -337,11 +338,53 @@ public abstract class AbstractCallableStatement
                 if (value == null)
                     field.setNull();
                 else
-                if (value instanceof TimestampWithCalendar)
-                    field.setTimestamp(
-                            (TimestampWithCalendar)value, 
-                            ((TimestampWithCalendar)value).getCalendar());
-                else
+                if (value instanceof WrapperWithCalendar) {
+                    
+                    Object obj = ((WrapperWithCalendar)value).getValue();
+                    
+                    if (obj == null) {
+                        field.setNull();
+                    } else {
+                        Calendar cal = ((WrapperWithCalendar)value).getCalendar();
+                        
+                        if (obj instanceof Timestamp)
+                            field.setTimestamp((Timestamp)obj, cal);
+                        else
+                        if (obj instanceof java.sql.Date)
+                            field.setDate((java.sql.Date)obj, cal);
+                        else
+                        if (obj instanceof Time)
+                            field.setTime((Time)obj, cal);
+                        else
+                            throw new TypeConvertionException(
+                                "Cannot convert type " + 
+                                obj.getClass().getName());
+                        
+                    }
+                } else 
+                if (value instanceof WrapperWithInt) {
+                    
+                    Object obj = ((WrapperWithInt)value).getValue();
+                    
+                    if (obj == null) {
+                        field.setNull();
+                    } else {
+                        int intValue = ((WrapperWithInt)value).getIntValue();
+                        
+                        if (obj instanceof InputStream)
+                            field.setBinaryStream((InputStream)obj, intValue);
+                        else
+                        if (obj instanceof Reader)
+                            field.setCharacterStream((Reader)obj, intValue);
+                        else
+                            throw new TypeConvertionException(
+                                "Cannot convert type " + 
+                                obj.getClass().getName());
+                        
+                    }
+                      
+                    
+                } else
                     field.setObject(value);
             }
         }
@@ -929,7 +972,7 @@ public abstract class AbstractCallableStatement
 
     public void setAsciiStream(int parameterIndex, InputStream x, int length)
     throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(x);
+        setBinaryStream(parameterIndex, x, length);
     }
 
     public void setBigDecimal(int parameterIndex, BigDecimal x)
@@ -940,7 +983,8 @@ public abstract class AbstractCallableStatement
     public void setBinaryStream(int parameterIndex, InputStream inputStream,
         int length) throws SQLException 
     {
-        procedureCall.getInputParam(parameterIndex).setValue(inputStream);
+        procedureCall.getInputParam(parameterIndex).setValue(
+            new WrapperWithInt(inputStream, length));
     }
 
     public void setBlob(int parameterIndex, Blob blob) throws SQLException {
@@ -962,7 +1006,8 @@ public abstract class AbstractCallableStatement
     public void setCharacterStream(int parameterIndex, Reader reader,
         int length) throws SQLException 
     {
-        procedureCall.getInputParam(parameterIndex).setValue(reader);
+        procedureCall.getInputParam(parameterIndex).setValue(
+            new WrapperWithInt(reader, length));
     }
 
     public void setClob(int parameterIndex, Clob x) throws SQLException {
@@ -971,7 +1016,8 @@ public abstract class AbstractCallableStatement
 
     public void setDate(int parameterIndex, java.sql.Date x, Calendar cal)
         throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(
+            new WrapperWithCalendar(x, cal));
     }
 
     public void setDate(int parameterIndex, java.sql.Date x) throws SQLException {
@@ -1032,7 +1078,8 @@ public abstract class AbstractCallableStatement
 
     public void setTime(int parameterIndex, Time x, Calendar cal)
         throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(x);
+        procedureCall.getInputParam(parameterIndex).setValue(
+            new WrapperWithCalendar(x, cal));
     }
 
     public void setTime(int parameterIndex, Time x) throws SQLException {
@@ -1042,7 +1089,7 @@ public abstract class AbstractCallableStatement
     public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal)
         throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(
-                new TimestampWithCalendar(x, cal));
+                new WrapperWithCalendar(x, cal));
     }
 
     public void setTimestamp(int parameterIndex, Timestamp x)
@@ -1055,17 +1102,39 @@ public abstract class AbstractCallableStatement
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
     
-    private static class TimestampWithCalendar extends Timestamp {
+    private static class WrapperWithCalendar {
+        private Object value;
         private Calendar c;
         
-        private TimestampWithCalendar(Timestamp t, Calendar c) {
-            super(t.getTime() + t.getNanos()/1000000);
-            
+        private WrapperWithCalendar(Object value, Calendar c) {
+            this.value = value;
             this.c = c;
+        }
+        
+        private Object getValue() {
+            return value;
         }
         
         private Calendar getCalendar() {
             return c;
+        }
+    }
+    
+    private static class WrapperWithInt {
+        private Object value;
+        private int intValue;
+        
+        private WrapperWithInt(Object value, int intValue) {
+            this.value = value;
+            this.intValue = intValue;
+        }
+        
+        private Object getValue() {
+            return value;
+        }
+        
+        private int getIntValue() {
+            return intValue;
         }
     }
 }
