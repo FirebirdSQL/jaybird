@@ -446,7 +446,7 @@ public class PingablePooledConnection implements PooledConnection,
                 "Notified about a connection that is not under my control.");
         }
 
-        cleanCache();
+        //cleanCache();
 
         currentConnection = null;
 
