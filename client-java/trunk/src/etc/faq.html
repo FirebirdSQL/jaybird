@@ -12,7 +12,7 @@
 <h1 ALIGN=CENTER><font size="6" style="font-size: 20pt"><a name="top"></a>Frequently 
   Asked Questions</font></h1>
 <p ALIGN=CENTER><font size="4">JayBird JCA/JDBC Driver for Firebird</font></p>
-<P ALIGN=CENTER>- Last Updated 8/1/03 -<BR>
+<P ALIGN=CENTER>- Last Updated 11/04/03 -<BR>
 </P>
 <table width="90%" border="0" cellspacing="0" cellpadding="5">
   <tr>
@@ -1363,7 +1363,7 @@ debug=&quot;0&quot; reloadable=&quot;true&quot; crossContext=&quot;true&quot;&gt
   </P>
   
 <P ALIGN=CENTER><FONT SIZE=5><a name="9"></a>9. How do I use JayBird with JBuilder?</FONT></P>
-  <P ALIGN=CENTER>Last updated: 2002.04.11</P>
+  <P ALIGN=CENTER>Last updated: 2003.11.04</P>
   <P ALIGN=CENTER><a href="#top">return to top</a></P>
   <P><BR>
     <BR>
@@ -1371,7 +1371,31 @@ debug=&quot;0&quot; reloadable=&quot;true&quot; crossContext=&quot;true&quot;&gt
   
 <P>Thanks to Marcelo Lopez Ruiz for the Jbuilder 6 Personal section.</P>
 <P>Thanks to John B. Moore for the JBuilder 7 Enterprise notes.</P>
-<P>JBuilder 7 Enterprise Notes:</P>
+<P>Thanks to Sergio Samayoa for the JBuilder 9 notes.</P>
+<P><strong>JBuilder 9 Notes:</strong></P>
+<P>JBuilder 9 installation is similar to JBuilder 7.</P>
+<P>1. Unpack JayBird onto your disk.</P>
+<P>2. Create a Library for JayBird:</P>
+<blockquote>
+  <p>Open JBuilder and pull down the &quot;Tools&quot; menu from the main menu bar. Select
+    &quot;Configure Libraries&quot;, this opens a dialog box.</p>
+  <p>Click the &quot;New&quot; button.This opens the &quot;New Library Wizard&quot; dialog box.</p>
+  <p>Type &quot;JayBird&quot; in the &quot;Name&quot; box.</p>
+  <p>In &quot;Location&quot; select JBuilder.</p>
+  <p>Click the &quot;Add&quot; button near the &quot;Library Paths&quot; list.</p>
+  <p>Type in the path to the firebirdsql-full.jar file and click the &quot;OK&quot; button.</p>
+  <p>Close the &quot;New Library Wizard&quot; dialog by clicking &quot;OK&quot;.</p>
+</blockquote>
+<P>3. Create a file &quot;JayBird.config&quot; in &lt;JBuilder dir&gt;\lib\ext containing the
+  line (for example):</P>
+<blockquote>
+  <p>addpath c:/JayBird/firebirdsql-full.jar</p>
+</blockquote>
+<P>4. Restart JBuilder.</P>
+<P>You can now use DataExpress. Add the &quot;JayBird&quot; library to your project. Note
+  that the driver will not be listed in the driver selection combo boxes.</P>
+<P>&nbsp;</P>
+<P><strong>JBuilder 7 Enterprise Notes:</strong></P>
 <p> Create a file...</p>
 <p>&lt;JBuilderDir&gt;\Lib\Ext\jaybird.config</p>
 <p>Containing the following line...</p>
