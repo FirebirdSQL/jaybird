@@ -180,7 +180,15 @@ public final class FBStringField extends FBField {
     String getString() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return toString(rs.row[numCol]);
+        if (javaEncoding == null)
+            return new String(rs.row[numCol]);
+        else {
+            try {
+                return new String(rs.row[numCol], javaEncoding);
+            } catch(java.io.UnsupportedEncodingException ex) {
+                return new String(rs.row[numCol]);
+            }
+        }
     }
     Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
@@ -270,11 +278,18 @@ public final class FBStringField extends FBField {
             field.sqldata = null;
             return;
         }
-        byte[] supplied = getBytes(value);
-        if (supplied.length > field.sqllen)
-            throw new DataTruncation(-1, true, false, supplied.length, field.sqllen);
-
-        field.sqldata = supplied;
+        if (javaEncoding==null){
+            field.sqldata = value.getBytes();
+        }
+        else {
+            try {
+                field.sqldata = value.getBytes(javaEncoding);
+            } catch(java.io.UnsupportedEncodingException ex) {
+                field.sqldata = value.getBytes();
+            }
+        }
+        if (field.sqldata.length > field.sqllen)
+            throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);
     }
 
     //----- setXXXStream code
@@ -307,7 +322,22 @@ public final class FBStringField extends FBField {
             int counter = 0;
             while ((counter = in.read(buff)) != -1)
                 out.write(buff, 0, counter);
-            setString(toString(out.toByteArray(), 0, length));
+
+            if (length > field.sqllen)
+                throw new DataTruncation(-1, true, false, length, field.sqllen);
+            if (javaEncoding==null){
+                field.sqldata = new byte[length];
+                System.arraycopy(out.toByteArray(), 0, field.sqldata, 0, length);
+            }
+            else {
+                try {
+                    field.sqldata = new byte[length];
+                    field.sqldata = (new String(out.toByteArray(), 0, length, javaEncoding)).getBytes();
+                } catch(java.io.UnsupportedEncodingException ex) {
+                    field.sqldata = new byte[length];
+                    System.arraycopy(out.toByteArray(), 0, field.sqldata, 0, length);
+                }
+            }
         }
         catch (IOException ioex) {
             throw (SQLException) createException(
@@ -340,7 +370,17 @@ public final class FBStringField extends FBField {
             return;
         }
 
-        setString(toString(value));
+        if (javaEncoding == null)
+            field.sqldata = value;
+        else {
+            try {
+                field.sqldata = (new String(value, javaEncoding)).getBytes();
+            } catch(java.io.UnsupportedEncodingException ex) {
+                field.sqldata = value;
+            }
+        }		  
+        if (field.sqldata.length > field.sqllen)
+            throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);
     }
 
     //----- setDate, setTime and setTimestamp code
