@@ -26,10 +26,8 @@ import org.firebirdsql.jca.FBResourceException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDS;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.util.Properties;
 import java.util.HashMap;
