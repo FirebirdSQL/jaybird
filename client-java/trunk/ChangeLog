@@ -1,3 +1,9 @@
+2004-07-22 19:32  rrokytskyy
+
+	* client-java/src/etc/: release_notes.pdf, release_notes.sxw:
+	
+	initial revision
+
 2004-07-21 21:21  rrokytskyy
 
 	* client-java/src/: main/org/firebirdsql/jdbc/FBResultSet.java,
