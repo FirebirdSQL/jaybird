@@ -45,6 +45,7 @@ public class FBDriver implements Driver {
     public static final String FIREBIRD_PROTOCOL_NATIVE= FIREBIRD_PROTOCOL + "native:";
     public static final String FIREBIRD_PROTOCOL_NATIVE_EMBEDDED = FIREBIRD_PROTOCOL + "embedded";
     public static final String FIREBIRD_PROTOCOL_NATIVE_LOCAL = FIREBIRD_PROTOCOL + "local:";
+    public static final String FIREBIRD_PROTOCOL_ORACLE_MODE = FIREBIRD_PROTOCOL + "oracle:";
 
     public static final String CHARSET = "charSet";
     public static final String USER = "user";
@@ -192,6 +193,8 @@ public class FBDriver implements Driver {
                 databaseURL = url.substring(FIREBIRD_PROTOCOL_NATIVE_EMBEDDED.length()+1);
             else if (url.startsWith(FIREBIRD_PROTOCOL_NATIVE_LOCAL))
                 databaseURL = url.substring(FIREBIRD_PROTOCOL_NATIVE_LOCAL.length());
+            else if (url.startsWith(FIREBIRD_PROTOCOL_ORACLE_MODE))
+                databaseURL = url.substring(FIREBIRD_PROTOCOL_ORACLE_MODE.length());
             else
                 databaseURL = url.substring(FIREBIRD_PROTOCOL.length());
 
@@ -248,6 +251,10 @@ public class FBDriver implements Driver {
             return GDSType.NATIVE_LOCAL;
         }
         else
+        if (url.startsWith(FIREBIRD_PROTOCOL_ORACLE_MODE))
+        {
+            return GDSType.ORACLE_MODE;
+        }
         {
             return GDSType.PURE_JAVA;
         }
