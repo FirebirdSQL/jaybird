@@ -1,3 +1,13 @@
+2004-07-27 11:45  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FBCachedFetcher.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	fixed issues with scrollable result sets in auto-commit mode
+
 2004-07-23 14:15  rrokytskyy
 
 	* client-java/src/etc/: release_notes.pdf, release_notes.sxw:
