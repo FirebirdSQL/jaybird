@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.sql.Blob;
 
@@ -201,11 +202,12 @@ public class FBBlobField extends FBField implements FBFlushableField {
         }
         
         if (!c.getAutoCommit()) {
-            copyCharacterStream(in, length);
+            copyCharacterStream(in, length, javaEncoding);
         } else {
             char[] buff = new char[BUFF_SIZE];
             ByteArrayOutputStream bout = new ByteArrayOutputStream(length);
-            OutputStreamWriter boutw = new OutputStreamWriter(bout);
+            try {
+            OutputStreamWriter boutw = new OutputStreamWriter(bout, javaEncoding);
 
             int chunk;
             try {
@@ -219,6 +221,12 @@ public class FBBlobField extends FBField implements FBFlushableField {
             }
             catch (IOException ioe) {
                 throw new FBSQLException(ioe);
+            }
+            } catch(UnsupportedEncodingException ex) {
+                throw new FBSQLException("Cannot set character stream because " +
+                        "the unsupported encoding is detected in the JVM: " +
+                        javaEncoding + ". Please report this to the driver developers."
+                    );
             }
             
             this.data = bout.toByteArray();
@@ -278,14 +286,14 @@ public class FBBlobField extends FBField implements FBFlushableField {
         field.sqldata = field.encodeLong(blob.getBlobId());
     }
 
-    private void copyCharacterStream(Reader in, int length) throws SQLException {
+    private void copyCharacterStream(Reader in, int length, String encoding) throws SQLException {
         
         /** @todo check if this is correct!!! */
         if (!c.getAutoCommit())
             c.ensureInTransaction();
         
         FBBlob blob =  new FBBlob(c);
-        blob.copyCharacterStream(in, length);
+        blob.copyCharacterStream(in, length, encoding);
         field.sqldata = field.encodeLong(blob.getBlobId());
     }
     
