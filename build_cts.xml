@@ -6,7 +6,7 @@
 	<property name="jdbc.driver"   value="org.firebirdsql.jdbc.FBDriver"/>
 	<property name="jdbc.init_sql" value="${basedir}/src/jdbccts/ddl.properties"/>
 	
-	<property name="cts.path"      value="c:/java/jdbccts"/>
+	<property name="cts.path"      value="f:/java/jdbccts"/>
 
 	<property name="cts.config"    value="dml.properties"/>
 	<property name="cts.excludes"  value="excludes.properties"/>
@@ -39,7 +39,7 @@
 		</java>
 	</target>
 	
-	<target name="init" depends="initdb">
+	<target name="init">
 		<mkdir dir="${compile.out}"/>
 		<mkdir dir="${test.out}"/>
 		<mkdir dir="${report.out}"/>
@@ -76,6 +76,7 @@
 			<classpath path="${compile.out}"/>
 			
 			<test name="org.firebirdsql.jdbc.cts.BatchUpdatesSuite" todir="${test.out}"/>
+			<test name="org.firebirdsql.jdbc.cts.CallableStatementSuite" todir="${test.out}"/>
 			<test name="org.firebirdsql.jdbc.cts.ConnectionSuite" todir="${test.out}"/>
 			<test name="org.firebirdsql.jdbc.cts.DbMetaSuite" todir="${test.out}"/>
 			<test name="org.firebirdsql.jdbc.cts.DateTimeSuite" todir="${test.out}"/>
