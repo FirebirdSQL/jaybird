@@ -89,103 +89,130 @@ public class TestFBBlobStream extends BaseFBTest {
     }
 
     protected void tearDown() throws Exception {
-//        java.sql.Statement stmt = connection.createStatement();
-//        stmt.executeUpdate(DROP_TABLE);
-//        stmt.close();
+        
+        if (!connection.getAutoCommit())
+            connection.setAutoCommit(true);
+        
+        java.sql.Statement stmt = connection.createStatement();
+        stmt.executeUpdate(DROP_TABLE);
+        stmt.close();
+        
         connection.close();
         super.tearDown();
     }
     
-    public void testBlobLength() throws Exception {
+    /**
+     * Test if BLOB length is reported correctly.
+     * 
+     * @throws java.lang.Exception if something went wrong.
+     */
+    public void _testBlobLength() throws Exception {
         connection.setAutoCommit(false);
 
         PreparedStatement ps = connection.prepareStatement(
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
 
-        long start = System.currentTimeMillis();
-
-        long size = testData[0].length;
-
-        ps.setInt(1, 1);
-        ps.setBytes(2, testData[0]);
-        ps.executeUpdate();
-
-        ps.close();
-
-        connection.commit();
-
-        ps = connection.prepareStatement(
-            "SELECT bin_data FROM test_blob WHERE id = ?");
+        try {
+            long start = System.currentTimeMillis();
+    
+            long size = testData[0].length;
+    
+            ps.setInt(1, 1);
+            ps.setBytes(2, testData[0]);
+            ps.executeUpdate();
+    
+            ps.close();
+    
+            connection.commit();
+    
+            ps = connection.prepareStatement(
+                "SELECT bin_data FROM test_blob WHERE id = ?");
+                
+            ps.setInt(1, 1);
             
-        ps.setInt(1, 1);
-        
-        ResultSet rs = ps.executeQuery();
-        
-        assertTrue("Should select at least one row", rs.next());
-        
-        FBBlob blob = (FBBlob)rs.getBlob(1);
-        
-        start = System.currentTimeMillis();
-        for(int i = 0; i < 1000; i++)
-            assertTrue("Reported length should be correct.", blob.length() == size);
-        System.out.println("Getting info took " + 
-            (System.currentTimeMillis() - start));
-
-        rs.close();
-        ps.close();
+            ResultSet rs = ps.executeQuery();
+            
+            assertTrue("Should select at least one row", rs.next());
+            
+            FBBlob blob = (FBBlob)rs.getBlob(1);
+            
+            start = System.currentTimeMillis();
+            for(int i = 0; i < 1000; i++)
+                assertTrue("Reported length should be correct.", blob.length() == size);
+            System.out.println("Getting info took " + 
+                (System.currentTimeMillis() - start));
+    
+            rs.close();
+        } finally {
+            ps.close();
+        }
     }
     
-    public void _testBlobSeek() throws Exception {
+    /**
+     * Test if BLOB seek() method works correctly.
+     * 
+     * @throws java.lang.Exception if something went wrong.
+     */
+    public void testBlobSeek() throws Exception {
         connection.setAutoCommit(false);
 
         PreparedStatement ps = connection.prepareStatement(
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
 
-        long start = System.currentTimeMillis();
-
-        long size = testData[0].length;
-
-        ps.setInt(1, 1);
-        ps.setBytes(2, testData[0]);
-        ps.executeUpdate();
-
-        ps.close();
-
-        connection.commit();
-
-        ps = connection.prepareStatement(
-            "SELECT bin_data FROM test_blob WHERE id = ?");
-
-        ps.setInt(1, 1);
-
-        ResultSet rs = ps.executeQuery();
-
-        assertTrue("Should select at least one row", rs.next());
-
-        FBBlob.FBBlobInputStream in = (FBBlob.FBBlobInputStream)rs.getBinaryStream(1);
-        
-        int blobSize = (int)in.length();
-        byte[] fullBlob = new byte[blobSize];
-        
-        in.read(fullBlob, 0, blobSize);
-        in.close();
-        
-        in = (FBBlob.FBBlobInputStream)rs.getBinaryStream(1);
-        in.seek(10);
-        byte[] truncatedBlob = new byte[blobSize - 10];
-        in.read(truncatedBlob, 0, blobSize - 10);
-        
-        byte[] testBlob = new byte[blobSize - 10];
-        System.arraycopy(fullBlob, 10, testBlob, 0, blobSize - 10);
-
-        System.out.println("Full and original blobs equal: " + 
-            Arrays.equals(testData[0], fullBlob));
-        
-        System.out.println("Truncated and tested blobs equal: " + 
-            Arrays.equals(testBlob, truncatedBlob));
-        
-        rs.close();
-        ps.close();
+        try {
+            long start = System.currentTimeMillis();
+    
+            long size = testData[0].length;
+    
+            ps.setInt(1, 1);
+            ps.setBytes(2, testData[0]);
+            ps.executeUpdate();
+            
+        } finally {
+            ps.close();
+        }
+    
+            connection.commit();
+    
+        try {
+            ps = connection.prepareStatement(
+                "SELECT bin_data FROM test_blob WHERE id = ?");
+    
+            ps.setInt(1, 1);
+    
+            ResultSet rs = ps.executeQuery();
+    
+            assertTrue("Should select at least one row", rs.next());
+    
+            FBBlob.FBBlobInputStream in = 
+                (FBBlob.FBBlobInputStream)rs.getBinaryStream(1);
+            
+            int blobSize = (int)in.length();
+            byte[] fullBlob = new byte[blobSize];
+            
+            in.readFully(fullBlob);
+            
+            in.close();
+            
+            in = (FBBlob.FBBlobInputStream)rs.getBinaryStream(1);
+            in.seek(10);
+            
+            byte[] truncatedBlob = new byte[blobSize - 10];
+            in.readFully(truncatedBlob);
+            
+            byte[] testBlob = new byte[blobSize - 10];
+            System.arraycopy(fullBlob, 10, testBlob, 0, blobSize - 10);
+    
+            assertTrue("Full and original blobs must be equal.", 
+                Arrays.equals(testData[0], fullBlob));
+                
+            assertTrue("Truncated and testing blobs must be equal.", 
+                Arrays.equals(testBlob, truncatedBlob));
+            
+            rs.close();
+        } finally {
+            ps.close();
+        }
     }
 
 
@@ -195,7 +222,7 @@ public class TestFBBlobStream extends BaseFBTest {
      * 
      * @throws Exception if something went wrong.
      */
-    public void _testFieldTypes() throws Exception {
+    public void testFieldTypes() throws Exception {
         
         connection.setAutoCommit(false);
         
