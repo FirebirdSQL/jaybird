@@ -45,7 +45,8 @@ public class TestFBMaintenanceManager extends FBTestBase {
         fbManager.setForceCreate(true);
         fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
 
-        maintenanceManager = new FBMaintenanceManager(GDSType.PURE_JAVA);
+        GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type"));
+        maintenanceManager = new FBMaintenanceManager(gdsType);
         maintenanceManager.setHost("localhost");
         maintenanceManager.setUser(DB_USER);
         maintenanceManager.setPassword(DB_PASSWORD);
@@ -387,6 +388,38 @@ public class TestFBMaintenanceManager extends FBTestBase {
     public void testKillUnavailableShadows() throws Exception {
         // Just run it to see if it throws an exception
         maintenanceManager.killUnavailableShadows();
+    }
+
+    public void testListLimboTransactions() throws Exception {
+        // Just run it to see if it throws an exception
+        maintenanceManager.listLimboTransactions();
+    }
+
+    public void testCommitAllTransactions() throws Exception {
+        // Just run it to see if it throws an exception 
+        maintenanceManager.commitAllTransactions();
+    }
+
+    public void testCommitSpecificTransaction() throws Exception {
+        maintenanceManager.commitTransaction(2);
+    }
+
+    public void testRollbackAllTransactions() throws Exception {
+        // Just run it to see if it throws an exception 
+        maintenanceManager.rollbackAllTransactions();
+    }
+
+    public void testRollbackSpecificTransaction() throws Exception {
+        maintenanceManager.rollbackTransaction(2);
+    }
+
+    public void testTwoPhaseRecovery() throws Exception {
+        // Just run it to see if it throws an exception 
+        maintenanceManager.twoPhaseRecovery();
+    }
+
+    public void testTwoPhaseRecoverySpecificTransaction() throws Exception {
+        maintenanceManager.twoPhaseRecovery(2);
     }
 
 }
