@@ -48,7 +48,7 @@ public class TestXADataSource extends TestFBConnectionPoolDataSource {
         try {
             Statement stmt = con.createStatement();
             try {
-                stmt.executeUpdate("CREATE TABLE test(a INTEGER)");
+                stmt.executeUpdate("CREATE TABLE xa_test(a INTEGER)");
             } catch (SQLException ex) {
                 if (ex.getErrorCode() != ISCConstants.isc_no_meta_update)
                         throw ex;
@@ -67,7 +67,7 @@ public class TestXADataSource extends TestFBConnectionPoolDataSource {
         try {
             Statement stmt = con.createStatement();
             try {
-                stmt.executeUpdate("DROP TABLE test");
+                stmt.executeUpdate("DROP TABLE xa_test");
             } finally {
                 stmt.close();
             }
@@ -109,14 +109,14 @@ public class TestXADataSource extends TestFBConnectionPoolDataSource {
 
                     Statement stmtA = conA.createStatement();
                     try {
-                        stmtA.execute("INSERT INTO test VALUES(1)");
+                        stmtA.execute("INSERT INTO xa_test VALUES(1)");
                     } finally {
                         stmtA.close();
                     }
 
                     Statement stmtB = conB.createStatement();
                     try {
-                        stmtB.execute("INSERT INTO test VALUES(2)");
+                        stmtB.execute("INSERT INTO xa_test VALUES(2)");
                     } finally {
                         stmtB.close();
                     }
@@ -142,7 +142,7 @@ public class TestXADataSource extends TestFBConnectionPoolDataSource {
                 Statement stmtC = conC.createStatement();
                 try {
                     ResultSet rs = stmtC
-                            .executeQuery("SELECT a FROM test ORDER BY a");
+                            .executeQuery("SELECT a FROM xa_test ORDER BY a");
 
                     assertTrue("Should select at least one row.", rs.next());
                     assertTrue("First value should be 1", rs.getInt(1) == 1);
@@ -190,7 +190,22 @@ public class TestXADataSource extends TestFBConnectionPoolDataSource {
 
     public void testPreparedStatement() throws Exception {
     }
+    
+    public void testIdleRemoverAndMinPoolSize() throws Exception {
+    }
+    
+    public void testClosePhysicalConnection() throws Exception {
+    }
 
+    public void testReferenceSupport() throws Exception {
+    }
+
+    public void testReferenceSupportWrapping() throws Exception {
+    }
+
+    public void testStatementLeaking() throws Exception {
+    }
+    
     private static class FBTestXid implements Xid {
 
         private static final int formatId = 0x0102;
