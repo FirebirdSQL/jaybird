@@ -345,14 +345,14 @@
     <javadoc packagenames="${packages}"
              sourcepath="${source.java}"
              destdir="${build.docs}"
-             classpath="${classpath}"
              author="true"
              version="true"
              windowtitle="${Name} API"
              doctitle="${Name}"
              extdirs="${module.thirdparty}"
-             bottom="Copyright &#169; 2001 David Jencks and other authors. All rights reserved."
-    />
+             bottom="Copyright &#169; 2001 David Jencks and other authors. All rights reserved.">
+      <classpath refid="javac.classpath"/>
+    </javadoc>
   </target>
 
   <!-- =================================================================== -->
