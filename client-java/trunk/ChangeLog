@@ -1,3 +1,20 @@
+2003-09-10 13:19  ryanbaldwin
+
+	*
+	
+	Fix for ClassCastException when using driver in mode type2 or
+	embedded.
+	client-java/src/pool/org/firebirdsql/pool/FBConnectionPoolDataSourc
+	e.java:
+
+2003-09-10 13:13  ryanbaldwin
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	
+	Fix for ClassCastException when using driver in mode type2 or
+	embedded.
+
 2003-09-02 15:31  ryanbaldwin
 
 	* client-java/src/native/jaygds/source/entrypoints.cpp:
