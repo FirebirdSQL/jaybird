@@ -219,7 +219,7 @@ public class FBBigDecimalField extends FBField {
                     throw (SQLException)createException(
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
-            field.sqldata = XSQLVAR.encodeInt(value.unscaledValue().shortValue());
+            field.sqldata = XSQLVAR.encodeInt(value.unscaledValue().intValue());
 //            field.sqldata = new Integer(value.unscaledValue().intValue());
         } else
         if (fieldType == 3) {
@@ -230,7 +230,7 @@ public class FBBigDecimalField extends FBField {
                     throw (SQLException)createException(
                         BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
             
-            field.sqldata = XSQLVAR.encodeLong(value.unscaledValue().shortValue());
+            field.sqldata = XSQLVAR.encodeLong(value.unscaledValue().longValue());
 //            field.sqldata = new Long(value.unscaledValue().longValue());
         } else
             throw (SQLException)createException(

@@ -20,6 +20,7 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.*;
+import java.math.BigDecimal;
 
 /**
  * Describe class <code>TestFBDecimalConversions</code> here.
@@ -30,6 +31,7 @@ import java.sql.*;
 public class TestFBDecimalConversions extends BaseFBTest {
     public static final String CREATE_TABLE =
         "CREATE TABLE decimal_test (" +
+        "  id INT, " +
         "  col_64bit DECIMAL(18,2), " +
         "  col_32bit NUMERIC(8,2), " +
         "  col_16bit NUMERIC(2,2), " +
@@ -40,11 +42,20 @@ public class TestFBDecimalConversions extends BaseFBTest {
     public static final String DROP_TABLE =
         "DROP TABLE decimal_test";
 
-    public static final String INSERT_RECORD =
-        "INSERT INTO decimal_test VALUES (10.0/3.0, 10.0/3.0, 10.0/3.0, 10.0/3.0, 10.0/3.0)";
+    public static final String INSERT_RECORD_1 =
+        "INSERT INTO decimal_test VALUES (1, 10.0/3.0, 10.0/3.0, 10.0/3.0, 10.0/3.0, 10.0/3.0)";
 
-    public static final String SELECT_RECORD =
-        "SELECT * FROM decimal_test";
+    public static final String SELECT_RECORD_1 =
+        "SELECT * FROM decimal_test where id = 1";
+
+    public static final String INSERT_RECORD_2 =
+        "INSERT INTO decimal_test VALUES (2, 5840813343806525.49, -16.92, -16.92, -16.92, -16.92)";
+
+    public static final String SELECT_RECORD_2 =
+        "SELECT * FROM decimal_test where id = 2";
+
+    public static final String UPDATE_RECORD = 
+        "UPDATE decimal_test SET col_64bit = ? where id = 2";
 
     public TestFBDecimalConversions(String testName) {
         super(testName);
@@ -68,7 +79,8 @@ public class TestFBDecimalConversions extends BaseFBTest {
         }
 
         stmt.executeUpdate(CREATE_TABLE);
-        stmt.executeUpdate(INSERT_RECORD);
+        stmt.executeUpdate(INSERT_RECORD_1);
+        stmt.executeUpdate(INSERT_RECORD_2);
 
         stmt.close();
 
@@ -88,30 +100,75 @@ public class TestFBDecimalConversions extends BaseFBTest {
 
     public void testFloat() throws Exception {
         Statement stmt = connection.createStatement();
-        ResultSet rs = stmt.executeQuery(SELECT_RECORD);
+        ResultSet rs = stmt.executeQuery(SELECT_RECORD_1);
 
         assertTrue("ResultSet should not be empty.", rs.next());
 
-        float decimalFloat = rs.getFloat(1);
+        float decimalFloat = rs.getFloat(2);
         assertTrue("DECIMAL(18,2) of 10.0/3.0 should be exactly 3.33 instead of " +
             decimalFloat, decimalFloat == (float)3.33);
 
-        float numeric32Float = rs.getFloat(2);
+        float numeric32Float = rs.getFloat(3);
         assertTrue("NUMERIC(8,2) of 10.0/3.0 should be exactly 3.33 instead of " +
             numeric32Float, numeric32Float == (float)3.33);
 
-        float numeric16Float = rs.getFloat(3);
+        float numeric16Float = rs.getFloat(4);
         assertTrue("NUMERIC(2,2) of 10.0/3.0 should be exactly 3.33 instead of " +
             numeric16Float, numeric16Float == (float)3.33);
 
-        float floatFloat = rs.getFloat(4);
+        float floatFloat = rs.getFloat(5);
         assertTrue("FLOAT of 10.0/3.0 should be the same to 3.33 instead of " +
             floatFloat, floatFloat == (float)3.33);
 
-        float doubleFloat = rs.getFloat(5);
+        float doubleFloat = rs.getFloat(6);
         assertTrue("DOUBLE PRECISION of 10.0/3.0 should be the same to 3.33 instead of " +
             doubleFloat, doubleFloat == (float)3.33);
 
+    }
+
+    public void testDecimal() throws Exception {
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(SELECT_RECORD_2);
+
+        assertTrue("ResultSet should not be empty.", rs.next());
+
+        BigDecimal bigDecimal = rs.getBigDecimal(2);
+        assertTrue("DECIMAL(18,2) of 5840813343806525.49 should be exact instead of " +
+            bigDecimal, bigDecimal.equals(new BigDecimal("5840813343806525.49")));
+        /*
+
+        float numeric32Float = rs.getFloat(3);
+        assertTrue("NUMERIC(8,2) of 10.0/3.0 should be exactly 3.33 instead of " +
+            numeric32Float, numeric32Float == (float)3.33);
+
+        float numeric16Float = rs.getFloat(4);
+        assertTrue("NUMERIC(2,2) of 10.0/3.0 should be exactly 3.33 instead of " +
+            numeric16Float, numeric16Float == (float)3.33);
+
+        float floatFloat = rs.getFloat(5);
+        assertTrue("FLOAT of 10.0/3.0 should be the same to 3.33 instead of " +
+            floatFloat, floatFloat == (float)3.33);
+
+        float doubleFloat = rs.getFloat(6);
+        assertTrue("DOUBLE PRECISION of 10.0/3.0 should be the same to 3.33 instead of " +
+            doubleFloat, doubleFloat == (float)3.33);
+        */
+    }
+
+    public void testSetDecimal() throws Exception {
+        BigDecimal test = new BigDecimal("5840813343806525.49");
+        PreparedStatement ps = connection.prepareStatement(UPDATE_RECORD);
+        ps.setBigDecimal(1, test);
+        ps.execute();
+
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(SELECT_RECORD_2);
+
+        assertTrue("ResultSet should not be empty.", rs.next());
+
+        BigDecimal bigDecimal = rs.getBigDecimal(2);
+        assertTrue("DECIMAL(18,2) of " + test + " should be exact instead of " +
+            bigDecimal, bigDecimal.equals(test));
     }
 
     public static void main(String[] args) {
