@@ -1,3 +1,43 @@
+2004-04-18 23:20  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractConnection.java, AbstractPreparedStatement.java,
+	AbstractStatement.java:
+	
+	added possibility to rollback batch in case of an error
+
+2004-04-18 19:00  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jdbc/FBDatabaseMetaData.java, jca/FBManagedConnectionMetaData.java:
+	
+	corrected version strings
+
+2004-04-18 18:58  rrokytskyy
+
+	* client-java/examples/DriverExample.java:
+	
+	added connection strings for native, local and embedded protocols
+
+2004-04-18 18:19  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/GDSFactory.java,
+	gds/GDSType.java, jdbc/FBDriver.java, ngds/GDS_Impl.java:
+	
+	added local protocol to use fbclient.dll in local mode (IPC)
+
+2004-04-18 13:35  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBDriver.java:
+	
+	modified driver version
+
+2004-04-18 01:50  rrokytskyy
+
+	* client-java/lib/junit.jar:
+	
+	updated junit version
+
 2004-04-17 23:46  rrokytskyy
 
 	* client-java/src/etc/connection_pool.html:
