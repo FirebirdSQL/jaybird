@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
 
+import java.sql.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -46,8 +47,22 @@ public class TestFBPreparedStatement extends FBTestBase{
         "  OBJ_DATA BLOB " + 
         ")";
         
+    public static final String CREATE_TEST_CHARS_TABLE = ""
+        + "CREATE TABLE TESTTAB ("
+        + "FIELD1 VARCHAR(10) NOT NULL PRIMARY KEY,"
+        + "FIELD2 VARCHAR(30),"
+        + "FIELD3 VARCHAR(20),"
+        + "FIELD4 FLOAT,"
+        + "FIELD5 CHAR"
+        + ")"
+        ;
+    
     public static final String DROP_TEST_BLOB_TABLE = 
         "DROP TABLE test_blob";
+    
+    public static final String DROP_TEST_CHARS_TABLE = ""
+        + "DROP TABLE TESTTAB"
+        ;
         
     public static final String TEST_STRING = "This is simple test string.";
     
@@ -74,11 +89,18 @@ public class TestFBPreparedStatement extends FBTestBase{
         }
         
         try {
+            stmt.executeUpdate(DROP_TEST_CHARS_TABLE);
+        } catch(Exception e) {
+            // ignore
+        }
+        
+        try {
             stmt.executeUpdate(DROP_GENERATOR);
         } catch(Exception ex) {
         }
         
         stmt.executeUpdate(CREATE_TEST_BLOB_TABLE);
+        stmt.executeUpdate(CREATE_TEST_CHARS_TABLE);
         
         stmt.executeUpdate(CREATE_GENERATOR);
         
@@ -89,6 +111,7 @@ public class TestFBPreparedStatement extends FBTestBase{
     protected void tearDown() throws Exception {
         Statement stmt = con.createStatement();
         stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
+        stmt.executeUpdate(DROP_TEST_CHARS_TABLE);
         stmt.close();
 
         con.close();
@@ -191,6 +214,64 @@ public class TestFBPreparedStatement extends FBTestBase{
         
         rs.close();
         ps.close();
+    }
+    
+    /**
+     * Test case to reproduce problem with the connection when "operation was
+     * cancelled" happens. Bug is fixed, however due to workaround for this
+     * problem (@see org.firebirdsql.jdbc.field.FBWorkaroundStringField) this
+     * test case is no longer relevant. In order to make it execute correctly
+     * one has to remove this workaround.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void _testOpCancelled() throws Exception {
+        con.setAutoCommit( true );
+        PreparedStatement prep = con.prepareStatement( 
+                "INSERT INTO TESTTAB (FIELD1, FIELD3, FIELD4, FIELD5 ) " +
+                "VALUES ( ?, ?, ?, ? )");
+
+        try {
+            for( int i = 0; i < 5; i++ ){
+                try{
+                    if( i == 0 ){
+                        prep.setObject( 1, "0123456789" );
+                        prep.setObject( 2, "01234567890123456789");
+                        prep.setObject( 3, "1259.9" );
+                        prep.setObject( 4, "A" );
+                    }
+                    if( i == 1 ){
+                        prep.setObject( 1, "0123456787" );
+                        prep.setObject( 2, "012345678901234567890");
+                        prep.setObject( 3, "0.9" );
+                        prep.setObject( 4, "B" );
+                    }
+                    if( i == 2 ){
+                        prep.setObject( 1, "0123456788" );
+                        prep.setObject( 2, "Fld3-Rec3");
+                        prep.setObject( 3, "0.9" );
+                        prep.setObject( 4, "B" );
+                    }
+                    if( i == 3 ){
+                        prep.setObject( 1, "0123456780" );
+                        prep.setObject( 2, "Fld3-Rec4");
+                        prep.setObject( 3, "1299.5" );
+                        prep.setObject( 4, "Q" );
+                    }
+                    if( i == 4 ){
+                        prep.setObject( 1, "0123456779" );
+                        prep.setObject( 2, "Fld3-Rec5");
+                        prep.setObject( 3, "1844" );
+                        prep.setObject( 4, "Z" );
+                    }
+                    prep.execute();
+                } catch(SQLException x){
+                    // x.printStackTrace();
+                } 
+            }
+        } finally {
+            prep.close();
+        }
     }
     
 }
