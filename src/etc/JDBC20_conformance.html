@@ -39,12 +39,14 @@ Excluding the non supported features, the following methods are not implemented<
 	<li><b>PreparedStatement</b></li>
 	<ul>
 		<li>setObject(index,object,type,scale)</li>
+		<li>setCharacterStream(i)</li>
 		<li>setDate(i,date,calendar)</li>
 		<li>setTime(i,time,calendar)</li>
 		<li>setTimestamp(i,timestamp,calendar)</li>
 	</ul>
 	<li><b>ResultSet</b></li>
 	<ul>
+		<li>getCharacterStream(i)</li>
 		<li>getDate(i,calendar)</li>
 		<li>getTime(i,calendar)</li>
 		<li>getTimestamp(i,calendar)</li>
