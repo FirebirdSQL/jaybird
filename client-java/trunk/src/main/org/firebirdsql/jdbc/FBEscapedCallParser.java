@@ -336,9 +336,12 @@ public class FBEscapedCallParser {
                  buffer.append(sqlbuff[i]);
          }
 
-         // remove spaces at the end
+         // remove spaces at the beginning and the end
          while(Character.isSpaceChar(buffer.charAt(0)))
              buffer.deleteCharAt(0);
+         
+         while(Character.isSpaceChar(buffer.charAt(buffer.length() - 1)))
+             buffer.deleteCharAt(buffer.length() - 1);
 
          // if buffer starts with '(', remove it, 
          // we do not want this thing to bother us
