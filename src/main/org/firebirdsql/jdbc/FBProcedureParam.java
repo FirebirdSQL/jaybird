@@ -32,6 +32,7 @@ public class FBProcedureParam {
     private int position;
     private int type;
     private int index = -1;
+    private boolean valueSet;
     
     public FBProcedureParam() {
     }
@@ -73,6 +74,11 @@ public class FBProcedureParam {
                     FBSQLException.SQL_STATE_INVALID_PARAM_TYPE);
         
         this.value = value;
+        this.valueSet = true;
+    }
+    
+    public boolean isValueSet() {
+        return valueSet;
     }
     
     public int getType() {

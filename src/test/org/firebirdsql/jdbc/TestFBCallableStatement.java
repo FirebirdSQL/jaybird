@@ -125,7 +125,11 @@ public class TestFBCallableStatement extends FBTestBase {
          ;
      
      public static final String EXECUTE_SIMPLE_OUT_PROCEDURE = ""
-         + "{call test_out ?, ? }";
+         + "{call test_out ?, ? }"
+         ;
+         
+     public static final String EXECUTE_IN_OUT_PROCEDURE = ""
+         + "{call test_out ?}"
          ;
 
     private Connection connection;
@@ -266,7 +270,8 @@ public class TestFBCallableStatement extends FBTestBase {
 
           cstmt.setInt(1, 22);			 
           cstmt.execute();
-			 assertTrue("First row value must be OTHER", cstmt.getString(1).equals("OTHER"));
+			 assertTrue("First row value must be OTHER, is " + 
+                     cstmt.getString(1), cstmt.getString(1).equals("OTHER"));
 			 
         } finally {
           cstmt.close();
@@ -325,4 +330,19 @@ public class TestFBCallableStatement extends FBTestBase {
         }
         
     }
+
+    public void testInOutProcedure() throws Exception {
+        CallableStatement stmt = 
+            connection.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
+        try {
+            stmt.setInt(1, 1);
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.execute();
+            assertTrue("Should return correct value", stmt.getInt(1) == 1);
+        } finally {
+            stmt.close();
+        }
+        
+    }
+    
 }

@@ -182,7 +182,7 @@ public class FBEscapedCallParser {
      * 
      * @return native form of the <code>sql</code>.
      */
-    public FBProcedureCall parseCall(String sql) throws FBSQLParseException {
+    public FBProcedureCall parseCall(String sql) throws FBSQLException {
         
     	sql = cleanUpCall(sql);
         
@@ -406,7 +406,7 @@ public class FBEscapedCallParser {
      * 
      * @throws FBSQLParseException if parameter cannot be correctly parsed.
      */
-    protected String processParam(String param) throws FBSQLParseException {
+    protected String processParam(String param) throws FBSQLException {
         return escapedParser.parse(param);
     }
 }
