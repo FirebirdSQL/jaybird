@@ -1,3 +1,83 @@
+2003-10-18 15:05  ryanbaldwin
+
+	* client-java/src/main/org/firebirdsql/ngds/:
+	ServiceParameterBufferImp.java, ServiceBufferBase.java:
+	
+	Moved some common code to base class.
+
+2003-10-18 14:15  ryanbaldwin
+
+	* client-java/src/test/org/firebirdsql/ngds/TestServicesAPI.java:
+	
+	Actually add the test class.
+
+2003-10-18 14:09  ryanbaldwin
+
+	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	
+	Corrected possible multithreading issue.
+
+2003-10-18 13:46  ryanbaldwin
+
+	* client-java/src/: main/org/firebirdsql/gds/GDS.java,
+	main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/gds/ServiceParameterBuffer.java,
+	main/org/firebirdsql/gds/ServiceRequestBuffer.java,
+	main/org/firebirdsql/gds/isc_svc_handle.java,
+	main/org/firebirdsql/jgds/GDS_Impl.java,
+	main/org/firebirdsql/ngds/GDS_Impl.java,
+	main/org/firebirdsql/ngds/InternalError.java,
+	main/org/firebirdsql/ngds/ServiceBufferBase.java,
+	main/org/firebirdsql/ngds/ServiceParameterBufferImp.java,
+	main/org/firebirdsql/ngds/ServiceRequestBufferImp.java,
+	main/org/firebirdsql/ngds/isc_svc_handle_impl.java,
+	native/jaygds/source/entrypoints.cpp,
+	native/jaygds/source/entrypoints_generated.h,
+	native/jaygds/source/fb_binding.cpp,
+	native/jaygds/source/fb_binding.h,
+	native/jaygds/source/fb_helpers.cpp,
+	native/jaygds/source/fb_helpers.h,
+	native/jaygds/source/handle_wrappers.cpp,
+	native/jaygds/source/handle_wrappers.h,
+	native/jaygds/source/win32/platform.cpp,
+	native/jaygds/source/win32/platform.h:
+	
+	Initial low level access to firebird services API to help make
+	embedded server usage more practicle - although equally as usable
+	in client/server mode.
+	
+	Consists of:   GDS level interface too services API added in GDS
+	pacakage.    Implementation in jgds pacakage all throw
+	UnsupportedOperationException.	  Implementation in ngds is
+	complete.    Initial tests added in
+	org.firebirdsql.ngds.TestServicesAPI.
+
+2003-10-18 09:21  rrokytskyy
+
+	* client-java/:
+	src/main/org/firebirdsql/jdbc/FBConnectionHelper.java,
+	src/main/org/firebirdsql/jdbc/FBParameterMetaData.java,
+	src/main/org/firebirdsql/management/FBManager.java,
+	src/test/org/firebirdsql/common/SimpleFBTestBase.java,
+	src/test/org/firebirdsql/jca/TestXABase.java,
+	examples/DriverExample.java,
+	src/test/org/firebirdsql/jdbc/TestBoundary.java,
+	src/test/org/firebirdsql/jdbc/TestDDL.java,
+	src/test/org/firebirdsql/jdbc/TestFBBlobAccess.java,
+	src/test/org/firebirdsql/jdbc/TestFBBlobAutocommit.java,
+	src/test/org/firebirdsql/jdbc/TestFBBlobParams.java,
+	src/test/org/firebirdsql/jdbc/TestFBBlobStream.java,
+	src/test/org/firebirdsql/jdbc/TestFBCallableStatement.java,
+	src/test/org/firebirdsql/jdbc/TestFBDecimalConversions.java,
+	src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java,
+	src/test/org/firebirdsql/jdbc/TestFBResultSet.java,
+	src/test/org/firebirdsql/jdbc/TestFBUnmanagedConnection.java,
+	src/test/org/firebirdsql/jdbc/TestReconnect.java,
+	src/test/org/firebirdsql/ngds/TestNgds.java,
+	src/test/org/firebirdsql/ngds/TestNgdsBlobReadBug.java:
+	
+	removed unused imports
+
 2003-10-16 12:04  ryanbaldwin
 
 	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
