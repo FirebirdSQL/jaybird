@@ -79,6 +79,7 @@
     <property name="build.j2ee" value="${module.output}/j2ee"/>
     <property name="build.concurrent" value="${module.output}/concurrent"/>
     <property name="build.classes" value="${module.output}/classes"/>
+    <property name="build.pool" value="${module.output}/pool"/>
     <property name="build.test" value="${module.output}/test"/>
     <property name="build.lib" value="${module.output}/lib"/>
     <property name="build.api" value="${module.output}/api"/>
@@ -145,12 +146,14 @@
     <path id="javac.test.classpath">
       <path refid="javac.driver.classpath"/>
       <pathelement location="${build.classes}"/>
+      <pathelement location="${build.pool}"/>
       <pathelement location="${lib.dir}/junit.jar"/>
     </path>
     
     <path id="javac.examples.classpath">
       <path refid="javac.driver.classpath"/>
       <pathelement location="${build.classes}"/>
+      <pathelement location="${build.pool}"/>
     </path>
 
     <!--
@@ -293,8 +296,9 @@
   </target>
 
   <target name="compile-pool" depends="compile-driver">
+    <mkdir dir="${build.pool}"/>
     <javac srcdir="${source.pool}"
-           destdir="${build.classes}"
+           destdir="${build.pool}"
            target="1.2"
            debug="on"
            deprecation="on"
@@ -414,9 +418,18 @@
          <include name="*.properties"/>
        </fileset>
     </jar>
+    
+    <jar jarfile="${build.lib}/firebirdsql-pool.jar" manifest="${build.etc}/default.mf">
+       <fileset dir="${build.pool}">
+         <include name="org/firebirdsql/**"/>
+       </fileset>
+    </jar>
 
     <jar jarfile="${build.lib}/firebirdsql-full.jar">
        <fileset dir="${build.classes}">
+         <include name="org/firebirdsql/**"/>
+       </fileset>
+       <fileset dir="${build.pool}">
          <include name="org/firebirdsql/**"/>
        </fileset>
        <fileset dir="${build.resources}">
