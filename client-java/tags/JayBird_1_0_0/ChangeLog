@@ -1,0 +1,1572 @@
+2003-03-25  d_jencks
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+		Update to use jca 1.5 interface.  NOTE: EVERYONE WILL HAVE TO
+		RUN THE total-clean TARGET TO GET THE NEW JCA1.5 CLASSES
+
+2003-03-09  ryanbaldwin
+	* src/native/jaygds/builds/msvc6/java_gds.dsp:
+	* src/native/jaygds/builds/msvc6/java_gds.dsw:
+	* src/native/jaygds/source/StdAfx.h:
+	* src/native/jaygds/source/allocator.cpp:
+	* src/native/jaygds/source/allocator.h:
+	* src/native/jaygds/source/entrypoints.cpp:
+	* src/native/jaygds/source/entrypoints_generated.h:
+	* src/native/jaygds/source/exceptions.cpp:
+	* src/native/jaygds/source/exceptions.h:
+	* src/native/jaygds/source/external/ib_util.h:
+	* src/native/jaygds/source/external/ibase.h:
+	* src/native/jaygds/source/external/iberror.h:
+	* src/native/jaygds/source/external/ibinstall.h:
+	* src/native/jaygds/source/external/jawt_md.h:
+	* src/native/jaygds/source/external/jni.h:
+	* src/native/jaygds/source/external/jni_md.h:
+	* src/native/jaygds/source/external/win32/jawt_md.h:
+	* src/native/jaygds/source/external/win32/jni_md.h:
+	* src/native/jaygds/source/fb_binding.cpp:
+	* src/native/jaygds/source/fb_binding.h:
+	* src/native/jaygds/source/fb_helpers.cpp:
+	* src/native/jaygds/source/fb_helpers.h:
+	* src/native/jaygds/source/handle_wrappers.cpp:
+	* src/native/jaygds/source/handle_wrappers.h:
+	* src/native/jaygds/source/jni_helpers.cpp:
+	* src/native/jaygds/source/jni_helpers.h:
+	* src/native/jaygds/source/xsqlda_wrapper.cpp:
+	* src/native/jaygds/source/xsqlda_wrapper.h:
+		Added native code for type 2 driver modifications.
+
+	* src/native/jaygds/source/entrypoints.cpp:
+		Fixed a leak of jclasshandle global references that would occur
+		when c++ exceptions were thrown. Sorry.
+
+2003-03-09  rrokytskyy
+	* src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.java:
+		fixed test case failure
+
+	* build.xml:
+		fixed log4j.properties and added new jar creation with all
+		needed classes
+
+	* src/main/org/firebirdsql/jgds/ClumpletImpl.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/StringClumplet.java:
+		rewrite of Clumplet.remove(int)
+
+	* src/main/org/firebirdsql/gds/ISCConstants.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+		added possibility to specify socket buffer size
+
+	* src/main/org/firebirdsql/gds/Clumplet.java:
+	* src/main/org/firebirdsql/jgds/ClumpletImpl.java:
+		added remove(int) method
+
+	* src/main/org/firebirdsql/gds/GDSExceptionHelper.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBDataSourceObjectFactory.java:
+	* src/main/org/firebirdsql/jdbc/FBSimpleDataSource.java:
+	* src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.java:
+		removed some deprecations
+
+	* src/main/org/firebirdsql/jgds/ClumpletImpl.java:
+	* src/main/org/firebirdsql/jgds/StringClumplet.java:
+		fixed NPE
+
+2003-03-05  rrokytskyy
+	* src/main/org/firebirdsql/jgds/XdrOutputStream.java:
+		fixed "operation was cancelled" and bug #696521
+
+	* src/main/org/firebirdsql/jdbc/FBLongVarCharField.java:
+		fixed NPE if null is passed into setXXX method
+
+2003-03-04  rrokytskyy
+	* src/test/org/firebirdsql/jdbc/TestBoundary.java:
+		initial revision
+
+2003-02-28  rfincher
+	* src/etc/faq.PDF:
+		FAQ in Adobe Acrobat pdf format
+
+	* src/etc/FAQ.txt:
+	* src/etc/faq.html:
+		*** empty log message ***
+
+2003-02-26  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBLongVarCharField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBBlobAccess.java:
+		bug with creating blobs without transaction fixed
+
+2003-02-22  skidder
+	* src/main/org/firebirdsql/gds/GDS.java:
+	* src/main/org/firebirdsql/gds/ISCConstants.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+		Fix isc_database_info bugs, give public access to this method
+		and add support for one more new Firebird 1.5 info token
+
+2003-02-05  rfincher
+	* src/etc/faq.html:
+	* src/etc/release_notes.html:
+		*** empty log message ***
+
+	* src/etc/FAQ.txt:
+		rc3 faq.txt
+
+2003-02-05  d_jencks
+	* build.xml:
+		Added text FAQ, updated build id
+
+2003-02-02  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBBlob.java:
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedLongVarCharField.java:
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBLongVarCharField.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBSQLException.java:
+		added field closing in ResultSet.next() and ResultSet.close()
+
+2003-02-01  brodsom
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/XdrInputStream.java:
+		Patch bug when SQL_TEXT length is 0
+		Add connect method
+
+	* src/main/org/firebirdsql/gds/ISCConstants.java:
+		Add new engine dpb value
+
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jdbc/FBDriver.java:
+		Remove unused import
+
+2003-02-01  rrokytskyy
+	* src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
+	* src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+		fixed some issues
+
+2003-01-29  d_jencks
+	* src/main/org/firebirdsql/management/FBManager.java:
+		Made create not overwrite existing db
+
+	* src/main/org/firebirdsql/management/FBManager.java:
+	* src/main/org/firebirdsql/management/FBManagerMBean.java:
+		One more try.. added forceCreate attribute to overwrite an old
+		db if desired
+
+	* src/main/org/firebirdsql/management/FBManager.java:
+		oops, keep my versions straight.  Also import everything explicitly
+
+2003-01-28  brodsom
+	* src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
+		Read/Write test for all the 1 byte supported charsets
+
+2003-01-27  rrokytskyy
+	* src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+		added test case to reproduce bug in result set fetching
+
+2003-01-26  brodsom
+	* src/main/org/firebirdsql/encodings/EncodingFactory.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp1255.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp1256.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp1257.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp737.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp775.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp858.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp862.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp864.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp866.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp869.java:
+	* src/main/org/firebirdsql/encodings/Encoding_ISO8859_13.java:
+	* src/main/org/firebirdsql/encodings/Encoding_ISO8859_3.java:
+	* src/main/org/firebirdsql/encodings/Encoding_ISO8859_4.java:
+	* src/main/org/firebirdsql/encodings/Encoding_ISO8859_5.java:
+	* src/main/org/firebirdsql/encodings/Encoding_ISO8859_6.java:
+	* src/main/org/firebirdsql/encodings/Encoding_ISO8859_7.java:
+	* src/main/org/firebirdsql/encodings/Encoding_ISO8859_8.java:
+	* src/main/org/firebirdsql/encodings/Encoding_ISO8859_9.java:
+	* src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	* src/resources/isc_encoding_size.properties:
+	* src/resources/isc_encodings.properties:
+		New character sets support
+
+2003-01-23  brodsom
+	* src/main/org/firebirdsql/encodings/Encoding.java:
+	* src/main/org/firebirdsql/encodings/EncodingFactory.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp1250.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp1251.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp1252.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp1253.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp1254.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp437.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp850.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp852.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp857.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp860.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp861.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp863.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp865.java:
+	* src/main/org/firebirdsql/encodings/Encoding_ISO8859_1.java:
+	* src/main/org/firebirdsql/encodings/Encoding_ISO8859_2.java:
+	* src/main/org/firebirdsql/encodings/Encoding_NotOneByte.java:
+	* src/main/org/firebirdsql/encodings/Encoding_OneByte.java:
+	* src/main/org/firebirdsql/gds/XSQLVAR.java:
+		Encodings patch
+
+2003-01-22  brodsom
+	* src/main/org/firebirdsql/encodings/Encoding.java:
+	* src/main/org/firebirdsql/encodings/EncodingFactory.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp1250.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp1251.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp1252.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp1253.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp1254.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp437.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp850.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp852.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp857.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp860.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp861.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp863.java:
+	* src/main/org/firebirdsql/encodings/Encoding_Cp865.java:
+	* src/main/org/firebirdsql/encodings/Encoding_ISO8859_1.java:
+	* src/main/org/firebirdsql/encodings/Encoding_ISO8859_2.java:
+	* src/main/org/firebirdsql/encodings/Encoding_NotOneByte.java:
+	* src/main/org/firebirdsql/encodings/Encoding_OneByte.java:
+		New character encoding classes
+
+	* src/main/org/firebirdsql/gds/XSQLVAR.java:
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBLongVarCharField.java:
+	* src/main/org/firebirdsql/jdbc/FBStringField.java:
+		Changes to use new character encoding classes
+		Patch when using BINARY character connection
+
+2003-01-20  brodsom
+	* src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
+		Add test for teh bug in the engine in cyrl charset
+
+2003-01-14  brodsom
+	* src/main/org/firebirdsql/jdbc/FBCallableStatement.java:
+		Patch for a bug when running execute several times
+
+	* src/test/org/firebirdsql/jdbc/TestFBCallableStatement.java:
+		Some more tests
+
+2003-01-13  brodsom
+	* src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+		Patch for problem with UNION's when retreiving column
+		information when there are too much columns
+
+2003-01-07  rrokytskyy
+	* src/test/org/firebirdsql/jdbc/TestDDL.java:
+		initial revision
+
+2002-12-24  skidder
+	* src/main/org/firebirdsql/jdbc/FBStatementFetcher.java:
+		Fix handling of statements with "for update" clause
+
+2002-12-20  brodsom
+	* src/test/org/firebirdsql/jdbc/BaseFBTest.java:
+		added read of test.db.lc_ctype parameter
+
+	* build.xml:
+		Solved bug when running against server!=localhost
+
+2002-12-18  rrokytskyy
+	* src/test/org/firebirdsql/jdbc/TestFBCallableStatement.java:
+		added test that detects incorrect fatal exception handling
+
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+		fixed executing procedures via normal and prepared statements
+
+2002-12-17  rrokytskyy
+	* src/test/org/firebirdsql/jdbc/TestFBResultSetMetaData.java:
+		fixed test case for system table
+
+	* src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+		added array with character set sizes
+
+	* src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+		fixed bug with display size for system tables
+
+2002-12-17  brodsom
+	* src/test/org/firebirdsql/jdbc/TestFBResultSetMetaData.java:
+		Test case for RDB$DATABASE
+
+	* src/etc/JDBC20_conformance.html:
+		Add beta1 statistics
+
+2002-12-17  d_jencks
+	* src/test/org/firebirdsql/jca/TestPoolingConnectionManager.java:
+		Increased timeouts for blocking tests to ridiculous lengths to
+		match the somewhat random results on my system.  This needs
+		more investigation with good tools
+
+	* build.xml:
+		tidying up for release
+
+	* src/main/org/firebirdsql/gds/GDSException.java:
+	* src/main/org/firebirdsql/jca/FBLocalTransaction.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBSQLException.java:
+		Layered exception handling to reduce nesting and make local tx
+		operations produce more informative messages
+
+2002-12-17  rfincher
+	* src/etc/faq.html:
+	* src/etc/release_notes.html:
+		*** empty log message ***
+
+2002-12-16  brodsom
+	* src/etc/JDBC20_conformance.html:
+		Correction
+
+	* src/etc/JDBC20_conformance.html:
+		Added remote test
+
+	* src/etc/JDBC20_conformance.html:
+		More corrections
+
+2002-12-16  rfincher
+	* src/etc/release_notes.html:
+		Revamped release notes with most info moved to FAQ.
+
+	* src/etc/faq.html:
+		*** empty log message ***
+
+2002-12-16  rrokytskyy
+	* src/test/org/firebirdsql/jdbc/TestFBCallableStatement.java:
+		some changes to test case to check selectable procedures
+
+2002-12-15  d_jencks
+	* src/main/org/firebirdsql/gds/ISCConstants.java:
+		Remove isc_obj_in_use from list of fatal errors per comments by
+		Ann and Nikolay.  The TestReconnect still passes.
+
+2002-12-14  d_jencks
+	* src/main/org/firebirdsql/gds/ISCConstants.java:
+		Edited list of fatal errors from explanations by Ann Harrison
+
+2002-12-13  d_jencks
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jca/FBStandAloneConnectionManager.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/XdrOutputStream.java:
+		Made logging quieter, and removed all string construction when
+		logging is disabled
+
+	* build.xml:
+	* src/etc/default.mf:
+		Added manifest info such as version, vm, firebirdsql url
+
+2002-12-13  brodsom
+	* src/etc/JDBC20_conformance.html:
+		Update to jdbc document
+
+	* src/etc/JDBC20_conformance.html:
+		Corrections by Rick Fincher
+
+	* src/etc/JDBC20_conformance.html:
+		Array class not implemented
+
+	* src/etc/JDBC20_conformance.html:
+		corrections
+
+2002-12-12  d_jencks
+	* src/main/org/firebirdsql/gds/GDSException.java:
+	* src/main/org/firebirdsql/gds/ISCConstants.java:
+	* src/main/org/firebirdsql/gds/isc_db_handle.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jca/FBStandAloneConnectionManager.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBRowSetMetaData.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/isc_db_handle_impl.java:
+	* src/test/org/firebirdsql/jdbc/TestReconnect.java:
+		Added fatal error checking, so ConnectionErrorOccurred
+		notifications are sent when a connection becomes unusable. 
+		Improved the ability  to destroy a dead or dying connection. 
+		Throw more correct XAExceptions.  Fixed npe in
+		ResultSetMetaData.
+
+	* src/main/org/firebirdsql/gds/ISCConstants.java:
+		First 3 corrections from Ann
+
+2002-12-12  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedFetcher.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedLongVarCharField.java:
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBFlushableField.java:
+	* src/main/org/firebirdsql/jdbc/FBLongVarCharField.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBStringField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
+	* src/test/org/firebirdsql/jdbc/TestFBLongVarCharEncodings.java:
+		added correct LONGVARCHAR support
+
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+		fixed exception handling
+
+	* src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+		fixed npe if connection is null
+
+	* src/test/org/firebirdsql/jdbc/TestFBDriver.java:
+		removed unnecessary stack trace printing
+
+	* src/test/org/firebirdsql/jdbc/TestFBBlobAccess.java:
+		added testSetNull() test
+
+2002-12-12  brodsom
+	* src/main/org/firebirdsql/jdbc/FBCallableStatement.java:
+		remove getTime(int .. and put jdbc 3 comment in some methods
+
+	* src/main/org/firebirdsql/gds/isc_db_handle.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/isc_db_handle_impl.java:
+		remove sql_database parameter isc_info_firebird_version because
+		it is not available in FB 0.9
+
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+		Workaround for JBuilder DataSets
+
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+		patch to the last commit
+
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jca/FBStandAloneConnectionManager.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+		add (log!=null) to the last changes
+
+2002-12-06  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+		removed automatic tx start after commit, fixed connection invalidation,
+		fixed setTransactionIsolation implementation
+
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+		f
+
+	* src/main/org/firebirdsql/jca/FBTpb.java:
+	* src/main/org/firebirdsql/jca/FBTpbMapper.java:
+		fixed bug with TRANSACTION_READ_UNCOMMITTED
+
+2002-12-05  brodsom
+	* src/test/org/firebirdsql/jdbc/TestFBBlobAutocommit.java:
+		getObject on blob subtype 1 should return String
+
+2002-12-03  brodsom
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+		getObject() must return String for blob type 1
+
+2002-12-01  brodsom
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+		Throw exceptions when ResultSet not in row or closed
+
+2002-11-29  brodsom
+	* src/main/org/firebirdsql/jgds/XdrOutputStream.java:
+		The buffer can't be static.
+
+	* src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+		check null
+
+	* src/etc/JDBC20_conformance.html:
+		Update document
+
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+		Each managed connection must use an instance of FBTpb
+
+2002-11-26  skidder
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+		Added TCP_NODELAY option to compensate performance degradation
+		caused by new socket IO pattern
+
+	* src/main/org/firebirdsql/gds/XSQLVAR.java:
+		Fixed bug while reading DATE field as Timestamp
+
+2002-11-26  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+		fixed bug with delete rules, thanks to Stephan Perktold
+
+2002-11-25  rrokytskyy
+	* src/main/org/firebirdsql/jca/FBTpb.java:
+	* src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	* src/main/org/firebirdsql/jdbc/FBDriver.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+		fixed incorrect line feeds
+
+	* src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
+		added explicit transliteration exception test
+
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+		fixed incorrect line feeds and made statements available to package
+
+	* src/main/org/firebirdsql/jdbc/FBDriver.java:
+		fixed nullpointer exception
+
+	* src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	* src/main/org/firebirdsql/jdbc/FBDriver.java:
+		improved TPB mapping code
+
+2002-11-24  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBCachedFetcher.java:
+		fixed bug with blobs
+
+	* src/test/org/firebirdsql/jdbc/TestFBBlobAccess.java:
+		initial revision
+
+	* build.xml:
+		added copying resources into ${build.test} directory to "
+		compile-tests" target
+
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jca/FBTpb.java:
+	* src/main/org/firebirdsql/jca/FBTpbMapper.java:
+	* src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBDriver.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBRowSetMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBSimpleDataSource.java:
+	* src/main/org/firebirdsql/jdbc/FBWrappingDataSource.java:
+	* src/resources/isc_encoding_size.properties:
+	* src/resources/isc_tpb_mapping.properties:
+	* src/test/org/firebirdsql/jca/TestFBTpbMapper.java:
+	* src/test/org/firebirdsql/jca/test_tpb_mapping.properties:
+	* src/test/org/firebirdsql/jdbc/TestFBResultSetMetaData.java:
+	* src/test/org/firebirdsql/jgds/TestGds.java:
+		added TPB mapping and fixed ResultSetMetaData
+
+2002-11-23  brodsom
+	* src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+		Remove default character set until more discussion about.
+
+2002-11-22  brodsom
+	* src/test/org/firebirdsql/jca/TestFBBlob.java:
+	* src/test/org/firebirdsql/jca/TestFBConnection.java:
+	* src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+	* src/test/org/firebirdsql/jca/TestFBManagedConnectionFactory.java:
+	* src/test/org/firebirdsql/jca/TestFBResultSet.java:
+	* src/test/org/firebirdsql/jca/TestFBStandAloneConnectionManager.java:
+	* src/test/org/firebirdsql/jca/TestFBXAResource.java:
+	* src/test/org/firebirdsql/jca/TestXABase.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDateField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDoubleField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBFloatField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBIntegerField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBLongField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBShortField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBStringField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBTimeField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBTimestampField.java:
+	* src/test/org/firebirdsql/jgds/TestGds.java:
+		Remove unneeded imports, and switch to ISCConstants
+
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/isc_db_handle_impl.java:
+		1.- Put protocol into isc_db_handle
+		2.- Remove GDS_Impl.readReceiveResponse
+		3.- Clean GDS_Impl. ...... database_info
+
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBStringField.java:
+		Move conversions to XSQLVAR
+
+	* src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	* src/main/org/firebirdsql/jdbc/FBDriver.java:
+		Important performance patch
+
+	* src/main/org/firebirdsql/gds/ISCConstants.java:
+		ISC Constants new class
+
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+		Remove unneeded import
+
+	* src/main/org/firebirdsql/gds/GDS.java:
+	* src/main/org/firebirdsql/gds/GDSException.java:
+	* src/main/org/firebirdsql/gds/XSQLDA.java:
+	* src/main/org/firebirdsql/gds/isc_blob_handle.java:
+	* src/main/org/firebirdsql/jca/FBConnectionRequestInfo.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jca/FBTpb.java:
+	* src/main/org/firebirdsql/jdbc/FBBigDecimalField.java:
+	* src/main/org/firebirdsql/jdbc/FBBlob.java:
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedFetcher.java:
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBDriver.java:
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBStringField.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/XdrInputStream.java:
+	* src/main/org/firebirdsql/jgds/XdrOutputStream.java:
+	* src/main/org/firebirdsql/jgds/isc_blob_handle_impl.java:
+	* src/main/org/firebirdsql/jgds/isc_db_handle_impl.java:
+	* src/main/org/firebirdsql/jgds/isc_stmt_handle_impl.java:
+	* src/main/org/firebirdsql/management/FBManager.java:
+		1.- Make most variables private in stmt_handle, blob_handle, db_handle and others
+		2.- Move constants from GDS to ISCConstants (class,1100 lines)
+
+2002-11-21  brodsom
+	* src/main/org/firebirdsql/gds/XSQLVAR.java:
+	* src/main/org/firebirdsql/jdbc/FBDateField.java:
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBStringField.java:
+	* src/main/org/firebirdsql/jdbc/FBTimeField.java:
+	* src/main/org/firebirdsql/jdbc/FBTimestampField.java:
+		1.- Patch timestamp bug
+		2.- Move some logic from FBPreparedStatement and FBField to FB...Field and XSQLVAR.
+
+	* src/test/org/firebirdsql/jca/TestPoolingConnectionManager.java:
+	* src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.java:
+	* src/test/org/firebirdsql/jgds/TestGds.java:
+		1.- Make stmt_handle vars private.
+		2.- Increase sleep time in TestPoolingConnectionManager and FBWrappingDataSource
+
+	* src/main/org/firebirdsql/gds/GDS.java:
+	* src/main/org/firebirdsql/gds/isc_db_handle.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedFetcher.java:
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBStatementFetcher.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/XdrInputStream.java:
+	* src/main/org/firebirdsql/jgds/isc_db_handle_impl.java:
+	* src/main/org/firebirdsql/jgds/isc_stmt_handle_impl.java:
+		1.- implemented isc_database_info, data and methods added to isc_db_handle/impl
+		2.- implemented DatabaseMetaData.getDatabaseProductName and getDatabaseProductVersion
+		3.- Make stmt_handle vars private.
+
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/isc_db_handle_impl.java:
+		1.- Remove db.op
+		2.- Make some data static
+		3.- add isc_arg_gds in ReadStatusVector (performance)
+
+2002-11-20  d_jencks
+	* src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+		fix test from changed typeinfo count
+
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+		fix some npes from null values
+
+	* src/test/org/firebirdsql/jdbc/TestFBDriver.java:
+		Demonstrate problem with timestamps
+
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+		remove BIGINT mapping
+
+2002-11-19  brodsom
+	* src/main/org/firebirdsql/gds/GDS.java:
+	* src/main/org/firebirdsql/gds/XSQLDA.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jca/FBTpb.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedFetcher.java:
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBFetcher.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBStatementFetcher.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/XdrInputStream.java:
+	* src/main/org/firebirdsql/jgds/XdrOutputStream.java:
+	* src/main/org/firebirdsql/jgds/isc_stmt_handle_impl.java:
+	* src/main/org/firebirdsql/management/FBManager.java:
+	* src/main/org/firebirdsql/management/FBManagerMBean.java:
+	* src/test/org/firebirdsql/jgds/TestGds.java:
+		Performance patches
+		1.- Reuse BLR
+		2.- Use TPB as byte[]
+		3.- change intermediate storage of input data from java list to object[]
+		4.- Changes in OutputStream and InputStream and move writeSQLData and readSQLData
+		fetchSize patch, now the setFetchSize methods works.
+
+2002-11-19  d_jencks
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+		Make transactions in managed environment work again.
+
+	* src/test/org/firebirdsql/jdbc/TestFBDriver.java:
+		verify that DECIMAL(18,0) stores all Long values.
+
+2002-11-16  brodsom
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBStringField.java:
+		performance change
+
+2002-11-15  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDriver.java:
+		fixed bug with committing transaction when connection is closed
+
+2002-11-13  brodsom
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBStringField.java:
+		load encoding in FBField and avoid arguments.
+
+	* src/main/org/firebirdsql/gds/XSQLVAR.java:
+		solution to times/dates problems with milliseconds and jdk 1.3
+		/1.4
+
+2002-11-10  rrokytskyy
+	* src/main/org/firebirdsql/jgds/Xdrable.java:
+		made interface public to reuse in other packages
+
+2002-11-04  rrokytskyy
+	* src/main/org/firebirdsql/gds/XSQLVAR.java:
+		fixed bug with timestamp encoding/decoding
+
+2002-11-04  brodsom
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+		Solve protected logger bug and remove SqlInfo reference
+
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+		Remove sqlInfo reference
+
+	* src/main/org/firebirdsql/gds/SqlInfo.java:
+	* src/test/org/firebirdsql/jca/TestFBManagedConnectionFactory.java:
+		remove SqlInfo
+
+	* src/main/org/firebirdsql/jgds/StringClumplet.java:
+	* src/main/org/firebirdsql/jgds/XdrInputStream.java:
+	* src/main/org/firebirdsql/jgds/XdrOutputStream.java:
+	* src/main/org/firebirdsql/jgds/isc_blob_handle_impl.java:
+	* src/main/org/firebirdsql/jgds/isc_db_handle_impl.java:
+	* src/main/org/firebirdsql/jgds/isc_stmt_handle_impl.java:
+	* src/main/org/firebirdsql/jgds/isc_tr_handle_impl.java:
+		add final to final jgds classes
+
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+		remove sqlinfo
+
+	* src/main/org/firebirdsql/gds/XSQLVAR.java:
+		Trying to solve the timestamp problem
+
+2002-11-03  d_jencks
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/test/org/firebirdsql/jdbc/BaseTestFBField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBTimestampField.java:
+		fixed null timestamp handling and added some info to tests. 
+		The timestamp tests fail due to fractional seconds trunctation.
+
+2002-11-02  brodsom
+	* src/main/org/firebirdsql/gds/GDS.java:
+	* src/main/org/firebirdsql/gds/XSQLVAR.java:
+	* src/main/org/firebirdsql/gds/isc_stmt_handle.java:
+	* src/main/org/firebirdsql/gds/isc_tr_handle.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedFetcher.java:
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBStatementFetcher.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/isc_db_handle_impl.java:
+	* src/main/org/firebirdsql/jgds/isc_stmt_handle_impl.java:
+	* src/main/org/firebirdsql/jgds/isc_tr_handle_impl.java:
+	* src/test/org/firebirdsql/jca/TestFBBlob.java:
+	* src/test/org/firebirdsql/jca/TestFBConnection.java:
+	* src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+	* src/test/org/firebirdsql/jca/TestFBManagedConnectionFactory.java:
+	* src/test/org/firebirdsql/jca/TestFBResultSet.java:
+	* src/test/org/firebirdsql/jca/TestFBStandAloneConnectionManager.java:
+	* src/test/org/firebirdsql/jca/TestFBXAResource.java:
+	* src/test/org/firebirdsql/jgds/TestGds.java:
+		Remove object creation SqlInfo, Response, trStatementMap, etc. 
+		Use stmt.rows from fetchers and change fetch to void.
+
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jca/IdleRemover.java:
+	* src/main/org/firebirdsql/jca/ManagedConnectionPool.java:
+	* src/main/org/firebirdsql/jdbc/FBBlob.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedFetcher.java:
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBStatementFetcher.java:
+	* src/main/org/firebirdsql/jgds/XdrOutputStream.java:
+	* src/main/org/firebirdsql/management/FBManager.java:
+		make log static
+
+2002-11-01  d_jencks
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+		Reordered to spec and added BIGINT (NUMERIC(18,0)) type for
+		help with Long mapping
+
+	* src/main/org/firebirdsql/jdbc/FBBigDecimalField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDecimalConversions.java:
+		fixed overeager cutnpaste problems with BigDecimal field, with
+		a test
+
+	* build.xml:
+		removed cruft
+
+2002-11-01  brodsom
+	* src/main/org/firebirdsql/jdbc/FBTimestampField.java:
+		solve bug in FBFieldTimestamp getObject and getString
+
+2002-10-31  d_jencks
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+		implemented getSQLKeywords
+
+2002-10-31  rrokytskyy
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+		f
+
+2002-10-30  rrokytskyy
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/isc_db_handle_impl.java:
+		fixed bug with not closing sockets to the database on isc_detach_database
+		thanks a lot to Lars George
+
+	* src/main/org/firebirdsql/gds/XSQLVAR.java:
+		fixed bug with ignoring fractional seconds in timestamp
+
+	* examples/DataSourceExample.java:
+		Fixed bug that causes hanging of ClassicServer on connect
+
+	* src/test/org/firebirdsql/jgds/TestGds.java:
+		fixed bug in a test case with reusing db handles after isc_detach_database
+
+2002-10-28  brodsom
+	* src/main/org/firebirdsql/gds/GDS.java:
+	* src/main/org/firebirdsql/gds/XSQLVAR.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBBigDecimalField.java:
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedFetcher.java:
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBDateField.java:
+	* src/main/org/firebirdsql/jdbc/FBDoubleField.java:
+	* src/main/org/firebirdsql/jdbc/FBFloatField.java:
+	* src/main/org/firebirdsql/jdbc/FBIntegerField.java:
+	* src/main/org/firebirdsql/jdbc/FBLongField.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBShortField.java:
+	* src/main/org/firebirdsql/jdbc/FBStatementFetcher.java:
+	* src/main/org/firebirdsql/jdbc/FBStringField.java:
+	* src/main/org/firebirdsql/jdbc/FBTimeField.java:
+	* src/main/org/firebirdsql/jdbc/FBTimestampField.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/XdrInputStream.java:
+	* src/main/org/firebirdsql/jgds/isc_stmt_handle_impl.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDateField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDoubleField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBFloatField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBIntegerField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBLongField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBShortField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBStringField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBTimeField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBTimestampField.java:
+	* src/test/org/firebirdsql/jgds/TestGds.java:
+		Change FBResultSet row and XSQLVAR.sqldata from Object to byte
+		]. Correct Bug in FBCachedBlobField.
+
+	* src/main/org/firebirdsql/jdbc/FBBigDecimalField.java:
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedBlob.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBCachedFetcher.java:
+	* src/main/org/firebirdsql/jdbc/FBDateField.java:
+	* src/main/org/firebirdsql/jdbc/FBDoubleField.java:
+	* src/main/org/firebirdsql/jdbc/FBFetcher.java:
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBFloatField.java:
+	* src/main/org/firebirdsql/jdbc/FBIntegerField.java:
+	* src/main/org/firebirdsql/jdbc/FBLongField.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBShortField.java:
+	* src/main/org/firebirdsql/jdbc/FBStatementFetcher.java:
+	* src/main/org/firebirdsql/jdbc/FBStringField.java:
+	* src/main/org/firebirdsql/jdbc/FBTimeField.java:
+	* src/main/org/firebirdsql/jdbc/FBTimestampField.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/XdrOutputStream.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDateField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDoubleField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBFloatField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBIntegerField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBLongField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBShortField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBStringField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBTimeField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBTimestampField.java:
+		Remove instanceof on field data. Change field parameter Object
+		] to FBResultSet.
+
+2002-10-27  brodsom
+	* src/main/org/firebirdsql/gds/XSQLVAR.java:
+	* src/main/org/firebirdsql/jdbc/FBBigDecimalField.java:
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBDateField.java:
+	* src/main/org/firebirdsql/jdbc/FBDoubleField.java:
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBFloatField.java:
+	* src/main/org/firebirdsql/jdbc/FBIntegerField.java:
+	* src/main/org/firebirdsql/jdbc/FBLongField.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBShortField.java:
+	* src/main/org/firebirdsql/jdbc/FBStringField.java:
+	* src/main/org/firebirdsql/jdbc/FBTimeField.java:
+	* src/main/org/firebirdsql/jdbc/FBTimestampField.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/test/org/firebirdsql/jdbc/BaseTestFBField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDateField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDoubleField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBFloatField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBIntegerField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBLongField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBShortField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBStringField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBTimeField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBTimestampField.java:
+		Remove use of sqlind on output. Change input to field to Object
+		] to improve performance (and remove use of sqldata on input).
+
+2002-10-26  brodsom
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/test/org/firebirdsql/jgds/TestGds.java:
+		Remove use of sqlind for input inside the driver. Remove copy
+		of row to sqldata in GDS_Impl.fetch
+
+2002-10-26  rrokytskyy
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/isc_db_handle_impl.java:
+		f
+
+2002-10-25  rrokytskyy
+	* src/resources/isc_error_msg.properties:
+		fixed error message for code 335544344
+
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/isc_db_handle_impl.java:
+		removed statement handle tracking because server releases them
+		on isc_detach_database
+
+2002-10-25  brodsom
+	* src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+		findColumn change
+
+2002-10-24  brodsom
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBStringField.java:
+		performance patches (column name problem included) and move
+		some get/set methods from FBResultSet to FBField
+
+2002-10-23  brodsom
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+		Reuse FBField
+
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBStringField.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/XdrOutputStream.java:
+	* src/test/org/firebirdsql/jdbc/TestFBStringField.java:
+		Some performance related changes, to be continued.
+
+	* src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+		Implement dummy isReadOnly, isWritable, isDefinitivelyWritable.
+
+2002-10-22  rrokytskyy
+	* src/main/org/firebirdsql/jca/FBResourceException.java:
+		fixed references to JCA 1.5 methods
+
+2002-10-21  d_jencks
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+		Removed experiment with timestamp handling I accidentally
+		committed in version 1.4
+
+2002-10-20  d_jencks
+	* src/main/org/firebirdsql/gds/GDS.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+		Check tx state on all commit, rollback, etc. methods, and add
+		rollback retaining (which is not tested).  cf bugs #621751
+		621753.
+
+2002-10-18  rrokytskyy
+	* src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+		initial revision
+
+	* src/main/org/firebirdsql/gds/GDSException.java:
+	* src/main/org/firebirdsql/gds/isc_db_handle.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBSQLWarning.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/isc_db_handle_impl.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDriver.java:
+		fixed warnings handling
+
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+		fixed bug with incorrect handling of column names
+
+2002-10-18  d_jencks
+	* src/main/org/firebirdsql/jca/FBLocalTransaction.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+		rewrote notifications to cache commit notification events and
+		avoid unnecessary ArrayList copying
+
+	* src/main/org/firebirdsql/jgds/StringClumplet.java:
+		wrong header
+
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jca/FBTpb.java:
+	* src/main/org/firebirdsql/jdbc/FBDriver.java:
+		fixed some errors Claudio pointed out, thanks
+
+2002-10-17  d_jencks
+	* src/main/org/firebirdsql/gds/Clumplet.java:
+	* src/main/org/firebirdsql/jca/FBConnectionRequestInfo.java:
+	* src/main/org/firebirdsql/jgds/ClumpletImpl.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/StringClumplet.java:
+		Modified Clumplet framework to never create Strings.  Inspired
+		by Ken Richards slightly different implementation
+
+	* src/etc/release_notes.html:
+		Latest version of release notes from Rick Fincher
+
+2002-10-15  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+		f
+
+	* src/main/org/firebirdsql/jca/FBResourceException.java:
+		r
+
+2002-10-14  d_jencks
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+		Implemented a couple of Date methods taking a Calendar
+		parameter.  I don't know if this creates the intended meaning
+		of the calendar object.
+
+	* src/main/org/firebirdsql/management/FBCommandLine.java:
+		simple command line FBManaged client, to create and drop dbs.
+
+2002-10-07  rrokytskyy
+	* src/main/org/firebirdsql/gds/GDSException.java:
+	* src/main/org/firebirdsql/jca/FBLocalTransaction.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnectionMetaData.java:
+	* src/main/org/firebirdsql/jca/FBPoolingConnectionManager.java:
+	* src/main/org/firebirdsql/jca/FBResourceException.java:
+	* src/main/org/firebirdsql/jca/FBTpb.java:
+	* src/main/org/firebirdsql/jca/FBXid.java:
+	* src/main/org/firebirdsql/jca/ManagedConnectionPool.java:
+	* src/main/org/firebirdsql/jdbc/FBDataSource.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBSQLException.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+		improved exception handling
+
+2002-10-05  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+		a
+
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+		f
+
+2002-10-01  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+		implemented setEscapedProcessing(boolean) method
+
+	* src/test/org/firebirdsql/jdbc/TestFBBlobAutocommit.java:
+		added test to check empty and null blobls
+
+2002-09-30  rrokytskyy
+	* src/test/org/firebirdsql/jdbc/TestFBBlobAutocommit.java:
+		added test to check setBinaryStream(...) in autocommit case
+
+2002-09-28  d_jencks
+	* src/main/org/firebirdsql/gds/Clumplet.java:
+	* src/main/org/firebirdsql/jca/FBConnectionRequestInfo.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jca/FBStandAloneConnectionManager.java:
+	* src/main/org/firebirdsql/jca/FBTpb.java:
+	* src/main/org/firebirdsql/jdbc/FBBlob.java:
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	* src/main/org/firebirdsql/jdbc/FBDataSource.java:
+	* src/main/org/firebirdsql/jdbc/FBDriver.java:
+	* src/main/org/firebirdsql/jdbc/FBSimpleDataSource.java:
+	* src/main/org/firebirdsql/jgds/ClumpletImpl.java:
+	* src/test/org/firebirdsql/jca/TestDataSourceSerialization.java:
+	* src/test/org/firebirdsql/jca/TestFBXAResource.java:
+	* src/test/org/firebirdsql/jca/TestXABase.java:
+	* src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.java:
+		Fixed physical connection leak, made  datasource and
+		ManagedConnectionFactory serializable, and made
+		BlobBufferLength and Integer attribute to be spec-compliant.
+
+2002-09-28  rrokytskyy
+	* src/resources/META-INF/ra.xml:
+		Fixed bug with config-property-type being "int", not "java.lang
+		Integer"
+
+2002-09-27  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBBigDecimalField.java:
+		fixed conversion errors
+
+2002-09-25  d_jencks
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+		Fixed typo spotted by Claudio, thanks
+
+	* src/main/org/firebirdsql/jdbc/FBSimpleDataSource.java:
+	* src/main/org/firebirdsql/jdbc/FBWrappingDataSource.java:
+		added a little sychronization... we only need to create the
+		ManagedConnectionFactory once
+
+	* src/main/org/firebirdsql/jca/IdleRemover.java:
+	* src/main/org/firebirdsql/jca/PoolFiller.java:
+		Made IdleRemover and PoolFiller threads daemon so apps can exit
+		more easily
+
+2002-09-23  d_jencks
+	* build.xml:
+		updated version in build
+
+2002-09-18  rrokytskyy
+	* src/main/org/firebirdsql/gds/GDSException.java:
+	* src/main/org/firebirdsql/jdbc/FBSQLException.java:
+		f
+
+2002-09-14  rrokytskyy
+	* src/main/org/firebirdsql/jdbc/FBBlob.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+		added fixes by Uwe Jaeger: changed SQLException to FBSQLException
+
+2002-09-12  d_jencks
+	* src/etc/release_notes.html:
+		New release notes, thanks to Rick Fincher
+
+	* src/etc/release_notes.html:
+		A couple of slight edits
+
+2002-09-09  d_jencks
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+		allow setting fetchSize even if maxRows = 0 (unlimited)
+
+	* build.xml:
+		removed log4j.properties from driver jar
+
+2002-08-29  rrokytskyy
+	* build.xml:
+		added javax.sql.* to a mini-j2ee.jar
+
+2002-08-29  d_jencks
+	* build.xml:
+	* src/main/org/firebirdsql/gds/Clumplet.java:
+	* src/main/org/firebirdsql/gds/GDS.java:
+	* src/main/org/firebirdsql/gds/GDSException.java:
+	* src/main/org/firebirdsql/gds/GDSExceptionHelper.java:
+	* src/main/org/firebirdsql/gds/GDSFactory.java:
+	* src/main/org/firebirdsql/gds/SqlInfo.java:
+	* src/main/org/firebirdsql/gds/XSQLDA.java:
+	* src/main/org/firebirdsql/gds/XSQLVAR.java:
+	* src/main/org/firebirdsql/gds/isc_blob_handle.java:
+	* src/main/org/firebirdsql/gds/isc_db_handle.java:
+	* src/main/org/firebirdsql/gds/isc_stmt_handle.java:
+	* src/main/org/firebirdsql/gds/isc_tr_handle.java:
+	* src/main/org/firebirdsql/jca/FBConnectionRequestInfo.java:
+	* src/main/org/firebirdsql/jca/FBLocalTransaction.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+	* src/main/org/firebirdsql/jca/FBManagedConnectionMetaData.java:
+	* src/main/org/firebirdsql/jca/FBPoolingConnectionManager.java:
+	* src/main/org/firebirdsql/jca/FBStandAloneConnectionManager.java:
+	* src/main/org/firebirdsql/jca/FBTpb.java:
+	* src/main/org/firebirdsql/jca/FBXid.java:
+	* src/main/org/firebirdsql/jca/IdleRemover.java:
+	* src/main/org/firebirdsql/jca/ManagedConnectionPool.java:
+	* src/main/org/firebirdsql/jca/PoolFiller.java:
+	* src/main/org/firebirdsql/jdbc/FBArray.java:
+	* src/main/org/firebirdsql/jdbc/FBBigDecimalField.java:
+	* src/main/org/firebirdsql/jdbc/FBBlob.java:
+	* src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	* src/main/org/firebirdsql/jdbc/FBCallableStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBClob.java:
+	* src/main/org/firebirdsql/jdbc/FBConnection.java:
+	* src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	* src/main/org/firebirdsql/jdbc/FBDataSource.java:
+	* src/main/org/firebirdsql/jdbc/FBDataSourceObjectFactory.java:
+	* src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBDateField.java:
+	* src/main/org/firebirdsql/jdbc/FBDoubleField.java:
+	* src/main/org/firebirdsql/jdbc/FBDriver.java:
+	* src/main/org/firebirdsql/jdbc/FBEscapedParser.java:
+	* src/main/org/firebirdsql/jdbc/FBField.java:
+	* src/main/org/firebirdsql/jdbc/FBFloatField.java:
+	* src/main/org/firebirdsql/jdbc/FBIntegerField.java:
+	* src/main/org/firebirdsql/jdbc/FBLongField.java:
+	* src/main/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBRef.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	* src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBRowSet.java:
+	* src/main/org/firebirdsql/jdbc/FBRowSetInternal.java:
+	* src/main/org/firebirdsql/jdbc/FBRowSetListener.java:
+	* src/main/org/firebirdsql/jdbc/FBRowSetMetaData.java:
+	* src/main/org/firebirdsql/jdbc/FBRowSetReader.java:
+	* src/main/org/firebirdsql/jdbc/FBRowSetWriter.java:
+	* src/main/org/firebirdsql/jdbc/FBSQLData.java:
+	* src/main/org/firebirdsql/jdbc/FBSQLException.java:
+	* src/main/org/firebirdsql/jdbc/FBSQLInput.java:
+	* src/main/org/firebirdsql/jdbc/FBSQLOutput.java:
+	* src/main/org/firebirdsql/jdbc/FBSQLParseException.java:
+	* src/main/org/firebirdsql/jdbc/FBShortField.java:
+	* src/main/org/firebirdsql/jdbc/FBSimpleDataSource.java:
+	* src/main/org/firebirdsql/jdbc/FBStatement.java:
+	* src/main/org/firebirdsql/jdbc/FBStringField.java:
+	* src/main/org/firebirdsql/jdbc/FBStruct.java:
+	* src/main/org/firebirdsql/jdbc/FBTimeField.java:
+	* src/main/org/firebirdsql/jdbc/FBTimestampField.java:
+	* src/main/org/firebirdsql/jdbc/FBWrappingDataSource.java:
+	* src/main/org/firebirdsql/jdbc/TypeConvertionException.java:
+	* src/main/org/firebirdsql/jgds/ClumpletImpl.java:
+	* src/main/org/firebirdsql/jgds/GDS_Impl.java:
+	* src/main/org/firebirdsql/jgds/XdrInputStream.java:
+	* src/main/org/firebirdsql/jgds/XdrOutputStream.java:
+	* src/main/org/firebirdsql/jgds/Xdrable.java:
+	* src/main/org/firebirdsql/jgds/isc_blob_handle_impl.java:
+	* src/main/org/firebirdsql/jgds/isc_db_handle_impl.java:
+	* src/main/org/firebirdsql/jgds/isc_stmt_handle_impl.java:
+	* src/main/org/firebirdsql/jgds/isc_tr_handle_impl.java:
+	* src/main/org/firebirdsql/logging/Log4jLogger.java:
+	* src/main/org/firebirdsql/logging/Logger.java:
+	* src/main/org/firebirdsql/logging/LoggerFactory.java:
+	* src/main/org/firebirdsql/logging/NullLogger.java:
+	* src/main/org/firebirdsql/management/FBManager.java:
+	* src/main/org/firebirdsql/management/FBManagerMBean.java:
+	* src/test/org/firebirdsql/jca/TestFBBlob.java:
+	* src/test/org/firebirdsql/jca/TestFBConnection.java:
+	* src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+	* src/test/org/firebirdsql/jca/TestFBManagedConnectionFactory.java:
+	* src/test/org/firebirdsql/jca/TestFBResultSet.java:
+	* src/test/org/firebirdsql/jca/TestFBStandAloneConnectionManager.java:
+	* src/test/org/firebirdsql/jca/TestFBXAResource.java:
+	* src/test/org/firebirdsql/jca/TestPoolingConnectionManager.java:
+	* src/test/org/firebirdsql/jca/TestXABase.java:
+	* src/test/org/firebirdsql/jdbc/BaseFBTest.java:
+	* src/test/org/firebirdsql/jdbc/BaseTestFBField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBBlobAutocommit.java:
+	* src/test/org/firebirdsql/jdbc/TestFBCallableStatement.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDateField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDecimalConversions.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDoubleField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDriver.java:
+	* src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
+	* src/test/org/firebirdsql/jdbc/TestFBEscapedCallParser.java:
+	* src/test/org/firebirdsql/jdbc/TestFBFloatField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBIntegerField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBLongField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+	* src/test/org/firebirdsql/jdbc/TestFBShortField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBStringField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBTimeField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBTimestampField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBUnmanagedConnection.java:
+	* src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.java:
+	* src/test/org/firebirdsql/jgds/TestGds.java:
+	* src/test/org/firebirdsql/management/TestFBManager.java:
+		Changed to lgpl only license.  Moved driver to subdirectory to
+		make build system more consistent.
+
+2002-08-28  d_jencks
+	* build.xml:
+		Shrank concurrent.jar to 7k, updated release packaging
+
+2002-08-26  d_jencks
+	* src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+		applied Jeremy Williams patches for sqlind and dbmetadata
+		GetProcedureColumns and related test. Thanks
+
+2002-08-23  d_jencks
+	* src/test/org/firebirdsql/jca/TestFBBlob.java:
+		make jdbc 1 non-autocommit transactions start as soon as
+		autocommit set off or previous tx ended. Autocommit
+		transactions are still started only when work is requested
+
+2002-08-22  brodsom
+	* src/etc/JDBC20_conformance.html:
+		add url syntax
+
+2002-08-21  rrokytskyy
+	* build.bat:
+		fixed some bugs
+
+2002-08-21  d_jencks
+	* src/test/org/firebirdsql/jca/TestFBConnection.java:
+	* src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+	* src/test/org/firebirdsql/jca/TestFBResultSet.java:
+	* src/test/org/firebirdsql/jca/TestFBXAResource.java:
+		Improved and simplified transaction tracking, fixed flag
+		handling in xa, and fixed broken tests
+
+	* build.bat:
+	* build.sh:
+	* build.xml:
+	* lib/ant.jar:
+	* lib/optional.jar:
+	* src/lib/connector.jar:
+	* src/lib/jta-spec1_0_1.jar:
+		Moved build system to more standard location. Removed connector
+		jar and jta.jar and replaced with classes from jboss, checked
+		out with cvs and compiled.  Updated ant.jar and optional.jar to
+		1.5 (but not yet the stuff in bin)
+
+2002-08-14  d_jencks
+	* src/lib/jmxri.jar:
+	* src/test/org/firebirdsql/jca/TestFBBlob.java:
+	* src/test/org/firebirdsql/jca/TestFBConnection.java:
+	* src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+	* src/test/org/firebirdsql/jca/TestFBManagedConnectionFactory.java:
+	* src/test/org/firebirdsql/jca/TestFBResultSet.java:
+	* src/test/org/firebirdsql/jca/TestFBStandAloneConnectionManager.java:
+	* src/test/org/firebirdsql/jca/TestFBXAResource.java:
+	* src/test/org/firebirdsql/jca/TestPoolingConnectionManager.java:
+	* src/test/org/firebirdsql/jca/TestXABase.java:
+	* src/test/org/firebirdsql/jdbc/BaseFBTest.java:
+	* src/test/org/firebirdsql/jdbc/BaseTestFBField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBBlobAutocommit.java:
+	* src/test/org/firebirdsql/jdbc/TestFBCallableStatement.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDateField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDecimalConversions.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDoubleField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBDriver.java:
+	* src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
+	* src/test/org/firebirdsql/jdbc/TestFBEscapedCallParser.java:
+	* src/test/org/firebirdsql/jdbc/TestFBFloatField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBIntegerField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBLongField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+	* src/test/org/firebirdsql/jdbc/TestFBShortField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBStringField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBTimeField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBTimestampField.java:
+	* src/test/org/firebirdsql/jdbc/TestFBUnmanagedConnection.java:
+	* src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.java:
+	* src/test/org/firebirdsql/jgds/TestGds.java:
+	* src/test/org/firebirdsql/management/TestFBManager.java:
+		Moved tests to separate directory. Removed need for jmx classes
+		 and removed jmxri.jar
+
+2002-08-10  d_jencks
+	* src/resources/META-INF/ra.xml:
+		fixed dumb typos so it deploys
+
+2002-08-08  d_jencks
+	* src/resources/META-INF/ra.xml:
+		Added Encoding property, removed commented out server and port
+		properties.  Fixed Doctype url (I hope)
+
+2002-07-10  rrokytskyy
+	* examples/DataSourceExample.java:
+	* examples/DriverExample.java:
+		initial revision
+
+2002-06-24  brodsom
+	* src/etc/JDBC20_conformance.html:
+		Update JDBC Document
+
+2002-06-20  d_jencks
+	* src/resources/META-INF/ra.xml:
+		Added ability to set tx isolation as a jca adapter, refactored
+		tpb support, and implemented equals and hashcode for
+		FBManagedConnectionFactory.
+
+2002-06-06  brodsom
+	* src/etc/JDBC20_conformance.html:
+		use DataStreams, inline methods ...
+
+2002-05-23  brodsom
+	* src/etc/JDBC20_conformance.html:
+		new document
+
+	* src/etc/JDBC20_conformance.html:
+		added characterStream
+
+2002-04-30  rrokytskyy
+	* src/resources/isc_error_msg.properties:
+		new version of error messages, many thanks to Ken Richard
+
+2002-04-11  d_jencks
+	* src/etc/release_notes.html:
+		added title
+
+	* release_notes.html:
+	* src/etc/release_notes.html:
+		release notes
+
+	* release_notes.html:
+		oops wrong place
+
+2002-04-09  rrokytskyy
+	* src/resources/isc_encodings.properties:
+		corrected Daniel Marczisovszky name
+
+2002-04-08  rrokytskyy
+	* src/resources/isc_encodings.properties:
+		added lc_ctype support
+
+2002-03-09  d_jencks
+	* src/resources/META-INF/ra.xml:
+		fixed bug 492181, slow blobs: made default blob buffer length
+		16K, and enabled setting it on the ManagedConnectionFactory and
+		FBWrappingDataSource.  Max is 32K - 1, min set to 1K.  Also
+		made FBManager so it can create on start and drop on stop -- 
+		handy for testing in jboss
+
+2002-02-03  d_jencks
+	* bin/ant:
+	* bin/ant.bat:
+	* bin/antRun:
+	* bin/antRun.bat:
+	* bin/lcp.bat:
+	* bin/runant.pl:
+	* bin/runant.py:
+		added missing ant script starter files
+
+2002-02-02  d_jencks
+	* src/stylesheets/details1.xsl:
+	* src/stylesheets/junit-frames.xsl:
+	* src/stylesheets/summary1.xsl:
+	* src/stylesheets/summary1a.xsl:
+	* src/stylesheets/summary2.xsl:
+		xsl stylsheets for junitreport
+
+	* src/lib/log4j-core.jar:
+		log4j-core.jar from log4j version 1.0.4. Log4j is used for all
+		logging, however the jar may be ommitted if you do not want
+		logging.
+
+	* lib/xalan.jar:
+		xalan 2.2.0
+
+	* src/resources/log4j.properties:
+		Example log4j property file
+
+	* lib/xml-apis.jar:
+		xml-apis.jar from xalan 2.2.0 package
+
+	* lib/xerces.jar:
+		xerces 1.4.4 from xalan 2.2.0 package
+
+	* lib/jaxp.jar:
+	* lib/parser.jar:
+		removed unused xml parsers
+
+	* lib/ant.jar:
+	* lib/optional.jar:
+		ant version 1.4.1
+
+2002-01-07  d_jencks
+	* src/resources/META-INF/ra.xml:
+	* src/resources/isc_error_msg.properties:
+	* src/resources/ra.xml:
+		Revised FBManager to create dialect 3 databases, and the tests
+		to use a newly created database. Simplified and unified test
+		constants. Test targets are now all-tests for all tests and one
+		test for one test: specify the test as -Dtest=Gds one-test for
+		the TestGds.class test.  Made a few other small changes to
+		improve error messages
+
+2002-01-05  d_jencks
+	* src/lib/concurrent.jar:
+		added Doug Lea's concurrent.jar, classes from Concurrent
+		Programming in java, 2nd edition
+
+2001-12-05  d_jencks
+	* src/resources/ra.xml:
+		Made connections use username and password from subject, added
+		default user name and password properties to ManagedConnectionFactory
+
+2001-11-24  d_jencks
+	* src/resources/ra.xml:
+		updated to jca spec final draft
+
+2001-10-19  d_jencks
+	* src/resources/ra.xml:
+		Updated ra.xml to latest dtd/spec and fixed up build.xml so it
+		works again w/o jdbcTest
+
+2001-07-15  d_jencks
+	* lib/ant.jar:
+	* lib/junit.jar:
+	* lib/optional.jar:
+		Updated ant and junit jars
+
+2001-06-29  d_jencks
+	* src/resources/ra.xml:
+		Fixed ra.xml, build script to generate depoyable rar
+
+2001-06-14  d_jencks
+	* src/lib/jmxri.jar:
+	* src/resources/ra.xml:
+		Checkin of partly working hybrid jca/jdbc driver. Datasource as
+		ConnectionFactory for managed connection factory works, 
+		connections obtained are nearly jdbc connections: statement and
+		prepared statement work, resultset works except for fancy
+		fields like blobs, however transactions must be managed via
+		connection.getLocalTransaction() similar to a javax.resource
+		cci.Connection.  TestDBStandAloneConnectionManager shows how to
+		set up and use the datasource.
+
+2001-05-09  d_jencks
+	* lib/ant.jar:
+	* lib/jaxp.jar:
+	* lib/parser.jar:
+	* src/lib/connector.jar:
+	* src/lib/jaas.jar:
+	* src/lib/jdbc-3_0-pfd2-classes.zip:
+	* src/lib/jta-spec1_0_1.jar:
+		jdbc-jca driver initial checkin
+
