@@ -226,9 +226,6 @@ class FBStatementFetcher implements FBFetcher {
             throw new FBSQLException("Result set is already closed.");
     }
     
-    public AbstractStatement getStatement() {
-        return fbStatement;
-    }
     public int getRowNum() {
         return rowNum;
     }
