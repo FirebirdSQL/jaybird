@@ -169,5 +169,26 @@ public class TestFBPreparedStatement extends BaseFBTest{
         ps.close();
     }
     
+    public void testMixedExecution() throws Throwable {
+        PreparedStatement ps = con.prepareStatement(
+            "INSERT INTO test_blob VALUES(?, NULL)");
+        
+        try {
+
+            ps.setInt(1, 100);
+            ps.execute();
+
+            ResultSet rs = ps.executeQuery("SELECT * FROM test_blob");
+            while (rs.next()) {
+                // nothing
+            }
+        } catch(Throwable t) {
+            t.printStackTrace();
+            throw t;
+        } finally {
+            ps.close();
+        }
+        
+    }
     
 }
