@@ -142,6 +142,15 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public GDS getInternalAPIHandler() {
         return mc.getInternalAPIHandler();
     }
+    
+    /**
+     * Get database parameter buffer for this connection.
+     * 
+     * @return instance of {@link DatabaseParameterBuffer}.
+     */
+    public DatabaseParameterBuffer getDatabaseParameterBuffer() {
+        return mc.getConnectionRequestInfo().getDpb();
+    }
 
     /**
      * Creates a <code>Statement</code> object for sending

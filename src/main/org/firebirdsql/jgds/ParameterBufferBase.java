@@ -68,6 +68,17 @@ public class ParameterBufferBase  implements java.io.Serializable, Xdrable
             }
         return null;
         }
+    
+    public boolean hasArgument(int type) {
+        final List argumentsList = getArgumentsList();
+        
+        for( int i = 0, n = argumentsList.size(); i<n; i++ ) {
+            final Argument argument = (Argument)argumentsList.get(i);
+            if( argument.getType() == type )
+                return true;
+        }
+        return false;
+    }
 	
 	public void removeArgument(int type)
 		{

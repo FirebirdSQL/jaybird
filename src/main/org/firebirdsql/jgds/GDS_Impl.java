@@ -234,6 +234,8 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
          DatabaseParameterBuffer result = dpb.deepCopy();
 
          result.removeArgument(ISCConstants.isc_dpb_socket_buffer_size);
+         result.removeArgument(ISCConstants.isc_dpb_blob_buffer_size);
+         result.removeArgument(ISCConstants.isc_dpb_use_stream_blobs);
  
          return result;
      }

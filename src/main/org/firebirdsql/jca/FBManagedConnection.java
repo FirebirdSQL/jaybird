@@ -21,40 +21,17 @@ package org.firebirdsql.jca;
 
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.sql.*;
+import java.util.*;
+
 import javax.resource.ResourceException;
-import javax.resource.spi.ConnectionEvent;
-import javax.resource.spi.ConnectionEventListener;
-import javax.resource.spi.ConnectionRequestInfo;
-import javax.resource.spi.LocalTransaction;
-import javax.resource.spi.ManagedConnection;
-import javax.resource.spi.ManagedConnectionMetaData;
+import javax.resource.spi.*;
 import javax.resource.spi.security.PasswordCredential;
 import javax.security.auth.Subject;
-import javax.transaction.xa.XAException;
-import javax.transaction.xa.XAResource;
-import javax.transaction.xa.Xid;
+import javax.transaction.xa.*;
 
-
-import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.XSQLDA;
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.isc_blob_handle;
-import org.firebirdsql.gds.isc_db_handle;
-import org.firebirdsql.gds.isc_stmt_handle;
-import org.firebirdsql.gds.isc_tr_handle;
+import org.firebirdsql.gds.*;
 import org.firebirdsql.jdbc.*;
-import org.firebirdsql.jdbc.AbstractConnection;
-import org.firebirdsql.jdbc.AbstractStatement;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -333,7 +310,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 **/
     public void destroy() throws ResourceException {
         if (currentTr != null) {
-            throw new IllegalStateException("Can't destroy managed connection  with active transaction");
+            throw new java.lang.IllegalStateException("Can't destroy managed connection  with active transaction");
         }
         if (currentDbHandle != null) {
             try {
@@ -870,7 +847,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     public void registerStatement(AbstractStatement fbStatement) {
         if (currentTr == null) {
-            throw new IllegalStateException("registerStatement called with no transaction");
+            throw new java.lang.IllegalStateException("registerStatement called with no transaction");
         }
 
         currentTr.registerStatementWithTransaction(fbStatement);
@@ -1093,6 +1070,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      */
     public GDS getInternalAPIHandler() {
         return mcf.gds;
+    }
+    
+    /**
+     * Get information about the current connection parameters.
+     * 
+     * @return instance of {@link FBConnectionRequestInfo}.
+     */
+    public FBConnectionRequestInfo getConnectionRequestInfo() {
+        return cri;
     }
 
     //--------------------------------------------------------------------

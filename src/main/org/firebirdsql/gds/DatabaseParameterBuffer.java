@@ -106,6 +106,8 @@ public interface DatabaseParameterBuffer
      * to the server. These params influence only client side.
      */
     int socket_buffer_size =   ISCConstants.isc_dpb_socket_buffer_size;
+    int blob_buffer_size =     ISCConstants.isc_dpb_blob_buffer_size;
+    int use_stream_blobs =     ISCConstants.isc_dpb_use_stream_blobs;
 	
 	
 	
@@ -148,6 +150,13 @@ public interface DatabaseParameterBuffer
 	 * @return argument as string or <code>null</code> if nothing found.
 	 */ 
 	String getArgumentAsString(int argumentType);
+    
+	/**
+     * Check if this parameter buffer has specified argument.
+	 * @param argumentType type of argument to find.
+	 * @return <code>true</code> if this buffer contains specified argument.
+	 */
+    boolean hasArgument(int argumentType);
 
     /**
 	 * Make a deep copy of this object.
