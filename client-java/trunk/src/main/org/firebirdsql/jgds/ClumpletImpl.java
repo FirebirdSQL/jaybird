@@ -49,12 +49,12 @@ public class ClumpletImpl
         this.content = content;
     }
 
-    ClumpletImpl(ClumpletImpl c) {
-        this.type = c.type;
-        this.content = c.content;
-        if (c.next != null) {
-            this.next = new ClumpletImpl(c.next);
+    ClumpletImpl cloneClumplet() {
+        ClumpletImpl newClumplet = new ClumpletImpl(type, content);
+        if (next != null) {
+            newClumplet.next = next.cloneClumplet();
         }
+        return newClumplet;
     }
 
     //not a very safe implementation, only works for one unchained clumplet.
@@ -82,6 +82,19 @@ public class ClumpletImpl
             return null;        
         } // end of if ()
         return next.find(type);
+    }
+
+    public String findString(int type)
+    {
+        if (type == this.type) 
+        {
+            throw new IllegalStateException("Do not call getStringContent on a non-StringClumplet!");
+        } // end of if ()
+        if (next == null) 
+        {
+            return null;        
+        } // end of if ()
+        return next.findString(type);
     }
 
     public int getLength() {
