@@ -106,8 +106,10 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
              try {
                  mc.internalStart(xid, XAResource.TMNOFLAGS);
              } catch(XAException ex) {
+                 xid = null;
                  throw new FBResourceException(ex);
              } catch(GDSException ex) {
+                 xid = null;
                  throw new FBResourceException(ex);
              }
              
