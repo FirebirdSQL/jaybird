@@ -42,10 +42,6 @@ import java.io.PrintStream;
 public class FBResourceException extends ResourceException {
     
     private Exception original;
-    
-    public FBResourceException() {
-        super();
-    }
 
     public FBResourceException(String string) {
         super(string);
