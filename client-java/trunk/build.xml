@@ -30,7 +30,7 @@
     <property name="module.etc" value="${module.source}/etc"/>
 
     <!-- Where source files live -->
-    <property name="source.java" value="${module.source}"/>
+    <property name="source.java" value="${module.source}/main"/>
     <property name="source.resources" value="${module.source}/resources"/>
     <property name="source.stylesheets" value="${module.source}/stylesheets"/>
     <property name="source.test" value="${module.source}/test"/>

@@ -1,26 +1,21 @@
-/*   The contents of this file are subject to the Mozilla Public
- *   License Version 1.1 (the "License"); you may not use this file
- *   except in compliance with the License. You may obtain a copy of
- *   the License at http://www.mozilla.org/MPL/
- *   Alternatively, the contents of this file may be used under the
- *   terms of the GNU Lesser General Public License Version 2 or later (the
- *   "LGPL"), in which case the provisions of the GPL are applicable
- *   instead of those above. You may obtain a copy of the Licence at
- *   http://www.gnu.org/copyleft/lgpl.html
+/*
+ * Firebird Open Source J2ee connector - jdbc driver
  *
- *    This program is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *    relevant License for more details.
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
  *
- *    This file was created by members of the firebird development team.
- *    All individual contributions remain the Copyright (C) of those
- *    individuals.  Contributors to this file are either listed here or
- *    can be obtained from a CVS history command.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
  *
- *    All rights reserved.
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
  */
-
 
 
 /*
@@ -28,6 +23,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.1  2002/08/14 13:22:46  d_jencks
+ * Moved tests to separate directory. Removed need for jmx classes, and removed jmxri.jar
+ *
  * Revision 1.10  2002/06/06 11:24:07  brodsom
  * Performance patch. Log if log4j is in the classpath, don't log if the enviroment variable FBLog4j is false.
  *
@@ -77,12 +75,13 @@ import java.sql.*;
 import junit.framework.*;
 import org.firebirdsql.logging.Logger;
 
-/**
- * Test suite for the FBWrappingDataSource  class implementation.
- *
- * @author Roman Rokytskyy (rrokytskyy@yahoo.co.uk)
- */
 
+/**
+ * Describe class <code>TestFBWrappingDataSource</code> here.
+ *
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @version 1.0
+ */
 public class TestFBWrappingDataSource extends BaseFBTest {
 
     private java.sql.Connection connection;
