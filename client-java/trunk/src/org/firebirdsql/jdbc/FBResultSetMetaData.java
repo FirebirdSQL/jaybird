@@ -212,45 +212,32 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getColumnDisplaySize(int column) throws  SQLException {
-        //These are mostly wrong!!
-        switch (getXsqlvar(column).sqltype & ~1) {
-            case GDS.SQL_TEXT:
+        int colType = getColumnType(column);
+        switch (colType){
+            case java.sql.Types.DECIMAL:
+            case java.sql.Types.NUMERIC:
                 return getXsqlvar(column).sqllen;
-            case GDS.SQL_VARYING:
+            case java.sql.Types.CHAR:
+            case java.sql.Types.VARCHAR:
                 return getXsqlvar(column).sqllen;
-            case GDS.SQL_SHORT:
-                return getXsqlvar(column).sqllen;
-            case GDS.SQL_LONG:
-                return getXsqlvar(column).sqllen;
-            case GDS.SQL_FLOAT:
-                return getXsqlvar(column).sqllen;
-            case GDS.SQL_DOUBLE:
-                return getXsqlvar(column).sqllen;
-            case GDS.SQL_D_FLOAT:
-                return getXsqlvar(column).sqllen;
-            case GDS.SQL_TIMESTAMP:
-                return getXsqlvar(column).sqllen;
-            case GDS.SQL_BLOB:
-                return 0;
-            case GDS.SQL_ARRAY:
-                return 0;
-            case GDS.SQL_QUAD:
-                return getXsqlvar(column).sqllen;
-            case GDS.SQL_TYPE_TIME:
-                return getXsqlvar(column).sqllen;
-            case GDS.SQL_TYPE_DATE:
+            case java.sql.Types.FLOAT:
+                return 9;
+            case java.sql.Types.DOUBLE:
+                return 17;
+            case java.sql.Types.INTEGER:
+                return 11;
+            case java.sql.Types.SMALLINT:
+                return 6;
+            case java.sql.Types.DATE:
                 return 10;
-            case GDS.SQL_INT64:
-                if (getXsqlvar(column).sqlscale == 0) {
-                    return getXsqlvar(column).sqllen;
-                }
-                else {
-                    return getXsqlvar(column).sqllen;
-                }
+            case java.sql.Types.TIME:
+                return 8;
+            case java.sql.Types.TIMESTAMP:
+                return 19;
             default:
-                throw new SQLException("Unkown sql type");
+                return 0;
+            }
         }
-    }
 
 
     /**
@@ -301,9 +288,32 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getPrecision(int column) throws  SQLException {
-        //presumable wrong!!
-        return getXsqlvar(column).sqllen;
-    }
+        int colType = getColumnType(column);
+        switch (colType){
+            case java.sql.Types.DECIMAL:
+            case java.sql.Types.NUMERIC:
+                return getXsqlvar(column).sqllen;
+            case java.sql.Types.CHAR:
+            case java.sql.Types.VARCHAR:
+                return getXsqlvar(column).sqllen;
+            case java.sql.Types.FLOAT:
+                return 7;
+            case java.sql.Types.DOUBLE:
+                return 15;
+            case java.sql.Types.INTEGER:
+                return 10;
+            case java.sql.Types.SMALLINT:
+                return 5;
+            case java.sql.Types.DATE:
+                return 10;
+            case java.sql.Types.TIME:
+                return 8;
+            case java.sql.Types.TIMESTAMP:
+                return 19;
+            default:
+                return 0;
+            }
+        }
 
 
     /**

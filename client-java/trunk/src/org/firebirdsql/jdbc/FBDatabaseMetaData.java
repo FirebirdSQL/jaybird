@@ -1618,9 +1618,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         + "from"
         + " RDB$PROCEDURES "
         + "where ";
-    private static final String GET_PROCEDURES_END = "1 = 1 order by 1";
-
-
+    private static final String GET_PROCEDURES_END = "1 = 1 order by 3";
 
     /**
      * Gets a description of the stored procedures available in a
@@ -1690,8 +1688,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         + "order by"
         + " PP.RDB$PROCEDURE_NAME,"
         + " PP.RDB$PARAMETER_TYPE desc,"
-        + " PP.RDB$PARAMETER_NUMBER";
-
+        + " PP.RDB$PARAMETER_NUMBER ";
 
     /**
      * Gets a description of a catalog's stored procedure parameters
@@ -1887,7 +1884,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                                         new Short((short)procedureNullable);
 
             // row[12] = rs.getString("REMARKS").trim(); // fixme, DESCRIPTION is a longvarchar (blob), and getString will barf on it.
-	    row[12] = null;
+            row[12] = null;
             rows.add(row);
         }
         return new FBResultSet(xsqlvars, rows);
@@ -1923,7 +1920,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         + " RDB$DESCRIPTION as REMARKS,"
         + " RDB$OWNER_NAME as OWNER_NAME"
         + " from RDB$RELATIONS"
-        + " where ? = 'T' and RDB$VIEW_SOURCE is not null";
+        + " where ? = 'T' and RDB$VIEW_SOURCE is not null "
+        + " order by 3 ";
 
     private static final String GET_TABLES_EXACT = "select null as TABLE_CAT,"
         + " null as TABLE_SCHEM,"
@@ -1983,9 +1981,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         + " RDB$OWNER_NAME as OWNER_NAME"
         + " from RDB$RELATIONS"
         + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
-        + " and RDB$RELATION_NAME || '" + SPACES + "' like ? escape '\\'";
-
-
+        + " and RDB$RELATION_NAME || '" + SPACES + "' like ? escape '\\' "
+        + " order by 3 ";
 
     /**
      * Gets a description of tables available in a catalog.
@@ -2369,13 +2366,39 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[4] = new Short((short) dataType);
             row[5] = getDataTypeName(fieldType, fieldSubType, fieldScale);
 
-            if (dataType == java.sql.Types.DECIMAL ||
-                dataType == java.sql.Types.NUMERIC)
-            {
-                row[6] = new Integer(rs.getShort("FIELD_PRECISION"));
-            } else {
-                row[6] = new Integer(rs.getShort("FIELD_LENGTH"));
-            }
+            switch (dataType){
+                case java.sql.Types.DECIMAL:
+                case java.sql.Types.NUMERIC:
+                   row[6] = new Integer(rs.getShort("FIELD_PRECISION"));
+                   break;
+                case java.sql.Types.CHAR:
+                case java.sql.Types.VARCHAR:
+                   row[6] = new Integer(rs.getShort("FIELD_LENGTH"));
+                   break;
+                case java.sql.Types.FLOAT:
+                   row[6] = new Integer(7);
+                   break;
+                case java.sql.Types.DOUBLE:
+                   row[6] = new Integer(15);
+                   break;
+                case java.sql.Types.INTEGER:
+                   row[6] = new Integer(10);
+                   break;
+                case java.sql.Types.SMALLINT:
+                   row[6] = new Integer(5);
+                   break;
+                case java.sql.Types.DATE:
+                   row[6] = new Integer(10);
+                   break;
+                case java.sql.Types.TIME:
+                   row[6] = new Integer(8);
+                   break;
+                case java.sql.Types.TIMESTAMP:
+                   row[6] = new Integer(19);
+                   break;
+                default:
+                   row[6] = new Integer(0);
+               }
 
             row[7] = new Short((short) 0);
             row[8] = new Integer(fieldScale * (-1));
@@ -2526,10 +2549,10 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                 return "NULL";
         }
     }
-	 
+
     private static final String GET_COLUMN_PRIVILEGES_START = "select "
-	     + "null as TABLE_CAT,"
-		  + "null as TABLE_SCHEM,"
+        + "null as TABLE_CAT,"
+        + "null as TABLE_SCHEM,"
         + "RF.RDB$RELATION_NAME as TABLE_NAME, "
         + "RF.RDB$FIELD_NAME as COLUMN_NAME, "
         + "UP.RDB$GRANTOR as GRANTOR, "
@@ -2548,7 +2571,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         + "UP.RDB$RELATION_NAME = ? and ((";
     private static final String GET_COLUMN_PRIVILEGES_END = " UP.RDB$OBJECT_TYPE = 0) or "
         + "(RF.RDB$FIELD_NAME is null and UP.RDB$OBJECT_TYPE = 0)) "
-        + "order by 1, 2, 5 ";
+        + "order by 4,7 ";
 
     /**
      * Gets a description of the access rights for a table's columns.
@@ -2609,7 +2632,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         + "where ";
     private static final String GET_TABLE_PRIVILEGES_END = " RDB$OBJECT_TYPE = 0 and"
         + " RDB$FIELD_NAME is null "
-        + "order by 1, 4";
+        + "order by 3, 6";
 
     /**
      * Gets a description of the access rights for each table available
@@ -3030,10 +3053,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         return new FBResultSet(xsqlvars, rows);
     }
 
-	 /*
-	  * Problem with update rule, delete rule, must convert to short
-	  * Firebird reports it as String
-	  */
 
     private static final String GET_IMPORTED_KEYS_START = "select"
     +" null as PKTABLE_CAT "
@@ -3063,7 +3082,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
     +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION ";
+    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
+    +" order by 3, 9 ";
 
     /**
      * Gets a description of the primary key columns that are
@@ -3144,11 +3164,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getValue());
         }
-/*		  
-        String sql = GET_IMPORTED_KEYS;
-        ArrayList params = new ArrayList();
-        params.add(table.toUpperCase());
-*/
         ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
@@ -3256,7 +3271,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[7] = rs.getString("FKCOLUMN_NAME").trim();
             row[8] = new Short(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
-            if (updateRule.equals("NO ACTION"))
+            if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
                 row[9] = new Short((short) DatabaseMetaData.importedKeyNoAction);
             else if (updateRule.equals("CASCADE"))
                 row[9] = new Short((short) DatabaseMetaData.importedKeyCascade);
@@ -3265,7 +3280,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             else if (updateRule.equals("SET DEFAULT"))
                 row[9] = new Short((short) DatabaseMetaData.importedKeySetDefault);
             String deleteRule = rs.getString("DELETE_RULE");
-            if (deleteRule.equals("NO ACTION"))
+            if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
                 row[10] = new Short((short) DatabaseMetaData.importedKeyNoAction);
             else if (deleteRule.equals("CASCADE"))
                 row[10] = new Short((short) DatabaseMetaData.importedKeyCascade);
@@ -3310,7 +3325,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
     +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION ";
+    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
+    +" order by 7, 9 ";
 
     /**
      * Gets a description of the foreign key columns that reference a
@@ -3499,7 +3515,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[7] = rs.getString("FKCOLUMN_NAME").trim();				
             row[8] = new Short(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
-            if (updateRule.equals("NO ACTION"))
+            if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
                 row[9] = new Short((short) DatabaseMetaData.importedKeyNoAction);
             else if (updateRule.equals("CASCADE"))
                 row[9] = new Short((short) DatabaseMetaData.importedKeyCascade);
@@ -3508,7 +3524,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             else if (updateRule.equals("SET DEFAULT"))
                 row[9] = new Short((short) DatabaseMetaData.importedKeySetDefault);
             String deleteRule = rs.getString("DELETE_RULE");
-            if (deleteRule.equals("NO ACTION"))
+            if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
                 row[10] = new Short((short) DatabaseMetaData.importedKeyNoAction);
             else if (deleteRule.equals("CASCADE"))
                 row[10] = new Short((short) DatabaseMetaData.importedKeyCascade);
@@ -3555,7 +3571,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
     +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION ";
+    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
+    +" order by 7, 9 ";
 
     /**
      * Gets a description of the foreign key columns in the foreign key
@@ -3761,7 +3778,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[7] = rs.getString("PKCOLUMN_NAME").trim();				
             row[8] = new Short(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
-            if (updateRule.equals("NO ACTION"))
+            if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
                 row[9] = new Short((short) DatabaseMetaData.importedKeyNoAction);
             else if (updateRule.equals("CASCADE"))
                 row[9] = new Short((short) DatabaseMetaData.importedKeyCascade);
@@ -3770,7 +3787,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             else if (updateRule.equals("SET DEFAULT"))
                 row[9] = new Short((short) DatabaseMetaData.importedKeySetDefault);
             String deleteRule = rs.getString("DELETE_RULE");
-            if (deleteRule.equals("NO ACTION"))
+            if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
                 row[10] = new Short((short) DatabaseMetaData.importedKeyNoAction);
             else if (deleteRule.equals("CASCADE"))
                 row[10] = new Short((short) DatabaseMetaData.importedKeyCascade);
@@ -3784,8 +3801,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
             rows.add(row);
         }
-//        rows.add(null);
-        // return new FBResultSet(xsqlvars, rows);
         return new FBResultSet(xsqlvars, rows);
     }
 
@@ -3973,7 +3988,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         //dialect 3 only
         ArrayList rows = new ArrayList();
 
-        rows.add(new Object[] {"CHAR", createShort(Types.CHAR), new Integer(0), "'", "'", "length",
+        rows.add(new Object[] {"CHAR", createShort(Types.CHAR), new Integer(32664), "'", "'", "length",
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TEXT), null, BINARY});
 
@@ -4001,7 +4016,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
             NOTAUTOINC, null, createShort(0), createShort(15), new Integer(GDS.SQL_DOUBLE), null, BINARY});
 
-        rows.add(new Object[] {"VARCHAR", createShort(Types.VARCHAR), new Integer(0), "'", "'", "length",
+        rows.add(new Object[] {"VARCHAR", createShort(Types.VARCHAR), new Integer(32664), "'", "'", "length",
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_VARYING), null, BINARY});
 
@@ -4066,7 +4081,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     +" ,null as FILTER_CONDITION "
     +" from rdb$indices ind, rdb$index_segments ise "
     +" where ind.rdb$index_name = ise.rdb$index_name "
-    +" and ind.rdb$relation_name = ? ";
+    +" and ind.rdb$relation_name = ? "
+    +" order by 4, 6, 8";
+
     /**
      * Gets a description of a table's indices and statistics. They are
      * ordered by NON_UNIQUE, TYPE, INDEX_NAME, and ORDINAL_POSITION.
@@ -4228,19 +4245,17 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[6] = new Short((short) DatabaseMetaData.tableIndexOther);
             row[7] = new Short(rs.getShort("ORDINAL_POSITION"));
             row[8] = rs.getString("COLUMN_NAME").trim();
-				int index_type = rs.getInt("ASC_OR_DESC");
-				if (index_type == 1)
-					row[9] = "D";
-				else
-					row[9] = "A";					
+            int index_type = rs.getInt("ASC_OR_DESC");
+            if (index_type == 1)
+                row[9] = "D";
+            else
+                row[9] = "A";
             row[10] = new Integer(0);
             row[11] = new Integer(0);
             row[12] = null;
 
             rows.add(row);
         }
-//        rows.add(null);
-        // return new FBResultSet(xsqlvars, rows);
         return new FBResultSet(xsqlvars, rows);
     }
 
