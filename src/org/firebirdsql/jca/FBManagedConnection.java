@@ -521,9 +521,9 @@ throw new XAException("end called with no transaction associated");
         }
     }
     
-    public void executeStatement(isc_stmt_handle stmt) throws GDSException {
+    public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda) throws GDSException {
         mcf.gds.isc_dsql_execute2(currentTr, stmt,
-                                 GDS.SQLDA_VERSION1, stmt.getInSqlda(), null);
+                                 GDS.SQLDA_VERSION1, stmt.getInSqlda(), (sendOutSqlda) ? stmt.getOutSqlda() : null);
                                  
     }
     
