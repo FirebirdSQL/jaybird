@@ -686,7 +686,13 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         }
     }
     
-    public void testSqlRole() throws Exception {
+    /**
+     * Test whether role name is correctly passed to the server. Currently 
+     * disabled because requires adding new user to the server manually.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void _testSqlRole() throws Exception {
         
         Connection ddlConnection = getConnectionViaDriverManager();
         try {
