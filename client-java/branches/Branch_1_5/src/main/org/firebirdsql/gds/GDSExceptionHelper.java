@@ -20,6 +20,12 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.5  2004/09/16 12:57:20  rrokytskyy
+ * fixed issue with messages (fix provided by Thomas (ben_ata)), updated messages
+ *
+ * Revision 1.4  2004/08/22 00:52:28  rrokytskyy
+ * fixed bug when the driver is loaded by the system classloader
+ *
  * Revision 1.3  2003/06/05 22:57:47  brodsom
  * Substitute package and inline imports
  *
@@ -79,7 +85,7 @@ public class GDSExceptionHelper {
 
    private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class,false);
 
-    private static final String MESSAGES = "isc_error_msg";
+    private static final String MESSAGES = "/isc_error_msg";
     private static Properties messages = new Properties();
 
     private static boolean initialized = false;
