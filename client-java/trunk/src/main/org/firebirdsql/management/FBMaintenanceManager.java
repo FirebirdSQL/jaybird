@@ -361,9 +361,8 @@ public class FBMaintenanceManager extends FBServiceManager
    
 
     /**
-     * Retrieve the ID of each limbo transaction and indicate what would
-     * happen if {@link #twoPhaseRecovery} is called. The output of this 
-     * method is written to the logger.
+     * Retrieve the ID of each limbo transaction. The output of this  method 
+     * is written to the logger.
      *
      * @throws SQLException if a database access error occurs
      */
@@ -372,64 +371,31 @@ public class FBMaintenanceManager extends FBServiceManager
     }
 
     /**
-     * Commit all limbo transactions.
-     *
-     * @throws SQLException if a database access error occurs
-     */
-    public void commitAllTransactions() throws SQLException {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Commit a specific limbo transaction based on its ID.
+     * Commit a limbo transaction based on its ID.
      *
      * @param transactionId The ID of the limbo transaction to be committed
      * @throws SQLException if a database access error occurs or the 
      *         given transaction ID is not valid
      */
     public void commitTransaction(int transactionId) throws SQLException {
-        throw new UnsupportedOperationException();
+        ServiceRequestBuffer srb = createDefaultRepairSRB();
+        srb.addArgument(ISCConstants.isc_spb_rpr_commit_trans, transactionId);
+        executeServicesOperation(srb);
     }
 
     /**
-     * Rollback all limbo transactions.
-     *
-     * @throws SQLException if a database access error occurs
-     */
-    public void rollbackAllTransactions() throws SQLException {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Rollback a specific limbo transaction based on its ID.
+     * Rollback a limbo transaction based on its ID.
      *
      * @param transactionId The ID of the limbo transaction to be rolled back
      * @throws SQLException if a database access error occurs or the
      *         given transaction ID is not valid
      */
     public void rollbackTransaction(int transactionId) throws SQLException {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Performs automated two-phase recovery for all limbo transactions.
-     *
-     * @throws SQLException if a database access error occurs
-     */
-    public void twoPhaseRecovery() throws SQLException {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Performs automated two-phase recovery for a limbo transaction based
-     * on its ID.
-     *
-     * @param transactionId The ID of the limbo transaction to be recovered
-     * @throws SQLException if a database access error occurs or the
-     *         given transaction ID is not valid
-     */
-    public void twoPhaseRecovery(int transactionId) throws SQLException {
-        throw new UnsupportedOperationException();
+        ServiceRequestBuffer srb = createDefaultRepairSRB();
+        srb.addArgument(
+                ISCConstants.isc_spb_rpr_rollback_trans, 
+                transactionId);
+        executeServicesOperation(srb);
     }
 
 
