@@ -66,22 +66,24 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 /**
+ * FBManagedConnectionFactory implements the jca ManagedConnectionFactory 
+ * interface and also many of the internal functions of ManagedConnection.
+ * This nonstandard behavior is required due to firebird requiring
+ * all work done in a transaction to be done over one connection.
+ * To support xa semantics, the correct db handle must be located whenever 
+ * a ManagedConnection is associated with an xid.
  *
- *   @see <related>
+ * WARNING: this adapter will probably not work properly in an environment
+ * where ManagedConnectionFactory is serialized and deserialized, and the 
+ * deserialized copy is expected to function as anything other than a key.
+ *
+ * @see <related>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- *   @version $ $
+ * @version $ $
  *
  * @todo add support for separate specification of host/port/filename.
  */
 
-
-
-/**
- *ManagedConnectionFactory instance is a factory of both ManagedConnection and EIS-specific
-connection factory instances. This interface supports connection pooling by providing methods for
-matching and creation of ManagedConnection instance.
-
- */
 
 public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
@@ -98,7 +100,8 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     //a concurrent reader map would be better
     private final Map xidMap = Collections.synchronizedMap(new HashMap());
 
-    private final Map TransactionStatementMap = new HashMap();  //Maps transaction handle to list of statements with resultsets.
+    //Maps transaction handle to list of statements with resultsets.
+    private final Map TransactionStatementMap = new HashMap();
 
     private FBConnectionRequestInfo defaultCri;
 
@@ -281,38 +284,26 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             && (blobBufferLength == blobBufferLength);
     }
 
-/**
-     Creates a Connection Factory instance. The Connection Factory instance gets initialized with
-     the passed ConnectionManager. In the managed scenario, ConnectionManager is provided by the
-     application server.
-     Parameters:
-         cxManager - ConnectionManager to be associated with created EIS connection factory
-         instance
-     Returns:
-         EIS-specific Connection Factory instance or javax.resource.cci.ConnectionFactory
-         instance
-     Throws:
-         ResourceException - Generic exception
-         ResourceAdapterInternalException - Resource adapter related error condition
-**/
+    /**
+     * The <code>createConnectionFactory</code> method creates a DataSource
+     * using the supplied ConnectionManager..
+     *
+     * @param cxManager a <code>ConnectionManager</code> value
+     * @return a <code>java.lang.Object</code> value
+     * @exception ResourceException if an error occurs
+     */
     public java.lang.Object createConnectionFactory(ConnectionManager cxManager) throws ResourceException {
         return new FBDataSource(this, cxManager);
     }
 
 
-
-
-/**
-     Creates a Connection Factory instance. The Connection Factory instance gets initialized with a
-     default ConnectionManager provided by the resource adapter.
-     Returns:
-         EIS-specific Connection Factory instance or javax.resource.cci.ConnectionFactory
-         instance
-     Throws:
-         ResourceException - Generic exception
-         ResourceAdapterInternalException - Resource adapter related error condition
-
-**/
+    /**
+     * The <code>createConnectionFactory</code> method creates a DataSource
+     * with a default stand alone ConnectionManager.  Ours can implement pooling.
+     *
+     * @return a <code>java.lang.Object</code> value
+     * @exception ResourceException if an error occurs
+     */
     public java.lang.Object createConnectionFactory() throws ResourceException {
         return new FBDataSource(this, new FBStandAloneConnectionManager());
     }
@@ -492,7 +483,6 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
                     {
                         db = (isc_db_handle)freeDbHandles.removeLast();
                     }
-                    //useDbHandle(db, 1);
                     return db;
                 } // end of if ()
                 return createDbHandle(cri);
@@ -512,9 +502,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     private isc_db_handle createDbHandle(FBConnectionRequestInfo cri) throws GDSException
     {
         isc_db_handle db = gds.get_new_isc_db_handle();
-        log.info("createDbHandle: " + db, new Exception("stacktrace"));
         gds.isc_attach_database(dbAlias, db, cri.getDpb());
-        //dbHandleUsage.put(db, new Integer(1));
         return db;
     }
 
