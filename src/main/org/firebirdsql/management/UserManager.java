@@ -1,258 +1,90 @@
 /*
  * $Id$
  * 
- * Firebird Open Source J2ee connector - jdbc driver
- *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
+ * Firebird Open Source J2EE Connector - JDBC Driver
+ * 
+ * Copyright (C) All Rights Reserved.
+ * 
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
  * can be obtained from a CVS history command.
- *
- * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *  
+ *   - Redistributions of source code must retain the above copyright 
+ *     notice, this list of conditions and the following disclaimer.
+ *   - Redistributions in binary form must reproduce the above 
+ *     copyright notice, this list of conditions and the following 
+ *     disclaimer in the documentation and/or other materials provided 
+ *     with the distribution.
+ *   - Neither the name of the firebird development team nor the names
+ *     of its contributors may be used to endorse or promote products 
+ *     derived from this software without specific prior written 
+ *     permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS 
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT 
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
+ * SUCH DAMAGE.
  */
 package org.firebirdsql.management;
 
 import java.io.IOException;
 import java.sql.SQLException;
-
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.GDSType;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.isc_svc_handle;
-import org.firebirdsql.jdbc.FBSQLException;
+import java.util.Map;
 
 /**
- * Uses the Services API to display, add, delete, and modify users. This
- * corresponds to the functionality of the command-line tool gsec.
+ * The base Firebird Service API functionality.
  * 
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
  */
-public class UserManager extends ServiceManager {
+public interface UserManager extends ServiceManager {
 
     /**
-     * Create instance of this class.
+     * Add a user to the Firebird Security Database.
      * 
-     * @param gdsType
+     * @param user to the Firebird Security Database.
+     * @throws SQLException
+     * @throws IOException
      */
-    public UserManager(GDSType gdsType) {
-        super(gdsType);
-    }
+    public void add(User user) throws SQLException, IOException;
 
     /**
-     * Create a new user in the security database.
+     * Delete a user to the Firebird Security Database.
      * 
-     * @param username
-     * @param password
+     * @param user to the Firebird Security Database.
+     * @throws SQLException
+     * @throws IOException
      */
-    public void addUser(String username, String password) throws SQLException,
-            IOException {
-        addUser(username, password, null, null, null, -1, -1, null, null);
-    }
+    public void delete(User user) throws SQLException, IOException;
 
     /**
-     * Create a new user in the security database.
+     * Update a user to the Firebird Security Database.
      * 
-     * @param username
-     * @param password
-     * @param firstname
-     * @param middlename
-     * @param lastname
+     * @param user to the Firebird Security Database.
+     * @throws SQLException
+     * @throws IOException
      */
-    public void addUser(String username, String password, String firstname,
-            String middlename, String lastname) throws SQLException,
-            IOException {
-
-        addUser(username, password, firstname, middlename, lastname, -1, -1,
-                null, null);
-    }
+    public void update(User user) throws SQLException, IOException;
 
     /**
-     * Create a new user in the security database.
+     * Return all valid users in the Firebird Security Database.
      * 
-     * @param username
-     * @param password
-     * @param firstname
-     * @param middlename
-     * @param lastname
-     * @param userid
-     * @param groupid
-     * @param groupname
-     * @param sqlrole
+     * @return all valid users in the Firebird Security Database.
+     * @throws SQLException
+     * @throws IOException
      */
-    protected void addUser(String username, String password, String firstname,
-            String middlename, String lastname, int userid, int groupid,
-            String groupname, String sqlrole) throws SQLException, IOException {
-
-        userAction(ISCConstants.isc_action_svc_add_user, username, password,
-                firstname, middlename, lastname, userid, groupid, groupname,
-                sqlrole);
-    }
-
-    /**
-     * Delete a user from the security database.
-     * 
-     * @param username
-     */
-    public void deleteUser(String username) throws SQLException, IOException {
-
-        deleteUser(username, null);
-
-    }
-
-    /**
-     * Delete a user from the security database.
-     * 
-     * @param username
-     * @param sqlrole
-     */
-    protected void deleteUser(String username, String sqlrole)
-            throws SQLException, IOException {
-
-        userAction(ISCConstants.isc_action_svc_delete_user, username, null,
-                null, null, null, -1, -1, null, sqlrole);
-
-    }
-
-    /**
-     * Display's all users in the security database.
-     */
-    public void displayAllUsers() throws SQLException, IOException {
-
-        displayUser(null);
-
-    }
-
-    /**
-     * Display a single user in the security database.
-     * 
-     * @param username
-     */
-    protected void displayUser(String username) throws SQLException,
-            IOException {
-
-        userAction(ISCConstants.isc_action_svc_display_user, username, null,
-                null, null, null, -1, -1, null, null);
-
-    }
-
-    /**
-     * Create a new user in the security database.
-     * 
-     * @param username
-     * @param password
-     */
-    public void modifyUser(String username, String password)
-            throws SQLException, IOException {
-
-        modifyUser(username, password, null, null, null, -1, -1, null, null);
-
-    }
-
-    /**
-     * Create a new user in the security database.
-     * 
-     * @param username
-     * @param password
-     * @param firstname
-     * @param middlename
-     * @param lastname
-     */
-    public void modifyUser(String username, String password, String firstname,
-            String middlename, String lastname) throws SQLException,
-            IOException {
-
-        modifyUser(username, password, firstname, middlename, lastname, -1, -1,
-                null, null);
-
-    }
-
-    /**
-     * Create a new user in the security database.
-     * 
-     * @param username
-     * @param password
-     * @param firstname
-     * @param middlename
-     * @param lastname
-     * @param userid
-     * @param groupid
-     * @param groupname
-     * @param sqlrole
-     */
-    protected void modifyUser(String username, String password,
-            String firstname, String middlename, String lastname, int userid,
-            int groupid, String groupname, String sqlrole) throws SQLException,
-            IOException {
-
-        userAction(ISCConstants.isc_action_svc_modify_user, username, password,
-                firstname, middlename, lastname, userid, groupid, groupname,
-                sqlrole);
-
-    }
-
-    private void userAction(int action, String username, String password,
-            String firstname, String middlename, String lastname, int userid,
-            int groupid, String groupname, String sqlrole) throws SQLException,
-            IOException {
-
-        GDS gds = getGds();
-
-        try {
-            isc_svc_handle handle = attachServiceManager(gds);
-            try {
-
-                ServiceRequestBuffer srb = getUserSRB(gds, action, username,
-                        password, firstname, middlename, lastname, userid,
-                        groupid, groupname, sqlrole);
-                gds.isc_service_start(handle, srb);
-
-                queueService(gds, handle);
-
-            } finally {
-                detachServiceManager(gds, handle);
-            }
-        } catch (GDSException ex) {
-            throw new FBSQLException(ex);
-        }
-    }
-
-    private ServiceRequestBuffer getUserSRB(GDS gds, int action,
-            String username, String password, String firstname,
-            String middlename, String lastname, int userid, int groupid,
-            String groupname, String sqlrole) {
-
-        ServiceRequestBuffer srb = gds.newServiceRequestBuffer(action);
-
-        if (username != null)
-            srb.addArgument(ISCConstants.isc_spb_sec_username, username);
-        if (password != null)
-            srb.addArgument(ISCConstants.isc_spb_sec_password, password);
-        if (firstname != null)
-            srb.addArgument(ISCConstants.isc_spb_sec_firstname, firstname);
-        if (middlename != null)
-            srb.addArgument(ISCConstants.isc_spb_sec_middlename, middlename);
-        if (lastname != null)
-            srb.addArgument(ISCConstants.isc_spb_sec_lastname, lastname);
-        if (userid != -1)
-            srb.addArgument(ISCConstants.isc_spb_sec_userid, userid);
-        if (groupid != -1)
-            srb.addArgument(ISCConstants.isc_spb_sec_groupid, groupid);
-        if (groupname != null)
-            srb.addArgument(ISCConstants.isc_spb_sec_groupname, groupname);
-        if (sqlrole != null)
-            srb.addArgument(ISCConstants.isc_spb_sql_role_name, sqlrole);
-
-        return srb;
-    }
+    public Map getUsers() throws SQLException, IOException;
 
 }

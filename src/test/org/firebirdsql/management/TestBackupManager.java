@@ -62,7 +62,7 @@ public class TestBackupManager extends FBTestBase {
     }
     
     public void testBackup() throws Exception {
-        BackupManager backupManager = new BackupManager(GDSType.PURE_JAVA);
+        BackupManager backupManager = new FBBackupManager(GDSType.PURE_JAVA);
         backupManager.setHost("localhost");
 //        backupManager.setPort(3060);
         backupManager.setUser("SYSDBA");
