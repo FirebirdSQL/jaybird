@@ -1,3 +1,64 @@
+2003-11-16 22:31  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	switched catalog and schema checks off
+
+2003-11-16 21:48  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	
+	removed unused imports
+
+2003-11-16 21:46  rrokytskyy
+
+	* client-java/src/jdbccts/: ddl.properties, dml.properties,
+	excludes.properties,
+	org/firebirdsql/jdbc/cts/BatchUpdatesSuite.java,
+	org/firebirdsql/jdbc/cts/CTSTestCase.java,
+	org/firebirdsql/jdbc/cts/CTSTestConfig.java,
+	org/firebirdsql/jdbc/cts/CTSTestSuite.java,
+	org/firebirdsql/jdbc/cts/CallableStatementSuite.java,
+	org/firebirdsql/jdbc/cts/ConnectionSuite.java,
+	org/firebirdsql/jdbc/cts/DateTimeSuite.java,
+	org/firebirdsql/jdbc/cts/DbMetaSuite.java,
+	org/firebirdsql/jdbc/cts/EscapeSyntaxSuite.java,
+	org/firebirdsql/jdbc/cts/ExceptionSuite.java,
+	org/firebirdsql/jdbc/cts/FirebirdSuite.java,
+	org/firebirdsql/jdbc/cts/PreparedStatementSuite.java,
+	org/firebirdsql/jdbc/cts/ResultSetSuite.java,
+	org/firebirdsql/jdbc/cts/RsMetaSuite.java,
+	org/firebirdsql/jdbc/cts/StatementSuite.java:
+	
+	JDBC CTS test framework initial revision
+
+2003-11-16 13:04  rrokytskyy
+
+	* client-java/src/etc/JDBC20_conformance.html:
+	
+	updated JDBC conformance info
+
+2003-11-16 13:02  rrokytskyy
+
+	* client-java/src/etc/jdbc_cts_log.txt:
+	
+	initial revision
+
+2003-11-16 12:40  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/field/FBStringField.java:
+	
+	added support for '1' as boolean true
+
+2003-11-16 00:08  ryanbaldwin
+
+	* client-java/src/main/org/firebirdsql/ngds/XSQLVARImpl.java:
+	
+	Applied 'fixed bug in time decoding' too ngds package.
+
 2003-11-15 23:49  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
