@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.3  2001/08/28 17:13:23  d_jencks
+ * Improved formatting slightly, removed dos cr's
+ *
  * Revision 1.2  2001/07/15 21:17:36  d_jencks
  * Updated to use assertTrue rather than assert, for junit 3.7
  *
@@ -72,7 +75,7 @@ public class TestFBDriver extends TestCase {
 
     protected void setUp() throws Exception {
         Class.forName(org.firebirdsql.jdbc.FBDriver.class.getName());
-        driver = java.sql.DriverManager.getDriver(TestConst.DB_URL);
+        driver = java.sql.DriverManager.getDriver(TestConst.DB_DRIVER_URL);
     }
 
 
@@ -83,12 +86,12 @@ public class TestFBDriver extends TestCase {
 
 
     public void testAcceptsURL() throws Exception {
-        assertTrue(driver.acceptsURL(TestConst.DB_URL));
+        assertTrue(driver.acceptsURL(TestConst.DB_DRIVER_URL));
     }
 
     public void testConnect() throws Exception {
-        System.out.println(TestConst.DB_URL);
-        connection = driver.connect(TestConst.DB_URL, TestConst.DB_INFO);
+        System.out.println(TestConst.DB_DRIVER_URL);
+        connection = driver.connect(TestConst.DB_DRIVER_URL, TestConst.DB_INFO);
         assertTrue("Connection is null", connection != null);
     }
 

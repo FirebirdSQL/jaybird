@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2001/08/28 17:13:23  d_jencks
+ * Improved formatting slightly, removed dos cr's
+ *
  * Revision 1.1  2001/07/13 18:16:15  d_jencks
  * Implementation of jdbc 1.0 Driver contributed by Roman Rokytskyy
  *
@@ -44,10 +47,19 @@ public class TestConst {
     /**
      * Default URL for the test
      */
-    public static final String DB_URL = FBDriver.FIREBIRD_PROTOCOL +
-        "localhost:/usr/local/firebird/dev/client-java/db/fbmctest.gdb";
-        //"localhost:d:/projects/firebirdclient/test/jbosstest.gdb";
-        //"localhost:/home/rocky/data/interbase/jboss.gdb";
+
+   private static final String PERSONAL_DB_LOCATION = "/usr/local/firebird/dev/client-java/db/fbmctest.gdb";
+        //someone elses...//"localhost:/home/rocky/data/interbase/jboss.gdb";
+
+
+   public static final String DB_SERVER_URL = "localhost";
+   public static final String DB_SERVER_PORT = "3050";
+
+   public static final String DB_DATASOURCE_URL = DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + PERSONAL_DB_LOCATION;
+
+   public static final String DB_DRIVER_URL = FBDriver.FIREBIRD_PROTOCOL + DB_DATASOURCE_URL;
+
+
 
     /**
      * Default user name for database connection

@@ -69,7 +69,7 @@ public class TestFBCallableStatement extends TestCase {
     protected void setUp() throws Exception {
         Class.forName(FBDriver.class.getName());
         connection =
-            java.sql.DriverManager.getConnection(TestConst.DB_URL, TestConst.DB_INFO);
+            java.sql.DriverManager.getConnection(TestConst.DB_DRIVER_URL, TestConst.DB_INFO);
         java.sql.Statement stmt = connection.createStatement();
         try {
             stmt.executeUpdate(DROP_PROCEDURE);
