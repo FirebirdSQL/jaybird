@@ -182,7 +182,7 @@ public class FBBlobField extends FBField {
             int chunk;
             try {
                 while (length >0) {
-                    chunk =in.read(buff, 0, Math.min(length, BUFF_SIZE));
+                    chunk =in.read(buff, 0, ((length<BUFF_SIZE) ? length:BUFF_SIZE));
                     bout.write(buff, 0, chunk);
                     length -= chunk;
                 }

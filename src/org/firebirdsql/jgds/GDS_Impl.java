@@ -1122,10 +1122,10 @@ public class GDS_Impl implements GDS {
                 log.debug("op_get_segment ");
                 db.out.writeInt(op_get_segment);
                 db.out.writeInt(blob.rbl_id); //short???
-                //            log.debug("trying to read bytes: " + Math.min(blob.rbl_buffer_length, maxread) + 2);
-                //db.out.writeInt(Math.min(blob.rbl_buffer_length, maxread) + 2); //Actually needs to be less than max short value
-                log.debug("trying to read bytes: " +Math.min(requested + 2, Short.MAX_VALUE));
-                db.out.writeInt(Math.min(requested + 2, Short.MAX_VALUE));
+                //            log.debug("trying to read bytes: " + ((blob.rbl_buffer_length< maxread)?blob.rbl_buffer_length:maxread) + 2);
+                //db.out.writeInt(((blob.rbl_buffer_length< maxread)?blob.rbl_buffer_length:maxread) + 2); //Actually needs to be less than max short value
+                log.debug("trying to read bytes: " +((requested + 2 < Short.MAX_VALUE) ? requested+2: Short.MAX_VALUE));
+                db.out.writeInt((requested + 2 < Short.MAX_VALUE) ? requested+2 : Short.MAX_VALUE);
                 db.out.writeInt(0);//writeBuffer for put segment;
                 db.out.flush();            
                 log.debug("sent");
@@ -1343,9 +1343,9 @@ public class GDS_Impl implements GDS {
                 log.debug("op_response resp_blob_id: " + r.resp_blob_id);
                 r.resp_data = db.in.readBuffer();
                 log.debug("op_response resp_data size: " + r.resp_data.length);
- /*           for (int i = 0; i < Math.min(r.resp_data.length, 16); i++) {
-                log.debug("byte: " + r.resp_data[i]);
-            }*/
+//              for (int i = 0; i < ((r.resp_data.length< 16) ? r.resp_data.length: 16) ; i++) {
+//                  log.debug("byte: " + r.resp_data[i]);
+//              }
                 readStatusVector(db);
                 log.debug("received");
                 checkAllRead(db.in);//DEBUG
@@ -1566,7 +1566,6 @@ public class GDS_Impl implements GDS {
             log.debug("sqldata still null in writeSQLDatum: " + xsqlvar);
         }
 
-
         try {
             Object sqldata = xsqlvar.sqldata;
             switch (xsqlvar.sqltype & ~1) {
@@ -1586,11 +1585,11 @@ public class GDS_Impl implements GDS {
                     db.out.writeInt(((byte[])sqldata).length);
                     db.out.writeOpaque((byte[])sqldata, ((byte[])sqldata).length);
 
-                    /* int len = Math.min(((String) sqldata).length(),
-                                       xsqlvar.sqllen);
-                    db.out.writeInt(len);
-                    buffer = ((String) sqldata).substring(0, len).getBytes();
-                    db.out.writeOpaque(buffer, buffer.length);*/
+//                  int len = ((((String) sqldata).length()<xsqlvar.sqllen) 
+//                  ? ((String) sqldata).length() : xsqlvar.sqllen);
+//                  db.out.writeInt(len);
+//                  buffer = ((String) sqldata).substring(0, len).getBytes();
+//                  db.out.writeOpaque(buffer, buffer.length);
                     break;
                 case SQL_SHORT:
                     db.out.writeInt(((Short) sqldata).shortValue());
@@ -1991,7 +1990,7 @@ public class GDS_Impl implements GDS {
                 log.debug("Extra bytes in packet read: " + i);
                 byte[] b = new byte[i];
                 in.read(b);
-                for (int j = 0; j < Math.min(b.length, 16); j++) {
+                for (int j = 0; j < ((b.length < 16) ? b.length : 16) ; j++) {					 
                     log.debug("byte: " + b[j]);
                 }
             }

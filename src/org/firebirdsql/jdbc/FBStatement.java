@@ -82,11 +82,11 @@ public class FBStatement implements Statement {
     //This is a cached result set and is used to allow a call to getResultSet()
     private ResultSet currentCachedResultSet;
 
-	 protected int maxRows = 0;	 
-	 private int fetchSize = 0;
-	 private int maxFieldSize = 0;
-	 private int queryTimeout = 0;
-	 
+    protected int maxRows = 0;	 
+    private int fetchSize = 0;
+    private int maxFieldSize = 0;
+    private int queryTimeout = 0;
+
     FBStatement(FBConnection c) {
         this.c = c;
         closed = false;
@@ -101,8 +101,8 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public ResultSet executeQuery(String sql) throws  SQLException {
-		 if (closed)
-			 throw new SQLException("Statement is closed");
+        if (closed)
+            throw new SQLException("Statement is closed");
         try
         {
             c.ensureInTransaction();
@@ -145,8 +145,8 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public int executeUpdate(String sql) throws  SQLException {
-		 if(closed)
-			 throw new SQLException("Statement is closed");
+        if(closed)
+            throw new SQLException("Statement is closed");
         try
         {
             c.ensureInTransaction();
@@ -233,8 +233,8 @@ public class FBStatement implements Statement {
                 closed = true;
             }
         }
-		  else
-			  closed = true;
+        else
+            closed = true;
     }
 
 
@@ -272,10 +272,10 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public void setMaxFieldSize(int max) throws  SQLException {
-		 if (max<0)
-        throw new SQLException("can't set max field size negative");
-		 else
-			 maxFieldSize = max;
+        if (max<0)
+            throw new SQLException("can't set max field size negative");
+        else
+            maxFieldSize = max;
     }
 
 
@@ -302,10 +302,10 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public void setMaxRows(int max) throws  SQLException {
-		 if (max<0)
-		    throw new SQLException("Max rows can't be less than 0");
-		 else
-			 maxRows = max;
+        if (max<0)
+            throw new SQLException("Max rows can't be less than 0");
+        else
+            maxRows = max;
     }
 
 
@@ -349,10 +349,10 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public void setQueryTimeout(int seconds) throws  SQLException {
-		 if (seconds<0)
-        throw new SQLException("can't set query timeout negative");
-		 else
-			 queryTimeout = seconds;
+        if (seconds<0)
+            throw new SQLException("can't set query timeout negative");
+        else
+            queryTimeout = seconds;
     }
 
 
@@ -456,8 +456,8 @@ public class FBStatement implements Statement {
      * @see #getMoreResults
      */
     public boolean execute(String sql) throws SQLException {
-		 if (closed)
-			 throw new SQLException("Statement is closed");
+        if (closed)
+            throw new SQLException("Statement is closed");
         try {
             c.ensureInTransaction();
             boolean hasResultSet = internalExecute(sql);
@@ -467,12 +467,6 @@ public class FBStatement implements Statement {
             } // end of if ()
             return hasResultSet;
         }
-/*		  
-        catch (ResourceException re)
-        {
-            throw new SQLException("ResourceException: " + re);
-        } // end of try-catch
- */
         catch (GDSException ge)
         {
             throw new FBSQLException(ge);
@@ -545,12 +539,12 @@ public class FBStatement implements Statement {
             return rs;
         } // end of if ()
         else {
-			  if (isResultSet){
-					currentRs = new FBResultSet(c, this, fixedStmt);
-					return currentRs;
-			  }
-			  else
-					return null;
+            if (isResultSet){
+                currentRs = new FBResultSet(c, this, fixedStmt);
+                return currentRs;
+            }
+            else
+                return null;
         } // end of else
     }
 
@@ -585,11 +579,11 @@ public class FBStatement implements Statement {
                 int insCount = i.getInsertCount();
                 int updCount = i.getUpdateCount();
                 int delCount = i.getDeleteCount();
-                int resCount = Math.max(insCount,Math.max(updCount,delCount));
+                int resCount = ((updCount>delCount) ? updCount:delCount);
+                resCount = ((resCount>insCount) ? resCount:insCount);
                 log.debug("InsertCount: " + insCount);
                 log.debug("UpdateCount: " + updCount);
                 log.debug("DeleteCount: " + delCount);
-
                 log.debug("returning: " + resCount);
 
                 return resCount;
@@ -619,7 +613,7 @@ public class FBStatement implements Statement {
      */
     public boolean getMoreResults() throws  SQLException {
 //        throw new SQLException("Not yet implemented");
-		 return false;
+          return false;
     }
 
     /**
@@ -658,8 +652,8 @@ public class FBStatement implements Statement {
      *      2.0 API</a>
      */
     public void setFetchDirection(int direction) throws  SQLException {
-		 if (direction != java.sql.ResultSet.FETCH_FORWARD)
-			throw new SQLException("can't set fetch direction");
+        if (direction != java.sql.ResultSet.FETCH_FORWARD)
+            throw new SQLException("can't set fetch direction");
     }
 
 
@@ -698,12 +692,12 @@ public class FBStatement implements Statement {
      *      2.0 API</a>
      */
     public void setFetchSize(int rows) throws  SQLException {
-		 if (rows < 0)
-			 throw new SQLException("can't set negative fetch size");
-		 else if (rows > maxRows)
-			 throw new SQLException("can't set fetch size > maxRows");
-		 else
-        fetchSize = rows;
+        if (rows < 0)
+            throw new SQLException("can't set negative fetch size");
+        else if (rows > maxRows)
+            throw new SQLException("can't set fetch size > maxRows");
+        else
+            fetchSize = rows;
     }
 
 
@@ -910,7 +904,7 @@ public class FBStatement implements Statement {
         closeResultSet();
         prepareFixedStatement(sql, false);
         c.executeStatement(fixedStmt, false);
-		  isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
+        isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
         return (fixedStmt.getOutSqlda().sqld > 0);
     }
 
@@ -923,16 +917,16 @@ public class FBStatement implements Statement {
         }
         c.prepareSQL(fixedStmt, c.nativeSQL(sql), describeBind);
     }
-	 
-	 protected void addWarning(java.sql.SQLWarning warning){
-		 if (firstWarning == null)
-			 firstWarning = warning;
-		 else{
-			 java.sql.SQLWarning lastWarning = firstWarning;
-			 while (lastWarning.getNextWarning() != null){
-				 lastWarning = lastWarning.getNextWarning();
-			 }
-			 lastWarning.setNextWarning(warning);
-		 }
-	 }	 
+
+    protected void addWarning(java.sql.SQLWarning warning){
+        if (firstWarning == null)
+            firstWarning = warning;
+        else{
+            java.sql.SQLWarning lastWarning = firstWarning;
+            while (lastWarning.getNextWarning() != null){
+                lastWarning = lastWarning.getNextWarning();
+            }
+            lastWarning.setNextWarning(warning);
+        }
+    }
 }
