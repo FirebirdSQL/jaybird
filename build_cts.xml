@@ -1,0 +1,110 @@
+<project default="report">
+	
+	<property name="jdbc.username" value="sysdba"/>
+	<property name="jdbc.password" value="masterkey"/>
+	<property name="jdbc.url"      value="jdbc:firebirdsql:localhost/3050:${basedir}/jdbccts.gdb"/>
+	<property name="jdbc.driver"   value="org.firebirdsql.jdbc.FBDriver"/>
+	<property name="jdbc.init_sql" value="${basedir}/conf/ctssql.ddl.firebird.sql"/>
+	
+	<property name="cts.path"      value="f:/java/jdbccts"/>
+
+	<property name="cts.config"    value="dml.properties"/>
+	<property name="cts.excludes"  value="excludes.properties"/>
+
+	<property name="output.dir"    value="${basedir}/output"/>
+	<property name="compile.out"   value="${output.dir}/cts/classes"/>
+	<property name="test.out"      value="${output.dir}/cts/test"/>
+	<property name="report.out"    value="${output.dir}/cts/reports"/>
+	
+	<property name="report.styles" value="${basedir}/src/stylesheets"/>
+	<property name="source.cts.junit" value="${basedir}/src/jdbccts"/>
+
+	<path id="cts.runtime">
+		<pathelement location="${cts.path}/lib/j2eects.jar"/>
+		<pathelement location="${cts.path}/lib/parser.jar"/>
+		<pathelement location="${cts.path}/lib/riinterceptors.jar"/>
+		
+		<pathelement path="${output.dir}/j2ee"/>
+		<pathelement path="${output.dir}/classes"/>
+		<pathelement path="${output.dir}/concurrent"/>
+		<pathelement path="${output.dir}/pool"/>
+		<pathelement path="${output.dir}/test"/>
+	</path>
+
+	<target name="initdb">
+		<java classname="com.sun.cts.util.InitCTSDatabase">
+			<classpath refid="cts.runtime"/>
+			
+			<arg value="-U${jdbc.username}"/>
+			<arg value="-P${jdbc.password}"/>
+			<arg value="-S${jdbc.url}"/>
+			<arg value="-p${jdbc.init_sql}"/>
+			<arg value="-d${jdbc.driver}"/>
+		</java>
+	</target>
+	
+	<target name="init">
+		<mkdir dir="${compile.out}"/>
+		<mkdir dir="${test.out}"/>
+		<mkdir dir="${report.out}"/>
+	</target>
+	
+	<target name="compile" depends="init">
+		<javac debug="true" destdir="${compile.out}">
+			<classpath refid="cts.runtime"/>
+			<src path="${cts.path}/tests"/>
+			<src path="${source.cts.junit}"/>
+		</javac>
+		<copy todir="${compile.out}">
+			<fileset dir="${source.cts.junit}">
+				<include name="**/*.properties"/>
+			</fileset>
+                </copy>
+	</target>
+	
+	<target name="test" depends="compile">
+	
+		<junit printsummary="true"
+			haltonerror="false"
+			haltonfailure="false" 
+		>
+			<sysproperty key="cts.config.resource" value="${cts.config}"/>
+			<sysproperty key="cts.excludes.resource" value="${cts.excludes}"/>
+
+
+			<sysproperty key="cts.db.url" value="${jdbc.url}"/>
+			<sysproperty key="cts.db.username" value="${jdbc.username}"/>
+			<sysproperty key="cts.db.password" value="${jdbc.password}"/>
+			
+			<classpath refid="cts.runtime"/>
+			<classpath path="${compile.out}"/>
+			
+			<test name="org.firebirdsql.jdbc.cts.BatchUpdatesSuite" todir="${test.out}"/>
+			<test name="org.firebirdsql.jdbc.cts.ConnectionSuite" todir="${test.out}"/>
+			<test name="org.firebirdsql.jdbc.cts.DbMetaSuite" todir="${test.out}"/>
+			<test name="org.firebirdsql.jdbc.cts.DateTimeSuite" todir="${test.out}"/>
+			<test name="org.firebirdsql.jdbc.cts.EscapeSyntaxSuite" todir="${test.out}"/>
+			<test name="org.firebirdsql.jdbc.cts.ExceptionSuite" todir="${test.out}"/>
+			<test name="org.firebirdsql.jdbc.cts.PreparedStatementSuite" todir="${test.out}"/>
+			<test name="org.firebirdsql.jdbc.cts.ResultSetSuite" todir="${test.out}"/>
+			<test name="org.firebirdsql.jdbc.cts.RsMetaSuite" todir="${test.out}"/>
+			<test name="org.firebirdsql.jdbc.cts.StatementSuite" todir="${test.out}"/>
+			
+			<formatter type="xml"/>
+			
+		</junit>
+	</target>
+	
+	<target name="report" depends="test">
+    	<junitreport todir="${report.out}">
+			<fileset dir="${test.out}">
+				<include name="TEST-*.xml"/>
+			</fileset>
+			<report format="frames"
+				todir="${report.out}"
+				styledir="${report.styles}"
+			/>
+		</junitreport>
+	</target>
+	
+</project>
