@@ -9,11 +9,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the Firebird Java GDS implementation.
- * 
- * The Initial Developer of the Original Code is Alejandro Alberola.
- * Portions created by Alejandro Alberola are Copyright (C) 2001
- * Boix i Oltra, S.L. All Rights Reserved.
+ * Original developer David Jencks
  * 
  * Contributor(s):
  * 
@@ -32,11 +28,15 @@
 
 package org.firebirdsql.gds;
 
-import javax.security.auth.Subject;
+import java.io.OutputStream;
+import java.io.IOException;
 
-public interface isc_db_handle {
+public interface Clumplet {
+
+    public void append(Clumplet c);
     
-    public Subject getSubject();
-
+    public int getLength();
+    
+//    public void write(OutputStream out) throws IOException;
+    
 }
-
