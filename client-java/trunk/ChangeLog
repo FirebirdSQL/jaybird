@@ -1,3 +1,49 @@
+2004-01-09 23:23  rfincher
+
+	* client-java/src/etc/: faq.PDF, FAQ.txt:
+	
+	[no log message]
+
+2004-01-09 23:14  rfincher
+
+	* client-java/src/etc/faq.html:
+	
+	fixed errors in some links.
+
+2004-01-08 19:05  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	added usage of substr function in bug report test case
+
+2004-01-08 14:11  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/:
+	jdbc/TestFBWrappingDataSource.java,
+	pool/TestFBConnectionPoolDataSource.java:
+	
+	added JNDI testing code
+
+2004-01-08 14:02  rrokytskyy
+
+	* client-java/src/lib/: fscontext.jar, providerutil.jar:
+	
+	needed for JNDI tests
+
+2004-01-08 13:24  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	FBConnectionPoolDataSource.java, FBPoolingDefaults.java,
+	FBWrappingDataSource.java:
+	
+	fixed some bugs in JNDI management
+
+2004-01-08 13:00  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	added getObject call to fully reproduce the bug.
+
 2004-01-05 10:53  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/: jdbc/TestFBResultSet.java,
