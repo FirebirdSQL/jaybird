@@ -35,7 +35,7 @@ public class TestFBCallableStatement extends TestCase {
         "CREATE PROCEDURE notfactorial(number INTEGER) RETURNS (result INTEGER) " +
         "AS " +
         "BEGIN " +
-        "  result = number;" + 
+        "  result = number;" +
         "END";
         /*"  DECLARE VARIABLE temp INTEGER; " +
         "BEGIN " +
@@ -56,7 +56,7 @@ public class TestFBCallableStatement extends TestCase {
         "SELECT * FROM notfactorial(?);";
 
     public static final String EXECUTE_PROCEDURE =
-        "EXECUTE PROCEDURE notfactorial(?)";
+        "{call notfactorial(?)}";
 
     private java.sql.Connection connection;
 
@@ -72,17 +72,17 @@ public class TestFBCallableStatement extends TestCase {
             java.sql.DriverManager.getConnection(TestConst.DB_URL, TestConst.DB_INFO);
         java.sql.Statement stmt = connection.createStatement();
         try {
-            stmt.execute(DROP_PROCEDURE);
+            stmt.executeUpdate(DROP_PROCEDURE);
         }
         catch (Exception e) {}
 
-        stmt.execute(CREATE_PROCEDURE);
+        stmt.executeUpdate(CREATE_PROCEDURE);
+        //connection.commit();
         stmt.close();
-        connection.commit();
     }
     protected void tearDown() throws Exception {
         java.sql.Statement stmt = connection.createStatement();
-        stmt.execute(DROP_PROCEDURE);
+        stmt.executeUpdate(DROP_PROCEDURE);
         stmt.close();
         connection.commit();
         connection.close();
@@ -94,7 +94,7 @@ public class TestFBCallableStatement extends TestCase {
         stmt.setInt(1, 5);
         stmt.execute();
         int ans = stmt.getInt(1);
-        assertTrue("got wrong answer, expected 5: " + ans, ans == 5); 
+        assertTrue("got wrong answer, expected 5: " + ans, ans == 5);
         /*java.sql.ResultSet rs = stmt.execute();
         boolean hasResult = false;
         while (rs.next()) {

@@ -1,4 +1,4 @@
-/*   This class is LGPL only, due to the inclusion of a 
+/*   This class is LGPL only, due to the inclusion of a
  *Xid implementation from the JBoss project as a static inner class for testing purposes.
  *The portions before the XidImpl are usable under MPL 1.1 or LGPL
  *If we write our own xid test implementation, we can reset the license to match
@@ -44,17 +44,17 @@ import junit.framework.*;
  *future enhancements will use datasources/ managed stuff.
  */
 public class TestFBXAResource extends TestXABase {
-    
-    
+
+
     public TestFBXAResource(String name) {
         super(name);
     }
-    
+
     public static Test suite() {
 
         return new TestSuite(TestFBXAResource.class);
     }
-    
+
     public void _setUp() throws Exception {
         FBManager m = new FBManager();
         m.setURL("localhost");
@@ -63,7 +63,7 @@ public class TestFBXAResource extends TestXABase {
         m.createDatabase(DBNAME);
         m.stop();
     }
-    
+
     public void _tearDown() throws Exception {
         FBManager m = new FBManager();
         m.setURL("localhost");
@@ -72,9 +72,9 @@ public class TestFBXAResource extends TestXABase {
         m.dropDatabase(DBNAME);
         m.stop();
     }
-    
-    
-    
+
+
+
 
 
 
@@ -146,7 +146,7 @@ public class TestFBXAResource extends TestXABase {
         xa.rollback(xid);
         mc.destroy();
     }
-    
+
     public void test2PCXATrans() throws Exception {
         System.out.println();
         System.out.println("testStartXATrans");
@@ -210,8 +210,8 @@ public class TestFBXAResource extends TestXABase {
         xa1.commit(xid2, true);
         mc1.destroy();
         mc2.destroy();
-        
+
     }
-    
-    
+
+
 }

@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.1  2001/07/13 18:16:15  d_jencks
+ * Implementation of jdbc 1.0 Driver contributed by Roman Rokytskyy
+ *
  * Revision 1.1  2001/07/09 09:09:51  rrokytskyy
  * Initial revision
  *
@@ -42,7 +45,7 @@ public class TestConst {
      * Default URL for the test
      */
     public static final String DB_URL = FBDriver.FIREBIRD_PROTOCOL +
-        "localhost:/usr/java/jboss/dev/jboss/dist/db/firebird/jbosstest.gdb";
+        "localhost:/usr/local/firebird/dev/client-java/db/fbmctest.gdb";
         //"localhost:d:/projects/firebirdclient/test/jbosstest.gdb";
         //"localhost:/home/rocky/data/interbase/jboss.gdb";
 

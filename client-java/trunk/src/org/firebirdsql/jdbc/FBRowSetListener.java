@@ -37,8 +37,8 @@ import javax.sql.RowSetEvent;
 
 
 /**
- * <P>The RowSetListener interface is implemented by a 
- * component that wants to be notified when a significant 
+ * <P>The RowSetListener interface is implemented by a
+ * component that wants to be notified when a significant
  * event happens in the life of a RowSet
  */
 

@@ -41,52 +41,52 @@ import org.firebirdsql.gds.GDSFactory;
  *   @author David Jencks (davidjencks@earthlink.net)
  *   @version $ $
  */
- 
+
 /**The ConnectionRequestInfo interface enables a resource adapter to pass its own request specific data
 structure across the connection request flow. A resource adapter extends the empty interface to
-supports its own data structures for connection request. 
+supports its own data structures for connection request.
 
 A typical use allows a resource adapter to handle application component specified per-connection
 request properties (example - client ID, language). The application server passes these properties back
 across to match/createManagedConnection calls on the resource adapter. These properties remain
-opaque to the application server during the connection request flow. 
+opaque to the application server during the connection request flow.
 
 Once the ConnectionRequestInfo reaches match/createManagedConnection methods on the
 ManagedConnectionFactory instance, resource adapter uses this additional per-request information
-to do connection creation and matching. 
+to do connection creation and matching.
 **/
 
 public class FBConnectionRequestInfo implements ConnectionRequestInfo {
-    
+
     private Clumplet c = null;
-    
+
     public FBConnectionRequestInfo() {
     }
-    
+
     public FBConnectionRequestInfo(FBConnectionRequestInfo src) {
         c = GDSFactory.cloneClumplet(src.c);
     }
-    
+
     Clumplet getDpb() {
         return c;
     }
-    
+
     public void setProperty(int type, String content) {
         append(GDSFactory.newClumplet(type, content));
     }
-    
+
     public void setProperty(int type) {
         append(GDSFactory.newClumplet(type));
     }
-    
+
     public void setProperty(int type, int content) {
         append(GDSFactory.newClumplet(type, content));
     }
-    
+
     public void setProperty(int type, byte[] content) {
         append(GDSFactory.newClumplet(type, content));
     }
-        
+
     private void append(Clumplet newc) {
         if (c == null) {
             c = newc;
@@ -99,11 +99,11 @@ public class FBConnectionRequestInfo implements ConnectionRequestInfo {
     public void setUser(String user) {
         setProperty(GDS.isc_dpb_user_name, user);
     }
-    
+
     public void setPassword(String password) {
         setProperty(GDS.isc_dpb_password, password);
     }
-     
+
     /**
      Checks whether this instance is equal to another. Since connectionRequestInfo is defined
      specific to a resource adapter, the resource adapter is required to implement this method. The
@@ -133,7 +133,7 @@ public class FBConnectionRequestInfo implements ConnectionRequestInfo {
      Returns:
          hash code os this instance
     **/
-     
+
     public int hashCode() {
         if (c == null) {
             return 0;

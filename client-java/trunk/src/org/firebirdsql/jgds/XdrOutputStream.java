@@ -1,26 +1,26 @@
-/* 
+/*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is the Firebird Java GDS implementation.
- * 
+ *
  * The Initial Developer of the Original Code is Alejandro Alberola.
  * Portions created by Alejandro Alberola are Copyright (C) 2001
  * Boix i Oltra, S.L. All Rights Reserved.
- * 
+ *
  * Contributor(s):
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Lesser General Public License Version 2.1 or later
- * (the "LGPL"), in which case the provisions of the LGPL are applicable 
- * instead of those above.  If you wish to allow use of your 
+ * (the "LGPL"), in which case the provisions of the LGPL are applicable
+ * instead of those above.  If you wish to allow use of your
  * version of this file only under the terms of the LGPL and not to
  * allow others to use your version of this file under the MPL,
  * indicate your decision by deleting the provisions above and
@@ -81,33 +81,33 @@ class XdrOutputStream extends FilterOutputStream {
             even(len);
         }
     }
-    
+
     public final void writeBuffer(byte[] buffer, int len) throws IOException {
         writeInt(len);
         writeOpaque(buffer, len);
     }
 
     public final void writeBlobBuffer(byte[] buffer) throws IOException {
-	int len = buffer.length ; // 2 for short for buffer length
-	//System.out.println("writeBlobBuffer len: " + len);
-	if (len > Short.MAX_VALUE) {
-	    throw new IOException(""); //Need a value???
-	}
-	writeInt(len + 2);
-	writeInt(len + 2); //bizarre but true! three copies of the length
-	write((len >> 0) & 0xff);
-	write((len >> 8) & 0xff);
-	write(buffer, 0, len);
-	//System.out.println("writeBlobBuffer wrotebuffer bytes: " + len);
-	even(len + 2);
+    int len = buffer.length ; // 2 for short for buffer length
+    //System.out.println("writeBlobBuffer len: " + len);
+    if (len > Short.MAX_VALUE) {
+        throw new IOException(""); //Need a value???
     }
-    
+    writeInt(len + 2);
+    writeInt(len + 2); //bizarre but true! three copies of the length
+    write((len >> 0) & 0xff);
+    write((len >> 8) & 0xff);
+    write(buffer, 0, len);
+    //System.out.println("writeBlobBuffer wrotebuffer bytes: " + len);
+    even(len + 2);
+    }
+
     public final void writeString(String s) throws IOException {
         byte[] buffer = s.getBytes();
         writeBuffer(buffer, buffer.length);
     }
-    
-    
+
+
     public final void writeSet(int type, Set s) throws IOException {
         if (s == null) {
             writeInt(1);
@@ -141,12 +141,12 @@ class XdrOutputStream extends FilterOutputStream {
         }
         even(size);
     }
-    
-    
+
+
     final void even(int length) throws IOException {
         for (int j = 0; j < ((4 - length) & 3); j++) {
             out.write(0);
         }
     }
-        
+
 }

@@ -49,7 +49,7 @@ import java.util.*;
 
 
 /**
- * 
+ *
  * <P>The RowSet interface adds support to the JDBC API for the
  * JavaBeans(TM) component model.  A rowset can be used as a JavaBean in
  * a visual Bean development environment. A RowSet can be created and
@@ -61,40 +61,40 @@ import java.util.*;
  * interface supports JavaBeans events, allowing other components in an
  * application to be notified when an important event on a rowset occurs,
  * such as a change in its value.
- * 
+ *
  * <P>The RowSet interface is unique in that it is intended to be
  * implemented using the rest of the JDBC(TM) API.  In other words, a
  * RowSet implementation is a layer of software that executes "on top"
  * of a JDBC driver.  Implementations of the RowSet interface can
  * be provided by anyone, including JDBC driver vendors who want to
- * provide a RowSet implementation as part of their JDBC products. 
- * 
+ * provide a RowSet implementation as part of their JDBC products.
+ *
  * <P>Rowsets are easy to use.  The RowSet interface extends the standard
  * java.sql.ResultSet interface.  The RowSetMetaData interface extends
  * the java.sql.ResultSetMetaData interface. Thus, developers familiar
  * with the JDBC API will have to learn a minimal number of new APIs to
  * use rowsets.  In addition, third-party software tools that work with
  * JDBC ResultSets will also easily be made to work with rowsets.
- * 
+ *
  */
 
 public class FBRowSet extends FBResultSet implements RowSet {
-    
+
     FBRowSet(FBManagedConnection mc, FBStatement fbstatement, isc_stmt_handle stmt) {
         super(mc, fbstatement, stmt);
     }
- 
-  
+
+
   //-----------------------------------------------------------------------
-  // Properties 
+  // Properties
   //-----------------------------------------------------------------------
 
   //-----------------------------------------------------------------------
   // The following properties may be used to create a Connection.
   //-----------------------------------------------------------------------
 
-  /** 
-   * Get the url used to create a JDBC connection. The default value 
+  /**
+   * Get the url used to create a JDBC connection. The default value
    * is null.
    *
    * @return a string url
@@ -114,7 +114,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * internally to create a database connection when reading or writing
    * data.  Either a url or a data source name is used to create a
    * connection, whichever was specified most recently.
-   * 
+   *
    * @param url a string value, may be null
    * @exception SQLException if a database-access error occurs.
    */
@@ -125,7 +125,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
 
   /**
    * The JNDI name that identifies a JDBC data source.  Users should set
-   * either the url or data source name properties.  The most recent 
+   * either the url or data source name properties.  The most recent
    * property set is used to get a connection.
    *
    * @return a data source name
@@ -147,9 +147,9 @@ public class FBRowSet extends FBResultSet implements RowSet {
     }
 
 
-  /** 
+  /**
    * The username used to create a database connection.  The username
-   * property is set at runtime before calling execute().  It is 
+   * property is set at runtime before calling execute().  It is
    * not usually part of the serialized state of a rowset object.
    *
    * @return a user name
@@ -171,9 +171,9 @@ public class FBRowSet extends FBResultSet implements RowSet {
     }
 
 
-  /** 
+  /**
    * The password used to create a database connection.  The password
-   * property is set at runtime before calling execute().  It is 
+   * property is set at runtime before calling execute().  It is
    * not usually part of the serialized state of a rowset object.
    *
    * @return a password
@@ -195,7 +195,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
     }
 
 
-  /** 
+  /**
    * The transaction isolation property contains the JDBC transaction
    * isolation level used.
    *
@@ -246,14 +246,14 @@ public class FBRowSet extends FBResultSet implements RowSet {
   // The following properties may be used to create a Statement.
   //-----------------------------------------------------------------------
 
-  /** 
+  /**
    * Get the rowset's command property.
    *
    * The command property contains a command string that can be executed to
    * fill the rowset with data.  The default value is null.
    *
    * @return the command string, may be null
-   * @exception SQLException if a database-access error occurs.  
+   * @exception SQLException if a database-access error occurs.
    */
     public String getCommand() {
         return "";
@@ -265,7 +265,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    *
    * This property is optional.  The command property may not be needed
    * when a rowset is produced by a data source that doesn't support
-   * commands, such as a spreadsheet. 
+   * commands, such as a spreadsheet.
    *
    * @param cmd a command string, may be null
    * @exception SQLException if a database-access error occurs.
@@ -275,9 +275,9 @@ public class FBRowSet extends FBResultSet implements RowSet {
     }
 
 
-  /** 
+  /**
    * A rowset may be read-only.  Attempts to update a
-   * read-only rowset will result in an SQLException being thrown. 
+   * read-only rowset will result in an SQLException being thrown.
    * Rowsets are updateable, by default, if updates are possible.
    *
    * @return true if updatable, false otherwise
@@ -306,14 +306,14 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * columns.  If the limit is exceeded, the excess data is silently
    * discarded.
    *
-   * @return the current max column size limit; zero means unlimited 
+   * @return the current max column size limit; zero means unlimited
    * @exception SQLException if a database-access error occurs.
    */
     public int getMaxFieldSize() throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
-    
+
   /**
    * The maxFieldSize limit (in bytes) is set to limit the size of
    * data that can be returned for any column value; it only applies
@@ -322,7 +322,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * is silently discarded. For maximum portability use values
    * greater than 256.
    *
-   * @param max the new max column size limit; zero means unlimited 
+   * @param max the new max column size limit; zero means unlimited
    * @exception SQLException if a database-access error occurs.
    */
     public void setMaxFieldSize(int max) throws  SQLException {
@@ -348,7 +348,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * RowSet can contain.  If the limit is exceeded, the excess
    * rows are silently dropped.
    *
-   * @param max the new max rows limit; zero means unlimited 
+   * @param max the new max rows limit; zero means unlimited
    * @exception SQLException if a database-access error occurs.
    */
     public void setMaxRows(int max) throws  SQLException {
@@ -385,8 +385,8 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * wait for a Statement to execute. If the limit is exceeded, a
    * SQLException is thrown.
    *
-   * @return the current query timeout limit in seconds; zero means 
-   * unlimited 
+   * @return the current query timeout limit in seconds; zero means
+   * unlimited
    * @exception SQLException if a database-access error occurs.
    */
     public int getQueryTimeout() throws  SQLException {
@@ -399,8 +399,8 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * wait for a Statement to execute. If the limit is exceeded, a
    * SQLException is thrown.
    *
-   * @param seconds the new query timeout limit in seconds; zero means 
-   * unlimited 
+   * @param seconds the new query timeout limit in seconds; zero means
+   * unlimited
    * @exception SQLException if a database-access error occurs.
    */
     public void setQueryTimeout(int seconds) throws  SQLException {
@@ -429,14 +429,14 @@ public class FBRowSet extends FBResultSet implements RowSet {
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   //-----------------------------------------------------------------------
   // Parameters
   //-----------------------------------------------------------------------
 
-  /** 
+  /**
    * The setXXX() methods are used to set any input parameters needed by
-   * command (above).  Parameters are set at runtime, as opposed to design 
+   * command (above).  Parameters are set at runtime, as opposed to design
    * time.
    */
 
@@ -459,16 +459,16 @@ public class FBRowSet extends FBResultSet implements RowSet {
    *
    * Set a parameter to SQL NULL.  This version of setNull should
    * be used for user-named types and REF type parameters.  Examples
-   * of user-named types include: STRUCT, DISTINCT, JAVA_OBJECT, and 
+   * of user-named types include: STRUCT, DISTINCT, JAVA_OBJECT, and
    * named array types.
    *
    * <P><B>Note:</B> To be portable, applications must give the
    * SQL type code and the fully qualified SQL type name when specifying
-   * a NULL user-named or REF parameter.  In the case of a user-named type 
-   * the name is the type name of the parameter itself.  For a REF 
-   * parameter the name is the type name of the referenced type.  If 
-   * a JDBC driver does not need the type code or type name information, 
-   * it may ignore it.     
+   * a NULL user-named or REF parameter.  In the case of a user-named type
+   * the name is the type name of the parameter itself.  For a REF
+   * parameter the name is the type name of the referenced type.  If
+   * a JDBC driver does not need the type code or type name information,
+   * it may ignore it.
    *
    * Although it is intended for user-named and Ref parameters,
    * this method may be used to set a null parameter of any JDBC type.
@@ -479,7 +479,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param sqlType a value from java.sql.Types
    * @param typeName the fully qualified name of a SQL user-named type,
-   *  ignored if the parameter is not a user-named type or REF 
+   *  ignored if the parameter is not a user-named type or REF
    * @exception SQLException if a database-access error occurs.
    */
     public void setNull (int paramIndex, int sqlType, String typeName) throws  SQLException {
@@ -487,7 +487,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
 
 
   /**
-   * Set a parameter to a Java boolean value.   
+   * Set a parameter to a Java boolean value.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param x the parameter value
@@ -499,7 +499,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
 
 
   /**
-   * Set a parameter to a Java byte value.  
+   * Set a parameter to a Java byte value.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param x the parameter value
@@ -509,9 +509,9 @@ public class FBRowSet extends FBResultSet implements RowSet {
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   /**
-   * Set a parameter to a Java short value.   
+   * Set a parameter to a Java short value.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param x the parameter value
@@ -523,7 +523,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
 
 
   /**
-   * Set a parameter to a Java int value.   
+   * Set a parameter to a Java int value.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param x the parameter value
@@ -535,7 +535,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
 
 
   /**
-   * Set a parameter to a Java long value.  
+   * Set a parameter to a Java long value.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param x the parameter value
@@ -560,7 +560,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
 
 
   /**
-   * Set a parameter to a Java double value. 
+   * Set a parameter to a Java double value.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param x the parameter value
@@ -570,9 +570,9 @@ public class FBRowSet extends FBResultSet implements RowSet {
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   /**
-   * Set a parameter to a java.lang.BigDecimal value.  
+   * Set a parameter to a java.lang.BigDecimal value.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param x the parameter value
@@ -584,7 +584,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
 
 
   /**
-   * Set a parameter to a Java String value.   
+   * Set a parameter to a Java String value.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param x the parameter value
@@ -596,10 +596,10 @@ public class FBRowSet extends FBResultSet implements RowSet {
 
 
   /**
-   * Set a parameter to a Java array of bytes.  
+   * Set a parameter to a Java array of bytes.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
-   * @param x the parameter value 
+   * @param x the parameter value
    * @exception SQLException if a database-access error occurs.
    */
     public void setBytes(int parameterIndex, byte x[]) throws  SQLException {
@@ -608,7 +608,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
 
 
   /**
-   * Set a parameter to a java.sql.Date value.   
+   * Set a parameter to a java.sql.Date value.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param x the parameter value
@@ -620,7 +620,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
 
 
   /**
-   * Set a parameter to a java.sql.Time value.   
+   * Set a parameter to a java.sql.Time value.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param x the parameter value
@@ -632,10 +632,10 @@ public class FBRowSet extends FBResultSet implements RowSet {
 
 
   /**
-   * Set a parameter to a java.sql.Timestamp value.   
+   * Set a parameter to a java.sql.Timestamp value.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
-   * @param x the parameter value 
+   * @param x the parameter value
    * @exception SQLException if a database-access error occurs.
    */
     public void setTimestamp(int parameterIndex, java.sql.Timestamp x) throws  SQLException {
@@ -646,38 +646,38 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * When a very large ASCII value is input to a LONGVARCHAR
    * parameter, it may be more practical to send it via a
    * java.io.InputStream. JDBC will read the data from the stream
-   * as needed, until it reaches end-of-file.   
-   * 
+   * as needed, until it reaches end-of-file.
+   *
    * <P><B>Note:</B> This stream object can either be a standard
    * Java stream object or your own subclass that implements the
    * standard interface.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param x the java input stream which contains the ASCII parameter value
-   * @param length the number of bytes in the stream 
+   * @param length the number of bytes in the stream
    * @exception SQLException if a database-access error occurs.
    */
     public void setAsciiStream(int parameterIndex, java.io.InputStream x, int length) throws  SQLException {
     }
 
-  
+
   /**
    * When a very large binary value is input to a LONGVARBINARY
    * parameter, it may be more practical to send it via a
    * java.io.InputStream. JDBC will read the data from the stream
    * as needed, until it reaches end-of-file.
-   * 
+   *
    * <P><B>Note:</B> This stream object can either be a standard
    * Java stream object or your own subclass that implements the
    * standard interface.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param x the java input stream which contains the binary parameter value
-   * @param length the number of bytes in the stream 
+   * @param length the number of bytes in the stream
    * @exception SQLException if a database-access error occurs.
    */
-    public void setBinaryStream(int parameterIndex, java.io.InputStream x, 
-		       int length) throws  SQLException {
+    public void setBinaryStream(int parameterIndex, java.io.InputStream x,
+               int length) throws  SQLException {
     }
 
 
@@ -685,23 +685,23 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * When a very large UNICODE value is input to a LONGVARCHAR
    * parameter, it may be more practical to send it via a
    * java.io.Reader. JDBC will read the data from the stream
-   * as needed, until it reaches end-of-file.  
-   * 
+   * as needed, until it reaches end-of-file.
+   *
    * <P><B>Note:</B> This stream object can either be a standard
    * Java stream object or your own subclass that implements the
    * standard interface.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
    * @param x the java reader which contains the UNICODE data
-   * @param length the number of characters in the stream 
+   * @param length the number of characters in the stream
    * @exception SQLException if a database-access error occurs.
    */
     public void setCharacterStream(int parameterIndex,
-       			  Reader reader,
-			  int length) throws  SQLException {
+                  Reader reader,
+              int length) throws  SQLException {
     }
 
-  
+
   /**
    * <p>Set the value of a parameter using an object; use the
    * java.lang equivalent objects for integral values.
@@ -710,25 +710,25 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * before being sent to the database.
    *
    * If the object is of a class implementing SQLData,
-   * the rowset should call its method writeSQL() to write it 
+   * the rowset should call its method writeSQL() to write it
    * to the SQL data stream.
    * else
-   * If the object is of a class implementing Ref, Blob, Clob, Struct, 
-   * or Array then pass it to the database as a value of the 
+   * If the object is of a class implementing Ref, Blob, Clob, Struct,
+   * or Array then pass it to the database as a value of the
    * corresponding SQL type.
    *
    * <p>Note that this method may be used to pass datatabase-
-   * specific abstract data types. 
+   * specific abstract data types.
    *
    * @param parameterIndex The first parameter is 1, the second is 2, ...
    * @param x The object containing the input parameter value
-   * @param targetSqlType The SQL type (as defined in java.sql.Types) to be 
+   * @param targetSqlType The SQL type (as defined in java.sql.Types) to be
    * sent to the database. The scale argument may further qualify this type.
    * @param scale For java.sql.Types.DECIMAL or java.sql.Types.NUMERIC types
    *          this is the number of digits after the decimal.  For all other
    *          types this value will be ignored,
    * @exception SQLException if a database-access error occurs.
-   * @see Types 
+   * @see Types
    */
     public void setObject(int parameterIndex, Object x, int targetSqlType, int scale) throws  SQLException {
     }
@@ -737,17 +737,17 @@ public class FBRowSet extends FBResultSet implements RowSet {
   /**
    * This method is like setObject above, but the scale used is the scale
    * of the second parameter.  Scalar values have a scale of zero.  Literal
-   * values have the scale present in the literal.  While it is supported, it 
-   * is not recommended that this method not be called with floating point 
+   * values have the scale present in the literal.  While it is supported, it
+   * is not recommended that this method not be called with floating point
    * input values.
    *
    * @exception SQLException if a database-access error occurs.
    */
-    public void setObject(int parameterIndex, Object x, 
-		 int targetSqlType) throws  SQLException {
+    public void setObject(int parameterIndex, Object x,
+         int targetSqlType) throws  SQLException {
     }
 
-  
+
   /**
    * <p>Set the value of a parameter using an object; use the
    * java.lang equivalent objects for integral values.
@@ -762,18 +762,18 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * type.
    *
    * If the object is of a class implementing SQLData,
-   * the rowset should call its method writeSQL() to write it 
+   * the rowset should call its method writeSQL() to write it
    * to the SQL data stream.
    * else
-   * If the object is of a class implementing Ref, Blob, Clob, Struct, 
-   * or Array then pass it to the database as a value of the 
+   * If the object is of a class implementing Ref, Blob, Clob, Struct,
+   * or Array then pass it to the database as a value of the
    * corresponding SQL type.
    *
    * Raise an exception if there is an ambiguity, for example, if the
    * object is of a class implementing more than one of those interfaces.
    *
    * @param parameterIndex The first parameter is 1, the second is 2, ...
-   * @param x The object containing the input parameter value 
+   * @param x The object containing the input parameter value
    * @exception SQLException if a database-access error occurs.
    */
     public void setObject(int parameterIndex, Object x) throws  SQLException {
@@ -790,7 +790,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
     }
 
 
-  /** 
+  /**
    * Set a BLOB parameter.
    *
    * @param i the first parameter is 1, the second is 2, ...
@@ -800,7 +800,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
     }
 
 
-  /** 
+  /**
    * Set a CLOB parameter.
    *
    * @param i the first parameter is 1, the second is 2, ...
@@ -809,8 +809,8 @@ public class FBRowSet extends FBResultSet implements RowSet {
     public void setClob (int i, Clob x) throws  SQLException {
     }
 
-  
-  /** 
+
+  /**
    * Set an Array parameter.
    *
    * @param i the first parameter is 1, the second is 2, ...
@@ -850,7 +850,7 @@ public class FBRowSet extends FBResultSet implements RowSet {
    * database.
    *
    * @param parameterIndex the first parameter is 1, the second is 2, ...
-   * @param x the parameter value 
+   * @param x the parameter value
    * @exception SQLException if a database-access error occurs.
    */
     public void setTimestamp(int parameterIndex, java.sql.Timestamp x, Calendar cal) throws  SQLException {
@@ -875,20 +875,20 @@ public class FBRowSet extends FBResultSet implements RowSet {
   //---------------------------------------------------------------------
 
   /**
-   * Fills the rowset with data.  
+   * Fills the rowset with data.
    *
-   * Execute() may use the following properties: url, data source name, 
-   * user name, password, transaction isolation, and type map to create a 
+   * Execute() may use the following properties: url, data source name,
+   * user name, password, transaction isolation, and type map to create a
    * connection for reading data.
-   * 
+   *
    * Execute may use the following properties to create a statement
-   * to execute a command: command, read only, maximum field size, 
+   * to execute a command: command, read only, maximum field size,
    * maximum rows, escape processing, and query timeout.
    *
-   * If the required properties have not been set, an exception is 
-   * thrown.  If successful, the current contents of the rowset are 
-   * discarded and the rowset's metadata is also (re)set.  If there are 
-   * outstanding updates, they are ignored.   
+   * If the required properties have not been set, an exception is
+   * thrown.  If successful, the current contents of the rowset are
+   * discarded and the rowset's metadata is also (re)set.  If there are
+   * outstanding updates, they are ignored.
    *
    * @exception SQLException if a database-access error occurs.
    */
@@ -911,14 +911,14 @@ public class FBRowSet extends FBResultSet implements RowSet {
 
 
   /**
-   * RowSet listener deregistration.  
+   * RowSet listener deregistration.
    *
    * @param listener an event listener
    */
     public void removeRowSetListener(RowSetListener listener) {
     }
 
- 
+
 }
 
 

@@ -39,7 +39,7 @@ import javax.resource.ResourceException;
  */
 
  public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
-     
+
     /**
      Returns Product name of the underlying EIS instance connected through the
      ManagedConnection.
@@ -49,7 +49,7 @@ import javax.resource.ResourceException;
      public java.lang.String getEISProductName() throws ResourceException {
          return "Firebird database system";
      }
-     
+
      /**
      Returns product version of the underlying EIS instance connected through the
      ManagedConnection.
@@ -59,8 +59,8 @@ import javax.resource.ResourceException;
      public java.lang.String getEISProductVersion() throws ResourceException {
          throw new ResourceException("not yet implemented");
      }
-     
-     
+
+
 
     /**
      Returns maximum limit on number of active concurrent connections that an EIS instance can
@@ -73,7 +73,7 @@ import javax.resource.ResourceException;
     public int getMaxConnections() throws ResourceException {
         return 0;
     }
-    
+
     /**
      Returns name of the user associated with the ManagedConnection instance. The name
      corresponds to the resource principal under whose whose security context, a connection to the

@@ -1,4 +1,4 @@
-/*   This class is LGPL only, due to the inclusion of a 
+/*   This class is LGPL only, due to the inclusion of a
  *Xid implementation from the JBoss project as a static inner class for testing purposes.
  *The portions before the XidImpl are usable under MPL 1.1 or LGPL
  *If we write our own xid test implementation, we can reset the license to match
@@ -45,28 +45,28 @@ import junit.framework.*;
  *future enhancements will use datasources/ managed stuff.
  */
 public class TestXABase extends TestCase {
-    
-    static final String DBNAME = "/usr/java/jboss/dev/jboss/dist/db/firebird/jbosstest.gdb";
-    //    static final String DBNAME = "/usr/local/firebird/dev/client-java/db/fbmctest.gdb";
+
+    //static final String DBNAME = "/usr/java/jboss/dev/jboss/dist/db/firebird/jbosstest.gdb";
+    static final String DBNAME = "/usr/local/firebird/dev/client-java/db/fbmctest.gdb";
     static final String dbName = "localhost/3050:" + DBNAME;
 //    static final String dbName = "localhost/3050:/usr/local/firebird/dev/client-java/db/jbosstest.gdb";
 //    static final String dbName2 = "localhost:/usr/local/firebird/dev/client-java/db/testdb2.gdb";
 
 //    private FBManagedConnectionFactory mcf;
-    
+
 //    private Clumplet dpb;
-    
+
 //    private HashSet tpb;
-    
+
     public TestXABase(String name) {
         super(name);
     }
-    
+
 /*    public static Test suite() {
 
         return new TestSuite(TestFBManagedConnectionFactory.class);
     }*/
-    
+
     public void _setUp() throws Exception {
         FBManager m = new FBManager();
         m.setURL("localhost");
@@ -75,7 +75,7 @@ public class TestXABase extends TestCase {
         m.createDatabase(DBNAME);
         m.stop();
     }
-    
+
     public void _tearDown() throws Exception {
         FBManager m = new FBManager();
         m.setURL("localhost");
@@ -84,9 +84,9 @@ public class TestXABase extends TestCase {
         m.dropDatabase(DBNAME);
         m.stop();
     }
-    
+
     public FBManagedConnectionFactory initMcf() {
-        
+
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
         mcf.setDatabase(dbName);
         FBConnectionRequestInfo cri = new FBConnectionRequestInfo();
@@ -108,8 +108,8 @@ public class TestXABase extends TestCase {
 
 
 
-    
-    /*Borrowed from 
+
+    /*Borrowed from
      * JBoss, the OpenSource EJB server
      *
      * Distributable under LGPL license.
@@ -117,13 +117,13 @@ public class TestXABase extends TestCase {
      */
      /*
     package org.firebirdsql.jca.test;
-    
+
     import java.net.InetAddress;
     import java.net.UnknownHostException;
-    
+
     import javax.transaction.xa.Xid;
     */
-    
+
     /**
      *  This object encapsulates the ID of a transaction.
      *  This implementation is immutable and always serializable at runtime.
@@ -137,16 +137,16 @@ public class TestXABase extends TestCase {
        implements Xid, java.io.Serializable
     {
        // Constants -----------------------------------------------------
-    
+
        public static final int JBOSS_FORMAT_ID = 0x0101;
-    
+
        // Attributes ----------------------------------------------------
-    
+
        /**
         *  Hash code of this instance. This is really a sequence number.
         */
        private int hash;
-    
+
        /**
         *  Global transaction id of this instance.
         *  The coding of this class depends on the fact that this variable is
@@ -154,15 +154,15 @@ public class TestXABase extends TestCase {
         *  this array are never given away, instead a clone is delivered.
         */
        private byte[] globalId;
-    
+
        /**
         *  Branch qualifier of this instance.
         *  This identifies the branch of a transaction.
         */
        private byte[] branchId;
-    
+
        // Static --------------------------------------------------------
-    
+
        /**
         *  The host name of this host, followed by a slash.
         *
@@ -171,12 +171,12 @@ public class TestXABase extends TestCase {
         *  for humans to read and will do for now.
         */
        private static String hostName;
-    
+
        /**
         *  The next transaction id to use on this host.
         */
        static private int nextId = 0;
-    
+
        /**
         *  Return a new unique transaction id to use on this host.
         */
@@ -184,12 +184,12 @@ public class TestXABase extends TestCase {
        {
           return nextId++;
        }
-    
+
        /**
         *  Singleton for no branch qualifier.
         */
        static private byte[] noBranchQualifier = new byte[0];
-    
+
        /**
         *  Initialize the <code>hostName</code> class variable.
         */
@@ -204,25 +204,25 @@ public class TestXABase extends TestCase {
              hostName = "localhost/";
           }
        }
-    
+
        /**
         *  Return a string that describes any Xid instance.
         */
        static String toString(Xid id) {
           if (id == null)
              return "[NULL Xid]";
-    
+
           String s = id.getClass().getName();
           s = s.substring(s.lastIndexOf('.') + 1);
           s = s + " [FormatId=" + id.getFormatId() +
                   ", GlobalId=" + new String(id.getGlobalTransactionId()).trim() +
                   ", BranchQual=" + new String(id.getBranchQualifier()).trim()+"]";
-    
+
           return s;
        }
-    
+
        // Constructors --------------------------------------------------
-    
+
        /**
         *  Create a new instance.
         */
@@ -232,7 +232,7 @@ public class TestXABase extends TestCase {
           globalId = (hostName + Integer.toString(hash)).getBytes();
           branchId = noBranchQualifier;
        }
-    
+
        /**
         *  Create a new branch of an existing global transaction ID.
         *
@@ -246,11 +246,11 @@ public class TestXABase extends TestCase {
           this.globalId = xid.globalId; // reuse array instance, we never modify.
           this.branchId = Integer.toString(branchId).getBytes();
        }
-    
+
        // Public --------------------------------------------------------
-    
+
        // Xid implementation --------------------------------------------
-    
+
        /**
         *  Return the global transaction id of this transaction.
         */
@@ -258,7 +258,7 @@ public class TestXABase extends TestCase {
        {
           return (byte[])globalId.clone();
        }
-    
+
        /**
         *  Return the branch qualifier of this transaction.
         */
@@ -269,7 +269,7 @@ public class TestXABase extends TestCase {
           else
              return (byte[])branchId.clone();
        }
-    
+
        /**
         *  Return the format identifier of this transaction.
         *
@@ -288,10 +288,10 @@ public class TestXABase extends TestCase {
           // 0x0101: The JBOSS_FORMAT_ID we use here.
           // 0xBB14: Used by JONAS.
           // 0xBB20: Used by JONAS.
-    
+
           return JBOSS_FORMAT_ID;
        }
-    
+
        /**
         *  Compare for equality.
         *
@@ -303,36 +303,36 @@ public class TestXABase extends TestCase {
        {
           if (obj instanceof XidImpl) {
              XidImpl other = (XidImpl)obj;
-    
+
              if (globalId.length != other.globalId.length ||
                  branchId.length != other.branchId.length)
                 return false;
-    
+
              for (int i = 0; i < globalId.length; ++i)
                 if (globalId[i] != other.globalId[i])
                    return false;
-    
+
              for (int i = 0; i < branchId.length; ++i)
                 if (branchId[i] != other.branchId[i])
                    return false;
-    
+
              return true;
           }
           return false;
        }
-    
+
        public int hashCode()
        {
           return hash;
        }
-    
+
        public String toString()
        {
           return toString(this);
        }
-    
+
        // Package protected ---------------------------------------------
-    
+
        /**
         *  Return the global transaction id of this transaction.
         *  Unlike the {@link #getGlobalTransactionId()} method, this one
@@ -343,13 +343,13 @@ public class TestXABase extends TestCase {
        {
           return (byte[])globalId.clone();
        }
-    
-       
+
+
        // Protected -----------------------------------------------------
-    
+
        // Private -------------------------------------------------------
-    
+
        // Inner classes -------------------------------------------------
     }
-    
+
 }

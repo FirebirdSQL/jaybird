@@ -108,11 +108,11 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
-	 * Executes an execute stored procedure.
+     * Executes an execute stored procedure.
      * Some prepared statements return multiple results; the <code>execute</code>
      * method handles these complex statements as well as the simpler
      * form of statements handled by the methods <code>executeQuery</code>
-	 * and <code>executeUpdate</code>.
+     * and <code>executeUpdate</code>.
      *
      * @exception SQLException if a database access error occurs
      * @see Statement#execute
@@ -751,7 +751,8 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      */
     public URL getURL(int colIndex) throws SQLException, MalformedURLException {
         assertHasData(getCurrentResultSet());
-        return getCurrentResultSet().getURL(colIndex);
+        //cast apparently to allow use of jdbc 2 interfaces with jdbc 3 methods.
+        return ((FBResultSet)getCurrentResultSet()).getURL(colIndex);
     }
 
     /**

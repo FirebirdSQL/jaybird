@@ -40,10 +40,10 @@ import org.firebirdsql.jgds.XdrInputStream;
  *   @version $ $
  */
 
- /**This class has methods for serializing xids for firebird use, 
+ /**This class has methods for serializing xids for firebird use,
  * and reading them back into instances of itelf.
  */
- 
+
 class FBXid implements Xid {
    // Constants ---------------------------------------------------
    //Constants from alice.h
@@ -56,7 +56,7 @@ class FBXid implements Xid {
    public static final int TDR_XID_FORMAT_ID = 5;
    public static final int TDR_XID_GLOBAL_ID = 6;
    public static final int TDR_XID_BRANCH_ID = 4;
-   
+
 
    // Attributes ----------------------------------------------------
     private int formatId;
@@ -115,7 +115,7 @@ class FBXid implements Xid {
                 int size;
                 switch (tag) {
                     case TDR_VERSION:
-                        break;                    
+                        break;
                     case TDR_XID_FORMAT_ID:
                         formatId = in.readInt();
                         length -= 4;
@@ -134,7 +134,7 @@ class FBXid implements Xid {
                         break;
                     default:
                         throw new GDSException("uninterpretable transaction format");
-                } 
+                }
             }
         }
         catch (IOException e) {
@@ -143,8 +143,8 @@ class FBXid implements Xid {
     }
 
     // Public --------------------------------------------------------
-    
-    
+
+
 
     // Xid implementation --------------------------------------------
 
@@ -185,11 +185,11 @@ class FBXid implements Xid {
     {
         if (obj instanceof Xid) {
             Xid other = (Xid)obj;
-         
+
             if (formatId != other.getFormatId()) {
                 return false;
             }
-            
+
             byte[] otherGlobalID = other.getGlobalTransactionId();
             byte[] otherBranchID = other.getBranchQualifier();
 
@@ -220,13 +220,13 @@ class FBXid implements Xid {
     {
         return toString(this);
     }
-    
+
     //package
-    
+
     int getLength() {
         return 1 + 1 + 4 + 1 + 1 + globalId.length + 1 + 1 + branchId.length;
     }
-    
+
     byte[] toBytes() {
         byte[] b = new byte[getLength()];
         int i = 0;
@@ -245,7 +245,7 @@ class FBXid implements Xid {
         System.arraycopy(branchId, 0, b, i, branchId.length);
         return b;
     }
-        
+
 
 }
 

@@ -47,22 +47,22 @@ import org.firebirdsql.jdbc.FBConnection;
  */
 
  public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.LocalTransaction {
-     
+
      private FBManagedConnection mc;
-     
+
      private Xid xid = null;
 
      //used to determine if local transaction events notify ConnectionEventListeners
-     //see jca spec section 6.8.  Basically not null means this is cci LocalTransaction, 
+     //see jca spec section 6.8.  Basically not null means this is cci LocalTransaction,
      //null means spi.LocalTransaction.
      private FBConnection c = null;
-         
+
      //should be package!!! perhaps reorganize and eliminate jdbc!!!
      public FBLocalTransaction(FBManagedConnection mc, FBConnection c) {
          this.mc = mc;
          this.c = c;
      }
-     
+
 
 
     /**
@@ -88,8 +88,8 @@ import org.firebirdsql.jdbc.FBConnection;
              mc.notify(ConnectionEvent.LOCAL_TRANSACTION_STARTED, c, null);
          }
      }
-     
-     
+
+
     /**
      Commit a local transaction
      Throws:
@@ -116,8 +116,8 @@ import org.firebirdsql.jdbc.FBConnection;
              mc.notify(ConnectionEvent.LOCAL_TRANSACTION_COMMITTED, c, null);
          }
      }
-     
-     
+
+
 
 
      /**
@@ -128,7 +128,7 @@ import org.firebirdsql.jdbc.FBConnection;
          ResourceAdapterInternalException - error condition internal to resource adapter
          EISSystemException - EIS instance specific error condition
     **/
-    
+
     public void rollback() throws ResourceException {
          if (xid == null) {
              throw new ResourceException("no local transaction active: can't rollback");
@@ -147,17 +147,17 @@ import org.firebirdsql.jdbc.FBConnection;
              mc.notify(ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK, c, null);
          }
      }
-     
-     
+
+
      //This is an intentionally non-implemented xid, so if prepare is called with it, it won't work.
      //Only object identity works for equals!
      static class FBLocalXid implements Xid {
-         
+
          private static final int formatId = 0x0102;//????????????
-         
+
          public FBLocalXid() {
          }
-         
+
         /**
          *  Return the global transaction id of this transaction.
          */
@@ -165,7 +165,7 @@ import org.firebirdsql.jdbc.FBConnection;
         {
            return null;
         }
-    
+
         /**
          *  Return the branch qualifier of this transaction.
          */
@@ -173,7 +173,7 @@ import org.firebirdsql.jdbc.FBConnection;
         {
             return null;
         }
-    
+
         /**
          *  Return the format identifier of this transaction.
          *
@@ -184,6 +184,6 @@ import org.firebirdsql.jdbc.FBConnection;
            return formatId;
         }
     }
-         
-     
+
+
  }

@@ -1,4 +1,4 @@
-/*   This class is LGPL only, due to the inclusion of a 
+/*   This class is LGPL only, due to the inclusion of a
  *Xid implementation from the JBoss project as a static inner class for testing purposes.
  *The portions before the XidImpl are usable under MPL 1.1 or LGPL
  *If we write our own xid test implementation, we can reset the license to match
@@ -54,17 +54,17 @@ public class TestFBDatabaseMetaData extends TestXABase {
     private DatabaseMetaData dmd;
     private LocalTransaction t;
     private Exception ex;
-    
-    
+
+
     public TestFBDatabaseMetaData(String name) {
         super(name);
     }
-    
+
     public static Test suite() {
 
         return new TestSuite(TestFBDatabaseMetaData.class);
     }
-    
+
     public void setUp() throws Exception {
         ex = null;
         FBManagedConnectionFactory mcf = initMcf();
@@ -91,7 +91,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         System.out.println();
         System.out.println("testGetTablesNull");
         createTable("T1");
-        
+
         ResultSet rs = dmd.getTables(null, null, "T1", null);
         int count = 0;
         while (rs.next()) {
@@ -104,17 +104,17 @@ public class TestFBDatabaseMetaData extends TestXABase {
         rs.close();
 
 
-        dropTable("T1");        
+        dropTable("T1");
         if (ex != null) {
             throw ex;
         }
-        
+
     }
     public void testGetTablesSystem() throws Exception {
         System.out.println();
         System.out.println("testGetTablesSystem");
         createTable("T1");
-        
+
         ResultSet rs = dmd.getTables(null, null, "T1", new String[] {"SYSTEM TABLE"});
         int count = 0;
         while (rs.next()) {
@@ -127,17 +127,17 @@ public class TestFBDatabaseMetaData extends TestXABase {
         rs.close();
 
 
-        dropTable("T1");        
+        dropTable("T1");
         if (ex != null) {
             throw ex;
         }
-        
+
     }
     public void testGetTablesTable() throws Exception {
         System.out.println();
         System.out.println("testGetTablesTable");
         createTable("T1");
-        
+
         ResultSet rs = dmd.getTables(null, null, "T1", new String[] {"TABLE"});
         int count = 0;
         while (rs.next()) {
@@ -150,18 +150,18 @@ public class TestFBDatabaseMetaData extends TestXABase {
         rs.close();
 
 
-        dropTable("T1");        
+        dropTable("T1");
         if (ex != null) {
             throw ex;
         }
-        
+
     }
 
     public void testGetTablesView() throws Exception {
         System.out.println();
         System.out.println("testGetTablesView");
         createTable("T1");
-        
+
         ResultSet rs = dmd.getTables(null, null, "T1", new String[] {"VIEW"});
         int count = 0;
         while (rs.next()) {
@@ -174,17 +174,17 @@ public class TestFBDatabaseMetaData extends TestXABase {
         rs.close();
 
 
-        dropTable("T1");        
+        dropTable("T1");
         if (ex != null) {
             throw ex;
         }
-        
+
     }
 
     public void testGetSystemTablesSystem() throws Exception {
         System.out.println();
         System.out.println("testGetSystemTablesSystem");
-        
+
         ResultSet rs = dmd.getTables(null, null, "RDB$RELATIONS", new String[] {"SYSTEM TABLE"});
         int count = 0;
         while (rs.next()) {
@@ -196,13 +196,13 @@ public class TestFBDatabaseMetaData extends TestXABase {
         assertTrue("Got more than one table name back!", count == 1);
         rs.close();
 
-        
+
     }
- 
+
     public void testGetAllSystemTablesSystem() throws Exception {
         System.out.println();
         System.out.println("testGetSystemTablesSystem");
-        
+
         ResultSet rs = dmd.getTables(null, null, "%", new String[] {"SYSTEM TABLE"});
         int count = 0;
         while (rs.next()) {
@@ -213,9 +213,9 @@ public class TestFBDatabaseMetaData extends TestXABase {
         assertTrue("# of system tables is not 32: counted: " + count, count == 32);
         rs.close();
 
-        
+
     }
- 
+
 
     public void testAAStringFunctions() {
         System.out.println();
@@ -296,11 +296,11 @@ public class TestFBDatabaseMetaData extends TestXABase {
         dropTable("\"test_ me\"");
         dropTable("\"test_ me too\"");
         dropTable("\"test_me too\"");
-        
+
         if (ex != null) {
             throw ex;
         }
-        
+
     }
     public void testGetColumnsWildcardQuote() throws Exception {
         System.out.println();
@@ -330,11 +330,11 @@ public class TestFBDatabaseMetaData extends TestXABase {
         dropTable("\"test_ me\"");
         dropTable("\"test_ me too\"");
         dropTable("\"test_me too\"");
-        
+
         if (ex != null) {
             throw ex;
         }
-        
+
     }
 
 
@@ -345,7 +345,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         ResultSet rs = dmd.getProcedures(null, null, "%");
         assertTrue("No resultset returned from getProcedures", rs != null);
     }
- 
+
     public void testGetProcedureColumns() throws Exception {
         System.out.println();
         System.out.println("testGetProcedureColumns");
@@ -353,7 +353,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         ResultSet rs = dmd.getProcedureColumns(null, null, "%", "%");
         assertTrue("No resultset returned from getProcedureColumns", rs != null);
     }
- 
+
     public void testGetColumnPrivileges() throws Exception {
         System.out.println();
         System.out.println("testGetColumnPrivileges");
@@ -361,7 +361,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         ResultSet rs = dmd.getColumnPrivileges(null, null, "RDB$RELATIONS", "%");
         assertTrue("No resultset returned from getProcedureColumns", rs != null);
     }
- 
+
     public void testGetTablePrivileges() throws Exception {
         System.out.println();
         System.out.println("testGetTablePrivileges");
@@ -391,12 +391,12 @@ public class TestFBDatabaseMetaData extends TestXABase {
         assertTrue("Not enough TypeInfo rows fetched: " + count, count >= 21);
     }
 
- 
+
     private void createTable(String tableName) throws Exception {
         dropTable(tableName);
         t.begin();
         try {
-            s.execute("CREATE TABLE " + tableName + " ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, \"my column1\" CHAR(10), \"my_ column2\" VARCHAR(20))"); 
+            s.execute("CREATE TABLE " + tableName + " ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, \"my column1\" CHAR(10), \"my_ column2\" VARCHAR(20))");
         }
         catch (Exception e) {
             ex = e;
@@ -413,6 +413,6 @@ public class TestFBDatabaseMetaData extends TestXABase {
         }
         t.commit();
     }
-    
+
 }
 

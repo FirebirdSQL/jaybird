@@ -40,12 +40,12 @@ import java.sql.*;
 
 
 /**
- * 
+ *
  * A rowset object presents itself to a reader or writer as an instance
  * of RowSetInternal.  The RowSetInternal interface contains additional
  * methods that let the reader or writer access and modify the internal
  * state of the rowset.
- * 
+ *
  */
 
 public class FBRowSetInternal implements RowSetInternal {
@@ -72,7 +72,7 @@ public class FBRowSetInternal implements RowSetInternal {
     }
 
 
-  /**    
+  /**
    * Set the rowset's metadata.
    *
    * @param a metadata object
@@ -82,7 +82,7 @@ public class FBRowSetInternal implements RowSetInternal {
     }
 
 
-  /** 
+  /**
    * Returns a result set containing the original value of the rowset.
    * The cursor is positioned before the first row in the result set.
    * Only rows contained in the result set returned by getOriginal()
@@ -107,7 +107,7 @@ public class FBRowSetInternal implements RowSetInternal {
   public ResultSet getOriginalRow() throws  SQLException {
         return null;
     }
-    
+
 
 }
 

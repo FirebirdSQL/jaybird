@@ -21,30 +21,45 @@
  *    All rights reserved.
  */
 
+
+
 /*
+
  * CVS modification log:
+
  * $Log$
+ * Revision 1.3  2001/07/18 20:07:31  d_jencks
+ * Added better GDSExceptions, new NativeSQL, and CallableStatement test from Roman Rokytskyy
+ *
  * Revision 1.2  2001/07/15 21:17:36  d_jencks
  * Updated to use assertTrue rather than assert, for junit 3.7
  *
  * Revision 1.1  2001/07/13 18:16:15  d_jencks
  * Implementation of jdbc 1.0 Driver contributed by Roman Rokytskyy
  *
+
  * Revision 1.1  2001/07/09 09:09:51  rrokytskyy
+
  * Initial revision
+
  *
+
  */
+
+
 
 package org.firebirdsql.jdbc;
 
 import junit.framework.*;
 import java.sql.*;
 
+
 /**
  * Test suite for the FBUnmanagedConnection implementation.
  *
  * @author Roman Rokytskyy (rrokytskyy@yahoo.co.uk)
  */
+
 public class TestFBUnmanagedConnection extends TestCase {
     public static final String CREATE_TEST_TABLE =
         "CREATE TABLE connection_test (" +
@@ -93,10 +108,10 @@ public class TestFBUnmanagedConnection extends TestCase {
         try{
             Statement statement = connection.createStatement();
             try {
-                statement.execute(DROP_TEST_TABLE);
-            }
-            catch (Exception e) {}
-            statement.executeUpdate(CREATE_TEST_TABLE);
+               statement.execute(DROP_TEST_TABLE);
+           }
+           catch (Exception e) {}
+           statement.executeUpdate(CREATE_TEST_TABLE);
             connection.commit();
             statement.executeUpdate(INSERT_TEST_TABLE);
             connection.commit();

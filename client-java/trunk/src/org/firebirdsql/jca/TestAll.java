@@ -1,4 +1,4 @@
-/*   This class is LGPL only, due to the inclusion of a 
+/*   This class is LGPL only, due to the inclusion of a
  *Xid implementation from the JBoss project as a static inner class for testing purposes.
  *The portions before the XidImpl are usable under MPL 1.1 or LGPL
  *If we write our own xid test implementation, we can reset the license to match
@@ -48,12 +48,12 @@ import junit.framework.*;
  *This runs all the FBTests as one suite.
  */
 public class TestAll extends TestCase {
-    
-    
+
+
     public TestAll(String name) {
         super(name);
     }
-    
+
     public static Test suite() {
 
         TestSuite suite = new TestSuite();
@@ -67,8 +67,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(TestFBXAResource.class);
         return suite;
     }
-    
 
 
-    
+
+
 }

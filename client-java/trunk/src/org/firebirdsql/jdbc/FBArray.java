@@ -38,13 +38,13 @@ import java.sql.SQLException;
  */
 
 
- 
+
 /**
  *
  * <p>
  * The mapping in the Java programming language for the SQL type
  * <code>ARRAY</code>.
- * By default, an <code>Array</code> object is a transaction-duration 
+ * By default, an <code>Array</code> object is a transaction-duration
  * reference to an SQL <code>ARRAY</code> value.  By default, an <code>Array</code>
  * object is implemented using an SQL LOCATOR(array) internally, which
  * means that an <code>Array</code> object contains a logical pointer
@@ -62,7 +62,7 @@ import java.sql.SQLException;
  * <li>create a class that implements the {@link SQLData}
  * interface for the UDT to be custom mapped. This will typically be
  * done using a tool.
- * <li>make an entry in a type map that contains 
+ * <li>make an entry in a type map that contains
  *   <ul>
  *   <li>the fully-qualified SQL type name of the UDT
  *   <li>the <code>Class</code> object for the class implementing
@@ -80,16 +80,16 @@ import java.sql.SQLException;
  * for the base type, the elements are mapped according to the standard mapping.
  * <p>
  * <b>NOTE:</b> This interface is new in the JDBC 2.0 API.
- * 
+ *
  */
 
 public class FBArray implements Array {
 
   /**
-   * Returns the SQL type name of the elements in 
+   * Returns the SQL type name of the elements in
    * the array designated by this <code>Array</code> object.
    * If the elements are a built-in type, it returns
-   * the database-specific type name of the elements. 
+   * the database-specific type name of the elements.
    * If the elements are a user-defined type (UDT),
    * this method returns the fully-qualified SQL type name.
    * @return a <code>String</code> that is the database-specific
@@ -113,7 +113,7 @@ public class FBArray implements Array {
    * the type code for the elements in the array designated by this
    * <code>Array</code> object.
    * @exception SQLException if an error occurs while attempting
-   * to access the base type 
+   * to access the base type
    * @since 1.2
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
    *      2.0 API</a>
@@ -124,13 +124,13 @@ public class FBArray implements Array {
 
 
   /**
-   * Retrieves the contents of the SQL <code>ARRAY</code> value designated 
+   * Retrieves the contents of the SQL <code>ARRAY</code> value designated
    * by this
    * <code>Array</code> object in the form of an array in the Java
    * programming language. This version of the method <code>getArray</code>
-   * uses the type map associated with the connection for customizations of 
+   * uses the type map associated with the connection for customizations of
    * the type mappings.
-   * @return an array in the Java programming language that contains 
+   * @return an array in the Java programming language that contains
    * the ordered elements of the SQL <code>ARRAY</code> value
    * designated by this object
    * @exception SQLException if an error occurs while attempting to
@@ -144,21 +144,21 @@ public class FBArray implements Array {
    }
 
   /**
-   * Retrieves the contents of the SQL array designated by this 
+   * Retrieves the contents of the SQL array designated by this
    * <code>Array</code> object.
-   * This method uses 
+   * This method uses
    * the specified <code>map</code> for type map customizations
-   * unless the base type of the array does not match a user-defined 
-   * type in <code>map</code>, in which case it 
+   * unless the base type of the array does not match a user-defined
+   * type in <code>map</code>, in which case it
    * uses the standard mapping. This version of the method
    * <code>getArray</code> uses either the given type map or the standard mapping;
    * it never uses the type map associated with the connection.
    *
    * @param map a <code>java.util.Map</code> object that contains mappings
    *            of SQL type names to classes in the Java programming language
-   * @return an array in the Java programming language that contains the ordered 
+   * @return an array in the Java programming language that contains the ordered
    *         elements of the SQL array designated by this object
-   * @exception SQLException if an error occurs while attempting to 
+   * @exception SQLException if an error occurs while attempting to
    *                         access the array
    * @since 1.2
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
@@ -167,18 +167,18 @@ public class FBArray implements Array {
     public Object getArray(java.util.Map map) throws SQLException {
         return null;
     }
-      
+
 
   /**
    * Returns an array containing a slice of the SQL <code>ARRAY</code>
    * value designated by this <code>Array</code> object, beginning with the
-   * specified <code>index</code> and containing up to <code>count</code> 
+   * specified <code>index</code> and containing up to <code>count</code>
    * successive elements of the SQL array.  This method uses the type map
    * associated with the connection for customizations of the type mappings.
    * @param index the array index of the first element to retrieve;
    *              the first element is at index 1
    * @param count the number of successive SQL array elements to retrieve
-   * @return an array containing up to <code>count</code> consecutive elements 
+   * @return an array containing up to <code>count</code> consecutive elements
    * of the SQL array, beginning with element <code>index</code>
    * @exception SQLException if an error occurs while attempting to
    * access the array
@@ -192,29 +192,29 @@ public class FBArray implements Array {
 
 
   /**
-   * Returns an array containing a slice of the SQL array object 
+   * Returns an array containing a slice of the SQL array object
    * designated by this <code>Array</code> object, beginning with the specified
    * <code>index</code> and containing up to <code>count</code>
-   * successive elements of the SQL array.  
+   * successive elements of the SQL array.
    * <P>
-   * This method uses 
+   * This method uses
    * the specified <code>map</code> for type map customizations
-   * unless the base type of the array does not match a user-defined 
-   * type in <code>map</code>, in which case it 
+   * unless the base type of the array does not match a user-defined
+   * type in <code>map</code>, in which case it
    * uses the standard mapping. This version of the method
    * <code>getArray</code> uses either the given type map or the standard mapping;
    * it never uses the type map associated with the connection.
    *
    * @param index the array index of the first element to retrieve;
    *              the first element is at index 1
-   * @param count the number of successive SQL array elements to 
+   * @param count the number of successive SQL array elements to
    * retrieve
    * @param map a <code>java.util.Map</code> object
    * that contains SQL type names and the classes in
    * the Java programming language to which they are mapped
    * @return an array containing up to <code>count</code>
    * consecutive elements of the SQL array designated by this
-   * <code>Array</code> object, beginning with element 
+   * <code>Array</code> object, beginning with element
    * <code>index</code>.
    * @exception SQLException if an error occurs while attempting to
    * access the array
@@ -222,23 +222,23 @@ public class FBArray implements Array {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
    *      2.0 API</a>
    */
-    public Object getArray(long index, int count, java.util.Map map) 
+    public Object getArray(long index, int count, java.util.Map map)
        throws SQLException {
        return null;
    }
 
 
   /**
-   * Returns a result set that contains the elements of the SQL 
+   * Returns a result set that contains the elements of the SQL
    * <code>ARRAY</code> value
    * designated by this <code>Array</code> object.  If appropriate,
-   * the elements of the array are mapped using the connection's type 
+   * the elements of the array are mapped using the connection's type
    * map; otherwise, the standard mapping is used.
    * <p>
    * The result set contains one row for each array element, with
    * two columns in each row.  The second column stores the element
-   * value; the first column stores the index into the array for 
-   * that element (with the first array element being at index 1). 
+   * value; the first column stores the index into the array for
+   * that element (with the first array element being at index 1).
    * The rows are in ascending order corresponding to
    * the order of the indices.
    * @return a {@link ResultSet} object containing one row for each
@@ -256,24 +256,24 @@ public class FBArray implements Array {
 
 
   /**
-   * Returns a result set that contains the elements of the SQL 
-   * <code>ARRAY</code> value 
+   * Returns a result set that contains the elements of the SQL
+   * <code>ARRAY</code> value
    * designated by this <code>Array</code> object.
-   * This method uses 
+   * This method uses
    * the specified <code>map</code> for type map customizations
-   * unless the base type of the array does not match a user-defined 
-   * type in <code>map</code>, in which case it 
+   * unless the base type of the array does not match a user-defined
+   * type in <code>map</code>, in which case it
    * uses the standard mapping. This version of the method
    * <code>getResultSet</code> uses either the given type map or the standard mapping;
    * it never uses the type map associated with the connection.
    * <p>
    * The result set contains one row for each array element, with
    * two columns in each row.  The second column stores the element
-   * value; the first column stores the index into the array for 
-   * that element (with the first array element being at index 1). 
+   * value; the first column stores the index into the array for
+   * that element (with the first array element being at index 1).
    * The rows are in ascending order corresponding to
    * the order of the indices.
-   * @param map contains the mapping of SQL user-defined types to 
+   * @param map contains the mapping of SQL user-defined types to
    * classes in the Java programming language
    * @return a <code>ResultSet</code> object containing one row for each
    * of the elements in the array designated by this <code>Array</code>
@@ -291,14 +291,14 @@ public class FBArray implements Array {
 
   /**
    * Returns a result set holding the elements of the subarray that
-   * starts at index <code>index</code> and contains up to 
+   * starts at index <code>index</code> and contains up to
    * <code>count</code> successive elements.  This method uses
    * the connection's type map to map the elements of the array if
    * the map contains an entry for the base type. Otherwise, the
    * standard mapping is used.
    * <P>
    * The result set has one row for each element of the SQL array
-   * designated by this object, with the first row containing the 
+   * designated by this object, with the first row containing the
    * element at index <code>index</code>.  The result set has
    * up to <code>count</code> rows in ascending order based on the
    * indices.  Each row has two columns:  The second column stores
@@ -326,19 +326,19 @@ public class FBArray implements Array {
    * Returns a result set holding the elements of the subarray that
    * starts at index <code>index</code> and contains up to
    * <code>count</code> successive elements.
-   * This method uses 
+   * This method uses
    * the specified <code>map</code> for type map customizations
-   * unless the base type of the array does not match a user-defined 
-   * type in <code>map</code>, in which case it 
+   * unless the base type of the array does not match a user-defined
+   * type in <code>map</code>, in which case it
    * uses the standard mapping. This version of the method
    * <code>getResultSet</code> uses either the given type map or the standard mapping;
    * it never uses the type map associated with the connection.
    * <P>
    * The result set has one row for each element of the SQL array
    * designated by this object, with the first row containing the
-   * element at index <code>index</code>.  The result set has   
+   * element at index <code>index</code>.  The result set has
    * up to <code>count</code> rows in ascending order based on the
-   * indices.  Each row has two columns:  The second column stores  
+   * indices.  Each row has two columns:  The second column stores
    * the element value; the first column stroes the index into the
    * array for that element.
    * @param index the array index of the first element to retrieve;
@@ -346,7 +346,7 @@ public class FBArray implements Array {
    * @param count the number of successive SQL array elements to retrieve
    * @param map the <code>Map</code> object that contains the mapping
    * of SQL type names to classes in the Java(tm) programming language
-   * @return a <code>ResultSet</code> object containing up to               
+   * @return a <code>ResultSet</code> object containing up to
    * <code>count</code> consecutive elements of the SQL array
    * designated by this <code>Array</code> object, starting at
    * index <code>index</code>.

@@ -48,16 +48,16 @@ import junit.framework.*;
 public class TestFBManager extends TestCase {
 
     public static String DBNAME = "/usr/local/firebird/dev/client-java/db/fbmtest.gdb";
-    
+
     public TestFBManager(String name) {
         super(name);
     }
-    
+
     public static Test suite() {
 
         return new TestSuite(TestFBManager.class);
     }
-    
+
     public void testStart() throws Exception {
         FBManager m = new FBManager();
         m.setURL("localhost");

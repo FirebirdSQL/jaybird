@@ -50,42 +50,42 @@ import javax.resource.spi.ManagedConnectionFactory;
 
 
 
-/** 
+/**
  * <p>A DataSource object is a factory for Connection objects.  An
  * object that implements the DataSource interface will typically be
- * registered with a JNDI service provider.  A JDBC driver that is 
- * accessed via the DataSource API does not automatically register 
- * itself with the DriverManager.  
+ * registered with a JNDI service provider.  A JDBC driver that is
+ * accessed via the DataSource API does not automatically register
+ * itself with the DriverManager.
  */
- 
+
 
 public class FBDataSource implements DataSource, Serializable, Referenceable {
-    
+
     transient private ConnectionManager cm;
-    
+
     transient private FBManagedConnectionFactory mcf;
-    
+
     transient private PrintWriter log;
-    
+
     private Reference jndiReference;
-    
+
     private int loginTimeout = 0;
-    
+
     public FBDataSource(FBManagedConnectionFactory mcf, ConnectionManager cm) {
         this.mcf = mcf;
         this.cm = cm;
     }
 
-    
+
     public void setReference(Reference ref) {
         this.jndiReference = ref;
     }
-    
+
     public Reference getReference() {
         return jndiReference;
     }
-    
-    
+
+
   /**
    * <p>Attempt to establish a database connection.
    *
@@ -101,11 +101,11 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
         }
     }
 
-      
+
   /**
    * <p>Attempt to establish a database connection.
    *
-   * @param user the database user on whose behalf the Connection is 
+   * @param user the database user on whose behalf the Connection is
    *  being made
    * @param password the user's password
    * @return  a Connection to the database
@@ -123,9 +123,9 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
         }
     }
 
-      
+
   /**
-   * <p>Get the log writer for this data source.  
+   * <p>Get the log writer for this data source.
    *
    * <p>The log writer is a character output stream to which all logging
    * and tracing messages for this data source object instance will be
@@ -138,7 +138,7 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
    * is disabled.
    *
    * @return the log writer for this data source, null if disabled
-   * @exception SQLException if a database-access error occurs.  
+   * @exception SQLException if a database-access error occurs.
    */
     public java.io.PrintWriter getLogWriter() throws  SQLException {
         return log;
@@ -159,7 +159,7 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
    * is disabled.
    *
    * @param out the new log writer; to disable, set to null
-   * @exception SQLException if a database-access error occurs.  
+   * @exception SQLException if a database-access error occurs.
    */
     public void setLogWriter(java.io.PrintWriter out) throws  SQLException {
         log = out;
@@ -169,7 +169,7 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
   /**
    * <p>Sets the maximum time in seconds that this data source will wait
    * while attempting to connect to a database.  A value of zero
-   * specifies that the timeout is the default system timeout 
+   * specifies that the timeout is the default system timeout
    * if there is one; otherwise it specifies that there is no timeout.
    * When a DataSource object is created the login timeout is
    * initially zero.
@@ -181,11 +181,11 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
         loginTimeout = seconds;
     }
 
-     
+
   /**
    * Gets the maximum time in seconds that this data source can wait
    * while attempting to connect to a database.  A value of zero
-   * means that the timeout is the default system timeout 
+   * means that the timeout is the default system timeout
    * if there is one; otherwise it means that there is no timeout.
    * When a DataSource object is created the login timeout is
    * initially zero.
@@ -197,9 +197,9 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
         return loginTimeout;
     }
 
-    
 
-} 
+
+}
 
 
 

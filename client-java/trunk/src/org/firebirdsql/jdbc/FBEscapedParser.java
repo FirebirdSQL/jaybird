@@ -29,6 +29,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.1  2001/07/18 20:07:31  d_jencks
+ * Added better GDSExceptions, new NativeSQL, and CallableStatement test from Roman Rokytskyy
+ *
  */
 
 package org.firebirdsql.jdbc;
@@ -51,7 +54,14 @@ public class FBEscapedParser {
     protected static final int LITERAL_STATE = 2;
     protected static final int ESCAPE_STATE = 4;
 
+    /*
+     Stored procedure calls support both following syntax:
+        {call procedure_name[(arg1, arg2, ...)]}
+     or
+        {?= call procedure_name[(arg1, arg2, ...)]}
+     */
     public static final String ESCAPE_CALL_KEYWORD = "call";
+    public static final String ESCAPE_CALL_KEYWORD2 = "?=";
     public static final String ESCAPE_DATE_KEYWORD = "d";
     public static final String ESCAPE_TIME_KEYWORD = "t";
     public static final String ESCAPE_TIMESTAMP_KEYWORD = "ts";
@@ -192,12 +202,14 @@ public class FBEscapedParser {
         /*
          * Handle keywords.
          */
-        if (keyword.equalsIgnoreCase(ESCAPE_CALL_KEYWORD))
+        if (keyword.equalsIgnoreCase(ESCAPE_CALL_KEYWORD2))
             throw new FBSQLParseException(
-                "Escaped procedure calls are not supported. " +
+                "Escaped procedure calls with output parameter are not supported. " +
                 "Use native EXECUTE PROCEDURE <proc_name> or " +
                 " SELECT * FROM <proc_name> calls instead.");
         else
+        if (keyword.equalsIgnoreCase(ESCAPE_CALL_KEYWORD))
+            return convertProcedureCall(payload.trim());
         if (keyword.equalsIgnoreCase(ESCAPE_DATE_KEYWORD))
             return toDateString(payload.trim());
         else
@@ -264,4 +276,22 @@ public class FBEscapedParser {
         return timestampStr;
     }
 
+    /**
+     * This methods converts the escaped procedure call syntax into the
+     * native procedure call.
+     * @param procedureCall part of {call proc_name(...)} without curly braces
+     * and "call" word.
+     * @result native procedure call.
+     */
+    protected String convertProcedureCall(String procedureCall) {
+        return "EXECUTE PROCEDURE " + procedureCall;
+    }
+
+    public static boolean supportsStoredProcedures() {
+        return true;
+    }
+
+    public static boolean supportsLikeEscapeClause() {
+        return false;
+    }
 }

@@ -56,7 +56,7 @@ import java.sql.*;
 
 
 /**
- * <P>An XAConnection object provides support for distributed 
+ * <P>An XAConnection object provides support for distributed
  * transactions.  An XAConnection may be enlisted in a distributed
  * transaction by means of an XAResource object.
  */
@@ -76,7 +76,7 @@ public class FBXAConnection implements PooledConnection, XAConnection {
         throw new SQLException("Not yet implemented");
     }
 
-      
+
   /**
    * <p>Close the physical connection.
    *
@@ -86,7 +86,7 @@ public class FBXAConnection implements PooledConnection, XAConnection {
         throw new SQLException("Not yet implemented");
     }
 
-      
+
   /**<P> Add an event listener.
    */
     public void addConnectionEventListener(ConnectionEventListener listener) {
@@ -98,11 +98,11 @@ public class FBXAConnection implements PooledConnection, XAConnection {
    */
     public void removeConnectionEventListener(ConnectionEventListener listener) {
     }
-    
-    
-    
+
+
+
     //JDBC 3.0-----------------
-    
+
     public void closeAll() {
     }
 
@@ -117,8 +117,8 @@ public class FBXAConnection implements PooledConnection, XAConnection {
         return null;
     }
 
-    
- } 
+
+ }
 
 
 

@@ -46,9 +46,9 @@ import org.firebirdsql.gds.isc_tr_handle;
     long blob_id;
     isc_blob_handle_impl next;
     int rbl_flags;
-    
+
     isc_blob_handle_impl() {};
-    
+
     public long getBlobId() {
         return blob_id;
     }
@@ -58,7 +58,7 @@ import org.firebirdsql.gds.isc_tr_handle;
      }
 
     public boolean isEof() {
-	return (rbl_flags & GDS.RBL_eof_pending) != 0;
+    return (rbl_flags & GDS.RBL_eof_pending) != 0;
     }
 
 }

@@ -59,7 +59,7 @@ public class FBConnectionPoolDataSource implements ConnectionPoolDataSource {
         throw new SQLException("Not yet implemented");
     }
 
-      
+
   /**
    * <p>Attempt to establish a database connection.
    *
@@ -72,9 +72,9 @@ public class FBConnectionPoolDataSource implements ConnectionPoolDataSource {
         throw new SQLException("Not yet implemented");
     }
 
-      
+
   /**
-   * <p>Get the log writer for this data source.  
+   * <p>Get the log writer for this data source.
    *
    * <p>The log writer is a character output stream to which all logging
    * and tracing messages for this data source object instance will be
@@ -87,7 +87,7 @@ public class FBConnectionPoolDataSource implements ConnectionPoolDataSource {
    * is disabled.
    *
    * @return the log writer for this data source, null if disabled
-   * @exception SQLException if a database-access error occurs.  
+   * @exception SQLException if a database-access error occurs.
    */
     public java.io.PrintWriter getLogWriter() throws SQLException {
         throw new SQLException("Not yet implemented");
@@ -108,7 +108,7 @@ public class FBConnectionPoolDataSource implements ConnectionPoolDataSource {
    * is disabled.
    *
    * @param out the new log writer; to disable, set to null
-   * @exception SQLException if a database-access error occurs.  
+   * @exception SQLException if a database-access error occurs.
    */
     public void setLogWriter(java.io.PrintWriter out) throws SQLException {
         throw new SQLException("Not yet implemented");
@@ -118,7 +118,7 @@ public class FBConnectionPoolDataSource implements ConnectionPoolDataSource {
   /**
    * <p>Sets the maximum time in seconds that this data source will wait
    * while attempting to connect to a database.  A value of zero
-   * specifies that the timeout is the default system timeout 
+   * specifies that the timeout is the default system timeout
    * if there is one; otherwise it specifies that there is no timeout.
    * When a data source object is created the login timeout is
    * initially zero.
@@ -130,11 +130,11 @@ public class FBConnectionPoolDataSource implements ConnectionPoolDataSource {
         throw new SQLException("Not yet implemented");
     }
 
-     
+
   /**
    * Gets the maximum time in seconds that this data source can wait
    * while attempting to connect to a database.  A value of zero
-   * means that the timeout is the default system timeout 
+   * means that the timeout is the default system timeout
    * if there is one; otherwise it means that there is no timeout.
    * When a data source object is created the login timeout is
    * initially zero.
@@ -146,8 +146,8 @@ public class FBConnectionPoolDataSource implements ConnectionPoolDataSource {
         throw new SQLException("Not yet implemented");
     }
 
-   
- } 
+
+ }
 
 
 

@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2001/07/18 20:07:31  d_jencks
+ * Added better GDSExceptions, new NativeSQL, and CallableStatement test from Roman Rokytskyy
+ *
  * Revision 1.2  2001/07/15 20:26:31  rrokytskyy
  * Commit from public CVS
  *
@@ -34,6 +37,8 @@
  * Initial revision
  *
  */
+
+
 
 package org.firebirdsql.jdbc;
 
@@ -58,6 +63,7 @@ import java.util.Map;
  * @author Roman Rokytskyy (rrokytskyy@yahoo.co.uk)
  * @see FBConnection
  */
+
 public class FBUnmanagedConnection extends FBConnection {
     private boolean autoCommit;
 
@@ -68,7 +74,7 @@ public class FBUnmanagedConnection extends FBConnection {
      * transaction.
      */
     public FBUnmanagedConnection(FBManagedConnection mc)
-        throws javax.resource.ResourceException
+        throws javax.resource.ResourceException, SQLException
     {
         // this is not completely correct implementation: we cause the managed
         // connection to be set twice: first in FBConnection constructor
@@ -79,6 +85,7 @@ public class FBUnmanagedConnection extends FBConnection {
 
         // start the transaction (java.sql.Connection has no begin() method).
         getLocalTransaction().begin();
+        setAutoCommit(true);
     }
 
 
@@ -108,6 +115,8 @@ public class FBUnmanagedConnection extends FBConnection {
      * @exception SQLException if a database access error occurs
      */
     public void rollback() throws SQLException {
+        if (isClosed())
+            throw new SQLException("You cannot rollback closed connection.");
         try{
             getLocalTransaction().rollback();
             getLocalTransaction().begin();
@@ -155,7 +164,7 @@ public class FBUnmanagedConnection extends FBConnection {
      * @todo implement the correct autoCommit.
      */
     public void setAutoCommit(boolean autoCommit) throws SQLException {
-        // this.autoCommit = autoCommit;
+        this.autoCommit = autoCommit;
     }
 
     /**
@@ -169,5 +178,5 @@ public class FBUnmanagedConnection extends FBConnection {
     public Map getTypeMap() throws java.sql.SQLException {
         return new java.util.HashMap();
     }
-
 }
+
