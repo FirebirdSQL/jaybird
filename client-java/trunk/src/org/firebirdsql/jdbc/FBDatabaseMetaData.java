@@ -3392,23 +3392,17 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             NULLABLE, CASEINSENSITIVE, PREDBASIC, SIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_INT64), null, BINARY});
 
-        /*
-        rows.add(new Object[] {"LONGVARBINARY", new Short((short)-4), new Integer(0), null, null, null,
+        rows.add(new Object[] {"BLOB", createShort(Types.LONGVARBINARY), new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
-        */
 
-        /*
-        rows.add(new Object[] {"VARBINARY", new Short((short)-3), new Integer(0), null, null, null,
+        rows.add(new Object[] {"BLOB", createShort(Types.VARBINARY), new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
-        */
 
-        /*
-        rows.add(new Object[] {"BINARY", createShort(Types.BLOB), new Integer(0), null, null, null,
+        rows.add(new Object[] {"BLOB", createShort(Types.BINARY), new Integer(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
-        */
 
         /*
                    //??should this be varchar???
