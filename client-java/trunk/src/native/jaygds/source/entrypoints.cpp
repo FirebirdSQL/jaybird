@@ -34,17 +34,21 @@
 #include <new>
 
 // First some basic helper functions for error handling and a macro to use for the
-// catch block in each JNI entrypoint..
+// catch block in each JNI entrypoint.
+
+
+// Must be initilized in Java_org_firebirdsql_ngds_GDS_1Impl_nativeInitilize
+JClassBinding  sInternalErrorClassBinding;
+JClassBinding  sOutOfMemoryErrorClassBinding;
+
 
 void EnsureJavaExceptionIssued(JNIEnv * javaEnvironment, InternalException& exception)
 	{
 	if( javaEnvironment->ExceptionCheck() == false ) 
 		{
-		JClassBinding classBinding( javaEnvironment, "org/firebirdsql/ngds/InternalError" );
-		
 		JString messageJString(javaEnvironment, exception.getMessage());
 
-		javaEnvironment->Throw( (jthrowable)classBinding.CreateNewInstance(javaEnvironment, "(Ljava/lang/String;)V", messageJString.AsJString()) );
+		javaEnvironment->Throw( (jthrowable)sInternalErrorClassBinding.CreateNewInstance(javaEnvironment, "(Ljava/lang/String;)V", messageJString.AsJString()) );
 		}
 	}
 
@@ -52,11 +56,9 @@ void EnsureJavaExceptionIssued(JNIEnv * javaEnvironment)
 	{
 	if( javaEnvironment->ExceptionCheck() == false ) 
 		{
-		JClassBinding classBinding( javaEnvironment, "org/firebirdsql/ngds/InternalError" );
-		
 		JString messageJString(javaEnvironment, "Unexpected exception caught.");
 
-		javaEnvironment->Throw( (jthrowable)classBinding.CreateNewInstance(javaEnvironment, "(Ljava/lang/String;)V", messageJString.AsJString()) );
+		javaEnvironment->Throw( (jthrowable)sInternalErrorClassBinding.CreateNewInstance(javaEnvironment, "(Ljava/lang/String;)V", messageJString.AsJString()) );
 		}
 	}
 
@@ -64,9 +66,7 @@ void MaybeIssueOutOfMemory(JNIEnv * javaEnvironment, std::bad_alloc& badAlloc)
 	{
 	if( javaEnvironment->ExceptionCheck() == false ) 
 		{
-		JClassBinding classBinding( javaEnvironment, "java/lang/OutOfMemoryError" );
-		
-		javaEnvironment->Throw( (jthrowable)classBinding.CreateNewInstance(javaEnvironment, "()V") );
+		javaEnvironment->Throw( (jthrowable)sOutOfMemoryErrorClassBinding.CreateNewInstance(javaEnvironment, "()V") );
 		}
 	}
 
@@ -106,6 +106,11 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_nativeInitilize
 	{
 	try
 		{
+
+		// Todo : If these fail then the exception handling for this method will not work.
+		sInternalErrorClassBinding    = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/InternalError" );
+		sOutOfMemoryErrorClassBinding = JClassBinding( javaEnvironment, "java/lang/OutOfMemoryError" );
+
 		JIscDatabaseHandle::Initilize(javaEnvironment);
 		JIscTransactionHandle::Initilize(javaEnvironment);
 		JIscStatementHandle::Initilize(javaEnvironment);
