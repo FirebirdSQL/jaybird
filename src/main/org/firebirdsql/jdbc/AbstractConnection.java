@@ -641,7 +641,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
         {
             addWarning(new FBSQLWarning("Unsupported type and/or concurrency"));
             
-            resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+            if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
+                resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+            
             resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
         }			  
           
@@ -675,7 +677,10 @@ public abstract class AbstractConnection implements FirebirdConnection {
               resultSetConcurrency != ResultSet.CONCUR_READ_ONLY)
 		  {
 		      addWarning(new FBSQLWarning("resultSetType or resultSetConcurrency changed"));
-	          resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+              
+              if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
+                  resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+              
               resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
 		  }
           
@@ -710,7 +715,10 @@ public abstract class AbstractConnection implements FirebirdConnection {
             resultSetConcurrency != ResultSet.CONCUR_READ_ONLY)
 		{
             addWarning(new FBSQLWarning("resultSetType or resultSetConcurrency changed"));
-            resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+            
+            if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
+                resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+            
             resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
         }	
         
