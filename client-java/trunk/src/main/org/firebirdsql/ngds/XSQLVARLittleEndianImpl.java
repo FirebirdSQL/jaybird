@@ -23,6 +23,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.XSQLVAR;
 
 /**
  * Implementation of {@link XSQLVAR} class for little-endian platforms 
@@ -38,6 +39,14 @@ public class XSQLVARLittleEndianImpl extends XSQLVARImpl {
         super();
     }
 
+    /* (non-Javadoc)
+     * @see org.firebirdsql.gds.XSQLVAR#deepCopy()
+     */
+    public XSQLVAR deepCopy() {
+        XSQLVARLittleEndianImpl result = new XSQLVARLittleEndianImpl();
+        result.copyFrom(this);
+        return result;
+    }
     /**
      * Create instance of this class for the specified XSQLVAR parameters.
      */

@@ -65,6 +65,17 @@ public class XSQLVAR {
     }
     
     /**
+     * Get a deep copy of this object.
+     *  
+     * @return deep copy of this object.
+     */
+    public XSQLVAR deepCopy() {
+        XSQLVAR result = new XSQLVAR();
+        result.copyFrom(this);
+        return result;
+    }
+    
+    /**
      * Copy constructor. Initialize this instance of <code>XSQLVAR</code> with
      * values from another instance.
      *
@@ -76,7 +87,13 @@ public class XSQLVAR {
         this.sqlscale = original.sqlscale;
         this.sqlsubtype = original.sqlsubtype;
         this.sqllen = original.sqllen;
-        this.sqldata = original.sqldata;
+        
+        if (original.sqldata != null) {
+            this.sqldata = new byte[original.sqldata.length]; 
+            System.arraycopy(original.sqldata, 0, this.sqldata, 0, original.sqldata.length);
+        } else
+            this.sqldata = null;
+        
         this.sqlname = original.sqlname;
         this.relname = original.relname;
         this.ownname = original.ownname;
