@@ -1,3 +1,18 @@
+2003-08-22 00:29  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/:
+	jca/TestFBDatabaseMetaData.java,
+	jca/TestPoolingConnectionManager.java, jdbc/TestReconnect.java:
+	
+	fixed NPE in logging system
+
+2003-08-22 00:12  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	FBPreparedStatement.java, FBStatement.java:
+	
+	backport from HEAD: fixed incorrect behavior in getUpdateCount()
+
 2003-08-21 21:02  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/:
