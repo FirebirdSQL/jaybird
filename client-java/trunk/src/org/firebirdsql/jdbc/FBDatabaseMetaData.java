@@ -2089,6 +2089,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         " RF.RDB$FIELD_NAME as FIELD_NAME," +
         " F.RDB$FIELD_TYPE as FIELD_TYPE," +
         " F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE," +
+        " F.RDB$FIELD_PRECISION as FIELD_PRECISION," +
         " F.RDB$FIELD_SCALE as FIELD_SCALE," +
         " F.RDB$FIELD_LENGTH as FIELD_LENGTH," +
         " RF.RDB$DESCRIPTION," +
@@ -2101,7 +2102,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         "where ";
 
     public static final String GET_COLUMNS_END = " RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME " +
-        "order by 1, 9";
+        "order by 1, 10";
 
     /**
      * Gets a description of table columns available in
@@ -2293,11 +2294,20 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             short fieldType = rs.getShort("FIELD_TYPE");
             short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
             short fieldScale = rs.getShort("FIELD_SCALE");
-            
-            row[4] = new Short((short) getDataType(fieldType, fieldSubType, fieldScale));
+            int dataType = getDataType(fieldType, fieldSubType, fieldScale);
+
+            row[4] = new Short((short) dataType);
             
             row[5] = null;
-            row[6] = new Integer(rs.getShort("FIELD_LENGTH"));
+
+            if (dataType == java.sql.Types.DECIMAL ||
+                dataType == java.sql.Types.NUMERIC)
+            {
+                row[6] = new Integer(rs.getShort("FIELD_PRECISION"));
+            } else {
+                row[6] = new Integer(rs.getShort("FIELD_LENGTH"));
+            }
+
             row[7] = new Short((short) 0);
             row[8] = new Integer(fieldScale * (-1));
             row[9] = new Integer(10);
