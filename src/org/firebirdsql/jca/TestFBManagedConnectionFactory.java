@@ -10,6 +10,7 @@ package org.firebirdsql.jca;
 
 import javax.resource.spi.*;
 import javax.transaction.xa.*;
+import java.sql.Connection;
 
 //import org.firebirdsql.jca.*;
 import org.firebirdsql.gds.Clumplet;
@@ -95,6 +96,58 @@ public class TestFBManagedConnectionFactory extends TestCase {
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
     }
+
+    public void testCreateC() throws Exception {
+        System.out.println();
+        System.out.println("testCreateC");
+        FBManagedConnectionFactory mcf = initMcf();
+        ManagedConnection mc = mcf.createManagedConnection(null, null);
+        Connection c = (Connection)mc.getConnection(null, null);
+    }
+
+    public void testAssociateC() throws Exception {
+        System.out.println();
+        System.out.println("testAssociateC");
+        FBManagedConnectionFactory mcf = initMcf();
+        ManagedConnection mc1 = mcf.createManagedConnection(null, null);
+        Connection c1 = (Connection)mc1.getConnection(null, null);
+        ManagedConnection mc2 = mcf.createManagedConnection(null, null);
+        Connection c2 = (Connection)mc2.getConnection(null, null);
+        mc1.associateConnection(c2);
+        mc2.associateConnection(c1);
+    }
+    
+    public void testCreateStatement() throws Exception {
+        System.out.println();
+        System.out.println("testCreateStatement");
+        FBManagedConnectionFactory mcf = initMcf();
+        ManagedConnection mc = mcf.createManagedConnection(null, null);
+        Connection c = (Connection)mc.getConnection(null, null);
+        Statement s = c.createStatement();
+    }
+
+    public void testUseStatement() throws Exception {
+        System.out.println();
+        System.out.println("testCreateStatement");
+        FBManagedConnectionFactory mcf = initMcf();
+        ManagedConnection mc = mcf.createManagedConnection(null, null);
+        Connection c = (Connection)mc.getConnection(null, null);
+        Statement s = c.createStatement();
+        XAResource xa = mc.getXAResource();
+        Xid xid = new XidImpl();
+        xa.start(xid, XAResource.TMNOFLAGS);
+        s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)"); 
+        xa.end(xid, XAResource.TMNOFLAGS);
+        xa.commit(xid, true);
+        
+        xid = new XidImpl();
+        xa.start(xid, XAResource.TMNOFLAGS);
+        s.execute("DROP TABLE T1"); 
+        xa.end(xid, XAResource.TMNOFLAGS);
+        xa.commit(xid, true);
+        
+    }
+
 
     public void testGetXAResource() throws Exception {
         System.out.println();
