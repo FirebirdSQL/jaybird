@@ -63,30 +63,11 @@ public class TestFBPreparedStatement extends FBTestBase{
         + ")"
         ;
     
-    public static final String CREATE_UNRECOGNIZED_TR_TABLE = ""
-        + "CREATE TABLE t1("
-        + "  c1 CHAR(2) CHARACTER SET ASCII NOT NULL, "
-        + "  c2 BLOB SUB_TYPE TEXT CHARACTER SET ASCII NOT NULL "
-        + ")"
-        ;
-    
-    public static final String ADD_CONSTRAINT_T1_C1 = ""
-        + "ALTER TABLE t1 ADD CONSTRAINT t1_c1 PRIMARY KEY (c1)"
-        ;
-    
-    public static final String INIT_T1 = ""
-        + "INSERT INTO t1 VALUES ('XX'. 'no more bugs')"
-        ;
-    
     public static final String DROP_TEST_BLOB_TABLE = 
         "DROP TABLE test_blob";
     
     public static final String DROP_TEST_CHARS_TABLE = ""
         + "DROP TABLE TESTTAB"
-        ;
-    
-    public static final String DROP_UNRECOGNIZED_TR_TABLE = ""
-        + "DROP TABLE t1"
         ;
         
     public static final String TEST_STRING = "This is simple test string.";
@@ -112,16 +93,7 @@ public class TestFBPreparedStatement extends FBTestBase{
         catch (Exception e) {
             //e.printStackTrace();
         }
-
-        try {
-            stmt.executeUpdate(DROP_UNRECOGNIZED_TR_TABLE);
-            stmt.executeUpdate(ADD_CONSTRAINT_T1_C1);
-            stmt.executeUpdate(INIT_T1);
-        }
-        catch (Exception e) {
-            //e.printStackTrace();
-        }
-
+        
         try {
             stmt.executeUpdate(DROP_TEST_CHARS_TABLE);
         } catch(Exception e) {
@@ -134,7 +106,6 @@ public class TestFBPreparedStatement extends FBTestBase{
         }
         
         stmt.executeUpdate(CREATE_TEST_BLOB_TABLE);
-        stmt.executeUpdate(CREATE_UNRECOGNIZED_TR_TABLE);
         stmt.executeUpdate(CREATE_TEST_CHARS_TABLE);
         
         stmt.executeUpdate(CREATE_GENERATOR);
@@ -147,7 +118,6 @@ public class TestFBPreparedStatement extends FBTestBase{
         Statement stmt = con.createStatement();
         stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
         stmt.executeUpdate(DROP_TEST_CHARS_TABLE);
-        stmt.executeUpdate(DROP_UNRECOGNIZED_TR_TABLE);
         stmt.close();
 
         con.close();
@@ -519,28 +489,6 @@ public class TestFBPreparedStatement extends FBTestBase{
             } finally {
                 ps.close();
             }
-            
-        } finally {
-            connection.close();
-        }
-    }
-    
-    public void testUnrecognizedTransaction() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
-        try {
-            String sql = "SELECT 1 FROM t1 WHERE c1 = ? AND c2 = ?";
-            PreparedStatement ps = connection.prepareStatement(
-                sql);
-            ps.setString(1, "xx");
-            ps.setString(2, "bug busters");
-            ResultSet rs = ps.executeQuery();
-            assertTrue("Should not find anything.", !rs.next());
-            
-            ps = connection.prepareStatement(sql);
-            ps.setString(1, "XX");
-            ps.setString(2, "bug busters");
-            rs = ps.executeQuery();
-            assertTrue("Should not find anything.", !rs.next());
             
         } finally {
             connection.close();

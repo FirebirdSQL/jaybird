@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.7  2004/10/10 10:58:01  rrokytskyy
+ * added support for character translation to character streams
+ *
  * Revision 1.6  2004/10/08 22:39:10  rrokytskyy
  * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
  * added possibility to translate characters if there are some encoding issues
