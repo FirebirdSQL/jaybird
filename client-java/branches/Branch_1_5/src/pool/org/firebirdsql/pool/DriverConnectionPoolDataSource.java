@@ -377,11 +377,11 @@ public class DriverConnectionPoolDataSource extends BasicAbstractConnectionPool
                 pooledConnection = new PingablePooledConnection(
                     connection, getPingStatement(), getPingInterval(),
                     isStatementPooling(), getTransactionIsolationLevel(),
-                    getMaxStatements());
+                    getMaxStatements(), isKeepStatements());
             else
                 pooledConnection = new PingablePooledConnection(
                     connection, isStatementPooling(), getTransactionIsolationLevel(),
-                    getMaxStatements());
+                    getMaxStatements(), isKeepStatements());
 
             return pooledConnection;
         }

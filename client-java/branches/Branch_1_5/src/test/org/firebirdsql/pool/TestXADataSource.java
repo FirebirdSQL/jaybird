@@ -27,6 +27,7 @@ import javax.sql.XADataSource;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
+import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.ISCConstants;
 
 /**
@@ -34,14 +35,34 @@ import org.firebirdsql.gds.ISCConstants;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class TestXADataSource extends TestFBConnectionPoolDataSource {
+public class TestXADataSource extends FBTestBase {
 
+    protected static final int DEFAULT_MIN_CONNECTIONS = 0;
+    protected static final int DEFAULT_MAX_CONNECTIONS = 2;
+    protected static final int DEFAULT_PING_INTERVAL = 5000;
+
+    
     public TestXADataSource(String name) {
         super(name);
     }
 
+    protected BasicAbstractConnectionPool pool;
+    
     protected void setUp() throws Exception {
         super.setUp();
+        
+        FBConnectionPoolDataSource connectionPool = new FBConnectionPoolDataSource();
+
+        connectionPool.setType(getGdsType().toString());
+        
+        connectionPool.setDatabase(DB_DATASOURCE_URL);
+        connectionPool.setMinPoolSize(DEFAULT_MIN_CONNECTIONS);
+        connectionPool.setMaxPoolSize(DEFAULT_MAX_CONNECTIONS);
+        connectionPool.setPingInterval(DEFAULT_PING_INTERVAL);
+        
+        connectionPool.setProperties(getDefaultPropertiesForConnection());
+        
+        this.pool = connectionPool;
 
         Connection con = pool.getPooledConnection().getConnection();
 
@@ -62,6 +83,7 @@ public class TestXADataSource extends TestFBConnectionPoolDataSource {
     }
 
     protected void tearDown() throws Exception {
+        
         Connection con = pool.getPooledConnection().getConnection();
 
         try {
@@ -164,61 +186,6 @@ public class TestXADataSource extends TestFBConnectionPoolDataSource {
         } finally {
             pool.shutdown();
         }
-    }
-
-    /*
-     * We have to override following methods to force JUnit not to execute 
-     * them again.
-     */
-    public void testBlocking() throws Exception {
-    }
-
-    public void testConnection() throws Exception {
-    }
-
-    public void testFalseConnectionUsage() throws Exception {
-    }
-
-    public void testIdleRemover() throws Exception {
-    }
-
-    public void testJNDI() throws Exception {
-    }
-
-    public void testPoolStart() throws Exception {
-    }
-
-    public void testPreparedStatement() throws Exception {
-    }
-    
-    public void testIdleRemoverAndMinPoolSize() throws Exception {
-    }
-    
-    public void testClosePhysicalConnection() throws Exception {
-    }
-
-    public void testReferenceSupport() throws Exception {
-    }
-
-    public void testReferenceSupportWrapping() throws Exception {
-    }
-
-    public void testStatementLeaking() throws Exception {
-    }
-
-    public void testNoPooling() throws Exception {
-    }
-
-    public void testPrepareWithError() throws Exception {
-    }
-
-    public void testShutdown() throws Exception {
-    }
-
-    public void testShutdownMultiple() throws Exception {
-    }
-
-    public void testSqlRole() throws Exception {
     }
 
     private static class FBTestXid implements Xid {
