@@ -76,7 +76,7 @@ public final class XdrOutputStream {
 
     public void writeBlobBuffer(byte[] buffer) throws IOException {
         int len = buffer.length ; // 2 for short for buffer length
-        if (log != null) log.debug("writeBlobBuffer len: " + len);
+        if (log != null && log.isDebugEnabled()) log.debug("writeBlobBuffer len: " + len);
         if (len > Short.MAX_VALUE) {
             throw new IOException(""); //Need a value???
         }
@@ -85,7 +85,6 @@ public final class XdrOutputStream {
         buf[count++] = (byte) ((len >> 0) & 0xff);
         buf[count++] = (byte) ((len >> 8) & 0xff);
         write(buffer, len, ((4 - len+2)&3));
-        if (log != null) log.debug("writeBlobBuffer wrotebuffer bytes: " + len);
     }
 
     public void writeString(String s) throws IOException {
@@ -144,7 +143,7 @@ public final class XdrOutputStream {
     public void writeSQLData(XSQLDA xsqlda) throws IOException {
         for (int i = 0; i < xsqlda.sqld; i++) {
             XSQLVAR xsqlvar = xsqlda.sqlvar[i];
-            if (log != null) {
+            if (log != null && log.isDebugEnabled()) {
                 if (out == null) {
                     log.debug("db.out null in writeSQLDatum");
                 }

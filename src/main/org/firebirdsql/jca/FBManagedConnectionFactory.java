@@ -613,7 +613,7 @@ public class FBManagedConnectionFactory
             
                 if (db.hasTransactions())
                 {
-                    if (log!=null) log.info("db has transactions!");
+                    if (log!=null) log.debug("db has transactions!");
                     synchronized (waitingToClose)
                     {
                         //double synchronization, but saves some ugly synch wrappers.
@@ -633,7 +633,7 @@ public class FBManagedConnectionFactory
                 waitingToClose.remove(db);
                 return;
             } // end of try-catch
-            if (log!=null) log.info("About to detach db");
+            if (log!=null) log.debug("About to detach db");
             waitingToClose.remove(db);
             gds.isc_detach_database(db);
         }
@@ -669,7 +669,7 @@ public class FBManagedConnectionFactory
             }
             catch (GDSException ge)
             {
-                if (log!=null) log.info("exception rolling back transaction from dying connection: " + ge.getMessage());
+                if (log!=null) log.debug("exception rolling back transaction from dying connection: " + ge.getMessage());
             } // end of try-catch
             
         } // end of for ()
@@ -679,7 +679,7 @@ public class FBManagedConnectionFactory
         }
         catch (GDSException ge)
         {
-            if (log!=null) log.info("exception releasing db handle from dying connection: " + ge.getMessage());
+            if (log!=null) log.debug("exception releasing db handle from dying connection: " + ge.getMessage());
         } // end of try-catch
         
     }
@@ -699,7 +699,7 @@ public class FBManagedConnectionFactory
             }
             catch (GDSException ge2)
             {
-                if (log!=null) log.info("Exception rolling back failed tx: ", ge2);
+                if (log!=null) log.debug("Exception rolling back failed tx: ", ge2);
             } // end of try-catch
             throw ge;
         } // end of catch
@@ -728,7 +728,7 @@ public class FBManagedConnectionFactory
             }
             catch (GDSException ge2)
             {
-                if (log!=null) log.info("Exception rolling back failed tx: ", ge2);
+                if (log!=null) log.debug("Exception rolling back failed tx: ", ge2);
             } // end of try-catch
             finally
             {
