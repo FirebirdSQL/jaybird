@@ -1,7 +1,7 @@
 Frequently Asked Questions
 JayBird JCA/JDBC Driver for Firebird
 
-- Last Updated 7/19/03 -
+- Last Updated 8/1/03 -
 
 
   1. How much of JDBC 2.0 is supported by JayBird?
@@ -82,11 +82,13 @@ JayBird JCA/JDBC Driver for Firebird
 
 39. How do I use stored procedures with JayBird?
 
-40. How do I pass Database Parameter Buffer (DPB) parameters?
+40. Why are VARCHAR Strings sometimes padded?
 
-41. How do I pass Database Parameter Buffer (DPB) parameters?
+41. Can I use CachedRowSet with JayBird?
 
-42. Can you give me some code examples?
+42. How do I pass Database Parameter Buffer (DPB) parameters?
+
+43. Can you give me some code examples?
    
 
 
@@ -555,13 +557,15 @@ For simplicity, start by setting the UserName and Password in the firebird-servi
 
 CATALINA_HOME is the installation directory for Tomcat 4.x or greater. An environment variable of that name is set up on the Tomcat server. TOMCAT_HOME was used in versions before Tomcat 4.
 
-To use JayBird with Tomcat you must put the jar files where your web apps can access them. Once they are available to you web apps you use JayBird in your servlets or beans just as you would in standalone programs.
+To use JayBird with Tomcat you must put the jar files where your web apps can access them. Once they are available to your web apps you use JayBird in your servlets or beans just as you would in standalone programs.
 
 If you have only one webapp using JayBird or you need to keep JayBird separate from other web apps, put the jar files in the WEB-INF/lib/ subdirectory of your web app.
 
 It is more likely that Firebird will be used by all of your web apps and Tomcat itself. To have universal access to JayBird, put the jars in CATALINA_HOME/common/lib/.
 
-If you configure a JNDI entry in CATALINA_HOME/conf/server.xml to use FBDataSourceObjectFactory, and you configure DBCP connection pooling (in Tomcat 4.1.x or greater) only one connection pool is started for all web apps. However, some users have reported problems with DBCP under certain circumstances.
+A simple example web app that creates a Firebird database and does a few transactions directly is included below. It is called test.
+
+Below that is the same web app set up to use a DataSource and connection poolingf via DBCP. It is called dbTest.
 
 To use JayBird's internal connection pooling, you can configure an FBWrapping DataSource for pooling just as you would in a stand-alone program. If you put a class for doing that in a servlet and start it when Tomcat is initialized, you can share a pool among web applications. If you do this, take care to make it thread safe and synchronize access to methods.
 
@@ -598,6 +602,706 @@ You can configure your web apps in WEB-INF/web.xml to only allow users with cert
 To use Tomcat's online GUI management web app to control your Tomcat installation, you must have the role "manager" in the USER_ROLES table under your name.
 
 See the Tomcat docs for more information.
+
+Sample Web Apps
+
+These examples assume that the username SYSDBA and password masterkey are valid. These samples create and search for the database in /databases/test.gdb. To use a different directory change those entries below. For windows change /databases/test.gdb to c:\\databases\\test.gdb, for example.
+
+Sample web app test:
+
+To use this sample web app create a folder called "test" in the webapps directory of your Tomcat installation. Put the HTML file below into a file called index.htm inside the folder called test. Put the contents of the XML file following this into test/WEB-INF/web.xml. Finally, put the contents of the jsp file following that into test/search.jsp. Start Tomcat and run test in your browser by calling http://localhost/test/index.htm.
+
+Put this in test/index.htm:
+
+<html>
+< head>
+< title>index.htm</title>
+< meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+< /head>
+
+<body bgcolor="#CCCCFF" text="#000000">
+< /p>
+< H1 align="center">Enter Name</H1>
+< /H1>
+< p>This demo of a simple web app will take the name you type above and search
+a table called CUSTOMERS in a Firebird database named test.gdb using the JayBird
+JDBC
+driver.
+The table CUSTOMERS has two fields (columns): FIRST_NAME and LAST_NAME.</p>
+< p>If the database or tables don't exist they will be created for you. You will
+need to edit the Strings at the top of the file search.jsp to appropriate
+ones for your system.</p>
+< p>If there are no entries with the same last name that you type in, the program
+will add 3 so you will get some output: &quot;Aaron, Bob, and Calvin&quot;.</p>
+< p>&nbsp;</p>
+< form name="form1" method="post" action="search.jsp">
+< p align="center">
+Type a Last Name to search for here:
+<input name="name" type="text" id="name">
+then click &quot;Submit&quot;.</p>
+< p align="center"> <input type="submit" name="Submit" value="Submit">
+< /p>
+< /form>
+< p>&nbsp;</p>
+< /body>
+< /html>
+
+ 
+
+Put this in test/WEB-INF/web.xml:
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+< !DOCTYPE web-app PUBLIC '-//Sun Microsystems, Inc.//DTD Web Application 2.2//EN' 'http://java.sun.com/j2ee/dtds/web-app_2.2.dtd'>
+
+<web-app>
+<session-config>
+<session-timeout>
+30
+</session-timeout>
+</session-config>
+<welcome-file-list>
+<welcome-file>index.htm</welcome-file>
+</welcome-file-list>
+< /web-app>
+
+
+Put this in test/search.jsp:
+
+<%@page contentType="text/html; charset=iso-8859-1" language="java" import="java.sql.*,org.firebirdsql.management.*"%>
+
+<html>
+< head>
+< title>search.jsp</title>
+< meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+< /head>
+
+<body bgcolor="#CCCCFF" text="#000000"><p>
+< /p>
+< H1 align="center">Test Search</H1>
+
+<%
+// Edit the strings below as needed for your system.
+
+String DB_SERVER_URL = "localhost";
+int DB_SERVER_PORT = 3050;
+
+// Use forward slashes here, even on Windows systems.
+String DB_PATH = "c:/databases";
+
+String DB_NAME = "test.gdb";
+String DB_USER = "sysdba";
+String DB_PASSWORD = "masterkey";
+String DB_CONNECTION_STRING = "jdbc:firebirdsql:"+DB_SERVER_URL+"/"+DB_SERVER_PORT+":"+DB_PATH+"/"+DB_NAME;
+
+String lastName = request.getParameter("name");
+
+// To help you debug, you can set a session attribute to values indicating
+// the prograss through the web app, then use an HTTP monitor to see how far 
+// you have progressed.
+
+// This stuff creates the database with the JMX management tools 
+// if it doesn't already exist.
+FBManager fbManager = new FBManager();
+
+fbManager.setServer(DB_SERVER_URL);
+fbManager.setPort(DB_SERVER_PORT);
+
+fbManager.start();
+
+fbManager.createDatabase(DB_PATH + "/" + DB_NAME, DB_USER, DB_PASSWORD);
+
+
+// Load the JayBird driver. This is OK for a test but your real web apps
+// should use a dataSource for efficiency and flexibility.
+Class.forName("org.firebirdsql.jdbc.FBDriver");
+
+%>
+Opening a connection with connection string: <%=DB_CONNECTION_STRING%><BR><BR>
+< %
+
+// Get a connection to the database.
+Connection connRSFind = DriverManager.getConnection(DB_CONNECTION_STRING, DB_USER, DB_PASSWORD);
+
+// Back to HTML, show the user the LAST_NAME typed in.
+%>
+< p>
+The user entered name is: <%=lastName%>
+< p>
+< %
+
+String sqlString = "SELECT * FROM CUSTOMERS WHERE LAST_NAME = \'" + lastName +"\'";
+
+// Switch back to html so we can print out the sqlString on the web page.
+%>
+
+The SQL String is: <%=sqlString%><p>
+
+<%
+PreparedStatement StatementRSFind=null;
+ResultSet RSFind=null;
+boolean resultException=false;
+boolean rsReady = false;
+
+try
+{
+StatementRSFind = connRSFind.prepareStatement(sqlString);
+
+RSFind = StatementRSFind.executeQuery();
+rsReady = RSFind.next();
+}
+catch(SQLException e1)
+{
+resultException = true; // Set a flag so that we know there was an error, not just an empty result set.
+
+%>
+Could not find table, I'll try to add it: <%=e1.getMessage()%><BR>
+< %
+}
+
+if (!rsReady || resultException)
+{ // If there are no database entries with this last name, enter a few so the user has something to look at.
+// Or, if there was an error, the table probably doesn't exist yet.
+
+// try to create table CUSTOMERS, in case it doesn't exist yet.
+
+if (resultException)
+{// The table CUSTOMERS probably doesn't exist, so we create it here.
+Statement statement2=null;
+
+try
+{
+statement2 = connRSFind.createStatement();
+}
+catch(SQLException e2)
+{
+%>
+Could not create statement2 with this connection! Check your database settings in search.jsp: <%=e2.getMessage()%><BR>
+< %
+}
+
+if (statement2 != null)
+{
+try
+{ // try to crate the table CUSTOMERS.
+sqlString = "CREATE TABLE CUSTOMERS(LAST_NAME VARCHAR(50), FIRST_NAME VARCHAR(50))";
+statement2.execute(sqlString);
+statement2.close();
+}
+catch(SQLException e2a)
+{
+%>
+Table CUSTOMERS already exists and we tried to create it again, or it could not be created: <%=e2a.getMessage()%> <BR>
+< %
+}
+}
+} // Table CUSTOZMERS should exist now, if it didn't before or things are really messed up.
+else
+{
+%>
+First attempt at getting a result set produced an empty result set.<BR>
+< %
+}
+
+// Insert some names into table CUSTOMERS. Either the table is new and empty, or there were
+// no entries with the last name the user gave us, so we'll enter a few, so the user has
+// something to look at.
+Statement statement3=null;
+
+try
+{
+statement3 = connRSFind.createStatement();
+}
+catch(SQLException e3)
+{
+%>
+Could not create statement3 with this connection! Check your database settings in search.jsp: <%=e3.getMessage()%><BR>
+< %
+}
+
+if (statement3 != null)
+{
+try
+{
+sqlString = "INSERT INTO CUSTOMERS(LAST_NAME, FIRST_NAME) VALUES(\'"+lastName+"\', 'Aaron')";
+%>
+Executing SQL: <%=sqlString%><BR>
+< %
+statement3.execute(sqlString);
+sqlString = "INSERT INTO CUSTOMERS(LAST_NAME, FIRST_NAME) VALUES(\'"+lastName+"\', 'Bob')";
+%>
+Executing SQL: <%=sqlString%><BR>
+< %
+statement3.execute(sqlString);
+sqlString = "INSERT INTO CUSTOMERS(LAST_NAME, FIRST_NAME) VALUES(\'"+lastName+"\', 'Calvin')";
+%>
+Executing SQL: <%=sqlString%><BR><BR>
+< %
+statement3.execute(sqlString);
+statement3.close();
+}
+catch(SQLException e3a)
+{
+%>
+We could not enter data in table CUSTOMERS for some reason: <%=e3a.getMessage()%> <BR>
+< %
+}
+}
+
+
+// try again to get a result set.
+sqlString = "SELECT * FROM CUSTOMERS WHERE LAST_NAME = \'" + lastName +"\'"; 
+StatementRSFind = connRSFind.prepareStatement(sqlString);
+RSFind = StatementRSFind.executeQuery();
+rsReady = RSFind.next();
+}
+
+int i = 0;
+
+if (rsReady)
+{
+boolean done=false;
+while (!done)
+{
+i++;
+String RSFind_Last = (String) RSFind.getObject("LAST_NAME");
+String RSFind_First = (String) RSFind.getObject("FIRST_NAME");
+// display the names in the browser.
+%>
+Name <%=i%>: <%=RSFind_First%> <%=RSFind_Last%> <BR>
+< %
+done = !RSFind.next();
+} //End while loop
+
+RSFind.close();
+}
+else
+{
+%>
+< BR>The result set was empty. Check to be sure database is running and settings in search.jsp are correct.<BR>
+< %
+
+}
+if (StatementRSFind != null)
+StatementRSFind.close();
+
+if (connRSFind != null)
+connRSFind.close();
+
+%>
+
+</body>
+< /html>
+
+
+Sample web app dbTest:
+
+This sample web app shows how to use a Fiorebird DataSource with Tomcat. To use it, create a folder called "dbTest" in the webapps directory of your Tomcat installation. Put the HTML file below into a file called index.htm inside the folder called dbTest. Put the contents of the XML file following this into dbTtest/WEB-INF/web.xml. Put the contents of the jsp file following that into dbTest/search.jsp. Put the context XML code after that into the conf/server.xml file of your Tomcat installation just before the entry: </Host>. Start Tomcat and run testDB in your browser by calling http://localhost/testDB/index.htm.
+
+Put this in testDB/index.htm:
+
+<html>
+< head>
+< title>index.htm</title>
+< meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+< /head>
+
+<body bgcolor="#CCCCFF" text="#000000">
+< /p>
+< H1 align="center">Enter Name</H1>
+< /H1>
+< p>This demo of a simple web app will take the name you type above and search
+a table called CUSTOMERS in a Firebird database named test.gdb using the JayBird
+JDBC
+driver.
+The table CUSTOMERS has two fields (columns): FIRST_NAME and LAST_NAME.</p>
+< p>If the database or tables don't exist they will be created for you. You will
+need to edit the Strings at the top of the file search.jsp to appropriate
+ones for your system.</p>
+< p>If there are no entries with the same last name that you type in, the program
+will add 3 so you will get some output: &quot;Aaron, Bob, and Calvin&quot;.</p>
+< p>&nbsp;</p>
+< form name="form1" method="post" action="search.jsp">
+< p align="center">
+Type a Last Name to search for here:
+<input name="name" type="text" id="name">
+then click &quot;Submit&quot;.</p>
+< p align="center"> <input type="submit" name="Submit" value="Submit">
+< /p>
+< /form>
+< p>&nbsp;</p>
+< /body>
+< /html>
+
+ 
+
+Put this in dbTest/WEB-INF/web.xml:
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE web-app PUBLIC '-//Sun Microsystems, Inc.//DTD Web Application 2.2//EN' 'http://java.sun.com/j2ee/dtds/web-app_2.2.dtd'>
+
+<web-app>
+<session-config>
+<session-timeout>
+30
+</session-timeout>
+</session-config>
+<welcome-file-list>
+<welcome-file>index.htm</welcome-file>
+</welcome-file-list>
+<resource-ref>
+<description>Test SQL DB Connection</description>
+<res-ref-name>jdbc/dbTest</res-ref-name>
+<res-type>javax.sql.DataSource</res-type>
+<res-auth>Container</res-auth>
+</resource-ref>
+< /web-app>
+
+
+Put this in dbTest/search.jsp:
+
+
+<%@page contentType="text/html; charset=iso-8859-1" language="java" import="java.sql.*,javax.sql.*,javax.servlet.*, javax.servlet.http.*,javax.naming.*,org.firebirdsql.management.*"%>
+
+<html>
+< head>
+< title>search.jsp</title>
+< meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+< /head>
+
+<body bgcolor="#CCCCFF" text="#000000"><p>
+< /p>
+< H1 align="center">Test Search</H1>
+
+<%
+// Edit the strings below as needed for your system.
+
+String DB_SERVER_URL = "localhost";
+int DB_SERVER_PORT = 3050;
+
+// Use forward slashes here, even on Windows systems.
+String DB_PATH = "c:/databases";
+
+String DB_NAME = "test.gdb";
+String DB_USER = "sysdba";
+String DB_PASSWORD = "masterkey";
+String DB_CONNECTION_STRING = "jdbc:firebirdsql:"+DB_SERVER_URL+"/"+DB_SERVER_PORT+":"+DB_PATH+"/"+DB_NAME;
+
+String lastName = request.getParameter("name");
+
+// To help you debug, you can set a session attribute to values indicating
+// the prograss through the web app, then use an HTTP monitor to see how far 
+// you have progressed.
+
+// This stuff creates the database with the JMX management tools 
+// if it doesn't already exist.
+FBManager fbManager = new FBManager();
+
+fbManager.setServer(DB_SERVER_URL);
+fbManager.setPort(DB_SERVER_PORT);
+
+fbManager.start();
+
+fbManager.createDatabase(DB_PATH + "/" + DB_NAME, DB_USER, DB_PASSWORD);
+
+%>
+Opening a connection with connection string: <%=DB_CONNECTION_STRING%><BR><BR>
+< %
+
+// Get a connection to the database from the dataSource.
+DataSource ds=null;
+Connection connRSFind=null;
+
+try
+{
+Context ctx = new InitialContext();
+
+if(ctx == null ) 
+throw new Exception("Boom - No Context");
+
+ds = (DataSource)ctx.lookup("java:comp/env/jdbc/dbTest");
+
+try
+{
+connRSFind = ds.getConnection();
+}
+catch (SQLException e)
+{
+System.out.println("getting new data source connection failed! Error: "+e+"\n");
+}
+
+}
+catch (Exception e)
+{
+System.out.println("Could Not get data source, error: "+e+"\n");
+}
+
+// Back to HTML, show the user the LAST_NAME typed in.
+%>
+< p>
+The user entered name is: <%=lastName%>
+< p>
+< %
+
+String sqlString = "SELECT * FROM CUSTOMERS WHERE LAST_NAME = \'" + lastName +"\'";
+
+// Switch back to html so we can print out the sqlString on the web page.
+%>
+
+The SQL String is: <%=sqlString%><p>
+
+<%
+PreparedStatement StatementRSFind=null;
+ResultSet RSFind=null;
+boolean resultException=false;
+boolean rsReady = false;
+
+try
+{
+StatementRSFind = connRSFind.prepareStatement(sqlString);
+
+RSFind = StatementRSFind.executeQuery();
+rsReady = RSFind.next();
+}
+catch(SQLException e1)
+{
+e1.printStackTrace(System.out);
+resultException = true; // Set a flag so that we know there was an error, not just an empty result set.
+
+%>
+Could not find table, I'll try to add it: <%=e1.getMessage()%><BR>
+< %
+}
+
+if (!rsReady || resultException)
+{ // If there are no database entries with this last name, enter a few so the user has something to look at.
+// Or, if there was an error, the table probably doesn't exist yet.
+
+// try to create table CUSTOMERS, in case it doesn't exist yet.
+
+if (resultException)
+{// The table CUSTOMERS probably doesn't exist, so we create it here.
+Statement statement2=null;
+
+try
+{
+statement2 = connRSFind.createStatement();
+}
+catch(SQLException e2)
+{
+%>
+Could not create statement2 with this connection! Check your database settings in search.jsp: <%=e2.getMessage()%><BR>
+< %
+}
+
+if (statement2 != null)
+{
+try
+{ // try to crate the table CUSTOMERS.
+sqlString = "CREATE TABLE CUSTOMERS(LAST_NAME VARCHAR(50), FIRST_NAME VARCHAR(50))";
+statement2.execute(sqlString);
+statement2.close();
+}
+catch(SQLException e2a)
+{
+%>
+Table CUSTOMERS already exists and we tried to create it again, or it could not be created: <%=e2a.getMessage()%> <BR>
+< %
+}
+}
+} // Table CUSTOZMERS should exist now, if it didn't before or things are really messed up.
+else
+{
+%>
+First attempt at getting a result set produced an empty result set.<BR>
+< %
+}
+
+// Insert some names into table CUSTOMERS. Either the table is new and empty, or there were
+// no entries with the last name the user gave us, so we'll enter a few, so the user has
+// something to look at.
+Statement statement3=null;
+
+try
+{
+statement3 = connRSFind.createStatement();
+}
+catch(SQLException e3)
+{
+%>
+Could not create statement3 with this connection! Check your database settings in search.jsp: <%=e3.getMessage()%><BR>
+< %
+}
+
+if (statement3 != null)
+{
+try
+{
+sqlString = "INSERT INTO CUSTOMERS(LAST_NAME, FIRST_NAME) VALUES(\'"+lastName+"\', 'Aaron')";
+%>
+Executing SQL: <%=sqlString%><BR>
+< %
+statement3.execute(sqlString);
+sqlString = "INSERT INTO CUSTOMERS(LAST_NAME, FIRST_NAME) VALUES(\'"+lastName+"\', 'Bob')";
+%>
+Executing SQL: <%=sqlString%><BR>
+< %
+statement3.execute(sqlString);
+sqlString = "INSERT INTO CUSTOMERS(LAST_NAME, FIRST_NAME) VALUES(\'"+lastName+"\', 'Calvin')";
+%>
+Executing SQL: <%=sqlString%><BR><BR>
+< %
+statement3.execute(sqlString);
+statement3.close();
+}
+catch(SQLException e3a)
+{
+%>
+We could not enter data in table CUSTOMERS for some reason: <%=e3a.getMessage()%> <BR>
+< %
+}
+}
+
+
+// try again to get a result set.
+sqlString = "SELECT * FROM CUSTOMERS WHERE LAST_NAME = \'" + lastName +"\'"; 
+StatementRSFind = connRSFind.prepareStatement(sqlString);
+RSFind = StatementRSFind.executeQuery();
+rsReady = RSFind.next();
+}
+
+int i = 0;
+
+if (rsReady)
+{
+boolean done=false;
+while (!done)
+{
+i++;
+String RSFind_Last = (String) RSFind.getObject("LAST_NAME");
+String RSFind_First = (String) RSFind.getObject("FIRST_NAME");
+// display the names in the browser.
+%>
+Name <%=i%>: <%=RSFind_First%> <%=RSFind_Last%> <BR>
+< %
+done = !RSFind.next();
+} //End while loop
+
+RSFind.close();
+}
+else
+{
+%>
+< BR>The result set was empty. Check to be sure database is running and settings in search.jsp are correct.<BR>
+< %
+
+}
+if (StatementRSFind != null)
+StatementRSFind.close();
+
+if (connRSFind != null)
+connRSFind.close();
+
+%>
+
+</body>
+< /html>
+
+
+
+
+Put this in conf/server.xml before </Host>: 
+
+<Context path="/dbTest" docBase="dbTest"
+debug="0" reloadable="true" crossContext="true">
+
+<Logger className="org.apache.catalina.logger.FileLogger"
+prefix="localhost_dbTest_log." suffix=".txt"
+timestamp="true"/>
+
+<Resource name="jdbc/dbTest"
+auth="Container"
+type="javax.sql.DataSource"/>
+
+<ResourceParams name="jdbc/dbTest">
+
+<parameter>
+<name>factory</name>
+<value>org.apache.commons.dbcp.BasicDataSourceFactory</value>
+</parameter>
+
+<parameter>
+<name>removeAbandoned</name>
+<value>true</value>
+</parameter>
+
+<parameter>
+<name>removeAbandonedTimeout</name>
+<value>300</value>
+</parameter>
+
+<parameter>
+<name>logAbandoned</name>
+<value>true</value>
+</parameter>
+
+<!-- Maximum number of dB connections in pool. Make sure you
+configure your Firebird max_connections large enough to handle
+all of your db connections. Set to 0 for no limit.
+-->
+<parameter>
+<name>maxActive</name>
+<value>100</value>
+</parameter>
+
+<!-- Maximum number of idle dB connections to retain in pool.
+Set to 0 for no limit.
+-->
+<parameter>
+<name>maxIdle</name>
+<value>30</value>
+</parameter>
+
+<!-- Maximum time to wait for a dB connection to become available
+in ms, in this example 10 seconds. An Exception is thrown if
+this timeout is exceeded. Set to -1 to wait indefinitely.
+-->
+<parameter>
+<name>maxWait</name>
+<value>10000</value>
+</parameter>
+
+<!-- Firebird dB username and password for dB connections -->
+<parameter>
+<name>username</name>
+<value>SYSDBA</value>
+</parameter>
+<parameter>
+<name>password</name>
+<value>masterkey</value>
+</parameter>
+
+<!-- Class name for JayBird JDBC driver -->
+<parameter>
+<name>driverClassName</name>
+<value>org.firebirdsql.jdbc.FBDriver</value>
+</parameter>
+
+<!-- The JDBC connection url for connecting to your MySQL dB.
+The autoReconnect=true argument to the url makes sure that the
+mm.mysql JDBC Driver will automatically reconnect if mysqld closed the
+connection. mysqld by default closes idle connections after 8 hours.
+-->
+<parameter>
+<name>url</name>
+<value>jdbc:firebirdsql:localhost/3050:/databases/test.gdb</value>
+</parameter>
+</ResourceParams>
+
+</Context>
+
 
 
 
@@ -1349,6 +2053,8 @@ log4j-core.jar Include if you want logging available. Some environments like app
 
  
 
+JayBird is now available as a single jar file: firebirdsql-full.jar.
+
 Some of the code was originally from Sun and they didn't allow distribution by third parties without a license. To be scrupulously legal you had to download the Sun jars separately. This was a pain so equivalent classes from the JBoss Project were used instead. These could be distributed but needed to be updated from the JBoss project source, so they are in a separate jar (mini-j2ee.jar).
 
 This combined with the fact that people are using the driver for everything from running a backing store for J2EE servers to simple database access in applets makes it hard to please everybody. So, multiple jars are used and you can pick and choose from them as needed.
@@ -1654,9 +2360,17 @@ If all else fails when developing web apps, you can put the jar files in the WEB
 
  
 
-No. Firebird and InterBase do not currently support secure connections internally. Therefore JayBird cannot. You must use SSL with an application server, or an IP tunneling program to secure your data in transit. These are both readily available. Secure connections are possible, you just have to use external software to get them.
+Not directly. Firebird and InterBase do not currently support secure connections internally. Therefore JayBird cannot. You must use SSL with an application server, or an IP tunneling program to secure your data in transit. These are both readily available. Secure connections are possible, you just have to use external software to get them.
+
+One popular tunneling program is ZeBeDee. See http://www.ibphoenix.com/a471.htm for more information and examples of a secure Firebird setup.
 
 There is a widely held misconception that Interclient/Interserver provide a secure connection. All they do is encode the password used to log in to the database. Data transactions after that are insecure unless the above means are used to secure them.
+
+Another method of securing your data is to write your application as a web application that runs on an application server and displays in a browser. Most app servers have secure access capability. In that scenario Firebird and the app server are run on systems behind a firewall. The web browser makes secure calls to the app server. The app server then makes unsecure calls to the Firebird server using Jaybird. Since both the app server and the firebird server are behind the firewall, none of their transactions are visible to the outside world. Port 3050 should be blocked at the firewall in such a scenario to prevent unauthorized access or spoofing of Firebird.
+
+This scenario will not prevent snooping from other systems behind your firewall, so for best security you may want to put your servers behind their own firewall.
+
+If the application server and the Firebird server are on the same machine, packets never reach the network, so snooping is more difficult. Port 3050 will have to remain available, however, so the system will not be completely secure.
 
 
 --------------------------------------------------------------------------------
@@ -1881,6 +2595,24 @@ If you see this error you probably need to include jndi.jar in your classpath, o
 
  
 
+Jaybird does not fully support escaped syntax for procedure calls (output parameters are not supported). However if you use native Firebird syntax, stored procedures are fully supported. 
+
+Native Firebird syntax:
+
+EXECUTE PROCEDURE proc_name(?, ?, ?, ...) for executable procedures;
+SELECT * FROM proc_name(?, ?, ...) for selectable procedures.
+
+{call proc_name(?, ?, ...)} is translated into EXECUTE PROCEDURE
+proc_name(?, ?, ?, ...) without any analysis. This means that:
+
+a) It is not usable for selectable stored procedures;
+b) Positions of output params are independent of input params (in JDBC they're not) and start with 1.
+
+When you use native syntax, stored procedures can be called both from PreparedStatement and from CallableStatement, in case of escaped syntax - only from CallableStatement.
+
+
+Examples 
+
 The following example is a stripped-down version of code taken from the project source code tests in the directory:
 
 client-java/src/test/org/firebirdsql/jdbc/TestFBCallableStatement.java 
@@ -1971,20 +2703,47 @@ Till v.6.5 InterBase sent VARCHAR columns padded to the full length with spaces 
 
 From one of the posts in the Firebird devel list this issue seems to appear when using the gds32.dll under Windows but not with the INET protocol.
 
+
+--------------------------------------------------------------------------------
+
+
+41- Can I use CachedRowSet with JayBird?
+
+
+
+
+Yes, but third party code must be used. CachedRowSet allows you to store a copy of a rowSet and disconnect from the Firebird server for processing. This is useful because it allows you to release a connection immediately after getting a rowSet instead of holding it open while the rowSet is processed. That allows the server to run more efficiently
+
+Two third-party implementations have been tested and seem to work the same. 
+
+One is from Oracle: OracleCachedRowSet -- it doesn't require an Oracle database but does require the Oracle JDBC jar file. You need both ocrs12.zip and ojdbc14.jar.
+
+See: http://otn.oracle.com/software/tech/java/sqlj_jdbc/content.html 
+
  
+
+Another is an open source project called jxutil: XDisconnectedRowSet -- only requires one jar file, jxRowSet-0.8a.jar.
+
+See: http://sourceforge.net/projects/jxutil/
+
+Depending on the intended use, it would be appropriate to study the licenses both implementations come under.
+Jxutil is LGPL (Limited Gnu Public License) software, while OracleCachedRowSet uses the Oracle Technology Network Development and Distribution License. See: http://otn.oracle.com/software/htdocs/distlic.html.
+
 
 
 
 --------------------------------------------------------------------------------
 
 
-41- How do I pass Database Parameter Buffer (DPB) parameters?
+42- How do I pass Database Parameter Buffer (DPB) parameters?
 
 
 
  
 
-You can pass any DPB parameter by stripping the "isc_dpb_" from the DPB parameter name and putting it in the URL. In case of roles and character encoding this could be:
+If you use FBWrappingDataSource, you specify DPB parameters in FBConnectionRequestInfo.
+
+If you are using java.sql.DriverManager you can pass any DPB parameter by stripping the "isc_dpb_" from the DPB parameter name and putting it in the URL. In case of roles and character encoding this could be:
 
 ...my.gdb?sql_role_name=guest&lc_ctype=WIN1251
 
@@ -2031,7 +2790,7 @@ user name
 
 
 
-42- Can you give me some code examples?
+43- Can you give me some code examples?
 
 
 
@@ -2970,7 +3729,7 @@ import org.firebirdsql.jdbc.FBWrappingDataSource;
 
 import org.firebirdsql.jca.FBConnectionRequestInfo;
 
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 
 
 
@@ -3036,11 +3795,11 @@ dataSource.setDescription ("An example database of employees");
 
 FBConnectionRequestInfo cri = dataSource.getConnectionRequestInfo();
 
-cri.setProperty(GDS.isc_dpb_lc_ctype, "NONE");
+cri.setProperty(ISCConstants.isc_dpb_lc_ctype, "NONE");
 
-cri.setProperty(GDS.isc_dpb_num_buffers, 1);
+cri.setProperty(ISCConstants.isc_dpb_num_buffers, 1);
 
-cri.setProperty(GDS.isc_dpb_sql_dialect, 3);
+cri.setProperty(ISCConstants.isc_dpb_sql_dialect, 3);
 
 dataSource.setConnectionRequestInfo(cri);
 
