@@ -2050,18 +2050,32 @@ public class GDS_Impl implements GDS {
                 throw new GDSException("Connection string missing");
             }
 
+            // allows standard syntax //host:port/....
+            // and old fb syntax host/port:....
             connectInfo = connectInfo.trim();
             String node_name;
-            int sep = connectInfo.indexOf(':');
+            char hostSepChar;
+            char portSepChar;
+            if (connectInfo.startsWith("//")){
+                connectInfo = connectInfo.substring(2);
+                hostSepChar = '/';
+                portSepChar = ':';
+            }
+				else {
+                hostSepChar = ':';
+                portSepChar = '/';
+            }
+
+            int sep = connectInfo.indexOf(hostSepChar);
             if (sep == 0 || sep == connectInfo.length() - 1) {
-                throw new GDSException("Bad connection string: ':' at beginning or end of:" + connectInfo +  isc_bad_db_format);
+                throw new GDSException("Bad connection string: '"+hostSepChar+"' at beginning or end of:" + connectInfo +  isc_bad_db_format);
             }
             else if (sep > 0) {
                 server = connectInfo.substring(0, sep);
                 fileName = connectInfo.substring(sep + 1);
-                int portSep = server.indexOf('/');
+                int portSep = server.indexOf(portSepChar);
                 if (portSep == 0 || portSep == server.length() - 1) {
-                    throw new GDSException("Bad server string: '/' at beginning or end of: " + server +  isc_bad_db_format);
+                    throw new GDSException("Bad server string: '"+portSepChar+"' at beginning or end of: " + server +  isc_bad_db_format);
                 }
                 else if (portSep > 0) {
                     port = Integer.parseInt(server.substring(portSep + 1));
