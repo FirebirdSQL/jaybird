@@ -112,6 +112,7 @@ char* ScratchPadAllocator::MemoryChunk::TryToAllocate( long sizeToAllocate )
 ScratchPadAllocator::MemoryChunk*	ScratchPadAllocator::allocateAndInitilizeChunk(int size)
 	{
 	size += sizeof(MemoryChunk);
+	size += 8;
 
 	int sizeToAllocate = 65536 < size ? size : 65536;
 
