@@ -125,7 +125,9 @@ public final class ISCConstants {
      * Driver-specific DPB params that will be removed before sending them
      * to the server. These params influence only client side.
      */
-    public final static int isc_dpb_socket_buffer_size    = 129;
+    public final static int isc_dpb_socket_buffer_size      = 129;
+    public final static int isc_dpb_blob_buffer_size        = 130;
+    public final static int isc_dpb_use_stream_blobs        = 131;
 
     /*************************************/
     /* Transaction parameter block stuff */

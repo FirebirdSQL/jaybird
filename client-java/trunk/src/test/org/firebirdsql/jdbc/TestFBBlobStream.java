@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.FBTestBase;
 import java.sql.*;
 import java.util.Arrays;
+import java.util.Properties;
 
 /**
  * Describe class <code>TestFBBlobAccess</code> here.
@@ -53,9 +54,13 @@ public class TestFBBlobStream extends FBTestBase {
 
     protected void setUp() throws Exception {
         super.setUp();
-        Class.forName(FBDriver.class.getName());
 
-        connection = getConnectionViaDriverManager();
+        Class.forName(FBDriver.class.getName());
+        
+        Properties props = getDefaultPropertiesForConnection();
+        props.put("isc_dpb_use_stream_blobs", "");
+        
+        connection = DriverManager.getConnection(getUrl(), props);
 
         java.sql.Statement stmt = connection.createStatement();
         try {

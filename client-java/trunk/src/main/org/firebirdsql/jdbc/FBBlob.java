@@ -27,15 +27,6 @@ import java.util.*;
 
 import org.firebirdsql.gds.*;
 
-
-/**
- *
- *   @see <related>
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- *   @version $ $
- */
-
-
 /**
  * The representation (mapping) in
  * the Java<sup><font size=-2>TM</font></sup> programming
@@ -65,7 +56,7 @@ import org.firebirdsql.gds.*;
 
 public class FBBlob implements FirebirdBlob, Synchronizable {
     
-    private static final boolean SEGMENTED = false;
+    private static final boolean SEGMENTED = true;
     public static final int READ_FULLY_BUFFER_SIZE = 16 * 1024;
 
     /**
@@ -684,7 +675,13 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             
             synchronized(syncObject) {
                 try {
-                    blob = c.createBlobHandle(SEGMENTED);
+                    DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
+                    
+                    boolean useStreamBlobs = 
+                        dpb.hasArgument(DatabaseParameterBuffer.use_stream_blobs);
+                    
+                    blob = c.createBlobHandle(!useStreamBlobs);
+                    
                 } catch (GDSException ge) {
                     throw new FBSQLException(ge);
                 }

@@ -61,7 +61,7 @@ public class FBConnectionRequestInfo
         c = src.deepCopy();
     }
 
-    DatabaseParameterBuffer getDpb() {
+    public DatabaseParameterBuffer getDpb() {
         return c;
     }
 
@@ -105,7 +105,7 @@ public class FBConnectionRequestInfo
     {
         return getStringProperty(ISCConstants.isc_dpb_password);
     }
-
+    
     /**
      Checks whether this instance is equal to another. Since connectionRequestInfo is defined
      specific to a resource adapter, the resource adapter is required to implement this method. The
