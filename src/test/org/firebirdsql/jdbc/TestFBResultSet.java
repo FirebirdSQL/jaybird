@@ -756,13 +756,14 @@ public class TestFBResultSet extends FBTestBase {
         
         connection.clearWarnings();
         Statement stmt = connection.createStatement(
-            ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_UPDATABLE);
+            ResultSet.TYPE_SCROLL_INSENSITIVE, 
+            ResultSet.CONCUR_UPDATABLE);
         
         try {
             assertTrue("No warnings should be added", connection.getWarnings() == null);
             
             ResultSet rs = stmt.executeQuery("SELECT id, long_str FROM test_table ORDER BY id");
-            
+
             int counter = 0;
             while(rs.next()) {
                 

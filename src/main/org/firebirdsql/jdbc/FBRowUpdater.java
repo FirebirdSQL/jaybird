@@ -365,6 +365,15 @@ public class FBRowUpdater  {
             
             executeStatement(SELECT_STATEMENT_TYPE, selectStatement);
             
+            Object[] rows = selectStatement.getRows();
+            if (rows.length == 0)
+                throw new FBSQLException("No rows could be fetched.");
+            
+            if (rows.length > 1)
+            throw new FBSQLException("More then one row fetched.");
+            
+            setRow((byte[][])rows[0]);
+            
         } catch(GDSException ex) {
             throw new FBSQLException(ex);
         }
@@ -379,6 +388,9 @@ public class FBRowUpdater  {
             if (inInsertRow && statementType != INSERT_STATEMENT_TYPE)
                 throw new FBSQLException("Only insertRow() is allowed when " +
                         "result set is positioned on insert row.");
+            
+            if (statementType != INSERT_STATEMENT_TYPE && oldRow == null)
+                throw new FBSQLException("Result set is not positioned on a row.");
             
             boolean[] parameterMask = getParameterMask();
             
@@ -456,6 +468,18 @@ public class FBRowUpdater  {
     
     public boolean rowUpdated() throws SQLException {
         return false;
+    }
+    
+    public byte[][] getNewRow() {
+        return newRow;
+    }
+    
+    public byte[][] getInsertRow() {
+        return insertRow;
+    }
+
+    public byte[][] getOldRow() {
+        return oldRow;
     }
     
     public void moveToInsertRow() throws SQLException {

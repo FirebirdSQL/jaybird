@@ -113,27 +113,12 @@ public class FBResultSet implements ResultSet {
 
         //prepareVars((!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE) || cached);
         
-        if (cached) {
-            prepareVars(true);
-            fbFetcher = new FBCachedFetcher(this.c, fbStatement, stmt, this);
-        } else
-        if (!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE) {
+        if (cached || rsType == ResultSet.TYPE_SCROLL_INSENSITIVE) {
             prepareVars(true);
             fbFetcher = new FBCachedFetcher(this.c, fbStatement, stmt, this);
         } else {
             prepareVars(false);
             
-            if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
-                try {
-                    rowUpdater = new FBRowUpdater(c, xsqlvars);
-                } catch (FBResultSetNotUpdatableException ex) {
-                    c.addWarning(new FBSQLWarning(
-                        "Result set concurrency changed to READ ONLY."));
-
-                    rsConcurrency = ResultSet.CONCUR_READ_ONLY;
-                }
-            }
-                    
             if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
                 c.addWarning(new FBSQLWarning(
                     "Result set type changed. " +
@@ -146,6 +131,17 @@ public class FBResultSet implements ResultSet {
                 fbFetcher = new FBUpdatableCursorFetcher(this.c, fbStatement, stmt, this);
             else
                 fbFetcher = new FBStatementFetcher(this.c, fbStatement, stmt, this);
+        }
+        
+        if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
+            try {
+                rowUpdater = new FBRowUpdater(c, xsqlvars);
+            } catch (FBResultSetNotUpdatableException ex) {
+                c.addWarning(new FBSQLWarning(
+                    "Result set concurrency changed to READ ONLY."));
+
+                rsConcurrency = ResultSet.CONCUR_READ_ONLY;
+            }
         }
     }
 
@@ -588,7 +584,10 @@ public class FBResultSet implements ResultSet {
 
         wasNullValid = true;
         // wasNull = field.isNull();
-        wasNull = (row[columnIndex - 1] == null);
+        if (row != null)
+            wasNull = (row[columnIndex - 1] == null);
+        else
+            wasNull = true;
         
         return field;
     }
@@ -599,7 +598,7 @@ public class FBResultSet implements ResultSet {
     public FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
         if (closed) throw new FBSQLException("The resultSet is closed");
         
-        if (checkRowPosition && row == null)
+        if (checkRowPosition && row == null && rowUpdater == null)
             throw new FBSQLException(
                     "The resultSet is not in a row, use next",
                     FBSQLException.SQL_STATE_NO_ROW_AVAIL);
@@ -2458,9 +2457,11 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void insertRow() throws  SQLException {
-        if (rowUpdater != null)
+        if (rowUpdater != null) {
             rowUpdater.insertRow();
-        else
+            fbFetcher.insertRow(rowUpdater.getInsertRow());
+            notifyRowUpdater();
+        } else
             throw new FBResultSetNotUpdatableException();
     }
 
@@ -2477,9 +2478,11 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateRow() throws  SQLException {
-        if (rowUpdater != null)
+        if (rowUpdater != null) {
             rowUpdater.updateRow();
-        else
+            fbFetcher.updateRow(rowUpdater.getNewRow());
+            notifyRowUpdater();
+        } else
             throw new FBResultSetNotUpdatableException();
     }
 
@@ -2496,9 +2499,11 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void deleteRow() throws  SQLException {
-        if (rowUpdater != null)
+        if (rowUpdater != null) {
             rowUpdater.deleteRow();
-        else
+            fbFetcher.deleteRow();
+            notifyRowUpdater();
+        } else
             throw new FBResultSetNotUpdatableException();
     }
 
@@ -2531,9 +2536,13 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void refreshRow() throws  SQLException {
-        if (rowUpdater != null)
+        if (rowUpdater != null) {
             rowUpdater.refreshRow();
-        else
+            fbFetcher.updateRow(rowUpdater.getOldRow());
+            
+            // this is excessive, but we do this to keep the code uniform
+            notifyRowUpdater();
+        } else
             throw new FBResultSetNotUpdatableException();
     }
 

@@ -119,4 +119,35 @@ interface FBFetcher {
 	boolean isFirst() throws SQLException;
 	boolean isLast() throws SQLException;
 	boolean isAfterLast() throws SQLException;
+    
+    /**
+     * Insert row at current position. This method adds a row at the current
+     * position in case of updatable result sets after successfull execution of
+     * the {@link ResultSet#insertRow()} method.
+     * 
+     * @param data row data
+     * 
+     * @throws SQLException if operation cannot be completed.
+     */
+    void insertRow(byte[][] data) throws SQLException;
+    
+    /**
+     * Delete row at current position. This method deletes a row at the current
+     * position in case of updatable result sets after successfull execution of
+     * the {@link ResultSet#deleteRow()} method.
+     * 
+     * @throws SQLException if operation cannot be completed.
+     */
+    void deleteRow() throws SQLException;
+    
+    /**
+     * Update row at current position. This method updates a row at the current
+     * position in case of updatable result sets after successfull execution of
+     * the {@link ResultSet#updateRow()} method.
+     * 
+     * @param data row data
+     * 
+     * @throws SQLException if operation cannot be completed.
+     */
+    void updateRow(byte[][] data) throws SQLException;
 }
