@@ -26,40 +26,6 @@
  *
  */
 
-/*
- * CVS modification log:
- * $Log$
- * Revision 1.20  2004/10/08 22:39:11  rrokytskyy
- * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
- * added possibility to translate characters if there are some encoding issues
- *
- * Revision 1.19  2004/08/15 00:10:34  rrokytskyy
- * introduced new parameters to change the time zone behavior and escaped parser behavior for function calls
- *
- * Revision 1.18  2004/07/19 14:03:33  rrokytskyy
- * fixed bug when incorrect data were used during batch execution
- *
- * Revision 1.17  2004/01/27 14:08:13  rrokytskyy
- * javadoc fixes
- *
- * Revision 1.16  2003/12/30 14:53:32  rrokytskyy
- * fixed incorrect timestamp encoding/decoding when using calendar
- *
- * Revision 1.15  2003/11/15 22:45:06  rrokytskyy
- * fixed bug in time decoding
- *
- * Revision 1.14  2003/06/25 00:01:08  ryanbaldwin
- * Initial type 2 jdbc driver support.
- *
- * Revision 1.13  2003/06/05 22:57:47  brodsom
- * Substitute package and inline imports
- *
- * Revision 1.12  2003/01/23 01:37:05  brodsom
- * Encodings patch
- *
- */
-
-
 package org.firebirdsql.gds;
 
 
@@ -479,14 +445,17 @@ public class XSQLVAR {
      *        may be <code>null</code>
      * @return The encoded <code>Time</code>
      */
-    public java.sql.Time encodeTime(Time d, Calendar cal) {
+    public java.sql.Time encodeTime(Time d, Calendar cal, boolean invertTimeZone) {
 
         if (cal == null) {
             return d;
         }
         else {
-            cal.setTime(d);
-            return new Time(cal.getTime().getTime());
+            long time = d.getTime() + 
+            (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() - 
+            Calendar.getInstance().getTimeZone().getRawOffset());
+        
+            return new Time(time);
         }
     }
 
@@ -512,14 +481,17 @@ public class XSQLVAR {
      *        be <code>null</code>
      * @return The decooded <code>Time</code>
      */
-    public java.sql.Time decodeTime(java.sql.Time d, Calendar cal) {
+    public java.sql.Time decodeTime(java.sql.Time d, Calendar cal, boolean invertTimeZone) {
 
         if (cal == null) {
             return d;
         }
         else {
-            cal.setTime(d);
-            return new Time(cal.getTime().getTime());    
+            long time = d.getTime() - 
+            (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() - 
+             Calendar.getInstance().getTimeZone().getRawOffset());
+        
+            return new Time(time);
         }
     }
 

@@ -48,7 +48,7 @@ class FBTimeField extends FBField {
     public Time getTime(Calendar cal) throws SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
-        return field.decodeTime(getTime(),cal);
+        return field.decodeTime(getTime(),cal, isInvertTimeZone());
     }
     public Time getTime() throws SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
@@ -94,7 +94,7 @@ class FBTimeField extends FBField {
             return;
         }
 
-        setTime(field.encodeTime(value,cal));
+        setTime(field.encodeTime(value,cal, isInvertTimeZone()));
     }
     public void setTime(Time value) throws SQLException {
         if (value == TIME_NULL_VALUE) {
