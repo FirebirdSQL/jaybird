@@ -51,7 +51,7 @@ public class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_handle {
     }
     
     void setRdb_id(int rdb_id) {
-        System.out.println("setting rdb_id to: " + rdb_id);
+        //System.out.println("setting rdb_id to: " + rdb_id);
         this.rdb_id = rdb_id;
     }
     

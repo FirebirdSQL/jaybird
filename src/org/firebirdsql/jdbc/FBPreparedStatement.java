@@ -328,7 +328,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             }
             sqlvar.sqlind = 0;
             sqlvar.sqldata = padded.toString().getBytes();
-            System.out.println("padded: /" + x + "/ to /" + padded + "/ length: " + ((byte[])sqlvar.sqldata).length);
+            //System.out.println("padded: /" + x + "/ to /" + padded + "/ length: " + ((byte[])sqlvar.sqldata).length);
             return;
         }
 

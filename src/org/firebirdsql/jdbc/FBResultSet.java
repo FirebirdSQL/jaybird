@@ -2749,7 +2749,7 @@ public class FBResultSet implements ResultSet {
         if (row[columnIndex - 1] == null) {
             return null;
         }
-        System.out.println("retrieved blob_id: " + row[columnIndex - 1]);
+        //System.out.println("retrieved blob_id: " + row[columnIndex - 1]);
         return new FBBlob(mc, ((Long)row[columnIndex - 1]).longValue());
     }
 
@@ -3168,7 +3168,7 @@ public class FBResultSet implements ResultSet {
         }
 
         public boolean next() throws SQLException {
-            System.out.println("FBResultSet next - FBStatementFetcher");
+            //System.out.println("FBResultSet next - FBStatementFetcher");
             try {
                 row = mc.fetch(stmt);
                 rowNum++;
@@ -3212,7 +3212,7 @@ public class FBResultSet implements ResultSet {
         }
 
         public boolean next() throws SQLException {
-            System.out.println("FBResultSet next - FBCachedFetcher");
+            //System.out.println("FBResultSet next - FBCachedFetcher");
             row = (Object[])rows.get(rowNum);
             rowNum++;
             return row != null;
