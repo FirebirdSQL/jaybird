@@ -49,6 +49,8 @@ public class FBTpb implements Serializable
 
     //read uncommitted actually not supported
     public static final String TRANSACTION_READ_UNCOMMITTED = "TRANSACTION_READ_UNCOMMITTED";
+    
+    public static final String TRANSACTION_NONE = "TRANSACTION_NONE";
 
     public final static Integer ISC_TPB_CONSISTENCY = new Integer(ISCConstants.isc_tpb_consistency);
     public final static Integer ISC_TPB_CONCURRENCY = new Integer(ISCConstants.isc_tpb_concurrency);
@@ -245,22 +247,35 @@ public class FBTpb implements Serializable
      * @see DatabaseMetaData#supportsTransactionIsolationLevel
      */
     public void setTransactionIsolation(int level) throws ResourceException {
+        
         switch (level) 
         {
-        case Connection.TRANSACTION_SERIALIZABLE :
-        case Connection.TRANSACTION_REPEATABLE_READ :
-        case Connection.TRANSACTION_READ_COMMITTED :
-        case Connection.TRANSACTION_READ_UNCOMMITTED :
-        
-            tpb = mapper.getMapping(level);
-            txIsolation = level;
+            case Connection.TRANSACTION_SERIALIZABLE :
+            case Connection.TRANSACTION_REPEATABLE_READ :
+            case Connection.TRANSACTION_READ_COMMITTED :
             
-            // apply read-only flag cached locally
-            setReadOnly(readOnly);
+                tpb = mapper.getMapping(level);
+                txIsolation = level;
+                
+                // apply read-only flag cached locally
+                setReadOnly(readOnly);
+                
+                break;
+
+            // promote to the higher isolation level, 
+            // because this one is not supported             
+            case Connection.TRANSACTION_READ_UNCOMMITTED :
             
-            break;
-        default: throw new FBResourceException(
-            "Unsupported transaction isolation level");
+                tpb = mapper.getMapping(Connection.TRANSACTION_READ_COMMITTED);
+                txIsolation = Connection.TRANSACTION_READ_COMMITTED;
+                
+                // apply read-only flag cached locally
+                setReadOnly(readOnly);
+                
+                break;
+                
+            default: throw new FBResourceException(
+                "Unsupported transaction isolation level");
         }
         createArray();
     }
