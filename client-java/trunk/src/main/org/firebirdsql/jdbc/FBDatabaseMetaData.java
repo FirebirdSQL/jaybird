@@ -4740,7 +4740,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         switch(type) {
             case ResultSet.TYPE_FORWARD_ONLY:
             case ResultSet.TYPE_SCROLL_INSENSITIVE :
-                return concurrency == ResultSet.CONCUR_READ_ONLY;
+                return concurrency == ResultSet.CONCUR_READ_ONLY || 
+                    concurrency == ResultSet.CONCUR_UPDATABLE;
             default:
                 return false;
         }
@@ -4760,7 +4761,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean ownUpdatesAreVisible(int type) throws SQLException {
-        return false;
+        return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
+            ResultSet.TYPE_SCROLL_SENSITIVE == type;
     }
 
 
@@ -4777,7 +4779,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean ownDeletesAreVisible(int type) throws SQLException {
-        return false;
+        return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
+            ResultSet.TYPE_SCROLL_SENSITIVE == type;
     }
 
 
@@ -4794,7 +4797,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean ownInsertsAreVisible(int type) throws SQLException {
-        return false;
+        return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
+            ResultSet.TYPE_SCROLL_SENSITIVE == type;
     }
 
 
