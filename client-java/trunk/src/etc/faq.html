@@ -12,7 +12,7 @@
 <h1 ALIGN=CENTER><font size="6" style="font-size: 20pt"><a name="top"></a>Frequently 
   Asked Questions</font></h1>
 <p ALIGN=CENTER><font size="4">JayBird JCA/JDBC Driver for Firebird</font></p>
-<P ALIGN=CENTER>- Last Updated 12/16/02 -<BR>
+<P ALIGN=CENTER>- Last Updated 2/3/03 -<BR>
 </P>
 <table width="90%" border="0" cellspacing="0" cellpadding="5">
   <tr>
@@ -64,8 +64,9 @@
       <p><a href="#38">38. Why do I see a &quot;javax.naming.Referenceable&quot; 
         error?</a></p>
       <p><a href="#39">39. How do I use stored procedures with JayBird?</a></p>
-      <p><a href="#dpb">40. How do I pass Database Parameter Buffer (DPB) parameters?</a></p>
-      <p><a href="#codeexamples">41. Can you give me some code examples?</a></p>
+      <p><a href="#40">40. How do I pass Database Parameter Buffer (DPB) parameters?</a></p>
+      <p><a href="#dpb">41. How do I pass Database Parameter Buffer (DPB) parameters?</a></p>
+      <p><a href="#codeexamples">42. Can you give me some code examples?</a></p>
 </td>
     <td>&nbsp;</td>
   </tr>
@@ -496,7 +497,7 @@ following methods are not implemented:</FONT></P>
     to protect your passwords and data.</P>
   
 <P>More Java code for a driver example and a DataSource example are included in 
-  the <a href="#codesamples">Code Examples</a> section below.<BR>
+  the <a href="#codeexsamples">Code Examples</a> section below.<BR>
 </P>
   <hr>
   <P><BR>
@@ -1132,7 +1133,7 @@ following methods are not implemented:</FONT></P>
     <BR>
   </P>
   
-<P>To join the Firebird-java mailing list, go to <a href="www.yahoogroups.com">www.yahoogroups.com</a>. 
+<P>To join the Firebird-java mailing list, go to <a href="../../../../myProjects/projects/JayBird%20FAQ/www.yahoogroups.com">www.yahoogroups.com</a>. 
   Follow the instructions there for joining a group. The name of the group is 
   Firebird-java.</P>
   
@@ -1143,15 +1144,27 @@ following methods are not implemented:</FONT></P>
     <BR>
   </P>
   <hr>
-  <P><BR>
-    <BR>
-  </P>
-  
+<BR>
 <P ALIGN=CENTER><FONT SIZE=5><a name="17"></a> 17- Are there any known bugs?</FONT></P>
-  <P ALIGN=CENTER><a href="#top">return to top</a></P>
   
-<P>Not as of this release. Monitor firebird-java@yahoogroups.com for daily updates.<BR>
-  </P>
+<P ALIGN=CENTER><a href="#top">return to top</a></P>
+<P ALIGN=CENTER>&nbsp;</P>
+  
+<P>1) 575397: SERIALIZABLE is not isc_tpb_consistency - there is no final agreement 
+  between developers about mapping.<br>
+</P>
+<P>2) 630749: implement isc_info_sql_stmt_savepoint - will be implemented in JayBird 
+  1.5.<br>
+  <br>
+  3) 631090: Calling stored procedures - cannot be fixed with current Firebird 
+  implementation.<br>
+  <br>
+  4) 638074: JUnit Errors in JayBird Build - known issue, not driver problem, 
+  but test case problem.<br><br>
+  5) 645725: getBestRowIdentifier() not working - not yet implemented.<br>
+  <br>
+<P>Monitor firebird-java@yahoogroups.com for daily updates.<BR>
+</P>
   
 <P>You may report bugs in the firebird bugtracker at <a href="http://sourceforge.net/tracker/?group_id=9028&atid=109028">http://sourceforge.net/tracker/?group_id=9028&amp;atid=109028</a> 
   <BR>
@@ -1894,12 +1907,25 @@ public class TestFBCallableStatement {<br>
   &nbsp;&nbsp;&nbsp}<br>
   }<br>
 </p>
-<p align=left>&nbsp; </p>
 <p></p>
 <hr>
-<p align=center>&nbsp;</p>
 <p></p>
-<p align=center><font size="+2"><a name="dpb"></a>40- How do I pass Database Parameter 
+<p align=center><font size="+2"><a name="40"></a>40- Why are VARCHAR strings sometimes 
+  padded?</font></p>
+<p align=center><a href="#top">return to top</a></p>
+<p align=left>&nbsp;</p>
+<p align=left>Till v.6.5 InterBase sent VARCHAR columns padded to the full length 
+  with spaces (0x20) similar to CHAR. In 6.5 this was changed by Borland so that 
+  VARCHARs are no longer padded, as expected. IB 6.0 and FB 1.0 pads VARCHARs 
+  too. However, if FB 1.0 is accessed via JayBird, it does NOT pad VARCHARs and 
+  sends them correctly. </p>
+<p> From one of the posts in the Firebird devel list this issue seems to appear 
+  when using the gds32.dll under Windows but not with the INET protocol.</p>
+<p>&nbsp;</p>
+<p></p>
+<hr>
+<p></p>
+<p align=center><font size="+2"><a name="dpb"></a>41- How do I pass Database Parameter 
   Buffer (DPB) parameters?</font></p>
 <p align=center><a href="#top">return to top</a></p>
 <p align=center>&nbsp;</p>
@@ -2070,7 +2096,7 @@ public class TestFBCallableStatement {<br>
 <hr>
 <p><br>
 </p>
-<p align=CENTER><font size=5><a name="codeexamples"></a>41- Can you give me some 
+<p align=CENTER><font size=5><a name="codeexamples"></a>42- Can you give me some 
   code examples?</font></p>
 <p align=CENTER><a href="#top">return to top</a></p>
 <p align=CENTER><br>
