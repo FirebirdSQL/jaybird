@@ -44,6 +44,10 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.jca.FBManagedConnection;
+import java.net.URL;
+import java.net.MalformedURLException;
+import java.io.InputStream;
+import java.util.ArrayList;
 
 
 /**
@@ -235,23 +239,41 @@ aDa
  
  */
 
+/**
+* Describe class <code>FBResultSet</code> here.
+*
+* @author <a href="mailto:david@HP.home.home">david</a>
+* @version 1.0
+*/
 public class FBResultSet implements ResultSet {
+
+    private FBFetcher fbFetcher;
     
     private FBManagedConnection mc;
     
-    private FBStatement fbstatement;
+//    private FBStatement fbstatement;
     
-    private isc_stmt_handle stmt;
+//    private isc_stmt_handle stmt;
+
+    XSQLVAR[] xsqlvars;
     
     private Object[] row = null;
     
     private int rowNum = 0;
     
     FBResultSet(FBManagedConnection mc, FBStatement fbstatement, isc_stmt_handle stmt) {
+        fbFetcher = new FBStatementFetcher(mc, fbstatement, stmt);
         this.mc = mc;
-        this.fbstatement = fbstatement;
+        xsqlvars = stmt.getOutSqlda().sqlvar;
+/*        this.fbstatement = fbstatement;
         this.stmt = stmt;
-        mc.registerStatement(fbstatement);
+        mc.registerStatement(fbstatement);*/
+    }
+    
+    FBResultSet(FBManagedConnection mc, isc_stmt_handle stmt) throws SQLException {
+        fbFetcher = new FBCachedFetcher(mc, stmt);
+        this.mc = mc;
+        xsqlvars = stmt.getOutSqlda().sqlvar;
     }
     
     
@@ -273,13 +295,15 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public boolean next() throws  SQLException {
-        try {
+         return fbFetcher.next();
+         /*        try {
             row = mc.fetch(stmt);
+            rownum++;
             return (row != null);
         }
         catch (GDSException ge) {            
             throw new SQLException("fetch problem: " + ge.toString());
-        }
+            }*/
     }
 
 
@@ -300,7 +324,8 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public void close() throws  SQLException {
-        fbstatement.closeResultSet();
+        fbFetcher.close();
+        //        fbstatement.closeResultSet();
     }
 
 
@@ -530,7 +555,13 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public java.sql.Date getDate(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TYPE_DATE) {
+            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        }
+        if (row[columnIndex - 1] == null) {
+            return null;
+        }
+        return (java.sql.Date)row[columnIndex - 1];
     }
 
 
@@ -545,7 +576,13 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public java.sql.Time getTime(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TYPE_TIME) {
+            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        }
+        if (row[columnIndex - 1] == null) {
+            return null;
+        }
+        return (java.sql.Time)row[columnIndex - 1];
     }
 
 
@@ -560,7 +597,13 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public java.sql.Timestamp getTimestamp(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TIMESTAMP) {
+            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        }
+        if (row[columnIndex - 1] == null) {
+            return null;
+        }
+        return (java.sql.Timestamp)row[columnIndex - 1];
     }
 
 
@@ -587,8 +630,8 @@ public class FBResultSet implements ResultSet {
 	 * value returned is <code>null</code>
      * @exception SQLException if a database access error occurs
      */
-    public java.io.InputStream getAsciiStream(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+    public InputStream getAsciiStream(int columnIndex) throws  SQLException {
+       return getBinaryStream(columnIndex);
     }
 
 
@@ -619,8 +662,8 @@ public class FBResultSet implements ResultSet {
      * @deprecated use <code>getCharacterStream</code> in place of 
 	 *              <code>getUnicodeStream</code>
      */
-    public java.io.InputStream getUnicodeStream(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+    public InputStream getUnicodeStream(int columnIndex) throws  SQLException {
+       return getBinaryStream(columnIndex);
     }
 
 
@@ -645,8 +688,8 @@ public class FBResultSet implements ResultSet {
 	 * if the value is SQL <code>NULL</code>, the value returned is <code>null</code>
      * @exception SQLException if a database access error occurs
      */
-    public java.io.InputStream getBinaryStream(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+    public InputStream getBinaryStream(int columnIndex) throws  SQLException {
+       return getBlob(columnIndex).getBinaryStream();
     }
 
 
@@ -1015,7 +1058,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public ResultSetMetaData getMetaData() throws  SQLException {
-        return new FBResultSetMetaData(stmt);
+        return new FBResultSetMetaData(xsqlvars);
     }
 
 
@@ -1096,7 +1139,7 @@ public class FBResultSet implements ResultSet {
         if (columnName == null || columnName.equals("")) {
             throw new SQLException("zero length identifiers not allowed");
         }
-        XSQLVAR[] xsqlvars = stmt.getOutSqlda().sqlvar;
+        //XSQLVAR[] xsqlvars = stmt.getOutSqlda().sqlvar;
         for (int i = 0; i< xsqlvars.length; i++) {
             if (columnName.equals(xsqlvars[i].aliasname)) {
                 return ++i;
@@ -2611,8 +2654,8 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public Statement getStatement() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+    public Statement getStatement() {
+        return fbFetcher.getStatement();
     }
 
 
@@ -2666,8 +2709,15 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public Blob getBlob(int i) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+    public Blob getBlob(int columnIndex) throws  SQLException {
+        if ((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_BLOB) {
+            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        }
+        if (row[columnIndex - 1] == null) {
+            return null;
+        }
+        System.out.println("retrieved blob_id: " + row[columnIndex - 1]);
+        return new FBBlob(mc, ((Long)row[columnIndex - 1]).longValue());
     }
 
 
@@ -2936,18 +2986,211 @@ public class FBResultSet implements ResultSet {
     public java.sql.Timestamp getTimestamp(String columnName, Calendar cal) throws  SQLException {
        return getTimestamp(findColumn(columnName), cal);
      }
+
+    //jdbc 3 methods
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     * @exception java.net.MalformedURLException <description>
+     */
+    public URL getURL(int param1) throws SQLException, MalformedURLException {
+        // TODO: implement this java.sql.ResultSet method
+        return null;
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     * @exception java.net.MalformedURLException <description>
+     */
+    public URL getURL(String param1) throws SQLException, MalformedURLException {
+        // TODO: implement this java.sql.ResultSet method
+        return null;
+    }
+
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void updateRef(int param1, Ref param2) throws SQLException {
+        // TODO: implement this java.sql.ResultSet method
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void updateRef(String param1, Ref param2) throws SQLException {
+        // TODO: implement this java.sql.ResultSet method
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void updateBlob(int param1, Blob param2) throws SQLException {
+        // TODO: implement this java.sql.ResultSet method
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void updateBlob(String param1, Blob param2) throws SQLException {
+        // TODO: implement this java.sql.ResultSet method
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void updateClob(int param1, Clob param2) throws SQLException {
+        // TODO: implement this java.sql.ResultSet method
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void updateClob(String param1, Clob param2) throws SQLException {
+        // TODO: implement this java.sql.ResultSet method
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void updateArray(int param1, Array param2) throws SQLException {
+        // TODO: implement this java.sql.ResultSet method
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void updateArray(String param1, Array param2) throws SQLException {
+        // TODO: implement this java.sql.ResultSet method
+    }
     
     //--------------------------------------------------------------------
     //package methods
     
     XSQLVAR getXsqlvar(int columnIndex) {
-        return stmt.getOutSqlda().sqlvar[columnIndex - 1];
+        //return fbFetcher.getXsqlvar(columnIndex);
+        return xsqlvars[columnIndex - 1];
     }
 
 /*    int getColumnCount() {
         return stmt.getOutSqlda().sqln;
     }
 */
+
+    interface FBFetcher {
+
+
+        boolean next() throws SQLException;
+
+        void close() throws SQLException;
+
+        Statement getStatement();
+
+    }
+
+    class FBStatementFetcher implements FBFetcher {
+
+        private FBManagedConnection mc;
+
+        private FBStatement fbStatement;
+
+        private isc_stmt_handle stmt;
+
+        FBStatementFetcher(FBManagedConnection mc, FBStatement fbStatement, isc_stmt_handle stmt) {
+            this.mc = mc;
+            this.fbStatement = fbStatement;
+            this.stmt = stmt;
+            mc.registerStatement(fbStatement);
+
+        }
+
+        public boolean next() throws SQLException {
+            try {
+                row = mc.fetch(stmt);
+                rowNum++;
+                return (row != null);
+            }
+            catch (GDSException ge) {            
+                throw new SQLException("fetch problem: " + ge.toString());
+            }
+        }
+
+        public void close() throws SQLException {
+            fbStatement.closeResultSet();
+        }
+
+        public Statement getStatement() {
+            return fbStatement;
+        }
+    }
+
+    class FBCachedFetcher  implements FBFetcher {
+
+        //        private FBManagedConnection mc;
+
+        //private isc_stmt_handle stmt;
+
+        private ArrayList rows = new ArrayList();
+
+        FBCachedFetcher(FBManagedConnection mc, isc_stmt_handle stmt) throws SQLException {
+            //this.mc = mc;
+            // this.stmt = stmt;
+            try {
+                do {
+                    row = mc.fetch(stmt);
+                    rows.add(row);
+                } while  (row != null);
+                rows.add(null);
+            }
+            catch (GDSException ge) {            
+                throw new SQLException("fetch problem: " + ge.toString());
+            }
+        }
+
+        public boolean next() throws SQLException {
+            row = (Object[])rows.get(rowNum);
+            rowNum++;
+            return row != null;
+        }
+
+        public void close() throws SQLException {
+        }
+
+        public Statement getStatement() {
+            return null;
+        }
+    }
+
 
 }
 

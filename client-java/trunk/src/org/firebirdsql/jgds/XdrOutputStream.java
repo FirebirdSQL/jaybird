@@ -86,6 +86,21 @@ class XdrOutputStream extends FilterOutputStream {
         writeInt(len);
         writeOpaque(buffer, len);
     }
+
+    public final void writeBlobBuffer(byte[] buffer) throws IOException {
+	int len = buffer.length ; // 2 for short for buffer length
+	System.out.println("writeBlobBuffer len: " + len);
+	if (len > Short.MAX_VALUE) {
+	    throw new IOException(""); //Need a value???
+	}
+	writeInt(len + 2);
+	writeInt(len + 2); //bizarre but true! three copies of the length
+	write((len >> 0) & 0xff);
+	write((len >> 8) & 0xff);
+	write(buffer, 0, len);
+	System.out.println("writeBlobBuffer wrotebuffer bytes: " + len);
+	even(len + 2);
+    }
     
     public final void writeString(String s) throws IOException {
         byte[] buffer = s.getBytes();

@@ -220,6 +220,27 @@ public interface GDS {
     final static int isc_info_req_update_count       =  15;
     final static int isc_info_req_delete_count       =  16;
     
+/************************/
+/* Blob Parameter Block */
+/************************/
+
+    final static int isc_bpb_version1                =  1;
+    final static int isc_bpb_source_type             =  1;
+    final static int isc_bpb_target_type             =  2;
+    final static int isc_bpb_type                    =  3;
+    final static int isc_bpb_source_interp           =  4;
+    final static int isc_bpb_target_interp           =  5;
+    final static int isc_bpb_filter_parameter        =  6;
+
+    final static int isc_bpb_type_segmented          =  0;
+    final static int isc_bpb_type_stream             =  1;
+
+    final static int RBL_eof              = 1;
+    final static int RBL_segment          = 2;
+    final static int RBL_eof_pending      = 4;
+    final static int RBL_create	          = 8;
+
+    
     /********************/
     /* ISC Error Codes */
     /*******************/
@@ -1078,6 +1099,29 @@ public interface GDS {
     
     int isc_vax_integer(byte[] buffer, int pos, int length);
     
+    
+    //-----------------------------------------------
+    //Blob methods
+    //-----------------------------------------------
+    
+    void isc_create_blob2(isc_db_handle db, 
+                        isc_tr_handle tr, 
+                        isc_blob_handle blob, 
+                        Clumplet bpb) throws GDSException;
+    
+    void isc_open_blob2(isc_db_handle db, 
+                        isc_tr_handle tr, 
+                        isc_blob_handle blob, 
+                        Clumplet bpb) throws GDSException;
+    
+    byte[] isc_get_segment(isc_blob_handle blob,
+                           int maxread) throws GDSException;
+                           
+    void isc_put_segment(isc_blob_handle blob_handle, 
+			 byte[] buffer) throws GDSException;
+
+    void isc_close_blob(isc_blob_handle blob) throws GDSException;
+    
     // Handle declaration methods
     isc_db_handle get_new_isc_db_handle();
     
@@ -1085,12 +1129,6 @@ public interface GDS {
     
     isc_stmt_handle get_new_isc_stmt_handle();
     
-/*    Clumplet newClumplet(int type, String content);
-    Clumplet newClumplet(int type);
-    Clumplet newClumplet(int type, int content);
-    Clumplet newClumplet(int type, byte[] content);
-    
-    Clumplet cloneClumplet(Clumplet c);*/
-    
+    isc_blob_handle get_new_isc_blob_handle();
 }
 

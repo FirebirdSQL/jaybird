@@ -38,6 +38,14 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 
 import org.firebirdsql.jca.FBManagedConnection;
+import java.net.URL;
+import java.net.MalformedURLException;
+import java.io.InputStream;
+import java.sql.Timestamp;
+import java.sql.Time;
+import java.sql.Date;
+import java.io.Reader;
+import java.util.Map;
 
 
 
@@ -606,6 +614,622 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     public void registerOutParameter (int paramIndex, int sqlType, String typeName)
      throws SQLException {
     }
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setAsciiStream(String param1, InputStream param2, int param3) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @param param4 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setObject(String param1, Object param2, int param3, int param4) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setObject(String param1, Object param2, int param3) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setObject(String param1, Object param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setCharacterStream(String param1, Reader param2, int param3) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * jdbc 3
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     * @exception java.net.MalformedURLException <description>
+     */
+    public URL getURL(int param1) throws SQLException, MalformedURLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * jdbc 3
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     * @exception java.net.MalformedURLException <description>
+     */
+    public URL getURL(String param1) throws SQLException, MalformedURLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setFloat(String param1, float param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public float getFloat(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Clob getClob(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setTime(int param1, Time param2) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setTime(int param1, Time param2, Calendar param3) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setDate(String param1, Date param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setDate(String param1, Date param2, Calendar param3) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Timestamp getTimestamp(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Timestamp getTimestamp(String param1, Calendar param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public byte[] getBytes(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setTimestamp(String param1, Timestamp param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setTimestamp(String param1, Timestamp param2, Calendar param3) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Time getTime(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Time getTime(String param1, Calendar param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Object getObject(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Object getObject(String param1, Map param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setByte(String param1, byte param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Array getArray(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public String getString(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Ref getRef(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int getInt(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void registerOutParameter(String param1, int param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void registerOutParameter(String param1, int param2, int param3) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void registerOutParameter(String param1, int param2, String param3) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setDouble(String param1, double param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setBytes(String param1, byte[] param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setBinaryStream(String param1, InputStream param2, int param3) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setInt(String param1, int param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public short getShort(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setBoolean(String param1, boolean param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setNull(String param1, int param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public BigDecimal getBigDecimal(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setLong(String param1, long param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public double getDouble(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setBigDecimal(String param1, BigDecimal param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setTime(String param1, Time param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setTime(String param1, Time param2, Calendar param3) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public long getLong(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setShort(String param1, short param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Date getDate(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Date getDate(String param1, Calendar param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+
+        throw new SQLException("not yet implemented");
+    }
+
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     * @exception java.net.MalformedURLException <description>
+     */
+    public void setURL(String param1, URL param2) throws SQLException, MalformedURLException {
+        // TODO: implement this java.sql.CallableStatement method
+
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public byte getByte(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Blob getBlob(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setString(String param1, String param2) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean getBoolean(String param1) throws SQLException {
+        // TODO: implement this java.sql.CallableStatement method
+        throw new SQLException("not yet implemented");
+    }
+
 
 }
 

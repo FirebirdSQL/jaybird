@@ -28,6 +28,7 @@ package org.firebirdsql.jdbc;
 // imports --------------------------------------
 import java.sql.Ref;
 import java.sql.SQLException;
+import java.util.Map;
 
 
 /**
@@ -78,6 +79,39 @@ public class FBRef implements Ref {
    */
     public String getBaseTypeName() throws  SQLException {
         return null;
+    }
+
+    //jdbc 3
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Object getObject(Map param1) throws SQLException {
+        // TODO: implement this java.sql.Ref method
+        return null;
+    }
+
+    /**
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Object getObject() throws SQLException {
+        // TODO: implement this java.sql.Ref method
+        return null;
+    }
+
+
+    /**
+     *
+     * @param param1 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setObject(Object param1) throws SQLException {
+        // TODO: implement this java.sql.Ref method
     }
 
 

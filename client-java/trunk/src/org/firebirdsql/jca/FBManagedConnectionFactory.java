@@ -55,6 +55,7 @@ import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.jdbc.FBDataSource;
 import org.firebirdsql.jdbc.FBStatement;
+import java.util.HashSet;
 
 /**
  *
@@ -93,7 +94,18 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     private Set tpbSet;
     
     
-    public FBManagedConnectionFactory() {};  //Default constructor.
+    public FBManagedConnectionFactory() {
+        defaultCri = new FBConnectionRequestInfo();
+        defaultCri.setProperty(GDS.isc_dpb_num_buffers, new byte[] {90});
+        defaultCri.setProperty(GDS.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
+
+        tpbSet = new HashSet();
+        tpbSet.add(new Integer(GDS.isc_tpb_write));
+        tpbSet.add(new Integer(GDS.isc_tpb_read_committed));
+        tpbSet.add(new Integer(GDS.isc_tpb_no_rec_version));
+        tpbSet.add(new Integer(GDS.isc_tpb_wait));
+
+    }  //Default constructor.
     
     //rar properties
     

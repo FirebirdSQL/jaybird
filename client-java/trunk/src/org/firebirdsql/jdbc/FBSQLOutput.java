@@ -34,6 +34,8 @@ import java.sql.Ref;
 import java.sql.SQLException;
 import java.sql.Struct;
 import java.sql.SQLData;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 
 /**
@@ -372,6 +374,15 @@ import java.sql.SQLData;
         throw new SQLException("Not yet implemented");
     }
 
+
+    /**
+     *
+     * @param param1 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void writeURL(URL param1) throws SQLException {
+        // TODO: implement this java.sql.SQLOutput method
+    }
 
 }
  

@@ -30,6 +30,7 @@ import java.io.*;
 import java.util.Properties;
 import java.util.HashSet;
 import java.sql.*;
+import java.util.Arrays;
 
 
 import junit.framework.*;
@@ -280,6 +281,21 @@ public class TestGds extends TestCase {
         dropDatabase(db);   
     }
     
+    private isc_db_handle setupTable2() throws Exception {
+        isc_db_handle db = createDatabase(dbName);
+        t1 = startTransaction(db);
+        doSQLImmed(db, t1, "create table r2 (col1 smallint not null primary key, col2 blob)");
+        commit(t1);
+        return db;        
+    }
+    
+    private void teardownTable2(isc_db_handle db) throws Exception {
+        t1 = startTransaction(db);
+        doSQLImmed(db, t1, "drop table r2");
+        commit(t1);
+        dropDatabase(db);   
+    }
+    
     public void testCreateDropTable() throws Exception {
         System.out.println();
         System.out.println("testCreateDropTable");
@@ -410,5 +426,375 @@ public class TestGds extends TestCase {
         teardownTable(db1);
     }
     
+    public void testCreateBlob() throws Exception {
+        System.out.println();
+        System.out.println("testCreateBlob");
+        db1 = createDatabase(dbName);
+        t1 = startTransaction(db1);
+	isc_blob_handle_impl blob = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
+	gds.isc_create_blob2(db1, t1, blob, null);
+	gds.isc_close_blob(blob);
+	commit(t1);
+        dropDatabase(db1);   
+    }
+    
+    public void testZZZCreateAndWriteBlob() throws Exception {
+      /*        byte[] testbuf = new byte[1024];
+	for (int i = 0; i < 1024; i++) {
+	    testbuf[i] = (byte)i;
+	    }*/
+        byte[] testbuf = new String("xxThis is a test of a blob").getBytes();
+	//testbuf[0] = 0;
+	//testbuf[1] = 24;
+        System.out.println();
+        System.out.println("testCreateAndWriteBlob");
+        db1 = setupTable2();
+        t1 = startTransaction(db1);
+	isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
+
+	Clumplet bpb = GDSFactory.newClumplet(GDS.isc_bpb_type, GDS.isc_bpb_type_segmented);
+	gds.isc_create_blob2(db1, t1, blob1, bpb);
+	System.out.println("new blob_id: " + blob1.blob_id);
+	gds.isc_put_segment(blob1, testbuf);
+        XSQLDA xsqlda = new XSQLDA(2);
+        XSQLVAR xsqlvar = new XSQLVAR();
+        xsqlvar.sqltype = GDS.SQL_SHORT;
+        xsqlvar.sqllen = 2;
+        xsqlvar.sqldata = new Short((short) 3);
+        xsqlda.sqlvar[0] = xsqlvar;
+        
+        xsqlvar = new XSQLVAR();
+        xsqlvar.sqltype = GDS.SQL_BLOB;
+        xsqlvar.sqllen = 8;
+        xsqlvar.sqldata = new Long(blob1.blob_id);
+        xsqlda.sqlvar[1] = xsqlvar;
+	gds.isc_close_blob(blob1);
+        
+        System.out.println("isc_dsql_exec_immed2");
+        gds.isc_dsql_exec_immed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
+                                 GDS.SQL_DIALECT_CURRENT, xsqlda, null);
+
+        isc_stmt_handle stmt1 = gds.get_new_isc_stmt_handle();
+        System.out.println("isc_dsql_allocate_statement");
+        gds.isc_dsql_allocate_statement(db1, stmt1);
+        XSQLDA out_xsqlda = gds.isc_dsql_prepare(t1, stmt1, "SELECT COL1, COL2 FROM R2",
+                             GDS.SQL_DIALECT_CURRENT);
+        
+        
+        System.out.println("isc_dsql_execute2");
+        gds.isc_dsql_execute2(t1, stmt1, 1, null, null);
+        
+	isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
+        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+            for (int i = 0; i < out_xsqlda.sqld; i++) {
+                Object data =  out_xsqlda.sqlvar[i].sqldata;
+                System.out.print("column: " + i + ", value: " + data);
+            }
+            System.out.println();
+
+	    blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
+	    //blob2.rbl_buffer_length = 30;//1024;
+	    gds.isc_open_blob2(db1, t1, blob2, null);
+	    byte[] answer = gds.isc_get_segment(blob2, 32);//1026);
+	    System.out.println("answer length: " + answer.length + ", answer string: " + new String(answer));
+	    gds.isc_close_blob(blob2);
+        }
+    
+        System.out.println("isc_dsql_free_statement");
+        gds.isc_dsql_free_statement(stmt1, GDS.DSQL_drop);
+
+
+	commit(t1);
+	teardownTable2(db1);
+	//        dropDatabase(db1);   
+    }
+    public void testZZZCreateAndWriteBlobStream() throws Exception {
+        byte[] a = new String("a").getBytes();
+        byte[] testbuf = new byte[500];
+	for (int i = 0; i < 500; i++) {
+	    testbuf[i] = a[0];//(byte)i;
+        }
+        System.out.println();
+        System.out.println("testCreateAndWriteBlobStream");
+        db1 = setupTable2();
+        t1 = startTransaction(db1);
+	isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
+
+	Clumplet bpb = GDSFactory.newClumplet(GDS.isc_bpb_type, GDS.isc_bpb_type_segmented);
+	//Clumplet bpb = GDSFactory.newClumplet(GDS.isc_bpb_type, GDS.isc_bpb_type_stream);
+	gds.isc_create_blob2(db1, t1, blob1, bpb);
+	System.out.println("new blob_id: " + blob1.blob_id);
+	for (int i = 0; i< 10; i++) {
+	    gds.isc_put_segment(blob1, testbuf);
+            System.out.println("wrote bytes: " + (i * testbuf.length)); 
+	}
+        XSQLDA xsqlda = new XSQLDA(2);
+        XSQLVAR xsqlvar = new XSQLVAR();
+        xsqlvar.sqltype = GDS.SQL_SHORT;
+        xsqlvar.sqllen = 2;
+        xsqlvar.sqldata = new Short((short) 3);
+        xsqlda.sqlvar[0] = xsqlvar;
+        
+        xsqlvar = new XSQLVAR();
+        xsqlvar.sqltype = GDS.SQL_BLOB;
+        xsqlvar.sqllen = 8;
+        xsqlvar.sqldata = new Long(blob1.blob_id);
+        xsqlda.sqlvar[1] = xsqlvar;
+	gds.isc_close_blob(blob1);
+        
+        System.out.println("isc_dsql_exec_immed2");
+        gds.isc_dsql_exec_immed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
+                                 GDS.SQL_DIALECT_CURRENT, xsqlda, null);
+
+        isc_stmt_handle stmt1 = gds.get_new_isc_stmt_handle();
+        System.out.println("isc_dsql_allocate_statement");
+        gds.isc_dsql_allocate_statement(db1, stmt1);
+        XSQLDA out_xsqlda = gds.isc_dsql_prepare(t1, stmt1, "SELECT COL1, COL2 FROM R2",
+                             GDS.SQL_DIALECT_CURRENT);
+        
+        
+        System.out.println("isc_dsql_execute2");
+        gds.isc_dsql_execute2(t1, stmt1, 1, null, null);
+        
+	isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
+        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+            for (int i = 0; i < out_xsqlda.sqld; i++) {
+                Object data =  out_xsqlda.sqlvar[i].sqldata;
+                System.out.print("column: " + i + ", value: " + data);
+            }
+            System.out.println();
+
+	    blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
+	    //blob2.rbl_buffer_length = 1050;//1024;
+	    gds.isc_open_blob2(db1, t1, blob2, bpb);
+            int readcount = 0;
+            do {
+                byte[] answer = gds.isc_get_segment(blob2, 1050);;
+		System.out.println("answer length: " + answer.length + ", answer string: " + new String(answer));
+                readcount += answer.length;
+                System.out.println("read bytes: " + readcount);
+		//blob2.rbl_buffer_length = 1050;//1024;
+	    } while (!blob2.isEof());
+	    gds.isc_close_blob(blob2);
+        }
+    
+        System.out.println("isc_dsql_free_statement");
+        gds.isc_dsql_free_statement(stmt1, GDS.DSQL_drop);
+
+
+	commit(t1);
+	teardownTable2(db1);
+	//        dropDatabase(db1);   
+    }
+
+    public void testZZZCreateAndWriteBlobStreamInPieces() throws Exception {
+        byte[] a = new String("a").getBytes();
+        byte[] testbuf = new byte[64];//33];//1024];
+	for (int i = 0; i < 64; i++) {
+	    testbuf[i] = a[0];//(byte)i;
+	    }
+        System.out.println();
+        System.out.println("testCreateAndWriteBlobStream");
+        db1 = setupTable2();
+        t1 = startTransaction(db1);
+	isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
+
+	//Clumplet bpb = GDSFactory.newClumplet(GDS.isc_bpb_type, GDS.isc_bpb_type_stream);
+	Clumplet bpb = GDSFactory.newClumplet(GDS.isc_bpb_type, GDS.isc_bpb_type_segmented);
+	gds.isc_create_blob2(db1, t1, blob1, bpb);
+	System.out.println("new blob_id: " + blob1.blob_id);
+	for (int i = 0; i< 10; i++) {
+	    gds.isc_put_segment(blob1, testbuf);
+            System.out.println("wrote bytes: " + (i * testbuf.length)); 
+	}
+        XSQLDA xsqlda = new XSQLDA(2);
+        XSQLVAR xsqlvar = new XSQLVAR();
+        xsqlvar.sqltype = GDS.SQL_SHORT;
+        xsqlvar.sqllen = 2;
+        xsqlvar.sqldata = new Short((short) 3);
+        xsqlda.sqlvar[0] = xsqlvar;
+        
+        xsqlvar = new XSQLVAR();
+        xsqlvar.sqltype = GDS.SQL_BLOB;
+        xsqlvar.sqllen = 8;
+        xsqlvar.sqldata = new Long(blob1.blob_id);
+        xsqlda.sqlvar[1] = xsqlvar;
+	gds.isc_close_blob(blob1);
+        
+        System.out.println("isc_dsql_exec_immed2");
+        gds.isc_dsql_exec_immed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
+                                 GDS.SQL_DIALECT_CURRENT, xsqlda, null);
+
+        isc_stmt_handle stmt1 = gds.get_new_isc_stmt_handle();
+        System.out.println("isc_dsql_allocate_statement");
+        gds.isc_dsql_allocate_statement(db1, stmt1);
+        XSQLDA out_xsqlda = gds.isc_dsql_prepare(t1, stmt1, "SELECT COL1, COL2 FROM R2",
+                             GDS.SQL_DIALECT_CURRENT);
+        
+        
+        System.out.println("isc_dsql_execute2");
+        gds.isc_dsql_execute2(t1, stmt1, 1, null, null);
+        
+	isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
+        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+            for (int i = 0; i < out_xsqlda.sqld; i++) {
+                Object data =  out_xsqlda.sqlvar[i].sqldata;
+                System.out.print("column: " + i + ", value: " + data);
+            }
+            System.out.println();
+
+	    blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
+            // blob2.rbl_buffer_length = 10;//1024;
+	    gds.isc_open_blob2(db1, t1, blob2, bpb);
+            int readcount = 0;
+	    do {
+                byte[] answer = gds.isc_get_segment(blob2, 10);// 1050)
+		System.out.println("answer length: " + answer.length + ", answer string: " + new String(answer));
+                readcount += answer.length;
+                System.out.println("read bytes: " + readcount);
+
+	    } while (!blob2.isEof());
+	    gds.isc_close_blob(blob2);
+        }
+    
+        System.out.println("isc_dsql_free_statement");
+        gds.isc_dsql_free_statement(stmt1, GDS.DSQL_drop);
+
+
+	commit(t1);
+	teardownTable2(db1);
+	//        dropDatabase(db1);   
+    }
+
+    public void testZZZZCreateAndWriteBlobStreamInPieces() throws Exception {
+        byte[] a = new String("a").getBytes();
+        byte[] testbuf = new byte[4096];//2030];
+        int reps = 10;//10000;
+        Arrays.fill(testbuf, a[0]);
+        System.out.println();
+        System.out.println("testCreateAndWriteBlobSegmented");
+        db1 = setupTable2();
+        t1 = startTransaction(db1);
+	isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
+
+	Clumplet bpb = GDSFactory.newClumplet(GDS.isc_bpb_type, GDS.isc_bpb_type_stream);
+	//Clumplet bpb = GDSFactory.newClumplet(GDS.isc_bpb_type, GDS.isc_bpb_type_segmented);
+	gds.isc_create_blob2(db1, t1, blob1, bpb);
+	System.out.println("new blob_id: " + blob1.blob_id);
+	for (int i = 0; i< reps; i++) {
+	    gds.isc_put_segment(blob1, testbuf);
+	}
+        System.out.println("wrote bytes: " + (100 * testbuf.length)); 
+        XSQLDA xsqlda = new XSQLDA(2);
+        XSQLVAR xsqlvar = new XSQLVAR();
+        xsqlvar.sqltype = GDS.SQL_SHORT;
+        xsqlvar.sqllen = 2;
+        xsqlvar.sqldata = new Short((short) 3);
+        xsqlda.sqlvar[0] = xsqlvar;
+        
+        xsqlvar = new XSQLVAR();
+        xsqlvar.sqltype = GDS.SQL_BLOB;
+        xsqlvar.sqllen = 8;
+        xsqlvar.sqldata = new Long(blob1.blob_id);
+        xsqlda.sqlvar[1] = xsqlvar;
+	gds.isc_close_blob(blob1);
+        
+        System.out.println("isc_dsql_exec_immed2");
+        gds.isc_dsql_exec_immed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
+                                 GDS.SQL_DIALECT_CURRENT, xsqlda, null);
+
+        isc_stmt_handle stmt1 = gds.get_new_isc_stmt_handle();
+        System.out.println("isc_dsql_allocate_statement");
+        gds.isc_dsql_allocate_statement(db1, stmt1);
+        XSQLDA out_xsqlda = gds.isc_dsql_prepare(t1, stmt1, "SELECT COL1, COL2 FROM R2",
+                             GDS.SQL_DIALECT_CURRENT);
+        
+        
+        System.out.println("isc_dsql_execute2");
+        gds.isc_dsql_execute2(t1, stmt1, 1, null, null);
+        
+	isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
+        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+            for (int i = 0; i < out_xsqlda.sqld; i++) {
+                Object data =  out_xsqlda.sqlvar[i].sqldata;
+                System.out.print("column: " + i + ", value: " + data);
+            }
+            System.out.println();
+
+	    blob2.blob_id =((Long) out_xsqlda.sqlvar[1].sqldata).longValue();
+            // blob2.rbl_buffer_length = 10;//1024;
+	    gds.isc_open_blob2(db1, t1, blob2, bpb);
+            int readcount = 0;
+	    do {
+                byte[] answer = gds.isc_get_segment(blob2, 1052);// 1050)
+                readcount += answer.length;
+
+	    } while (!blob2.isEof());
+            System.out.println("read bytes: " + readcount);
+            if (readcount != (reps * testbuf.length)) {
+                throw new Exception("Retrieved wrong size");
+            }
+	    gds.isc_close_blob(blob2);
+        }
+    
+        System.out.println("isc_dsql_free_statement");
+        gds.isc_dsql_free_statement(stmt1, GDS.DSQL_drop);
+
+
+	commit(t1);
+	teardownTable2(db1);
+	//        dropDatabase(db1);   
+    }
+    
+    public void testZZReadBlob() throws Exception {
+        System.out.println();
+        System.out.println("testReadBlob");
+        db1 = gds.get_new_isc_db_handle();
+        
+        System.out.println("isc_attach_database");
+        gds.isc_attach_database("localhost:/opt/interbase/examples/v5/employee.gdb", db1, c);
+	//        db1 = createDatabase("localhost:/opt/interbase/examples/v5/employee.gdb");
+        t1 = startTransaction(db1);
+	isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
+
+        isc_stmt_handle stmt1 = gds.get_new_isc_stmt_handle();
+        
+        System.out.println("isc_dsql_allocate_statement");
+        gds.isc_dsql_allocate_statement(db1, stmt1);
+        
+        
+        System.out.println("isc_dsql_prepare");
+        XSQLDA out_xsqlda = gds.isc_dsql_prepare(t1, stmt1, "SELECT C1, C2 FROM t2 WHERE C1 = 1",
+                             GDS.SQL_DIALECT_CURRENT);
+        
+        System.out.println("isc_dsql_execute2");
+        gds.isc_dsql_execute2(t1, stmt1, 1, null, null);
+        
+//        System.out.println("isc_dsql_set_cursor_name");
+//        gds.isc_dsql_set_cursor_name(stmt1, "cur1", 0);
+        
+//        int fetch_stat;
+        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
+            for (int i = 0; i < out_xsqlda.sqld; i++) {
+                Object data =  out_xsqlda.sqlvar[i].sqldata;
+                System.out.print(data + "    ");
+            }
+            System.out.println();
+	    blob1.blob_id = ((Long)out_xsqlda.sqlvar[1].sqldata).longValue();
+        }
+    
+        System.out.println("isc_dsql_free_statement");
+        gds.isc_dsql_free_statement(stmt1, GDS.DSQL_drop);
+
+
+	//blob1.rbl_buffer_length = 1024;
+	gds.isc_open_blob2(db1, t1, blob1, null);
+	byte[] answer = gds.isc_get_segment(blob1, 1026);
+	System.out.println("answer length: " + answer.length + " " + new String(answer));
+	gds.isc_close_blob(blob1);
+	commit(t1);
+	//	teardownTable2(db1);
+	//        dropDatabase(db1);   
+    }
     
 }

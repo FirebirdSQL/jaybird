@@ -29,6 +29,19 @@ package org.firebirdsql.jdbc;
 import java.sql.Blob;
 import java.sql.SQLException;
 
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.HashSet;
+
+import org.firebirdsql.jca.FBManagedConnection;
+import org.firebirdsql.gds.isc_blob_handle;
+import org.firebirdsql.gds.GDSException;
+import java.io.OutputStream;
+import java.io.BufferedOutputStream;
+
 
 /**
  *
@@ -66,6 +79,33 @@ import java.sql.SQLException;
  */
 
 public class FBBlob implements Blob{
+
+    /**
+     * bufferlength is the size of the buffer for blob input and output streams,
+     * also used for the BufferedInputStream/BufferedOutputStream wrappers.
+     *
+     */
+    private int bufferlength = 2048;
+
+    private long blob_id;
+    private FBManagedConnection mc;
+
+    private Collection inputStreams = new HashSet();
+    private FBBlobOutputStream blobOut = null;
+
+    FBBlob(FBManagedConnection mc, long blob_id) {
+        this.mc = mc;
+        this.blob_id = blob_id;
+    }
+
+    void close() throws IOException {
+        Iterator i = inputStreams.iterator();
+        while (i.hasNext()) {
+            ((FBBlobInputStream)i.next()).close();
+        }
+        inputStreams.clear(); 
+    }
+
 
   /**
    * Returns the number of bytes in the <code>BLOB</code> value
@@ -113,8 +153,10 @@ public class FBBlob implements Blob{
    * @since 1.2
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
-    public java.io.InputStream getBinaryStream () throws SQLException {
-        throw new SQLException("Not yet implemented");
+    public InputStream getBinaryStream () throws SQLException {
+        FBBlobInputStream blobstream = new FBBlobInputStream();
+        inputStreams.add(blobstream);
+        return new BufferedInputStream(blobstream, bufferlength);
     }
 
   /** 
@@ -155,6 +197,267 @@ public class FBBlob implements Blob{
     public long position(Blob pattern, long start) throws SQLException {
         throw new SQLException("Not yet implemented");
     }
+
+
+    //jdbc 3.0 additions
+
+    /**
+     *
+     * @param param1 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void truncate(long param1) throws SQLException {
+        // TODO: implement this java.sql.Blob method
+        throw new SQLException("Not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int setBytes(long param1, byte[] param2) throws SQLException {
+        // TODO: implement this java.sql.Blob method
+        throw new SQLException("Not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @param param4 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int setBytes(long param1, byte[] param2, int param3, int param4) throws SQLException {
+        // TODO: implement this java.sql.Blob method
+        throw new SQLException("Not yet implemented");
+    }
+
+    /**
+     *
+     * @param pos The position in the blob to start writing.
+     * @return OuputStream to write to.
+     * @exception java.sql.SQLException <description>
+     */
+    public OutputStream setBinaryStream(long pos) throws SQLException {
+        if (blobOut != null) {
+            throw new SQLException("only one blob output stream open at a time!");
+        }
+        if (pos < 0) {
+            throw new SQLException("You can't start before the beginning of the blob");
+        }
+        if ((blob_id == 0) && (pos > 0)) {
+            throw new SQLException("previous value was null, you must start at position 0");
+        }
+        blobOut = new FBBlobOutputStream();
+        if (pos > 0) {
+            //copy pos bytes from input to output
+            //implement this later
+        }
+        return new BufferedOutputStream(blobOut, bufferlength);
+    }
+
+
+    //package methods
+
+    long getBlobId() throws SQLException {
+        if (blob_id == 0) {
+            throw new SQLException("you are attempting to access an blob with no blob_id");
+        }
+        return blob_id;
+    }
+
+    void copyStream(InputStream inputStream, int length) throws SQLException {
+        OutputStream os = setBinaryStream(0);
+        byte[] buffer = new byte[bufferlength];
+        int chunk;
+        try {
+            while (length >0) {
+                chunk =inputStream.read(buffer, 0, Math.min(length, bufferlength));
+                os.write(buffer, 0, chunk);
+                length -= chunk;
+            }
+            os.close();
+        }
+        catch (IOException ioe) {
+            throw new SQLException("read/write blob problem: " + ioe);
+        }
+    }
+
+
+    //Inner classes
+
+    public class FBBlobInputStream extends InputStream {
+
+
+        /**
+         * buffer holds the last result of calling isc_get_segment.
+         *
+         */
+        private byte[] buffer = null;
+
+
+        /**
+         * blob is the isc_blob_handle actually refencing the database;
+         *
+         */
+        private isc_blob_handle blob;
+
+
+        /**
+         * pos is the position of the next byte to read in the buffer.
+         *
+         */
+        private int pos = 0;
+
+        private FBBlobInputStream() throws SQLException {
+            if (blob_id == 0) {
+                throw new SQLException("You can't read a new blob");
+            }
+            try {
+                blob = mc.openBlobHandle(blob_id);
+            }
+            catch (GDSException ge) {
+                throw new SQLException("couldn't open blob: " + blob_id + " exception: " + ge.toString());
+            }
+        }
+
+        public int available() throws IOException {
+            if (buffer == null) {
+                if (blob.isEof()) {
+                    return -1;
+                }
+                try {
+                    //bufferlength is in FBBlob enclosing class
+                    buffer = mc.getBlobSegment(blob, bufferlength);
+                }
+                catch (GDSException ge) {
+                    throw new IOException("Blob read problem: " + ge.toString());
+                }
+                pos = 0;
+                if (buffer.length == 0) {
+                   return -1;
+                }
+            }
+            return buffer.length - pos;
+        }
+
+        public int read() throws IOException {
+            if (available() <= 0) {
+                return -1;
+            }
+            int result = buffer[pos++] & 0x00FF;//& seems to convert signed byte to unsigned byte
+            if (pos == buffer.length) {
+                buffer = null;
+            }
+            return result;
+        }
+
+
+
+        public int read(byte[] b, int off, int len) throws IOException {
+            int result = available();
+            if (result <= 0) {
+                return 0;
+            }
+            if (result > len) {//not expected to happen
+                System.arraycopy(buffer, pos, b, off, len);
+                pos += len;
+                return len;
+            }
+            System.arraycopy(buffer, pos, b, off, result);
+            buffer = null;
+            pos = 0;
+            return result;
+        }
+
+        public void close() throws IOException {
+            if (blob != null) {
+                try {
+                    mc.closeBlob(blob);
+                }
+                catch (GDSException ge) {
+                    throw new IOException ("couldn't close blob: " + ge);
+                }
+                blob = null;
+            }
+        }
+    }
+
+    private class FBBlobOutputStream extends OutputStream {
+
+        private isc_blob_handle blob;
+
+        private byte[] buffer = null;
+
+        private FBBlobOutputStream() throws SQLException {
+            try {
+                blob = mc.createBlobHandle();
+            }
+            catch (GDSException ge) {
+                throw new SQLException("Couldn't create new blob: " + ge);
+            }
+            if (blob_id == 0) {
+                blob_id = blob.getBlobId();
+            }
+        }
+
+        public void write(int b) throws IOException {
+            //This won't be called, don't implement
+            throw new IOException("FBBlobOutputStream.write(int b) not implemented");
+        }
+
+        public void write(byte[] b, int off, int len) throws IOException {
+            try {
+                if ((off == 0) && (len <= bufferlength)) {
+                    mc.putBlobSegment(blob, b); 
+                    return;
+                }
+                else {
+                    byte[] buf = new byte[bufferlength];
+                    int chunk;
+                    while (len > 0) {
+                        if (len >= bufferlength) {
+                            if (buf == null) {
+                                buf = new byte[bufferlength];
+                            }
+                            chunk = bufferlength;
+                        }
+                        else {
+                            buf = new byte[len];
+                            chunk = len;
+                        }
+                        System.arraycopy(b, off, buf, 0, chunk);
+                        mc.putBlobSegment(blob, buf); 
+                        len -= chunk;
+                    }
+                }
+            }
+            catch (GDSException ge) {
+                throw new IOException("Problem writing to FBBlobOutputStream: " + ge);
+            }
+        }
+
+        public void close() throws IOException {
+            if (blob != null) {
+                try {
+                    mc.closeBlob(blob);
+                    System.out.println("OutputStream closing, setting blob_id: " + blob.getBlobId());
+                    blob_id = blob.getBlobId();
+                }
+                catch (GDSException ge) {
+                    throw new IOException("could not close blob: " + ge);
+                }
+                blob = null;
+            }
+        }
+
+    }
+
 
 }
 

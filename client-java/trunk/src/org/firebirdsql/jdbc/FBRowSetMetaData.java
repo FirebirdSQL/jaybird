@@ -31,7 +31,7 @@ import javax.sql.RowSetMetaData;
 import java.sql.SQLException;
 import java.sql.*;
 
-import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.XSQLVAR;
 
 /**
  *
@@ -51,8 +51,8 @@ import org.firebirdsql.gds.isc_stmt_handle;
 
 public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaData {
 
-    FBRowSetMetaData(isc_stmt_handle stmt) {
-        super(stmt);
+    FBRowSetMetaData(XSQLVAR[] xsqlvars) {
+        super(xsqlvars);
     }
 
   /**

@@ -35,6 +35,11 @@ import java.util.Arrays;
 
 public class ClumpletImpl implements Clumplet, Xdrable {
     
+    //format of a clumplet:
+    //type - 1 byte
+    //length - 1 byte
+    //contents - length bytes.
+    
     int type;
     byte[] content;
     ClumpletImpl next;

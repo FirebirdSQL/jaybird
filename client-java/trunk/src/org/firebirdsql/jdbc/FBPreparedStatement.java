@@ -43,6 +43,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.sql.ParameterMetaData;
+import java.net.URL;
+import java.io.ByteArrayInputStream;
 
 /**
  *
@@ -324,8 +327,9 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @param x the parameter value 
      * @exception SQLException if a database access error occurs
      */
-    public void setBytes(int parameterIndex, byte x[]) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+    public void setBytes(int parameterIndex, byte[] x) throws  SQLException {
+        //Only works for blobs right now
+        setBinaryStream(parameterIndex, new ByteArrayInputStream(x), x.length);
     }
 
 
@@ -339,6 +343,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setDate(int parameterIndex, java.sql.Date x) throws  SQLException {
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        if ((sqlvar.sqltype & ~1) != GDS.SQL_TYPE_DATE){
+            throw new SQLException("Not a Date, type: " + sqlvar.sqltype);
+        }
+        sqlvar.sqlind = 0;
+        sqlvar.sqldata = x;
     }
 
 
@@ -352,6 +362,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setTime(int parameterIndex, java.sql.Time x) throws  SQLException {
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        if ((sqlvar.sqltype & ~1) != GDS.SQL_TYPE_TIME){
+            throw new SQLException("Not a Time, type: " + sqlvar.sqltype);
+        }
+        sqlvar.sqlind = 0;
+        sqlvar.sqldata = x;
     }
 
 
@@ -366,6 +382,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setTimestamp(int parameterIndex, java.sql.Timestamp x) throws  SQLException {
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        if ((sqlvar.sqltype & ~1) != GDS.SQL_TIMESTAMP){
+            throw new SQLException("Not a Timestamp, type: " + sqlvar.sqltype);
+        }
+        sqlvar.sqlind = 0;
+        sqlvar.sqldata = x;
     }
 
 
@@ -388,6 +410,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setAsciiStream(int parameterIndex, java.io.InputStream x, int length) throws  SQLException {
+        setBinaryStream(parameterIndex, x, length);
     }
 
 
@@ -412,10 +435,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @param length the number of bytes in the stream 
      * @exception SQLException if a database access error occurs
      * @deprecated
+
+     *I really have no idea if there is anything else we should be doing here
      */
     public void setUnicodeStream(int parameterIndex, java.io.InputStream x, 
 			  int length) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        setBinaryStream(parameterIndex, x, length);
     }
 
 
@@ -436,8 +461,17 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @param length the number of bytes in the stream 
      * @exception SQLException if a database access error occurs
      */
-    public void setBinaryStream(int parameterIndex, java.io.InputStream x, 
+    public void setBinaryStream(int parameterIndex, java.io.InputStream inputStream, 
 			 int length) throws  SQLException {
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        if ((sqlvar.sqltype & ~1) != GDS.SQL_BLOB){
+            throw new SQLException("Not a Blob, type: " + sqlvar.sqltype);
+        }
+        //get a new blob object
+        FBBlob blob = (FBBlob)c.createBlob();
+        blob.copyStream(inputStream, length);
+        sqlvar.sqlind = 0;
+        sqlvar.sqldata = new Long(blob.getBlobId());
     }
 
 
@@ -634,7 +668,16 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
 	 *      2.0 API</a>
      */
-    public void setBlob (int i, Blob x) throws  SQLException {
+    public void setBlob (int parameterIndex, Blob blob) throws  SQLException {
+        if (!(blob instanceof FBBlob)) {
+            throw new SQLException("You must use FBBlobs with Firebird!");
+        }
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        if ((sqlvar.sqltype & ~1) != GDS.SQL_BLOB) {
+            throw new SQLException("Not a blob, type: " + sqlvar.sqltype);
+        }
+        sqlvar.sqlind = 0;
+        sqlvar.sqldata = new Long(((FBBlob)blob).getBlobId());
     }
 
 
@@ -680,7 +723,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
 	 *      2.0 API</a>
      */
     public ResultSetMetaData getMetaData() throws  SQLException {
-        return new FBResultSetMetaData(fixedStmt);
+        return new FBResultSetMetaData(fixedStmt.getOutSqlda().sqlvar);
     }
 
 
@@ -787,6 +830,29 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
          setNull(paramIndex, sqlType); //all nulls are represented the same... a null reference
     }
 
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setURL(int param1, URL param2) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("Not yet implemented");
+    }
+
+
+    /**
+     * jdbc 3
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public ParameterMetaData getParameterMetaData() throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("Not yet implemented");
+    }
+    
 }
 
 

@@ -68,11 +68,16 @@ import java.sql.Types;
 
 public class FBResultSetMetaData implements ResultSetMetaData {
     
-    private isc_stmt_handle stmt;
+    // private isc_stmt_handle stmt;
+    private XSQLVAR[] xsqlvars;
     
-    FBResultSetMetaData(isc_stmt_handle stmt) {
+    /*    FBResultSetMetaData(isc_stmt_handle stmt) {
         this.stmt = stmt;
-    }
+        }*/
+
+    FBResultSetMetaData(XSQLVAR[] xsqlvars) {
+        this.xsqlvars = xsqlvars;
+        }
 
     /**
      * Returns the number of columns in this <code>ResultSet</code> object.
@@ -81,7 +86,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	int getColumnCount() {
-        return stmt.getOutSqlda().sqln;;
+        //return stmt.getOutSqlda().sqln;;
+        return xsqlvars.length;
     }
 
 
@@ -530,7 +536,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
     //private methods
     
     private XSQLVAR getXsqlvar(int columnIndex) {
-        return stmt.getOutSqlda().sqlvar[columnIndex - 1];
+        //return stmt.getOutSqlda().sqlvar[columnIndex - 1];
+        return xsqlvars[columnIndex - 1];
     }
     
 

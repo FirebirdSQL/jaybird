@@ -46,7 +46,8 @@ import junit.framework.*;
  */
 public class TestXABase extends TestCase {
     
-    static final String DBNAME = "/usr/local/firebird/dev/client-java/db/fbmctest.gdb";
+    static final String DBNAME = "/usr/java/jboss/dev/jboss/dist/db/firebird/jbosstest.gdb";
+//    static final String DBNAME = "/usr/local/firebird/dev/client-java/db/fbmctest.gdb";
     static final String dbName = "localhost/3050:" + DBNAME;
 //    static final String dbName = "localhost/3050:/usr/local/firebird/dev/client-java/db/jbosstest.gdb";
 //    static final String dbName2 = "localhost:/usr/local/firebird/dev/client-java/db/testdb2.gdb";
