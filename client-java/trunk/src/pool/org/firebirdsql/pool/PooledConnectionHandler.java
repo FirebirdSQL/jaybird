@@ -170,6 +170,17 @@ class PooledConnectionHandler implements InvocationHandler {
     public XConnectionManager getManager() {
         return owner;
     }
+    
+    /**
+     * Deallocate current connection. This call is similar to the call
+     * {@link Connection#close()} when invoked on the proxy object. However,
+     * unlike that call no listener is notified that connection being closed;
+     *
+     * @throws SQLException if something goes wrong.
+     */
+    public void deallocate() throws SQLException {
+        handleConnectionClose(false);
+    }
 
 	private boolean invokeEntered;
 	
@@ -351,15 +362,28 @@ class PooledConnectionHandler implements InvocationHandler {
     
     /**
      * Handle {@link Connection#close()} method. This implementation closes the
-     * connection and cleans the cache.
+     * connection, cleans the cache and notifies the owner.
      * 
      * @throws SQLException if underlying connection threw this exception.
      */
     synchronized void handleConnectionClose() throws SQLException {
+        handleConnectionClose(true);
+    }
+    
+    /**
+     * Handle {@link Connection#close()} method. This implementation closes the
+     * connection and cleans the cache.
+     * 
+     * @param notifyOwner <code>true</code> when connection owner should be 
+     * notified.
+     * 
+     * @throws SQLException if underlying connection threw this exception.
+     */
+    synchronized void handleConnectionClose(boolean notifyOwner) throws SQLException {
         try {
             closeOpenStatements();
         } finally {
-    		if (owner != null) {
+    		if (owner != null && notifyOwner) {
     			owner.connectionClosed(this);            
             }
     

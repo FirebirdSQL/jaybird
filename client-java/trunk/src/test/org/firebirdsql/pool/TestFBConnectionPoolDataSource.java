@@ -516,6 +516,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     }
     
     public void testIdleRemover() throws Exception {
+        
         pool.setMaxIdleTime(1 * 1000);
         
         try {
@@ -543,6 +544,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     }
 
     public void testIdleRemoverAndMinPoolSize() throws Exception {
+        
         pool.setMaxIdleTime(1 * 1000);
         pool.setMinPoolSize(1);
         
@@ -608,6 +610,64 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             throw ex;
         } finally {
             pool.shutdown();
+        }
+    }
+    
+    /**
+     * Test whether shutdown works correctly with one open connection.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testShutdown() throws Exception {
+        Connection con = pool.getPooledConnection().getConnection();
+        Statement stmt = con.createStatement();
+        try {
+            stmt.execute("SELECT * FROM rdb$database");
+        } finally {
+            stmt.close();
+        }
+        
+        pool.shutdown();
+        
+        try {
+            Statement test = con.createStatement();
+            try {
+                test.close();
+            } finally {
+                fail("Should not happen.");
+            }
+        } catch(SQLException ex) {
+            // everything is fine
+        }
+    }
+    
+    /**
+     * Test whether shutdown works correctly with multiple open connections.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testShutdownMultiple() throws Exception {
+        Connection con1 = pool.getPooledConnection().getConnection();
+        Statement stmt = con1.createStatement();
+        try {
+            stmt.execute("SELECT * FROM rdb$database");
+        } finally {
+            stmt.close();
+        }
+        
+        Connection con2 = pool.getPooledConnection().getConnection();
+        
+        pool.shutdown();
+        
+        try {
+            Statement test = con1.createStatement();
+            try {
+                test.close();
+            } finally {
+                fail("Should not happen.");
+            }
+        } catch(SQLException ex) {
+            // everything is fine
         }
     }
 }
