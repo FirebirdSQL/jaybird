@@ -1,3 +1,84 @@
+2004-10-03 01:39  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/: gds/TestFatalErrors.java,
+	pool/TestDriverConnectionPoolDataSource.java,
+	pool/TestFBConnectionPoolDataSource.java,
+	pool/TestXADataSource.java:
+	
+	merged with head
+
+2004-10-03 01:37  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/pool/TestXADataSource.java:
+	
+	disabled tests that are not relevant here
+
+2004-10-03 01:29  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/: gds/TestFatalErrors.java,
+	pool/TestDriverConnectionPoolDataSource.java:
+	
+	fixed failures when using Ant
+
+2004-10-03 01:22  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/gds/isc_stmt_handle.java,
+	main/org/firebirdsql/gds/isc_tr_handle.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/ngds/isc_stmt_handle_impl.java,
+	pool/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBPooledConnection.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java,
+	main/org/firebirdsql/jgds/GDS_Impl.java,
+	main/org/firebirdsql/jgds/isc_db_handle_impl.java,
+	main/org/firebirdsql/jgds/isc_stmt_handle_impl.java,
+	main/org/firebirdsql/jgds/isc_tr_handle_impl.java,
+	main/org/firebirdsql/ngds/GDS_Impl.java,
+	main/org/firebirdsql/ngds/isc_db_handle_impl.java,
+	main/org/firebirdsql/ngds/isc_tr_handle_impl.java,
+	test/org/firebirdsql/gds/TestFatalErrors.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+	
+	merged with head
+
+2004-10-03 01:12  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/isc_stmt_handle.java,
+	main/org/firebirdsql/gds/isc_tr_handle.java,
+	main/org/firebirdsql/ngds/GDS_Impl.java,
+	main/org/firebirdsql/ngds/isc_db_handle_impl.java,
+	main/org/firebirdsql/ngds/isc_stmt_handle_impl.java,
+	main/org/firebirdsql/ngds/isc_tr_handle_impl.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jgds/GDS_Impl.java,
+	main/org/firebirdsql/jgds/isc_db_handle_impl.java,
+	main/org/firebirdsql/jgds/isc_stmt_handle_impl.java,
+	main/org/firebirdsql/jgds/isc_tr_handle_impl.java,
+	test/org/firebirdsql/gds/TestFatalErrors.java:
+	
+	test case and fixes for the case of fatal errors
+
+2004-10-03 01:09  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/ISCConstants.java:
+	
+	removed final modifier around fatal errors and changed visibility
+	to package local
+
+2004-10-02 14:52  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/FBPooledConnection.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java:
+	
+	fixed connection leaking
+
 2004-10-01 23:32  rrokytskyy
 
 	* client-java/src/resources/isc_error_msg.properties:
