@@ -49,4 +49,13 @@ public interface ServiceRequestBuffer
      * @param value The value to set for the given parameter
      */
     public void addArgument(int argumentType, int value);
-    }
+
+    /**
+     * Set a <code>byte</code> parameter on this
+     * <code>ServiceRequestBuffer</code>.
+     *
+     * @param argumentType The parameter to be set
+     * @param value The value to the set for the given parameter
+     */
+    public void addArgument(int argumentType, byte value);
+}
