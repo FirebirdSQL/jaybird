@@ -449,6 +449,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         try {
             while (length >0) {
                 chunk =inputStream.read(buffer, 0, ((length<bufferlength) ? length:bufferlength));
+                if (chunk == -1)
+                    break;
                 os.write(buffer, 0, chunk);
                 length -= chunk;
             }
@@ -467,6 +469,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         try {
             while (length >0) {
                 chunk =inputStream.read(buffer, 0, ((length<bufferlength) ? length:bufferlength));
+                if (chunk == -1)
+                    break;
                 osw.write(buffer, 0, chunk);                
                 length -= chunk;
             }

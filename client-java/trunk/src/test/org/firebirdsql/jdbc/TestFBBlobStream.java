@@ -19,6 +19,8 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
+
+import java.io.ByteArrayInputStream;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Properties;
@@ -284,5 +286,50 @@ public class TestFBBlobStream extends FBTestBase {
             rs.close();
             stmt.close();
         }
+    }
+    
+    /**
+     * Check if specifying more bytes than available in the stream does not 
+     * cause endless loop.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testEndlessLoop() throws Exception {
+        connection.setAutoCommit(false);
+
+        PreparedStatement ps = connection.prepareStatement(
+            "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
+
+        try {
+            long start = System.currentTimeMillis();
+
+            ByteArrayInputStream in = new ByteArrayInputStream(new byte[0]);
+    
+            ps.setInt(1, 1);
+            ps.setBinaryStream(2, in, 10);
+            ps.executeUpdate();
+    
+            ps.close();
+    
+            connection.commit();
+    
+            ps = connection.prepareStatement(
+                "SELECT bin_data FROM test_blob WHERE id = ?");
+               
+            ps.setInt(1, 1);
+            
+            ResultSet rs = ps.executeQuery();
+            
+            assertTrue("Should select at least one row", rs.next());
+            
+            byte[] blob = rs.getBytes(1);
+            
+            assertTrue("Reported length should be correct.", blob.length == 0);
+    
+            rs.close();
+        } finally {
+            ps.close();
+        }
+        
     }
 }
