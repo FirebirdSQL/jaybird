@@ -426,23 +426,23 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1al
 
 	}
 
-JNIEXPORT jobject JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1prepare__Lorg_firebirdsql_gds_isc_1tr_1handle_2Lorg_firebirdsql_gds_isc_1stmt_1handle_2Ljava_lang_String_2I
-  (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle, jobject jStatementHandle, jstring statement, jint dialect)
+JNIEXPORT jobject JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1prepare
+  (JNIEnv *javaEnvironment, jobject jThis, jobject jTransactionHandle, jobject jStatementHandle, jbyteArray statement, jint dialect)
+
 {
 	ENTER_PROTECTED_BLOCK
 		JIscTransactionHandle transactionHandle(javaEnvironment, jTransactionHandle);
 		JIscStatementHandle statementHandle(javaEnvironment, jStatementHandle);
-		JString statementString( javaEnvironment, statement );
+		JByteArray statementStringBytes( javaEnvironment, statement );
 
 		FirebirdStatusVector status;
 		isc_tr_handle rawTransactionHandle = transactionHandle.GetHandleValue();
 		isc_stmt_handle rawStatementHandle = statementHandle.GetHandleValue();
 
-		const char* const statement = statementString.AsCString();
-
+	
 		JXSqlda xsqlda(javaEnvironment);
 		
-		FirebirdApiBinding::isc_dsql_prepare( status.RawAccess(), &rawTransactionHandle, &rawStatementHandle, 0, const_cast<char*>(statement), dialect, xsqlda.RawAccess() );
+		FirebirdApiBinding::isc_dsql_prepare( status.RawAccess(), &rawTransactionHandle, &rawStatementHandle, 0, statementStringBytes.Read(), dialect, xsqlda.RawAccess() );
 
 		if(xsqlda.RawAccess()->sqln != xsqlda.RawAccess()->sqld )
 			{
@@ -466,45 +466,6 @@ JNIEXPORT jobject JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_
 
 	return NULL;
 
-	}
-
-JNIEXPORT jobject JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1prepare__Lorg_firebirdsql_gds_isc_1tr_1handle_2Lorg_firebirdsql_gds_isc_1stmt_1handle_2Ljava_lang_String_2Ljava_lang_String_2I
-  (JNIEnv *javaEnvironment, jobject jThis, jobject jTransactionHandle, jobject jStatementHandle, jstring statement, jstring encoding, jint dialect)
-{
-ENTER_PROTECTED_BLOCK
-		JIscTransactionHandle transactionHandle(javaEnvironment, jTransactionHandle);
-		JIscStatementHandle statementHandle(javaEnvironment, jStatementHandle);
-		JString statementString( javaEnvironment, statement );
-
-		FirebirdStatusVector status;
-		isc_tr_handle rawTransactionHandle = transactionHandle.GetHandleValue();
-		isc_stmt_handle rawStatementHandle = statementHandle.GetHandleValue();
-
-		const char* const statement = statementString.AsCString();
-
-		JXSqlda xsqlda(javaEnvironment);
-		
-		FirebirdApiBinding::isc_dsql_prepare( status.RawAccess(), &rawTransactionHandle, &rawStatementHandle, 0, const_cast<char*>(statement), dialect, xsqlda.RawAccess() );
-
-		if(xsqlda.RawAccess()->sqln != xsqlda.RawAccess()->sqld )
-			{
-			xsqlda.Resize( xsqlda.RawAccess()->sqld );
-			
-				// Re-describe the statement. 
-			FirebirdApiBinding::isc_dsql_describe( status.RawAccess(), &rawStatementHandle, dialect, xsqlda.RawAccess() );
-			}
-
-		transactionHandle.SetHandleValue(rawTransactionHandle);
-		statementHandle.SetHandleValue(rawStatementHandle);
-
-		jobject returnValue = xsqlda.AllocateJavaXSqlda(javaEnvironment);
-
-		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, statementHandle);
-
-		return returnValue;
-	LEAVE_PROTECTED_BLOCK
-
-	return NULL;
 	}
 
 JNIEXPORT jobject JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1describe
@@ -563,33 +524,6 @@ JNIEXPORT jobject JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_
 	LEAVE_PROTECTED_BLOCK
 
 	return NULL;
-	}
-
-JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1execute
-  (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle, jobject jStatementHandle, jint jDaVersion, jobject jXSqlda)
-	{
-	ENTER_PROTECTED_BLOCK
-		JIscTransactionHandle transactionHandle(javaEnvironment, jTransactionHandle);
-	
-		JIscStatementHandle statementHandle(javaEnvironment, jStatementHandle);
-		
-		JXSqlda in_xsqlda( javaEnvironment, jXSqlda );
-
-		FirebirdStatusVector status;
-		isc_tr_handle rawTransactionHandle = transactionHandle.GetHandleValue();
-		isc_stmt_handle rawStatementHandle = statementHandle.GetHandleValue();
-
-		FirebirdApiBinding::isc_dsql_execute( status.RawAccess(), &rawTransactionHandle, &rawStatementHandle, jDaVersion, in_xsqlda.RawAccess() );
-	
-		transactionHandle.SetHandleValue(rawTransactionHandle);
-		statementHandle.SetHandleValue(rawStatementHandle);
-
-		in_xsqlda.Resync(javaEnvironment);
-				
-		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, statementHandle);
-	LEAVE_PROTECTED_BLOCK
-
-
 	}
 
 JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1execute2
@@ -654,13 +588,13 @@ ENTER_PROTECTED_BLOCK
 	}
 
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1exec_1immed2__Lorg_firebirdsql_gds_isc_1db_1handle_2Lorg_firebirdsql_gds_isc_1tr_1handle_2Ljava_lang_String_2Ljava_lang_String_2ILorg_firebirdsql_gds_XSQLDA_2Lorg_firebirdsql_gds_XSQLDA_2
-  (JNIEnv *javaEnvironment, jobject jThis, jobject jDatabaseHandle, jobject jTransactionHandle, jstring jStatement, jstring jEncoding, jint jDialect, jobject jInXsqlda, jobject jOutXsqlda)
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1exec_1immed2
+  (JNIEnv *javaEnvironment, jobject jThis, jobject jDatabaseHandle, jobject jTransactionHandle, jbyteArray jStatement, jint jDialect, jobject jInXsqlda, jobject jOutXsqlda)
 {
 	ENTER_PROTECTED_BLOCK
 		JIscDatabaseHandle databaseHandle(javaEnvironment, jDatabaseHandle);
 		JIscTransactionHandle transactionHandle(javaEnvironment, jTransactionHandle);
-		JString statementString( javaEnvironment, jStatement );
+		JByteArray statementStringBytes( javaEnvironment, jStatement );
 
 		
 		
@@ -670,14 +604,13 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1ex
 
 		FirebirdStatusVector status;
 		
-		
-		const char* const statement = statementString.AsCString();
+	
 
 		isc_db_handle rawDatabaseHandle = databaseHandle.GetHandleValue();
 		isc_tr_handle rawTransactionHandle = transactionHandle.GetHandleValue();
 	
 
-		FirebirdApiBinding::isc_dsql_exec_immed2( status.RawAccess(), &rawDatabaseHandle, &rawTransactionHandle, 0, const_cast<char*>(statement), jDialect, in_xsqlda.RawAccess(), out_xsqlda.RawAccess() );
+		FirebirdApiBinding::isc_dsql_exec_immed2( status.RawAccess(), &rawDatabaseHandle, &rawTransactionHandle, 0, statementStringBytes.Read(), jDialect, in_xsqlda.RawAccess(), out_xsqlda.RawAccess() );
 
 	
 		databaseHandle.SetHandleValue(rawDatabaseHandle);

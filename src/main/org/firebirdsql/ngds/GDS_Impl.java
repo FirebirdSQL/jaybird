@@ -23,6 +23,9 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.jdbc.FBConnectionHelper;
+
+import java.io.UnsupportedEncodingException;
 
 /**
  * Type 2 GDS implementation.
@@ -742,16 +745,22 @@ public class GDS_Impl extends AbstractGDS implements GDS
                                      XSQLDA in_xsqlda,
                                      XSQLDA out_xsqlda) throws GDSException
         {
-        synchronized(db_handle)
+        try
             {
-            native_isc_dsql_exec_immed2( db_handle, tr_handle, statement, encoding, dialect, in_xsqlda, out_xsqlda );
+            synchronized(db_handle)
+                {
+                native_isc_dsql_exec_immed2( db_handle, tr_handle, getByteArrayForString(statement, encoding), dialect, in_xsqlda, out_xsqlda );
+                }
+            }
+        catch (UnsupportedEncodingException e)
+            {
+            throw new GDSException("Unsupported encoding. "+e.getMessage());
             }
         }
 
     public native void native_isc_dsql_exec_immed2(isc_db_handle db_handle,
                                      isc_tr_handle tr_handle,
-                                     String statement,
-                                     String encoding,
+                                     byte[] statement,
                                      int dialect,
                                      XSQLDA in_xsqlda,
                                      XSQLDA out_xsqlda) throws GDSException;
@@ -864,10 +873,7 @@ public class GDS_Impl extends AbstractGDS implements GDS
         return isc_dsql_prepare(tr_handle, stmt_handle, statement, "NONE", dialect);
         }
 
-    public native XSQLDA native_isc_dsql_prepare(isc_tr_handle tr_handle,
-                                   isc_stmt_handle stmt_handle,
-                                   String statement,
-                                   int dialect) throws GDSException;
+    
 
 
     // isc_dsql_free_statement ---------------------------------------------------------------------------------------------
@@ -877,33 +883,39 @@ public class GDS_Impl extends AbstractGDS implements GDS
                                    String encoding,
                                    int dialect) throws GDSException
         {
-        isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
-        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
-        isc_db_handle_impl db = stmt.getRsr_rdb();
-
-        synchronized(db)
+        try
+                {
+                isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
+                isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
+                isc_db_handle_impl db = stmt.getRsr_rdb();
+        
+                synchronized(db)
+                    {
+                    if (tr_handle == null) {
+                        throw new GDSException(ISCConstants.isc_bad_trans_handle);
+                    }
+        
+                    if (stmt_handle == null) {
+                        throw new GDSException(ISCConstants.isc_bad_req_handle);
+                    }
+        
+                stmt.setInSqlda(null);
+                stmt.setOutSqlda(null);
+                
+                stmt.setOutSqlda(native_isc_dsql_prepare(tr_handle, stmt_handle, getByteArrayForString(statement, encoding),  dialect ));
+    
+                return stmt_handle.getOutSqlda();
+                }
+            }
+        catch (UnsupportedEncodingException e)
             {
-            if (tr_handle == null) {
-                throw new GDSException(ISCConstants.isc_bad_trans_handle);
-            }
-
-            if (stmt_handle == null) {
-                throw new GDSException(ISCConstants.isc_bad_req_handle);
-            }
-
-            stmt.setInSqlda(null);
-            stmt.setOutSqlda(null);
-
-            stmt.setOutSqlda(native_isc_dsql_prepare(tr_handle, stmt_handle, statement,  dialect ));
-
-            return stmt_handle.getOutSqlda();
+            throw new GDSException("Unsupported encoding. "+e.getMessage());
             }
         }
 
     public native XSQLDA native_isc_dsql_prepare(isc_tr_handle tr_handle,
                                    isc_stmt_handle stmt_handle,
-                                   String statement,
-                                   String encoding,
+                                   byte[] statement,
                                    int dialect) throws GDSException;
 
     // isc_dsql_free_statement ---------------------------------------------------------------------------------------------
@@ -1276,6 +1288,27 @@ public class GDS_Impl extends AbstractGDS implements GDS
 
             return fileName;
             }
+    
+    
+    private byte[] getByteArrayForString(String statement, String encoding) throws UnsupportedEncodingException
+        {
+        String javaEncoding = null;
+         if (encoding != null && !"NONE".equals(encoding))
+            javaEncoding = FBConnectionHelper.getJavaEncoding(encoding);
+        
+        final byte[] stringBytes;
+        if (javaEncoding != null)
+            stringBytes = statement.getBytes(javaEncoding);
+        else
+            stringBytes = statement.getBytes();
+              
+        
+        final byte[] zeroTermBytes = new byte[stringBytes.length+1];
+        System.arraycopy(stringBytes, 0, zeroTermBytes, 0, stringBytes.length);
+        zeroTermBytes[stringBytes.length]=0;
+        
+        return zeroTermBytes; 
+        }
 
     
     
