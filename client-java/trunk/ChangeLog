@@ -1,3 +1,33 @@
+2004-08-29 18:03  rrokytskyy
+
+	*
+	
+	added workaround for JDK 1.3
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
+	ava:
+
+2004-08-29 17:31  rrokytskyy
+
+	*
+	
+	fixed JDK 1.3 compatibility issue and added assertions
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
+	ava:
+
+2004-08-29 17:06  rrokytskyy
+
+	* client-java/src/etc/: release_notes.html, release_notes.pdf,
+	release_notes.sxw:
+	
+	added information about jaybird.dll and libjaybird.so
+
+2004-08-29 16:49  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jca/:
+	FBLocalTransaction.java, FBManagedConnection.java:
+	
+	added check for the transaction xid
+
 2004-08-26 19:41  rrokytskyy
 
 	*
