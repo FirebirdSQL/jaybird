@@ -20,6 +20,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.5  2004/09/16 12:57:20  rrokytskyy
+ * fixed issue with messages (fix provided by Thomas (ben_ata)), updated messages
+ *
  * Revision 1.4  2004/08/22 00:52:28  rrokytskyy
  * fixed bug when the driver is loaded by the system classloader
  *
