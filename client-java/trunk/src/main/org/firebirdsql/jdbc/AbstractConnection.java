@@ -1230,57 +1230,11 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized ResultSet doQuery(String sql, List params,HashMap statements) 
 	 throws SQLException
     {
-        /*
+        AbstractPreparedStatement s = getStatement(sql, statements);
+        for (int i = 0; i < params.size(); i++) 
+            s.setStringForced(i + 1, (String) params.get(i));
         
-        // Commented out by R.Rokytskyy on 29.05.2004 
-        // during simplification of the metadata query handling.
-        // Remove after next release.
-         
-        boolean ourTransaction = false;
-        FBLocalTransaction trans = null;
-        if (!inTransaction())
-        {
-            trans = getLocalTransaction();
-				 
-            try 
-            {
-                trans.internalBegin();
-                ourTransaction = true;
-            }
-            catch (ResourceException ge)
-            {
-                throw new FBSQLException(ge);
-            }
-        }
-        */
-        AbstractPreparedStatement s = getStatement(sql,statements);
-        for (int i = 0; i < params.size(); i++)
-        {
-            s.setStringForced(i + 1, (String)params.get(i));
-        }
-        ResultSet rs = null;
-        try
-        {
-            rs = s.executeMetaDataQuery();
-            // rs = ((AbstractStatement)s).getCachedResultSet(true); //trim strings
-        }
-        finally
-        {
-            /*
-            if (ourTransaction) 
-            {
-                try 
-                {
-                    trans.internalCommit();
-                }
-                catch (ResourceException ge) 
-                {
-                    throw new FBSQLException(ge);
-                }
-            }
-            */
-        }
-        return rs;
+        return s.executeMetaDataQuery();
     }
 
     protected void finalize() throws Throwable {
