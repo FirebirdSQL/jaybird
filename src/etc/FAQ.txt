@@ -1263,7 +1263,7 @@ Include if you want logging available. Some environments like application server
 JayBird is now available as a single jar file: firebirdsql-full.jar.
 Some of the code was originally from Sun and they didn't allow distribution by third parties without a license. To be scrupulously legal you had to download the Sun jars separately. This was a pain so equivalent classes from the JBoss Project were used instead. These could be distributed but needed to be updated from the JBoss project source, so they are in a separate jar (mini-j2ee.jar).
 This combined with the fact that people are using the driver for everything from running a backing store for J2EE servers to simple database access in applets makes it hard to please everybody. So, multiple jars are used and you can pick and choose from them as needed.
-The concurrency files are also from another project and are in a separate jar with a subset of only the needed classes in the package (mini-concurrent.jar), see: http://gee.cs.oswego.edu/dl/classes/EDU/oswego/Cs/dl/util/concurrent/intro.html for details. 
+The concurrency files are also from another project and are in a separate jar with a subset of only the needed classes in the package (mini-concurrent.jar), see: http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html for details. 
 The firebirdsql-test.jar has routines that are used only for testing at build time.
 The other jars are less frequently used and are packaged separately for easy removal.
 If you are trying to build an app that you can distribute as an executable jar, you are free to tear apart the jars and roll your own.
