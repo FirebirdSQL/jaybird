@@ -19,153 +19,19 @@
 
 package org.firebirdsql.jdbc;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Parser for escaped procedure call.
  */
 public class FBEscapedCallParser {
     
-    /**
-     * Represents procedure call parameter.
-     */
-    public static class FBProcedureCallParam {
-        private String value = "?";
-        private int position;
-        
-        public FBProcedureCallParam() {
-            
-        }
-        
-        public FBProcedureCallParam(int position, String value) {
-            this.position = position;
-            this.value = value;
-        }
-        
-        public void setPosition(int position) {
-            this.position = position;
-        }
-        
-        public void setValue(String value) {
-            this.value = value;
-        }
-        
-        public int getPosition() {
-            return position;
-        }
-        
-        public String getValue() {
-            return value;
-        }
-        
-        public boolean isConstant() {
-            return !"?".equals(value);
-        }
-        
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (!(obj instanceof FBProcedureCallParam)) return false;
-            
-            FBProcedureCallParam that = (FBProcedureCallParam)obj;
-            
-            return this.position == that.position &&
-                   this.value != null ? this.value.equals(that.value) : 
-                                        that.value == null;
-        }
-    }
-    
-    /**
-     * Represents procedure call.
-     */
-    public static class FBProcedureCall {
-        private String name;
-        private List inputParams = new ArrayList();
-        private List outputParams = new ArrayList();
-
-        public String getName() {
-            return name;
-        }
-        
-        public void setName(String name) {
-            this.name = name;
-        }
-        
-        public List getInputParams() {
-            return inputParams;
-        }
-        
-        public List getOutputParams() {
-            return outputParams;
-        }
-        
-        public void addInputParam(FBProcedureCallParam param) {
-            inputParams.add(param);
-        }
-        
-        public void addOutputParam(FBProcedureCallParam param) {
-            outputParams.add(param);
-        }
-        
-        public void addParam(int position, String param) {
-            param = param.trim();
-            
-            boolean isInputParam = true;
-            if (param.length() > 3) {
-                String possibleOutIndicator = param.substring(0, 3);
-                if ("OUT".equalsIgnoreCase(possibleOutIndicator) &&
-                    Character.isSpaceChar(param.charAt(3))) 
-                {
-                    isInputParam = false;
-                    param = param.substring(3).trim();
-                }
-            }
-            
-            if (param.length() > 2) {
-                String possibleInIndicator = param.substring(0, 2);
-                if ("IN".equalsIgnoreCase(possibleInIndicator) &&
-                    Character.isSpaceChar(param.charAt(2))) 
-                {
-                    param = param.substring(2).trim();
-                }
-                
-            }
-            
-            FBProcedureCallParam callParam = new FBProcedureCallParam();
-            callParam.setPosition(position);
-            callParam.setValue(param);
-            
-            if (isInputParam)
-                addInputParam(callParam);
-            else
-                addOutputParam(callParam);
-            
-        }
-        
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (!(obj instanceof FBProcedureCall)) return false;
-            
-            FBProcedureCall that = (FBProcedureCall)obj;
-            
-            boolean result = this.name != null ? 
-                this.name.equals(that.name) : that.name == null;
-            
-            result &= this.inputParams.equals(that.inputParams);
-            result &= this.outputParams.equals(that.outputParams);
-            
-            return result;
-        }
-    }
-    
     private static final int UNDEFINED_STATE = 0;
     private static final int NORMAL_STATE = 1;
     private static final int LITERAL_STATE = 2;
+    private static final int BRACE_STATE = 3;
     private static final int SPACE_STATE = 5;
     private static final int COMMA_STATE = 6;
     
     private boolean parameterTerminated;
-    private boolean nameProcessed;
     
     private int state = NORMAL_STATE;
     private int nestedEscaped = 0;
@@ -226,6 +92,13 @@ public class FBEscapedCallParser {
                 
                 break;
                 
+            case '(' :
+            case ')' : 
+                if (!isInState(LITERAL_STATE))
+                    setState(BRACE_STATE);
+                
+                break;
+                
             default :
                 if (!isInState(LITERAL_STATE))
                 setState(NORMAL_STATE);
@@ -241,11 +114,16 @@ public class FBEscapedCallParser {
     public FBProcedureCall parseCall(String sql) throws FBSQLParseException {
         
         FBProcedureCall procedureCall = new FBProcedureCall();
-        int paramPosition = 1;
+        int paramPosition = 0;
+        int paramCount = 0;
 
         char[] sqlbuff = sql.toCharArray();
         StringBuffer buffer = new StringBuffer();
         StringBuffer escape = new StringBuffer();
+        
+        boolean isNameProcessed = false;
+        boolean isExecuteWordProcessed = false;
+        boolean isProcedureWordProcessed = false;
 
         for(int i = 0; i < sqlbuff.length; i++) {
 
@@ -254,20 +132,50 @@ public class FBEscapedCallParser {
             if (isInState(NORMAL_STATE))
                 buffer.append(sqlbuff[i]);
             else
-            if (isInState(SPACE_STATE)) {
-                if (!nameProcessed) {
-                    procedureCall.setName(buffer.toString());
-                    nameProcessed = true;
+            if (isInState(SPACE_STATE) || isInState(BRACE_STATE)) {
+                if (!isNameProcessed) {
+                    
+                    String token = buffer.toString();
+                    
+                    if ("EXECUTE".equalsIgnoreCase(token)) {
+                        if (!isExecuteWordProcessed && !isProcedureWordProcessed)
+                            isExecuteWordProcessed = true;
+                        else
+                            throw new FBSQLParseException(
+                                    "Syntax error. EXECUTE token is not " +
+                                    "on the first place.");
+                    } else
+                    if ("PROCEDURE".equalsIgnoreCase(token)) {
+                        if (isExecuteWordProcessed && !isProcedureWordProcessed)
+                            isProcedureWordProcessed = true;
+                        else
+                            throw new FBSQLParseException(
+                                    "Syntax error. PROCEDURE token is not " +
+                                    "following EXECUTE token.");
+                    } else
+                    if (isExecuteWordProcessed && isProcedureWordProcessed) {
+                        procedureCall.setName(token);
+                        isNameProcessed = true;
+                    } else
+                        throw new FBSQLParseException(
+                                "Syntax error.");
+                    
                     buffer = new StringBuffer();
                 } else {
-                    buffer.append(sqlbuff[i]);
+                    // buffer.append(sqlbuff[i]);
                     setState(NORMAL_STATE);
                 }
             } else
             if (isInState(COMMA_STATE)) {
                 String param = buffer.toString();
                 buffer = new StringBuffer();
-                procedureCall.addParam(paramPosition, param);
+                FBProcedureParam callParam = 
+                    procedureCall.addParam(paramPosition, param);
+                
+                if (callParam.isParam()) {
+                    paramCount++;
+                    callParam.setIndex(paramCount);
+                }
                 
                 paramPosition++;
             } else
@@ -279,7 +187,12 @@ public class FBEscapedCallParser {
             buffer.deleteCharAt(0);
         
         if (buffer.length() > 0) {
-            procedureCall.addParam(paramPosition, buffer.toString());
+            FBProcedureParam callParam = 
+                procedureCall.addParam(paramPosition, buffer.toString());
+            if (callParam.isParam()) {
+                paramCount++;
+                callParam.setIndex(paramCount);
+            }
         }
         
         return procedureCall;
