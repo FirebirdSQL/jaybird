@@ -1,3 +1,11 @@
+2004-06-19 23:16  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractStatement.java, FBBlob.java, FBStatementFetcher.java:
+	
+	added needed synchronization when a statement is used from multiple
+	threads
+
 2004-06-15 22:56  rrokytskyy
 
 	* client-java/src/:
