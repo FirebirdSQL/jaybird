@@ -108,7 +108,7 @@ public class TestFBResultSet extends TestXABase {
         
     }
 
-    public void testZZUseResultSetMore() throws Exception {
+    public void testUseResultSetMore() throws Exception {
         System.out.println();
         System.out.println("testUseResultSetMore");
         FBManagedConnectionFactory mcf = initMcf();
@@ -427,7 +427,7 @@ public class TestFBResultSet extends TestXABase {
         public static final String CREATE_PROCEDURE =
         "CREATE PROCEDURE testproc(number INTEGER) RETURNS (result INTEGER) AS BEGIN     result = number; END";
 
-    public void testzzzExecutableProcedure() throws Exception {
+    public void testExecutableProcedure() throws Exception {
         System.out.println();
         System.out.println("testExecutableProcedure");
         FBManagedConnectionFactory mcf = initMcf();
@@ -444,13 +444,7 @@ public class TestFBResultSet extends TestXABase {
         }
         t.commit();
         t.begin();
-        //try {
             s.execute(CREATE_PROCEDURE); 
-            //s.close();
-            //}
-        /*catch (Exception e) {
-            ex = e;
-            }*/
         t.commit();
         
         t.begin();
@@ -458,11 +452,7 @@ public class TestFBResultSet extends TestXABase {
         p.setInt(1, 5);
         
         assertTrue("execute returned false for execute procedure statement", p.execute()); 
-        ResultSet rs = p.getResultSet();
-        while (rs.next()) {
-            System.out.println("factorial: " + rs.getInt(1) );
-        }
-//        rs.close(); //should be automatic
+        assertTrue("wrong answer from sp invocation", p.getInt(1) == 5);
         p.close();
         t.commit();   
         
