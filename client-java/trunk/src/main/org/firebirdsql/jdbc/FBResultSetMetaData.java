@@ -20,25 +20,13 @@
 package org.firebirdsql.jdbc;
 
 
+import java.math.BigDecimal;
+import java.sql.*;
+import java.sql.Date;
+import java.util.*;
+
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
-
-import java.math.BigDecimal;
-
-import java.sql.ResultSetMetaData;
-
-import java.sql.Blob;
-import java.sql.Array;
-import java.sql.Date;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Implementation of {@link ResultSetMetaData} interface.
@@ -608,7 +596,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                     return BigDecimal.class.getName();
                 }
             default:
-                throw new SQLException("Unkown sql type");
+                throw new FBSQLException("Unkown SQL type.",
+                        FBSQLException.SQL_STATE_INVALID_PARAM_TYPE);
         }
     }
 

@@ -32,6 +32,8 @@ import org.firebirdsql.gds.GDSException;
  */
 public class FBSQLWarning extends SQLWarning {
     
+    public static final String SQL_STATE_WARNING = "01000";
+    
     private GDSException original;
     private String message;
     
@@ -45,7 +47,7 @@ public class FBSQLWarning extends SQLWarning {
      * returns <code>false</code>).
      */
     public FBSQLWarning(GDSException original) {
-        super(original.getMessage());
+        super(original.getMessage(), SQL_STATE_WARNING);
             
         if (!original.isWarning())
             throw new IllegalArgumentException(

@@ -21,13 +21,7 @@ package org.firebirdsql.jdbc;
 
 
 import java.sql.*;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
 import java.util.*;
-import java.util.Iterator;
-import java.util.LinkedList;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
@@ -138,7 +132,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      */
     public ResultSet executeQuery(String sql) throws  SQLException {
         if (closed)
-            throw new SQLException("Statement is closed");
+            throw new FBSQLException("Statement is closed");
             
         Object syncObject = getSynchronizationObject();
             
@@ -146,8 +140,9 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             try {
                 c.ensureInTransaction();
                 if (!internalExecute(sql)) {
-                    throw new SQLException(
-                        "query did not return a result set: " + sql);
+                    throw new FBSQLException(
+                        "Query did not return a result set.",
+                        FBSQLException.SQL_STATE_NO_RESULT_SET);
                 }
                 if (c.willEndTransaction()) {
                     ResultSet rs = getCachedResultSet(false);
@@ -179,7 +174,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      */
     public int executeUpdate(String sql) throws  SQLException {
         if(closed)
-            throw new SQLException("Statement is closed");
+            throw new FBSQLException("Statement is closed");
             
         Object syncObject = getSynchronizationObject();
             
@@ -187,7 +182,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             try {
                 c.ensureInTransaction();
                 if (internalExecute(sql)) {
-                    throw new SQLException("update statement returned results!");
+                    throw new FBSQLException("Update statement returned results.");
                 }
                 return getUpdateCount();
             } catch (GDSException ge) {
@@ -213,7 +208,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      */
     public void close() throws  SQLException {
         if (closed)
-            throw new SQLException("This statement is already closed.");
+            throw new FBSQLException("This statement is already closed.");
             
         Object syncObject = getSynchronizationObject();
         
@@ -295,7 +290,8 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      */
     public void setMaxFieldSize(int max) throws  SQLException {
         if (max<0)
-            throw new SQLException("can't set max field size negative");
+            throw new FBSQLException("Can't set max field size negative",
+                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
         else
             maxFieldSize = max;
     }
@@ -325,7 +321,8 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      */
     public void setMaxRows(int max) throws  SQLException {
         if (max<0)
-            throw new SQLException("Max rows can't be less than 0");
+            throw new FBSQLException("Max rows can't be less than 0",
+                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
         else
             maxRows = max;
     }
@@ -372,7 +369,8 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      */
     public void setQueryTimeout(int seconds) throws  SQLException {
         if (seconds<0)
-            throw new SQLException("can't set query timeout negative");
+            throw new FBSQLException("Can't set query timeout negative",
+                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
         else
             queryTimeout = seconds;
     }
@@ -482,7 +480,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      */
     public boolean execute(String sql) throws SQLException {
         if (closed)
-            throw new SQLException("Statement is closed");
+            throw new FBSQLException("Statement is closed");
         
         Object syncObject = getSynchronizationObject();
             
@@ -523,10 +521,10 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         
         
         if (currentRs != null) {
-            throw new SQLException("Only one resultset at a time/statement!");
+            throw new FBSQLException("Only one resultset at a time/statement.");
         }
         if (fixedStmt == null) {
-            throw new SQLException("No statement just executed");
+            throw new FBSQLException("No statement was executed.");
         }
         if (currentCachedResultSet != null)
         {
@@ -546,10 +544,10 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
 
     ResultSet getCachedResultSet(boolean trimStrings) throws SQLException {
         if (currentRs != null) {
-            throw new SQLException("Only one resultset at a time/statement!");
+            throw new FBSQLException("Only one resultset at a time/statement.");
         }
         if (fixedStmt == null) {
-            throw new SQLException("No statement just executed");
+            throw new FBSQLException("No statement was executed.");
         }
         currentCachedResultSet = new FBResultSet(c, this, fixedStmt, trimStrings, resultSetListener);
         return currentCachedResultSet;
@@ -691,7 +689,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      */
     public void setFetchDirection(int direction) throws  SQLException {
         if (direction != ResultSet.FETCH_FORWARD)
-            throw new SQLException("can't set fetch direction");
+            throw new FBDriverNotCapableException();
     }
 
 
@@ -731,9 +729,11 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      */
     public void setFetchSize(int rows) throws  SQLException {
         if (rows < 0)
-            throw new SQLException("can't set negative fetch size");
+            throw new FBSQLException("Can't set negative fetch size",
+                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
         else if (maxRows > 0 && rows > maxRows)
-            throw new SQLException("can't set fetch size > maxRows");
+            throw new FBSQLException("Can't set fetch size > maxRows",
+                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
         else
             fetchSize = rows;
     }
@@ -874,11 +874,11 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      */
     public int[] executeBatch() throws  SQLException {
         if (closed)
-            throw new SQLException("Statement is closed");
+            throw new FBSQLException("Statement is closed");
         
         if (c.getAutoCommit())
             c.addWarning(new SQLWarning("Batch updates should be run " +
-                    "with auto-commit disabled."));
+                    "with auto-commit disabled.", "1000"));
         
         Object syncObject = getSynchronizationObject();
         LinkedList responses = new LinkedList();
@@ -986,7 +986,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         throws GDSException, SQLException
     {
         if (closed)
-            throw new SQLException("Statement is already closed.");
+            throw new FBSQLException("Statement is already closed.");
 
         closeResultSet();
         prepareFixedStatement(sql, false);

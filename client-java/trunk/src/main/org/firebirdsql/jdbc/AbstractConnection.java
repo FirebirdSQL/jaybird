@@ -69,8 +69,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     private void checkValidity() throws SQLException {
         if (invalid || isClosed())
-            throw new SQLException(
-                "This connection is closed and cannot be used now.");
+            throw new FBSQLException(
+                "This connection is closed and cannot be used now.",
+                FBSQLException.SQL_STATE_CONNECTION_CLOSED);
     }
     
     /**
@@ -261,7 +262,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         try {
             return new FBEscapedParser().parse(sql);
         } catch(FBSQLParseException pex) {
-            throw new SQLException(pex.toString());
+            throw new FBSQLException(pex.toString());
         }
     }
 
@@ -301,7 +302,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
 
                 this.mc.autoCommit = autoCommit;
                 
-            } catch(GDSException ge) {
+            } catch(ResourceException ge) {
                 throw new FBSQLException(ge);
             }
         } 
@@ -317,7 +318,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public boolean getAutoCommit() throws SQLException {
         if (isClosed())
-            throw new SQLException("You cannot getAutomcommit on an " +
+            throw new FBSQLException("You cannot getAutomcommit on an " +
                     "unassociated closed connection.");
 
         return mc.autoCommit;
@@ -335,16 +336,18 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public synchronized void commit() throws SQLException {
         if (isClosed())
-            throw new SQLException("You cannot commit a closed connection.");
+            throw new FBSQLException(
+                "You cannot commit a closed connection.",
+                FBSQLException.SQL_STATE_CONNECTION_CLOSED);
 
         if (getAutoCommit())
-            throw new SQLException("commit called with AutoCommit true!");
+            throw new FBSQLException("commit called with AutoCommit true!");
 
         try {
             if (inTransaction())
                 getLocalTransaction().internalCommit();
             
-        } catch(GDSException ge) {
+        } catch(ResourceException ge) {
             throw new FBSQLException(ge);
         }
     }
@@ -361,17 +364,19 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public synchronized void rollback() throws SQLException {
         if (getAutoCommit())
-            throw new SQLException("rollback called with AutoCommit true!");
+            throw new FBSQLException("Rollback called with AutoCommit true!");
 
         if (isClosed())
-            throw new SQLException("You cannot rollback closed connection.");
+            throw new FBSQLException(
+                "You cannot rollback closed connection.",
+                FBSQLException.SQL_STATE_CONNECTION_CLOSED);
 
         try{
             if (inTransaction())
                 getLocalTransaction().internalRollback();
-                
-        } catch(GDSException ge) {
-            throw new FBSQLException(ge);
+            
+        } catch(ResourceException ex) {
+            throw new FBSQLException(ex);
         }
     }
 
@@ -405,7 +410,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
                         if (inTransaction())
                             getLocalTransaction().internalRollback();
 
-                    } catch(GDSException ge) {
+                    } catch(ResourceException ge) {
                         throw new FBSQLException(ge);
                     }
                     finally
@@ -523,7 +528,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
         throws SQLException 
     {
         if (isClosed())
-            throw new SQLException("Connection has being closed.");
+            throw new FBSQLException(
+                    "Connection has being closed.",
+                    FBSQLException.SQL_STATE_CONNECTION_CLOSED);
         
         if (getTransactionIsolation() != level) {
             try {
@@ -535,9 +542,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
 
             } catch (ResourceException re) {
                 throw new FBSQLException(re);
-                
-            } catch (GDSException ge) {
-                throw new FBSQLException(ge);
             } 
         }
     }
@@ -555,7 +559,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         }
         catch (ResourceException e)
         {
-            throw new SQLException(e.getMessage());
+            throw new FBSQLException(e);
         } // end of try-catch
     }
 
@@ -815,7 +819,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
             {
                 getLocalTransaction().internalCommit();
             }
-            catch (GDSException ge)
+            catch (ResourceException ge)
             {
                 throw new FBSQLException(ge);
             } // end of catch
@@ -987,7 +991,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 trans.internalBegin();
                 ourTransaction = true;
             }
-            catch (GDSException ge)
+            catch (ResourceException ge)
             {
                 throw new FBSQLException(ge);
             }
@@ -1011,7 +1015,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 {
                     trans.internalCommit();
                 }
-                catch (GDSException ge) 
+                catch (ResourceException ge) 
                 {
                     throw new FBSQLException(ge);
                 }

@@ -92,7 +92,9 @@ public abstract class AbstractPreparedStatement extends FBStatement
             try {
                 c.ensureInTransaction();
                 if (!internalExecute(isExecuteProcedureStatement)) {
-                    throw new SQLException("No resultset for sql");
+                    throw new FBSQLException(
+                            "No resultset for sql",
+                            FBSQLException.SQL_STATE_NO_RESULT_SET);
                 }
                 if (c.willEndTransaction()) {
                     return getCachedResultSet(false);
@@ -125,7 +127,8 @@ public abstract class AbstractPreparedStatement extends FBStatement
             try {
                 c.ensureInTransaction();
                 if (internalExecute(isExecuteProcedureStatement)) {
-                    throw new SQLException("update statement returned results!");
+                    throw new FBSQLException(
+                            "Update statement returned results.");
                 }
                 return getUpdateCount();
             } finally {
@@ -221,7 +224,9 @@ public abstract class AbstractPreparedStatement extends FBStatement
      */
     protected FBField getField(int columnIndex) throws SQLException {
          if (columnIndex > fields.length)
-            throw new SQLException("invalid column index");
+            throw new FBSQLException(
+                     "Invalid column index.",
+                     FBSQLException.SQL_STATE_INVALID_COLUMN);
             
          isParamSet[columnIndex-1] = true;
          return fields[columnIndex-1];
@@ -397,8 +402,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
         }
 
         if (!canExecute)
-            throw new SQLException("Not all parameters were set. " +
-                "Cannot execute query.");
+            throw new FBSQLException("Not all parameters were set.");
 
         Object syncObject = getSynchronizationObject();
         
@@ -450,7 +454,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
 		}
         
         if (!allParamsSet)
-            throw new SQLException("Not all parameters set.");
+            throw new FBSQLException("Not all parameters set.");
         
         XSQLVAR[] oldXsqlvar = fixedStmt.getInSqlda().sqlvar;
         
@@ -616,7 +620,9 @@ public abstract class AbstractPreparedStatement extends FBStatement
      */
     public void setBlob (int parameterIndex, Blob blob) throws  SQLException {
         if (!(blob instanceof FBBlob)) {
-            throw new SQLException("You must use FBBlobs with Firebird!");
+            throw new FBSQLException(
+                    "You must use FBBlobs with Firebird.",
+                    FBSQLException.SQL_STATE_INVALID_PARAM_TYPE);
         }
         getField(parameterIndex).setBlob((FBBlob) blob);
     }

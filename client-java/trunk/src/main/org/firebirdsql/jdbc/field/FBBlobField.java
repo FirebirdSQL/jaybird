@@ -136,13 +136,13 @@ public class FBBlobField extends FBField implements FBFlushableField {
             try {
                 in.close();
             } catch(IOException ioex) {
-                throw new SQLException("Unable to close BLOB input stream.");
+                throw new FBSQLException(ioex);
             }
 
             try {
                 bout.close();
             } catch(IOException ioex) {
-                throw new SQLException("Unable to close ByteArrayOutputStream.");
+                throw new FBSQLException(ioex);
             }
         }
 
@@ -214,7 +214,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
                 bout.close();
             }
             catch (IOException ioe) {
-                throw new SQLException("read/write blob problem: " + ioe);
+                throw new FBSQLException(ioe);
             }
             
             this.data = bout.toByteArray();
@@ -246,7 +246,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
                 bout.close();
             }
             catch (IOException ioe) {
-                throw new SQLException("read/write blob problem: " + ioe);
+                throw new FBSQLException(ioe);
             }
             
             this.data = bout.toByteArray();

@@ -284,8 +284,8 @@ public class FBStringField extends FBField {
         }
         field.sqldata = field.encodeString(value,javaEncoding);
 
-        if (field.sqldata.length > field.sqllen)
-            throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);
+//        if (field.sqldata.length > field.sqllen)
+//            throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);
     }
 
     //----- setXXXStream code

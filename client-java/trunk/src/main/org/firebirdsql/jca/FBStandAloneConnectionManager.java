@@ -22,14 +22,11 @@ package org.firebirdsql.jca;
 
 
 import java.io.PrintWriter;
-import javax.resource.ResourceException;
-import javax.resource.spi.ConnectionEvent;
-import javax.resource.spi.ConnectionEventListener;
-import javax.resource.spi.ConnectionManager;
-import javax.resource.spi.ConnectionRequestInfo;
-import javax.resource.spi.ManagedConnection;
-import javax.resource.spi.ManagedConnectionFactory;
 import java.io.Serializable;
+
+import javax.resource.ResourceException;
+import javax.resource.spi.*;
+
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 

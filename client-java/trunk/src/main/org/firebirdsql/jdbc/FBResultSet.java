@@ -157,7 +157,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public boolean next() throws  SQLException {
-        if (closed) throw new SQLException("The resultSet is closed");
+        if (closed) throw new FBSQLException("The resultSet is closed");
         wasNullValid = false;
         opened = true;
 
@@ -186,7 +186,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public void close() throws  SQLException {
-        if (closed) throw new SQLException("The resultSet is closed");
+        if (closed) throw new FBSQLException("The resultSet is closed");
         wasNullValid = false;
         closed = true;
         
@@ -218,10 +218,10 @@ public class FBResultSet implements ResultSet {
      */
     public boolean wasNull() throws  SQLException {
         if (!wasNullValid) {
-            throw new SQLException("look at a column before testing null!");
+            throw new FBSQLException("Look at a column before testing null.");
         }
         if (row == null) {
-            throw new SQLException("No row available for wasNull!");
+            throw new FBSQLException("No row available for wasNull.");
         }
         return wasNull;		  
     }
@@ -316,10 +316,17 @@ public class FBResultSet implements ResultSet {
      * Factory method for the field access objects
      */
     private FBField getField(int columnIndex) throws SQLException {
-        if (closed) throw new SQLException("The resultSet is closed");
-        if (!opened) throw new SQLException("The resultSet is not in a row, use next");
+        if (closed) throw new FBSQLException("The resultSet is closed");
+
+        if (!opened) throw new FBSQLException(
+                    "The resultSet is not in a row, use next",
+                    FBSQLException.SQL_STATE_NO_ROW_AVAIL);
+        
         if (columnIndex> xsqlvars.length)
-             throw new SQLException("invalid column index");
+             throw new FBSQLException(
+                    "Invalid column index.",
+                    FBSQLException.SQL_STATE_INVALID_COLUMN);
+        
         FBField field = fields[columnIndex-1];
         wasNullValid = true;
         wasNull = field.isNull();
@@ -328,10 +335,16 @@ public class FBResultSet implements ResultSet {
     }
 
     private FBField getField(String columnName) throws SQLException {
-        if (closed) throw new SQLException("The resultSet is closed");
-        if (!opened) throw new SQLException("The resultSet is not in a row, use next");
+        if (closed) throw new FBSQLException("The resultSet is closed");
+        
+        if (!opened) throw new FBSQLException(
+                    "The resultSet is not in a row, use next",
+                    FBSQLException.SQL_STATE_NO_ROW_AVAIL);
+
         if (columnName == null) {
-            throw new SQLException("column identifier must be not null");
+            throw new FBSQLException(
+                    "Column identifier must be not null.",
+                    FBSQLException.SQL_STATE_INVALID_COLUMN);
         }
 
         FBField field = (FBField) colNames.get(columnName);
@@ -343,7 +356,9 @@ public class FBResultSet implements ResultSet {
         }
         //
         if (field == null)
-            throw new SQLException("column name " + columnName + " not found in result set.");
+            throw new FBSQLException(
+                    "Column name " + columnName + " not found in result set.",
+                    FBSQLException.SQL_STATE_INVALID_COLUMN);
         else{
             wasNullValid = true;
             wasNull = field.isNull();
@@ -601,7 +616,9 @@ public class FBResultSet implements ResultSet {
     // the first instance of the column will be returned
     public int findColumn(String columnName) throws SQLException {
         if (columnName == null || columnName.equals("")) {
-            throw new SQLException("zero length identifiers not allowed");
+            throw new FBSQLException(
+                    "Empty string does not identify column.",
+                    FBSQLException.SQL_STATE_INVALID_COLUMN);
         }
         if (columnName.startsWith("\"") && columnName.endsWith("\"")) {
             columnName = columnName.substring(1, columnName.length() - 1);				
@@ -631,7 +648,9 @@ public class FBResultSet implements ResultSet {
             }
         }        
 
-        throw new SQLException("column name " + columnName + " not found in result set."); 
+        throw new FBSQLException(
+                "Column name " + columnName + " not found in result set.",
+                FBSQLException.SQL_STATE_INVALID_COLUMN); 
     }
 
 
@@ -962,7 +981,7 @@ public class FBResultSet implements ResultSet {
      */
     public void setFetchDirection(int direction) throws  SQLException {
          if (direction != ResultSet.FETCH_FORWARD)
-            throw new SQLException("can't set fetch direction");
+            throw new FBDriverNotCapableException("Can't set fetch direction");
     }
 
 
@@ -1000,9 +1019,12 @@ public class FBResultSet implements ResultSet {
      */
     public void setFetchSize(int rows) throws  SQLException {
          if (rows < 0)
-             throw new SQLException("can't set negative fetch size");
+             throw new FBSQLException("Can't set negative fetch size.",
+                     FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+         
          else if (maxRows > 0 && rows > maxRows)
-             throw new SQLException("can't set fetch size > maxRows");
+             throw new FBSQLException("Can't set fetch size > maxRows.",
+                     FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
          else
         fetchSize = rows;
     }

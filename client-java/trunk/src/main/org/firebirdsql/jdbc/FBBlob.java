@@ -201,7 +201,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     private long interpretLength(byte[] info, int position) throws SQLException { 
                 
         if (info[position] != ISCConstants.isc_info_blob_total_length)
-            throw new SQLException("Length is not available.");
+            throw new FBSQLException("Length is not available.");
             
         int dataLength = 
             c.getInternalAPIHandler().isc_vax_integer(info, position + 1, 2);
@@ -223,7 +223,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             new byte[] {ISCConstants.isc_info_blob_type}, 20);
 
         if (info[0] != ISCConstants.isc_info_blob_type)
-            throw new SQLException("Cannot determine BLOB type");
+            throw new FBSQLException("Cannot determine BLOB type");
 
         int dataLength =
             c.getInternalAPIHandler().isc_vax_integer(info, 1, 2);
@@ -275,8 +275,9 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     public byte[] getBytes(long pos, int length) throws SQLException{
         
         if (pos > Integer.MAX_VALUE)
-            throw new SQLException("Blob position is limited to 2^31 - 1 " + 
-                "due to isc_seek_blob limitations.");
+            throw new FBSQLException("Blob position is limited to 2^31 - 1 " + 
+                "due to isc_seek_blob limitations.",
+                FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
         
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
@@ -338,7 +339,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public long position(byte pattern[], long start) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -358,7 +359,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public long position(Blob pattern, long start) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -370,7 +371,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @exception java.sql.SQLException <description>
      */
     public void truncate(long param1) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -381,7 +382,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @exception java.sql.SQLException <description>
      */
     public int setBytes(long param1, byte[] param2) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -394,7 +395,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @exception java.sql.SQLException <description>
      */
     public int setBytes(long param1, byte[] param2, int param3, int param4) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -404,15 +405,19 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @exception java.sql.SQLException <description>
      */
     public OutputStream setBinaryStream(long pos) throws SQLException {
-        if (blobOut != null) {
-            throw new SQLException("only one blob output stream open at a time!");
-        }
-        if (pos < 0) {
-            throw new SQLException("You can't start before the beginning of the blob");
-        }
-        if ((isNew) && (pos > 0)) {
-            throw new SQLException("previous value was null, you must start at position 0");
-        }
+        if (blobOut != null) 
+            throw new FBSQLException("Only one blob output stream open at a time!");
+
+        if (pos < 0) 
+            throw new FBSQLException(
+                    "You can't start before the beginning of the blob",
+                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+
+        if ((isNew) && (pos > 0)) 
+            throw new FBSQLException(
+                    "Previous value was null, you must start at position 0",
+                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+
         blobOut = new FBBlobOutputStream();
         if (pos > 0) {
             //copy pos bytes from input to output
@@ -427,7 +432,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
 
     public long getBlobId() throws SQLException {
         if (isNew) 
-            throw new SQLException("No Blob ID is available in new Blob object.");
+            throw new FBSQLException("No Blob ID is available in new Blob object.");
 
         return blob_id;
     }
@@ -450,7 +455,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             os.close();
         }
         catch (IOException ioe) {
-            throw new SQLException("read/write blob problem: " + ioe);
+            throw new FBSQLException(ioe);
         }
     }
 
@@ -468,7 +473,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             os.close();
         }
         catch (IOException ioe) {
-            throw new SQLException("read/write blob problem: " + ioe);
+            throw new FBSQLException(ioe);
         }
     }
 
@@ -509,9 +514,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             
             closed = false;
             
-            if (isNew) {
-                throw new SQLException("You can't read a new blob");
-            }
+            if (isNew) 
+                throw new FBSQLException("You can't read a new blob");
             
             Object syncObject = getSynchronizationObject();
             

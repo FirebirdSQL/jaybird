@@ -19,15 +19,14 @@
 
 package org.firebirdsql.jca;
 
-import java.io.Serializable;
 import java.io.ByteArrayOutputStream;
+import java.io.Serializable;
 import java.sql.Connection;
-import java.util.HashSet;
-import java.util.Set;
-import javax.resource.ResourceException;
-import org.firebirdsql.gds.ISCConstants;
+import java.util.*;
 
-import java.util.Iterator;
+import javax.resource.ResourceException;
+
+import org.firebirdsql.gds.ISCConstants;
 /**
  * FBTpb.java
  *

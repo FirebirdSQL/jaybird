@@ -23,6 +23,8 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 import java.util.*;
 
+import javax.resource.ResourceException;
+
 import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jca.*;
@@ -125,8 +127,11 @@ public class FBDriver implements Driver {
                             }
                             catch (NumberFormatException e)
                             {
-                                throw new SQLException("Blob buffer length " + value + " could not be converted to an integer");
-                            } // end of try-catch
+                                throw new FBSQLException(
+                                    "Blob buffer length " + value + 
+                                    " could not be converted to an integer",
+                                    FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
+                            }
                             
                         } 
                         
@@ -162,8 +167,9 @@ public class FBDriver implements Driver {
                 user = conCri.getStringProperty(ISCConstants.isc_dpb_user_name);
 
             if (user == null)
-                throw new SQLException(
-                    "User for database connection not specified.");
+                throw new FBSQLException(
+                    "User for database connection not specified.",
+                    FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
 
             // extract the password
             String password = info.getProperty(PASSWORD);
@@ -172,8 +178,9 @@ public class FBDriver implements Driver {
                 password = conCri.getStringProperty(ISCConstants.isc_dpb_password);
 
             if (password == null)
-                throw new SQLException(
-                    "Password for database connection not specified.");
+                throw new FBSQLException(
+                    "Password for database connection not specified.",
+                    FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
             
             // extract the database URL
 
@@ -209,8 +216,8 @@ public class FBDriver implements Driver {
             }
 
             return dataSource.getConnection(user, password);
-        } catch(javax.resource.ResourceException resex) {
-            throw new SQLException(resex.getMessage());
+        } catch(ResourceException resex) {
+            throw new FBSQLException(resex);
         }
     }
 

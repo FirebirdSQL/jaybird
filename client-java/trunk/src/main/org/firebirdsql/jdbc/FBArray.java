@@ -67,7 +67,7 @@ public class FBArray implements Array {
    *      2.0 API</a>
    */
     public int getBaseType() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 

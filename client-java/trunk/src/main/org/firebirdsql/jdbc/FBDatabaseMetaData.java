@@ -20,19 +20,10 @@
 package org.firebirdsql.jdbc;
 
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.sql.DatabaseMetaData;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
+import java.sql.*;
+import java.util.*;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.XSQLVAR;
-
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -692,7 +683,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public  String getNumericFunctions() throws SQLException {
         return "";//udf's
-        //throw new SQLException("Not yet implemented");
     }
 
 
@@ -719,7 +709,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public  String getSystemFunctions() throws SQLException {
         return "";
-        //throw new SQLException("Not yet implemented");
     }
 
 
@@ -827,7 +816,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public  boolean supportsConvert() throws SQLException {
         return false;//don't know
-        //throw new SQLException("Not yet implemented");
     }
 
 
@@ -842,7 +830,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public  boolean supportsConvert(int fromType, int toType) throws SQLException {
         return false;//don't know
-        //throw new SQLException("Not yet implemented");
     }
 
 
@@ -912,7 +899,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public  boolean supportsGroupByUnrelated() throws SQLException {
         return false;
-        //throw new SQLException("Not yet implemented");//don't know
     }
 
 
@@ -925,7 +911,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public  boolean supportsGroupByBeyondSelect() throws SQLException {
         return false;
-        //throw new SQLException("Not yet implemented");//dont know
     }
 
 
@@ -1055,7 +1040,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsIntegrityEnhancementFacility() throws SQLException {
-        //throw new SQLException("Not yet implemented");//wtf is this? referential integrity??
         return true; // rrokytskyy: yep, they call so foreign keys + cascade deletes
     }
 
@@ -1104,7 +1088,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public  String getSchemaTerm() throws  SQLException {
         return null;
-        //throw new SQLException("No schemas");
     }
 
 
@@ -1435,7 +1418,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsOpenStatementsAcrossCommit() throws SQLException {
-        return false;//commit retaining only.
+        return true;//commit retaining only.
     }
 
 
@@ -1447,7 +1430,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsOpenStatementsAcrossRollback() throws SQLException {
-        return false;//commit retaining only.
+        return true;//commit retaining only.
     }
 
 
@@ -4150,7 +4133,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     private byte[] createShort(int value) throws SQLException {
         if (value > Short.MAX_VALUE)
-            throw new SQLException("Cannot convert integer to short.");
+            throw new FBSQLException("Cannot convert integer to short.",
+                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+        
         return new XSQLVAR().encodeShort((short)value);
     }
 
@@ -4944,8 +4929,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public ResultSet getAttributes(String param1, String param2, String param3, String param4) throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        throw new FBDriverNotCapableException();
     }
 
     /**

@@ -147,8 +147,10 @@ public abstract class FBField {
     protected String javaEncoding	= null;
 
     FBField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
-        if (field == null) throw new SQLException(
-            "Cannot create FBField instance for null as XSQLVAR.");
+        if (field == null) throw new FBSQLException(
+            "Cannot create FBField instance for null as XSQLVAR.",
+            FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+        
         this.field = field;
         this.rs = rs;
         this.numCol = numCol;
@@ -461,7 +463,7 @@ public abstract class FBField {
             OBJECT_CONVERSION_ERROR);
     }
     public Object getObject(Map map) throws  SQLException {
-              throw new SQLException("Not yet implemented");
+              throw new FBDriverNotCapableException();
     }
     public InputStream getAsciiStream() throws SQLException {
         throw (SQLException)createException(
@@ -515,13 +517,13 @@ public abstract class FBField {
             TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();		 
     }
     public Ref getRef() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+                throw new FBDriverNotCapableException();
     }
     public Clob getClob() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+                throw new FBDriverNotCapableException();
     }
     public Array getArray() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+                throw new FBDriverNotCapableException();
     }
     //--- setters
 
