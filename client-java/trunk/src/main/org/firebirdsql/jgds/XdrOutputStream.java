@@ -52,7 +52,7 @@ public final class XdrOutputStream {
     private static byte[] zero = XSQLVAR.encodeInt(0);
     private static byte[] minusOne = XSQLVAR.encodeInt(-1);
 
-    private static byte[] buf = new byte[32767];
+    private byte[] buf = new byte[32767];
     private int count;
 
     private OutputStream out = null;
@@ -103,14 +103,10 @@ public final class XdrOutputStream {
         if (encoding != null && !"NONE".equals(encoding))
             javaEncoding = FBConnectionHelper.getJavaEncoding(encoding);
         
-        byte[] buffer;
-        
         if (javaEncoding != null)
-            buffer = s.getBytes(javaEncoding);
+            writeBuffer(s.getBytes(javaEncoding));
         else
-            buffer = s.getBytes();
-            
-        writeBuffer(buffer);
+            writeBuffer(s.getBytes());
     }
 
     public void writeSet(int type, byte[] s) throws IOException {
