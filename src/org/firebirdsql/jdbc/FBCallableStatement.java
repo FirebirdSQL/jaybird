@@ -100,6 +100,8 @@ import org.firebirdsql.jca.FBManagedConnection;
  * @see ResultSet
  */
 public class FBCallableStatement extends FBPreparedStatement implements CallableStatement {
+    static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE";
+
     private ResultSet currentRs;
 
 
@@ -119,21 +121,21 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @see Statement#execute
      */
     public boolean execute() throws  SQLException {
-        try 
+        try
         {
             c.ensureInTransaction();
             boolean hasResultSet = internalExecute(true);
-            if (hasResultSet && c.willEndTransaction()) 
+            if (hasResultSet && c.willEndTransaction())
             {
-                getCachedResultSet(false);   
+                getCachedResultSet(false);
             } // end of if ()
             return hasResultSet;
         }
-        catch (ResourceException re) 
+        catch (ResourceException re)
         {
             throw new SQLException("ResourceException: " + re);
         } // end of try-catch
-        finally 
+        finally
         {
             c.checkEndTransaction();
         } // end of finally
