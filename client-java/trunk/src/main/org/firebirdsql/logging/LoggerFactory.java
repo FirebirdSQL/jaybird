@@ -33,27 +33,29 @@ public class LoggerFactory{
     
     public static Logger getLogger(String name,boolean def) {
         if (!checked){
-            try {
-                Class verify = Class.forName("org.apache.log4j.Category");
-                log4j = true;
-            }
-            catch (ClassNotFoundException cnfe){
-                log4j = false;
-            }
+            String sLog4j = System.getProperty("FBLog4j");
+            if (!def){
+                if (sLog4j != null && sLog4j.equals("true"))
+                    log4j = true;
+                      else
+                    log4j = false;
+                 }
+            else{
+                if (sLog4j != null && sLog4j.equals("false"))
+                    log4j = false;
+                      else
+                    log4j = true;
+                 }
+
             if (log4j){
-                    String sLog4j = System.getProperty("FBLog4j");
-                if (!def){
-                    if (sLog4j != null && sLog4j.equals("true"))
-                        log4j = true;
-                          else
-                        log4j = false;
-                     }
-                else{
-                    if (sLog4j != null && sLog4j.equals("false"))
-                        log4j = false;
-                          else
-                        log4j = true;
-                     }
+                 try {
+                     Class verify = Class.forName("org.apache.log4j.Category");
+                     log4j = true;
+                 }
+                 catch (ClassNotFoundException cnfe){
+                     log4j = false;
+                 }
+                
             }
             checked = true;
         }
