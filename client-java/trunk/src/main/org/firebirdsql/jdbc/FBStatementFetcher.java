@@ -108,7 +108,7 @@ class FBStatementFetcher implements FBFetcher {
         if (maxRows != 0 && fetchSize > maxRows)
             fetchSize = maxRows;
         //
-        if (!stmt.getAllRowsFetched() && (rowsArray == null || rowsArray.length == rowPosition)){
+        if (!stmt.getAllRowsFetched() && (rowsArray == null || size == rowPosition)){
             try {
                 c.fetch(stmt, fetchSize);
                 rowPosition = 0;
