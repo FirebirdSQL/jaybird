@@ -809,7 +809,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
                 setDate(parameterIndex, (java.sql.Date) x);
             } else if (x instanceof java.sql.Timestamp) {
                 setDate(parameterIndex, new java.sql.Date(((java.sql.Timestamp) x).getTime()));
-            } if (x instanceof String) {
+            } else  if (x instanceof String) {
                 setDate(parameterIndex, java.sql.Date.valueOf((String) x));
             } else {
                 throw new SQLException("Invalid conversion to date");
@@ -820,7 +820,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
                 setTime(parameterIndex, (java.sql.Time) x);
             } else if (x instanceof java.sql.Timestamp) {
                 setTime(parameterIndex, new java.sql.Time(((java.sql.Timestamp) x).getTime()));
-            } if (x instanceof String) {
+            } else if (x instanceof String) {
                 setTime(parameterIndex, java.sql.Time.valueOf((String) x));
             } else {
                 throw new SQLException("Invalid conversion to time");
@@ -831,7 +831,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
                 setTimestamp(parameterIndex, (java.sql.Timestamp) x);
             } else if (x instanceof java.sql.Date) {
                 setTimestamp(parameterIndex, new java.sql.Timestamp(((java.sql.Date) x).getTime()));
-            } if (x instanceof String) {
+            } else if (x instanceof String) {
                 setTimestamp(parameterIndex, java.sql.Timestamp.valueOf((String) x));
             } else {
                 throw new SQLException("Invalid conversion to timestamp");

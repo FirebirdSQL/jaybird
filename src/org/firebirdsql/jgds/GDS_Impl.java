@@ -1700,8 +1700,22 @@ public class GDS_Impl implements GDS {
         return s;
     }
 
-    private int encodeTime(java.util.Date t) {
-        return (int) ((t.getTime() % 86400) / 1000) * 10000;
+    private int encodeTime(java.util.Date d) {
+        GregorianCalendar c = new GregorianCalendar();
+        c.setTime(d);
+        long millisInDay =
+          c.get(Calendar.HOUR_OF_DAY)*60*60*1000
+          +
+          c.get(Calendar.MINUTE)*60*1000
+          +
+          c.get(Calendar.SECOND)*1000
+          +
+          c.get(Calendar.MILLISECOND)
+          ;
+
+        int iTime = (int) (millisInDay * 10);
+
+        return iTime;
     }
 
     private int encodeDate(java.util.Date d) {
