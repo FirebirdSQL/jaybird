@@ -18,11 +18,9 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.io.*;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Properties;
-import org.firebirdsql.gds.ISCConstants;
 
 /**
  * Describe class <code>TestFBBlobAccess</code> here.
