@@ -934,7 +934,7 @@ JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1bl
 		isc_blob_handle rawBlobHandle = blobHandle.GetHandleValue();
 		ISC_QUAD rawBlobId = blobHandle.GetId();
 
-		char* resultBuffer = (char*)_alloca(jBufferLength);
+		char* resultBuffer = (char*)alloca(jBufferLength);
 		
 		FirebirdApiBinding::isc_blob_info( status.RawAccess(), &rawBlobHandle, bytesToWrite.Size(), bytesToWrite.Read(), jBufferLength, resultBuffer );
 	
