@@ -22,8 +22,8 @@
     <property name="version.major" value="1"/>
     <property name="version.minor" value="0"/>
     <property name="version.revision" value="0"/>
-    <property name="version.tag" value="RC2"/>
-    <property name="version.name" value="RC2"/>
+    <property name="version.tag" value="RC3"/>
+    <property name="version.name" value="RC3"/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}"/>
 
@@ -260,6 +260,7 @@
          <include name="default.mf"/>
          <include name="JDBC20_conformance.html"/>
          <include name="faq.html"/>
+         <include name="FAQ.txt"/>
          <include name="release_notes.html"/>
       </fileset>
       <filterset>
@@ -587,6 +588,7 @@
       </zipfileset>
       <fileset dir="${module.etc}">
         <include name="*.html"/>
+        <include name="FAQ.txt"/>
       </fileset>
     </zip>
   </target>
