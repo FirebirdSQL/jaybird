@@ -369,6 +369,28 @@ public class TestFBDatabaseMetaData extends TestXABase {
         ResultSet rs = dmd.getTablePrivileges(null, null, "%");
         assertTrue("No resultset returned from getTablePrivileges", rs != null);
     }
+
+    public void testGetTypeInfo() throws Exception {
+        System.out.println();
+        System.out.println("testGetTypeInfo");
+
+        ResultSet rs = dmd.getTypeInfo();
+        assertTrue("No resultset returned from getTablePrivileges", rs != null);
+        int count = 0;
+        while (rs.next()) {
+            count++;
+            for (int i = 1; i <= 18; i++) {
+                Object o = rs.getObject(i);
+                if (o == null) {
+                    o = "null";
+                }
+                System.out.print(o.toString());
+            }
+            System.out.println();
+        }
+        assertTrue("Not enough TypeInfo rows fetched: " + count, count >= 21);
+    }
+
  
     private void createTable(String tableName) throws Exception {
         dropTable(tableName);

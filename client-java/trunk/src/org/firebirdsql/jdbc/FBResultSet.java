@@ -278,6 +278,12 @@ public class FBResultSet implements ResultSet {
         xsqlvars = stmt.getOutSqlda().sqlvar;
     }
     
+    FBResultSet(/*FBManagedConnection mc, */XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
+        fbFetcher = new FBCachedFetcher(rows);
+        //this.mc = mc;
+        this.xsqlvars = xsqlvars;
+    }
+    
     
 
     /**
@@ -394,7 +400,33 @@ public class FBResultSet implements ResultSet {
      */
     public boolean getBoolean(int columnIndex) throws  SQLException {
         setWasNullColumnIndex(columnIndex);
-                throw new SQLException("Not yet implemented");
+        if (row[columnIndex - 1] == null) {
+            return false;
+        }
+        if (((getXsqlvar(columnIndex).sqltype & ~1) == GDS.SQL_TEXT)
+             ||((getXsqlvar(columnIndex).sqltype & ~1) == GDS.SQL_VARYING)) {
+            String value = ((String)row[columnIndex - 1]).toUpperCase();
+            if (value.equals("T") || value.equals("TRUE")) {
+                return true;
+            }
+            if (value.equals("F") || value.equals("FALSE")) {
+                return false;
+            }
+            throw new SQLException("can't interpret value as boolean: " + value);
+        }
+        if (((getXsqlvar(columnIndex).sqltype & ~1) == GDS.SQL_SHORT)
+             ||((getXsqlvar(columnIndex).sqltype & ~1) == GDS.SQL_LONG)) {
+            int value = ((Number)row[columnIndex - 1]).intValue();
+            if (value == 0) {
+                return true;
+            }
+            if (value == 1) {
+                return false;
+            }
+            throw new SQLException("can't interpret value as boolean: " + value);
+        }
+        throw new SQLException("can't interpret type as boolean: " + (getXsqlvar(columnIndex).sqltype & ~1));
+
     }
 
 
@@ -3190,15 +3222,10 @@ public class FBResultSet implements ResultSet {
 
     class FBCachedFetcher  implements FBFetcher {
 
-        //        private FBManagedConnection mc;
-
-        //private isc_stmt_handle stmt;
-
-        private ArrayList rows = new ArrayList();
+        private ArrayList rows;
 
         FBCachedFetcher(FBManagedConnection mc, isc_stmt_handle stmt) throws SQLException {
-            //this.mc = mc;
-            // this.stmt = stmt;
+            rows = new ArrayList();
             try {
                 do {
                     row = mc.fetch(stmt);
@@ -3211,8 +3238,15 @@ public class FBResultSet implements ResultSet {
             }
         }
 
+        FBCachedFetcher(ArrayList rows) throws SQLException {
+            this.rows = rows;
+        }
+
         public boolean next() throws SQLException {
             //System.out.println("FBResultSet next - FBCachedFetcher");
+            if (rowNum >= rows.size()) {
+                return false;
+            }
             row = (Object[])rows.get(rowNum);
             rowNum++;
             return row != null;
