@@ -183,6 +183,8 @@ public final class XdrOutputStream {
                 }
             }
             else {
+                // decrement length because it was incremented before
+                len--;
                 if (buffer != null) {
                     int buflen = buffer.length;
                     if (buflen >=len){
