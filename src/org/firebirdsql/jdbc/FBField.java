@@ -110,7 +110,25 @@ abstract class FBField {
     static final InputStream STREAM_NULL_VALUE = null;
     static final byte[] BYTES_NULL_VALUE = null;
     static final FBBlob BLOB_NULL_VALUE = null;
-
+    
+    static final byte MAX_BYTE_VALUE = Byte.MAX_VALUE;
+    static final byte MIN_BYTE_VALUE = (byte)(-1 * MAX_BYTE_VALUE - 1);
+    
+    static final short MAX_SHORT_VALUE = Short.MAX_VALUE;
+    static final short MIN_SHORT_VALUE = (short)(-1 * MAX_SHORT_VALUE - 1);
+    
+    static final int MAX_INT_VALUE = Integer.MAX_VALUE;
+    static final int MIN_INT_VALUE = -1 * MAX_INT_VALUE - 1;
+    
+    static final long MAX_LONG_VALUE = Long.MAX_VALUE;
+    static final long MIN_LONG_VALUE = -1 * MAX_LONG_VALUE - 1;
+    
+    static final float MAX_FLOAT_VALUE = Float.MAX_VALUE;
+    static final float MIN_FLOAT_VALUE = -1 * MAX_FLOAT_VALUE;
+    
+    static final double MAX_DOUBLE_VALUE = Double.MAX_VALUE;
+    static final double MIN_DOUBLE_VALUE = -1 * MAX_DOUBLE_VALUE;
+    
     XSQLVAR field;
 
     FBField(XSQLVAR field) throws SQLException {

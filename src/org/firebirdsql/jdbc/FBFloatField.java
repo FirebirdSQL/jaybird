@@ -45,7 +45,8 @@ class FBFloatField extends FBField {
         Float value = (Float)field.sqldata;
 
         // check if value is withing bounds
-        if (Math.abs(value.floatValue()) > Byte.MAX_VALUE)
+        if (value.floatValue() > MAX_BYTE_VALUE ||
+            value.floatValue() < MIN_BYTE_VALUE)
                 throw (SQLException)createException(
                     BYTE_CONVERSION_ERROR).fillInStackTrace();
 
@@ -57,7 +58,8 @@ class FBFloatField extends FBField {
         Float value = (Float)field.sqldata;
 
         // check if value is withing bounds
-        if (Math.abs(value.floatValue()) > Short.MAX_VALUE)
+        if (value.floatValue() > MAX_SHORT_VALUE ||
+            value.floatValue() < MIN_SHORT_VALUE)
                 throw (SQLException)createException(
                     SHORT_CONVERSION_ERROR).fillInStackTrace();
 
@@ -69,7 +71,8 @@ class FBFloatField extends FBField {
         Float value = (Float)field.sqldata;
 
         // check if value is withing bounds
-        if (Math.abs(value.floatValue()) > Integer.MAX_VALUE)
+        if (value.floatValue() > MAX_INT_VALUE ||
+            value.floatValue() < MIN_INT_VALUE)
                 throw (SQLException)createException(
                     INT_CONVERSION_ERROR).fillInStackTrace();
 
@@ -81,7 +84,8 @@ class FBFloatField extends FBField {
         Float value = (Float)field.sqldata;
 
         // check if value is withing bounds
-        if (Math.abs(value.floatValue()) > Long.MAX_VALUE)
+        if (value.floatValue() > MAX_LONG_VALUE ||
+            value.floatValue() < MIN_LONG_VALUE)
                 throw (SQLException)createException(
                     LONG_CONVERSION_ERROR).fillInStackTrace();
 
@@ -142,7 +146,8 @@ class FBFloatField extends FBField {
     }
     void setDouble(double value) throws java.sql.SQLException {
         // check if value is within bounds
-        if (Math.abs(value) > Float.MAX_VALUE)
+        if (value > MAX_FLOAT_VALUE ||
+            value < MIN_FLOAT_VALUE)
                 throw (SQLException)createException(
                     DOUBLE_CONVERSION_ERROR).fillInStackTrace();
 
@@ -150,7 +155,8 @@ class FBFloatField extends FBField {
     }
     void setLong(long value) throws java.sql.SQLException {
         // check if value is within bounds
-        if (Math.abs(value) > Float.MAX_VALUE)
+        if (value > MAX_FLOAT_VALUE ||
+            value < MIN_FLOAT_VALUE)
                 throw (SQLException)createException(
                     LONG_CONVERSION_ERROR).fillInStackTrace();
 
@@ -170,7 +176,8 @@ class FBFloatField extends FBField {
         }
 
         // check if value is within bounds
-        if (value.abs().compareTo(new BigDecimal(Float.MAX_VALUE)) > 0)
+        if (value.compareTo(new BigDecimal(MAX_FLOAT_VALUE)) > 0 ||
+            value.compareTo(new BigDecimal(MIN_FLOAT_VALUE)) < 0)
                 throw (SQLException)createException(
                     BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
