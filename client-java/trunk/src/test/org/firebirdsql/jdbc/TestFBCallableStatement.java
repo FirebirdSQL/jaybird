@@ -79,7 +79,6 @@ public class TestFBCallableStatement extends FBTestBase {
 
     public static final String DROP_PROCEDURE_EMP_SELECT =
         "DROP PROCEDURE get_emp_proj;";
-
     public static final String SELECT_PROCEDURE_EMP_SELECT =
         "SELECT * FROM get_emp_proj(?)";
 
@@ -114,7 +113,7 @@ public class TestFBCallableStatement extends FBTestBase {
 	     "DROP TABLE employee_project;";
      
      public static final String CREATE_SIMPLE_OUT_PROC = ""
-         + "CREATE PROCEDURE test_out (inParam INTEGER) RETURNS (outParam INTEGER) "
+         + "CREATE PROCEDURE test_out (inParam VARCHAR(10)) RETURNS (outParam VARCHAR(10)) "
          + "AS BEGIN "
          + "    outParam = inParam; "
          + "END"
@@ -158,6 +157,9 @@ public class TestFBCallableStatement extends FBTestBase {
      public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_3 = ""
          + "EXECUTE PROCEDURE test_no_params ()"
          ;
+     
+     public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST = ""
+         + "EXECUTE PROCEDURE test_out 'test'";
 
     private Connection connection;
 
@@ -369,6 +371,20 @@ public class TestFBCallableStatement extends FBTestBase {
         
     }
 
+    public void testOutProcedureWithConst() throws Exception {
+        CallableStatement stmt = 
+            connection.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST);
+        try {
+            //stmt.setInt(1, 1);
+            //stmt.registerOutParameter(2, Types.INTEGER);
+            stmt.execute();
+            assertTrue("Should return correct value", "test".equals(stmt.getString(1)));
+        } finally {
+            stmt.close();
+        }
+        
+    }
+    
     public void testInOutProcedure() throws Exception {
         CallableStatement stmt = 
             connection.prepareCall(EXECUTE_IN_OUT_PROCEDURE);

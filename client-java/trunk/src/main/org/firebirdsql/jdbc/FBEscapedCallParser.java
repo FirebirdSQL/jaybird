@@ -259,8 +259,10 @@ public class FBEscapedCallParser {
                  // otherwise go into normal state to enable next transitions.
                  if (!isNameProcessed) {
                      boolean tokenProcessed = processToken(token);
-                     if (tokenProcessed)
+                     if (tokenProcessed) {
                      	buffer = new StringBuffer();
+                        setState(NORMAL_STATE);
+                     }
                  } else {
                      buffer.append(sqlbuff[i]);
                      setState(NORMAL_STATE);
@@ -332,10 +334,13 @@ public class FBEscapedCallParser {
                  setState(NORMAL_STATE);
                  
              } else
-             if (isInState(LITERAL_STATE))
+             if (isInState(LITERAL_STATE)) 
                  buffer.append(sqlbuff[i]);
          }
 
+         if (buffer.length() == 0) 
+             return procedureCall;
+         
          // remove spaces at the beginning and the end
          while(Character.isSpaceChar(buffer.charAt(0)))
              buffer.deleteCharAt(0);
@@ -345,27 +350,26 @@ public class FBEscapedCallParser {
 
          // if buffer starts with '(', remove it, 
          // we do not want this thing to bother us
-         if (buffer.length() > 0 && buffer.charAt(0) == '(')
+         if (buffer.charAt(0) == '(')
              buffer.deleteCharAt(0);
+
          
          // if buffer ends with ')', remove it
          // it should match an opening brace right after the procedure
          // name, and we assume that all syntax check was already done.
-         if (buffer.length() > 0 && buffer.charAt(buffer.length() - 1) == ')')
+         if (buffer.charAt(buffer.length() - 1) == ')')
              buffer.deleteCharAt(buffer.length() - 1);
          
          // if there's something in the buffer, treat it as last param
-         if (buffer.length() > 0) {
-             if(null == procedureCall.getName() && !isNameProcessed) {
-                 procedureCall.setName(buffer.toString());
-             } else {
-                 FBProcedureParam callParam = 
-                     procedureCall.addParam(paramPosition, buffer.toString());
-                 
-                 if (callParam.isParam()) {
-                     paramCount++;
-                     callParam.setIndex(paramCount);
-                 }
+         if(null == procedureCall.getName() && !isNameProcessed) {
+             procedureCall.setName(buffer.toString());
+         } else {
+             FBProcedureParam callParam = 
+                 procedureCall.addParam(paramPosition, buffer.toString());
+             
+             if (callParam.isParam()) {
+                 paramCount++;
+                 callParam.setIndex(paramCount);
              }
          }
          
@@ -399,7 +403,7 @@ public class FBEscapedCallParser {
             return true;
         }
         
-        if (isCallWordProcessed && !isNameProcessed) {
+        if ((isCallWordProcessed || (isExecuteWordProcessed && isProcedureWordProcessed)) && !isNameProcessed) {
             procedureCall.setName(token);
             isNameProcessed = true;
             return true;
