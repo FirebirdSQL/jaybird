@@ -99,7 +99,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     private isc_db_handle currentDbHandle;
 
-    private Set tpb;
+    private final FBTpb tpb;
 
     FBManagedConnection(final Subject subject, 
                         final ConnectionRequestInfo cri, 
@@ -271,11 +271,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             ((FBConnection)i.next()).setManagedConnection(null);
         } // end of for ()
         connectionHandles.clear();
-        /*
-        for (int i = connectionHandles.size() - 1; i>= 0; i--) {
-            ((FBConnection)connectionHandles.get(i)).close();
-        }
-        */
     }
 
 /**
@@ -658,49 +653,36 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         return cri.getUser();
     }
 
-    public int getTransactionIsolation() {
-        if (tpb.contains(new Integer(GDS.isc_tpb_consistency))) {
-            return GDS.isc_tpb_consistency;
-        }
-        if (tpb.contains(new Integer(GDS.isc_tpb_read_committed))) {
-            return GDS.isc_tpb_read_committed;
-        }
-        return GDS.isc_tpb_concurrency; //default.
+    public int getTransactionIsolation() throws ResourceException {
+        return tpb.getTransactionIsolation();
     }
 
-    public void setTransactionIsolation(int isolation) {
-        tpb.remove(new Integer(GDS.isc_tpb_read_committed));
-        tpb.remove(new Integer(GDS.isc_tpb_concurrency));
-        tpb.remove(new Integer(GDS.isc_tpb_consistency));
-        tpb.remove(new Integer(GDS.isc_tpb_rec_version));
-        switch (isolation) {
-            case GDS.isc_tpb_read_committed: 
-                tpb.add(new Integer(GDS.isc_tpb_read_committed));
-                tpb.add(new Integer(GDS.isc_tpb_rec_version));
-                break;
-            case GDS.isc_tpb_concurrency: 
-                tpb.add(new Integer(GDS.isc_tpb_concurrency));
-                break;
-            case GDS.isc_tpb_consistency: 
-                tpb.add(new Integer(GDS.isc_tpb_consistency));
-                break;
-            default: break;
-        }
+    public void setTransactionIsolation(int isolation) throws ResourceException {
+        tpb.setTransactionIsolation(isolation);
+    }
+
+    public String getTransactionIsolationName() throws ResourceException {
+        return tpb.getTransactionIsolationName();
+    }
+
+    public void setTransactionIsolationName(String isolation) throws ResourceException {
+        tpb.setTransactionIsolationName(isolation);
+    }
+
+    public int getIscTransactionIsolation() throws ResourceException {
+        return tpb.getIscTransactionIsolation();
+    }
+
+    public void setIscTransactionIsolation(int isolation) throws ResourceException {
+        tpb.setIscTransactionIsolation(isolation);
     }
 
     public void setReadOnly(boolean readOnly) {
-        tpb.remove(new Integer(GDS.isc_tpb_read));
-        tpb.remove(new Integer(GDS.isc_tpb_write));
-        if (readOnly) {
-            tpb.add(new Integer(GDS.isc_tpb_read));
-        }
-        else {
-            tpb.add(new Integer(GDS.isc_tpb_write));
-        }
+        tpb.setReadOnly(readOnly);
     }
 
     public boolean isReadOnly() {
-        return tpb.contains(new Integer(GDS.isc_tpb_read));
+        return tpb.isReadOnly();
     }
 
 
@@ -793,7 +775,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     }
 
     Set getTpb() {
-        return tpb;
+        return tpb.getInternalTpb();
     }
 
 
@@ -837,79 +819,5 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
-/*
-    public static class SqlInfo {
-        private int statementType;
-        private int insertCount;
-        private int updateCount;
-        private int deleteCount;
-        private int selectCount; //????
-
-        SqlInfo(byte[] buffer, GDS gds) {
-            int pos = 0;
-            int length;
-            int type;
-            while ((type = buffer[pos++]) != GDS.isc_info_end) {
-                length = gds.isc_vax_integer(buffer, pos, 2);
-                pos += 2;
-                switch (type) {
-                    case GDS.isc_info_sql_records:
-                        int l;
-                        int t;
-                        while ((t = buffer[pos++]) != GDS.isc_info_end) {
-                            l = gds.isc_vax_integer(buffer, pos, 2);
-                            pos += 2;
-                            switch (t) {
-                                case GDS.isc_info_req_insert_count:
-                                    insertCount = gds.isc_vax_integer(buffer, pos, l);
-                                    break;
-                                case GDS.isc_info_req_update_count:
-                                    updateCount = gds.isc_vax_integer(buffer, pos, l);
-                                    break;
-                                case GDS.isc_info_req_delete_count:
-                                    deleteCount = gds.isc_vax_integer(buffer, pos, l);
-                                    break;
-                                case GDS.isc_info_req_select_count:
-                                    selectCount = gds.isc_vax_integer(buffer, pos, l);
-                                    break;
-                                default:
-                                    break;
-                            }
-                            pos += l;
-                        }
-                        break;
-                    case GDS.isc_info_sql_stmt_type:
-                        statementType = gds.isc_vax_integer(buffer, pos, length);
-                        pos += length;
-                        break;
-                    default:
-                        pos += length;
-                        break;
-                }
-            }
-        }
-
-        public int getStatementType() {
-            return statementType;
-        }
-
-        public int getInsertCount() {
-            return insertCount;
-        }
-
-        public int getUpdateCount() {
-            return updateCount;
-        }
-
-        public int getDeleteCount() {
-            return deleteCount;
-        }
-
-        public int getSelectCount() {
-            return selectCount;
-        }
-    }
-
-*/
 	 
 }

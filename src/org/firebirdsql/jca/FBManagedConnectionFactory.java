@@ -102,9 +102,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
     private FBConnectionRequestInfo defaultCri;
 
-    private Clumplet dpbClumplet;
-
-    private Set tpbSet;
+    private final FBTpb tpb = new FBTpb();
 
     private final static int MAX_BLOB_BUFFER_LENGTH = 1024 * 32 - 1;
     private final static int MIN_BLOB_BUFFER_LENGTH = 1024;
@@ -113,28 +111,10 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     //must be less than 1024 * 32: 1-24 * 32 -  is ok.
     private int blobBufferLength = 1024 * 16;
 
+    private volatile int hashCode = 0;
 
     public FBManagedConnectionFactory() {
         defaultCri = FBConnectionHelper.getDefaultCri();
-        
-        /*
-        String charset = "ISO8859_1";
-        String encoding = System.getProperty("file.encoding");
-        if (encoding.equalsIgnoreCase("ISO-8859-1")) {
-            charset = "ISO8859_1";
-        } else if (encoding.equalsIgnoreCase("Cp1252")) {
-            charset = "WIN1252";
-        }
-        defaultCri.setProperty(GDS.isc_dpb_lc_ctype, charset);
-        */
-
-        tpbSet = new HashSet();
-        tpbSet.add(new Integer(GDS.isc_tpb_write));
-        tpbSet.add(new Integer(GDS.isc_tpb_read_committed));
-        tpbSet.add(new Integer(GDS.isc_tpb_rec_version));
-//        tpbSet.add(new Integer(GDS.isc_tpb_concurrency));
-//        tpbSet.add(new Integer(GDS.isc_tpb_wait));
-
     }  //Default constructor.
 
     //rar properties
@@ -143,6 +123,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     public void setDatabase(String database) throws ResourceException {
         if (this.dbAlias!=null && !database.equals(this.dbAlias))
             throw new ResourceException("can't change database!");
+        hashCode = 0;
         this.dbAlias = database;
     }
 
@@ -151,16 +132,18 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     }
 
     public void setConnectionRequestInfo(FBConnectionRequestInfo cri) {
+        hashCode = 0;
         this.defaultCri = new FBConnectionRequestInfo(cri);
     }
 
-    //returning our internal state may not be a good idea!
+
     public FBConnectionRequestInfo getDefaultConnectionRequestInfo() {
         return new FBConnectionRequestInfo(defaultCri);
     }
 
     public void setUserName(String userName)
     {
+        hashCode = 0;
         defaultCri.setUser(userName);
     }
 
@@ -171,6 +154,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
     public void setPassword(String password)
     {
+        hashCode = 0;
         defaultCri.setPassword(password);
     }
 
@@ -179,14 +163,45 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         return defaultCri.getPassword();
     }
 
-    public void setTpb(Collection tpb) {
-        tpbSet = new HashSet(tpb);
+    public void setTpb(FBTpb tpb)
+    {
+        hashCode = 0;
+        this.tpb.setTpb(tpb);
     }
 
-    public Set getTpb() {
-        return new HashSet(tpbSet);
+
+    public FBTpb getTpb() {
+        return new FBTpb(tpb);
     }
 
+    public void setTransactionIsolation(Integer level) throws ResourceException
+    {
+        hashCode = 0;
+        if (level == null) 
+        {
+            throw new ResourceException("You must supply a isolation level");
+        } // end of if ()
+        else
+        {
+            tpb.setTransactionIsolation(level.intValue());
+        } // end of else
+    }
+
+    public Integer getTransactionIsolation() throws ResourceException
+    {
+        return new Integer(tpb.getTransactionIsolation());
+    }
+
+    public void setTransactionIsolationName(String level) throws ResourceException
+    {
+        hashCode = 0;
+        tpb.setTransactionIsolationName(level);
+    }
+
+    public String getTransactionIsolationName() throws ResourceException
+    {
+        return tpb.getTransactionIsolationName();
+    }
 
     /**
      * Get the BlobBufferLength value.
@@ -203,6 +218,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
      */
     public void setBlobBufferLength(final int blobBufferLength)
     {
+        hashCode = 0;
         if (blobBufferLength > MAX_BLOB_BUFFER_LENGTH) 
         {
             this.blobBufferLength = MAX_BLOB_BUFFER_LENGTH;
@@ -219,7 +235,39 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         } // end of else
     }
 
+
+    public int hashCode()
+    {
+        if (hashCode != 0) 
+        {
+            return hashCode;
+        } // end of if ()
+        int result = 17;
+        result = 37 * result + ((dbAlias == null)? 0: dbAlias.hashCode());
+        result = 37 * result + defaultCri.hashCode();
+        result = 37 * result + tpb.hashCode();
+        result = 37 * result + blobBufferLength;
+        hashCode = result;
+        return hashCode;
+    }
     
+    public boolean equals(Object other)
+    {
+        if (other == this) 
+        {
+            return true;
+        } // end of if ()
+        if (!(other instanceof FBManagedConnectionFactory)) 
+        {
+            return false;
+        } // end of if ()
+        FBManagedConnectionFactory mcf = (FBManagedConnectionFactory)other;
+        return
+            (dbAlias == null ? mcf.dbAlias == null : dbAlias.equals(mcf.dbAlias))
+            && (defaultCri.equals(mcf.defaultCri))
+            && (tpb.equals(mcf.tpb))
+            && (blobBufferLength == blobBufferLength);
+    }
 
 /**
      Creates a Connection Factory instance. The Connection Factory instance gets initialized with
@@ -381,33 +429,6 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
 
 
-
-/**
-     Returns the hash code for the ManagedConnectionFactory
-     Overrides:
-         hashCode in class java.lang.Object
-     Returns:
-         hash code for the ManagedConnectionFactory
-
-**/
-    /*public int hashCode() {
-        return 0;
-        }*/
-
-
-
-/**
-     Check if this ManagedConnectionFactory is equal to another ManagedConnectionFactory.
-     Overrides:
-         equals in class java.lang.Object
-     Returns:
-         true if two instances are equal
-
-**/
-
-    /* public boolean equals(java.lang.Object other) {
-        return false;
-        }*/
 
     isc_tr_handle lookupXid(Xid xid) 
     {

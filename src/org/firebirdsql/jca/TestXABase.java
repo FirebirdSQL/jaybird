@@ -67,12 +67,14 @@ public class TestXABase extends BaseFBTest {
         cri.setProperty(GDS.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
         cri.setProperty(GDS.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0});
         mcf.setConnectionRequestInfo(cri);
+        /*
         HashSet tpb = new HashSet();
         tpb.add(new Integer(GDS.isc_tpb_write));
         tpb.add(new Integer(GDS.isc_tpb_read_committed));
         tpb.add(new Integer(GDS.isc_tpb_no_rec_version));
         tpb.add(new Integer(GDS.isc_tpb_wait));
         mcf.setTpb(tpb);
+        */
         return mcf;
     }
 
