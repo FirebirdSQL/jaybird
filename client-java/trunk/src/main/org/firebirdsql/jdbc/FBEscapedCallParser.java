@@ -340,20 +340,29 @@ public class FBEscapedCallParser {
          while(Character.isSpaceChar(buffer.charAt(0)))
              buffer.deleteCharAt(0);
 
+         // if buffer starts with '(', remove it, 
+         // we do not want this thing to bother us
+         if (buffer.length() > 0 && buffer.charAt(0) == '(')
+             buffer.deleteCharAt(0);
+         
          // if buffer ends with ')', remove it
          // it should match an opening brace right after the procedure
          // name, and we assume that all syntax check was already done.
-         if (buffer.charAt(buffer.length() - 1) == ')')
+         if (buffer.length() > 0 && buffer.charAt(buffer.length() - 1) == ')')
              buffer.deleteCharAt(buffer.length() - 1);
          
          // if there's something in the buffer, treat it as last param
          if (buffer.length() > 0) {
-             FBProcedureParam callParam = 
-                 procedureCall.addParam(paramPosition, buffer.toString());
-             
-             if (callParam.isParam()) {
-                 paramCount++;
-                 callParam.setIndex(paramCount);
+             if(null == procedureCall.getName() && !isNameProcessed) {
+                 procedureCall.setName(buffer.toString());
+             } else {
+                 FBProcedureParam callParam = 
+                     procedureCall.addParam(paramPosition, buffer.toString());
+                 
+                 if (callParam.isParam()) {
+                     paramCount++;
+                     callParam.setIndex(paramCount);
+                 }
              }
          }
          

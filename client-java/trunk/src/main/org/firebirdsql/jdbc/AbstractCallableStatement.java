@@ -96,6 +96,11 @@ public abstract class AbstractCallableStatement
         super(c, rsType, rsConcurrency);
         
         FBEscapedCallParser parser = new FBEscapedCallParser();
+        
+        // here statement is parsed twicel, once in c.nativeSQL(...)
+        // and second time in parser.parseCall(...)... not nice, maybe 
+        // in the future should be fixed by calling FBEscapedParser for
+        // each parameter in FBEscapedCallParser class
         procedureCall = parser.parseCall(c.nativeSQL(sql));
     }
     
@@ -144,11 +149,12 @@ public abstract class AbstractCallableStatement
                 prepareFixedStatement(procedureCall.getSQL(), true);
                 boolean hasResultSet = internalExecute(true);
 
-                if (hasResultSet && c.willEndTransaction())
-                    getCachedResultSet(false);
+                if (hasResultSet) {
+                    if (c.willEndTransaction())
+                        cacheResultSet();
                 
-                if (hasResultSet)
                     setRequiredTypes();
+                }
                 
                 return hasResultSet;
                 
@@ -185,7 +191,7 @@ public abstract class AbstractCallableStatement
                 
 
                 if (c.willEndTransaction()) 
-                    getCachedResultSet(false);
+                    cacheResultSet();
                 else 
                     getResultSet();
 
@@ -228,11 +234,12 @@ public abstract class AbstractCallableStatement
                 
                 boolean hasResults = internalExecute(true);
                 
-                if (hasResults && c.willEndTransaction())
-                    getCachedResultSet(false);
+                if (hasResults) {
+                    if (c.willEndTransaction())
+                        cacheResultSet();
                 
-                if (hasResults)
                     setRequiredTypes();
+                }
                 
                 return getUpdateCount();
                 
@@ -837,11 +844,22 @@ public abstract class AbstractCallableStatement
     //this method doesn't give an exception if it is called twice.
     protected ResultSet getCurrentResultSet() throws SQLException {
         if (currentRs == null)
-            currentRs = getResultSet();
+            currentRs = super.getResultSet();
         return currentRs;
     }
-
     
+    protected void cacheResultSet() throws SQLException {
+        
+        if (currentRs != null)
+            throw new FBDriverConsistencyCheckException(
+                    "Trying to cache result set before closing exitsing one.");
+        
+        currentRs = getCachedResultSet(false);
+    }
+    
+    public ResultSet getResultSet() throws SQLException {
+        return getCurrentResultSet();
+    }
     
     public void setArray(int i, Array x) throws SQLException {
         procedureCall.getInputParam(i).setValue(x);

@@ -131,6 +131,33 @@ public class TestFBCallableStatement extends FBTestBase {
      public static final String EXECUTE_IN_OUT_PROCEDURE = ""
          + "{call test_out ?}"
          ;
+     
+     public static final String CREATE_PROCEDURE_WITHOUT_PARAMS = ""
+         + "CREATE PROCEDURE test_no_params "
+         + "AS BEGIN "
+         + "    exit; "
+         + "END"
+         ;
+     
+     public static final String DROP_PROCEDURE_WITHOUT_PARAMS = ""
+         + "DROP PROCEDURE test_no_params"
+         ;
+     
+     public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS = ""
+         + "{call test_no_params}"
+         ;
+     
+     public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_1 = ""
+         + "{call test_no_params()}"
+         ;
+     
+     public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_2 = ""
+         + "{call test_no_params ()}"
+         ;
+     
+     public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_3 = ""
+         + "EXECUTE PROCEDURE test_no_params ()"
+         ;
 
     private Connection connection;
 
@@ -164,6 +191,10 @@ public class TestFBCallableStatement extends FBTestBase {
             stmt.executeUpdate(DROP_SIMPLE_OUT_PROC);
         }
         catch (Exception e) {}
+        try {
+            stmt.executeUpdate(DROP_PROCEDURE_WITHOUT_PARAMS);
+        }
+        catch (Exception e) {}
         
 
         stmt.executeUpdate(CREATE_PROCEDURE);
@@ -171,6 +202,8 @@ public class TestFBCallableStatement extends FBTestBase {
         stmt.executeUpdate(CREATE_PROCEDURE_EMP_SELECT);
         stmt.executeUpdate(CREATE_PROCEDURE_EMP_INSERT);
         stmt.executeUpdate(CREATE_SIMPLE_OUT_PROC);
+        stmt.executeUpdate(CREATE_PROCEDURE_WITHOUT_PARAMS);
+        
         stmt.close();
     }
     protected void tearDown() throws Exception {
@@ -180,6 +213,7 @@ public class TestFBCallableStatement extends FBTestBase {
         stmt.executeUpdate(DROP_PROCEDURE_EMP_INSERT);
         stmt.executeUpdate(DROP_EMPLOYEE_PROJECT);
         stmt.executeUpdate(DROP_SIMPLE_OUT_PROC);
+        stmt.executeUpdate(DROP_PROCEDURE_WITHOUT_PARAMS);
         stmt.close();
         connection.close();
         super.tearDown();
@@ -277,10 +311,13 @@ public class TestFBCallableStatement extends FBTestBase {
           cstmt.close();
         }
 		  
+        connection.setAutoCommit(true);
         PreparedStatement stmt = connection.prepareStatement(SELECT_PROCEDURE_EMP_SELECT);
         try {
           stmt.setInt(1, 44);
-          ResultSet rs = stmt.executeQuery();
+          stmt.execute();
+          //ResultSet rs = stmt.executeQuery();
+          ResultSet rs = stmt.getResultSet();
           assertTrue("Should have three rows", rs.next());
 			 assertTrue("First row value must be DGPII", rs.getString(1).equals("DGPII"));
           assertTrue("Should have three rows", rs.next());
@@ -298,6 +335,7 @@ public class TestFBCallableStatement extends FBTestBase {
           rs.close();
         } finally {
           stmt.close();
+          connection.setAutoCommit(false);
         }
     }
 
@@ -342,7 +380,65 @@ public class TestFBCallableStatement extends FBTestBase {
         } finally {
             stmt.close();
         }
-        
     }
     
+    /**
+     * Test case that reproduces problem executing procedures without 
+     * parameters. Bug found and reported by Stanislav Bernatsky.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testProcedureWithoutParams() throws Exception {
+        CallableStatement stmt = 
+            connection.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS);
+        try {
+            stmt.execute();
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test case that reproduces problem executing procedures without 
+     * parameters but with braces in call. Reported by Ben (vmdd_tech).
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testProcedureWithoutParams1() throws Exception {
+        CallableStatement stmt = 
+            connection.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_1);
+        try {
+            stmt.execute();
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test case that reproduces problem executing procedures without 
+     * parameters, with braces in call, but with space between procedure
+     * name and braces. Reported by Ben (vmdd_tech).
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testProcedureWithoutParams2() throws Exception {
+        CallableStatement stmt = 
+            connection.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_2);
+        try {
+            stmt.execute();
+            // assertTrue("Should return correct value", stmt.getInt(1) == 1);
+        } finally {
+            stmt.close();
+        }
+        
+        // and now test EXECUTE PROCEDURE syntax
+        stmt = connection.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_3);
+        try {
+            stmt.execute();
+        } finally {
+            stmt.close();
+        }
+        
+    }
+
 }
