@@ -25,6 +25,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -77,6 +78,18 @@ public interface FirebirdStatement extends Statement {
      * with this statement, otherwise <code>false</code>.
      */
     boolean hasOpenResultSet();
+    
+    /**
+     * Get current result set. Behaviour of this method is similar to the 
+     * behavior of the {@link Statement#getResultSet()}, except that this method
+     * can be called as much as you like.
+     * 
+     * @return instance of {@link ResultSet} representing current result set
+     * or <code>null</code> if it is not available.
+     * 
+     * @throws SQLException if database access error happened.
+     */
+    ResultSet getCurrentResultSet() throws SQLException;
     
     /**
      * Check if this statement is valid.
