@@ -1,3 +1,34 @@
+2004-07-15 01:03  rrokytskyy
+
+	* client-java/src/resources/isc_encodings.properties:
+	
+	fixed java mappings for some encodings
+
+2004-07-15 00:24  rrokytskyy
+
+	* client-java/src/resources/isc_encodings.properties:
+	
+	fixed java mappings for some encodings
+
+2004-07-15 00:09  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/XdrOutputStream.java:
+	
+	partial fix to ArrayIndexOutOfBoundsException, thanks to gab_reid
+
+2004-07-14 23:50  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	BasicAbstractConnectionPool.java, FBWrappingDataSource.java:
+	
+	added object factory to the default reference
+
+2004-07-14 23:41  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBDataSource.java:
+	
+	added constructor to make BES happy
+
 2004-07-13 10:55  rrokytskyy
 
 	*
