@@ -37,25 +37,55 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     private static final int BUFF_SIZE = 4096;
     
     private boolean isCachedData = false;
+    
+    private FBBlob blob;
 
     FBLongVarCharField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
         super(field, rs, numCol);
     }
     
+    public void close() throws SQLException {
+        try {
+            if (blob != null) 
+                blob.close();
+        } catch(IOException ioex) {
+            throw new FBSQLException(ioex);
+        } finally {       
+            // forget this blob instance, resource waste
+            // but simplifies our life. BLOB handle will be
+            // released by a server automatically later
+
+            blob = null;
+        }
+    }
+    
     Blob getBlob() throws SQLException {
+        
+        if (blob != null)
+            return blob;
+        
+    /*
+    // commented out by R.Rokytskyy since getBlob(boolean) is
+    // used only from getBlob() and it makes sense to join two
+    // methods
         return getBlob(false);
     }
 
     Blob getBlob(boolean create) throws SQLException {
+    */
         if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 
         Long blobId = new Long(XSQLVAR.decodeLong(rs.row[numCol]));
-
+        
+        /*
+        // commented out by R.Rokytskyy, it's dead code
         if (blobId == null)
             blobId = new Long(0);
+        */
 
-        return new FBBlob(c, blobId.longValue());
+        blob = new FBBlob(c, blobId.longValue());
+        return blob;
     }
     
     InputStream getBinaryStream() throws SQLException {

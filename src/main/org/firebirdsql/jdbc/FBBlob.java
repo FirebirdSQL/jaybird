@@ -332,8 +332,13 @@ public class FBBlob implements Blob{
          *
          */
         private int pos = 0;
+        
+        private boolean closed;
 
         private FBBlobInputStream() throws SQLException {
+            
+            closed = false;
+            
             if (blob_id == 0) {
                 throw new SQLException("You can't read a new blob");
             }
@@ -346,6 +351,7 @@ public class FBBlob implements Blob{
         }
 
         public int available() throws IOException {
+            checkClosed();
             if (buffer == null) {
                 if (blob.isEof()) {
                     return -1;
@@ -366,6 +372,7 @@ public class FBBlob implements Blob{
         }
 
         public int read() throws IOException {
+            checkClosed();
             if (available() <= 0) {
                 return -1;
             }
@@ -379,6 +386,7 @@ public class FBBlob implements Blob{
 
 
         public int read(byte[] b, int off, int len) throws IOException {
+            checkClosed();
             int result = available();
             if (result <= 0) {
                 return -1;
@@ -403,7 +411,12 @@ public class FBBlob implements Blob{
                     throw new IOException ("couldn't close blob: " + ge);
                 }
                 blob = null;
+                closed = true;
             }
+        }
+        
+        private void checkClosed() throws IOException {
+            if (closed) throw new IOException("Input stream is already closed.");
         }
     }
 

@@ -36,25 +36,57 @@ public class FBBlobField extends FBField implements FBFlushableField {
     private static final int BUFF_SIZE = 4096;
 
     private boolean isCachedData = false;
+    
+    private FBBlob blob;
 
     FBBlobField(XSQLVAR field, FBResultSet rs, int numCol) throws SQLException {
         super(field, rs, numCol);
     }
+    
+    public void close() throws SQLException {
+        try {
+            if (blob != null) 
+                blob.close();
+        } catch(IOException ioex) {
+            throw new FBSQLException(ioex);
+        } finally {       
+            // forget this blob instance, resource waste
+            // but simplifies our life. BLOB handle will be
+            // released by a server automatically later
+            
+            blob = null;
+        }
+    }
 
     Blob getBlob() throws SQLException {
+        
+        if (blob != null)
+            return blob;
+    
+    /*
+    // This code was commented by R.Rokytskyy
+    // since getBlob(boolean) was used only in getBlob() method.
+    // and it makes a little sense to keep two methods.
+    
         return getBlob(false);
     }
 
     Blob getBlob(boolean create) throws SQLException {
+    */
         if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 
         Long blobId = new Long(XSQLVAR.decodeLong(rs.row[numCol]));
 
+        
+        // Commented by R.Rokytskyy, this is dead code, remove before release
         if (blobId == null)
             blobId = new Long(0);
+        
 
-        return new FBBlob(c, blobId.longValue());
+        blob = new FBBlob(c, blobId.longValue());
+        
+        return blob;
     }
 
     InputStream getAsciiStream() throws SQLException {

@@ -25,6 +25,7 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.jca.FBResourceException;
 import java.io.PrintWriter;
 import java.io.PrintStream;
+import java.io.IOException;
 
 /**
  *@author Ken Richard
@@ -36,6 +37,12 @@ import java.io.PrintStream;
 public class FBSQLException extends SQLException {
     private Exception original;
     private String message;
+    
+    public FBSQLException(IOException ioex) {
+        super(ioex.getMessage());
+        original = ioex;
+        message = "I/O Exception. " + ioex.getMessage();
+    }
 
     public FBSQLException(GDSException ex) {
         super(ex.getMessage());
