@@ -32,11 +32,11 @@ public class TestFBResultSet extends BaseFBTest {
         ;
         
     public static final String CREATE_TABLE_STATEMENT = ""
-        + "CREATE TABLE test_empty_string_bug(id INTEGER)"
+        + "CREATE TABLE test_table(id INTEGER, str VARCHAR(10))"
         ;
         
     public static final String DROP_TABLE_STATEMENT = ""
-        + "DROP TABLE test_empty_string_bug"
+        + "DROP TABLE test_table"
         ;
         
     public static final String CREATE_VIEW_STATEMENT = ""
@@ -47,7 +47,7 @@ public class TestFBResultSet extends BaseFBTest {
         + "    id, "
         + "    '' "
         + "  FROM "
-        + "    test_empty_string_bug"
+        + "    test_table"
         ;
         
     public static final String DROP_VIEW_STATEMENT = ""
@@ -59,7 +59,13 @@ public class TestFBResultSet extends BaseFBTest {
         ;
     
     public static final String INSERT_INTO_TABLE_STATEMENT = ""
-        + "INSERT INTO test_empty_string_bug VALUES(?)"
+        + "INSERT INTO test_table VALUES(?, ?)"
+        ;
+        
+    public static final String CURSOR_NAME = "some_cursor";
+        
+    public static final String UPDATE_TABLE_STATEMENT = ""
+        + "UPDATE test_table SET str = ? WHERE CURRENT OF " + CURSOR_NAME
         ;
 
     public TestFBResultSet(String name) {
@@ -126,6 +132,100 @@ public class TestFBResultSet extends BaseFBTest {
     }
     
     /**
+     * Test if positioned updates work correctly.
+     * 
+     * @throws java.lang.Exception if something went wrong.
+     */
+    public void testPositionedUpdate() throws Exception {
+        PreparedStatement ps = 
+            connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+
+        try {
+            for(int i = 0; i < 10; i++) {
+                ps.setInt(1, i);
+                ps.setInt(2, i);
+                ps.executeUpdate();
+            }
+        } finally {
+            ps.close();
+        }
+        
+        connection.setAutoCommit(false);
+        
+        Statement select = connection.createStatement();
+        select.setCursorName(CURSOR_NAME);
+        try {
+            ResultSet rs = select.executeQuery(
+                "SELECT id, str FROM test_table FOR UPDATE OF " + CURSOR_NAME);
+                
+            assertTrue("ResultSet.isBeforeFirst() should be true.", 
+                rs.isBeforeFirst());
+
+            try {
+                PreparedStatement update = connection.prepareStatement(
+                    UPDATE_TABLE_STATEMENT);
+
+                try {
+                    boolean first = true;
+                    int counter = 0;
+                    
+                    while (rs.next()) {
+                        
+                        if (first) {
+                            first = false;
+                            assertTrue("ResultSet.isFirst() should be true", 
+                                rs.isFirst());
+                        }
+                        
+                        counter++;
+
+                        assertTrue("ResultSet.getRow() should be correct", 
+                            rs.getRow() == counter);
+                        
+                        update.setInt(1, rs.getInt(1) + 1);
+                        int updatedCount = update.executeUpdate();
+                        
+                        assertTrue("Number of update rows should be 1, is " + updatedCount, 
+                            updatedCount == 1);
+                    }
+                    
+                    assertTrue("ResultSet.isAfterLast() should be true", 
+                        rs.isAfterLast());
+                    
+                } finally {
+                    update.close();
+                }
+                
+            } finally {
+                rs.close();
+            }
+            
+        } finally {
+            select.close();
+        }
+
+        connection.commit();
+        
+        select = connection.createStatement();
+        try {
+            ResultSet rs = select.executeQuery("SELECT id, str FROM test_table");
+            while (rs.next()) {
+                int idValue = rs.getInt(1);
+                int strValue = rs.getInt(2);
+
+                assertTrue("Value of str column must be equal to id + 1, " +
+                    "idValue = " + idValue + ", strValue = " + strValue,
+                    strValue == (idValue + 1));
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
+            throw e;
+        } finally {
+            select.close();
+        }
+    }
+    
+    /**
      * This test checks if an empty column in a view is correctly returned
      * to the client.
      * 
@@ -138,6 +238,7 @@ public class TestFBResultSet extends BaseFBTest {
         try {
             for(int i = 0; i < 10; i++) {
                 ps.setInt(1, i);
+                ps.setString(2, "");
                 ps.executeUpdate();
             }
         } finally {
