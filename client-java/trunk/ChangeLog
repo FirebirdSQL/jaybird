@@ -1,3 +1,58 @@
+2003-11-15 23:49  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
+	
+	fixed spec deviation in batch updates
+
+2003-11-15 23:48  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	FBEscapedFunctionHelper.java, FBDatabaseMetaData.java:
+	
+	added support for some more functions
+
+2003-11-15 23:47  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBEscapedParser.java:
+	
+	fixed bug when escaped syntax was in upper case
+
+2003-11-15 23:46  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/field/FBFloatField.java:
+	
+	modified type to make JDBC CTS succeed
+
+2003-11-15 23:46  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/field/FBStringField.java:
+	
+	modified long boolean values to make JDBC CTS succeed
+
+2003-11-15 23:45  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/XSQLVAR.java:
+	
+	fixed bug in time decoding
+
+2003-11-15 18:17  skidder
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	
+	Fix HUGE driver performance problem.  This unneeded 2-line method
+	wasted 30-50% CPU time for my application on average (while
+	application does a lot of different things).
+
+2003-11-15 17:11  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	fixed batch updates info
+
 2003-11-14 19:25  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/FBResultSet.java:
