@@ -85,9 +85,6 @@ public abstract class AbstractPreparedStatement extends FBStatement
                 c.ensureInTransaction();
                 prepareFixedStatement(sql, true);
             } catch (GDSException ge) {
-                if (log != null)
-                    log.info("GDSException in PreparedStatement constructor",
-                        ge);
                 throw new FBSQLException(ge);
             } finally {
                 c.checkEndTransaction();
