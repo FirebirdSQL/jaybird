@@ -398,11 +398,15 @@ public class FBConnection implements Connection
                 }
 
                 this.mc.autoCommit = autoCommit;
-
+                
+                /*
+                // commented out by R.Rokytskyy, we should not start
+                // tx if autocommit is off. 
                 if (!autoCommit) 
                 {
                     getLocalTransaction().begin();
                 } // end of if ()
+                */
             } catch(javax.resource.ResourceException resex) {
                 throw new SQLException(resex.toString());
             }
