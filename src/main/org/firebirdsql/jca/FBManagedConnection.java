@@ -46,6 +46,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.isc_blob_handle;
 import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.isc_stmt_handle;
@@ -1017,6 +1018,26 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      */
     public void clearWarnings() {
         currentDbHandle.clearWarnings();
+    }
+
+    /**
+     * Get connection handle for direct Firebird API access
+     *
+     * @return internal handle for connection
+     */
+    public isc_db_handle getIscDBHandle() throws GDSException {
+        if (currentDbHandle == null) {
+            currentDbHandle = mcf.getDbHandle(cri);
+        }
+        return currentDbHandle;
+    }
+
+    /**
+     * Get Firebird API handler (sockets/native/embeded/etc)
+     * @return handler object for internal API calls
+     */
+    public GDS getInternalAPIHandler() {
+        return mcf.gds;
     }
 
     //--------------------------------------------------------------------

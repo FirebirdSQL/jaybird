@@ -36,7 +36,9 @@ import javax.resource.spi.LocalTransaction;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.isc_blob_handle;
+import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.GDS;
 import org.firebirdsql.jca.FBLocalTransaction;
 import org.firebirdsql.jca.FBManagedConnection;
 import java.util.Map;
@@ -149,6 +151,24 @@ public class FBConnection implements Connection
             metaData = null;
         }
         this.mc = mc;
+    }
+
+    /**
+     * Get connection handle for direct Firebird API access
+     *
+     * @return internal handle for connection
+     * @exception GDSException if handle needed to be created and creation failed
+     */
+    public isc_db_handle getIscDBHandle() throws GDSException {
+        return mc.getIscDBHandle();
+    }
+
+    /**
+     * Get Firebird API handler (sockets/native/embeded/etc)
+     * @return handler object for internal API calls
+     */
+    public GDS getInternalAPIHandler() {
+        return mc.getInternalAPIHandler();
     }
 
     /**

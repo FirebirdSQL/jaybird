@@ -243,6 +243,13 @@ public final class GDS_Impl implements GDS {
 
 
 
+      final static byte[] describe_database_info = new byte[] { ISCConstants.isc_info_db_sql_dialect,
+                                   ISCConstants.isc_info_isc_version,
+                                   ISCConstants.isc_info_ods_version,
+                                   ISCConstants.isc_info_ods_minor_version,
+                                   ISCConstants.isc_info_end
+                                   };
+
     public void isc_attach_database(DbAttachInfo dbai,
                                    isc_db_handle db_handle,
                                    Clumplet dpb) throws GDSException  {
@@ -274,25 +281,16 @@ public final class GDS_Impl implements GDS {
                     throw ge;
                 }
                 // read database information
-                isc_database_info(db,0,null,0,null);
+                parseAttachDatabaseInfo(isc_database_info(db,describe_database_info,1024),db);
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_net_write_err);
             }
         }
     }
 
-    final static byte[] describe_database_info = new byte[] { ISCConstants.isc_info_db_sql_dialect,
-                                 ISCConstants.isc_info_isc_version,
-                                 ISCConstants.isc_info_ods_version,
-                                 ISCConstants.isc_info_ods_minor_version,
-                                 ISCConstants.isc_info_end
-                                 };
-
-    public void isc_database_info(isc_db_handle handle,
-                                 int item_length,
+    public byte[] isc_database_info(isc_db_handle handle,
                                  byte[] items,
-                                 int buffer_length,
-                                 byte[] buffer) throws GDSException {
+                                 int buffer_length) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
         isc_db_handle_impl db = (isc_db_handle_impl) handle;
         synchronized (db){
@@ -301,47 +299,28 @@ public final class GDS_Impl implements GDS {
                 db.out.writeInt(op_info_database);
                 db.out.writeInt(db.getRdb_id());
                 db.out.writeInt(0);
-                db.out.writeBuffer(describe_database_info);
-                db.out.writeInt(1024);
+                db.out.writeBuffer(items);
+                db.out.writeInt(buffer_length);
                 db.out.flush();
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
-                parseDatabaseInfo(db,db.getResp_data(),describe_database_info);
                 if (debug) log.debug("parseSqlInfo: first 2 bytes are " + isc_vax_integer(db.getResp_data(), 0, 2) + " or: " + db.getResp_data()[0] + ", " + db.getResp_data()[1]);
+                return db.getResp_data();
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_network_error);
             } 
         }
     }
 
-    private void parseDatabaseInfo(isc_db_handle db,
-                                byte[] info,
-                                byte[] items) throws GDSException {
-                
+/**
+ * Parse database info returned after attach. This method assumes that
+ * it is not truncated.
+ * @param info information returned by isc_database_info call
+ * @param handle isc_db_handle to set connection parameters
+ * @throws GDSException if something went wrong :))
+ */
+    private void parseAttachDatabaseInfo(byte[] info, isc_db_handle handle) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
-        if (debug) log.debug("parseDatabaseInfo started");
-        
-        int lastindex = 0;
-        parseTruncDatabaseInfo(info, lastindex, db);
-        while ((lastindex = parseTruncDatabaseInfo(info, lastindex, db)) > 0) {
-            lastindex--;               // Is this OK ?
-            byte[] new_items = new byte[4 + items.length];
-            new_items[0] = ISCConstants.isc_info_sql_sqlda_start;
-            new_items[1] = 2;
-            new_items[2] = (byte) (lastindex & 255);
-            new_items[3] = (byte) (lastindex >> 8);
-            System.arraycopy(items, 0, new_items, 4, items.length);
-//            info = isc_database_info(db, 0, 
-//                                     new_items, info.length, null);
-        }
-        if (debug) log.debug("parseDatabaseInfo ended");
-    }
-
-    private int parseTruncDatabaseInfo(byte[] info,
-                                  int lastindex, isc_db_handle handle) throws GDSException {
-        boolean debug = log != null && log.isDebugEnabled();
-        byte item;
-        int index = 0;
         if (debug) log.debug("parseDatabaseInfo: first 2 bytes are " + isc_vax_integer(info, 0, 2) + " or: " + info[0] + ", " + info[1]);	  
         int value=0;
         int len=0;
@@ -361,9 +340,9 @@ public final class GDS_Impl implements GDS {
                     len = isc_vax_integer(info, i, 2);
                     i += 2;
                     if (debug) log.debug("isc_info_version len:"+len);
-                    // 
-                    byte[] vers = new byte[len];
-                    System.arraycopy(info, i, vers, 0, len);
+                    // This +/-2 offset is to skip count and version string length
+                    byte[] vers = new byte[len-2];
+                    System.arraycopy(info, i+2, vers, 0, len-2);
                     String versS = new String(vers);
                     i += len;
                     db.setVersion(versS);
@@ -387,13 +366,11 @@ public final class GDS_Impl implements GDS {
                     break;
                 case ISCConstants.isc_info_truncated:
                     if (debug) log.debug("isc_info_truncated ");
-                    return lastindex;
+                    return;
                 default:
                     throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
             }
-            lastindex = index;
         }
-        return 0;
     }
 	 
     public void isc_detach_database(isc_db_handle db_handle) throws GDSException {
