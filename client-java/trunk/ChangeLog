@@ -1,3 +1,44 @@
+2003-08-21 21:02  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	FBPreparedStatement.java, FBStatement.java:
+	
+	fixed incorrect behavior in getUpdateCount()
+
+2003-08-21 00:28  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	FBConnectionPoolDataSource.java, FBWrappingDataSource.java:
+	
+	made data sources serializable and referencable
+
+2003-08-21 00:06  rrokytskyy
+
+	*
+	
+	significant refactoring to make connection pools consistent
+	introduced idle remover test case
+	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
+	ource.java:
+
+2003-08-21 00:04  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/ngds/TestNgds.java:
+	
+	switched to single GDS type class
+
+2003-08-21 00:03  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestReconnect.java:
+	
+	fixed possible NPE due to changes in logging subsystem
+
+2003-08-21 00:03  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jgds/TestGds.java:
+	
+	organized imports
+
 2003-08-21 00:02  rrokytskyy
 
 	*
