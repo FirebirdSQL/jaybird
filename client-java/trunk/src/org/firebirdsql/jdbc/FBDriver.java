@@ -25,6 +25,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.3  2001/08/28 17:13:23  d_jencks
+ * Improved formatting slightly, removed dos cr's
+ *
  * Revision 1.2  2001/07/13 18:16:15  d_jencks
  * Implementation of jdbc 1.0 Driver contributed by Roman Rokytskyy
  *
@@ -42,16 +45,18 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
-import java.sql.Driver;
+
+
 
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
-
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
 import javax.security.auth.Subject;
 import org.firebirdsql.jca.*;
-
-import java.util.Vector;
 
 /**
  *
@@ -98,6 +103,8 @@ public class FBDriver implements Driver {
      */
     private Subject subject = null;
 
+    private Map urlToDataSourceMap = new HashMap();
+
     static{
         try{
             java.sql.DriverManager.registerDriver(new FBDriver());
@@ -134,6 +141,11 @@ public class FBDriver implements Driver {
     public Connection connect(String url, java.util.Properties info)
         throws SQLException
     {
+        if (url == null || !url.startsWith(FIREBIRD_PROTOCOL)) 
+        {
+            return null;
+        } // end of if ()
+        
         try {
             // extract the user
             String user = info.getProperty(USER);
@@ -149,25 +161,17 @@ public class FBDriver implements Driver {
 
             // extract the database URL
             String databaseURL = url.substring(FIREBIRD_PROTOCOL.length());
+            FBDataSource dataSource = (FBDataSource)urlToDataSourceMap.get(databaseURL);
+            if (dataSource == null) 
+            {
+                FBManagedConnectionFactory factory = new FBManagedConnectionFactory();
+                factory.setDatabase(databaseURL);
+                dataSource = (FBDataSource)factory.createConnectionFactory();
+                urlToDataSourceMap.put(databaseURL, dataSource);
+            } // end of if ()
+            
 
-            // use the managed connection factory
-            FBManagedConnectionFactory factory = new FBManagedConnectionFactory();
-            factory.setDatabase(databaseURL);
-
-            // prepare the connection parameters
-            FBConnectionRequestInfo connectionInfo =
-                factory.getDefaultConnectionRequestInfo();
-            connectionInfo.setUser(user);
-            connectionInfo.setPassword(password);
-
-            // obtain the managed connection
-            FBManagedConnection mc = (FBManagedConnection)
-                factory.createManagedConnection(subject, connectionInfo);
-
-            // wrap the managed connection into the java.sql.Connection.
-            FBUnmanagedConnection connection = new FBUnmanagedConnection(mc);
-
-            return connection;
+            return dataSource.getConnection(user, password);
         } catch(javax.resource.ResourceException resex) {
             throw new SQLException(resex.toString());
         }

@@ -3276,7 +3276,6 @@ public class FBResultSet implements ResultSet {
                     rows.add(row);
                 } while  (row != null);
                 rows.add(null);
-  
                 mc.closeStatement(stmt, false);
             }
             catch (GDSException ge) {

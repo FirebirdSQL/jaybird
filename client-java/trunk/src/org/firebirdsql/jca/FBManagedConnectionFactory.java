@@ -123,9 +123,10 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     }
 
     public void setConnectionRequestInfo(FBConnectionRequestInfo cri) {
-        this.defaultCri = cri;
+        this.defaultCri = new FBConnectionRequestInfo(cri);
     }
 
+    //returning our internal state may not be a good idea!
     public FBConnectionRequestInfo getDefaultConnectionRequestInfo() {
         return defaultCri;
     }

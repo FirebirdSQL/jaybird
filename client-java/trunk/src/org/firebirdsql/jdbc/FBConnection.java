@@ -26,24 +26,27 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
+
+
+
+
+//import javax.resource.cci.Connection;--can't import, two classes with same name.
+import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.sql.Savepoint;
 import java.sql.Statement;
-
+import java.util.HashMap;
+import javax.resource.ResourceException;
 import javax.resource.cci.LocalTransaction;
-
 import org.firebirdsql.gds.GDS;
-
 import org.firebirdsql.jca.FBLocalTransaction;
 import org.firebirdsql.jca.FBManagedConnection;
-
-//import javax.resource.cci.Connection;--can't import, two classes with same name.
-import java.sql.Savepoint;
-import java.sql.Blob;
+import java.util.Map;
 
 
 
@@ -78,6 +81,15 @@ import java.sql.Blob;
  * Methods that are new in the JDBC 2.0 API are tagged @since 1.2.
  */
 public class FBConnection implements Connection/*, javax.resource.cci.Connection*/ {
+    //flag that is set to true when a transaction is started automatically,
+    //so the transaction may be committed automatically after a 
+    //statement is executed.
+    private boolean autoTransaction = false;
+
+    //Autocommit flag.  This should be left true if you are using Local or 
+    //XATransactions and want to execute statements outside a transaction.
+    //Set it false only if you use the Connection.commit and rollback methods.
+    private boolean autoCommit = true;
 
     FBManagedConnection mc;
 
@@ -306,7 +318,8 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * auto-commit.
      * @exception SQLException if a database access error occurs
      */
-    public void setAutoCommit(boolean autoCommit) throws SQLException {
+    public void setAutoCommit(boolean autoCommit) {
+        this.autoCommit = autoCommit;
     }
 
 
@@ -317,8 +330,8 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      * @see #setAutoCommit
      */
-    public boolean getAutoCommit() throws SQLException {
-        return false;
+    public boolean getAutoCommit() {
+        return autoCommit;
     }
 
 
@@ -332,6 +345,17 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @see #setAutoCommit
      */
     public void commit() throws SQLException {
+        if (getAutoCommit()) 
+        {
+            throw new SQLException("commit called with AutoCommit true!");   
+        } // end of if ()
+        
+        try {
+            getLocalTransaction().commit();
+            //getLocalTransaction().begin();
+        } catch(javax.resource.ResourceException resex) {
+            throw new SQLException(resex.toString());
+        }
     }
 
 
@@ -345,6 +369,18 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @see #setAutoCommit
      */
     public void rollback() throws SQLException {
+        if (getAutoCommit()) 
+        {
+            throw new SQLException("rollback called with AutoCommit true!");   
+        } // end of if ()
+        if (isClosed())
+            throw new SQLException("You cannot rollback closed connection.");
+        try{
+            getLocalTransaction().rollback();
+            //getLocalTransaction().begin();
+        } catch(javax.resource.ResourceException resex) {
+            throw new SQLException(resex.toString());
+        }
     }
 
 
@@ -356,6 +392,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public void rollback(Savepoint param1) throws SQLException {
         // TODO: implement this java.sql.Connection method
+        throw new SQLException("Rollback to savepoint not yet implemented!");
     }
 
     /**
@@ -660,9 +697,8 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public java.util.Map getTypeMap() throws SQLException {
-        throw new SQLException("Not yet implemented");
-
+    public Map getTypeMap() throws SQLException {
+        return new HashMap();
     }
 
 
@@ -773,6 +809,47 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
     String getUserName() {
         return mc.getUserName();
     }
+
+    /**
+     * The <code>ensureInTransaction</code> method starts a local transaction
+     * if a transaction is not associated with this connection.
+     *
+     * @return a <code>boolean</code> value, true if transaction was started.
+     */
+    void ensureInTransaction() throws ResourceException
+    {
+        if (inTransaction()) 
+        {
+            autoTransaction = false;
+            return;        
+        } // end of if ()
+        //We have to start out own transaction
+        getLocalTransaction().begin();
+        autoTransaction = true;
+    }
+
+    boolean willEndTransaction()
+    {
+        return getAutoCommit() && autoTransaction;
+    }
+
+    void checkEndTransaction() throws SQLException
+    {
+        if (willEndTransaction()) 
+        {
+            autoTransaction = false; 
+            try   
+            {
+                getLocalTransaction().commit();
+            }
+            catch (ResourceException re) 
+            {
+                throw new SQLException("Error during autocommit: " + re);   
+            } // end of catch
+            
+        } // end of if ()
+    }    
+        
 
 }
 

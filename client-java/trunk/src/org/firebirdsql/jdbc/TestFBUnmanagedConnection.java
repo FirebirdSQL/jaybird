@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.4  2001/08/28 17:13:23  d_jencks
+ * Improved formatting slightly, removed dos cr's
+ *
  * Revision 1.3  2001/07/18 20:07:31  d_jencks
  * Added better GDSExceptions, new NativeSQL, and CallableStatement test from Roman Rokytskyy
  *
@@ -101,11 +104,25 @@ public class TestFBUnmanagedConnection extends TestCase {
             java.sql.DriverManager.getConnection(TestConst.DB_URL, TestConst.DB_INFO);
     }
     protected void tearDown() throws Exception {
+        try 
+        {
+            if (!connection.getAutoCommit()) 
+            {
+                connection.commit();
+            } // end of if ()
+        } catch (Exception e) 
+        {
+            //these messages are too annoying.
+            //System.out.println("Possible problem committing before close of connection-- possibly not a problem");
+            // e.printStackTrace();
+        } // end of try-catch
+
         connection.close();
     }
 
     public void testCommit() throws Exception {
         try{
+            connection.setAutoCommit(false);
             Statement statement = connection.createStatement();
             try {
                statement.execute(DROP_TEST_TABLE);
@@ -137,11 +154,11 @@ public class TestFBUnmanagedConnection extends TestCase {
         assertTrue("Statement is null", statement != null);
     }
 
-    public void xtestGetAutoCommit() throws Exception {
+    public void testGetAutoCommit() throws Exception {
         connection.setAutoCommit(true);
         assertTrue("AutoCommit is false", connection.getAutoCommit());
         connection.setAutoCommit(false);
-        assertTrue("AutoCommit is false", !connection.getAutoCommit());
+        assertTrue("AutoCommit is true", !connection.getAutoCommit());
     }
 
     public void testGetMetaData() throws Exception {
@@ -159,7 +176,4 @@ public class TestFBUnmanagedConnection extends TestCase {
         assertTrue("NativeSQL is null", nativeSQL != null);
     }
 
-    public void xtestSetAutoCommit() throws Exception {
-        xtestGetAutoCommit();
-    }
 }

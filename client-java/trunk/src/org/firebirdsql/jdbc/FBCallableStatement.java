@@ -26,26 +26,27 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
+
+import java.io.InputStream;
+import java.io.Reader;
 import java.math.BigDecimal;
-import java.util.Calendar;
-import java.sql.CallableStatement;
-import java.sql.SQLException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
+import java.sql.CallableStatement;
 import java.sql.Clob;
+import java.sql.Date;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-
-import org.firebirdsql.jca.FBManagedConnection;
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.io.InputStream;
-import java.sql.Timestamp;
+import java.sql.SQLException;
 import java.sql.Time;
-import java.sql.Date;
-import java.io.Reader;
+import java.sql.Timestamp;
+import java.util.Calendar;
 import java.util.Map;
+import javax.resource.ResourceException;
+import org.firebirdsql.jca.FBManagedConnection;
 
 
 
@@ -118,7 +119,24 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @see Statement#execute
      */
     public boolean execute() throws  SQLException {
-        return execute(true);
+        try 
+        {
+            c.ensureInTransaction();
+            boolean hasResultSet = internalExecute(true);
+            if (hasResultSet && c.willEndTransaction()) 
+            {
+                getCachedResultSet(false);   
+            } // end of if ()
+            return hasResultSet;
+        }
+        catch (ResourceException re) 
+        {
+            throw new SQLException("ResourceException: " + re);
+        } // end of try-catch
+        finally 
+        {
+            c.checkEndTransaction();
+        } // end of finally
     }
 
     /**
@@ -1289,6 +1307,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
             throw new SQLException("Current statement has not data to return.");
     }
 
+    //this method doesn't give an exception if it is called twice.
     private ResultSet getCurrentResultSet() throws SQLException {
         if (currentRs == null)
             currentRs = getResultSet();

@@ -26,15 +26,16 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
-import java.sql.Statement;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-
-import org.firebirdsql.jca.FBManagedConnection;
+import java.sql.Statement;
+import javax.resource.ResourceException;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.jca.FBManagedConnection;
 
 /**
  *
@@ -64,9 +65,14 @@ public class FBStatement implements Statement {
     protected FBConnection c;
     protected FBManagedConnection mc;
 
-    protected isc_stmt_handle fixedStmt = null;
+    protected isc_stmt_handle fixedStmt;
 
-    private FBResultSet currentRs = null;
+    //The normally retrieved resultset. (no autocommit, not a cached rs).
+    private FBResultSet currentRs;
+
+    //Holds a result set from an execute call using autocommit. 
+    //This is a cached result set and is used to allow a call to getResultSet()
+    private ResultSet currentCachedResultSet;
 
     FBStatement(FBConnection c) {
         this.c = c;
@@ -82,10 +88,36 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public ResultSet executeQuery(String sql) throws  SQLException {
-        if (!execute(sql)) {
-            throw new SQLException("query did not return a result set: " + sql);
+        try 
+        {
+            c.ensureInTransaction();
+            if (!internalExecute(sql)) {
+                throw new SQLException("query did not return a result set: " + sql);
+            }
+            if (c.willEndTransaction()) 
+            {
+                ResultSet rs = getCachedResultSet(false);
+                //autocommits.
+                return rs;       
+            } // end of if ()
+            else 
+            {
+                return getResultSet();
+            } // end of else
         }
-        return getResultSet();
+        catch (ResourceException re) 
+        {
+            throw new SQLException("ResourceException: " + re);
+        } // end of try-catch
+        catch (GDSException ge) 
+        {
+            throw new SQLException("GDSException: " + ge);
+        } // end of try-catch
+        finally 
+        {
+            c.checkEndTransaction();
+        } // end of finally
+
     }
 
 
@@ -102,10 +134,26 @@ public class FBStatement implements Statement {
      * @exception SQLException if a database access error occurs
      */
     public int executeUpdate(String sql) throws  SQLException {
-        if (execute(sql)) {
-            throw new SQLException("update statement returned results!");
+        try 
+        {
+            c.ensureInTransaction();
+            if (internalExecute(sql)) {
+                throw new SQLException("update statement returned results!");
+            }
+            return getUpdateCount();
         }
-        return getUpdateCount();
+        catch (ResourceException re) 
+        {
+            throw new SQLException("ResourceException: " + re);
+        } // end of try-catch
+        catch (GDSException ge) 
+        {
+            throw new SQLException("GDSException: " + ge);
+        } // end of try-catch
+        finally 
+        {
+            c.checkEndTransaction();
+        } // end of finally
     }
 
     /**
@@ -160,6 +208,7 @@ public class FBStatement implements Statement {
     public void close() throws  SQLException {
         if (fixedStmt != null) {
             try {
+                //may need ensureTransaction?
                 mc.closeStatement(fixedStmt, true);
             }
             catch (GDSException ge) {
@@ -168,6 +217,7 @@ public class FBStatement implements Statement {
             finally {
                 fixedStmt = null;
                 currentRs = null;
+                currentCachedResultSet = null;
             }
         }
     }
@@ -383,17 +433,26 @@ public class FBStatement implements Statement {
      */
     public boolean execute(String sql) throws  SQLException {
         try {
-            closeResultSet();
-            if (fixedStmt == null) {
-                fixedStmt = mc.getAllocatedStatement();
-            }
-            mc.prepareSQL(fixedStmt, c.nativeSQL(sql), false);
-            mc.executeStatement(fixedStmt, false);
-            return (fixedStmt.getOutSqlda().sqld > 0);
+            c.ensureInTransaction();
+            boolean hasResultSet = internalExecute(sql);
+            if (hasResultSet && c.willEndTransaction()) 
+            {
+                getCachedResultSet(false);
+            } // end of if ()
+            return hasResultSet;
         }
-        catch (GDSException ge) {
-            throw new SQLException("GDS exception: " + ge.toString());
-        }
+        catch (ResourceException re) 
+        {
+            throw new SQLException("ResourceException: " + re);
+        } // end of try-catch
+        catch (GDSException ge) 
+        {
+            throw new SQLException("GDSException: " + ge);
+        } // end of try-catch
+        finally 
+        {
+            c.checkEndTransaction();
+        } // end of finally
     }
 
     /**
@@ -436,6 +495,8 @@ public class FBStatement implements Statement {
     /**
      *  Returns the current result as a <code>ResultSet</code> object.
      *  This method should be called only once per result.
+     * Calling this method twice with autocommit on and used will probably
+     * throw an inappropriate or uninformative exception.
      *
      * @return the current result as a <code>ResultSet</code> object;
      * <code>null</code> if the result is an update count or there are no more results
@@ -449,8 +510,17 @@ public class FBStatement implements Statement {
         if (fixedStmt == null) {
             throw new SQLException("No statement just executed");
         }
-        currentRs = new FBResultSet(mc, this, fixedStmt);
-        return currentRs;
+        if (currentCachedResultSet != null) 
+        {
+            ResultSet rs = currentCachedResultSet;
+            currentCachedResultSet = null;
+            return rs;    
+        } // end of if ()
+        else 
+        {
+            currentRs = new FBResultSet(mc, this, fixedStmt);
+            return currentRs;
+        } // end of else
     }
 
     ResultSet getCachedResultSet(boolean trimStrings) throws SQLException {
@@ -460,7 +530,8 @@ public class FBStatement implements Statement {
         if (fixedStmt == null) {
             throw new SQLException("No statement just executed");
         }
-        return new FBResultSet(mc, fixedStmt, trimStrings);
+        currentCachedResultSet = new FBResultSet(mc, fixedStmt, trimStrings);
+        return currentCachedResultSet;
     }
 
 
@@ -477,12 +548,12 @@ public class FBStatement implements Statement {
     public int getUpdateCount() throws  SQLException {
         try {
             FBManagedConnection.SqlInfo i = mc.getSqlInfo(fixedStmt);
-System.out.println("InsertCount: " + i.getInsertCount());
-System.out.println("UpdateCount: " + i.getUpdateCount());
-System.out.println("DeleteCount: " + i.getDeleteCount());
+            /*System.out.println("InsertCount: " + i.getInsertCount());
+              System.out.println("UpdateCount: " + i.getUpdateCount());
+              System.out.println("DeleteCount: " + i.getDeleteCount());
 
-System.out.println("returning: " + Math.max(i.getInsertCount(), Math.max(i.getUpdateCount(), i.getDeleteCount())));
-
+              System.out.println("returning: " + Math.max(i.getInsertCount(), Math.max(i.getUpdateCount(), i.getDeleteCount())));
+            */
             return Math.max(i.getInsertCount(), Math.max(i.getUpdateCount(), i.getDeleteCount()));
         }
         catch (GDSException ge) {
@@ -765,6 +836,7 @@ System.out.println("returning: " + Math.max(i.getInsertCount(), Math.max(i.getUp
     //package level
 
     void closeResultSet() throws SQLException {
+        currentCachedResultSet = null;
         if (currentRs != null) {
             try {
                 mc.closeStatement(fixedStmt, false);
@@ -781,6 +853,16 @@ System.out.println("returning: " + Math.max(i.getInsertCount(), Math.max(i.getUp
         if (fixedStmt != null) {
             fixedStmt.clearRows();
         }
+    }
+
+    protected boolean internalExecute(String sql) throws GDSException, SQLException {
+        closeResultSet();
+        if (fixedStmt == null) {
+            fixedStmt = mc.getAllocatedStatement();
+        }
+        mc.prepareSQL(fixedStmt, c.nativeSQL(sql), false);
+        mc.executeStatement(fixedStmt, false);
+        return (fixedStmt.getOutSqlda().sqld > 0);
     }
 
 }

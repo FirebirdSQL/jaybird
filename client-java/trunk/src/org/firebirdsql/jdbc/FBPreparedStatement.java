@@ -27,26 +27,27 @@ package org.firebirdsql.jdbc;
 
 // imports --------------------------------------
 
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.jca.FBManagedConnection;
-import java.math.BigDecimal;
-import java.util.Calendar;
 
-import java.sql.PreparedStatement;
+import java.io.ByteArrayInputStream;
+import java.math.BigDecimal;
+import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.DataTruncation;
+import java.sql.ParameterMetaData;
+import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.sql.ParameterMetaData;
-import java.net.URL;
-import java.io.ByteArrayInputStream;
-import java.sql.DataTruncation;
+import java.util.Calendar;
+import javax.resource.ResourceException;
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jca.FBManagedConnection;
 
 /**
  *
@@ -89,15 +90,21 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     FBPreparedStatement(FBConnection c, String sql) throws SQLException {
         super(c);
         try {
+            c.ensureInTransaction();
             if (fixedStmt == null) {
                 fixedStmt = mc.getAllocatedStatement();
             }
             mc.prepareSQL(fixedStmt, c.nativeSQL(sql), true);
+            c.checkEndTransaction();
         }
-        catch (GDSException ge) {
-            throw new SQLException("GDS exception: " + ge.toString());
-        }
-
+        catch (ResourceException re) 
+        {
+            throw new SQLException("ResourceException: " + re);
+        } // end of try-catch
+        catch (GDSException ge) 
+        {
+            throw new SQLException("GDSException: " + ge);
+        } // end of try-catch
     }
 
     /**
@@ -109,10 +116,30 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public ResultSet executeQuery() throws  SQLException {
-        if (!execute()) {
-            throw new SQLException("No resultset for sql");
+        try 
+        {
+            c.ensureInTransaction();
+            if (!internalExecute(false)) 
+            {
+                throw new SQLException("No resultset for sql");
+            }
+            if (c.willEndTransaction()) 
+            {
+                return getCachedResultSet(false);
+            } // end of if ()
+            else 
+            {
+                return getResultSet();
+            } // end of else
         }
-        return getResultSet();
+        catch (ResourceException re) 
+        {
+            throw new SQLException("ResourceException: " + re);
+        } // end of try-catch
+        finally 
+        {
+            c.checkEndTransaction();
+        } // end of finally
     }
 
 
@@ -128,10 +155,22 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public int executeUpdate() throws  SQLException {
-        if (execute()) {
-            throw new SQLException("update statement returned results!");
+        try 
+        {
+            c.ensureInTransaction();
+            if (internalExecute(false)) {
+                throw new SQLException("update statement returned results!");
+            }
+            return getUpdateCount();
         }
-        return getUpdateCount();
+        catch (ResourceException re) 
+        {
+            throw new SQLException("ResourceException: " + re);
+        } // end of try-catch
+        finally 
+        {
+            c.checkEndTransaction();
+        } // end of finally
     }
 
 
@@ -820,10 +859,27 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see Statement#execute
      */
     public boolean execute() throws  SQLException {
-        return execute(false);
+        try 
+        {
+            c.ensureInTransaction();
+            boolean hasResultSet = internalExecute(false);
+            if (hasResultSet && c.willEndTransaction()) 
+            {
+                getCachedResultSet(false);   
+            } // end of if ()
+            return hasResultSet;
+        }
+        catch (ResourceException re) 
+        {
+            throw new SQLException("ResourceException: " + re);
+        } // end of try-catch
+        finally 
+        {
+            c.checkEndTransaction();
+        } // end of finally
     }
 
-    protected boolean execute(boolean sendOutParams) throws  SQLException {
+    protected boolean internalExecute(boolean sendOutParams) throws  SQLException {
         try {
             closeResultSet();
             mc.executeStatement(fixedStmt, sendOutParams);
