@@ -92,6 +92,8 @@ public final class XdrInputStream {
                 readFully(buffer,0,-len);
             }
             else {
+                // len is incremented to avoid value 0 so it must be decremented					
+                len --;
                 buffer = new byte[len];
                 readFully(buffer,0,len);
                 readFully(pad,0,(4 - len) & 3);
