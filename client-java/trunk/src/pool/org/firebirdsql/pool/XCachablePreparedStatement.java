@@ -24,11 +24,11 @@ import java.sql.SQLException;
 
 /**
  * This interface defines a cachable prepared statement. It should be used
- * internally only.
+ * internally only and therefore has package visibility.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public interface XCachablePreparedStatement extends PreparedStatement {
+interface XCachablePreparedStatement extends PreparedStatement {
     
     /**
      * Set associated connection.
@@ -50,4 +50,13 @@ public interface XCachablePreparedStatement extends PreparedStatement {
      * exception.
      */
     void forceClose() throws SQLException;
+    
+    /**
+     * Get original prepared statement being cached. This method should be used
+     * only to test correctness by comparing wrapped instances. Should not be
+     * used for any other purposes.
+     * 
+     * @return wrapped prepared statement.
+     */
+    PreparedStatement getOriginal();
 }
