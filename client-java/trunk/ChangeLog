@@ -1,3 +1,10 @@
+2004-07-21 21:21  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/jdbc/FBResultSet.java,
+	test/org/firebirdsql/jdbc/TestMultithreadedAccess.java:
+	
+	fixed bug with blobs and scrollable cursors
+
 2004-07-19 16:03  rrokytskyy
 
 	* client-java/src/: main/org/firebirdsql/gds/XSQLVAR.java,
