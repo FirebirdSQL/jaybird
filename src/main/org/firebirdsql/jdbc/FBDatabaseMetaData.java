@@ -705,8 +705,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getStringFunctions() throws SQLException {
-        return "SUBSTRING";
-        //throw new SQLException("Not yet implemented");
+        return "SUBSTRING,UCASE,CONCAT";
     }
 
 
@@ -731,8 +730,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getTimeDateFunctions() throws SQLException {
-        return "NOT,YET,IMPLEMENTED";
-        //throw new SQLException("Not yet implemented");
+        return "CURDATE,CURTIME,DAYOFYEAR,HOUR,MINUTE,MONTH,NOW,SECOND,YEAR";
     }
 
 
