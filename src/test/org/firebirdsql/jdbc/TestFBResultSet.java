@@ -37,7 +37,11 @@ public class TestFBResultSet extends FBTestBase {
         ;
         
     public static final String CREATE_TABLE_STATEMENT = ""
-        + "CREATE TABLE test_table(id INTEGER, str VARCHAR(10))"
+        + "CREATE TABLE test_table(" 
+        + "  id INTEGER, " 
+        + "  str VARCHAR(10), " 
+        + "  long_str VARCHAR(255)" 
+        + ")"
         ;
         
     public static final String DROP_TABLE_STATEMENT = ""
@@ -58,13 +62,28 @@ public class TestFBResultSet extends FBTestBase {
     public static final String DROP_VIEW_STATEMENT = ""
         + "DROP VIEW test_empty_string_view"
         ;
-        
+
+    public static final String CREATE_SUBSTR_FUNCTION = ""
+        + "DECLARE EXTERNAL FUNCTION substr " 
+        + "  CSTRING(80), SMALLINT, SMALLINT "
+        + "RETURNS CSTRING(80) FREE_IT " 
+        + "ENTRY_POINT 'IB_UDF_substr' MODULE_NAME 'ib_udf'"
+        ;
+    
+    public static final String DROP_SUBSTR_FUNCTION = ""
+        + "DROP EXTERNAL FUNCTION substr"
+        ;
+    
     public static final String SELECT_FROM_VIEW_STATEMENT = ""
         + "SELECT * FROM test_empty_string_view"
         ;
     
     public static final String INSERT_INTO_TABLE_STATEMENT = ""
-        + "INSERT INTO test_table VALUES(?, ?)"
+        + "INSERT INTO test_table (id, str) VALUES(?, ?)"
+        ;
+    
+    public static final String INSERT_LONG_STR_STATEMENT = ""
+        + "INSERT INTO test_table (id, long_str) VALUES(?, ?)"
         ;
         
     public static final String CURSOR_NAME = "some_cursor";
@@ -90,19 +109,26 @@ public class TestFBResultSet extends FBTestBase {
         
         try {
             try {
-                stmt.executeUpdate(DROP_VIEW_STATEMENT);
+                stmt.execute(DROP_VIEW_STATEMENT);
             } catch (SQLException ex) {
                 // do nothing here
             }
             
             try {
-                stmt.executeUpdate(DROP_TABLE_STATEMENT);
+                stmt.execute(DROP_TABLE_STATEMENT);
             } catch (SQLException ex) {
                 // do nothing here
             }
             
-            stmt.executeUpdate(CREATE_TABLE_STATEMENT);
-            stmt.executeUpdate(CREATE_VIEW_STATEMENT);
+            try {
+                stmt.execute(DROP_SUBSTR_FUNCTION);
+            } catch(SQLException ex) {
+                // do nothing here
+            }
+            
+            stmt.execute(CREATE_TABLE_STATEMENT);
+            stmt.execute(CREATE_VIEW_STATEMENT);
+            stmt.execute(CREATE_SUBSTR_FUNCTION);
         } finally {
             stmt.close();
         }
@@ -408,6 +434,66 @@ public class TestFBResultSet extends FBTestBase {
                 // everything is fine
             }
             assertTrue("ResultSet.next() should return false.", !rs.next());
+            
+        } finally {
+            stmt.close();
+        }
+    }
+    
+    /**
+     * This test case tries to reproduce a NPE reported in Firebird-Java group
+     * by vmdd_tech after JayBird 1.5 beta 1 release.
+     *  
+     * @throws Exception if something goes wrong.
+     */
+    public void testBugReport1() throws Exception {
+        PreparedStatement insertStmt = 
+            connection.prepareStatement(INSERT_LONG_STR_STATEMENT);
+        try {
+            insertStmt.setInt(1, 1);
+            insertStmt.setString(2, "aaa");
+            
+            insertStmt.execute();
+            
+            insertStmt.setInt(1, 2);
+            insertStmt.setString(2, "'more than 80 chars are in " +
+                    "hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" +
+                    "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+            
+            insertStmt.execute();
+            
+            insertStmt.setInt(1, 3);
+            insertStmt.setString(2, "more than 80 chars are in " +
+                    "hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" +
+                    "eeeeeeeeeeeeeeeeee");
+            
+            insertStmt.execute();
+        } finally {
+            insertStmt.close();
+        }
+        
+        Statement stmt = connection.createStatement();
+        try {
+            String query = "SELECT id, long_str FROM test_table";
+            ResultSet rs;
+            
+            try {
+                rs = stmt.executeQuery(query);
+                assertTrue("Should have at least one row", rs.next());
+                rs.close();
+            } catch(SQLException ex) {
+                // it is ok as well, since substr is declared as CSTRING(80)
+                // and truncation error happens
+            }
+
+            try  {
+                rs = stmt.executeQuery(query);
+                assertTrue("Should have at least one row", rs.next());
+                rs.close();
+            } catch(SQLException ex) {
+                // it is ok as well, since substr is declared as CSTRING(80)
+                // and truncation error happens
+            }
             
         } finally {
             stmt.close();
