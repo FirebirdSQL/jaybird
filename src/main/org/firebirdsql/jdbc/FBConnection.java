@@ -496,18 +496,6 @@ public class FBConnection implements Connection, FirebirdConnection
         }
     }
 
-
-
-    /**
-     * jdbc 3
-     * @param param1 <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public synchronized void rollback(Savepoint param1) throws SQLException {
-        // TODO: implement this java.sql.Connection method
-        throw new SQLException("Rollback to savepoint not yet implemented!");
-    }
-
     /**
      * Releases a Connection's database and JDBC resources
      * immediately instead of waiting for
@@ -887,39 +875,143 @@ public class FBConnection implements Connection, FirebirdConnection
         throw new SQLException("Not yet implemented");
     }
 
+    
+    /*
+     * Savepoint stuff.  
+     */
+    
+    private int savepointCounter = 0;
+
+    private int getNextSavepointCounter() {
+        return savepointCounter++;
+    }
+    
     /**
+     * Creates an unnamed savepoint in the current transaction and 
+     * returns the new <code>Savepoint</code> object that represents it.
      *
-     * jdbc 3
-     * @return <description>
-     * @exception java.sql.SQLException <description>
+     * @return the new <code>Savepoint</code> object
+     * @exception SQLException if a database access error occurs
+     *            or this <code>Connection</code> object is currently in
+     *            auto-commit mode
+     * @see Savepoint
      */
     public synchronized Savepoint setSavepoint() throws SQLException {
-        // TODO: implement this java.sql.Connection method
-        throw new SQLException("Not yet implemented");
+        FBSavepoint savepoint = new FBSavepoint(getNextSavepointCounter());
+        
+        setSavepoint(savepoint);
+        
+        return savepoint;
+    }
+        
+    /**
+     * Set the savepoint on the server.
+     * 
+     * @param savepoint savepoint to set.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    private void setSavepoint(FBSavepoint savepoint) throws SQLException {
+        if (getAutoCommit())
+            throw new SQLException("Connection.setSavepoint() method cannot " + 
+                "be used in auto-commit mode.");
 
+        try {
+            mc.executeImmediate("SAVEPOINT " + savepoint.getServerSavepointId());
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
+        }
     }
 
     /**
+     * Creates a savepoint with the given name in the current transaction
+     * and returns the new <code>Savepoint</code> object that represents it.
      *
-     * jdbc 3
-     * @param param1 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
+     * @param name a <code>String</code> containing the name of the savepoint
+     * @return the new <code>Savepoint</code> object
+     * @exception SQLException if a database access error occurs
+     *            or this <code>Connection</code> object is currently in
+     *            auto-commit mode
+     * @see Savepoint
      */
-    public synchronized Savepoint setSavepoint(String param1) throws SQLException {
-        // TODO: implement this java.sql.Connection method
-        throw new SQLException("Not yet implemented");
-
+    public synchronized Savepoint setSavepoint(String name) throws SQLException {
+        FBSavepoint savepoint = new FBSavepoint(name);
+        
+        setSavepoint(savepoint);
+        
+        return savepoint;
+    }
+    
+    /**
+     * Undoes all changes made after the given <code>Savepoint</code> object
+     * was set. 
+     * <P>
+     * This method should be used only when auto-commit has been disabled.
+     *
+     * @param savepoint the <code>Savepoint</code> object to roll back to
+     * @exception SQLException if a database access error occurs,
+     *            the <code>Savepoint</code> object is no longer valid,
+     *            or this <code>Connection</code> object is currently in
+     *            auto-commit mode
+     * @see Savepoint
+     * @see #rollback
+     */
+    public synchronized void rollback(Savepoint savepoint) throws SQLException {
+        
+        if (getAutoCommit())
+            throw new SQLException("Connection.setSavepoint() method cannot " + 
+                "be used in auto-commit mode.");
+        
+        if (!(savepoint instanceof FBSavepoint))
+            throw new SQLException(
+                "Specified savepoint was not obtained from this connection.");
+        
+        FBSavepoint fbSavepoint = (FBSavepoint)savepoint;
+        
+        if (!fbSavepoint.isValid())
+            throw new SQLException("Savepoint is no longer valid.");
+        
+        try {
+			mc.executeImmediate(
+				"ROLLBACK TO " + fbSavepoint.getServerSavepointId());
+		} catch (GDSException ex) {
+			throw new FBSQLException(ex);
+		}
     }
 
     /**
-     * jdbc 3
-     * @param param1 <description>
-     * @exception java.sql.SQLException <description>
+     * Removes the given <code>Savepoint</code> object from the current 
+     * transaction. Any reference to the savepoint after it have been removed 
+     * will cause an <code>SQLException</code> to be thrown.
+     *
+     * @param savepoint the <code>Savepoint</code> object to be removed
+     * @exception SQLException if a database access error occurs or
+     *            the given <code>Savepoint</code> object is not a valid 
+     *            savepoint in the current transaction
      */
-    public synchronized void releaseSavepoint(Savepoint param1) throws SQLException {
-        // TODO: implement this java.sql.Connection method
-        throw new SQLException("Not yet implemented");
+    public synchronized void releaseSavepoint(Savepoint savepoint) throws SQLException {
+        
+        if (getAutoCommit())
+            throw new SQLException("Connection.setSavepoint() method cannot " + 
+                "be used in auto-commit mode.");
+        
+        if (!(savepoint instanceof FBSavepoint))
+            throw new SQLException(
+                "Specified savepoint was not obtained from this connection.");
+        
+        FBSavepoint fbSavepoint = (FBSavepoint)savepoint;
+        
+        if (!fbSavepoint.isValid())
+            throw new SQLException("Savepoint is no longer valid.");
+
+        try {
+			mc.executeImmediate(
+			    "RELEASE SAVEPOINT " + fbSavepoint.getServerSavepointId());
+		} catch (GDSException ex) {
+			throw new FBSQLException(ex);
+		}
+            
+        fbSavepoint.invalidate();
     }
 
 

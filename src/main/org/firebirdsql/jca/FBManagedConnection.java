@@ -797,6 +797,22 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             throw ge;
         } // end of catch
     }
+    
+    public void executeImmediate(String statement) throws GDSException {
+        try {
+            mcf.gds.isc_dsql_exec_immed2(
+                getIscDBHandle(), 
+                currentTr, 
+                statement, 
+                3, 
+                null, 
+                null
+            );
+        } catch(GDSException ex) {
+            checkFatal(ex);
+            throw ex;
+        }
+    }
 
     public void fetch(isc_stmt_handle stmt, int fetchSize)
         throws GDSException

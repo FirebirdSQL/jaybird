@@ -28,6 +28,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+
+import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
 
@@ -242,7 +244,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getDriverVersion() throws SQLException {
-        return "1.1";
+        return "1.5";
     }
 
 
@@ -262,7 +264,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @return JDBC driver minor version number
      */
     public  int getDriverMinorVersion() {
-        return 1;
+        return 5;
     }
 
 
@@ -4323,15 +4325,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         ArrayList rows = new ArrayList();
 
         //BIGINT=-5
-        //Unfortunately it doesn't seem to be possible to specify INT64 as a column datatype
-        //I'm using NUMERIC(18,0) until something better is available.
-        //Note that 18 digits is too few whereas 19 is too many.
-        /*
-        rows.add(new byte[][] {getBytes("NUMERIC(18,0)"), createShort(Types.BIGINT)
-            , XSQLVAR.encodeInt(64), null, null, null,
+        rows.add(new byte[][] {getBytes("BIGINT"), createShort(Types.BIGINT)
+            , anXSQLVAR.encodeInt(64), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
-        */
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
+        
         //LONGVARBINARY=-4
         rows.add(new byte[][] {getBytes("BLOB SUB_TYPE 0"), createShort(Types.LONGVARBINARY)
             , anXSQLVAR.encodeInt(0), null, null, null,
@@ -4958,8 +4956,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public boolean supportsSavepoints() throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        return true;
     }
 
     /**
@@ -4986,8 +4983,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public boolean supportsGetGeneratedKeys() throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        return false;
     }
 
 
@@ -5000,8 +4996,46 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public ResultSet getSuperTypes(String param1, String param2, String param3) throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        XSQLVAR[] xsqlvars = new XSQLVAR[6];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlname = "TYPE_CAT";
+        xsqlvars[0].relname = "SUPERTYPES";
+
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlname = "TYPE_SCHEM";
+        xsqlvars[1].relname = "SUPERTYPES";
+
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqlname = "TYPE_NAME";
+        xsqlvars[2].relname = "SUPERTYPES";
+
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlname = "SUPERTYPE_CAT";
+        xsqlvars[3].relname = "SUPERTYPES";
+
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqlname = "SUPERTYPE_SCHEM";
+        xsqlvars[4].relname = "SUPERTYPES";
+
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqlname = "SUPERTYPE_NAME";
+        xsqlvars[5].relname = "SUPERTYPES";
+
+        ArrayList rows = new ArrayList(0);
+
+        return new FBResultSet(xsqlvars, rows);
     }
 
     /**
@@ -5013,8 +5047,36 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public ResultSet getSuperTables(String param1, String param2, String param3) throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        
+        XSQLVAR[] xsqlvars = new XSQLVAR[4];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlname = "TABLE_CAT";
+        xsqlvars[0].relname = "SUPERTABLES";
+
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlname = "TABLE_SCHEM";
+        xsqlvars[1].relname = "SUPERTABLES";
+
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqlname = "TABLE_NAME";
+        xsqlvars[2].relname = "SUPERTABLES";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlname = "SUPERTABLE_NAME";
+        xsqlvars[3].relname = "SUPERTABLES";
+
+        ArrayList rows = new ArrayList(0);
+
+        return new FBResultSet(xsqlvars, rows);
     }
 
     /**
@@ -5024,8 +5086,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public boolean supportsResultSetHoldability(int param1) throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        return false;
     }
 
     /**
@@ -5034,8 +5095,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public int getResultSetHoldability() throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        return ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
     /**
@@ -5044,8 +5104,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public int getDatabaseMajorVersion() throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        try {
+            return c.getIscDBHandle().getDatabaseProductMajorVersion();
+        } catch (GDSException e) {
+            throw new FBSQLException(e);
+        }
     }
 
     /**
@@ -5054,8 +5117,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public int getDatabaseMinorVersion() throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        try {
+            return c.getIscDBHandle().getDatabaseProductMinorVersion();
+        } catch (GDSException e) {
+            throw new FBSQLException(e);
+        }
     }
 
     /**
@@ -5064,8 +5130,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public int getJDBCMajorVersion() throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        return 2;
     }
 
     /**
@@ -5074,8 +5139,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public int getJDBCMinorVersion() throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        return 0;
     }
 
     /**
@@ -5084,8 +5148,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public int getSQLStateType() throws SQLException {
-        // TODO: implement this java.sql.DatabaseMetaData method
-        throw new SQLException("not yet supported");
+        //TODO check if this is correct
+        return sqlStateXOpen;
     }
 
     //private
