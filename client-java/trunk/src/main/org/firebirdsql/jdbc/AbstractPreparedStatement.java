@@ -517,7 +517,9 @@ public abstract class AbstractPreparedStatement extends FBStatement
         XSQLVAR[] newXsqlvar = new XSQLVAR[oldXsqlvar.length];
         for (int i = 0; i < newXsqlvar.length; i++) {
 			newXsqlvar[i] = new XSQLVAR();
+            newXsqlvar[i].copyFrom(oldXsqlvar[i]);
             
+            /*
             newXsqlvar[i].aliasname = oldXsqlvar[i].aliasname;
             newXsqlvar[i].ownname = oldXsqlvar[i].ownname;
             newXsqlvar[i].relname = oldXsqlvar[i].relname;
@@ -527,6 +529,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
             newXsqlvar[i].sqlsubtype = oldXsqlvar[i].sqlsubtype;
             newXsqlvar[i].sqltype = oldXsqlvar[i].sqltype;
             newXsqlvar[i].sqldata = oldXsqlvar[i].sqldata;
+            */
 		}
         
         batchList.add(newXsqlvar);
@@ -606,16 +609,17 @@ public abstract class AbstractPreparedStatement extends FBStatement
         boolean commit = false;
         synchronized(syncObject) {
             c.ensureInTransaction();
+            XSQLVAR[] backupVars = null;
             try {
                 while(iter.hasNext()) {
-                	XSQLVAR[] vars = (XSQLVAR[])iter.next();
+                	XSQLVAR[] data = (XSQLVAR[])iter.next();
+
+                    XSQLVAR[] vars = fixedStmt.getInSqlda().sqlvar; 
+                    for (int i = 0; i < vars.length; i++) {
+                        vars[i].copyFrom(data[i]);
+                        isParamSet[i] = true;
+                    }
                     
-                    fixedStmt.getInSqlda().sqlvar = vars;
-                    
-                    for (int i = 0; i < isParamSet.length; i++) {
-        				isParamSet[i] = true;
-        			}
-                
                     try {
                         if (internalExecute(isExecuteProcedureStatement)) 
                             throw new BatchUpdateException(toArray(results));
