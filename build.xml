@@ -21,14 +21,14 @@
 
     <property name="version.major" value="1"/>
     <property name="version.minor" value="0"/>
-    <property name="version.revision" value="0"/>
+    <property name="version.revision" value="1"/>
     <property name="version.tag" value=""/>
     <property name="version.name" value=""/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}"/>
 
     <!-- This must be set to the CVS tag for any release -->
-    <property name="version.cvstag" value="HEAD"/>
+    <property name="version.cvstag" value="Branch_1_0"/>
 
     <!-- Manifest version info -->
     <property name="specification.title" value="FirebirdSQL JayBird"/>
@@ -366,6 +366,7 @@
          <include name="org/firebirdsql/**"/>
        </fileset>
        <fileset dir="${build.resources}">
+         <exclude name="log4j.properties"/>
          <include name="*.properties"/>
        </fileset>
     </jar>
@@ -385,6 +386,7 @@
          <exclude name="**/jdbc/**"/>
        </fileset>
        <fileset dir="${build.resources}">
+         <exclude name="log4j.properties"/>
          <include name="*.properties"/>
        </fileset>
     </jar>
