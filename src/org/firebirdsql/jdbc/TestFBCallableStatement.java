@@ -77,33 +77,30 @@ public class TestFBCallableStatement extends TestCase {
         catch (Exception e) {}
 
         stmt.executeUpdate(CREATE_PROCEDURE);
-        //connection.commit();
         stmt.close();
     }
     protected void tearDown() throws Exception {
         java.sql.Statement stmt = connection.createStatement();
         stmt.executeUpdate(DROP_PROCEDURE);
         stmt.close();
-        connection.commit();
         connection.close();
     }
 
     public void testRun() throws Exception {
-        java.sql.CallableStatement stmt =
-            connection.prepareCall(EXECUTE_PROCEDURE);
+        java.sql.CallableStatement stmt = connection.prepareCall(EXECUTE_PROCEDURE);
         stmt.setInt(1, 5);
         stmt.execute();
         int ans = stmt.getInt(1);
         assertTrue("got wrong answer, expected 5: " + ans, ans == 5);
-        /*java.sql.ResultSet rs = stmt.execute();
-        boolean hasResult = false;
-        while (rs.next()) {
-            hasResult = true;
-            int result = rs.getInt(1);
-            assertTrue("Wrong result: expecting 5, received " + result, result == 5);
-            }
-        assertTrue("No result were found.", hasResult);
-        rs.close();*/
+            /*java.sql.ResultSet rs = stmt.execute();
+              boolean hasResult = false;
+              while (rs.next()) {
+              hasResult = true;
+              int result = rs.getInt(1);
+              assertTrue("Wrong result: expecting 5, received " + result, result == 5);
+              }
+              assertTrue("No result were found.", hasResult);
+              rs.close();*/
         stmt.close();
     }
     /*

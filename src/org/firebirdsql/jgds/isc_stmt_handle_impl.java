@@ -44,6 +44,7 @@ public class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_handle
     XSQLDA out_sqlda = null;
     List rows = new LinkedList();
     boolean allRowsFetched = false;
+    boolean isSingletonResult = false;
 
     public isc_stmt_handle_impl() {
     }

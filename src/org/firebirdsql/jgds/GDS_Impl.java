@@ -687,7 +687,12 @@ public class GDS_Impl implements GDS {
                     //this would be an Execute procedure
                     stmt.rows.add(receiveSqlResponse(db, out_xsqlda));
                     stmt.allRowsFetched = true;
+                    stmt.isSingletonResult = true;
                 }
+                else 
+                {
+                    stmt.isSingletonResult = false;
+                } // end of else
 
                 receiveResponse(db);
             } catch (IOException ex) {
@@ -865,6 +870,14 @@ public class GDS_Impl implements GDS {
         if (stmt_handle == null) {
             throw new GDSException(isc_bad_req_handle);
         }
+
+        //Does not seem to be possible or necessary to close
+        //an execute proceure statement.
+        if (stmt.isSingletonResult && option == DSQL_close) 
+        {
+            return;        
+        } // end of if ()
+        
 
         synchronized (db) {
             try {
