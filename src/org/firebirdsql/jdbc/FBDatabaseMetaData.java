@@ -1606,19 +1606,14 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         return false;
     }
 
-    private static final String GET_PROCEDURES_START = "select null as PROCEDURE_CAT,"
-        + " null as PROCEDURE_SCHEM,"
+    private static final String GET_PROCEDURES_START = "select "
         + " RDB$PROCEDURE_NAME as PROCEDURE_NAME,"
-        + " null as FUTURE1,"
-        + " null as FUTURE2,"
-        + " null as FUTURE3,"
         + " RDB$DESCRIPTION as REMARKS,"
-        + " RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE,"
-        + " RDB$OWNER_NAME "
+        + " RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE "
         + "from"
         + " RDB$PROCEDURES "
         + "where ";
-    private static final String GET_PROCEDURES_END = "1 = 1 order by 3";
+    private static final String GET_PROCEDURES_END = "1 = 1 order by 1";
 
     /**
      * Gets a description of the stored procedures available in a
@@ -1665,7 +1660,82 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!procedureClause.getCondition().equals("")) {
             params.add(procedureClause.getValue());
         }
-        return c.doQuery(sql, params, statements);
+        ResultSet rs = c.doQuery(sql, params, statements);
+        XSQLVAR[] xsqlvars = new XSQLVAR[8];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = -1;
+        xsqlvars[0].sqlname = "PROCEDURE_CAT";
+        xsqlvars[0].relname = "RDB$PROCEDURES";
+
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlind = -1;
+        xsqlvars[1].sqlname = "PROCEDURE_SCHEM";
+        xsqlvars[1].relname = "RDB$PROCEDURES";
+
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqlind = 0;
+        xsqlvars[2].sqlname = "PROCEDURE_NAME";
+        xsqlvars[2].relname = "RDB$PROCEDURES";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlind = -1;
+        xsqlvars[3].sqlname = "FUTURE1";
+        xsqlvars[3].relname = "RDB$PROCEDURES";
+
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqlind = -1;
+        xsqlvars[4].sqlname = "FUTURE2";
+        xsqlvars[4].relname = "RDB$PROCEDURES";
+
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqlind = -1;
+        xsqlvars[5].sqlname = "FUTURE3";
+        xsqlvars[5].relname = "RDB$PROCEDURES";
+
+        xsqlvars[6] = new XSQLVAR();
+        xsqlvars[6].sqltype = GDS.SQL_VARYING;
+        xsqlvars[6].sqllen = 80; // gets updated if there are longer remarks.
+        xsqlvars[6].sqlind = 0;
+        xsqlvars[6].sqlname = "REMARKS";
+        xsqlvars[6].relname = "RDB$PROCEDURES";
+
+        xsqlvars[7] = new XSQLVAR();
+        xsqlvars[7].sqltype = GDS.SQL_SHORT;
+        xsqlvars[7].sqlname = "PROCEDURE_TYPE";
+        xsqlvars[7].relname = "RDB$PROCEDURES";
+
+	// re-arrange data to match JDBC 2.0 spec
+        ArrayList rows = new ArrayList();
+        while (rs.next()) {
+            Object[] row = new Object[8];
+            row[0] = null;
+            row[1] = null;
+            row[2] = rs.getString("PROCEDURE_NAME").trim();
+	    row[3] = null;
+            row[4] = null;
+            row[5] = null;
+	    String remarks = rs.getString("REMARKS");
+	    row[6] = remarks;
+	    if (remarks != null && remarks.length() > xsqlvars[6].sqllen)
+		    xsqlvars[6].sqllen = remarks.length();
+            short procedureType = rs.getShort("PROCEDURE_TYPE");
+            row[7] = (procedureType == 0) ? new Short((short)procedureNoResult) : new Short((short)procedureReturnsResult);
+            rows.add(row);
+        }
+        return new FBResultSet(xsqlvars, rows);
     }
 
 
@@ -1809,9 +1879,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[5].relname = "COLUMNINFO";
 
         xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = GDS.SQL_VARYING | 1;
+        xsqlvars[6].sqltype = GDS.SQL_VARYING;
         xsqlvars[6].sqllen = 31;
-        xsqlvars[6].sqlind = -1;
         xsqlvars[6].sqlname = "TYPE_NAME";
         xsqlvars[6].relname = "COLUMNINFO";
 
@@ -1841,9 +1910,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         xsqlvars[11].relname = "COLUMNINFO";
 
         xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = GDS.SQL_VARYING | 1;
-        xsqlvars[12].sqllen = 31;
-        xsqlvars[12].sqlind = -1;
+        xsqlvars[12].sqltype = GDS.SQL_VARYING;
+        xsqlvars[12].sqllen = 80; // gets updated if we get a longer description
+        xsqlvars[12].sqlind = 0;
         xsqlvars[12].sqlname = "REMARKS";
         xsqlvars[12].relname = "COLUMNINFO";
 
@@ -1865,8 +1934,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
             row[5] = new Short((short) dataType);
 
-            row[6] = null; // fixme: should be the type name as a string
+            row[6] = getDataTypeName(fieldType, fieldSubType, fieldScale); 
 
+	    row[7] = null;
             if (dataType == java.sql.Types.DECIMAL ||
                 dataType == java.sql.Types.NUMERIC)
             {
@@ -1883,8 +1953,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[11] = (nullFlag == 1) ? new Short((short)procedureNoNulls) :
                                         new Short((short)procedureNullable);
 
-            // row[12] = rs.getString("REMARKS").trim(); // fixme, DESCRIPTION is a longvarchar (blob), and getString will barf on it.
-            row[12] = null;
+	    String remarks = rs.getString("REMARKS");
+            row[12] = remarks;
+            if (remarks != null && remarks.length() > xsqlvars[12].sqllen)
+		    xsqlvars[12].sqllen = remarks.length();
+
             rows.add(row);
         }
         return new FBResultSet(xsqlvars, rows);
