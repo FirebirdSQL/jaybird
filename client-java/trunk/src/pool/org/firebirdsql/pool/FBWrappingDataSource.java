@@ -640,7 +640,8 @@ public class FBWrappingDataSource implements DataSource,
      * that allows to reconstruct the datasource.
      */
     public Reference getDefaultReference() {
-        Reference ref = new Reference(getClass().getName());
+        Reference ref = new Reference(getClass().getName(), 
+                getClass().getName(), null);
         
         if (getBlockingTimeout() != FBPoolingDefaults.DEFAULT_BLOCKING_TIMEOUT)
             ref.add(new StringRefAddr(REF_BLOCKING_TIMEOUT, 
