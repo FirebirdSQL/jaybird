@@ -1,3 +1,38 @@
+2004-12-11 23:36  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/management/FBUser.java:
+	
+	fixed equals(Object) and added hashCode() methods
+
+2004-12-11 22:57  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/management/BackupManager.java,
+	main/org/firebirdsql/management/FBBackupManager.java,
+	test/org/firebirdsql/management/TestBackupManager.java:
+	
+	restore works
+
+2004-12-11 07:25  sjardine
+
+	* client-java/src/:
+	main/org/firebirdsql/management/BackupManager.java,
+	main/org/firebirdsql/management/DatabaseManager.java,
+	main/org/firebirdsql/management/FBBackupManager.java,
+	main/org/firebirdsql/management/FBCommandLine.java,
+	main/org/firebirdsql/management/FBDatabaseManager.java,
+	main/org/firebirdsql/management/FBServiceManager.java,
+	main/org/firebirdsql/management/FBUser.java,
+	main/org/firebirdsql/management/FBUserManager.java,
+	main/org/firebirdsql/management/ServiceManager.java,
+	main/org/firebirdsql/management/User.java,
+	main/org/firebirdsql/management/UserManager.java,
+	test/org/firebirdsql/management/TestBackupManager.java,
+	test/org/firebirdsql/management/TestUserManager.java:
+	
+	Added interfaces for the service manager API.  Completed user
+	management classes and started database management classes.
+
 2004-12-09 00:12  sjardine
 
 	* client-java/src/:
