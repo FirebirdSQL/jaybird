@@ -1,3 +1,9 @@
+2003-09-19 13:06  ryanbaldwin
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBBlobField.java:
+	
+	Applied patch supplied by Robert DiFalco to improve performance.
+
 2003-09-10 13:19  ryanbaldwin
 
 	*
