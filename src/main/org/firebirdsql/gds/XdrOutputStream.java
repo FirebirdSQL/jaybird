@@ -46,12 +46,16 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public final class XdrOutputStream {
 
+    private static final int BUF_SIZE = 32767;
+    private static final int BUF_MAX = (int)(BUF_SIZE * 0.8);
+
     private static Logger log = LoggerFactory.getLogger(XdrOutputStream.class,false);
-    private static byte[] textPad = new byte[32767];
+    private static byte[] textPad = new byte[BUF_SIZE];
     private static byte[] zero = new XSQLVAR().encodeInt(0);   // todo
     private static byte[] minusOne = new XSQLVAR().encodeInt(-1);
 
-    private byte[] buf = new byte[32767];
+    private byte[] buf = new byte[BUF_SIZE];
+
     private int count;
 
     private OutputStream out = null;
@@ -232,7 +236,7 @@ public final class XdrOutputStream {
     //
 
     public void write(byte[] b, int len, int pad) throws IOException {
-        if (len > 256){
+        if (len > 256 || count + len >= BUF_MAX){
             if (count > 0)
                 out.write(buf, 0, count);
             out.write(b, 0, len);
