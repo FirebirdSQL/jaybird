@@ -111,7 +111,13 @@ class FBFloatField extends FBField {
     public Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
+        /*
+        // Commented out by R.Rokytskyy. JDBC CTS expects
+        // java.lang.Double to be returned from this method
+        
         return new Float(field.decodeFloat(rs.row[numCol]));
+         */
+        return new Double(field.decodeFloat(rs.row[numCol]));
     }
     public boolean getBoolean() throws SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
