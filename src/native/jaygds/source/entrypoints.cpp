@@ -857,7 +857,7 @@ JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1ge
 
 		if( statusPart == isc_segstr_eof )
 			blobHandle.SetIsEndOfFile(true);
-		else
+		else if( statusPart != isc_segment )
 			{
 			blobHandle.SetIsEndOfFile(false);
 			
