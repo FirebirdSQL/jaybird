@@ -167,6 +167,8 @@ public class FBEscapedParser {
      * escaped syntax.
      */
     protected boolean checkForEscapes(String sql) {
+        sql = sql.toLowerCase();
+        
         return  sql.indexOf(CHECK_CALL_1) != -1 ||
                 sql.indexOf(CHECK_CALL_2) != -1 ||
                 sql.indexOf(CHECK_DATE) != -1 ||
