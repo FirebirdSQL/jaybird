@@ -58,6 +58,7 @@ import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.jdbc.FBDataSource;
 import org.firebirdsql.jdbc.FBStatement;
+import org.firebirdsql.jdbc.FBConnectionHelper;
 import java.util.HashSet;
 
 import org.firebirdsql.logging.Logger;
@@ -113,10 +114,9 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
 
     public FBManagedConnectionFactory() {
-        defaultCri = new FBConnectionRequestInfo();
-        defaultCri.setProperty(GDS.isc_dpb_num_buffers, new byte[] {90});
-        defaultCri.setProperty(GDS.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
+        defaultCri = FBConnectionHelper.getDefaultCri();
         
+        /*
         String charset = "ISO8859_1";
         String encoding = System.getProperty("file.encoding");
         if (encoding.equalsIgnoreCase("ISO-8859-1")) {
@@ -125,11 +125,13 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             charset = "WIN1252";
         }
         defaultCri.setProperty(GDS.isc_dpb_lc_ctype, charset);
+        */
 
         tpbSet = new HashSet();
         tpbSet.add(new Integer(GDS.isc_tpb_write));
         //tpbSet.add(new Integer(GDS.isc_tpb_read_committed));
-        //tpbSet.add(new Integer(GDS.isc_tpb_no_rec_version));
+        //tpbSet.add(new Integer(GDS.isc_tpb_rec_version));
+        tpbSet.add(new Integer(GDS.isc_tpb_concurrency));
         tpbSet.add(new Integer(GDS.isc_tpb_wait));
 
     }  //Default constructor.
