@@ -1687,9 +1687,8 @@ public class GDS_Impl implements GDS {
 //            case SQL_D_FLOAT:
 //                break;
                 case SQL_TIMESTAMP:
-                    db.out.writeLong(((java.util.Date)sqldata).getTime());
-                    //db.out.writeInt(encodeDate((java.sql.Timestamp) sqldata));
-                    //db.out.writeInt(encodeTime((java.sql.Timestamp) sqldata));
+                    db.out.writeInt(encodeDate((java.sql.Timestamp) sqldata));
+                    db.out.writeInt(encodeTime((java.sql.Timestamp) sqldata));
                     break;
                 case SQL_BLOB:
                     db.out.writeLong(((Long) sqldata).longValue());
@@ -1866,9 +1865,8 @@ public class GDS_Impl implements GDS {
 //                break;
                 case SQL_TIMESTAMP:
                     xsqlvar.sqldata = new java.sql.Timestamp(
-                        db.in.readLong());
-                    //decodeDate(db.in.readInt()).getTime() +
-                    //decodeTime(db.in.readInt()).getTime());
+                        decodeDate(db.in.readInt()).getTime() +
+                        decodeTime(db.in.readInt()).getTime());
                     break;
                 case SQL_BLOB:
                     xsqlvar.sqldata = new Long(db.in.readLong());
