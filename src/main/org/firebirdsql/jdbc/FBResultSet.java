@@ -2271,8 +2271,19 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public java.sql.Date getDate(int columnIndex, Calendar cal) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+    public java.sql.Date getDate(int columnIndex, Calendar cal)
+        throws  SQLException
+    {
+        java.sql.Date d = getDate(columnIndex);
+        if (cal == null) 
+        {
+            return d;
+        } // end of if ()
+        else
+        {
+            cal.setTime(d);
+            return new java.sql.Date(cal.getTime().getTime());    
+        } // end of else
     }
 
 
@@ -2319,8 +2330,19 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public java.sql.Time getTime(int columnIndex, Calendar cal) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+    public java.sql.Time getTime(int columnIndex, Calendar cal)
+        throws  SQLException
+    {
+        java.sql.Time d = getTime(columnIndex);
+        if (cal == null) 
+        {
+            return d;
+        } // end of if ()
+        else
+        {
+            cal.setTime(d);
+            return new java.sql.Time(cal.getTime().getTime());    
+        } // end of else
     }
 
 
@@ -2368,8 +2390,22 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public java.sql.Timestamp getTimestamp(int columnIndex, Calendar cal) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+    public java.sql.Timestamp getTimestamp(int columnIndex, Calendar cal)
+        throws  SQLException
+    {
+        java.sql.Timestamp x = getTimestamp(columnIndex);
+        //return d;
+        
+        if (cal == null) 
+        {
+            return x;
+        } // end of if ()
+        else
+        {
+            long time = x.getTime() + cal.getTimeZone().getRawOffset();
+            return new java.sql.Timestamp(time);    
+        } // end of else
+        
     }
 
 
