@@ -22,6 +22,8 @@ package org.firebirdsql.pool;
 import java.lang.reflect.*;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -92,6 +94,14 @@ class PooledConnectionHandler implements InvocationHandler {
             String.class, Integer.TYPE, Integer.TYPE
         });
         
+    private final static Method CONNECTION_CREATE_STATEMENT = findMethod(
+            Connection.class, "createStatement", new Class[0]);
+
+        private final static Method CONNECTION_CREATE_STATEMENT2 = findMethod(
+            Connection.class, "createStatement", new Class[] {
+                Integer.TYPE, Integer.TYPE
+            });
+    
     private final static Method CONNECTION_CLOSE = findMethod(
         Connection.class, "close", new Class[0]);
         
@@ -213,6 +223,18 @@ class PooledConnectionHandler implements InvocationHandler {
                     resultSetType.intValue(), 
                     resultSetConcurrency.intValue());
 			} else
+            if (method.equals(CONNECTION_CREATE_STATEMENT)){
+                return handleCreateStatement(
+                    ResultSet.TYPE_FORWARD_ONLY,
+                    ResultSet.CONCUR_READ_ONLY);
+            } else
+            if (method.equals(CONNECTION_CREATE_STATEMENT2)) {
+                Integer resultSetType = (Integer)args[0];
+                Integer resultSetConcurrency = (Integer)args[1];
+                return handleCreateStatement(
+                    resultSetType.intValue(), 
+                    resultSetConcurrency.intValue());
+            } else
 			if (method.equals(CONNECTION_COMMIT)) {
 				handleConnectionCommit();
 				return Void.TYPE;
@@ -263,6 +285,66 @@ class PooledConnectionHandler implements InvocationHandler {
             statement, resultSetType, resultSetConcurrency);
     }
     
+    private HashSet openStatements = new HashSet();
+    
+    /**
+     * Handle {@link Connection#createStatement(int, int)} method call.
+     * @param resultSetType
+     * @param resultSetConcurrency
+     * @return
+     * @throws SQLException
+     */
+    synchronized Statement handleCreateStatement(int resultSetType, 
+            int resultSetConcurrency) throws SQLException 
+    {
+        Statement result = 
+            connection.createStatement(resultSetType, resultSetConcurrency);
+        
+        StatementHandler handler = new StatementHandler(this, result);
+        openStatements.add(handler);
+        
+        return handler.getProxy();
+    }
+    
+    /**
+     * Forget about a statement. This method removes a statement from the 
+     * internal collection containing open statements. This method should be
+     * called only from a dynamic proxy intercepting {@link Statement#close()}
+     * method.
+     * 
+     * @param handler instance of {@link StatementHandler} wrapping a statement
+     * to forget.
+     */
+    public synchronized void forgetStatement(StatementHandler handler) {
+        openStatements.remove(handler);
+    }
+    
+    /**
+     * Close all open statements that were not correctly closed by the
+     * application.
+     * 
+     * @throws SQLException if some error happened during close.
+     */
+    synchronized void closeOpenStatements() throws SQLException {
+        SQLException error = null;
+        
+        for (Iterator iter = openStatements.iterator(); iter.hasNext();) {
+            StatementHandler handler = (StatementHandler) iter.next();
+            
+            try {
+                handler.getWrappedObject().close();
+            } catch(SQLException ex) {
+                if (error == null)
+                    error = ex;
+                else
+                    error.setNextException(ex);
+            }
+        }
+        
+        if (error != null)
+            throw error;
+    }
+    
     /**
      * Handle {@link Connection#close()} method. This implementation closes the
      * connection and cleans the cache.
@@ -270,13 +352,17 @@ class PooledConnectionHandler implements InvocationHandler {
      * @throws SQLException if underlying connection threw this exception.
      */
     synchronized void handleConnectionClose() throws SQLException {
-		if (owner != null) {
-			owner.connectionClosed(this);            
+        try {
+            closeOpenStatements();
+        } finally {
+    		if (owner != null) {
+    			owner.connectionClosed(this);            
+            }
+    
+    		closed = true;
+            
+    		closeStackTrace = XConnectionUtil.getStackTrace(new Exception());
         }
-
-		closed = true;
-        
-		closeStackTrace = XConnectionUtil.getStackTrace(new Exception());
 	}
     
     /**

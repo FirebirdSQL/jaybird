@@ -62,15 +62,6 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
 
     private final static Method PREPARED_STATEMENT_GET_ORIGINAL = findMethod(
         XCachablePreparedStatement.class, "getOriginal", new Class[0]);
-        
-    private final static Method PREPARED_STATEMENT_EXECUTE_QUERY_1 = findMethod(
-        PreparedStatement.class, "executeQuery", new Class[0]);
-
-    private final static Method PREPARED_STATEMENT_EXECUTE_QUERY_2 = findMethod(
-        PreparedStatement.class, "executeQuery", new Class[]{String.class});
-        
-    private final static Method PREPARED_STATEMENT_GET_RESULT_SET = findMethod(
-        PreparedStatement.class, "getResultSet", new Class[0]);
     
     private String statement;
     private PreparedStatement preparedStatement;
@@ -167,18 +158,14 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
                 Object result = method.invoke(preparedStatement, args);
                 
                 if (result instanceof ResultSet) {
-                    
+
                     ResultSetHandler handler = new ResultSetHandler(
-                        (PreparedStatement)proxy, 
-                        (ResultSet)result
-                        );
-                        
+                            (PreparedStatement) proxy, (ResultSet) result);
+
                     result = Proxy.newProxyInstance(
-                        getClass().getClassLoader(),
-                        new Class[]{ResultSet.class},
-                        handler
-                        );
-                    
+                            getClass().getClassLoader(),
+                            new Class[] { ResultSet.class}, handler);
+
                 } 
                 
                 return result;

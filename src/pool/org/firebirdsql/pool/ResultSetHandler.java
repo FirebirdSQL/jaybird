@@ -41,7 +41,7 @@ public class ResultSetHandler implements InvocationHandler {
         ResultSet.class, "getStatement", new Class[0]);
         
         
-    private PreparedStatement owner;
+    private Statement owner;
     private ResultSet target;
     
     /**
@@ -53,7 +53,7 @@ public class ResultSetHandler implements InvocationHandler {
      * 
      * @param target result set to wrap.
      */
-    public ResultSetHandler(PreparedStatement owner, ResultSet target) {
+    public ResultSetHandler(Statement owner, ResultSet target) {
         this.owner = owner;
         this.target = target;
     } 

@@ -290,6 +290,57 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     }
     
     /**
+     * Test if statement leaks are correctly prevented.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testStatementLeaking() throws Exception {
+        DataSource dataSource = new SimpleDataSource(pool);
+        
+        Connection con = dataSource.getConnection();
+        
+        try {
+            Statement stmt = con.createStatement();
+            
+            ResultSet rs = stmt.executeQuery("SELECT * FROM rdb$database");
+            assertTrue("Should select at least one row.", rs.next());
+            assertTrue("Should have correct statememnt.", rs.getStatement() == stmt);
+            assertTrue("Should select exactly one row.", !rs.next());
+            
+            // close connection, according to specification
+            // it must close also corresponding statement
+            con.close();
+            
+            try {
+                rs = stmt.executeQuery("SELECT * FROM rdb$database");
+                fail("Should throw exception that statement is closed.");
+            } catch(SQLException ex) {
+                // everything is fine
+            }
+            
+            // this block checks if statements are correctly
+            // removed from a collection for automatic cleanup
+            // we rely on tha fact, that calling Statement.close()
+            // twice would cause SQLException in the second case.
+            con = dataSource.getConnection();
+            stmt = con.createStatement();
+            stmt.close();
+            con.close();
+            
+            // get connection from the pool, so finally clause works correctly
+            con = dataSource.getConnection();
+            
+            assertTrue("Pool should have only one connection open.", 
+                    pool.getTotalSize() == 1);
+
+        } finally {
+            con.close();
+            
+            pool.shutdown();
+        }
+    }
+    
+    /**
      * Test if blocking works correctly.
      * 
      * @throws Exception if something went wrong.
