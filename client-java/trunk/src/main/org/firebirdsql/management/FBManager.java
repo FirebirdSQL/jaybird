@@ -349,24 +349,24 @@ public class FBManager implements FBManagerMBean
         throws Exception
     {
         isc_db_handle db = null;
-            db = gds.get_new_isc_db_handle();
-            try {
-                DatabaseParameterBuffer dpb = c.deepCopy();
-                    dpb.addArgument(DatabaseParameterBuffer.user_name, user);
-                    dpb.addArgument(DatabaseParameterBuffer.password, password);
-                gds.isc_attach_database(getConnectString(fileName), db, dpb);
-                
-                // if forceCreate is set, drop the database correctly
-                // otherwise exit, database already exists
-                if (forceCreate)
-                    gds.isc_drop_database(db);
-                else {
-                    gds.isc_detach_database(db);
-                    return; //database exists, don't wipe it out.
-                }
-    	    } catch (GDSException e) {
-                // we ignore it
-    	    }
+        db = gds.get_new_isc_db_handle();
+        try {
+            DatabaseParameterBuffer dpb = c.deepCopy();
+                dpb.addArgument(DatabaseParameterBuffer.user_name, user);
+                dpb.addArgument(DatabaseParameterBuffer.password, password);
+            gds.isc_attach_database(getConnectString(fileName), db, dpb);
+            
+            // if forceCreate is set, drop the database correctly
+            // otherwise exit, database already exists
+            if (forceCreate)
+                gds.isc_drop_database(db);
+            else {
+                gds.isc_detach_database(db);
+                return; //database exists, don't wipe it out.
+            }
+	    } catch (GDSException e) {
+            // we ignore it
+	    }
 
     	db = gds.get_new_isc_db_handle();
         try {
@@ -409,6 +409,27 @@ public class FBManager implements FBManagerMBean
         }
     }
 
+    /* (non-Javadoc)
+     * @see org.firebirdsql.management.FBManagerMBean#isDatabaseExists(java.lang.String, java.lang.String, java.lang.String)
+     */
+    public boolean isDatabaseExists(String fileName, String user,
+            String password) throws Exception {
+        isc_db_handle db = null;
+        db = gds.get_new_isc_db_handle();
+        try {
+            DatabaseParameterBuffer dpb = c.deepCopy();
+                dpb.addArgument(DatabaseParameterBuffer.user_name, user);
+                dpb.addArgument(DatabaseParameterBuffer.password, password);
+            gds.isc_attach_database(getConnectString(fileName), db, dpb);
+            
+            gds.isc_detach_database(db);
+            return true;
+            
+        } catch (GDSException e) {
+            return false;
+        }
+    }
+    
     //private methods
     private String getConnectString(String filename) {
         String fileString = getServer() + "/" + getPort() + ":" + filename;

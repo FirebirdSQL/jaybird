@@ -140,6 +140,8 @@ public interface FBManagerMBean {
     public void createDatabase (String filename, String user, String password) throws Exception;
 
     public void dropDatabase(String fileName, String user, String password) throws Exception;
+    
+    public boolean isDatabaseExists(String fileName, String user, String password) throws Exception;
 
 
 }

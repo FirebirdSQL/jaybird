@@ -66,8 +66,15 @@ public class TestFBManager extends FBTestBase {
         m.setForceCreate(true);
         m.createDatabase(getdbpath(DB_NAME + ".fdb"), DB_USER, DB_PASSWORD);
         
+        assertTrue("Must report that database exists", m.isDatabaseExists(
+            getdbpath(DB_NAME + ".fdb"), DB_USER, DB_PASSWORD));
+        
         // check drop
         m.dropDatabase(getdbpath(DB_NAME + ".fdb"), DB_USER, DB_PASSWORD);
+        
+        assertTrue("Must report that database exists", !m.isDatabaseExists(
+            getdbpath(DB_NAME + ".fdb"), DB_USER, DB_PASSWORD));
+        
         m.stop();
     }
 
