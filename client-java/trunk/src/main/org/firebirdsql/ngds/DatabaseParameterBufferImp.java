@@ -1,4 +1,4 @@
-/*
+ /*
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -16,44 +16,49 @@
  *
  * All rights reserved.
  */
+
 package org.firebirdsql.ngds;
 
-import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.ISCConstants;
 
 import java.io.ByteArrayOutputStream;
 
 /**
- * ngds implementation for ServiceRequestBufferImp.
+ *
  */
-class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequestBuffer
+public class DatabaseParameterBufferImp extends ParameterBufferBase implements DatabaseParameterBuffer
     {
-    /**
-     * Every ServiceRequestBuffer has an associated taskIdentifier.
-     *
-     * @param taskIdentifier
-     */
-    ServiceRequestBufferImp(int taskIdentifier)
+    public DatabaseParameterBufferImp()
         {
-        this.taskIdentifier = taskIdentifier;
+        super();
         }
 
-    /**
+
+    public DatabaseParameterBuffer deepCopy()
+        {
+        final DatabaseParameterBufferImp copy = new DatabaseParameterBufferImp();
+
+        // All the Argument sub classes are immutable so to make a 'deep' copy this is all we have to do.
+        copy.getArgumentsList().addAll( this.getArgumentsList() );
+
+        return copy;
+        }
+
+	
+	/**
      * Pacakage local method for obtaining buffer suitable for passing to native method.
      *
      * @return
      */
-    byte[] toByteArray()
+    byte[] getBytesForNativeCode()
         {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        byteArrayOutputStream.write(taskIdentifier);
+        byteArrayOutputStream.write(ISCConstants.isc_dpb_version1);
 
         super.writeArgumentsTo(byteArrayOutputStream);
 
         return byteArrayOutputStream.toByteArray();
         }
-
-    // PRIVATE MEMBERS
-
-    private int taskIdentifier;
     }

@@ -26,7 +26,7 @@ import java.io.ByteArrayOutputStream;
 /**
  * ngds implementation for ServiceParameterBuffer.
  */
-class ServiceParameterBufferImp extends ServiceBufferBase implements ServiceParameterBuffer
+class ServiceParameterBufferImp extends ParameterBufferBase implements ServiceParameterBuffer
     {
     // We will overide the addArgument(int argumentType, String value) method.
 

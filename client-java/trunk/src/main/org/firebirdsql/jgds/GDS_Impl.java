@@ -182,14 +182,14 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
      * The value for port is 3050 if not supplied.
      * @param db_handle an <code>isc_db_handle</code> The db handle to
      * attach to the new database.
-     * @param c a <code>Clumplet</code> The parameters for the new database
+     * @param databaseParameterBuffer a <code>Clumplet</code> The parameters for the new database
      * and the attachment to it.  See docs for dpb (database
      * parameter block.)
      * @exception GDSException if an error occurs
      */
     public void isc_create_database(String file_name,
                                    isc_db_handle db_handle,
-                                   Clumplet c) throws GDSException {
+                                   DatabaseParameterBuffer databaseParameterBuffer) throws GDSException {
 
         boolean debug = log != null && log.isDebugEnabled();
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
@@ -202,16 +202,16 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
 
 
             DbAttachInfo dbai = new DbAttachInfo(file_name);
-            connect(db, dbai, c);
+            connect(db, dbai, databaseParameterBuffer);
             try {
                 if (debug) log.debug("op_create ");
                 db.out.writeInt(op_create);
                 db.out.writeInt(0);           // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
 
-                c = removeInternalDPB(c);
+                databaseParameterBuffer = removeInternalDPB(databaseParameterBuffer);
 
-                db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable)c);
+                db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable)databaseParameterBuffer);
                 //            db.out.writeBuffer(dpb, dpb_length);
                 db.out.flush();
                 if (debug) log.debug("sent");
@@ -230,29 +230,30 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
 
     }
 
-    private Clumplet removeInternalDPB(Clumplet dpb) {
-        Clumplet result = dpb;
+     private DatabaseParameterBuffer removeInternalDPB(DatabaseParameterBuffer dpb) {
+         DatabaseParameterBuffer result = dpb.deepCopy();
 
-        result = result.remove(ISCConstants.isc_dpb_socket_buffer_size);
+         result.removeArgument(ISCConstants.isc_dpb_socket_buffer_size);
+ 
+         return result;
+     }
 
-        return result;
-    }
 
     public void isc_attach_database(String host,
                                     Integer port,
                                     String file_name,
                                     isc_db_handle db_handle,
-                                    Clumplet dpb) throws GDSException  {
+                                    DatabaseParameterBuffer databaseParameterBuffer) throws GDSException  {
         DbAttachInfo dbai = new DbAttachInfo(host, port, file_name);
-        isc_attach_database(dbai, db_handle, dpb);
+        isc_attach_database(dbai, db_handle, databaseParameterBuffer);
     }
 
     public void isc_attach_database(String connectString,
                                    isc_db_handle db_handle,
-                                   Clumplet dpb) throws GDSException  {
+                                   DatabaseParameterBuffer databaseParameterBuffer) throws GDSException  {
 
         DbAttachInfo dbai = new DbAttachInfo(connectString);
-        isc_attach_database(dbai, db_handle, dpb);
+        isc_attach_database(dbai, db_handle, databaseParameterBuffer);
     }
 
 
@@ -266,7 +267,7 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
 
     public void isc_attach_database(DbAttachInfo dbai,
                                    isc_db_handle db_handle,
-                                   Clumplet dpb) throws GDSException  {
+                                   DatabaseParameterBuffer databaseParameterBuffer) throws GDSException  {
 
         boolean debug = log != null && log.isDebugEnabled();
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
@@ -276,16 +277,16 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
         }
 
         synchronized (db) {
-            connect(db, dbai, dpb);
+            connect(db, dbai, databaseParameterBuffer);
             try {
                 if (debug) log.debug("op_attach ");
                 db.out.writeInt(op_attach);
                 db.out.writeInt(0);                // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
 
-                dpb = removeInternalDPB(dpb);
+                databaseParameterBuffer = removeInternalDPB(databaseParameterBuffer);
 
-                db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable)dpb);
+                db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable)databaseParameterBuffer);
                 db.out.flush();
                 if (debug) log.debug("sent");
 
@@ -1367,22 +1368,22 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
     public void isc_create_blob2(isc_db_handle db_handle,
                         isc_tr_handle tr_handle,
                         isc_blob_handle blob_handle, //contains blob_id
-                        Clumplet bpb) throws GDSException {
-        openOrCreateBlob(db_handle, tr_handle, blob_handle, bpb, (bpb == null)? op_create_blob: op_create_blob2);
+                        BlobParameterBuffer blobParameterBuffer) throws GDSException {
+        openOrCreateBlob(db_handle, tr_handle, blob_handle, blobParameterBuffer, (blobParameterBuffer == null)? op_create_blob: op_create_blob2);
         ((isc_blob_handle_impl)blob_handle).rbl_flagsAdd(ISCConstants.RBL_create);
     }
 
     public void isc_open_blob2(isc_db_handle db_handle,
                         isc_tr_handle tr_handle,
                         isc_blob_handle blob_handle, //contains blob_id
-                        Clumplet bpb) throws GDSException {
-        openOrCreateBlob(db_handle, tr_handle, blob_handle, bpb, (bpb == null)? op_open_blob: op_open_blob2);
+                        BlobParameterBuffer blobParameterBuffer) throws GDSException {
+        openOrCreateBlob(db_handle, tr_handle, blob_handle, blobParameterBuffer, (blobParameterBuffer == null)? op_open_blob: op_open_blob2);
     }
 
     private final void openOrCreateBlob(isc_db_handle db_handle,
                         isc_tr_handle tr_handle,
                         isc_blob_handle blob_handle, //contains blob_id
-                        Clumplet bpb,
+                        BlobParameterBuffer blobParameterBuffer,
                         int op) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
@@ -1402,12 +1403,12 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
             try {
 
                 if (debug) {
-                    log.debug((bpb == null)? "op_open/create_blob ": "op_open/create_blob2 ");
+                    log.debug((blobParameterBuffer == null)? "op_open/create_blob ": "op_open/create_blob2 ");
                     log.debug("op: " + op);
                 }
                 db.out.writeInt(op);
-                if (bpb != null) {
-                    db.out.writeTyped(ISCConstants.isc_bpb_version1, (Xdrable)bpb);
+                if (blobParameterBuffer != null) {
+                    db.out.writeTyped(ISCConstants.isc_bpb_version1, (Xdrable)blobParameterBuffer);
                 }
                 db.out.writeInt(tr.getTransactionId()); //??really a short?
                 if (debug) log.debug("sending blob_id: " + blob.getBlob_id());
@@ -1549,21 +1550,20 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
     }
 
     public void connect(isc_db_handle_impl db,
-                        String host, Integer port, String filename, Clumplet dpb)
+                        String host, Integer port, String filename, DatabaseParameterBuffer databaseParameterBuffer)
 			throws GDSException {
         DbAttachInfo dbai = new DbAttachInfo(host, port, filename);
-        connect(db, dbai, dpb);
+        connect(db, dbai, databaseParameterBuffer);
     }
 
     private void connect(isc_db_handle_impl db,
-                            DbAttachInfo dbai, Clumplet dpb) throws GDSException {
+                            DbAttachInfo dbai, DatabaseParameterBuffer databaseParameterBuffer) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
 
 
         int socketBufferSize = -1;
 
-        String iscSocketBufferLength = dpb.findString(
-            ISCConstants.isc_dpb_socket_buffer_size);
+        String iscSocketBufferLength = databaseParameterBuffer.getArgumentAsString(ISCConstants.isc_dpb_socket_buffer_size);
 
         if (iscSocketBufferLength != null) {
             try {
@@ -2157,35 +2157,15 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
     }
 
 
-    public  Clumplet newClumplet(int type, String content) {
-        return new StringClumplet(type, content);
-    }
-
-    public  Clumplet newClumplet(int type){
-        return new ClumpletImpl(type, new byte[] {});
-    }
-
-
-
-    public Clumplet newClumplet(int type, int c){
-        return new ClumpletImpl(type, new byte[] {
-            (byte)(c >>  0),
-            (byte)(c >>  8),
-            (byte)(c >> 16),
-            (byte)(c >> 24)});
-    }
-
-    public  Clumplet newClumplet(int type, byte[] content) {
-        return new ClumpletImpl(type, content);
-    }
-
-    public  Clumplet cloneClumplet(Clumplet c) {
-        if (c == null) {
-            return null;
+    public DatabaseParameterBuffer newDatabaseParameterBuffer()
+        {
+        return new DatabaseParameterBufferImp();
         }
-        return ((ClumpletImpl)c).cloneClumplet();
-    }
 
+    public BlobParameterBuffer newBlobParameterBuffer()
+        {
+        return new BlobParameterBufferImp();
+        }
 
 
     // Services API methods - all currently un-implemented.
