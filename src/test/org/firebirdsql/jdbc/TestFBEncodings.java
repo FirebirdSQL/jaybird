@@ -40,13 +40,18 @@ public class TestFBEncodings extends BaseFBTest {
         "  unicode_field VARCHAR(50) CHARACTER SET UNICODE_FSS, " +
         "  ascii_field VARCHAR(50) CHARACTER SET ASCII, " +
         "  none_field VARCHAR(50) CHARACTER SET NONE " +
-        ")";
+        ")"
+        ;
         
     public static String DROP_TABLE = 
         "DROP TABLE test_encodings";
     
     public TestFBEncodings(String testName) {
         super(testName);
+    }
+    
+    protected String getCreateTableStatement() {
+        return CREATE_TABLE;
     }
     
     protected void setUp() throws Exception {
@@ -68,7 +73,7 @@ public class TestFBEncodings extends BaseFBTest {
         catch (Exception e) {}
 
         try {
-            stmt.executeUpdate(CREATE_TABLE);
+            stmt.executeUpdate(getCreateTableStatement());
             stmt.close();        
         } catch(Exception ex) {
         }
@@ -90,10 +95,13 @@ public class TestFBEncodings extends BaseFBTest {
         Connection connection = 
             DriverManager.getConnection(DB_DRIVER_URL, props);
             
-        java.sql.Statement stmt = connection.createStatement();
-        stmt.executeUpdate(DROP_TABLE);
-        stmt.close();
-        connection.close();      
+        try {
+            java.sql.Statement stmt = connection.createStatement();
+            stmt.executeUpdate(DROP_TABLE);
+            stmt.close();
+        } finally {
+            connection.close();      
+        }
         
         super.tearDown();
     }
@@ -131,61 +139,65 @@ public class TestFBEncodings extends BaseFBTest {
         Connection connection = 
             DriverManager.getConnection(DB_DRIVER_URL, props);
 
-        PreparedStatement stmt = connection.prepareStatement(
-            "INSERT INTO test_encodings(" + 
-            "  id, win1251_field, unicode_field, none_field) " +
-            "VALUES(?, ?, ?, ?)");
-        
-        stmt.setInt(1, UKRAINIAN_TEST_ID);
-        stmt.setString(2, UKRAINIAN_TEST_STRING_WIN1251);
-        stmt.setString(3, UKRAINIAN_TEST_STRING_WIN1251);
-        stmt.setString(4, UKRAINIAN_TEST_STRING_WIN1251);
-        
-        int updated = stmt.executeUpdate();
-        stmt.close();
-        
-        assertTrue("Should insert one row", updated == 1);
-        
-        stmt = connection.prepareStatement(
-            "SELECT win1251_field, unicode_field " + 
-            "FROM test_encodings WHERE id = ?");
-            
-        stmt.setInt(1, UKRAINIAN_TEST_ID);
-            
-        ResultSet rs = stmt.executeQuery();
-        
-        assertTrue("Should have at least one row", rs.next());
-        
-        String win1251Value = rs.getString(1);
-        assertTrue("win1251_field value should be the same", 
-            win1251Value.equals(UKRAINIAN_TEST_STRING));
-            
-        String unicodeValue = rs.getString(2);
-        assertTrue("unicode_field value should be the same", 
-            unicodeValue.equals(UKRAINIAN_TEST_STRING));
-            
-        assertTrue("Should have exactly one row", !rs.next());
-        
-        rs.close();
-        stmt.close();
-        
-        stmt = connection.prepareStatement(
-            "SELECT none_field FROM test_encodings WHERE id = ?");
-        	
-        stmt.setInt(1, UKRAINIAN_TEST_ID);
-        
         try {
-            rs = stmt.executeQuery();
+            PreparedStatement stmt = connection.prepareStatement(
+                "INSERT INTO test_encodings(" + 
+                "  id, win1251_field, unicode_field, none_field) " +
+                "VALUES(?, ?, ?, ?)");
             
-            assertTrue("Should not be able to read none_field " + 
-                "with special characters", false);
-        } catch(SQLException sqlex) {
-            // everything is ok
+            stmt.setInt(1, UKRAINIAN_TEST_ID);
+            stmt.setString(2, UKRAINIAN_TEST_STRING_WIN1251);
+            stmt.setString(3, UKRAINIAN_TEST_STRING_WIN1251);
+            stmt.setString(4, UKRAINIAN_TEST_STRING_WIN1251);
+            
+            int updated = stmt.executeUpdate();
+            stmt.close();
+            
+            assertTrue("Should insert one row", updated == 1);
+            
+            stmt = connection.prepareStatement(
+                "SELECT win1251_field, unicode_field " + 
+                "FROM test_encodings WHERE id = ?");
+                
+            stmt.setInt(1, UKRAINIAN_TEST_ID);
+                
+            ResultSet rs = stmt.executeQuery();
+            
+            assertTrue("Should have at least one row", rs.next());
+            
+            String win1251Value = rs.getString(1);
+            assertTrue("win1251_field value should be the same", 
+                win1251Value.equals(UKRAINIAN_TEST_STRING));
+                
+            String unicodeValue = rs.getString(2);
+            assertTrue("unicode_field value should be the same", 
+                unicodeValue.equals(UKRAINIAN_TEST_STRING));
+                
+            assertTrue("Should have exactly one row", !rs.next());
+            
+            rs.close();
+            stmt.close();
+            
+            stmt = connection.prepareStatement(
+                "SELECT none_field FROM test_encodings WHERE id = ?");
+                
+            stmt.setInt(1, UKRAINIAN_TEST_ID);
+            
+            try {
+                rs = stmt.executeQuery();
+                
+                String noneStr = rs.getString(1);
+                
+                assertTrue("Should not be able to read none_field " + 
+                    "with special characters", false);
+            } catch(SQLException sqlex) {
+                // everything is ok
+            }
+            
+            stmt.close();
+        } finally {
+            connection.close();
         }
-        
-        stmt.close();
-        
-        connection.close();
     }
 
 
@@ -203,61 +215,66 @@ public class TestFBEncodings extends BaseFBTest {
         Connection connection = 
             DriverManager.getConnection(DB_DRIVER_URL, props);
 
-        PreparedStatement stmt = connection.prepareStatement(
-            "INSERT INTO test_encodings(" + 
-            "  id, win1252_field, unicode_field, none_field) " +
-            "VALUES(?, ?, ?, ?)");
-        
-        stmt.setInt(1, GERMAN_TEST_ID);
-        stmt.setString(2, GERMAN_TEST_STRING_WIN1252);
-        stmt.setString(3, GERMAN_TEST_STRING_WIN1252);
-        stmt.setString(4, GERMAN_TEST_STRING_WIN1252);
-        
-        int updated = stmt.executeUpdate();
-        stmt.close();
-        
-        assertTrue("Should insert one row", updated == 1);
-        
-        stmt = connection.prepareStatement(
-            "SELECT win1252_field, unicode_field " + 
-            "FROM test_encodings WHERE id = ?");
-            
-        stmt.setInt(1, GERMAN_TEST_ID);
-            
-        ResultSet rs = stmt.executeQuery();
-        
-        assertTrue("Should have at least one row", rs.next());
-        
-        String win1252Value = rs.getString(1);
-        assertTrue("win1252_field value should be the same", 
-            win1252Value.equals(GERMAN_TEST_STRING_WIN1252));
-            
-        String unicodeValue = rs.getString(2);
-        assertTrue("unicode_field value should be the same", 
-            unicodeValue.equals(GERMAN_TEST_STRING_WIN1252));
-            
-        assertTrue("Should have exactly one row", !rs.next());
-        
-        rs.close();
-        stmt.close();
-        
-        stmt = connection.prepareStatement(
-            "SELECT none_field FROM test_encodings WHERE id = ?");
-        	
-        stmt.setInt(1, GERMAN_TEST_ID);
-        
         try {
-            rs = stmt.executeQuery();
+            PreparedStatement stmt = connection.prepareStatement(
+                "INSERT INTO test_encodings(" + 
+                "  id, win1252_field, unicode_field, none_field) " +
+                "VALUES(?, ?, ?, ?)");
             
-            assertTrue("Should not be able to read none_field " + 
-                "with special characters", false);
-        } catch(SQLException sqlex) {
-            // everything is ok
+            stmt.setInt(1, GERMAN_TEST_ID);
+            stmt.setString(2, GERMAN_TEST_STRING_WIN1252);
+            stmt.setString(3, GERMAN_TEST_STRING_WIN1252);
+            stmt.setString(4, GERMAN_TEST_STRING_WIN1252);
+            
+            int updated = stmt.executeUpdate();
+            stmt.close();
+            
+            assertTrue("Should insert one row", updated == 1);
+            
+            stmt = connection.prepareStatement(
+                "SELECT win1252_field, unicode_field " + 
+                "FROM test_encodings WHERE id = ?");
+                
+            stmt.setInt(1, GERMAN_TEST_ID);
+                
+            ResultSet rs = stmt.executeQuery();
+            
+            assertTrue("Should have at least one row", rs.next());
+            
+            String win1252Value = rs.getString(1);
+            assertTrue("win1252_field value should be the same", 
+                win1252Value.equals(GERMAN_TEST_STRING_WIN1252));
+                
+            String unicodeValue = rs.getString(2);
+            assertTrue("unicode_field value should be the same", 
+                unicodeValue.equals(GERMAN_TEST_STRING_WIN1252));
+                
+            assertTrue("Should have exactly one row", !rs.next());
+            
+            rs.close();
+            stmt.close();
+            
+            stmt = connection.prepareStatement(
+                "SELECT none_field FROM test_encodings WHERE id = ?");
+                
+            stmt.setInt(1, GERMAN_TEST_ID);
+            
+            try {
+                rs = stmt.executeQuery();
+                
+                String noneStr = rs.getString(1);
+                
+                assertTrue("Should not be able to read none_field " + 
+                    "with special characters", false);
+            } catch(SQLException sqlex) {
+                // everything is ok
+            }
+            
+            stmt.close();
+            
+        } finally {
+            connection.close();
         }
-        
-        stmt.close();
-        
-        connection.close();
     }
     
     // String in Hungarian ("\u0151r\u00FClt")
@@ -289,71 +306,75 @@ public class TestFBEncodings extends BaseFBTest {
         Connection connection = 
             DriverManager.getConnection(DB_DRIVER_URL, props);
 
-        PreparedStatement stmt = connection.prepareStatement(
-            "INSERT INTO test_encodings(" + 
-            "  id, win1250_field, win1251_field, win1252_field, " + 
-            "  unicode_field, none_field) " +
-            "VALUES(?, ?, ?, ?, ?, ?)");
-        
-        stmt.setInt(1, HUNGARIAN_TEST_ID);
-        stmt.setString(2, HUNGARIAN_TEST_STRING_WIN1250);
-        stmt.setString(3, UKRAINIAN_TEST_STRING);
-        stmt.setString(4, GERMAN_TEST_STRING_WIN1252);
-        stmt.setString(5, HUNGARIAN_TEST_STRING);
-        stmt.setString(6, HUNGARIAN_TEST_STRING_WIN1250);
-        
-        int updated = stmt.executeUpdate();
-        stmt.close();
-        
-        assertTrue("Should insert one row", updated == 1);
-        
-        stmt = connection.prepareStatement(
-            "SELECT win1250_field, win1251_field, win1252_field, unicode_field " + 
-            "FROM test_encodings WHERE id = ?");
-            
-        stmt.setInt(1, HUNGARIAN_TEST_ID);
-            
-        ResultSet rs = stmt.executeQuery();
-        
-        assertTrue("Should have at least one row", rs.next());
-        
-        String win1250Value = rs.getString(1);
-        assertTrue("win1250_field value should be the same", 
-            win1250Value.equals(HUNGARIAN_TEST_STRING));
-
-        String win1251Value = rs.getString(2);
-        assertTrue("win1251_field value should be the same", 
-            win1251Value.equals(UKRAINIAN_TEST_STRING));
-
-        String win1252Value = rs.getString(3);
-        assertTrue("win1252_field value should be the same", 
-            win1252Value.equals(GERMAN_TEST_STRING_WIN1252));
-            
-        String unicodeValue = rs.getString(4);
-        assertTrue("unicode_field value should be the same", 
-            unicodeValue.equals(HUNGARIAN_TEST_STRING));
-
-        assertTrue("Should have exactly one row", !rs.next());
-        
-        rs.close();
-        stmt.close();
-        
-        stmt = connection.prepareStatement(
-            "SELECT none_field FROM test_encodings WHERE id = ?");
-        	
-        stmt.setInt(1, HUNGARIAN_TEST_ID);
-        
         try {
-            rs = stmt.executeQuery();
+            PreparedStatement stmt = connection.prepareStatement(
+                "INSERT INTO test_encodings(" + 
+                "  id, win1250_field, win1251_field, win1252_field, " + 
+                "  unicode_field, none_field) " +
+                "VALUES(?, ?, ?, ?, ?, ?)");
             
-            assertTrue("Should not be able to read none_field " + 
-                "with special characters", false);
-        } catch(SQLException sqlex) {
-            // everything is ok
+            stmt.setInt(1, HUNGARIAN_TEST_ID);
+            stmt.setString(2, HUNGARIAN_TEST_STRING_WIN1250);
+            stmt.setString(3, UKRAINIAN_TEST_STRING);
+            stmt.setString(4, GERMAN_TEST_STRING_WIN1252);
+            stmt.setString(5, HUNGARIAN_TEST_STRING);
+            stmt.setString(6, HUNGARIAN_TEST_STRING_WIN1250);
+            
+            int updated = stmt.executeUpdate();
+            stmt.close();
+            
+            assertTrue("Should insert one row", updated == 1);
+            
+            stmt = connection.prepareStatement(
+                "SELECT win1250_field, win1251_field, win1252_field, unicode_field " + 
+                "FROM test_encodings WHERE id = ?");
+                
+            stmt.setInt(1, HUNGARIAN_TEST_ID);
+                
+            ResultSet rs = stmt.executeQuery();
+            
+            assertTrue("Should have at least one row", rs.next());
+            
+            String win1250Value = rs.getString(1);
+            assertTrue("win1250_field value should be the same", 
+                win1250Value.equals(HUNGARIAN_TEST_STRING));
+    
+            String win1251Value = rs.getString(2);
+            assertTrue("win1251_field value should be the same", 
+                win1251Value.equals(UKRAINIAN_TEST_STRING));
+    
+            String win1252Value = rs.getString(3);
+            assertTrue("win1252_field value should be the same", 
+                win1252Value.equals(GERMAN_TEST_STRING_WIN1252));
+                
+            String unicodeValue = rs.getString(4);
+            assertTrue("unicode_field value should be the same", 
+                unicodeValue.equals(HUNGARIAN_TEST_STRING));
+    
+            assertTrue("Should have exactly one row", !rs.next());
+            
+            rs.close();
+            stmt.close();
+            
+            stmt = connection.prepareStatement(
+                "SELECT none_field FROM test_encodings WHERE id = ?");
+                
+            stmt.setInt(1, HUNGARIAN_TEST_ID);
+            
+            try {
+                rs = stmt.executeQuery();
+                
+                String noneStr = rs.getString(1);
+                
+                assertTrue("Should not be able to read none_field " + 
+                    "with special characters", false);
+            } catch(SQLException sqlex) {
+                // everything is ok
+            }
+            
+            stmt.close();
+        } finally {
+            connection.close();
         }
-        
-        stmt.close();
-        
-        connection.close();
     }    
 }

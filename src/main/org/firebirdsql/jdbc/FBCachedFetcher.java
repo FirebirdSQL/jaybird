@@ -97,12 +97,28 @@ class FBCachedFetcher implements FBFetcher {
                 for (int i=0;i< rowsArray.length; i++){
                     localRow = (byte[][])rowsArray[i];
                     //ugly blob caching workaround.
-                    for (int j = 0; j < localRow.length; j++){                   
+                    for (int j = 0; j < localRow.length; j++){    
+                        
+                        // if field is blob and there is a value in cache
                         if (isBlob[j] && localRow[j] != null ) {
-                            rs.row = localRow;						  
-                            FBBlobField blob = (FBBlobField)FBField.createField(rs.xsqlvars[j], rs, j,false);
-                            blob.setConnection(c);
+                            
+                            // make this row current in result set
+                            rs.row = localRow;
+                            
+                            // copy data from current row
+                            FBField localField = FBField.createField(rs.xsqlvars[j], rs, j,false);
+                            
+                            FBFlushableField blob = (FBFlushableField)localField;
+                                  
+                            if (blob instanceof FBBlobField)
+                                ((FBBlobField)blob).setConnection(c);
+                            else
+                            if (blob instanceof FBLongVarCharField)
+                                ((FBLongVarCharField)blob).setConnection(c);
+                                
                             localRow[j] = blob.getCachedObject();
+                            
+                            // set current row in result set to null
                             rs.row = null;
                         }
                     }

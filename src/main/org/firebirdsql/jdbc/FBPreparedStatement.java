@@ -403,8 +403,10 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
         if (hasBlobs){
             for(int i = 0; i < isParamSet.length; i++){
                 if (isBlob[i]){
-                    FBBlobField blobField = (FBBlobField)getField(i + 1);
-                    blobField.flushCachedData();
+                    FBFlushableField flushableField = 
+                        (FBFlushableField)getField(i + 1);
+                        
+                    flushableField.flushCachedData();
                 }
             }
         }
@@ -704,8 +706,8 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
       		if (fields[i] instanceof FBBlobField)
       		    ((FBBlobField)fields[i]).setConnection(c);
       		else
-      		    if (fields[i] instanceof FBStringField)
-      		        ((FBStringField)fields[i]).setConnection(c);
+      		if (fields[i] instanceof FBStringField)
+      		    ((FBStringField)fields[i]).setConnection(c);
 
             isBlob[i] =
                 FBField.isType(getXsqlvar(i+1), Types.BLOB) ||
