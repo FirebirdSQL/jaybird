@@ -35,10 +35,11 @@ public class FBCallableStatement extends AbstractCallableStatement {
      * 
      * @throws SQLException if something went wrong.
      */
-    public FBCallableStatement(AbstractConnection c, String sql)
+    public FBCallableStatement(AbstractConnection c, String sql, 
+                               int rsType, int rsConcurrency)
         throws SQLException 
     {
-        super(c, sql);
+        super(c, sql, rsType, rsConcurrency);
     }
     
 }

@@ -27,18 +27,18 @@ import java.sql.SQLException;
  */
 public class FBPreparedStatement extends AbstractPreparedStatement {
 
-	/**
+    /**
      * Create instance of this class.
      * 
-	 * @param c instance of {@link AbstractConnection}.
-	 * @param sql SQL statement to prepare.
+     * @param c instance of {@link AbstractConnection}.
+     * @param sql SQL statement to prepare.
      * 
-	 * @throws SQLException if something went wrong.
-	 */
-	public FBPreparedStatement(AbstractConnection c, String sql)
-		throws SQLException 
-    {
-		super(c, sql);
-	}
+     * @throws SQLException if something went wrong.
+     */
+    public FBPreparedStatement(AbstractConnection c, String sql, 
+                               int rsType, int rsConcurrency)
+    throws SQLException {
+        super(c, sql, rsType, rsConcurrency);
+    }
 
 }

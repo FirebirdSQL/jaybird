@@ -71,6 +71,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     private String cursorName;
 
     private int rsConcurrency;
+    private int rsType;
     
     private FBObjectListener.ResultSetListener resultSetListener = new RSListener();
     
@@ -95,9 +96,10 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         }
     }
 
-    protected AbstractStatement(AbstractConnection c, int rsConcurrency) {
+    protected AbstractStatement(AbstractConnection c, int rsType, int rsConcurrency) {
         this.c = c;
         this.rsConcurrency = rsConcurrency;
+        this.rsType = rsType;
         
         closed = false;
     }
@@ -534,7 +536,8 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         } // end of if ()
         else {
             if (isResultSet){
-                currentRs = new FBResultSet(c, this, fixedStmt, resultSetListener);
+                currentRs = new FBResultSet(
+                        c, this, fixedStmt, resultSetListener, rsType, rsConcurrency);
                 return currentRs;
             }
             else
@@ -769,7 +772,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      *      2.0 API</a>
      */
     public int getResultSetConcurrency() throws  SQLException {
-        return ResultSet.CONCUR_READ_ONLY;
+        return rsConcurrency;
     }
 
 
@@ -785,7 +788,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      *      2.0 API</a>
      */
     public int getResultSetType()  throws  SQLException {
-        return ResultSet.TYPE_FORWARD_ONLY;
+        return rsType;
     }
 
     private LinkedList batchList = new LinkedList();

@@ -12,8 +12,8 @@ public class FBStatement extends AbstractStatement {
 	/**
 	 * 
 	 */
-	public FBStatement(AbstractConnection c, int rsConcurrency) {
-		super(c, rsConcurrency);
+	public FBStatement(AbstractConnection c, int rsType, int rsConcurrency) {
+		super(c, rsType, rsConcurrency);
 	}
 
     

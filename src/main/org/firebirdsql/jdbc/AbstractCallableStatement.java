@@ -75,9 +75,10 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     private ResultSet currentRs;
 
 
-    protected AbstractCallableStatement(AbstractConnection c, String sql) throws SQLException {
-        //rewriting the "call x" syntax is done in the FBPreparedStatement constructor.
-        super(c, sql);
+    protected AbstractCallableStatement(AbstractConnection c, String sql, 
+                                        int rsType, int rsConcurrency) 
+    throws SQLException {
+        super(c, sql, rsType, rsConcurrency);
     }
 
     /**

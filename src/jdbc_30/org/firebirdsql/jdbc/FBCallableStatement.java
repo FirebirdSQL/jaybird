@@ -43,9 +43,10 @@ public class FBCallableStatement extends AbstractCallableStatement {
 	 * @throws SQLException
 	 *             if SQL error occured.
 	 */
-	public FBCallableStatement(AbstractConnection c, String sql)
+	public FBCallableStatement(AbstractConnection c, String sql, 
+                               int rsType, int rsConcurrency)
 		throws SQLException {
-		super(c, sql);
+		super(c, sql, rsType, rsConcurrency);
 	}
 
 	public void registerOutParameter(String param1, int param2)
