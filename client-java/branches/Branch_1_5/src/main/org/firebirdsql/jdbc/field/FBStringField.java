@@ -204,7 +204,7 @@ public class FBStringField extends FBField {
     public Time getTime(Calendar cal) throws SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
-        return field.decodeTime(getTime(),cal);
+        return field.decodeTime(getTime(),cal, isInvertTimeZone());
     }
     public Time getTime() throws SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
@@ -214,7 +214,7 @@ public class FBStringField extends FBField {
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 		  
-        return field.decodeTimestamp(getTimestamp(),cal);
+        return field.decodeTimestamp(getTimestamp(),cal, isInvertTimeZone());
     }
     public Timestamp getTimestamp() throws SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
@@ -365,7 +365,7 @@ public class FBStringField extends FBField {
             return;
         }
 
-        setTime(field.encodeTime(value,cal));
+        setTime(field.encodeTime(value,cal, isInvertTimeZone()));
     }
     public void setTime(Time value) throws SQLException {
         if (value == TIME_NULL_VALUE) {
@@ -381,7 +381,7 @@ public class FBStringField extends FBField {
             return;
         }
 
-        setTimestamp(field.encodeTimestamp(value,cal));
+        setTimestamp(field.encodeTimestamp(value,cal, isInvertTimeZone()));
     }
     public void setTimestamp(Timestamp value) throws SQLException {
         if (value == TIMESTAMP_NULL_VALUE) {

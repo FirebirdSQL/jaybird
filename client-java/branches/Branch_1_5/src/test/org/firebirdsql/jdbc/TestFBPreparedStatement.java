@@ -48,7 +48,8 @@ public class TestFBPreparedStatement extends FBTestBase{
         "CREATE TABLE test_blob (" + 
         "  ID INTEGER, " + 
         "  OBJ_DATA BLOB, " +
-        "  TS_FIELD TIMESTAMP " +
+        "  TS_FIELD TIMESTAMP, " +
+        "  T_FIELD TIME " +
         ")";
         
     public static final String CREATE_TEST_CHARS_TABLE = ""
@@ -63,11 +64,30 @@ public class TestFBPreparedStatement extends FBTestBase{
         + ")"
         ;
     
+    public static final String CREATE_UNRECOGNIZED_TR_TABLE = ""
+        + "CREATE TABLE t1("
+        + "  c1 CHAR(2) CHARACTER SET ASCII NOT NULL, "
+        + "  c2 BLOB SUB_TYPE TEXT CHARACTER SET ASCII NOT NULL "
+        + ")"
+        ;
+    
+    public static final String ADD_CONSTRAINT_T1_C1 = ""
+        + "ALTER TABLE t1 ADD CONSTRAINT t1_c1 PRIMARY KEY (c1)"
+        ;
+    
+    public static final String INIT_T1 = ""
+        + "INSERT INTO t1 VALUES ('XX', 'no more bugs')"
+        ;
+    
     public static final String DROP_TEST_BLOB_TABLE = 
         "DROP TABLE test_blob";
     
     public static final String DROP_TEST_CHARS_TABLE = ""
         + "DROP TABLE TESTTAB"
+        ;
+    
+    public static final String DROP_UNRECOGNIZED_TR_TABLE = ""
+        + "DROP TABLE t1"
         ;
         
     public static final String TEST_STRING = "This is simple test string.";
@@ -88,37 +108,54 @@ public class TestFBPreparedStatement extends FBTestBase{
 
         Statement stmt = con.createStatement();
         try {
-            stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
+            try {
+                stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
+            }
+            catch (Exception e) {
+                //e.printStackTrace();
+            }
+    
+            try {
+                stmt.executeUpdate(DROP_UNRECOGNIZED_TR_TABLE);
+            }
+            catch (Exception e) {
+                //e.printStackTrace();
+            }
+    
+            try {
+                stmt.executeUpdate(DROP_TEST_CHARS_TABLE);
+            } catch(Exception e) {
+                // ignore
+            }
+            
+            try {
+                stmt.executeUpdate(DROP_GENERATOR);
+            } catch(Exception ex) {
+            }
+            
+            stmt.executeUpdate(CREATE_TEST_BLOB_TABLE);
+            stmt.executeUpdate(CREATE_UNRECOGNIZED_TR_TABLE);
+            stmt.executeUpdate(ADD_CONSTRAINT_T1_C1);
+            stmt.executeUpdate(INIT_T1);
+            stmt.executeUpdate(CREATE_TEST_CHARS_TABLE);
+            
+            stmt.executeUpdate(CREATE_GENERATOR);
+
+        } finally {
+            stmt.close(); 
         }
-        catch (Exception e) {
-            //e.printStackTrace();
-        }
-        
-        try {
-            stmt.executeUpdate(DROP_TEST_CHARS_TABLE);
-        } catch(Exception e) {
-            // ignore
-        }
-        
-        try {
-            stmt.executeUpdate(DROP_GENERATOR);
-        } catch(Exception ex) {
-        }
-        
-        stmt.executeUpdate(CREATE_TEST_BLOB_TABLE);
-        stmt.executeUpdate(CREATE_TEST_CHARS_TABLE);
-        
-        stmt.executeUpdate(CREATE_GENERATOR);
-        
-        stmt.close(); 
         
     }
 
     protected void tearDown() throws Exception {
         Statement stmt = con.createStatement();
-        stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
-        stmt.executeUpdate(DROP_TEST_CHARS_TABLE);
-        stmt.close();
+        try {
+            stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
+            stmt.executeUpdate(DROP_TEST_CHARS_TABLE);
+            stmt.executeUpdate(DROP_UNRECOGNIZED_TR_TABLE);
+        } finally {
+            stmt.close();
+        }
 
         con.close();
         
@@ -131,37 +168,43 @@ public class TestFBPreparedStatement extends FBTestBase{
         PreparedStatement insertPs = con.prepareStatement(
             "INSERT INTO test_blob (id, obj_data) VALUES (?,?);");
             
-        insertPs.setInt(1, id);
-        insertPs.setBytes(2, TEST_STRING.getBytes());
-        
-        int inserted = insertPs.executeUpdate();
-        
-        assertTrue("Row should be inserted.", inserted == 1);
-        
-        checkSelectString(TEST_STRING, id);
-        
-        //Update item
-        PreparedStatement updatePs = con.prepareStatement(
-            "UPDATE test_blob SET obj_data=? WHERE id=?;");
+        try {
+            insertPs.setInt(1, id);
+            insertPs.setBytes(2, TEST_STRING.getBytes());
             
-        updatePs.setBytes(1, ANOTHER_TEST_STRING.getBytes());
-        updatePs.setInt(2, id);
-        updatePs.executeUpdate();
-        
-        updatePs.clearParameters();
-        
-        checkSelectString(ANOTHER_TEST_STRING, id);
-        
-        updatePs.setBytes(1, TEST_STRING.getBytes());
-        updatePs.setInt(2, id + 1);
-        int updated = updatePs.executeUpdate();
-        
-        assertTrue("No rows should be updated.", updated == 0);
-        
-        checkSelectString(ANOTHER_TEST_STRING, id);
-        
-        insertPs.close();
-        updatePs.close();
+            int inserted = insertPs.executeUpdate();
+            
+            assertTrue("Row should be inserted.", inserted == 1);
+            
+            checkSelectString(TEST_STRING, id);
+            
+            //Update item
+            PreparedStatement updatePs = con.prepareStatement(
+                "UPDATE test_blob SET obj_data=? WHERE id=?;");
+                
+            try {
+                updatePs.setBytes(1, ANOTHER_TEST_STRING.getBytes());
+                updatePs.setInt(2, id);
+                updatePs.executeUpdate();
+                
+                updatePs.clearParameters();
+                
+                checkSelectString(ANOTHER_TEST_STRING, id);
+                
+                updatePs.setBytes(1, TEST_STRING.getBytes());
+                updatePs.setInt(2, id + 1);
+                int updated = updatePs.executeUpdate();
+                
+                assertTrue("No rows should be updated.", updated == 0);
+                
+                checkSelectString(ANOTHER_TEST_STRING, id);
+            } finally {
+                updatePs.close();
+            }
+
+        } finally {
+            insertPs.close();
+        }
     }
     
     public void testMixedExecution() throws Throwable {
@@ -190,20 +233,23 @@ public class TestFBPreparedStatement extends FBTestBase{
         PreparedStatement selectPs = con.prepareStatement(
             "SELECT obj_data FROM test_blob WHERE id = ?");
             
-        selectPs.setInt(1, id);
-        ResultSet rs = selectPs.executeQuery();
-        
-        assertTrue("There must be at least one row available.", rs.next());
-        
-        String result = rs.getString(1);
-        
-        assertTrue("Selected string must be equal to inserted one.", 
-            stringToTest.equals(result));
+        try {
+            selectPs.setInt(1, id);
+            ResultSet rs = selectPs.executeQuery();
             
-        assertTrue("There must be exactly one row.", !rs.next());
-        
-        rs.close();
-        selectPs.close();
+            assertTrue("There must be at least one row available.", rs.next());
+            
+            String result = rs.getString(1);
+            
+            assertTrue("Selected string must be equal to inserted one.", 
+                stringToTest.equals(result));
+                
+            assertTrue("There must be exactly one row.", !rs.next());
+            
+            rs.close();
+        } finally {
+            selectPs.close();
+        }
     }
     
     public void testGenerator() throws Exception {
@@ -345,8 +391,6 @@ public class TestFBPreparedStatement extends FBTestBase{
     }
     
     public void testTimestampWithCalendar() throws Exception {
-        //Connection connection = getConnectionViaDriverManager();
-        
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.setProperty("timestamp_uses_local_timezone", "");
@@ -358,21 +402,17 @@ public class TestFBPreparedStatement extends FBTestBase{
             
             try {
                 Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+01"));
+                Calendar utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 
                 Timestamp ts = new Timestamp(calendar.getTime().getTime());
-                
-                stmt.setInt(1, 1);
-                stmt.setTimestamp(2, ts);
-                
-                stmt.execute();
-                
+
                 stmt.setInt(1, 2);
                 stmt.setTimestamp(2, ts, calendar);
                 
                 stmt.execute();
 
                 stmt.setInt(1, 3);
-                stmt.setTimestamp(2, ts, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+                stmt.setTimestamp(2, ts, utcCalendar);
                 
                 stmt.execute();
                 
@@ -382,15 +422,13 @@ public class TestFBPreparedStatement extends FBTestBase{
                     ResultSet rs = selectStmt.executeQuery(
                         "SELECT id, CAST(ts_field AS VARCHAR(30)), ts_field FROM test_blob");
                     
-                    Timestamp ts1 = null;
                     Timestamp ts2 = null;
                     Timestamp ts3 = null;
                     
-                    String ts1Str = null;
                     String ts2Str = null;
                     String ts3Str = null;
                     
-                    int maxLength = 23;
+                    int maxLength = 22;
                     
                     // workaround for the bug in java.sql.Timestamp in JDK 1.3 
                     if ("1.3".equals(System.getProperty("java.specification.version")))
@@ -399,11 +437,6 @@ public class TestFBPreparedStatement extends FBTestBase{
                     while(rs.next()) {
                         
                         switch(rs.getInt(1)) {
-                            case 1 :
-                                ts1 = rs.getTimestamp(3);
-                                ts1Str = rs.getString(2).substring(0, maxLength);
-                                break;
-                                
                             case 2 :
                                 ts2 = rs.getTimestamp(3);
                                 ts2Str = rs.getString(2).substring(0, maxLength);
@@ -414,24 +447,11 @@ public class TestFBPreparedStatement extends FBTestBase{
                                 ts3Str = rs.getString(2).substring(0, maxLength);
                                 break;
                         }
-                        /*
-                        System.out.println("ID " + rs.getInt(1) + 
-                            ", time_str '" + rs.getString(2) + 
-                            "', time ts " + rs.getTimestamp(3) + 
-                            ", time ts_cal " + rs.getTimestamp(3, Calendar.getInstance(TimeZone.getTimeZone("GMT+01"))) +
-                            ", time ts_zone " + rs.getTimestamp(3, Calendar.getInstance(TimeZone.getTimeZone("UTC"))));
-                        */
                     }
                     
-                    assertTrue("Timestamps 1 and 2 should be equal", 
-                        ts1.getTime() == ts2.getTime());
+                    assertTrue("Timestamps 2 and 3 should differ for 3600 seconds.",
+                        Math.abs(ts2.getTime() - ts3.getTime()) == 3600*1000);
                     
-                    assertTrue("Timestamps 1 and 3 should differ for 3600 seconds.",
-                        Math.abs(ts1.getTime() - ts3.getTime()) == 3600*1000);
-                    
-                    assertTrue("Server should see the same timestamp",
-                        ts1.toString().substring(0,  maxLength).equals(ts1Str));
-
                     assertTrue("Server should see the same timestamp",
                         ts2.toString().substring(0, maxLength).equals(ts2Str));
 
@@ -451,6 +471,81 @@ public class TestFBPreparedStatement extends FBTestBase{
         }
     }
     
+    public void testTimeWithCalendar() throws Exception {
+        Properties props = new Properties();
+        props.putAll(getDefaultPropertiesForConnection());
+        props.setProperty("timestamp_uses_local_timezone", "");
+        
+        Connection connection = DriverManager.getConnection(getUrl(), props);
+        try {
+            PreparedStatement stmt = connection.prepareStatement(
+                "INSERT INTO test_blob(id, t_field) VALUES (?, ?)");
+            
+            try {
+                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+01"));
+                Calendar utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                
+                Time t = new Time(calendar.getTime().getTime());
+
+                stmt.setInt(1, 2);
+                stmt.setTime(2, t, calendar);
+                
+                stmt.execute();
+
+                stmt.setInt(1, 3);
+                stmt.setTime(2, t, utcCalendar);
+                
+                stmt.execute();
+                
+                
+                Statement selectStmt = connection.createStatement();
+                try {
+                    ResultSet rs = selectStmt.executeQuery(
+                        "SELECT id, CAST(t_field AS VARCHAR(30)), t_field FROM test_blob");
+                    
+                    Time t2 = null;
+                    Time t3 = null;
+                    
+                    String t2Str = null;
+                    String t3Str = null;
+                    
+                    while(rs.next()) {
+                        
+                        switch(rs.getInt(1)) {
+                            case 2 :
+                                t2 = rs.getTime(3);
+                                t2Str = rs.getString(2);
+                                break;
+                                
+                            case 3 : 
+                                t3 = rs.getTime(3);
+                                t3Str = rs.getString(2);
+                                break;
+                        }
+                    }
+                    
+                    assertTrue("Timestamps 2 and 3 should differ for 3600 seconds.",
+                        Math.abs(t2.getTime() - t3.getTime()) == 3600*1000);
+                    
+                    assertTrue("Server should see the same timestamp",
+                        t2.toString().equals(t2Str.substring(0, 8)));
+
+                    assertTrue("Server should see the same timestamp",
+                        t3.toString().equals(t3Str.substring(0, 8)));
+
+                } finally {
+                    selectStmt.close();
+                }
+                
+            } finally {
+                stmt.close();
+            }
+            
+        } finally {
+            connection.close();
+        }
+    }
+
     /**
      * Test if failure in setting the parameter leaves the driver in
      * correct state (i.e. "not all params were set").
@@ -489,6 +584,24 @@ public class TestFBPreparedStatement extends FBTestBase{
             } finally {
                 ps.close();
             }
+            
+        } finally {
+            connection.close();
+        }
+    }
+    
+    public void _testUnrecognizedTransaction() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        try {
+            String sql = "SELECT 1 FROM t1 WHERE c1 = ? AND c2 = ?";
+            PreparedStatement ps;
+            ResultSet rs;
+            
+            ps = connection.prepareStatement(sql);
+            ps.setString(1, "XX");
+            ps.setString(2, "bug busters");
+            rs = ps.executeQuery();
+            assertTrue("Should find something.", rs.next());
             
         } finally {
             connection.close();

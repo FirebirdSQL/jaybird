@@ -29,6 +29,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.19.2.1  2004/10/10 12:32:14  rrokytskyy
+ * merged with HEAD
+ *
  * Revision 1.20  2004/10/08 22:39:11  rrokytskyy
  * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
  * added possibility to translate characters if there are some encoding issues
@@ -303,15 +306,26 @@ public class XSQLVAR {
         return d.toTimestamp();
     }
 
-
-    public java.sql.Time encodeTime(Time d, Calendar cal) {
+    /**
+     * Encode a given <code>Time</code> value using a given 
+     * <code>Calendar</code>.
+     *
+     * @param d The <code>Time</code> to be encoded
+     * @param cal The <code>Calendar</code> to be used in the encoding,
+     *        may be <code>null</code>
+     * @return The encoded <code>Time</code>
+     */
+    public java.sql.Time encodeTime(Time d, Calendar cal, boolean invertTimeZone) {
 
         if (cal == null) {
             return d;
         }
         else {
-            cal.setTime(d);
-            return new Time(cal.getTime().getTime());
+            long time = d.getTime() + 
+            (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() - 
+            Calendar.getInstance().getTimeZone().getRawOffset());
+        
+            return new Time(time);
         }
     }
 
@@ -323,14 +337,25 @@ public class XSQLVAR {
     }
 
 
-    public java.sql.Time decodeTime(java.sql.Time d, Calendar cal) {
+    /**
+     * Decode a <code>Time</code> value using a given <code>Calendar</code>.
+     *
+     * @param d The <code>Time</code> to be decoded
+     * @param cal The <code>Calendar</code> to be used in the decoding, may
+     *        be <code>null</code>
+     * @return The decooded <code>Time</code>
+     */
+    public java.sql.Time decodeTime(java.sql.Time d, Calendar cal, boolean invertTimeZone) {
 
         if (cal == null) {
             return d;
         }
         else {
-            cal.setTime(d);
-            return new Time(cal.getTime().getTime());    
+            long time = d.getTime() - 
+            (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() - 
+             Calendar.getInstance().getTimeZone().getRawOffset());
+        
+            return new Time(time);
         }
     }
 

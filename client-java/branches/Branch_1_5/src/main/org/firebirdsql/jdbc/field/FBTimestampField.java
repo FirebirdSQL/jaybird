@@ -51,13 +51,6 @@ class FBTimestampField extends FBField {
     }
     */
     
-    private boolean isInvertTimeZone() {
-        if (c == null) return false;
-        
-        DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
-        return dpb.hasArgument(DatabaseParameterBuffer.timestamp_uses_local_timezone);
-    }
-    
     public String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
@@ -76,7 +69,7 @@ class FBTimestampField extends FBField {
     public Time getTime(Calendar cal) throws SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
-        return field.decodeTime(getTime(),cal);
+        return field.decodeTime(getTime(),cal, isInvertTimeZone());
     }
     public Time getTime() throws SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
@@ -125,7 +118,7 @@ class FBTimestampField extends FBField {
             return;
         }
 
-        setTime(field.encodeTime(value,cal));
+        setTime(field.encodeTime(value,cal, isInvertTimeZone()));
     }
     public void setTime(Time value) throws SQLException {
         if (value == TIME_NULL_VALUE) {

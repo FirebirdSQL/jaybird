@@ -19,6 +19,7 @@
 
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jdbc.*;
@@ -794,5 +795,12 @@ public abstract class FBField {
     //
     void copyOI(){
         rs.row[numCol] = field.sqldata;
+    }
+
+    protected boolean isInvertTimeZone() {
+        if (c == null) return false;
+        
+        DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
+        return dpb.hasArgument(DatabaseParameterBuffer.timestamp_uses_local_timezone);
     }
 }

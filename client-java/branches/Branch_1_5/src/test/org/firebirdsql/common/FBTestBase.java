@@ -212,5 +212,6 @@ public class FBTestBase extends SimpleFBTestBase
         gdsTypeToUrlPrefixMap.put(GDSType.NATIVE_EMBEDDED, "jdbc:firebirdsql:embedded:");
         gdsTypeToUrlPrefixMap.put(GDSType.NATIVE,          "jdbc:firebirdsql:native:");
         gdsTypeToUrlPrefixMap.put(GDSType.ORACLE_MODE,     "jdbc:firebirdsql:oracle:");
+        gdsTypeToUrlPrefixMap.put(GDSType.NATIVE_LOCAL,    "jdbc:firebirdsql:local:");
         }
     }
