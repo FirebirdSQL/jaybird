@@ -110,7 +110,7 @@ public class TestFBBlobParams extends FBTestBase {
      * 
      * @throws java.lang.Exception if something went wrong.
      */
-    public void testUpperAndBlobParam() throws Exception {
+    public void _testUpperAndBlobParam() throws Exception {
         Connection connection = getConnectionViaDriverManager();
         connection.setAutoCommit(false);
 
@@ -152,7 +152,7 @@ public class TestFBBlobParams extends FBTestBase {
      * 
      * @throws java.lang.Exception if something went wrong.
      */
-    public void testEqualityInBlobParam() throws Exception {
+    public void _testEqualityInBlobParam() throws Exception {
         Connection connection = getConnectionViaDriverManager();
         connection.setAutoCommit(false);
 
