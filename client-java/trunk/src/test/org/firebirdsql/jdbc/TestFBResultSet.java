@@ -30,7 +30,32 @@ public class TestFBResultSet extends BaseFBTest {
         + "  3 AS \"Col1\""
         + "FROM rdb$database"
         ;
+        
+    public static final String CREATE_TABLE_STATEMENT = ""
+        + "CREATE TABLE test_empty_string_bug(season_no INTEGER)"
+        ;
+        
+    public static final String DROP_TABLE_STATEMENT = ""
+        + "DROP TABLE test_empty_string_bug"
+        ;
+        
+    public static final String CREATE_VIEW_STATEMENT = ""
+        + "CREATE VIEW \"TEST\"(\"SEASON_NO\", \"EMPTY_CHAR\") "
+        + "  AS  "
+        + "  SELECT season_no, '' FROM test_empty_string_bug"
+        ;
+        
+    public static final String DROP_VIEW_STATEMENT = ""
+        + "DROP VIEW \"TEST\""
+        ;
+        
+    public static final String SELECT_FROM_VIEW_STATEMENT = ""
+        + "SELECT * FROM \"TEST\""
+        ;
     
+    public static final String INSERT_INTO_TABLE_STATEMENT = ""
+        + "INSERT INTO test_empty_string_bug VALUES(?)"
+        ;
 
     public TestFBResultSet(String name) {
         super(name);
@@ -45,6 +70,27 @@ public class TestFBResultSet extends BaseFBTest {
         
         connection = DriverManager.getConnection(
             DB_DRIVER_URL, DB_INFO);
+            
+        Statement stmt = connection.createStatement();
+        
+        try {
+            try {
+                stmt.executeUpdate(DROP_VIEW_STATEMENT);
+            } catch (SQLException ex) {
+                // do nothing here
+            }
+            
+            try {
+                stmt.executeUpdate(DROP_TABLE_STATEMENT);
+            } catch (SQLException ex) {
+                // do nothing here
+            }
+            
+            stmt.executeUpdate(CREATE_TABLE_STATEMENT);
+            stmt.executeUpdate(CREATE_VIEW_STATEMENT);
+        } finally {
+            stmt.close();
+        }
     }
 
     protected void tearDown() throws Exception {
@@ -72,6 +118,51 @@ public class TestFBResultSet extends BaseFBTest {
         assertTrue("Col1 should be 1.", rs.getInt("Col1") == 1);
         
         stmt.close();
+    }
+    
+    /**
+     * This test checks if an empty column in a view is correctly returned
+     * to the client.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testEmptyColumnInView() throws Exception {
+        PreparedStatement ps = 
+            connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+            
+        try {
+            for(int i = 0; i < 10; i++) {
+                ps.setInt(1, i);
+                ps.executeUpdate();
+            }
+        } finally {
+            ps.close();
+        }
+        
+        
+        connection.setAutoCommit(false);
+
+        Statement stmt = connection.createStatement();
+        
+        try {
+            
+            ResultSet rs = stmt.executeQuery(SELECT_FROM_VIEW_STATEMENT);
+            
+            int counter = 0;
+            while(rs.next()) {
+                int key = rs.getInt(1);
+                String value = rs.getString(2);
+                
+                counter++;
+            }
+            
+            assertTrue("Should read 10 records", counter == 10);
+            
+        }finally {
+            stmt.close();
+        }
+        
+        connection.setAutoCommit(true);
     }
 
 }
