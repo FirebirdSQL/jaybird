@@ -245,7 +245,7 @@ public class FBParameterMetaData implements ParameterMetaData {
             case ISCConstants.SQL_BLOB:
                 if (sqlsubtype < 0)
                     return Types.BLOB;
-                else if (sqlsubtype == 0)
+                else if (sqlsubtype == 0 || sqlsubtype > 1)
                     return Types.LONGVARBINARY;
                 else if (sqlsubtype == 1)
                     return Types.LONGVARCHAR;
@@ -318,13 +318,13 @@ public class FBParameterMetaData implements ParameterMetaData {
                     return "BIGINT";
             case ISCConstants.SQL_BLOB:
                 if (sqlsubtype < 0)
-                    return "BLOB SUB_TYPE <0";
+                    return "BLOB SUB_TYPE " + sqlsubtype;
                 else if (sqlsubtype == 0)
                     return "BLOB SUB_TYPE 0";
                 else if (sqlsubtype == 1)
                     return "BLOB SUB_TYPE 1";
                 else
-                    return "BLOB SUB_TYPE >1";
+                    return "BLOB SUB_TYPE " + sqlsubtype;
             case ISCConstants.SQL_QUAD:
                 return "ARRAY";
             default:
