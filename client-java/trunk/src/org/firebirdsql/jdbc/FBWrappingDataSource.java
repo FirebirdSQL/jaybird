@@ -28,6 +28,8 @@ package org.firebirdsql.jdbc;
 // imports --------------------------------------
 import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jca.FBPoolingConnectionManager;
+import org.firebirdsql.jca.ManagedConnectionPool;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
@@ -62,6 +64,8 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
 
     transient private FBManagedConnectionFactory mcf;
 
+   transient private FBPoolingConnectionManager cm;
+
     transient private FBDataSource ds;
 
     transient private PrintWriter log;
@@ -72,9 +76,12 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
 
     private String description;
 
+   private boolean pooling = false;
+
+   private final ManagedConnectionPool.PoolParams poolParams = new ManagedConnectionPool.PoolParams();
+
     public FBWrappingDataSource() throws ResourceException {
         mcf = new FBManagedConnectionFactory();
-        ds = (FBDataSource)mcf.createConnectionFactory();
     }
 
 
@@ -86,6 +93,80 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
         return jndiReference;
     }
 
+   public void setPooling(final boolean pooling)
+   {
+      this.pooling = pooling;
+   }
+
+   public boolean getPooling()
+   {
+      return pooling;
+   }
+
+   public void setMinSize(final int minSize)
+   {
+      poolParams.minSize = minSize;
+   }
+
+   public int getMinSize()
+   {
+      return poolParams.minSize;
+   }
+
+   public void setMaxSize(int maxSize)
+   {
+      poolParams.maxSize = maxSize;
+   }
+
+   public int getMaxSize()
+   {
+      return poolParams.maxSize;
+   }
+
+   public void setBlockingTimeout(final int blockingTimeout)
+   {
+      poolParams.blockingTimeout = blockingTimeout;
+   }
+
+   public int getBlockingTimeout()
+   {
+      return poolParams.blockingTimeout;
+   }
+
+   public void setIdleTimeout(long idleTimeout)
+   {
+      poolParams.idleTimeout = idleTimeout;
+   }
+
+   public long getIdleTimeout()
+   {
+      return poolParams.idleTimeout;
+   }
+
+   public void setIdleTimeoutMinutes(long idleTimeout)
+   {
+      poolParams.idleTimeout = idleTimeout * 1000 * 60;
+   }
+
+   public long getIdleTimeoutMinutes()
+   {
+      return poolParams.idleTimeout / (1000 * 60);
+   }
+
+   public FBConnectionRequestInfo getConnectionRequestInfo()
+   {
+      return mcf.getDefaultConnectionRequestInfo();
+   }
+
+   public void setConnectionRequestInfo(FBConnectionRequestInfo cri)
+   {
+      mcf.setConnectionRequestInfo(cri);
+   }
+
+   public int getConnectionCount()
+   {
+      return cm.getConnectionCount();
+   }
 
   /**
    * <p>Attempt to establish a database connection.
@@ -94,6 +175,7 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
    * @exception SQLException if a database-access error occurs.
    */
     public Connection getConnection() throws  SQLException {
+       checkStarted();
         return ds.getConnection();
     }
 
@@ -108,6 +190,7 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
    * @exception SQLException if a database-access error occurs.
    */
     public Connection getConnection(String userName, String userPassword) throws  SQLException {
+       checkStarted();
         return ds.getConnection(userName, userPassword);
     }
 
@@ -166,7 +249,8 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
    * @exception SQLException if a database access error occurs.
    */
     public void setLoginTimeout(int seconds) throws  SQLException {
-        loginTimeout = seconds;
+       //loginTimeout = seconds;
+       setBlockingTimeout(seconds * 1000);
     }
 
 
@@ -182,7 +266,8 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
    * @exception SQLException if a database access error occurs.
    */
     public int getLoginTimeout() throws  SQLException {
-        return loginTimeout;
+       //return loginTimeout;
+       return getBlockingTimeout()/1000;
     }
 
     //Now the useful properties for the DataSource.
@@ -227,6 +312,31 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
     {
         return description;
     }
+
+   private void checkStarted() throws SQLException
+   {
+      if (ds == null) 
+      {
+         try 
+         {
+          
+            if (pooling) 
+            {
+               cm = new FBPoolingConnectionManager(poolParams, mcf);
+               ds = (FBDataSource)mcf.createConnectionFactory(cm);  
+            } // end of if ()
+            else
+            {
+               ds = (FBDataSource)mcf.createConnectionFactory();
+            } // end of else
+         }
+         catch (ResourceException re)
+         {
+            throw new SQLException("Couldn't create ConnectionFactory! " + re);
+         } // end of try-catch
+        
+      } // end of if ()
+   }      
 
 }
 

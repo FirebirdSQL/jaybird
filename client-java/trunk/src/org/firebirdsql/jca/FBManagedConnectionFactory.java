@@ -128,7 +128,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
     //returning our internal state may not be a good idea!
     public FBConnectionRequestInfo getDefaultConnectionRequestInfo() {
-        return defaultCri;
+        return new FBConnectionRequestInfo(defaultCri);
     }
 
     public void setUserName(String userName)

@@ -51,6 +51,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
       <pathelement location="${src.lib.dir}/jaas.jar"/>
       <pathelement location="${src.lib.dir}/jmxri.jar"/>
       <pathelement location="${lib.dir}/junit.jar"/>
+      <pathelement location="${src.lib.dir}/concurrent.jar"/>
     </path>
 
 
@@ -87,8 +88,9 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
 
     <javac srcdir="${src.dir}"
            destdir="${build.classes}"
-           debug="off"
-           deprecation="off"
+           target="1.2"
+           debug="on"
+           deprecation="on"
            optimize="on"
            includes="org/**"
            excludes="**/temp*"
@@ -183,7 +185,7 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
       </classpath>
       <formatter type="plain" usefile="false"/>
       <!--test name="org.firebirdsql.jca.TestFBResultSet"/-->
-      <test name="org.firebirdsql.jca.TestFBDatabaseMetaData"/>
+      <test name="org.firebirdsql.jdbc.TestFBWrappingDataSource"/>
     </junit>
   </target>
 
