@@ -1,3 +1,32 @@
+2003-09-02 15:31  ryanbaldwin
+
+	* client-java/src/native/jaygds/source/entrypoints.cpp:
+	
+	Revised fix for bug demonstrated in
+	org.firebirdsql.ngds.TestNgdsBlobReadBug.
+
+2003-09-02 15:15  ryanbaldwin
+
+	* client-java/src/native/jaygds/source/entrypoints.cpp:
+	
+	Fix for bug demonstrated in
+	org.firebirdsql.ngds.TestNgdsBlobReadBug.
+
+2003-09-02 15:01  ryanbaldwin
+
+	*
+	client-java/src/test/org/firebirdsql/ngds/TestNgdsBlobReadBug.java:
+	
+	Fixed bad literal text.
+
+2003-09-02 13:19  ryanbaldwin
+
+	* client-java/src/test/org/firebirdsql/ngds/: TestNgds.java,
+	TestNgdsBlobReadBug.java:
+	
+	Fixed file header for TestNgds.java.  Added a test(currently
+	failing) which reproduces a bug with blob reading in type 2 mode.
+
 2003-08-22 00:29  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/:
