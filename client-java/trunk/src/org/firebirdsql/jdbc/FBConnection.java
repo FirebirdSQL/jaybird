@@ -133,7 +133,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @return a new Statement object
      * @exception SQLException if a database access error occurs
      */
-    public Statement createStatement() throws SQLException {
+    public synchronized Statement createStatement() throws SQLException {
         return new FBStatement(this);
     }
 
@@ -146,7 +146,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @return <description>
      * @exception java.sql.SQLException <description>
      */
-    public Statement createStatement(int param1, int param2, int param3) throws SQLException {
+    public synchronized Statement createStatement(int param1, int param2, 
+        int param3) throws SQLException 
+    {
         // TODO: implement this java.sql.Connection method
         throw new SQLException("not yet implemented");
     }
@@ -181,7 +183,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * pre-compiled statement
      * @exception SQLException if a database access error occurs
      */
-    public PreparedStatement prepareStatement(String sql)
+    public synchronized PreparedStatement prepareStatement(String sql)
         throws SQLException {
         return new FBPreparedStatement(this, sql);
     }
@@ -195,7 +197,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @return <description>
      * @exception java.sql.SQLException <description>
      */
-    public PreparedStatement prepareStatement(String param1, int param2) throws SQLException {
+    public synchronized PreparedStatement prepareStatement(String param1, 
+        int param2) throws SQLException 
+    {
         // TODO: implement this java.sql.Connection method
         throw new SQLException("not yet implemented");
     }
@@ -210,7 +214,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @return <description>
      * @exception java.sql.SQLException <description>
      */
-    public PreparedStatement prepareStatement(String param1, int param2, int param3, int param4) throws SQLException {
+    public synchronized PreparedStatement prepareStatement(String param1, 
+        int param2, int param3, int param4) throws SQLException 
+    {
         // TODO: implement this java.sql.Connection method
         throw new SQLException("not yet implemented");
     }
@@ -223,7 +229,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @return <description>
      * @exception java.sql.SQLException <description>
      */
-    public PreparedStatement prepareStatement(String param1, int[] param2) throws SQLException {
+    public synchronized PreparedStatement prepareStatement(String param1, 
+        int[] param2) throws SQLException 
+    {
         // TODO: implement this java.sql.Connection method
         throw new SQLException("not yet implemented");
     }
@@ -235,7 +243,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @return <description>
      * @exception java.sql.SQLException <description>
      */
-    public PreparedStatement prepareStatement(String param1, String[] param2) throws SQLException {
+    public synchronized PreparedStatement prepareStatement(String param1, 
+        String[] param2) throws SQLException 
+    {
         // TODO: implement this java.sql.Connection method
         throw new SQLException("not yet implemented");
     }
@@ -268,7 +278,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * pre-compiled SQL statement
      * @exception SQLException if a database access error occurs
      */
-    public CallableStatement prepareCall(String sql) throws SQLException {
+    public synchronized CallableStatement prepareCall(String sql) 
+        throws SQLException 
+    {
         return new FBCallableStatement(this, sql);
     }
 
@@ -282,7 +294,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @return <description>
      * @exception java.sql.SQLException <description>
      */
-    public CallableStatement prepareCall(String param1, int param2, int param3, int param4) throws SQLException {
+    public synchronized CallableStatement prepareCall(String param1, int param2, 
+        int param3, int param4) throws SQLException 
+    {
         // TODO: implement this java.sql.Connection method
         throw new SQLException("not yet implemented");
     }
@@ -299,7 +313,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @return the native form of this statement
      * @exception SQLException if a database access error occurs
      */
-    public String nativeSQL(String sql) throws SQLException {
+    public synchronized String nativeSQL(String sql) throws SQLException {
         try {
             return new FBEscapedParser().parse(sql);
         } catch(FBSQLParseException pex) {
@@ -331,7 +345,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * auto-commit.
      * @exception SQLException if a database access error occurs
      */
-    public void setAutoCommit(boolean autoCommit) throws SQLException {
+    public synchronized void setAutoCommit(boolean autoCommit) 
+        throws SQLException 
+    {
         if (this.autoCommit != autoCommit && inTransaction())
             try {
                 getLocalTransaction().commit();
@@ -364,7 +380,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      * @see #setAutoCommit
      */
-    public void commit() throws SQLException {
+    public synchronized void commit() throws SQLException {
         if (getAutoCommit())
         {
             throw new SQLException("commit called with AutoCommit true!");
@@ -390,7 +406,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      * @see #setAutoCommit
      */
-    public void rollback() throws SQLException {
+    public synchronized void rollback() throws SQLException {
         if (getAutoCommit())
         {
             throw new SQLException("rollback called with AutoCommit true!");
@@ -414,7 +430,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @param param1 <description>
      * @exception java.sql.SQLException <description>
      */
-    public void rollback(Savepoint param1) throws SQLException {
+    public synchronized void rollback(Savepoint param1) throws SQLException {
         // TODO: implement this java.sql.Connection method
         throw new SQLException("Rollback to savepoint not yet implemented!");
     }
@@ -430,7 +446,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      *
      * @exception SQLException if a database access error occurs
      */
-    public void close() {
+    public synchronized void close() {
         if (mc != null) {
             mc.close(this);
             mc = null;
@@ -463,7 +479,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @return a DatabaseMetaData object for this Connection
      * @exception SQLException if a database access error occurs
      */
-    public DatabaseMetaData getMetaData() throws SQLException {
+    public synchronized DatabaseMetaData getMetaData() throws SQLException {
         if (metaData == null) {
             metaData = new FBDatabaseMetaData(this);
         }
@@ -482,7 +498,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * read-only mode.
      * @exception SQLException if a database access error occurs
      */
-    public void setReadOnly(boolean readOnly) throws SQLException {
+    public synchronized void setReadOnly(boolean readOnly) throws SQLException {
         mc.setReadOnly(readOnly);
     }
 
@@ -506,7 +522,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      *
      * @exception SQLException if a database access error occurs
      */
-    public void setCatalog(String catalog) throws SQLException {
+    public synchronized void setCatalog(String catalog) throws SQLException {
     }
 
 
@@ -580,7 +596,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      * @see DatabaseMetaData#supportsTransactionIsolationLevel
      */
-    public void setTransactionIsolation(int level) throws SQLException {
+    public synchronized void setTransactionIsolation(int level) 
+        throws SQLException 
+    {
         try 
         {
             mc.setTransactionIsolation(level);
@@ -655,8 +673,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public Statement createStatement(int resultSetType, int resultSetConcurrency)
-        throws SQLException {
+    public synchronized Statement createStatement(int resultSetType, 
+        int resultSetConcurrency) throws SQLException 
+    {
 		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
 		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
 		     return createStatement();
@@ -683,8 +702,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public PreparedStatement prepareStatement(String sql, int resultSetType,
-                    int resultSetConcurrency) throws SQLException {
+    public synchronized PreparedStatement prepareStatement(String sql, 
+        int resultSetType, int resultSetConcurrency) throws SQLException 
+    {
 		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
 		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
 	        return new FBPreparedStatement(this, sql);
@@ -710,8 +730,9 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public CallableStatement prepareCall(String sql, int resultSetType,
-                 int resultSetConcurrency) throws SQLException {
+    public synchronized CallableStatement prepareCall(String sql, 
+        int resultSetType, int resultSetConcurrency) throws SQLException 
+    {
 		  if (resultSetType == java.sql.ResultSet.TYPE_FORWARD_ONLY
 		  && resultSetConcurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
 	        return new FBCallableStatement(this, sql);
@@ -749,7 +770,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public void setTypeMap(java.util.Map map) throws SQLException {
+    public synchronized void setTypeMap(java.util.Map map) throws SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -759,7 +780,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @param param1 <description>
      * @exception java.sql.SQLException <description>
      */
-    public void setHoldability(int param1) throws SQLException {
+    public synchronized void setHoldability(int param1) throws SQLException {
         // TODO: implement this java.sql.Connection method
         throw new SQLException("Not yet implemented");
     }
@@ -781,7 +802,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @return <description>
      * @exception java.sql.SQLException <description>
      */
-    public Savepoint setSavepoint() throws SQLException {
+    public synchronized Savepoint setSavepoint() throws SQLException {
         // TODO: implement this java.sql.Connection method
         throw new SQLException("Not yet implemented");
 
@@ -794,7 +815,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @return <description>
      * @exception java.sql.SQLException <description>
      */
-    public Savepoint setSavepoint(String param1) throws SQLException {
+    public synchronized Savepoint setSavepoint(String param1) throws SQLException {
         // TODO: implement this java.sql.Connection method
         throw new SQLException("Not yet implemented");
 
@@ -805,7 +826,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @param param1 <description>
      * @exception java.sql.SQLException <description>
      */
-    public void releaseSavepoint(Savepoint param1) throws SQLException {
+    public synchronized void releaseSavepoint(Savepoint param1) throws SQLException {
         // TODO: implement this java.sql.Connection method
         throw new SQLException("Not yet implemented");
     }
@@ -815,7 +836,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
     //-------------------------------------------
     //Borrowed from javax.resource.cci.Connection
 
-    public FBLocalTransaction getLocalTransaction() {
+    public synchronized FBLocalTransaction getLocalTransaction() {
         if (localTransaction == null) {
             localTransaction = new FBLocalTransaction(mc, this);
         }
@@ -827,7 +848,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * into a blob field without needing a preexisting blob
      * to modify.
     **/
-    public Blob createBlob() throws SQLException {
+    public synchronized Blob createBlob() throws SQLException {
         return new FBBlob(this, 0);
     }
 
@@ -856,7 +877,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      *
      * @return a <code>boolean</code> value, true if transaction was started.
      */
-    void ensureInTransaction() throws SQLException
+    synchronized void ensureInTransaction() throws SQLException
     {
 		 try {
 			if (inTransaction())
@@ -884,12 +905,12 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      *
      * @return a <code>boolean</code> value
      */
-    boolean willEndTransaction()
+    synchronized boolean willEndTransaction()
     {
         return getAutoCommit() && autoTransaction;
     }
 
-    void checkEndTransaction() throws SQLException
+    synchronized void checkEndTransaction() throws SQLException
     {
         if (willEndTransaction())
         {
@@ -906,7 +927,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
         } // end of if ()
     }
 
-	 protected void addWarning(java.sql.SQLWarning warning){
+	 protected synchronized void addWarning(java.sql.SQLWarning warning){
 		 if (firstWarning == null)
 			 firstWarning = warning;
 		 else{

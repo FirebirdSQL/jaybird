@@ -83,15 +83,18 @@ import org.firebirdsql.logging.LoggerFactory;
              throw new ResourceException("local transaction active: can't begin another");
          }
          xid = new FBLocalXid();
-         try {
-             mc.start(xid, XAResource.TMNOFLAGS);  //FBManagedConnection is its own XAResource
-         }
-         catch (XAException e) {
-            if (log != null) log.warn("couldn't start local transaction: " , e);
-            throw new ResourceException("couldn't start local transaction: " + e);
-         }
-         if (c != null) {
-             mc.notify(ConnectionEvent.LOCAL_TRANSACTION_STARTED, c, null);
+         
+         synchronized(mc) {
+             try {
+                 mc.start(xid, XAResource.TMNOFLAGS);  //FBManagedConnection is its own XAResource
+             }
+             catch (XAException e) {
+                if (log != null) log.warn("couldn't start local transaction: " , e);
+                throw new ResourceException("couldn't start local transaction: " + e);
+             }
+             if (c != null) {
+                 mc.notify(ConnectionEvent.LOCAL_TRANSACTION_STARTED, c, null);
+             }
          }
      }
 
@@ -108,18 +111,21 @@ import org.firebirdsql.logging.LoggerFactory;
          if (xid == null) {
              throw new ResourceException("no local transaction active: can't commit");
          }
-         try {
-             mc.end(xid, XAResource.TMNOFLAGS);  //FBManagedConnection is its own XAResource
-             mc.commit(xid, true);
-         }
-         catch (XAException e) {
-             throw new ResourceException("couldn't commit local transaction: " + e);
-         }
-         finally {
-             xid = null;
-         }
-         if (c != null) {
-             mc.notify(ConnectionEvent.LOCAL_TRANSACTION_COMMITTED, c, null);
+         
+         synchronized(mc) {
+             try {
+                 mc.end(xid, XAResource.TMNOFLAGS);  //FBManagedConnection is its own XAResource
+                 mc.commit(xid, true);
+             }
+             catch (XAException e) {
+                 throw new ResourceException("couldn't commit local transaction: " + e);
+             }
+             finally {
+                 xid = null;
+             }
+             if (c != null) {
+                 mc.notify(ConnectionEvent.LOCAL_TRANSACTION_COMMITTED, c, null);
+             }
          }
      }
 
@@ -139,18 +145,21 @@ import org.firebirdsql.logging.LoggerFactory;
          if (xid == null) {
              throw new ResourceException("no local transaction active: can't rollback");
          }
-         try {
-             mc.end(xid, XAResource.TMNOFLAGS);  //??? on flags --FBManagedConnection is its own XAResource
-             mc.rollback(xid);
-         }
-         catch (XAException e) {
-             throw new ResourceException("couldn't commit local transaction: " + e);
-         }
-         finally {
-             xid = null;
-         }
-         if (c != null) {
-             mc.notify(ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK, c, null);
+         
+         synchronized(mc) {
+             try {
+                 mc.end(xid, XAResource.TMNOFLAGS);  //??? on flags --FBManagedConnection is its own XAResource
+                 mc.rollback(xid);
+             }
+             catch (XAException e) {
+                 throw new ResourceException("couldn't commit local transaction: " + e);
+             }
+             finally {
+                 xid = null;
+             }
+             if (c != null) {
+                 mc.notify(ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK, c, null);
+             }
          }
      }
 
