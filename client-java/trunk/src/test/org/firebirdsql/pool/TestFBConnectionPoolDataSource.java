@@ -760,6 +760,24 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
                 ddlConnection.close();
             }
         }
-        
+    }
+    
+    public void testNoPooling() throws Exception {
+        pool.setPooling(false);
+        pool.setMinPoolSize(0);
+        pool.setMaxPoolSize(5);
+
+        try {
+            Connection connection1 = pool.getPooledConnection().getConnection();
+            assertTrue(pool.getTotalSize() == 1);
+            
+            connection1.close();
+            assertTrue(pool.getTotalSize() == 0);
+            
+            Connection connection2 = pool.getPooledConnection().getConnection();
+            assertTrue(pool.getTotalSize() == 1);
+        } finally {
+            pool.shutdown();
+        }
     }
 }
