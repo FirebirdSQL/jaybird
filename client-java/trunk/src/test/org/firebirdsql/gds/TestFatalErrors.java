@@ -133,7 +133,7 @@ public class TestFatalErrors extends FBTestBase {
                 try {
                     stmt.execute("bla-bla-bla");
                 } catch(SQLException ex) {
-                    if (ex.getErrorCode() != ISCConstants.isc_dsql_error)
+                    if (ex.getErrorCode() != ISCConstants.isc_dsql_error && ex.getErrorCode() != ISCConstants.isc_sqlerr)
                         throw ex;
                 }
                 
