@@ -27,6 +27,8 @@
 #include "ibase.h"
 #include "jni.h"
 
+#include <algorithm>
+
 
 
 // JIscDatabaseHandle Class -------------------------------------------------------------------------------------
@@ -395,7 +397,9 @@ isc_blob_handle		JIscBlobHandle::GetHandleValue()
  */
 void JIscBlobHandle::SetId( ISC_QUAD handle )
 	{
-	sMethodBinding_SetId.CallVoid( mJavaEnvironment, mJavaObjectHandle, handle );
+	jlong valueToSet = GetJLongFromIscQuad(handle);
+
+	sMethodBinding_SetId.CallVoid( mJavaEnvironment, mJavaObjectHandle, valueToSet );
 	}
 
 
@@ -406,12 +410,64 @@ ISC_QUAD		JIscBlobHandle::GetId()
 	{
 	jlong value = sMethodBinding_GetId.CallLong( mJavaEnvironment, mJavaObjectHandle );
 
-	ISC_QUAD returnValue;
+	return GetIscQuadFromJavaLong(value);
+	}
 
-	memcpy( &returnValue, &value, sizeof(ISC_QUAD) );
 
+/* The primary purpose of this method is to ensure that the byte ordering in the jlong
+ * is the same across all platforms - the java code may set this into the sqldata field
+ * on an XSQLDAVar structure so it must always be LSB first.
+ */
+jlong  JIscBlobHandle::GetJLongFromIscQuad(ISC_QUAD value)
+	{
+	jlong returnValue = *((jlong*)&value);
+
+	if( IsLittleEndianByteOrdering() == false )
+		{
+		char* pointerToReturnValue = (char*)&returnValue;
+
+		std::reverse(pointerToReturnValue, pointerToReturnValue + sizeof(jlong));
+		}
+	
 	return returnValue;
 	}
+
+/* The inverse of the above method.
+ *
+ *
+ */
+ISC_QUAD JIscBlobHandle::GetIscQuadFromJavaLong(jlong value)
+	{
+	ISC_QUAD returnValue = *((ISC_QUAD*)&value);
+	
+	if( IsLittleEndianByteOrdering() == false )
+		{
+		char* pointerToReturnValue = (char*)&returnValue;
+
+		std::reverse(pointerToReturnValue, pointerToReturnValue + sizeof(ISC_QUAD));
+		}
+	
+	return returnValue;
+	}
+
+
+
+//ISC_QUAD Java
+
+bool JIscBlobHandle::IsLittleEndianByteOrdering()
+	{
+	union 
+		{
+		char c;
+		int i;
+		} u;
+
+	u.i = 0;
+	u.c = 1;
+
+	return (u.i == 1);
+	}
+
 
 /*
  *
