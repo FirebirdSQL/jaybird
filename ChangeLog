@@ -1,3 +1,41 @@
+2004-07-13 10:55  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	
+	added patch to prevent "unrecognized transaction" exception, thanks
+	to J.A.C.K.
+
+2004-07-13 10:53  rrokytskyy
+
+	*
+	
+	fixed possible multithreading issue, thanks to J.A.C.K.
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
+	.java:
+
+2004-07-13 10:37  rrokytskyy
+
+	*
+	
+	code reformatting
+	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
+	.java:
+
+2004-07-13 10:12  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	fixed some metadata issues
+
+2004-07-13 09:59  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	FBConnectionPoolDataSource.java, FBWrappingDataSource.java:
+	
+	deprecated sqlRole property, added roleName property
+
 2004-06-19 23:16  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/:
