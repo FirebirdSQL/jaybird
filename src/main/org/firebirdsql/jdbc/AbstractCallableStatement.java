@@ -964,17 +964,6 @@ public abstract class AbstractCallableStatement
         currentRs = getCachedResultSet(false);
     }
     
-    /**
-     * Returns the current result as a <code>ResultSet</code> object.
-     * This method should be called only once per result.
-     * Calling this method twice with autocommit on and used will probably
-     * throw an inappropriate or uninformative exception.
-     *
-     * @return the current result as a <code>ResultSet</code> object;
-     * <code>null</code> if the result is an update count or there are no more results
-     * @exception SQLException if a database access error occurs
-     * @see #execute
-     */
     public ResultSet getResultSet() throws SQLException {
         return getCurrentResultSet();
     }

@@ -21,15 +21,12 @@ package org.firebirdsql.gds;
 
 
 /**
- * This interface replaces Clumplet in calls to <code>isc_create_blob2</code> 
- * and <code>isc_open_blob2</code>.
- * <p>
- * Instances are created via <code>GDS.newBlobParameterBuffer();</code>
- * <p>
- * Constants from <code>ISCConstants</code> that are relevant to a blob 
- * parameter buffer are duplicated on this interface. If the original name was
- * <code>isc_bpb_source_type</code> then the new name is 
- * <code>source_type</code>. 
+ * This interface replaces Clumplet in calls to isc_create_blob2 and isc_open_blob2.
+ * 
+ * Instances are created via GDS.newBlobParameterBuffer();
+ *
+ * Constants from ISCConstants that are relevant to a blob parameter buffer are duplicated 
+ * on this interface. If the original name where isc_bpb_source_type the new name is source_type. 
  */
 public interface BlobParameterBuffer
     {
@@ -44,35 +41,23 @@ public interface BlobParameterBuffer
     int type_stream             =  ISCConstants.isc_bpb_type_stream;
 
     /**
-     * Set a void (valueless) parameter on this 
-     * <code>BlobParameterBuffer</code>.
      *
-     * @param argumentType The parameter to be set, either an 
-     *        <code>ISCConstantsone.isc_bpb_*</code> constant, or one of the 
-     *        fields of this interface
+	 * 
+     * @param argumentType
      */
     void addArgument(int argumentType);
 
     /**
-     * Set a <code>String</code> parameter on this 
-     * <code>BlobParameterBuffer</code>.
      *
-     * @param argumentType The parameter to be set, either an 
-     *        <code>ISCConstantsone.isc_bpb_*</code> constant, or one of the 
-     *        fields of this interface
-     * @param value The value to set for the given parameter
+     * @param argumentType
+     * @param value
      */
     void addArgument(int argumentType, String value);
 
     /**
-     * Set an <code>int</code> parameter on this 
-     * <code>BlobParameterBuffer</code>.
      *
-     * @param argumentType The parameter to be set, either an 
-     *        <code>ISCConstantsone.isc_bpb_*</code> constant, or one of the 
-     *        fields of this interface
-     * @param value The value to set for the given parameter
+     * @param argumentType
+     * @param value
      */
     void addArgument(int argumentType, int value);
-
-}
+    }

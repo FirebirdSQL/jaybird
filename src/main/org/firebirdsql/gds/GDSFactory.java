@@ -32,25 +32,14 @@ import java.util.HashMap;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class GDSFactory {
+public class GDSFactory
+    {
 
-
-    /**
-     * Get an instance of the default <code>GDS</code> implemenation.
-     *
-     * @return A default <code>GDS</code> instance
-     */
     public static GDS getDefaultGDS()
         {
         return getGDSForType(GDSType.PURE_JAVA);
         }
 
-    /**
-     * Get an instance of the specified implemenation of <code>GDS</code>.
-     *
-     * @param gdsType The type of the <code>GDS</code> instance to be returned
-     * @return A <code>GDS</code> implementation of the given type
-     */
     public synchronized static GDS getGDSForType(GDSType gdsType)
         {
         GDS gds = (GDS) gdsTypeToGdsInstanceMap.get(gdsType);

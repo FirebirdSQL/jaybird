@@ -373,57 +373,43 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     //jdbc 3.0 additions
 
     /**
-     * <b>This operation is not currently supported</b>
-     * Truncate this <code>Blob</code> to a given length. 
      *
-     * @param param1 The length to truncate this Blob to 
-     * @exception java.sql.SQLException this operation is not supported     
-     * */
+     * @param param1 <description>
+     * @exception java.sql.SQLException <description>
+     */
     public void truncate(long param1) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
     /**
-     * <b>This operation is not currently supported</b>
-     * Writes all or part of the given byte array to the BLOB value that this 
-     * <code>Blob</code> object represents and returns the number of bytes 
-     * written.
      *
-     * @param param1 The position at which to start writing 
-     * @param param2 The array of bytes to be written 
-     * @return the number of bytes written 
-     * @exception java.sql.SQLException because this operation is not supported 
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int setBytes(long param1, byte[] param2) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
     /**
-     * <b>This operation is not currently supported</b>
-     * Writes all or part of the given byte array to the BLOB value that this 
-     * <code>Blob</code> object represents and returns the number of bytes 
-     * written.
      *
-     * @param param1 The position at which to start writing 
-     * @param param2 The array of bytes to be written 
-     * @param param3 the offset into the byte array at which to start reading 
-     * the bytes to be set 
-     * @param param4 the number of bytes to be written to the BLOB value from 
-     * the byte array   
-     * @return the number of bytes written 
-     * @exception java.sql.SQLException because this operation is not supported 
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @param param4 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int setBytes(long param1, byte[] param2, int param3, int param4) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
     /**
-     * Retrieves a stream that can be used to write to the BLOB value that 
-     * this Blob object represents. The stream begins at position pos. 
      *
      * @param pos The position in the blob to start writing.
      * @return OuputStream to write to.
-     * @exception java.sql.SQLException if a database access error occurs 
+     * @exception java.sql.SQLException <description>
      */
     public OutputStream setBinaryStream(long pos) throws SQLException {
         if (blobOut != null) 
@@ -451,12 +437,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
 
     //package methods
 
-    /**
-     * Get the identifier for this <code>Blob</code>
-     *
-     * @return This <code>Blob</code>'s identifier
-     * @throws SQLException if a database access error occurs
-     */
     public long getBlobId() throws SQLException {
         if (isNew) 
             throw new FBSQLException("No Blob ID is available in new Blob object.");
@@ -469,13 +449,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         this.isNew = false;
     }
 
-    /**
-     * Copy the contents of an <code>InputStream</code> into this Blob.
-     *
-     * @param inputStream the stream from which data will be copied
-     * @param length The maximum number of bytes to read from the InputStream
-     * @throws SQLException if a database access error occurs
-     */
     public void copyStream(InputStream inputStream, int length) throws SQLException {
         OutputStream os = setBinaryStream(0);
         byte[] buffer = new byte[bufferlength];
@@ -496,13 +469,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
     }
 
-    /**
-     * Copy data from a character stream into this Blob.
-     *
-     * @param inputStream the source of data to copy
-     * @param length The maximum number of bytes to copy
-     * @param encoding The encoding used in the character stream
-     */
     public void copyCharacterStream(Reader inputStream, int length, String encoding) throws SQLException {
         OutputStream os = setBinaryStream(0);
         try {
@@ -535,9 +501,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
 
     //Inner classes
 
-    /**
-     * An input stream for reading directly from a FBBlob instance.
-     */
     public class FBBlobInputStream extends InputStream 
         implements FirebirdBlob.BlobInputStream
     {

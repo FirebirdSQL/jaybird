@@ -5,7 +5,7 @@
 	<TITLE></TITLE>
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.2  (Win32)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
-	<META NAME="CHANGED" CONTENT="20040829;17041724">
+	<META NAME="CHANGED" CONTENT="20041205;12440547">
 	<STYLE>
 	<!--
 		@page { size: 21cm 29.7cm; margin: 2cm }
@@ -37,7 +37,7 @@
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <H1 CLASS="western" ALIGN=CENTER>JayBird JCA/JDBC Driver<BR>Release
-Notes v 1.5.0</H1>
+Notes v 1.5.5</H1>
 <DIV ID="Table of Contents1" DIR="LTR">
 	<DIV ID="Table of Contents1_Head" DIR="LTR">
 		<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Table
@@ -53,8 +53,8 @@ Notes v 1.5.0</H1>
 	support</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.1.3.Using JayBird with InterBase|outline">Using
 	JayBird with InterBase</A></FONT></P>
-	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.2.What's new in JayBird 1.5.0|outline">What's
-	new in JayBird 1.5.0</A></FONT></P>
+	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.2.What's new in JayBird 1.5|outline">What's
+	new in JayBird 1.5</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.2.1.Type 2 and embedded server|outline">Type
 	2 and embedded server</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.2.2.Support of IN and OUT stored procedure parameters|outline">Support
@@ -71,6 +71,8 @@ Notes v 1.5.0</H1>
 	result sets</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.2.8.JDBC 2.0 compatibility|outline">JDBC
 	2.0 compatibility</A></FONT></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.2.9.List of bugs fixed since JayBird 1.5.0|outline">List
+	of bugs fixed since JayBird 1.5.0</A></FONT></P>
 	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.3.Distribution package|outline">Distribution
 	package</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.3.1.License|outline">License</A></FONT></P>
@@ -238,8 +240,8 @@ Firebird features in InterBase. JayBird 1.5 provides much more better
 JDBC compatibility compared to InterClient 4 shipped with InterBase
 7.1 and provides many features that are not available in InterClient
 4.</P>
-<H2 CLASS="western"><A NAME="1.2.What's new in JayBird 1.5.0|outline"></A>
-What's new in JayBird 1.5.0</H2>
+<H2 CLASS="western"><A NAME="1.2.What's new in JayBird 1.5|outline"></A>
+What's new in JayBird 1.5</H2>
 <P CLASS="western">JayBird 1.5 introduces number of new features and
 improvements.</P>
 <H3 CLASS="western"><A NAME="1.2.1.Type 2 and embedded server|outline"></A>
@@ -468,6 +470,321 @@ pass JDBC 2.0 compatibility suite. It successfully passes 1216 tests,
 60 tests were excluded, because they are either not applicable to
 Firebird or fail due to some server problems (math rounding issues,
 limitations of NUMERIC data type, etc.).</P>
+<H3 CLASS="western"><A NAME="1.2.9.List of bugs fixed since JayBird 1.5.0|outline"></A>
+List of bugs fixed since JayBird 1.5.0</H3>
+<TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=39*>
+	<COL WIDTH=217*>
+	<THEAD>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-12-04</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed NPE when error happens during
+				reconnecting</P>
+			</TD>
+		</TR>
+	</THEAD>
+	<TBODY>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-12-04</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">allowed calling commit/rollback in Oracle mode</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-11-24</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added setBlob() method for BLOB SUB_TYPE 1
+				fields</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-11-24</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed the issue with calendar in
+				PreparedStatement.setTime(Time, Calendar) method</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-11-21</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added fix for &quot;trying to reopen an open
+				cursor&quot; in type 2 driver</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-11-20</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">improved memory usage within transaction</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-25</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed a bug in write(byte[], int, int) method
+				in FBBlob.java when passed array was bigger than blob buffer size</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-24</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added keepStatements parameter</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-24</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed a bug in AbstractCallableStatement where
+				not all params were marked as set</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-23  
+				</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed an issue when prepared statement was
+				left in incorrect state when exception happened in setter.
+				Original fix provided by Gabriel Reid</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-23</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed an issue with local encodings when
+				connection is obtained via JCA framework</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-23</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">applied patch for the
+				ArrayIndexOutOfBoundsException by Gabriel Reid</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-15</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added support for dialect 1</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-13</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed a bug with encodings in pool</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-11</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed memory leak in pool</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-11</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed ClassFormatError when running JayBird in
+				NATIVE or EMBEDDED mode on Linux</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-10</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added code to handle missing translations</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-10</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added code to support property infos and
+				modified the way properties are handled</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-09</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added mapping between HP-UX and Cp1252
+				encodings</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-09</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added code to solve the issue when database
+				has encoding NONE and there is no chance to control regional
+				settings of the host OS added possibility to translate characters
+				if there are some encoding issues</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-03</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed incorrect interface querying when
+				constructing dynamic proxy</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-03</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added code to close result set when statement
+				is released back to pool</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-03</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added keepStatements property to the 
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-03</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added support for fyracle.dll</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-03</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added support for Oracle-mode URLs (Fyracle
+				project)</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-03</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">test case and fixes for the case of fatal
+				errors</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-02</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed connection leaking</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-01</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed error messages</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-09-26</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added additional synchronization</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-09-26</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed issue with three-param setters in
+				CallableStatement when the passed Calendar was ignored</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-09-21</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added test case for SQL roles</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-09-17</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed issue when FBManager needed running
+				server even in embedded mode</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-09-16</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed issue with messages that in some
+				conditions could not be found (fix provided by Thomas (ben_ata))</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-09-09</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed NPE in pool</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-08-29</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added check for the transaction xid</P>
+			</TD>
+		</TR>
+	</TBODY>
+</TABLE>
 <H2 CLASS="western"><A NAME="1.3.Distribution package|outline"></A>Distribution
 package</H2>
 <P CLASS="western">JayBird driver has compile-time and run-time
@@ -1316,6 +1633,23 @@ JayBird  implementation of the connection pooling classes.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25%>
+				<P CLASS="western"><CODE CLASS="western">keepStatements</CODE></P>
+			</TD>
+			<TD WIDTH=18%>
+				<P CLASS="western" ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P CLASS="western" ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P CLASS="western">If set to <CODE CLASS="western">false</CODE>,
+				pool will close pooled statements when connection is returned
+				back to the pool. 
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
 				<P CLASS="western"><CODE CLASS="western">pingStatement</CODE></P>
 			</TD>
 			<TD WIDTH=18%>
@@ -1590,7 +1924,10 @@ setter method.</P>
 			<TD WIDTH=40%>
 				<P CLASS="western">Character set for the connection. Similar to
 				<CODE CLASS="western">encoding</CODE> property, but accepts Java
-				names instead of Firebird ones.</P>
+				names instead of Firebird ones. If used in combination with
+				<CODE CLASS="western">encoding</CODE> property, specifies the
+				encoding that is used to convert bytes into characters. When used
+				alone, it also determines the client encoding of the application.</P>
 			</TD>
 		</TR>
 		<TR VALIGN=TOP>

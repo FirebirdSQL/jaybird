@@ -21,6 +21,10 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.3  2004/10/08 22:39:10  rrokytskyy
+ * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
+ * added possibility to translate characters if there are some encoding issues
+ *
  * Revision 1.2  2003/01/23 01:41:19  brodsom
  * Encodings patch
  *

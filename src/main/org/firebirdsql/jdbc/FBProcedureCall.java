@@ -32,20 +32,10 @@ public class FBProcedureCall {
     private Vector inputParams = new Vector();
     private Vector outputParams = new Vector();
 
-    /**
-     * Get the name of the procedure to be called.
-     *
-     * @return The procedure name
-     */
     public String getName() {
         return name;
     }
     
-    /**
-     * Set the name of the procedure to be called.
-     *
-     * @param name The name of the procedure
-     */
     public void setName(String name) {
         this.name = name;
     }
@@ -53,8 +43,7 @@ public class FBProcedureCall {
     /**
      * Get input parameter by the specified index.
      * 
-     * @param index index for which parameter has to be returned, first
-     * index is 1
+     * @param index index for which parameter has to be returned.
      * 
      * @return instance of {@link FBProcedureParam}.
      */
@@ -75,12 +64,6 @@ public class FBProcedureCall {
         return result;
     }
     
-    /**
-     * Get the output parameter at the specified index.
-     *
-     * @param index The index of the parameter, first index is 1
-     * @return The parameter at the given index
-     */
     public FBProcedureParam getOutputParam(int index) {
         return getParam(outputParams, index);    
     }
@@ -145,30 +128,14 @@ public class FBProcedureCall {
         	return position;
     }
     
-
-    /**
-     * Get the list of input parameters for this procecedure call.
-     *
-     * @return A list of all input parameters
-     */
     public List getInputParams() {
     	return inputParams;
     }
     
-    /**
-     * Get a list of output parameters for this procedure call.
-     *
-     * @return A list of all output parameters
-     */
     public List getOutputParams() {
         return outputParams;
     }
     
-    /**
-     * Add an input parameter to this procedure call.
-     * 
-     * @param param The parameter to be added
-     */
     public void addInputParam(FBProcedureParam param) {
         if (inputParams.size() < param.getPosition() + 1)
             inputParams.setSize(param.getPosition() + 1);
@@ -176,11 +143,6 @@ public class FBProcedureCall {
     	inputParams.set(param.getPosition(), param);
     }
     
-    /**
-     * Add an output parameter to this procedure call.
-     *
-     * @param param The parameter to be added
-     */
     public void addOutputParam(FBProcedureParam param) {
         if (outputParams.size() < param.getPosition() + 1)
         	outputParams.setSize(param.getPosition() + 1);

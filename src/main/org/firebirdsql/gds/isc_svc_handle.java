@@ -24,22 +24,10 @@ import java.util.List;
 /**
  * The interface <code>isc_svc_handle</code> is a java mapping for a isc_svc_handle handle.
  */
-public interface isc_svc_handle {
-
-    /**
-     * Retrieve whether this service handle is valid.
-     *
-     * @return <code>true</code> if the handle is valid, 
-     *         <code>false</code> otherwise
-     */
+public interface isc_svc_handle
+    {
     boolean isValid();
 
-    /**
-     * Retrieve whether this service handle is invalid.
-     *
-     * @return <code>true</code> if the handle is invalid, 
-     *         <code>false</code> otherwise
-     */
     boolean isNotValid();
 
     /**

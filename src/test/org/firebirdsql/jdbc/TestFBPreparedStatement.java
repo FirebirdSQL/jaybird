@@ -470,7 +470,7 @@ public class TestFBPreparedStatement extends FBTestBase{
             connection.close();
         }
     }
-
+    
     public void testTimeWithCalendar() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
@@ -546,7 +546,6 @@ public class TestFBPreparedStatement extends FBTestBase{
         }
     }
 
-    
     /**
      * Test if failure in setting the parameter leaves the driver in
      * correct state (i.e. "not all params were set").

@@ -32,7 +32,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 /**
- * The Jaybird JDBC Driver implementation for the Firebird database.
+ * Describe class <code>FBDriver</code> here.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0

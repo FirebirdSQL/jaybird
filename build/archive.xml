@@ -42,7 +42,7 @@
        </fileset>
     </jar>
 
-    <jar jarfile="${build.lib}/firebirdsql-full.jar">
+    <jar jarfile="${build.lib}/firebirdsql-full.jar" manifest="${build.etc}/default.mf">
        <fileset dir="${build.classes}">
          <include name="org/firebirdsql/**"/>
        </fileset>

@@ -1,19 +1,4 @@
 #!/usr/bin/perl
-#
-# Copyright 2000-2004 The Apache Software Foundation
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#
 #######################################################################
 #
 # runant.pl
@@ -29,6 +14,7 @@
 # the code is not included. 
 #
 # created:         2000-8-24
+# last modified:   2000-8-24
 # author:          Steve Loughran steve_l@sourceforge.net
 #######################################################################
 #
@@ -49,7 +35,7 @@ use strict;
 #use warnings;
 
 #and set $debug to 1 to turn on trace info
-my $debug=1;
+my $debug=0;
 
 #######################################################################
 #
@@ -65,78 +51,71 @@ if ($HOME eq "")
 my $JAVACMD = $ENV{JAVACMD};
 $JAVACMD = "java" if $JAVACMD eq "";
 
-my $onnetware = 0;
-if ($^O eq "NetWare")
-{
-  $onnetware = 1;
-}
-
-my $oncygwin = ($^O eq "cygwin");
-
 #ISSUE: what java wants to split up classpath varies from platform to platform 
 #and perl is not too hot at hinting which box it is on.
-#here I assume ":" 'cept on win32, dos, and netware. Add extra tests here as needed.
+#here I assume ":" 'cept on win32 and dos. Add extra tests here as needed.
 my $s=":";
-if(($^O eq "MSWin32") || ($^O eq "dos") || ($^O eq "cygwin") ||
-   ($onnetware == 1))
+if(($^O eq "MSWin32") || ($^O eq "dos"))
         {
         $s=";";
         }
 
 #build up standard classpath
-my $localpath = "$HOME/lib/ant-launcher.jar";
-#set JVM options and Ant arguments, if any
-my @ANT_OPTS=split(" ", $ENV{ANT_OPTS});
-my @ANT_ARGS=split(" ", $ENV{ANT_ARGS});
+my $localpath=$ENV{CLASSPATH};
+if ($localpath eq "")
+        {
+        print "warning: no initial classpath\n" if ($debug);
+        $localpath="";
+        }
+
+#add jar files. I am sure there is a perl one liner to do this.
+my $jarpattern="$HOME/lib/*.jar";
+my @jarfiles =glob($jarpattern);
+print "jarfiles=@jarfiles\n" if ($debug);
+my $jar;
+foreach $jar (@jarfiles )
+        {
+        $localpath.="$s$jar";
+        }
+
+#if Java home is defined, look for tools.jar & classes.zip and add to classpath
+my $JAVA_HOME = $ENV{JAVA_HOME};
+if ($JAVA_HOME ne "")
+        {
+        my $tools="$JAVA_HOME/lib/tools.jar";
+        if (-e "$tools")
+                {
+                $localpath .= "$s$tools";
+                }
+        my $classes="$JAVA_HOME/lib/classes.zip";
+        if (-e $classes)
+                {
+                $localpath .= "$s$classes";
+                }
+        }
+else
+        {
+    print "\n\nWarning: JAVA_HOME environment variable is not set.\n".
+                "If the build fails because sun.* classes could not be found\n".
+                "you will need to set the JAVA_HOME environment variable\n".
+                "to the installation directory of java\n";
+        }
 
 #jikes
+my @ANT_OPTS=split $ENV{ANT_OPTS};
 if($ENV{JIKESPATH} ne "")
         {
         push @ANT_OPTS, "-Djikes.class.path=$ENV{JIKESPATH}";
         }
 
 #construct arguments to java
+
 my @ARGS;
+push @ARGS, "-classpath", "$localpath", "-Dant.home=$HOME";
 push @ARGS, @ANT_OPTS;
-
-my $CYGHOME = "";
-
-my $classpath=$ENV{CLASSPATH};
-if ($oncygwin == 1) {
-  $localpath = `cygpath --path --windows $localpath`;
-  chomp ($localpath);
-  if (! $classpath eq "")
-  {
-    $classpath = `cygpath --path --windows "$classpath"`;
-    chomp ($classpath);
-  }
-  $HOME = `cygpath --path --windows $HOME`;
-  chomp ($HOME);
-  $CYGHOME = `cygpath --path --windows $ENV{HOME}`;
-  chomp ($CYGHOME);
-}
-push @ARGS, "-classpath", "$localpath";
-push @ARGS, "-Dant.home=$HOME";
-if ( ! $CYGHOME eq "" )
-{
-  push @ARGS, "-Dcygwin.user.home=\"$CYGHOME\""
-}
-push @ARGS, "org.apache.tools.ant.launch.Launcher", @ANT_ARGS;
+push @ARGS, "org.apache.tools.ant.Main";
 push @ARGS, @ARGV;
-if (! $classpath eq "")
-{
-  if ($onnetware == 1)
-  {
-    # make classpath literally $CLASSPATH
-    # this is to avoid pushing us over the 512 character limit
-    # even skip the ; - that is already in $localpath
-    push @ARGS, "-lib", "\$CLASSPATH";
-  }
-  else
-  {
-    push @ARGS, "-lib", "$classpath";
-  }
-}
+
 print "\n $JAVACMD @ARGS\n\n" if ($debug);
 
 my $returnValue = system $JAVACMD, @ARGS;

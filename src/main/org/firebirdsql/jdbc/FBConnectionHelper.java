@@ -108,15 +108,6 @@ public class FBConnectionHelper {
 
     }
     
-    /**
-     * Get a default instance of {@link FBConnectionRequestInfo} for a 
-     * given GDS implementation. The returned FBConnectionRequestInfo
-     * will be bound to the GDS implemenation that is passed in as a parameter.
-     *
-     * @param gds The <code>GDS</code> implementation
-     * @return The default <code>FBConnectionRequestInfo</code> for the GDS
-     * implementation
-     */
     public static FBConnectionRequestInfo getDefaultCri(GDS gds) {
         FBConnectionRequestInfo result = FBConnectionRequestInfo.newInstance(gds);
         return result;

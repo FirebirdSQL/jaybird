@@ -36,7 +36,7 @@
     <mkdir dir="${build.j2ee}"/>
 
     <javac destdir="${build.j2ee}"
-           target="${ant.java.version}"
+           target="1.2"
            debug="on"
            deprecation="on"
            optimize="on">
@@ -57,7 +57,7 @@
   	<mkdir dir="${build.examples}"/>
     <javac srcdir="${source.examples}"
            destdir="${build.examples}"
-           target="${ant.java.version}"
+           target="1.2"
            debug="on"
            deprecation="on"
            optimize="on"
@@ -80,27 +80,15 @@
     </path>
   </target>
 
-  <target name="set-jdk1.4-src" unless="jdk1.5">
-    <path id="source.jdk.specific">
-      <pathelement path="${source.jdk1.4}"/>
-    </path>
-  </target>
-  
-  <target name="set-jdk1.5-src" if="jdk1.5">
-    <path id="source.jdk.specific">
-      <pathelement path="${source.jdk1.5}"/>
-    </path>
-  </target>
-
-  <target name="compile-driver" depends="compile-j2ee,set-jdbc-20-src,set-jdbc-30-src,set-jdk1.4-src,set-jdk1.5-src">
+  <target name="compile-driver" depends="compile-j2ee,set-jdbc-20-src,set-jdbc-30-src">
     <mkdir dir="${build.classes}"/>
     <javac destdir="${build.classes}"
-           target="${ant.java.version}"
+           target="1.2"
            debug="on"
            deprecation="on"
            optimize="on"
            includes="org/**"
-           excludes="**/temp*,org/firebirdsql/pool/**"
+           excludes="**/temp*"
     >
       <classpath refid="javac.driver.classpath"/>
       <src path="${source.java}"/>
@@ -112,15 +100,14 @@
     <mkdir dir="${build.pool}"/>
     <javac srcdir="${source.pool}"
            destdir="${build.pool}"
-           target="${ant.java.version}"
+           target="1.2"
            debug="on"
            deprecation="on"
            optimize="on"
-           includes="org/firebirdsql/pool/**"
+           includes="org/**"
            excludes="**/temp*"
     >
       <classpath refid="javac.pool.classpath"/>
-      <src refid="source.jdk.specific"/>
     </javac>
   </target>
   
@@ -128,7 +115,7 @@
   	<mkdir dir="${build.compatibility}"/>
     <javac srcdir="${source.compatibility}"
            destdir="${build.compatibility}"
-           target="${ant.java.version}"
+           target="1.2"
            debug="on"
            deprecation="on"
            optimize="on"
@@ -152,7 +139,7 @@
     <mkdir dir="${build.test}"/>
     <javac srcdir="${source.test}"
            destdir="${build.test}"
-           target="${ant.java.version}"
+           target="1.2"
            debug="on"
            deprecation="on"
            optimize="on"

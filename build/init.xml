@@ -8,23 +8,16 @@
 
 	<!-- We set jdbc.30 property if JDK version is 1.4 -->
 	<condition property="jdbc.30" value="true">
-	  <or>
 		<equals arg1="${ant.java.version}" arg2="1.4"/>
-		<equals arg1="${ant.java.version}" arg2="1.5"/>
-	  </or>		
 	</condition>
-	
-	<!-- We set jdk1.5 property if JDK version is 1.5 -->
-	<condition property="jdk1.5" value="true">
-		<equals arg1="${ant.java.version}" arg2="1.5"/>
-	</condition>
-	
-	<property name="Name" value="FirebirdSQL"/>
+
+
+    <property name="Name" value="FirebirdSQL"/>
     <property name="name" value="firebirdsql"/>
 
     <property name="version.major" value="1"/>
     <property name="version.minor" value="5"/>
-    <property name="version.revision" value="0"/>
+    <property name="version.revision" value="5"/>
     <property name="version.tag" value=""/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
@@ -69,8 +62,6 @@
     <property name="source.java" value="${module.source}/main"/>
     <property name="source.jdbc.20" value="${module.source}/jdbc_20"/>
     <property name="source.jdbc.30" value="${module.source}/jdbc_30"/>
-    <property name="source.jdk1.4" value="${module.source}/jdk1_4"/>
-    <property name="source.jdk1.5" value="${module.source}/jdk1_5"/>
     <property name="source.etc" value="${module.source}/etc"/>
     <property name="source.examples" value="${module.examples}"/>
     <property name="source.examples" value="${module.root}/examples"/>
@@ -137,7 +128,7 @@
 
     <!--available property="jdk1.3+" classname="java.lang.StrictMath" /-->
 
-    <available property="j2ee.present" file="${jboss.source.root}" />
+    <available property="j2ee.present" file="${jboss.source.root}/jboss-j2ee" />
 
     <path id="javac.j2ee.classpath">
       <pathelement location="${module.thirdparty}/jaas.jar"/>
