@@ -46,6 +46,7 @@ public class GDSFactory
         if (gds == null)
             {
             gds = createGDSForType(gdsType);
+            gds = GDSSynchronizationPolicy.applySyncronizationPolicy(gds, gdsType);
             gdsTypeToGdsInstanceMap.put(gdsType, gds);
             }
 
