@@ -78,10 +78,11 @@ public class TestFBEncodings extends BaseFBTest {
             stmt.close();        
         } catch(Exception ex) {
         }
+        
+        connection.close();
     }
 
     protected void tearDown() throws Exception {
-        /*
         java.util.Properties props = new java.util.Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "NONE");
@@ -93,7 +94,6 @@ public class TestFBEncodings extends BaseFBTest {
         stmt.executeUpdate(DROP_TABLE);
         stmt.close();
         connection.close();      
-        */
         
         super.tearDown();
     }
@@ -117,7 +117,7 @@ public class TestFBEncodings extends BaseFBTest {
         
     public static int UKRAINIAN_TEST_ID = 1;
     
-    public void _testUkrainian() throws Exception {
+    public void testUkrainian() throws Exception {
         UKRAINIAN_TEST_STRING_WIN1251 = 
             new String(UKRAINIAN_TEST_BYTES, "Cp1251");
         
@@ -168,6 +168,23 @@ public class TestFBEncodings extends BaseFBTest {
         
         rs.close();
         stmt.close();
+        
+        stmt = connection.prepareStatement(
+            "SELECT none_field FROM test_encodings WHERE id = ?");
+        	
+        stmt.setInt(1, UKRAINIAN_TEST_ID);
+        
+        try {
+            rs = stmt.executeQuery();
+            
+            assertTrue("Should not be able to read none_field " + 
+                "with special characters", false);
+        } catch(SQLException sqlex) {
+            // everything is ok
+        }
+        
+        stmt.close();
+        
         connection.close();
     }
 
@@ -178,7 +195,7 @@ public class TestFBEncodings extends BaseFBTest {
         
     public static int GERMAN_TEST_ID = 2;
     
-    public void _testGerman() throws Exception {
+    public void testGerman() throws Exception {
         java.util.Properties props = new java.util.Properties();
         props.putAll(DB_INFO);
         props.put("lc_ctype", "WIN1252");
@@ -223,6 +240,23 @@ public class TestFBEncodings extends BaseFBTest {
         
         rs.close();
         stmt.close();
+        
+        stmt = connection.prepareStatement(
+            "SELECT none_field FROM test_encodings WHERE id = ?");
+        	
+        stmt.setInt(1, GERMAN_TEST_ID);
+        
+        try {
+            rs = stmt.executeQuery();
+            
+            assertTrue("Should not be able to read none_field " + 
+                "with special characters", false);
+        } catch(SQLException sqlex) {
+            // everything is ok
+        }
+        
+        stmt.close();
+        
         connection.close();
     }
     
@@ -303,6 +337,23 @@ public class TestFBEncodings extends BaseFBTest {
         
         rs.close();
         stmt.close();
+        
+        stmt = connection.prepareStatement(
+            "SELECT none_field FROM test_encodings WHERE id = ?");
+        	
+        stmt.setInt(1, HUNGARIAN_TEST_ID);
+        
+        try {
+            rs = stmt.executeQuery();
+            
+            assertTrue("Should not be able to read none_field " + 
+                "with special characters", false);
+        } catch(SQLException sqlex) {
+            // everything is ok
+        }
+        
+        stmt.close();
+        
         connection.close();
     }    
 }
