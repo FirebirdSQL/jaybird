@@ -129,11 +129,43 @@ public class XSQLVAR {
         // some versions of JDK (1.4.1 win) return millis with getTime() when
         // api docs say it only returns integral seconds 
         // we have to take millis out and use getNanos for every version to work OK 
-        return encodeLong((value.getTime()/1000)*1000 + value.getNanos() / 1000000);
+        long millis = (value.getTime()/1000)*1000 + value.getNanos() / 1000000;
+        
+        // note, we cannot simply pass millis to the database, because
+        // Firebird stores timestamp in format (citing Ann W. Harrison):
+        //
+        // "[timestamp is] stored a two long words, one representing 
+        // the number of days since 17 Nov 1858 and one representing number 
+        // of 100 nano-seconds since midnight"
+        
+        byte[] date = encodeDate(new java.sql.Date(millis));
+        byte[] time = encodeTime(new java.sql.Time(millis));
+        
+        byte[] result = new byte[date.length + time.length];
+        System.arraycopy(date, 0, result, 0, date.length);
+        System.arraycopy(time, 0, result, date.length, time.length);
+        
+        return result;
     }
 
     public final static java.sql.Timestamp decodeTimestamp(byte[] byte_int){
-        return new java.sql.Timestamp(decodeLong(byte_int));
+        // return new java.sql.Timestamp(decodeLong(byte_int));
+        
+        if (byte_int.length != 8)
+            throw new IllegalArgumentException("Bad parameter to decode");
+        
+        // we have to extract time and date correctly
+        // see encodeTimestamp(...) for explanations
+            
+        byte[] date = new byte[4];
+        byte[] time = new byte[4];
+        
+        System.arraycopy(byte_int, 0, date, 0, date.length);
+        System.arraycopy(byte_int, date.length, time, 0, time.length);
+        
+        return new java.sql.Timestamp(
+            decodeDate(date).getTime() + 
+            decodeTime(time).getTime());
     } 
 	 
     public final static byte[] encodeTime(java.sql.Time d) {
@@ -157,7 +189,7 @@ public class XSQLVAR {
     public final static java.sql.Time decodeTime(byte[] int_byte) {
         GregorianCalendar c = new GregorianCalendar();
         int millisInDay = decodeInt(int_byte)/10;
-        java.sql.Time time = new java.sql.Time(millisInDay-c.get(Calendar.ZONE_OFFSET));
+        java.sql.Time time = new java.sql.Time(millisInDay); //-c.get(Calendar.ZONE_OFFSET));
         return time;		  
     }
 	 
