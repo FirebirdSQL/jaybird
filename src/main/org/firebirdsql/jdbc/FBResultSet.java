@@ -580,18 +580,36 @@ public class FBResultSet implements ResultSet {
         if (columnName == null || columnName.equals("")) {
             throw new SQLException("zero length identifiers not allowed");
         }
-        columnName = columnName.toUpperCase();
-        //XSQLVAR[] xsqlvars = stmt.getOutSqlda().sqlvar;
+        
+        if (columnName.startsWith("\"") && columnName.endsWith("\""))
+            columnName = columnName.substring(1, columnName.length() - 1);
+            
+        // case-sensitively check column aliases 
         for (int i = 0; i< xsqlvars.length; i++) {
             if (columnName.equals(xsqlvars[i].aliasname)) {
                 return ++i;
             }
         }
+        // case-sensitively check column names
         for (int i = 0; i< xsqlvars.length; i++) {
             if (columnName.equals(xsqlvars[i].sqlname)) {
                 return ++i;
             }
         }
+        
+        // do the same with case insensitive comparison
+        
+        for (int i = 0; i< xsqlvars.length; i++) {
+            if (columnName.equalsIgnoreCase(xsqlvars[i].aliasname)) {
+                return ++i;
+            }
+        }
+        for (int i = 0; i< xsqlvars.length; i++) {
+            if (columnName.equalsIgnoreCase(xsqlvars[i].sqlname)) {
+                return ++i;
+            }
+        }
+        
         throw new SQLException("column name " + columnName + " not found in result set.");
     }
 
