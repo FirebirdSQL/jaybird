@@ -5,7 +5,7 @@
 <!-- ======================================================================= -->
 
 
-<project name="FirebirdSQL" default="rar" basedir="../..">
+<project name="FirebirdSQL" default="tests-report-html" basedir=".">
 
   <target name="init">
     <tstamp/>
@@ -35,7 +35,13 @@
     <property name="source.stylesheets" value="${module.source}/stylesheets"/>
     <property name="source.test" value="${module.source}/test"/>
 
+    <property name="thirdparty" value="${module.root}/thirdparty"/>
+    <property name="jboss.source.root"
+	    location="${thirdparty}/jboss/"/>
+
+
     <!-- Where build generated files will go -->
+    <property name="build.j2ee" value="${module.output}/j2ee"/>
     <property name="build.classes" value="${module.output}/classes"/>
     <property name="build.test" value="${module.output}/test"/>
     <property name="build.lib" value="${module.output}/lib"/>
@@ -78,16 +84,26 @@
 
     <!--available property="jdk1.3+" classname="java.lang.StrictMath" /-->
 
-    <path id="javac.classpath">
-      <pathelement location="${build.classes}"/>
-      <pathelement location="${module.thirdparty}/jta-spec1_0_1.jar"/>
-      <pathelement location="${module.thirdparty}/connector.jar"/>
-      <pathelement location="${module.thirdparty}/jdbc-3_0-pfd2-classes.zip"/>
+    <available property="j2ee.present" file="${jboss.source.root}" />
+
+    <path id="javac.j2ee.classpath">
       <pathelement location="${module.thirdparty}/jaas.jar"/>
+    </path>
+
+    <path id="javac.driver.classpath">
+      <path refid="javac.j2ee.classpath"/>
+      <pathelement location="${build.j2ee}"/>
+      <pathelement location="${module.thirdparty}/jdbc-3_0-pfd2-classes.zip"/>
       <pathelement location="${module.thirdparty}/concurrent.jar"/>
       <pathelement location="${module.thirdparty}/log4j-core.jar"/>
+    </path>
+
+    <path id="javac.test.classpath">
+      <path refid="javac.driver.classpath"/>
+      <pathelement location="${build.classes}"/>
       <pathelement location="${lib.dir}/junit.jar"/>
     </path>
+
   </target>
 
   <!-- =================================================================== -->
@@ -102,15 +118,52 @@
        eof="remove"/>
   </target>
 
+  <target name="checkout-j2ee" depends="init" unless="j2ee.present">
+    <property name="jboss.cvsroot"
+                  value=":pserver:anonymous@cvs.sourceforge.net:/cvsroot/jboss"/>
+    <property name="jboss.cvstag" value="HEAD"/>
+    <!--property name="jboss.cvsdate" value="2002-07-29 13:00 +0000"/-->
+
+    <cvspass cvsroot="${jboss.cvsroot}"
+                 password=""
+                 passfile=".cvspass"/>
+
+    <mkdir dir="${jboss.source.root}"/>
+    <cvs cvsRoot="${jboss.cvsroot}"
+         passfile=".cvspass"
+         command="-q checkout -P"
+         dest="${jboss.source.root}"
+         package="jboss-j2ee"/>
+  </target>
+
 
   <!-- =================================================================== -->
   <!-- Compiles the source code                                            -->
   <!-- =================================================================== -->
-  <target name="compile" depends="compile-classes, compile-resources, compile-stylesheets"/>
+  <target name="compile" depends="compile-j2ee, compile-driver, compile-tests, compile-resources, compile-stylesheets"/>
 
-  <target name="compile-classes" depends="init" >
+  <target name="compile-j2ee" depends="init, checkout-j2ee">
+    <mkdir dir="${build.j2ee}"/>
+
+    <javac destdir="${build.j2ee}"
+           target="1.2"
+           debug="on"
+           deprecation="on"
+           optimize="on">
+      <classpath refid="javac.j2ee.classpath"/>
+      <src path="${jboss.source.root}/jboss-j2ee/src/main"/>
+        
+      <include name="javax/resource/*.java"/>
+      <include name="javax/resource/cci/ConnectionSpec.java"/>
+      <include name="javax/resource/cci/LocalTransaction.java"/>
+      <include name="javax/resource/spi/**/*.java"/>
+      <include name="javax/transaction/xa/*.java"/>
+    </javac>
+  </target>
+
+
+  <target name="compile-driver" depends="compile-j2ee">
     <mkdir dir="${build.classes}"/>
-
     <javac srcdir="${source.java}"
            destdir="${build.classes}"
            target="1.2"
@@ -120,9 +173,11 @@
            includes="org/**"
            excludes="**/temp*"
     >
-      <classpath refid="javac.classpath"/>
+      <classpath refid="javac.driver.classpath"/>
     </javac>
+  </target>
 
+  <target name="compile-tests" depends="compile-driver">
     <mkdir dir="${build.test}"/>
     <javac srcdir="${source.test}"
            destdir="${build.test}"
@@ -133,7 +188,7 @@
            includes="org/**"
            excludes="**/temp*"
     >
-      <classpath refid="javac.classpath"/>
+      <classpath refid="javac.test.classpath"/>
     </javac>
   </target>
 
@@ -160,7 +215,17 @@
   <!-- =================================================================== -->
   <!-- Creates the jar archives                                            -->
   <!-- =================================================================== -->
-  <target name="jars" depends="jar-jmx, rar, jar-test"/>
+  <target name="jars" depends="jar-j2ee, jar-jmx, rar, jar-test"/>
+
+  <target name="jar-j2ee" depends="compile">
+
+    <mkdir dir="${build.lib}"/>
+    <jar jarfile="${build.lib}/mini-j2ee.jar">
+       <fileset dir="${build.j2ee}">
+         <include name="javax/**"/>
+       </fileset>
+    </jar>
+  </target>
 
   <target name="jar-ra" depends="compile">
 
@@ -267,7 +332,7 @@
         <pathelement location="${build.resources}"/>
         <pathelement location="${lib.dir}/ant.jar"/>
         <pathelement location="${lib.dir}/optional.jar"/>
-        <path refid="javac.classpath"/>
+        <path refid="javac.test.classpath"/>
       </classpath>
 
       <formatter type="${junit.formatter.type}"
@@ -450,6 +515,7 @@
   <!-- Total cleanup                                                       -->
   <!-- =================================================================== -->
   <target name="total-clean" depends="clean">
+    <delete dir="${jboss.source.root}"/>
     <delete file="${Name}-${version}.zip"/>
     <delete file="${Name}-${version}.tar"/>
     <delete file="${Name}-${version}.tar.gz"/>
