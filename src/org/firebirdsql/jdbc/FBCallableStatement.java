@@ -769,7 +769,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @exception java.sql.SQLException <description>
      * @exception java.net.MalformedURLException <description>
      */
-    public URL getURL(int colIndex) throws SQLException, MalformedURLException {
+    public URL getURL(int colIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
         //cast apparently to allow use of jdbc 2 interfaces with jdbc 3 methods.
         return ((FBResultSet)getCurrentResultSet()).getURL(colIndex);
@@ -783,7 +783,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @exception java.sql.SQLException <description>
      * @exception java.net.MalformedURLException <description>
      */
-    public URL getURL(String colName) throws SQLException, MalformedURLException {
+    public URL getURL(String colName) throws SQLException {
         return getURL(getCurrentResultSet().findColumn(colName));
     }
 

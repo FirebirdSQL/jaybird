@@ -2369,7 +2369,7 @@ public class FBResultSet implements ResultSet {
      * @exception java.sql.SQLException <description>
      * @exception java.net.MalformedURLException <description>
      */
-    public URL getURL(int param1) throws SQLException, MalformedURLException {
+    public URL getURL(int param1) throws SQLException {
         // TODO: implement this java.sql.ResultSet method
         return null;
     }
@@ -2381,7 +2381,7 @@ public class FBResultSet implements ResultSet {
      * @exception java.sql.SQLException <description>
      * @exception java.net.MalformedURLException <description>
      */
-    public URL getURL(String param1) throws SQLException, MalformedURLException {
+    public URL getURL(String param1) throws SQLException {
         // TODO: implement this java.sql.ResultSet method
         return null;
     }
