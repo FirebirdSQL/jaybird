@@ -32,8 +32,6 @@ import javax.naming.Reference;
 import javax.resource.Referenceable;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionManager;
-import javax.resource.spi.ManagedConnectionFactory;
-
 
 /**
  * The class <code>FBDataSource</code> is a ConnectionFactory for jdbc

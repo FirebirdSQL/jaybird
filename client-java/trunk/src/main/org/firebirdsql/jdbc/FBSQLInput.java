@@ -27,10 +27,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Ref;
 import java.sql.SQLException;
-import java.sql.Struct;
-import java.sql.SQLData;
 import java.net.URL;
-import java.net.MalformedURLException;
 
 /**
  *

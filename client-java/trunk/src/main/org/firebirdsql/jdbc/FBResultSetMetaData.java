@@ -20,14 +20,15 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.9  2003/01/13 19:07:37  brodsom
+ * Patch for problem with UNION's when retreiving column information when there are too much columns
+ *
  *
 */
 package org.firebirdsql.jdbc;
 
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.isc_stmt_handle;
-import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
 
 import java.math.BigDecimal;
@@ -36,7 +37,6 @@ import java.sql.ResultSetMetaData;
 
 import java.sql.Blob;
 import java.sql.Array;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.sql.ResultSet;

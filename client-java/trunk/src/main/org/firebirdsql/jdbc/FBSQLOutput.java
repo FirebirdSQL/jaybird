@@ -30,8 +30,6 @@ import java.sql.SQLException;
 import java.sql.Struct;
 import java.sql.SQLData;
 import java.net.URL;
-import java.net.MalformedURLException;
-
 
 /**
  *

@@ -2709,7 +2709,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private static final short double_type = 27;
     private static final short timestamp_type = 35;
     private static final short varchar_type = 37;
-    private static final short cstring_type = 40;
+//    private static final short cstring_type = 40;
     private static final short blob_type = 261;
 	 
     private int getDataType (short fieldType, short fieldSubType, short fieldScale) {

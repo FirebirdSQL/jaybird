@@ -23,7 +23,6 @@ package org.firebirdsql.jdbc;
 
 import javax.sql.RowSetMetaData;
 import java.sql.SQLException;
-import java.sql.*;
 
 import org.firebirdsql.gds.XSQLVAR;
 

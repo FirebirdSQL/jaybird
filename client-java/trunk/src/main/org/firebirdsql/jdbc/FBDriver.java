@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.10  2003/02/01 01:19:55  brodsom
+ * Remove unused import
+ *
  * Revision 1.9  2002/11/25 20:23:44  rrokytskyy
  * improved TPB mapping code
  *
@@ -108,10 +111,8 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import javax.security.auth.Subject;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jca.FBConnectionRequestInfo;
-import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
 
 import org.firebirdsql.logging.Logger;
@@ -140,7 +141,6 @@ public class FBDriver implements Driver {
      * @todo implement the default subject for the
      * standard connection.
      */
-    private Subject subject = null;
 
     private Map mcfToDataSourceMap = new HashMap();
 

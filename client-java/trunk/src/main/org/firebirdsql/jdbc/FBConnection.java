@@ -96,10 +96,11 @@ public class FBConnection implements Connection
     /**
      * Invalidate this connection. This method makes connection unusable.
      */
+/* Private and not used method    
     private void invalidate() {
         invalid = true;
     }
-    
+*/    
     /**
      * This method should be invoked by each of the statements in the 
      * {@link Statement#close()} method. Here we remove statement from the

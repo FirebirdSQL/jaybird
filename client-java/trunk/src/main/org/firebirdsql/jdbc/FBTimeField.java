@@ -20,7 +20,6 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.Timestamp;
-import java.sql.Date;
 import java.sql.SQLException;
 import java.util.Calendar;
 import org.firebirdsql.gds.XSQLVAR;
