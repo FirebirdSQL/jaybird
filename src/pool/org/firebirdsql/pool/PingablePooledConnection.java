@@ -37,18 +37,14 @@ public class PingablePooledConnection implements PooledConnection, XConnectionMa
     XPingableConnection, XStatementManager 
 {
             
-        private static final boolean CACHE_PREPARED_STATEMENTS = true;
-
         private static final boolean LOG_PREPARE_STATEMENT = false;
         private static final boolean LOG_STATEMENT_IN_POOL = false;
         private static final boolean LOG_POOL_CLEANING = false;
         private static final boolean LOG_META_DATA = false;
-        private static final boolean LOG_REENTRANT_ACCESS = false;
 
-        private static Logger logChannel = 
+        private static Logger log = 
             LoggerFactory.getLogger(PingablePooledConnection.class, false);
             
-
 		private Connection jdbcConnection;
 		private HashSet eventListeners = new HashSet();
 		
@@ -65,6 +61,9 @@ public class PingablePooledConnection implements PooledConnection, XConnectionMa
     
         private HashMap statements = new HashMap();
         
+        protected Logger getLogChannel() {
+            return log;
+        }
 		
 		PingablePooledConnection(Connection connection) throws SQLException {
 			this.jdbcConnection = connection;
@@ -72,15 +71,15 @@ public class PingablePooledConnection implements PooledConnection, XConnectionMa
             this.supportsStatementsAccrossCommit = 
                 connection.getMetaData().supportsOpenStatementsAcrossCommit();
 
-            if (LOG_META_DATA)
-                logChannel.info("Pool supports open statements across commit : " + 
+            if (LOG_META_DATA && getLogChannel() != null)
+                getLogChannel().info("Pool supports open statements across commit : " + 
                     supportsStatementsAccrossCommit);
 
             this.supportsStatementsAccrossRollback = 
                 connection.getMetaData().supportsOpenStatementsAcrossRollback();
 
-            if (LOG_META_DATA)
-                logChannel.info("Pool supports open statements across rollback : " + 
+            if (LOG_META_DATA && getLogChannel() != null)
+                getLogChannel().info("Pool supports open statements across rollback : " + 
                     supportsStatementsAccrossRollback);
             
 		}
@@ -271,8 +270,8 @@ public class PingablePooledConnection implements PooledConnection, XConnectionMa
         public XCachablePreparedStatement prepareStatement(String statement, 
             int resultSetType, int resultSetConcurrency) throws SQLException 
         {
-            if (LOG_PREPARE_STATEMENT)
-                logChannel.info("Prepared statement for SQL '" + statement + "'");
+            if (LOG_PREPARE_STATEMENT && getLogChannel() != null)
+                getLogChannel().info("Prepared statement for SQL '" + statement + "'");
     
             PreparedStatement stmt = jdbcConnection.prepareStatement(
                 statement, resultSetType, resultSetConcurrency);
@@ -294,8 +293,8 @@ public class PingablePooledConnection implements PooledConnection, XConnectionMa
          */
         private void cleanCache() throws SQLException {
         
-            if (LOG_POOL_CLEANING)
-                logChannel.info("Prepared statement cache cleaned.");
+            if (LOG_POOL_CLEANING && getLogChannel() != null)
+                getLogChannel().info("Prepared statement cache cleaned.");
         
             synchronized(statements) {
                 Iterator iter = statements.entrySet().iterator();
@@ -330,10 +329,22 @@ public class PingablePooledConnection implements PooledConnection, XConnectionMa
          * @throws SQLException if prepared statement cannot be added to the pool.
          */
         public void statementClosed(String statement, Object proxy) throws SQLException {
-            XPreparedStatementCache stmtCache = 
-                (XPreparedStatementCache)statements.get(statement);
-            
-            stmtCache.dereference(proxy);
+            synchronized(statements) {
+                XPreparedStatementCache stmtCache = 
+                    (XPreparedStatementCache)statements.get(statement);
+                
+                if (stmtCache == null) {
+                    if (getLogChannel() != null)
+                        getLogChannel().error(
+                        "Cannot find statement cache for SQL \"" + statement + 
+                        "\". Trying to close statement to release resources."
+                    );
+                    
+                    if (proxy instanceof XCachablePreparedStatement)
+                        ((XCachablePreparedStatement)proxy).forceClose();
+                } else 
+                    stmtCache.dereference(proxy);
+            }
         }
                  
 			
