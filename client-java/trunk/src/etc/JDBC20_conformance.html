@@ -10,21 +10,21 @@
 
 <BODY>
 <h1>JDBC 2.0 implementation</h1>
-<p>Last updated. December 13 2002</p>
+<p>Last updated. December 14 2002</p>
 
 
 <h2>1.- Introduction</h2>
 <p>This document is focused on feature coverage of the JDBC 2.0 specification and performance.</p>
-<p>For more information about the driver and how to use it, please read the <a href="release_notes.html">release notes</a>.</p>
+<p>For more information about the driver and how to use it, please read the <a href="release_notes.html">release notes</a> and <a href="faq.html">FAQ</a>.</p>
 
 <h2>2.- Connection URL</h2>
-<p>The driver has two URL syntax</p>
+<p>The driver URL syntax has two forms:</p>
 <p>Standard format= jdbc:firebirdsql:[//host[:port]/]&lt;database&gt;    <br>
 FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
 
 <h2>3.- JDBC Features</h2>
-<p>The driver comply with JDBC 2.0 core with some features and methods not implemented, some of it required by the specification and some optional.</p>
-<p>The following optional features and the methods that support it are not implemented</p>
+<p>The driver complies with the JDBC 2.0 core with some features and methods not implemented. Some of the unimplemented features are required by the specification and some are optional.</p>
+<p>The following optional features and the methods that support it are not implemented:</p>
 <ul>
 <li><b>Batch Updates.</b></li>
 	<ul>
@@ -112,7 +112,7 @@ FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
 		</ul>
 	</ul>
 </ul>
-<p>Excluding the non supported features, the following methods are not yet implemented:</p>
+<p>Excluding the unsupported features, the following methods are not yet implemented:</p>
 <ul>
 	<li><b>java.sql.Statement</b></li>
 	<ul>
@@ -132,7 +132,7 @@ FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
 		<li>position(Blob pattern, long start)</li>
 	</ul>
 </ul>
-<p>The following methods are implemented, but does not work as expected</p>
+<p>The following methods are implemented, but do not work as expected:</p>
 <ul>
 	<li><b>java.sql.Statement</b></li>
 	<ul>
@@ -141,28 +141,28 @@ FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
 	</ul>
 	<li><b>java.sql.PreparedStatement</b></li>
 	<ul>
-		<li>setObject(index,object,type) This method are implemented but behaves as setObject(index,object)</li>
-		<li>setObject(index,object,type,scale) This method are implemented but behaves as setObject(index,object)</li>
+		<li>setObject(index,object,type) This method is implemented but behaves as setObject(index,object)</li>
+		<li>setObject(index,object,type,scale) This method is implemented but behaves as setObject(index,object)</li>
 	</ul>
 	<li><b>java.sql.ResultSetMetaData</b></li>
 	<ul>
-		<li>isReadOnly(i) always return false</li>
-		<li>isWritable(i) always return true</li>
-		<li>isDefinitivelyWritable(i) always return true</li>
+		<li>isReadOnly(i) always returns false</li>
+		<li>isWritable(i) always returns true</li>
+		<li>isDefinitivelyWritable(i) always returns true</li>
 	</ul>
 	<li><b>java.sql.DatabaseMetaData</b></li>
 	<ul>
-		<li>getBestRowIdentifier(i) always return empty resultSet</li>
+		<li>getBestRowIdentifier(i) always returns empty resultSet</li>
 	</ul>
 </ul>
 <h2>4.- Compliance Tests</h2>
-<p>The compliance was check with <a href="http://www.jDataMaster.com">jDataMaster</a>,
-which include more than 1000 tests, excluding:</p>
+<p>The compliance was checked with <a href="http://www.jDataMaster.com">jDataMaster</a>, 
+which includes more than 1000 tests, excluding:</p>
 	<ul>
 		<li>CallableStatements</li>
 		<li>Escape Syntax</li>
 	</ul>
-<p>FB type 4 driver pass all the tests.</p>
+<p>FB type 4 driver (JayBird) passed all the tests.</p>
 <p>The set/get tests don't apply to the columns of the following java.sql.Types </p>
 <ul>
 	<li>BINARY (Don't exist in FB)</li>
@@ -176,19 +176,19 @@ which include more than 1000 tests, excluding:</p>
 	<li>ARRAY (Don't exist in FB)</li>
 	<li>REF (Don't exist in FB)</li>
 </ul>
-<p>Firebird driver is the only driver of those tested with this tool which pass all the tests, 
-the next one fails on 90 tests, including all of the most known RDBMS.</p>
+<p>Firebird driver is the only driver of those tested with this tool which passed all the tests, 
+the next one fails on 90 tests, including all of the most well known RDBMS.</p>
 <h2>5.- Performance recomendations</h2>
 
 <p><b>Updates, deletes etc</b></p>
-<p>Don't use executeUpdate when you don't need the affected record count. Because the database don't send this information into the result, the driver must request it after the execution finish, as it need some some to do it . Use execute() instead of executeUpdate() when count is not needed.</p>
+<p>Don't use executeUpdate when you don't need the affected record count. Because the database doesn't send this information to the result, the driver must request it after the execution finishes, and it needs some time to do it . Use execute() instead of executeUpdate() when count is not needed.</p>
 
 <p><b>Character encoding</b></p>
-<p>In FB the client notify to the server which character set it will use in the communication. The server then convert all the incoming character information from this character set to the one of the field or database. In the output the server also do the conversion from the database/field character set to the one needed by the client.</p>
-<p>This driver set as the default the NONE character set, the same that Interclient use. It seems there are some performance problems in the engine and when the NONE character set is received it takes some time to convert it to the character set of the field/database. When using none, the theory is that the server only verify that the characters received are valid characters.</p>
-<p>When using a character set not NONE in the database, please set the lc_ctype parameter equal to the database default charset. If you can, select the database default character set to be equivalent to the default character set of your JVM.</p>
+<p>In FB the client notifies the server which character set it will use in the communication. The server then converts all the incoming character information from this character set to the one of the field or database. In the output the server also does the conversion from the database/field character set to the one needed by the client.</p>
+<p>This driver sets as the default the NONE character set, the same that Interclient uses. It seems there are some performance problems in the engine and when the NONE character set is received it takes some time to convert it to the character set of the field/database. When using NONE, the theory is that the server only verifies that the characters received are valid characters.</p>
+<p>When using a character set other than NONE in the database, set the lc_ctype parameter equal to the database default charset. If you can, select the database default character set to be equivalent to the default character set of your JVM.</p>
 <p>Also you can set the default character set of the database to NONE, but this is not recommended since other tools that can be used with the database can't know which character set is in use.</p>
-<p>Apparently, there can be some problems if the database use character set NONE and the lc_ctype parameter is set to WIN1252.</p>
+<p>Apparently, there can be some problems if the database uses character set NONE and the lc_ctype parameter is set to WIN1252.</p>
 <table border=1 cellpadding=5 cellspacing=0>
  <tr >
   <td>&nbsp;</td>
@@ -287,8 +287,8 @@ the next one fails on 90 tests, including all of the most known RDBMS.</p>
 </table>
 
 <h2>6.- Performance compared with Interclient</h2>
-<p>The results of the jDataMaster basic performance tests, are the following</p>
-<p>Local test</p>
+<p>The results of the jDataMaster basic performance tests, are as follows:</p>
+<p>Local test (Server and driver on same system):</p>
 <p>AMD 1,7 with 512MB/DDR and FB 1.0 without forced Writes</p>
 <p>The JVM are the Sun j2sdk 1.4.1_01 with the parameters -Xms256 and -Xmx256.</p>
 <p>The default character set of the database is WIN1252</p>
@@ -700,19 +700,19 @@ the next one fails on 90 tests, including all of the most known RDBMS.</p>
   <td>&nbsp;</td>
  </tr>
 </table>
-<p>Some of the reasons that justify this differences between Interclient and our driver, and which we hope can solve as soon as posible are the following:</p>
+<p>Some of the reasons that justify this differences between Interclient and JayBird, and which we hope we can solve as soon as posible are the following:</p>
 <ul>
 <li>Autocommit</li>
 <ul>
-<li>Interclient uses the autocommit facility of the database whether this driver doesn't.</li>
+	<li>Interclient uses the autocommit facility of the database and JayBird doesn't.</li>
 </ul>
 <li>Character fields</li>
 <ul>
-<li>Interclient uses a protocol in which the character values are received trimmed, this driver doesn't.</li>
+	<li>Interclient uses a protocol in which the character values are received trimmed, JayBird doesn't.</li>
 </ul>
 <li>Character and varchar fields</li>
 <ul>
-<li>It seems that the method to convert characters used by Interclient is better than the default character conversion did by Java.</li>
+	<li>It seems that the method to convert characters used by Interclient is better than the default character conversion done by Java.</li>
 </ul>
 </ul>
 <br/>
