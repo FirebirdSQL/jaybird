@@ -20,6 +20,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2003/06/05 23:22:30  brodsom
+ * Substitute package and inline imports
+ *
  * Revision 1.1  2002/08/29 13:41:04  d_jencks
  * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
  *
@@ -284,8 +287,7 @@ public class FBEscapedParser {
                 "Escaped escapes are not supported.");
         else
         if (keyword.toString().equalsIgnoreCase(ESCAPE_FUNCTION_KEYWORD))
-            throw new FBSQLParseException(
-                "Escaped functions are not supported.");
+            return convertEscapedFunction(payload.toString().trim());
         else
         if (keyword.toString().equalsIgnoreCase(ESCAPE_OUTERJOIN_KEYWORS))
             return convertOuterJoin(payload.toString().trim());
@@ -367,6 +369,20 @@ public class FBEscapedParser {
         return outerJoin;
     }
 
+    /**
+     * This method converts escaped function to a server function call. Actually
+     * we do not change anything here, we hope that all UDF are defined.
+     * 
+     * @param escapedFunction escaped function call
+     * @return server-side function call.
+     * 
+     * @throws FBSQLParseException if something was wrong.
+     */
+    protected String convertEscapedFunction(String escapedFunction)
+        throws FBSQLParseException
+    {
+        return escapedFunction;
+    }
 
     public static boolean supportsStoredProcedures() {
         return true;
