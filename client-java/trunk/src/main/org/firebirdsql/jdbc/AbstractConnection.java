@@ -206,10 +206,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public synchronized PreparedStatement prepareStatement(String sql)
-        throws SQLException {
-        PreparedStatement stmt = new FBPreparedStatement(this, sql);
-        activeStatements.add(stmt);
-        return stmt;
+    throws SQLException {
+        return prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
 
     /**
@@ -240,11 +238,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public synchronized CallableStatement prepareCall(String sql) 
-        throws SQLException 
-    {
-        CallableStatement stmt = new FBCallableStatement(this, sql);
-        activeStatements.add(stmt);
-        return stmt;
+    throws SQLException {
+        return prepareCall(sql, 
+                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
 
     /**
@@ -622,13 +618,16 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized Statement createStatement(int resultSetType, 
         int resultSetConcurrency) throws SQLException 
     {
-        if (resultSetType != ResultSet.TYPE_FORWARD_ONLY ||
+        if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE ||
            resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) 
         {
             addWarning(new FBSQLWarning("Unsupported type and/or concurrency"));
+            
+            resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+            resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
         }			  
           
-        Statement stmt =  new FBStatement(this, ResultSet.CONCUR_READ_ONLY);
+        Statement stmt =  new FBStatement(this, resultSetType, resultSetConcurrency);
         activeStatements.add(stmt);
         return stmt;
     }
@@ -654,13 +653,17 @@ public abstract class AbstractConnection implements FirebirdConnection {
         int resultSetType, int resultSetConcurrency) throws SQLException 
     {
           PreparedStatement stmt;
-		  if (resultSetType == ResultSet.TYPE_FORWARD_ONLY
-		  && resultSetConcurrency == ResultSet.CONCUR_READ_ONLY)
-	        stmt = new FBPreparedStatement(this, sql);
-		  else{
-		     addWarning(new SQLWarning("resultSetType or resultSetConcurrency changed"));
-	        stmt = new FBPreparedStatement(this, sql);
-		  }		
+		  if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE && 
+              resultSetConcurrency != ResultSet.CONCUR_READ_ONLY)
+		  {
+		      addWarning(new FBSQLWarning("resultSetType or resultSetConcurrency changed"));
+	          resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+              resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
+		  }
+          
+          stmt = new FBPreparedStatement(
+                  this, sql, resultSetType, resultSetConcurrency);
+          
           activeStatements.add(stmt);
           return stmt;
     }
@@ -685,15 +688,19 @@ public abstract class AbstractConnection implements FirebirdConnection {
         int resultSetType, int resultSetConcurrency) throws SQLException 
     {
         CallableStatement stmt;
-		  if (resultSetType == ResultSet.TYPE_FORWARD_ONLY
-		  && resultSetConcurrency == ResultSet.CONCUR_READ_ONLY)
-	        stmt =new FBCallableStatement(this, sql);
-		  else{
-		     addWarning(new SQLWarning("resultSetType or resultSetConcurrency changed"));
-	        stmt = new FBCallableStatement(this, sql);
-		  }		
-          activeStatements.add(stmt);
-          return stmt;
+		if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE && 
+            resultSetConcurrency != ResultSet.CONCUR_READ_ONLY)
+		{
+            addWarning(new FBSQLWarning("resultSetType or resultSetConcurrency changed"));
+            resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+            resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
+        }	
+        
+        stmt = new FBCallableStatement(this, sql, resultSetType, resultSetConcurrency);
+        
+        activeStatements.add(stmt);
+        
+        return stmt;
     }
 
 

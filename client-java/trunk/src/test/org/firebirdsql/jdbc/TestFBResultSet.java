@@ -223,11 +223,17 @@ public class TestFBResultSet extends FBTestBase {
         } catch(SQLException ex) {
             // everything is ok
         }
+        
+        connection.setAutoCommit(true);
+        
         select = connection.createStatement();
         try {
             rs = select.executeQuery("SELECT id, str FROM test_table");
             
             int counter = 0;
+            
+            assertTrue("ResultSet.isBeforeFirst() should be true",
+                    rs.isBeforeFirst());
             
             while (rs.next()) {
                 
@@ -249,6 +255,10 @@ public class TestFBResultSet extends FBTestBase {
                     "idValue = " + idValue + ", strValue = " + strValue,
                     strValue == (idValue + 1));
             }
+            
+            assertTrue("ResultSet.isAfterLast() should be true",
+                    rs.isAfterLast());
+            
         } catch(Exception e) {
             e.printStackTrace();
             throw e;

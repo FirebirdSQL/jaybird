@@ -15,9 +15,9 @@ public class FBPreparedStatement extends AbstractPreparedStatement {
 	 * @param sql
 	 * @throws SQLException
 	 */
-	public FBPreparedStatement(AbstractConnection c, String sql)
+	public FBPreparedStatement(AbstractConnection c, String sql, int rsType, int rsConcurrency)
 		throws SQLException {
-		super(c, sql);
+		super(c, sql, rsType, rsConcurrency);
 	}
 
     /**

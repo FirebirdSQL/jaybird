@@ -67,6 +67,10 @@ public class FBResultSet implements ResultSet {
     
     private String cursorName;
     private FBObjectListener.ResultSetListener listener;
+    
+    private int rsType = ResultSet.TYPE_FORWARD_ONLY;
+    private int rsConcurrency = ResultSet.CONCUR_READ_ONLY;
+    
 	 /**
      * Creates a new <code>FBResultSet</code> instance.
      *
@@ -74,12 +78,18 @@ public class FBResultSet implements ResultSet {
      * @param fbstatement a <code>AbstractStatement</code> value
      * @param stmt an <code>isc_stmt_handle</code> value
      */
-    protected FBResultSet(AbstractConnection c, AbstractStatement fbstatement, isc_stmt_handle stmt, 
-        FBObjectListener.ResultSetListener listener) throws SQLException 
-    {
+    protected FBResultSet(AbstractConnection c, 
+                          AbstractStatement fbstatement, 
+                          isc_stmt_handle stmt, 
+                          FBObjectListener.ResultSetListener listener,
+                          int rsType, 
+                          int rsConcurrency) 
+    throws SQLException {
         this.c = c;
         this.cursorName = fbstatement.getCursorName();
         this.listener = listener;
+        this.rsType = rsType;
+        this.rsConcurrency = rsConcurrency;
         
         xsqlvars = stmt.getOutSqlda().sqlvar;
         maxRows = fbstatement.getMaxRows();
@@ -87,10 +97,19 @@ public class FBResultSet implements ResultSet {
         
         boolean updatableCursor = fbstatement.isUpdatableCursor();
         
-        if (updatableCursor) 
-            fbFetcher = new FBUpdatableFetcher(this.c, fbstatement, stmt, this);
-        else
-        fbFetcher = new FBStatementFetcher(this.c, fbstatement, stmt, this);
+        if (!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE)
+            fbFetcher = new FBCachedFetcher(this.c, fbstatement, stmt, this);
+        else {
+            rsType = ResultSet.TYPE_FORWARD_ONLY;
+            rsConcurrency = ResultSet.CONCUR_READ_ONLY;
+            
+            c.addWarning(new FBSQLWarning("resultSetType or resultSetConcurrency changed"));
+            
+            if (updatableCursor)  
+                fbFetcher = new FBUpdatableFetcher(this.c, fbstatement, stmt, this);
+            else
+                fbFetcher = new FBStatementFetcher(this.c, fbstatement, stmt, this);
+        }
     }
 
     /**
@@ -114,13 +133,7 @@ public class FBResultSet implements ResultSet {
         maxRows = fbStatement.getMaxRows();
         xsqlvars = stmt.getOutSqlda().sqlvar;
         prepareVars(true);
-        fbFetcher = new FBCachedFetcher(this.c, fbStatement,stmt,this);
-        //use willEndTransaction rather than getAutoCommit so blobs are cached only when transactions are
-        //automatically ended.  Using jca framework, getAutoCommit is always true.
-        if (c.willEndTransaction()) 
-        {
-            FBCachedFetcher fetcher = (FBCachedFetcher)fbFetcher;
-        }
+        fbFetcher = new FBCachedFetcher(this.c, fbStatement, stmt, this);
     }
 
     protected FBResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
@@ -1072,7 +1085,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public int getType() throws  SQLException {
-        return ResultSet.TYPE_FORWARD_ONLY;
+        return rsType;
     }
 
     /**
@@ -1088,7 +1101,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public int getConcurrency() throws  SQLException {
-        return ResultSet.CONCUR_READ_ONLY;
+        return rsConcurrency;
     }
 
 

@@ -56,10 +56,11 @@ public abstract class AbstractPreparedStatement extends FBStatement
     private final static Logger log = 
         LoggerFactory.getLogger(AbstractStatement.class,false);
     
-    protected AbstractPreparedStatement(AbstractConnection c, String sql) 
+    protected AbstractPreparedStatement(AbstractConnection c, String sql, 
+                                        int rsType, int rsConcurrency) 
         throws SQLException 
     {
-        super(c, ResultSet.CONCUR_READ_ONLY);
+        super(c, rsType, rsConcurrency);
         
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {

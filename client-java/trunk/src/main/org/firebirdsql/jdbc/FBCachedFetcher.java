@@ -12,21 +12,20 @@ import org.firebirdsql.logging.LoggerFactory;
 
 class FBCachedFetcher implements FBFetcher {
 
+    private boolean forwardOnly;
     private Object[] rowsArray;
     private AbstractStatement fbStatement;
     private FBResultSet rs;
     private int rowNum = 0;
-    private boolean isEmpty = false;     
-    private boolean isBeforeFirst = false;
-    private boolean isFirst = false;
-    private boolean isLast = false;
-    private boolean isAfterLast = false;
 
     private final static Logger log = LoggerFactory.getLogger(FBCachedFetcher.class,false);
           
     FBCachedFetcher(AbstractConnection c, AbstractStatement fbStatement, 
             isc_stmt_handle stmt_handle, FBResultSet rs) throws SQLException 
     {
+        
+        this.forwardOnly = rs.getType() == ResultSet.TYPE_FORWARD_ONLY;
+        
         ArrayList rowsSets = new ArrayList(100);
         ArrayList rows = new ArrayList(100);
 
@@ -36,11 +35,6 @@ class FBCachedFetcher implements FBFetcher {
         this.fbStatement = fbStatement;
         this.rs = rs;
             
-        isEmpty = false;
-        isBeforeFirst = false;
-        isFirst = false;
-        isLast = false;
-        isAfterLast = false;
         //
         // Check if there is blobs to catch
         //
@@ -126,10 +120,6 @@ class FBCachedFetcher implements FBFetcher {
                     }
                 }
             }
-            if (rowsArray.length==0)
-                 isEmpty = true;
-            else
-                 isBeforeFirst = true;
             c.closeStatement(stmt, false);
         }
         catch (GDSException ge) {
@@ -140,68 +130,91 @@ class FBCachedFetcher implements FBFetcher {
     FBCachedFetcher(ArrayList rows, FBResultSet rs) throws SQLException {
         rowsArray = rows.toArray();
         this.rs = rs;
-            
-        isEmpty = false;
-        isBeforeFirst = false;
-        isFirst = false;
-        isLast = false;
-        isAfterLast = false;
-            
-        if (rowsArray.length==0)
-            isEmpty = true;
-        else
-            isBeforeFirst = true;
     }
 
     public boolean next() throws SQLException {
-        isBeforeFirst = false;
-        isFirst = false;
-        isLast = false;
-        isAfterLast = false;
-                
-        if (log!=null) log.debug("FBResultSet next - FBCachedFetcher");
-        if (isEmpty)
+        if (isEmpty())
             return false;
-        else 
-        if(rowNum == rowsArray.length) {
+        
+        rowNum++;
+        
+        if (isAfterLast()) {
             rs.row = null;
-            rowNum = 0;
-            isAfterLast = true;
+            // keep cursor right after last row 
+            rowNum = rowsArray.length + 1;
+            
             return false;
         }
-        else {
-            rowNum++;
-                
-            if (rowNum == 1)
-                isFirst = true;
-            if (rowNum == rowsArray.length)
-                isLast = true;
-            rs.row = (byte[][])rowsArray[rowNum-1];		  
-            // help the garbage collector
-            rowsArray[rowNum-1] = null;
+
+        rs.row = (byte[][])rowsArray[rowNum-1];		  
                
-            return true;
-        }
-    }
-
-    public boolean absolute(int row) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public boolean first() throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public boolean last() throws SQLException {
-        throw new FBDriverNotCapableException();
+        return true;
     }
 
     public boolean previous() throws SQLException {
-        throw new FBDriverNotCapableException();
+        
+        if (forwardOnly)
+            throw new FBDriverNotCapableException(
+                    "Result set is TYPE_FORWARD_ONLY");
+        
+        if (isEmpty())
+            return false;
+        
+        rowNum--;
+
+        if(isBeforeFirst()) {
+            rs.row = null;
+            
+            // keep cursor right before the first row
+            rowNum = 0;
+            return false;
+        }
+            
+        rs.row = (byte[][])rowsArray[rowNum-1];       
+        
+        return true;
+    }
+    
+    public boolean absolute(int row) throws SQLException {
+        
+        if (forwardOnly && row > rowNum)
+            throw new FBDriverNotCapableException(
+                    "Result set is TYPE_FORWARD_ONLY");
+        
+        if (isEmpty())
+            return false;
+        
+        rowNum = row;
+
+        if(isBeforeFirst()) {
+            rs.row = null;
+            
+            // keep cursor right before the first row
+            rowNum = 0;
+            return false;
+        } 
+        
+        if (isAfterLast()) {
+            rs.row = null;
+            rowNum = rowsArray.length + 1;
+            return false;
+        }
+        
+        rs.row = (byte[][])rowsArray[rowNum-1];       
+        
+        return true;
+    }
+
+    public boolean first() throws SQLException {
+        return absolute(1);
+    }
+
+    public boolean last() throws SQLException {
+        return absolute(-1);
     }
 
     public boolean relative(int row) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return absolute(rowNum + row);
     }
 
     public void close() throws SQLException {
@@ -214,18 +227,18 @@ class FBCachedFetcher implements FBFetcher {
         return rowNum;
     }
     public boolean isEmpty() {
-        return isEmpty;
+        return rowsArray == null || rowsArray.length == 0;
     }
     public boolean isBeforeFirst() {
-        return isBeforeFirst;
+        return !isEmpty() && rowNum < 1;
     }
     public boolean isFirst() {
-        return isFirst;
+        return rowNum == 1;
     }
     public boolean isLast() {
-        return isLast;
+        return rowsArray != null ? rowNum == rowsArray.length : false;
     }
     public boolean isAfterLast() {
-        return isAfterLast;
+        return rowNum > rowsArray.length;
     }
 }
