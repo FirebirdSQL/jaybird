@@ -108,6 +108,7 @@ public class FBPoolingConnectionManager
             public void connectionClosed(ConnectionEvent event)
             {
                //there can only be one Connection handle for this managed connection.
+               localmc.removeConnectionEventListener(this);
                returnManagedConnection(localmc, false);
             }
 
@@ -126,6 +127,7 @@ public class FBPoolingConnectionManager
 
             public void connectionErrorOccurred(ConnectionEvent event)
             {
+               localmc.removeConnectionEventListener(this);
                returnManagedConnection(localmc, true);
             }
          });
