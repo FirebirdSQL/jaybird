@@ -157,7 +157,7 @@ import org.firebirdsql.logging.LoggerFactory;
 public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
     implements PooledConnectionManager, ConnectionPoolDataSource, 
     XADataSource, PooledConnectionEventListener,
-    FirebirdPoolConfiguration
+    FirebirdPool
 {
     
     public static final String USER_NAME_PROPERTY = FBDriver.USER;

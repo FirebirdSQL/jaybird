@@ -151,7 +151,7 @@ import org.firebirdsql.jdbc.FBConnectionHelper;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class FBWrappingDataSource implements DataSource, 
-    ObjectFactory, Referenceable, Serializable, FirebirdPoolConfiguration 
+    ObjectFactory, Referenceable, Serializable, FirebirdPool 
 {
 
     private FBConnectionPoolDataSource pool;
@@ -185,6 +185,11 @@ public class FBWrappingDataSource implements DataSource,
 
         }
         super.finalize();
+    }
+    
+    public void shutdown() {
+        if (pool != null)
+            pool.shutdown();
     }
 
     /**
