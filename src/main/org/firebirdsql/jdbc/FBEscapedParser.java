@@ -185,6 +185,10 @@ public class FBEscapedParser {
      * @return native form of the <code>sql</code>.
      */
     public String parse(String sql) throws FBSQLParseException {
+        
+        lastState = NORMAL_STATE;
+        state = NORMAL_STATE;
+        nestedEscaped = 0;
 
         if (!checkForEscapes(sql))
             return sql;
@@ -248,14 +252,20 @@ public class FBEscapedParser {
         /*
          * Handle keywords.
          */
-        if (keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD2))
-            throw new FBSQLParseException(
-                "Escaped procedure calls {?=call ...} are not yet supported. " +
-                "Use native EXECUTE PROCEDURE <proc_name>, or " +
-                " SELECT * FROM <proc_name> or {call ...} calls instead.");
-        else
-        if (keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD))
-            return convertProcedureCall(payload.toString().trim());
+        if (keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD) || 
+                keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD2)) {
+            
+            StringBuffer call = new StringBuffer();
+            call
+                .append('{')
+                .append(keyword)
+                .append(' ')
+                .append(payload)
+                .append('}');
+            
+            return convertProcedureCall(call.toString());
+        
+        } else
         if (keyword.toString().equalsIgnoreCase(ESCAPE_DATE_KEYWORD))
             return toDateString(payload.toString().trim());
         else
@@ -330,9 +340,9 @@ public class FBEscapedParser {
     protected String convertProcedureCall(String procedureCall)
         throws FBSQLParseException
     {
-        FBEscapedParser tempParser = new FBEscapedParser();
-        return AbstractCallableStatement.NATIVE_CALL_COMMAND + " " +
-            tempParser.parse(procedureCall);
+        FBEscapedCallParser tempParser = new FBEscapedCallParser();
+        FBProcedureCall call = tempParser.parseCall(procedureCall);
+        return call.getSQL();
     }
 
     /**

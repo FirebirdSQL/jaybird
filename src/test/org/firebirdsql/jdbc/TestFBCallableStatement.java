@@ -188,7 +188,7 @@ public class TestFBCallableStatement extends FBTestBase {
           cstmt.setInt(1, 5);
           cstmt.setInt(3, 0);
           cstmt.execute();
-          int ans = cstmt.getInt(1);
+          int ans = cstmt.getInt(2);
           assertTrue("got wrong answer, expected 120: " + ans, ans == 120);
         } finally {
           cstmt.close();
@@ -319,7 +319,7 @@ public class TestFBCallableStatement extends FBTestBase {
             stmt.setInt(1, 1);
             stmt.registerOutParameter(2, Types.INTEGER);
             stmt.execute();
-            assertTrue("Should return correct value", stmt.getInt(1) == 1);
+            assertTrue("Should return correct value", stmt.getInt(2) == 1);
         } finally {
             stmt.close();
         }

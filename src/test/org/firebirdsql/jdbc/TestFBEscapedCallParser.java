@@ -19,6 +19,9 @@
 
 package org.firebirdsql.jdbc;
 
+import java.sql.SQLException;
+import java.sql.Types;
+
 import junit.framework.TestCase;
 
 
@@ -42,7 +45,14 @@ public class TestFBEscapedCallParser extends TestCase {
         "EXECUTE PROCEDURE my_proc(?, '11-dec-2001');";
     
     public static final String CALL_TEST_5 =
-        "EXECUTE PROCEDURE my_proc(upper(?), '11-dec-2001', out 'test string, with comma')";
+        "{? = call my_proc(UPPER(?), '11-dec-2001',out 'test string, with comma')}";
+    
+    public static final String CALL_TEST_6 =
+        "{call my_proc(?, {fn ucase(?)}, '11-dec-2001',out 'test string, with comma')}";
+    
+    public static final String CALL_TEST_7 =
+        "EXECUTE PROCEDURE my_proc(UPPER(?), '11-dec-2001')";
+    
 
     public TestFBEscapedCallParser(String testName) {
         super(testName);
@@ -53,12 +63,14 @@ public class TestFBEscapedCallParser extends TestCase {
     protected void setUp() {
         testProcedureCall = new FBProcedureCall();
         testProcedureCall.setName("my_proc");
-        testProcedureCall.addInputParam(
-                new FBProcedureParam(0, "upper(?)"));
-        testProcedureCall.addInputParam(
-                new FBProcedureParam(1, "'11-dec-2001'"));
         testProcedureCall.addOutputParam(
-                new FBProcedureParam(2, "'test string, with comma'"));
+                new FBProcedureParam(0, "?"));
+        testProcedureCall.addInputParam(
+                new FBProcedureParam(1, "UPPER(?)"));
+        testProcedureCall.addInputParam(
+                new FBProcedureParam(2, "'11-dec-2001'"));
+        testProcedureCall.addOutputParam(
+                new FBProcedureParam(3, "'test string, with comma'"));
     }
     
     protected void tearDown() {
@@ -67,11 +79,28 @@ public class TestFBEscapedCallParser extends TestCase {
     public void testProcessEscapedCall() throws Exception {
         FBEscapedCallParser parser = new FBEscapedCallParser();
         
-        FBProcedureCall procedureCall = 
-            parser.parseCall(CALL_TEST_5);
+        FBProcedureCall procedureCall = parser.parseCall(CALL_TEST_5);
+        procedureCall.registerOutParam(1, Types.INTEGER);
+        try {
+        	procedureCall.registerOutParam(3, Types.CHAR);
+            assertTrue("Should not allow registering param 3 as output, " +
+                    "since it does not exist.", false);
+            
+        } catch(SQLException ex) {
+        	// everything is ok
+        }
         
         assertTrue("Should correctly parse call. " + procedureCall.getSQL(), 
                 testProcedureCall.equals(procedureCall));
+        
+        procedureCall = parser.parseCall(CALL_TEST_6);
+        procedureCall.registerOutParam(1, Types.INTEGER);
+        assertTrue("Should correctly parse call. " + procedureCall.getSQL(), 
+                testProcedureCall.equals(procedureCall));
+        
+        procedureCall = parser.parseCall(CALL_TEST_7);
+        assertTrue("Should correctly parse call. " + procedureCall.getSQL(), 
+                testProcedureCall.getSQL().equals(procedureCall.getSQL()));
     }
 
 }
