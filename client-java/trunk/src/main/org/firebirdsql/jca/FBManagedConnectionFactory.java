@@ -42,7 +42,7 @@ import javax.security.auth.Subject;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
-//import org.firebirdsql.gds.Clumplet;
+
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;

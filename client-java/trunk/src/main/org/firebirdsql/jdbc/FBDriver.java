@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.9  2002/11/25 20:23:44  rrokytskyy
+ * improved TPB mapping code
+ *
  * Revision 1.8  2002/11/25 15:03:30  rrokytskyy
  * fixed nullpointer exception
  *
@@ -114,7 +117,6 @@ import org.firebirdsql.jca.FBTpbMapper;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.jgds.ClumpletImpl;
 
 /**
  * Describe class <code>FBDriver</code> here.
