@@ -17,7 +17,7 @@
 
     <property name="version.major" value="1"/>
     <property name="version.minor" value="5"/>
-    <property name="version.revision" value="4"/>
+    <property name="version.revision" value="5"/>
     <property name="version.tag" value=""/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
@@ -128,7 +128,7 @@
 
     <!--available property="jdk1.3+" classname="java.lang.StrictMath" /-->
 
-    <available property="j2ee.present" file="${jboss.source.root}" />
+    <available property="j2ee.present" file="${jboss.source.root}/jboss-j2ee" />
 
     <path id="javac.j2ee.classpath">
       <pathelement location="${module.thirdparty}/jaas.jar"/>
