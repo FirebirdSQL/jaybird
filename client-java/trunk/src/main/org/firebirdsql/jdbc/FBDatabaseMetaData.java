@@ -26,11 +26,8 @@ import java.sql.DatabaseMetaData;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.PreparedStatement;
 import java.sql.Types;
-import java.util.Collection;
 import java.util.ArrayList;
-import java.util.List;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
 
@@ -1099,11 +1096,13 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     /**
      * What's the database vendor's preferred term for "schema"?
      *
-     * @return the vendor term
+     * @return the vendor term, always <code>null</code> because
+     * schemas are not supported by database server (see JDBC CTS
+     * for details).
      * @exception SQLException if a database access error occurs
      */
     public  String getSchemaTerm() throws  SQLException {
-        return "";
+        return null;
         //throw new SQLException("No schemas");
     }
 
@@ -1122,12 +1121,14 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     /**
      * What's the database vendor's preferred term for "catalog"?
      *
-     * @return the vendor term
+     * @return the vendor term, always <code>null</code> because
+     * catalogs are not supported by database server (see JDBC CTS
+     * for details).
+     *
      * @exception SQLException if a database access error occurs
      */
     public  String getCatalogTerm() throws  SQLException {
-        return "";
-        //throw new SQLException("No Catalogs");
+        return null;
     }
 
 
@@ -1146,22 +1147,22 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     /**
      * What's the separator between catalog and table name?
      *
-     * @return the separator string
+     * @return the separator string, always <code>null</code> because
+     * catalogs are not supported by database server (see JDBC CTS
+     * for details).
+
      * @exception SQLException if a database access error occurs
      */
     public  String getCatalogSeparator() throws SQLException {
-        return "";
-        //throw new SQLException("No catalogs");
+        return null;
     }
 
 
     /**
      * Can a schema name be used in a data manipulation statement?
      *
-    public * @return <code>true</code> if so {
-        throw new SQLException("Not yet implemented");
-    }
- <code>false</code> otherwise
+     * @return <code>true</code> if so; <code>false</code> otherwise
+     * 
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsSchemasInDataManipulation() throws SQLException {
