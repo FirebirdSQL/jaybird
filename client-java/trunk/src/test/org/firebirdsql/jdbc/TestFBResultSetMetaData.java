@@ -46,6 +46,8 @@ public class TestFBResultSetMetaData extends BaseFBTest {
         "long_field, int_field, short_field " + 
         "FROM test_rs_metadata";
     
+    public static final String TEST_QUERY2 = 
+        "SELECT * from RDB$DATABASE";
         
     public static String DROP_TABLE = 
         "DROP TABLE test_rs_metadata";
@@ -128,7 +130,28 @@ public class TestFBResultSetMetaData extends BaseFBTest {
 
         assertTrue("long_field must have precision 4", 
             metaData.getPrecision(6) == 4);
-            
+
+        stmt.close();
+        connection.close();
+    }
+    public void testResultSetMetaData2() throws Exception {
+        java.util.Properties props = new java.util.Properties();
+        props.putAll(DB_INFO);
+        props.put("lc_ctype", "UNICODE_FSS");
+        
+        Connection connection = 
+            DriverManager.getConnection(DB_DRIVER_URL, props);
+        
+        Statement stmt = connection.createStatement();
+        
+        ResultSet rs = stmt.executeQuery(TEST_QUERY2);
+        
+        ResultSetMetaData metaData = rs.getMetaData();
+        		  
+        assertTrue("RDB$SECURITY_CLASS must have display size 31 ",metaData.getColumnDisplaySize(3)==31);
+		  
+        assertTrue("RDB$CHARACTER_SET_NAME must have display size 31 ",metaData.getColumnDisplaySize(4)==31);
+		  
         stmt.close();
         connection.close();
     }
