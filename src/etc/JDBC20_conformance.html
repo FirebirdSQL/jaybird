@@ -132,23 +132,11 @@ FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
 <h2>4.- Compliance Tests</h2>
 <p>JDBC 2.0 compliance was checked with Sun JDBC CTS 1.3.1 test suite. Callable
 statement tests  were excluded from run since driver does not support 
-registerOutParam() method and testing makes little sense. Results can be found 
-in CVS in file client-java/src/etc/jdbc_cts_log.txt.</p>
+registerOutParam() method and testing makes little sense.</p>
 <p>Driver does not conform JDBC specification in following areas:
 <ul>
 	<li>Support of ResultSet.TYPE_SCROLL_INSENSITIVE. JDBC specification requires
 	JDBC driver to fully support this type of result set, but JayBird does not.
-	<li>Driver does not return X/Open SQLSTATE values in SQLException.
-</ul>
-Other failures are caused by :
-<ul>
-	<li>float rounding problems of the database server (like 1e-14 is not equal 
-	to 9.9e-15);
-	<li>exact point arithmetic number representation (it is not possible to 
-	represent number with >25 digits in Firebird);
-	<li>absense of BIT data type support (these tests can be excluded from run 
-	anyway);
-	<li>incorrect boolean conversion within the test cases.
 </ul>
 </p>
 <p>Also the compliance was checked with <a href="http://www.jDataMaster.com">jDataMaster</a>, 
