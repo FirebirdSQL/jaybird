@@ -442,8 +442,10 @@ public class TestGds extends BaseFBTest {
         String out = "";
         byte[][] row = null;
         gds.isc_dsql_fetch(stmt1, 1, out_xsqlda,200);
-        for (int rowNum=0; rowNum < stmt1.size; rowNum++){
-           row = (byte[][]) stmt1.rows[rowNum];
+        Object[] rows = stmt1.getRows();
+        int size = stmt1.size();
+        for (int rowNum=0; rowNum < size; rowNum++){
+           row = (byte[][]) rows[rowNum];
             for (int i = 0; i < out_xsqlda.sqld; i++) {
                 Short data =  new Short(XSQLVAR.decodeShort(row[i]));
                 out += data.shortValue() + "    ";
@@ -520,8 +522,10 @@ public class TestGds extends BaseFBTest {
         isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
         byte[][] row = null;
         gds.isc_dsql_fetch(stmt1, 1, out_xsqlda, 200);
-        for (int rowNum=0; rowNum < stmt1.size; rowNum++){
-           row = (byte[][]) stmt1.rows[rowNum];
+        Object[] rows = stmt1.getRows();
+        int size = stmt1.size();
+        for (int rowNum=0; rowNum < size; rowNum++){
+           row = (byte[][]) rows[rowNum];
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
                 Object data =  row[i];
@@ -598,8 +602,10 @@ public class TestGds extends BaseFBTest {
         isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
         byte[][] row = null;
         gds.isc_dsql_fetch(stmt1, 1, out_xsqlda, 200);
-        for (int rowNum=0; rowNum < stmt1.size; rowNum++){
-           row = (byte[][]) stmt1.rows[rowNum];
+        Object[] rows = stmt1.getRows();
+        int size = stmt1.size();
+        for (int rowNum=0; rowNum < size; rowNum++){
+           row = (byte[][]) rows[rowNum];
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
                 Object data =  row[i];
@@ -681,8 +687,10 @@ public class TestGds extends BaseFBTest {
     isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
         byte[][] row = null;
         gds.isc_dsql_fetch(stmt1, 1, out_xsqlda, 200);
-        for (int rowNum=0; rowNum < stmt1.size; rowNum++){
-           row = (byte[][]) stmt1.rows[rowNum];
+        Object[] rows = stmt1.getRows();
+        int size = stmt1.size();
+        for (int rowNum=0; rowNum < size; rowNum++){
+           row = (byte[][]) rows[rowNum];
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
                 Object data =  row[i];
@@ -763,8 +771,10 @@ public class TestGds extends BaseFBTest {
         isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
         byte[][] row = null;
         gds.isc_dsql_fetch(stmt1, 1, out_xsqlda, 200);
-        for (int rowNum=0; rowNum < stmt1.size; rowNum++){
-           row = (byte[][]) stmt1.rows[rowNum];
+        Object[] rows = stmt1.getRows();
+        int size = stmt1.size();
+        for (int rowNum=0; rowNum < size; rowNum++){
+           row = (byte[][]) rows[rowNum];
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
                 Object data =  row[i];

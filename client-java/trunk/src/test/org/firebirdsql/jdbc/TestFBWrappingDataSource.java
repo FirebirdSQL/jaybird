@@ -23,6 +23,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.3  2002/09/28 19:21:37  d_jencks
+ * Fixed physical connection leak, made  datasource and ManagedConnectionFactory serializable, and made BlobBufferLength and Integer attribute to be spec-compliant.
+ *
  * Revision 1.2  2002/08/29 13:41:16  d_jencks
  * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
  *
@@ -160,7 +163,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
         ds.setPassword(DB_PASSWORD);
         connection = ds.getConnection();//DB_USER, DB_PASSWORD);
         assertTrue("Connection is null", connection != null);
-        Thread.sleep(2000);
+        Thread.sleep(3000);
         int ccount = ds.getConnectionCount();
         assertTrue("Wrong number of connections! " + ccount + ", expected " + ds.getMinSize(), ccount == ds.getMinSize());
         connection.close();
