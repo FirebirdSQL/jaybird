@@ -20,6 +20,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.1  2003/10/05 18:14:55  skidder
+ * Implement getParameterMetaData and fix minor issue in getResultSetMetaData.
+ *
  *
  *
 */
@@ -40,7 +43,6 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.sql.ResultSet;
 
 /**
  * Describe class <code>FBParameterMetaData</code> here.

@@ -19,10 +19,6 @@
 
 package org.firebirdsql.management;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.sql.SQLException;
-
 import org.firebirdsql.gds.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;

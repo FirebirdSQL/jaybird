@@ -19,9 +19,6 @@
 package org.firebirdsql.common;
 
 import junit.framework.TestCase;
-import org.firebirdsql.jdbc.FBDriver;
-
-import java.util.Properties;
 
 /**
  * Base class for test cases which can be run against only a single GDS implementation.

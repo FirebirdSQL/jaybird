@@ -31,8 +31,6 @@ import org.firebirdsql.common.SimpleFBTestBase;
 
 import java.util.Arrays;
 
-import junit.framework.TestCase;
-
 /**
  * Performs basic low level tests of the ngds package.
  */
