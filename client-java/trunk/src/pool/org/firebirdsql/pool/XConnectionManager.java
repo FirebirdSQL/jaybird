@@ -26,6 +26,15 @@ import java.sql.*;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 interface XConnectionManager {
+    
+    /**
+     * Get array of interfaces that should be implemented by a dynamic proxy
+     * that will intercept all calls to the connection. Result must contain at
+     * least {@link java.sql.Connection} interface 
+     * 
+     * @return array of interfaces that should be implemented by dynamic proxy.
+     */
+    Class[] getImplementedInterfaces();
 	
 	/**
 	 * Check if specified connection is still valid. 

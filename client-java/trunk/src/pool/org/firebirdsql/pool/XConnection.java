@@ -67,7 +67,9 @@ class XConnection implements InvocationHandler {
         Connection.class, "prepareStatement", new Class[] {String.class});
 
     private final static Method CONNECTION_PREPARE_STATEMENT2 = findMethod(
-        Connection.class, "prepareStatement", new Class[] {String.class, Integer.TYPE, Integer.TYPE});
+        Connection.class, "prepareStatement", new Class[] {
+            String.class, Integer.TYPE, Integer.TYPE
+        });
         
     private final static Method CONNECTION_CLOSE = findMethod(
         Connection.class, "close", new Class[0]);
@@ -85,12 +87,7 @@ class XConnection implements InvocationHandler {
     
 	private boolean closed;
 	private String closeStackTrace = "";
-	
-	private boolean supportsStatementsAccrossCommit;
-	private boolean supportsStatementsAccrossRollback;
-	
-    private HashMap statements = new HashMap();
-    
+
     /**
      * Construct instance of this class. This method constructs new proxy
 	 * that implements {@link Connection} interface and uses newly constructed
@@ -117,23 +114,9 @@ class XConnection implements InvocationHandler {
             this.connection = connection;
             this.owner = owner;
 
-            this.supportsStatementsAccrossCommit = 
-                connection.getMetaData().supportsOpenStatementsAcrossCommit();
-
-            if (LOG_META_DATA)
-                logChannel.info("Pool supports open statements across commit : " + 
-                    supportsStatementsAccrossCommit);
-
-            this.supportsStatementsAccrossRollback = 
-                connection.getMetaData().supportsOpenStatementsAcrossRollback();
-
-            if (LOG_META_DATA)
-                logChannel.info("Pool supports open statements across rollback : " + 
-                    supportsStatementsAccrossRollback);
-			
             proxy = (Connection)Proxy.newProxyInstance(
                 XConnection.class.getClassLoader(),
-                new Class[] {Connection.class},
+                owner.getImplementedInterfaces(),
                 this);
 		}
 	
@@ -295,21 +278,4 @@ class XConnection implements InvocationHandler {
 		
 		getManager().connectionRolledBack(this);
     }
-    
-    /**
-     * Handle {@link PreparedStatement#close()} method. This implementation 
-     * dereferences proxy in cache.
-     * 
-     * @param statement SQL statement corresponding to the proxy.
-     * @param proxy proxy wrapping the connection.
-     * 
-     * @throws SQLException if prepared statement cannot be added to the pool.
-     */
-    void handleStatementClose(String statement, Object proxy) throws SQLException {
-        XPreparedStatementCache stmtCache = 
-		    (XPreparedStatementCache)statements.get(statement);
-			
-        stmtCache.dereference(proxy);
-    }
-    
 }

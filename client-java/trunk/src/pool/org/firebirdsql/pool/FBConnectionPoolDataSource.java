@@ -24,6 +24,8 @@ import java.sql.SQLException;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import javax.sql.PooledConnection;
+import org.firebirdsql.jdbc.FirebirdConnection;
 
 /**
  * Connection pool for Firebird JDBC driver.
@@ -35,6 +37,7 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPoolDataSource
     private static final Logger LOG =
         LoggerFactory.getLogger(FBConnectionPoolDataSource.class, false);
     
+    private ConnectionPoolConfiguration config;
 
     /**
      * Create instance of this class.
@@ -46,7 +49,9 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPoolDataSource
     public FBConnectionPoolDataSource(FBConnectionPoolConfiguration config) 
         throws SQLException
     {
-        super(config);
+        super();
+        
+        this.config = config;
         
         try {
             Class.forName("org.firebirdsql.jdbc.FBDriver");
@@ -59,21 +64,40 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPoolDataSource
     protected Logger getLogger() {
         return LOG;
     }
+    
+    public ConnectionPoolConfiguration getConfiguration() {
+        return config;
+    }
+
 
     /**
      * Allocate new physical connection. This implementation uses 
      * {@link DriverManager} to allocate connection. Other implementations might
      * consider overriding this method to provide more optimized implementation.
      * 
-     * @return instance of {@link Connection}
+     * @return instance of {@link PooledConnection}
      * 
      * @throws SQLException if connection cannot be allocated.
      */
-    protected Connection allocateConnection() throws SQLException {
+    protected PooledConnection allocateConnection() throws SQLException {
         FBConnectionPoolConfiguration config = 
             (FBConnectionPoolConfiguration)getConfiguration();
         
-        return DriverManager.getConnection(config.getUrl(), config.getProperties());
+        Connection connection = 
+            DriverManager.getConnection(config.getUrl(), config.getProperties());
+            
+        PingablePooledConnection pooledConnection = null;
+
+        if (config.isPingable())
+            pooledConnection =
+                new FBPooledConnection(
+                    connection,
+                    config.getPingStatement(),
+                    config.getPingInterval());
+        else
+            pooledConnection = new FBPooledConnection(connection);
+            
+        return pooledConnection;
     }
     
     
@@ -82,11 +106,31 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPoolDataSource
      * 
      * @see AbstractConnectionPoolDataSource#getQueueName()
      */
-    protected String getQueueName() {
+    protected String getPoolName() {
         FBConnectionPoolConfiguration config = 
             (FBConnectionPoolConfiguration)getConfiguration();
 
         return config.getUrl();
+    }
+    
+    private static class FBPooledConnection extends PingablePooledConnection {
+
+        public FBPooledConnection(Connection connection) throws SQLException {
+            super(connection);
+        }
+
+        protected FBPooledConnection(Connection connection, 
+            String pingStatement, int pingInterval) throws SQLException 
+        {
+            super(connection, pingStatement, pingInterval);
+        }
+        
+        public Class[] getImplementedInterfaces() {
+            return new Class[] {
+                FirebirdConnection.class
+            };
+        }
+        
     }
 
 }
