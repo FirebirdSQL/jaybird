@@ -5,25 +5,20 @@
 	<TITLE></TITLE>
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.1  (Win32)">
 	<META NAME="CREATED" CONTENT="20040417;14232670">
-	<META NAME="CHANGED" CONTENT="20040417;22590154">
+	<META NAME="CHANGED" CONTENT="20040531;13312821">
 	<STYLE>
 	<!--
 		@page { size: 21cm 29.7cm }
 		PRE.western { so-language: en-US }
+		CODE { background: transparent }
 		CODE.western { font-size: 10pt; so-language:  }
-		CODE.java-keyword-western { color: #0000ff; font-size: 10pt; so-language:  }
-		CODE.java-keyword-cjk { color: #0000ff }
-		CODE.java-keyword-ctl { color: #0000ff }
-		CODE.java-literals-western { color: #ff0000; font-size: 10pt; so-language:  }
-		CODE.java-literals-cjk { color: #ff0000 }
-		CODE.java-literals-ctl { color: #ff0000 }
 	-->
 	</STYLE>
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <H1>Connection pooling with JayBird 1.5</H1>
 <ADDRESS>Roman Rokytskyy, Firebird Foundation</ADDRESS>
-<ADDRESS><BR>
+<ADDRESS STYLE="margin-bottom: 0.5cm"><BR><BR>
 </ADDRESS>
 <P>Connection pooling provides effective way to handle physical
 database connections. It is believed that establishing new connection
@@ -72,8 +67,7 @@ the example</P>
 	<TBODY>
 		<TR VALIGN=TOP>
 			<TD WIDTH=7%>
-				<PRE CLASS="western">
-001
+				<PRE CLASS="western">001
 002
 003
 004
@@ -88,28 +82,27 @@ the example</P>
 013
 014
 015
-016
-</PRE>
+016</PRE>
 			</TD>
 			<TD WIDTH=93%>
-				<PRE CLASS="western"><CODE CLASS="western">...</CODE>
-<CODE CLASS="western">Connection connection = dataSource.getConnection();</CODE>
-<CODE CLASS="western"><CODE CLASS="java-keyword-western">try</CODE> {</CODE>
-<CODE CLASS="western">    </CODE><CODE CLASS="western">PreparedStatement ps = connection.prepareStatement(</CODE>
-<CODE CLASS="western">        <CODE CLASS="java-literals-western">&ldquo;</CODE></CODE><CODE CLASS="western"><CODE CLASS="java-literals-western">SELECT * FROM test_table WHERE id = ?&rdquo;</CODE>);</CODE>
-<CODE CLASS="western">    </CODE><CODE CLASS="western"><CODE CLASS="java-keyword-western">try</CODE> {</CODE>
-<CODE CLASS="western">        </CODE><CODE CLASS="western">ps.setInt(1, id);</CODE>
-<CODE CLASS="western">        </CODE><CODE CLASS="western">ResultSet rs = ps.executeQuery();</CODE>
-<CODE CLASS="western">        </CODE><CODE CLASS="western"><CODE CLASS="java-keyword-western">while</CODE> (rs.next()) {</CODE>
-<CODE CLASS="western">            </CODE><CODE CLASS="western">// do something here</CODE>
-<CODE CLASS="western">        </CODE><CODE CLASS="western">}</CODE>
-<CODE CLASS="western">    </CODE><CODE CLASS="western">} <CODE CLASS="java-keyword-western">finally</CODE> {</CODE>
-<CODE CLASS="western">        </CODE><CODE CLASS="western">ps.close();</CODE>
-<CODE CLASS="western">    </CODE><CODE CLASS="western">}</CODE>
-<CODE CLASS="western">} <CODE CLASS="java-keyword-western">finally</CODE> {</CODE>
-<CODE CLASS="western">    </CODE><CODE CLASS="western">connection.close();</CODE>
-<CODE CLASS="western">}</CODE>
-<CODE CLASS="western">...</CODE></PRE>
+				<PRE CLASS="western">...
+Connection connection = dataSource.getConnection();
+try {
+    PreparedStatement ps = connection.prepareStatement(
+        &ldquo;SELECT * FROM test_table WHERE id = ?&rdquo;);
+    try {
+        ps.setInt(1, id);
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            // do something here
+        }
+    } finally {
+        ps.close();
+    }
+} finally {
+    connection.close();
+}
+...</PRE>
 			</TD>
 		</TR>
 	</TBODY>
@@ -142,7 +135,7 @@ where it waits for the next call.</P>
 	<TBODY>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25%>
-				<PRE CLASS="western"><CODE CLASS="western">AbstractConnectionPool.java</CODE></PRE>
+				<PRE CLASS="western">AbstractConnectionPool.java</PRE>
 			</TD>
 			<TD WIDTH=75%>
 				<P>Base class for all connection pools. Can be used for
@@ -151,7 +144,7 @@ where it waits for the next call.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25%>
-				<PRE CLASS="western"><CODE CLASS="western">BasicAbstractConnectionPool.java</CODE></PRE>
+				<PRE CLASS="western">BasicAbstractConnectionPool.java</PRE>
 			</TD>
 			<TD WIDTH=75%>
 				<P>Subclass of <CODE CLASS="western">AbstractConnectionPool</CODE>,
@@ -163,7 +156,7 @@ where it waits for the next call.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25%>
-				<PRE CLASS="western"><CODE CLASS="western">DriverConnectionPoolDataSource.java</CODE></PRE>
+				<PRE CLASS="western">DriverConnectionPoolDataSource.java</PRE>
 			</TD>
 			<TD WIDTH=75%>
 				<P>Implementation of <CODE CLASS="western">javax.sql.ConnectionPoolDataSource</CODE>
@@ -173,7 +166,7 @@ where it waits for the next call.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25%>
-				<PRE CLASS="western"><CODE CLASS="western">FBConnectionPoolDataSource.java</CODE></PRE>
+				<PRE CLASS="western">FBConnectionPoolDataSource.java</PRE>
 			</TD>
 			<TD WIDTH=75%>
 				<P>JayBird specific implementation of
@@ -184,7 +177,7 @@ where it waits for the next call.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25%>
-				<PRE CLASS="western"><CODE CLASS="western">FBSimpleDataSource.java</CODE></PRE>
+				<PRE CLASS="western">FBSimpleDataSource.java</PRE>
 			</TD>
 			<TD WIDTH=75%>
 				<P>Implementation of <CODE CLASS="western">javax.sql.DataSource</CODE>
@@ -196,7 +189,7 @@ where it waits for the next call.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25%>
-				<PRE CLASS="western"><CODE CLASS="western">FBWrappingDataSource.java</CODE></PRE>
+				<PRE CLASS="western">FBWrappingDataSource.java</PRE>
 			</TD>
 			<TD WIDTH=75%>
 				<P>Implementation of <CODE CLASS="western">javax.sql.DataSource</CODE>
@@ -208,7 +201,7 @@ where it waits for the next call.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25%>
-				<PRE CLASS="western"><CODE CLASS="western">SimpleDataSource.java</CODE></PRE>
+				<PRE CLASS="western">SimpleDataSource.java</PRE>
 			</TD>
 			<TD WIDTH=75%>
 				<P>Implementation of <CODE CLASS="western">javax.sql.DataSource</CODE>
@@ -257,7 +250,75 @@ can participate in distributed JTA transactions.</P>
 	<TBODY>
 		<TR>
 			<TD COLSPAN=4 WIDTH=100% VALIGN=TOP>
-				<P ALIGN=CENTER><EM>Generic properties</EM></P>
+				<P ALIGN=CENTER><EM>Standard properties</EM></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P><CODE CLASS="western">maxIdleTime</CODE></P>
+			</TD>
+			<TD WIDTH=18%>
+				<P ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P>Maximum time in milliseconds after which idle connection in
+				the pool is closed.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P><CODE CLASS="western">maxPoolSize</CODE></P>
+			</TD>
+			<TD WIDTH=18%>
+				<P ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P>Maximum number of open physical connections.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P><CODE CLASS="western">minPoolSize</CODE></P>
+			</TD>
+			<TD WIDTH=18%>
+				<P ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P>Minimum number of open physical connections. If value is
+				greater than 0, corresponding number of connections will be
+				opened when first connection is obtained.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P><CODE CLASS="western">maxStatements</CODE></P>
+			</TD>
+			<TD WIDTH=18%>
+				<P ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P>Maximum size of prepared statement pool. If 0, statement
+				pooling is switched off. When application requests more
+				statements than can be kept in pool, JayBird will allow creating
+				that statements, however closing them would not return them back
+				to the pool, but rather immediately release the resources.</P>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=4 WIDTH=100% VALIGN=TOP>
+				<P ALIGN=CENTER><EM>Pool properties</EM></P>
 			</TD>
 		</TR>
 		<TR VALIGN=TOP>
@@ -287,8 +348,7 @@ can participate in distributed JTA transactions.</P>
 				<P ALIGN=CENTER>+</P>
 			</TD>
 			<TD WIDTH=40%>
-				<P>Maximum time in milliseconds after which idle connection in
-				the pool is closed.</P>
+				<P><I>Deprecated</I>. Same as <CODE CLASS="western">maxIdleTime</CODE>.</P>
 			</TD>
 		</TR>
 		<TR VALIGN=TOP>
@@ -317,7 +377,7 @@ can participate in distributed JTA transactions.</P>
 				<P ALIGN=CENTER>+</P>
 			</TD>
 			<TD WIDTH=40%>
-				<P>Maximum number of open physical connections.</P>
+				<P><I>Deprecated</I>. Same as <CODE CLASS="western">maxPoolSize</CODE>.</P>
 			</TD>
 		</TR>
 		<TR VALIGN=TOP>
@@ -331,9 +391,7 @@ can participate in distributed JTA transactions.</P>
 				<P ALIGN=CENTER>+</P>
 			</TD>
 			<TD WIDTH=40%>
-				<P>Minimum number of open physical connections. If value is
-				greater than 0, corresponding number of connections will be
-				opened when first connection is obtained.</P>
+				<P><I>Deprecated</I>. Same as <CODE CLASS="western">minPoolSize</CODE>.</P>
 			</TD>
 		</TR>
 		<TR VALIGN=TOP>
@@ -411,9 +469,12 @@ can participate in distributed JTA transactions.</P>
 				<P>Default transaction isolation level. All connections returned
 				from the pool will have this isolation level. One of:</P>
 				<UL>
-					<LI><CODE CLASS="western">TRANSACTION_READ_COMMITTED</CODE>
-					<LI><CODE CLASS="western">TRANSACTION_REPEATABLE_READ</CODE>
-					<LI><CODE CLASS="western">TRANSACTION_SERIALIZABLE</CODE>
+					<LI><P STYLE="margin-bottom: 0cm"><CODE CLASS="western">TRANSACTION_READ_COMMITTED</CODE>
+										</P>
+					<LI><P STYLE="margin-bottom: 0cm"><CODE CLASS="western">TRANSACTION_REPEATABLE_READ</CODE>
+										</P>
+					<LI><P><CODE CLASS="western">TRANSACTION_SERIALIZABLE</CODE> 
+					</P>
 				</UL>
 			</TD>
 		</TR>
@@ -466,12 +527,15 @@ can participate in distributed JTA transactions.</P>
 			<TD WIDTH=40%>
 				<P>Type of the driver to use. Possible values are:</P>
 				<UL>
-					<LI><CODE CLASS="western">PURE_JAVA</CODE> or <CODE CLASS="western">TYPE4</CODE>
-					for type 4 JDBC driver
-					<LI><CODE CLASS="western">NATIVE</CODE> or <CODE CLASS="western">TYPE2</CODE>
-					for type 2 JDBC driver
-					<LI><CODE CLASS="western">EMBEDDED</CODE> for using embedded
-					version of the Firebird.
+					<LI><P STYLE="margin-bottom: 0cm"><CODE CLASS="western">PURE_JAVA</CODE>
+					or <CODE CLASS="western">TYPE4</CODE> for type 4 JDBC driver 
+					</P>
+					<LI><P STYLE="margin-bottom: 0cm"><CODE CLASS="western">NATIVE</CODE>
+					or <CODE CLASS="western">TYPE2</CODE> for type 2 JDBC driver 
+					</P>
+					<LI><P><CODE CLASS="western">EMBEDDED</CODE> for using embedded
+					version of the Firebird. 
+					</P>
 				</UL>
 			</TD>
 		</TR>
@@ -599,12 +663,88 @@ can participate in distributed JTA transactions.</P>
 				<P ALIGN=CENTER>-</P>
 			</TD>
 			<TD WIDTH=17%>
+				<P ALIGN=CENTER>+</P>
+				<P ALIGN=CENTER><CODE CLASS="western">setNonStandardProperty(String)</CODE></P>
 				<P ALIGN=CENTER><CODE CLASS="western">setNonStandardProperty(String,
 				String)</CODE></P>
 			</TD>
 			<TD WIDTH=40%>
 				<P>Allows to set any valid connection property that does not have
-				corresponding setter method.</P>
+				corresponding setter method. Two setters are available: 
+				</P>
+				<P><CODE CLASS="western">setNonStandardProperty(String)</CODE>
+				method takes only one parameter in form
+				<CODE CLASS="western">&ldquo;propertyName[=propertyValue]&rdquo;</CODE>,
+				this allows setting non-standard parameters using configuration
+				files.</P>
+				<P><CODE CLASS="western">setNonStandardProperty(String, String)</CODE>
+				takes property name as first parameter, and its value as the
+				second parameter.</P>
+			</TD>
+		</TR>
+		<TR>
+			<TD COLSPAN=4 WIDTH=100% VALIGN=TOP>
+				<P ALIGN=CENTER><EM>Pool runtime properties</EM></P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P><CODE CLASS="western">freeSize</CODE></P>
+			</TD>
+			<TD WIDTH=18%>
+				<P ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P ALIGN=CENTER>-</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P>Tells how many free connections are in the pool. Value is
+				between 0 and <CODE CLASS="western">totalSize</CODE>.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P><CODE CLASS="western">workingSize</CODE></P>
+			</TD>
+			<TD WIDTH=18%>
+				<P ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P ALIGN=CENTER>-</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P>Tells how many connections were taken from the pool and are
+				currently used in the application.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P><CODE CLASS="western">totalSize</CODE></P>
+			</TD>
+			<TD WIDTH=18%>
+				<P ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P ALIGN=CENTER>-</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P>Total size of open connection. At the pool creation &ndash; 0,
+				after obtaining first connection &ndash; between <CODE CLASS="western">minPoolSize</CODE>
+				and <CODE CLASS="western">maxPoolSize</CODE>.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P><CODE CLASS="western">connectionCount</CODE></P>
+			</TD>
+			<TD WIDTH=18%>
+				<P ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P ALIGN=CENTER>-</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P><I>Deprecated</I>. Same as <CODE CLASS="western">freeSize</CODE>.</P>
 			</TD>
 		</TR>
 	</TBODY>
@@ -698,8 +838,8 @@ providing all necessary setters.</P>
 <H3>org.firebirdsql.pool.FBWrappingDataSource</H3>
 <P>This class is a wrapper for <CODE CLASS="western">FBConnectionPoolDataSource</CODE>
 converting interface from <CODE CLASS="western">javax.sql.ConnectionPoolDataSource</CODE>
-to <CODE CLASS="western">javax.sql.DataSource</CODE>.  It defines
-same properties as <CODE CLASS="western">FBConnectionPoolDataSource</CODE>
+to <CODE CLASS="western">javax.sql.DataSource</CODE>. It defines same
+properties as <CODE CLASS="western">FBConnectionPoolDataSource</CODE>
 does.</P>
 </BODY>
 </HTML>

@@ -1,141 +1,197 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <HTML>
 <HEAD>
-<TITLE> New Document </TITLE>
-<META NAME="Generator" CONTENT="EditPlus">
-<META NAME="Author" CONTENT="">
-<META NAME="Keywords" CONTENT="">
-<META NAME="Description" CONTENT="">
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
+	<TITLE> New Document </TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.2  (Win32)">
+	<META NAME="CREATED" CONTENT="20040718;14285406">
+	<META NAME="CHANGED" CONTENT="20040718;14345568">
 </HEAD>
-
-<BODY>
-<h1>JDBC 2.0 implementation</h1>
-<p>Last updated. December 17 2002</p>
-<hr/>
-<h2>1.- Introduction</h2>
-<p>This document is focused on feature coverage of the JDBC 2.0 specification and performance.</p>
-<p>For more information about the driver and how to use it, please read the <a href="release_notes.html">release notes</a> and <a href="faq.html">FAQ</a>.</p>
-<!-- 
-<p>For comments and corrections contact with 
+<BODY LANG="en-US" DIR="LTR">
+<H1>JDBC 2.0 implementation</H1>
+<P>Last updated. December 17 2002</P>
+<H2>1.- Introduction</H2>
+<P>This document is focused on feature coverage of the JDBC 2.0
+specification and performance.</P>
+<P>For more information about the driver and how to use it, please
+read the <A HREF="release_notes.html">release notes</A> and <A HREF="faq.html">FAQ</A>.</P>
+<H2><!-- <p>For comments and corrections contact with 
 <a href="mailto:blas@puertareal.com">Blas Rodriguez Somoza</a> or  
 with <a href="mailto:Firebird-Java@yahoogroups.com">Firebird-Java@yahoogroups.com</a>.
--->
-
-<h2>2.- Connection URL</h2>
-<p>The driver URL syntax has two forms:</p>
-<p>Standard format= jdbc:firebirdsql:[//host[:port]/]&lt;database&gt;    <br>
-FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</p>
-
-<h2>3.- JDBC Features</h2>
-<p>The driver complies with the JDBC 2.0 core with some features and methods not implemented. Some of the unimplemented features are required by the specification and some are optional.</p>
-<p>The following optional features and the methods that support it are not implemented:</p>
-<ul>
-<li><b>ResultSet.TYPE_SCROLL_SENSITIVE</b>
-<p>Server does not support scrollable cursors, so we are not able to implement
-this feature correctly. When you create a statement with result set type
-TYPE_SCROLL_SENSITIVE, it is replaced with TYPE_SCROLL_INSENSITIVE and 
-corresponding warning is added to connection warnings.</p>
-</li>
-<li><b>ResultSet.CONCUR_UPDATABLE</b></li>
-	<ul>
-		<li>java.sql.ResultSet</li>
-		<ul>
-			<li>rowUpdated()</li>
-			<li>rowInserted()</li>
-			<li>rowDeleted()</li>
-			<li>updateXXX(....)</li>
-			<li>insertRow()</li>
-			<li>updateRow()</li>
-			<li>deleteRow()</li>
-			<li>refreshRow()</li>
-			<li>cancelRowUpdates()</li>
-			<li>moveToInsertRow()</li>
-			<li>moveToCurrentRow()</li>
-		</ul>
-	</ul>
-<li><b>Ref, Clob and Array types.</b></li>
-	<ul>
-		<li>java.sql.PreparedStatement</li>
-		<ul>
-			<li>setRef(int i, Ref x)</li>
-			<li>setClob (int i, Clob x)</li>
-			<li>setArray(int i, Array x)</li>
-		</ul>
-		<li>java.sql.ResultSet</li>
-		<ul>
-			<li>getArray(int i)</li>
-			<li>getArray(String columnName)</li>
-			<li>getRef(int i)</li>
-			<li>getRef(String columnName)</li>
-			<li>getClob(int i)</li>
-			<li>getClob(String columnName)</li>
-		</ul>
-	</ul>
-<li><b>User Defined Types/Type Maps.</b></li>
-	<ul>
-		<li>java.sql.ResultSet</li>
-		<ul>
-			<li>getObject(int i, java.util.Map map)</li>
-			<li>getObject(String columnName, java.util.Map map)</li>
-		</ul>
-		<li>java.sql.Connection</li>
-		<ul>
-			<li>getTypeMap()</li>
-			<li>setTypeMap(java.util.Map map)</li>
-		</ul>
-	</ul>
-</ul>
-<p>Excluding the unsupported features, the following methods are not yet implemented:</p>
-<ul>
-	<li><b>java.sql.Statement</b></li>
-	<ul>
-		<li>cancel()</li>
-	</ul>
-	<li><b>java.sql.Blob</b></li>
-	<ul>
-		<li>position(byte pattern[], long start)</li>
-		<li>position(Blob pattern, long start)</li>
-	</ul>
-</ul>
-<p>The following methods are implemented, but do not work as expected:</p>
-<ul>
-	<li><b>java.sql.Statement</b></li>
-	<ul>
-		<li>get/setMaxFieldSize does nothing</li>
-		<li>get/setQueryTimeout does nothing</li>
-	</ul>
-	<li><b>java.sql.PreparedStatement</b></li>
-	<ul>
-		<li>setObject(index,object,type) This method is implemented but behaves 
-		as setObject(index,object)</li>
-		<li>setObject(index,object,type,scale) This method is implemented but 
-		behaves as setObject(index,object)</li>
-	</ul>
-	<li><b>java.sql.ResultSetMetaData</b></li>
-	<ul>
-		<li>isReadOnly(i) always returns false</li>
-		<li>isWritable(i) always returns true</li>
-		<li>isDefinitivelyWritable(i) always returns true</li>
-	</ul>
-	<li><b>java.sql.DatabaseMetaData</b></li>
-	<ul>
-		<li>getBestRowIdentifier(i) always returns empty resultSet</li>
-	</ul>
-</ul>
-<h2>4.- Compliance Tests</h2>
-<p>JDBC 2.0 compliance was checked with Sun JDBC CTS 1.3.1 test suite. Driver 
-passed all relevant tests (totally 1216 tests), excluded tests can be checked
-in the CVS in client-java/src/jdbccts/excludes.properties. This file also contains
-explanations why the test was exluded. There are two main groups of test cases
-that were excluded: BIT data type tests and tests that fail due to rounding
-problems in floating-point numbers within the Firebird itself. BIT data type is
-not yet supported by Firebird and rounding problems will be checked with server
-team. Some tests were excluded due to errors within the tests themselves, this 
-will be checked with Sun Microsystems later.</p>
-
-<!--
-
-This is related to version 1.0.x, new run is required for v1.5
+-->2.-
+Connection URL</H2>
+<P>The driver URL syntax has two forms:</P>
+<P>Standard format= jdbc:firebirdsql:[//host[:port]/]&lt;database&gt;
+<BR>FB old format= jdbc:firebirdsql:[host[/port]:]&lt;database&gt;</P>
+<H2>3.- JDBC Features</H2>
+<P>The driver complies with the JDBC 2.0 core with some features and
+methods not implemented. Some of the unimplemented features are
+required by the specification and some are optional.</P>
+<P>The following optional features and the methods that support it
+are not implemented:</P>
+<UL>
+	<LI><P><B>ResultSet.TYPE_SCROLL_SENSITIVE</B> 
+	</P>
+	<P>Server does not support scrollable cursors, so we are not able to
+	implement this feature correctly. When you create a statement with
+	result set type TYPE_SCROLL_SENSITIVE, it is replaced with
+	TYPE_SCROLL_INSENSITIVE and corresponding warning is added to
+	connection warnings.</P>
+	<LI><P STYLE="margin-bottom: 0cm"><B>ResultSet.CONCUR_UPDATABLE</B> 
+	</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm">java.sql.ResultSet 
+		</P>
+		<UL>
+			<LI><P STYLE="margin-bottom: 0cm">rowUpdated() 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">rowInserted() 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">rowDeleted() 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">updateXXX(....) 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">insertRow() 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">updateRow() 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">deleteRow() 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">refreshRow() 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">cancelRowUpdates() 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">moveToInsertRow() 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">moveToCurrentRow() 
+			</P>
+		</UL>
+	</UL>
+	<LI><P STYLE="margin-bottom: 0cm"><B>Ref, Clob and Array types.</B> 
+	</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm">java.sql.PreparedStatement 
+		</P>
+		<UL>
+			<LI><P STYLE="margin-bottom: 0cm">setRef(int i, Ref x) 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">setClob (int i, Clob x) 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">setArray(int i, Array x) 
+			</P>
+		</UL>
+		<LI><P STYLE="margin-bottom: 0cm">java.sql.ResultSet 
+		</P>
+		<UL>
+			<LI><P STYLE="margin-bottom: 0cm">getArray(int i) 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">getArray(String columnName) 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">getRef(int i) 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">getRef(String columnName) 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">getClob(int i) 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">getClob(String columnName) 
+			</P>
+		</UL>
+	</UL>
+	<LI><P STYLE="margin-bottom: 0cm"><B>User Defined Types/Type Maps.</B>
+		</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm">java.sql.ResultSet 
+		</P>
+		<UL>
+			<LI><P STYLE="margin-bottom: 0cm">getObject(int i, java.util.Map
+			map) 
+			</P>
+			<LI><P STYLE="margin-bottom: 0cm">getObject(String columnName,
+			java.util.Map map) 
+			</P>
+		</UL>
+		<LI><P STYLE="margin-bottom: 0cm">java.sql.Connection 
+		</P>
+		<UL>
+			<LI><P STYLE="margin-bottom: 0cm">getTypeMap() 
+			</P>
+			<LI><P>setTypeMap(java.util.Map map) 
+			</P>
+		</UL>
+	</UL>
+</UL>
+<P>Excluding the unsupported features, the following methods are not
+yet implemented:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm"><B>java.sql.Statement</B> 
+	</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm">cancel() 
+		</P>
+	</UL>
+	<LI><P STYLE="margin-bottom: 0cm"><B>java.sql.Blob</B> 
+	</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm">position(byte pattern[], long
+		start) 
+		</P>
+		<LI><P>position(Blob pattern, long start) 
+		</P>
+	</UL>
+</UL>
+<P>The following methods are implemented, but do not work as
+expected:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm"><B>java.sql.Statement</B> 
+	</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm">get/setMaxFieldSize does nothing 
+		</P>
+		<LI><P STYLE="margin-bottom: 0cm">get/setQueryTimeout does nothing 
+		</P>
+	</UL>
+	<LI><P STYLE="margin-bottom: 0cm"><B>java.sql.PreparedStatement</B> 
+	</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm">setObject(index,object,type) This
+		method is implemented but behaves as setObject(index,object) 
+		</P>
+		<LI><P STYLE="margin-bottom: 0cm">setObject(index,object,type,scale)
+		This method is implemented but behaves as setObject(index,object) 
+		</P>
+	</UL>
+	<LI><P STYLE="margin-bottom: 0cm"><B>java.sql.ResultSetMetaData</B> 
+	</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm">isReadOnly(i) always returns
+		false 
+		</P>
+		<LI><P STYLE="margin-bottom: 0cm">isWritable(i) always returns true
+				</P>
+		<LI><P STYLE="margin-bottom: 0cm">isDefinitivelyWritable(i) always
+		returns true 
+		</P>
+	</UL>
+	<LI><P STYLE="margin-bottom: 0cm"><B>java.sql.DatabaseMetaData</B> 
+	</P>
+	<UL>
+		<LI><P>getBestRowIdentifier(i) always returns empty resultSet 
+		</P>
+	</UL>
+</UL>
+<H2>4.- Compliance Tests</H2>
+<P>JDBC 2.0 compliance was checked with Sun JDBC CTS 1.3.1 test
+suite. Driver passed all relevant tests (totally 1216 tests),
+excluded tests can be checked in the CVS in
+client-java/src/jdbccts/excludes.properties. This file also contains
+explanations why the test was exluded. There are two main groups of
+test cases that were excluded: BIT data type tests and tests that
+fail due to rounding problems in floating-point numbers within the
+Firebird itself. BIT data type is not yet supported by Firebird and
+rounding problems will be checked with server team. Some tests were
+excluded due to errors within the tests themselves, this will be
+checked with Sun Microsystems later.</P>
+<H2><!-- This is related to version 1.0.x, new run is required for v1.5
 
 <p>Also the compliance was checked with <a href="http://www.jDataMaster.com">jDataMaster</a>, 
 which includes more than 1000 tests, excluding:</p>
@@ -160,118 +216,268 @@ which includes more than 1000 tests, excluding:</p>
 <p>Firebird driver is the only driver of those tested with this tool which passed all the tests, 
 the next one fails on 90 tests, including all of the most well known RDBMS.</p>
 
--->
-
-<h2>5.- Performance recomendations</h2>
-
-<p><b>Updates, deletes etc</b></p>
-<p>Don't use executeUpdate when you don't need the affected record count. Because the database doesn't send this information to the result, the driver must request it after the execution finishes, and it needs some time to do it . Use execute() instead of executeUpdate() when count is not needed.</p>
-
-<p><b>Character encoding</b></p>
-<p>In FB the client notifies the server which character set it will use in the communication. The server then converts all the incoming character information from this character set to the one of the field or database. In the output the server also does the conversion from the database/field character set to the one needed by the client.</p>
-<p>This driver sets as the default the NONE character set, the same that Interclient uses. It seems there are some performance problems in the engine and when the NONE character set is received it takes some time to convert it to the character set of the field/database. When using NONE, the theory is that the server only verifies that the characters received are valid characters.</p>
-<p>When using a character set other than NONE in the database, set the lc_ctype parameter equal to the database default charset. If you can, select the database default character set to be equivalent to the default character set of your JVM.</p>
-<p>Also you can set the default character set of the database to NONE, but this is not recommended since other tools that can be used with the database can't know which character set is in use.</p>
-<p>Apparently, there can be some problems if the database uses character set NONE and the lc_ctype parameter is set to WIN1252.</p>
-<table border=1 cellpadding=5 cellspacing=0>
- <tr >
-  <td>&nbsp;</td>
-  <td>A) RC2</td>
-  <td>B) RC2</td>
-  <td>C) RC2</td>
-  <td>time B/A(%)</td>
-  <td>time C/A(%)</td>
- </tr>
- <tr >
-  <td>Client lc_ctype</td>
-  <td>NONE</td>
-  <td>WIN1252</td>
-  <td>NONE</td>
-  <td>&nbsp;</td>
-  <td>&nbsp;</td>
- </tr>
- <tr >
-  <td >DB default charset</td>
-  <td>WIN1252</td>
-  <td>WIN1252</td>
-  <td>NONE</td>
-  <td>&nbsp;</td>
-  <td>&nbsp;</td>
- </tr>
- <tr>
-  <td colspan=6 bgcolor="#cccccc">IMPLICIT TRANSACTION CONTROL</td>
- </tr>
- <tr >
-  <td >Insert short record of Char</td>
-  <td align=right>14719</td>
-  <td align=right>13547</td>
-  <td align=right>12844</td>
-  <td align=right>92</td>
-  <td align=right>87</td>
- </tr>
- <tr >
-  <td>Insert long record of Char</td>
-  <td align=right>10218</td>
-  <td align=right>8656</td>
-  <td align=right>8453</td>
-  <td align=right>85</td>
-  <td align=right>83</td>
- </tr>
- <tr >
-  <td>Insert short record of Varchar</td>
-  <td align=right>14016</td>
-  <td align=right>13484</td>
-  <td align=right>12828</td>
-  <td align=right>96</td>
-  <td align=right>92</td>
- </tr>
- <tr >
-  <td>Insert long record of Varchar</td>
-  <td align=right>9172</td>
-  <td align=right>8406</td>
-  <td align=right>8031</td>
-  <td align=right>92</td>
-  <td align=right>88</td>
- </tr>
- <tr >
-  <td colspan=6 bgcolor="#cccccc">EXPLICIT TRANSACTION CONTROL</td>
- </tr>
- <tr >
-  <td >Insert short record of Char</td>
-  <td align=right>4594</td>
-  <td align=right>3579</td>
-  <td align=right>3469</td>
-  <td align=right>78</td>
-  <td align=right>76</td>
- </tr>
- <tr >
-  <td>Insert long record of Char</td>
-  <td align=right>4500</td>
-  <td align=right>3110</td>
-  <td align=right>3063</td>
-  <td align=right>69</td>
-  <td align=right>68</td>
- </tr>
- <tr >
-  <td>Insert short record of Varchar</td>
-  <td align=right>4109</td>
-  <td align=right>3672</td>
-  <td align=right>3578</td>
-  <td align=right>89</td>
-  <td align=right>87</td>
- </tr>
- <tr >
-  <td>Insert long record of Varchar</td>
-  <td align=right>3609</td>
-  <td align=right>2985</td>
-  <td align=right>2922</td>
-  <td align=right>83</td>
-  <td align=right>81</td>
- </tr>
-</table>
-
-<!--
-<h2>6.- Performance compared with Interclient</h2>
+-->5.-
+Performance recommendations</H2>
+<P><B>Updates, deletes etc</B></P>
+<P>Don't use executeUpdate when you don't need the affected record
+count. Because the database doesn't send this information to the
+result, the driver must request it after the execution finishes, and
+it needs some time to do it . Use execute() instead of
+executeUpdate() when count is not needed.</P>
+<P><B>Character encoding</B></P>
+<P>In FB the client notifies the server which character set it will
+use in the communication. The server then converts all the incoming
+character information from this character set to the one of the field
+or database. In the output the server also does the conversion from
+the database/field character set to the one needed by the client.</P>
+<P>This driver sets as the default the NONE character set, the same
+that Interclient uses. It seems there are some performance problems
+in the engine and when the NONE character set is received it takes
+some time to convert it to the character set of the field/database.
+When using NONE, the theory is that the server only verifies that the
+characters received are valid characters.</P>
+<P>When using a character set other than NONE in the database, set
+the lc_ctype parameter equal to the database default charset. If you
+can, select the database default character set to be equivalent to
+the default character set of your JVM.</P>
+<P>Also you can set the default character set of the database to
+NONE, but this is not recommended since other tools that can be used
+with the database can't know which character set is in use.</P>
+<P>Apparently, there can be some problems if the database uses
+character set NONE and the lc_ctype parameter is set to WIN1252.</P>
+<TABLE BORDER=1 CELLPADDING=5 CELLSPACING=0>
+	<TR>
+		<TD>
+			<P>&nbsp;</P>
+		</TD>
+		<TD>
+			<P>A) RC2</P>
+		</TD>
+		<TD>
+			<P>B) RC2</P>
+		</TD>
+		<TD>
+			<P>C) RC2</P>
+		</TD>
+		<TD>
+			<P>time B/A(%)</P>
+		</TD>
+		<TD>
+			<P>time C/A(%)</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>Client lc_ctype</P>
+		</TD>
+		<TD>
+			<P>NONE</P>
+		</TD>
+		<TD>
+			<P>WIN1252</P>
+		</TD>
+		<TD>
+			<P>NONE</P>
+		</TD>
+		<TD>
+			<P>&nbsp;</P>
+		</TD>
+		<TD>
+			<P>&nbsp;</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>DB default charset</P>
+		</TD>
+		<TD>
+			<P>WIN1252</P>
+		</TD>
+		<TD>
+			<P>WIN1252</P>
+		</TD>
+		<TD>
+			<P>NONE</P>
+		</TD>
+		<TD>
+			<P>&nbsp;</P>
+		</TD>
+		<TD>
+			<P>&nbsp;</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD COLSPAN=6 BGCOLOR="#cccccc">
+			<P>IMPLICIT TRANSACTION CONTROL</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>Insert short record of Char</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>14719</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>13547</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>12844</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>92</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>87</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>Insert long record of Char</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>10218</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>8656</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>8453</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>85</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>83</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>Insert short record of Varchar</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>14016</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>13484</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>12828</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>96</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>92</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>Insert long record of Varchar</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>9172</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>8406</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>8031</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>92</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>88</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD COLSPAN=6 BGCOLOR="#cccccc">
+			<P>EXPLICIT TRANSACTION CONTROL</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>Insert short record of Char</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>4594</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>3579</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>3469</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>78</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>76</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>Insert long record of Char</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>4500</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>3110</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>3063</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>69</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>68</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>Insert short record of Varchar</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>4109</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>3672</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>3578</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>89</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>87</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P>Insert long record of Varchar</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>3609</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>2985</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>2922</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>83</P>
+		</TD>
+		<TD>
+			<P ALIGN=RIGHT>81</P>
+		</TD>
+	</TR>
+</TABLE>
+<P><!-- <h2>6.- Performance compared with Interclient</h2>
 <p>The results of the jDataMaster basic performance tests, are as follows:</p>
 <p><b>Local test (Server and driver on same system)</b></p>
 <p>Conditions</p>
@@ -923,7 +1129,7 @@ the next one fails on 90 tests, including all of the most well known RDBMS.</p>
 </ul>
 <br/>
 <br/>
--->
-
+--><BR><BR>
+</P>
 </BODY>
 </HTML>
