@@ -4228,11 +4228,12 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         //Unfortunately it doesn't seem to be possible to specify INT64 as a column datatype
         //I'm using NUMERIC(18,0) until something better is available.
         //Note that 18 digits is too few whereas 19 is too many.
+        /*
         rows.add(new byte[][] {getBytes("NUMERIC(18,0)"), createShort(Types.BIGINT)
             , XSQLVAR.encodeInt(64), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, XSQLVAR.encodeInt(GDS.SQL_INT64), null, BINARY});
-
+        */
         //LONGVARBINARY=-4
         rows.add(new byte[][] {getBytes("BLOB SUB_TYPE 0"), createShort(Types.LONGVARBINARY)
             , XSQLVAR.encodeInt(0), null, null, null,
