@@ -202,7 +202,7 @@ public class FBManagedConnectionFactory
         hashCode = 0;
         if (level == null) 
         {
-            throw new ResourceException("You must supply a isolation level");
+            throw new FBResourceException("You must supply a isolation level");
         } // end of if ()
         else
         {

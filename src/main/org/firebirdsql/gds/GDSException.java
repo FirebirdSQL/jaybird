@@ -21,6 +21,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2002/09/18 23:10:29  rrokytskyy
+ * f
+ *
  * Revision 1.1  2002/08/29 13:41:01  d_jencks
  * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
  *
@@ -142,6 +145,10 @@ public class GDSException extends Exception {
 
     public GDSException getNext() {
         return next;
+    }
+    
+    public boolean isWarning() {
+        return type == GDS.isc_arg_warning;
     }
 
     /*

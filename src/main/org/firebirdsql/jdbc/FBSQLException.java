@@ -20,7 +20,11 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
+import javax.resource.ResourceException;
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.jca.FBResourceException;
+import java.io.PrintWriter;
+import java.io.PrintStream;
 
 /**
  *@author Ken Richard
@@ -34,8 +38,28 @@ public class FBSQLException extends SQLException {
     private String message;
 
     public FBSQLException(GDSException ex) {
+        super(ex.getMessage());
         original = ex;
         message = "GDS Exception. " + ex.getMessage();
+    }
+    
+    public FBSQLException(ResourceException ex) {
+        super(ex.getMessage());
+        
+        // try to unwrap wrapped exception
+        if (ex instanceof FBResourceException) {
+            
+            FBResourceException rex = (FBResourceException)ex;
+            
+            if (rex.getOriginal() != null)
+                original = rex.getOriginal();
+            else
+                original = rex;
+                
+        } else
+            original = ex;
+            
+        message = "Resource Exception. " + ex.getMessage();
     }
     
     public int getErrorCode() {
@@ -51,5 +75,25 @@ public class FBSQLException extends SQLException {
 
     public String getMessage() {
         return message;
-    }    
+    }
+
+    public void printStackTrace() {
+        printStackTrace(System.err);
+    }
+
+    public void printStackTrace(PrintStream s) {
+        super.printStackTrace(s);
+        if (original != null) {
+            s.print("at ");
+            original.printStackTrace(s);
+        }
+    }
+
+    public void printStackTrace(PrintWriter s) {
+        super.printStackTrace(s);
+        if (original != null) {
+            s.print("at ");
+            original.printStackTrace(s);
+        }
+    }
 }

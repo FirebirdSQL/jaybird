@@ -93,7 +93,7 @@ public class FBPoolingConnectionManager
    {
       if (this.mcf != mcf) 
       {
-         throw new ResourceException("Wrong ManagedConnectionFactory sent to PoolingConnectionManager!");
+         throw new FBResourceException("Wrong ManagedConnectionFactory sent to PoolingConnectionManager!");
       } // end of if ()
       final ManagedConnection mc = getManagedConnection(cri);
       mc.addConnectionEventListener(new ConnectionEventListener() {

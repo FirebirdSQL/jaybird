@@ -48,7 +48,7 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
          Product name of the EIS instance.
     **/
      public java.lang.String getEISProductName() throws ResourceException {
-        throw new ResourceException("Not yet implemented");
+        throw new FBResourceException("Not yet implemented");
      }
 
      /**
@@ -58,7 +58,7 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
          Product version of the EIS instance
     **/
      public java.lang.String getEISProductVersion() throws ResourceException {
-         throw new ResourceException("not yet implemented");
+         throw new FBResourceException("not yet implemented");
      }
 
 

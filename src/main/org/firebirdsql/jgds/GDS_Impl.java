@@ -1416,9 +1416,10 @@ public class GDS_Impl implements GDS {
                 int arg = db.in.readInt();
                 switch (arg) {
                     case isc_arg_end:
-                        if (head != null) {
+                        if (head != null && !head.isWarning()) {
                             throw head;
-                        }
+                        } 
+                        
                         return;
                     case isc_arg_interpreted:
                     case isc_arg_string:
@@ -2084,7 +2085,7 @@ public class GDS_Impl implements GDS {
                 hostSepChar = '/';
                 portSepChar = ':';
             }
-				else {
+                else {
                 hostSepChar = ':';
                 portSepChar = '/';
             }

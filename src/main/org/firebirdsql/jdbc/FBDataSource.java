@@ -104,7 +104,7 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
             return (Connection)cm.allocateConnection(mcf, subjectCri);
         }
         catch (ResourceException re) {
-            throw new SQLException("Problem getting connection: " + re.getMessage());
+            throw new FBSQLException(re);
         }
     }
 
