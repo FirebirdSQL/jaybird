@@ -205,7 +205,22 @@ public class TestXADataSource extends TestFBConnectionPoolDataSource {
 
     public void testStatementLeaking() throws Exception {
     }
-    
+
+    public void testNoPooling() throws Exception {
+    }
+
+    public void testPrepareWithError() throws Exception {
+    }
+
+    public void testShutdown() throws Exception {
+    }
+
+    public void testShutdownMultiple() throws Exception {
+    }
+
+    public void testSqlRole() throws Exception {
+    }
+
     private static class FBTestXid implements Xid {
 
         private static final int formatId = 0x0102;

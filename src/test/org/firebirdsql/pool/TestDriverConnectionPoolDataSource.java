@@ -93,4 +93,7 @@ public class TestDriverConnectionPoolDataSource extends
         super.testPreparedStatement();
     }
     
+    public void testSqlRole() throws Exception {
+        // test is not defined for this type of pool
+    }
 }
