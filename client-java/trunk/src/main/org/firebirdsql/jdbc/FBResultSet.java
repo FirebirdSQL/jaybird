@@ -61,7 +61,7 @@ import java.util.ArrayList;
 
 public class FBResultSet implements ResultSet {
 
-   private final Logger log = LoggerFactory.getLogger(getClass(),false);
+    private final Logger log = LoggerFactory.getLogger(getClass(),false);
 
     protected FBFetcher fbFetcher;
 
@@ -72,23 +72,24 @@ public class FBResultSet implements ResultSet {
     private Object[] row = null;
 
     protected int rowNum = 0;
-     protected int maxRows = 0;
-     protected int fetchSize = 0;
+    protected int maxRows = 0;
+    protected int fetchSize = 0;
      
-     private boolean isEmpty = false;
+    private boolean isEmpty = false;
      
-     private boolean isBeforeFirst = false;
-     private boolean isFirst = false;
-     private boolean isLast = false;
-     private boolean isAfterLast = false;
-     
+    private boolean isBeforeFirst = false;
+    private boolean isFirst = false;
+    private boolean isLast = false;
+    private boolean isAfterLast = false;
+    
     private int wasNullColumnIndex = -1;
 
     //might be a bit of a kludge, or a useful feature.
     protected boolean trimStrings;
 
-     java.sql.SQLWarning firstWarning = null;
+    java.sql.SQLWarning firstWarning = null;
      
+    private FBField[] fields = null;
     /**
      * Creates a new <code>FBResultSet</code> instance.
      *
@@ -100,7 +101,8 @@ public class FBResultSet implements ResultSet {
      throws SQLException {
         this.c = c;
         xsqlvars = stmt.getOutSqlda().sqlvar;
-          maxRows = fbstatement.getMaxRows();
+        maxRows = fbstatement.getMaxRows();
+        prepareVars();
         fbFetcher = new FBStatementFetcher(this.c, fbstatement, stmt);
     }
 
@@ -117,9 +119,10 @@ public class FBResultSet implements ResultSet {
     FBResultSet(FBConnection c, FBStatement fbStatement,isc_stmt_handle stmt, boolean trimStrings) throws SQLException {
         this.c = c;
         this.trimStrings = trimStrings;
-          maxRows = fbStatement.getMaxRows();
+        maxRows = fbStatement.getMaxRows();
         xsqlvars = stmt.getOutSqlda().sqlvar;
         fbFetcher = new FBCachedFetcher(this.c, fbStatement,stmt);
+        prepareVars();
         //use willEndTransaction rather than getAutoCommit so blobs are cached only when transactions are
         //automatically ended.  Using jca framework, getAutoCommit is always true.
         if (c.willEndTransaction()) 
@@ -129,11 +132,24 @@ public class FBResultSet implements ResultSet {
     }
 
     FBResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
-          maxRows = 0;
-          fbFetcher = new FBCachedFetcher(rows);
+        maxRows = 0;
+        fbFetcher = new FBCachedFetcher(rows);
         this.xsqlvars = xsqlvars;
+        prepareVars();
     }
 
+    private void prepareVars() throws SQLException {
+        fields = new FBField[xsqlvars.length];
+        for (int i=0; i<xsqlvars.length; i++){
+        	   fields[i] = FBField.createField(xsqlvars[i]);
+		      if (fields[i] instanceof FBBlobField)
+                ((FBBlobField)fields[i]).setConnection(c);
+            else{
+                if (fields[i] instanceof FBStringField)
+                   ((FBStringField)fields [i]).setConnection(c);
+				}
+        }
+    }
 
 
     /**
@@ -305,7 +321,7 @@ public class FBResultSet implements ResultSet {
     private FBField getField(int columnIndex) throws SQLException {
          if (columnIndex> xsqlvars.length)
              throw new SQLException("invalid column index");
-    
+/*    
         FBField thisField = FBField.createField(getXsqlvar(columnIndex));
 
         if (thisField instanceof FBBlobField)
@@ -313,10 +329,10 @@ public class FBResultSet implements ResultSet {
         else
         if (thisField instanceof FBStringField)
             ((FBStringField)thisField).setConnection(c);
-
+*/
         setWasNullColumnIndex(columnIndex);
 
-        return thisField;
+        return fields[columnIndex-1];
     }
 
 
