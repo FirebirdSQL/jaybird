@@ -373,10 +373,16 @@ public class TestFBCallableStatement extends FBTestBase {
         CallableStatement stmt = 
             connection.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
         try {
+            stmt.clearParameters();
             stmt.setInt(1, 1);
             stmt.registerOutParameter(1, Types.INTEGER);
             stmt.execute();
             assertTrue("Should return correct value", stmt.getInt(1) == 1);
+            stmt.clearParameters();
+            stmt.setInt(1, 2);
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.execute();
+            assertTrue("Should return correct value", stmt.getInt(1) == 2);
         } finally {
             stmt.close();
         }
