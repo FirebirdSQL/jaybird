@@ -79,7 +79,7 @@ public final class ISCConstants {
     public final static int isc_dpb_quit_log                = 26;
     public final static int isc_dpb_no_reserve              = 27;
     public final static int isc_dpb_user_name               = 28;
-    public static final int isc_dpb_user                    = 28; // alias to isc_dpb_user_name
+    public final static int isc_dpb_user                    = 28; // alias to isc_dpb_user_name
     public final static int isc_dpb_password                = 29;
     public final static int isc_dpb_password_enc            = 30;
     public final static int isc_dpb_sys_user_name_enc       = 31;
