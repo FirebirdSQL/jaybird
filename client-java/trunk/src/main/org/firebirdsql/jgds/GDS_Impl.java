@@ -609,7 +609,9 @@ public class GDS_Impl implements GDS {
             }
 
             stmt.rsr_rdb = db;
-            db.rdb_sql_requests.addElement(stmt);
+            
+            /** @todo implement statement handle tracking correctly */
+            // db.rdb_sql_requests.addElement(stmt);
             stmt.allRowsFetched = false;
         }
 
@@ -942,7 +944,9 @@ public class GDS_Impl implements GDS {
                     stmt.out_sqlda = null;
                 }
                 stmt.clearRows();
-                db.rdb_sql_requests.remove(stmt);
+                
+                /** @todo implement statement handle tracking correctly */
+                // db.rdb_sql_requests.remove(stmt);
             } catch (IOException ex) {
                 throw new GDSException(isc_net_read_err);
             }
