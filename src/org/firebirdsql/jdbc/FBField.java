@@ -82,6 +82,9 @@ abstract class FBField {
 
     static String BYTES_CONVERSION_ERROR =
         "Error converting to array of bytes.";
+        
+    static String BLOB_CONVERSION_ERROR = 
+        "Error converting to Firebird BLOB object";
 
     static String SQL_TYPE_NOT_SUPPORTED =
         "SQL type for this field is not yet supported.";
@@ -456,68 +459,69 @@ abstract class FBField {
             OBJECT_CONVERSION_ERROR).fillInStackTrace();
         */
         if (value == null) {
-          setNull(true);
-          return;
-        }
-        if (value instanceof InputStream) {
-          setBinaryStream((InputStream) value);
-        } else
-        if (value instanceof BigDecimal) {
-          setBigDecimal((BigDecimal) value);
-        } else
-        if (value instanceof Blob) {
-          setBinaryStream(((Blob) value).getBinaryStream());
-        } else
-        if (value instanceof Boolean) {
-          setBoolean(((Boolean) value).booleanValue());
-        } else
-        if (value instanceof Byte) {
-          setByte(((Byte) value).byteValue());
-        } else
-        if (value instanceof byte[]) {
-          setBytes((byte[]) value);
-        } else
-        if (value instanceof Date) {
-          setDate((Date) value);
-        } else
-        if (value instanceof Double) {
-          setDouble(((Double) value).doubleValue());
-        } else
-        if (value instanceof Float) {
-          setFloat(((Float) value).floatValue());
-        } else
-        if (value instanceof Integer) {
-          setInteger(((Integer) value).intValue());
-        } else
-        if (value instanceof Long) {
-          setLong(((Long) value).longValue());
-        } else
-        if (value instanceof Short) {
-          setShort(((Short) value).shortValue());
-        } else
-        if (value instanceof String) {
-          setString((String) value);
-        } else
-        if (value instanceof Time) {
-          setTime((Time) value);
-        } else
-        if (value instanceof Timestamp) {
-          setTimestamp((Timestamp) value);
-        } else {
-          throw (SQLException) createException(
-            OBJECT_CONVERSION_ERROR).fillInStackTrace();
+            setNull(true);
+            return;
         }
 
+        if (value instanceof BigDecimal) {
+            setBigDecimal((BigDecimal) value);
+        } else
+        if (value instanceof Blob) {
+            if (value instanceof FBBlob)
+                setBlob((FBBlob)value);
+            else
+                setBinaryStream(((Blob) value).getBinaryStream(), 
+                    (int)((Blob)value).length());
+        } else
+        if (value instanceof Boolean) {
+            setBoolean(((Boolean) value).booleanValue());
+        } else
+        if (value instanceof Byte) {
+            setByte(((Byte) value).byteValue());
+        } else
+        if (value instanceof byte[]) {
+            setBytes((byte[]) value);
+        } else
+        if (value instanceof Date) {
+            setDate((Date) value);
+        } else
+        if (value instanceof Double) {
+            setDouble(((Double) value).doubleValue());
+        } else
+        if (value instanceof Float) {
+            setFloat(((Float) value).floatValue());
+        } else
+        if (value instanceof Integer) {
+            setInteger(((Integer) value).intValue());
+        } else
+        if (value instanceof Long) {
+            setLong(((Long) value).longValue());
+        } else
+        if (value instanceof Short) {
+            setShort(((Short) value).shortValue());
+        } else
+        if (value instanceof String) {
+            setString((String) value);
+        } else
+        if (value instanceof Time) {
+            setTime((Time) value);
+        } else
+        if (value instanceof Timestamp) {
+            setTimestamp((Timestamp) value);
+        } else {
+            throw (SQLException) createException(
+                OBJECT_CONVERSION_ERROR).fillInStackTrace();
+        }
     }
-    void setAsciiStream(InputStream in) throws SQLException {
+    void setAsciiStream(InputStream in, int length) throws SQLException {
         throw (SQLException)createException(
             ASCII_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setUnicodeStream(InputStream in) throws SQLException {
+    void setUnicodeStream(InputStream in, int length) throws SQLException {
         throw (SQLException)createException(
             UNICODE_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setBinaryStream(InputStream in) throws SQLException {
+    void setBinaryStream(InputStream in, int length) throws SQLException {
         throw (SQLException)createException(
             BINARY_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
@@ -536,5 +540,9 @@ abstract class FBField {
     void setTimestamp(java.sql.Timestamp value) throws SQLException {
         throw (SQLException)createException(
             TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();
+    }
+    void setBlob(FBBlob blob) throws SQLException {
+        throw (SQLException)createException(
+            BLOB_CONVERSION_ERROR).fillInStackTrace();
     }
 }

@@ -260,23 +260,23 @@ class FBStringField extends FBField {
 
 	//----- setXXXStream code
 
-	void setAsciiStream(InputStream in) throws SQLException {
+	void setAsciiStream(InputStream in, int length) throws SQLException {
 		if (in == null) {
 			setNull(true);
 			return;
 		}
 
-		setBinaryStream(in);
+		setBinaryStream(in, length);
 	}
-	void setUnicodeStream(InputStream in) throws SQLException {
+	void setUnicodeStream(InputStream in, int length) throws SQLException {
 		if (in == null) {
 			setNull(true);
 			return;
 		}
 
-		setBinaryStream(in);
+		setBinaryStream(in, length);
 	}
-	void setBinaryStream(InputStream in) throws SQLException {
+	void setBinaryStream(InputStream in, int length) throws SQLException {
 		if (in == null) {
 			setNull(true);
 			return;
@@ -288,7 +288,7 @@ class FBStringField extends FBField {
 			int counter = 0;
 			while ((counter = in.read(buff)) != -1)
 				out.write(buff, 0, counter);
-			setString(new String(out.toByteArray()));
+			setString(new String(out.toByteArray(), 0, length));
 		}
 		catch (IOException ioex) {
 			throw (SQLException) createException(

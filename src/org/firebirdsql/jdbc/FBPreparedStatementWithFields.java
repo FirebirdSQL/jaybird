@@ -37,12 +37,13 @@ public class FBPreparedStatementWithFields extends FBPreparedStatement {
         super(c, sql);
     }
 
-    public void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException {
-        super.setAsciiStream(parameterIndex, x, length);
-    }
-
     public void setBinaryStream(int parameterIndex, InputStream inputStream, int length) throws SQLException {
-        super.setBinaryStream(parameterIndex, inputStream, length);
+        //super.setBinaryStream(parameterIndex, inputStream, length);
+        getField(parameterIndex).setBinaryStream(inputStream, length);
+    }
+    
+    public void setBytes(int parameterIndex, byte[] x) throws SQLException {
+        getField(parameterIndex).setBytes(x);
     }
 
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
@@ -94,13 +95,6 @@ public class FBPreparedStatementWithFields extends FBPreparedStatement {
     }
 
     /**
-     * @deprecated
-     */
-    public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
-        super.setUnicodeStream(parameterIndex, x, length);
-    }
-
-    /**
      * Returns the XSQLVAR structure for the specified column.
      */
     protected XSQLVAR getXsqlvar(int columnIndex) {
@@ -118,5 +112,4 @@ public class FBPreparedStatementWithFields extends FBPreparedStatement {
 
         return thisField;
     }
-
 }
