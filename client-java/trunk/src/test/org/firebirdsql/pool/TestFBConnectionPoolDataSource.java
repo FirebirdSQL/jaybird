@@ -539,4 +539,44 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         }
     }
 
+    /**
+     * This test check if closing a physical connection is correctly detected
+     * and pool sizes are correctly adjusted.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testClosePhysicalConnection() throws Exception {
+        pool.setBlockingTimeout(1 * 1000);
+        pool.setMaxPoolSize(1);
+        
+        try {
+            PooledConnection physConnection = pool.getPooledConnection();
+            
+            assertTrue("Should have totally 1 connection", 
+                pool.getTotalSize() == 1);
+                
+            assertTrue("Should have 1 working connection", 
+                pool.getWorkingSize() == 1);
+            
+            physConnection.close();
+            
+            assertTrue("Working size should be 0", 
+                pool.getWorkingSize() == 0);
+
+            assertTrue("Total size should be 0",
+                pool.getTotalSize() == 0);
+            
+            try {
+                physConnection = pool.getPooledConnection();
+            } catch(SQLException ex) {
+                fail("Should get the connection without any problem. " + ex.toString());
+            }
+           
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            throw ex;
+        } finally {
+            pool.shutdown();
+        }
+    }
 }

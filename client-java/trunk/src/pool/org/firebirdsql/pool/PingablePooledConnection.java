@@ -213,8 +213,19 @@ public class PingablePooledConnection implements PooledConnection,
      *
      * @throws SQLException
      */
-    public
-        void close() throws SQLException {
+    public void close() throws SQLException {
+        close(true);
+    }
+    
+    /**
+     * Close this connection.
+     * 
+     * @param generateEvents <code>true</code> if event listeners should be
+     * notified about this operation.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    protected void close(boolean generateEvents) throws SQLException {
         checkValidity();
 
         if (currentConnection != null) {
@@ -223,6 +234,23 @@ public class PingablePooledConnection implements PooledConnection,
         }
         jdbcConnection.close();
 
+        if (generateEvents) {
+            ConnectionEvent event = new ConnectionEvent(this);
+            Iterator iter = eventListeners.iterator();
+            while (iter.hasNext()) {
+                ConnectionEventListener listener = 
+                    (ConnectionEventListener)iter.next();
+                
+                if (!(listener instanceof PooledConnectionEventListener))
+                    continue;
+                
+                PooledConnectionEventListener pooledEventListener = 
+                    (PooledConnectionEventListener)listener;
+                
+                pooledEventListener.physicalConnectionClosed(event);
+            }
+        }
+        
         invalidate();
     }
     
@@ -231,7 +259,7 @@ public class PingablePooledConnection implements PooledConnection,
 	 */
 	public void deallocate() {
         try {
-            close();
+            close(false);
         } catch(SQLException ex) {
             log.warn("Could not cleanly deallocate connection.", ex);
         }

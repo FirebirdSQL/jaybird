@@ -27,13 +27,39 @@ import java.util.EventObject;
  */
 public class PooledObjectEvent extends EventObject {
     
+    private boolean connectionDeallocated;
+    
 	/**
-     * Create instance of this object for the specified event source.
+     * Create instance of this object for the specified event source. This is
+     * a shortcut call for <code>PooledObjectEvent(Object, false)</code>.
      * 
 	 * @param eventSource event source.
 	 */
 	public PooledObjectEvent(Object eventSource) {
-		super(eventSource);
+		this(eventSource, false);
 	}
+    
+    /**
+     * Create instance of this object for the specified event source and 
+     * information if the physical connection is deallocated. 
+     * 
+     * @param eventSource event source.
+     * 
+     * @param connectionDeallocated <code>true</code> if physical connection
+     * is closed.
+     */
+    public PooledObjectEvent(Object eventSource, boolean connectionDeallocated) {
+        super(eventSource);
+        
+        this.connectionDeallocated = connectionDeallocated;
+    }
 
+    /**
+     * Check if the physical connection that generated this event is deallocated.
+     * 
+     * @return <code>true</code> if connection was deallocated.
+     */
+    public boolean isDeallocated() {
+        return connectionDeallocated;
+    }
 }
