@@ -40,7 +40,7 @@ public class FBConnectionPoolConfiguration extends RefAddr
      * Type that should be used when creating {@link javax.naming.RefAddr}
      * instances of this configuration.
      */
-    public static final String REF_TYPE = "firebird_connection_pool";  
+    public static final String REF_TYPE = FBConnectionPoolConfiguration.class.getName();  
     
     private static final String PING_STATEMENT = ""
         + "SELECT cast(1 AS INTEGER) FROM rdb$database" 
@@ -51,23 +51,14 @@ public class FBConnectionPoolConfiguration extends RefAddr
      */
     public static final int DEFAULT_PING_INTERVAL = 5000;
     
-    /**
-     * Default blocking timeout, value is equal to {@link Integer#MAX_VALUE}.
-     */
-    public static final int DEFAULT_BLOCKING_TIMEOUT = Integer.MAX_VALUE;
-    
-    /**
-     * Default retry interval of 1 sec.
-     */
-    public static final int DEFAULT_RETRY_INTERVAL = 1 * 1000;
-    
     private String jdbcUrl;
     
     private int minConnections;
     private int maxConnections;
     
-    private int blockingTimeout = DEFAULT_BLOCKING_TIMEOUT;
-    private int retryInterval = DEFAULT_RETRY_INTERVAL;
+    private int blockingTimeout = FBPoolingDefaults.DEFAULT_BLOCKING_TIMEOUT;
+    private int retryInterval = FBPoolingDefaults.DEFAULT_RETRY_INTERVAL;
+    private int idleTimeout = FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT;
     
     private Properties properties = new Properties();
     
@@ -116,6 +107,17 @@ public class FBConnectionPoolConfiguration extends RefAddr
      */
     public Properties getProperties() {
         return properties;
+    }
+    
+    /**
+     * Get JDBC connection property by key.
+     * 
+     * @param key key of the property.
+     * 
+     * @return value of the property or <code>null</code> if propery not yet.
+     */
+    public String getProperty(String key) {
+        return properties.getProperty(key);
     }
 
     /**
@@ -220,6 +222,9 @@ public class FBConnectionPoolConfiguration extends RefAddr
      * @see #getProperties()
      */
     public void setProperties(Properties properties) {
+        if (properties == null)
+            throw new NullPointerException("Specified properties are null.");
+        
         this.properties.clear();
         this.properties.putAll(properties);
     }
@@ -282,4 +287,23 @@ public class FBConnectionPoolConfiguration extends RefAddr
     public void setRetryInterval(int retryInterval) {
         this.retryInterval = retryInterval;
     }
+    
+    /**
+     * Get idle timeout.
+     * 
+     * @return idle timeout in milliseconds.
+     */
+    public int getIdleTimeout() {
+        return idleTimeout;
+    }
+
+    /**
+     * Set idle timeout.
+     * 
+     * @param idleTimeout idle timeout in milliseconds.
+     */
+    public void setIdleTimeout(int idleTimeout) {
+        this.idleTimeout = idleTimeout;
+    }
+    
 }

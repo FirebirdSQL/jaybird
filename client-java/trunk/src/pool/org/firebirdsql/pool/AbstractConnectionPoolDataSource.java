@@ -21,6 +21,9 @@ package org.firebirdsql.pool;
 
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.naming.*;
 import javax.sql.*;
@@ -37,6 +40,54 @@ import org.firebirdsql.logging.Logger;
  */
 public abstract class AbstractConnectionPoolDataSource
     implements ConnectionPoolDataSource, ConnectionEventListener, Referenceable {
+        
+    /**
+     * This constant controls behavior of this class in case of
+     * severe error situation. Usually, if value of this constant 
+     * is <code>true</code>, such error condition will result in
+     * raising either runtime exception or error.
+     */
+    private static final boolean PARANOID_MODE = true;
+
+    /**
+     * Structure class to store user name and password. 
+     */
+    private static class UserPasswordPair {
+        private String userName;
+        private String password;
+    
+        public UserPasswordPair(String userName, String password) {
+            this.userName = userName;
+            this.password = password;
+        }
+    
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null) return false;
+            if (!(obj instanceof UserPasswordPair)) return false;
+        
+            UserPasswordPair that = (UserPasswordPair)obj;
+        
+            boolean equal = true;
+            
+            equal &= userName != null ? 
+                userName.equals(that.userName) : that.userName == null;
+                
+            equal &= password != null ? 
+                password.equals(that.password) : that.password == null;
+        
+            return equal; 
+        }
+    
+        public int hashCode() {
+            int result = 3;
+            
+            result ^= userName != null ? userName.hashCode() : 0;
+            result ^= password != null ? password.hashCode() : 0;
+            
+            return result;
+        }
+    }
 
     private boolean available;
 
@@ -44,6 +95,9 @@ public abstract class AbstractConnectionPoolDataSource
     private PrintWriter logWriter;
 
     private PooledConnectionQueue freeConnections;
+    
+    private HashMap personalizedQueues = new HashMap();
+    private HashMap connectionQueues = new HashMap();
     
     /**
      * Get logger for this instance. By default all log messages belong to 
@@ -90,8 +144,8 @@ public abstract class AbstractConnectionPoolDataSource
      */
     public void start() throws SQLException {
 
-        freeConnections = new PooledConnectionQueue(this, 
-            getPoolName(), getConfiguration().getBlockingTimeout());
+        freeConnections = new PooledConnectionQueue(getConnectionManager(), 
+            getLogger(), getConfiguration(), getPoolName());
 
         if (available)
             return;
@@ -128,6 +182,16 @@ public abstract class AbstractConnectionPoolDataSource
         available = false;
 
         freeConnections.shutdown();
+        
+        Iterator iter = personalizedQueues.entrySet().iterator();
+        while(iter.hasNext()) {
+            Map.Entry entry = (Map.Entry)iter.next();
+            
+            PooledConnectionQueue queue = 
+                (PooledConnectionQueue)entry.getValue();
+                
+            queue.shutdown();
+        }
 
         if (getLogger() != null)
             getLogger().info(
@@ -135,6 +199,43 @@ public abstract class AbstractConnectionPoolDataSource
                 + getPoolName()
                 + ".");
 
+    }
+    
+    /**
+     * Get queue for the specified user name and password.
+     * 
+     * @param userName user name.
+     * @param password password.
+     * 
+     * @return instance of {@link PooledConnectionQueue}.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    public PooledConnectionQueue getQueue(String userName, String password)
+        throws SQLException 
+    {
+        UserPasswordPair key = new UserPasswordPair(userName, password);
+        
+        synchronized(personalizedQueues) {
+            PooledConnectionQueue queue = 
+                (PooledConnectionQueue)personalizedQueues.get(key);
+                
+            if (queue == null) {
+                queue = new PooledConnectionQueue(
+                    getConnectionManager(), 
+                    getLogger(), 
+                    getConfiguration(), 
+                    getPoolName(),
+                    userName,
+                    password);
+                    
+                queue.start();
+                    
+                personalizedQueues.put(key, queue);
+            }
+            
+            return queue;
+        }
     }
 
     /**
@@ -201,19 +302,23 @@ public abstract class AbstractConnectionPoolDataSource
      * Get pooled connection. This method will block until there will be 
      * free connection to return.
      * 
+     * @param queue instance of {@link PooledConnectionQueue} where connection
+     * will be obtained.
+     * 
      * @return instance of {@link PooledConnection}.
      * 
      * @throws SQLException if pooled connection cannot be obtained.
      */
-    public synchronized PooledConnection getPooledConnection()
-        throws SQLException {
+    protected synchronized PooledConnection getPooledConnection(
+        PooledConnectionQueue queue) throws SQLException 
+    {
 
         if (!available)
             throw new SQLException("Connection pool is not started.");
 
         PooledConnection result;
 
-        result = freeConnections.take();
+        result = queue.take();
 
         if (result instanceof XPingableConnection) {
             
@@ -235,16 +340,34 @@ public abstract class AbstractConnectionPoolDataSource
                             + " was not valid, trying to get another one.");
                             
                     // notify queue that invalid connection was destroyed
-                    freeConnections.destroyConnection(result);
+                    queue.destroyConnection(result);
 
                     // take another one
-                    result = (PooledConnection)freeConnections.take();
+                    result = (PooledConnection)queue.take();
                 }
             }
         }
 
         result.addConnectionEventListener(this);
+        
+        // save the queue to which this connection belongs to
+        connectionQueues.put(result, queue);
+        
         return result;
+    }
+    
+    /**
+     * Get pooled connection. This method will block until there will be 
+     * free connection to return.
+     * 
+     * @return instance of {@link PooledConnection}.
+     * 
+     * @throws SQLException if pooled connection cannot be obtained.
+     */
+    public synchronized PooledConnection getPooledConnection() 
+        throws SQLException 
+    {
+        return getPooledConnection(freeConnections);
     }
 
     /**
@@ -259,9 +382,9 @@ public abstract class AbstractConnectionPoolDataSource
      * @throws SQLException always, this method is not yet implemented.
      */
     public PooledConnection getPooledConnection(String user, String password)
-        throws SQLException {
-        /**@todo Implement this getPooledConnection() method*/
-        throw new SQLException("Method getPooledConnection() not yet implemented.");
+        throws SQLException 
+    {
+        return getPooledConnection(getQueue(user, password));
     }
 
     /**
@@ -278,8 +401,23 @@ public abstract class AbstractConnectionPoolDataSource
                 
             connection.removeConnectionEventListener(this);
             
-            freeConnections.put(connection);
-            
+            PooledConnectionQueue queue = 
+                (PooledConnectionQueue)connectionQueues.get(connection);
+                
+            if (queue == null) {
+                if (getLogger() != null)
+                    getLogger().warn("Connection " + connection + 
+                        " does not have corresponding queue");
+                    
+                if (PARANOID_MODE)
+                    throw new IllegalStateException(
+                        "Connection " + connection + 
+                        " does not have corresponding queue");
+                else
+                    connection.close();
+            } else
+                queue.put(connection);
+                
         } catch (SQLException ex) {
 
             if (getLogger() != null)
@@ -301,13 +439,15 @@ public abstract class AbstractConnectionPoolDataSource
     }
     
     /**
-     * Allocate new physical connection. 
+     * Get instance of {@link PooledConnectionManager} responsible for 
+     * instantiating pooled connections.
      * 
-     * @return instance of {@link PooledConnection}
+     * @return instance of {@link PooledConnectionManager}
      * 
-     * @throws SQLException if connection cannot be allocated.
+     * @throws SQLException if connection manager cannot be obtained.
      */
-    protected abstract PooledConnection allocateConnection() throws SQLException;
+    protected abstract PooledConnectionManager getConnectionManager()
+        throws SQLException;
     
     /**
      * Get name of the pool. This name will be displayed in log when pool

@@ -112,10 +112,12 @@ class XConnection implements InvocationHandler {
             
             this.connection = connection;
             this.owner = owner;
+            
+            Class[] implementedInterfaces = connection.getClass().getInterfaces();
 
             proxy = (Connection)Proxy.newProxyInstance(
                 XConnection.class.getClassLoader(),
-                owner.getImplementedInterfaces(),
+                implementedInterfaces,
                 this);
 		}
 	
