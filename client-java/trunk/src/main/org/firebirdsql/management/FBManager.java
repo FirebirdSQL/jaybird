@@ -349,18 +349,24 @@ public class FBManager implements FBManagerMBean
         throws Exception
     {
         isc_db_handle db = null;
-        if (!forceCreate) {
             db = gds.get_new_isc_db_handle();
             try {
                 DatabaseParameterBuffer dpb = c.deepCopy();
                     dpb.addArgument(DatabaseParameterBuffer.user_name, user);
                     dpb.addArgument(DatabaseParameterBuffer.password, password);
                 gds.isc_attach_database(getConnectString(fileName), db, dpb);
-                gds.isc_detach_database(db);
-                return; //database exists, don't wipe it out.
-    	    } catch (Exception e) {
+                
+                // if forceCreate is set, drop the database correctly
+                // otherwise exit, database already exists
+                if (forceCreate)
+                    gds.isc_drop_database(db);
+                else {
+                    gds.isc_detach_database(db);
+                    return; //database exists, don't wipe it out.
+                }
+    	    } catch (GDSException e) {
+                // we ignore it
     	    }
-    	} // end of if ()
 
     	db = gds.get_new_isc_db_handle();
         try {
