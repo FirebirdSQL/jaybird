@@ -276,7 +276,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         if (!c.getAutoCommit())
             c.ensureInTransaction();
         
-        FBBlob blob =  new FBBlob(c, 0);
+        FBBlob blob =  new FBBlob(c);
         blob.copyStream(in, length);
         field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
     }
@@ -287,7 +287,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         if (!c.getAutoCommit())
             c.ensureInTransaction();
         
-        FBBlob blob =  new FBBlob(c, 0);
+        FBBlob blob =  new FBBlob(c);
         blob.copyCharacterStream(in, length);
         field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
     }

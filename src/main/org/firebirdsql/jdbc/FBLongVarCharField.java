@@ -186,7 +186,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (!c.getAutoCommit())
             c.ensureInTransaction();
         
-        FBBlob blob =  new FBBlob(c, 0);
+        FBBlob blob =  new FBBlob(c);
         blob.copyStream(in, length);
         field.sqldata = XSQLVAR.encodeLong(blob.getBlobId());
     }
