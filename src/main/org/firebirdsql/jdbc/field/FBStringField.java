@@ -83,8 +83,8 @@ import org.firebirdsql.jdbc.FBResultSet;
 public class FBStringField extends FBField {
     private static final String SHORT_TRUE = "Y";
     private static final String SHORT_FALSE = "N";
-    private static final String LONG_TRUE = "TRUE";
-    private static final String LONG_FALSE = "FALSE";
+    private static final String LONG_TRUE = "true";
+    private static final String LONG_FALSE = "false";
     private static final String SHORT_TRUE_2 = "T";
 //    private static final String SHORT_FALSE_2 = "F";
     
