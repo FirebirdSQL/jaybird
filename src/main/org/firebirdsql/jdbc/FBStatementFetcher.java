@@ -100,6 +100,8 @@ class FBStatementFetcher implements FBFetcher {
     }
     
     public boolean next() throws SQLException {
+        if (!wasFetched)
+            fetch();
         
         setIsBeforeFirst(false);
         setIsFirst(false);

@@ -384,9 +384,23 @@ public class TestFBResultSet extends FBTestBase {
             
             rs.beforeFirst();
             assertTrue("isBeforeFirst() should return true", rs.isBeforeFirst());
+            try {
+                rs.getInt(1);
+                assertTrue("Should not be possibe to access column if cursor " +
+                        "does not point to a row.", false);
+            } catch(SQLException ex) {
+                // everything is fine
+            }
             
             rs.afterLast();
             assertTrue("isAfterLast() should return true", rs.isAfterLast());
+            try {
+                rs.getInt(1);
+                assertTrue("Should not be possibe to access column if cursor " +
+                        "does not point to a row.", false);
+            } catch(SQLException ex) {
+                // everything is fine
+            }
         } finally {
             stmt.close();
         }
