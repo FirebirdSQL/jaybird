@@ -445,6 +445,7 @@ public class FBBlob implements Blob{
             }
             if (isNew) {
                 blob_id = blob.getBlob_id();
+                isNew = false;
             }
         }
 
@@ -484,6 +485,7 @@ public class FBBlob implements Blob{
                     c.closeBlob(blob);
 //                  if (log!=null) log.info("OutputStream closing, setting blob_id: " + blob.getBlobId());
                     blob_id = blob.getBlob_id();
+                    isNew = false;
                 }
                 catch (GDSException ge) {
                     throw new IOException("could not close blob: " + ge);
