@@ -42,4 +42,9 @@ public interface isc_stmt_handle {
 
     void clearRows();
 
+    int getInsertCount();
+
+    int getUpdateCount();
+
+    int getDeleteCount();
 }

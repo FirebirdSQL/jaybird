@@ -596,8 +596,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     }
 
-    public byte[][] fetch(isc_stmt_handle stmt) throws GDSException {
-        return mcf.gds.isc_dsql_fetch(stmt, GDS.SQLDA_VERSION1, stmt.getOutSqlda());
+    public void fetch(isc_stmt_handle stmt) throws GDSException {
+        mcf.gds.isc_dsql_fetch(stmt, GDS.SQLDA_VERSION1, stmt.getOutSqlda());
     }
 
     public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
@@ -617,7 +617,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             throw new Error("registerStatement called with no transaction");
         }
 
-        mcf.registerStatementWithTransaction(currentTr, fbStatement);
+        currentTr.registerStatementWithTransaction(fbStatement);
     }
 
     public isc_blob_handle openBlobHandle(long blob_id) throws GDSException {
@@ -645,17 +645,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         mcf.gds.isc_put_segment(blob, buf);
     }
 
-    private static byte[] stmtInfo = new byte[]
-        {GDS.isc_info_sql_records,
-         GDS.isc_info_sql_stmt_type,
-         GDS.isc_info_end};
-    private static int INFO_SIZE = 128;
-
-    public SqlInfo getSqlInfo(isc_stmt_handle stmt) throws GDSException {
-        return new SqlInfo(mcf.gds.isc_dsql_sql_info(stmt, stmtInfo.length, stmtInfo, INFO_SIZE), mcf.gds);
+    public void getSqlCounts(isc_stmt_handle stmt) throws GDSException {
+        mcf.gds.getSqlCounts(stmt);
     }
-
-
     //for DatabaseMetaData.
     public String getDatabase() {
         return mcf.getDatabase();

@@ -217,8 +217,8 @@ public class GDS_Impl implements GDS {
                 if (log != null) log.debug("sent");
 
                 try {
-                    Response r = receiveResponse(db);
-                    db.setRdb_id(r.resp_object);
+                    receiveResponse(db);
+                    db.setRdb_id(db.resp_object);
                 } catch (GDSException g) {
                     disconnect(db);
                     throw g;
@@ -271,8 +271,8 @@ public class GDS_Impl implements GDS {
                 if (log != null) log.debug("sent");
 
                 try {
-                    Response r = receiveResponse(db);
-                    db.setRdb_id(r.resp_object);
+                    receiveResponse(db);
+                    db.setRdb_id(db.resp_object);
                 }
                 catch (GDSException ge) {
                     disconnect(db);
@@ -388,11 +388,11 @@ public class GDS_Impl implements GDS {
                 db.out.flush();            
                 if (log != null) log.debug("sent");
                 //out.flush();
-                Response r = receiveResponse(db);
-                tr.setTransactionId(r.resp_object);
+                receiveResponse(db);
             } catch (IOException ex) {
                 throw new GDSException(isc_network_error);
             }
+            tr.setTransactionId(db.resp_object);
 
             //tr.rtr_rdb = db;
             tr.setDbHandle(db);
@@ -608,8 +608,8 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(db.getRdb_id());
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                Response r =receiveResponse(db);
-                stmt.rsr_id = r.resp_object;
+                receiveResponse(db);
+                stmt.rsr_id = db.resp_object;
             } catch (IOException ex) {
                 throw new GDSException(isc_net_read_err);
             }
@@ -829,7 +829,7 @@ public class GDS_Impl implements GDS {
     }
 
 
-    public byte[][] isc_dsql_fetch(isc_stmt_handle stmt_handle,
+    public void isc_dsql_fetch(isc_stmt_handle stmt_handle,
                               int da_version,
                               XSQLDA xsqlda) throws GDSException {
 
@@ -886,7 +886,7 @@ public class GDS_Impl implements GDS {
                 }
             }
         }
-
+/*
         if (stmt.rows.size() > 0) {
             //Return next row from cache.
             return (byte[][])stmt.rows.remove(0);
@@ -894,7 +894,7 @@ public class GDS_Impl implements GDS {
         else {
             return null; //no rows fetched
         }
-
+*/
     }
 
 
@@ -997,8 +997,8 @@ public class GDS_Impl implements GDS {
                 db.out.flush();            
 
                 if (log != null) log.debug("sent");
-                Response r = receiveResponse(db);
-                stmt.out_sqlda = parseSqlInfo(stmt_handle, r.resp_data, sql_prepare_info);
+                receiveResponse(db);
+                stmt.out_sqlda = parseSqlInfo(stmt_handle, db.resp_data, sql_prepare_info);
                 return stmt.out_sqlda;
             } catch (IOException ex) {
                 throw new GDSException(isc_net_read_err);
@@ -1064,8 +1064,8 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(buffer_length);
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                Response r = receiveResponse(db);
-                return r.resp_data;
+                receiveResponse(db);
+                return db.resp_data;
             } catch (IOException ex) {
                 throw new GDSException(isc_net_read_err);
             }
@@ -1073,7 +1073,58 @@ public class GDS_Impl implements GDS {
 
 
     }
+	 
+    private static byte[] stmtInfo = new byte[]
+        {GDS.isc_info_sql_records,
+         GDS.isc_info_sql_stmt_type,
+         GDS.isc_info_end};
+    private static int INFO_SIZE = 128;
 
+    public void getSqlCounts(isc_stmt_handle stmt_handle) throws GDSException {
+        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
+        byte[] buffer = isc_dsql_sql_info(stmt, stmtInfo.length, stmtInfo, INFO_SIZE);
+        int pos = 0;
+        int length;
+        int type;
+        while ((type = buffer[pos++]) != GDS.isc_info_end) {
+            length = isc_vax_integer(buffer, pos, 2);
+            pos += 2;
+            switch (type) {
+            case GDS.isc_info_sql_records:
+                int l;
+                int t;
+                while ((t = buffer[pos++]) != GDS.isc_info_end) {
+                    l = isc_vax_integer(buffer, pos, 2);
+                    pos += 2;
+                    switch (t) {
+                    case GDS.isc_info_req_insert_count:
+                        stmt.insertCount = isc_vax_integer(buffer, pos, l);
+                        break;
+                    case GDS.isc_info_req_update_count:
+                        stmt.updateCount = isc_vax_integer(buffer, pos, l);
+                        break;
+                    case GDS.isc_info_req_delete_count:
+                        stmt.deleteCount = isc_vax_integer(buffer, pos, l);
+                        break;
+                    case GDS.isc_info_req_select_count:
+                        stmt.selectCount = isc_vax_integer(buffer, pos, l);
+                        break;
+                    default:
+                        break;
+                    }
+                    pos += l;
+                }
+                break;
+            case GDS.isc_info_sql_stmt_type:
+                stmt.statementType = isc_vax_integer(buffer, pos, length);
+                pos += length;
+                break;
+            default:
+                pos += length;
+                break;
+            }
+        }
+    }
 
     public int isc_vax_integer(byte[] buffer, int pos, int length) {
         int value;
@@ -1144,11 +1195,11 @@ public class GDS_Impl implements GDS {
                 db.out.flush();            
 
                 if (log != null) log.debug("sent");
-                Response r = receiveResponse(db);
+                receiveResponse(db);
                 blob.db = db;
                 blob.tr = tr;
-                blob.rbl_id = r.resp_object;
-                blob.blob_id = r.resp_blob_id;
+                blob.rbl_id = db.resp_object;
+                blob.blob_id = db.resp_blob_id;
                 tr.addBlob(blob);
             }
             catch (IOException ioe) {
@@ -1179,15 +1230,15 @@ public class GDS_Impl implements GDS {
                 db.out.writeInt(0);//writeBuffer for put segment;
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                Response resp = receiveResponse(db);
+                receiveResponse(db);
                 blob.rbl_flags &= ~RBL_segment;
-                if (resp.resp_object == 1) {
+                if (db.resp_object == 1) {
                     blob.rbl_flags |= RBL_segment;
                 }
-                else if (resp.resp_object == 2) {
+                else if (db.resp_object == 2) {
                     blob.rbl_flags |= RBL_eof_pending;
                 }
-                byte[] buffer = resp.resp_data;
+                byte[] buffer = db.resp_data;
                 if (buffer.length == 0) {//previous segment was last, this has no data
                     return buffer;
                 }
@@ -1234,7 +1285,7 @@ public class GDS_Impl implements GDS {
                 db.out.writeBlobBuffer(buffer);
                 db.out.flush();            
                 if (log != null) log.debug("sent");
-                Response resp = receiveResponse(db);
+                receiveResponse(db);
             }
             catch (IOException ioe) {
                 throw new GDSException(isc_net_read_err);
@@ -1382,18 +1433,17 @@ public class GDS_Impl implements GDS {
         }
     }
 
-    private Response receiveResponse(isc_db_handle_impl db) throws GDSException {
+    private void receiveResponse(isc_db_handle_impl db) throws GDSException {
         try {
             if (log != null) log.debug("op_response ");
             int op = readOperation(db);
             if (op == op_response) {
-                Response r = new Response();
-                r.resp_object = db.in.readInt();
-                if (log != null) log.debug("op_response resp_object: " + r.resp_object);
-                r.resp_blob_id = db.in.readLong();
-                if (log != null) log.debug("op_response resp_blob_id: " + r.resp_blob_id);
-                r.resp_data = db.in.readBuffer();
-                if (log != null) log.debug("op_response resp_data size: " + r.resp_data.length);
+                db.resp_object = db.in.readInt();
+                if (log != null) log.debug("op_response resp_object: " + db.resp_object);
+                db.resp_blob_id = db.in.readLong();
+                if (log != null) log.debug("op_response resp_blob_id: " + db.resp_blob_id);
+                db.resp_data = db.in.readBuffer();
+                if (log != null) log.debug("op_response resp_data size: " + db.resp_data.length);
 //              for (int i = 0; i < ((r.resp_data.length< 16) ? r.resp_data.length: 16) ; i++) {
 //                  if (log != null) log.debug("byte: " + r.resp_data[i]);
 //              }
@@ -1402,14 +1452,11 @@ public class GDS_Impl implements GDS {
                     log.debug("received");
                     checkAllRead(db.in);//DEBUG
                 }
-                return r;
             } else {
                 if (log != null){
                     log.debug("not received: op is " + op);
                     checkAllRead(db.in);
                 }
-                return null;
-//                throw new GDSException(isc_net_read_err);
             }
         } catch (IOException ex) {
            if (log != null) log.warn("IOException in receiveResponse", ex);
@@ -2113,12 +2160,6 @@ public class GDS_Impl implements GDS {
             return null;
         }
         return ((ClumpletImpl)c).cloneClumplet();
-    }
-
-    private static class Response {
-        int resp_object;
-        long resp_blob_id;
-        byte[] resp_data;
     }
 
 }

@@ -43,9 +43,15 @@ public class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_handle
     isc_db_handle_impl rsr_rdb;
     XSQLDA in_sqlda = null;
     XSQLDA out_sqlda = null;
-    ArrayList rows = new ArrayList();
+    public ArrayList rows = new ArrayList();
     public boolean allRowsFetched = false;
     boolean isSingletonResult = false;
+
+    int statementType;
+    int insertCount;
+    int updateCount;
+    int deleteCount;
+    int selectCount; //????
 
     public isc_stmt_handle_impl() {
     }
@@ -61,5 +67,25 @@ public class isc_stmt_handle_impl implements org.firebirdsql.gds.isc_stmt_handle
     public void clearRows() {
         rows.clear();
         allRowsFetched = false;
+    }
+
+    public int getStatementType() {
+        return statementType;
+    }
+
+    public int getInsertCount() {
+        return insertCount;
+    }
+
+    public int getUpdateCount() {
+        return updateCount;
+    }
+
+    public int getDeleteCount() {
+        return deleteCount;
+    }
+
+    public int getSelectCount() {
+        return selectCount;
     }
 }

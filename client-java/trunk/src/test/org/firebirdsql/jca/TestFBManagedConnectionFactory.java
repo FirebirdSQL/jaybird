@@ -28,7 +28,7 @@ import org.firebirdsql.gds.Clumplet;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.gds.SqlInfo;
-import org.firebirdsql.jgds.GDS_Impl;
+//import org.firebirdsql.jgds.GDS_Impl;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.logging.Logger;

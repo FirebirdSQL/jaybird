@@ -49,5 +49,7 @@ public interface isc_tr_handle {
 
     int getState();
 
+    void registerStatementWithTransaction(org.firebirdsql.jdbc.FBStatement fbStatement);
 
+    void forgetResultSets();
 }

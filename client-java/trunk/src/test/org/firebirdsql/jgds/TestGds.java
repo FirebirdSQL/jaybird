@@ -285,7 +285,7 @@ public class TestGds extends BaseFBTest {
         if (log!=null) log.info("test- rdb_id2: " + ((isc_db_handle_impl)db2).getRdb_id());
         t1 = startTransaction(db1);
         doSQLImmed(db1, t1, "create table r1 (col1 smallint not null primary key)");
-        ((isc_tr_handle_impl)t1).rtr_rdb = (isc_db_handle_impl)db2;
+        ((isc_tr_handle)t1).rtr_rdb = (isc_db_handle_impl)db2;
         commit(t1); //on db2 connection
         t1 = startTransaction(db2);
         doSQLImmed(db2, t1, "create table r2 (col1 smallint not null primary key)");
@@ -410,7 +410,7 @@ public class TestGds extends BaseFBTest {
         XSQLDA in_xsqlda;// = new XSQLDA();
         XSQLDA out_xsqlda;// = new XSQLDA();
 
-        isc_stmt_handle stmt1 = gds.get_new_isc_stmt_handle();
+        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.get_new_isc_stmt_handle();
 
         if (log!=null) log.info("test- isc_dsql_allocate_statement");
         gds.isc_dsql_allocate_statement(db1, stmt1);
@@ -439,7 +439,10 @@ public class TestGds extends BaseFBTest {
         String out = "";
 //        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
         byte[][] row = null;
-        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
+//        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
+        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda);
+		  for (int rowNum=0; rowNum < stmt1.rows.size(); rowNum++){
+           row = (byte[][]) stmt1.rows.get(rowNum);
             for (int i = 0; i < out_xsqlda.sqld; i++) {
 //                Short data = (Short) out_xsqlda.sqlvar[i].sqldata;
                 Short data =  new Short(XSQLVAR.decodeShort(row[i]));
@@ -502,7 +505,7 @@ public class TestGds extends BaseFBTest {
         gds.isc_dsql_exec_immed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                                  GDS.SQL_DIALECT_CURRENT, xsqlda, null);
 
-        isc_stmt_handle stmt1 = gds.get_new_isc_stmt_handle();
+        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.get_new_isc_stmt_handle();
         if (log!=null) log.info("test- isc_dsql_allocate_statement");
         gds.isc_dsql_allocate_statement(db1, stmt1);
         XSQLDA out_xsqlda = gds.isc_dsql_prepare(t1, stmt1, "SELECT COL1, COL2 FROM R2",
@@ -515,7 +518,10 @@ public class TestGds extends BaseFBTest {
         isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
 //        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
         byte[][] row = null;
-        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
+//        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
+        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda);
+		  for (int rowNum=0; rowNum < stmt1.rows.size(); rowNum++){
+           row = (byte[][]) stmt1.rows.get(rowNum);
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
 //                Object data =  out_xsqlda.sqlvar[i].sqldata;
@@ -579,7 +585,7 @@ public class TestGds extends BaseFBTest {
         gds.isc_dsql_exec_immed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                                  GDS.SQL_DIALECT_CURRENT, xsqlda, null);
 
-        isc_stmt_handle stmt1 = gds.get_new_isc_stmt_handle();
+        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.get_new_isc_stmt_handle();
         if (log!=null) log.info("test- isc_dsql_allocate_statement");
         gds.isc_dsql_allocate_statement(db1, stmt1);
         XSQLDA out_xsqlda = gds.isc_dsql_prepare(t1, stmt1, "SELECT COL1, COL2 FROM R2",
@@ -592,7 +598,10 @@ public class TestGds extends BaseFBTest {
         isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
 //        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
         byte[][] row = null;
-        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
+//        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
+        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda);
+		  for (int rowNum=0; rowNum < stmt1.rows.size(); rowNum++){
+           row = (byte[][]) stmt1.rows.get(rowNum);
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
 //                Object data =  out_xsqlda.sqlvar[i].sqldata;
@@ -661,7 +670,7 @@ public class TestGds extends BaseFBTest {
         gds.isc_dsql_exec_immed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                                  GDS.SQL_DIALECT_CURRENT, xsqlda, null);
 
-        isc_stmt_handle stmt1 = gds.get_new_isc_stmt_handle();
+        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.get_new_isc_stmt_handle();
         if (log!=null) log.info("test- isc_dsql_allocate_statement");
         gds.isc_dsql_allocate_statement(db1, stmt1);
         XSQLDA out_xsqlda = gds.isc_dsql_prepare(t1, stmt1, "SELECT COL1, COL2 FROM R2",
@@ -674,7 +683,10 @@ public class TestGds extends BaseFBTest {
     isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
 //        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
         byte[][] row = null;
-        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
+//        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
+        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda);
+		  for (int rowNum=0; rowNum < stmt1.rows.size(); rowNum++){
+           row = (byte[][]) stmt1.rows.get(rowNum);
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
 //                Object data =  out_xsqlda.sqlvar[i].sqldata;
@@ -742,7 +754,7 @@ public class TestGds extends BaseFBTest {
         gds.isc_dsql_exec_immed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                                  GDS.SQL_DIALECT_CURRENT, xsqlda, null);
 
-        isc_stmt_handle stmt1 = gds.get_new_isc_stmt_handle();
+        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.get_new_isc_stmt_handle();
         if (log!=null) log.info("test- isc_dsql_allocate_statement");
         gds.isc_dsql_allocate_statement(db1, stmt1);
         XSQLDA out_xsqlda = gds.isc_dsql_prepare(t1, stmt1, "SELECT COL1, COL2 FROM R2",
@@ -755,7 +767,10 @@ public class TestGds extends BaseFBTest {
         isc_blob_handle_impl blob2 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
 //        while (gds.isc_dsql_fetch(stmt1, 1, out_xsqlda) != null) {
         byte[][] row = null;
-        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
+//        while ((row=gds.isc_dsql_fetch(stmt1, 1, out_xsqlda)) != null) {
+        gds.isc_dsql_fetch(stmt1, 1, out_xsqlda);
+		  for (int rowNum=0; rowNum < stmt1.rows.size(); rowNum++){
+           row = (byte[][]) stmt1.rows.get(rowNum);
            String out = "";
             for (int i = 0; i < out_xsqlda.sqld; i++) {
 //                Object data =  out_xsqlda.sqlvar[i].sqldata;
@@ -801,7 +816,7 @@ public class TestGds extends BaseFBTest {
         t1 = startTransaction(db1);
     isc_blob_handle_impl blob1 = (isc_blob_handle_impl)gds.get_new_isc_blob_handle();
 
-        isc_stmt_handle stmt1 = gds.get_new_isc_stmt_handle();
+        isc_stmt_handle_impl stmt1 = gds.get_new_isc_stmt_handle();
 
         if (log!=null) log.info("test- isc_dsql_allocate_statement");
         gds.isc_dsql_allocate_statement(db1, stmt1);

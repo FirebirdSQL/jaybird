@@ -14,7 +14,7 @@ class FBStatementFetcher implements FBFetcher {
     private FBStatement fbStatement;
     private FBResultSet rs;
 
-    private isc_stmt_handle stmt;
+    private isc_stmt_handle_impl stmt;
           
     private byte[][] nextRow;
 
@@ -32,7 +32,7 @@ class FBStatementFetcher implements FBFetcher {
     {
         this.c = c;
         this.fbStatement = fbStatement;
-        this.stmt = stmt;
+        this.stmt = (isc_stmt_handle_impl) stmt;
         this.rs = rs;
             
         c.registerStatement(fbStatement);
@@ -44,15 +44,14 @@ class FBStatementFetcher implements FBFetcher {
         isAfterLast = false;
             
         try {
-            nextRow = c.fetch(stmt);
-
+            fetch();
             if (nextRow==null)
                 isEmpty = true;
             else 
                 isBeforeFirst = true;
         }
-        catch (GDSException ge) {
-            throw new FBSQLException(ge);
+        catch (SQLException sqle) {
+            throw sqle;
         }
     }
 
@@ -75,7 +74,7 @@ class FBStatementFetcher implements FBFetcher {
             try {
 //                System.arraycopy(nextRow,0,row,0,row.length);
                 rs.row = nextRow;						 
-                nextRow = c.fetch(stmt);
+                fetch();
                 rowNum++;
                     
                 if(rowNum==1)
@@ -86,16 +85,31 @@ class FBStatementFetcher implements FBFetcher {
                         
                 return true;
             }
-            catch (GDSException ge) {
-                throw new FBSQLException(ge);
+            catch (SQLException sqle) {
+                throw sqle;
             }
         }
     }
 
+    public void fetch() throws SQLException {
+        if (!stmt.allRowsFetched && stmt.rows.size() == 0){
+            try {
+                c.fetch(stmt);
+				}
+            catch (GDSException ge) {
+                throw new FBSQLException(ge);
+            }
+        }
+        if (stmt.rows.size() > 0) {
+            nextRow = (byte[][]) stmt.rows.remove(0);
+        }
+        else
+            nextRow = null;
+    }
+	 
     public void close() throws SQLException {
         fbStatement.closeResultSet();
     }
-
     public Statement getStatement() {
         return fbStatement;
     }

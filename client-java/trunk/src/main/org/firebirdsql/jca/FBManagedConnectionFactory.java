@@ -129,9 +129,6 @@ public class FBManagedConnectionFactory
     //a concurrent reader map would be better
     private transient final Map xidMap = Collections.synchronizedMap(new HashMap());
 
-    //Maps transaction handle to list of statements with resultsets.
-    private transient final Map TransactionStatementMap = new HashMap();
-
     private transient final Object startLock = new Object();
     private transient boolean started = false;
 
@@ -620,7 +617,7 @@ public class FBManagedConnectionFactory
 
     void commit(Xid xid) throws XAException {
         isc_tr_handle tr = getTrHandleForXid(xid);
-        forgetResultSets(tr);
+        tr.forgetResultSets();
         try {
             gds.isc_commit_transaction(tr);
         }
@@ -652,7 +649,7 @@ public class FBManagedConnectionFactory
 
     void rollback(Xid xid) throws XAException {
         isc_tr_handle tr = getTrHandleForXid(xid);
-        forgetResultSets(tr);
+        tr.forgetResultSets();
         try {
             gds.isc_rollback_transaction(tr);
         }
@@ -662,33 +659,6 @@ public class FBManagedConnectionFactory
         finally {
             xidMap.remove(xid);
         }
-    }
-
-
-    void registerStatementWithTransaction(isc_tr_handle tr, FBStatement stmt) {
-        ArrayList stmts = null;
-        synchronized (tr) {
-            stmts = (ArrayList)TransactionStatementMap.get(tr);
-            if (stmts == null) {
-                stmts = new ArrayList();
-                TransactionStatementMap.put(tr, stmts);
-            }
-        }
-        stmts.add(stmt);
-    }
-
-    private void forgetResultSets(isc_tr_handle tr) {
-        //shouldn't need synchronization, only called by rollback and commit- then we're done
-        //transaction/thread should also help.
-        ArrayList stmts = (ArrayList)TransactionStatementMap.get(tr);
-        if (stmts != null) {
-            Iterator i = stmts.iterator();
-            while (i.hasNext()) {
-                ((FBStatement)i.next()).forgetResultSet();
-            }
-            stmts.clear();
-        }
-        TransactionStatementMap.remove(tr);
     }
 
     //Serialization support
