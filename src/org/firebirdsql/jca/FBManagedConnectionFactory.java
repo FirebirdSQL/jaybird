@@ -449,19 +449,42 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
                 useDbHandle(db, 1);
                 return db;
             }
-        } catch (NoSuchElementException e) {
-            isc_db_handle db = gds.get_new_isc_db_handle();
-            try {
-                gds.isc_attach_database(dbAlias, db, cri.getDpb());
+        } 
+        catch (NoSuchElementException e) 
+        {
+            try 
+            {
+                return createDbHandle(cri);
             }
-            catch (GDSException ge) {
-               log.error("GDS Exception in getDbHandle", ge);
-               throw new XAException(ge.getMessage());
-            }
-            dbHandleUsage.put(db, new Integer(1));
-            return db;
+            catch (GDSException ge)
+            {
+                log.error("GDS Exception in getDbHandle", ge);
+                throw new XAException(ge.getMessage());
+            } // end of try-catch
         }
     }
+
+    private isc_db_handle createDbHandle(FBConnectionRequestInfo cri) throws GDSException
+    {
+        isc_db_handle db = gds.get_new_isc_db_handle();
+        gds.isc_attach_database(dbAlias, db, cri.getDpb());
+        dbHandleUsage.put(db, new Integer(1));
+        return db;
+    }
+
+    void assureDbHandle(FBConnectionRequestInfo cri) throws ResourceException
+    {
+        try 
+        {
+            returnDbHandle(createDbHandle(cri));
+        }
+        catch (GDSException ge)
+        {
+            log.info("Could not get a db connection!", ge);
+            throw new ResourceException("could not get a db connection!", ge.getMessage());   
+        } // end of try-catch
+    }
+        
 
     synchronized int returnDbHandle(isc_db_handle db) {
         if (db != null) {

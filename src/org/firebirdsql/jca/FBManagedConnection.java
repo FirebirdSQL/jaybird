@@ -99,14 +99,16 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     private Set tpb;
 
-    FBManagedConnection(Subject subject, 
-                        ConnectionRequestInfo cri, 
-                        FBManagedConnectionFactory mcf)
+    FBManagedConnection(final Subject subject, 
+                        final ConnectionRequestInfo cri, 
+                        final FBManagedConnectionFactory mcf)
         throws ResourceException
     {
         this.mcf = mcf;
         this.cri = getCombinedConnectionRequestInfo(subject, cri);//cri;
         this.tpb = mcf.getTpb(); //getTpb supplies a copy.
+        //Make sure we can get a connection to the db.
+        mcf.assureDbHandle(this.cri);
     }
 
 

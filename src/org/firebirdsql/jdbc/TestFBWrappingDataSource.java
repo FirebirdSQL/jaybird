@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.6  2002/02/03 02:45:39  d_jencks
+ * Fixed the rest of the bugs! The testsuite now all passes
+ *
  * Revision 1.5  2002/02/02 18:58:24  d_jencks
  * converted to log4j logging and cleaned up some test problems.  If you do not wish to use log4j, you may leave out the log4j-core.jar and get no logging
  *
@@ -135,12 +138,12 @@ public class TestFBWrappingDataSource extends BaseFBTest {
         ds.setDatabaseName(DB_DATASOURCE_URL);
         ds.setMinSize(3);
         ds.setMaxSize(5);
-        ds.setBlockingTimeout(100);
-        ds.setIdleTimeout(1000);
+        ds.setBlockingTimeout(1000);
+        ds.setIdleTimeout(2000);
         ds.setPooling(true);
         connection = ds.getConnection(DB_USER, DB_PASSWORD);
         assertTrue("Connection is null", connection != null);
-        Thread.sleep(500);
+        Thread.sleep(2000);
         int ccount = ds.getConnectionCount();
         assertTrue("Wrong number of connections!" + ccount, ccount == ds.getMinSize());
         connection.close();
