@@ -81,11 +81,25 @@ public class FBStatement implements Statement {
     private int queryTimeout = 0;
     private String cursorName;
 
-    FBStatement(FBConnection c) {
+    private int rsConcurrency;
+
+    FBStatement(FBConnection c, int rsConcurrency) {
         this.c = c;
+        this.rsConcurrency = rsConcurrency;
+        
         closed = false;
     }
-
+    
+    /**
+     * Get name of the cursor.
+     * 
+     * @return name of the cursor or <code>null</code> if no cursor name was 
+     * set.
+     */
+    String getCursorName() {
+        return cursorName;
+    }
+    
     /**
      * Executes an SQL statement that returns a single <code>ResultSet</code> object.
      *
@@ -745,7 +759,7 @@ public class FBStatement implements Statement {
      *      2.0 API</a>
      */
     public int getResultSetConcurrency() throws  SQLException {
-        return java.sql.ResultSet.CONCUR_READ_ONLY;
+        return rsConcurrency;
     }
 
 

@@ -72,7 +72,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     private final static Logger log = LoggerFactory.getLogger(FBStatement.class,false);
     
     FBPreparedStatement(FBConnection c, String sql) throws SQLException {
-        super(c);
+        super(c, ResultSet.CONCUR_READ_ONLY);
         try {
             c.ensureInTransaction();
             prepareFixedStatement(sql, true);
