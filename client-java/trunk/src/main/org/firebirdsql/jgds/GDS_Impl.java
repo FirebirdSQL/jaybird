@@ -1928,16 +1928,25 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
 
         XSQLDA xsqlda = new XSQLDA();
         int lastindex = 0;
-        while ((lastindex = parseTruncSqlInfo(info, xsqlda, lastindex)) > 0) {
-            lastindex--;               // Is this OK ?
+        int index = 0;
+        while ((index = parseTruncSqlInfo(info, xsqlda, lastindex)) > 0) {
             byte[] new_items = new byte[4 + items.length];
             new_items[0] = ISCConstants.isc_info_sql_sqlda_start;
             new_items[1] = 2;
-            new_items[2] = (byte) (lastindex & 255);
-            new_items[3] = (byte) (lastindex >> 8);
+            new_items[2] = (byte) (index & 255);
+            new_items[3] = (byte) (index >> 8);
             System.arraycopy(items, 0, new_items, 4, items.length);
-            info = isc_dsql_sql_info(stmt_handle, /* new_items.length, */
-                                     new_items, info.length);
+            
+            int size = info.length;
+            
+            // this situation happens only if one XSQLVAR does not fit
+            // the buffer. in this case we increase buffer twice and try
+            // again
+            if (index == lastindex)
+                size = info.length * 2;
+            
+            info = isc_dsql_sql_info(stmt_handle, new_items, size);
+            lastindex = index;
         }
         if (debug) log.debug("parseSqlInfo ended");
         calculateBLR(xsqlda);
@@ -2035,13 +2044,13 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
                         break;
                     case ISCConstants.isc_info_truncated:
                         if (debug) log.debug("isc_info_truncated ");
-                        return lastindex;
-                        //throw new GDSException(isc_dsql_sqlda_err);
+                        return index;
                     default:
                         throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
                 }
             }
-            lastindex = index;
+
+            lastindex++;
         }
         return 0;
     }

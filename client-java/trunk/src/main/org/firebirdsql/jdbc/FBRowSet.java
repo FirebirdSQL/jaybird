@@ -49,7 +49,7 @@ import java.util.Map;
 public class FBRowSet extends FBResultSet implements RowSet {
 
     FBRowSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt) throws SQLException{
-        super(c, fbstatement, stmt);
+        super(c, fbstatement, stmt, null);
     }
 
 

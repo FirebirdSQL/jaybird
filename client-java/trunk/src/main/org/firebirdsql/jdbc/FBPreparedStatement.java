@@ -57,7 +57,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     private final static Logger log = LoggerFactory.getLogger(FBStatement.class,false);
     
     FBPreparedStatement(FBConnection c, String sql) throws SQLException {
-        super(c);
+        super(c, ResultSet.CONCUR_READ_ONLY);
         
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
@@ -693,11 +693,19 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
     {
         super.prepareFixedStatement(sql, describeBind);
 
+        XSQLDA inSqlda = fixedStmt.getInSqlda();
+        
+        if (!describeBind && inSqlda == null) {
+            inSqlda = new XSQLDA();
+            inSqlda.sqln = 0;
+            inSqlda.sqlvar = new XSQLVAR[0];
+        }
+
         // initialize isParamSet member
-        isParamSet = new boolean[fixedStmt.getInSqlda().sqln];
-        fields = new FBField[fixedStmt.getInSqlda().sqln];		  
-        isBlob = new boolean[fixedStmt.getInSqlda().sqln];		  
-        XSQLVAR[] inVars = fixedStmt.getInSqlda().sqlvar;
+        isParamSet = new boolean[inSqlda.sqln];
+        fields = new FBField[inSqlda.sqln];		  
+        isBlob = new boolean[inSqlda.sqln];		  
+        XSQLVAR[] inVars = inSqlda.sqlvar;
         // this is probably redundant, JVM initializes members to false
         for (int i = 0; i < isParamSet.length; i++){
             isParamSet[i] = false;
