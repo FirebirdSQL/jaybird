@@ -19,14 +19,13 @@
 
 package org.firebirdsql.jdbc;
 
-import java.util.*;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Parser for escaped procedure call.
  */
-public class FBEscapedCallParser extends FBEscapedParser {
+public class FBEscapedCallParser {
     
     /**
      * Represents procedure call parameter.
@@ -152,22 +151,47 @@ public class FBEscapedCallParser extends FBEscapedParser {
             boolean result = this.name != null ? 
                 this.name.equals(that.name) : that.name == null;
             
-            result &= Arrays.equals(
-                this.inputParams.toArray(), that.inputParams.toArray());
-            
-            result &= Arrays.equals(
-                    this.outputParams.toArray(), that.outputParams.toArray());
+            result &= this.inputParams.equals(that.inputParams);
+            result &= this.outputParams.equals(that.outputParams);
             
             return result;
         }
     }
     
+    private static final int UNDEFINED_STATE = 0;
+    private static final int NORMAL_STATE = 1;
+    private static final int LITERAL_STATE = 2;
     private static final int SPACE_STATE = 5;
     private static final int COMMA_STATE = 6;
     
     private boolean parameterTerminated;
     private boolean nameProcessed;
     
+    private int state = NORMAL_STATE;
+    private int nestedEscaped = 0;
+
+    /**
+     * Returns the current state.
+     */
+    protected int getState() { return state; }
+
+    /**
+     * Sets the current state.
+     * @param state to enter.
+     * @throws <code>java.lang.IllegalStateException</code> if the system
+     * cannot enter the desired state.
+     */
+    protected void setState(int state) {
+        this.state = state;
+    }
+
+    /**
+     * Returns if the system is in state <code>state</code>.
+     * @param state we're testing
+     * @return <code>true</code> if the system is in state <code>state</code>.
+     */
+    protected boolean isInState(int state) { return getState() == state; }
+
     /**
      * Test the character to be the state switching character and switches
      * the state if necessary.
