@@ -2443,6 +2443,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         " F.RDB$FIELD_PRECISION as FIELD_PRECISION," +
         " F.RDB$FIELD_SCALE as FIELD_SCALE," +
         " F.RDB$FIELD_LENGTH as FIELD_LENGTH," +
+        " F.RDB$CHARACTER_LENGTH as CHARACTER_LENGTH," +
         " RF.RDB$DESCRIPTION," +
         " RF.RDB$DEFAULT_SOURCE as DEFAULT_SOURCE," +
         " RF.RDB$FIELD_POSITION as FIELD_POSITION, " +
@@ -2650,7 +2651,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                    break;
                 case java.sql.Types.CHAR:
                 case java.sql.Types.VARCHAR:
-                   row[6] = XSQLVAR.encodeInt(rs.getShort("FIELD_LENGTH"));
+                   row[6] = XSQLVAR.encodeInt(rs.getShort("CHARACTER_LENGTH"));
                    row[15] = XSQLVAR.encodeInt(rs.getShort("FIELD_LENGTH"));
                    break;
                 case java.sql.Types.FLOAT:
