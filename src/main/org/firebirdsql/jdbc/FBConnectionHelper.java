@@ -24,7 +24,6 @@ import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
 import org.firebirdsql.jca.FBResourceException;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.gds.GDS;
 
 import java.io.ByteArrayInputStream;

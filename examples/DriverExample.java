@@ -37,9 +37,6 @@ public class DriverExample
     // driver independent.  However, the code will still rely on the
     // predefined table structure of employee.gdb.
 
-    // See comment about closing JDBC objects at the end of this main() method.
-    System.runFinalizersOnExit (true);
-
     // Here are the JDBC objects we're going to work with.
     // We're defining them outside the scope of the try block because
     // they need to be visible in a finally clause which will be used
@@ -383,15 +380,6 @@ public class DriverExample
       // Before we close the connection, let's rollback any changes we may have made.
       try { if (c!=null) c.rollback (); } catch (java.sql.SQLException e) { showSQLException (e); }
       try { if (c!=null) c.close (); } catch (java.sql.SQLException e) { showSQLException (e); }
-
-     // If you don't close your database objects explicitly as above,
-     // they may be closed by the object's finalizer, but there's
-     // no guarantee if or when the finalizer will be called.
-     // In general, object finalizers are not called on program exit.
-     // It's recommended to close your JDBC objects explictly,
-     // but you can use System.runFinalizersOnExit(true), as at the beginning
-     // of this method main(), to force finalizers to be called before
-     // program exit.
     }
   }
 

@@ -22,7 +22,6 @@ package org.firebirdsql.jca;
 import javax.transaction.xa.Xid;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.GDSFactory;
 
 import org.firebirdsql.common.FBTestBase;
 

@@ -23,7 +23,6 @@ import org.firebirdsql.common.FBTestBase;
 import java.io.ByteArrayInputStream;
 import java.sql.Blob;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
