@@ -21,38 +21,39 @@ package org.firebirdsql.jdbc;
 import junit.framework.*;
 
 /**
- * Describe class <code>TestFBCallableStatement</code> here.
+ * This test case checks callable statements by executing procedure through
+ * {@link java.sql.CallableStatement} and {@link java.sql.PreparedStatement}.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
 public class TestFBCallableStatement extends BaseFBTest {
-    public static final String CREATE_PROCEDURE =
-        "CREATE PROCEDURE notfactorial(number INTEGER) RETURNS (result INTEGER) " +
-        "AS " +
-        "BEGIN " +
-        "  result = number;" +
-        "END";
-        /*"  DECLARE VARIABLE temp INTEGER; " +
-        "BEGIN " +
-        "  temp = number - 1; " +
-        "  IF (NOT temp IS NULL) THEN BEGIN " +
-        "    IF (temp > 0) THEN " +
-        "      EXECUTE PROCEDURE notfactorial(:temp) RETURNING_VALUES :temp; " +
-        "    ELSE " +
-        "      temp = 1; " +
-        "    result = number * temp; " +
-        "  END " +
-        "END";*/
+    public static final String CREATE_PROCEDURE = ""
+        + "CREATE PROCEDURE factorial(number INTEGER, mode INTEGER) RETURNS (result INTEGER) " 
+        + "AS " 
+        + "  DECLARE VARIABLE temp INTEGER; " 
+        + "BEGIN " 
+        + "  temp = number - 1; " 
+        + "  IF (NOT temp IS NULL) THEN BEGIN " 
+        + "    IF (temp > 0) THEN " 
+        + "      EXECUTE PROCEDURE factorial(:temp, 0) RETURNING_VALUES :temp; " 
+        + "    ELSE " 
+        + "      temp = 1; " 
+        + "    result = number * temp; " 
+        + "  END "
+        + "  IF (mode = 1) THEN "
+        + "    SUSPEND; "
+        + "END"
+        ;
 
     public static final String DROP_PROCEDURE =
-        "DROP PROCEDURE notfactorial;";
+        "DROP PROCEDURE factorial;";
 
     public static final String SELECT_PROCEDURE =
-        "SELECT * FROM notfactorial(?);";
+        "SELECT * FROM factorial(?, 1)";
 
     public static final String EXECUTE_PROCEDURE =
-        "{call notfactorial(?)}";
+        "{call factorial(?, 0)}";
 
     private java.sql.Connection connection;
 
@@ -84,32 +85,28 @@ public class TestFBCallableStatement extends BaseFBTest {
     }
 
     public void testRun() throws Exception {
-        java.sql.CallableStatement stmt = connection.prepareCall(EXECUTE_PROCEDURE);
-        stmt.setInt(1, 5);
-        stmt.execute();
-        int ans = stmt.getInt(1);
-        assertTrue("got wrong answer, expected 5: " + ans, ans == 5);
-            /*java.sql.ResultSet rs = stmt.execute();
-              boolean hasResult = false;
-              while (rs.next()) {
-              hasResult = true;
-              int result = rs.getInt(1);
-              assertTrue("Wrong result: expecting 5, received " + result, result == 5);
-              }
-              assertTrue("No result were found.", hasResult);
-              rs.close();*/
-        stmt.close();
+        java.sql.CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE);
+        try {
+          cstmt.setInt(1, 5);
+          cstmt.execute();
+          int ans = cstmt.getInt(1);
+          assertTrue("got wrong answer, expected 120: " + ans, ans == 120);
+        } finally {
+          cstmt.close();
+        }
+        
+        java.sql.PreparedStatement stmt = connection.prepareStatement(SELECT_PROCEDURE);
+        try {
+          stmt.setInt(1, 5);
+          java.sql.ResultSet rs = stmt.executeQuery();
+          assertTrue("Should have at least one row", rs.next());
+          int result = rs.getInt(1);
+          assertTrue("Wrong result: expecting 120, received " + result, result == 120);
+                
+          assertTrue("Should have exactly one row.", !rs.next());
+          rs.close();
+        } finally {
+          stmt.close();
+        }
     }
-    /*
-    public void testExecute() {
-        assertTrue(false);
-    }
-    public void testExecuteQuery() {
-        assertTrue(false);
-    }
-    public void testExecuteUpdate() {
-        assertTrue(false);
-    }
-    */
-
 }
