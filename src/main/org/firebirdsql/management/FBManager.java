@@ -65,44 +65,17 @@ public class FBManager implements FBManagerMBean
     private static final String STOPPED = "Stopped";
     private static final String STARTED = "Started";
 
-    public static final class Type
-        {
-        private Type(String s)
-            {
-
-            name = s;
-            }
-
-        public static final Type FOUR = new Type("type 4");
-        public static final Type TWO = new Type("type 2");
-        public static final Type TWO_EMBEDED = new Type("type 2 embeded");
-
-        public String toString()
-            {
-            return name;
-            }
-
-        private final String name;
-        }
-
-    private static final Map internalTypeToGdsTypeMap = new HashMap();
-    static
-        {
-        internalTypeToGdsTypeMap.put( Type.FOUR, GDSType.PURE_JAVA );
-        internalTypeToGdsTypeMap.put( Type.TWO, GDSType.NATIVE );
-        internalTypeToGdsTypeMap.put( Type.TWO_EMBEDED, GDSType.NATIVE_EMBEDDED );
-        }
 
 
-    private final Type type;
+    private GDSType type;
 
 
     public FBManager()
         {
-        this(Type.FOUR);
+        this(GDSType.PURE_JAVA);
         }
 
-    public FBManager(Type type)
+    public FBManager(GDSType type)
         {
         this.type = type;
         }
@@ -120,7 +93,7 @@ public class FBManager implements FBManagerMBean
      * @jmx.managed-operation
      */
     public void start() throws Exception {
-        gds = GDSFactory.getGDSForType((GDSType)internalTypeToGdsTypeMap.get(type));
+        gds = GDSFactory.getGDSForType(type);
         c = gds.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
         c.append(gds.newClumplet(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
         c.append(gds.newClumplet(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
@@ -175,6 +148,10 @@ public class FBManager implements FBManagerMBean
     }
 
 
+
+
+
+
     //Firebird specific methods
     //Which server are we connecting to?
 
@@ -196,6 +173,14 @@ public class FBManager implements FBManagerMBean
      */
     public String getServer() {
         return host;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public String getType() {
+        return this.type.toString();
     }
 
     /**
@@ -231,6 +216,11 @@ public class FBManager implements FBManagerMBean
     {
         return fileName;
     }
+
+    public void setType(String type) {
+        this.type = GDSType.getType(type);
+    }
+
 
 
     /**
