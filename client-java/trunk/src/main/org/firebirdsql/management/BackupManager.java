@@ -40,7 +40,6 @@
  */
 package org.firebirdsql.management;
 
-import java.io.IOException;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.ISCConstants;
@@ -114,16 +113,6 @@ public interface BackupManager extends ServiceManager {
     public static final int RESTORE_ONE_AT_A_TIME = ISCConstants.isc_spb_res_one_at_a_time;
 
     /**
-     * Replace existing database during restore.
-     */
-    public static final int RESTORE_REPLACE = ISCConstants.isc_spb_res_replace;
-
-    /**
-     * Create a database during restore, but do not replace it if it exists.
-     */
-    public static final int RESTORE_CREATE = ISCConstants.isc_spb_res_create;
-
-    /**
      * Do not reserve 20% on each page for the future versions, useful for
      * read-only databases.
      */
@@ -144,52 +133,84 @@ public interface BackupManager extends ServiceManager {
 
     /**
      * Perform the backup operation.
-     * @param verbose output to the logger.
-     * @throws SQLException
-     * @throws IOException
+     *
+     * @throws SQLException if a database error occurs during the backup
      */
-    public void backupDatabase(boolean verbose) throws SQLException,
-            IOException;
+    public void backupDatabase() throws SQLException;
 
     /**
      * Perform the backup operation, metadata only.
-     * @param verbose output to the logger.
-     * @throws SQLException
-     * @throws IOException
+     *
+     * @throws SQLException if a database error occurs during the backup
      */
-    public void backupMetadata(boolean verbose) throws SQLException,
-            IOException;
+    public void backupMetadata() throws SQLException;
 
     /**
      * Perform the backup operation.
-     * @param options for the backup operation
-     * @param verbose output to the logger.
-     * @throws SQLException
-     * @throws IOException
+     *
+     * @param options a bitmask combination of the <code>BACKUP_*</code> 
+     *        static final fields for the backup operation
+     * @throws SQLException if a database error occurs during the backup
      */
-    public void backupDatabase(int options, boolean verbose)
-            throws SQLException, IOException;
+    public void backupDatabase(int options) throws SQLException;
+
+    /**
+     * Set whether the operations of this <code>BackupManager</code> will
+     * result in verbose logging to the configured logger.
+     *
+     * @param verbose If <code>true</code>, operations will be logged
+     *        verbosely, otherwise they will not be logged verbosely
+     */
+    public void setVerbose(boolean verbose);
+      
+    /**
+     * Set the default number of pages to be buffered (cached) by default in a 
+     * restored database.
+     *
+     * @param bufferCount The page-buffer size to be used, a positive value
+     */
+    public void setRestorePageBufferCount(int bufferCount);
+
+    /**
+     * Set the page size that will be used for a restored database. The value 
+     * for <code>pageSize</code> must be one of: 1024, 2048, 4196, or 8192. The
+     * default value is 1024.
+     *
+     * @param pageSize The page size to be used in a restored database, one
+     *        of 1024, 2048, 4196, 8192
+     */
+    public void setRestorePageSize(int pageSize);
+
+    /**
+     * Set the restore operation to create a new database, as opposed to
+     * overwriting an existing database.
+     *
+     * @param create If <code>true</code>, the restore operation will attempt
+     *        to create a new database, otherwise the restore operation will
+     *        overwrite an existing database
+     */
+    public void setRestoreCreate(boolean create);
+
+    /**
+     * Set the read-only attribute on a restored database.
+     *
+     * @param readOnly If <code>true</code>, a restored database will be
+     *        read-only, otherwise it will be read-write.
+     */
+    public void setRestoreReadOnly(boolean readOnly);
 
     /**
      * Perform the restore operation.
      * @param  verbose output to the logger.
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException if a database error occurs during the restore
      */
-    public void restoreDatabase(boolean verbose) throws SQLException,
-            IOException;
+    public void restoreDatabase() throws SQLException;
 
     /**
      * Perform the restore operation.
-     * @param buffers 
-     * @param pageSize
-     * @param restoreReadOnly
-     * @param options
-     * @param verbose
-     * @throws SQLException
-     * @throws IOException
+     * @param options A bitmask combination of <code>RESTORE_*</code> static
+     *        final fields
+     * @throws SQLException if a database error occurs during the restore
      */
-    public void restoreDatabase(int buffers, int pageSize,
-            boolean restoreReadOnly, int options, boolean verbose)
-            throws SQLException, IOException;
+    public void restoreDatabase(int options) throws SQLException;
 }
