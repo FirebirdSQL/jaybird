@@ -73,8 +73,6 @@ public class FBConnectionHelper {
             if (!fields[i].getType().getName().equals("int"))
                 continue;
 
-            // System.out.println("bla");
-
             String name = fields[i].getName();
             Integer value;
             try {
