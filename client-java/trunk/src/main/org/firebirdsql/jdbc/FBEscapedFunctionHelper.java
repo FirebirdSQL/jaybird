@@ -64,11 +64,13 @@ public class FBEscapedFunctionHelper {
         for(int i = 0; i < chars.length ; i++) {
             switch(chars[i]) {
                 case '\'' :
+                    sb.append(chars[i]);
                     if (!inDoubleQuotes) 
                         inQuotes = !inQuotes;
                     break;
                     
                 case '"' :
+                    sb.append(chars[i]);
                     if (!inQuotes) 
                         inDoubleQuotes = !inDoubleQuotes;
                     break;
@@ -92,14 +94,18 @@ public class FBEscapedFunctionHelper {
                     else {
                         params.add(sb.toString());
                         sb = new StringBuffer();
-                        break;
                     }
+                    break;
                   
                 // by default we add chars to the buffer  
                 default : 
                     sb.append(chars[i]);
             }
         }
+        
+        // add last parameter if present
+        if (sb.length() > 0)
+            params.add(sb.toString());
         
         // after processing all parameters all string literals should be closed
         if (inQuotes || inDoubleQuotes)
