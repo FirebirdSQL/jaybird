@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.5  2002/02/04 04:35:51  d_jencks
+ * modified test setup to run against remote server using command line properties
+ *
  * Revision 1.4  2002/02/03 02:45:39  d_jencks
  * Fixed the rest of the bugs! The testsuite now all passes
  *
@@ -71,7 +74,7 @@ public class BaseFBTest extends TestCase
     /**
      * Default URL for the test
      */
-   private static final String DB_PATH = System.getProperty("test.db.dir");
+   private static final String DB_PATH = System.getProperty("test.db.dir", "");
 
 
    public static final String DB_SERVER_URL = System.getProperty("test.db.host", "localhost");
@@ -98,6 +101,8 @@ public class BaseFBTest extends TestCase
      * Password for the default user for database connection
      */
     public static final String DB_PASSWORD = "masterkey";
+    
+    public static final String DB_LC_CTYPE = "NONE";
 
     /**
      * Default properties for database connection
@@ -109,6 +114,7 @@ public class BaseFBTest extends TestCase
     static{
         DB_INFO.setProperty(FBDriver.USER, DB_USER);
         DB_INFO.setProperty(FBDriver.PASSWORD, DB_PASSWORD);
+        DB_INFO.setProperty("lc_ctype", DB_LC_CTYPE);
     }
 
    private final FBManager fbManager = new FBManager();
