@@ -89,14 +89,24 @@ public class FBBlob implements Blob{
 
     private long blob_id;
     private FBConnection c;
+    private boolean isNew;
 
     private Collection inputStreams = new HashSet();
     private FBBlobOutputStream blobOut = null;
 
-    FBBlob(FBConnection c, long blob_id) {
+    private FBBlob(FBConnection c, boolean isNew) {
         this.c = c;
-        this.blob_id = blob_id;
+        this.isNew = isNew;
         this.bufferlength = c.getBlobBufferLength().intValue();
+    }
+    
+    FBBlob(FBConnection c) {
+        this(c, true);
+    }
+
+    FBBlob(FBConnection c, long blob_id) {
+        this(c, false);
+        this.blob_id = blob_id;
     }
 
     void close() throws IOException {
@@ -251,7 +261,7 @@ public class FBBlob implements Blob{
         if (pos < 0) {
             throw new SQLException("You can't start before the beginning of the blob");
         }
-        if ((blob_id == 0) && (pos > 0)) {
+        if ((isNew) && (pos > 0)) {
             throw new SQLException("previous value was null, you must start at position 0");
         }
         blobOut = new FBBlobOutputStream();
@@ -266,7 +276,7 @@ public class FBBlob implements Blob{
     //package methods
 
     long getBlobId() throws SQLException {
-        if (blob_id == 0) {
+        if (isNew) {
             throw new SQLException("you are attempting to access an blob with no blob_id");
         }
         return blob_id;
@@ -339,7 +349,7 @@ public class FBBlob implements Blob{
             
             closed = false;
             
-            if (blob_id == 0) {
+            if (isNew) {
                 throw new SQLException("You can't read a new blob");
             }
             try {
@@ -433,7 +443,7 @@ public class FBBlob implements Blob{
             catch (GDSException ge) {
                 throw new FBSQLException(ge);
             }
-            if (blob_id == 0) {
+            if (isNew) {
                 blob_id = blob.getBlob_id();
             }
         }
