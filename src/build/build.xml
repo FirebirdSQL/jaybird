@@ -125,14 +125,15 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
       </classpath>
       <formatter type="plain" usefile="false"/>
       <test name="org.firebirdsql.management.TestFBManager"/>
-      <test name="org.firebirdsql.jgds.TestGds"/>
+      <test name="org.firebirdsql.jca.TestAll"/>
+      <!--test name="org.firebirdsql.jgds.TestGds"/>
       <test name="org.firebirdsql.jca.TestFBManagedConnectionFactory"/>
       <test name="org.firebirdsql.jca.TestFBXAResource"/>
       <test name="org.firebirdsql.jca.TestFBConnection"/>
       <test name="org.firebirdsql.jca.TestFBStandAloneConnectionManager"/>
       <test name="org.firebirdsql.jca.TestFBResultSet"/>
       <test name="org.firebirdsql.jca.TestFBBlob"/>
-      <test name="org.firebirdsql.jca.TestFBDatabaseMetaData"/>
+      <test name="org.firebirdsql.jca.TestFBDatabaseMetaData"/-->
     </junit>
   </target>
 
@@ -171,6 +172,10 @@ Sorry, I haven'tbeen able to create a dialect 3 db dynamically yet. -->
          includes="firebirdsql.jar,META-INF/ra.xml"
     />
   </target>
+
+  <target name="deploy-rar" depends="rar">
+    <copy todir="/usr/java/jboss/dev/jboss/dist/deploy/lib/" file="${dist.dir}/firebirdsql.rar"/>
+</target>
 
 
   <!-- =================================================================== -->
