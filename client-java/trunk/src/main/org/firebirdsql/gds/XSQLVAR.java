@@ -126,27 +126,19 @@ public class XSQLVAR {
     }
 
     public final static byte[] encodeTimestamp(java.sql.Timestamp value){
-//        return encodeLong(value.getTime() + value.getNanos() / 1000000);
-        return encodeLong(value.getTime() );
+        // some versions of JDK (1.4.1 win) return millis with getTime() when
+        // api docs say it only returns integral seconds 
+        // we have to take millis out and use getNanos for every version to work OK 
+        return encodeLong((value.getTime()/1000)*1000 + value.getNanos() / 1000000);
     }
 
     public final static java.sql.Timestamp decodeTimestamp(byte[] byte_int){
         return new java.sql.Timestamp(decodeLong(byte_int));
-    }
-/*
-    public final static byte[] encodeTime(java.sql.Time value) {
-        long millis = value.getTime();
-        // only take time data, not date
-        millis = millis % 3600000;
-        System.out.println("Time entrada    "+value);
-        System.out.println("Time entrada ms "+millis);
-        return encodeInt((int) millis*10);
-    }
-*/
+    } 
+	 
     public final static byte[] encodeTime(java.sql.Time d) {
         GregorianCalendar c = new GregorianCalendar();
         c.setTime(d);
-//        System.out.println("Time entrada    "+d);
         long millisInDay =
           c.get(Calendar.HOUR_OF_DAY)*60*60*1000
           +
@@ -158,24 +150,14 @@ public class XSQLVAR {
           ;
         int saving_offset = c.get(Calendar.DST_OFFSET);
         int zone_offset = c.get(Calendar.ZONE_OFFSET);
-//        System.out.println("Time entrada ms "+millisInDay+" dst="+saving_offset
-//		  +" zone="+zone_offset);
         int iTime = (int) (millisInDay * 10);
         return encodeInt(iTime);
     }
-/*	 	 
-    public final static java.sql.Time decodeTime(byte[] int_byte) {
-        int millis = decodeInt(int_byte);
-        System.out.println("Time entrada ms "+millis);
-        return new java.sql.Time(millis/10);
-    }
-*/
+
     public final static java.sql.Time decodeTime(byte[] int_byte) {
         GregorianCalendar c = new GregorianCalendar();
         int millisInDay = decodeInt(int_byte)/10;
-//        System.out.println("Time entrada ms "+millisInDay+" offset="+c.get(Calendar.ZONE_OFFSET));
         java.sql.Time time = new java.sql.Time(millisInDay-c.get(Calendar.ZONE_OFFSET));
-//        System.out.println("Time ="+time);
         return time;		  
     }
 	 
@@ -204,13 +186,11 @@ public class XSQLVAR {
                  (1461 * ya) / 4 +
                  (153 * month + 2) / 5 +
                  day + 1721119 - 2400001);
-//        System.out.println("encodeDate "+value);
         return encodeInt(value);
     }
 
     public final static java.sql.Date decodeDate(byte[] byte_int) {        		 
         int sql_date = decodeInt(byte_int);
-//        System.out.println("decodeDate "+sql_date);
 
         int year, month, day, century;
 
