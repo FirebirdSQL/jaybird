@@ -1,0 +1,443 @@
+<?xml version="1.0"?>
+
+<!-- ======================================================================= -->
+<!-- JDBC-JCA Driver for Firebird build file                                -->
+<!-- ======================================================================= -->
+
+
+<project name="FirebirdSQL" default="rar" basedir="../..">
+
+  <target name="init">
+    <tstamp/>
+    <property name="Name" value="FirebirdSQL"/>
+    <property name="name" value="firebirdsql"/>
+    <property name="version" value="1.0_beta_1"/>
+
+    <property name="lib.dir" value="${basedir}/lib"/>
+
+<!--you will presumably need to change this if you want to use it.-->
+    <property name="jboss.base.dir" value="/mnt/otherlinux/usr/java/jboss/co12/jboss-all/build/output/jboss-3.0.0beta2"/>
+    <property name="jboss.deploy.dir" value="${jboss.base.dir}/server/default/deploy"/>
+
+    <!-- Setup the module environment. -->
+    <property name="module.root" value="${basedir}"/>
+
+    <property file="${module.root}/local.properties"/>
+    <property name="module.source" value="${module.root}/src"/>
+    <property name="module.output" value="${module.root}/output"/>
+    <property name="module.tools" value="${module.root}/lib"/>
+    <property name="module.thirdparty" value="${module.source}/lib"/>
+    <property name="module.etc" value="${module.source}/etc"/>
+
+    <!-- Where source files live -->
+    <property name="source.java" value="${module.source}"/>
+    <property name="source.resources" value="${module.source}/resources"/>
+    <property name="source.stylesheets" value="${module.source}/stylesheets"/>
+
+    <!-- Where build generated files will go -->
+    <property name="build.classes" value="${module.output}/classes"/>
+    <property name="build.lib" value="${module.output}/lib"/>
+    <property name="build.api" value="${module.output}/api"/>
+    <property name="build.etc" value="${module.output}/etc"/>
+    <property name="build.bin" value="${module.output}/bin"/>
+    <property name="build.docs" value="${module.output}/docs"/>
+    <property name="build.resources" value="${module.output}/resources"/>
+    <property name="build.stylesheets" value="${module.output}/stylesheets"/>
+    <property name="build.reports" value="${module.output}/reports"/>
+    <property name="build.testlog" value="${module.output}/log"/>
+    <property name="build.dist" value="${module.output}/dist"/>
+
+    <property name="junit.timeout" value="600000"/> <!-- 10 minutes -->
+    <property name="junit.batchtest.todir" value="${build.reports}"/>
+    <property name="junit.jvm" value="java"/>
+    <property name="junit.jvm.options" value="-Ddummy"/>
+
+    <property name="junit.formatter.type" value="xml"/>
+    <property name="junit.formatter.usefile" value="true"/>
+    <property name="junit.printsummary" value="true"/> 
+    <property name="junit.haltonerror"  value="true"/>
+    <property name="junit.haltonfailure"  value="true"/>
+    <property name="junit.fork" value="true"/>
+    <property name="junit.timeout" value="60000"/>
+    <!--property name="junit.jvm" value="true"/-->
+
+<!-- these may be overridden on the command line to test against a server
+  on another host.  For example,
+./build.sh -Dtest.db.host=192.168.0.3 -Dtest.db.dir=/usr/local/firebird/dev/client-java/output/db tests-report-html
+-->
+    <property name="test.db.host" value="localhost"/>
+    <property name="test.db.port" value="3050"/>
+    <property name="test.db.dir" value="${module.output}/db"/>
+
+
+    <property name="packages" value="org.firebirdsql.*"/>
+
+    <property name="build.compiler" value="classic"/>
+
+    <!--available property="jdk1.3+" classname="java.lang.StrictMath" /-->
+
+    <path id="javac.classpath">
+      <pathelement location="${build.classes}"/>
+      <pathelement location="${module.thirdparty}/jta-spec1_0_1.jar"/>
+      <pathelement location="${module.thirdparty}/connector.jar"/>
+      <pathelement location="${module.thirdparty}/jdbc-3_0-pfd2-classes.zip"/>
+      <pathelement location="${module.thirdparty}/jaas.jar"/>
+      <pathelement location="${module.thirdparty}/jmxri.jar"/>
+      <pathelement location="${module.thirdparty}/concurrent.jar"/>
+      <pathelement location="${module.thirdparty}/log4j-core.jar"/>
+      <pathelement location="${lib.dir}/junit.jar"/>
+    </path>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Fix cr-lf                                                           -->
+  <!-- =================================================================== -->
+  <target name="pretty" depends="init">
+    <fixcrlf srcDir="${source.java}"
+       includes="**/*.java,**/*.xml,**/*.sh"
+       cr="remove"
+       tab="remove"
+       tablength="4"
+       eof="remove"/>
+  </target>
+
+
+  <!-- =================================================================== -->
+  <!-- Compiles the source code                                            -->
+  <!-- =================================================================== -->
+  <target name="compile" depends="compile-classes, compile-resources, compile-stylesheets"/>
+
+  <target name="compile-classes" depends="init" >
+    <mkdir dir="${build.classes}"/>
+<!--depend is apparently not in distributed ant version-->
+    <!--depend srcDir="${source.java}"
+           destDir="${build.classes}"
+           cache="${build.classes}"/-->
+
+    <javac srcdir="${source.java}"
+           destdir="${build.classes}"
+           target="1.2"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+           includes="org/**"
+           excludes="**/temp*"
+    >
+      <classpath refid="javac.classpath"/>
+    </javac>
+  </target>
+
+  <!-- Compile resource files -->
+  <target name="compile-resources" depends="init">
+    <mkdir dir="${build.resources}"/>
+    <copy todir="${build.resources}" filtering="no">
+      <fileset dir="${source.resources}">
+         <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- Compile stylesheets -->
+  <target name="compile-stylesheets" depends="init">
+    <mkdir dir="${build.stylesheets}"/>
+    <copy todir="${build.stylesheets}" filtering="yes">
+      <fileset dir="${source.stylesheets}">
+         <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the jar archives                                            -->
+  <!-- =================================================================== -->
+  <target name="jars" depends="jar-jmx, rar"/>
+
+  <target name="jar-ra" depends="compile">
+
+    <mkdir dir="${build.lib}"/>
+    <jar jarfile="${build.lib}/firebirdsql.jar">
+       <fileset dir="${build.classes}">
+         <include name="org/firebirdsql/**"/>
+         <exclude name="**/**Test**.class"/>
+       </fileset>
+       <fileset dir="${build.resources}">
+         <include name="*.properties"/>
+       </fileset>
+    </jar>
+  </target>
+
+
+  <!-- =================================================================== -->
+  <!-- Creates the jmx-jar archives                                            -->
+  <!-- =================================================================== -->
+  <target name="jar-jmx" depends="compile">
+
+    <mkdir dir="${build.lib}"/>
+    <jar jarfile="${build.lib}/firebirdjmx.jar">
+       <fileset dir="${build.classes}">
+         <include name="org/firebirdsql/**"/>
+         <exclude name="**/*Test*.class"/>
+         <exclude name="**/jca/**"/>
+         <exclude name="**/jdbc/**"/>
+       </fileset>
+       <fileset dir="${build.resources}">
+         <include name="*.properties"/>
+       </fileset>
+    </jar>
+  </target>
+
+
+
+  <!-- =================================================================== -->
+  <!-- Creates the rar archives                                            -->
+  <!-- =================================================================== -->
+  <target name="rar" depends="jar-ra">
+    <!--mkdir dir="${build.jar-ra.dir}/META-INF"/>
+    <copy todir="${build.jar-ra.dir}/META-INF">
+        <fileset dir="${source.resources.dir}"/>
+    </copy-->
+
+    <jar jarfile="${build.lib}/firebirdsql.rar">
+      <fileset dir="${build.lib}">
+        <include name="firebirdsql.jar"/>
+      </fileset>
+      <fileset dir="${build.resources}">
+        <include name="META-INF/ra.xml"/>
+      </fileset>
+    </jar>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- deploys the rar and example ConnectionFactoryLoader to              -->
+  <!-- (my location of) JBoss                                              -->
+  <!-- =================================================================== -->
+  <target name="deploy-rar" depends="rar">
+    <delete file="${jboss.deploy.dir}/firebird-service.xml"/>
+    <delete file="${jboss.deploy.dir}/firebirdsql.rar"/>
+    <!--sleep seconds="2"/coming with ant 1.4.1-->
+    <copy todir="${jboss.deploy.dir}" file="${build.lib}/firebirdsql.rar"/>
+    <!--copy todir="${jboss.deploy.dir}" file="${build.dir}/firebird-service.xml"/-->
+  </target>
+
+
+  <!-- =================================================================== -->
+  <!-- runs the junit tests                                                -->
+  <!-- =================================================================== -->
+
+  <target name="all-tests" depends="jars">
+    <!-- Override JUnit defaults -->
+
+    <!--create local db dir, if you are running on remote machine
+      you must provide it yourself -->
+    <mkdir dir="${module.output}/db"/>
+    <mkdir dir="${build.reports}"/>
+    <mkdir dir="${build.testlog}"/>
+    <junit dir="${module.output}"
+	   printsummary="${junit.printsummary}" 
+	   haltonerror="${junit.haltonerror}" 
+	   haltonfailure="${junit.haltonfailure}" 
+	   fork="${junit.fork}"
+	   timeout="${junit.timeout}"
+	   jvm="${junit.jvm}">
+
+      <jvmarg value="${junit.jvm.options}"/>
+      <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
+      <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
+      <sysproperty key="test.db.dir" value="${test.db.dir}"/>
+
+      <classpath>
+        <pathelement location="${build.classes}"/>
+        <pathelement location="${build.resources}"/>
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
+        <path refid="javac.classpath"/>
+      </classpath>
+
+      <formatter type="${junit.formatter.type}"
+		 usefile="${junit.formatter.usefile}"/>
+
+      <batchtest todir="${build.reports}"
+		 haltonerror="${junit.batchtest.haltonerror}" 
+		 haltonfailure="${junit.batchtest.haltonfailure}" 
+		 fork="${junit.fork}">
+
+        <fileset dir="${build.classes}">
+          <include name="**/Test*.class"/>
+          <exclude name="**/TestAll.class"/>
+          <exclude name="**/TestXABase*.class"/>
+          <exclude name="**/TestConst.class"/>
+          <exclude name="**/*$$*.class"/>
+
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <!--
+     | Run a single testcase by specifing the part of the test name after Test before the .class 
+     | of the unit test using the test property, -Dtest=Gds one-test
+     | Here you specify the testcase class, not the directory
+   -->
+
+  <target name="one-test" depends="jars" if="test"
+	  description="Execute a single test.">
+    <mkdir dir="${test.db.dir}"/>
+    <mkdir dir="${build.reports}"/>
+    <mkdir dir="${build.testlog}"/>
+    <junit dir="${module.output}"
+	   printsummary="${junit.printsummary}" 
+	   haltonerror="${junit.haltonerror}" 
+	   haltonfailure="${junit.haltonfailure}" 
+	   fork="${junit.fork}"
+	   timeout="${junit.timeout}"
+	   jvm="${junit.jvm}">
+
+      <jvmarg value="${junit.jvm.options}"/>
+      <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
+      <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
+      <sysproperty key="test.db.dir" value="${test.db.dir}"/>
+
+
+      <classpath>
+        <pathelement location="${build.classes}"/>
+        <pathelement location="${build.resources}"/>
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
+        <path refid="javac.classpath"/>
+      </classpath>
+
+      <formatter type="${junit.formatter.type}"
+		 usefile="${junit.formatter.usefile}"/>
+
+      <batchtest todir="${build.reports}"
+		 haltonerror="${junit.batchtest.haltonerror}" 
+		 haltonfailure="${junit.batchtest.haltonfailure}" 
+		 fork="${junit.batchtest.fork}">
+
+        <fileset dir="${build.classes}">
+          <include name="org/firebirdsql/*/Test${test}*.class"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+
+
+  <target name="tests-report-html" depends="all-tests">
+    <mkdir dir="${build.reports}/html"/>
+
+    <junitreport todir="${build.reports}">
+      <fileset dir="${build.reports}">
+        <include name="TEST-*.xml"/>
+      </fileset>
+      <report format="frames" 
+              todir="${build.reports}/html"
+              styledir="${build.stylesheets}"
+      />
+    </junitreport>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the API documentation                                       -->
+  <!-- =================================================================== -->
+  <target name="javadocs" depends="init">
+    <mkdir dir="${build.docs}"/>
+    <javadoc packagenames="${packages}"
+             sourcepath="${source.java}"
+             destdir="${build.docs}"
+             author="true"
+             version="true"
+             windowtitle="${Name} API"
+             doctitle="${Name}"
+             extdirs="${module.thirdparty}"
+             bottom="Copyright &#169; 2001 David Jencks and other authors. All rights reserved.">
+      <classpath refid="javac.classpath"/>
+    </javadoc>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the html documentation                                      -->
+  <!-- =================================================================== -->
+  <target name="docs" depends="init">
+
+    <!--echo message="Building html documentation. Please wait ..."/-->
+<!--    <style  basedir="${source.docs.dir}"
+             style="jboss.xsl"
+             destdir="${build.docs.dir}"
+             includes="jbossdocs.xml"
+    />
+    <move todir="${build.docs.dir}">
+      <fileset dir="${source.java}/build" includes="*.html"/>
+    </move>
+    <delete file="${build.docs.dir}/jbossdocs.html"/>-->
+
+    <!-- Stylesheets, images, and static HTML -->
+ <!--   <copy todir="${build.docs.dir}">
+       <fileset dir="${source.java}/docs" excludes="*.xml,*.xsl,**/docbook/**,**/docbookx/**"/>
+     </copy>
+     -->
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the distribution                                            -->
+  <!-- =================================================================== -->
+  <target name="dist" depends="rar">
+    <mkdir dir="${build.dist}"/>
+    <zip zipfile="${build.dist}/${Name}-${version}.zip">
+      <fileset dir="${build.lib}">
+        <include name="firebirdsql.rar"/>
+        <include name="firebirdsql.jar"/>
+      </fileset>
+      <zipfileset dir="${module.thirdparty}" prefix="lib">
+        <include name="*.jar"/>
+      </zipfileset>
+      <fileset dir="${module.etc}">
+        <include name="release_notes.html"/>
+      </fileset>
+    </zip>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Packages the source files with ZIP                                  -->
+  <!-- =================================================================== -->
+  <target name="src-zip" depends="init">
+    <zip zipfile="${Name}-src-${version}.zip" basedir="../.." includes="clients/java/**" excludes="clients/java/**.zip"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Packages the distribution with ZIP                                  -->
+  <!-- =================================================================== -->
+  <target name="dist-zip" depends="dist">
+    <zip zipfile="${Name}-${version}.zip" basedir="${dist.dir}" includes="src/**"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Packages the distribution with TAR-GZIP                             -->
+  <!-- =================================================================== -->
+  <target name="dist-tgz" depends="dist">
+    <tar tarfile="${Name}-${version}.tar" basedir="${dist.dir}" includes="src/**"/>
+    <gzip zipfile="${Name}-${version}.tar.gz" src="${Name}-${version}.tar"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Cleans up generated stuff                                           -->
+  <!-- =================================================================== -->
+  <target name="clean" depends="init">
+    <delete dir="${module.output}"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Total cleanup                                                       -->
+  <!-- =================================================================== -->
+  <target name="total-clean" depends="clean">
+    <delete file="${Name}-${version}.zip"/>
+    <delete file="${Name}-${version}.tar"/>
+    <delete file="${Name}-${version}.tar.gz"/>
+  </target>
+</project>
+
+
+
+
+
+
