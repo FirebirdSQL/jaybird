@@ -61,6 +61,9 @@
       <fileset dir=".">
         <include name="ChangeLog"/>
       </fileset>
+      <fileset dir="native">
+        <include name="*"/>
+      </fileset>
       <zipfileset dir="${build.lib}" prefix="lib">
         <include name="mini-j2ee.jar"/>
         <include name="mini-concurrent.jar"/>
