@@ -65,6 +65,7 @@ import org.firebirdsql.jdbc.FBConnectionHelper;
  *      <li>TRANSACTION_READ_COMMITTED
  *      <li>TRANSACTION_REPEATABLE_READ
  *      <li>TRANSACTION_SERIALIZABLE
+ *      </ul>
  * 
  * <li><code>loginTimeout</code> 
  *      property from {@link javax.sql.DataSource}, in this context is a synonym 
@@ -310,7 +311,7 @@ public class FBWrappingDataSource implements DataSource,
     }
 
     /**
-     * @deprecated non-standard name, use {@link #setMaxIdleTime()}.
+     * @deprecated non-standard name, use {@link #setMaxIdleTime(int)}.
      */
     public void setIdleTimeout(int idleTimeoutValue) {
         getPool().setIdleTimeout(idleTimeoutValue);

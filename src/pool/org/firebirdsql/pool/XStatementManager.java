@@ -60,7 +60,7 @@ public interface XStatementManager {
      * @param statement SQL statement of an object that is being closed.
      * @param proxy proxy on which {@link java.sql.Statement#close()} method was called.
      * 
-     * @param stmt statement that was closed.
+     * @throws SQLException if something went wrong.
      */
     void statementClosed(String statement, Object proxy) throws SQLException;
 }
