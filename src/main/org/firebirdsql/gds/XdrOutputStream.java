@@ -376,6 +376,7 @@ public final class XdrOutputStream {
             out.write(buf,0,count);
         }
         count=0;
+        buf = new byte[BUF_SIZE];
         out.flush();
     }
 
