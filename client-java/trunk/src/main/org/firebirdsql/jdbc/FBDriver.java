@@ -21,6 +21,10 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.4  2002/11/22 02:30:38  brodsom
+ * 1.- Make most variables private in stmt_handle, blob_handle, db_handle and others
+ * 2.- Move constants from GDS to ISCConstants (class,1100 lines)
+ *
  * Revision 1.3  2002/10/18 04:16:05  d_jencks
  * fixed some errors Claudio pointed out, thanks
  *
@@ -197,7 +201,7 @@ public class FBDriver implements Driver {
             }
 
             FBConnectionRequestInfo conCri =
-                FBConnectionHelper.getCri(info, null);
+                FBConnectionHelper.getCri(info, FBConnectionHelper.getDefaultCri());
 
             FBTpb tpb = FBConnectionHelper.getTpb(info);
 

@@ -97,10 +97,19 @@ public class FBConnectionHelper {
 
     public static FBConnectionRequestInfo getDefaultCri() {
         FBConnectionRequestInfo result = new FBConnectionRequestInfo();
-
-        //result.setProperty(GDS.isc_dpb_num_buffers, new byte[] {90});
-        //result.setProperty(GDS.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
-        //result.setProperty(GDS.isc_dpb_force_write, new byte[] {0});
+        //
+        // Important for performance on inserts. the charset code must not be none
+        //
+        String enc = FBConnectionHelper.getDefaultJavaEncoding();
+        String iscEncoding = FBConnectionHelper.getIscEncoding(enc);
+        if (iscEncoding != null)
+            result.setProperty(ISCConstants.isc_dpb_lc_ctype,iscEncoding);
+        else 
+            result.setProperty(ISCConstants.isc_dpb_lc_ctype,"ISO8859_1");
+		  
+        //result.setProperty(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
+        //result.setProperty(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
+        //result.setProperty(ISCConstants.isc_dpb_force_write, new byte[] {0});
 
         return result;
     }
@@ -240,9 +249,22 @@ public class FBConnectionHelper {
         if (!encodingsLoaded)
             loadEncodings();
 
-        return (String)iscEncodings.get(iscEncoding);
+        // 
+        // very important for performance
+        // if javaEncoding is the default one, set to null
+        //
+        String javaEncoding = (String)iscEncodings.get(iscEncoding);
+        String defaultEncoding = getDefaultJavaEncoding();
+        if (javaEncoding.equals(defaultEncoding)) 
+            return null;
+        else 
+            return javaEncoding;
     }
 
+    public static String getDefaultJavaEncoding() {
+        InputStreamReader reader = new InputStreamReader(new ByteArrayInputStream(new byte[2])); 
+        return reader.getEncoding();
+    }
     /**
      * Get InterBase encoding for given Java language encoding.
      *
