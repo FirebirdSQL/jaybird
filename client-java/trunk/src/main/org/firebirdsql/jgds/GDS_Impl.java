@@ -905,6 +905,7 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
                 else
                 {
                     stmt.setIsSingletonResult(false);
+                    stmt.setAllRowsFetched(false);
                 } // end of else
                 receiveResponse(db,op);
             } catch (IOException ex) {
