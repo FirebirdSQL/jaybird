@@ -20,12 +20,14 @@
 package org.firebirdsql.gds;
 
 /**
- * This interface replaces Clumplet in calls to isc_create_database and isc_attach_database.
+ * This interface replaces Clumplet in calls to isc_create_database and 
+ * isc_attach_database.
  * 
  * Instances are created via GDS.newDatabaseParameterBuffer();
  *
- * Constants from ISCConstants that are relevant to a database parameter buffer are duplicated 
- * on this interface. If the original name where isc_dpb_cdd_pathname the new name is cdd_pathname. 
+ * Constants from ISCConstants that are relevant to a database parameter buffer 
+ * are duplicated on this interface. If the original name where 
+ * isc_dpb_cdd_pathname the new name is cdd_pathname. 
  */
 public interface DatabaseParameterBuffer
     {
@@ -108,48 +110,48 @@ public interface DatabaseParameterBuffer
 	
 	
     /**
-     *
-     * @param argumentType
+     * Add argument.
+     * @param argumentType type of argument.
      */
     void addArgument(int argumentType);
 
     /**
-     *
-     * @param argumentType
-     * @param value
+     * Add string argument.
+     * @param argumentType type of argument.
+     * @param value string value to add.
      */
     void addArgument(int argumentType, String value);
 
     /**
-     *
-     * @param argumentType
-     * @param value
+     * Add integer argument.
+     * @param argumentType type of argument.
+     * @param value integer value to add.
      */
     void addArgument(int argumentType, int value);
 	
 	/**
-	 * 
-	 * @param argumentType
-	 * @param content
+	 * Add array of bytes.
+	 * @param argumentType type of argument.
+	 * @param content content of argument.
 	 */ 
 	void addArgument(int argumentType, byte[] content);
 
 	/**
-	 * 
-	 * @param argumentType
+	 * Remove specified argument.
+	 * @param argumentType type of argument to remove.
 	 */ 
 	void removeArgument(int argumentType);
 
 	/**
-	 * 
-	 * @param argumentType
-	 * @return
+	 * Get argument as string.
+	 * @param argumentType type of argument to find.
+	 * @return argument as string or <code>null</code> if nothing found.
 	 */ 
 	String getArgumentAsString(int argumentType);
 
     /**
-	 * 
-	 * @return
+	 * Make a deep copy of this object.
+	 * @return deep copy of this object.
 	 */ 
     DatabaseParameterBuffer deepCopy();
 	}

@@ -354,9 +354,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
    * <P>Return an XA resource to the caller.
    *
    * @return the XAResource
-   * @exception SQLException if a database-access error occurs
    */
-    public javax.transaction.xa.XAResource getXAResource() throws ResourceException {
+    public javax.transaction.xa.XAResource getXAResource() {
        if (log!=null) log.debug("XAResource requested from FBManagedConnection");
        return this;
     }

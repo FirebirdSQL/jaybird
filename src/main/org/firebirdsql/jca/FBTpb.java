@@ -35,7 +35,6 @@ import java.util.Iterator;
  * Created: Wed Jun 19 10:12:22 2002
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version
  */
 
 public class FBTpb implements Serializable
@@ -245,7 +244,6 @@ public class FBTpb implements Serializable
      * exception of TRANSACTION_NONE; some databases may not support
      * other values
      * @exception SQLException if a database access error occurs
-     * @see DatabaseMetaData#supportsTransactionIsolationLevel
      */
     public void setTransactionIsolation(int level) throws ResourceException {
         
@@ -315,8 +313,8 @@ public class FBTpb implements Serializable
     /**
      * Set Firebird transaction isolation level. 
      * 
-     * @param isolation one of the {@link GDS.isc_tpb_consistency}, 
-     * {@link GDS.isc_tpb_concurrency} or {@link GDS.isc_tpb_read_committed}.
+     * @param isolation one of the {@link ISCConstants.isc_tpb_consistency}, 
+     * {@link ISCConstants.isc_tpb_concurrency} or {@link ISCConstants.isc_tpb_read_committed}.
      * 
      * @deprecated This method does not handle correctly JDBC-TPB mapping and
      * should not be called if custom mapping is used.

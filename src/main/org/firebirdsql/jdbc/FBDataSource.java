@@ -121,7 +121,6 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
    * is disabled.
    *
    * @return the log writer for this data source, null if disabled
-   * @exception SQLException if a database-access error occurs.
    */
     public PrintWriter getLogWriter() {
         return log;

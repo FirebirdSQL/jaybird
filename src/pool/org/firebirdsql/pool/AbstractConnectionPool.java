@@ -29,8 +29,8 @@ import org.firebirdsql.logging.Logger;
 /**
  * Abstract class for creating connection pools. Subclasses must implement
  * factory method to produce physical connections to the database (method
- * {@link #allocateConnection()} and few utility methods ({@link #getConfiguration()},
- * {@link #getLogger()} and {@link #getPoolName}).
+ * {@link #getConnectionManager()} and few utility methods ({@link #getLogger()}
+ * and {@link #getPoolName}).
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */

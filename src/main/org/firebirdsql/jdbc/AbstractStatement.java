@@ -865,7 +865,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * command in the batch.  The elements of the array are ordered according
      * to the order in which commands were added to the batch.
      * @exception SQLException if a database access error occurs or the
-     * driver does not support batch statements. Throws {@link BatchUpdateException}
+     * driver does not support batch statements. Throws {@link java.sql.BatchUpdateException}
      * (a subclass of <code>SQLException</code>) if one of the commands sent to the
      * database fails to execute properly or attempts to return a result set.
      * @since 1.3
@@ -928,13 +928,10 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
 
 
     /**
-     * Returns the <code>Connection</code> object
-     * that produced this <code>Statement</code> object.
+     * Returns the <code>Connection</code> object that produced this 
+     * <code>Statement</code> object.
+     * 
      * @return the connection that produced this statement
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
      */
     public Connection getConnection() {
         return c;

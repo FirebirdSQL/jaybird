@@ -423,8 +423,7 @@ public class PingablePooledConnection implements PooledConnection,
      *
      * @param connection connection that was commited.
      *
-     *
-     * @see XConnectionManager#connectionCommitted(XConnection)
+     * @see XConnectionManager#connectionCommitted(PooledConnectionHandler)
      */
     public void connectionCommitted(PooledConnectionHandler connection) throws SQLException {
 
@@ -445,7 +444,7 @@ public class PingablePooledConnection implements PooledConnection,
      * @param connection connection that was commited.
      *
      *
-     * @see XConnectionManager#connectionRolledBack(XConnection)
+     * @see XConnectionManager#connectionRolledBack(PooledConnectionHandler)
      */
     public void connectionRolledBack(PooledConnectionHandler connection) throws
         SQLException {
