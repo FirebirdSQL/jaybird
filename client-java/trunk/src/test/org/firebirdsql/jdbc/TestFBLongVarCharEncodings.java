@@ -61,5 +61,7 @@ public class TestFBLongVarCharEncodings extends TestFBEncodings {
         super.testUkrainian();
     }
     
-    
+    public void testPadding() throws Exception {
+        // test is not relevant
+    }
 }
