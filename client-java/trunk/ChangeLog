@@ -1,3 +1,68 @@
+2004-11-25 00:58  rrokytskyy
+
+	* client-java/src/:
+	jdk1_4/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	jdk1_4/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	jdk1_5/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	jdk1_5/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	
+	Steven Jardine: refactoring to support jdk 1.5
+	pool/org/firebirdsql/pool/AbstractDriverConnectionPoolDataSource.ja
+	va,
+	pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/BasicAbstractConnectionPool.java:
+
+2004-11-25 00:43  rrokytskyy
+
+	* client-java/lib/: ant-launcher.jar, optional.jar, ant.jar,
+	ant-junit.jar:
+	
+	Steven Jardine: upgrade to ant 1.6.2 and support of jdk 1.5
+
+2004-11-25 00:33  rrokytskyy
+
+	*
+	
+	fixed the bug with path
+	client-java/src/test/org/firebirdsql/ngds/TestJaybirdBlobBackupProb
+	lem.java:
+
+2004-11-25 00:32  rrokytskyy
+
+	*
+	
+	added some try/finally blocks and fixed the max length of the
+	timestamp string
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
+	ava:
+
+2004-11-25 00:30  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/common/:
+	SimpleFBTestBase.java, FBTestBase.java:
+	
+	added support for local tests
+
+2004-11-24 22:04  rrokytskyy
+
+	*
+	
+	added setBlob() method
+	client-java/src/main/org/firebirdsql/jdbc/field/FBLongVarCharField.
+	java:
+
+2004-11-24 21:50  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/jdbc/field/FBField.java,
+	main/org/firebirdsql/jdbc/field/FBStringField.java,
+	main/org/firebirdsql/jdbc/field/FBTimeField.java,
+	main/org/firebirdsql/jdbc/field/FBTimestampField.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java,
+	main/org/firebirdsql/gds/XSQLVAR.java:
+	
+	fixed the issue with calendar in PreparedStatement.setTime(Time,
+	Calendar) method
+
 2004-11-21 01:19  rrokytskyy
 
 	* client-java/src/: main/org/firebirdsql/ngds/GDS_Impl.java,
