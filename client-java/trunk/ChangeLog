@@ -1,3 +1,45 @@
+2004-08-25 00:15  rrokytskyy
+
+	*
+	
+	fixed division by 0 error
+	client-java/src/pool/org/firebirdsql/pool/PooledConnectionQueue.jav
+	a:
+
+2004-08-24 23:52  rrokytskyy
+
+	*
+	
+	renamed to FirebirdPool
+	client-java/src/pool/org/firebirdsql/pool/FirebirdPoolConfiguration
+	.java:
+
+2004-08-24 23:51  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBWrappingDataSource.java,
+	pool/org/firebirdsql/pool/FirebirdPool.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+	
+	renamed the interface and added shutdown() method to it
+
+2004-08-24 23:33  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/management/FBManager.java,
+	main/org/firebirdsql/management/FBManagerMBean.java,
+	test/org/firebirdsql/management/TestFBManager.java:
+	
+	added isDatabaseExists() method
+
+2004-08-24 23:11  rrokytskyy
+
+	* client-java/src/:
+	test/org/firebirdsql/management/TestFBManager.java,
+	main/org/firebirdsql/management/FBManager.java:
+	
+	fixed dropping database when forceCreate is true
+
 2004-08-23 21:58  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/pool/TestXADataSource.java:
