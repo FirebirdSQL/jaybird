@@ -1,3 +1,33 @@
+2003-12-05 15:55  rrokytskyy
+
+	*
+	
+	added test for executing procedures that return values
+	client-java/src/test/org/firebirdsql/jdbc/TestFBCallableStatement.j
+	ava:
+
+2003-12-05 15:54  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	added check for the ResultSet.next()
+
+2003-12-05 15:48  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+	
+	fixed problem when getting default value of the column
+
+2003-12-05 15:47  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
+	
+	added synchronization so we don't crash connection's transaction
+	state
+
 2003-12-04 00:18  rrokytskyy
 
 	* client-java/src/: main/org/firebirdsql/jdbc/FBResultSet.java,
