@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.7  2002/03/21 18:12:40  d_jencks
+ * Changed to get a db connection when a ManagedConnection is created.  Note that this may or may not be the db connection used when you start a transaction and do some work.
+ *
  * Revision 1.6  2002/02/03 02:45:39  d_jencks
  * Fixed the rest of the bugs! The testsuite now all passes
  *
@@ -139,7 +142,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
         ds.setMinSize(3);
         ds.setMaxSize(5);
         ds.setBlockingTimeout(1000);
-        ds.setIdleTimeout(2000);
+        ds.setIdleTimeout(20000);
         ds.setPooling(true);
         connection = ds.getConnection(DB_USER, DB_PASSWORD);
         assertTrue("Connection is null", connection != null);
