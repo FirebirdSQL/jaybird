@@ -56,6 +56,7 @@ import org.firebirdsql.jdbc.field.FieldDataProvider;
 public class FBRowUpdater  {
 
     private AbstractConnection connection;
+    private Synchronizable syncProvider;
     private XSQLVAR[] xsqlvars;
     
     private FBField[] fields;
@@ -75,16 +76,17 @@ public class FBRowUpdater  {
     private isc_stmt_handle insertStatement;
     private isc_stmt_handle selectStatement;
 
-    public FBRowUpdater(AbstractConnection connection, XSQLVAR[] xsqlvars) throws SQLException {
+    public FBRowUpdater(AbstractConnection connection, XSQLVAR[] xsqlvars, 
+            Synchronizable syncProvider) throws SQLException {
+        
         this.connection = connection;
+        this.syncProvider = syncProvider;
         
         this.xsqlvars = new XSQLVAR[xsqlvars.length];
         this.fields = new FBField[xsqlvars.length];
         
         for (int i = 0; i < xsqlvars.length; i++) {
-            XSQLVAR xsqlvar = new XSQLVAR();
-            xsqlvar.copyFrom(xsqlvars[i]);
-            
+            XSQLVAR xsqlvar = xsqlvars[i].deepCopy();
             this.xsqlvars[i] = xsqlvar;
         }
         
@@ -322,60 +324,91 @@ public class FBRowUpdater  {
     private static final int SELECT_STATEMENT_TYPE = 4;
     
     public void updateRow() throws SQLException {
-        try {
-            if (updateStatement == null)
-                updateStatement = connection.getAllocatedStatement();
-            
-            executeStatement(UPDATE_STATEMENT_TYPE, updateStatement);
-            
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
+        
+        Object mutex = syncProvider.getSynchronizationObject();
+        synchronized(mutex) {
+            try {
+                
+                connection.ensureInTransaction();
+                
+                if (updateStatement == null)
+                    updateStatement = connection.getAllocatedStatement();
+                
+                executeStatement(UPDATE_STATEMENT_TYPE, updateStatement);
+                
+            } catch(GDSException ex) {
+                throw new FBSQLException(ex);
+            } finally {
+                connection.checkEndTransaction();
+            }
         }
     }
     
     public void deleteRow() throws SQLException {
-        try {
-            if (deleteStatement == null)
-                deleteStatement = connection.getAllocatedStatement();
-            
-            executeStatement(DELETE_STATEMENT_TYPE, deleteStatement);
-            
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
+        Object mutex = syncProvider.getSynchronizationObject();
+        synchronized(mutex) {
+            try {
+                connection.ensureInTransaction();
+                
+                if (deleteStatement == null)
+                    deleteStatement = connection.getAllocatedStatement();
+                
+                executeStatement(DELETE_STATEMENT_TYPE, deleteStatement);
+                
+            } catch(GDSException ex) {
+                throw new FBSQLException(ex);
+            } finally {
+                connection.checkEndTransaction();
+            }
         }
     }
     
     public void insertRow() throws SQLException {
-        try {
-            
-            if (insertStatement == null)
-                insertStatement = connection.getAllocatedStatement();
-            
-            executeStatement(INSERT_STATEMENT_TYPE, insertStatement);
-            
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
+        Object mutex = syncProvider.getSynchronizationObject();
+        synchronized(mutex) {
+            try {
+                
+                connection.ensureInTransaction();
+                
+                if (insertStatement == null)
+                    insertStatement = connection.getAllocatedStatement();
+                
+                executeStatement(INSERT_STATEMENT_TYPE, insertStatement);
+                
+            } catch(GDSException ex) {
+                throw new FBSQLException(ex);
+            } finally {
+                connection.checkEndTransaction();
+            }
         }
     }
     
     public void refreshRow() throws SQLException {
-        try {
-            if (selectStatement == null)
-                selectStatement = connection.getAllocatedStatement();
-            
-            executeStatement(SELECT_STATEMENT_TYPE, selectStatement);
-            
-            Object[] rows = selectStatement.getRows();
-            if (rows.length == 0)
-                throw new FBSQLException("No rows could be fetched.");
-            
-            if (rows.length > 1)
-            throw new FBSQLException("More then one row fetched.");
-            
-            setRow((byte[][])rows[0]);
-            
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
+        Object mutex = syncProvider.getSynchronizationObject();
+        synchronized(mutex) {
+            try {
+                
+                connection.ensureInTransaction();
+                
+                if (selectStatement == null)
+                    selectStatement = connection.getAllocatedStatement();
+                
+                executeStatement(SELECT_STATEMENT_TYPE, selectStatement);
+                
+                Object[] rows = selectStatement.getRows();
+                if (rows.length == 0)
+                    throw new FBSQLException("No rows could be fetched.");
+                
+                if (rows.length > 1)
+                throw new FBSQLException("More then one row fetched.");
+                
+                setRow((byte[][])rows[0]);
+                
+            } catch(GDSException ex) {
+                throw new FBSQLException(ex);
+            } finally {
+                connection.checkEndTransaction();
+            }
         }
     }
     

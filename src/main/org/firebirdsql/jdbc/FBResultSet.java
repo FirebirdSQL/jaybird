@@ -38,7 +38,7 @@ import org.firebirdsql.jdbc.field.*;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBResultSet implements ResultSet {
+public class FBResultSet implements ResultSet, Synchronizable {
 
     private AbstractStatement fbStatement;
     private FBFetcher fbFetcher;
@@ -135,7 +135,7 @@ public class FBResultSet implements ResultSet {
         
         if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
             try {
-                rowUpdater = new FBRowUpdater(c, xsqlvars);
+                rowUpdater = new FBRowUpdater(c, xsqlvars, this);
             } catch (FBResultSetNotUpdatableException ex) {
                 c.addWarning(new FBSQLWarning(
                     "Result set concurrency changed to READ ONLY."));
@@ -227,7 +227,13 @@ public class FBResultSet implements ResultSet {
         for(int i = 0; i < fields.length; i++) 
             fields[i].close();
     }
-
+    
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.Synchronizable#getSynchronizationObject()
+     */
+    public Object getSynchronizationObject() throws SQLException {
+        return fbStatement.getSynchronizationObject();
+    }
     /**
      * Moves the cursor down one row from its current position.
      * A <code>ResultSet</code> cursor is initially positioned
