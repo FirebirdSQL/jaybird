@@ -30,7 +30,8 @@ import javax.security.auth.Subject;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-//import org.jboss.logging.Logger;
+import org.firebirdsql.logging.Logger;
+
 
 /**
  *  Unit Test for class ManagedConnectionPool
@@ -44,7 +45,6 @@ import junit.framework.TestSuite;
 public class TestPoolingConnectionManager extends TestXABase 
 {
 
-   //   Logger log = Logger.getLogger(getClass());
 
    boolean failed;
 
@@ -96,20 +96,46 @@ public class TestPoolingConnectionManager extends TestXABase
       
    }
 
-   public void testShortBlocking() throws Exception
+    /**
+     * The <code>testShortBlocking</code> method attempts to test the
+     * performance of the FIFO queue based pool with lots of threads
+     * and simulated work.  It appears to have periods of very long
+     * response times and generally is slower than I (david jencks)
+     * expect.  This needs more investigation with a performance
+     * optimizing tool.
+     *
+     * @exception Exception if an error occurs
+     */
+    public void testShortBlocking() throws Exception
    {
       final int reps = 100;
-      final int threadsPerConnection = 4;
-      final long sleepTime = 2;
+      final int threadsPerConnection = 20;
+      final long sleepTime = 2;//time connection is "used"
+      final long overhead = 6;//overhead of context switching etc.
       failed = false;
-      FBManagedConnectionFactory mcf = initMcf();//new FBManagedConnectionFactory();
+      Collection threads = new ArrayList();
+      FBManagedConnectionFactory mcf = initMcf();
       ManagedConnectionPool.PoolParams pp = new ManagedConnectionPool.PoolParams();
       pp.minSize = 0;
-      pp.maxSize = 5;
-      pp.blockingTimeout = 10;
-      pp.idleTimeout = 500;
+      pp.maxSize = 30;
+      pp.blockingTimeout = (int)(threadsPerConnection * (sleepTime + overhead)) + 1000;
+      pp.idleTimeout = 1000000;//milliseconds
       final ConnectionRequestInfo cri = mcf.getDefaultConnectionRequestInfo();
       final FBPoolingConnectionManager cm = new FBPoolingConnectionManager(pp, mcf);
+      Collection cs = new ArrayList();
+      //prefill the pool
+      for (int i = 0; i < pp.maxSize; i++)
+      {
+          cs.add(cm.getManagedConnection(cri));
+      }
+      for (Iterator i = cs.iterator(); i.hasNext(); )
+      {
+          ManagedConnection mc = (ManagedConnection)i.next();
+          cm.returnManagedConnection(mc, false);
+      }
+      cs.clear();
+      log.info("Running short blocking test with blocking timeout: " + pp.blockingTimeout);
+      final Logger llog = log;
       for (int i = 0; i < pp.maxSize * threadsPerConnection; i++)
       {
          Runnable t = new Runnable() {
@@ -117,6 +143,7 @@ public class TestPoolingConnectionManager extends TestXABase
                {
                   for (int j = 0; j < reps; j++)
                   {
+                      long startTime = System.currentTimeMillis();
                      try 
                      {
                         ManagedConnection mc = cm.getManagedConnection(cri);
@@ -125,11 +152,13 @@ public class TestPoolingConnectionManager extends TestXABase
                      }
                       catch (ResourceException re)
                      {
-                        TestPoolingConnectionManager.this.failed = true;
+                         long duration = System.currentTimeMillis() - startTime;
+                         llog.info("presumed blocking timeout at iteration: " + j + ", duration: " + duration);
+                         TestPoolingConnectionManager.this.failed = true;
                      } // end of try-catch
                      catch (InterruptedException ie)
                      {
-                        return;
+                         return;
                      } // end of catch
                      
                      
@@ -137,8 +166,15 @@ public class TestPoolingConnectionManager extends TestXABase
                   
                }
             };
-         new Thread(t).start();
+         Thread th = new Thread(t);
+         threads.add(th);
+         th.start();
       } // end of for ()
+      for (Iterator i = threads.iterator(); i.hasNext();)
+      {
+          ((Thread)i.next()).join();
+      } // end of for ()
+      
       assertTrue("Wrong number of connections counted: " + cm.getConnectionCount(), cm.getConnectionCount() == pp.maxSize);
       assertTrue("Blocking Timeout occurred in ShortBlocking test", !failed);
       cm.shutdown();
