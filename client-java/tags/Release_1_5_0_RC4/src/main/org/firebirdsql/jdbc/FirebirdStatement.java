@@ -1,0 +1,88 @@
+/*
+ * Firebird Open Source J2ee connector - jdbc driver, public Firebird-specific 
+ * JDBC extensions.
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *    1. Redistributions of source code must retain the above copyright notice, 
+ *       this list of conditions and the following disclaimer.
+ *    2. Redistributions in binary form must reproduce the above copyright 
+ *       notice, this list of conditions and the following disclaimer in the 
+ *       documentation and/or other materials provided with the distribution. 
+ *    3. The name of the author may not be used to endorse or promote products 
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+package org.firebirdsql.jdbc;
+
+import java.sql.SQLException;
+import java.sql.Statement;
+
+/**
+ * Firebird-specific extensions to the {@link Statement} interface.
+ * 
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ */
+public interface FirebirdStatement extends Statement {
+
+    /**
+     * Get number of inserted rows. You can call this method multiple times,
+     * it does not affect the JDBC result number.
+     * 
+     * @return number of inserted rows or -1 if current result is result set.
+     * 
+     * @throws SQLException if database error occurs.
+     */
+	int getInsertedRowsCount() throws SQLException;
+    
+    /**
+     * Get number of updated rows. You can call this method multiple times,
+     * it does not affect the JDBC result number.
+     * 
+     * @return number of updated rows or -1 if current result is result set.
+     * 
+     * @throws SQLException if database error occurs.
+     */
+    int getUpdatedRowsCount() throws SQLException;
+    
+    /**
+     * Get number of deleted rows. You can call this method multiple times,
+     * it does not affect the JDBC result number.
+     * 
+     * @return number of deleted rows or -1 if current result is result set.
+     * 
+     * @throws SQLException if database error occurs.
+     */
+    int getDeletedRowsCount() throws SQLException;
+    
+    /**
+     * Check if this statement has open result set. Note, this method works
+     * correctly if auto-commit is disabled. In auto-commit mode it will always
+     * return <code>false</code> because from the statement's point of view
+     * result set is not open (in auto-commit mode complete result set is fetched
+     * and cached in wrapping object before returning from the 
+     * {@link #getResultSet()} method).
+     * 
+     * @return <code>true</code> if there's already open result set associated
+     * with this statement, otherwise <code>false</code>.
+     */
+    boolean hasOpenResultSet();
+    
+    /**
+     * Check if this statement is valid.
+     * 
+     * @return <code>true</code> if statement is valid and can be used to 
+     * execute SQL.
+     */
+    boolean isValid();
+}
