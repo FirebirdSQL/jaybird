@@ -523,7 +523,7 @@ public class FBStatement implements Statement {
         else 
         {
             //currentRs = new FBResultSet(mc, this, fixedStmt);
-            currentRs = new FBResultSetWithFields(c, this, fixedStmt);
+            currentRs = new FBResultSet(c, this, fixedStmt);
             return currentRs;
         } // end of else
     }
@@ -536,7 +536,7 @@ public class FBStatement implements Statement {
             throw new SQLException("No statement just executed");
         }
         //currentCachedResultSet = new FBResultSet(mc, fixedStmt, trimStrings);
-        currentCachedResultSet = new FBResultSetWithFields(c, fixedStmt, trimStrings);
+        currentCachedResultSet = new FBResultSet(c, fixedStmt, trimStrings);
         return currentCachedResultSet;
     }
 

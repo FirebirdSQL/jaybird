@@ -80,8 +80,8 @@ import java.util.*;
 
 public class FBRowSet extends FBResultSet implements RowSet {
 
-    FBRowSet(FBManagedConnection mc, FBStatement fbstatement, isc_stmt_handle stmt) {
-        super(mc, fbstatement, stmt);
+    FBRowSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt) {
+        super(c, fbstatement, stmt);
     }
 
 

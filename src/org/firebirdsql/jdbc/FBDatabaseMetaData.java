@@ -322,6 +322,27 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         return false;
     }
 
+    /**
+     * 
+     * @return a <code>boolean</code> value
+     * @exception SQLException if an error occurs
+     * @todo implement statemet pooling on the server.. then in the driver
+     */
+    public boolean supportsStatementPooling() throws SQLException {
+        return false;
+    }
+
+    /**
+     * Describe <code>locatorsUpdateCopy</code> method here.
+     *
+     * @return a <code>boolean</code> value
+     * @exception SQLException if an error occurs
+     * @todo find out what this even means
+     */
+    public boolean locatorsUpdateCopy() throws SQLException {
+        return false;
+    }
+
 
     /**
      * Does the database treat mixed case unquoted SQL identifiers as
@@ -2099,7 +2120,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         for(int i = 0; i < ALL_TYPES.length; i++)
           rows.add(new Object[] {ALL_TYPES[i]});
 
-        return new FBResultSetWithFields(xsqlvars, rows);
+        return new FBResultSet(xsqlvars, rows);
         */
         throw new SQLException("Not yet implemented");
     }
@@ -2349,7 +2370,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         }
         rows.add(null);
         //return new FBResultSet(xsqlvars, rows);
-        return new FBResultSetWithFields(xsqlvars, rows);
+        return new FBResultSet(xsqlvars, rows);
     }
 
     private int getDataType (short fieldType, short fieldSubType, short fieldScale) {
@@ -2831,7 +2852,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         }
         rows.add(null);
         // return new FBResultSet(xsqlvars, rows);
-        return new FBResultSetWithFields(xsqlvars, rows);
+        return new FBResultSet(xsqlvars, rows);
     }
 
 
@@ -3482,7 +3503,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
         //rows.add(null);
         // return new FBResultSet(xsqlvars, rows);
-        return new FBResultSetWithFields(xsqlvars, rows);
+        return new FBResultSet(xsqlvars, rows);
 
     }
 

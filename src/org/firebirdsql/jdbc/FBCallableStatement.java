@@ -1130,6 +1130,20 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
+     * Describe <code>setNull</code> method here.
+     *
+     * @param param1 a <code>String</code> value
+     * @param param2 an <code>int</code> value
+     * @param param3 a <code>String</code> value
+     * @exception SQLException if an error occurs
+     */
+    public void setNull(String param1, int param2, String param3)
+throws SQLException {
+         // TODO: implement this java.sql.CallableStatement method
+         throw new SQLException("not yet implemented");
+     }
+ 
+    /**
      *
      * @param param1 <description>
      * @return <description>
@@ -1242,7 +1256,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @exception java.sql.SQLException <description>
      * @exception java.net.MalformedURLException <description>
      */
-    public void setURL(String param1, URL param2) throws SQLException, MalformedURLException {
+    public void setURL(String param1, URL param2) throws SQLException {
         // TODO: implement this java.sql.CallableStatement method
 
         throw new SQLException("not yet implemented");

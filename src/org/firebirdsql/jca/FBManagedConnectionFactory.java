@@ -66,6 +66,8 @@ import org.firebirdsql.logging.Logger;
  *   @see <related>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *   @version $ $
+ *
+ * @todo add support for separate specification of host/port/filename.
  */
 
 
@@ -84,6 +86,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
     GDS gds = GDSFactory.newGDS();
 
+    //should add handling for host/port/file separately.
     private String dbAlias;
 
     private LinkedList freeDbHandles = new LinkedList();

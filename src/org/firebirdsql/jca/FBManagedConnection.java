@@ -260,10 +260,18 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          IllegalStateException - Illegal state for calling connection cleanup. Example - if a
          localtransaction is in progress that doesn't allow connection cleanup
 */
-    public void cleanup() throws ResourceException {
+    public void cleanup() throws ResourceException 
+    {
+        for (Iterator i = connectionHandles.iterator(); i.hasNext();)
+        {
+            ((FBConnection)i.next()).setManagedConnection(null);
+        } // end of for ()
+        connectionHandles.clear();
+        /*
         for (int i = connectionHandles.size() - 1; i>= 0; i--) {
             ((FBConnection)connectionHandles.get(i)).close();
         }
+        */
     }
 
 /**
@@ -391,15 +399,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
           log.debug("End called: " + id);
        } // end of if ()
         if (currentTr == null) {
-           XAException xae = new XAException("end called with no transaction associated");
+            //XAException xae = new XAException("end called with no transaction associated");
            if (log.isDebugEnabled()) 
            {
-              log.debug("end called with no transaction associated: " + id + ", flags: " + flags, xae);
+               log.debug("end called with no transaction associated: " + id + ", flags: " + flags);//, new Exception());
            } // end of if ()
 
-           throw xae;
+           //throw xae;
 
-//return;
+           return;
         }
         if (mcf.lookupXid(id) != currentTr) {
             throw new XAException("end called with wrong xid");
@@ -613,6 +621,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     }
 
     public void close(FBConnection c) {
+        c.setManagedConnection(null);
         connectionHandles.remove(c);
         notify(ConnectionEvent.CONNECTION_CLOSED, c, null);
     }

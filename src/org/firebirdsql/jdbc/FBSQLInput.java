@@ -370,7 +370,7 @@ public class FBSQLInput implements SQLInput {
      * @exception java.sql.SQLException <description>
      * @exception java.net.MalformedURLException <description>
      */
-    public URL readURL() throws SQLException, MalformedURLException {
+    public URL readURL() throws SQLException {
         // TODO: implement this java.sql.SQLInput method
         return null;
     }

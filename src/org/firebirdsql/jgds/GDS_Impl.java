@@ -231,10 +231,27 @@ public class GDS_Impl implements GDS {
 
     }
 
+    public void isc_attach_database(String host,
+                                    Integer port,
+                                    String file_name,
+                                    isc_db_handle db_handle,
+                                    Clumplet dpb) throws GDSException  {
+        DbAttachInfo dbai = new DbAttachInfo(host, port, file_name);
+        isc_attach_database(dbai, db_handle, dpb);
+    }
 
-    public void isc_attach_database(String file_name,
+    public void isc_attach_database(String connectString,
                                    isc_db_handle db_handle,
-                                   Clumplet c) throws GDSException  {
+                                   Clumplet dpb) throws GDSException  {
+        DbAttachInfo dbai = new DbAttachInfo(connectString);
+        isc_attach_database(dbai, db_handle, dpb);
+    }
+
+
+
+    public void isc_attach_database(DbAttachInfo dbai,
+                                   isc_db_handle db_handle,
+                                   Clumplet dpb) throws GDSException  {
 
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
 
@@ -243,17 +260,13 @@ public class GDS_Impl implements GDS {
         }
 
         synchronized (db) {
-            DbAttachInfo dbai = new DbAttachInfo(file_name);
             connect(db, dbai);
             try {
                 if (log.isDebugEnabled()) {log.debug("op_attach ");}
                 db.out.writeInt(op_attach);
                 db.out.writeInt(0);                // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
-                db.out.writeTyped(isc_dpb_version1, (Xdrable)c);
-                //            db.out.writeInt(c.getLength());
-                //            c.write(db.out);
-                //            db.out.writeBuffer(dpb, dpb_length);
+                db.out.writeTyped(isc_dpb_version1, (Xdrable)dpb);
                 db.out.flush();            
                 if (log.isDebugEnabled()) {log.debug("sent");}
 
@@ -1540,16 +1553,22 @@ public class GDS_Impl implements GDS {
     private void writeSQLDatum(isc_db_handle_impl db,
                                   XSQLVAR xsqlvar) throws GDSException {
         byte[] buffer;
-        if (db.out == null) {
-            System.out.println("db.out null in writeSQLDatum");
-        }
-        if (xsqlvar.sqldata == null) {
-            System.out.println("sqldata null in writeSQLDatum: " + xsqlvar);
-        }
-
+        boolean debug = log.isDebugEnabled();
+        if (debug) 
+        {
+            if (db.out == null) 
+            {
+                log.debug("db.out null in writeSQLDatum");
+            }
+            if (xsqlvar.sqldata == null) 
+            {
+                log.debug("sqldata null in writeSQLDatum: " + xsqlvar);
+            }
+        } // end of if ()
         fixNull(xsqlvar);
-        if (xsqlvar.sqldata == null) {
-            System.out.println("sqldata still null in writeSQLDatum: " + xsqlvar);
+        if (debug && xsqlvar.sqldata == null) 
+        {
+            log.debug("sqldata still null in writeSQLDatum: " + xsqlvar);
         }
 
 
@@ -2035,12 +2054,32 @@ if (log.isDebugEnabled()) {log.debug("isc_info_truncated ");}
                     server = server.substring(0, sep);
                 }
             }
+            if (sep == -1) 
+            {
+                fileName = connectInfo;
+            } // end of if ()            
         }
 
-        public DbAttachInfo(String server, int port, String fileName) {
-            this.server = server;
-            this.port = port;
+        public DbAttachInfo(String server, Integer port, String fileName) throws GDSException
+        {
+            if (fileName == null || fileName.equals("")) 
+            {
+                throw new GDSException("null filename in DbAttachInfo");
+            } // end of if ()
+            if (server != null) 
+            {
+                this.server = server;
+            } // end of if ()
+            if (port != null) 
+            {
+                this.port = port.intValue();
+            } // end of if ()
             this.fileName = fileName;
+            if (fileName == null || fileName.equals("")) 
+            {
+                throw new GDSException("null filename in DbAttachInfo");
+            } // end of if ()
+            
         }
 
         public String getServer() {
