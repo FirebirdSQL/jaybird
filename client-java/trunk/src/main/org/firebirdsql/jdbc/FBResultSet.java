@@ -581,8 +581,12 @@ public class FBResultSet implements ResultSet {
             throw new SQLException("zero length identifiers not allowed");
         }
         
-        if (columnName.startsWith("\"") && columnName.endsWith("\""))
+        boolean doCaseInsensitiveSearch = true;
+        
+        if (columnName.startsWith("\"") && columnName.endsWith("\"")) {
             columnName = columnName.substring(1, columnName.length() - 1);
+            doCaseInsensitiveSearch = false;
+        }
             
         // case-sensitively check column aliases 
         for (int i = 0; i< xsqlvars.length; i++) {
@@ -597,16 +601,19 @@ public class FBResultSet implements ResultSet {
             }
         }
         
-        // do the same with case insensitive comparison
+        if (doCaseInsensitiveSearch) {
         
-        for (int i = 0; i< xsqlvars.length; i++) {
-            if (columnName.equalsIgnoreCase(xsqlvars[i].aliasname)) {
-                return ++i;
+            // do the same with case insensitive comparison
+            
+            for (int i = 0; i< xsqlvars.length; i++) {
+                if (columnName.equalsIgnoreCase(xsqlvars[i].aliasname)) {
+                    return ++i;
+                }
             }
-        }
-        for (int i = 0; i< xsqlvars.length; i++) {
-            if (columnName.equalsIgnoreCase(xsqlvars[i].sqlname)) {
-                return ++i;
+            for (int i = 0; i< xsqlvars.length; i++) {
+                if (columnName.equalsIgnoreCase(xsqlvars[i].sqlname)) {
+                    return ++i;
+                }
             }
         }
         
