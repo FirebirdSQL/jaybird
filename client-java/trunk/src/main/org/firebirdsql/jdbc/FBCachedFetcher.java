@@ -22,11 +22,11 @@ class FBCachedFetcher implements FBFetcher {
     private boolean isLast = false;
     private boolean isAfterLast = false;
 
-
     private final static Logger log = LoggerFactory.getLogger(FBCachedFetcher.class,false);
           
-    FBCachedFetcher(AbstractConnection c, AbstractStatement fbStatement
-    , isc_stmt_handle stmt_handle, FBResultSet rs) throws SQLException {
+    FBCachedFetcher(AbstractConnection c, AbstractStatement fbStatement, 
+            isc_stmt_handle stmt_handle, FBResultSet rs) throws SQLException 
+    {
         ArrayList rowsSets = new ArrayList(100);
         ArrayList rows = new ArrayList(100);
 
@@ -107,7 +107,8 @@ class FBCachedFetcher implements FBFetcher {
                             rs.row = localRow;
                             
                             // copy data from current row
-                            FBField localField = FBField.createField(rs.xsqlvars[j], rs, j,false);
+                            FBField localField = FBField.createField(
+                                    rs.xsqlvars[j], rs, j,false);
                             
                             FBFlushableField blob = (FBFlushableField)localField;
                                   
@@ -183,28 +184,48 @@ class FBCachedFetcher implements FBFetcher {
         }
     }
 
+    public boolean absolute(int row) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public boolean first() throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public boolean last() throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public boolean previous() throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public boolean relative(int row) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
     public void close() throws SQLException {
     }
 
-    public Statement getStatement() {
+    public AbstractStatement getStatement() {
         return fbStatement;
     }
     public int getRowNum() {
         return rowNum;
     }
-    public boolean getIsEmpty() {
+    public boolean isEmpty() {
         return isEmpty;
     }
-    public boolean getIsBeforeFirst() {
+    public boolean isBeforeFirst() {
         return isBeforeFirst;
     }
-    public boolean getIsFirst() {
+    public boolean isFirst() {
         return isFirst;
     }
-    public boolean getIsLast() {
+    public boolean isLast() {
         return isLast;
     }
-    public boolean getIsAfterLast() {
+    public boolean isAfterLast() {
         return isAfterLast;
     }
 }

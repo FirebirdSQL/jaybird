@@ -139,6 +139,20 @@ public class FBResultSet implements ResultSet {
         }
     }
 
+    /**
+     * Check if statement is open and prepare statement for cursor move.
+     * 
+     * @throws SQLException if statement is closed.
+     */
+    protected void checkCursorMove() throws SQLException {
+        if (closed) throw new FBSQLException("The resultSet is closed");
+        wasNullValid = false;
+        opened = true;
+
+        // close current fields, so that resources are freed.
+        for(int i = 0; i < fields.length; i++) 
+            fields[i].close();
+    }
 
     /**
      * Moves the cursor down one row from its current position.
@@ -157,14 +171,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public boolean next() throws  SQLException {
-        if (closed) throw new FBSQLException("The resultSet is closed");
-        wasNullValid = false;
-        opened = true;
-
-        // close current fields, so that resources are freed.
-        for(int i = 0; i < fields.length; i++) 
-           fields[i].close();
-            
+        checkCursorMove();
         return fbFetcher.next();
     }
 
@@ -735,7 +742,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean isBeforeFirst() throws  SQLException {
-         return fbFetcher.getIsBeforeFirst();
+         return fbFetcher.isBeforeFirst();
     }
 
 
@@ -752,7 +759,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean isAfterLast() throws  SQLException {
-        return fbFetcher.getIsAfterLast();
+        return fbFetcher.isAfterLast();
     }
 
 
@@ -768,7 +775,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean isFirst() throws  SQLException {
-         return fbFetcher.getIsFirst();
+         return fbFetcher.isFirst();
     }
 
 
@@ -788,7 +795,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean isLast() throws  SQLException {
-       return fbFetcher.getIsLast();
+       return fbFetcher.isLast();
     }
 
 
@@ -836,7 +843,8 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean first() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        checkCursorMove();
+        return fbFetcher.first();
     }
 
 
@@ -853,7 +861,8 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean last() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        checkCursorMove();
+        return fbFetcher.last();
     }
 
 
@@ -906,7 +915,8 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean absolute( int row ) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        checkCursorMove();
+        return fbFetcher.absolute(row);
     }
 
 
@@ -934,7 +944,8 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean relative( int rows ) throws  SQLException {
-        throw new FBDriverNotCapableException();
+        checkCursorMove();
+        return fbFetcher.relative(rows);
     }
 
 
@@ -955,7 +966,8 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean previous() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        checkCursorMove();
+        return fbFetcher.previous();
     }
 
 
