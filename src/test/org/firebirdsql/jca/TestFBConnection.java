@@ -18,14 +18,15 @@
  */
 package org.firebirdsql.jca;
 
-import javax.resource.spi.*;
-import javax.transaction.xa.*;
+import javax.resource.spi.ManagedConnection;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
+
 import java.sql.Connection;
+import java.sql.Statement;
 
-import java.sql.*;
-
-import junit.framework.*;
-
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
  * Describe class <code>TestFBConnection</code> here.

@@ -18,17 +18,25 @@
  */
 package org.firebirdsql.jca;
 
-import javax.resource.spi.*;
-import javax.transaction.xa.*;
+
+import javax.resource.spi.LocalTransaction;
+import javax.resource.spi.ManagedConnection;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
 import javax.sql.DataSource;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 import org.firebirdsql.jdbc.FBConnection;
 
-import java.sql.*;
 
-import junit.framework.*;
 
 /**
  * Describe class <code>TestFBResultSet</code> here.

@@ -18,7 +18,9 @@
  */
 package org.firebirdsql.jca;
 
-import javax.resource.spi.*;
+import javax.resource.spi.ManagedConnection;
+import javax.resource.spi.ManagedConnectionFactory;
+
 
 /**
  * Describe class <code>TestFBManagedConnectionFactory</code> here.

@@ -18,7 +18,8 @@
  */
 package org.firebirdsql.jca;
 
-import javax.transaction.xa.*;
+
+import javax.transaction.xa.Xid;
 
 import org.firebirdsql.gds.ISCConstants;
 
@@ -28,6 +29,7 @@ import org.firebirdsql.jdbc.BaseFBTest;
     import java.net.InetAddress;
     import java.net.UnknownHostException;
 
+import java.io.Serializable;
 
 /**
  * THIS FILE INCLUDES AN XID IMPLEMENTATION FROM THE JBOSS PROJECT
@@ -96,7 +98,7 @@ public class TestXABase extends BaseFBTest {
      *  @version $Revision$
      */
         public static class  XidImpl
-       implements Xid, java.io.Serializable
+       implements Xid, Serializable
     {
        // Constants -----------------------------------------------------
 

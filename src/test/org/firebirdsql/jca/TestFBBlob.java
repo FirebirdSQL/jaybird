@@ -18,16 +18,19 @@
  */
 package org.firebirdsql.jca;
 
-import javax.resource.spi.*;
-import java.sql.PreparedStatement;
+import javax.resource.spi.LocalTransaction;
 import javax.sql.DataSource;
 
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBBlob;
 
-import java.io.*;
-import java.sql.*;
-
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.sql.Blob;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.util.Arrays;
 
 /**
