@@ -152,7 +152,7 @@ public class XPreparedStatement implements InvocationHandler {
             } else
                 return method.invoke(preparedStatement, args);
         } catch(InvocationTargetException ex) {
-            throw ex.getCause();
+            throw ex.getTargetException();
         }
     }
     
