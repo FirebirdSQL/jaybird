@@ -1,3 +1,70 @@
+2003-11-09 15:06  ryanbaldwin
+
+	*
+	
+	Added test to demonstrate possible problem backing up database
+	created using streamed blobs.
+	client-java/src/test/org/firebirdsql/ngds/TestJaybirdBlobBackupProb
+	lem.java:
+
+2003-11-09 14:09  ryanbaldwin
+
+	* client-java/src/native/jaygds/source/: fb_helpers.cpp,
+	fb_helpers.h:
+	
+	More robust status vector handling.
+
+2003-11-09 12:23  ryanbaldwin
+
+	* client-java/src/main/org/firebirdsql/ngds/:
+	ServiceParameterBufferImp.java, ServiceRequestBufferImp.java:
+	
+	Fix for Services API problem introduced yesterday.
+
+2003-11-09 02:28  ryanbaldwin
+
+	* client-java/src/main/org/firebirdsql/ngds/ServiceBufferBase.java:
+	
+	Refactoring.  gds.Clumplet and its implementations have been
+	removed and replaced by BlobParameterBuffer and
+	DatabaseParameterBuffer classes, and appropriate implementations
+
+2003-11-09 02:21  ryanbaldwin
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/BlobParameterBuffer.java,
+	main/org/firebirdsql/gds/Clumplet.java,
+	main/org/firebirdsql/gds/DatabaseParameterBuffer.java,
+	main/org/firebirdsql/gds/GDS.java,
+	main/org/firebirdsql/jca/FBConnectionRequestInfo.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	main/org/firebirdsql/jdbc/FBConnectionHelper.java,
+	main/org/firebirdsql/jgds/BlobParameterBufferImp.java,
+	main/org/firebirdsql/jgds/ClumpletImpl.java,
+	main/org/firebirdsql/jgds/DatabaseParameterBufferImp.java,
+	main/org/firebirdsql/jgds/GDS_Impl.java,
+	main/org/firebirdsql/jgds/ParameterBufferBase.java,
+	main/org/firebirdsql/jgds/StringClumplet.java,
+	main/org/firebirdsql/management/FBManager.java,
+	main/org/firebirdsql/ngds/BlobParameterBufferImp.java,
+	main/org/firebirdsql/ngds/ClumpletImpl.java,
+	main/org/firebirdsql/ngds/DatabaseParameterBufferImp.java,
+	main/org/firebirdsql/ngds/GDS_Impl.java,
+	main/org/firebirdsql/ngds/ParameterBufferBase.java,
+	main/org/firebirdsql/ngds/ServiceParameterBufferImp.java,
+	main/org/firebirdsql/ngds/ServiceRequestBufferImp.java,
+	main/org/firebirdsql/ngds/StringClumplet.java,
+	native/jaygds/builds/msvc6/java_gds.dsp,
+	test/org/firebirdsql/common/FBTestBase.java,
+	test/org/firebirdsql/jgds/TestGds.java,
+	test/org/firebirdsql/ngds/TestNgds.java,
+	test/org/firebirdsql/ngds/TestNgdsBlobReadBug.java:
+	
+	Refactoring.  gds.Clumplet and its implementations have been
+	removed and replaced by BlobParameterBuffer and
+	DatabaseParameterBuffer classes, and appropriate implementations
+
 2003-11-08 13:11  rrokytskyy
 
 	* client-java/src/:
