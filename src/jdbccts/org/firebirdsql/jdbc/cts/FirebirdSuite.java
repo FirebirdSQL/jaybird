@@ -140,10 +140,7 @@ public class FirebirdSuite {
         TestSuite suite = new TestSuite();
         
         suite.addTest(BatchUpdatesSuite.suite());
-        /*
-        // we do not test callable statements until they're fully implemented 
         suite.addTest(CallableStatementSuite.suite());
-        */
         suite.addTest(ConnectionSuite.suite());
         suite.addTest(DateTimeSuite.suite());
         suite.addTest(DbMetaSuite.suite());
