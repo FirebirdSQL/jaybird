@@ -1,3 +1,11 @@
+2005-03-30 22:47  gab_reid
+
+	*
+	
+	Added missing isc_info_end to request buffer
+	client-java/src/main/org/firebirdsql/jdbc/FirebirdStatementInfoFact
+	ory.java:
+
 2005-03-10 00:36  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/FBRowUpdater.java:
