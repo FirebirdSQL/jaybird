@@ -31,7 +31,7 @@ import org.firebirdsql.gds.GDSException;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-interface Xdrable {
+public interface Xdrable {
 
     int getLength();
 
