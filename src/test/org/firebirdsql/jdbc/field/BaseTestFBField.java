@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.field;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

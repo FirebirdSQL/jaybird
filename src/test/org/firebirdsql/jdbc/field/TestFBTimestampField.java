@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.field;
 
 
 import java.math.BigDecimal;
@@ -50,10 +50,8 @@ public class TestFBTimestampField extends BaseTestFBField {
         Object[] row = new byte[1][];
         ArrayList rows = new ArrayList();
         rows.add(row);		  
-        FBResultSet rs = new FBResultSet(xsqlvars,rows);
-		  rs.next();
-//		stringField.sqldata = TEST_TIMESTAMP;
-//		stringField.sqlind = 0;
+        FBFieldResultSet rs = new FBFieldResultSet(xsqlvars,rows);
+		rs.next();
 
 		field = FBField.createField(xsqlvars[0],rs,0, false);
 	}
