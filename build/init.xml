@@ -18,7 +18,7 @@
     <property name="version.major" value="1"/>
     <property name="version.minor" value="5"/>
     <property name="version.revision" value="0"/>
-    <property name="version.tag" value="Beta"/>
+    <property name="version.tag" value="RC2"/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
@@ -70,6 +70,7 @@
     <property name="source.test" value="${module.source}/test"/>
     <property name="source.test.30" value="${module.source}/test_30"/>
     <property name="source.pool" value="${module.source}/pool"/>
+    <property name="source.compatibility" value="${module.source}/compatibility"/>
 
     <property name="thirdparty" value="${module.root}/thirdparty"/>
     <property name="jboss.source.root"
@@ -81,6 +82,7 @@
     <property name="build.concurrent" value="${module.output}/concurrent"/>
     <property name="build.classes" value="${module.output}/classes"/>
     <property name="build.pool" value="${module.output}/pool"/>
+    <property name="build.compatibility" value="${module.output}/compatibility"/>
     <property name="build.test" value="${module.output}/test"/>
     <property name="build.lib" value="${module.output}/lib"/>
     <property name="build.api" value="${module.output}/api"/>
@@ -142,6 +144,12 @@
     <path id="javac.pool.classpath">
       <path refid="javac.driver.classpath"/>
       <pathelement location="${build.classes}"/>
+    </path>
+    
+    <path id="javac.compatibility.classpath">
+      <path refid="javac.driver.classpath"/>
+      <pathelement location="${build.classes}"/>
+      <pathelement location="${build.pool}"/>
     </path>
 
     <path id="javac.test.classpath">

@@ -1,7 +1,7 @@
   <!-- =================================================================== -->
   <!-- Compiles the source code                                            -->
   <!-- =================================================================== -->
-  <target name="compile" depends="compile-concurrent, compile-j2ee, compile-driver, compile-pool, compile-tests, compile-etc, compile-examples, compile-resources, compile-stylesheets"/>
+  <target name="compile" depends="compile-concurrent, compile-j2ee, compile-driver, compile-pool, compile-compatibility, compile-tests, compile-etc, compile-examples, compile-resources, compile-stylesheets"/>
 
   <!-- calling this unjar a compile is stretching the truth a bit-->
   <target name="compile-concurrent" depends="init">
@@ -108,6 +108,19 @@
            excludes="**/temp*"
     >
       <classpath refid="javac.pool.classpath"/>
+    </javac>
+  </target>
+  
+  <target name="compile-compatibility" depends="compile-pool">
+  	<mkdir dir="${build.compatibility}"/>
+    <javac srcdir="${source.compatibility}"
+           destdir="${build.compatibility}"
+           target="1.2"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+    >
+      <classpath refid="javac.compatibility.classpath"/>
     </javac>
   </target>
 
