@@ -21,9 +21,10 @@ package org.firebirdsql.jdbc;
 import java.sql.PreparedStatement;
 
 /**
- *
+ * Firebird extensions to the {@link PreparedStatement} interface.
+ * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public interface FirebirdPreparedStatement extends PreparedStatement {
+public interface FirebirdPreparedStatement extends FirebirdStatement, PreparedStatement {
     
 }
