@@ -45,7 +45,10 @@ public class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_handle {
     private Subject subject;
     private Collection rdb_transactions = new ArrayList();
     private List rdb_warnings = new ArrayList();
-    Vector rdb_sql_requests = new Vector();
+    
+    /** @todo Implement statement handle tracking correctly */
+    // Vector rdb_sql_requests = new Vector();
+    
     Socket socket;
     XdrOutputStream out;
     XdrInputStream in;
