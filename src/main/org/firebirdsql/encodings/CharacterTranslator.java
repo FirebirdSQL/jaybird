@@ -23,8 +23,11 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.ResourceBundle;
+
+import org.firebirdsql.jdbc.FBSQLException;
 
 
 /**
@@ -75,42 +78,47 @@ public class CharacterTranslator {
         this.mappingPath = mappingPath;
         Properties props = new Properties();
 
-        ResourceBundle res = ResourceBundle.getBundle(
-            mappingPath, Locale.getDefault(), getClass().getClassLoader());
+        try {
+            ResourceBundle res = ResourceBundle.getBundle(
+                mappingPath, Locale.getDefault(), getClass().getClassLoader());
+                
+            Enumeration en = res.getKeys();
+            while(en.hasMoreElements()) {
+                String key = (String)en.nextElement();
+                String value = res.getString(key);
+                props.put(key, value);
+            }
+    
             
-        Enumeration en = res.getKeys();
-        while(en.hasMoreElements()) {
-            String key = (String)en.nextElement();
-            String value = res.getString(key);
-            props.put(key, value);
-        }
-
-        
-        for (Iterator iter = props.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            
-            String key = (String)entry.getKey();
-            String value = (String)entry.getValue();
-            
-            if (!key.startsWith("db."))
-                throw new SQLException("Incorrect mapping format. " +
-                        "All properties should start with \"db.\", but " + 
-                        key + " found.");
-            
-            if (key.length() != 4)
-                throw new SQLException("Incorrect mapping format. " +
-                        "Key should consist only of 4 characters, but " + 
-                        key + " found.");
-            
-            if (value.length() != 1)
-                throw new SQLException("Incorrect mapping format. " + 
-                    "Mapped value should consist only of single character, but " + 
-                    value + " found.");
-            
-            char dbChar = key.charAt(3);
-            char javaChar = value.charAt(0);
-            
-            mapping[dbChar] = javaChar;
+            for (Iterator iter = props.entrySet().iterator(); iter.hasNext();) {
+                Map.Entry entry = (Map.Entry) iter.next();
+                
+                String key = (String)entry.getKey();
+                String value = (String)entry.getValue();
+                
+                if (!key.startsWith("db."))
+                    throw new SQLException("Incorrect mapping format. " +
+                            "All properties should start with \"db.\", but " + 
+                            key + " found.");
+                
+                if (key.length() != 4)
+                    throw new SQLException("Incorrect mapping format. " +
+                            "Key should consist only of 4 characters, but " + 
+                            key + " found.");
+                
+                if (value.length() != 1)
+                    throw new SQLException("Incorrect mapping format. " + 
+                        "Mapped value should consist only of single character, but " + 
+                        value + " found.");
+                
+                char dbChar = key.charAt(3);
+                char javaChar = value.charAt(0);
+                
+                mapping[dbChar] = javaChar;
+            }
+        } catch(MissingResourceException ex) {
+            throw new FBSQLException("Character translation " + mappingPath + 
+                " could not be found.");
         }
     }
 }
