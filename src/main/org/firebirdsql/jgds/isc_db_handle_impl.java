@@ -32,6 +32,8 @@ import java.net.*;
 
 import javax.security.auth.Subject;
 
+import org.firebirdsql.gds.GDSException;
+
 /**
  * Describe class <code>isc_db_handle_impl</code> here.
  *
@@ -42,6 +44,7 @@ public class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_handle {
     private int rdb_id;
     private Subject subject;
     private Collection rdb_transactions = new ArrayList();
+    private List rdb_warnings = new ArrayList();
     Vector rdb_sql_requests = new Vector();
     Socket socket;
     XdrOutputStream out;
@@ -80,5 +83,23 @@ public class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_handle {
     void removeTransaction(isc_tr_handle_impl tr)
     {
         rdb_transactions.remove(tr);
+    }
+    
+    public List getWarnings() {
+        synchronized(rdb_warnings) {
+            return new ArrayList(rdb_warnings);
+        }
+    }
+    
+    public void addWarning(GDSException warning) {
+        synchronized(rdb_warnings) {
+            rdb_warnings.add(warning);
+        }
+    }
+    
+    public void clearWarnings() {
+        synchronized(rdb_warnings) {
+            rdb_warnings.clear();
+        }
     }
 }

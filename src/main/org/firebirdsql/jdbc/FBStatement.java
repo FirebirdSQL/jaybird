@@ -918,7 +918,6 @@ public class FBStatement implements Statement {
         return (fixedStmt.getOutSqlda().sqld > 0);
     }
 
-
     protected void prepareFixedStatement(String sql, boolean describeBind)
         throws GDSException, SQLException
     {

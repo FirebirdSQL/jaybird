@@ -24,9 +24,11 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionEvent;
@@ -711,7 +713,23 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             return "NONE";
         }
     }
+    
+    /**
+     * Get all warnings associated with current connection.
+     * 
+     * @return list of {@link GDSException} instances representing warnings
+     * for this database connection.
+     */
+    public List getWarnings() {
+        return currentDbHandle.getWarnings();
+    }
 
+    /**
+     * Clear warnings for this database connection.
+     */
+    public void clearWarnings() {
+        currentDbHandle.clearWarnings();
+    }
 
     //--------------------------------------------------------------------
     //package visibility

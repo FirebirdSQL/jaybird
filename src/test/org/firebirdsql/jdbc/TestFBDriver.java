@@ -24,6 +24,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.2  2002/08/29 13:41:16  d_jencks
+ * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
+ *
  * Revision 1.1  2002/08/14 13:22:46  d_jencks
  * Moved tests to separate directory. Removed need for jmx classes, and removed jmxri.jar
  *
@@ -62,6 +65,8 @@
 package org.firebirdsql.jdbc;
 
 import junit.framework.*;
+import java.sql.*;
+import java.util.*;
 
 import org.firebirdsql.logging.Logger;
 
@@ -114,6 +119,49 @@ public class TestFBDriver extends BaseFBTest {
     public void testJdbcCompliant() {
         // current driver is not JDBC compliant.
         assertTrue(!driver.jdbcCompliant());
+    }
+    
+    /**
+     * This method tests if driver correctly handles warnings returned from
+     * database. We use SQL dialect mismatch between client and server to 
+     * make server return us a warning.
+     */
+    public void testWarnings() throws Exception {
+        Properties info = (Properties)DB_INFO.clone();
+        info.setProperty("set_db_sql_dialect", "1");
+        
+        // open connection and convert DB to SQL dialect 1
+        Connection dialect1Connection = 
+            DriverManager.getConnection(DB_DRIVER_URL, info);
+            
+        Statement stmt = dialect1Connection.createStatement();
+        
+        // execute select statement, driver will pass SQL dialect 3 
+        // for this statement and database server will return a warning
+        stmt.executeQuery("SELECT 1 as col1 FROM rdb$database");
+        
+        stmt.close();
+        
+        SQLWarning warning = dialect1Connection.getWarnings();
+        
+        warning.printStackTrace();
+        
+        assertTrue("Connection should have at least one warning.", 
+            warning != null);
+            
+        dialect1Connection.clearWarnings();
+        
+        assertTrue("After clearing no warnings should be present.",
+            dialect1Connection.getWarnings() == null);
+            
+        dialect1Connection.close();
+        
+        info.setProperty("set_db_sql_dialect", "3");
+        
+        Connection dialect3Connection = 
+            DriverManager.getConnection(DB_DRIVER_URL, info);
+            
+        dialect3Connection.close();
     }
 }
 

@@ -721,7 +721,16 @@ public class FBConnection implements Connection
      * @exception SQLException if a database access error occurs
      */
     public SQLWarning getWarnings() throws SQLException {
-        return firstWarning;
+        SQLWarning warning = firstWarning;
+        SQLWarning iscWarning = getIscWarnings();
+        
+        if (warning == null)
+            warning = iscWarning;
+        else
+        if (iscWarning != null)
+            warning.setNextWarning(iscWarning);
+            
+        return warning;
     }
 
 
@@ -735,6 +744,7 @@ public class FBConnection implements Connection
      */
     public void clearWarnings() throws SQLException {
 		 firstWarning = null;
+         clearIscWarnings();
     }
 
 
@@ -1027,6 +1037,38 @@ public class FBConnection implements Connection
 			 lastWarning.setNextWarning(warning);
 		 }
 	 }
+     
+     /**
+      * Get warnings associated with this database connection.
+      * 
+      * @return instance of {@link SQLWarning} that is the first warning in 
+      * a linked list of warnings.
+      */
+     private SQLWarning getIscWarnings() {
+         SQLWarning firstWarning = null;
+         SQLWarning lastWarning = null;
+         java.util.Iterator iter = mc.getWarnings().iterator();
+         while (iter.hasNext()) {
+             GDSException item = (GDSException)iter.next();
+             
+             FBSQLWarning warning = new FBSQLWarning(item);
+             if (firstWarning == null) {
+                 firstWarning = warning;
+                 lastWarning = firstWarning;
+             } else {
+                lastWarning.setNextWarning(warning);
+                lastWarning = warning;
+             }
+         }
+         return firstWarning;
+     }
+     
+     /**
+      * Clear warnings associated with this database connection.
+      */
+     private void clearIscWarnings() {
+         mc.clearWarnings();
+     }
 	 
 	 //******** Proxies of ManagedConnection methods for jdbc methods
      
