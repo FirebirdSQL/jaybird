@@ -323,7 +323,14 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * auto-commit.
      * @exception SQLException if a database access error occurs
      */
-    public void setAutoCommit(boolean autoCommit) {
+    public void setAutoCommit(boolean autoCommit) throws SQLException {
+        if (this.autoCommit != autoCommit && inTransaction())
+            try {
+                getLocalTransaction().commit();
+            } catch(javax.resource.ResourceException resex) {
+                throw new SQLException(resex.toString());
+            }
+            
         this.autoCommit = autoCommit;
     }
 
