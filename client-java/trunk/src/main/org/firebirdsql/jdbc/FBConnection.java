@@ -966,7 +966,7 @@ public class FBConnection implements Connection
         return mc.getSqlInfo(stmt);
     }
 	 
-    public int getBlobBufferLength(){
+    public Integer getBlobBufferLength(){
         return mc.getBlobBufferLength();
     }
 	 

@@ -23,6 +23,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.2  2002/08/29 13:41:16  d_jencks
+ * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
+ *
  * Revision 1.1  2002/08/14 13:22:46  d_jencks
  * Moved tests to separate directory. Removed need for jmx classes, and removed jmxri.jar
  *
@@ -97,11 +100,11 @@ public class TestFBWrappingDataSource extends BaseFBTest {
 
         ds = new FBWrappingDataSource();
         ds.setDatabaseName(DB_DATASOURCE_URL);
-        connection = ds.getConnection(DB_USER, DB_PASSWORD);
-        assertTrue("Connection is null", connection != null);
         ds.setUser(DB_USER);
         ds.setPassword(DB_PASSWORD);
         connection = ds.getConnection();
+        assertTrue("Connection is null", connection != null);
+        connection = ds.getConnection(DB_USER, DB_PASSWORD);
         assertTrue("Connection is null", connection != null);
     }
 
@@ -153,20 +156,22 @@ public class TestFBWrappingDataSource extends BaseFBTest {
         ds.setBlockingTimeout(1000);
         ds.setIdleTimeout(20000);
         ds.setPooling(true);
-        connection = ds.getConnection(DB_USER, DB_PASSWORD);
+        ds.setUser(DB_USER);
+        ds.setPassword(DB_PASSWORD);
+        connection = ds.getConnection();//DB_USER, DB_PASSWORD);
         assertTrue("Connection is null", connection != null);
         Thread.sleep(2000);
         int ccount = ds.getConnectionCount();
-        assertTrue("Wrong number of connections!" + ccount, ccount == ds.getMinSize());
+        assertTrue("Wrong number of connections! " + ccount + ", expected " + ds.getMinSize(), ccount == ds.getMinSize());
         connection.close();
         ArrayList cs = new ArrayList();
         for (int i = 0; i < ds.getMaxSize(); i++)
         {
-           cs.add(ds.getConnection(DB_USER, DB_PASSWORD));
+            cs.add(ds.getConnection());//DB_USER, DB_PASSWORD));
         } // end of for ()
         try
         {
-           ds.getConnection(DB_USER, DB_PASSWORD);
+            ds.getConnection();//DB_USER, DB_PASSWORD);
            fail("got a connection more than maxsize!");
         }
         catch (SQLException re)
@@ -178,9 +183,7 @@ public class TestFBWrappingDataSource extends BaseFBTest {
            ((Connection)i.next()).close();
         } // end of for ()
         //This will be from same pool due to internal construction of FBDataSource.
-        ds.setUser(DB_USER);
-        ds.setPassword(DB_PASSWORD);
-        connection = ds.getConnection();
+        connection = ds.getConnection(DB_USER, DB_PASSWORD);
         assertTrue("Connection is null", connection != null);
         connection.close();
 

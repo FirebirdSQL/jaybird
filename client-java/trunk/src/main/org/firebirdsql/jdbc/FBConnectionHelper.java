@@ -20,6 +20,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.jca.FBConnectionRequestInfo;
+import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.gds.GDS;
 
 import java.util.Properties;
@@ -167,8 +168,8 @@ public class FBConnectionHelper {
      * @return a TPB containing all relevant parameters extracted from
      * <code>info</code>
      */
-    public static Collection getTpb(Properties info) {
-        HashSet tpb = new HashSet();
+    public static FBTpb getTpb(Properties info) {
+        FBTpb tpb = new FBTpb();
 
         Iterator keys = info.keySet().iterator();
         while(keys.hasNext()) {

@@ -19,7 +19,9 @@
 
 package org.firebirdsql.jca;
 
+import java.io.ObjectStreamException;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,6 +32,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.WeakHashMap;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionManager;
 import javax.resource.spi.ConnectionRequestInfo;
@@ -71,34 +74,60 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 
 
-public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
+public class FBManagedConnectionFactory 
+    implements  ManagedConnectionFactory, Serializable
+{
 
-   private final Logger log = LoggerFactory.getLogger(getClass(),true);
+    private final static int MAX_BLOB_BUFFER_LENGTH = 1024 * 32 - 1;
+    private final static int MIN_BLOB_BUFFER_LENGTH = 1024;
 
-    final GDS gds = GDSFactory.newGDS();
+    /**
+     * The <code>mcfInstances</code> weak hash map is used in deserialization
+     * to find the correct instance of a mcf.
+     *
+     */
+    private final static Map mcfInstances = new WeakHashMap();
 
+    //These properties give the mcf its identity
     //should add handling for host/port/file separately.
     private String dbAlias;
-
-    private final Map criToFreeDbHandlesMap = new HashMap();
-
-    //Maps supplied XID to internal transaction handle.
-    //a concurrent reader map would be better
-    private final Map xidMap = Collections.synchronizedMap(new HashMap());
-
-    //Maps transaction handle to list of statements with resultsets.
-    private final Map TransactionStatementMap = new HashMap();
 
     private FBConnectionRequestInfo defaultCri;
 
     private final FBTpb tpb = new FBTpb();
 
-    private final static int MAX_BLOB_BUFFER_LENGTH = 1024 * 32 - 1;
-    private final static int MIN_BLOB_BUFFER_LENGTH = 1024;
-
 
     //must be less than 1024 * 32: 1-24 * 32 -  is ok.
     private int blobBufferLength = 1024 * 16;
+
+    //These hold non-serializable stuff.
+    private transient final Logger log = LoggerFactory.getLogger(getClass(),true);
+
+    transient final GDS gds = GDSFactory.newGDS();
+
+    /**
+     * The <code>criToFreeDbHandlesMap</code> maps cri to lists of physical
+     * connections that are not currently used by a managed connection.
+     *
+     */
+    private transient final Map criToFreeDbHandlesMap = new HashMap();
+
+    /**
+     * The <code>waitingToClose</code> set holds physical connections that 
+     * should be closed as soon as all transactions on them are complete.
+     *
+     */
+    private transient final Set waitingToClose = Collections.synchronizedSet(new HashSet());
+
+    //Maps supplied XID to internal transaction handle.
+    //a concurrent reader map would be better
+    private transient final Map xidMap = Collections.synchronizedMap(new HashMap());
+
+    //Maps transaction handle to list of statements with resultsets.
+    private transient final Map TransactionStatementMap = new HashMap();
+
+    private transient final Object startLock = new Object();
+    private transient boolean started = false;
 
     private volatile int hashCode = 0;
 
@@ -109,9 +138,9 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     //rar properties
 
 
-    public void setDatabase(String database) throws ResourceException {
-        if (this.dbAlias!=null && !database.equals(this.dbAlias))
-            throw new ResourceException("can't change database!");
+    public void setDatabase(String database) 
+    {
+        checkNotStarted();
         hashCode = 0;
         this.dbAlias = database;
     }
@@ -121,6 +150,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     }
 
     public void setConnectionRequestInfo(FBConnectionRequestInfo cri) {
+        checkNotStarted();
         hashCode = 0;
         this.defaultCri = new FBConnectionRequestInfo(cri);
     }
@@ -132,6 +162,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
     public void setUserName(String userName)
     {
+        checkNotStarted();
         hashCode = 0;
         defaultCri.setUser(userName);
     }
@@ -143,6 +174,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
     public void setPassword(String password)
     {
+        checkNotStarted();
         hashCode = 0;
         defaultCri.setPassword(password);
     }
@@ -154,6 +186,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
     public void setTpb(FBTpb tpb)
     {
+        checkNotStarted();
         hashCode = 0;
         this.tpb.setTpb(tpb);
     }
@@ -165,6 +198,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
     public void setTransactionIsolation(Integer level) throws ResourceException
     {
+        checkNotStarted();
         hashCode = 0;
         if (level == null) 
         {
@@ -183,6 +217,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
     public void setTransactionIsolationName(String level) throws ResourceException
     {
+        checkNotStarted();
         hashCode = 0;
         tpb.setTransactionIsolationName(level);
     }
@@ -193,6 +228,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     }
     
     public void setEncoding(String encoding) {
+        checkNotStarted();
         hashCode = 0;
         defaultCri.setProperty(GDS.isc_dpb_lc_ctype, encoding);
     }
@@ -208,18 +244,20 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
      * Get the BlobBufferLength value.
      * @return the BlobBufferLength value.
      */
-    public int getBlobBufferLength()
+    public Integer getBlobBufferLength()
     {
-        return blobBufferLength;
+        return new Integer(blobBufferLength);
     }
 
     /**
      * Set the BlobBufferLength value.
      * @param newBlobBufferLength The new BlobBufferLength value.
      */
-    public void setBlobBufferLength(final int blobBufferLength)
+    public void setBlobBufferLength(final Integer blobBufferLengthWrapper)
     {
+        checkNotStarted();
         hashCode = 0;
+        int blobBufferLength = blobBufferLengthWrapper.intValue();
         if (blobBufferLength > MAX_BLOB_BUFFER_LENGTH) 
         {
             this.blobBufferLength = MAX_BLOB_BUFFER_LENGTH;
@@ -279,6 +317,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
      * @exception ResourceException if an error occurs
      */
     public java.lang.Object createConnectionFactory(ConnectionManager cxManager) throws ResourceException {
+        start();
         return new FBDataSource(this, cxManager);
     }
 
@@ -291,6 +330,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
      * @exception ResourceException if an error occurs
      */
     public java.lang.Object createConnectionFactory() throws ResourceException {
+        start();
         return new FBDataSource(this, new FBStandAloneConnectionManager());
     }
 
@@ -320,6 +360,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
                                                      ConnectionRequestInfo cri)
         throws ResourceException 
     {
+        start();
         return new FBManagedConnection(subject, cri, this);
     }
 
@@ -432,9 +473,10 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
                 throw new XAException("Transaction flags wrong, this xid new for this rm");
             }
             //new xid for us
-            isc_db_handle db = mc.getIscDBHandle();
-            tr = gds.get_new_isc_tr_handle();
-            try {
+            try 
+            {
+                isc_db_handle db = mc.getIscDBHandle(waitingToClose);
+                tr = gds.get_new_isc_tr_handle();
                 gds.isc_start_transaction(tr, db, mc.getTpb());
             }
             catch (GDSException ge) {
@@ -485,30 +527,25 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         } // end of try-catch
     }
 
-    private isc_db_handle createDbHandle(FBConnectionRequestInfo cri) throws GDSException
+    isc_db_handle createDbHandle(FBConnectionRequestInfo cri) throws GDSException
     {
         isc_db_handle db = gds.get_new_isc_db_handle();
         gds.isc_attach_database(dbAlias, db, cri.getDpb());
         return db;
     }
 
-    void assureDbHandle(FBConnectionRequestInfo cri) throws ResourceException
+    void returnDbHandle(isc_db_handle db, FBConnectionRequestInfo cri) throws GDSException
     {
-        try 
+        if (db == null) 
         {
-            returnDbHandle(createDbHandle(cri), cri);
-        }
-        catch (GDSException ge)
-        {
-            if (log!=null) log.info("Could not get a db connection!", ge);
-            throw new ResourceException(ge.getMessage());   
-        } // end of try-catch
-    }
+            return;
+        } // end of if ()
         
-
-    void returnDbHandle(isc_db_handle db, FBConnectionRequestInfo cri) 
-    {
-        if (db != null) 
+        if (waitingToClose.contains(db))
+        {
+            releaseDbHandle(db, cri);
+        }
+        else
         {
             LinkedList freeDbHandles = null;
             synchronized(criToFreeDbHandlesMap)
@@ -522,7 +559,11 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             }
             synchronized(freeDbHandles)
             {
-                freeDbHandles.addLast(db);
+                //This is slow, but there should be very few freeDbHandles.
+                if (!freeDbHandles.contains(db)) 
+                {
+                    freeDbHandles.addLast(db);
+                } // end of if ()
             }
         }
     }
@@ -530,10 +571,39 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     void releaseDbHandle(isc_db_handle db, FBConnectionRequestInfo cri) 
         throws GDSException 
     {
+        if (db == null) 
+        {
+            throw new IllegalArgumentException("Attempt to release a null db handle!");
+        } // end of if ()
+        
         synchronized (db)
         {
-            if (db != null && !db.hasTransactions())
+            LinkedList freeDbHandles = null;
+            synchronized(criToFreeDbHandlesMap)
             {
+                freeDbHandles = (LinkedList)criToFreeDbHandlesMap.get(cri);
+            }
+            if (freeDbHandles != null) 
+            {
+                synchronized(freeDbHandles)
+                {
+                    freeDbHandles.remove(db); 
+                } // end of if ()
+            }
+            if (db.hasTransactions())
+            {
+                synchronized (waitingToClose)
+                {
+                    //double synchronization, but saves some ugly synch wrappers.
+                    if (!waitingToClose.contains(db)) 
+                    {
+                        waitingToClose.add(db);
+                    } // end of if ()
+                }
+            }
+            else
+            {
+                waitingToClose.remove(db);
                 gds.isc_detach_database(db);
             }
         }
@@ -614,7 +684,64 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         }
     }
 
+    //Serialization support
+    private Object readResolve() throws ObjectStreamException
+    {
+        FBManagedConnectionFactory mcf = (FBManagedConnectionFactory)mcfInstances.get(this);
+        if (mcf != null) 
+        {
+            return mcf;
+        } // end of if ()
+        mcf = new FBManagedConnectionFactory();
+        mcf.setDatabase(this.getDatabase());
+        mcf.setConnectionRequestInfo(this.getDefaultConnectionRequestInfo());
+        mcf.setTpb(this.getTpb());
+        mcf.setBlobBufferLength(this.getBlobBufferLength());
+        return mcf;
+    }
 
+    /**
+     * The <code>canonicalize</code> method is used in FBDriver to reuse
+     * previous fbmcf instances if they have been create.  It should
+     * really be package access level
+     *
+     * @return a <code>FBManagedConnectionFactory</code> value
+     */
+    public FBManagedConnectionFactory canonicalize()
+    {
+        FBManagedConnectionFactory mcf = (FBManagedConnectionFactory)mcfInstances.get(this);
+        if (mcf != null) 
+        {
+            return mcf;
+        } // end of if ()
+        return this;
+    }
+
+    private void start()
+    {
+        synchronized (startLock)
+        {
+            if (!started) 
+            {
+                synchronized (mcfInstances)
+                {
+                    mcfInstances.put(this, this);
+                }
+                started = true;
+            } // end of if ()
+        }
+    }
+
+    private void checkNotStarted() throws IllegalStateException
+    {
+        synchronized (startLock)
+        {
+            if (started) 
+            {
+                throw new IllegalStateException("Operation not permitted after ManagedConnectionFactory in use");
+            } // end of if ()
+        }
+    } 
 
 }
 

@@ -19,16 +19,17 @@
 
 package org.firebirdsql.jca;
 
+
+
 import java.io.PrintWriter;
-
 import javax.resource.ResourceException;
-
 import javax.resource.spi.ConnectionEvent;
 import javax.resource.spi.ConnectionEventListener;
-import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ConnectionManager;
+import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
+import java.io.Serializable;
 
 
 
@@ -40,7 +41,9 @@ import javax.resource.spi.ManagedConnectionFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBStandAloneConnectionManager implements ConnectionManager , ConnectionEventListener {
+public class FBStandAloneConnectionManager 
+    implements ConnectionManager, ConnectionEventListener, Serializable
+{
 
      //package constructor
      FBStandAloneConnectionManager() {

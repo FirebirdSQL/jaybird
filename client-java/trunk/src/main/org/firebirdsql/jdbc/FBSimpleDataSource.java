@@ -70,7 +70,7 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
      * 
      * @return length of BLOB buffer.
      */
-    public int getBlobBufferLength() {
+    public Integer getBlobBufferLength() {
         return mcf.getBlobBufferLength();
     }
     
@@ -80,7 +80,7 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
      * 
      * @param length new length of the BLOB buffer.
      */
-    public void setBlobBufferLength(int length) {
+    public void setBlobBufferLength(Integer length) {
         mcf.setBlobBufferLength(length);
     }
     
@@ -130,12 +130,9 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
      * 
      * @throws SQLException if database name cannot be set.
      */
-    public void setDatabase(String name) throws SQLException {
-        try {
-            mcf.setDatabase(name);
-        } catch(ResourceException rex) {
-            throw new SQLException(rex.getMessage());
-        }
+    public void setDatabase(String name)
+    {
+        mcf.setDatabase(name);
     }
     
     /**

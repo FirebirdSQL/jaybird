@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.1  2002/08/29 13:41:04  d_jencks
+ * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
+ *
  * Revision 1.13  2002/06/12 00:55:19  brodsom
  * Enable Connection management by ManagedConnectionFactory
  *
@@ -83,6 +86,7 @@ import java.util.StringTokenizer;
 import javax.security.auth.Subject;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jca.FBConnectionRequestInfo;
+import org.firebirdsql.jca.FBTpb;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -96,12 +100,13 @@ import org.firebirdsql.gds.GDS;
  */
 public class FBDriver implements Driver {
 
-   private final static Logger log;
+    private final static Logger log;
 
     public static final String FIREBIRD_PROTOCOL = "jdbc:firebirdsql:";
     public static final String USER = "user";
     public static final String PASSWORD = "password";
     public static final String DATABASE = "database";
+    public static final String BLOB_BUFFER_LENGTH = "blob)buffer_length";
 
     /**
      * @todo implement the default subject for the
@@ -109,10 +114,8 @@ public class FBDriver implements Driver {
      */
     private Subject subject = null;
 
-    private Map urlToDataSourceMap = new HashMap();
+    private Map mcfToDataSourceMap = new HashMap();
 
-    private Map urlToMCFMap = new HashMap();
-	 
     static{
        log = LoggerFactory.getLogger(FBDriver.class,false);
         try{
@@ -154,7 +157,7 @@ public class FBDriver implements Driver {
         {
             return null;
         } // end of if ()
-
+        Integer blobBufferLength = null;
         try {
             int iQuestionMark = url.indexOf("?");
             if (iQuestionMark > -1) {
@@ -168,6 +171,19 @@ public class FBDriver implements Driver {
                         String property = propertyString.substring(0, iIs);
                         String value = propertyString.substring(iIs+1);
                         info.setProperty(property,value);
+                        if (property.equals(BLOB_BUFFER_LENGTH)) 
+                        {
+                            try 
+                            {
+                                blobBufferLength = new Integer(value);
+                            }
+                            catch (NumberFormatException e)
+                            {
+                                throw new SQLException("Blob buffer length " + value + " could not be converted to an integer");
+                            } // end of try-catch
+                            
+                        } // end of if ()
+                        
                     }
                 }
                 url = url.substring(0,iQuestionMark);
@@ -175,6 +191,8 @@ public class FBDriver implements Driver {
 
             FBConnectionRequestInfo conCri =
                 FBConnectionHelper.getCri(info, null);
+
+            FBTpb tpb = FBConnectionHelper.getTpb(info);
 
             // extract the user
             String user = info.getProperty(USER);
@@ -199,25 +217,26 @@ public class FBDriver implements Driver {
             // extract the database URL
             String databaseURL = url.substring(FIREBIRD_PROTOCOL.length());
 
-//          Datasource can't be cached alone because it is necessary to update 
-//          the cri in the ManagedConnectionFactory each time the driver get 
-//          a new connection from the DataSource
-            FBManagedConnectionFactory factory =
-                (FBManagedConnectionFactory)urlToMCFMap.get(databaseURL);
-            FBDataSource dataSource =
-                (FBDataSource)urlToDataSourceMap.get(databaseURL);
-
-            if (factory == null) {
-                factory = new FBManagedConnectionFactory();
-                factory.setDatabase(databaseURL);
-                dataSource = (FBDataSource)factory.createConnectionFactory();
-                urlToDataSourceMap.put(databaseURL, dataSource);
-                urlToMCFMap.put(databaseURL, factory);
+            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
+            mcf.setDatabase(databaseURL);
+            mcf.setConnectionRequestInfo(conCri);
+            mcf.setTpb(tpb);
+            if (blobBufferLength != null) 
+            {
+                mcf.setBlobBufferLength(blobBufferLength);                
             } // end of if ()
+            mcf = mcf.canonicalize();
 
-            // set connection request info
-            factory.setConnectionRequestInfo(FBConnectionHelper.getCri(
-                info, factory.getDefaultConnectionRequestInfo()));                    
+            FBDataSource dataSource = null;
+            synchronized (mcfToDataSourceMap)
+            {
+                dataSource = (FBDataSource)mcfToDataSourceMap.get(mcf);
+                
+                if (dataSource == null) {
+                    dataSource = (FBDataSource)mcf.createConnectionFactory();
+                    mcfToDataSourceMap.put(mcf, dataSource);
+                } // end of if ()
+            }
 
             return dataSource.getConnection(user, password);
         } catch(javax.resource.ResourceException resex) {
