@@ -302,7 +302,7 @@ public class GDS_Impl implements GDS {
         synchronized (db) {
             if (db_handle.hasTransactions()) 
             {
-                throw new GDSException(isc_open_trans);
+                throw new GDSException(isc_open_trans, db.getOpenTransactionCount());
             } // end of if ()
         
 
