@@ -97,6 +97,9 @@ public abstract class FBField {
 
     static String SQL_TYPE_NOT_SUPPORTED =
         "SQL type for this field is not yet supported.";
+    
+    static String SQL_ARRAY_NOT_SUPPORTED = 
+        "Types.ARRAY: " + SQL_TYPE_NOT_SUPPORTED;
 
 
     static final byte BYTE_NULL_VALUE = 0;
@@ -431,8 +434,10 @@ public abstract class FBField {
             else
                 return new FBLongVarCharField(field, rs, numCol, Types.LONGVARCHAR);
         else
-            throw (SQLException)createException(
-                SQL_TYPE_NOT_SUPPORTED);
+        if (isType(field, Types.ARRAY))
+            throw (SQLException)createException(SQL_ARRAY_NOT_SUPPORTED);
+        else
+            throw (SQLException)createException(SQL_TYPE_NOT_SUPPORTED);
     }
     
     /**
