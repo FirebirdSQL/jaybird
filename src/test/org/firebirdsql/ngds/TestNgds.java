@@ -4,8 +4,6 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.gds.*;
 
-import org.firebirdsql.ngds.XSQLDAImpl;
-import org.firebirdsql.ngds.XSQLVARImpl;
 
 
 import org.firebirdsql.jca.FBTpb;
@@ -52,7 +50,7 @@ public class TestNgds extends BaseFBTest {
 
 
     protected void setUp() {
-       gds = GDSFactory.getGDSForType(GDSFactory.GdsType.NATIVE);
+       gds = GDSFactory.getGDSForType(GDSType.NATIVE);
 
         c = (ClumpletImpl)gds.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
 
@@ -171,7 +169,7 @@ public class TestNgds extends BaseFBTest {
 
    public void testCreateDropD3DB() throws Exception
    {
-       GDS gds = GDSFactory.getGDSForType(GDSFactory.GdsType.NATIVE);
+       GDS gds = GDSFactory.getGDSForType(GDSType.NATIVE);
 
       Clumplet c = (Clumplet)gds.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
 
