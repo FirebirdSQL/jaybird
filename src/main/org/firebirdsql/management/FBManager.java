@@ -77,9 +77,9 @@ public class FBManager implements FBManagerMBean {
      */
     public void start() throws Exception {
         gds = GDSFactory.newGDS();
-        c = GDSFactory.newClumplet(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
-        c.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
-        c.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
+        c = GDSFactory.newClumplet(gds.isc_dpb_num_buffers, new byte[] {90});
+        c.append(GDSFactory.newClumplet(gds.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0}));
+        c.append(GDSFactory.newClumplet(gds.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0}));
 
         state = STARTED;
         if (isCreateOnStart()) 
@@ -306,8 +306,6 @@ public class FBManager implements FBManagerMBean {
         this.dropOnStop = dropOnStop;
     }
     
-    
-
 
     //Meaningful management methods
 
@@ -325,10 +323,22 @@ public class FBManager implements FBManagerMBean {
         throws Exception 
     {
         isc_db_handle db = gds.get_new_isc_db_handle();
+	try {
+	    Clumplet dpb = GDSFactory.cloneClumplet(c);
+	    dpb.append(GDSFactory.newClumplet(GDS.isc_dpb_user_name, user));
+	    dpb.append(GDSFactory.newClumplet(GDS.isc_dpb_password, password));
+	    gds.isc_attach_database(getConnectString(fileName), db, dpb);
+	    gds.isc_detach_database(db);
+	    return; //database exists, don't wipe it out.
+	}
+	catch (Exception e)
+	{
+	    //db does not exist, create it. 
+	}
         try {
             Clumplet dpb = GDSFactory.cloneClumplet(c);
-            dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_user_name, user));
-            dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_password, password));
+            dpb.append(GDSFactory.newClumplet(GDS.isc_dpb_user_name, user));
+            dpb.append(GDSFactory.newClumplet(GDS.isc_dpb_password, password));
             gds.isc_create_database(getConnectString(fileName), db, dpb);
             gds.isc_detach_database(db);
         }
@@ -356,8 +366,8 @@ public class FBManager implements FBManagerMBean {
         try {
             isc_db_handle db = gds.get_new_isc_db_handle();
             Clumplet dpb = GDSFactory.cloneClumplet(c);
-            dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_user_name, user));
-            dpb.append(GDSFactory.newClumplet(ISCConstants.isc_dpb_password, password));
+            dpb.append(GDSFactory.newClumplet(GDS.isc_dpb_user_name, user));
+            dpb.append(GDSFactory.newClumplet(GDS.isc_dpb_password, password));
             gds.isc_attach_database(getConnectString(fileName), db, dpb);
             gds.isc_drop_database(db);
 
