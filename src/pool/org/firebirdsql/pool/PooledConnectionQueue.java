@@ -151,7 +151,7 @@ class PooledConnectionQueue {
      * could not be created.
      */
     public void start() throws SQLException {
-        for (int i = 0; i < getConfiguration().getMinConnections(); i++) {
+        for (int i = 0; i < getConfiguration().getMinPoolSize(); i++) {
             try {
                 addConnection(queue);
             } catch (InterruptedException iex) {
@@ -385,11 +385,11 @@ class PooledConnectionQueue {
                     "Trying to create connection, total connections "
                         + totalConnections
                         + ", max allowed "
-                        + getConfiguration().getMaxConnections());
+                        + getConfiguration().getMaxPoolSize());
             
             boolean maximumCapacityReached = 
-                getConfiguration().getMaxConnections() <= totalConnections  && 
-                getConfiguration().getMaxConnections() != 0 &&
+                getConfiguration().getMaxPoolSize() <= totalConnections  && 
+                getConfiguration().getMaxPoolSize() != 0 &&
                 getConfiguration().isPooling();
 
             if (maximumCapacityReached) {
@@ -428,7 +428,11 @@ class PooledConnectionQueue {
      */
     private boolean releaseNextIdleConnection() throws SQLException {
                   
-        synchronized(takeMutex) {  
+        synchronized(takeMutex) {
+            
+            if (totalSize() <= getConfiguration().getMinPoolSize())
+                return false;
+            
             PooledObject candidate = (PooledObject)queue.peek();
             
             if (candidate == null)
@@ -440,7 +444,7 @@ class PooledConnectionQueue {
             
             long idleTime = System.currentTimeMillis() - lastUsageTime.longValue();
             
-            if (idleTime < getConfiguration().getIdleTimeout()) 
+            if (idleTime < getConfiguration().getMaxIdleTime()) 
                 return false;
             
             try {    
@@ -484,8 +488,8 @@ class PooledConnectionQueue {
                 }
                 
                 try {
-                    int idleTimeout = getConfiguration().getIdleTimeout();
-                    int maxConnections =  getConfiguration().getMaxConnections();
+                    int idleTimeout = getConfiguration().getMaxIdleTime();
+                    int maxConnections =  getConfiguration().getMaxPoolSize();
                     Thread.sleep(idleTimeout / maxConnections);
                 } catch(InterruptedException ex) {
                     // do nothing
