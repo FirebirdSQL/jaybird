@@ -21,6 +21,10 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.11  2003/06/04 13:04:34  brodsom
+ * Remove unused vars and imports
+ * Comment unused private method
+ *
  * Revision 1.10  2003/02/01 01:19:55  brodsom
  * Remove unused import
  *
@@ -103,6 +107,7 @@ package org.firebirdsql.jdbc;
 
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.Driver;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
@@ -147,7 +152,7 @@ public class FBDriver implements Driver {
     static{
        log = LoggerFactory.getLogger(FBDriver.class,false);
         try{
-            java.sql.DriverManager.registerDriver(new FBDriver());
+            DriverManager.registerDriver(new FBDriver());
         } catch(Exception ex) {
            if (log!=null) log.error("Could not register with driver manager", ex);
         }
@@ -178,7 +183,7 @@ public class FBDriver implements Driver {
      *         connection to the URL
      * @exception SQLException if a database access error occurs
      */
-    public Connection connect(String url, java.util.Properties info)
+    public Connection connect(String url, Properties info)
         throws SQLException
     {
         if (url == null || !url.startsWith(FIREBIRD_PROTOCOL))
@@ -312,7 +317,7 @@ public class FBDriver implements Driver {
      * @todo convert parameters into constants
      */
     public DriverPropertyInfo[] getPropertyInfo(String url,
-        java.util.Properties info) throws  SQLException
+        Properties info) throws  SQLException
     {
         Vector properties = new Vector();
         String database = url.substring(FIREBIRD_PROTOCOL.length());

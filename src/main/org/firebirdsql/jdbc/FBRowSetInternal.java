@@ -23,8 +23,11 @@ package org.firebirdsql.jdbc;
 // imports --------------------------------------
 import javax.sql.RowSetInternal;
 import javax.sql.RowSetMetaData;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.*;
+
 
 /**
  * Describe class <code>FBRowSetInternal</code> here.

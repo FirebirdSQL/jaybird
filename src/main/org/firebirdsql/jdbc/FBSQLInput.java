@@ -21,12 +21,18 @@ package org.firebirdsql.jdbc;
 
 
 // imports --------------------------------------
+import java.sql.Date;
 import java.sql.SQLInput;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Ref;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.io.InputStream;
+import java.io.Reader;
+import java.math.BigDecimal;
 import java.net.URL;
 
 /**
@@ -174,7 +180,7 @@ public class FBSQLInput implements SQLInput {
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>null</code>
    * @exception SQLException if a database access error occurs
    */
-    public java.math.BigDecimal readBigDecimal() throws  SQLException {
+    public BigDecimal readBigDecimal() throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -197,7 +203,7 @@ public class FBSQLInput implements SQLInput {
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>null</code>
    * @exception SQLException if a database access error occurs
    */
-    public java.sql.Date readDate() throws  SQLException {
+    public Date readDate() throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -208,7 +214,7 @@ public class FBSQLInput implements SQLInput {
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>null</code>
    * @exception SQLException if a database access error occurs
    */
-    public java.sql.Time readTime() throws  SQLException {
+    public Time readTime() throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -219,7 +225,7 @@ public class FBSQLInput implements SQLInput {
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>null</code>
    * @exception SQLException if a database access error occurs
    */
-    public java.sql.Timestamp readTimestamp() throws  SQLException {
+    public Timestamp readTimestamp() throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -230,7 +236,7 @@ public class FBSQLInput implements SQLInput {
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>null</code>
    * @exception SQLException if a database access error occurs
    */
-    public java.io.Reader readCharacterStream() throws  SQLException {
+    public Reader readCharacterStream() throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -241,7 +247,7 @@ public class FBSQLInput implements SQLInput {
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>null</code>
    * @exception SQLException if a database access error occurs
    */
-    public java.io.InputStream readAsciiStream() throws  SQLException {
+    public InputStream readAsciiStream() throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -253,7 +259,7 @@ public class FBSQLInput implements SQLInput {
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>null</code>
    * @exception SQLException if a database access error occurs
    */
-    public java.io.InputStream readBinaryStream() throws  SQLException {
+    public InputStream readBinaryStream() throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
 

@@ -22,22 +22,28 @@ package org.firebirdsql.jdbc;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.Date;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
 
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.XSQLVAR;
 
 import java.net.URL;
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 
 
@@ -75,10 +81,10 @@ public class FBResultSet implements ResultSet {
     //might be a bit of a kludge, or a useful feature.
     private boolean trimStrings;
 
-    private java.sql.SQLWarning firstWarning = null;
+    private SQLWarning firstWarning = null;
      
     private FBField[] fields = null;
-    private java.util.HashMap colNames = new java.util.HashMap();
+    private HashMap colNames = new HashMap();
 	 /**
      * Creates a new <code>FBResultSet</code> instance.
      *
@@ -129,7 +135,7 @@ public class FBResultSet implements ResultSet {
 
     private void prepareVars(boolean cached) throws SQLException {
         fields = new FBField[xsqlvars.length];
-        colNames = new java.util.HashMap(xsqlvars.length,1);
+        colNames = new HashMap(xsqlvars.length,1);
         for (int i=0; i<xsqlvars.length; i++){
             fields[i] = FBField.createField(xsqlvars[i], this, i, cached);
             fields[i].setConnection(c);
@@ -248,7 +254,7 @@ public class FBResultSet implements ResultSet {
         return getField(columnIndex).getBytes();
     }
 
-    public java.sql.Date getDate(int columnIndex) throws SQLException {
+    public Date getDate(int columnIndex) throws SQLException {
         return getField(columnIndex).getDate();
     }
 
@@ -284,11 +290,11 @@ public class FBResultSet implements ResultSet {
             return getField(columnIndex).getString();
     }
 
-    public java.sql.Time getTime(int columnIndex) throws SQLException {
+    public Time getTime(int columnIndex) throws SQLException {
         return getField(columnIndex).getTime();
     }
 
-    public java.sql.Timestamp getTimestamp(int columnIndex) throws SQLException {
+    public Timestamp getTimestamp(int columnIndex) throws SQLException {
         return getField(columnIndex).getTimestamp();
     }
 
@@ -427,21 +433,21 @@ public class FBResultSet implements ResultSet {
     }
 
 
-    public java.sql.Date getDate(String columnName) throws  SQLException {
+    public Date getDate(String columnName) throws  SQLException {
         return getField(columnName).getDate();
     }
 
 
-    public java.sql.Time getTime(String columnName) throws  SQLException {
+    public Time getTime(String columnName) throws  SQLException {
         return getField(columnName).getTime();
     }
 
 
-    public java.sql.Timestamp getTimestamp(String columnName) throws  SQLException {
+    public Timestamp getTimestamp(String columnName) throws  SQLException {
         return getField(columnName).getTimestamp();
     }
 
-    public java.io.InputStream getAsciiStream(String columnName) throws  SQLException {
+    public InputStream getAsciiStream(String columnName) throws  SQLException {
         return getField(columnName).getAsciiStream();
     }
 
@@ -454,11 +460,11 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if an error occurs
      * @deprecated
      */
-    public java.io.InputStream getUnicodeStream(String columnName) throws  SQLException {
+    public InputStream getUnicodeStream(String columnName) throws  SQLException {
         return getField(columnName).getUnicodeStream();
     }
 
-    public java.io.InputStream getBinaryStream(String columnName) throws  SQLException {
+    public InputStream getBinaryStream(String columnName) throws  SQLException {
         return getField(columnName).getBinaryStream();
     }
 
@@ -648,7 +654,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public java.io.Reader getCharacterStream(int columnIndex) throws  SQLException {
+    public Reader getCharacterStream(int columnIndex) throws  SQLException {
         return getField(columnIndex).getCharacterStream();
     }
 
@@ -667,7 +673,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public java.io.Reader getCharacterStream(String columnName) throws  SQLException {
+    public Reader getCharacterStream(String columnName) throws  SQLException {
         return getField(columnName).getCharacterStream();
     }
 
@@ -955,7 +961,7 @@ public class FBResultSet implements ResultSet {
      * @see Statement#setFetchDirection
      */
     public void setFetchDirection(int direction) throws  SQLException {
-         if (direction != java.sql.ResultSet.FETCH_FORWARD)
+         if (direction != ResultSet.FETCH_FORWARD)
             throw new SQLException("can't set fetch direction");
     }
 
@@ -971,7 +977,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public int getFetchDirection() throws  SQLException {
-       return java.sql.ResultSet.FETCH_FORWARD;
+       return ResultSet.FETCH_FORWARD;
     }
 
 
@@ -1032,7 +1038,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public int getType() throws  SQLException {
-        return java.sql.ResultSet.TYPE_FORWARD_ONLY;
+        return ResultSet.TYPE_FORWARD_ONLY;
     }
 
     /**
@@ -1048,7 +1054,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public int getConcurrency() throws  SQLException {
-        return java.sql.ResultSet.CONCUR_READ_ONLY;
+        return ResultSet.CONCUR_READ_ONLY;
     }
 
 
@@ -1338,7 +1344,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateDate(int columnIndex, java.sql.Date x) throws  SQLException {
+    public void updateDate(int columnIndex, Date x) throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
 
@@ -1357,7 +1363,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateTime(int columnIndex, java.sql.Time x) throws  SQLException {
+    public void updateTime(int columnIndex, Time x) throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
 
@@ -1377,7 +1383,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateTimestamp(int columnIndex, java.sql.Timestamp x) throws  SQLException {
+    public void updateTimestamp(int columnIndex, Timestamp x) throws  SQLException {
         throw new SQLException("not yet implemented");
     }
 
@@ -1397,8 +1403,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateAsciiStream(int columnIndex,
-               java.io.InputStream x,
+    public void updateAsciiStream(int columnIndex, InputStream x,
                int length) throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
@@ -1419,8 +1424,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateBinaryStream(int columnIndex,
-                java.io.InputStream x,
+    public void updateBinaryStream(int columnIndex, InputStream x,
                 int length) throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
@@ -1441,8 +1445,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateCharacterStream(int columnIndex,
-                 java.io.Reader x,
+    public void updateCharacterStream(int columnIndex, Reader x,
                  int length) throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
@@ -1722,7 +1725,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateDate(String columnName, java.sql.Date x) throws  SQLException {
+    public void updateDate(String columnName, Date x) throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
 
@@ -1741,7 +1744,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateTime(String columnName, java.sql.Time x) throws  SQLException {
+    public void updateTime(String columnName, Time x) throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
 
@@ -1761,7 +1764,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateTimestamp(String columnName, java.sql.Timestamp x) throws  SQLException {
+    public void updateTimestamp(String columnName, Timestamp x) throws  SQLException {
         throw new SQLException("not yet implemented");
     }
 
@@ -1781,8 +1784,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateAsciiStream(String columnName,
-               java.io.InputStream x,
+    public void updateAsciiStream(String columnName, InputStream x,
                int length) throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
@@ -1803,8 +1805,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateBinaryStream(String columnName,
-                java.io.InputStream x,
+    public void updateBinaryStream(String columnName, InputStream x,
                 int length) throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
@@ -1825,8 +1826,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateCharacterStream(String columnName,
-                 java.io.Reader reader,
+    public void updateCharacterStream(String columnName, Reader reader,
                  int length) throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
@@ -2058,7 +2058,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public Object getObject(int i, java.util.Map map) throws  SQLException {
+    public Object getObject(int i, Map map) throws  SQLException {
         return getField(i).getObject(map);
     }
 
@@ -2129,7 +2129,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public Object getObject(String columnName, java.util.Map map) throws  SQLException {
+    public Object getObject(String columnName, Map map) throws  SQLException {
         return getField(columnName).getObject(map);
     }
 
@@ -2221,7 +2221,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public java.sql.Date getDate(int columnIndex, Calendar cal)
+    public Date getDate(int columnIndex, Calendar cal)
         throws  SQLException
     {
         return getField(columnIndex).getDate(cal);
@@ -2247,7 +2247,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public java.sql.Date getDate(String columnName, Calendar cal) throws  SQLException {
+    public Date getDate(String columnName, Calendar cal) throws  SQLException {
         return getField(columnName).getDate(cal);
     }
 
@@ -2271,7 +2271,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public java.sql.Time getTime(int columnIndex, Calendar cal)
+    public Time getTime(int columnIndex, Calendar cal)
         throws  SQLException
     {
         return getField(columnIndex).getTime(cal);
@@ -2298,7 +2298,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public java.sql.Time getTime(String columnName, Calendar cal) throws  SQLException {
+    public Time getTime(String columnName, Calendar cal) throws  SQLException {
        return getField(columnName).getTime(cal);
      }
 
@@ -2322,7 +2322,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public java.sql.Timestamp getTimestamp(int columnIndex, Calendar cal)
+    public Timestamp getTimestamp(int columnIndex, Calendar cal)
         throws  SQLException
     {
         return getField(columnIndex).getTimestamp(cal);
@@ -2348,7 +2348,7 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public java.sql.Timestamp getTimestamp(String columnName, Calendar cal) throws  SQLException {
+    public Timestamp getTimestamp(String columnName, Calendar cal) throws  SQLException {
        return getField(columnName).getTimestamp(cal);
      }
 
@@ -2469,11 +2469,11 @@ public class FBResultSet implements ResultSet {
 
     //--------------------------------------------------------------------
 
-     protected void addWarning(java.sql.SQLWarning warning){
+     protected void addWarning(SQLWarning warning){
          if (firstWarning == null)
              firstWarning = warning;
          else{
-             java.sql.SQLWarning lastWarning = firstWarning;
+             SQLWarning lastWarning = firstWarning;
              while (lastWarning.getNextWarning() != null){
                  lastWarning = lastWarning.getNextWarning();
              }

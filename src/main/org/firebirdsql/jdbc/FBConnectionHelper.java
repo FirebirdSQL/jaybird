@@ -25,12 +25,14 @@ import org.firebirdsql.jca.FBTpbMapper;
 import org.firebirdsql.jca.FBResourceException;
 import org.firebirdsql.gds.ISCConstants;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.util.Properties;
 import java.util.HashMap;
 import java.util.Iterator;
-
-import java.lang.reflect.*;
-import java.io.*;
 
 /**
  * This class maps the extended JDBC properties to the

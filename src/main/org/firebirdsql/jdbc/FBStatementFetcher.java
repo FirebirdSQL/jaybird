@@ -1,7 +1,8 @@
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.*;
-import org.firebirdsql.jgds.*;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.jgds.isc_stmt_handle_impl;
 import java.sql.SQLException;
 import java.sql.Statement;
 import org.firebirdsql.logging.Logger;

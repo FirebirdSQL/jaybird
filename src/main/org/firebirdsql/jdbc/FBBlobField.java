@@ -19,8 +19,12 @@
  
 package org.firebirdsql.jdbc;
 
-import java.io.*;
-
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.sql.SQLException;
 import java.sql.Blob;
 

@@ -23,6 +23,7 @@ package org.firebirdsql.jdbc;
 // imports --------------------------------------
 import java.sql.Struct;
 import java.sql.SQLException;
+import java.util.Map;
 
 /**
  *
@@ -103,7 +104,7 @@ public class FBStruct implements Struct {
    * @return an array containing the ordered attribute values
    * @exception SQLException if a database access error occurs
    */
-    public Object[] getAttributes(java.util.Map map) throws  SQLException {
+    public Object[] getAttributes(Map map) throws  SQLException {
         return null;
     }
 

@@ -2151,8 +2151,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[6] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
 
             row[7] = null;
-            if (dataType == java.sql.Types.DECIMAL ||
-                dataType == java.sql.Types.NUMERIC)
+            if (dataType == Types.DECIMAL ||
+                dataType == Types.NUMERIC)
             {
                 row[7] = XSQLVAR.encodeInt(rs.getShort("FIELD_PRECISION"));
             } else {
@@ -2644,41 +2644,41 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[5] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
 
             switch (dataType){
-                case java.sql.Types.DECIMAL:
-                case java.sql.Types.NUMERIC:
+                case Types.DECIMAL:
+                case Types.NUMERIC:
                    row[6] = XSQLVAR.encodeInt(rs.getShort("FIELD_PRECISION"));
                    row[15] = XSQLVAR.encodeInt(0);
                    break;
-                case java.sql.Types.CHAR:
-                case java.sql.Types.VARCHAR:
+                case Types.CHAR:
+                case Types.VARCHAR:
                    row[6] = XSQLVAR.encodeInt(rs.getShort("CHARACTER_LENGTH"));
                    row[15] = XSQLVAR.encodeInt(rs.getShort("FIELD_LENGTH"));
                    break;
-                case java.sql.Types.FLOAT:
+                case Types.FLOAT:
                    row[6] = XSQLVAR.encodeInt(7);
                    row[15] = XSQLVAR.encodeInt(0);
                    break;
-                case java.sql.Types.DOUBLE:
+                case Types.DOUBLE:
                    row[6] = XSQLVAR.encodeInt(15);
                    row[15] = XSQLVAR.encodeInt(0);
                    break;
-                case java.sql.Types.INTEGER:
+                case Types.INTEGER:
                    row[6] = XSQLVAR.encodeInt(10);
                    row[15] = XSQLVAR.encodeInt(0);
                    break;
-                case java.sql.Types.SMALLINT:
+                case Types.SMALLINT:
                    row[6] = XSQLVAR.encodeInt(5);
                    row[15] = XSQLVAR.encodeInt(0);
                    break;
-                case java.sql.Types.DATE:
+                case Types.DATE:
                    row[6] = XSQLVAR.encodeInt(10);
                    row[15] = XSQLVAR.encodeInt(0);
                    break;
-                case java.sql.Types.TIME:
+                case Types.TIME:
                    row[6] = XSQLVAR.encodeInt(8);
                    row[15] = XSQLVAR.encodeInt(0);
                    break;
-                case java.sql.Types.TIMESTAMP:
+                case Types.TIMESTAMP:
                    row[6] = XSQLVAR.encodeInt(19);
                    row[15] = XSQLVAR.encodeInt(0);
                    break;
@@ -2735,9 +2735,9 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
                 case int64_type:
                 case double_type:
                     if (fieldSubType == 2)
-                        return java.sql.Types.DECIMAL;
+                        return Types.DECIMAL;
                     else
-                        return java.sql.Types.NUMERIC;
+                        return Types.NUMERIC;
                 default:
                     break;
             }
@@ -2745,43 +2745,43 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
         switch (fieldType) {
             case smallint_type:
-                return java.sql.Types.SMALLINT;
+                return Types.SMALLINT;
             case integer_type:
-                return java.sql.Types.INTEGER;
+                return Types.INTEGER;
             case double_type:
             case d_float_type:
-                return java.sql.Types.DOUBLE;
+                return Types.DOUBLE;
             case float_type:
-                return java.sql.Types.FLOAT;
+                return Types.FLOAT;
             case char_type:
-                return java.sql.Types.CHAR;
+                return Types.CHAR;
             case varchar_type:
-                return java.sql.Types.VARCHAR;
+                return Types.VARCHAR;
             case timestamp_type:
-                return java.sql.Types.TIMESTAMP;
+                return Types.TIMESTAMP;
             case time_type:
-                return java.sql.Types.TIME;
+                return Types.TIME;
             case date_type:
-                return java.sql.Types.DATE;
+                return Types.DATE;
             case int64_type:
                 //This might need some help for long mapping
                 if (fieldSubType == 2)
-                    return java.sql.Types.DECIMAL;
+                    return Types.DECIMAL;
                 else
-                    return java.sql.Types.NUMERIC;
+                    return Types.NUMERIC;
             case blob_type:
                 if (fieldSubType < 0)
-                    return java.sql.Types.BLOB;
+                    return Types.BLOB;
                 else if (fieldSubType == 0)
-                    return java.sql.Types.LONGVARBINARY;
+                    return Types.LONGVARBINARY;
                 else if (fieldSubType == 1)
-                    return java.sql.Types.LONGVARCHAR;
+                    return Types.LONGVARCHAR;
                 else
-                    return java.sql.Types.OTHER;
+                    return Types.OTHER;
             case quad_type:
-                return java.sql.Types.OTHER;
+                return Types.OTHER;
             default:
-                return java.sql.Types.NULL;
+                return Types.NULL;
         }
     }
 
@@ -4630,7 +4630,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public boolean supportsResultSetType(int type) throws SQLException {
         switch (type){
-            case java.sql.ResultSet.TYPE_FORWARD_ONLY:
+            case ResultSet.TYPE_FORWARD_ONLY:
                 return true;
             default:
                 return false;
@@ -4652,8 +4652,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean supportsResultSetConcurrency(int type, int concurrency) throws SQLException {
-        if (type==java.sql.ResultSet.TYPE_FORWARD_ONLY 
-        && concurrency == java.sql.ResultSet.CONCUR_READ_ONLY)
+        if (type==ResultSet.TYPE_FORWARD_ONLY 
+        && concurrency == ResultSet.CONCUR_READ_ONLY)
             return true;
         else
             return false;

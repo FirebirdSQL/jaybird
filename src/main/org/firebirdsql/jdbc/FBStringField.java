@@ -94,7 +94,7 @@ public class FBStringField extends FBField {
 	 
     //----- Math code
 
-    byte getByte() throws java.sql.SQLException {
+    byte getByte() throws SQLException {
         if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
 
         try {
@@ -135,7 +135,7 @@ public class FBStringField extends FBField {
                 LONG_CONVERSION_ERROR+" "+getString().trim()).fillInStackTrace();
         }
     }
-    BigDecimal getBigDecimal() throws java.sql.SQLException {
+    BigDecimal getBigDecimal() throws SQLException {
         if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
         /**@todo check what exceptions can be thrown here */
@@ -152,7 +152,7 @@ public class FBStringField extends FBField {
                 FLOAT_CONVERSION_ERROR+" "+getString().trim()).fillInStackTrace();
         }
     }
-    double getDouble() throws java.sql.SQLException {
+    double getDouble() throws SQLException {
         if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
         try {
@@ -173,7 +173,7 @@ public class FBStringField extends FBField {
                 getString().trim().equalsIgnoreCase(SHORT_TRUE) ||
                 getString().trim().equalsIgnoreCase(SHORT_TRUE_2);
     }
-    String getString() throws java.sql.SQLException {
+    String getString() throws SQLException {
         if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
         return field.decodeString(rs.row[numCol], javaEncoding);
@@ -229,7 +229,7 @@ public class FBStringField extends FBField {
 
         return Time.valueOf(getString().trim());
     }
-    Timestamp getTimestamp(Calendar cal) throws java.sql.SQLException {
+    Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 		  
         return XSQLVAR.decodeTimestamp(getTimestamp(),cal);
@@ -333,7 +333,7 @@ public class FBStringField extends FBField {
             else {
                 try {
                     field.sqldata = (new String(out.toByteArray(), 0, length, javaEncoding)).getBytes();
-                } catch(java.io.UnsupportedEncodingException ex) {
+                } catch(UnsupportedEncodingException ex) {
                     System.arraycopy(out.toByteArray(), 0, field.sqldata, 0, length);
                 }
             }

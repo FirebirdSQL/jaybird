@@ -378,7 +378,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * is <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public java.sql.Date getDate(int parameterIndex) throws SQLException {
+    public Date getDate(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
         return getCurrentResultSet().getDate(parameterIndex);
     }
@@ -393,7 +393,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * is <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public java.sql.Time getTime(int parameterIndex) throws SQLException {
+    public Time getTime(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
         return getCurrentResultSet().getTime(parameterIndex);
     }
@@ -408,7 +408,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * is <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public java.sql.Timestamp getTimestamp(int parameterIndex)
+    public Timestamp getTimestamp(int parameterIndex)
         throws SQLException
     {
         assertHasData(getCurrentResultSet());
@@ -482,7 +482,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public Object getObject(int i, java.util.Map map) throws SQLException {
+    public Object getObject(int i, Map map) throws SQLException {
         assertHasData(getCurrentResultSet());
         return getCurrentResultSet().getObject(i, map);
     }
@@ -584,7 +584,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public java.sql.Date getDate(int parameterIndex, Calendar cal)
+    public Date getDate(int parameterIndex, Calendar cal)
         throws SQLException
     {
         assertHasData(getCurrentResultSet());
@@ -610,7 +610,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public java.sql.Time getTime(int parameterIndex, Calendar cal)
+    public Time getTime(int parameterIndex, Calendar cal)
         throws SQLException
     {
         assertHasData(getCurrentResultSet());
@@ -637,7 +637,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public java.sql.Timestamp getTimestamp(int parameterIndex, Calendar cal)
+    public Timestamp getTimestamp(int parameterIndex, Calendar cal)
         throws SQLException
     {
         assertHasData(getCurrentResultSet());

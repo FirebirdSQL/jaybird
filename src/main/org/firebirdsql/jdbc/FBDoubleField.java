@@ -103,17 +103,17 @@ class FBDoubleField extends FBField {
 
         return XSQLVAR.decodeDouble(rs.row[numCol]);
     }
-    java.math.BigDecimal getBigDecimal() throws SQLException {
+    BigDecimal getBigDecimal() throws SQLException {
         if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
-        return new java.math.BigDecimal(XSQLVAR.decodeDouble(rs.row[numCol]));
+        return new BigDecimal(XSQLVAR.decodeDouble(rs.row[numCol]));
     }
     Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
         return new Double(XSQLVAR.decodeDouble(rs.row[numCol]));
     }
-    boolean getBoolean() throws java.sql.SQLException {
+    boolean getBoolean() throws SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
         return XSQLVAR.decodeDouble(rs.row[numCol]) == 1;
@@ -126,7 +126,7 @@ class FBDoubleField extends FBField {
 
     //--- setXXX methods
 
-    void setString(String value) throws java.sql.SQLException {
+    void setString(String value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
@@ -139,28 +139,28 @@ class FBDoubleField extends FBField {
                 STRING_CONVERSION_ERROR+" "+value).fillInStackTrace();
         }
     }
-    void setShort(short value) throws java.sql.SQLException {
+    void setShort(short value) throws SQLException {
         setDouble((double)value);
     }
-    void setBoolean(boolean value) throws java.sql.SQLException {
+    void setBoolean(boolean value) throws SQLException {
         setDouble(value ? 1 : 0);
     }
-    void setFloat(float value) throws java.sql.SQLException {
+    void setFloat(float value) throws SQLException {
         setDouble((double)value);
     }
-    void setDouble(double value) throws java.sql.SQLException {
+    void setDouble(double value) throws SQLException {
         field.sqldata = XSQLVAR.encodeDouble(value);
     }
-    void setLong(long value) throws java.sql.SQLException {
+    void setLong(long value) throws SQLException {
         setDouble((double)value);
     }
-    void setInteger(int value) throws java.sql.SQLException {
+    void setInteger(int value) throws SQLException {
         setDouble((double)value);
     }
-    void setByte(byte value) throws java.sql.SQLException {
+    void setByte(byte value) throws SQLException {
         setDouble((double)value);
     }
-    void setBigDecimal(java.math.BigDecimal value) throws SQLException {
+    void setBigDecimal(BigDecimal value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;

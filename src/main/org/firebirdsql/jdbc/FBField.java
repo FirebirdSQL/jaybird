@@ -22,6 +22,9 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
 
+import java.sql.Array;
+import java.sql.Clob;
+import java.sql.Ref;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.sql.Date;
@@ -31,8 +34,10 @@ import java.sql.Blob;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.Map;
 
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 
 /**
@@ -435,11 +440,11 @@ abstract class FBField {
         throw (SQLException)createException(
             DOUBLE_CONVERSION_ERROR).fillInStackTrace();
     }
-    java.math.BigDecimal getBigDecimal() throws SQLException {
+    BigDecimal getBigDecimal() throws SQLException {
         throw (SQLException)createException(
             BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
     }
-    java.math.BigDecimal getBigDecimal(int scale) throws SQLException {
+    BigDecimal getBigDecimal(int scale) throws SQLException {
         return getBigDecimal();
     }
     boolean getBoolean() throws SQLException {
@@ -454,7 +459,7 @@ abstract class FBField {
         throw (SQLException)createException(
             OBJECT_CONVERSION_ERROR);
     }
-    public Object getObject(java.util.Map map) throws  SQLException {
+    public Object getObject(Map map) throws  SQLException {
               throw new SQLException("Not yet implemented");
     }
     InputStream getAsciiStream() throws SQLException {
@@ -469,12 +474,12 @@ abstract class FBField {
         throw (SQLException)createException(
             BINARY_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
-    java.io.Reader getCharacterStream() throws  SQLException {
+    Reader getCharacterStream() throws  SQLException {
         InputStream is =  getUnicodeStream();
         if (is==null)
             return null;
         else
-            return new java.io.InputStreamReader(getUnicodeStream());
+            return new InputStreamReader(getUnicodeStream());
     }	 
     byte[] getBytes() throws SQLException {
         throw (SQLException)createException(
@@ -484,37 +489,37 @@ abstract class FBField {
         throw (SQLException)createException(
             BLOB_CONVERSION_ERROR).fillInStackTrace();
     }
-    java.sql.Date getDate() throws SQLException {
+    Date getDate() throws SQLException {
         throw (SQLException)createException(
             DATE_CONVERSION_ERROR).fillInStackTrace();
     }
-    java.sql.Date getDate(Calendar cal) throws SQLException {
+    Date getDate(Calendar cal) throws SQLException {
         throw (SQLException)createException(
             DATE_CONVERSION_ERROR).fillInStackTrace();
     }	 
-    java.sql.Time getTime() throws SQLException {
+    Time getTime() throws SQLException {
         throw (SQLException)createException(
             TIME_CONVERSION_ERROR).fillInStackTrace();
     }
-    java.sql.Time getTime(Calendar cal) throws SQLException {
+    Time getTime(Calendar cal) throws SQLException {
         throw (SQLException)createException(
             TIME_CONVERSION_ERROR).fillInStackTrace();
     }	 
-    java.sql.Timestamp getTimestamp() throws SQLException {
+    Timestamp getTimestamp() throws SQLException {
         throw (SQLException)createException(
             TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();
     }
-    java.sql.Timestamp getTimestamp(Calendar cal) throws SQLException {
+    Timestamp getTimestamp(Calendar cal) throws SQLException {
         throw (SQLException)createException(
             TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();		 
     }
-    java.sql.Ref getRef() throws  SQLException {
+    Ref getRef() throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
-    java.sql.Clob getClob() throws  SQLException {
+    Clob getClob() throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
-    java.sql.Array getArray() throws  SQLException {
+    Array getArray() throws  SQLException {
                 throw new SQLException("Not yet implemented");
     }
     //--- setters
@@ -543,7 +548,7 @@ abstract class FBField {
         throw (SQLException)createException(
             DOUBLE_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setBigDecimal(java.math.BigDecimal value) throws SQLException {
+    void setBigDecimal(BigDecimal value) throws SQLException {
         throw (SQLException)createException(
             BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
     }
@@ -635,27 +640,27 @@ abstract class FBField {
         throw (SQLException)createException(
             BYTES_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setDate(java.sql.Date value, java.util.Calendar cal) throws SQLException {
+    void setDate(Date value, Calendar cal) throws SQLException {
         throw (SQLException)createException(
             DATE_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setDate(java.sql.Date value) throws SQLException {
+    void setDate(Date value) throws SQLException {
         throw (SQLException)createException(
             DATE_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setTime(java.sql.Time value, java.util.Calendar cal) throws SQLException {
+    void setTime(Time value, Calendar cal) throws SQLException {
         throw (SQLException)createException(
             TIME_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setTime(java.sql.Time value) throws SQLException {
+    void setTime(Time value) throws SQLException {
         throw (SQLException)createException(
             TIME_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setTimestamp(java.sql.Timestamp value, java.util.Calendar cal) throws SQLException {
+    void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
         throw (SQLException)createException(
             TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();
     }
-    void setTimestamp(java.sql.Timestamp value) throws SQLException {
+    void setTimestamp(Timestamp value) throws SQLException {
         throw (SQLException)createException(
             TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();
     }

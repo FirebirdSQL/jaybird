@@ -1,14 +1,17 @@
 package org.firebirdsql.jdbc;
 
+import java.sql.SQLException;
+import java.sql.Statement;
+
 interface FBFetcher {
 
-    boolean next() throws java.sql.SQLException;
+     boolean next() throws SQLException;
 
-    void close() throws java.sql.SQLException;
+     void close() throws SQLException;
 
 	 static final int MAX_FETCH_ROWS = 400;
 	 
-    java.sql.Statement getStatement();
+     Statement getStatement();
 
 	 public int getRowNum();
 	 public boolean getIsEmpty();

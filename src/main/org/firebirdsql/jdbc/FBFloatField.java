@@ -101,17 +101,17 @@ class FBFloatField extends FBField {
 
         return XSQLVAR.decodeFloat(rs.row[numCol]);
     }
-    java.math.BigDecimal getBigDecimal() throws SQLException {
+    BigDecimal getBigDecimal() throws SQLException {
         if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
-        return new java.math.BigDecimal(XSQLVAR.decodeFloat(rs.row[numCol]));
+        return new BigDecimal(XSQLVAR.decodeFloat(rs.row[numCol]));
     }
     Object getObject() throws SQLException {
         if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
         return new Float(XSQLVAR.decodeFloat(rs.row[numCol]));
     }
-    boolean getBoolean() throws java.sql.SQLException {
+    boolean getBoolean() throws SQLException {
         if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
         return XSQLVAR.decodeFloat(rs.row[numCol]) == 1;
@@ -124,7 +124,7 @@ class FBFloatField extends FBField {
 
     //--- setXXX methods
 
-    void setString(String value) throws java.sql.SQLException {
+    void setString(String value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
@@ -137,16 +137,16 @@ class FBFloatField extends FBField {
                 FLOAT_CONVERSION_ERROR+" "+value).fillInStackTrace();
         }
     }
-    void setShort(short value) throws java.sql.SQLException {
+    void setShort(short value) throws SQLException {
         setFloat((float)value);
     }
-    void setBoolean(boolean value) throws java.sql.SQLException {
+    void setBoolean(boolean value) throws SQLException {
         setFloat(value ? 1.0f : 0.0f);
     }
-    void setFloat(float value) throws java.sql.SQLException {
+    void setFloat(float value) throws SQLException {
         field.sqldata = XSQLVAR.encodeFloat(value);
     }
-    void setDouble(double value) throws java.sql.SQLException {
+    void setDouble(double value) throws SQLException {
         // check if value is within bounds
         if (value > MAX_FLOAT_VALUE ||
             value < MIN_FLOAT_VALUE)
@@ -155,7 +155,7 @@ class FBFloatField extends FBField {
 
         setFloat((float)value);
     }
-    void setLong(long value) throws java.sql.SQLException {
+    void setLong(long value) throws SQLException {
         // check if value is within bounds
         if (value > MAX_FLOAT_VALUE ||
             value < MIN_FLOAT_VALUE)
@@ -164,13 +164,13 @@ class FBFloatField extends FBField {
 
         setFloat((float)value);
     }
-    void setInteger(int value) throws java.sql.SQLException {
+    void setInteger(int value) throws SQLException {
         setFloat((float)value);
     }
-    void setByte(byte value) throws java.sql.SQLException {
+    void setByte(byte value) throws SQLException {
         setFloat((float)value);
     }
-    void setBigDecimal(java.math.BigDecimal value) throws SQLException {
+    void setBigDecimal(BigDecimal value) throws SQLException {
         if (value == null) {
             field.sqldata = null;
             return;

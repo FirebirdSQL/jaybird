@@ -24,7 +24,7 @@ package org.firebirdsql.jdbc;
 import javax.sql.RowSetWriter;
 import javax.sql.RowSetInternal;
 
-import java.sql.*;
+import java.sql.SQLException;
 
 
 /**
