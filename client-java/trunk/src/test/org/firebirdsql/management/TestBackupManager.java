@@ -1,5 +1,6 @@
 package org.firebirdsql.management;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.DriverManager;
@@ -41,7 +42,7 @@ public class TestBackupManager extends FBTestBase {
         fbManager.setForceCreate(true);
         fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
 
-        GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type"));
+        GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type", "PURE_JAVA"));
         backupManager = new FBBackupManager(gdsType);
         backupManager.setHost("localhost");
         backupManager.setUser("SYSDBA");
@@ -157,7 +158,7 @@ public class TestBackupManager extends FBTestBase {
             conn.close();
 
             backupManager.setRestoreReadOnly(false);
-            backupManager.setRestoreCreate(false);
+            backupManager.setRestoreReplace(true);
             backupManager.restoreDatabase();
             conn = getConnection();
             stmt = conn.createStatement();
@@ -171,7 +172,7 @@ public class TestBackupManager extends FBTestBase {
 
     public void testBackupReplace() throws Exception {
         backupManager.backupDatabase();
-        backupManager.setRestoreCreate(true);
+        backupManager.setRestoreReplace(false);
         try {
             backupManager.restoreDatabase();
             fail("Can't restore-create an existing database");
@@ -179,8 +180,39 @@ public class TestBackupManager extends FBTestBase {
             // Ignore
         }
         
-        backupManager.setRestoreCreate(false);
+        backupManager.setRestoreReplace(true);
         backupManager.restoreDatabase();
     }
 
+    public void testBackupMultiple() throws Exception {
+        backupManager.clearBackupPaths();
+        backupManager.clearRestorePaths();
+        
+        String backupPath1 = DB_PATH + "/" + DB_NAME + "-1.fbk";
+        String backupPath2 = DB_PATH + "/" + DB_NAME + "-2.fbk";
+
+        backupManager.addBackupPath(backupPath1, 2048);
+        backupManager.addBackupPath(backupPath2);
+        
+        backupManager.backupDatabase();
+        
+        File file1 = new File(backupPath1);
+        assertTrue("File " + backupPath1 + " should exist.", file1.exists());
+        
+        File file2 = new File(backupPath2);
+        assertTrue("File " + backupPath2 + " should exist.", file2.exists());
+
+        backupManager.clearBackupPaths();
+        
+        backupManager.addBackupPath(backupPath1);
+        backupManager.addBackupPath(backupPath2);
+        
+        String restorePath1 = DB_PATH + "/" + DB_NAME + "-1.fdb";
+        String restorePath2 = DB_PATH + "/" + DB_NAME + "-2.fdb";
+        
+        backupManager.addRestorePath(restorePath1, 10);
+        backupManager.addRestorePath(restorePath2, 100);
+        
+        backupManager.restoreDatabase();
+    }
 }
