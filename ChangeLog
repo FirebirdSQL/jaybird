@@ -1,3 +1,34 @@
+2004-10-15 18:21  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jca/FBConnectionRequestInfo.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jgds/ParameterBufferBase.java,
+	main/org/firebirdsql/gds/DatabaseParameterBuffer.java,
+	main/org/firebirdsql/ngds/ParameterBufferBase.java,
+	test/org/firebirdsql/jca/TestXABase.java,
+	test/org/firebirdsql/jdbc/TestFBDriver.java:
+	
+	merged with head
+
+2004-10-15 18:17  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jca/TestXABase.java:
+	
+	fixed bug in test case re. the number of bytes for sql dialect
+
+2004-10-15 18:06  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/gds/DatabaseParameterBuffer.java,
+	main/org/firebirdsql/jca/FBConnectionRequestInfo.java,
+	main/org/firebirdsql/ngds/ParameterBufferBase.java,
+	test/org/firebirdsql/jdbc/TestFBDriver.java,
+	main/org/firebirdsql/jgds/ParameterBufferBase.java:
+	
+	added support of dialect 1
+
 2004-10-14 00:26  rrokytskyy
 
 	* client-java/src/:
