@@ -1633,7 +1633,7 @@ public class GDS_Impl implements GDS {
                     db.out.writeLong(((Long) sqldata).longValue());
                     break;
                 default:
-                    System.out.println("Unknown sql data type: " + xsqlvar.sqltype);
+                    throw new GDSException("Unknown sql data type: " + xsqlvar.sqltype);
             }
 
             db.out.writeInt(xsqlvar.sqlind);
@@ -1643,7 +1643,7 @@ public class GDS_Impl implements GDS {
         }
     }
 
-    private void fixNull(XSQLVAR xsqlvar) {
+    private void fixNull(XSQLVAR xsqlvar) throws GDSException{
         if ((xsqlvar.sqlind == -1) && (xsqlvar.sqldata == null)) {
             switch (xsqlvar.sqltype & ~1) {
                 case SQL_TEXT:
@@ -1682,7 +1682,7 @@ public class GDS_Impl implements GDS {
                     xsqlvar.sqldata = new java.sql.Date(0);
                     break;
                 default:
-                    System.out.println("Unknown sql data type: " + xsqlvar.sqltype);
+                    throw new GDSException("Unknown sql data type: " + xsqlvar.sqltype);
             }
         }
     }
