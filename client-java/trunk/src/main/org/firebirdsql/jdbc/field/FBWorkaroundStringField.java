@@ -66,6 +66,9 @@ public class FBWorkaroundStringField extends FBStringField {
             int requiredType) throws SQLException 
     {
         super(field, rs, numCol, requiredType);
+        
+        bytesPerCharacter = 1;
+        possibleCharLength = field.sqllen / bytesPerCharacter;
     }
     
     /**
