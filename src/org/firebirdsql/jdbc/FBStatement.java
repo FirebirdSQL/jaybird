@@ -117,7 +117,6 @@ public class FBStatement implements Statement {
         } // end of try-catch
         finally 
         {
-           System.out.println("in finally block, of executeQuery");
             c.checkEndTransaction();
         } // end of finally
 
