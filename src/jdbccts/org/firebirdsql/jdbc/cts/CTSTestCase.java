@@ -100,12 +100,9 @@ public class CTSTestCase extends TestCase {
         TestUtil.logMsg("Beginning Test: " + testName);
         TestUtil.separator2();
         
-        if (setupMethod != null) {
-            Properties tempProps = new Properties();
-            tempProps.putAll(props);
+        if (setupMethod != null)
             setupMethod.invoke(test, 
-                    new Object[] { new String[0], tempProps});
-        }
+                    new Object[] { new String[0], new Properties(props)});
         
     }
 

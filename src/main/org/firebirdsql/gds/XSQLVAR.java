@@ -29,6 +29,10 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.20  2004/10/08 22:39:11  rrokytskyy
+ * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
+ * added possibility to translate characters if there are some encoding issues
+ *
  * Revision 1.19  2004/08/15 00:10:34  rrokytskyy
  * introduced new parameters to change the time zone behavior and escaped parser behavior for function calls
  *
