@@ -229,20 +229,27 @@ public class FBStatement implements Statement {
         try {
             if (fixedStmt != null) {
                 try {
-                    //may need ensureTransaction?
-                    c.closeStatement(fixedStmt, true);
-                }
-                catch (GDSException ge) {
+                    try {
+                        if (currentRs != null)
+                            currentRs.close();
+
+                        if (currentCachedResultSet != null)
+                            currentCachedResultSet.close();
+
+                    } finally {
+                        currentRs = null;
+                        currentCachedResultSet = null;
+
+                        //may need ensureTransaction?
+                        c.closeStatement(fixedStmt, true);
+                    }
+                } catch (GDSException ge) {
                     throw new FBSQLException(ge);
-                }
-                finally {
+                } finally {
                     fixedStmt = null;
-                    currentRs = null;
-                    currentCachedResultSet = null;
                     closed = true;
                 }
-            }
-            else
+            } else
                 closed = true;
         } finally {
             c.notifyStatementClosed(this);
