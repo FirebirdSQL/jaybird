@@ -1,3 +1,45 @@
+2004-05-20 21:04  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/field/FBField.java:
+	
+	added better error reporting for arrays
+
+2004-05-20 14:15  rrokytskyy
+
+	*
+	
+	testPadding() is not relevant here
+	client-java/src/test/org/firebirdsql/jdbc/TestFBLongVarCharEncoding
+	s.java:
+
+2004-05-20 14:14  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	we no longer fail when ResultSet.close() is called twice
+
+2004-05-20 14:13  rrokytskyy
+
+	*
+	
+	fixed possible div by zero (does not happen in reality, but in
+	syntetic tests is possible)
+	client-java/src/main/org/firebirdsql/jdbc/field/FBWorkaroundStringF
+	ield.java:
+
+2004-05-20 13:59  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	XCachablePreparedStatement.java, XStatementManager.java,
+	BasicAbstractConnectionPool.java,
+	DriverConnectionPoolDataSource.java,
+	FBConnectionPoolDataSource.java, FBPooledConnection.java,
+	FBPoolingDefaults.java, PingablePooledConnection.java,
+	PooledPreparedStatementHandler.java, XPreparedStatementCache.java:
+	
+	added possibility to specify maximum number of pooled statements
+	added maxPoolSize, minPoolSize and maxIdleTime property aliases
+
 2004-05-18 20:06  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
