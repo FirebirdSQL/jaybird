@@ -1,3 +1,11 @@
+2004-08-26 19:41  rrokytskyy
+
+	*
+	
+	fixed possible concurrent modification exception
+	client-java/src/pool/org/firebirdsql/pool/PingablePooledConnection.
+	java:
+
 2004-08-25 22:38  rrokytskyy
 
 	* client-java/src/etc/: release_notes.sxw, release_notes.html,
