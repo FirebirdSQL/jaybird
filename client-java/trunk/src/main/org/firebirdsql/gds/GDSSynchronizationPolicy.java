@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -95,7 +96,7 @@ public class GDSSynchronizationPolicy {
      * implementation.
      */
     private abstract static class AbstractSynchronizationPolicy 
-        implements InvocationHandler 
+        implements InvocationHandler, Serializable
     {
        
         private GDS gds;
