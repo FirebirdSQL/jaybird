@@ -197,7 +197,7 @@ public class FBManagedConnectionFactory
 
 
     public FBTpb getTpb() {
-        return tpb;
+        return new FBTpb(tpb);
     }
     
     public void setTpbMapper(FBTpbMapper mapper) {
