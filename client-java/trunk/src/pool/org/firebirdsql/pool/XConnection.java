@@ -219,6 +219,13 @@ class XConnection implements InvocationHandler {
 				return Void.TYPE;
 			} else
 				return method.invoke(connection, args);
+        } catch(InvocationTargetException ex) {
+            
+            if (ex.getTargetException() instanceof SQLException && owner != null)
+                owner.connectionErrorOccured(this, (SQLException)ex.getTargetException());
+                
+            throw ex.getTargetException();
+            
 		} catch(SQLException ex) {
 			
 			if (owner != null) 
