@@ -21,10 +21,8 @@ package org.firebirdsql.pool;
 import java.io.*;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Hashtable;
 
 import javax.naming.*;
-import javax.naming.spi.ObjectFactory;
 import javax.sql.ConnectionPoolDataSource;
 import javax.sql.PooledConnection;
 
@@ -45,7 +43,7 @@ import org.firebirdsql.jdbc.FBSQLException;
 public abstract class BasicAbstractConnectionPool 
     extends AbstractConnectionPool 
     implements ConnectionPoolConfiguration, ConnectionPoolDataSource,
-    Serializable, Referenceable, ObjectFactory
+    Serializable, Referenceable
 {
 
     /*
@@ -297,14 +295,13 @@ public abstract class BasicAbstractConnectionPool
     private static final String REF_IDLE_TIMEOUT = "idleTimeout";
 
     protected abstract BasicAbstractConnectionPool createObjectInstance();
-    
     /**
      * Get object instance for the specified name in the specified context.
      * This method constructs new datasource if <code>obj</code> represents
      * {@link Reference}, whose factory class is equal to this class.
      */
-    public Object getObjectInstance(Object obj, Name name, Context nameCtx, 
-                                    Hashtable environment) throws Exception 
+    
+    public Object getObjectInstance(Object obj) throws Exception 
     {
         
         if (!(obj instanceof Reference)) return null;
@@ -385,6 +382,7 @@ public abstract class BasicAbstractConnectionPool
         
         return ds;
     }
+    
 
     protected String getRefAddr(Reference ref, String type) {
         RefAddr addr = ref.get(type);
