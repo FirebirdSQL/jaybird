@@ -47,6 +47,7 @@ import org.firebirdsql.jca.FBManagedConnection;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 
 
@@ -593,13 +594,26 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public byte[] getBytes(int columnIndex) throws  SQLException {
-        if (((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TEXT)
+        if ((getXsqlvar(columnIndex).sqltype & ~1) == GDS.SQL_BLOB) {
+            setWasNullColumnIndex(columnIndex);
+            InputStream in = getBinaryStream(columnIndex);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            try {
+                byte[] buffer = new byte[512];
+                while (in.available() > 0) {
+                    int count = in.read(buffer);
+                    out.write(buffer, 0, count);
+                }
+            } catch (java.io.IOException ex) {
+                throw new SQLException("Blob I/O error");
+            }
+            return out.toByteArray();
+        } else if (((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TEXT)
              &&((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_VARYING)) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
         setWasNullColumnIndex(columnIndex);
         return (byte[])row[columnIndex - 1];
-
     }
 
 
@@ -1202,6 +1216,7 @@ public class FBResultSet implements ResultSet {
         if (columnName == null || columnName.equals("")) {
             throw new SQLException("zero length identifiers not allowed");
         }
+	columnName = columnName.toUpperCase();
         //XSQLVAR[] xsqlvars = stmt.getOutSqlda().sqlvar;
         for (int i = 0; i< xsqlvars.length; i++) {
             if (columnName.equals(xsqlvars[i].aliasname)) {
