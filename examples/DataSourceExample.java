@@ -20,7 +20,7 @@
 
 import org.firebirdsql.jdbc.FBWrappingDataSource;
 import org.firebirdsql.jca.FBConnectionRequestInfo;
-import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ISCConstants;
 
 public final class DataSourceExample
 {
@@ -31,7 +31,7 @@ public final class DataSourceExample
 	FBWrappingDataSource dataSource = new FBWrappingDataSource();
 
     // Set the standard properties
-    dataSource.setDatabaseName ("localhost/3050:c:/database/employee.gdb");
+    dataSource.setDatabase ("localhost/3050:c:/database/employee.gdb");
     dataSource.setDescription ("An example database of employees");
 
 	/*
@@ -55,8 +55,8 @@ public final class DataSourceExample
 	 */
 	 
 	FBConnectionRequestInfo cri = dataSource.getConnectionRequestInfo();
-	cri.setProperty(GDS.isc_dpb_lc_ctype, "NONE");
-    cri.setProperty(GDS.isc_dpb_sql_dialect, 1);
+	cri.setProperty(ISCConstants.isc_dpb_lc_ctype, "NONE");
+    cri.setProperty(ISCConstants.isc_dpb_sql_dialect, 1);
 	
     /*
      * Note, next line works only with SuperServer architecture,
