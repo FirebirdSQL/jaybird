@@ -1,3 +1,9 @@
+2004-08-22 22:48  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/pool/TestXADataSource.java:
+	
+	improved assertion message
+
 2004-08-22 02:52  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/gds/GDSExceptionHelper.java:
