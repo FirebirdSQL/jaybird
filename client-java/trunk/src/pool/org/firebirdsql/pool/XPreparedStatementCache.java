@@ -20,6 +20,8 @@
 package org.firebirdsql.pool;
 
 import java.sql.*;
+import java.util.HashSet;
+import java.util.Iterator;
 
 import EDU.oswego.cs.dl.util.concurrent.*;
 import org.firebirdsql.logging.Logger;
@@ -46,6 +48,7 @@ class XPreparedStatementCache {
 
     private XStatementManager owner;
     private LinkedQueue freeReferences = new LinkedQueue();
+    private HashSet workingReferences = new HashSet();
     private String sql;
     private int resultSetType;
     private int resultSetConcurrency;
@@ -123,6 +126,8 @@ class XPreparedStatementCache {
             }
             
             result.setConnection(connection);
+            
+            workingReferences.add(result);
 
             return result;
         } catch(InterruptedException iex) {
@@ -167,12 +172,14 @@ class XPreparedStatementCache {
     }
 
     /**
-     * Invalidate this reference guard. After invoking this method no other
+     * Invalidate this pool. After invoking this method no other
      * method can be invoked.
      */
     synchronized void invalidate() throws SQLException {
         sql = null;
         
+        // clear free references
+        SQLException error = null;
         while(!freeReferences.isEmpty()) {
             try {
                 XCachablePreparedStatement result =
@@ -181,8 +188,34 @@ class XPreparedStatementCache {
                 result.forceClose();
             } catch(InterruptedException ex) {
                 // ignore
+            } catch(SQLException ex) {
+                if (error != null)
+                    error = ex;
+                else
+                    error.setNextException(ex);
             }
         }
+        
+        // clear working references, even they're currently in use
+        // since we are invalidating the pool and there's no way back
+        Iterator iter = workingReferences.iterator();
+        while(iter.hasNext()) {
+            XCachablePreparedStatement item = 
+                (XCachablePreparedStatement)iter.next();
+                
+            try {
+                item.forceClose();
+            } catch(SQLException ex) {
+                if (error != null)
+                    error = ex;
+                else
+                    error.setNextException(ex);
+            }
+        }
+        workingReferences.clear();
+        
+        if (error != null)
+            throw error;
     }
 
 }
