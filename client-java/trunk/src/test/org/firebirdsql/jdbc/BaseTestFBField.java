@@ -142,7 +142,7 @@ public abstract class BaseTestFBField extends TestCase {
     public void testTimestamp() throws SQLException {
         field.setTimestamp(TEST_TIMESTAMP);
         field.copyOI();		  
-        assertTrue("Timestamp values test failure", field.getTimestamp().equals(TEST_TIMESTAMP));
+        assertTrue("Timestamp values test failure: expected: " + TEST_TIMESTAMP + ", actual: " + field.getTimestamp(), field.getTimestamp().equals(TEST_TIMESTAMP));
     }
 
     protected byte[] readInputStream(InputStream in) {
