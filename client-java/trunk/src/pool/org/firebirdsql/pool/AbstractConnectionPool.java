@@ -37,6 +37,58 @@ import org.firebirdsql.logging.Logger;
 public abstract class AbstractConnectionPool implements PooledObjectListener {
         
     /**
+     * Structure class to store user name and password. 
+     */
+    protected static class UserPasswordPair {
+        private String userName;
+        private String password;
+    
+        public UserPasswordPair() {
+            this(null, null);
+        }
+    
+        public String getUserName() {
+            return userName;
+        }
+        
+        public String getPassword() {
+            return password;
+        }
+        
+        public UserPasswordPair(String userName, String password) {
+            this.userName = userName;
+            this.password = password;
+        }
+    
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null) return false;
+            if (!(obj instanceof UserPasswordPair)) return false;
+        
+            UserPasswordPair that = (UserPasswordPair)obj;
+        
+            boolean equal = true;
+            
+            equal &= userName != null ? 
+                userName.equals(that.userName) : that.userName == null;
+                
+            equal &= password != null ? 
+                password.equals(that.password) : that.password == null;
+        
+            return equal; 
+        }
+    
+        public int hashCode() {
+            int result = 3;
+            
+            result ^= userName != null ? userName.hashCode() : 0;
+            result ^= password != null ? password.hashCode() : 0;
+            
+            return result;
+        }
+    }
+
+    /**
      * This constant controls behavior of this class in case of
      * severe error situation. Usually, if value of this constant 
      * is <code>true</code>, such error condition will result in

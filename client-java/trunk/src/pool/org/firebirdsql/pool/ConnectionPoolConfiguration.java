@@ -74,6 +74,29 @@ public interface ConnectionPoolConfiguration {
      */
     int getIdleTimeout();
     
+    /**
+     * Check if this connection pool uses connection pooling, or just implements
+     * JDBC 2.0 SE interfaces. By default pooling is on. It might make sense to 
+     * set pooling off to check performance degradation in test environment. It
+     * could be also used in the environment where physical connection must be
+     * closed right after usage, however using JDBC 2.0 SE interfaces is either
+     * a requirement or is simpler than standard <code>java.sql.Driver</code>.
+     * 
+     * @return <code>true</code> if pooling is enabled.
+     */
+    boolean isPooling();
+    
+    /**
+     * Check if this connection pool provides also prepared statement pooling.
+     * By default prepared statement pooling is enabled, however there might be
+     * situations where statement pooling is not desired, for example in 
+     * environments where database can quickly run out of handles and fast 
+     * handle reuse is required.
+     * 
+     * @return <code>true</code> if prepared statement pooling is enabled.
+     */
+    boolean isStatementPooling();
+    
 	/**
 	 * Check if this pool supports pingable connections. Pingable connections
 	 * are used to correctly check if connection is still alive or not.

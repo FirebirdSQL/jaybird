@@ -52,9 +52,11 @@ class FBPooledConnection extends PingablePooledConnection
      * @throws ResourceException if resource management error happened.
      */
     public FBPooledConnection(FBManagedConnection managedConnection, 
-        FBConnectionRequestInfo cri) throws SQLException, ResourceException 
+        FBConnectionRequestInfo cri, boolean statementPooling) 
+        throws SQLException, ResourceException 
     {
-        super((Connection)managedConnection.getConnection(null, cri));
+        super((Connection)managedConnection.getConnection(null, cri), 
+            statementPooling);
         
         this.managedConnection = managedConnection;
         this.cri = cri;
@@ -73,11 +75,12 @@ class FBPooledConnection extends PingablePooledConnection
      * @throws ResourceException if resource management error happened.
      */
     protected FBPooledConnection(FBManagedConnection managedConnection, 
-        FBConnectionRequestInfo cri, String pingStatement, int pingInterval) 
+        FBConnectionRequestInfo cri, String pingStatement, int pingInterval, 
+        boolean statementPooling) 
         throws SQLException, ResourceException 
     {
         super((Connection)managedConnection.getConnection(null, cri), 
-            pingStatement, pingInterval);
+            pingStatement, pingInterval, statementPooling);
         
         this.managedConnection = managedConnection;
         this.cri = cri;

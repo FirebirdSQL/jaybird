@@ -227,27 +227,34 @@ class PooledConnectionQueue {
             if (blocked && getLogger() != null)
                 getLogger().warn("Pool " + queueName + " will be unblocked");
 
-            queue.put(connection);
-            
-            // save timestamp when connection was returned to queue
-            connectionIdleTime.put(
-                connection, new Long(System.currentTimeMillis()));
+            if (getConfiguration().isPooling()) {
+                queue.put(connection);
+                
+                // save timestamp when connection was returned to queue
+                connectionIdleTime.put(
+                    connection, new Long(System.currentTimeMillis()));
+    
+                size++;
+            } else {
+                connectionIdleTime.remove(connection);
+            }
 
-            size++;
             blocked = false;
 
             workingConnections.remove(connection);
 
+            // deallocate connection if pooling is not enabled.
+            if (!getConfiguration().isPooling())
+                connection.deallocate();
+
             if (LOG_DEBUG_INFO && getLogger() != null)
-                getLogger().debug(
-                    "Thread "
+                getLogger().debug("Thread "
                         + Thread.currentThread().getName()
                         + " released connection.");
 
         } catch (InterruptedException iex) {
             if (getLogger() != null)
-                getLogger().warn(
-                    "Thread "
+                getLogger().warn("Thread "
                     + Thread.currentThread().getName()
                     + " was interrupted.",
                     iex);
@@ -379,9 +386,13 @@ class PooledConnectionQueue {
                         + totalConnections
                         + ", max allowed "
                         + getConfiguration().getMaxConnections());
+            
+            boolean maximumCapacityReached = 
+                getConfiguration().getMaxConnections() <= totalConnections  && 
+                getConfiguration().getMaxConnections() != 0 &&
+                getConfiguration().isPooling();
 
-            if (totalConnections >= getConfiguration().getMaxConnections()
-                && getConfiguration().getMaxConnections() != 0) {
+            if (maximumCapacityReached) {
 
                 if (LOG_DEBUG_INFO && getLogger() != null)
                     getLogger().debug("Was not able to add more connections.");

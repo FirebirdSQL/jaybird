@@ -58,6 +58,7 @@ public class PingablePooledConnection implements PooledConnection,
 
     private boolean supportsStatementsAccrossCommit;
     private boolean supportsStatementsAccrossRollback;
+    private boolean statementPooling;
 
     private HashMap statements = new HashMap();
 
@@ -65,9 +66,12 @@ public class PingablePooledConnection implements PooledConnection,
         return log;
     }
 
-    protected PingablePooledConnection(Connection connection) throws
-        SQLException {
+    protected PingablePooledConnection(Connection connection, 
+                                       boolean statementPooling) 
+        throws SQLException 
+    {
         this.jdbcConnection = connection;
+        this.statementPooling = statementPooling;
 
         this.supportsStatementsAccrossCommit =
             connection.getMetaData().supportsOpenStatementsAcrossCommit();
@@ -90,15 +94,20 @@ public class PingablePooledConnection implements PooledConnection,
     }
 
     protected PingablePooledConnection(Connection connection,
-        String pingStatement,
-        int pingInterval) throws SQLException {
-        this(connection);
+        String pingStatement, int pingInterval, boolean statementPooling) 
+        throws SQLException 
+    {
+        this(connection, statementPooling);
         this.pingStatement = pingStatement;
         this.pingInterval = pingInterval;
     }
 
     public long getLastPingTime() {
         return lastPingTime;
+    }
+    
+    public boolean isStatementPooling() {
+        return statementPooling;
     }
 
     /**
@@ -263,6 +272,11 @@ public class PingablePooledConnection implements PooledConnection,
      */
     public PreparedStatement getPreparedStatement(String statement,
         int resultSetType, int resultSetConcurrency) throws SQLException {
+        
+        if (!isStatementPooling())
+            return jdbcConnection.prepareStatement(
+                statement, resultSetType, resultSetConcurrency);
+        
         PreparedStatement stmt;
 
         synchronized (statements) {
