@@ -37,13 +37,14 @@ public class FBUpdatableFetcher extends FBStatementFetcher {
     }
 
     public boolean next() throws SQLException {
+        
         if (getIsBeforeFirst()) {
             setIsBeforeFirst(false);
             setIsEmpty(false);
             setIsFirst(true);
 
             setRowNum(getRowNum() + 1);
-            rs.row = nextRow;
+            rs.row = getNextRow();
 
             return true;
         }
@@ -56,7 +57,7 @@ public class FBUpdatableFetcher extends FBStatementFetcher {
         if (getIsEmpty())
             return false;
         else 
-        if (nextRow == null || (fbStatement.maxRows!=0 && getRowNum()==fbStatement.maxRows)){
+        if (getNextRow() == null || (fbStatement.maxRows!=0 && getRowNum()==fbStatement.maxRows)){
             setIsAfterLast(true);
             setRowNum(0);
             return false;
@@ -64,16 +65,16 @@ public class FBUpdatableFetcher extends FBStatementFetcher {
         else {
             try {
                 fetch();
-
+                
                 boolean maxRowReached = 
                     fbStatement.maxRows!=0 && getRowNum()==fbStatement.maxRows;
 
-                if((nextRow==null) || maxRowReached) {
+                if((getNextRow()==null) || maxRowReached) {
                     setIsAfterLast(true);
                     return false;
                 }
 
-                rs.row = nextRow;
+                rs.row = getNextRow();
                 setRowNum(getRowNum() + 1);
 
                 return true;
