@@ -86,7 +86,13 @@ public class FBConnectionRequestInfo
         return c.getArgumentAsString(type);
     }
 
+    public int getIntProperty(int type) {
+        return c.getArgumentAsInt(type);
+    }
 
+    public boolean hasArgument(int type) {
+        return c.hasArgument(type);
+    }
 
     public void setUser(String user) {
         setProperty(ISCConstants.isc_dpb_user_name, user);
