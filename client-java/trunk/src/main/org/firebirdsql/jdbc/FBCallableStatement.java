@@ -113,6 +113,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     public boolean execute() throws  SQLException {
         try
         {
+            currentRs = null;
             c.ensureInTransaction();
             boolean hasResultSet = internalExecute(true);
             if (hasResultSet && c.willEndTransaction())
