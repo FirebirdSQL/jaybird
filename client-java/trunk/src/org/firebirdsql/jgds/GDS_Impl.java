@@ -300,6 +300,11 @@ public class GDS_Impl implements GDS {
         }
 
         synchronized (db) {
+            if (db_handle.hasTransactions()) 
+            {
+                throw new GDSException(isc_open_trans);
+            } // end of if ()
+        
 
             try {
                 if (log != null) log.debug("op_detach ");
@@ -312,7 +317,7 @@ public class GDS_Impl implements GDS {
                 throw new GDSException(isc_network_error);
             }
 
-            db.rdb_transactions = new Vector();
+            //db.rdb_transactions = new Vector();
         }
 
     }
@@ -380,25 +385,27 @@ public class GDS_Impl implements GDS {
                 if (log != null) log.debug("sent");
                 //out.flush();
                 Response r = receiveResponse(db);
-                tr.rtr_id = r.resp_object;
+                tr.setTransactionId(r.resp_object);
             } catch (IOException ex) {
                 throw new GDSException(isc_network_error);
             }
 
-            tr.rtr_rdb = db;
+            //tr.rtr_rdb = db;
+            tr.setDbHandle(db);
             tr.setState(isc_tr_handle.TRANSACTIONSTARTED);
-            db.rdb_transactions.addElement(tr);
-        }
+            //db.rdb_transactions.addElement(tr);
+        }//end synch on db
 
     }
 
     public void isc_commit_transaction(isc_tr_handle tr_handle) throws GDSException {
-        isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
-        isc_db_handle_impl db = tr.rtr_rdb;
-
         if (tr_handle == null) {
             throw new GDSException(isc_bad_trans_handle);
         }
+
+        isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
+        isc_db_handle_impl db = (isc_db_handle_impl)tr.getDbHandle();
+
 
         synchronized (db) {
 
@@ -406,9 +413,9 @@ public class GDS_Impl implements GDS {
 
             try {
                 if (log != null) log.debug("op_commit ");
-                if (log != null) log.debug("tr.rtr_id: " + tr.rtr_id);
+                if (log != null) log.debug("tr.rtr_id: " + tr.getTransactionId());
                 db.out.writeInt(op_commit);
-                db.out.writeInt(tr.rtr_id);
+                db.out.writeInt(tr.getTransactionId());
                 db.out.flush();            
                 if (log != null) log.debug("sent");
                 receiveResponse(db);
@@ -417,8 +424,9 @@ public class GDS_Impl implements GDS {
             }
 
             tr.setState(isc_tr_handle.NOTRANSACTION);
-            tr.rtr_rdb = null;
-            db.rdb_transactions.removeElement(tr);
+            //tr.rtr_rdb = null;
+            //db.rdb_transactions.removeElement(tr);
+            tr.unsetDbHandle();
         }
 
     }
@@ -428,7 +436,7 @@ public class GDS_Impl implements GDS {
         if (tr == null) {
             throw new GDSException(isc_bad_trans_handle);
         }
-        isc_db_handle_impl db = tr.rtr_rdb;
+        isc_db_handle_impl db = (isc_db_handle_impl)tr.getDbHandle();
 
         synchronized (db) {
             tr.setState(isc_tr_handle.TRANSACTIONCOMMITTING);
@@ -436,7 +444,7 @@ public class GDS_Impl implements GDS {
             try {
                 if (log != null) log.debug("op_commit_retaining ");
                 db.out.writeInt(op_commit_retaining);
-                db.out.writeInt(tr.rtr_id);
+                db.out.writeInt(tr.getTransactionId());
                 db.out.flush();            
                 if (log != null) log.debug("sent");
                 receiveResponse(db);
@@ -453,7 +461,7 @@ public class GDS_Impl implements GDS {
         if (tr == null) {
             throw new GDSException(isc_bad_trans_handle);
         }
-        isc_db_handle_impl db = tr.rtr_rdb;
+        isc_db_handle_impl db = (isc_db_handle_impl)tr.getDbHandle();
 
         synchronized (db) {
             if (tr.getState() != isc_tr_handle.TRANSACTIONSTARTED) {
@@ -464,7 +472,7 @@ public class GDS_Impl implements GDS {
             try {
                 if (log != null) log.debug("op_prepare ");
                 db.out.writeInt(op_prepare);
-                db.out.writeInt(tr.rtr_id);
+                db.out.writeInt(tr.getTransactionId());
                 db.out.flush();            
                 if (log != null) log.debug("sent");
                 receiveResponse(db);
@@ -481,7 +489,7 @@ public class GDS_Impl implements GDS {
         if (tr == null) {
             throw new GDSException(isc_bad_trans_handle);
         }
-        isc_db_handle_impl db = tr.rtr_rdb;
+        isc_db_handle_impl db = (isc_db_handle_impl)tr.getDbHandle();
 
         synchronized (db) {
             if (tr.getState() != isc_tr_handle.TRANSACTIONSTARTED) {
@@ -491,7 +499,7 @@ public class GDS_Impl implements GDS {
             try {
                 if (log != null) log.debug("op_prepare2 ");
                 db.out.writeInt(op_prepare2);
-                db.out.writeInt(tr.rtr_id);
+                db.out.writeInt(tr.getTransactionId());
                 db.out.writeBuffer(bytes, bytes.length);
                 db.out.flush();            
                 if (log != null) log.debug("sent");
@@ -511,7 +519,7 @@ public class GDS_Impl implements GDS {
         if (tr == null) {
             throw new GDSException(isc_bad_trans_handle);
         }
-        isc_db_handle_impl db = tr.rtr_rdb;
+        isc_db_handle_impl db = (isc_db_handle_impl)tr.getDbHandle();
 
         synchronized (db) {
 
@@ -523,7 +531,7 @@ public class GDS_Impl implements GDS {
             try {
                 if (log != null) log.debug("op_rollback ");
                 db.out.writeInt(op_rollback);
-                db.out.writeInt(tr.rtr_id);
+                db.out.writeInt(tr.getTransactionId());
                 db.out.flush();            
                 if (log != null) log.debug("sent");
                 receiveResponse(db);
@@ -532,8 +540,9 @@ public class GDS_Impl implements GDS {
             }
 
             tr.setState(isc_tr_handle.NOTRANSACTION);
-            tr.rtr_rdb = null;
-            db.rdb_transactions.removeElement(tr);
+            //tr.rtr_rdb = null;
+            //db.rdb_transactions.removeElement(tr);
+            tr.unsetDbHandle();
         }
 
     }
@@ -662,7 +671,7 @@ public class GDS_Impl implements GDS {
                 
                 db.out.writeInt((out_xsqlda == null) ? op_execute : op_execute2);
                 db.out.writeInt(stmt.rsr_id);
-                db.out.writeInt(tr.rtr_id);
+                db.out.writeInt(tr.getTransactionId());
 
                 writeBLR(db, in_xsqlda);
                 db.out.writeInt(0);  //message number = in_message_type
@@ -743,7 +752,7 @@ public class GDS_Impl implements GDS {
                     db.out.writeInt(0);
                 }
 
-                db.out.writeInt(tr.rtr_id);
+                db.out.writeInt(tr.getTransactionId());
                 db.out.writeInt(0);
                 db.out.writeInt(dialect);
                 db.out.writeString(statement);
@@ -939,7 +948,7 @@ public class GDS_Impl implements GDS {
             try {
                 if (log != null) log.debug("op_prepare_statement ");
                 db.out.writeInt(op_prepare_statement);
-                db.out.writeInt(tr.rtr_id);
+                db.out.writeInt(tr.getTransactionId());
                 db.out.writeInt(stmt.rsr_id);
                 db.out.writeInt(dialect);
                 db.out.writeString(statement);
@@ -1087,7 +1096,7 @@ public class GDS_Impl implements GDS {
                 if (bpb != null) {
                     db.out.writeTyped(isc_bpb_version1, (Xdrable)bpb);
                 }
-                db.out.writeInt(tr.rtr_id); //??really a short?
+                db.out.writeInt(tr.getTransactionId()); //??really a short?
                 if (log != null) log.debug("sending blob_id: " + blob.blob_id);
                 db.out.writeLong(blob.blob_id);
                 db.out.flush();            

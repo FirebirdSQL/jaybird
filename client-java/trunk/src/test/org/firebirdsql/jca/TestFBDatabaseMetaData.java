@@ -368,7 +368,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         if (log != null) log.info("testGetTypeInfo");
 
         ResultSet rs = dmd.getTypeInfo();
-        assertTrue("No resultset returned from getTablePrivileges", rs != null);
+        assertTrue("No resultset returned from getTypeInfo", rs != null);
         int count = 0;
         String out = "";
         while (rs.next()) {
@@ -382,7 +382,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
             }
             out += System.getProperty("line.separator");
         }
-        if (log != null) log.info("getTablePrivileges returned: " + out);
+        if (log != null) log.info("getTypeInfoblePrivileges returned: " + out);
         assertTrue("Not enough TypeInfo rows fetched: " + count, count >= 16);
     }
 

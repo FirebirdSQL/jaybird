@@ -36,7 +36,9 @@ import javax.security.auth.Subject;
 
 public interface isc_db_handle {
 
-    public Subject getSubject();
+    Subject getSubject();
+
+    boolean hasTransactions();
 
 }
 

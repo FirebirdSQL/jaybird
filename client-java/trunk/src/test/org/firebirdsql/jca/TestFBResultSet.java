@@ -75,7 +75,7 @@ public class TestFBResultSet extends TestXABase {
         catch (Exception e) {
             ex = e;
         }
-        xa.end(xid, XAResource.TMNOFLAGS);
+        xa.end(xid, XAResource.TMSUCCESS);
         xa.commit(xid, true);
 
         xid = new XidImpl();
@@ -89,14 +89,14 @@ public class TestFBResultSet extends TestXABase {
         }
         rs.close();
         //s.close();
-        xa.end(xid, XAResource.TMNOFLAGS);
+        xa.end(xid, XAResource.TMSUCCESS);
         xa.commit(xid, true);
 
         xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
         s.execute("DROP TABLE T1");
         s.close();
-        xa.end(xid, XAResource.TMNOFLAGS);
+        xa.end(xid, XAResource.TMSUCCESS);
         xa.commit(xid, true);
         mc.destroy();
         if (ex != null) {
@@ -123,7 +123,7 @@ public class TestFBResultSet extends TestXABase {
         catch (Exception e) {
             ex = e;
         }
-        xa.end(xid, XAResource.TMNOFLAGS);
+        xa.end(xid, XAResource.TMSUCCESS);
         xa.commit(xid, true);
 
         xid = new XidImpl();
@@ -159,14 +159,14 @@ public class TestFBResultSet extends TestXABase {
         }
         rs.close();
         //s.close();
-        xa.end(xid, XAResource.TMNOFLAGS);
+        xa.end(xid, XAResource.TMSUCCESS);
         xa.commit(xid, true);
 
         xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
         s.execute("DROP TABLE T1");
         s.close();
-        xa.end(xid, XAResource.TMNOFLAGS);
+        xa.end(xid, XAResource.TMSUCCESS);
         xa.commit(xid, true);
         mc.destroy();
         if (ex != null) {
