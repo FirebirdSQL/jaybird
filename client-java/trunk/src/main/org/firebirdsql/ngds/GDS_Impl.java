@@ -227,8 +227,10 @@ public class GDS_Impl extends AbstractGDS implements GDS
             {
             throw new GDSException(ISCConstants.isc_bad_db_handle);
             }
+        
+        DatabaseParameterBuffer cleanDPB = removeInternalDPB(databaseParameterBuffer);
 
-        final byte[] dpbBytes = databaseParameterBuffer == null ? null : ((DatabaseParameterBufferImp)databaseParameterBuffer).getBytesForNativeCode();
+        final byte[] dpbBytes = databaseParameterBuffer == null ? null : ((DatabaseParameterBufferImp)cleanDPB).getBytesForNativeCode();
 
         synchronized(this)
             {
@@ -237,6 +239,25 @@ public class GDS_Impl extends AbstractGDS implements GDS
         
         parseAttachDatabaseInfo(isc_database_info(db_handle,describe_database_info,1024),db_handle);
         }
+    
+    /**
+     * Removes JayBird-specific parameters from the DPB buffer.
+     * 
+     * @param dpb original DPB object. 
+     * 
+     * @return clone of the original DPB without JayBird-specific parameters.
+     */
+    private DatabaseParameterBuffer removeInternalDPB(DatabaseParameterBuffer dpb) {
+        DatabaseParameterBuffer result = dpb.deepCopy();
+
+        result.removeArgument(ISCConstants.isc_dpb_socket_buffer_size);
+        result.removeArgument(ISCConstants.isc_dpb_blob_buffer_size);
+        result.removeArgument(ISCConstants.isc_dpb_use_stream_blobs);
+        result.removeArgument(ISCConstants.isc_dpb_paranoia_mode);
+
+        return result;
+    }
+    
     
      final static byte[] describe_database_info = new byte[] { ISCConstants.isc_info_db_sql_dialect,
                                    ISCConstants.isc_info_isc_version,
