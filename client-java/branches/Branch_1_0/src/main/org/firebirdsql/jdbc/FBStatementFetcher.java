@@ -95,6 +95,7 @@ class FBStatementFetcher implements FBFetcher {
                 if((nextRow==null) || (fbStatement.maxRows!=0 && rowNum==fbStatement.maxRows)) {
                     /** @todo fix this, isLast cannot be correctly set */
                     // isLast = true;
+                    isAfterLast = true;
                     return false;
                 }
 
