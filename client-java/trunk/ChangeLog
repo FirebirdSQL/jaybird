@@ -1,3 +1,11 @@
+2004-09-09 17:25  rrokytskyy
+
+	*
+	
+	fixed NPE
+	client-java/src/pool/org/firebirdsql/pool/PingablePooledConnection.
+	java:
+
 2004-08-29 18:03  rrokytskyy
 
 	*
