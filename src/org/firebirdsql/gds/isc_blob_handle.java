@@ -36,7 +36,7 @@ package org.firebirdsql.gds;
  */
 
 public interface isc_blob_handle {
-    
+
     long getBlobId();
 
     void setBlobId(long blob_id);

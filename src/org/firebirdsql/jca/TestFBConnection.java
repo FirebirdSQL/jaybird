@@ -1,4 +1,4 @@
-/*   This class is LGPL only, due to the inclusion of a 
+/*   This class is LGPL only, due to the inclusion of a
  *Xid implementation from the JBoss project as a static inner class for testing purposes.
  *The portions before the XidImpl are usable under MPL 1.1 or LGPL
  *If we write our own xid test implementation, we can reset the license to match
@@ -44,18 +44,18 @@ import junit.framework.*;
  *future enhancements will use datasources/ managed stuff.
  */
 public class TestFBConnection extends TestXABase {
-    
-    
+
+
     public TestFBConnection(String name) {
         super(name);
     }
-    
+
     public static Test suite() {
 
         return new TestSuite(TestFBConnection.class);
     }
-    
-    
+
+
 
     public void testCreateC() throws Exception {
         System.out.println();
@@ -82,7 +82,7 @@ public class TestFBConnection extends TestXABase {
         mc1.destroy();
         mc2.destroy();
     }
-    
+
     public void testCreateStatement() throws Exception {
         System.out.println();
         System.out.println("testCreateStatement");
@@ -106,7 +106,7 @@ public class TestFBConnection extends TestXABase {
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
         try {
-            s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)"); 
+            s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)");
             //s.close();
         }
         catch (Exception e) {
@@ -114,10 +114,10 @@ public class TestFBConnection extends TestXABase {
         }
         xa.end(xid, XAResource.TMNOFLAGS);
         xa.commit(xid, true);
-        
+
         xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        s.execute("DROP TABLE T1"); 
+        s.execute("DROP TABLE T1");
         s.close();
         xa.end(xid, XAResource.TMNOFLAGS);
         xa.commit(xid, true);
@@ -125,9 +125,9 @@ public class TestFBConnection extends TestXABase {
         if (ex != null) {
             throw ex;
         }
-        
+
     }
 
 
-    
+
 }

@@ -50,7 +50,7 @@ import java.sql.Types;
 
 
 /**
- * An object that can be used to get information about the types 
+ * An object that can be used to get information about the types
  * and properties of the columns in a <code>ResultSet</code> object.
  * The following code fragment creates the <code>ResultSet</code> object rs,
  * creates the <code>ResultSetMetaData</code> object rsmd, and uses rsmd
@@ -67,10 +67,10 @@ import java.sql.Types;
  */
 
 public class FBResultSetMetaData implements ResultSetMetaData {
-    
+
     // private isc_stmt_handle stmt;
     private XSQLVAR[] xsqlvars;
-    
+
     /*    FBResultSetMetaData(isc_stmt_handle stmt) {
         this.stmt = stmt;
         }*/
@@ -85,7 +85,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return the number of columns
      * @exception SQLException if a database access error occurs
      */
-    public 	int getColumnCount() {
+    public  int getColumnCount() {
         //return stmt.getOutSqlda().sqln;;
         return xsqlvars.length;
     }
@@ -98,7 +98,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public 	boolean isAutoIncrement(int column) {
+    public  boolean isAutoIncrement(int column) {
         return false;
     }
 
@@ -110,10 +110,10 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public 	boolean isCaseSensitive(int column) throws  SQLException {
+    public  boolean isCaseSensitive(int column) throws  SQLException {
         return true;
     }
-	
+
 
     /**
      * Indicates whether the designated column can be used in a where clause.
@@ -122,7 +122,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public 	boolean isSearchable(int column) throws  SQLException {
+    public  boolean isSearchable(int column) throws  SQLException {
         if (((getXsqlvar(column).sqltype & ~1) == GDS.SQL_ARRAY)
             || ((getXsqlvar(column).sqltype & ~1) == GDS.SQL_BLOB)) {
             return false;
@@ -140,20 +140,20 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public 	boolean isCurrency(int column) throws  SQLException {
+    public  boolean isCurrency(int column) throws  SQLException {
         return false;
     }
 
 
     /**
-     * Indicates the nullability of values in the designated column.		
+     * Indicates the nullability of values in the designated column.
      *
      * @param column the first column is 1, the second is 2, ...
      * @return the nullability status of the given column; one of <code>columnNoNulls</code>,
-	 *          <code>columnNullable</code> or <code>columnNullableUnknown</code>
+     *          <code>columnNullable</code> or <code>columnNullableUnknown</code>
      * @exception SQLException if a database access error occurs
      */
-    public 	int isNullable(int column) throws  SQLException {
+    public  int isNullable(int column) throws  SQLException {
         if ((getXsqlvar(column).sqltype & 1) == 1) {
             return columnNullable;
         }
@@ -164,19 +164,19 @@ public class FBResultSetMetaData implements ResultSetMetaData {
 
 
     /**
-	 * The constant indicating that a
+     * The constant indicating that a
      * column does not allow <code>NULL</code> values.
      */
     int columnNoNulls = 0;
 
     /**
-	 * The constant indicating that a
+     * The constant indicating that a
      * column allows <code>NULL</code> values.
      */
     int columnNullable = 1;
 
     /**
-	 * The constant indicating that the
+     * The constant indicating that the
      * nullability of a column's values is unknown.
      */
     int columnNullableUnknown = 2;
@@ -188,7 +188,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public 	boolean isSigned(int column) throws  SQLException {
+    public  boolean isSigned(int column) throws  SQLException {
         switch (getXsqlvar(column).sqltype & ~1) {
             case GDS.SQL_SHORT:
             case GDS.SQL_LONG:
@@ -208,10 +208,10 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      *
      * @param column the first column is 1, the second is 2, ...
      * @return the normal maximum number of characters allowed as the width
-	 *          of the designated column
+     *          of the designated column
      * @exception SQLException if a database access error occurs
      */
-    public 	int getColumnDisplaySize(int column) throws  SQLException {
+    public  int getColumnDisplaySize(int column) throws  SQLException {
         //These are mostly wrong!!
         switch (getXsqlvar(column).sqltype & ~1) {
             case GDS.SQL_TEXT:
@@ -261,10 +261,10 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return the suggested column title
      * @exception SQLException if a database access error occurs
      */
-    public 	String getColumnLabel(int column) throws  SQLException {
+    public  String getColumnLabel(int column) throws  SQLException {
         return (getXsqlvar(column).aliasname == null) ? getXsqlvar(column).sqlname: getXsqlvar(column).aliasname;
     }
-	
+
 
     /**
      * Get the designated column's name.
@@ -273,7 +273,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return column name
      * @exception SQLException if a database access error occurs
      */
-    public 	String getColumnName(int column) throws  SQLException {
+    public  String getColumnName(int column) throws  SQLException {
         return getXsqlvar(column).sqlname;
     }
 
@@ -285,7 +285,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return schema name or "" if not applicable
      * @exception SQLException if a database access error occurs
      */
-    public 	String getSchemaName(int column) throws  SQLException {
+    public  String getSchemaName(int column) throws  SQLException {
         //not really implemented
         throw new SQLException("Schemas aren't supported");
         //return getXsqlvar(column).ownname;
@@ -299,7 +299,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return precision
      * @exception SQLException if a database access error occurs
      */
-    public 	int getPrecision(int column) throws  SQLException {
+    public  int getPrecision(int column) throws  SQLException {
         //presumable wrong!!
         return getXsqlvar(column).sqllen;
     }
@@ -312,19 +312,19 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return scale
      * @exception SQLException if a database access error occurs
      */
-    public 	int getScale(int column) throws  SQLException {
+    public  int getScale(int column) throws  SQLException {
         return getXsqlvar(column).sqlscale;
     }
-	
+
 
     /**
-     * Gets the designated column's table name. 
+     * Gets the designated column's table name.
      *
      * @param column the first column is 1, the second is 2, ...
      * @return table name or "" if not applicable
      * @exception SQLException if a database access error occurs
      */
-    public 	String getTableName(int column) throws  SQLException {
+    public  String getTableName(int column) throws  SQLException {
         return getXsqlvar(column).relname;
     }
 
@@ -336,7 +336,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return column name or "" if not applicable
      * @exception SQLException if a database access error occurs
      */
-    public 	String getCatalogName(int column) throws  SQLException {
+    public  String getCatalogName(int column) throws  SQLException {
         throw new SQLException("Catalogs not supported");
     }
 
@@ -349,7 +349,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @exception SQLException if a database access error occurs
      * @see Types
      */
-    public 	int getColumnType(int column) throws  SQLException {
+    public  int getColumnType(int column) throws  SQLException {
         switch (getXsqlvar(column).sqltype & ~1) {
             case GDS.SQL_TEXT:
                 return Types.CHAR;
@@ -395,10 +395,10 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      *
      * @param column the first column is 1, the second is 2, ...
      * @return type name used by the database. If the column type is
-	 * a user-defined type, then a fully-qualified type name is returned.
+     * a user-defined type, then a fully-qualified type name is returned.
      * @exception SQLException if a database access error occurs
      */
-    public 	String getColumnTypeName(int column) throws  SQLException {
+    public  String getColumnTypeName(int column) throws  SQLException {
         //Maybe these are supposed to be the sql keywords????
         switch (getXsqlvar(column).sqltype & ~1) {
             case GDS.SQL_TEXT:
@@ -442,7 +442,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public 	boolean isReadOnly(int column) throws  SQLException {
+    public  boolean isReadOnly(int column) throws  SQLException {
         //Need to consider priveleges!!
         throw new SQLException("Not yet implemented");
     }
@@ -455,20 +455,20 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public 	boolean isWritable(int column) throws  SQLException {
+    public  boolean isWritable(int column) throws  SQLException {
         //Needs priveleges???
         throw new SQLException("Not yet implemented");
     }
 
 
     /**
-     * Indicates whether a write on the designated column will definitely succeed.	
+     * Indicates whether a write on the designated column will definitely succeed.
      *
      * @param column the first column is 1, the second is 2, ...
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public 	boolean isDefinitelyWritable(int column) throws  SQLException {
+    public  boolean isDefinitelyWritable(int column) throws  SQLException {
         //Need to consider privileges!!!
         throw new SQLException("Not yet implemented");
     }
@@ -477,20 +477,20 @@ public class FBResultSetMetaData implements ResultSetMetaData {
     //--------------------------JDBC 2.0-----------------------------------
 
     /**
-     * <p>Returns the fully-qualified name of the Java class whose instances 
+     * <p>Returns the fully-qualified name of the Java class whose instances
      * are manufactured if the method <code>ResultSet.getObject</code>
-	 * is called to retrieve a value 
+     * is called to retrieve a value
      * from the column.  <code>ResultSet.getObject</code> may return a subclass of the
      * class returned by this method.
-	 *
-	 * @return the fully-qualified name of the class in the Java programming
-	 *         language that would be used by the method 
-	 * <code>ResultSet.getObject</code> to retrieve the value in the specified
-	 * column. This is the class name used for custom mapping.
+     *
+     * @return the fully-qualified name of the class in the Java programming
+     *         language that would be used by the method
+     * <code>ResultSet.getObject</code> to retrieve the value in the specified
+     * column. This is the class name used for custom mapping.
      * @exception SQLException if a database access error occurs
-	 * @since 1.2
-	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-	 *      2.0 API</a>
+     * @since 1.2
+     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
+     *      2.0 API</a>
      */
     public String getColumnClassName(int column) throws  SQLException {
         switch (getXsqlvar(column).sqltype & ~1) {
@@ -532,13 +532,13 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         }
     }
 
-    
+
     //private methods
-    
+
     private XSQLVAR getXsqlvar(int columnIndex) {
         //return stmt.getOutSqlda().sqlvar[columnIndex - 1];
         return xsqlvars[columnIndex - 1];
     }
-    
+
 
 }

@@ -33,16 +33,16 @@ import org.firebirdsql.gds.GDSException;
  *   @version $ $
  */
 
- /**This interface represents objects that 
- * can serialize themselves to xdr streams. 
+ /**This interface represents objects that
+ * can serialize themselves to xdr streams.
  */
 
 interface Xdrable {
-    
+
     int getLength();
-    
+
     void read(XdrInputStream in, int length) throws IOException;
-    
+
     void write(XdrOutputStream out) throws IOException;
 
 }

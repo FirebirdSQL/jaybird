@@ -1,4 +1,4 @@
-/*   This class is LGPL only, due to the inclusion of a 
+/*   This class is LGPL only, due to the inclusion of a
  *Xid implementation from the JBoss project as a static inner class for testing purposes.
  *The portions before the XidImpl are usable under MPL 1.1 or LGPL
  *If we write our own xid test implementation, we can reset the license to match
@@ -47,17 +47,17 @@ import junit.framework.*;
  *future enhancements will use datasources/ managed stuff.
  */
 public class TestFBResultSet extends TestXABase {
-    
-    
+
+
     public TestFBResultSet(String name) {
         super(name);
     }
-    
+
     public static Test suite() {
 
         return new TestSuite(TestFBResultSet.class);
     }
-    
+
 
 
     public void testUseResultSet() throws Exception {
@@ -72,7 +72,7 @@ public class TestFBResultSet extends TestXABase {
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
         try {
-            s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)"); 
+            s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)");
             //s.close();
         }
         catch (Exception e) {
@@ -83,8 +83,8 @@ public class TestFBResultSet extends TestXABase {
 
         xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assertTrue("execute returned true for insert statement", !s.execute("insert into T1 values (1, 1)")); 
-        assertTrue("executeUpdate did not return 1 for single row insert", s.executeUpdate("insert into T1 values (2, 2)") == 1); 
+        assertTrue("execute returned true for insert statement", !s.execute("insert into T1 values (1, 1)"));
+        assertTrue("executeUpdate did not return 1 for single row insert", s.executeUpdate("insert into T1 values (2, 2)") == 1);
         assertTrue("execute returned false for select statement", s.execute("select C1, C2 from T1"));
         ResultSet rs = s.getResultSet();
         while (rs.next()) {
@@ -94,10 +94,10 @@ public class TestFBResultSet extends TestXABase {
         //s.close();
         xa.end(xid, XAResource.TMNOFLAGS);
         xa.commit(xid, true);
-        
+
         xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        s.execute("DROP TABLE T1"); 
+        s.execute("DROP TABLE T1");
         s.close();
         xa.end(xid, XAResource.TMNOFLAGS);
         xa.commit(xid, true);
@@ -105,7 +105,7 @@ public class TestFBResultSet extends TestXABase {
         if (ex != null) {
             throw ex;
         }
-        
+
     }
 
     public void testUseResultSetMore() throws Exception {
@@ -120,7 +120,7 @@ public class TestFBResultSet extends TestXABase {
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
         try {
-            s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20), C8 TIME, C9 DATE, C10 TIMESTAMP)"); 
+            s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20), C8 TIME, C9 DATE, C10 TIMESTAMP)");
             //s.close();
         }
         catch (Exception e) {
@@ -131,15 +131,15 @@ public class TestFBResultSet extends TestXABase {
 
         xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assertTrue("execute returned true for insert statement", 
-            !s.execute("insert into T1 values (1, 1, 1, 1.0, 1.0, 'one', 'one', '8:00:03.1234', '2002-JAN-11', '2001-JAN-6:8:00:03.1223')")); 
+        assertTrue("execute returned true for insert statement",
+            !s.execute("insert into T1 values (1, 1, 1, 1.0, 1.0, 'one', 'one', '8:00:03.1234', '2002-JAN-11', '2001-JAN-6:8:00:03.1223')"));
         //s.close();
-        // s.execute("insert into T1 values (2, 2,2,  2.0, 2.0, 'two', 'two')"); 
+        // s.execute("insert into T1 values (2, 2,2,  2.0, 2.0, 'two', 'two')");
         //s.close();
         assertTrue("execute returned false for select statement", s.execute("select C1, C2, C3,  C4, C5, C6, C7, C8, C9, C10 from T1"));
         ResultSet rs = s.getResultSet();
         while (rs.next()) {
-            System.out.println("C1: " + rs.getInt(1) 
+            System.out.println("C1: " + rs.getInt(1)
                 + " C2: " + rs.getShort(2)
                 + " C3: " + rs.getLong(3)
                 + " C4: " + rs.getFloat(4)
@@ -151,7 +151,7 @@ public class TestFBResultSet extends TestXABase {
                 + " C10: " + rs.getTimestamp(10)
 
                 );
-            System.out.println("C1: " + rs.getInt("C1") 
+            System.out.println("C1: " + rs.getInt("C1")
                 + " C2: " + rs.getShort("C2")
                 + " C3: " + rs.getLong("C3")
                 + " C4: " + rs.getFloat("C4")
@@ -164,10 +164,10 @@ public class TestFBResultSet extends TestXABase {
         //s.close();
         xa.end(xid, XAResource.TMNOFLAGS);
         xa.commit(xid, true);
-        
+
         xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        s.execute("DROP TABLE T1"); 
+        s.execute("DROP TABLE T1");
         s.close();
         xa.end(xid, XAResource.TMNOFLAGS);
         xa.commit(xid, true);
@@ -175,7 +175,7 @@ public class TestFBResultSet extends TestXABase {
         if (ex != null) {
             throw ex;
         }
-        
+
     }
 
     public void testUseResultSetWithPreparedStatement() throws Exception {
@@ -189,14 +189,14 @@ public class TestFBResultSet extends TestXABase {
         Exception ex = null;
         t.begin();
         try {
-            s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20))"); 
+            s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20))");
             //s.close();
         }
         catch (Exception e) {
             ex = e;
         }
         t.commit();
-        
+
         t.begin();
         PreparedStatement p = c.prepareStatement("insert into T1 values (?, ?, ?, ?, ?, ?, ?)");
         p.setInt(1, 1);
@@ -206,8 +206,8 @@ public class TestFBResultSet extends TestXABase {
         p.setDouble(5, 1.0);
         p.setString(6, "one");
         p.setString(7, "one");
-        
-        assertTrue("execute returned true for insert statement", !p.execute()); 
+
+        assertTrue("execute returned true for insert statement", !p.execute());
         p.setInt(1, 2);
         p.setShort(2, (short)2);
         p.setLong(3, 2);
@@ -216,13 +216,13 @@ public class TestFBResultSet extends TestXABase {
         p.setString(6, "two");
         p.setString(7, "two");
         assertTrue("executeUpdate count != 1", p.executeUpdate() == 1);
-        
+
         p.close();
         p = c.prepareStatement("select * from T1 where C1 = ?");
         p.setInt(1, 1);
         ResultSet rs = p.executeQuery();
         while (rs.next()) {
-            System.out.println("C1: " + rs.getInt(1) 
+            System.out.println("C1: " + rs.getInt(1)
                 + " C2: " + rs.getShort(2)
                 + " C3: " + rs.getLong(3)
                 + " C4: " + rs.getFloat(4)
@@ -230,7 +230,7 @@ public class TestFBResultSet extends TestXABase {
                 + " C6: " + rs.getString(6)
                 + " C7: " + rs.getString(7)
                 );
-            System.out.println("C1: " + rs.getInt("C1") 
+            System.out.println("C1: " + rs.getInt("C1")
                 + " C2: " + rs.getShort("C2")
                 + " C3: " + rs.getLong("C3")
                 + " C4: " + rs.getFloat("C4")
@@ -243,7 +243,7 @@ public class TestFBResultSet extends TestXABase {
         p.setInt(1, 2);
         rs = p.executeQuery();
         while (rs.next()) {
-            System.out.println("C1: " + rs.getInt(1) 
+            System.out.println("C1: " + rs.getInt(1)
                 + " C2: " + rs.getShort(2)
                 + " C3: " + rs.getLong(3)
                 + " C4: " + rs.getFloat(4)
@@ -251,7 +251,7 @@ public class TestFBResultSet extends TestXABase {
                 + " C6: " + rs.getString(6)
                 + " C7: " + rs.getString(7)
                 );
-            System.out.println("C1: " + rs.getInt("C1") 
+            System.out.println("C1: " + rs.getInt("C1")
                 + " C2: " + rs.getShort("C2")
                 + " C3: " + rs.getLong("C3")
                 + " C4: " + rs.getFloat("C4")
@@ -261,19 +261,19 @@ public class TestFBResultSet extends TestXABase {
                 );
         }
         p.close();
-        t.commit();   
-        
+        t.commit();
+
         t.begin();
-        s.execute("DROP TABLE T1"); 
+        s.execute("DROP TABLE T1");
         s.close();
         t.commit();
         c.close();
         if (ex != null) {
             throw ex;
         }
-        
+
     }
-    
+
     public void testUsePreparedStatementAcrossTransactions() throws Exception {
         System.out.println();
         System.out.println("testUsePreparedStatementAcrossTransactions");
@@ -292,14 +292,14 @@ public class TestFBResultSet extends TestXABase {
         t.commit();
         t.begin();
         try {
-            s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20))"); 
+            s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20))");
             //s.close();
         }
         catch (Exception e) {
             ex = e;
         }
         t.commit();
-        
+
         t.begin();
         PreparedStatement p = c.prepareStatement("insert into T1 values (?, ?, ?, ?, ?, ?, ?)");
         p.setInt(1, 1);
@@ -309,8 +309,8 @@ public class TestFBResultSet extends TestXABase {
         p.setDouble(5, 1.0);
         p.setString(6, "one");
         p.setString(7, "one");
-        
-        assertTrue("execute returned true for insert statement", !p.execute()); 
+
+        assertTrue("execute returned true for insert statement", !p.execute());
         p.setInt(1, 2);
         p.setShort(2, (short)2);
         p.setLong(3, 2);
@@ -319,13 +319,13 @@ public class TestFBResultSet extends TestXABase {
         p.setString(6, "two");
         p.setString(7, "two");
         assertTrue("executeUpdate count != 1", p.executeUpdate() == 1);
-        
+
         p.close();
         p = c.prepareStatement("select * from T1 where C1 = ?");
         p.setInt(1, 1);
         ResultSet rs = p.executeQuery();
         while (rs.next()) {
-            System.out.println("C1: " + rs.getInt(1) 
+            System.out.println("C1: " + rs.getInt(1)
                 + " C2: " + rs.getShort(2)
                 + " C3: " + rs.getLong(3)
                 + " C4: " + rs.getFloat(4)
@@ -333,7 +333,7 @@ public class TestFBResultSet extends TestXABase {
                 + " C6: " + rs.getString(6)
                 + " C7: " + rs.getString(7)
                 );
-            System.out.println("C1: " + rs.getInt("C1") 
+            System.out.println("C1: " + rs.getInt("C1")
                 + " C2: " + rs.getShort("C2")
                 + " C3: " + rs.getLong("C3")
                 + " C4: " + rs.getFloat("C4")
@@ -349,7 +349,7 @@ public class TestFBResultSet extends TestXABase {
         p.setInt(1, 2);
         rs = p.executeQuery();
         while (rs.next()) {
-            System.out.println("C1: " + rs.getInt(1) 
+            System.out.println("C1: " + rs.getInt(1)
                 + " C2: " + rs.getShort(2)
                 + " C3: " + rs.getLong(3)
                 + " C4: " + rs.getFloat(4)
@@ -357,7 +357,7 @@ public class TestFBResultSet extends TestXABase {
                 + " C6: " + rs.getString(6)
                 + " C7: " + rs.getString(7)
                 );
-            System.out.println("C1: " + rs.getInt("C1") 
+            System.out.println("C1: " + rs.getInt("C1")
                 + " C2: " + rs.getShort("C2")
                 + " C3: " + rs.getLong("C3")
                 + " C4: " + rs.getFloat("C4")
@@ -367,17 +367,17 @@ public class TestFBResultSet extends TestXABase {
                 );
         }
         p.close();
-        t.commit();   
-        
+        t.commit();
+
         t.begin();
-        s.execute("DROP TABLE T1"); 
+        s.execute("DROP TABLE T1");
         s.close();
         t.commit();
         c.close();
         if (ex != null) {
             throw ex;
         }
-        
+
     }
 
     public void testUseResultSetWithCount() throws Exception {
@@ -391,39 +391,39 @@ public class TestFBResultSet extends TestXABase {
         Exception ex = null;
         t.begin();
         try {
-            s.execute(" CREATE TABLE Customer (name VARCHAR(256),accounts VARCHAR(2000),id VARCHAR(256))"); 
+            s.execute(" CREATE TABLE Customer (name VARCHAR(256),accounts VARCHAR(2000),id VARCHAR(256))");
             //s.close();
         }
         catch (Exception e) {
             ex = e;
         }
         t.commit();
-        
+
         t.begin();
         PreparedStatement p = c.prepareStatement("SELECT COUNT(*) FROM Customer WHERE id=? AND name=?");
         p.setString(1, "1");
         p.setString(2, "First Customer");
-        
-        assertTrue("execute returned false for insert statement", p.execute()); 
+
+        assertTrue("execute returned false for insert statement", p.execute());
         ResultSet rs = p.getResultSet();
         while (rs.next()) {
             System.out.println("count: " + rs.getInt(1) );
         }
 //        rs.close(); //should be automatic
         p.close();
-        t.commit();   
-        
+        t.commit();
+
         t.begin();
-        s.execute("DROP TABLE Customer"); 
+        s.execute("DROP TABLE Customer");
         s.close();
         t.commit();
         c.close();
         if (ex != null) {
             throw ex;
         }
-        
+
     }
-    
+
         public static final String CREATE_PROCEDURE =
         "CREATE PROCEDURE testproc(number INTEGER) RETURNS (result INTEGER) AS BEGIN     result = number; END";
 
@@ -438,34 +438,34 @@ public class TestFBResultSet extends TestXABase {
         Exception ex = null;
         t.begin();
         try {
-            s.execute("DROP PROCEDURE testproc"); 
+            s.execute("DROP PROCEDURE testproc");
         }
         catch (Exception e) {
         }
         t.commit();
         t.begin();
-            s.execute(CREATE_PROCEDURE); 
+            s.execute(CREATE_PROCEDURE);
         t.commit();
-        
+
         t.begin();
         CallableStatement p = c.prepareCall("EXECUTE PROCEDURE testproc(?)");
         p.setInt(1, 5);
-        
-        assertTrue("execute returned false for execute procedure statement", p.execute()); 
+
+        assertTrue("execute returned false for execute procedure statement", p.execute());
         assertTrue("wrong answer from sp invocation", p.getInt(1) == 5);
         p.close();
-        t.commit();   
-        
+        t.commit();
+
         t.begin();
-        s.execute("DROP PROCEDURE testproc"); 
+        s.execute("DROP PROCEDURE testproc");
         s.close();
         t.commit();
         c.close();
         if (ex != null) {
             throw ex;
         }
-        
+
     }
-    
+
 
 }

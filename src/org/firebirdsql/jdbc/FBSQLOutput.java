@@ -48,7 +48,7 @@ import java.net.MalformedURLException;
 
 /**
  * The output stream for writing the attributes of a user-defined
- * type back to the database.  This interface, used 
+ * type back to the database.  This interface, used
  * only for custom mapping, is used by the driver, and its
  * methods are never directly invoked by a programmer.
  * <p>When an object of a class implementing the interface
@@ -59,9 +59,9 @@ import java.net.MalformedURLException;
  * The driver then creates an instance of <code>SQLOutput</code> and
  * passes it to the method <code>SQLData.writeSQL</code>.
  * The method <code>writeSQL</code> in turn calls the
- * appropriate <code>SQLOutput.writeXXX</code> methods 
+ * appropriate <code>SQLOutput.writeXXX</code> methods
  * to write data from the <code>SQLData</code> object to
- * the <code>SQLOutput</code> output stream as the 
+ * the <code>SQLOutput</code> output stream as the
  * representation of an SQL user-defined type.
  * @since 1.2
  * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
@@ -277,7 +277,7 @@ import java.net.MalformedURLException;
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   //================================================================
   // Methods for writing items of SQL user-defined types to the stream.
   // These methods pass objects to the database as values of SQL
@@ -287,12 +287,12 @@ import java.net.MalformedURLException;
   //================================================================
 
   /**
-   * Writes to the stream the data contained in the given 
+   * Writes to the stream the data contained in the given
    * <code>SQLData</code> object.
    * When the <code>SQLData</code> object is <code>null</code>, this
-   * method writes an SQL <code>NULL</code> to the stream.  
+   * method writes an SQL <code>NULL</code> to the stream.
    * Otherwise, it calls the <code>SQLData.writeSQL</code>
-   * method of the given object, which 
+   * method of the given object, which
    * writes the object's attributes to the stream.
    * The implementation of the method <code>SQLData.writeSQ</code>
    * calls the appropriate <code>SQLOutput.writeXXX</code> method(s)
@@ -301,7 +301,7 @@ import java.net.MalformedURLException;
    * input stream and written to an <code>SQLOutput</code>
    * output stream in the same order in which they were
    * listed in the SQL definition of the user-defined type.
-   * 
+   *
    * @param x the object representing data of an SQL structured or
    * distinct type
    * @exception SQLException if a database access error occurs
@@ -353,7 +353,7 @@ import java.net.MalformedURLException;
    * Writes an SQL structured type value to the stream.
    *
    * @param x a <code>Struct</code> object representing data of an SQL
-   * structured type 
+   * structured type
    *
    * @exception SQLException if a database access error occurs
    */
@@ -385,4 +385,4 @@ import java.net.MalformedURLException;
     }
 
 }
- 
+

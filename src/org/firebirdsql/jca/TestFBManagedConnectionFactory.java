@@ -1,4 +1,4 @@
-/*   This class is LGPL only, due to the inclusion of a 
+/*   This class is LGPL only, due to the inclusion of a
  *Xid implementation from the JBoss project as a static inner class for testing purposes.
  *The portions before the XidImpl are usable under MPL 1.1 or LGPL
  *If we write our own xid test implementation, we can reset the license to match
@@ -47,17 +47,17 @@ import junit.framework.*;
  *future enhancements will use datasources/ managed stuff.
  */
 public class TestFBManagedConnectionFactory extends TestXABase {
-    
-    
+
+
     public TestFBManagedConnectionFactory(String name) {
         super(name);
     }
-    
+
     public static Test suite() {
 
         return new TestSuite(TestFBManagedConnectionFactory.class);
     }
-    
+
     public void _setUp() throws Exception {
         FBManager m = new FBManager();
         m.setURL("localhost");
@@ -66,7 +66,7 @@ public class TestFBManagedConnectionFactory extends TestXABase {
         m.createDatabase(DBNAME);
         m.stop();
     }
-    
+
     public void _tearDown() throws Exception {
         FBManager m = new FBManager();
         m.setURL("localhost");
@@ -75,9 +75,9 @@ public class TestFBManagedConnectionFactory extends TestXABase {
         m.dropDatabase(DBNAME);
         m.stop();
     }
-    
-    
-    
+
+
+
 
 
 
@@ -96,8 +96,8 @@ public class TestFBManagedConnectionFactory extends TestXABase {
         mc.destroy();
     }
 
-    
-    
+
+
     public void testSqlInfo() throws Exception {
         System.out.println();
         System.out.println("testSqlInfo");
@@ -155,13 +155,13 @@ public class TestFBManagedConnectionFactory extends TestXABase {
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         FBManagedConnection.SqlInfo si = new FBManagedConnection.SqlInfo(testbuffer, GDSFactory.newGDS());
-        
+
         assertTrue("selectcount wrong " + si.getSelectCount(), si.getSelectCount() == 2);
         assertTrue("insertcount wrong " + si.getInsertCount(), si.getInsertCount() == 1);
         assertTrue("updatecount wrong " + si.getUpdateCount(), si.getUpdateCount() == 4);
         assertTrue("deletecount wrong " + si.getDeleteCount(), si.getDeleteCount() == 3);
         assertTrue("statement type wrong " + si.getStatementType(), si.getStatementType() == 2);
-        
+
         mc.destroy();
     }
 

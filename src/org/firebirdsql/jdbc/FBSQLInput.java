@@ -44,15 +44,15 @@ import java.net.MalformedURLException;
  *   @version $ $
  */
 
- 
+
 /**
- * An input stream that contains a stream of values representing an 
+ * An input stream that contains a stream of values representing an
  * instance of an SQL structured or distinct type.
  * This interface, used only for custom mapping, is used by the driver
  * behind the scenes, and a programmer never directly invokes
  * <code>SQLInput</code> methods. The <code>readXXX</code> methods
  * provide a way to read the values in an <code>SQLInput</code> object.
- * The method <code>wasNull</code> is used to determine whether the 
+ * The method <code>wasNull</code> is used to determine whether the
  * the last value read was SQL <code>NULL</code>.
  * <P>When the method <code>getObject</code> is called with an
  * object of a class implementing the interface <code>SQLData</code>,
@@ -61,8 +61,8 @@ import java.net.MalformedURLException;
  * being custom mapped. The driver
  * creates an instance of <code>SQLInput</code>, populating it with the
  * attributes of the UDT.  The driver then passes the input
- * stream to the method <code>SQLData.readSQL</code>, which in turn 
- * calls the <code>SQLInput.readXXX</code> methods 
+ * stream to the method <code>SQLData.readSQL</code>, which in turn
+ * calls the <code>SQLInput.readXXX</code> methods
  * in its implementation for reading the
  * attributes from the input stream.
  * @since 1.2
@@ -71,7 +71,7 @@ import java.net.MalformedURLException;
  */
 
 public class FBSQLInput implements SQLInput {
-  
+
 
   //================================================================
   // Methods for reading attributes from the stream of SQL data.
@@ -80,7 +80,7 @@ public class FBSQLInput implements SQLInput {
   //================================================================
 
   /**
-   * Reads the next attribute in the stream as a <code>String</code> 
+   * Reads the next attribute in the stream as a <code>String</code>
    * in the Java programming language.
    *
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>null</code>
@@ -92,7 +92,7 @@ public class FBSQLInput implements SQLInput {
 
 
   /**
-   * Reads the next attribute in the stream as a <code>boolean</code> 
+   * Reads the next attribute in the stream as a <code>boolean</code>
    * in the Java programming language.
    *
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>false</code>
@@ -104,7 +104,7 @@ public class FBSQLInput implements SQLInput {
 
 
   /**
-   * Reads the next attribute in the stream as a <code>byte</code> 
+   * Reads the next attribute in the stream as a <code>byte</code>
    * in the Java programming language.
    *
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>0</code>
@@ -116,7 +116,7 @@ public class FBSQLInput implements SQLInput {
 
 
   /**
-   * Reads the next attribute in the stream as a <code>short</code> 
+   * Reads the next attribute in the stream as a <code>short</code>
    * in the Java programming language.
    *
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>0</code>
@@ -128,7 +128,7 @@ public class FBSQLInput implements SQLInput {
 
 
   /**
-   * Reads the next attribute in the stream as an <code>int</code> 
+   * Reads the next attribute in the stream as an <code>int</code>
    * in the Java programming language.
    *
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>0</code>
@@ -140,7 +140,7 @@ public class FBSQLInput implements SQLInput {
 
 
   /**
-   * Reads the next attribute in the stream as a <code>long</code> 
+   * Reads the next attribute in the stream as a <code>long</code>
    * in the Java programming language.
    *
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>0</code>
@@ -152,7 +152,7 @@ public class FBSQLInput implements SQLInput {
 
 
   /**
-   * Reads the next attribute in the stream as a <code>float</code> 
+   * Reads the next attribute in the stream as a <code>float</code>
    * in the Java programming language.
    *
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>0</code>
@@ -164,7 +164,7 @@ public class FBSQLInput implements SQLInput {
 
 
   /**
-   * Reads the next attribute in the stream as a <code>double</code> 
+   * Reads the next attribute in the stream as a <code>double</code>
    * in the Java programming language.
    *
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>0</code>
@@ -176,7 +176,7 @@ public class FBSQLInput implements SQLInput {
 
 
   /**
-   * Reads the next attribute in the stream as a <code>java.math.BigDecimal</code> 
+   * Reads the next attribute in the stream as a <code>java.math.BigDecimal</code>
    * object in the Java programming language.
    *
    * @return the attribute; if the value is SQL <code>NULL</code>, returns <code>null</code>
@@ -265,7 +265,7 @@ public class FBSQLInput implements SQLInput {
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   //================================================================
   // Methods for reading items of SQL user-defined types from the stream.
   //================================================================
@@ -279,12 +279,12 @@ public class FBSQLInput implements SQLInput {
    * <P>A type map is registered with the stream by the JDBC driver before the
    * stream is passed to the application.
    *
-   * <P>When the datum at the head of the stream is an SQL <code>NULL</code>, 
+   * <P>When the datum at the head of the stream is an SQL <code>NULL</code>,
    * the method returns <code>null</code>.  If the datum is an SQL structured or distinct
-   * type, it determines the SQL type of the datum at the head of the stream. 
+   * type, it determines the SQL type of the datum at the head of the stream.
    * If the stream's type map has an entry for that SQL type, the driver
-   * constructs an object of the appropriate class and calls the method 
-   * <code>SQLData.readSQL</code> on that object, which reads additional data from the 
+   * constructs an object of the appropriate class and calls the method
+   * <code>SQLData.readSQL</code> on that object, which reads additional data from the
    * stream, using the protocol described for that method.
    *
    * @return the datum at the head of the stream as an <code>Object</code> in the
@@ -301,7 +301,7 @@ public class FBSQLInput implements SQLInput {
    * <code>Ref</code> object in the Java programming language.
    *
    * @return a <code>Ref</code> object representing the SQL <code>REF</code> value
-   * at the head of the stream; <code>null</code> if the value read is 
+   * at the head of the stream; <code>null</code> if the value read is
    * SQL <code>NULL</code>
    * @exception SQLException if a database access error occurs
    */
@@ -315,7 +315,7 @@ public class FBSQLInput implements SQLInput {
    * <code>Blob</code> object in the Java programming language.
    *
    * @return a <code>Blob</code> object representing data of the SQL <code>BLOB</code> value
-   * at the head of the stream; <code>null</code> if the value read is 
+   * at the head of the stream; <code>null</code> if the value read is
    * SQL <code>NULL</code>
    * @exception SQLException if a database access error occurs
    */
@@ -329,7 +329,7 @@ public class FBSQLInput implements SQLInput {
    * <code>Clob</code> object in the Java programming language.
    *
    * @return a <code>Clob</code> object representing data of the SQL <code>CLOB</code> value
-   * at the head of the stream; <code>null</code> if the value read is 
+   * at the head of the stream; <code>null</code> if the value read is
    * SQL <code>NULL</code>
    * @exception SQLException if a database access error occurs
    */
@@ -354,11 +354,11 @@ public class FBSQLInput implements SQLInput {
 
   /**
    * Determines whether the last value read was SQL <code>NULL</code>.
-   * 
+   *
    * @return <code>true</code> if the most recently read SQL value was SQL
    * <code>NULL</code>; otherwise, <code>false</code>
    * @exception SQLException if a database access error occurs
-   * 
+   *
    */
     public boolean wasNull() throws  SQLException {
         throw new SQLException("Not yet implemented");
@@ -374,6 +374,6 @@ public class FBSQLInput implements SQLInput {
         // TODO: implement this java.sql.SQLInput method
         return null;
     }
-    
+
 
 }

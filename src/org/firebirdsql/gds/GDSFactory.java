@@ -43,29 +43,29 @@ import org.firebirdsql.jgds.ClumpletImpl;
  */
 
 public class GDSFactory {
-    
+
     public static GDS newGDS() {
         return new GDS_Impl();
     }
-    
-    
+
+
     public static Clumplet newClumplet(int type, String content) {
         return GDS_Impl.newClumplet(type, content);
     }
-    
+
     public static Clumplet newClumplet(int type){
         return GDS_Impl.newClumplet(type);
     }
-    
+
 
     public static Clumplet newClumplet(int type, int c){
         return GDS_Impl.newClumplet(type, c);
     }
-    
+
     public static Clumplet newClumplet(int type, byte[] content) {
         return GDS_Impl.newClumplet(type, content);
     }
-    
+
     public static Clumplet cloneClumplet(Clumplet c) {
         return GDS_Impl.cloneClumplet(c);
     }

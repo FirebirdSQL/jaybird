@@ -11,29 +11,29 @@ import javax.management.ObjectName;
 
 
 public interface FBManagerMBean {
-    
+
     public final static String OBJECT_NAME = "DefaultDomain:service=firebirdsqlmanager";
-    
+
     public void start()
         throws Exception;
-   
+
     public void stop();
-   
+
     public String getName();
     public int getState();
     public String getStateString();
-    
+
     public void setURL(String host);
-    
+
     public String getURL();
-    
+
     public void setPort(int port);
-    
+
     public int getPort();
-    
+
     public void createDatabase (String filename) throws Exception;
 
     public void dropDatabase(String fileName) throws Exception;
 
-  
+
 }

@@ -69,33 +69,33 @@ import java.util.HashSet;
 /**
  *ManagedConnectionFactory instance is a factory of both ManagedConnection and EIS-specific
 connection factory instances. This interface supports connection pooling by providing methods for
-matching and creation of ManagedConnection instance. 
- 
+matching and creation of ManagedConnection instance.
+
  */
 
 public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
-    
+
     private PrintWriter log = new PrintWriter(System.out);
-    
+
     GDS gds = GDSFactory.newGDS();
-    
+
     private String dbAlias;
-    
+
     private LinkedList freeDbHandles = new LinkedList();
 
     private HashMap dbHandleUsage = new HashMap();
-    
+
     private HashMap xidMap = new HashMap();  //Maps supplied XID to internal transaction handle.
-    
+
     private HashMap TransactionStatementMap = new HashMap();  //Maps transaction handle to list of statements with resultsets.
 
     private FBConnectionRequestInfo defaultCri;
-    
+
     private Clumplet dpbClumplet;
-    
+
     private Set tpbSet;
-    
-    
+
+
     public FBManagedConnectionFactory() {
         defaultCri = new FBConnectionRequestInfo();
         defaultCri.setProperty(GDS.isc_dpb_num_buffers, new byte[] {90});
@@ -108,39 +108,39 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         tpbSet.add(new Integer(GDS.isc_tpb_wait));
 
     }  //Default constructor.
-    
+
     //rar properties
-    
-    
+
+
     public void setDatabase(String database) {
         this.dbAlias = database;
     }
-    
+
     public String getDatabase() {
         return dbAlias;
     }
-    
+
     public void setConnectionRequestInfo(FBConnectionRequestInfo cri) {
         this.defaultCri = cri;
     }
-    
+
     public FBConnectionRequestInfo getDefaultConnectionRequestInfo() {
         return defaultCri;
     }
-    
+
 /*    public void setDpb(Clumplet dpb) {
         dpbClumplet = dpb;
     }*/
-    
+
 /*    public Clumplet getDpb() {
 //        return dpbClumplet;
         return defaultCri.c;
     }*/
-    
+
     public void setTpb(Set tpb) {
         tpbSet = tpb;
     }
-    
+
     public Set getTpb() {
         return tpbSet;
     }
@@ -184,7 +184,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
 
 /**
-     Creates a new physical connection to the underlying EIS resource manager, 
+     Creates a new physical connection to the underlying EIS resource manager,
 
      ManagedConnectionFactory uses the security information (passed as Subject) and additional
      ConnectionRequestInfo (which is specific to ResourceAdapter and opaque to application server)
@@ -216,7 +216,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
 
 /**
-     Returns a matched connection from the candidate set of connections. 
+     Returns a matched connection from the candidate set of connections.
 
      ManagedConnectionFactory uses the security info (as in Subject) and information provided
      through ConnectionRequestInfo and additional Resource Adapter specific criteria to do
@@ -244,14 +244,14 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
                                                  javax.security.auth.Subject subject,
                                                  ConnectionRequestInfo cxRequestInfo)
                                           throws ResourceException {
-	Iterator i = connectionSet.iterator();
-	while (i.hasNext()) {
-	    FBManagedConnection mc = (FBManagedConnection)i.next();
+    Iterator i = connectionSet.iterator();
+    while (i.hasNext()) {
+        FBManagedConnection mc = (FBManagedConnection)i.next();
             if (mc.matches(subject, (FBConnectionRequestInfo)cxRequestInfo)) {
                 return mc;
             }
-	}
-	return null;
+    }
+    return null;
     }
 
 
@@ -267,7 +267,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
      ManagedConnectionFactory. When a ManagedConnectionFactory object is created the log
      writer is initially null, in other words, logging is disabled. Once a log writer is associated with a
      ManagedConnectionFactory, logging and tracing for ManagedConnectionFactory instance is
-     enabled. 
+     enabled.
 
      The ManagedConnection instances created by ManagedConnectionFactory "inherits" the log
      writer, which can be overridden by ApplicationServer using ManagedConnection.setLogWriter
@@ -287,10 +287,10 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
 
 
 /**
-     Get the log writer for this ManagedConnectionFactory instance. 
+     Get the log writer for this ManagedConnectionFactory instance.
 
      The log writer is a character output stream to which all logging and tracing messages for this
-     ManagedConnectionFactory instance will be printed 
+     ManagedConnectionFactory instance will be printed
 
      ApplicationServer manages the association of output stream with the
      ManagedConnectionFactory. When a ManagedConnectionFactory object is created the log
@@ -334,16 +334,16 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
     /* public boolean equals(java.lang.Object other) {
         return false;
         }*/
-    
+
     //needs synchronization!
     isc_tr_handle lookupXid(Xid xid) {
         return (isc_tr_handle) xidMap.get(xid);
     }
-    
+
     void forgetXid(Xid xid) {
         xidMap.remove(xid);
     }
-    
+
     //needs synchronization!
     isc_tr_handle getCurrentIscTrHandle(Xid xid, FBManagedConnection mc, int flags) throws XAException {
         isc_tr_handle tr = lookupXid(xid);
@@ -355,13 +355,13 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             isc_db_handle db = mc.getIscDBHandle();
             tr = gds.get_new_isc_tr_handle();
             try {
-                gds.isc_start_transaction(tr, db, getTpb());
-            } 
+                gds.isc_start_transaction(tr, db, mc.getTpb());
+            }
             catch (GDSException ge) {
                 throw new XAException(ge.toString());
             }
             xidMap.put(xid, tr);
-        } 
+        }
         else {
             if (flags != XAResource.TMJOIN && flags != XAResource.TMRESUME) {
                 throw new XAException("Transaction flags wrong, this xid already known");
@@ -382,7 +382,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             return count + inc;
         }
     }
-   
+
     isc_db_handle getDbHandle(FBConnectionRequestInfo cri) throws XAException {
         try {
             synchronized (freeDbHandles) {
@@ -402,7 +402,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             return db;
         }
     }
-    
+
     synchronized int returnDbHandle(isc_db_handle db) {
         if (db != null) {
             freeDbHandles.addLast(db);
@@ -421,9 +421,9 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         }
     }
 
-    
-    
-    
+
+
+
     void commit(Xid xid) throws XAException {
         isc_tr_handle tr = lookupXid(xid);
         forgetResultSets(tr);
@@ -437,7 +437,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             forgetXid(xid);
         }
     }
-        
+
     void prepare(Xid xid) throws XAException {
         try {
             FBXid fbxid;
@@ -455,7 +455,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             throw new XAException(ge.toString());
         }
     }
-        
+
     void rollback(Xid xid) throws XAException {
         isc_tr_handle tr = lookupXid(xid);
         forgetResultSets(tr);
@@ -469,7 +469,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             forgetXid(xid);
         }
     }
-    
+
     void registerStatementWithTransaction(isc_tr_handle tr, FBStatement stmt) {
         ArrayList stmts = null;
         synchronized (tr) {
@@ -481,7 +481,7 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
         }
         stmts.add(stmt);
     }
-    
+
     private void forgetResultSets(isc_tr_handle tr) {
         //shouldn't need synchronization, only called by rollback and commit- then we're done
         //transaction/thread should also help.
@@ -494,10 +494,10 @@ public class FBManagedConnectionFactory implements  ManagedConnectionFactory {
             stmts.clear();
         }
     }
-        
-        
 
-} 
+
+
+}
 
 
 

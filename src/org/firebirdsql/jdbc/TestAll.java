@@ -24,6 +24,9 @@
 /*
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2001/07/18 05:12:46  d_jencks
+ * Completely implemented DatabaseMetaData.getTables
+ *
  * Revision 1.1  2001/07/13 18:16:15  d_jencks
  * Implementation of jdbc 1.0 Driver contributed by Roman Rokytskyy
  *

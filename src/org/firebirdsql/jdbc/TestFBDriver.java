@@ -21,16 +21,29 @@
  *    All rights reserved.
  */
 
+
+
 /*
+
  * CVS modification log:
+
  * $Log$
+ * Revision 1.2  2001/07/15 21:17:36  d_jencks
+ * Updated to use assertTrue rather than assert, for junit 3.7
+ *
  * Revision 1.1  2001/07/13 18:16:15  d_jencks
  * Implementation of jdbc 1.0 Driver contributed by Roman Rokytskyy
  *
+
  * Revision 1.1  2001/07/09 09:09:51  rrokytskyy
+
  * Initial revision
+
  *
+
  */
+
+
 
 package org.firebirdsql.jdbc;
 
@@ -41,6 +54,7 @@ import junit.framework.*;
  *
  * @author Roman Rokytskyy (rrokytskyy@yahoo.co.uk)
  */
+
 public class TestFBDriver extends TestCase {
 
     private java.sql.Connection connection;
@@ -49,29 +63,38 @@ public class TestFBDriver extends TestCase {
     public TestFBDriver(String testName) {
         super(testName);
     }
+
     public static Test suite() {
         return new TestSuite(TestFBDriver.class);
     }
+
+
 
     protected void setUp() throws Exception {
         Class.forName(org.firebirdsql.jdbc.FBDriver.class.getName());
         driver = java.sql.DriverManager.getDriver(TestConst.DB_URL);
     }
 
+
+
     protected void tearDown() {
     }
+
+
 
     public void testAcceptsURL() throws Exception {
         assertTrue(driver.acceptsURL(TestConst.DB_URL));
     }
+
     public void testConnect() throws Exception {
         System.out.println(TestConst.DB_URL);
         connection = driver.connect(TestConst.DB_URL, TestConst.DB_INFO);
         assertTrue("Connection is null", connection != null);
     }
+
     public void testJdbcCompliant() {
         // current driver is not JDBC compliant.
         assertTrue(!driver.jdbcCompliant());
     }
-
 }
+

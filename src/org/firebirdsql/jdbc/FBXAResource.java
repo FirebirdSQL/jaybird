@@ -47,7 +47,7 @@ public class FBXAResource implements XAResource {
 //    private FBManagedConnection fbmc;
     private boolean active = false;
     private int timeout_ignored = 0;
-    
+
 
 /*    public FBXAResource(FBManagedConnection fbmc) {
         this.fbmc = fbmc;
@@ -242,7 +242,7 @@ Log.getLog().debug("RuleXAResource started: " + this + ", Xid: " + id);
         fbmc.setCurrentXid(id);
         active = true;*/
     }
-    
-    
-    
+
+
+
 }

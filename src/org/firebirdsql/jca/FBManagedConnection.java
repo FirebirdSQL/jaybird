@@ -34,10 +34,12 @@ import javax.resource.spi.LocalTransaction;
 import javax.resource.spi.ConnectionEvent;
 import javax.resource.spi.ConnectionEventListener;
 import javax.resource.spi.ConnectionRequestInfo;
+import javax.resource.spi.security.PasswordCredential;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Set;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
@@ -71,37 +73,40 @@ import org.firebirdsql.jdbc.FBStatement;
  */
 
 public class FBManagedConnection implements ManagedConnection, XAResource {
-    
+
     private FBManagedConnectionFactory mcf;
-    
+
     private ArrayList connectionEventListeners = new ArrayList();
-    
+
     private ArrayList connectionHandles = new ArrayList();
-    
+
     private PrintWriter log;
-    
+
     private int timeout = 0;
-    
+
     private Subject s;
-    
+
     private FBConnectionRequestInfo cri;
-    
-    
+
+
     private isc_tr_handle currentTr;
-    
+
     private isc_db_handle currentDbHandle;
-    
+
+    private Set tpb;
+
     FBManagedConnection(Subject s, FBConnectionRequestInfo cri, FBManagedConnectionFactory mcf) {
         this.mcf = mcf;
         this.s = s;
         this.cri = cri;
         this.log = mcf.getLogWriter();
+        this.tpb = mcf.getTpb().clone();
     }
-    
-    
-    
+
+
+
     //javax.resource.spi.ManagedConnection implementation
-    
+
     /**
      Returns an javax.resource.spi.LocalTransaction instance. The LocalTransaction interface
      is used by the container to manage local transactions for a RM instance.
@@ -111,9 +116,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          ResourceException - generic exception if operation fails
          NotSupportedException - if the operation is not supported
          ResourceAdapterInternalException - resource adapter internal error condition
-    
-    
-    
+
+
+
     **/
 
     public LocalTransaction getLocalTransaction() throws ResourceException {
@@ -135,9 +140,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public ManagedConnectionMetaData getMetaData() throws ResourceException {
         throw new ResourceException("not yet implemented");
     }
-    
+
     /**
-     Sets the log writer for this ManagedConnection instance. 
+     Sets the log writer for this ManagedConnection instance.
 
      The log writer is a character output stream to which all logging and tracing messages for this
      ManagedConnection instance will be printed. Application Server manages the association of
@@ -157,10 +162,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public void setLogWriter(PrintWriter out){
         this.log = out;
     }
-    
-    
+
+
     /**
-     Gets the log writer for this ManagedConnection instance. 
+     Gets the log writer for this ManagedConnection instance.
 
      The log writer is a character output stream to which all logging and tracing messages for this
      ManagedConnection instance will be printed. ConnectionManager manages the association of
@@ -180,7 +185,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public PrintWriter getLogWriter() {
         return log;
     }
-    
+
   /**<P> Add an event listener.
    */
     public void addConnectionEventListener(ConnectionEventListener listener) {
@@ -194,10 +199,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public void removeConnectionEventListener(ConnectionEventListener listener) {
         connectionEventListeners.remove(listener);
     }
-    
+
   /**Used by the container to change the association of an application-level connection handle with a
      ManagedConneciton instance. The container should find the right ManagedConnection instance
-     and call the associateConnection method. 
+     and call the associateConnection method.
 
      The resource adapter is required to implement the associateConnection method. The method
      implementation for a ManagedConnection should dissociate the connection handle (passed as a
@@ -216,27 +221,27 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             ((FBConnection)connection).setManagedConnection(this);
             connectionHandles.add(connection);
         }
-        catch (ClassCastException cce) {        
+        catch (ClassCastException cce) {
             throw new ResourceException("invalid connection supplied to associateConnection: " + cce);
         }
     }
 /**
 
 
-     Application server calls this method to force any cleanup on the ManagedConnection instance. 
+     Application server calls this method to force any cleanup on the ManagedConnection instance.
 
      The method ManagedConnection.cleanup initiates a cleanup of the any client-specific state as
      maintained by a ManagedConnection instance. The cleanup should invalidate all connection
      handles that had been created using this ManagedConnection instance. Any attempt by an
      application component to use the connection handle after cleanup of the underlying
-     ManagedConnection should result in an exception. 
+     ManagedConnection should result in an exception.
 
      The cleanup of ManagedConnection is always driven by an application server. An application
      server should not invoke ManagedConnection.cleanup when there is an uncompleted transaction
-     (associated with a ManagedConnection instance) in progress. 
+     (associated with a ManagedConnection instance) in progress.
 
      The invocation of ManagedConnection.cleanup method on an already cleaned-up connection
-     should not throw an exception. 
+     should not throw an exception.
 
      The cleanup of ManagedConnection instance resets its client specific state and prepares the
      connection to be put back in to a connection pool. The cleanup method should not cause resource
@@ -247,13 +252,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          ResourceAdapterInternalException - resource adapter internal error condition
          IllegalStateException - Illegal state for calling connection cleanup. Example - if a
          localtransaction is in progress that doesn't allow connection cleanup
-*/    
+*/
     public void cleanup() throws ResourceException {
         for (int i = connectionHandles.size() - 1; i>= 0; i--) {
             ((FBConnection)connectionHandles.get(i)).close();
         }
     }
-    
+
 /**
 
 
@@ -279,7 +284,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
          CommException - failed communication with EIS instance
          EISSystemException - internal error condition in EIS instance - used if EIS instance is
          involved in setting state of ManagedConnection
-**/    
+**/
     public java.lang.Object getConnection(Subject subject, ConnectionRequestInfo cxRequestInfo)
         throws ResourceException {
         //subject currently ignored
@@ -288,12 +293,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         connectionHandles.add(c);
         return c;
     }
-    
- 
+
+
 /**
 
 
-     Destroys the physical connection to the underlying resource manager. 
+     Destroys the physical connection to the underlying resource manager.
 
      To manage the size of the connection pool, an application server can explictly call
      ManagedConnection.destroy to destroy a physical connection. A resource adapter should destroy
@@ -302,7 +307,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      Throws:
          ResourceException - generic exception if operation failed
          IllegalStateException - illegal state for destroying connection
-**/   
+**/
     public void destroy() throws ResourceException {
         if (currentTr != null) {
             throw new IllegalStateException("Can't destroy managed connection  with active transaction");
@@ -320,8 +325,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             }
         }
     }
-             
-             
+
+
   /**<P>In both javax.sql.XAConnection and javax.resource.spi.MangagedConnection
    * <P>Return an XA resource to the caller.
    *
@@ -332,11 +337,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         log.println("XAResource requested from FBManagedConnection");
         return this;
     }
-    
+
     //--------------------------------------------------------------
     //XAResource implementation
     //--------------------------------------------------------------
-    
+
 
     /**
      * Commits a transaction.
@@ -407,12 +412,12 @@ throw new XAException("end called with no transaction associated");
     }
 
     public boolean isSameRM(XAResource res) throws javax.transaction.xa.XAException {
-        return (res instanceof FBManagedConnection) 
-            && (mcf == ((FBManagedConnection)res).mcf); 
+        return (res instanceof FBManagedConnection)
+            && (mcf == ((FBManagedConnection)res).mcf);
     }
 
     /**
-     * Prepares a transaction to commit.  
+     * Prepares a transaction to commit.
      * @throws XAException
      *     Occurs when the state was not correct (end never called), the
      *     transaction ID is wrong, or the connection was set to Auto-Commit.
@@ -492,9 +497,9 @@ throw new XAException("end called with no transaction associated");
         }
         findIscTrHandle(id, flags);
     }
-    
+
     //FB public methods. Could be package if packages reorganized.
-    
+
     public isc_stmt_handle getAllocatedStatement() throws GDSException {
         //Should we test for dbhandle?
         if (currentTr == null) {
@@ -508,7 +513,7 @@ throw new XAException("end called with no transaction associated");
     public boolean inTransaction() {
         return currentTr != null;
     }
-    
+
     public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException {
         log.println("preparing sql: " + sql);
         //Should we test for dbhandle?
@@ -520,31 +525,31 @@ throw new XAException("end called with no transaction associated");
             mcf.gds.isc_dsql_describe_bind(stmt, GDS.SQLDA_VERSION1);
         }
     }
-    
+
     public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda) throws GDSException {
         mcf.gds.isc_dsql_execute2(currentTr, stmt,
                                  GDS.SQLDA_VERSION1, stmt.getInSqlda(), (sendOutSqlda) ? stmt.getOutSqlda() : null);
-                                 
+
     }
-    
+
     public Object[] fetch(isc_stmt_handle stmt) throws GDSException {
         return mcf.gds.isc_dsql_fetch(stmt, GDS.SQLDA_VERSION1, stmt.getOutSqlda());
     }
-    
+
     public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
         mcf.gds.isc_dsql_free_statement(stmt, (deallocate) ? GDS.DSQL_drop: GDS.DSQL_close);
     }
-    
+
     public void close(FBConnection c) {
         connectionHandles.remove(c);
         notify(ConnectionEvent.CONNECTION_CLOSED, c, null);
     }
-    
+
     public void registerStatement(FBStatement fbStatement) {
         if (currentTr == null) {
             throw new Error("registerStatement called with no transaction");
         }
-        
+
         mcf.registerStatementWithTransaction(currentTr, fbStatement);
     }
 
@@ -572,21 +577,84 @@ throw new XAException("end called with no transaction associated");
     public void putBlobSegment(isc_blob_handle blob, byte[] buf) throws GDSException {
         mcf.gds.isc_put_segment(blob, buf);
     }
-    
-    private static byte[] stmtInfo = new byte[] 
-        {GDS.isc_info_sql_records, 
-         GDS.isc_info_sql_stmt_type, 
+
+    private static byte[] stmtInfo = new byte[]
+        {GDS.isc_info_sql_records,
+         GDS.isc_info_sql_stmt_type,
          GDS.isc_info_end};
     private static int INFO_SIZE = 128;
-    
+
     public SqlInfo getSqlInfo(isc_stmt_handle stmt) throws GDSException {
         return new SqlInfo(mcf.gds.isc_dsql_sql_info(stmt, stmtInfo.length, stmtInfo, INFO_SIZE), mcf.gds);
     }
-    
+
+
+    //for DatabaseMetaData.
+    public String getDatabase() {
+        return mcf.getDatabase();
+    }
+
+    public String getUserName() {
+        if (s != null) {
+            Set credentials = s.getPrivateCredentials(javax.resource.spi.security.PasswordCredential.class);
+            Iterator i = credentials.iterator();
+            while (i.hasNext()) {
+                PasswordCredential pc = (PasswordCredential)i.next();
+                return pc.getUserName();
+            }
+        }
+        return null;//we could go fishing but why bother?
+    }
+
+    public int getTransactionIsolation() {
+        if (tpb.contains(new Integer(GDS.isc_tpb_consistency))) {
+            return GDS.isc_tpb_consistency;
+        }
+        if (tpb.contains(new Integer(GDS.isc_tpb_read_committed))) {
+            return GDS.isc_tpb_read_committed;
+        }
+        return GDS.isc_tpb_concurrency; //default.
+    }
+
+    public void setTransactionIsolation(int isolation) {
+        tpb.remove(new Integer(GDS.isc_tpb_read_committed));
+        tpb.remove(new Integer(GDS.isc_tpb_concurrency));
+        tpb.remove(new Integer(GDS.isc_tpb_consistency));
+        switch (isolation) {
+            GDS.isc_tpb_read_committed: 
+                tpb.add(new Integer(GDS.isc_tpb_read_committed));
+                break;
+            GDS.isc_tpb_concurrency: 
+                tpb.add(new Integer(GDS.isc_tpb_concurrency));
+                break;
+            GDS.isc_tpb_consistency: 
+                tpb.add(new Integer(GDS.isc_tpb_consistency));
+                break;
+            default: break;
+        }
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        tpb.remove(new Integer(GDS.isc_tpb_read));
+        tpb.remove(new Integer(GDS.isc_tpb_write));
+        if (readOnly) {
+            tpb.add(GDS.isc_tpb_read);
+        }
+        else {
+            tpb.add(GDS.isc_tpb_write);
+        }
+    }
+
+    public boolean isReadOnly() {
+        return tpb.contains(new Integer(GDS.isc_tpb_read));
+    }
+
+
+
     //--------------------------------------------------------------------
     //package visibility
     //--------------------------------------------------------------------
-    
+
     void findIscTrHandle(Xid xid, int flags) throws XAException {
         currentTr = mcf.getCurrentIscTrHandle(xid, this, flags);
         if (currentTr.getDbHandle() != currentDbHandle) {
@@ -601,7 +669,7 @@ throw new XAException("end called with no transaction associated");
         }
         return currentDbHandle;
     }
-    
+
 
     void notify(int type, FBConnection c, Exception e) {
         //(new Exception()).printStackTrace();
@@ -637,7 +705,7 @@ throw new XAException("end called with no transaction associated");
                 }
                 break;
             default:
-//                throw new 
+//                throw new
                 break;
         }
     }
@@ -657,14 +725,14 @@ throw new XAException("end called with no transaction associated");
     //-----------------------------------------
     //Private methods
     //-----------------------------------------
-    
+
     public static class SqlInfo {
         private int statementType;
         private int insertCount;
         private int updateCount;
         private int deleteCount;
         private int selectCount; //????
-        
+
         SqlInfo(byte[] buffer, GDS gds) {
             int pos = 0;
             int length;
@@ -673,7 +741,7 @@ throw new XAException("end called with no transaction associated");
                 length = gds.isc_vax_integer(buffer, pos, 2);
                 pos += 2;
                 switch (type) {
-                    case GDS.isc_info_sql_records: 
+                    case GDS.isc_info_sql_records:
                         int l;
                         int t;
                         while ((t = buffer[pos++]) != GDS.isc_info_end) {
@@ -708,27 +776,27 @@ throw new XAException("end called with no transaction associated");
                 }
             }
         }
-        
+
         public int getStatementType() {
             return statementType;
         }
-        
+
         public int getInsertCount() {
             return insertCount;
         }
-        
+
         public int getUpdateCount() {
             return updateCount;
         }
-        
+
         public int getDeleteCount() {
             return deleteCount;
         }
-        
+
         public int getSelectCount() {
             return selectCount;
         }
     }
-                        
-                
+
+
 }

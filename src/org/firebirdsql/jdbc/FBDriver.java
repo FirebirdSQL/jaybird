@@ -25,6 +25,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.2  2001/07/13 18:16:15  d_jencks
+ * Implementation of jdbc 1.0 Driver contributed by Roman Rokytskyy
+ *
  * Revision 1.3  2001/07/09 09:09:34  rrokytskyy
  * Switched to the FBUnmanagedConnection implementation
  *

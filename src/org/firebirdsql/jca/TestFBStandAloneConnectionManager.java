@@ -1,4 +1,4 @@
-/*   This class is LGPL only, due to the inclusion of a 
+/*   This class is LGPL only, due to the inclusion of a
  *Xid implementation from the JBoss project as a static inner class for testing purposes.
  *The portions before the XidImpl are usable under MPL 1.1 or LGPL
  *If we write our own xid test implementation, we can reset the license to match
@@ -46,18 +46,18 @@ import junit.framework.*;
  *future enhancements will use datasources/ managed stuff.
  */
 public class TestFBStandAloneConnectionManager extends TestXABase {
-    
-    
+
+
     public TestFBStandAloneConnectionManager(String name) {
         super(name);
     }
-    
+
     public static Test suite() {
 
         return new TestSuite(TestFBStandAloneConnectionManager.class);
     }
-    
-    
+
+
 
     public void testCreateDCM() throws Exception {
         System.out.println();
@@ -70,7 +70,7 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
         c.close();
     }
 
-    
+
     public void testCreateStatement() throws Exception {
         System.out.println();
         System.out.println("testCreateStatement");
@@ -94,25 +94,25 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
         Exception ex = null;
         t.begin();
         try {
-            s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)"); 
+            s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)");
             //s.close();
         }
         catch (Exception e) {
             ex = e;
         }
         t.commit();
-        
+
         t.begin();
-        s.execute("DROP TABLE T1"); 
+        s.execute("DROP TABLE T1");
         s.close();
         t.commit();
         c.close();
         if (ex != null) {
             throw ex;
         }
-        
+
     }
 
 
-    
+
 }

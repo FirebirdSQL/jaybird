@@ -1,26 +1,26 @@
-/* 
+/*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License") throws GDSException; you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is the Firebird Java GDS implementation.
- * 
+ *
  * The Initial Developer of the Original Code is Alejandro Alberola.
  * Portions created by Alejandro Alberola are Copyright (C) 2001
  * Boix i Oltra, S.L. All Rights Reserved.
- * 
+ *
  * Contributor(s):
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Lesser General Public License Version 2.1 or later
- * (the "LGPL"), in which case the provisions of the LGPL are applicable 
- * instead of those above.  If you wish to allow use of your 
+ * (the "LGPL"), in which case the provisions of the LGPL are applicable
+ * instead of those above.  If you wish to allow use of your
  * version of this file only under the terms of the LGPL and not to
  * allow others to use your version of this file under the MPL,
  * indicate your decision by deleting the provisions above and
@@ -44,10 +44,10 @@ public interface GDS {
     final static int SQL_DIALECT_V6_TRANSITION  = 2;
     final static int SQL_DIALECT_V6             = 3;
     final static int SQL_DIALECT_CURRENT        = SQL_DIALECT_V6;
-    
+
     final static int DSQL_close   =  1;
     final static int DSQL_drop    =  2;
-    
+
     /**********************************/
     /* Database parameter block stuff */
     /**********************************/
@@ -101,14 +101,14 @@ public interface GDS {
     final static int isc_dpb_wal_grp_cmt_wait        = 46;
     final static int isc_dpb_lc_messages             = 47;
     final static int isc_dpb_lc_ctype                = 48;
-    final static int isc_dpb_cache_manager		     = 49;
-    final static int isc_dpb_shutdown		         = 50;
-    final static int isc_dpb_online			         = 51;
-    final static int isc_dpb_shutdown_delay		     = 52;
-    final static int isc_dpb_reserved		         = 53;
-    final static int isc_dpb_overwrite		         = 54;
-    final static int isc_dpb_sec_attach		         = 55;
-    final static int isc_dpb_disable_wal		     = 56;
+    final static int isc_dpb_cache_manager           = 49;
+    final static int isc_dpb_shutdown                = 50;
+    final static int isc_dpb_online                  = 51;
+    final static int isc_dpb_shutdown_delay          = 52;
+    final static int isc_dpb_reserved                = 53;
+    final static int isc_dpb_overwrite               = 54;
+    final static int isc_dpb_sec_attach              = 55;
+    final static int isc_dpb_disable_wal             = 56;
     final static int isc_dpb_connect_timeout         = 57;
     final static int isc_dpb_dummy_packet_interval   = 58;
     final static int isc_dpb_gbak_attach             = 59;
@@ -118,9 +118,9 @@ public interface GDS {
     final static int isc_dpb_sql_dialect             = 63;
     final static int isc_dpb_set_db_readonly         = 64;
     final static int isc_dpb_set_db_sql_dialect      = 65;
-    final static int isc_dpb_gfix_attach		     = 66;
-    final static int isc_dpb_gstat_attach		     = 67;
-    
+    final static int isc_dpb_gfix_attach             = 66;
+    final static int isc_dpb_gstat_attach            = 67;
+
     /*************************************/
     /* Transaction parameter block stuff */
     /*************************************/
@@ -141,13 +141,36 @@ public interface GDS {
     final static int isc_tpb_verb_time               = 12;
     final static int isc_tpb_commit_time             = 13;
     final static int isc_tpb_ignore_limbo            = 14;
-    final static int isc_tpb_read_committed		     = 15;
-    final static int isc_tpb_autocommit		         = 16;
-    final static int isc_tpb_rec_version		     = 17;
-    final static int isc_tpb_no_rec_version		     = 18;
-    final static int isc_tpb_restart_requests	     = 19;
+    final static int isc_tpb_read_committed          = 15;
+    final static int isc_tpb_autocommit              = 16;
+    final static int isc_tpb_rec_version             = 17;
+    final static int isc_tpb_no_rec_version          = 18;
+    final static int isc_tpb_restart_requests        = 19;
     final static int isc_tpb_no_auto_undo            = 20;
-    
+
+    /*final static Integer isc_tpb_version1                = 1;
+    final static Integer isc_tpb_version3                = 3;
+    final static Integer isc_tpb_consistency             = 1;
+    final static Integer isc_tpb_concurrency             = 2;
+    final static Integer isc_tpb_shared                  = 3;
+    final static Integer isc_tpb_protected               = 4;
+    final static Integer isc_tpb_exclusive               = 5;
+    final static Integer isc_tpb_wait                    = 6;
+    final static Integer isc_tpb_nowait                  = 7;
+    final static Integer isc_tpb_read                    = 8;
+    final static Integer isc_tpb_write                   = 9;
+    final static Integer isc_tpb_lock_read               = 10;
+    final static Integer isc_tpb_lock_write              = 11;
+    final static Integer isc_tpb_verb_time               = 12;
+    final static Integer isc_tpb_commit_time             = 13;
+    final static Integer isc_tpb_ignore_limbo            = 14;
+    final static Integer isc_tpb_read_committed          = 15;
+    final static Integer isc_tpb_autocommit              = 16;
+    final static Integer isc_tpb_rec_version             = 17;
+    final static Integer isc_tpb_no_rec_version          = 18;
+    final static Integer isc_tpb_restart_requests        = 19;
+    final static Integer isc_tpb_no_auto_undo            = 20;
+    */
     /****************************/
     /* Common, structural codes */
     /****************************/
@@ -157,7 +180,7 @@ public interface GDS {
     final static int isc_info_error                  = 3;
     final static int isc_info_data_not_ready         = 4;
     final static int isc_info_flag_end               = 127;
-    
+
     /*************************/
     /* SQL information items */
     /*************************/
@@ -181,9 +204,9 @@ public interface GDS {
     final static int isc_info_sql_sqlda_start         = 20;
     final static int isc_info_sql_stmt_type           = 21;
     final static int isc_info_sql_get_plan            = 22;
-    final static int isc_info_sql_records		      = 23;
-    final static int isc_info_sql_batch_fetch	      = 24;
-    
+    final static int isc_info_sql_records             = 23;
+    final static int isc_info_sql_batch_fetch         = 24;
+
     /*********************************/
     /* SQL information return values */
     /*********************************/
@@ -201,7 +224,7 @@ public interface GDS {
     final static int isc_info_sql_stmt_rollback       = 11;
     final static int isc_info_sql_stmt_select_for_upd = 12;
     final static int isc_info_sql_stmt_set_generator  = 13;
-    
+
     /*****************************/
     /* Request information items */
     /*****************************/
@@ -219,7 +242,7 @@ public interface GDS {
     final static int isc_info_req_insert_count       =  14;
     final static int isc_info_req_update_count       =  15;
     final static int isc_info_req_delete_count       =  16;
-    
+
 /************************/
 /* Blob Parameter Block */
 /************************/
@@ -238,9 +261,9 @@ public interface GDS {
     final static int RBL_eof              = 1;
     final static int RBL_segment          = 2;
     final static int RBL_eof_pending      = 4;
-    final static int RBL_create	          = 8;
+    final static int RBL_create           = 8;
 
-    
+
     /********************/
     /* ISC Error Codes */
     /*******************/
@@ -956,8 +979,8 @@ public interface GDS {
     final static int isc_gstat_open_err                   = 336920605;
     final static int isc_gstat_read_err                   = 336920606;
     final static int isc_gstat_sysmemex                   = 336920607;
-    final static int isc_err_max                          = 689;    
-    
+    final static int isc_err_max                          = 689;
+
     /*******************/
     /* SQL definitions */
     /*******************/
@@ -979,73 +1002,73 @@ public interface GDS {
 
     /* Historical alias for pre V6 applications */
     final static int SQL_DATE      = SQL_TIMESTAMP;
-    
-    
-    
+
+
+
     // Database functions
     void isc_create_database2(String file_name, isc_db_handle db_handle) throws GDSException;
-    
+
     void isc_create_database(String file_name,
                             isc_db_handle db_handle,
                             Clumplet c
                            /* int dpb_length,
                             byte[] dpb*/) throws GDSException;
-   
+
     void isc_attach_database(String file_name,
                             isc_db_handle db_handle,
                             Clumplet c
                            /* int dpb_length,
                             byte[] dpb*/) throws GDSException;
-   
+
     void isc_database_info(isc_db_handle db_handle,
                             int item_length,
                             byte[] items,
                             int buffer_length,
                             byte[] buffer) throws GDSException;
-        
+
     void isc_detach_database(isc_db_handle db_handle) throws GDSException;
-    
+
     void isc_drop_database(isc_db_handle db_handle) throws GDSException;
-    
+
     byte[] isc_expand_dpb(byte[] dpb, int dpb_length,
                           int param, Object[] params) throws GDSException;
-    
-    
+
+
     // Transactions
-    
+
     void isc_start_transaction(    isc_tr_handle tr_handle,
                                 isc_db_handle db_handle,
                                 Set tpb
                                 /*int tpb_length,
                                 byte[] tpb*/) throws GDSException;
-                                        
-    
+
+
     void isc_commit_transaction(    isc_tr_handle tr_handle) throws GDSException;
-    
+
     void isc_commit_retaining(isc_tr_handle tr_handle) throws GDSException;
-    
+
     void isc_prepare_transaction(isc_tr_handle tr_handle) throws GDSException;
-    
+
     void isc_prepare_transaction2(isc_tr_handle tr_handle,
                                    byte[] bytes) throws GDSException;
-                                   
+
     void isc_rollback_transaction(isc_tr_handle tr_handle) throws GDSException;
-    
-    
+
+
     // Dynamic SQL
-    
+
     void isc_dsql_allocate_statement(isc_db_handle db_handle,
                                        isc_stmt_handle stmt_handle) throws GDSException;
-    
+
     void isc_dsql_alloc_statement2(isc_db_handle db_handle,
                                      isc_stmt_handle stmt_handle) throws GDSException;
-    
+
     XSQLDA isc_dsql_describe(isc_stmt_handle stmt_handle,
                             int da_version) throws GDSException;
-    
+
     XSQLDA isc_dsql_describe_bind(isc_stmt_handle stmt_handle,
                                   int da_version) throws GDSException;
-    
+
     void isc_dsql_execute(isc_tr_handle tr_handle,
                            isc_stmt_handle stmt_handle,
                            int da_version,
@@ -1063,7 +1086,7 @@ public interface GDS {
                                       String statement,
                                       int dialect,
                                       XSQLDA xsqlda) throws GDSException;
-    
+
     void isc_dsql_exec_immed2(isc_db_handle db_handle,
                                isc_tr_handle tr_handle,
 //                                      int length,
@@ -1071,14 +1094,14 @@ public interface GDS {
                                int dialect,
                                XSQLDA in_xsqlda,
                                XSQLDA out_xsqlda) throws GDSException;
-    
+
     Object[] isc_dsql_fetch(isc_stmt_handle stmt_handle,
                          int da_version,
                          XSQLDA xsqlda) throws GDSException;
-    
+
     void isc_dsql_free_statement(isc_stmt_handle stmt_handle,
                                    int option) throws GDSException;
-    
+
     XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
                            isc_stmt_handle stmt_handle,
 //                                      int length,
@@ -1088,47 +1111,47 @@ public interface GDS {
     void isc_dsql_set_cursor_name(isc_stmt_handle stmt_handle,
                                     String cursor_name,
                                     int type) throws GDSException;
-                                   
-                                   
+
+
     byte[] isc_dsql_sql_info(isc_stmt_handle stmt_handle,
                             int item_length,
                             byte[] items,
                             int buffer_length/*,
                             byte[] buffer*/) throws GDSException;
-    
-    
+
+
     int isc_vax_integer(byte[] buffer, int pos, int length);
-    
-    
+
+
     //-----------------------------------------------
     //Blob methods
     //-----------------------------------------------
-    
-    void isc_create_blob2(isc_db_handle db, 
-                        isc_tr_handle tr, 
-                        isc_blob_handle blob, 
+
+    void isc_create_blob2(isc_db_handle db,
+                        isc_tr_handle tr,
+                        isc_blob_handle blob,
                         Clumplet bpb) throws GDSException;
-    
-    void isc_open_blob2(isc_db_handle db, 
-                        isc_tr_handle tr, 
-                        isc_blob_handle blob, 
+
+    void isc_open_blob2(isc_db_handle db,
+                        isc_tr_handle tr,
+                        isc_blob_handle blob,
                         Clumplet bpb) throws GDSException;
-    
+
     byte[] isc_get_segment(isc_blob_handle blob,
                            int maxread) throws GDSException;
-                           
-    void isc_put_segment(isc_blob_handle blob_handle, 
-			 byte[] buffer) throws GDSException;
+
+    void isc_put_segment(isc_blob_handle blob_handle,
+             byte[] buffer) throws GDSException;
 
     void isc_close_blob(isc_blob_handle blob) throws GDSException;
-    
+
     // Handle declaration methods
     isc_db_handle get_new_isc_db_handle();
-    
+
     isc_tr_handle get_new_isc_tr_handle();
-    
+
     isc_stmt_handle get_new_isc_stmt_handle();
-    
+
     isc_blob_handle get_new_isc_blob_handle();
 }
 

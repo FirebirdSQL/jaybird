@@ -43,8 +43,8 @@ import org.firebirdsql.gds.XSQLVAR;
 
 
 /**
- * <P>The RowSetMetaData interface extends ResultSetMetaData with 
- * methods that allow a metadata object to be initialized.  A 
+ * <P>The RowSetMetaData interface extends ResultSetMetaData with
+ * methods that allow a metadata object to be initialized.  A
  * RowSetReader may create a RowSetMetaData and pass it to a rowset
  * when new data is read.
  */
@@ -92,7 +92,7 @@ public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaD
     public void setCaseSensitive(int columnIndex, boolean property) throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
-	
+
 
   /**
    * Specify whether the column can be used in a where clause.
@@ -107,7 +107,7 @@ public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaD
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   /**
    * Specify whether the column is a cash value.
    *
@@ -121,7 +121,7 @@ public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaD
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   /**
    * Specify whether the column's value can be set to NULL.
    *
@@ -149,7 +149,7 @@ public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaD
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   /**
    * Specify the column's normal max width in chars.
    *
@@ -162,7 +162,7 @@ public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaD
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   /**
    * Specify the suggested column title for use in printouts and
    * displays, if any.
@@ -174,8 +174,8 @@ public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaD
     public void setColumnLabel(int columnIndex, String label) throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
-	
-  
+
+
   /**
    * Specify the column name.
    *
@@ -187,7 +187,7 @@ public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaD
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   /**
    * Specify the column's table's schema, if any.
    *
@@ -199,7 +199,7 @@ public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaD
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   /**
    * Specify the column's number of decimal digits.
    *
@@ -211,7 +211,7 @@ public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaD
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   /**
    * Specify the column's number of digits to right of the decimal point.
    *
@@ -222,8 +222,8 @@ public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaD
     public void setScale(int columnIndex, int scale) throws  SQLException {
         throw new SQLException("Not yet implemented");
     }
-	
-  
+
+
   /**
    * Specify the column's table name, if any.
    *
@@ -235,7 +235,7 @@ public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaD
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   /**
    * Specify the column's table's catalog name, if any.
    *
@@ -247,7 +247,7 @@ public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaD
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   /**
    * Specify the column's SQL type.
    *
@@ -260,7 +260,7 @@ public class FBRowSetMetaData extends FBResultSetMetaData implements RowSetMetaD
         throw new SQLException("Not yet implemented");
     }
 
-  
+
   /**
    * Specify the column's data source specific type name, if any.
    *
