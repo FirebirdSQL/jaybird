@@ -48,7 +48,7 @@ class FBLongField extends FBField {
         if (value.longValue() > MAX_BYTE_VALUE ||
             value.longValue() < MIN_BYTE_VALUE)
                 throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR).fillInStackTrace();
+                    BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         return ((Long)field.sqldata).byteValue();
     }
@@ -61,7 +61,7 @@ class FBLongField extends FBField {
         if (value.longValue() > MAX_SHORT_VALUE ||
             value.longValue() < MIN_SHORT_VALUE)
                 throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR).fillInStackTrace();
+                    BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         return ((Long)field.sqldata).shortValue();
     }
@@ -74,7 +74,7 @@ class FBLongField extends FBField {
         if (value.longValue() > MAX_INT_VALUE ||
             value.longValue() < MIN_INT_VALUE)
                 throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR).fillInStackTrace();
+                    BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         return ((Long)field.sqldata).intValue();
     }
@@ -123,7 +123,7 @@ class FBLongField extends FBField {
             setLong(Long.parseLong(value));
         } catch(NumberFormatException nfex) {
             throw (SQLException)createException(
-                LONG_CONVERSION_ERROR).fillInStackTrace();
+                LONG_CONVERSION_ERROR+" "+value).fillInStackTrace();
         }
     }
     void setShort(short value) throws java.sql.SQLException {
@@ -137,7 +137,7 @@ class FBLongField extends FBField {
         if (value > MAX_LONG_VALUE ||
             value < MIN_LONG_VALUE)
                 throw (SQLException)createException(
-                    FLOAT_CONVERSION_ERROR).fillInStackTrace();
+                    FLOAT_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setLong((long)value);
     }
@@ -146,7 +146,7 @@ class FBLongField extends FBField {
         if (value > MAX_LONG_VALUE ||
             value < MIN_LONG_VALUE)
                 throw (SQLException)createException(
-                    DOUBLE_CONVERSION_ERROR).fillInStackTrace();
+                    DOUBLE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setLong((long)value);
     }
@@ -170,7 +170,7 @@ class FBLongField extends FBField {
         if (value.compareTo(new BigDecimal(MAX_LONG_VALUE)) > 0 ||
             value.compareTo(new BigDecimal(MIN_LONG_VALUE)) < 0)
                 throw (SQLException)createException(
-                    BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
+                    BIGDECIMAL_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setLong(value.longValue());
     }

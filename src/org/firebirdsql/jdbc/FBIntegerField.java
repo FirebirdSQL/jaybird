@@ -49,7 +49,7 @@ class FBIntegerField extends FBField {
         if (value.intValue() > MAX_BYTE_VALUE ||
             value.intValue() < MIN_BYTE_VALUE)
                 throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR).fillInStackTrace();
+                    BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         return ((Integer)field.sqldata).byteValue();
     }
@@ -62,7 +62,7 @@ class FBIntegerField extends FBField {
         if (value.intValue() > MAX_SHORT_VALUE ||
             value.intValue() < MIN_SHORT_VALUE)
                 throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR).fillInStackTrace();
+                    BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         return ((Integer)field.sqldata).shortValue();
     }
@@ -116,7 +116,7 @@ class FBIntegerField extends FBField {
             setInteger(Integer.parseInt(value));
         } catch(NumberFormatException nfex) {
             throw (SQLException)createException(
-                INT_CONVERSION_ERROR).fillInStackTrace();
+                INT_CONVERSION_ERROR+" "+value).fillInStackTrace();
         }
     }
     void setShort(short value) throws java.sql.SQLException {
@@ -130,7 +130,7 @@ class FBIntegerField extends FBField {
         if (value > MAX_INT_VALUE ||
             value < MIN_INT_VALUE)
                 throw (SQLException)createException(
-                    FLOAT_CONVERSION_ERROR).fillInStackTrace();
+                    FLOAT_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setInteger((int)value);
     }
@@ -139,7 +139,7 @@ class FBIntegerField extends FBField {
         if (value > MAX_INT_VALUE ||
             value < MIN_INT_VALUE)
                 throw (SQLException)createException(
-                    DOUBLE_CONVERSION_ERROR).fillInStackTrace();
+                    DOUBLE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setInteger((int)value);
     }
@@ -148,7 +148,7 @@ class FBIntegerField extends FBField {
         if (value > MAX_INT_VALUE ||
             value < MIN_INT_VALUE)
                 throw (SQLException)createException(
-                    LONG_CONVERSION_ERROR).fillInStackTrace();
+                    LONG_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setInteger((int)value);
     }
@@ -169,7 +169,7 @@ class FBIntegerField extends FBField {
         if (value.compareTo(new BigDecimal(MAX_INT_VALUE)) > 0 ||
             value.compareTo(new BigDecimal(MIN_INT_VALUE)) < 0)
                 throw (SQLException)createException(
-                    BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
+                    BIGDECIMAL_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setInteger(value.intValue());
     }

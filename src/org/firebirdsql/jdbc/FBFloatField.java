@@ -48,7 +48,7 @@ class FBFloatField extends FBField {
         if (value.floatValue() > MAX_BYTE_VALUE ||
             value.floatValue() < MIN_BYTE_VALUE)
                 throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR).fillInStackTrace();
+                    BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         return ((Float)field.sqldata).byteValue();
     }
@@ -61,7 +61,7 @@ class FBFloatField extends FBField {
         if (value.floatValue() > MAX_SHORT_VALUE ||
             value.floatValue() < MIN_SHORT_VALUE)
                 throw (SQLException)createException(
-                    SHORT_CONVERSION_ERROR).fillInStackTrace();
+                    SHORT_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         return ((Float)field.sqldata).shortValue();
     }
@@ -74,7 +74,7 @@ class FBFloatField extends FBField {
         if (value.floatValue() > MAX_INT_VALUE ||
             value.floatValue() < MIN_INT_VALUE)
                 throw (SQLException)createException(
-                    INT_CONVERSION_ERROR).fillInStackTrace();
+                    INT_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         return ((Float)field.sqldata).intValue();
     }
@@ -87,7 +87,7 @@ class FBFloatField extends FBField {
         if (value.floatValue() > MAX_LONG_VALUE ||
             value.floatValue() < MIN_LONG_VALUE)
                 throw (SQLException)createException(
-                    LONG_CONVERSION_ERROR).fillInStackTrace();
+                    LONG_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         return ((Float)field.sqldata).longValue();
     }
@@ -131,7 +131,7 @@ class FBFloatField extends FBField {
             setFloat(Float.parseFloat(value));
         } catch(NumberFormatException nfex) {
             throw (SQLException)createException(
-                FLOAT_CONVERSION_ERROR).fillInStackTrace();
+                FLOAT_CONVERSION_ERROR+" "+value).fillInStackTrace();
         }
     }
     void setShort(short value) throws java.sql.SQLException {
@@ -149,7 +149,7 @@ class FBFloatField extends FBField {
         if (value > MAX_FLOAT_VALUE ||
             value < MIN_FLOAT_VALUE)
                 throw (SQLException)createException(
-                    DOUBLE_CONVERSION_ERROR).fillInStackTrace();
+                    DOUBLE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setFloat((float)value);
     }
@@ -158,7 +158,7 @@ class FBFloatField extends FBField {
         if (value > MAX_FLOAT_VALUE ||
             value < MIN_FLOAT_VALUE)
                 throw (SQLException)createException(
-                    LONG_CONVERSION_ERROR).fillInStackTrace();
+                    LONG_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setFloat((float)value);
     }
@@ -179,7 +179,7 @@ class FBFloatField extends FBField {
         if (value.compareTo(new BigDecimal(MAX_FLOAT_VALUE)) > 0 ||
             value.compareTo(new BigDecimal(MIN_FLOAT_VALUE)) < 0)
                 throw (SQLException)createException(
-                    BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
+                    BIGDECIMAL_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setFloat(value.floatValue());
     }
