@@ -56,7 +56,7 @@ public class XSQLVAR {
         this.sqldata = sqldata;
     }
     //
-    // Methods to encode/decode
+    // numbers
     //
     public final static byte[] encodeShort(short value){
         return encodeInt(value);
@@ -124,7 +124,56 @@ public class XSQLVAR {
     public final static double decodeDouble(byte[] byte_int){
         return Double.longBitsToDouble(decodeLong(byte_int));
     }
-
+    //
+    // Strings
+    //
+    public final static byte[] encodeString(String value, String encoding){
+        if (encoding==null){
+            return value.getBytes();
+        }
+        else {
+            try {
+                return value.getBytes(encoding);
+            } catch(java.io.UnsupportedEncodingException ex) {
+                return value.getBytes();
+            }
+        }
+	 }
+    public final static byte[] encodeString(byte[] value, String encoding){
+        if (encoding == null)
+            return value;
+        else {
+            try {
+                return (new String(value, encoding)).getBytes();
+            } catch(java.io.UnsupportedEncodingException ex) {
+                return value;
+            }
+		  }
+	 }
+    public final static String decodeString(byte[] value, String encoding){
+        if (encoding == null)
+            return new String(value);
+        else {
+            try {
+                return new String(value, encoding);
+            } catch(java.io.UnsupportedEncodingException ex) {
+                return new String(value);
+            }
+        }
+	 }
+    // 
+    // times,dates...
+    // 
+    public final static java.sql.Timestamp encodeTimestamp(java.sql.Timestamp value, Calendar cal){
+        if (cal == null) {
+            return value;
+        }
+        else {
+            long time = value.getTime() - cal.getTimeZone().getRawOffset();				
+            return new java.sql.Timestamp(time);
+        }
+	 }
+	 
     public final static byte[] encodeTimestamp(java.sql.Timestamp value){
 
         // note, we cannot simply pass millis to the database, because
@@ -145,6 +194,16 @@ public class XSQLVAR {
         return result;
     }
 
+    public final static java.sql.Timestamp decodeTimestamp(java.sql.Timestamp value, Calendar cal){
+        if (cal == null) {
+            return value;
+        }
+        else {
+            long time = value.getTime() + cal.getTimeZone().getRawOffset();				
+            return new java.sql.Timestamp(time);
+        }
+	 }
+
     public final static java.sql.Timestamp decodeTimestamp(byte[] byte_int){
         
         if (byte_int.length != 8)
@@ -163,21 +222,61 @@ public class XSQLVAR {
         return d.toTimestamp();
     }
 
+    public final static java.sql.Time encodeTime(java.sql.Time d, Calendar cal) {
+        if (cal == null) {
+            return d;
+        }
+        else {
+            cal.setTime(d);
+            return new java.sql.Time(cal.getTime().getTime());
+        }
+    }
+	 
     public final static byte[] encodeTime(java.sql.Time d) {
         datetime dt = new datetime(d);
         return dt.toTimeBytes();
     }
 
+    public final static java.sql.Time decodeTime(java.sql.Time d, Calendar cal) {
+        if (cal == null) {
+            return d;
+        }
+        else {
+            cal.setTime(d);
+            return new java.sql.Time(cal.getTime().getTime());    
+        }
+    }
+	 
     public final static java.sql.Time decodeTime(byte[] int_byte) {
         datetime dt = new datetime(null,int_byte);
         return dt.toTime();
     }
 
-    public final static byte[] encodeDate(java.util.Date d) {
+    public final static java.sql.Date encodeDate(java.sql.Date d, Calendar cal) {
+        if (cal == null) {
+            return (d);
+        }
+        else {
+            cal.setTime(d);            
+            return new java.sql.Date(cal.getTime().getTime());
+        }
+    }
+	 
+    public final static byte[] encodeDate(java.sql.Date d) {
         datetime dt = new datetime(d);
         return dt.toDateBytes();
     }
 
+    public final static java.sql.Date decodeDate(java.sql.Date d, Calendar cal) {
+        if (cal == null || d == null) {
+            return d;
+        } 
+        else {
+            cal.setTime(d);
+            return new java.sql.Date(cal.getTime().getTime());    
+        }
+    }
+	 
     public final static java.sql.Date decodeDate(byte[] byte_int) {
         datetime dt = new datetime(byte_int, null);
         return dt.toDate();
@@ -201,7 +300,7 @@ public class XSQLVAR {
             year = c.get(Calendar.YEAR);
             month = c.get(Calendar.MONTH)+1;
             day = c.get(Calendar.DAY_OF_MONTH);
-            hour = c.get(Calendar.HOUR);
+            hour = c.get(Calendar.HOUR_OF_DAY);
             minute = c.get(Calendar.MINUTE);
             second = c.get(Calendar.SECOND);
             millisecond = value.getNanos()/1000000;
@@ -225,7 +324,7 @@ public class XSQLVAR {
             year = 0;
             month = 0;
             day = 0;
-            hour = c.get(Calendar.HOUR);
+            hour = c.get(Calendar.HOUR_OF_DAY);
             minute = c.get(Calendar.MINUTE);
             second = c.get(Calendar.SECOND);
             millisecond = c.get(Calendar.MILLISECOND);
@@ -296,7 +395,7 @@ public class XSQLVAR {
 
         java.sql.Time toTime(){
             Calendar c = new GregorianCalendar();
-            c.set(Calendar.HOUR,hour);
+            c.set(Calendar.HOUR_OF_DAY,hour);
             c.set(Calendar.MINUTE,minute);
             c.set(Calendar.SECOND,second);
             c.set(Calendar.MILLISECOND,millisecond);			 
@@ -308,7 +407,7 @@ public class XSQLVAR {
             c.set(Calendar.YEAR,year);
             c.set(Calendar.MONTH,month-1);
             c.set(Calendar.DAY_OF_MONTH,day);
-            c.set(Calendar.HOUR,hour);
+            c.set(Calendar.HOUR_OF_DAY,hour);
             c.set(Calendar.MINUTE,minute);
             c.set(Calendar.SECOND,second);
             c.set(Calendar.MILLISECOND,millisecond);

@@ -471,58 +471,25 @@ abstract class FBField {
         throw (SQLException)createException(
             DATE_CONVERSION_ERROR).fillInStackTrace();
     }
-    java.sql.Date getDate(Calendar cal)
-        throws  SQLException
-    {
-        java.sql.Date d = getDate();
-        if (cal == null || d == null) 
-        {
-            return d;
-        } // end of if ()
-        else
-        {
-            cal.setTime(d);
-            return new java.sql.Date(cal.getTime().getTime());    
-        } // end of else
+    java.sql.Date getDate(Calendar cal) throws SQLException {
+        throw (SQLException)createException(
+            DATE_CONVERSION_ERROR).fillInStackTrace();
     }	 
     java.sql.Time getTime() throws SQLException {
         throw (SQLException)createException(
             TIME_CONVERSION_ERROR).fillInStackTrace();
     }
-    java.sql.Time getTime(Calendar cal)
-        throws  SQLException
-    {
-        java.sql.Time d = getTime();
-        if (cal == null || d == null) 
-        {
-            return d;
-        } // end of if ()
-        else
-        {
-            cal.setTime(d);
-            return new java.sql.Time(cal.getTime().getTime());    
-        } // end of else
+    java.sql.Time getTime(Calendar cal) throws SQLException {
+        throw (SQLException)createException(
+            TIME_CONVERSION_ERROR).fillInStackTrace();
     }	 
     java.sql.Timestamp getTimestamp() throws SQLException {
         throw (SQLException)createException(
             TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();
     }
-    java.sql.Timestamp getTimestamp(Calendar cal)
-        throws  SQLException
-    {
-        java.sql.Timestamp x = getTimestamp();
-        //return d;
-        
-        if (cal == null || x == null) 
-        {
-            return x;
-        } // end of if ()
-        else
-        {
-            long time = x.getTime() + cal.getTimeZone().getRawOffset();
-            return new java.sql.Timestamp(time);    
-        } // end of else
-        
+    java.sql.Timestamp getTimestamp(Calendar cal) throws SQLException {
+        throw (SQLException)createException(
+            TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();		 
     }
     java.sql.Ref getRef() throws  SQLException {
                 throw new SQLException("Not yet implemented");
@@ -651,13 +618,25 @@ abstract class FBField {
         throw (SQLException)createException(
             BYTES_CONVERSION_ERROR).fillInStackTrace();
     }
+    void setDate(java.sql.Date value, java.util.Calendar cal) throws SQLException {
+        throw (SQLException)createException(
+            DATE_CONVERSION_ERROR).fillInStackTrace();
+    }
     void setDate(java.sql.Date value) throws SQLException {
         throw (SQLException)createException(
             DATE_CONVERSION_ERROR).fillInStackTrace();
     }
+    void setTime(java.sql.Time value, java.util.Calendar cal) throws SQLException {
+        throw (SQLException)createException(
+            TIME_CONVERSION_ERROR).fillInStackTrace();
+    }
     void setTime(java.sql.Time value) throws SQLException {
         throw (SQLException)createException(
             TIME_CONVERSION_ERROR).fillInStackTrace();
+    }
+    void setTimestamp(java.sql.Timestamp value, java.util.Calendar cal) throws SQLException {
+        throw (SQLException)createException(
+            TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();
     }
     void setTimestamp(java.sql.Timestamp value) throws SQLException {
         throw (SQLException)createException(

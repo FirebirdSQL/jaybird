@@ -22,7 +22,7 @@ package org.firebirdsql.jdbc;
 import java.sql.Timestamp;
 import java.sql.Date;
 import java.sql.SQLException;
-
+import java.util.Calendar;
 import org.firebirdsql.gds.XSQLVAR;
 import java.sql.Time;
 
@@ -47,17 +47,26 @@ class FBTimeField extends FBField {
 
         return String.valueOf(XSQLVAR.decodeTime(rs.row[numCol]));
     }
+    Time getTime(Calendar cal) throws java.sql.SQLException {
+        if (rs.row[numCol]==null) return TIME_NULL_VALUE;
+
+        return XSQLVAR.decodeTime(getTime(),cal);
+    }
     Time getTime() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
         return XSQLVAR.decodeTime(rs.row[numCol]);
+    }
+    Timestamp getTimestamp(Calendar cal) throws java.sql.SQLException {
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
+		  
+        return XSQLVAR.decodeTimestamp(getTimestamp(),cal);
     }
     Timestamp getTimestamp() throws java.sql.SQLException {
         if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
         return new Timestamp(getTime().getTime());
     }
-
     //--- setXXX methods
 
     void setString(String value) throws java.sql.SQLException {
@@ -67,12 +76,27 @@ class FBTimeField extends FBField {
         }
         setTime(Time.valueOf(value));
     }
+    void setTimestamp(Timestamp value, Calendar cal) throws java.sql.SQLException {
+        if (value == null) {
+            field.sqldata = null;
+            return;
+        }
+        setTimestamp(XSQLVAR.encodeTimestamp(value,cal));
+    }
     void setTimestamp(Timestamp value) throws java.sql.SQLException {
         if (value == null) {
             field.sqldata = null;
             return;
         }
         setTime(new Time(value.getTime()));
+    }
+    void setTime(Time value, Calendar cal) throws java.sql.SQLException {
+        if (value == null) {
+            field.sqldata = null;
+            return;
+        }
+
+        setTime(XSQLVAR.encodeTime(value,cal));
     }
     void setTime(Time value) throws java.sql.SQLException {
         if (value == null) {
