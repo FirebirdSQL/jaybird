@@ -37,7 +37,7 @@ public class FBProcedureParam {
     
     public FBProcedureParam(int position, String paramValue) {
         this.position = position;
-        this.isParam = "?".equals(paramValue.trim());
+        this.isParam = paramValue.indexOf('?') >= 0;
         this.value = paramValue.trim(); 
     }
     

@@ -42,7 +42,6 @@ public class FBEscapedCallParser {
     
     private boolean isFirstOutParam;
     private boolean isNameProcessed;
-    private boolean isCallWordProcessed;
     private boolean isExecuteWordProcessed;
     private boolean isProcedureWordProcessed;
     
@@ -62,13 +61,7 @@ public class FBEscapedCallParser {
      * cannot enter the desired state.
      */
     protected void setState(int state) {
-        this.lastState = this.state;
         this.state = state;
-    }
-    
-    protected void clearState(int state) {
-        this.lastState = this.state;
-        this.state &= ~state;
     }
 
     /**
@@ -78,8 +71,6 @@ public class FBEscapedCallParser {
      */
     protected boolean isInState(int state) { return this.state == state; }
     
-    protected boolean wasInState(int state) { return  lastState == state; }
-
     /**
      * Test the character to be the state switching character and switches
      * the state if necessary.
@@ -140,109 +131,9 @@ public class FBEscapedCallParser {
     /**
      * Converts escaped parts in the passed SQL to native representation.
      * @param sql to parse
+     * 
      * @return native form of the <code>sql</code>.
      */
-    public FBProcedureCall _parseCall(String sql) throws FBSQLParseException {
-        
-        FBProcedureCall procedureCall = new FBProcedureCall();
-        int paramPosition = 0;
-        int paramCount = 0;
-
-        char[] sqlbuff = sql.toCharArray();
-        StringBuffer buffer = new StringBuffer();
-        StringBuffer escape = new StringBuffer();
-        
-        boolean isNameProcessed = false;
-        boolean isExecuteWordProcessed = false;
-        boolean isProcedureWordProcessed = false;
-
-        /*
-        for(int i = 0; i < sqlbuff.length; i++) {
-
-            switchState(sqlbuff[i]);
-
-            if (isInState(NORMAL_STATE) || isInState(BRACE_STATE))
-                buffer.append(sqlbuff[i]);
-            else
-            if (isInState(SPACE_STATE)) {
-                if (!isNameProcessed) {
-                    
-                    String token = buffer.toString();
-                    
-                    if ("EXECUTE".equalsIgnoreCase(token)) {
-                        if (!isExecuteWordProcessed && !isProcedureWordProcessed)
-                            isExecuteWordProcessed = true;
-                        else
-                            throw new FBSQLParseException(
-                                    "Syntax error. EXECUTE token is not " +
-                                    "on the first place.");
-                    } else
-                    if ("PROCEDURE".equalsIgnoreCase(token)) {
-                        if (isExecuteWordProcessed && !isProcedureWordProcessed)
-                            isProcedureWordProcessed = true;
-                        else
-                            throw new FBSQLParseException(
-                                    "Syntax error. PROCEDURE token is not " +
-                                    "following EXECUTE token.");
-                    } else
-                    if (isExecuteWordProcessed && isProcedureWordProcessed) {
-                        procedureCall.setName(token);
-                        isNameProcessed = true;
-                    } else
-                        throw new FBSQLParseException(
-                                "Syntax error.");
-                    
-                    buffer = new StringBuffer();
-                } else {
-                    // buffer.append(sqlbuff[i]);
-                    setState(NORMAL_STATE);
-                }
-            } else
-            if (isInState(BRACE_STATE)) {
-                boolean shouldBeName = 
-                    isExecuteWordProcessed && 
-                    isProcedureWordProcessed && 
-                    !isNameProcessed;
-                
-                if (shouldBeName) {
-                    procedureCall.setName(buffer.toString());
-                    isNameProcessed = true;
-                    buffer = new StringBuffer();
-                } 
-            } else
-            if (isInState(COMMA_STATE)) {
-                String param = buffer.toString();
-                buffer = new StringBuffer();
-                FBProcedureParam callParam = 
-                    procedureCall.addParam(paramPosition, param);
-                
-                if (callParam.isParam()) {
-                    paramCount++;
-                    callParam.setIndex(paramCount);
-                }
-                
-                paramPosition++;
-            } else
-            if (isInState(LITERAL_STATE))
-                buffer.append(sqlbuff[i]);
-        }
-        
-        while(Character.isSpaceChar(buffer.charAt(0)))
-            buffer.deleteCharAt(0);
-        
-        if (buffer.length() > 0) {
-            FBProcedureParam callParam = 
-                procedureCall.addParam(paramPosition, buffer.toString());
-            if (callParam.isParam()) {
-                paramCount++;
-                callParam.setIndex(paramCount);
-            }
-        }
-        */
-        
-        return procedureCall;
-    }
-    
     public FBProcedureCall parseCall(String sql) throws FBSQLParseException {
         
         procedureCall = new FBProcedureCall();
@@ -252,7 +143,6 @@ public class FBEscapedCallParser {
         isNameProcessed = false;
         
         isFirstOutParam = false;
-        isCallWordProcessed = false;
         
         paramCount = 0;
         paramPosition = 0;
