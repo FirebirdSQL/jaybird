@@ -1,0 +1,137 @@
+/*
+ * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
+ */
+package org.firebirdsql.jdbc;
+
+import java.io.*;
+import java.sql.*;
+import java.util.Arrays;
+
+/**
+ * Describe class <code>TestFBBlobAccess</code> here.
+ *
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @version 1.0
+ */
+public class TestFBBlobAccess extends BaseFBTest {
+    public static final String CREATE_TABLE = 
+        "CREATE TABLE test_blob(" + 
+        "  id INTEGER, " + 
+        "  bin_data BLOB " + 
+        ")";
+        
+    public static final String DROP_TABLE = 
+        "DROP TABLE test_blob";
+        
+
+    public static int TEST_ROW_COUNT = 10;        
+        
+    private Connection connection;
+    
+    private byte[][] testData;
+
+    
+    
+    public TestFBBlobAccess(String testName) {
+        super(testName);
+    }
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        Class.forName(FBDriver.class.getName());
+        connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        
+        java.sql.Statement stmt = connection.createStatement();
+        try {
+            stmt.executeUpdate(DROP_TABLE);
+        }
+        catch (Exception e) {}
+
+        stmt.executeUpdate(CREATE_TABLE);
+        stmt.close();
+        
+        java.util.Random rnd = new java.util.Random();
+        
+        testData = new byte[TEST_ROW_COUNT][0];
+        
+        for (int i = 0; i < testData.length; i++) {
+            int testLength = rnd.nextInt(100) + 10;
+            testData[i] = new byte[testLength];
+            rnd.nextBytes(testData[i]);
+        }
+        
+    }
+
+    protected void tearDown() throws Exception {
+        java.sql.Statement stmt = connection.createStatement();
+        stmt.executeUpdate(DROP_TABLE);
+        stmt.close();
+        connection.close();
+        super.tearDown();
+    }
+    
+    /**
+     * Test if byte[] are correctly stored and retrieved from database
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testFieldTypes() throws Exception {
+        PreparedStatement ps = connection.prepareStatement(
+            "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
+            
+        for(int i = 0; i < TEST_ROW_COUNT; i++) {
+            ps.setInt(1, i);
+            ps.setBytes(2, testData[i]);
+            
+            ps.execute();
+        }
+        
+        ps.close();
+        
+       
+        Statement stmt = connection.createStatement();
+            
+        ResultSet rs = stmt.executeQuery("SELECT id, bin_data FROM test_blob");
+        
+        try {
+            int counter = 0;
+            
+            while(rs.next()) {
+                
+                int id = rs.getInt("id");
+                byte[] data = rs.getBytes("bin_data");
+                
+                assertTrue(
+                    "Data read from database for id " + id + 
+                    " should be equal to generated one.",
+                    java.util.Arrays.equals(testData[id], data));
+                    
+                counter++;
+            }
+            
+            assertTrue(
+                "Should read " + TEST_ROW_COUNT + 
+                " rows, read " + counter, TEST_ROW_COUNT == counter);
+            
+        } finally {
+            rs.close();
+            stmt.close();
+        }
+    }
+    
+}
