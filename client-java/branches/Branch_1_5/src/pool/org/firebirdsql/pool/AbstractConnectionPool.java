@@ -263,6 +263,8 @@ public abstract class AbstractConnectionPool implements PooledObjectListener {
                     getLogger().warn("Connection " + connection + 
                         " does not have corresponding queue");
                     
+                connectionToQueueMap.remove(connection);
+                
                 if (PARANOID_MODE)
                     throw new IllegalStateException(
                         "Connection " + connection + 
@@ -271,9 +273,10 @@ public abstract class AbstractConnectionPool implements PooledObjectListener {
                     connection.deallocate();
             } else {
                 
-                if (event.isDeallocated())
+                if (event.isDeallocated()) {
+                    connectionToQueueMap.remove(connection);
                     queue.physicalConnectionDeallocated(connection);
-                else
+                } else
                     queue.put(connection);
             }
                 
@@ -283,6 +286,17 @@ public abstract class AbstractConnectionPool implements PooledObjectListener {
                 getLogger().warn("Error releasing connection.", ex);
         }
     }    
+
+    /**
+     * Notify about the deallocation of the physical connection (for example,
+     * when connection is removed by the idle remover thread).
+     * 
+     * @param event instance of {@link PooledObjectEvent}.
+     */
+    protected void physicalConnectionDeallocated(PooledObjectEvent event) {
+        PooledObject connection = (PooledObject) event.getSource();
+        connectionToQueueMap.remove(connection);
+    }
  
     /**
      * Get configuration of this data source.

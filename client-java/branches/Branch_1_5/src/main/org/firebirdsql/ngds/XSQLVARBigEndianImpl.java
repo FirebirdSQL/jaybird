@@ -41,4 +41,18 @@ public class XSQLVARBigEndianImpl extends XSQLVARImpl {
         super(sqltype, sqlscale, sqlsubtype, sqllen, sqldata, sqlname, relname,
                 ownname, aliasname);
     }
+    
+    public byte[] encodeShort(short value){
+        byte ret[] = new byte[2];
+        ret[1] = (byte) ((value >>> 0) & 0xff);
+        ret[0] = (byte) ((value >>> 8) & 0xff);
+        return ret;
+    }
+
+    public short decodeShort(byte[] byte_int){
+        int b1 = byte_int[1]&0xFF;
+        int b2 = byte_int[0]&0xFF;
+
+        return (short)((b1 << 0) + (b2 << 8));
+    }
 }
