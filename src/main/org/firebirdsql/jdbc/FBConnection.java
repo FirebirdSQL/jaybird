@@ -1099,6 +1099,11 @@ public class FBConnection implements Connection, FirebirdConnection
         checkManagedConnection();
         mc.fetch(stmt, fetchSize);
     }
+    
+    public void setCursorName(isc_stmt_handle stmt, String cursorName) throws GDSException {
+        checkManagedConnection();
+        mc.setCursorName(stmt, cursorName);
+    }
 
     public void getSqlCounts(isc_stmt_handle stmt) throws GDSException {
         checkManagedConnection();

@@ -816,6 +816,18 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         } // end of catch
 
     }
+    
+    public void setCursorName(isc_stmt_handle stmt, String cursorName) 
+        throws GDSException
+    {
+        try {
+            mcf.gds.isc_dsql_set_cursor_name(
+                stmt, cursorName, 0); // type is reserved for future use
+        } catch(GDSException ge) {
+            checkFatal(ge);
+            throw ge;
+        }
+    }
 
     public void closeStatement(isc_stmt_handle stmt, boolean deallocate)
         throws GDSException

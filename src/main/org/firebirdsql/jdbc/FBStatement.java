@@ -56,7 +56,7 @@ public class FBStatement implements Statement, Synchronizable {
     protected FBConnection c;
 
     protected isc_stmt_handle fixedStmt;
-
+    
     //The normally retrieved resultset. (no autocommit, not a cached rs).
     private FBResultSet currentRs;
 
@@ -75,6 +75,7 @@ public class FBStatement implements Statement, Synchronizable {
     protected int fetchSize = 0;
     private int maxFieldSize = 0;
     private int queryTimeout = 0;
+    private String cursorName;
 
     FBStatement(FBConnection c) {
         this.c = c;
@@ -442,9 +443,12 @@ public class FBStatement implements Statement, Synchronizable {
      * @exception SQLException if a database access error occurs
      */
     public void setCursorName(String name) throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        this.cursorName = name;
     }
 
+    boolean isUpdatableCursor() {
+        return cursorName != null;
+    }
 
     //----------------------- Multiple Results --------------------------
 
@@ -543,6 +547,14 @@ public class FBStatement implements Statement, Synchronizable {
      * @see #execute
      */
     public ResultSet getResultSet() throws  SQLException {
+        try {
+            if (cursorName != null)
+                c.setCursorName(fixedStmt, cursorName);
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
+        }
+        
+        
         if (currentRs != null) {
             throw new SQLException("Only one resultset at a time/statement!");
         }
