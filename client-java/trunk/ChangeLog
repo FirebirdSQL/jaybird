@@ -1,3 +1,9 @@
+2003-12-26 19:55  rrokytskyy
+
+	* client-java/src/jdbccts/ddl.properties:
+	
+	added stored procedures
+
 2003-12-19 14:44  rrokytskyy
 
 	* client-java/src/:
