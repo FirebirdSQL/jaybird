@@ -32,7 +32,7 @@
 class FirebirdStatusVector
 	{
 	public:
-	FirebirdStatusVector(){ }
+	FirebirdStatusVector();
 	
 	ISC_STATUS*		RawAccess();
 			

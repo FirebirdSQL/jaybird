@@ -28,6 +28,12 @@
 
 // FirebirdStatusVector Class ---------------------------------------------------------------------
 
+FirebirdStatusVector::FirebirdStatusVector()
+	{
+	memset(mVector, 0, sizeof(mVector));
+	}
+
+
 // Static Member 
 
 JClassBinding	FirebirdStatusVector::sClassBinding;
