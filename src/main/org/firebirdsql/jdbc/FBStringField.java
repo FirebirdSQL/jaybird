@@ -376,7 +376,14 @@ public class FBStringField extends FBField {
             return;
         }
 
-        field.sqldata = field.encodeString(value,javaEncoding);
+        // 2.07.2003. Commented out by R.Rokytskyy due to inconsistency with
+        // getBytes() method. Also it is not clear if this encoding
+        // is needed here at all. Should be removed in one month if not fixed
+        // earlier.
+        //
+        //field.sqldata = field.encodeString(value,javaEncoding);
+
+        field.sqldata = value;
 
         if (field.sqldata.length > field.sqllen)
             throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);
