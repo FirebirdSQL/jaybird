@@ -40,6 +40,7 @@ import java.util.Map;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 
 /**
  * Describe class <code>FBField</code> here.
@@ -594,11 +595,18 @@ public abstract class FBField {
             BINARY_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
     public Reader getCharacterStream() throws  SQLException {
-        InputStream is =  getUnicodeStream();
+        InputStream is =  getBinaryStream();
         if (is==null)
-            return null;
+            return READER_NULL_VALUE;
         else
-            return new InputStreamReader(getUnicodeStream());
+            try {
+                return new InputStreamReader(is, javaEncoding);
+            } catch(UnsupportedEncodingException ex) {
+                throw new FBSQLException("Cannot set character stream because " +
+                    "the unsupported encoding is detected in the JVM: " +
+                    javaEncoding + ". Please report this to the driver developers."
+                );
+            }
     }	 
     public byte[] getBytes() throws SQLException {
         throw (SQLException)createException(

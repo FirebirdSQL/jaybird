@@ -461,6 +461,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                 os.write(buffer, 0, chunk);
                 length -= chunk;
             }
+            os.flush();
             os.close();
         }
         catch (IOException ioe) {
@@ -468,9 +469,10 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
     }
 
-    public void copyCharacterStream(Reader inputStream, int length) throws SQLException {
+    public void copyCharacterStream(Reader inputStream, int length, String encoding) throws SQLException {
         OutputStream os = setBinaryStream(0);
-        OutputStreamWriter osw = new OutputStreamWriter(os);
+        try {
+        OutputStreamWriter osw = new OutputStreamWriter(os, encoding);
         char[] buffer = new char[bufferlength];
         int chunk;
         try {
@@ -481,10 +483,18 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                 osw.write(buffer, 0, chunk);                
                 length -= chunk;
             }
+            osw.flush();
+            os.flush();
             os.close();
         }
         catch (IOException ioe) {
             throw new FBSQLException(ioe);
+        }
+        } catch(UnsupportedEncodingException ex) {
+            throw new FBSQLException("Cannot set character stream because " +
+                "the unsupported encoding is detected in the JVM: " +
+                encoding + ". Please report this to the driver developers."
+            );
         }
     }
 
