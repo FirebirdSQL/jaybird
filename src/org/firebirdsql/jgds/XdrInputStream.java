@@ -33,66 +33,36 @@
 package org.firebirdsql.jgds;
 
 import java.io.*;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
-public class XdrInputStream extends FilterInputStream {
+public class XdrInputStream extends DataInputStream {
 
-   private final Logger log = LoggerFactory.getLogger(getClass());
+    private byte[] pad = new byte[4];
 
     public XdrInputStream(InputStream in) {
         super(in);
     }
-
-    public short readShort() throws IOException {
-        return (short) readInt();
-    }
-
-    public int readInt() throws IOException {
-        int b1 = in.read();
-        int b2 = in.read();
-        int b3 = in.read();
-        int b4 = in.read();
-        if ((b1 | b2 | b3 | b4) < 0) {
-            throw new EOFException();
-        }
-        return ((b1 << 24) + (b2 << 16) + (b3 << 8) + (b4 << 0));
-    }
-
-    public long readLong() throws IOException {
-        return ((long) (readInt()) << 32) + (readInt() & 0xffffffffL);
-    }
-
-    public final float readFloat() throws IOException {
-        return Float.intBitsToFloat(readInt());
-    }
-
-    public final double readDouble() throws IOException {
-        return Double.longBitsToDouble(readLong());
-    }
-
+	 
     public final byte[] readOpaque(int len) throws IOException {
         byte[] buffer = new byte[len];
-        int pos = 0;
-        int chunk;
-        while (pos < len) {
-            chunk = in.read(buffer, pos, len - pos);
-            if (chunk<0)
-                throw new EOFException();
-            pos += chunk;
-        }
-        for (int i = 0; i < ((4 - len) & 3); i++) {
-            in.read();
-        }
+        readFully(buffer);
+        readFully(pad,0,((4 - len) & 3));
         return buffer;
     }
 
     public final byte[] readBuffer() throws IOException {
-        return readOpaque(readInt());
+        int len = readInt();
+        byte[] buffer = new byte[len];
+        readFully(buffer);
+        readFully(pad,0,((4 - len) & 3));
+        return buffer;
     }
 
 
     public final String readString() throws IOException {
-        return new String(readBuffer());
+        int len = readInt();
+        byte[] buffer = new byte[len];
+        readFully(buffer);
+        readFully(pad,0,((4 - len) & 3));
+        return new String(buffer);				
     }
 }

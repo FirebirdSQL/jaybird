@@ -10,7 +10,7 @@
 
 <BODY>
 <h2>CORE JDBC Features</h2>
-<p>The driver comply with JDBC 2.0 core with some features and methods not implemented, some of it required by the specification and some optional. Until now i don't test gets/sets, so it can be some errors in type conversion that it is usually a bug-prone area. </p>
+<p>The driver comply with JDBC 2.0 core with some features and methods not implemented, some of it required by the specification and some optional.</p>
    The following optional features was not supported<br>
 <ul>
 <li>Batch Updates.</li>
@@ -25,18 +25,18 @@ The methods that support those features return SQLExceptions when used.<br><br>
 Excluding the non supported features, the following methods are not implemented<br>
 
 <ul>
-	<li><b>RSMetaData</b></li>
+	<li><b>java.sql.ResultSetMetaData</b></li>
 	<ul>
 		<li>isReadOnly(i)</li>
 		<li>isWritable(i)</li>
 		<li>isDefinitivelyWritable(i)</li>
 	</ul>
-	<li><b>Statement</b></li>
+	<li><b>java.sql.Statement</b></li>
 	<ul>
 		<li>setEscapeProcessing(boolean)</li>
 		<li>cancel()</li>
 	</ul>
-	<li><b>PreparedStatement</b></li>
+	<li><b>java.sql.PreparedStatement</b></li>
 	<ul>
 		<li>setObject(index,object,type,scale)</li>
 		<li>setCharacterStream(i)</li>
@@ -44,9 +44,8 @@ Excluding the non supported features, the following methods are not implemented<
 		<li>setTime(i,time,calendar)</li>
 		<li>setTimestamp(i,timestamp,calendar)</li>
 	</ul>
-	<li><b>ResultSet</b></li>
+	<li><b>java.sql.ResultSet</b></li>
 	<ul>
-		<li>getCharacterStream(i)</li>
 		<li>getDate(i,calendar)</li>
 		<li>getTime(i,calendar)</li>
 		<li>getTimestamp(i,calendar)</li>
@@ -54,22 +53,24 @@ Excluding the non supported features, the following methods are not implemented<
 </ul>
 The folowing methods was implemented but does not work as expected
 <ul>
-	<li><b>ResultSet</b></li>
+	<li><b>java.sql.ResultSet</b></li>
 	<ul>
 		<li>get/setFetchSize does nothing</li>
 	</ul>
-	<li><b>Statement</b></li>
+	<li><b>java.sql.Statement</b></li>
 	<ul>
 		<li>get/setFetchSize does nothing</li>
 		<li>get/setMaxFieldSize does nothing</li>
 		<li>get/setQueryTimeout does nothing</li>
 	</ul>
-	<li><b>PreparedStatement</b></li>
+	<li><b>java.sql.PreparedStatement</b></li>
 	<ul>
 		<li>setObject(index,object,type) This method are supported but behaves as setObject(index,object)</li>
 	</ul>
 </ul>
 <br><br>
+The driver was tested with jDataMaster.<br>
+<br>
 <p>May-16-2002<br>
 Blas Rodriguez Somoza</p>
 </BODY>
