@@ -108,48 +108,54 @@ public class TestFBPreparedStatement extends FBTestBase{
 
         Statement stmt = con.createStatement();
         try {
-            stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
-        }
-        catch (Exception e) {
-            //e.printStackTrace();
-        }
+            try {
+                stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
+            }
+            catch (Exception e) {
+                //e.printStackTrace();
+            }
+    
+            try {
+                stmt.executeUpdate(DROP_UNRECOGNIZED_TR_TABLE);
+            }
+            catch (Exception e) {
+                //e.printStackTrace();
+            }
+    
+            try {
+                stmt.executeUpdate(DROP_TEST_CHARS_TABLE);
+            } catch(Exception e) {
+                // ignore
+            }
+            
+            try {
+                stmt.executeUpdate(DROP_GENERATOR);
+            } catch(Exception ex) {
+            }
+            
+            stmt.executeUpdate(CREATE_TEST_BLOB_TABLE);
+            stmt.executeUpdate(CREATE_UNRECOGNIZED_TR_TABLE);
+            stmt.executeUpdate(ADD_CONSTRAINT_T1_C1);
+            stmt.executeUpdate(INIT_T1);
+            stmt.executeUpdate(CREATE_TEST_CHARS_TABLE);
+            
+            stmt.executeUpdate(CREATE_GENERATOR);
 
-        try {
-            stmt.executeUpdate(DROP_UNRECOGNIZED_TR_TABLE);
+        } finally {
+            stmt.close(); 
         }
-        catch (Exception e) {
-            //e.printStackTrace();
-        }
-
-        try {
-            stmt.executeUpdate(DROP_TEST_CHARS_TABLE);
-        } catch(Exception e) {
-            // ignore
-        }
-        
-        try {
-            stmt.executeUpdate(DROP_GENERATOR);
-        } catch(Exception ex) {
-        }
-        
-        stmt.executeUpdate(CREATE_TEST_BLOB_TABLE);
-        stmt.executeUpdate(CREATE_UNRECOGNIZED_TR_TABLE);
-        stmt.executeUpdate(ADD_CONSTRAINT_T1_C1);
-        stmt.executeUpdate(INIT_T1);
-        stmt.executeUpdate(CREATE_TEST_CHARS_TABLE);
-        
-        stmt.executeUpdate(CREATE_GENERATOR);
-        
-        stmt.close(); 
         
     }
 
     protected void tearDown() throws Exception {
         Statement stmt = con.createStatement();
-        stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
-        stmt.executeUpdate(DROP_TEST_CHARS_TABLE);
-        stmt.executeUpdate(DROP_UNRECOGNIZED_TR_TABLE);
-        stmt.close();
+        try {
+            stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
+            stmt.executeUpdate(DROP_TEST_CHARS_TABLE);
+            stmt.executeUpdate(DROP_UNRECOGNIZED_TR_TABLE);
+        } finally {
+            stmt.close();
+        }
 
         con.close();
         
@@ -162,37 +168,43 @@ public class TestFBPreparedStatement extends FBTestBase{
         PreparedStatement insertPs = con.prepareStatement(
             "INSERT INTO test_blob (id, obj_data) VALUES (?,?);");
             
-        insertPs.setInt(1, id);
-        insertPs.setBytes(2, TEST_STRING.getBytes());
-        
-        int inserted = insertPs.executeUpdate();
-        
-        assertTrue("Row should be inserted.", inserted == 1);
-        
-        checkSelectString(TEST_STRING, id);
-        
-        //Update item
-        PreparedStatement updatePs = con.prepareStatement(
-            "UPDATE test_blob SET obj_data=? WHERE id=?;");
+        try {
+            insertPs.setInt(1, id);
+            insertPs.setBytes(2, TEST_STRING.getBytes());
             
-        updatePs.setBytes(1, ANOTHER_TEST_STRING.getBytes());
-        updatePs.setInt(2, id);
-        updatePs.executeUpdate();
-        
-        updatePs.clearParameters();
-        
-        checkSelectString(ANOTHER_TEST_STRING, id);
-        
-        updatePs.setBytes(1, TEST_STRING.getBytes());
-        updatePs.setInt(2, id + 1);
-        int updated = updatePs.executeUpdate();
-        
-        assertTrue("No rows should be updated.", updated == 0);
-        
-        checkSelectString(ANOTHER_TEST_STRING, id);
-        
-        insertPs.close();
-        updatePs.close();
+            int inserted = insertPs.executeUpdate();
+            
+            assertTrue("Row should be inserted.", inserted == 1);
+            
+            checkSelectString(TEST_STRING, id);
+            
+            //Update item
+            PreparedStatement updatePs = con.prepareStatement(
+                "UPDATE test_blob SET obj_data=? WHERE id=?;");
+                
+            try {
+                updatePs.setBytes(1, ANOTHER_TEST_STRING.getBytes());
+                updatePs.setInt(2, id);
+                updatePs.executeUpdate();
+                
+                updatePs.clearParameters();
+                
+                checkSelectString(ANOTHER_TEST_STRING, id);
+                
+                updatePs.setBytes(1, TEST_STRING.getBytes());
+                updatePs.setInt(2, id + 1);
+                int updated = updatePs.executeUpdate();
+                
+                assertTrue("No rows should be updated.", updated == 0);
+                
+                checkSelectString(ANOTHER_TEST_STRING, id);
+            } finally {
+                updatePs.close();
+            }
+
+        } finally {
+            insertPs.close();
+        }
     }
     
     public void testMixedExecution() throws Throwable {
@@ -221,20 +233,23 @@ public class TestFBPreparedStatement extends FBTestBase{
         PreparedStatement selectPs = con.prepareStatement(
             "SELECT obj_data FROM test_blob WHERE id = ?");
             
-        selectPs.setInt(1, id);
-        ResultSet rs = selectPs.executeQuery();
-        
-        assertTrue("There must be at least one row available.", rs.next());
-        
-        String result = rs.getString(1);
-        
-        assertTrue("Selected string must be equal to inserted one.", 
-            stringToTest.equals(result));
+        try {
+            selectPs.setInt(1, id);
+            ResultSet rs = selectPs.executeQuery();
             
-        assertTrue("There must be exactly one row.", !rs.next());
-        
-        rs.close();
-        selectPs.close();
+            assertTrue("There must be at least one row available.", rs.next());
+            
+            String result = rs.getString(1);
+            
+            assertTrue("Selected string must be equal to inserted one.", 
+                stringToTest.equals(result));
+                
+            assertTrue("There must be exactly one row.", !rs.next());
+            
+            rs.close();
+        } finally {
+            selectPs.close();
+        }
     }
     
     public void testGenerator() throws Exception {
@@ -413,7 +428,7 @@ public class TestFBPreparedStatement extends FBTestBase{
                     String ts2Str = null;
                     String ts3Str = null;
                     
-                    int maxLength = 23;
+                    int maxLength = 22;
                     
                     // workaround for the bug in java.sql.Timestamp in JDK 1.3 
                     if ("1.3".equals(System.getProperty("java.specification.version")))
