@@ -92,10 +92,6 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
     //statement is executed.
     private boolean autoTransaction = false;
 
-    //Autocommit flag.  This should be left true if you are using Local or
-    //XATransactions and want to execute statements outside a transaction.
-    //Set it false only if you use the Connection.commit and rollback methods.
-    private boolean autoCommit = true;
 
     FBManagedConnection mc;
 
@@ -348,14 +344,29 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
     public synchronized void setAutoCommit(boolean autoCommit) 
         throws SQLException 
     {
-        if (this.autoCommit != autoCommit && inTransaction())
+        if (isClosed())
+        {
+            throw new SQLException("You cannot setAutocommit on a closed connection.");
+        }
+        if (mc.autoCommit != autoCommit)
+        {
             try {
-                getLocalTransaction().commit();
+                if (inTransaction())
+                {
+                    getLocalTransaction().commit();
+                }
+
+                this.mc.autoCommit = autoCommit;
+
+                if (!autoCommit) 
+                {
+                    getLocalTransaction().begin();
+                } // end of if ()
             } catch(javax.resource.ResourceException resex) {
                 throw new SQLException(resex.toString());
             }
-
-        this.autoCommit = autoCommit;
+        } // end of if ()
+        
     }
 
 
@@ -366,8 +377,12 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      * @see #setAutoCommit
      */
-    public boolean getAutoCommit() {
-        return autoCommit;
+    public boolean getAutoCommit() throws SQLException {
+        if (isClosed())
+        {
+            throw new SQLException("You cannot getAutomcommit on an unassociated closed connection.");
+        }
+        return mc.autoCommit;
     }
 
 
@@ -381,6 +396,10 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @see #setAutoCommit
      */
     public synchronized void commit() throws SQLException {
+        if (isClosed())
+        {
+            throw new SQLException("You cannot commit a closed connection.");
+        }
         if (getAutoCommit())
         {
             throw new SQLException("commit called with AutoCommit true!");
@@ -391,6 +410,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
             {
                 getLocalTransaction().commit();
             } // end of if ()
+            getLocalTransaction().begin();
         } catch(javax.resource.ResourceException resex) {
             throw new SQLException(resex.toString());
         }
@@ -412,12 +432,15 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
             throw new SQLException("rollback called with AutoCommit true!");
         } // end of if ()
         if (isClosed())
+        {
             throw new SQLException("You cannot rollback closed connection.");
+        }
         try{
             if (inTransaction())
             {
                 getLocalTransaction().rollback();
             } // end of if ()
+            getLocalTransaction().begin();
         } catch(javax.resource.ResourceException resex) {
             throw new SQLException(resex.toString());
         }
@@ -446,8 +469,15 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      *
      * @exception SQLException if a database access error occurs
      */
-    public synchronized void close() {
+    public synchronized void close() throws SQLException {
         if (mc != null) {
+            //if we are in a transaction started automatically because autocommit = false,
+            //end it.
+            if (!getAutoCommit()) 
+            {
+                setAutoCommit(true);
+            } // end of if ()
+            
             mc.close(this);
             mc = null;
         }
@@ -905,7 +935,7 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      *
      * @return a <code>boolean</code> value
      */
-    synchronized boolean willEndTransaction()
+    synchronized boolean willEndTransaction() throws SQLException
     {
         return getAutoCommit() && autoTransaction;
     }
