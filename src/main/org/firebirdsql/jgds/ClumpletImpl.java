@@ -54,6 +54,7 @@ public class ClumpletImpl
         ClumpletImpl newClumplet = new ClumpletImpl(type, content);
         if (next != null) {
             newClumplet.next = next.cloneClumplet();
+            newClumplet.next.prev = newClumplet;
         }
         return newClumplet;
     }
@@ -103,10 +104,10 @@ public class ClumpletImpl
         if (type == this.type) {
             if (this.prev != null) {
                 this.prev.next = this.next;
+                return prev;
             } else
                 return this.next;
-        }
-            
+        } else
         if (next == null)
             return this;
         else
@@ -114,7 +115,11 @@ public class ClumpletImpl
             this.next = this.next.next;
             return this;
         } else {
-            return ((ClumpletImpl)next.remove(type)).prev;
+            ClumpletImpl temp = (ClumpletImpl)next.remove(type);
+            if (temp != null)
+                return temp.prev;
+            else
+                return this;
         }
     }
 
