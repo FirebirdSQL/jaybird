@@ -20,12 +20,19 @@
 package org.firebirdsql.jgds;
 
 
-import org.firebirdsql.gds.*;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.gds.Clumplet;
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.GDSFactory;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.XSQLDA;
+import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.isc_db_handle;
+import org.firebirdsql.gds.isc_tr_handle;
 import org.firebirdsql.jdbc.BaseFBTest;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;

@@ -19,12 +19,16 @@
 
 package org.firebirdsql.jdbc;
 
-import junit.framework.*;
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.ArrayList;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
  * Describe class <code>TestFBShortField</code> here.
@@ -42,7 +46,7 @@ public class TestFBShortField extends BaseTestFBField {
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_SHORT;
         byte[][] row = new byte[1][];
-        java.util.ArrayList rows = new java.util.ArrayList();
+        ArrayList rows = new ArrayList();
         rows.add(row);		  
         FBResultSet rs = new FBResultSet(xsqlvars,rows);
 		  rs.next();
@@ -61,12 +65,12 @@ public class TestFBShortField extends BaseTestFBField {
 
 
 
-	public void testObject() throws java.sql.SQLException {
+	public void testObject() throws SQLException {
 		field.setObject(new Short(TEST_SHORT));
 		field.copyOI();
 		assertTrue(field.getObject().equals(new Short(TEST_SHORT)));
 	}
-	public void testUnicodeStream() throws java.sql.SQLException {
+	public void testUnicodeStream() throws SQLException {
 		try {
 			super.testUnicodeStream();
 			assertTrue("This method should fail.", false);
@@ -74,7 +78,7 @@ public class TestFBShortField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testBinaryStream() throws java.sql.SQLException {
+	public void testBinaryStream() throws SQLException {
 		try {
 			super.testBinaryStream();
 			assertTrue("This method should fail.", false);
@@ -83,12 +87,12 @@ public class TestFBShortField extends BaseTestFBField {
 		}
 
 	}
-	public void testString() throws java.sql.SQLException {
+	public void testString() throws SQLException {
 		field.setString(Short.toString(TEST_SHORT));
 		field.copyOI();
 		assertTrue(field.getString().equals(Short.toString(TEST_SHORT)));
 	}
-	public void testAsciiStream() throws java.sql.SQLException {
+	public void testAsciiStream() throws SQLException {
 		try {
 			super.testAsciiStream();
 			assertTrue("This method should fail.", false);
@@ -96,7 +100,7 @@ public class TestFBShortField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testTimestamp() throws java.sql.SQLException {
+	public void testTimestamp() throws SQLException {
 		try {
 			super.testTimestamp();
 			assertTrue("This method should fail.", false);
@@ -104,14 +108,13 @@ public class TestFBShortField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testBigDecimal() throws java.sql.SQLException {
-		java.math.BigDecimal testBigDecimal =
-			java.math.BigDecimal.valueOf((long)TEST_SHORT);
+	public void testBigDecimal() throws SQLException {
+		BigDecimal testBigDecimal =	BigDecimal.valueOf((long)TEST_SHORT);
 		field.setBigDecimal(testBigDecimal);
 		field.copyOI();
 		assertTrue(field.getBigDecimal().equals(testBigDecimal));
 	}
-	public void testDate() throws java.sql.SQLException {
+	public void testDate() throws SQLException {
 		try {
 			super.testDate();
 			assertTrue("This method should fail.", false);
@@ -119,7 +122,7 @@ public class TestFBShortField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testTime() throws java.sql.SQLException {
+	public void testTime() throws SQLException {
 		try {
 			super.testTime();
 			assertTrue("This method should fail.", false);
@@ -127,7 +130,7 @@ public class TestFBShortField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testBytes() throws java.sql.SQLException {
+	public void testBytes() throws SQLException {
 		try {
 			super.testBytes();
 			assertTrue("This method should fail.", false);
@@ -136,7 +139,7 @@ public class TestFBShortField extends BaseTestFBField {
 		}
 
 	}
-	public void testInteger() throws java.sql.SQLException {
+	public void testInteger() throws SQLException {
 		try {
 			super.testInteger();
 			assertTrue("This method should fail.", false);
@@ -144,7 +147,7 @@ public class TestFBShortField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testLong() throws java.sql.SQLException {
+	public void testLong() throws SQLException {
 		try {
 			super.testLong();
 			assertTrue("This method should fail.", false);
@@ -152,7 +155,7 @@ public class TestFBShortField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testFloat() throws java.sql.SQLException {
+	public void testFloat() throws SQLException {
 		try {
 			super.testFloat();
 			assertTrue("This method should fail.", false);
@@ -160,7 +163,7 @@ public class TestFBShortField extends BaseTestFBField {
 			//everything is ok :)
 		}
 	}
-	public void testDouble() throws java.sql.SQLException {
+	public void testDouble() throws SQLException {
 		try {
 			super.testDouble();
 			assertTrue("This method should fail.", false);

@@ -19,13 +19,17 @@
 
 package org.firebirdsql.jdbc;
 
-import junit.framework.*;
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
 
+import java.io.ByteArrayInputStream;
+import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.io.*;
+import java.util.ArrayList;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
  * Describe class <code>TestFBStringField</code> here.
@@ -53,7 +57,7 @@ public class TestFBStringField extends BaseTestFBField {
         xsqlvars[0].sqltype = ISCConstants.SQL_TEXT;
         xsqlvars[0].sqllen = TEST_STRING_SIZE;
         Object[] row = new byte[1][];
-        java.util.ArrayList rows = new java.util.ArrayList();
+        ArrayList rows = new ArrayList();
         rows.add(row);		  
         FBResultSet rs = new FBResultSet(xsqlvars,rows);
 		  rs.next();
@@ -64,15 +68,14 @@ public class TestFBStringField extends BaseTestFBField {
     }
     protected void tearDown() {
     }
-    public void testBigDecimal() throws java.sql.SQLException {
-        java.math.BigDecimal testBigDecimal =
-            new java.math.BigDecimal((double)TEST_LONG);
+    public void testBigDecimal() throws SQLException {
+        BigDecimal testBigDecimal = new BigDecimal((double)TEST_LONG);
         field.setBigDecimal(testBigDecimal);
         field.copyOI();
         assertTrue(field.getBigDecimal().equals(testBigDecimal));
     }
 
-    public void testString() throws java.sql.SQLException {
+    public void testString() throws SQLException {
         field.setString(TEST_STRING_SHORT);		  
 //        assertTrue("String was not completed with spaces or is longer.",
 //            field.getString().length() == TEST_STRING_SIZE);
@@ -86,7 +89,7 @@ public class TestFBStringField extends BaseTestFBField {
             // everything is ok
         }
     }
-    public void testObject() throws java.sql.SQLException {
+    public void testObject() throws SQLException {
         field.setObject(TEST_STRING_SHORT);
 //        assertTrue("String was not completed with spaces or is longer.",
 //            field.getString().length() == TEST_STRING_SIZE);
@@ -95,7 +98,7 @@ public class TestFBStringField extends BaseTestFBField {
             field.getString().trim().equals(TEST_STRING_SHORT));
     }
 
-    public void testUnicodeStream() throws java.sql.SQLException {
+    public void testUnicodeStream() throws SQLException {
         byte[] bytes = TEST_STRING_SHORT.getBytes();
         field.setUnicodeStream(new ByteArrayInputStream(bytes), bytes.length);
         field.copyOI();
@@ -110,7 +113,7 @@ public class TestFBStringField extends BaseTestFBField {
             // everything is ok
         }
     }
-    public void testBinaryStream() throws java.sql.SQLException {
+    public void testBinaryStream() throws SQLException {
         byte[] bytes = TEST_STRING_SHORT.getBytes();
         field.setBinaryStream(new ByteArrayInputStream(bytes), bytes.length);
         field.copyOI();
@@ -125,7 +128,7 @@ public class TestFBStringField extends BaseTestFBField {
             // everything is ok
         }
     }
-    public void testAsciiStream() throws java.sql.SQLException {
+    public void testAsciiStream() throws SQLException {
         byte[] bytes = TEST_STRING_SHORT.getBytes();
         field.setAsciiStream(new ByteArrayInputStream(bytes), bytes.length);
         field.copyOI();
@@ -140,7 +143,7 @@ public class TestFBStringField extends BaseTestFBField {
             // everything is ok
         }
     }
-    public void testBytes() throws java.sql.SQLException {
+    public void testBytes() throws SQLException {
         field.setBytes(TEST_STRING_SHORT.getBytes());
         field.copyOI();
         String fromBytes = new String(field.getBytes());
@@ -153,7 +156,7 @@ public class TestFBStringField extends BaseTestFBField {
             // everything is ok
         }
     }
-    public void testDate() throws java.sql.SQLException {
+    public void testDate() throws SQLException {
         field.setDate(TEST_DATE);
         // because of the date-string-date conversion we loose the
         // time part of java.util.Date, and strictly speaking
@@ -162,7 +165,7 @@ public class TestFBStringField extends BaseTestFBField {
         assertTrue("Date values test failure",
             field.getDate().toString().equals(TEST_DATE.toString()));
     }
-    public void testTime() throws java.sql.SQLException {
+    public void testTime() throws SQLException {
         field.setTime(TEST_TIME);
         // because of the time-string-time conversion we loose the
         // date part of java.util.Date, and strictly speaking

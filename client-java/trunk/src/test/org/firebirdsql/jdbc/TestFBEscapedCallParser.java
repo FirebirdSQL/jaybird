@@ -19,7 +19,10 @@
 
 package org.firebirdsql.jdbc;
 
-import junit.framework.*;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
 
 /**
  * Describe class <code>TestFBEscapedCallParser</code> here.

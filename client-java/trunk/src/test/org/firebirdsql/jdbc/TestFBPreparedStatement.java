@@ -19,7 +19,11 @@
 
 package org.firebirdsql.jdbc;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 /**
  * Describe class <code>TestFBPreparedStatement</code> here.
@@ -59,11 +63,9 @@ public class TestFBPreparedStatement extends BaseFBTest{
         super.setUp();
         
         Class.forName(FBDriver.class.getName());
-        con =
-            java.sql.DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
-            
+        con = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);            
 
-        java.sql.Statement stmt = con.createStatement();
+        Statement stmt = con.createStatement();
         try {
             stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
         }
@@ -85,7 +87,7 @@ public class TestFBPreparedStatement extends BaseFBTest{
     }
 
     protected void tearDown() throws Exception {
-        java.sql.Statement stmt = con.createStatement();
+        Statement stmt = con.createStatement();
         stmt.executeUpdate(DROP_TEST_BLOB_TABLE);
         stmt.close();
 

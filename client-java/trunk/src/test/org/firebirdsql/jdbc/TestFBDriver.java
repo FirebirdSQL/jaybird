@@ -24,6 +24,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.8  2003/06/04 13:51:01  brodsom
+ * Remove unused vars and imports
+ *
  * Revision 1.7  2002/12/12 23:32:21  rrokytskyy
  * removed unnecessary stack trace printing
  *
@@ -80,12 +83,23 @@
 package org.firebirdsql.jdbc;
 
 
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLWarning;
+import java.sql.Statement;
+import java.sql.Timestamp;
+
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Properties;
 import java.util.TimeZone;
-import junit.framework.*;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
  * Test suite for the FBDriver class implementation.
@@ -95,8 +109,8 @@ import junit.framework.*;
  */
 public class TestFBDriver extends BaseFBTest {
 
-    private java.sql.Connection connection;
-    private java.sql.Driver driver;
+    private Connection connection;
+    private Driver driver;
 
     public TestFBDriver(String testName) {
         super(testName);
@@ -111,7 +125,7 @@ public class TestFBDriver extends BaseFBTest {
     protected void setUp() throws Exception {
        super.setUp();
         Class.forName(org.firebirdsql.jdbc.FBDriver.class.getName());
-        driver = java.sql.DriverManager.getDriver(DB_DRIVER_URL);
+        driver = DriverManager.getDriver(DB_DRIVER_URL);
     }
 
 
@@ -253,8 +267,8 @@ public class TestFBDriver extends BaseFBTest {
                 s.execute("CREATE TABLE DATETEST (DATEID INTEGER NOT NULL PRIMARY KEY, TESTDATE TIMESTAMP)");
                 PreparedStatement ps = c.prepareStatement("INSERT INTO DATETEST (DATEID, TESTDATE) VALUES (?,?)");
                 Calendar cal = new GregorianCalendar(timeZoneUTC);
-                java.util.Date d1 = new java.util.Date("Sat Feb 17 20:59:31 EST 1917");
-                java.sql.Timestamp x = new java.sql.Timestamp(d1.getTime());
+                Date d1 = new Date("Sat Feb 17 20:59:31 EST 1917");
+                Timestamp x = new Timestamp(d1.getTime());
                 try 
                 {
                     ps.setInt(1, 1);
@@ -273,7 +287,7 @@ public class TestFBDriver extends BaseFBTest {
                     {
                          
                         assertTrue("Should have one row!", rs.next());
-                        java.sql.Timestamp x2 = rs.getTimestamp(1, cal);
+                        Timestamp x2 = rs.getTimestamp(1, cal);
                         java.util.Date d2 = new java.util.Date(x2.getTime());
                         assertTrue("Retrieved wrong value! expected: " + d1 + ", actual: " + d2, d1.equals(d2));
                     }
