@@ -24,6 +24,8 @@ import javax.resource.spi.ManagedConnectionMetaData;
 
 import javax.resource.ResourceException;
 
+import org.firebirdsql.gds.GDSException;
+
 
 /**
  * The class <code>FBManagedConnectionMetaData</code> implements 
@@ -48,7 +50,11 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
          Product name of the EIS instance.
     **/
      public String getEISProductName() throws ResourceException {
-        throw new FBResourceException("Not yet implemented");
+         try {
+             return mc.getIscDBHandle().getDatabaseProductName();
+         } catch(GDSException ex) {
+             throw new FBResourceException(ex);
+         }
      }
 
      /**
@@ -58,7 +64,11 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
          Product version of the EIS instance
     **/
      public String getEISProductVersion() throws ResourceException {
-         throw new FBResourceException("Not yet implemented");
+         try {
+             return mc.getIscDBHandle().getDatabaseProductVersion();
+         } catch(GDSException ex) {
+             throw new FBResourceException(ex);
+         }
      }
 
 

@@ -224,7 +224,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getDriverName() throws SQLException {
-        return "FirebirdSQL JCA/JDBC resource adapter";
+        return "JayBird JCA/JDBC driver";
     }
 
 
