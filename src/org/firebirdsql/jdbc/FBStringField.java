@@ -257,18 +257,6 @@ class FBStringField extends FBField {
 		field.sqldata = supplied;
 		setNull(false);
 	}
-	void setObject(Object value) throws SQLException {
-		if (value == null) {
-			setNull(true);
-			return;
-		}
-
-		if (value instanceof String)
-			setString((String) value);
-		else
-			throw (SQLException) createException(
-				OBJECT_CONVERSION_ERROR).fillInStackTrace();
-	}
 
 	//----- setXXXStream code
 

@@ -131,18 +131,6 @@ class FBShortField extends FBField {
 
         setShort((short)value);
     }
-    void setObject(Object value) throws java.sql.SQLException {
-        if (value == null) {
-            setNull(true);
-            return;
-        }
-
-        if (value instanceof Short)
-            setShort(((Short)value).shortValue());
-        else
-            throw (SQLException)createException(
-                SHORT_CONVERSION_ERROR).fillInStackTrace();
-    }
     void setDouble(double value) throws java.sql.SQLException {
         // check if value is within bounds
         if (value > Short.MAX_VALUE ||
