@@ -35,7 +35,7 @@ InternalException::InternalException(const char* const message, ... )
 	va_list args;
 
 	va_start(args, message);
-	_vsnprintf( mBuffer, sizeof(mBuffer), message, args );
+	vsnprintf( mBuffer, sizeof(mBuffer), message, args );
 	va_end(args);
 	}
 

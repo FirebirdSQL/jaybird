@@ -203,7 +203,7 @@ void FirebirdApiBinding::Load(const char* const firebirdDllName)
 /*
  *
  */
-void FirebirdApiBinding::Unload()
+/*void FirebirdApiBinding::Unload()
 	{
 	if (sHandle != NULL)
 		{
@@ -212,7 +212,7 @@ void FirebirdApiBinding::Unload()
 	
 	sIsLoaded = false;
 	sHandle = NULL;
-	}
+	}*/
 
 
 /*

@@ -37,9 +37,16 @@
 
 #include <windows.h>
 
+
+#include <malloc.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+
+// Dont know if this is a good thing too do 
+#define vsnprintf _vsnprintf
+#define alloca _alloca
 
 // Defines for fb_binding.h and fb_binding.cpp
 typedef HMODULE SHARED_LIBRARY_HANDLE;
