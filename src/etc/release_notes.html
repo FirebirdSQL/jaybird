@@ -5,7 +5,7 @@
 	<TITLE></TITLE>
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.2  (Win32)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
-	<META NAME="CHANGED" CONTENT="20041024;17554486">
+	<META NAME="CHANGED" CONTENT="20041205;12440547">
 	<STYLE>
 	<!--
 		@page { size: 21cm 29.7cm; margin: 2cm }
@@ -37,7 +37,7 @@
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <H1 CLASS="western" ALIGN=CENTER>JayBird JCA/JDBC Driver<BR>Release
-Notes v 1.5.4</H1>
+Notes v 1.5.5</H1>
 <DIV ID="Table of Contents1" DIR="LTR">
 	<DIV ID="Table of Contents1_Head" DIR="LTR">
 		<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Table
@@ -53,8 +53,8 @@ Notes v 1.5.4</H1>
 	support</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.1.3.Using JayBird with InterBase|outline">Using
 	JayBird with InterBase</A></FONT></P>
-	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.2.What's new in JayBird 1.5.4|outline">What's
-	new in JayBird 1.5.4</A></FONT></P>
+	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.2.What's new in JayBird 1.5|outline">What's
+	new in JayBird 1.5</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.2.1.Type 2 and embedded server|outline">Type
 	2 and embedded server</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#1.2.2.Support of IN and OUT stored procedure parameters|outline">Support
@@ -240,8 +240,8 @@ Firebird features in InterBase. JayBird 1.5 provides much more better
 JDBC compatibility compared to InterClient 4 shipped with InterBase
 7.1 and provides many features that are not available in InterClient
 4.</P>
-<H2 CLASS="western"><A NAME="1.2.What's new in JayBird 1.5.4|outline"></A>
-What's new in JayBird 1.5.4</H2>
+<H2 CLASS="western"><A NAME="1.2.What's new in JayBird 1.5|outline"></A>
+What's new in JayBird 1.5</H2>
 <P CLASS="western">JayBird 1.5 introduces number of new features and
 improvements.</P>
 <H3 CLASS="western"><A NAME="1.2.1.Type 2 and embedded server|outline"></A>
@@ -478,6 +478,86 @@ List of bugs fixed since JayBird 1.5.0</H3>
 	<THEAD>
 		<TR VALIGN=TOP>
 			<TD WIDTH=15%>
+				<P CLASS="western">2004-12-04</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed NPE when error happens during
+				reconnecting</P>
+			</TD>
+		</TR>
+	</THEAD>
+	<TBODY>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-12-04</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">allowed calling commit/rollback in Oracle mode</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-11-24</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added setBlob() method for BLOB SUB_TYPE 1
+				fields</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-11-24</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed the issue with calendar in
+				PreparedStatement.setTime(Time, Calendar) method</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-11-21</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added fix for &quot;trying to reopen an open
+				cursor&quot; in type 2 driver</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-11-20</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">improved memory usage within transaction</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-25</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed a bug in write(byte[], int, int) method
+				in FBBlob.java when passed array was bigger than blob buffer size</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-24</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">added keepStatements parameter</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">2004-10-24</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">fixed a bug in AbstractCallableStatement where
+				not all params were marked as set</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
 				<P CLASS="western">2004-10-23  
 				</P>
 			</TD>
@@ -487,8 +567,6 @@ List of bugs fixed since JayBird 1.5.0</H3>
 				Original fix provided by Gabriel Reid</P>
 			</TD>
 		</TR>
-	</THEAD>
-	<TBODY>
 		<TR VALIGN=TOP>
 			<TD WIDTH=15%>
 				<P CLASS="western">2004-10-23</P>
