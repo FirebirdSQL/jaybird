@@ -109,7 +109,8 @@ public interface DatabaseParameterBuffer
     int blob_buffer_size =     ISCConstants.isc_dpb_blob_buffer_size;
     int use_stream_blobs =     ISCConstants.isc_dpb_use_stream_blobs;
     int paranoia_mode =        ISCConstants.isc_dpb_paranoia_mode;
-	
+	int timestamp_uses_local_timezone =     ISCConstants.isc_dpb_timestamp_uses_local_timezone;
+    int use_standard_udf =     ISCConstants.isc_dpb_use_standard_udf;
 	
 	
     /**

@@ -257,6 +257,8 @@ public class GDS_Impl extends AbstractGDS implements GDS
         result.removeArgument(ISCConstants.isc_dpb_blob_buffer_size);
         result.removeArgument(ISCConstants.isc_dpb_use_stream_blobs);
         result.removeArgument(ISCConstants.isc_dpb_paranoia_mode);
+        result.removeArgument(ISCConstants.isc_dpb_timestamp_uses_local_timezone);
+        result.removeArgument(ISCConstants.isc_dpb_use_standard_udf);
 
         return result;
     }
