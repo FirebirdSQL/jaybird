@@ -79,12 +79,12 @@ public class FBStandAloneConnectionManager
 
     public void connectionErrorOccurred(ConnectionEvent ce) {
         PrintWriter externalLog = ((FBManagedConnection)ce.getSource()).getLogWriter();
-        if (log!=null) log.info("ConnectionErrorOccurred, ", ce.getException());
+        if (log!=null) log.debug("ConnectionErrorOccurred, ", ce.getException());
         try {
             ((FBManagedConnection)ce.getSource()).destroy();
         }
         catch (ResourceException e) {
-            if (log!=null) log.info("further problems destroying connection: ", e);
+            if (log!=null) log.debug("further problems destroying connection: ", e);
             if (externalLog != null) externalLog.println("Exception closing unmanaged connection: " + e);
         }
     }

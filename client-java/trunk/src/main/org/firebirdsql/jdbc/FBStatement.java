@@ -593,27 +593,6 @@ public class FBStatement implements Statement {
             catch (GDSException ge) {
                 throw new FBSQLException(ge);
             }
-/*			  
-            try {
-                SqlInfo i = c.getSqlInfo(fixedStmt);
-                int insCount = i.getInsertCount();
-                int updCount = i.getUpdateCount();
-                int delCount = i.getDeleteCount();
-                int resCount = ((updCount>delCount) ? updCount:delCount);
-                resCount = ((resCount>insCount) ? resCount:insCount);
-                if (log!=null) {
-                    log.debug("InsertCount: " + insCount);
-                    log.debug("UpdateCount: " + updCount);
-                    log.debug("DeleteCount: " + delCount);
-                    log.debug("returning: " + resCount);
-                }
-
-                return resCount;
-            }
-            catch (GDSException ge) {
-                throw new FBSQLException(ge);
-            }
- */
         }
     }
 
