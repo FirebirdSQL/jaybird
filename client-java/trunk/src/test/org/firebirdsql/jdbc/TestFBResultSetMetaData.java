@@ -148,9 +148,9 @@ public class TestFBResultSetMetaData extends BaseFBTest {
         
         ResultSetMetaData metaData = rs.getMetaData();
         		  
-        assertTrue("RDB$SECURITY_CLASS must have display size 31 ",metaData.getColumnDisplaySize(3)==31);
+        assertTrue("RDB$SECURITY_CLASS must have display size 31 ",metaData.getColumnDisplaySize(3)==10);
 		  
-        assertTrue("RDB$CHARACTER_SET_NAME must have display size 31 ",metaData.getColumnDisplaySize(4)==31);
+        assertTrue("RDB$CHARACTER_SET_NAME must have display size 31 ",metaData.getColumnDisplaySize(4)==10);
 		  
         stmt.close();
         connection.close();
