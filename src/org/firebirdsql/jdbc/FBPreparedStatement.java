@@ -631,194 +631,176 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      */
     public void setObject(int parameterIndex, Object x) throws  SQLException {
         XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        int type = sqlvar.sqltype & ~1;
-        switch (type) {
-        case GDS.SQL_TEXT:
-        case GDS.SQL_VARYING:
-            if (x instanceof String) {
-                setString(parameterIndex, (String)x);
-                return;
+        int sqltype = sqlvar.sqltype & ~1;
+        int sqlscale = sqlvar.sqlscale;
+        
+        if (sqlscale < 0 || sqltype == GDS.SQL_INT64) {
+            switch (sqltype) {
+                case GDS.SQL_SHORT: 
+                case GDS.SQL_LONG: 
+                case GDS.SQL_INT64: 
+                case GDS.SQL_DOUBLE: 
+                    BigDecimal value;
+                    if (x instanceof BigDecimal) {
+                        value = (BigDecimal) x;
+                    } else if (x instanceof Number) {
+                        value = new BigDecimal(((Number) x).doubleValue());
+                    } else if (x instanceof Boolean) {
+                       if (((Boolean) x).booleanValue()) {
+                            value = new BigDecimal((double) 1);
+                        } else {
+                            value = new BigDecimal((double) 0);
+                        }
+                    } else if (x instanceof String) {
+                        value = new BigDecimal((String) x);
+                    } else {
+                        throw new SQLException("Invalid conversion to decimal");
+                    }
+                    
+                    value = value.setScale(sqlscale * (-1), BigDecimal.ROUND_HALF_UP);
+                    x = new Long(value.unscaledValue().longValue());
+                    break;
+                default:
+                    throw new SQLException("Invalid conversion to decimal");
             }
-            if (x instanceof byte[]) {
-                setBytes(parameterIndex, (byte[])x);
-                return;
-            }
-            setString(parameterIndex, x.toString());
-            break;
+        }
+        
+        switch (sqltype) {
         case GDS.SQL_SHORT:
             sqlvar.sqlind = 0;
             if (x instanceof Short) {
                 sqlvar.sqldata = x;
-                return;
-            }
-            if (x instanceof String) {
-                sqlvar.sqldata = new Short((String)x);
-                return;
-            }
-            if (x instanceof BigDecimal) {
-                sqlvar.sqldata = new Short(((BigDecimal)x).shortValue());
-                return;
-            }
-            if (x instanceof Boolean) {
-                if (((Boolean)x).booleanValue()) {
-                    sqlvar.sqldata = new Short((short)0);
+            } else if (x instanceof Number) {
+                sqlvar.sqldata = new Short(((Number) x).shortValue());
+            } else if (x instanceof Boolean) {
+                if (((Boolean) x).booleanValue()) {
+                    sqlvar.sqldata = new Short((short) 1);
+                } else {
+                    sqlvar.sqldata = new Short((short) 0);
                 }
-                else {
-                    sqlvar.sqldata = new Short((short)1);
-                }
-                return;
+            } else if (x instanceof String) {
+                sqlvar.sqldata = new Short((String) x);
+            } else {
+                throw new SQLException("Invalid conversion to short");
             }
-            if (x instanceof Integer) {
-                sqlvar.sqldata = new Short(((Integer)x).shortValue());
-                return;
-            }
-            if (x instanceof Long) {
-                sqlvar.sqldata = new Short(((Long)x).shortValue());
-                return;
-            }
-            if (x instanceof Float) {
-                sqlvar.sqldata = new Short(((Float)x).shortValue());
-                return;
-            }
-            if (x instanceof Double) {
-                sqlvar.sqldata = new Short(((Double)x).shortValue());
-                return;
-            }
-            throw new SQLException("Invalid conversion to short");
+            break;
         case GDS.SQL_LONG:
             sqlvar.sqlind = 0;
             if (x instanceof Integer) {
                 sqlvar.sqldata = x;
-                return;
-            }
-            if (x instanceof String) {
-                sqlvar.sqldata = new Integer((String)x);
-                return;
-            }
-            if (x instanceof BigDecimal) {
-                sqlvar.sqldata = new Integer(((BigDecimal)x).intValue());
-                return;
-            }
-            if (x instanceof Boolean) {
-                if (((Boolean)x).booleanValue()) {
-                    sqlvar.sqldata = new Integer(0);
+            } else if (x instanceof Number) {
+                sqlvar.sqldata = new Integer(((Number) x).intValue());
+            } else if (x instanceof Boolean) {
+                if (((Boolean) x).booleanValue()) {
+                    sqlvar.sqldata = new Integer((int) 1);
+                } else {
+                    sqlvar.sqldata = new Integer((int) 0);
                 }
-                else {
-                    sqlvar.sqldata = new Integer(1);
-                }
-                return;
+            } else if (x instanceof String) {
+                sqlvar.sqldata = new Integer((String) x);
+            } else {
+                throw new SQLException("Invalid conversion to integer");
             }
-            if (x instanceof Short) {
-                sqlvar.sqldata = new Integer(((Short)x).intValue());
-                return;
-            }
+            break;
+        case GDS.SQL_INT64:
+            sqlvar.sqlind = 0;
             if (x instanceof Long) {
-                sqlvar.sqldata = new Integer(((Long)x).intValue());
-                return;
+                sqlvar.sqldata = x;
+            } else {
+                throw new SQLException("Invalid conversion to decimal");
             }
-            if (x instanceof Float) {
-                sqlvar.sqldata = new Integer(((Float)x).intValue());
-                return;
-            }
-            if (x instanceof Double) {
-                sqlvar.sqldata = new Integer(((Double)x).intValue());
-                return;
-            }
-            throw new SQLException("Invalid conversion to integer");
+            break;
         case GDS.SQL_FLOAT:
+            sqlvar.sqlind = 0;
             if (x instanceof Float) {
                 sqlvar.sqldata = x;
-                return;
-            }
-            if (x instanceof String) {
-                sqlvar.sqldata = new Float((String)x);
-                return;
-            }
-            if (x instanceof BigDecimal) {
-                sqlvar.sqldata = new Float(((BigDecimal)x).floatValue());
-                return;
-            }
-            if (x instanceof Boolean) {
-                if (((Boolean)x).booleanValue()) {
-                    sqlvar.sqldata = new Float(0);
+            } else if (x instanceof Number) {
+                sqlvar.sqldata = new Float(((Number) x).floatValue());
+            } else if (x instanceof Boolean) {
+                if (((Boolean) x).booleanValue()) {
+                    sqlvar.sqldata = new Float((float) 1);
+                } else {
+                    sqlvar.sqldata = new Float((float) 0);
                 }
-                else {
-                    sqlvar.sqldata = new Float(1);
-                }
-                return;
+            } else if (x instanceof String) {
+                sqlvar.sqldata = new Float((String) x);
+            } else {
+                throw new SQLException("Invalid conversion to float");
             }
-            if (x instanceof Short) {
-                sqlvar.sqldata = new Float(((Short)x).floatValue());
-                return;
-            }
-            if (x instanceof Long) {
-                sqlvar.sqldata = new Float(((Long)x).floatValue());
-                return;
-            }
-            if (x instanceof Integer) {
-                sqlvar.sqldata = new Float(((Integer)x).floatValue());
-                return;
-            }
-            if (x instanceof Double) {
-                sqlvar.sqldata = new Float(((Double)x).floatValue());
-                return;
-            }
-            throw new SQLException("Invalid conversion to Float");
+            break;
         case GDS.SQL_DOUBLE:
             sqlvar.sqlind = 0;
             if (x instanceof Double) {
                 sqlvar.sqldata = x;
-                return;
-            }
-            if (x instanceof String) {
-                sqlvar.sqldata = new Double((String)x);
-                return;
-            }
-            if (x instanceof BigDecimal) {
-                sqlvar.sqldata = new Double(((BigDecimal)x).doubleValue());
-                return;
-            }
-            if (x instanceof Boolean) {
-                if (((Boolean)x).booleanValue()) {
-                    sqlvar.sqldata = new Double(0);
+            } else if (x instanceof Number) {
+                sqlvar.sqldata = new Double(((Number) x).doubleValue());
+            } else if (x instanceof Boolean) {
+                if (((Boolean) x).booleanValue()) {
+                    sqlvar.sqldata = new Double((double) 1);
+                } else {
+                    sqlvar.sqldata = new Double((double) 0);
                 }
-                else {
-                    sqlvar.sqldata = new Double(1);
-                }
-                return;
+            } else if (x instanceof String) {
+                sqlvar.sqldata = new Double((String) x);
+            } else {
+                throw new SQLException("Invalid conversion to double");
             }
-            if (x instanceof Short) {
-                sqlvar.sqldata = new Double(((Short)x).doubleValue());
-                return;
-            }
-            if (x instanceof Long) {
-                sqlvar.sqldata = new Double(((Long)x).doubleValue());
-                return;
-            }
-            if (x instanceof Float) {
-                sqlvar.sqldata = new Double(((Float)x).doubleValue());
-                return;
-            }
-            if (x instanceof Integer) {
-                sqlvar.sqldata = new Double(((Integer)x).doubleValue());
-                return;
-            }
-            throw new SQLException("Invalid conversion to Double");
+            break;
         case GDS.SQL_D_FLOAT:
             throw new SQLException("not yet implemented");
-        case GDS.SQL_TIMESTAMP:
-            throw new SQLException("not yet implemented");
+        case GDS.SQL_TEXT:
+        case GDS.SQL_VARYING:
+            if (x instanceof String) {
+                setString(parameterIndex, (String) x);
+            } else if (x instanceof byte[]) {
+                setBytes(parameterIndex, (byte[]) x);
+            } else {
+                setString(parameterIndex, x.toString());
+            }
+            break;
         case GDS.SQL_BLOB:
-            throw new SQLException("not yet implemented");
+            if (x instanceof byte[]) {
+                setBytes(parameterIndex, (byte[]) x);
+            } else {
+                throw new SQLException("Invalid conversion to blob");
+            }
+            break;
+        case GDS.SQL_TYPE_DATE:
+            if (x instanceof java.sql.Date) {
+                setDate(parameterIndex, (java.sql.Date) x);
+            } else if (x instanceof java.sql.Timestamp) {
+                setDate(parameterIndex, new java.sql.Date(((java.sql.Timestamp) x).getTime()));
+            } if (x instanceof String) {
+                setDate(parameterIndex, java.sql.Date.valueOf((String) x));
+            } else {
+                throw new SQLException("Invalid conversion to date");
+            }
+            break;
+        case GDS.SQL_TYPE_TIME:
+            if (x instanceof java.sql.Time) {
+                setTime(parameterIndex, (java.sql.Time) x);
+            } else if (x instanceof java.sql.Timestamp) {
+                setTime(parameterIndex, new java.sql.Time(((java.sql.Timestamp) x).getTime()));
+            } if (x instanceof String) {
+                setTime(parameterIndex, java.sql.Time.valueOf((String) x));
+            } else {
+                throw new SQLException("Invalid conversion to time");
+            }
+            break;
+        case GDS.SQL_TIMESTAMP:
+            if (x instanceof java.sql.Timestamp) {
+                setTimestamp(parameterIndex, (java.sql.Timestamp) x);
+            } else if (x instanceof java.sql.Date) {
+                setTimestamp(parameterIndex, new java.sql.Timestamp(((java.sql.Date) x).getTime()));
+            } if (x instanceof String) {
+                setTimestamp(parameterIndex, java.sql.Timestamp.valueOf((String) x));
+            } else {
+                throw new SQLException("Invalid conversion to timestamp");
+            }
+            break;
         case GDS.SQL_ARRAY:
             throw new SQLException("not yet implemented");
         case GDS.SQL_QUAD:
-            throw new SQLException("not yet implemented");
-        case GDS.SQL_TYPE_TIME:
-            throw new SQLException("not yet implemented");
-        case GDS.SQL_TYPE_DATE:
-            throw new SQLException("not yet implemented");
-        case GDS.SQL_INT64:
             throw new SQLException("not yet implemented");
         default:
             throw new SQLException("Invalid type in sqlvar!!");
