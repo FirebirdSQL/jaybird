@@ -1,3 +1,38 @@
+2005-02-22 08:42  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	updated test case for auto-commit mode
+
+2005-02-22 08:13  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FBResultSet.java,
+	FBRowUpdater.java:
+	
+	fixed updatable result sets in auto-commit mode
+
+2005-02-22 08:11  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
+	
+	fixed issue with uncleaned cached result set
+
+2005-02-22 08:09  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
+	
+	fixed issue with reentrant calls to ensureInTransaction and
+	checkEndTransaction
+
+2005-02-22 08:08  rrokytskyy
+
+	*
+	
+	removed unneeded line of code
+	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
+	.java:
+
 2005-02-14 23:10  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/FBEscapedParser.java:
