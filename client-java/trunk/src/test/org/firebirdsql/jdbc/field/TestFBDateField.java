@@ -17,46 +17,48 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.field;
 
 
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Time;
 import java.util.ArrayList;
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.jdbc.FBResultSet;
+
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Describe class <code>TestFBTimeField</code> here.
+ * Describe class <code>TestFBDateField</code> here.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TestFBTimeField extends BaseTestFBField {
-	public TestFBTimeField(String testName) {
+public class TestFBDateField extends BaseTestFBField {
+	public TestFBDateField(String testName) {
 		super(testName);
 	}
 	public static Test suite() {
-		return new TestSuite(TestFBTimeField.class);
+		return new TestSuite(TestFBDateField.class);
 	}
 	protected void setUp() throws SQLException{
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
         xsqlvars[0] = createXSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_TYPE_TIME;
+        xsqlvars[0].sqltype = ISCConstants.SQL_TYPE_DATE;
         byte[][] row = new byte[1][];
         ArrayList rows = new ArrayList();
         rows.add(row);		  
-        FBResultSet rs = new FBResultSet(xsqlvars,rows);
+        FBResultSet rs = new FBFieldResultSet(xsqlvars,rows);
 		  rs.next();
-//		stringField.sqldata = TEST_TIME;
+//		stringField.sqldata = TEST_DATE;
 //		stringField.sqlind = 0;
 
-		field = FBField.createField(xsqlvars[0],rs,0, false);
+		field = FBField.createField(xsqlvars[0], rs, 0, false);
 	}
 	protected void tearDown() {
 	}
@@ -159,43 +161,42 @@ public class TestFBTimeField extends BaseTestFBField {
 
 	//--- real test methods
 
-	public void testDate() throws SQLException {
+	public void testTime() throws SQLException {
 		try {
-			super.testDate();
+			super.testTime();
 			assertTrue("This method should fail.", false);
 		} catch(SQLException ex) {
 			//everything is ok :)
 		}
 	}
 	public void testTimestamp() throws SQLException {
-		String timeStr = new Time(TEST_TIMESTAMP.getTime()).toString();
+		String dateStr = new Date(TEST_TIMESTAMP.getTime()).toString();
 		field.setTimestamp(TEST_TIMESTAMP);
-		field.copyOI();
+      field.copyOI();
 		// we have to test string representation, because of conversion problem
 		assertTrue("Timestamp value test failure.",
-			field.getTime().toString().equals(timeStr));
+			field.getDate().toString().equals(dateStr));
 	}
 	public void testString() throws SQLException {
-		field.setString(TEST_TIME.toString());
+		field.setString(TEST_DATE.toString());
+      field.copyOI();
 		// we have to test string representation, because java.sql.Date
 		// keeps the time part of the timestamp after creation, but
 		// usually loses it after some conversions. So, date might
 		// be the same, by object will differ. String comparison produces
 		// stable results.
-		field.copyOI();
 		assertTrue("String value test failure",
-			field.getString().equals(TEST_TIME.toString()));
+			field.getString().equals(TEST_DATE.toString()));
 	}
 	public void testObject() throws SQLException {
-		field.setObject(TEST_TIME);
+		field.setObject(TEST_DATE);
+      field.copyOI();
 		// we have to test string representation, because java.sql.Date
 		// keeps the time part of the timestamp after creation, but
 		// usually loses it after some conversions. So, date might
 		// be the same, by object will differ. String comparison produces
 		// stable results.
-		field.copyOI();
 		assertTrue("Object value test failure",
-			field.getString().equals(TEST_TIME.toString()));
+			field.getString().equals(TEST_DATE.toString()));
 	}
-
 }

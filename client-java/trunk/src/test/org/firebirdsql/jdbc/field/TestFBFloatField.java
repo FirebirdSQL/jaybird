@@ -17,7 +17,8 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.field;
+
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
@@ -30,39 +31,37 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Describe class <code>TestFBIntegerField</code> here.
+ * Describe class <code>TestFBFloatField</code> here.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TestFBIntegerField extends BaseTestFBField {
-	public TestFBIntegerField(String testName) {
+public class TestFBFloatField extends BaseTestFBField {
+	public TestFBFloatField(String testName) {
 		super(testName);
 	}
 	public static Test suite() {
-		return new TestSuite(TestFBIntegerField.class);
+		return new TestSuite(TestFBFloatField.class);
 	}
 	protected void setUp() throws SQLException{
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
         xsqlvars[0] = createXSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_LONG;
+        xsqlvars[0].sqltype = ISCConstants.SQL_FLOAT;
         byte[][] row = new byte[1][];
         ArrayList rows = new ArrayList();
         rows.add(row);		  
-        FBResultSet rs = new FBResultSet(xsqlvars,rows);
-		  rs.next();
-//		intField.sqldata = new Integer(TEST_INT);
-//		intField.sqlind = 0;
+        FBFieldResultSet rs = new FBFieldResultSet(xsqlvars,rows);
+		rs.next();
 
-		field = FBField.createField(xsqlvars[0],rs,0,false);
+		field = FBField.createField(xsqlvars[0], rs, 0, false);
 	}
 	protected void tearDown() {
 	}
 
 	public void testObject() throws SQLException {
-		field.setObject(new Integer(TEST_INT));
+		field.setObject(new Float(TEST_FLOAT));
 		field.copyOI();
-		assertTrue(field.getObject().equals(new Integer(TEST_INT)));
+		assertTrue(field.getObject().equals(new Float(TEST_FLOAT)));
 	}
 	public void testUnicodeStream() throws SQLException {
 		try {
@@ -85,9 +84,9 @@ public class TestFBIntegerField extends BaseTestFBField {
 
 	}
 	public void testString() throws SQLException {
-		field.setString(Integer.toString(TEST_INT));
-		field.copyOI();
-		assertTrue(field.getString().equals(Integer.toString(TEST_INT)));
+		field.setString(Float.toString(TEST_FLOAT));
+		field.copyOI();		
+		assertTrue(field.getString().equals(Float.toString(TEST_FLOAT)));
 	}
 	public void testAsciiStream() throws SQLException {
 		try {
@@ -106,9 +105,9 @@ public class TestFBIntegerField extends BaseTestFBField {
 		}
 	}
 	public void testBigDecimal() throws SQLException {
-		BigDecimal testBigDecimal =	BigDecimal.valueOf((long)TEST_INT);
+		BigDecimal testBigDecimal =	new BigDecimal((double)TEST_FLOAT);
 		field.setBigDecimal(testBigDecimal);
-		field.copyOI();
+		field.copyOI();		
 		assertTrue(field.getBigDecimal().equals(testBigDecimal));
 	}
 	public void testDate() throws SQLException {
@@ -134,23 +133,20 @@ public class TestFBIntegerField extends BaseTestFBField {
 		} catch(SQLException ex) {
 			//everything is ok :)
 		}
-
+	}
+	public void testInteger() throws SQLException {
+		// unfortunately (long)((float)myLong) != myLong....
+		// so we can test only float values...
+		field.setLong(TEST_INT);
+		field.copyOI();		
+		assertTrue(field.getFloat() == (float)TEST_INT);
 	}
 	public void testLong() throws SQLException {
-		try {
-			super.testLong();
-			assertTrue("This method should fail.", false);
-		} catch(SQLException ex) {
-			//everything is ok :)
-		}
-	}
-	public void testFloat() throws SQLException {
-		try {
-			super.testFloat();
-			assertTrue("This method should fail.", false);
-		} catch(SQLException sqlex) {
-			//everything is ok :)
-		}
+		// unfortunately (long)((float)myLong) != myLong....
+		// so we can test only float values...
+		field.setLong(TEST_LONG);
+		field.copyOI();		
+		assertTrue(field.getFloat() == (float)TEST_LONG);
 	}
 	public void testDouble() throws SQLException {
 		try {
