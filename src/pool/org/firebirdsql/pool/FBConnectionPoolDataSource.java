@@ -175,6 +175,7 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
         PROPERTY_NAME_MAPPING.put("userName", USER_NAME_PROPERTY);
         PROPERTY_NAME_MAPPING.put("socketBufferSize", SOCKET_BUFFER_PROPERTY);
         PROPERTY_NAME_MAPPING.put("sqlRole", SQL_ROLE_PROPERTY);
+        PROPERTY_NAME_MAPPING.put("roleName", SQL_ROLE_PROPERTY);
         PROPERTY_NAME_MAPPING.put("tpbMapping", TPB_MAPPING_PROPERTY);
     }
     
@@ -753,13 +754,28 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
     public void setSocketBufferSize(int socketBufferSize) {
         setIntProperty(SOCKET_BUFFER_PROPERTY, socketBufferSize);
     }
-
-    public String getSqlRole() {
+    
+    
+    public String getRoleName() {
         return getProperty(SQL_ROLE_PROPERTY);
     }
+    
+    public void setRoleName(String roleName) {
+        setProperty(SQL_ROLE_PROPERTY, roleName);
+    }
 
+    /**
+     * @deprecated please use {@link #getRoleName()} instead.
+     */
+    public String getSqlRole() {
+        return getRoleName();
+    }
+
+    /**
+     * @deprecated please use {@link #setRoleName(String)} instead. 
+     */
     public void setSqlRole(String sqlRole) {
-        setProperty(SQL_ROLE_PROPERTY, sqlRole);
+        setRoleName(sqlRole);
     }
 
     public String getTpbMapping() {
