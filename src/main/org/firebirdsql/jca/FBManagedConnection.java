@@ -505,7 +505,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         {
             checkFatalXA(ge, committingDbHandle);
             if (log!=null) log.debug("Exception in prepare", ge);
-            throw new FBXAException(XAException.XAER_RMERR);
+            throw new FBXAException(XAException.XAER_RMERR, ge);
         }
         return XA_OK;
     }

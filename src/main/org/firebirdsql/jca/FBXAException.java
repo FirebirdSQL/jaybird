@@ -18,6 +18,9 @@
  */
 package org.firebirdsql.jca;
 
+import java.io.PrintStream;
+import java.io.PrintWriter;
+
 import javax.transaction.xa.XAException;
 
 /**
@@ -44,6 +47,52 @@ public class FBXAException extends XAException {
         this(msg);
         
         this.errorCode = errorCode;
+    }
+
+    private Exception reason;
+    
+    public FBXAException(int errorCode, Exception reason) {
+        this(errorCode);
+        
+        this.reason = reason;
+    }
+    
+    /**
+     * Get message of this exception.
+     * 
+     * @return combined message of this exception and original exception.
+     */
+    public String getMessage() {
+        String s = super.getMessage();
+
+        if (reason == null)
+            return s;
+            
+        if (s == null)
+            return reason.getMessage();
+            
+        return s + "\nReason: " + reason.getMessage();
+    }
+
+
+    public void printStackTrace() {
+        printStackTrace(System.err);
+    }
+
+    public void printStackTrace(PrintStream s) {
+        super.printStackTrace(s);
+        if (reason != null) {
+            s.print("at ");
+            reason.printStackTrace(s);
+        }
+    }
+
+    public void printStackTrace(PrintWriter s) {
+        super.printStackTrace(s);
+        if (reason != null) {
+            s.print("at ");
+            reason.printStackTrace(s);
+        }
     }
 
 }

@@ -41,7 +41,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
     implements PooledConnectionManager, ConnectionPoolDataSource, 
-    ConnectionEventListener
+    XADataSource, ConnectionEventListener
 {
     
     public static final String USER_NAME_PROPERTY = FBDriver.USER;
@@ -245,12 +245,41 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
 	 * 
 	 * @throws SQLException always, this method is not yet implemented.
 	 */
-	public PooledConnection getPooledConnection(String user, String password) 
+	public synchronized PooledConnection getPooledConnection(String user, String password) 
         throws SQLException 
     {
 	    return (PooledConnection)getPooledConnection(
             getQueue(new AbstractConnectionPool.UserPasswordPair(user, password)));
 	}
+    
+    /**
+     * Get XA connection. This method will block until there will be 
+     * free connection to return.
+     * 
+     * @return instance of {@link XAConnection}.
+     * 
+     * @throws SQLException if pooled connection cannot be obtained.
+     */
+    public XAConnection getXAConnection() throws SQLException {
+        return (XAConnection)getPooledConnection();
+    }
+
+    /**
+     * Get XA connection for the specified user name and password.
+     * 
+     * @param user user name.
+     * @param password password corresponding to specified user name.
+     * 
+     * @return instance of {@link XAConnection} for the specified
+     * credentials.
+     * 
+     * @throws SQLException always, this method is not yet implemented.
+     */
+    public XAConnection getXAConnection(String user, String password)
+            throws SQLException 
+    {
+        return (XAConnection)getPooledConnection(user, password);
+    }
     
     /**
      * Notify about connection being closed.
