@@ -1,3 +1,11 @@
+2003-11-19 20:02  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	AbstractConnectionPool.java, PingablePooledConnection.java:
+	
+	fixed bug when zero ping interval caused permanent connection
+	pinging
+
 2003-11-18 12:06  ryanbaldwin
 
 	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
