@@ -40,13 +40,7 @@
  */
 package org.firebirdsql.management;
 
-import java.io.IOException;
 import java.io.OutputStream;
-
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.isc_svc_handle;
-import org.firebirdsql.jdbc.FBSQLException;
 
 /**
  * The base Firebird Service API functionality.
@@ -127,45 +121,5 @@ public interface ServiceManager {
      * @param logger for the connection to the service manager.
      */
     public void setLogger(OutputStream logger);
-
-    /**
-     * Returns the GDS for the connection to the service manager.
-     * @return the GDS for the connection to the service manager.
-     */
-    public GDS getGds();
-
-    /**
-     * Returns the service name for the connection to the service manager.
-     * @return the service name for the connection to the service manager.
-     */
-    public String getServiceName();
-
-    /**
-     * Attaches the service manager to the database.
-     * @param gds
-     * @return handle to the service manager.
-     * @throws GDSException
-     */
-    public isc_svc_handle attachServiceManager(GDS gds) throws GDSException;
-
-    /**
-     * Detaches the service manager from the database.
-     * @param gds
-     * @param handle
-     * @throws GDSException
-     */
-    public void detachServiceManager(GDS gds, isc_svc_handle handle)
-            throws GDSException;
-
-    /**
-     * Queues a specific service for execution by the service manager.
-     * @param gds
-     * @param handle
-     * @throws GDSException
-     * @throws FBSQLException
-     * @throws IOException
-     */
-    public void queueService(GDS gds, isc_svc_handle handle)
-            throws GDSException, FBSQLException, IOException;
 
 }
