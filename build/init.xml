@@ -135,11 +135,8 @@
 
     <property name="build.compiler" value="classic"/>
 
-    <!--available property="jdk1.3+" classname="java.lang.StrictMath" /-->
-
-    <available property="j2ee.present" file="${jboss.source.root}" />
-
     <path id="javac.j2ee.classpath">
+      <pathelement location="${module.thirdparty}/mini-j2ee.jar"/>
       <pathelement location="${module.thirdparty}/jaas.jar"/>
     </path>
 
