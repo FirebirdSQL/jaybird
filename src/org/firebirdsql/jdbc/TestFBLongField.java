@@ -100,7 +100,7 @@ public class TestFBLongField extends BaseTestFBField {
         //unfortunatelly we loose some digits while converting
         // between BigDecimal and long, so we have to test long values
         java.math.BigDecimal testBigDecimal =
-            new java.math.BigDecimal((double)TEST_LONG);
+            java.math.BigDecimal.valueOf(TEST_LONG);
         field.setBigDecimal(testBigDecimal);
         assertTrue(field.getLong() == testBigDecimal.longValue());
     }
