@@ -43,6 +43,7 @@ public class FBDriver implements Driver {
     public static final String FIREBIRD_PROTOCOL_NATIVE= FIREBIRD_PROTOCOL + "native:";
     public static final String FIREBIRD_PROTOCOL_NATIVE_EMBEDDED = FIREBIRD_PROTOCOL + "embedded";
 
+    public static final String CHARSET = "charSet";
     public static final String USER = "user";
     public static final String USER_NAME = "user_name";
     public static final String PASSWORD = "password";
@@ -127,7 +128,7 @@ public class FBDriver implements Driver {
                                 throw new SQLException("Blob buffer length " + value + " could not be converted to an integer");
                             } // end of try-catch
                             
-                        } // end of if ()
+                        } 
                         
                     } else {
                         info.setProperty(propertyString, "");
@@ -138,10 +139,20 @@ public class FBDriver implements Driver {
 
 
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
-
+            
+            // workaround to make other Java people happy
+            String charSet = info.getProperty(CHARSET);
+            if (info.getProperty("isc_dpb_lc_ctype") == null &&
+                info.getProperty("lc_ctype") == null) 
+            {
+                String iscEncoding = FBConnectionHelper.getIscEncoding(charSet);
+                if (iscEncoding != null)
+                	info.setProperty("lc_ctype", iscEncoding);
+            }
+            
             FBConnectionRequestInfo conCri =
                 FBConnectionHelper.getCri(info, mcf.getDefaultConnectionRequestInfo());
-                
+            
             FBTpbMapper tpbMapper = FBConnectionHelper.getTpbMapper(info);
 
             // extract the user
@@ -163,7 +174,7 @@ public class FBDriver implements Driver {
             if (password == null)
                 throw new SQLException(
                     "Password for database connection not specified.");
-
+            
             // extract the database URL
 
             String databaseURL;
