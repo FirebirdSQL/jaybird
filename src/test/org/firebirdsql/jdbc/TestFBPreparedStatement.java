@@ -450,4 +450,48 @@ public class TestFBPreparedStatement extends FBTestBase{
             connection.close();
         }
     }
+    
+    /**
+     * Test if failure in setting the parameter leaves the driver in
+     * correct state (i.e. "not all params were set").
+     * @throws Exception
+     */
+    public void testBindParameter() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        
+        try {
+            connection.setAutoCommit(false);
+            
+            PreparedStatement ps = connection.prepareStatement("UPDATE testtab SET field1 = ? WHERE id = ?");
+            try {
+                try {
+                    ps.setString(1, "veeeeeeeeeeeeeeeeeeeeery looooooooooooooooooooooong striiiiiiiiiiiiiiiiiiing");
+                } catch(DataTruncation ex) {
+                    // ignore
+                }
+                ps.setInt(2, 1);
+                
+                try {
+                    ps.execute();
+                } catch(FBMissingParameterException ex) {
+                    // correct
+                }
+                
+                Statement stmt = connection.createStatement();
+                try {
+                    stmt.execute("SELECT * FROM rdb$database");
+                } catch(Throwable t) {
+                    if (t instanceof SQLException) {
+                        //ignore
+                    } else
+                        fail("Should not throw exception");
+                }
+            } finally {
+                ps.close();
+            }
+            
+        } finally {
+            connection.close();
+        }
+    }
 }

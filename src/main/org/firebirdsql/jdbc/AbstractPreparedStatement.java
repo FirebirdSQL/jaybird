@@ -164,56 +164,69 @@ public abstract class AbstractPreparedStatement extends FBStatement
      */
     public void setNull(int parameterIndex, int sqlType) throws  SQLException {
         getField(parameterIndex).setNull();
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setBinaryStream(int parameterIndex, InputStream inputStream,
         int length) throws SQLException
     {
         getField(parameterIndex).setBinaryStream(inputStream, length);
+        isParamSet[parameterIndex - 1] = true;
     }
 	 
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
         getField(parameterIndex).setBytes(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
         getField(parameterIndex).setBoolean(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setByte(int parameterIndex, byte x) throws SQLException {
         getField(parameterIndex).setByte(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setDate(int parameterIndex, Date x) throws SQLException {
         getField(parameterIndex).setDate(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setDouble(int parameterIndex, double x) throws SQLException {
         getField(parameterIndex).setDouble(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setFloat(int parameterIndex, float x) throws SQLException {
         getField(parameterIndex).setFloat(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setInt(int parameterIndex, int x) throws SQLException {
         getField(parameterIndex).setInteger(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setLong(int parameterIndex, long x) throws SQLException {
         getField(parameterIndex).setLong(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setObject(int parameterIndex, Object x) throws SQLException {
         getField(parameterIndex).setObject(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setShort(int parameterIndex, short x) throws SQLException {
         getField(parameterIndex).setShort(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setString(int parameterIndex, String x) throws SQLException {
         getField(parameterIndex).setString(x);
+        isParamSet[parameterIndex - 1] = true;
     }
     
     public void setStringForced(int parameterIndex, String x) throws SQLException {
@@ -222,18 +235,22 @@ public abstract class AbstractPreparedStatement extends FBStatement
             ((FBWorkaroundStringField)field).setStringForced(x);
         else
             field.setString(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setTime(int parameterIndex, Time x) throws SQLException {
         getField(parameterIndex).setTime(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
         getField(parameterIndex).setTimestamp(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws  SQLException {
         getField(parameterIndex).setBigDecimal(x);
+        isParamSet[parameterIndex - 1] = true;
     }
     /**
      * Returns the XSQLVAR structure for the specified column.
@@ -251,7 +268,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
                      "Invalid column index.",
                      FBSQLException.SQL_STATE_INVALID_COLUMN);
             
-         isParamSet[columnIndex-1] = true;
+         //isParamSet[columnIndex-1] = true;
          return fields[columnIndex-1];
     }
 
@@ -277,6 +294,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
         int length) throws  SQLException
     {
         setBinaryStream(parameterIndex, x, length);
+        isParamSet[parameterIndex - 1] = true;
     }
 
 
@@ -307,6 +325,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
     public void setUnicodeStream(int parameterIndex, InputStream x,
               int length) throws  SQLException {
         setBinaryStream(parameterIndex, x, length);
+        isParamSet[parameterIndex - 1] = true;
     }
 
 
@@ -370,6 +389,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
     public void setObject(int parameterIndex, Object x, int targetSqlType, int scale) throws  SQLException {
         // Workaround for JBuilder DataSets		 
         setObject(parameterIndex, x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
 
@@ -387,7 +407,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
     public void setObject(int parameterIndex, Object x, int targetSqlType) throws  SQLException {
         //well, for now
         setObject(parameterIndex, x);
-
+        isParamSet[parameterIndex - 1] = true;
     }
 
 
@@ -458,7 +478,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
         }
 
         if (!canExecute)
-            throw new FBSQLException("Not all parameters were set.");
+            throw new FBMissingParameterException("Not all parameters were set.", isParamSet);
 
         Object syncObject = getSynchronizationObject();
         
@@ -672,6 +692,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
     public void setCharacterStream(int parameterIndex, Reader reader,
               int length) throws  SQLException {
         getField(parameterIndex).setCharacterStream(reader, length);
+        isParamSet[parameterIndex - 1] = true;
     }
 
 
@@ -709,6 +730,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
                     FBSQLException.SQL_STATE_INVALID_PARAM_TYPE);
         }
         getField(parameterIndex).setBlob((FBBlob) blob);
+        isParamSet[parameterIndex - 1] = true;
     }
 
 
@@ -782,6 +804,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
     public void setDate(int parameterIndex, Date x, Calendar cal)
         throws  SQLException {
         getField(parameterIndex).setDate(x, cal);
+        isParamSet[parameterIndex - 1] = true;
     }
 
 
@@ -807,6 +830,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
     public void setTime(int parameterIndex, Time x, Calendar cal)
         throws  SQLException {
         getField(parameterIndex).setTime(x, cal);
+        isParamSet[parameterIndex - 1] = true;
     }
 
 
@@ -832,6 +856,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
     public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) 
         throws  SQLException {
         getField(parameterIndex).setTimestamp(x, cal);
+        isParamSet[parameterIndex - 1] = true;
     }
 
 
@@ -867,6 +892,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
      */
      public void setNull (int parameterIndex, int sqlType, String typeName) throws  SQLException {
          setNull(parameterIndex, sqlType); //all nulls are represented the same... a null reference
+         isParamSet[parameterIndex - 1] = true;
     }
      
     /**
