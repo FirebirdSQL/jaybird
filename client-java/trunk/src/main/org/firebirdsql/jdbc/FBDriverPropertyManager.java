@@ -12,6 +12,8 @@ import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 
+import org.firebirdsql.encodings.EncodingFactory;
+
 
 /**
  * Manager of the DPB properties.
@@ -195,6 +197,8 @@ public class FBDriverPropertyManager {
             result.put(propInfo.dpbName, propValue);
         }
         
+        handleEncodings(result);
+        
         return result;
     }
     
@@ -208,6 +212,9 @@ public class FBDriverPropertyManager {
      * be extracted.
      */
     private static void convertUrlParams(String url, Properties info) {
+        if (url == null)
+            return;
+        
         int iQuestionMark = url.indexOf("?");
 
         if (iQuestionMark == -1) 
@@ -226,6 +233,42 @@ public class FBDriverPropertyManager {
             } else {
                 info.setProperty(propertyString, "");
             }
+        }
+    }
+    
+    /**
+     * Handle character encoding parameters. This method ensures that both
+     * java encoding an client connection encodings are correctly set. 
+     * Additionally method handles the character translation stuff.
+     * 
+     * @param info connection properties
+     * @param cri mapping connection request info.
+     * 
+     * @throws SQLException if both isc_dpb_local_encoding and charSet are
+     * specified.
+     */
+    private static void handleEncodings(Properties info) throws SQLException {
+        String iscEncoding = info.getProperty("isc_dpb_lc_ctype");
+        String localEncoding = info.getProperty("isc_dpb_local_encoding");
+        
+        if (iscEncoding != null && localEncoding == null) {
+            String javaEncoding = FBConnectionHelper.getJavaEncoding(iscEncoding);
+            
+            if (javaEncoding != null)
+                info.setProperty("isc_dpb_local_encoding", javaEncoding);
+        }
+        
+        if (iscEncoding == null && localEncoding != null) {
+            iscEncoding = FBConnectionHelper.getIscEncoding(localEncoding); 
+            info.setProperty("isc_dpb_lc_ctype", iscEncoding);
+        }
+        
+        // ensure that we fail before any connection is obtained
+        // in case when incorrect mapping path is specified 
+        // (note, EncodingFactory.getEncoding(String, String) throws exception)
+        String mappingPath = info.getProperty("isc_dpb_mapping_path");
+        if (mappingPath != null) {
+            EncodingFactory.getEncoding(localEncoding, mappingPath);
         }
     }
     
