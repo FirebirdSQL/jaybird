@@ -46,6 +46,7 @@ import java.sql.SQLWarning;
 import java.sql.ParameterMetaData;
 import java.net.URL;
 import java.io.ByteArrayInputStream;
+import java.sql.DataTruncation;
 
 /**
  *
@@ -309,11 +310,36 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      */
     public void setString(int parameterIndex, String x) throws  SQLException {
         XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
-        if (((sqlvar.sqltype & ~1) != GDS.SQL_TEXT) && ((sqlvar.sqltype & ~1) != GDS.SQL_VARYING)){
-            throw new SQLException("Not a String, type: " + sqlvar.sqltype);
+        if ((sqlvar.sqltype & ~1) == GDS.SQL_TEXT) {
+            byte[] supplied = x.getBytes();//Should be using encoding??
+            if (supplied.length > sqlvar.sqllen) {
+                throw new DataTruncation(parameterIndex, true, false, supplied.length, sqlvar.sqllen);
+            }
+            if (supplied.length == sqlvar.sqllen) {
+                sqlvar.sqlind = 0;
+                sqlvar.sqldata = supplied;
+                return;
+            }
+            //else pad with spaces
+            StringBuffer padded = new StringBuffer(sqlvar.sqllen);
+            padded.append(x);
+            for (int i = 0; i < sqlvar.sqllen - supplied.length; i++) {
+                padded.append(' ');
+            }
+            sqlvar.sqlind = 0;
+            sqlvar.sqldata = padded.toString().getBytes();
+            System.out.println("padded: /" + x + "/ to /" + padded + "/ length: " + ((byte[])sqlvar.sqldata).length);
+            return;
         }
-        sqlvar.sqlind = 0;
-        sqlvar.sqldata = x;
+
+
+        if ((sqlvar.sqltype & ~1) == GDS.SQL_VARYING){
+            sqlvar.sqlind = 0;
+            sqlvar.sqldata = x.getBytes();//Should be using encoding??
+            return;
+        }
+        throw new SQLException("Not a String, type: " + sqlvar.sqltype);
+
     }
 
 
@@ -328,8 +354,32 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setBytes(int parameterIndex, byte[] x) throws  SQLException {
-        //Only works for blobs right now
-        setBinaryStream(parameterIndex, new ByteArrayInputStream(x), x.length);
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        if (x.length > sqlvar.sqllen) {
+            throw new DataTruncation(parameterIndex, true, false, x.length, sqlvar.sqllen);
+        }
+        if ((sqlvar.sqltype & ~1) == GDS.SQL_TEXT) {
+            if (x.length == sqlvar.sqllen) {
+                sqlvar.sqlind = 0;
+                sqlvar.sqldata = x;
+                return;
+            }
+            //else pad with nulls
+            byte[] padded = new byte[sqlvar.sqllen];
+            System.arraycopy(x, 0, padded, 0, x.length);
+            sqlvar.sqlind = 0;
+            sqlvar.sqldata = padded;
+            return;
+        }
+        if ((sqlvar.sqltype & ~1) == GDS.SQL_VARYING) {
+            sqlvar.sqlind = 0;
+            sqlvar.sqldata = x;
+            return;
+        }
+        //Added to allow input to blobs
+        if ((sqlvar.sqltype & ~1) == GDS.SQL_BLOB) {
+            setBinaryStream(parameterIndex, new ByteArrayInputStream(x), x.length);
+        }
     }
 
 
@@ -526,6 +576,7 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @see Types 
      */
     public void setObject(int parameterIndex, Object x, int targetSqlType, int scale) throws  SQLException {
+        throw new SQLException("not yet implemented");
     }
 
 
@@ -541,6 +592,9 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setObject(int parameterIndex, Object x, int targetSqlType) throws  SQLException {
+        //well, for now
+        setObject(parameterIndex, x);
+
     }
 
 
@@ -574,6 +628,200 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
      * @exception SQLException if a database access error occurs
      */
     public void setObject(int parameterIndex, Object x) throws  SQLException {
+        XSQLVAR sqlvar = fixedStmt.getInSqlda().sqlvar[parameterIndex - 1];
+        int type = sqlvar.sqltype & ~1;
+        switch (type) {
+        case GDS.SQL_TEXT:
+        case GDS.SQL_VARYING:
+            if (x instanceof String) {
+                setString(parameterIndex, (String)x);
+                return;
+            }
+            if (x instanceof byte[]) {
+                setBytes(parameterIndex, (byte[])x);
+                return;
+            }
+            setString(parameterIndex, x.toString());
+            break;
+        case GDS.SQL_SHORT:
+            sqlvar.sqlind = 0;
+            if (x instanceof Short) {
+                sqlvar.sqldata = x;
+                return;
+            }
+            if (x instanceof String) {
+                sqlvar.sqldata = new Short((String)x);
+                return;
+            }
+            if (x instanceof BigDecimal) {
+                sqlvar.sqldata = new Short(((BigDecimal)x).shortValue());
+                return;
+            }
+            if (x instanceof Boolean) {
+                if (((Boolean)x).booleanValue()) {
+                    sqlvar.sqldata = new Short((short)0);
+                }
+                else {
+                    sqlvar.sqldata = new Short((short)1);
+                }
+                return;
+            }
+            if (x instanceof Integer) {
+                sqlvar.sqldata = new Short(((Integer)x).shortValue());
+                return;
+            }
+            if (x instanceof Long) {
+                sqlvar.sqldata = new Short(((Long)x).shortValue());
+                return;
+            }
+            if (x instanceof Float) {
+                sqlvar.sqldata = new Short(((Float)x).shortValue());
+                return;
+            }
+            if (x instanceof Double) {
+                sqlvar.sqldata = new Short(((Double)x).shortValue());
+                return;
+            }
+            throw new SQLException("Invalid conversion to short");
+        case GDS.SQL_LONG:
+            sqlvar.sqlind = 0;
+            if (x instanceof Integer) {
+                sqlvar.sqldata = x;
+                return;
+            }
+            if (x instanceof String) {
+                sqlvar.sqldata = new Integer((String)x);
+                return;
+            }
+            if (x instanceof BigDecimal) {
+                sqlvar.sqldata = new Integer(((BigDecimal)x).intValue());
+                return;
+            }
+            if (x instanceof Boolean) {
+                if (((Boolean)x).booleanValue()) {
+                    sqlvar.sqldata = new Integer(0);
+                }
+                else {
+                    sqlvar.sqldata = new Integer(1);
+                }
+                return;
+            }
+            if (x instanceof Short) {
+                sqlvar.sqldata = new Integer(((Short)x).intValue());
+                return;
+            }
+            if (x instanceof Long) {
+                sqlvar.sqldata = new Integer(((Long)x).intValue());
+                return;
+            }
+            if (x instanceof Float) {
+                sqlvar.sqldata = new Integer(((Float)x).intValue());
+                return;
+            }
+            if (x instanceof Double) {
+                sqlvar.sqldata = new Integer(((Double)x).intValue());
+                return;
+            }
+            throw new SQLException("Invalid conversion to integer");
+        case GDS.SQL_FLOAT:
+            if (x instanceof Float) {
+                sqlvar.sqldata = x;
+                return;
+            }
+            if (x instanceof String) {
+                sqlvar.sqldata = new Float((String)x);
+                return;
+            }
+            if (x instanceof BigDecimal) {
+                sqlvar.sqldata = new Float(((BigDecimal)x).floatValue());
+                return;
+            }
+            if (x instanceof Boolean) {
+                if (((Boolean)x).booleanValue()) {
+                    sqlvar.sqldata = new Float(0);
+                }
+                else {
+                    sqlvar.sqldata = new Float(1);
+                }
+                return;
+            }
+            if (x instanceof Short) {
+                sqlvar.sqldata = new Float(((Short)x).floatValue());
+                return;
+            }
+            if (x instanceof Long) {
+                sqlvar.sqldata = new Float(((Long)x).floatValue());
+                return;
+            }
+            if (x instanceof Integer) {
+                sqlvar.sqldata = new Float(((Integer)x).floatValue());
+                return;
+            }
+            if (x instanceof Double) {
+                sqlvar.sqldata = new Float(((Double)x).floatValue());
+                return;
+            }
+            throw new SQLException("Invalid conversion to Float");
+        case GDS.SQL_DOUBLE:
+            sqlvar.sqlind = 0;
+            if (x instanceof Double) {
+                sqlvar.sqldata = x;
+                return;
+            }
+            if (x instanceof String) {
+                sqlvar.sqldata = new Double((String)x);
+                return;
+            }
+            if (x instanceof BigDecimal) {
+                sqlvar.sqldata = new Double(((BigDecimal)x).doubleValue());
+                return;
+            }
+            if (x instanceof Boolean) {
+                if (((Boolean)x).booleanValue()) {
+                    sqlvar.sqldata = new Double(0);
+                }
+                else {
+                    sqlvar.sqldata = new Double(1);
+                }
+                return;
+            }
+            if (x instanceof Short) {
+                sqlvar.sqldata = new Double(((Short)x).doubleValue());
+                return;
+            }
+            if (x instanceof Long) {
+                sqlvar.sqldata = new Double(((Long)x).doubleValue());
+                return;
+            }
+            if (x instanceof Float) {
+                sqlvar.sqldata = new Double(((Float)x).doubleValue());
+                return;
+            }
+            if (x instanceof Integer) {
+                sqlvar.sqldata = new Double(((Integer)x).doubleValue());
+                return;
+            }
+            throw new SQLException("Invalid conversion to Double");
+        case GDS.SQL_D_FLOAT:
+            throw new SQLException("not yet implemented");
+        case GDS.SQL_TIMESTAMP:
+            throw new SQLException("not yet implemented");
+        case GDS.SQL_BLOB:
+            throw new SQLException("not yet implemented");
+        case GDS.SQL_ARRAY:
+            throw new SQLException("not yet implemented");
+        case GDS.SQL_QUAD:
+            throw new SQLException("not yet implemented");
+        case GDS.SQL_TYPE_TIME:
+            throw new SQLException("not yet implemented");
+        case GDS.SQL_TYPE_DATE:
+            throw new SQLException("not yet implemented");
+        case GDS.SQL_INT64:
+            throw new SQLException("not yet implemented");
+        default:
+            throw new SQLException("Invalid type in sqlvar!!");
+
+        }
     }
 
 

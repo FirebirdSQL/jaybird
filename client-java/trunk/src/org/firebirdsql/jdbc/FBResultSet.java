@@ -365,7 +365,8 @@ public class FBResultSet implements ResultSet {
              &&((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_VARYING)) {
             throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
         }
-        return (String)row[columnIndex - 1];
+        return new String((byte[])row[columnIndex - 1]);
+        //return (String)row[columnIndex - 1];
     }
 
 
@@ -540,7 +541,12 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public byte[] getBytes(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        if (((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_TEXT)
+             &&((getXsqlvar(columnIndex).sqltype & ~1) != GDS.SQL_VARYING)) {
+            throw new SQLException("Wrong type for column " + columnIndex + "type should be" + getXsqlvar(columnIndex).sqltype);
+        }
+        return (byte[])row[columnIndex - 1];
+
     }
 
 
@@ -3135,6 +3141,7 @@ public class FBResultSet implements ResultSet {
         }
 
         public boolean next() throws SQLException {
+            System.out.println("FBResultSet next - FBStatementFetcher");
             try {
                 row = mc.fetch(stmt);
                 rowNum++;
@@ -3178,6 +3185,7 @@ public class FBResultSet implements ResultSet {
         }
 
         public boolean next() throws SQLException {
+            System.out.println("FBResultSet next - FBCachedFetcher");
             row = (Object[])rows.get(rowNum);
             rowNum++;
             return row != null;
