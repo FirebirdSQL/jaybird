@@ -391,17 +391,13 @@ public class FBConnectionHelper {
         // if javaEncoding is the default one, set to null
         //
         String javaEncoding = (String)iscEncodings.get(iscEncoding);
-        String defaultEncoding = getDefaultJavaEncoding();
+        String defaultEncoding = System.getProperty("file.encoding");
         if (javaEncoding == null || javaEncoding.equalsIgnoreCase(defaultEncoding)) 
             return null;
         else 
             return javaEncoding;
     }
 
-    public static String getDefaultJavaEncoding() {
-        InputStreamReader reader = new InputStreamReader(new ByteArrayInputStream(new byte[2])); 
-        return reader.getEncoding();
-    }
     /**
      * Get InterBase encoding for given Java language encoding.
      *
