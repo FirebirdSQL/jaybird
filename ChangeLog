@@ -1,3 +1,43 @@
+2004-05-18 20:06  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
+	
+	fixed issue with incorrect padding of the multibyte char fields in
+	the server
+
+2004-05-18 20:05  rrokytskyy
+
+	*
+	
+	added synchronization for embedded server on non-windows systems
+	client-java/src/main/org/firebirdsql/gds/GDSSynchronizationPolicy.j
+	ava:
+
+2004-05-18 20:04  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/ISCConstants.java,
+	gds/DatabaseParameterBuffer.java, jdbc/FBResultSet.java,
+	jgds/GDS_Impl.java:
+	
+	added paranoia mode dpb parameter, so user can influence behavior
+	of the driver in areas where specification is not available
+
+2004-05-18 20:02  rrokytskyy
+
+	*
+	
+	fixed issue with incorrect padding of the multibyte char fields in
+	the server
+	client-java/src/main/org/firebirdsql/jdbc/field/FBWorkaroundStringF
+	ield.java:
+
+2004-05-18 19:59  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	
+	fixed issue when jaybird-specific dpb params were submitted to the
+	client lib
+
 2004-05-14 23:10  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/:
