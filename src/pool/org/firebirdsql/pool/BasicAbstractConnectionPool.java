@@ -19,6 +19,7 @@
 package org.firebirdsql.pool;
 
 import java.io.*;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Hashtable;
 
@@ -26,6 +27,9 @@ import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
 import javax.sql.ConnectionPoolDataSource;
 import javax.sql.PooledConnection;
+
+import org.firebirdsql.jdbc.FBConnectionHelper;
+import org.firebirdsql.jdbc.FBSQLException;
 
 /**
  * Base class for connection pool implementations. Main feature of this class is
@@ -59,6 +63,7 @@ public abstract class BasicAbstractConnectionPool
 
     private boolean pooling = true;
     private boolean statementPooling = true;
+    private int transactionIsolation = FBPoolingDefaults.DEFAULT_ISOLATION;
     
     private Reference reference;
     
@@ -159,6 +164,45 @@ public abstract class BasicAbstractConnectionPool
     public void setStatementPooling(boolean statementPooling) {
         this.statementPooling = statementPooling;
     }
+    
+    public int getTransactionIsolationLevel() {
+        return transactionIsolation;
+    }
+    
+    public void setTransactionIsolationLevel(int transactionIsolation) {
+        this.transactionIsolation = transactionIsolation;
+    }
+    
+    public String getIsolation() {
+        switch(getTransactionIsolationLevel()) {
+        
+            case Connection.TRANSACTION_READ_COMMITTED :
+                return FBConnectionHelper.TRANSACTION_READ_COMMITTED;
+            
+            case Connection.TRANSACTION_REPEATABLE_READ :
+                return FBConnectionHelper.TRANSACTION_REPEATABLE_READ;
+            
+            case Connection.TRANSACTION_SERIALIZABLE :
+                return FBConnectionHelper.TRANSACTION_SERIALIZABLE;
+            
+            default :
+                throw new IllegalStateException("Unknown transaction isolation level");
+        }
+    }
+    
+    public void setIsolation(String isolation) throws SQLException {
+        if (FBConnectionHelper.TRANSACTION_READ_COMMITTED.equalsIgnoreCase(isolation))
+            setTransactionIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
+        else
+        if (FBConnectionHelper.TRANSACTION_REPEATABLE_READ.equalsIgnoreCase(isolation))
+            setTransactionIsolationLevel(Connection.TRANSACTION_REPEATABLE_READ);
+        else
+        if (FBConnectionHelper.TRANSACTION_SERIALIZABLE.equalsIgnoreCase(isolation))
+            setTransactionIsolationLevel(Connection.TRANSACTION_SERIALIZABLE);
+        else
+            throw new FBSQLException("Unknown transaction isolation.", 
+                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+    }
 
     private static final String REF_BLOCKING_TIMEOUT = "blockingTimeout";
     private static final String REF_IDLE_TIMEOUT = "idleTimeout";
@@ -166,6 +210,7 @@ public abstract class BasicAbstractConnectionPool
     private static final String REF_MAX_SIZE = "maxSize";
     private static final String REF_MIN_SIZE = "minSize";
     private static final String REF_PING_INTERVAL = "pingInterval";
+    private static final String REF_TX_ISOLATION = "txIsolation";
 
     protected abstract BasicAbstractConnectionPool createObjectInstance();
     
@@ -212,6 +257,10 @@ public abstract class BasicAbstractConnectionPool
         addr = getRefAddr(ref, REF_PING_INTERVAL);
         if (addr != null)
             ds.setPingInterval(Integer.parseInt(addr));
+        
+        addr = getRefAddr(ref, REF_TX_ISOLATION);
+        if (addr != null)
+            ds.setTransactionIsolationLevel(Integer.parseInt(addr));
             
         return ds;
     }
@@ -274,6 +323,10 @@ public abstract class BasicAbstractConnectionPool
         if (getPingInterval() != FBPoolingDefaults.DEFAULT_PING_INTERVAL)
             ref.add(new StringRefAddr(REF_PING_INTERVAL, 
                 String.valueOf(getPingInterval())));
+        
+        if (getTransactionIsolationLevel() != FBPoolingDefaults.DEFAULT_ISOLATION)
+            ref.add(new StringRefAddr(REF_TX_ISOLATION,
+                String.valueOf(getTransactionIsolationLevel())));
             
         return ref;
     }

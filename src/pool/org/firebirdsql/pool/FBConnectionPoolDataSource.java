@@ -53,7 +53,9 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
     public static final String SOCKET_BUFFER_PROPERTY = "socket_buffer_size";
     public static final String SQL_ROLE_PROPERTY = "sql_role_property";
 
-    public static final AbstractConnectionPool.UserPasswordPair EMPTY_USER_PASSWORD = new AbstractConnectionPool.UserPasswordPair();
+    public static final AbstractConnectionPool.UserPasswordPair 
+        EMPTY_USER_PASSWORD = new AbstractConnectionPool.UserPasswordPair();
+    
     private static final String PING_STATEMENT = ""
         + "SELECT cast(1 AS INTEGER) FROM rdb$database" 
         ;
@@ -153,13 +155,15 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
                         cri,
                         getPingStatement(),
                         getPingInterval(),
-                        isStatementPooling());
+                        isStatementPooling(),
+                        getTransactionIsolationLevel());
             else
                 pooledConnection = 
                     new FBPooledConnection(
                         managedConnection, 
                         cri, 
-                        isStatementPooling());
+                        isStatementPooling(),
+                        getTransactionIsolationLevel());
 
             return pooledConnection;
 
@@ -384,7 +388,11 @@ public class FBConnectionPoolDataSource extends BasicAbstractConnectionPool
      * @see org.firebirdsql.pool.ConnectionPoolConfiguration#getPingStatement()
      */
     public String getPingStatement() {
-        return PING_STATEMENT;
+        String pingStatement = super.getPingStatement();
+        if (pingStatement != null)
+            return pingStatement;
+        else
+            return PING_STATEMENT;
     }
 
     /**
