@@ -285,7 +285,9 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
 
     public void setUser(String userName)
     {
-        mcf.getDefaultConnectionRequestInfo().setUser(userName);
+        FBConnectionRequestInfo cri = mcf.getDefaultConnectionRequestInfo();
+        cri.setUser(userName);
+        mcf.setConnectionRequestInfo(cri);
     }
 
     public String getUser()
@@ -295,7 +297,9 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
 
     public void setPassword(String userPassword)
     {
-        mcf.getDefaultConnectionRequestInfo().setPassword(userPassword);
+        FBConnectionRequestInfo cri = mcf.getDefaultConnectionRequestInfo();
+        cri.setPassword(userPassword);
+        mcf.setConnectionRequestInfo(cri);
     }
 
     public String getPassword()
