@@ -641,16 +641,21 @@ public class FBManagedConnectionFactory
         Set xidTrs = xidMap.entrySet();
         for (Iterator i = transactions.iterator(); i.hasNext();)
         {
+            
             isc_tr_handle tr = (isc_tr_handle)i.next();
-            for (Iterator j = xidTrs.iterator(); j.hasNext(); )
-            {
-                Map.Entry pair = (Map.Entry)j.next();
-                if (pair.getValue() == tr)
+            
+            // synchronize iterations over the map
+            synchronized(xidMap) {
+                for (Iterator j = xidTrs.iterator(); j.hasNext(); )
                 {
-                    rolledback.add(pair.getKey());
-                    j.remove();
-                } // end of if ()
-            } // end of for ()
+                    Map.Entry pair = (Map.Entry)j.next();
+                    if (pair.getValue() == tr)
+                    {
+                        rolledback.add(pair.getKey());
+                        j.remove();
+                    } // end of if ()
+                } // end of for ()
+            }
 
             try
             {
