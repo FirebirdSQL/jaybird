@@ -971,10 +971,18 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         tpb.setTransactionIsolationName(isolation);
     }
 
+    /**
+     * @deprecated you should not use internal transaction isolation levels
+     * directrly.
+     */
     public int getIscTransactionIsolation() throws ResourceException {
         return tpb.getIscTransactionIsolation();
     }
 
+    /**
+     * @deprecated you should not use internal transaction isolation levels
+     * directrly.
+     */
     public void setIscTransactionIsolation(int isolation) throws ResourceException {
         tpb.setIscTransactionIsolation(isolation);
     }

@@ -74,9 +74,9 @@ public class FBDataSourceObjectFactory
       {
          throw new IllegalArgumentException("You must supply a db name");      
       } // end of if ()
-      ds.setDatabaseName(dbName);
+      ds.setDatabase(dbName);
 
-      ds.setUser(get(ref, "User", null));
+      ds.setUserName(get(ref, "User", null));
 
       ds.setPassword(get(ref, "Password", null));
 
