@@ -77,23 +77,23 @@ public class FBResultSet implements ResultSet {
     private Object[] row = null;
 
     protected int rowNum = 0;
-	 protected int maxRows = 0;
-	 protected int fetchSize = 0;
-	 
-	 private boolean isEmpty = false;
-	 
-	 private boolean isBeforeFirst = false;
-	 private boolean isFirst = false;
-	 private boolean isLast = false;
-	 private boolean isAfterLast = false;
-	 
+     protected int maxRows = 0;
+     protected int fetchSize = 0;
+     
+     private boolean isEmpty = false;
+     
+     private boolean isBeforeFirst = false;
+     private boolean isFirst = false;
+     private boolean isLast = false;
+     private boolean isAfterLast = false;
+     
     private int wasNullColumnIndex = -1;
 
     //might be a bit of a kludge, or a useful feature.
     protected boolean trimStrings;
 
-	 java.sql.SQLWarning firstWarning = null;
-	 
+     java.sql.SQLWarning firstWarning = null;
+     
     /**
      * Creates a new <code>FBResultSet</code> instance.
      *
@@ -102,10 +102,10 @@ public class FBResultSet implements ResultSet {
      * @param stmt an <code>isc_stmt_handle</code> value
      */
     FBResultSet(FBConnection c, FBStatement fbstatement, isc_stmt_handle stmt) 
-	 throws SQLException {
+     throws SQLException {
         this.c = c;
         xsqlvars = stmt.getOutSqlda().sqlvar;
-		  maxRows = fbstatement.getMaxRows();
+          maxRows = fbstatement.getMaxRows();
         fbFetcher = new FBStatementFetcher(this.c, fbstatement, stmt);
     }
 
@@ -122,7 +122,7 @@ public class FBResultSet implements ResultSet {
     FBResultSet(FBConnection c, FBStatement fbStatement,isc_stmt_handle stmt, boolean trimStrings) throws SQLException {
         this.c = c;
         this.trimStrings = trimStrings;
-		  maxRows = fbStatement.getMaxRows();
+          maxRows = fbStatement.getMaxRows();
         xsqlvars = stmt.getOutSqlda().sqlvar;
         fbFetcher = new FBCachedFetcher(this.c, fbStatement,stmt);
         //use willEndTransaction rather than getAutoCommit so blobs are cached only when transactions are
@@ -134,8 +134,8 @@ public class FBResultSet implements ResultSet {
     }
 
     FBResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
-		  maxRows = 0;
-		  fbFetcher = new FBCachedFetcher(rows);
+          maxRows = 0;
+          fbFetcher = new FBCachedFetcher(rows);
         this.xsqlvars = xsqlvars;
     }
 
@@ -311,9 +311,9 @@ public class FBResultSet implements ResultSet {
      * Factory method for the field access objects
      */
     private FBField getField(int columnIndex) throws SQLException {
-		 if (columnIndex> xsqlvars.length)
-			 throw new SQLException("invalid column index");
-	
+         if (columnIndex> xsqlvars.length)
+             throw new SQLException("invalid column index");
+    
         FBField thisField = FBField.createField(getXsqlvar(columnIndex));
 
         if (thisField instanceof FBBlobField)
@@ -685,7 +685,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean isBeforeFirst() throws  SQLException {
-		 return isBeforeFirst;
+         return isBeforeFirst;
     }
 
 
@@ -718,7 +718,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean isFirst() throws  SQLException {
-		 return isFirst;
+         return isFirst;
     }
 
 
@@ -960,8 +960,8 @@ public class FBResultSet implements ResultSet {
      * @see Statement#setFetchDirection
      */
     public void setFetchDirection(int direction) throws  SQLException {
-		 if (direction != java.sql.ResultSet.FETCH_FORWARD)
-			throw new SQLException("can't set fetch direction");
+         if (direction != java.sql.ResultSet.FETCH_FORWARD)
+            throw new SQLException("can't set fetch direction");
     }
 
 
@@ -998,11 +998,11 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void setFetchSize(int rows) throws  SQLException {
-		 if (rows < 0)
-			 throw new SQLException("can't set negative fetch size");
-		 else if (rows > maxRows)
-			 throw new SQLException("can't set fetch size > maxRows");
-		 else
+         if (rows < 0)
+             throw new SQLException("can't set negative fetch size");
+         else if (rows > maxRows)
+             throw new SQLException("can't set fetch size > maxRows");
+         else
         fetchSize = rows;
     }
 
@@ -2535,63 +2535,77 @@ public class FBResultSet implements ResultSet {
         private FBStatement fbStatement;
 
         private isc_stmt_handle stmt;
-		  
-		  private Object[] nextRow;
+          
+        private Object[] nextRow;
 
-        FBStatementFetcher(FBConnection c, FBStatement fbStatement, isc_stmt_handle stmt) 
-		  throws SQLException {
+        FBStatementFetcher(FBConnection c, FBStatement fbStatement, 
+            isc_stmt_handle stmt) throws SQLException 
+        {
             this.c = c;
             this.fbStatement = fbStatement;
             this.stmt = stmt;
+            
             c.registerStatement(fbStatement);
-				isEmpty = false;
-				isBeforeFirst = false;
-				isFirst = false;
-				isLast = false;
-				isAfterLast = false;
+            
+            isEmpty = false;
+            isBeforeFirst = false;
+            isFirst = false;
+            isLast = false;
+            isAfterLast = false;
+            
             try {
                 nextRow = c.fetch(stmt);
-					 row = new Object[nextRow.length];
-					 if (nextRow==null)
-						 isEmpty = true;
-					 else 
-						 isBeforeFirst = true;
-				}
+                
+                if (nextRow != null)
+                     row = new Object[nextRow.length];
+                else
+                    row = null;
+                    
+                if (nextRow==null)
+                    isEmpty = true;
+                else 
+                    isBeforeFirst = true;
+            }
             catch (GDSException ge) {
                 throw new SQLException("fetch problem: " + ge.toString());
             }
         }
 
         public boolean next() throws SQLException {
-			   isBeforeFirst = false;
-			   isFirst = false;
-				isLast = false;
-				isAfterLast = false;
-				
-            log.debug("FBResultSet next - FBStatementFetcher");
-				if (isEmpty)
-					return false;
-				else if (nextRow == null || (fbStatement.maxRows!=0 && rowNum==fbStatement.maxRows)){
-					isAfterLast = true;
-					rowNum=0;
-					return false;
-				}
-				else {
-	            try {
-						row = nextRow;
-						nextRow = c.fetch(stmt);
-	                rowNum++;
-                   copyToSQLVAR(row);
-						 if(rowNum==1)
-							 isFirst=true;
-						 if((nextRow==null) || (fbStatement.maxRows!=0 && rowNum==fbStatement.maxRows))
-							 isLast = true;
-	                return true;
-	            }
-	            catch (GDSException ge) {
-	                throw new SQLException("fetch problem: " + ge.toString());
-	            }
-				}
+            isBeforeFirst = false;
+            isFirst = false;
+            isLast = false;
+            isAfterLast = false;
+                
+            if (log.isDebugEnabled())
+                log.debug("FBResultSet next - FBStatementFetcher");
+                    
+            if (isEmpty)
+                return false;
+            else if (nextRow == null || (fbStatement.maxRows!=0 && rowNum==fbStatement.maxRows)){
+                isAfterLast = true;
+                rowNum=0;
+                return false;
+            }
+            else {
+                try {
+                    row = nextRow;
+                    nextRow = c.fetch(stmt);
+                    rowNum++;
+                    copyToSQLVAR(row);
+                    
+                    if(rowNum==1)
+                        isFirst=true;
+                    
+                    if((nextRow==null) || (fbStatement.maxRows!=0 && rowNum==fbStatement.maxRows))
+                        isLast = true;
+                        
+                    return true;
+                }
+                catch (GDSException ge) {
+                    throw new SQLException("fetch problem: " + ge.toString());
+                }
+            }
         }
 
         public void close() throws SQLException {
@@ -2615,16 +2629,19 @@ public class FBResultSet implements ResultSet {
         ArrayList rows;
 
         private FBStatement fbStatement;
-		  
+          
         FBCachedFetcher(FBConnection c, FBStatement fbStatement, isc_stmt_handle stmt) throws SQLException {
             Object[] localRow = null;
+            
             this.fbStatement = fbStatement;
-				isEmpty = false;
-				isBeforeFirst = false;
-				isFirst = false;
-				isLast = false;
-				isAfterLast = false;
+            
+            isEmpty = false;
+            isBeforeFirst = false;
+            isFirst = false;
+            isLast = false;
+            isAfterLast = false;
             rows = new ArrayList();
+            
             try {
                 do {
                     localRow = c.fetch(stmt);
@@ -2648,10 +2665,10 @@ public class FBResultSet implements ResultSet {
                         rows.add(localRow);
                     }
                 } while  (localRow != null && (fbStatement.maxRows==0 || rows.size()<fbStatement.maxRows));
-					 if (rows.size()==0)
-						 isEmpty = true;
-					 else
-						 isBeforeFirst = true;
+                     if (rows.size()==0)
+                         isEmpty = true;
+                     else
+                         isBeforeFirst = true;
                 // rows.add(null);
                 c.closeStatement(stmt, false);
             }
@@ -2662,43 +2679,49 @@ public class FBResultSet implements ResultSet {
 
         FBCachedFetcher(ArrayList rows) throws SQLException {
             this.rows = rows;
-				isEmpty = false;
-				isBeforeFirst = false;
-				isFirst = false;
-				isLast = false;
-				isAfterLast = false;
-				 if (rows.size()==0)
-					 isEmpty = true;
-				 else
-					 isBeforeFirst = true;
+            
+            isEmpty = false;
+            isBeforeFirst = false;
+            isFirst = false;
+            isLast = false;
+            isAfterLast = false;
+            
+            if (rows.size()==0)
+                isEmpty = true;
+            else
+                isBeforeFirst = true;
         }
 
         public boolean next() throws SQLException {
-			   isBeforeFirst = false;
-			   isFirst = false;
-				isLast = false;
-				isAfterLast = false;
-				
+            isBeforeFirst = false;
+            isFirst = false;
+            isLast = false;
+            isAfterLast = false;
+                
             log.debug("FBResultSet next - FBCachedFetcher");
-				if (isEmpty)
-					return false;
-				else if(rowNum == rows.size()) {
-					row = null;
-					rowNum = 0;
-					isAfterLast = true;
-               return false;
-					}
-				else {
-	            rowNum++;
-					if (rowNum == 1)
-						isFirst = true;
-					if (rowNum == rows.size())
-						isLast = true;
-	            row = (Object[])rows.get(rowNum-1);
-					copyToSQLVAR(row);
+            if (isEmpty)
+                return false;
+            else 
+            if(rowNum == rows.size()) {
+                row = null;
+                rowNum = 0;
+                isAfterLast = true;
+                return false;
+            }
+            else {
+                rowNum++;
+                
+                if (rowNum == 1)
+                    isFirst = true;
+                if (rowNum == rows.size())
+                    isLast = true;
 
-					return true;
-				}
+                row = (Object[])rows.get(rowNum-1);
+                
+                copyToSQLVAR(row);
+
+                return true;
+            }
         }
 
         public void close() throws SQLException {
@@ -2721,15 +2744,15 @@ public class FBResultSet implements ResultSet {
     }
 
 
-	 protected void addWarning(java.sql.SQLWarning warning){
-		 if (firstWarning == null)
-			 firstWarning = warning;
-		 else{
-			 java.sql.SQLWarning lastWarning = firstWarning;
-			 while (lastWarning.getNextWarning() != null){
-				 lastWarning = lastWarning.getNextWarning();
-			 }
-			 lastWarning.setNextWarning(warning);
-		 }
-	 }
+     protected void addWarning(java.sql.SQLWarning warning){
+         if (firstWarning == null)
+             firstWarning = warning;
+         else{
+             java.sql.SQLWarning lastWarning = firstWarning;
+             while (lastWarning.getNextWarning() != null){
+                 lastWarning = lastWarning.getNextWarning();
+             }
+             lastWarning.setNextWarning(warning);
+         }
+     }
 }
