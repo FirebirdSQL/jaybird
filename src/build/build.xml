@@ -7,15 +7,13 @@
 
 <project name="FirebirdSQL" default="rar" basedir="../..">
 
+  <target name="init">
+    <tstamp/>
     <property name="Name" value="FirebirdSQL"/>
     <property name="name" value="firebirdsql"/>
     <property name="version" value="0.0"/>
 
     <property name="lib.dir" value="${basedir}/lib"/>
-    <property name="src.dir" value="${basedir}/src"/>
-
-    <property name="src.resources" value="${src.dir}/resources"/>
-    <property name="src.lib" value="${src.dir}/lib"/>
 
     <!--property name="build.dir" value="${basedir}/build"/>
     <property name="build.bin.dir" value="${build.dir}/bin"/>
@@ -38,7 +36,12 @@
     <property name="module.source" value="${module.root}/src"/>
     <property name="module.output" value="${module.root}/output"/>
     <property name="module.tools" value="${module.root}/lib"/>
-    <!--property name="module.thirdparty" value="${module.root}/thirdparty"/-->
+    <property name="module.thirdparty" value="${module.source}/lib"/>
+
+    <!-- Where source files live -->
+    <property name="source.java" value="${module.source}"/>
+    <property name="source.resources" value="${module.source}/resources"/>
+    <property name="source.stylesheets" value="${module.source}/stylesheets"/>
 
     <!-- Where build generated files will go -->
     <property name="build.classes" value="${module.output}/classes"/>
@@ -54,6 +57,7 @@
 
     <property name="junit.timeout" value="600000"/> <!-- 10 minutes -->
     <property name="junit.batchtest.todir" value="${build.reports}"/>
+    <property name="junit.jvm" value="java"/>
     <property name="junit.jvm.options" value="-Ddummy"/>
 
     <property name="junit.formatter.type" value="xml"/>
@@ -76,21 +80,22 @@
 
     <path id="javac.classpath">
       <pathelement location="${build.classes}"/>
-      <pathelement location="${src.lib}/jta-spec1_0_1.jar"/>
-      <pathelement location="${src.lib}/connector.jar"/>
-      <pathelement location="${src.lib}/jdbc-3_0-pfd2-classes.zip"/>
-      <pathelement location="${src.lib}/jaas.jar"/>
-      <pathelement location="${src.lib}/jmxri.jar"/>
-      <pathelement location="${src.lib}/concurrent.jar"/>
+      <pathelement location="${module.thirdparty}/jta-spec1_0_1.jar"/>
+      <pathelement location="${module.thirdparty}/connector.jar"/>
+      <pathelement location="${module.thirdparty}/jdbc-3_0-pfd2-classes.zip"/>
+      <pathelement location="${module.thirdparty}/jaas.jar"/>
+      <pathelement location="${module.thirdparty}/jmxri.jar"/>
+      <pathelement location="${module.thirdparty}/concurrent.jar"/>
+      <pathelement location="${module.thirdparty}/log4j-core.jar"/>
       <pathelement location="${lib.dir}/junit.jar"/>
     </path>
-
+  </target>
 
   <!-- =================================================================== -->
   <!-- Fix cr-lf                                                           -->
   <!-- =================================================================== -->
-  <target name="pretty">
-    <fixcrlf srcDir="${src.dir}"
+  <target name="pretty" depends="init">
+    <fixcrlf srcDir="${source.java}"
        includes="**/*.java,**/*.xml,**/*.sh"
        cr="remove"
        tab="remove"
@@ -102,15 +107,15 @@
   <!-- =================================================================== -->
   <!-- Compiles the source code                                            -->
   <!-- =================================================================== -->
-  <target name="compile" depends="compile-classes, compile-resources"/>
+  <target name="compile" depends="compile-classes, compile-resources, compile-stylesheets"/>
 
-  <target name="compile-classes" >
+  <target name="compile-classes" depends="init" >
     <mkdir dir="${build.classes}"/>
-    <depend srcDir="${src.dir}"
+    <depend srcDir="${source.java}"
            destDir="${build.classes}"
            cache="${build.classes}"/>
 
-    <javac srcdir="${src.dir}"
+    <javac srcdir="${source.java}"
            destdir="${build.classes}"
            target="1.2"
            debug="on"
@@ -124,10 +129,20 @@
   </target>
 
   <!-- Compile resource files -->
-  <target name="compile-resources">
+  <target name="compile-resources" depends="init">
     <mkdir dir="${build.resources}"/>
     <copy todir="${build.resources}" filtering="no">
-      <fileset dir="${src.resources}">
+      <fileset dir="${source.resources}">
+         <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- Compile stylesheets -->
+  <target name="compile-stylesheets" depends="init">
+    <mkdir dir="${build.stylesheets}"/>
+    <copy todir="${build.stylesheets}" filtering="yes">
+      <fileset dir="${source.stylesheets}">
          <include name="**/*"/>
       </fileset>
     </copy>
@@ -180,7 +195,7 @@
   <target name="rar" depends="jar-ra">
     <!--mkdir dir="${build.jar-ra.dir}/META-INF"/>
     <copy todir="${build.jar-ra.dir}/META-INF">
-        <fileset dir="${src.resources.dir}"/>
+        <fileset dir="${source.resources.dir}"/>
     </copy-->
 
     <jar jarfile="${build.lib}/firebirdsql.rar">
@@ -232,6 +247,8 @@
       <classpath>
         <pathelement location="${build.classes}"/>
         <pathelement location="${build.resources}"/>
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
         <path refid="javac.classpath"/>
       </classpath>
 
@@ -241,13 +258,14 @@
       <batchtest todir="${build.reports}"
 		 haltonerror="${junit.batchtest.haltonerror}" 
 		 haltonfailure="${junit.batchtest.haltonfailure}" 
-		 fork="${junit.batchtest.fork}">
+		 fork="${junit.fork}">
 
         <fileset dir="${build.classes}">
           <include name="**/Test*.class"/>
           <exclude name="**/TestAll.class"/>
           <exclude name="**/TestXABase*.class"/>
           <exclude name="**/TestConst.class"/>
+          <exclude name="**/*$$*.class"/>
 
         </fileset>
       </batchtest>
@@ -282,6 +300,8 @@
       <classpath>
         <pathelement location="${build.classes}"/>
         <pathelement location="${build.resources}"/>
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
         <path refid="javac.classpath"/>
       </classpath>
 
@@ -302,7 +322,7 @@
 
 
 
-  <!--maybe later target name="tests-report-html" depends="tests-standard-unit">
+  <target name="tests-report-html" depends="all-tests">
     <mkdir dir="${build.reports}/html"/>
 
     <junitreport todir="${build.reports}">
@@ -314,22 +334,22 @@
               styledir="${build.stylesheets}"
       />
     </junitreport>
-  </target-->
+  </target>
 
   <!-- =================================================================== -->
   <!-- Creates the API documentation                                       -->
   <!-- =================================================================== -->
-  <target name="javadocs">
+  <target name="javadocs" depends="init">
     <mkdir dir="${build.docs}"/>
     <javadoc packagenames="${packages}"
-             sourcepath="${src.dir}"
+             sourcepath="${source.java}"
              destdir="${build.docs}"
              classpath="${classpath}"
              author="true"
              version="true"
              windowtitle="${Name} API"
              doctitle="${Name}"
-             extdirs="${src.lib.dir}"
+             extdirs="${module.thirdparty}"
              bottom="Copyright &#169; 2001 David Jencks and other authors. All rights reserved."
     />
   </target>
@@ -337,22 +357,22 @@
   <!-- =================================================================== -->
   <!-- Creates the html documentation                                      -->
   <!-- =================================================================== -->
-  <target name="docs">
+  <target name="docs" depends="init">
 
     <!--echo message="Building html documentation. Please wait ..."/-->
-<!--    <style  basedir="${src.docs.dir}"
+<!--    <style  basedir="${source.docs.dir}"
              style="jboss.xsl"
              destdir="${build.docs.dir}"
              includes="jbossdocs.xml"
     />
     <move todir="${build.docs.dir}">
-      <fileset dir="${src.dir}/build" includes="*.html"/>
+      <fileset dir="${source.java}/build" includes="*.html"/>
     </move>
     <delete file="${build.docs.dir}/jbossdocs.html"/>-->
 
     <!-- Stylesheets, images, and static HTML -->
  <!--   <copy todir="${build.docs.dir}">
-       <fileset dir="${src.dir}/docs" excludes="*.xml,*.xsl,**/docbook/**,**/docbookx/**"/>
+       <fileset dir="${source.java}/docs" excludes="*.xml,*.xsl,**/docbook/**,**/docbookx/**"/>
      </copy>
      -->
   </target>
@@ -372,7 +392,7 @@
 
      <mkdir dir="${dist.dir}/src"/>
      <copy todir="${dist.dir}/src">
-        <fileset dir="${src.dir}">
+        <fileset dir="${source.java}">
            <exclude name="**/*.jar"/>
         </fileset>
      </copy>
@@ -381,7 +401,7 @@
   <!-- =================================================================== -->
   <!-- Packages the source files with ZIP                                  -->
   <!-- =================================================================== -->
-  <target name="src-zip">
+  <target name="src-zip" depends="init">
     <zip zipfile="${Name}-src-${version}.zip" basedir="../.." includes="clients/java/**" excludes="clients/java/**.zip"/>
   </target>
 
@@ -403,7 +423,7 @@
   <!-- =================================================================== -->
   <!-- Cleans up generated stuff                                           -->
   <!-- =================================================================== -->
-  <target name="clean">
+  <target name="clean" depends="init">
     <delete dir="${module.output}"/>
   </target>
 
