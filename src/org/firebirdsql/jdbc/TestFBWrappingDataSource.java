@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.1  2001/11/26 01:04:01  d_jencks
+ * Added a datasource DBWrappingDataSource that can be used in standalone applications: allows you to set databaseName, user, and password.  Uses the StandAloneConnectionManager, so there is no pooling at the moment.
+ *
 
  * Initial revision
 
@@ -39,6 +42,9 @@
 
 package org.firebirdsql.jdbc;
 
+import java.util.ArrayList;
+import javax.resource.ResourceException;
+import java.sql.SQLException;
 import junit.framework.*;
 
 /**
@@ -77,6 +83,45 @@ public class TestFBWrappingDataSource extends TestCase {
         ds.setPassword(TestConst.DB_PASSWORD);
         connection = ds.getConnection();
         assertTrue("Connection is null", connection != null);
+    }
+
+    public void testPooling() throws Exception {
+        System.out.println("Testing FBWrapping DataSource Pooling on db: " + TestConst.DB_URL);
+
+        ds = new FBWrappingDataSource();
+        ds.setDatabaseName(TestConst.DB_URL);
+        ds.setMinSize(3);
+        ds.setMaxSize(5);
+        ds.setBlockingTimeout(100);
+        ds.setIdleTimeout(1000);
+        ds.setPooling(true);
+        connection = ds.getConnection(TestConst.DB_USER, TestConst.DB_PASSWORD);
+        assertTrue("Connection is null", connection != null);
+        Thread.sleep(500);
+        int ccount = ds.getConnectionCount();
+        assertTrue("Wrong number of connections!" + ccount, ccount == ds.getMinSize());
+        connection.close();
+        ArrayList cs = new ArrayList();
+        for (int i = 0; i < ds.getMaxSize(); i++)
+        {
+           cs.add(ds.getConnection(TestConst.DB_USER, TestConst.DB_PASSWORD));      
+        } // end of for ()
+        try 
+        {
+           ds.getConnection(TestConst.DB_USER, TestConst.DB_PASSWORD);              
+           fail("got a connection more than maxsize!");
+        }
+        catch (SQLException re)
+        {
+           //got a blocking timeout, good    
+        } // end of try-catch
+        
+        ds.setUser(TestConst.DB_USER);
+        ds.setPassword(TestConst.DB_PASSWORD);
+        connection = ds.getConnection();
+        assertTrue("Connection is null", connection != null);
+        connection.close();
+
     }
 
 }
