@@ -19,10 +19,10 @@
 package org.firebirdsql.pool;
 
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Hashtable;
-import java.util.Properties;
 
 import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
@@ -30,7 +30,6 @@ import javax.resource.Referenceable;
 import javax.sql.DataSource;
 
 import org.firebirdsql.jdbc.FBConnectionDefaults;
-import org.firebirdsql.jdbc.FBDriver;
 
 /**
  * Implementation of {@link javax.sql.DataSource} including connection pooling.
@@ -79,53 +78,28 @@ import org.firebirdsql.jdbc.FBDriver;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenceable {
+public class FBWrappingDataSource implements DataSource, 
+    ObjectFactory, Referenceable, Serializable 
+{
 
-    public static final String TYPE4_PREFIX = FBDriver.FIREBIRD_PROTOCOL;
-    public static final String TYPE2_PREFIX = FBDriver.FIREBIRD_PROTOCOL_NATIVE;
-    public static final String EMBEDDED_PREFIX = FBDriver.FIREBIRD_PROTOCOL_NATIVE_EMBEDDED;
-
-    public static final String TYPE4 = "type4";
-    public static final String PURE_JAVA = "pure";
-
-    public static final String TYPE2 = "type2";
-    public static final String NATIVE = "native";
-
-    public static final String EMBEDDED = "embedded";
-    public static final String NATIVE_EMBEDDED = "native_embedded";
-
-    private Object configSyncObject = new Object();
     private FBConnectionPoolDataSource pool;
     
     private Reference reference;
 
-    private String userName;
-    private String password;
-    private String sqlRole;
-
-    private String database;
-    private String encoding;
     private String description;
-
-    private String tpbMapping;
-    private String type;
     
-    private Properties nonStandardProperties = new Properties();
-
-    private int blobBufferSize = FBConnectionDefaults.DEFAULT_BLOB_BUFFER_SIZE;
-    private int socketBufferSize = FBConnectionDefaults.DEFAULT_SOCKET_BUFFER_SIZE;
-
-    private int minSize = FBPoolingDefaults.DEFAULT_MIN_SIZE;
-    private int maxSize = FBPoolingDefaults.DEFAULT_MAX_SIZE;
-    private int blockingTimeout = FBPoolingDefaults.DEFAULT_BLOCKING_TIMEOUT;
-    private int idleTimeout = FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT;
-    private int pingInterval = FBPoolingDefaults.DEFAULT_PING_INTERVAL;
-
     /**
      * Create instance of this class.
      */
     public FBWrappingDataSource() throws SQLException {
-        pool = new FBConnectionPoolDataSource();
+        // empty
+    }
+    
+    private synchronized FBConnectionPoolDataSource getPool() {
+        if (pool == null)
+            pool = new FBConnectionPoolDataSource();
+            
+        return pool;
     }
 
     /**
@@ -149,7 +123,7 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
      * @throws SQLException if connection cannot be obtained due to some reason.
      */
     public Connection getConnection() throws SQLException {
-        return pool.getPooledConnection().getConnection();
+        return getPool().getPooledConnection().getConnection();
     }
 
     /**
@@ -162,7 +136,7 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
     public Connection getConnection(String user, String password) 
         throws SQLException 
     {
-        return pool.getPooledConnection(user, password).getConnection();
+        return getPool().getPooledConnection(user, password).getConnection();
     }
 
     /**
@@ -180,7 +154,7 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
      * @return instance of {@link PrintWriter}.
      */
     public PrintWriter getLogWriter() {
-        return pool.getLogWriter();
+        return getPool().getLogWriter();
     }
 
     /**
@@ -198,7 +172,7 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
      * @param printWriter instance of {@link PrintWriter}.
      */
     public void setLogWriter(PrintWriter printWriter) {
-        pool.setLogWriter(printWriter);
+        getPool().setLogWriter(printWriter);
     }
 
     /*
@@ -206,19 +180,19 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
      */
 
     public int getBlockingTimeout() {
-        return pool.getBlockingTimeout();
+        return getPool().getBlockingTimeout();
     }
 
     public void setBlockingTimeout(int blockingTimeoutValue) {
-        pool.setBlockingTimeout(blockingTimeoutValue);
+        getPool().setBlockingTimeout(blockingTimeoutValue);
     }
 
     public String getDatabase() {
-        return pool.getDatabase();
+        return getPool().getDatabase();
     }
 
     public void setDatabase(String databaseValue) {
-        pool.setDatabase(databaseValue);
+        getPool().setDatabase(databaseValue);
     }
 
     public String getDescription() {
@@ -230,103 +204,103 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
     }
 
     public String getEncoding() {
-        return pool.getEncoding();
+        return getPool().getEncoding();
     }
 
     public void setEncoding(String encodingValue) {
-        pool.setEncoding(encodingValue);
+        getPool().setEncoding(encodingValue);
     }
 
     public int getIdleTimeout() {
-        return pool.getIdleTimeout();
+        return getPool().getIdleTimeout();
     }
 
     public void setIdleTimeout(int idleTimeoutValue) {
-        pool.setIdleTimeout(idleTimeoutValue);
+        getPool().setIdleTimeout(idleTimeoutValue);
     }
 
     public int getMaxSize() {
-        return pool.getMaxConnections();
+        return getPool().getMaxConnections();
     }
 
     public void setMaxSize(int maxSizeValue) {
-        pool.setMaxConnections(maxSizeValue);
+        getPool().setMaxConnections(maxSizeValue);
     }
 
     public int getMinSize() {
-        return pool.getMinConnections();
+        return getPool().getMinConnections();
     }
 
     public void setMinSize(int minSizeValue) {
-        pool.setMinConnections(minSizeValue);
+        getPool().setMinConnections(minSizeValue);
     }
 
     public String getPassword() {
-        return pool.getPassword();
+        return getPool().getPassword();
     }
 
     public void setPassword(String passwordValue) {
-        pool.setPassword(passwordValue);
+        getPool().setPassword(passwordValue);
     }
 
     public String getTpbMapping() {
-        return pool.getTpbMapping();
+        return getPool().getTpbMapping();
     }
 
     public void setTpbMapping(String tpbMappingValue) {
-        pool.setTpbMapping(tpbMappingValue);
+        getPool().setTpbMapping(tpbMappingValue);
     }
 
     public String getUserName() {
-        return pool.getUserName();
+        return getPool().getUserName();
     }
 
     public void setUserName(String userNameValue) {
-        pool.setUserName(userNameValue);
+        getPool().setUserName(userNameValue);
     }
 
     public int getBlobBufferSize() {
-        return pool.getBlobBufferSize();
+        return getPool().getBlobBufferSize();
     }
 
     public void setBlobBufferSize(int blobBufferSizeValue) {
-        pool.setBlobBufferSize(blobBufferSizeValue);
+        getPool().setBlobBufferSize(blobBufferSizeValue);
     }
 
     public String getType() {
-        return pool.getType();
+        return getPool().getType();
     }
 
     public void setType(String typeValue) throws SQLException {
-        pool.setType(type);
+        getPool().setType(typeValue);
     }
 
     public int getPingInterval() {
-        return pool.getPingInterval();
+        return getPool().getPingInterval();
     }
 
     public void setPingInterval(int pingIntervalValue) {
-        pool.setPingInterval(pingIntervalValue);
+        getPool().setPingInterval(pingIntervalValue);
     }
 
     public int getSocketBufferSize() {
-        return pool.getSocketBufferSize();
+        return getPool().getSocketBufferSize();
     }
 
     public String getSqlRole() {
-        return pool.getSqlRole();
+        return getPool().getSqlRole();
     }
 
     public void setSocketBufferSize(int socketBufferSize) {
-        pool.setSocketBufferSize(socketBufferSize);
+        getPool().setSocketBufferSize(socketBufferSize);
     }
 
     public void setSqlRole(String sqlRole) {
-        pool.setSqlRole(sqlRole);
+        getPool().setSqlRole(sqlRole);
     }
     
     public String getNonStandardProperty(String key) {
-        return pool.getNonStandardProperty(key);
+        return getPool().getNonStandardProperty(key);
     }
     
     public void setNonStandardProperty(String key, String value) {
@@ -336,7 +310,7 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
         if (value == null)
             value = "";
             
-        pool.setNonStandardProperty(key, value);
+        getPool().setNonStandardProperty(key, value);
     }
     
     /*
@@ -362,8 +336,8 @@ public class FBWrappingDataSource implements DataSource, ObjectFactory, Referenc
     }
     
     public int getConnectionCount() throws SQLException {
-        if (pool != null)
-            return pool.getFreeSize();
+        if (getPool() != null)
+            return getPool().getFreeSize();
         else
             return 0;
     }
