@@ -14,7 +14,6 @@ package org.firebirdsql.management;
  * Created: Thu Oct 10 14:14:07 2002
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version
  */
 
 public class FBCommandLine 
