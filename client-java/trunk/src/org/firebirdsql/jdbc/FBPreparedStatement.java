@@ -417,7 +417,12 @@ public class FBPreparedStatement extends FBStatement implements PreparedStatemen
             
         for(int i = 0; i < inVars.length; i++) 
         {
-            if (FBField.isType(inVars[i], Types.BLOB)) 
+            boolean isBlobField = 
+                FBField.isType(inVars[i], Types.BLOB) ||
+                FBField.isType(inVars[i], Types.BINARY) ||
+                FBField.isType(inVars[i], Types.LONGVARCHAR);
+                
+            if (isBlobField) 
             {
                 FBBlobField blobField = (FBBlobField)getField(i + 1);
                 blobField.flushCachedData();

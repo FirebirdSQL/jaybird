@@ -323,8 +323,10 @@ abstract class FBField {
         if (isType(field, Types.TIMESTAMP))
             return new FBTimestampField(field);
         else
-        if (isType(field, Types.BLOB) || isType(field, Types.LONGVARBINARY))
-            return new FBBlobField(field);
+        if (isType(field, Types.BLOB) || 
+            isType(field, Types.LONGVARBINARY) ||
+            isType(field, Types.LONGVARCHAR))
+                return new FBBlobField(field);
         else
             throw (SQLException)createException(
                 SQL_TYPE_NOT_SUPPORTED);
@@ -409,6 +411,10 @@ abstract class FBField {
     byte[] getBytes() throws SQLException {
         throw (SQLException)createException(
             BYTES_CONVERSION_ERROR).fillInStackTrace();
+    }
+    Blob getBlob() throws SQLException {
+        throw (SQLException)createException(
+            BLOB_CONVERSION_ERROR).fillInStackTrace();
     }
     java.sql.Date getDate() throws SQLException {
         throw (SQLException)createException(

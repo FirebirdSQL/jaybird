@@ -74,7 +74,7 @@ public class FBBlobField extends FBField {
         // getBinaryStream() is not defined for BLOB types, only for BINARY
         if (field.sqlsubtype < 0)
             throw (SQLException)createException(
-                BINARY_STREAM_CONVERSION_ERROR);
+                BINARY_STREAM_CONVERSION_ERROR).fillInStackTrace();
         
         Blob blob = getBlob();
 
@@ -89,7 +89,11 @@ public class FBBlobField extends FBField {
         if (field.sqlsubtype < 0)
             throw (SQLException)createException(
                 BYTES_CONVERSION_ERROR);
-        
+
+        return getBytesInternal();
+    }
+    
+    byte[] getBytesInternal() throws SQLException {
         Blob blob = getBlob();
 
         if (blob == BLOB_NULL_VALUE)
@@ -140,14 +144,14 @@ public class FBBlobField extends FBField {
         if (isNull())
             return BLOB_NULL_VALUE;
 
-        return new FBCachedBlob(getBytes());
+        return new FBCachedBlob(getBytesInternal());
     }
 
     String getString() throws SQLException {
         // getString() is not defined for BLOB fields, only for BINARY
         if (field.sqlsubtype < 0)
             throw (SQLException)createException(
-                STRING_CONVERSION_ERROR);
+                STRING_CONVERSION_ERROR).fillInStackTrace();
 
         Blob blob = getBlob();
 
@@ -259,7 +263,7 @@ public class FBBlobField extends FBField {
                 return BYTES_NULL_VALUE;
 
             byte[] result = new byte[length];
-            System.arraycopy(blobData, (int)pos, result, 0, length);
+            System.arraycopy(blobData, (int)pos - 1, result, 0, length);
             return result;
         }
 
