@@ -1,3 +1,29 @@
+2004-08-15 13:58  rrokytskyy
+
+	*
+	
+	removed statement cache cleanup on close
+	client-java/src/pool/org/firebirdsql/pool/PingablePooledConnection.
+	java:
+
+2004-08-15 12:58  rrokytskyy
+
+	* client-java/src/etc/: release_notes.html, release_notes.pdf,
+	release_notes.sxw:
+	
+	updated release notes
+
+2004-08-15 12:50  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	ObjectCloseTraceException.java, PingablePooledConnection.java,
+	PoolDebugConfiguration.java, PooledConnectionHandler.java,
+	PooledConnectionQueue.java, PooledObjectListener.java,
+	PooledPreparedStatementHandler.java,
+	UnknownDriverTypeException.java, XPreparedStatementCache.java:
+	
+	improved configurability of driver debugging
+
 2004-08-15 02:13  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/jdbc/:
