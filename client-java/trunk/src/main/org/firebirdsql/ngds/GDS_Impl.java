@@ -750,7 +750,7 @@ public class GDS_Impl extends AbstractGDS implements GDS {
         
         synchronized (db_handle) {
             native_isc_dsql_exec_immed2(db_handle, tr_handle,
-                statement, dialect,
+                getZeroTerminatedArray(statement), dialect,
                 in_xsqlda, out_xsqlda);
         }
     }
@@ -885,7 +885,7 @@ public class GDS_Impl extends AbstractGDS implements GDS {
             stmt.setOutSqlda(null);
 
             stmt.setOutSqlda(native_isc_dsql_prepare(tr_handle, stmt_handle,
-                statement, dialect));
+                getZeroTerminatedArray(statement), dialect));
 
             return stmt_handle.getOutSqlda();
         }
@@ -1272,6 +1272,10 @@ public class GDS_Impl extends AbstractGDS implements GDS {
         else
             stringBytes = statement.getBytes();
 
+        return getZeroTerminatedArray(stringBytes);
+    }
+    
+    private byte[] getZeroTerminatedArray(byte[] stringBytes) {
         final byte[] zeroTermBytes = new byte[stringBytes.length + 1];
         System.arraycopy(stringBytes, 0, zeroTermBytes, 0, stringBytes.length);
         zeroTermBytes[stringBytes.length] = 0;
