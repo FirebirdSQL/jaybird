@@ -534,9 +534,12 @@ public class FBResultSet implements ResultSet {
      *
      * @return the description of this <code>ResultSet</code> object's columns
      * @exception SQLException if a database access error occurs
+     * 
+     * @todo we need another way of specifying the exended metadata if
+     * this result set is constructed in code.
      */
     public ResultSetMetaData getMetaData() throws  SQLException {
-        return new FBResultSetMetaData(xsqlvars, this);
+        return new FBResultSetMetaData(xsqlvars, c);
     }
 
 

@@ -126,6 +126,8 @@ public class FBManagedConnectionFactory
      */
     private transient final Set waitingToClose = Collections.synchronizedSet(new HashSet());
 
+    private transient final Set rolledback =  Collections.synchronizedSet(new HashSet());
+
     //Maps supplied XID to internal transaction handle.
     //a concurrent reader map would be better
     private transient final Map xidMap = Collections.synchronizedMap(new HashMap());
@@ -473,28 +475,36 @@ public class FBManagedConnectionFactory
 
 
     isc_tr_handle getCurrentIscTrHandle(Xid xid, FBManagedConnection mc, int flags) 
-        throws XAException 
+        throws XAException, GDSException
     {
         isc_tr_handle tr = getTrHandleForXid(xid);
         if (tr == null) {
             if (flags != XAResource.TMNOFLAGS) {
-                throw new XAException("Transaction flags wrong, this xid new for this rm");
+                //We don't know this xid, should come with no flags.
+                throw new XAException(XAException.XAER_INVAL);
             }
             //new xid for us
+            isc_db_handle db = mc.getIscDBHandle(waitingToClose);
+            tr = gds.get_new_isc_tr_handle();
             try 
             {
-                isc_db_handle db = mc.getIscDBHandle(waitingToClose);
-                tr = gds.get_new_isc_tr_handle();
                 gds.isc_start_transaction(tr, db, mc.getTpb().getArray());
             }
-            catch (GDSException ge) {
-                throw new XAException(ge.getMessage());
-            }
+            catch (GDSException ge)
+            {
+                //I think all errors here are fatal??
+                destroyDbHandle(db, mc.cri);
+                throw ge;
+            } // end of try-catch
+            
+
             xidMap.put(xid, tr);
         }
         else {
             if (flags != XAResource.TMJOIN && flags != XAResource.TMRESUME) {
-                throw new XAException("Transaction flags wrong, this xid already known");
+                //this xid is already known, should have join or resume flag.
+                //DUPID might be better?
+                throw new XAException(XAException.XAER_INVAL);
             }
         }
         return tr;
@@ -531,7 +541,7 @@ public class FBManagedConnectionFactory
         catch (GDSException ge)
         {
             if (log!=null) log.error("GDS Exception in getDbHandle", ge);
-            throw new XAException(ge.getMessage());
+            throw new XAException(XAException.XAER_RMERR);
         } // end of try-catch
     }
 
@@ -598,43 +608,109 @@ public class FBManagedConnectionFactory
                     freeDbHandles.remove(db); 
                 } // end of if ()
             }
-            if (db.hasTransactions())
+            try 
             {
-                synchronized (waitingToClose)
+            
+                if (db.hasTransactions())
                 {
-                    //double synchronization, but saves some ugly synch wrappers.
-                    if (!waitingToClose.contains(db)) 
+                    log.info("db has transactions!");
+                    synchronized (waitingToClose)
                     {
-                        waitingToClose.add(db);
-                    } // end of if ()
+                        //double synchronization, but saves some ugly synch wrappers.
+                        if (!waitingToClose.contains(db)) 
+                        {
+                            waitingToClose.add(db);
+                        } // end of if ()
+                        return;
+                    }
                 }
+                
+
             }
-            else
+            catch (IllegalStateException ise)
             {
+                //db is already invalidated, no point in trying again.
                 waitingToClose.remove(db);
-                gds.isc_detach_database(db);
-            }
+                return;
+            } // end of try-catch
+            log.info("About to detach db");
+            waitingToClose.remove(db);
+            gds.isc_detach_database(db);
         }
     }
 
+    /**
+     * The <code>destroyDbHandle</code> method is called when a fatal
+     * error occurs on a isc_db_handle.  It attempts to rollback all
+     * associated transactions, marks the associated xids as
+     * rolledback, and detaches the db handle.
+     *
+     */
+    void destroyDbHandle(isc_db_handle db, FBConnectionRequestInfo cri)
+    {
+        Collection transactions = db.getTransactions();
+        Set xidTrs = xidMap.entrySet();
+        for (Iterator i = transactions.iterator(); i.hasNext();)
+        {
+            isc_tr_handle tr = (isc_tr_handle)i.next();
+            for (Iterator j = xidTrs.iterator(); j.hasNext(); )
+            {
+                Map.Entry pair = (Map.Entry)j.next();
+                if (pair.getValue() == tr) 
+                {
+                    rolledback.add(pair.getKey());
+                    j.remove();
+                } // end of if ()
+            } // end of for ()
+            
+            try 
+            {
+                gds.isc_rollback_transaction(tr);
+            }
+            catch (GDSException ge)
+            {
+                log.info("exception rolling back transaction from dying connection: " + ge.getMessage());
+            } // end of try-catch
+            
+        } // end of for ()
+        try 
+        {
+            releaseDbHandle(db, cri);
+        }
+        catch (GDSException ge)
+        {
+            log.info("exception releasing db handle from dying connection: " + ge.getMessage());
+        } // end of try-catch
+        
+    }
 
 
-
-    void commit(Xid xid) throws XAException {
+    void commit(Xid xid) throws GDSException {
         isc_tr_handle tr = getTrHandleForXid(xid);
         tr.forgetResultSets();
         try {
             gds.isc_commit_transaction(tr);
         }
-        catch (GDSException ge) {
-            throw new XAException(ge.getMessage());
-        }
+        catch (GDSException ge)
+        {
+            try 
+            {
+                gds.isc_rollback_transaction(tr);
+            }
+            catch (GDSException ge2)
+            {
+                log.info("Exception rolling back failed tx: ", ge2);
+            } // end of try-catch
+            throw ge;
+        } // end of catch
+        
         finally {
             xidMap.remove(xid);
         }
     }
 
-    void prepare(Xid xid) throws XAException {
+    void prepare(Xid xid) throws GDSException {
+        isc_tr_handle tr = getTrHandleForXid(xid);
         try {
             FBXid fbxid;
             if (xid instanceof FBXid) {
@@ -643,23 +719,31 @@ public class FBManagedConnectionFactory
             else {
                 fbxid = new FBXid(xid);
             }
-            gds.isc_prepare_transaction2(getTrHandleForXid(xid), fbxid.toBytes());
+            gds.isc_prepare_transaction2(tr, fbxid.toBytes());
         }
         catch (GDSException ge) {
+            try 
+            {
+                gds.isc_rollback_transaction(tr);
+            }
+            catch (GDSException ge2)
+            {
+                log.info("Exception rolling back failed tx: ", ge2);
+            } // end of try-catch
+            finally
+            {
+                xidMap.remove(xid);
+            } // end of finally
             if (log!=null) log.warn("error in prepare", ge);
-            xidMap.remove(xid);
-            throw new XAException(ge.getMessage());
+            throw ge;
         }
     }
 
-    void rollback(Xid xid) throws XAException {
+    void rollback(Xid xid) throws GDSException {
         isc_tr_handle tr = getTrHandleForXid(xid);
         tr.forgetResultSets();
         try {
             gds.isc_rollback_transaction(tr);
-        }
-        catch (GDSException ge) {
-            throw new XAException(ge.getMessage());
         }
         finally {
             xidMap.remove(xid);

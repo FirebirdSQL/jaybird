@@ -1080,4 +1080,91 @@ public final class ISCConstants {
 
     /* Historical alias for pre V6 applications */
     public final static int SQL_DATE      = SQL_TIMESTAMP;
+
+    /**
+     * The constant array <code>FATAL_ERRORS</code> holds an ORDERED
+     * list of isc error codes that indicate that the connection is no
+     * longer usable.  This is used in the jca framework to determine
+     * if a GDSException should result in a ConnectionErrorOccurred
+     * notification to the Connection Manager to destroy the
+     * connection.  It is eesntial that this list be ordered so
+     * determining if a code is in it can proceed reliably.
+     *
+     */
+    public final static int[] FATAL_ERRORS = new int[] {
+        isc_bad_dbkey, //not sure
+        isc_bad_db_format,
+        isc_bad_db_handle,
+        isc_bad_dpb_content,
+        isc_bad_dpb_form,
+        isc_bad_req_handle,
+        isc_bad_segstr_handle,
+        isc_bad_segstr_id,
+        isc_bad_tpb_content,
+        isc_bad_tpb_form,
+        isc_bad_trans_handle,
+        isc_db_corrupt,
+        isc_excess_trans,
+        isc_integ_fail,
+        isc_invalid_blr,
+        isc_io_error,
+        isc_metadata_corrupt,
+        isc_not_valid,
+        isc_no_meta_update,
+        isc_no_segstr_close,
+        isc_obsolete_metadata,
+        isc_open_trans,
+        isc_port_len,
+        isc_req_sync,
+        isc_req_wrong_db,
+        isc_segment,
+        isc_segstr_eof,
+        isc_segstr_no_op,
+        isc_segstr_no_read,
+        isc_segstr_no_trans,
+        isc_segstr_no_write,
+        isc_segstr_wrong_db,
+        isc_sys_request,
+        isc_stream_eof,
+        isc_unavailable,
+        isc_wrong_ods,
+        isc_fatal_conflict,
+        isc_badblk,
+        isc_relbadblk,
+        isc_blktoobig,
+        isc_bufexh,
+        isc_bufinuse,
+        isc_bdbincon,
+        isc_reqinuse,
+        isc_badodsver,
+        isc_dirtypage,
+        isc_doubleloc,
+        isc_nodnotfnd,
+        isc_dupnodfnd,
+        isc_locnotmar,
+        isc_badpagtyp,
+        isc_corrupt,
+        isc_badpage,
+        isc_badindex,
+        isc_badhndcnt,
+        isc_connect_reject,
+        isc_no_lock_mgr,
+        isc_blocking_signal,
+        isc_lockmanerr,
+        isc_bad_detach,
+        isc_obj_in_use,
+        isc_buf_invalid,
+        isc_bad_lock_level,
+        isc_shutdown,
+        isc_io_create_err,
+        isc_io_open_err,
+        isc_io_close_err,
+        isc_io_read_err,
+        isc_io_write_err,
+        isc_io_delete_err,
+        isc_io_access_err,
+        isc_lost_db_connection,
+        isc_bad_protocol,
+        isc_file_in_use
+    };
 }
