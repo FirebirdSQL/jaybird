@@ -351,7 +351,7 @@ public class ManagedConnectionPool
        * @return <description>
        */
       public boolean add(Object param1) {
-         throw new UnsupportedOperationException("can't add to SetOfOne");;
+         throw new UnsupportedOperationException("can't add to SetOfOne");
       }
 
       /**
@@ -397,7 +397,7 @@ public class ManagedConnectionPool
        *
        */
       public void clear() {
-         throw new UnsupportedOperationException("can't clear SetOfOne");;
+         throw new UnsupportedOperationException("can't clear SetOfOne");
       }
 
       /**
@@ -406,7 +406,7 @@ public class ManagedConnectionPool
        * @return <description>
        */
       public boolean remove(Object param1) {
-         throw new UnsupportedOperationException("can't remove from SetOfOne");;
+         throw new UnsupportedOperationException("can't remove from SetOfOne");
       }
 
       /**
