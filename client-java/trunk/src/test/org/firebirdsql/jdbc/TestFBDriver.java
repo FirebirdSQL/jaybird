@@ -24,6 +24,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.6  2002/11/20 15:04:57  d_jencks
+ * Demonstrate problem with timestamps
+ *
  * Revision 1.5  2002/11/19 17:37:47  d_jencks
  * verify that DECIMAL(18,0) stores all Long values.
  *
@@ -155,8 +158,6 @@ public class TestFBDriver extends BaseFBTest {
         stmt.close();
         
         SQLWarning warning = dialect1Connection.getWarnings();
-        
-        warning.printStackTrace();
         
         assertTrue("Connection should have at least one warning.", 
             warning != null);
