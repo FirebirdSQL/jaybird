@@ -5095,7 +5095,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public int getResultSetHoldability() throws SQLException {
-        return ResultSet.CLOSE_CURSORS_AT_COMMIT;
+        return 2; // same as ResultSet.CLOSE_CURSORS_AT_COMMIT, but makes JDK 1.3 happy
     }
 
     /**
@@ -5148,8 +5148,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception java.sql.SQLException <description>
      */
     public int getSQLStateType() throws SQLException {
-        //TODO check if this is correct
-        return sqlStateXOpen;
+        // return sqlStateXOpen;
+        return 1; // same value as sqlStateXOpen, but makes JDK 1.3 happy.
     }
 
     //private

@@ -69,8 +69,8 @@ public class ResultSetHandler implements InvocationHandler {
             try {
                 return method.invoke(target, args);
             } catch(InvocationTargetException ex) {
-                if (ex.getCause() instanceof SQLException)
-                    throw ex.getCause();
+                if (ex.getTargetException() instanceof SQLException)
+                    throw ex.getTargetException();
                 else
                     throw ex;
             }

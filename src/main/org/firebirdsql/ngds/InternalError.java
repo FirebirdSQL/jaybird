@@ -31,6 +31,6 @@ public class InternalError extends RuntimeException
 
     public InternalError(String message, Throwable cause)
         {
-        super(message, cause);
+        super(message);
         }
     }
