@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.2  2002/01/05 05:34:06  d_jencks
+ * added Doug Lea's concurrent.jar, classes from Concurrent Programming in java, 2nd edition
+ *
  * Revision 1.1  2001/11/26 01:04:01  d_jencks
  * Added a datasource DBWrappingDataSource that can be used in standalone applications: allows you to set databaseName, user, and password.  Uses the StandAloneConnectionManager, so there is no pooling at the moment.
  *
@@ -44,7 +47,7 @@ package org.firebirdsql.jdbc;
 
 import java.util.ArrayList;
 import javax.resource.ResourceException;
-import java.sql.SQLException;
+import java.sql.*;
 import junit.framework.*;
 
 /**
@@ -73,10 +76,10 @@ public class TestFBWrappingDataSource extends TestCase {
 
 
     public void testConnect() throws Exception {
-        System.out.println("Testing FBWrapping DataSource on db: " + TestConst.DB_URL);
+        System.out.println("Testing FBWrapping DataSource on db: " + TestConst.DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
-        ds.setDatabaseName(TestConst.DB_URL);
+        ds.setDatabaseName(TestConst.DB_DATASOURCE_URL);
         connection = ds.getConnection(TestConst.DB_USER, TestConst.DB_PASSWORD);
         assertTrue("Connection is null", connection != null);
         ds.setUser(TestConst.DB_USER);
@@ -85,11 +88,49 @@ public class TestFBWrappingDataSource extends TestCase {
         assertTrue("Connection is null", connection != null);
     }
 
-    public void testPooling() throws Exception {
-        System.out.println("Testing FBWrapping DataSource Pooling on db: " + TestConst.DB_URL);
+    public void testOneConnectionWithPooling() throws Exception {
+        System.out.println("Testing FBWrapping DataSource Pooling on db: " + TestConst.DB_DATASOURCE_URL);
 
         ds = new FBWrappingDataSource();
-        ds.setDatabaseName(TestConst.DB_URL);
+        ds.setDatabaseName(TestConst.DB_DATASOURCE_URL);
+        ds.setMinSize(3);
+        ds.setMaxSize(5);
+        ds.setBlockingTimeout(100);
+        ds.setIdleTimeout(1000);
+        ds.setPooling(true);
+        connection = ds.getConnection(TestConst.DB_USER, TestConst.DB_PASSWORD);
+        //connection.setAutoCommit(false);
+        assertTrue("Connection is null", connection != null);
+        Statement s = connection.createStatement();
+        Exception ex = null;
+        try {
+           s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)");
+            s.close();
+            ResultSet rs = s.executeQuery("select * from T1");
+            rs.close();
+        }
+        catch (Exception e) {
+            ex = e;
+        }
+        //connection.commit();
+
+
+        s.execute("DROP TABLE T1");
+        s.close();
+        //connection.commit();
+        connection.close();
+        if (ex != null) {
+            throw ex;
+        }
+
+    }
+
+
+   public void testPooling() throws Exception {
+        System.out.println("Testing FBWrapping DataSource Pooling on db: " + TestConst.DB_DATASOURCE_URL);
+
+        ds = new FBWrappingDataSource();
+        ds.setDatabaseName(TestConst.DB_DATASOURCE_URL);
         ds.setMinSize(3);
         ds.setMaxSize(5);
         ds.setBlockingTimeout(100);

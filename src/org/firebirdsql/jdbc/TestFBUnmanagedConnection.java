@@ -28,6 +28,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.5  2001/11/25 23:15:55  d_jencks
+ * Implemented autocommit that does not interfere with connections managed by XAResource or LocalTransaction.  Made Driver reuse ManagedConnectionFactory for same database url.
+ *
  * Revision 1.4  2001/08/28 17:13:23  d_jencks
  * Improved formatting slightly, removed dos cr's
  *
@@ -101,7 +104,7 @@ public class TestFBUnmanagedConnection extends TestCase {
     protected void setUp() throws Exception {
         Class.forName(FBDriver.class.getName());
         connection =
-            java.sql.DriverManager.getConnection(TestConst.DB_URL, TestConst.DB_INFO);
+            java.sql.DriverManager.getConnection(TestConst.DB_DRIVER_URL, TestConst.DB_INFO);
     }
     protected void tearDown() throws Exception {
         try 
