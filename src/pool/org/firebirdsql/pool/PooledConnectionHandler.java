@@ -21,7 +21,6 @@ package org.firebirdsql.pool;
 
 import java.lang.reflect.*;
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -70,7 +69,7 @@ class PooledConnectionHandler implements InvocationHandler {
      * @return array of all implemented interfaces.
      */
     public static Class[] getAllInterfaces(Class clazz) {
-    	ArrayList result = new ArrayList();
+    	HashSet result = new HashSet();
         
         do {
             Class[] interfaces = clazz.getInterfaces();
