@@ -101,4 +101,89 @@ public class TestFBBlobParams extends BaseFBTest {
             connection.close();
         }
     }
+    
+    /**
+     * Test case that reproduces problem when using UPPER function with text
+     * Blobs.
+     * 
+     * @throws java.lang.Exception if something went wrong.
+     */
+    public void testUpperAndBlobParam() throws Exception {
+        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        connection.setAutoCommit(false);
+
+        try {
+            
+            Statement stmt = connection.createStatement();
+            try {
+                stmt.execute("INSERT INTO ClassMap(oid, classname) VALUES (1, 'test')");
+            } finally {
+                stmt.close();
+            }
+    
+            connection.commit();
+            
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT oid FROM ClassMap WHERE UPPER(classname) LIKE ?"
+            );
+            
+            try {
+                ps.setString(1, "TEST");
+
+                ResultSet rs = ps.executeQuery();
+                assertTrue("Should find at least one row.", rs.next());
+                assertTrue("OID value should be correct.",
+                    "1".equals(rs.getString(1)));
+                assertTrue("Only one row should be selected", !rs.next());
+            } finally {
+                ps.close();
+            }
+
+        } finally {
+            connection.close();
+        }
+    }
+
+    /**
+     * Test case that reproduces problem when using equal sign with text
+     * Blobs.
+     * 
+     * @throws java.lang.Exception if something went wrong.
+     */
+    public void testEqualityInBlobParam() throws Exception {
+        Connection connection = DriverManager.getConnection(DB_DRIVER_URL, DB_INFO);
+        connection.setAutoCommit(false);
+
+        try {
+
+            Statement stmt = connection.createStatement();
+            try {
+                stmt.execute("INSERT INTO ClassMap(oid, classname) VALUES (1, 'test')");
+            } finally {
+                stmt.close();
+            }
+
+            connection.commit();
+
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT oid FROM ClassMap WHERE classname = ?"
+            );
+
+            try {
+                ps.setString(1, "test");
+
+                ResultSet rs = ps.executeQuery();
+                assertTrue("Should find at least one row.", rs.next());
+                assertTrue("OID value should be correct.",
+                    "1".equals(rs.getString(1)));
+                assertTrue("Only one row should be selected", !rs.next());
+            } finally {
+                ps.close();
+            }
+
+        } finally {
+            connection.close();
+        }
+    }
+
 }
