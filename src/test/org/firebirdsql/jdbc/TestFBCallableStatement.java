@@ -152,7 +152,7 @@ public class TestFBCallableStatement extends FBTestBase {
          ;
      
      public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_2 = ""
-         + "{call test_no_params ()}"
+         + "{call test_no_params () }"
          ;
      
      public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_3 = ""
