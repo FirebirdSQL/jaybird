@@ -75,7 +75,7 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
     int resp_object;
     long resp_blob_id;
     byte[] resp_data;
-    int op = -1;
+//    int op = -1;
 
     public isc_db_handle_impl() {
     }
