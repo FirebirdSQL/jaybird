@@ -1,3 +1,11 @@
+2004-10-25 23:05  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/jdbc/FBBlob.java,
+	test/org/firebirdsql/jdbc/TestFBBlobStream.java:
+	
+	fixed a bug in write(byte[], int, int) method in FBBlob.java when
+	passed array was bigger than blob buffer size
+
 2004-10-24 21:51  rrokytskyy
 
 	*
