@@ -1,3 +1,49 @@
+2004-12-09 00:12  sjardine
+
+	* client-java/src/:
+	main/org/firebirdsql/management/UserManager.java,
+	test/org/firebirdsql/management/TestUserManager.java,
+	lib/mini-j2ee.jar:
+	
+	Replaced dependency for jboss-j2ee source with a mini-j2ee.jar,
+	modified build scripts, and added preliminary classes for Services
+	API User Management.
+
+2004-12-07 22:13  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/gds/TestFatalErrors.java:
+	
+	added code to support Vulcan
+
+2004-12-07 22:11  rrokytskyy
+
+	*
+	
+	fixed the serialization issue
+	client-java/src/main/org/firebirdsql/gds/GDSSynchronizationPolicy.j
+	ava:
+
+2004-12-07 08:18  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jgds/ParameterBufferBase.java:
+	
+	fixed possible length deviation when MBCS is used
+
+2004-12-07 06:36  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jgds/ServiceParameterBufferImp.java,
+	main/org/firebirdsql/gds/ServiceParameterBuffer.java,
+	main/org/firebirdsql/jgds/GDS_Impl.java,
+	main/org/firebirdsql/jgds/ServiceRequestBufferImp.java,
+	main/org/firebirdsql/jgds/isc_svc_handle_impl.java,
+	main/org/firebirdsql/management/BackupManager.java,
+	main/org/firebirdsql/management/ServiceManager.java,
+	test/org/firebirdsql/management/TestBackupManager.java:
+	
+	initial revision of Services API for type 4 jdbc driver
+
 2004-12-05 21:32  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/gds/XdrOutputStream.java:
