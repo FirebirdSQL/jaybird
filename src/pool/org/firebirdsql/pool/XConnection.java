@@ -245,58 +245,9 @@ class XConnection implements InvocationHandler {
     synchronized PreparedStatement handlePrepareStatement(String statement, 
         int resultSetType, int resultSetConcurrency) throws SQLException 
     {
-        /*
-        PreparedStatement stmt;
-		
-		synchronized(statements) {
-	        XPreparedStatementCache stmtCache = 
-			    (XPreparedStatementCache)statements.get(statement);
-        
-			if (stmtCache == null) {
-				stmtCache = new XPreparedStatementCache(
-                    this, statement, resultSetType, resultSetConcurrency);
-                    
-				statements.put(statement, stmtCache);
-			} 
-			
-			stmt = stmtCache.reference();
-		}
-        
-        return stmt;
-        */
         return getManager().getPreparedStatement(
             statement, resultSetType, resultSetConcurrency);
     }
-    
-    /**
-     * Prepare the specified statement and wrap it with cache notification 
-     * wrapper.
-     * 
-     * @param statement sattement to prepare.
-     * 
-     * @return prepared and wrapped statement.
-     * 
-     * @throws SQLException if underlying connection threw this exception.
-     */
-    /*
-    public XCachablePreparedStatement prepareStatement(String statement, 
-        int resultSetType, int resultSetConcurrency) throws SQLException 
-    {
-		if (LOG_PREPARE_STATEMENT)
-			logChannel.info("Prepared statement for SQL '" + statement + "'");
-		
-        PreparedStatement stmt = connection.prepareStatement(
-            statement, resultSetType, resultSetConcurrency);
-		
-		XPreparedStatement handler = 
-			new XPreparedStatement(statement, stmt, this);
-		
-		return (XCachablePreparedStatement)Proxy.newProxyInstance(
-			getClass().getClassLoader(),
-			new Class[] {XCachablePreparedStatement.class}, 
-			handler);
-    }
-    */
     
     /**
      * Handle {@link Connection#close()} method. This implementation closes the
@@ -311,10 +262,7 @@ class XConnection implements InvocationHandler {
 
 		closed = true;
         
-		java.io.StringWriter writer = new java.io.StringWriter();
-		new Exception().printStackTrace(new java.io.PrintWriter(writer));
-		writer.flush();
-		closeStackTrace = writer.toString();
+		closeStackTrace = XConnectionUtil.getStackTrace(new Exception());
 	}
     
     /**
