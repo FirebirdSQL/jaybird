@@ -20,7 +20,6 @@
 package org.firebirdsql.ngds;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Arrays;
 import org.firebirdsql.gds.Clumplet;
 import java.io.Serializable;

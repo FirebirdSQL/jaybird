@@ -29,7 +29,6 @@ package org.firebirdsql.ngds;
 
 
 
-import java.net.*;
 import java.util.*;
 import java.util.Collection;
 import javax.security.auth.Subject;
