@@ -284,7 +284,7 @@ public class FBWrappingDataSource implements DataSource, Serializable, Reference
     //Now the useful properties for the DataSource.
 
 
-    public void setDatabaseName(String database)
+    public void setDatabaseName(String database) throws ResourceException
     {
         mcf.setDatabase(database);
     }
