@@ -111,8 +111,8 @@ public class TestFBBlobAutocommit extends BaseFBTest {
             assertTrue("ID should be the same.", rs.getInt(1) == TEST_ID);
             assertTrue("getObject() on binary field should return byte[]", 
                 rs.getObject(2) instanceof byte[]);
-            assertTrue("getObject() on text field should return byte[]", 
-                rs.getObject(3) instanceof byte[]);
+            assertTrue("getObject() on text field should return String", 
+                rs.getObject(3) instanceof String);
             assertTrue("getObject() on blob field should return java.sql.Blob", 
                 rs.getObject(4) instanceof Blob);
                 
