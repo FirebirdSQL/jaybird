@@ -60,7 +60,7 @@ public class TestFBResultSet extends TestXABase {
     
 
 
-    public void xtestUseResultSet() throws Exception {
+    public void testUseResultSet() throws Exception {
         System.out.println();
         System.out.println("testUseResultSet");
         FBManagedConnectionFactory mcf = initMcf();
@@ -108,7 +108,7 @@ public class TestFBResultSet extends TestXABase {
         
     }
 
-    public void xtestZZUseResultSetMore() throws Exception {
+    public void testZZUseResultSetMore() throws Exception {
         System.out.println();
         System.out.println("testUseResultSetMore");
         FBManagedConnectionFactory mcf = initMcf();
@@ -178,7 +178,7 @@ public class TestFBResultSet extends TestXABase {
         
     }
 
-    public void xtestUseResultSetWithPreparedStatement() throws Exception {
+    public void testUseResultSetWithPreparedStatement() throws Exception {
         System.out.println();
         System.out.println("testUseResultSetWithPreparedStatement");
         FBManagedConnectionFactory mcf = initMcf();
@@ -285,6 +285,13 @@ public class TestFBResultSet extends TestXABase {
         Exception ex = null;
         t.begin();
         try {
+            s.execute("DROP TABLE T1");
+        }
+        catch (Exception e) {
+        }
+        t.commit();
+        t.begin();
+        try {
             s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20))"); 
             //s.close();
         }
@@ -373,7 +380,7 @@ public class TestFBResultSet extends TestXABase {
         
     }
 
-    public void xtestUseResultSetWithCount() throws Exception {
+    public void testUseResultSetWithCount() throws Exception {
         System.out.println();
         System.out.println("testUseResultSetWithCount");
         FBManagedConnectionFactory mcf = initMcf();
@@ -417,5 +424,58 @@ public class TestFBResultSet extends TestXABase {
         
     }
     
+        public static final String CREATE_PROCEDURE =
+        "CREATE PROCEDURE testproc(number INTEGER) RETURNS (result INTEGER) AS BEGIN     result = number; END";
+
+    public void testzzzExecutableProcedure() throws Exception {
+        System.out.println();
+        System.out.println("testExecutableProcedure");
+        FBManagedConnectionFactory mcf = initMcf();
+        DataSource ds = (DataSource)mcf.createConnectionFactory();
+        FBConnection c = (FBConnection)ds.getConnection();
+        Statement s = c.createStatement();
+        LocalTransaction t = c.getLocalTransaction();
+        Exception ex = null;
+        t.begin();
+        try {
+            s.execute("DROP PROCEDURE testproc"); 
+        }
+        catch (Exception e) {
+        }
+        t.commit();
+        t.begin();
+        //try {
+            s.execute(CREATE_PROCEDURE); 
+            //s.close();
+            //}
+        /*catch (Exception e) {
+            ex = e;
+            }*/
+        t.commit();
+        
+        t.begin();
+        CallableStatement p = c.prepareCall("EXECUTE PROCEDURE testproc(?)");
+        p.setInt(1, 5);
+        
+        assertTrue("execute returned false for execute procedure statement", p.execute()); 
+        ResultSet rs = p.getResultSet();
+        while (rs.next()) {
+            System.out.println("factorial: " + rs.getInt(1) );
+        }
+//        rs.close(); //should be automatic
+        p.close();
+        t.commit();   
+        
+        t.begin();
+        s.execute("DROP PROCEDURE testproc"); 
+        s.close();
+        t.commit();
+        c.close();
+        if (ex != null) {
+            throw ex;
+        }
+        
+    }
     
+
 }
