@@ -246,11 +246,11 @@ public class GDS_Impl extends AbstractGDS implements GDS
             DbAttachInfo dbai = new DbAttachInfo(file_name);
 
             final String fileName;
-            if( dbai.getFileName().indexOf(':') == -1 && dbai.getFileName().startsWith("/") == false )
-            {
-             fileName = "/"  +dbai.getFileName();
-            }
-            else
+           // if( dbai.getFileName().indexOf(':') == -1 && dbai.getFileName().startsWith("/") == false )
+           // {
+           //  fileName = "/"  +dbai.getFileName();
+            //}
+            //else
             fileName = dbai.getFileName();
 
             if(log != null)
