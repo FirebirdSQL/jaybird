@@ -33,12 +33,16 @@
 package org.firebirdsql.jgds;
 
 import org.firebirdsql.gds.isc_db_handle;
+import java.util.Collection;
+import java.util.ArrayList;
 
 
 public class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_handle {
     int rtr_id;
     isc_db_handle_impl rtr_rdb;
     isc_tr_handle_impl rtr_next;
+    Collection blobs = new ArrayList();
+    //    isc_blob_handle_impl rbl_next;
     
     private int state = NOTRANSACTION;
     
@@ -56,5 +60,14 @@ public class isc_tr_handle_impl implements org.firebirdsql.gds.isc_tr_handle {
     public int getState() {
         return state;
     }
+    
+    void addBlob(isc_blob_handle_impl blob) {
+	blobs.add(blob);
+	//        blob.next = rbl_next;
+	//        rbl_next = blob;
+    }
 
+    void removeBlob(isc_blob_handle_impl blob) {
+	blobs.remove(blob);
+    }
 }

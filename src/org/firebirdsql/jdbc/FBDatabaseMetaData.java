@@ -30,6 +30,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.PreparedStatement;
+import javax.resource.cci.LocalTransaction;
+import javax.resource.ResourceException;
 
 /**
  *
@@ -61,6 +64,32 @@ import java.sql.SQLException;
  * SQLException is thrown.
  */
 public class FBDatabaseMetaData implements DatabaseMetaData {
+
+    FBConnection c;
+
+    //boolean transactionActive = false;
+
+    LocalTransaction trans;
+
+    PreparedStatement tables = null;
+
+    FBDatabaseMetaData(FBConnection c) {
+        this.c = c;
+        trans = c.getLocalTransaction();
+    }
+
+    void close() {
+        try {
+            if (tables != null) {
+                tables.close();
+                tables = null;
+            }
+        }
+        catch (SQLException e) {
+            //yuckola
+            e.printStackTrace();
+        }
+    }
 
     //----------------------------------------------------------------------
 	// First, a variety of minor information about the target database.
@@ -639,7 +668,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsMultipleResultSets() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -651,7 +680,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsMultipleTransactions() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return true;
     }
 
 
@@ -664,7 +693,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsNonNullableColumns() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return true;
     }
 
 
@@ -756,7 +785,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsOuterJoins() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return true;
     }
 
 
@@ -779,7 +808,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsLimitedOuterJoins() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return true;
     }
 
 
@@ -790,7 +819,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	String getSchemaTerm() throws  SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new SQLException("No schemas");
     }
 
 
@@ -824,7 +853,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean isCatalogAtStart() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -835,7 +864,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	String getCatalogSeparator() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        throw new SQLException("No catalogs");
     }
 
 
@@ -849,7 +878,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsSchemasInDataManipulation() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -860,7 +889,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsSchemasInProcedureCalls() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -871,7 +900,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsSchemasInTableDefinitions() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -882,7 +911,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsSchemasInIndexDefinitions() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -893,7 +922,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsSchemasInPrivilegeDefinitions() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -904,7 +933,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsCatalogsInDataManipulation() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -915,7 +944,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsCatalogsInProcedureCalls() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -926,7 +955,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsCatalogsInTableDefinitions() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -937,7 +966,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsCatalogsInIndexDefinitions() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -948,7 +977,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsCatalogsInPrivilegeDefinitions() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return false;
     }
 
 
@@ -1007,7 +1036,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsSubqueriesInComparisons() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return true;
     }
 
 
@@ -1020,7 +1049,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsSubqueriesInExists() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return true;
     }
 
 
@@ -1033,7 +1062,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsSubqueriesInIns() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return true;
     }
 
 
@@ -1046,7 +1075,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsSubqueriesInQuantifieds() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return true;
     }
 
 
@@ -1059,7 +1088,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsCorrelatedSubqueries() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return true;
     }
 
 
@@ -1070,7 +1099,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	boolean supportsUnion() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        return true;
     }
 
 
@@ -1759,7 +1788,40 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getTables(String catalog, String schemaPattern,
 		String tableNamePattern, String types[]) throws SQLException {
-        throw new SQLException("Not yet implemented");
+        if (catalog != null) {
+            throw new SQLException("Catalogs not supported");
+        }
+        if (schemaPattern != null) {
+            throw new SQLException("Schemas not supported");
+        }
+        boolean ourTransaction = false;
+        if (!c.inTransaction()) {
+
+            try {
+                trans.begin();
+                ourTransaction = true;
+            }
+            catch (ResourceException re) {
+                throw new SQLException("couldn't work with local transaction: " + re);
+            }
+        }
+        if (tables == null) {
+            tables = c.prepareStatement("select null as TABLE_CAT, null as TABLE_SCHEM, RDB$RELATION_NAME as TABLE_NAME, 'TABLE' as TABLE_TYPE, 'you want a comment?' as REMARKS from RDB$RELATIONS where RDB$RELATION_NAME = ?");
+        }
+        tables.setString(1, tableNamePattern);
+        tables.execute();
+        ResultSet rs = ((FBStatement)tables).getCachedResultSet();
+        if (ourTransaction) {
+            try {
+                trans.commit();
+            }
+            catch (ResourceException re) {
+                throw new SQLException("couldn't work with local transaction: " + re);
+            }
+        }
+
+        //ResultSet rs = tables.executeQuery();
+        return rs;
     }
 
 
@@ -2991,6 +3053,160 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         throw new SQLException("Not yet implemented");
     }
 
+    //jdbc 3 methods
+
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @param param4 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public ResultSet getAttributes(String param1, String param2, String param3, String param4) throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
+
+    /**
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean supportsSavepoints() throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
+
+    /**
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean supportsNamedParameters() throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
+
+    /**
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean supportsMultipleOpenResults() throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
+
+    /**
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean supportsGetGeneratedKeys() throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
+
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public ResultSet getSuperTypes(String param1, String param2, String param3) throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public ResultSet getSuperTables(String param1, String param2, String param3) throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean supportsResultSetHoldability(int param1) throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
+
+    /**
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int getResultSetHoldability() throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
+
+    /**
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int getDatabaseMajorVersion() throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
+
+    /**
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int getDatabaseMinorVersion() throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
+
+    /**
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int getJDBCMajorVersion() throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
+
+    /**
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int getJDBCMinorVersion() throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
+
+    /**
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int getSQLStateType() throws SQLException {
+        // TODO: implement this java.sql.DatabaseMetaData method
+        throw new SQLException("not yet supported");
+    }
 
 }
 

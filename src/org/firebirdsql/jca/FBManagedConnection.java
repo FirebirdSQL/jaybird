@@ -47,6 +47,7 @@ import javax.security.auth.Subject;
 import org.firebirdsql.gds.isc_db_handle;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.isc_tr_handle;
+import org.firebirdsql.gds.isc_blob_handle;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLDA;
@@ -327,6 +328,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
    * @exception SQLException if a database-access error occurs
    */
     public javax.transaction.xa.XAResource getXAResource() throws ResourceException {
+        log.println("XAResource requested from FBManagedConnection");
         return this;
     }
     
@@ -344,6 +346,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     differs depending on the exact situation.
      */
     public void commit(Xid id, boolean twoPhase) throws XAException {
+        log.println("Commit called: " + id);
         if (mcf.lookupXid(id) == null) {
             throw new XAException("commit called with unknown transaction");
         }
@@ -361,6 +364,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      */
      //what do we do with flags?????
     public void end(Xid id, int flags) throws javax.transaction.xa.XAException {
+        log.println("End called: " + id);
         if (currentTr == null) {
             throw new XAException("end called with no transaction associated");
         }
@@ -379,6 +383,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     transaction ID is wrong.
      */
     public void forget(Xid id) throws javax.transaction.xa.XAException {
+        log.println("forget called: " + id);
         if (mcf.lookupXid(id) == null) {
             throw new XAException("forget called with unknown transaction");
         }
@@ -407,6 +412,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     transaction ID is wrong, or the connection was set to Auto-Commit.
      */
     public int prepare(Xid id) throws javax.transaction.xa.XAException {
+        log.println("prepare called: " + id);
         if (mcf.lookupXid(id) == null) {
             throw new XAException("prepare called with unknown transaction");
         }
@@ -435,6 +441,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     differs depending on the exact situation.
      */
     public void rollback(Xid id) throws javax.transaction.xa.XAException {
+        log.println("rollback called: " + id);
         if (mcf.lookupXid(id) == null) {
             throw new XAException("rollback called with unknown transaction");
         }
@@ -467,6 +474,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *     transaction ID is wrong, or the instance has already been closed.
      */
     public void start(Xid id, int flags) throws XAException {
+        log.println("start called: " + id);
         if (currentTr != null) {
             throw new XAException("start called with transaction associated");
         }
@@ -484,8 +492,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         mcf.gds.isc_dsql_allocate_statement(currentTr.getDbHandle(), stmt);
         return stmt;
     }
+
+    public boolean inTransaction() {
+        return currentTr != null;
+    }
     
     public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException {
+        log.println("preparing sql: " + sql);
         //Should we test for dbhandle?
         XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, sql, GDS.SQL_DIALECT_CURRENT);
         if (out.sqld != out.sqln) {
@@ -522,6 +535,31 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         
         mcf.registerStatementWithTransaction(currentTr, fbStatement);
     }
+
+    public isc_blob_handle openBlobHandle(long blob_id) throws GDSException {
+        isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
+        blob.setBlobId(blob_id);
+        mcf.gds.isc_open_blob2(currentDbHandle, currentTr, blob, null);//no bpb for now, segmented
+        return blob;
+    }
+
+    public isc_blob_handle createBlobHandle() throws GDSException {
+        isc_blob_handle blob = mcf.gds.get_new_isc_blob_handle();
+        mcf.gds.isc_create_blob2(currentDbHandle, currentTr, blob, null);//no bpb for now, segmented
+        return blob;
+    }
+
+    public byte[] getBlobSegment(isc_blob_handle blob, int len) throws GDSException {
+        return mcf.gds.isc_get_segment(blob, len);
+    }
+
+    public void closeBlob(isc_blob_handle blob) throws GDSException {
+        mcf.gds.isc_close_blob(blob);
+    }
+
+    public void putBlobSegment(isc_blob_handle blob, byte[] buf) throws GDSException {
+        mcf.gds.isc_put_segment(blob, buf);
+    }
     
     private static byte[] stmtInfo = new byte[] 
         {GDS.isc_info_sql_records, 
@@ -556,7 +594,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     void notify(int type, FBConnection c, Exception e) {
         ConnectionEvent ce = new ConnectionEvent(this, type, e);
         ce.setConnectionHandle(c);
-        Iterator i = connectionEventListeners.iterator();
+        //avoid a concurrent modification exception - notification modifies list.
+        ArrayList cels = (ArrayList)connectionEventListeners.clone();
+        Iterator i = cels.iterator();
         switch (type) {
             case ConnectionEvent.CONNECTION_CLOSED:
                 while (i.hasNext()) {

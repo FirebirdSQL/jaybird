@@ -40,6 +40,8 @@ import org.firebirdsql.jca.FBLocalTransaction;
 import org.firebirdsql.jca.FBManagedConnection;
 
 //import javax.resource.cci.Connection;--can't import, two classes with same name.
+import java.sql.Savepoint;
+import java.sql.Blob;
 
 
 
@@ -78,6 +80,8 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
     FBManagedConnection mc;
     
     FBLocalTransaction localTransaction = null;
+
+    FBDatabaseMetaData metaData = null;
     
     public FBConnection(FBManagedConnection mc) {
         this.mc = mc;
@@ -104,6 +108,20 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      */
     public Statement createStatement() throws SQLException {
         return new FBStatement(this);
+    }
+
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Statement createStatement(int param1, int param2, int param3) throws SQLException {
+        // TODO: implement this java.sql.Connection method
+        return null;
     }
 
 
@@ -143,6 +161,60 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
 
 
     /**
+     *
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public PreparedStatement prepareStatement(String param1, int param2) throws SQLException {
+        // TODO: implement this java.sql.Connection method
+        return null;
+    }
+
+    /**
+     *
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @param param4 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public PreparedStatement prepareStatement(String param1, int param2, int param3, int param4) throws SQLException {
+        // TODO: implement this java.sql.Connection method
+        return null;
+    }
+
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public PreparedStatement prepareStatement(String param1, int[] param2) throws SQLException {
+        // TODO: implement this java.sql.Connection method
+        return null;
+    }
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public PreparedStatement prepareStatement(String param1, String[] param2) throws SQLException {
+        // TODO: implement this java.sql.Connection method
+        return null;
+    }
+
+
+    /**
 	 * Creates a <code>CallableStatement</code> object for calling
 	 * database stored procedures.
      * The <code>CallableStatement</code> object provides
@@ -170,6 +242,21 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      */
     public CallableStatement prepareCall(String sql) throws SQLException {
+        return null;
+    }
+
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @param param4 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public CallableStatement prepareCall(String param1, int param2, int param3, int param4) throws SQLException {
+        // TODO: implement this java.sql.Connection method
         return null;
     }
 
@@ -255,6 +342,16 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
     }
 
 
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void rollback(Savepoint param1) throws SQLException {
+        // TODO: implement this java.sql.Connection method
+    }
+
     /**
      * Releases a Connection's database and JDBC resources
 	 * immediately instead of waiting for
@@ -267,8 +364,15 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      */
     public void close() {
-        mc.close(this);
-        mc = null;
+        //close any prepared statements we may have executed.
+        if (metaData != null) {
+            metaData.close();
+            metaData = null;
+        }
+        if (mc != null) {
+            mc.close(this);
+            mc = null;
+        }
     }
 
 
@@ -298,7 +402,10 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
      * @exception SQLException if a database access error occurs
      */
     public DatabaseMetaData getMetaData() throws SQLException {
-        return null;
+        if (metaData == null) {
+            metaData = new FBDatabaseMetaData(this);
+        }
+        return metaData;
     }
 
 
@@ -496,7 +603,6 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
         return null;
     }
 
-
     /**
      *
 	 * Creates a <code>CallableStatement</code> object that will generate
@@ -531,7 +637,8 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public java.util.Map getTypeMap() throws SQLException {
-        return null;
+        throw new SQLException("Not yet implemented");
+
     }
 
 
@@ -547,8 +654,68 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public void setTypeMap(java.util.Map map) throws SQLException {
+        throw new SQLException("Not yet implemented");
     }
     
+    /**
+     *
+     * jdbc 3
+     * @param param1 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void setHoldability(int param1) throws SQLException {
+        // TODO: implement this java.sql.Connection method
+        throw new SQLException("Not yet implemented");
+    }
+
+    /**
+     *
+     * jdbc 3
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int getHoldability() throws SQLException {
+        // TODO: implement this java.sql.Connection method
+        throw new SQLException("Not yet implemented");
+    }
+
+    /**
+     *
+     * jdbc 3
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Savepoint setSavepoint() throws SQLException {
+        // TODO: implement this java.sql.Connection method
+        throw new SQLException("Not yet implemented");
+
+    }
+
+    /**
+     *
+     * jdbc 3
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Savepoint setSavepoint(String param1) throws SQLException {
+        // TODO: implement this java.sql.Connection method
+        throw new SQLException("Not yet implemented");
+
+    }
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void releaseSavepoint(Savepoint param1) throws SQLException {
+        // TODO: implement this java.sql.Connection method
+        throw new SQLException("Not yet implemented");
+    }
+
+
+
     //-------------------------------------------
     //Borrowed from javax.resource.cci.Connection
     
@@ -557,6 +724,21 @@ public class FBConnection implements Connection/*, javax.resource.cci.Connection
             localTransaction = new FBLocalTransaction(mc, this);
         }
         return localTransaction;
+    }
+    /**
+     * This non- interface method is included so you can 
+     * actually get a blob object to use to write new data
+     * into a blob field without needing a preexisting blob
+     * to modify.
+    **/
+    public Blob createBlob() throws SQLException {
+        return new FBBlob(mc, 0);
+    }
+
+    //package methods
+
+    boolean inTransaction() {
+        return mc.inTransaction();
     }
 
 }

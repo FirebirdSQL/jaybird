@@ -34,6 +34,8 @@ import java.sql.Ref;
 import java.sql.SQLException;
 import java.sql.Struct;
 import java.sql.SQLData;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 /**
  *
@@ -362,5 +364,16 @@ public class FBSQLInput implements SQLInput {
         throw new SQLException("Not yet implemented");
     }
 
+    /**
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     * @exception java.net.MalformedURLException <description>
+     */
+    public URL readURL() throws SQLException, MalformedURLException {
+        // TODO: implement this java.sql.SQLInput method
+        return null;
+    }
+    
 
 }

@@ -108,9 +108,9 @@ public class TestFBResultSet extends TestXABase {
         
     }
 
-    public void testUseResultSetMore() throws Exception {
+    public void testZZUseResultSetMore() throws Exception {
         System.out.println();
-        System.out.println("testUseResultSet");
+        System.out.println("testUseResultSetMore");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         Connection c = (Connection)mc.getConnection(null, null);
@@ -120,7 +120,7 @@ public class TestFBResultSet extends TestXABase {
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
         try {
-            s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20))"); 
+            s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20), C8 TIME, C9 DATE, C10 TIMESTAMP)"); 
             //s.close();
         }
         catch (Exception e) {
@@ -132,11 +132,11 @@ public class TestFBResultSet extends TestXABase {
         xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
         assert("execute returned true for insert statement", 
-            !s.execute("insert into T1 values (1, 1, 1, 1.0, 1.0, 'one', 'one')")); 
+            !s.execute("insert into T1 values (1, 1, 1, 1.0, 1.0, 'one', 'one', '8:00:03.1234', '2002-JAN-11', '2001-JAN-6:8:00:03.1223')")); 
         //s.close();
-        s.execute("insert into T1 values (2, 2,2,  2.0, 2.0, 'two', 'two')"); 
+        // s.execute("insert into T1 values (2, 2,2,  2.0, 2.0, 'two', 'two')"); 
         //s.close();
-        assert("execute returned false for select statement", s.execute("select C1, C2, C3,  C4, C5, C6, C7 from T1"));
+        assert("execute returned false for select statement", s.execute("select C1, C2, C3,  C4, C5, C6, C7, C8, C9, C10 from T1"));
         ResultSet rs = s.getResultSet();
         while (rs.next()) {
             System.out.println("C1: " + rs.getInt(1) 
@@ -146,6 +146,10 @@ public class TestFBResultSet extends TestXABase {
                 + " C5: " + rs.getDouble(5)
                 + " C6: " + rs.getString(6)
                 + " C7: " + rs.getString(7)
+                + " C8: " + rs.getTime(8)
+                + " C9: " + rs.getDate(9)
+                + " C10: " + rs.getTimestamp(10)
+
                 );
             System.out.println("C1: " + rs.getInt("C1") 
                 + " C2: " + rs.getShort("C2")

@@ -959,6 +959,169 @@ public class GDS_Impl implements GDS {
         } 
         return value;
     }
+
+
+    //-----------------------------------------------
+    //Blob methods
+    //-----------------------------------------------
+    
+    public void isc_create_blob2(isc_db_handle db_handle, 
+                        isc_tr_handle tr_handle, 
+                        isc_blob_handle blob_handle, //contains blob_id
+                        Clumplet bpb) throws GDSException {
+        openOrCreateBlob(db_handle, tr_handle, blob_handle, bpb, (bpb == null)? op_create_blob: op_create_blob2);
+        ((isc_blob_handle_impl)blob_handle).rbl_flags |= RBL_create;
+    }
+    
+    public void isc_open_blob2(isc_db_handle db_handle, 
+                        isc_tr_handle tr_handle, 
+                        isc_blob_handle blob_handle, //contains blob_id
+                        Clumplet bpb) throws GDSException {
+        openOrCreateBlob(db_handle, tr_handle, blob_handle, bpb, (bpb == null)? op_open_blob: op_open_blob2);
+    }
+    
+    private final void openOrCreateBlob(isc_db_handle db_handle, 
+                        isc_tr_handle tr_handle, 
+                        isc_blob_handle blob_handle, //contains blob_id
+                        Clumplet bpb,
+                        int op) throws GDSException {
+        isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
+        isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
+        isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
+        
+        if (db == null) {
+            throw new GDSException(isc_bad_db_handle);
+        }
+        if (tr == null) {
+            throw new GDSException(isc_bad_trans_handle);
+        }
+        if (blob == null) {
+            throw new GDSException(isc_bad_segstr_handle);
+        }
+        int buffer_length = MAX_BUFFER_SIZE;
+        try {
+            
+            System.out.print((bpb == null)? "op_open/create_blob ": "op_open/create_blob2 ");
+	    System.out.println("op: " + op);
+            db.out.writeInt(op);
+            if (bpb != null) {
+                db.out.writeTyped(isc_bpb_version1, (Xdrable)bpb);
+            }
+            db.out.writeInt(tr.rtr_id); //??really a short?
+            System.out.println("sending blob_id: " + blob.blob_id);
+            db.out.writeLong(blob.blob_id);
+            
+            System.out.println("sent");
+            Response r = receiveResponse(db);
+            blob.db = db;
+            blob.tr = tr;
+            blob.rbl_id = r.resp_object;
+	    blob.blob_id = r.resp_blob_id;
+            tr.addBlob(blob);
+        }
+        catch (IOException ioe) {
+            throw new GDSException(isc_net_read_err);
+        }
+    }
+    
+    public byte[] isc_get_segment(isc_blob_handle blob_handle,
+                                  int requested) throws GDSException {
+        isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
+        isc_db_handle_impl db = blob.db;
+        if (db == null) {
+            throw new GDSException(isc_bad_db_handle);
+        }
+        isc_tr_handle_impl tr = blob.tr;
+        if (tr == null) {
+            throw new GDSException(isc_bad_trans_handle);
+        }
+        try {
+            
+            System.out.print("op_get_segment ");
+            db.out.writeInt(op_get_segment);
+	    db.out.writeInt(blob.rbl_id); //short???
+            //            System.out.println("trying to read bytes: " + Math.min(blob.rbl_buffer_length, maxread) + 2);
+	    //db.out.writeInt(Math.min(blob.rbl_buffer_length, maxread) + 2); //Actually needs to be less than max short value
+            System.out.println("trying to read bytes: " +Math.min(requested + 2, Short.MAX_VALUE));
+            db.out.writeInt(Math.min(requested + 2, Short.MAX_VALUE));
+	    db.out.writeInt(0);//writeBuffer for put segment;
+            System.out.println("sent");
+	    Response resp = receiveResponse(db);
+	    blob.rbl_flags &= ~RBL_segment;
+	    if (resp.resp_object == 1) {
+		blob.rbl_flags |= RBL_segment;
+	    }
+	    else if (resp.resp_object == 2) {
+		blob.rbl_flags |= RBL_eof_pending;
+	    }
+	    byte[] buffer = resp.resp_data;
+            if (buffer.length == 0) {//previous segment was last, this has no data
+                return buffer;
+            }
+            int len = 0;
+            int srcpos = 0;
+            int destpos = 0;
+            while (srcpos < buffer.length) {
+                len = isc_vax_integer(buffer, srcpos, 2);
+                srcpos += 2;
+                System.arraycopy(buffer, srcpos, buffer, destpos, len);
+                srcpos += len;
+                destpos += len;
+            }
+	    byte[] result = new byte[destpos];
+	    System.arraycopy(buffer, 0, result, 0, destpos);
+	    return result;
+
+	}
+	catch (IOException ioe) {
+	    throw new GDSException(isc_net_read_err);
+	}
+    }
+
+    //    private final int byteToUchar(byte b) {
+    //return (0x7f & b) + (((0x80 & b) == 0) ? 0: 0x80);
+    //}
+
+    public void isc_put_segment(isc_blob_handle blob_handle, byte[] buffer) throws GDSException {
+        isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
+        isc_db_handle_impl db = blob.db;
+        if (db == null) {
+            throw new GDSException(isc_bad_db_handle);
+        }
+        isc_tr_handle_impl tr = blob.tr;
+        if (tr == null) {
+            throw new GDSException(isc_bad_trans_handle);
+        }
+        try {
+            
+            System.out.print("op_batch_segments ");
+            db.out.writeInt(op_batch_segments);
+            System.out.print("blob.rbl_id:  " + blob.rbl_id);
+	    db.out.writeInt(blob.rbl_id); //short???
+            System.out.print("buffer.length " + buffer.length);
+	    db.out.writeBlobBuffer(buffer);
+            System.out.println("sent");
+	    Response resp = receiveResponse(db);
+	}
+	catch (IOException ioe) {
+	    throw new GDSException(isc_net_read_err);
+	}
+    }
+                           
+    public void isc_close_blob(isc_blob_handle blob_handle) throws GDSException {
+        isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
+        isc_db_handle_impl db = blob.db;
+        if (db == null) {
+            throw new GDSException(isc_bad_db_handle);
+        }
+        isc_tr_handle_impl tr = blob.tr;
+        if (tr == null) {
+            throw new GDSException(isc_bad_trans_handle);
+        }
+        releaseObject(db, op_close_blob, blob.rbl_id);
+	tr.removeBlob(blob);
+    }
+    
     
     
     // Handle declaration methods
@@ -973,6 +1136,11 @@ public class GDS_Impl implements GDS {
     public isc_stmt_handle get_new_isc_stmt_handle() {
         return new isc_stmt_handle_impl();
     }
+    
+    public isc_blob_handle get_new_isc_blob_handle() {
+        return new isc_blob_handle_impl();
+    }
+
  
     private void connect(isc_db_handle_impl db,
                             DbAttachInfo dbai) throws GDSException {
@@ -1585,6 +1753,18 @@ System.out.println("isc_info_sql_alias " + xsqlda.sqlvar[index].aliasname);
             throw new GDSException("IOException in checkAllRead: " + e);
         }
     }
+
+    private void releaseObject(isc_db_handle_impl db, int op, int id) throws GDSException {
+	try {
+	    db.out.writeInt(op);
+	    db.out.writeInt(id);
+	    receiveResponse(db);
+	}
+	catch (IOException ioe) {
+	    throw new GDSException(isc_net_read_err);
+	}
+    }
+	
         
     
     //inner classes

@@ -28,6 +28,10 @@ package org.firebirdsql.jdbc;
 // imports --------------------------------------
 import java.sql.Clob;
 import java.sql.SQLException;
+import java.io.Reader;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.io.InputStream;
 
 
 /**
@@ -78,6 +82,16 @@ public class FBClob implements Clob {
         throw new SQLException("Not yet implemented");
     }
 
+    /**
+     *
+     * @param param1 <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public void truncate(long param1) throws SQLException {
+        // TODO: implement this java.sql.Clob method
+    }
+
+
 
   /**
    * Returns a copy of the specified substring 
@@ -110,7 +124,7 @@ public class FBClob implements Clob {
    * @since 1.2
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
-    public java.io.Reader getCharacterStream() throws SQLException {
+    public Reader getCharacterStream() throws SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -124,7 +138,7 @@ public class FBClob implements Clob {
    * @since 1.2
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
-    public java.io.InputStream getAsciiStream() throws SQLException {
+    public InputStream getAsciiStream() throws SQLException {
         throw new SQLException("Not yet implemented");
     }
 
@@ -167,5 +181,56 @@ public class FBClob implements Clob {
     public long position(Clob searchstr, long start) throws SQLException {
         throw new SQLException("Not yet implemented");
     }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int setString(long param1, String param2) throws SQLException {
+        // TODO: implement this java.sql.Clob method
+        throw new SQLException("not yet implemented");
+
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @param param4 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int setString(long param1, String param2, int param3, int param4) throws SQLException {
+        // TODO: implement this java.sql.Clob method
+        throw new SQLException("not yet implemented");
+
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public OutputStream setAsciiStream(long param1) throws SQLException {
+        // TODO: implement this java.sql.Clob method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     *
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public Writer setCharacterStream(long param1) throws SQLException {
+        // TODO: implement this java.sql.Clob method
+        throw new SQLException("not yet implemented");
+    }
+
 
 }

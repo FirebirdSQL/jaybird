@@ -61,7 +61,7 @@ import org.firebirdsql.gds.isc_stmt_handle;
  */
 public class FBStatement implements Statement {
     
-    private FBConnection c;
+    protected FBConnection c;
     protected FBManagedConnection mc;
     
     protected isc_stmt_handle fixedStmt = null;
@@ -108,6 +108,41 @@ public class FBStatement implements Statement {
         return getUpdateCount();
     }
 
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int executeUpdate(String param1, int param2) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("Not yet implemented");
+    }
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int executeUpdate(String param1, int[] param2) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("Not yet implemented");
+    }
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int executeUpdate(String param1, String[] param2) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("Not yet implemented");
+    }
 
     /**
 	 * Releases this <code>Statement</code> object's database 
@@ -361,6 +396,42 @@ public class FBStatement implements Statement {
         }
     }
 
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean execute(String param1, int param2) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean execute(String param1, int[] param2) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean execute(String param1, String[] param2) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
+    }
+
 	
     /**
      *  Returns the current result as a <code>ResultSet</code> object. 
@@ -380,6 +451,16 @@ public class FBStatement implements Statement {
         }
         currentRs = new FBResultSet(mc, this, fixedStmt);
         return currentRs;
+    }
+
+    ResultSet getCachedResultSet() throws SQLException {
+        if (currentRs != null) {
+            throw new SQLException("Only one resultset at a time/statement!");
+        }
+        if (fixedStmt == null) {
+            throw new SQLException("No statement just executed");
+        }
+        return new FBResultSet(mc, fixedStmt);
     }
  
 
@@ -430,6 +511,17 @@ System.out.println("returning: " + Math.max(i.getInsertCount(), Math.max(i.getUp
         throw new SQLException("Not yet implemented");
     }
  
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean getMoreResults(int param1) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
+    }
+
 
 
     //--------------------------JDBC 2.0-----------------------------
@@ -647,6 +739,28 @@ System.out.println("returning: " + Math.max(i.getInsertCount(), Math.max(i.getUp
     public Connection getConnection() {
         return c;
     }
+
+    /**
+     * jdbc 3
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int getResultSetHoldability() throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     * jdbc 3
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public ResultSet getGeneratedKeys() throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
+    }
+
+
     
     //package level
     
