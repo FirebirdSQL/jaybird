@@ -1187,8 +1187,8 @@ public class FBResultSet implements ResultSet {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             try {
                 byte[] buffer = new byte[512];
-                while (in.available() > 0) {
-                    int count = in.read(buffer);
+                int count;
+                while ((count = in.read(buffer)) > 0) {
                     out.write(buffer, 0, count);
                 }
             } catch (java.io.IOException ex) {
