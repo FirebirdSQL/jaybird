@@ -19,13 +19,13 @@
 package org.firebirdsql.pool;
 
 import java.io.*;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.Hashtable;
 import java.util.Properties;
 
 import javax.naming.*;
+import javax.naming.spi.ObjectFactory;
+import javax.resource.Referenceable;
 import javax.resource.ResourceException;
 import javax.sql.*;
 
@@ -42,8 +42,10 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public class FBConnectionPoolDataSource extends AbstractConnectionPool
     implements PooledConnectionManager, ConnectionPoolConfiguration, 
-    ConnectionPoolDataSource, ConnectionEventListener
+    ConnectionPoolDataSource, ConnectionEventListener, 
+    Serializable, Referenceable, ObjectFactory
 {
+    
     public static final String USER_NAME_PROPERTY = FBDriver.USER;
     public static final String PASSWORD_PROPERTY = FBDriver.PASSWORD;
     public static final String TPB_MAPPING_PROPERTY = FBDriver.TPB_MAPPING;
@@ -108,9 +110,9 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
     private Reference reference;
     
 	private int loginTimeout;
-	private PrintWriter logWriter;
+	private transient PrintWriter logWriter;
     
-    private FBManagedConnectionFactory managedConnectionFactory;
+    private transient FBManagedConnectionFactory managedConnectionFactory;
 
     private int minConnections = FBPoolingDefaults.DEFAULT_MIN_SIZE;
     private int maxConnections = FBPoolingDefaults.DEFAULT_MAX_SIZE;
@@ -132,19 +134,8 @@ public class FBConnectionPoolDataSource extends AbstractConnectionPool
      * 
      * @throws SQLException if something went wrong.
      */
-    public FBConnectionPoolDataSource() 
-        throws SQLException
-    {
+    public FBConnectionPoolDataSource() {
         super();
-        
-        
-        try {
-            Class.forName("org.firebirdsql.jdbc.FBDriver");
-        } catch (ClassNotFoundException cnfex) {
-            throw new SQLException(
-                "Firebird JDBC driver not found.");
-        }
-        
     }
     
     private synchronized FBManagedConnectionFactory getManagedConnectionFactory() {
