@@ -154,10 +154,11 @@ public class TestFBResultSet extends BaseFBTest {
         
         connection.setAutoCommit(false);
         
+        ResultSet rs;
         Statement select = connection.createStatement();
         select.setCursorName(CURSOR_NAME);
         try {
-            ResultSet rs = select.executeQuery(
+            rs = select.executeQuery(
                 "SELECT id, str FROM test_table FOR UPDATE OF " + CURSOR_NAME);
                 
             assertTrue("Cursor name should be correct", 
@@ -166,7 +167,6 @@ public class TestFBResultSet extends BaseFBTest {
             assertTrue("ResultSet.isBeforeFirst() should be true.", 
                 rs.isBeforeFirst());
 
-            try {
                 PreparedStatement update = connection.prepareStatement(
                     UPDATE_TABLE_STATEMENT);
 
@@ -208,19 +208,23 @@ public class TestFBResultSet extends BaseFBTest {
                     update.close();
                 }
                 
-            } finally {
-                rs.close();
-            }
-            
         } finally {
             select.close();
+        }
+        
+        try {
+            rs.close();
+            assertTrue(
+                "Result set should be closed after statemnet close", false);
+        } catch(SQLException ex) {
+            // everything is ok
         }
 
         connection.commit();
         
         select = connection.createStatement();
         try {
-            ResultSet rs = select.executeQuery("SELECT id, str FROM test_table");
+            rs = select.executeQuery("SELECT id, str FROM test_table");
             
             int counter = 0;
             
