@@ -785,7 +785,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void beforeFirst() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -800,7 +800,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void afterLast() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -817,7 +817,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean first() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -834,7 +834,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean last() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -887,7 +887,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean absolute( int row ) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -915,7 +915,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean relative( int rows ) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -936,7 +936,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean previous() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1076,7 +1076,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean rowUpdated() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1095,7 +1095,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean rowInserted() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1115,7 +1115,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public boolean rowDeleted() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1134,7 +1134,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateNull(int columnIndex) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1153,7 +1153,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateBoolean(int columnIndex, boolean x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1173,7 +1173,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateByte(int columnIndex, byte x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1192,7 +1192,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateShort(int columnIndex, short x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1211,7 +1211,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateInt(int columnIndex, int x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1230,7 +1230,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateLong(int columnIndex, long x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1249,7 +1249,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateFloat(int columnIndex, float x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1268,7 +1268,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateDouble(int columnIndex, double x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1288,7 +1288,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateBigDecimal(int columnIndex, BigDecimal x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1307,7 +1307,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateString(int columnIndex, String x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1326,7 +1326,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateBytes(int columnIndex, byte x[]) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1345,7 +1345,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateDate(int columnIndex, Date x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1364,7 +1364,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateTime(int columnIndex, Time x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1384,7 +1384,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateTimestamp(int columnIndex, Timestamp x) throws  SQLException {
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1404,8 +1404,9 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateAsciiStream(int columnIndex, InputStream x,
-               int length) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+               int length) throws  SQLException 
+    {
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1425,8 +1426,9 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateBinaryStream(int columnIndex, InputStream x,
-                int length) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+                int length) throws  SQLException 
+    {
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1446,8 +1448,9 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateCharacterStream(int columnIndex, Reader x,
-                 int length) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+                 int length) throws  SQLException 
+    {
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1469,8 +1472,10 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateObject(int columnIndex, Object x, int scale) throws  SQLException {
-        throw new SQLException("not yet implemented");
+    public void updateObject(int columnIndex, Object x, int scale) 
+        throws  SQLException 
+    {
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1489,7 +1494,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateObject(int columnIndex, Object x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1507,7 +1512,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateNull(String columnName) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1526,7 +1531,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateBoolean(String columnName, boolean x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1545,7 +1550,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateByte(String columnName, byte x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1564,7 +1569,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateShort(String columnName, short x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1583,7 +1588,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateInt(String columnName, int x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1602,7 +1607,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateLong(String columnName, long x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1621,7 +1626,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateFloat(String columnName, float x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1640,7 +1645,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateDouble(String columnName, double x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1660,7 +1665,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateBigDecimal(String columnName, BigDecimal x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1679,7 +1684,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateString(String columnName, String x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1707,7 +1712,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateBytes(String columnName, byte x[]) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1726,7 +1731,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateDate(String columnName, Date x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1745,7 +1750,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateTime(String columnName, Time x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1765,7 +1770,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateTimestamp(String columnName, Timestamp x) throws  SQLException {
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1785,8 +1790,9 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateAsciiStream(String columnName, InputStream x,
-               int length) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+               int length) throws  SQLException 
+    {
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1806,8 +1812,9 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateBinaryStream(String columnName, InputStream x,
-                int length) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+                int length) throws  SQLException 
+    {
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1827,8 +1834,9 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateCharacterStream(String columnName, Reader reader,
-                 int length) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+                 int length) throws  SQLException 
+    {
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1850,8 +1858,10 @@ public class FBResultSet implements ResultSet {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void updateObject(String columnName, Object x, int scale) throws  SQLException {
-        throw new SQLException("not yet implemented");
+    public void updateObject(String columnName, Object x, int scale) 
+        throws  SQLException 
+    {
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1870,7 +1880,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateObject(String columnName, Object x) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1888,7 +1898,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void insertRow() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1904,7 +1914,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void updateRow() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1920,7 +1930,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void deleteRow() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1952,7 +1962,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void refreshRow() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1973,7 +1983,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void cancelRowUpdates() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2001,7 +2011,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void moveToInsertRow() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2017,7 +2027,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public void moveToCurrentRow() throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2362,8 +2372,7 @@ public class FBResultSet implements ResultSet {
      * @exception java.net.MalformedURLException <description>
      */
     public URL getURL(int param1) throws SQLException {
-        // TODO: implement this java.sql.ResultSet method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -2374,8 +2383,7 @@ public class FBResultSet implements ResultSet {
      * @exception java.net.MalformedURLException <description>
      */
     public URL getURL(String param1) throws SQLException {
-        // TODO: implement this java.sql.ResultSet method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2386,8 +2394,7 @@ public class FBResultSet implements ResultSet {
      * @exception java.sql.SQLException <description>
      */
     public void updateRef(int param1, Ref param2) throws SQLException {
-        // TODO: implement this java.sql.ResultSet method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -2397,8 +2404,7 @@ public class FBResultSet implements ResultSet {
      * @exception java.sql.SQLException <description>
      */
     public void updateRef(String param1, Ref param2) throws SQLException {
-        // TODO: implement this java.sql.ResultSet method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -2408,8 +2414,7 @@ public class FBResultSet implements ResultSet {
      * @exception java.sql.SQLException <description>
      */
     public void updateBlob(int param1, Blob param2) throws SQLException {
-        // TODO: implement this java.sql.ResultSet method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -2419,8 +2424,7 @@ public class FBResultSet implements ResultSet {
      * @exception java.sql.SQLException <description>
      */
     public void updateBlob(String param1, Blob param2) throws SQLException {
-        // TODO: implement this java.sql.ResultSet method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -2430,8 +2434,7 @@ public class FBResultSet implements ResultSet {
      * @exception java.sql.SQLException <description>
      */
     public void updateClob(int param1, Clob param2) throws SQLException {
-        // TODO: implement this java.sql.ResultSet method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -2441,8 +2444,7 @@ public class FBResultSet implements ResultSet {
      * @exception java.sql.SQLException <description>
      */
     public void updateClob(String param1, Clob param2) throws SQLException {
-        // TODO: implement this java.sql.ResultSet method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -2452,8 +2454,7 @@ public class FBResultSet implements ResultSet {
      * @exception java.sql.SQLException <description>
      */
     public void updateArray(int param1, Array param2) throws SQLException {
-        // TODO: implement this java.sql.ResultSet method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -2463,8 +2464,7 @@ public class FBResultSet implements ResultSet {
      * @exception java.sql.SQLException <description>
      */
     public void updateArray(String param1, Array param2) throws SQLException {
-        // TODO: implement this java.sql.ResultSet method
-        throw new SQLException("not yet implemented");
+        throw new FBDriverNotCapableException();
     }
 
     //--------------------------------------------------------------------
