@@ -366,7 +366,7 @@ public class FBBlob implements Blob{
         public int read(byte[] b, int off, int len) throws IOException {
             int result = available();
             if (result <= 0) {
-                return 0;
+                return -1;
             }
             if (result > len) {//not expected to happen
                 System.arraycopy(buffer, pos, b, off, len);
