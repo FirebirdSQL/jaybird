@@ -26,7 +26,7 @@ import java.sql.SQLException;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
-import org.firebirdsql.pool.UnknownDriverTypeException;
+
 
 /**
  * The class <code>FBManager</code> is a simple jmx mbean that allows you

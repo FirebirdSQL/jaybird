@@ -5,7 +5,7 @@
 <!-- ======================================================================= -->
 
 
-<project name="FirebirdSQL" default="tests-report-html" basedir=".">
+<project name="FirebirdSQL" default="tests-report-html-pure-java" basedir=".">
 
   <target name="init">
     <!-- Setup the build timestamp & build identifer properties -->

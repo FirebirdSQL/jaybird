@@ -23,7 +23,7 @@ import java.sql.Connection;
 import java.util.Set;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.jdbc.BaseFBTest;
+
 import org.firebirdsql.common.FBTestBase;
 
 /**

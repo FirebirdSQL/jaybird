@@ -27,7 +27,7 @@ import java.sql.Statement;
 import javax.sql.DataSource;
 import javax.sql.PooledConnection;
 
-import org.firebirdsql.jdbc.BaseFBTest;
+
 import org.firebirdsql.common.FBTestBase;
 
 /**
