@@ -154,7 +154,7 @@ public class TestFBBlobAutocommit extends BaseFBTest {
         int insertedCount = stmt.executeUpdate();
         stmt.close();
         
-        assertTrue("Should insert one row", insertedCount == 1);
+        assertTrue("Should insert one row.", insertedCount == 1);
         
         stmt = connection.prepareStatement(
             "SELECT bin_data FROM test_blob WHERE id = ?");
@@ -172,6 +172,61 @@ public class TestFBBlobAutocommit extends BaseFBTest {
         } finally {
             rs.close();
             stmt.close();
+        }
+    }
+    
+    /**
+     * Test if driver returns correctly empty and null blobs.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testEmptyOrNullBlob() throws Exception {
+        try {
+        PreparedStatement stmt = connection.prepareStatement(
+            "INSERT INTO test_blob(id, bin_data) VALUES(?, ?)");
+            
+        try {
+            stmt.setInt(1, 3);
+            stmt.setBytes(2, new byte[0]);
+            
+            int insertedCount = stmt.executeUpdate();
+            assertTrue("Should insert one row.", insertedCount == 1);
+            
+            stmt.setInt(1, 4);
+            stmt.setNull(2, Types.BINARY);
+            
+            insertedCount = stmt.executeUpdate();
+            assertTrue("Should insert one row.", insertedCount == 1);
+        } finally {        
+            stmt.close();
+        }
+        
+        stmt = connection.prepareStatement(
+            "SELECT bin_data FROM test_blob WHERE id = ?");
+            
+        stmt.setInt(1, 3);
+        try {
+            ResultSet rs = stmt.executeQuery();
+            
+            assertTrue("Should select at least one row.", rs.next());
+            assertTrue("Result should byte[0]", Arrays.equals(rs.getBytes(1), new byte[0]));
+            
+            rs.close();
+            
+            stmt.setInt(1, 4);
+            rs = stmt.executeQuery();
+            
+            assertTrue("Should select at least one row.", rs.next());
+            assertTrue("Result should byte[0]", rs.getObject(1) == null);
+            
+            rs.close();
+        } finally {
+            stmt.close();
+        }
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            
+            throw ex;
         }
     }
 }
