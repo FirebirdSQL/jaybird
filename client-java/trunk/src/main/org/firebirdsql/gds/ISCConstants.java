@@ -1090,51 +1090,48 @@ public final class ISCConstants {
      * connection.  It is eesntial that this list be ordered so
      * determining if a code is in it can proceed reliably.
      *
+     *
+     * This list has been kindly reviewed by Ann Harrison, 12/13/2002
      */
     public final static int[] FATAL_ERRORS = new int[] {
-        isc_bad_dbkey, //not sure
-        isc_bad_db_format,
-        isc_bad_db_handle,
-        isc_bad_dpb_content,
-        isc_bad_dpb_form,
-        isc_bad_req_handle,
-        isc_bad_segstr_handle,
-        isc_bad_segstr_id,
-        isc_bad_tpb_content,
-        isc_bad_tpb_form,
-        isc_bad_trans_handle,
+        isc_bad_db_format,   //probably not a firebird db
+        isc_bad_db_handle,   //couldn't get a connection
+        isc_bad_dpb_content, //couldn't get a connection
+        isc_bad_dpb_form,    //couldn't get a connection
         isc_bug_check,
         isc_db_corrupt,
-        isc_excess_trans,
-        isc_integ_fail,
-        isc_invalid_blr,
+        //isc_excess_trans, oracle gateway only
+        //isc_integ_fail,  user trigger or check constraint failed
+        //isc_invalid_blr,  usually undefined udf or bad procedure/trigger
         isc_io_error,
         isc_metadata_corrupt,
-        isc_not_valid,
-        isc_no_meta_update,
-        isc_no_segstr_close,
-        isc_obsolete_metadata,
-        isc_open_trans,
-        isc_port_len,
-        isc_req_sync,
-        isc_req_wrong_db,
-        isc_segstr_no_op,
-        isc_segstr_no_read,
-        isc_segstr_no_trans,
-        isc_segstr_no_write,
-        isc_segstr_wrong_db,
-        isc_sys_request,
-        isc_stream_eof,
+        //isc_not_valid,  field level check failed.
+        //isc_no_meta_update,  something went wrong trying to update metadata
+        isc_open_trans,  //could not forcibly close tx on server shutdown.
+        isc_port_len,    //user sent buffer too short or long for data
+                         //expected.  Should never occur
+        isc_req_sync,    //client asked for data when server expected
+                         //data or vice versa. Should never happen
+        isc_req_wrong_db,//In a multi-database application, a prepared
+                         //request has been opened against the wrong
+                         //database.  Not fatal, but also very
+                         //unlikely. I'm leaving it in because if we
+                         //get this, something is horribly wrong.
+        isc_sys_request, //A system service call failed.  Probably fatal.
+        //isc_stream_eof, Part of the scrolling cursors stuff, not
+        //fatal, simply indicates that you've got to the end of the
+        //cursor.
+
         isc_unavailable,
         isc_wrong_ods,
-        isc_fatal_conflict,
+        //isc_fatal_conflict, not used.
         isc_badblk,
         isc_relbadblk,
         isc_blktoobig,
         isc_bufexh,
         isc_bufinuse,
         isc_bdbincon,
-        isc_reqinuse,
+        //isc_reqinuse, User level error, unlikely with JayBird, not fatal.
         isc_badodsver,
         isc_dirtypage,
         isc_doubleloc,
@@ -1146,14 +1143,20 @@ public final class ISCConstants {
         isc_badpage,
         isc_badindex,
         isc_badhndcnt,
-        isc_connect_reject,
-        isc_no_lock_mgr,
+        isc_connect_reject, //no connection to close
+        isc_no_lock_mgr,    //no connection to close
         isc_blocking_signal,
         isc_lockmanerr,
-        isc_bad_detach,
-        isc_obj_in_use,
+        isc_bad_detach,     //detach failed...fatal, but there's nothing we can do.
+        isc_obj_in_use,     //User-level error in metadata updates.
+                            //Not fatal.  However, it was the cause of
+                            //this work, so I'm leaving it
+                            //in... perhaps it was a firebird bug?
         isc_buf_invalid,
-        isc_bad_lock_level,
+        isc_bad_lock_level,  //PC_ENGINE only, handles record locking
+                             //issues from the attemptto make
+                             //InterBase just like Dbase.
+
         isc_shutdown,
         isc_io_create_err,
         isc_io_open_err,
