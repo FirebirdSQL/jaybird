@@ -334,10 +334,26 @@
          <include name="org/firebirdsql/**"/>
        </fileset>
        <fileset dir="${build.resources}">
-         <include name="*.properties"/>
          <exclude name="log4j.properties"/>
+         <include name="*.properties"/>
        </fileset>
     </jar>
+
+    <jar jarfile="${build.lib}/firebirdsql-full.jar">
+       <fileset dir="${build.classes}">
+         <include name="org/firebirdsql/**"/>
+       </fileset>
+       <fileset dir="${build.resources}">
+         <include name="*.properties"/>
+       </fileset>
+       <fileset dir="${build.j2ee}">
+         <include name="javax/**"/>
+       </fileset>
+       <fileset dir="${build.concurrent}">
+         <include name="EDU/**"/>
+       </fileset>
+    </jar>
+
   </target>
 
   <target name="jar-test" depends="compile">
