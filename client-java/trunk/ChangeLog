@@ -1,3 +1,11 @@
+2004-04-26 23:07  rrokytskyy
+
+	*
+	
+	added test for long parameters
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
+	ava:
+
 2004-04-25 17:18  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/gds/: GDSFactory.java,
