@@ -196,8 +196,8 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             assertEquals(8192, ds.getSocketBufferSize());
             
             assertEquals(1000, ds.getBlockingTimeout());
-            assertEquals(1000, ds.getIdleTimeout());
-            assertEquals(5, ds.getMaxConnections());
+            assertEquals(1000, ds.getMaxIdleTime());
+            assertEquals(5, ds.getMaxPoolSize());
             assertEquals(2, ds.getMinConnections());
             assertEquals(12000, ds.getPingInterval());
             assertEquals("TRANSACTION_REPEATABLE_READ", ds.getIsolation());
@@ -510,5 +510,33 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             pool.shutdown();
         }
     }
-    
+
+    public void testIdleRemoverAndMinPoolSize() throws Exception {
+        pool.setIdleTimeout(1 * 1000);
+        pool.setMinPoolSize(1);
+        
+        try {
+            Connection con = pool.getPooledConnection().getConnection();
+            
+            assertTrue("Should have totally 1 connection", 
+                pool.getTotalSize() == 1);
+                
+            assertTrue("Should have 1 working connection", 
+                pool.getWorkingSize() == 1);
+            
+            con.close();
+            
+            assertTrue("Working size should be 0", 
+                pool.getWorkingSize() == 0);
+            
+            Thread.sleep(10 * 1000 + 5 * 1000);
+            
+            assertTrue("Total size should be 1",
+                pool.getTotalSize() == 1);
+            
+        } finally {
+            pool.shutdown();
+        }
+    }
+
 }
