@@ -911,7 +911,12 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                         else
                             responses.add(new Integer(getUpdateCount()));
                     } catch (GDSException ge) {
-                        throw new BatchUpdateException(toArray(responses));
+                        
+                        throw new BatchUpdateException(
+                                ge.getMessage(), 
+                                FBSQLException.SQL_STATE_GENERAL_ERROR,
+                                ge.getFbErrorCode(),
+                                toArray(responses));
                     }
                 }
                
