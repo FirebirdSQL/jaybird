@@ -61,8 +61,15 @@ public class TestFBFloatField extends BaseTestFBField {
 	public void testObject() throws SQLException {
 		field.setObject(new Float(TEST_FLOAT));
 		field.copyOI();
-		assertTrue(field.getObject().equals(new Float(TEST_FLOAT)));
-	}
+        
+        /*
+		// JDBC CTS requires getObject() to return java.lang.Double
+        // for float columns, let it be so 
+
+        assertTrue(field.getObject().equals(new Float(TEST_FLOAT)));
+        */
+        assertTrue(field.getObject().equals(new Double(TEST_FLOAT)));
+    }
 	public void testUnicodeStream() throws SQLException {
 		try {
 			super.testUnicodeStream();
