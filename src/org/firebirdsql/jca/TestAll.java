@@ -59,8 +59,8 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(TestGds.class);
         suite.addTestSuite(TestFBBlob.class);
-        //        suite.addTestSuite(TestFBConnection.class);
-        //suite.addTestSuite(TestFBDatabaseMetaData.class);
+        suite.addTestSuite(TestFBConnection.class);
+        suite.addTestSuite(TestFBDatabaseMetaData.class);
         suite.addTestSuite(TestFBManagedConnectionFactory.class);
         suite.addTestSuite(TestFBResultSet.class);
         suite.addTestSuite(TestFBStandAloneConnectionManager.class);

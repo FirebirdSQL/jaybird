@@ -38,6 +38,8 @@ import javax.resource.ResourceException;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.XSQLVAR;
 
 /**
  *
@@ -2826,7 +2828,19 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         throw new SQLException("Not yet implemented");
     }
 
-
+    private static final Short shortZero = new Short((short)0);
+    private static final String CASESENSITIVE = "T";
+    private static final String CASEINSENSITIVE = "F";
+    private static final String UNSIGNED = "T";
+    private static final String SIGNED = "F";
+    private static final String FIXEDSCALE = "T";
+    private static final String VARIABLESCALE = "F";
+    private static final String NOTAUTOINC = "F";
+    private static final Short PREDNONE = new Short((short)0);//typePredNone);
+    private static final Short PREDBASIC = new Short((short)2);//typePredBasic);
+    private static final Short SEARCHABLE = new Short((short)3);//typeSearchable);
+    private static final Short NULLABLE = new Short((short)1);//typeNullable);
+    private static final Integer BINARY = new Integer(2);
 
     /**
      * Gets a description of all the standard SQL types supported by
@@ -2875,7 +2889,227 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public 	ResultSet getTypeInfo() throws SQLException {
-        throw new SQLException("Not yet implemented");
+        //need to construct xsqlvar[] for ResultSetMetaData.
+        XSQLVAR[] xsqlvars = new XSQLVAR[18];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = 0;
+        xsqlvars[0].sqlname = "TYPE_NAME";
+        xsqlvars[0].relname = "TYPEINFO";
+
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = GDS.SQL_SHORT;
+        xsqlvars[1].sqlname = "DATA_TYPE";
+        xsqlvars[1].relname = "TYPEINFO";
+
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = GDS.SQL_LONG;
+        xsqlvars[2].sqlname = "PRECISION";
+        xsqlvars[2].relname = "TYPEINFO";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqllen = 1;
+        xsqlvars[3].sqlind = 1;
+        xsqlvars[3].sqlname = "LITERAL_PREFIX";
+        xsqlvars[3].relname = "TYPEINFO";
+
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqllen = 1;
+        xsqlvars[4].sqlind = 1;
+        xsqlvars[4].sqlname = "LITERAL_SUFFIX";
+        xsqlvars[4].relname = "TYPEINFO";
+
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqlind = 1;
+        xsqlvars[5].sqlname = "CREATE_PARAMS";
+        xsqlvars[5].relname = "TYPEINFO";
+
+        xsqlvars[6] = new XSQLVAR();
+        xsqlvars[6].sqltype = GDS.SQL_SHORT;
+        xsqlvars[6].sqlname = "NULLABLE";
+        xsqlvars[6].relname = "TYPEINFO";
+
+        xsqlvars[7] = new XSQLVAR();
+        xsqlvars[7].sqltype = GDS.SQL_TEXT;
+        xsqlvars[7].sqllen = 1;
+        xsqlvars[7].sqlname = "CASE_SENSITIVE";
+        xsqlvars[7].relname = "TYPEINFO";
+
+        xsqlvars[8] = new XSQLVAR();
+        xsqlvars[8].sqltype = GDS.SQL_SHORT;
+        xsqlvars[8].sqlname = "SEARCHABLE";
+        xsqlvars[8].relname = "TYPEINFO";
+
+        xsqlvars[9] = new XSQLVAR();
+        xsqlvars[9].sqltype = GDS.SQL_TEXT;
+        xsqlvars[9].sqllen = 1;
+        xsqlvars[9].sqlname = "UNSIGNED_ATTRIBUTE";
+        xsqlvars[9].relname = "TYPEINFO";
+
+        xsqlvars[10] = new XSQLVAR();
+        xsqlvars[10].sqltype = GDS.SQL_TEXT;
+        xsqlvars[10].sqllen = 1;
+        xsqlvars[10].sqlname = "FIXED_PREC_SCALE";
+        xsqlvars[10].relname = "TYPEINFO";
+
+        xsqlvars[11] = new XSQLVAR();
+        xsqlvars[11].sqltype = GDS.SQL_TEXT;
+        xsqlvars[11].sqllen = 1;
+        xsqlvars[11].sqlname = "AUTO_INCREMENT";
+        xsqlvars[11].relname = "TYPEINFO";
+
+        xsqlvars[12] = new XSQLVAR();
+        xsqlvars[12].sqltype = GDS.SQL_VARYING;
+        xsqlvars[12].sqllen = 31;
+        xsqlvars[12].sqlind = 1;
+        xsqlvars[12].sqlname = "LOCAL_TYPE_NAME";
+        xsqlvars[12].relname = "TYPEINFO";
+
+        xsqlvars[13] = new XSQLVAR();
+        xsqlvars[13].sqltype = GDS.SQL_SHORT;
+        xsqlvars[13].sqlname = "MINIMUM_SCALE";
+        xsqlvars[13].relname = "TYPEINFO";
+
+        xsqlvars[14] = new XSQLVAR();
+        xsqlvars[14].sqltype = GDS.SQL_SHORT;
+        xsqlvars[14].sqlname = "MAXIMUM_SCALE";
+        xsqlvars[14].relname = "TYPEINFO";
+
+        xsqlvars[15] = new XSQLVAR();
+        xsqlvars[15].sqltype = GDS.SQL_LONG;
+        xsqlvars[15].sqlname = "SQL_DATA_TYPE";
+        xsqlvars[15].relname = "TYPEINFO";
+
+        xsqlvars[16] = new XSQLVAR();
+        xsqlvars[16].sqltype = GDS.SQL_LONG;
+        xsqlvars[16].sqlname = "SQL_DATETIME_SUB";
+        xsqlvars[16].relname = "TYPEINFO";
+
+        xsqlvars[17] = new XSQLVAR();
+        xsqlvars[17].sqltype = GDS.SQL_LONG;
+        xsqlvars[17].sqlname = "NUM_PREC_RADIX";
+        xsqlvars[17].relname = "TYPEINFO";
+
+        //dialect 3 only
+        ArrayList rows = new ArrayList();
+        rows.add(new Object[] {"BIT", new Short((short)-7), new Integer(1), null, null, null, 
+            NULLABLE, CASEINSENSITIVE, PREDBASIC, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_SHORT), null, BINARY});
+
+        rows.add(new Object[] {"TINYINT", new Short((short)-6), new Integer(8), null, null, null, 
+            NULLABLE, CASEINSENSITIVE, PREDBASIC, SIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_SHORT), null, BINARY});
+
+        rows.add(new Object[] {"BIGINT", new Short((short)-5), new Integer(64), null, null, null, 
+            NULLABLE, CASEINSENSITIVE, PREDBASIC, SIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_INT64), null, BINARY});
+
+        rows.add(new Object[] {"LONGVARBINARY", new Short((short)-4), new Integer(0), null, null, null, 
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+        rows.add(new Object[] {"VARBINARY", new Short((short)-3), new Integer(0), null, null, null, 
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+        rows.add(new Object[] {"BINARY", new Short((short)-2), new Integer(0), null, null, null, 
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+                   //??should this be varchar???
+        rows.add(new Object[] {"LONGVARCHAR", new Short((short)-2), new Integer(0), null, null, null, 
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+        rows.add(new Object[] {"CHAR", new Short((short)1), new Integer(0), "'", "'", null, 
+            NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TEXT), null, BINARY});
+
+        rows.add(new Object[] {"NUMERIC", new Short((short)2), new Integer(64), null, null, null, 
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, new Short(Short.MIN_VALUE), new Short(Short.MAX_VALUE), new Integer(GDS.SQL_INT64), null, BINARY});
+
+        rows.add(new Object[] {"DECIMAL", new Short((short)3), new Integer(64), null, null, null, 
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, new Short(Short.MIN_VALUE), new Short(Short.MAX_VALUE), new Integer(GDS.SQL_INT64), null, BINARY});
+
+        rows.add(new Object[] {"INTEGER", new Short((short)4), new Integer(32), null, null, null, 
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_LONG), null, BINARY});
+
+        rows.add(new Object[] {"SMALLINT", new Short((short)5), new Integer(16), null, null, null, 
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_SHORT), null, BINARY});
+
+        rows.add(new Object[] {"FLOAT", new Short((short)6), new Integer(32), null, null, null, 
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE, 
+            NOTAUTOINC, null, new Short((short)-38), new Short((short)38), new Integer(GDS.SQL_FLOAT), null, BINARY});
+
+        rows.add(new Object[] {"REAL", new Short((short)7), new Integer(32), null, null, null, 
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE, 
+            NOTAUTOINC, null, new Short((short)-38), new Short((short)38), new Integer(GDS.SQL_FLOAT), null, BINARY});
+
+        rows.add(new Object[] {"DOUBLE", new Short((short)8), new Integer(64), null, null, null, 
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE, 
+            NOTAUTOINC, null, new Short((short)-308), new Short((short)308), new Integer(GDS.SQL_DOUBLE), null, BINARY});
+
+        rows.add(new Object[] {"VARCHAR", new Short((short)12), new Integer(0), "'", "'", null, 
+            NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_VARYING), null, BINARY});
+
+        rows.add(new Object[] {"DATE", new Short((short)91), new Integer(0), null, null, null, 
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TYPE_DATE), null, BINARY});
+
+        rows.add(new Object[] {"TIME", new Short((short)92), new Integer(0), null, null, null, 
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TYPE_TIME), null, BINARY});
+
+        rows.add(new Object[] {"TIMESTAMP", new Short((short)91), new Integer(0), null, null, null, 
+            NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_TIMESTAMP), null, BINARY});
+
+                 /*rows.add(new Object[] {"OTHER", new Short((short)1111), new Integer(0), null, null, null, 
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+        rows.add(new Object[] {"JAVA_OBJECT", new Short((short)2000), new Integer(0), null, null, null, 
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+        rows.add(new Object[] {"DISTINCT", new Short((short)2001), new Integer(0), null, null, null, 
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+        rows.add(new Object[] {"STRUCT", new Short((short)2002), new Integer(0), null, null, null, 
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+        rows.add(new Object[] {"ARRAY", new Short((short)2003), new Integer(0), null, null, null, 
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+                 */
+        rows.add(new Object[] {"BLOB", new Short((short)2004), new Integer(0), null, null, null, 
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+        rows.add(new Object[] {"CLOB", new Short((short)2005), new Integer(0), null, null, null, 
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});
+
+                 /*rows.add(new Object[] {"REF", new Short((short)2006), new Integer(0), null, null, null, 
+            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE, 
+            NOTAUTOINC, null, shortZero, shortZero, new Integer(GDS.SQL_BLOB), null, BINARY});*/
+
+        rows.add(null);
+        return new FBResultSet(xsqlvars, rows);
+
     }
 
 
@@ -3623,6 +3857,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     }
 
 }
+
 
 
 
