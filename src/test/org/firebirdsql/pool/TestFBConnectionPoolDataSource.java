@@ -316,4 +316,31 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             pool.shutdown();
         }
     }
+    
+   public void testUnexpectedInvalidStateExceptionOnCommit() throws SQLException
+        {
+        Connection conn = null;
+        PreparedStatement statement = null;
+        try
+            {
+            DataSource dataSource = new SimpleDataSource(pool);
+        
+            conn  = dataSource.getConnection();
+            conn.setAutoCommit(false);
+            
+            statement = conn.prepareStatement("SELECT * FROM RDB$RELATIONS");
+            
+            ResultSet results = statement.executeQuery();
+            while(results.next())
+                {
+                }
+            }
+        finally
+            {
+            conn.commit();
+            
+            statement.close();
+            conn.close();
+            }
+        }
 }
