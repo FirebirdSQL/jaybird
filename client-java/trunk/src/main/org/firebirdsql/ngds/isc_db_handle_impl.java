@@ -69,9 +69,7 @@ public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_hand
         return !invalid;
     }
 
-    void invalidate() throws java.io.IOException {
-
-
+    void invalidate() {
         invalid = true;
     }
     

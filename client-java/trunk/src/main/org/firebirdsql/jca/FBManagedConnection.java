@@ -864,7 +864,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         notify(connectionClosedNotifier, ce);
     }
 
-    public void registerStatement(AbstractStatement fbStatement) {
+    public void registerStatement(isc_stmt_handle fbStatement) {
         if (currentTr == null) {
             throw new java.lang.IllegalStateException("registerStatement called with no transaction");
         }
