@@ -1,3 +1,9 @@
+2004-01-31 02:05  rfincher
+
+	* client-java/src/etc/: FAQ.txt, faq.PDF, faq.html:
+	
+	updates to FAQ
+
 2004-01-27 15:08  rrokytskyy
 
 	* client-java/src/: main/org/firebirdsql/gds/GDSException.java,
