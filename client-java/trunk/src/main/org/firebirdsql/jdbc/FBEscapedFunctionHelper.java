@@ -83,23 +83,23 @@ public class FBEscapedFunctionHelper {
         FUNCTION_MAP.put("UCASE", "UPPER({0})");
         
         /* Time and Date Functions */
-        FUNCTION_MAP.put("CURDATE", null);
-        FUNCTION_MAP.put("CURTIME", null);
+        FUNCTION_MAP.put("CURDATE", "CURRENT_DATE");
+        FUNCTION_MAP.put("CURTIME", "CURRENT_TIME");
         FUNCTION_MAP.put("DAYNAME", null);
         FUNCTION_MAP.put("DAYOFMONTH", null);
         FUNCTION_MAP.put("DAYOFWEEK", null);
-        FUNCTION_MAP.put("DAYOFYEAR", null);
-        FUNCTION_MAP.put("HOUR", null);
-        FUNCTION_MAP.put("MINUTE", null);
-        FUNCTION_MAP.put("MONTH", null);
+        FUNCTION_MAP.put("DAYOFYEAR", "EXTRACT(DAY FROM {0})");
+        FUNCTION_MAP.put("HOUR", "EXTRACT(HOUR FROM {0})");
+        FUNCTION_MAP.put("MINUTE", "EXTRACT(MINUTE FROM {0})");
+        FUNCTION_MAP.put("MONTH", "EXTRACT(MONTH FROM {0})");
         FUNCTION_MAP.put("MONTHNAME", null);
-        FUNCTION_MAP.put("NOW", null);
+        FUNCTION_MAP.put("NOW", "CURRENT_TIMESTAMP");
         FUNCTION_MAP.put("QUARTER", null);
-        FUNCTION_MAP.put("SECOND", null);
+        FUNCTION_MAP.put("SECOND", "EXTRACT(SECOND FROM {0})");
         FUNCTION_MAP.put("TIMESTAMPADD", null);
         FUNCTION_MAP.put("TIMESTAMPDIFF", null);
         FUNCTION_MAP.put("WEEK", null);
-        FUNCTION_MAP.put("YEAR", null);
+        FUNCTION_MAP.put("YEAR", "EXTRACT(YEAR FROM {0})");
         
         /* System Functions */
         FUNCTION_MAP.put("DATABASE", null);
