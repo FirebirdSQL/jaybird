@@ -18,17 +18,14 @@
 // The DriverManager, Driver, and DriverPropertyInfo interfaces
 // may be deprecated in the future.
 
-import org.firebirdsql.jdbc.FBWrappingDataSource;
-import org.firebirdsql.jca.FBConnectionRequestInfo;
-import org.firebirdsql.gds.ISCConstants;
-
 public final class DataSourceExample
 {
   static public void main (String args[]) throws Exception
   {
     // Create an Firebird data source manually;
     
-	FBWrappingDataSource dataSource = new FBWrappingDataSource();
+	org.firebirdsql.pool.FBWrappingDataSource dataSource = 
+        new org.firebirdsql.pool.FBWrappingDataSource();
 
     // Set the standard properties
     dataSource.setDatabase ("localhost/3050:c:/database/employee.gdb");
@@ -49,24 +46,18 @@ public final class DataSourceExample
     //dataSource.setSuggestedCachePages (0);
     //dataSource.setSweepOnConnect (false);
 	
-	/*
-	 * This is an example how to use FBConnectionRequestInfo to specify
-	 * DPB that will be used for this data source.
-	 */
-	 
-	FBConnectionRequestInfo cri = dataSource.getConnectionRequestInfo();
-	cri.setProperty(ISCConstants.isc_dpb_lc_ctype, "NONE");
-    cri.setProperty(ISCConstants.isc_dpb_sql_dialect, 1);
-	
-    /*
-     * Note, next line works only with SuperServer architecture,
-     * ClassicServer will hang if this line is uncommented.
-     */
+    // this some kind of equivalent to dataSource.setNetworkProtocol(String)
+    // possible values are "type4", "type2" and "embedded".
+	dataSource.setType("type4");
     
-    //cri.setProperty(GDS.isc_dpb_num_buffers, 1);
+    dataSource.setSqlRole("USER");
+    dataSource.setEncoding("NONE");
+    
+    // other non-standard properties do not have setters
+    // you can pass any DPB parameter
+    dataSource.setNonStandardProperty("isc_dpb_sweep", null);
+    dataSource.setNonStandardProperty("isc_dpb_num_buffers", "75");
 	
-	dataSource.setConnectionRequestInfo(cri);
-
     // Connect to the Firebird DataSource
     try {
       dataSource.setLoginTimeout (10);
