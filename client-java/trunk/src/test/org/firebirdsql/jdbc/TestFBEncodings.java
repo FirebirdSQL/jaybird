@@ -725,11 +725,11 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
         
     }
     
-    private static final byte[] TRANSLATION_TEST_BYTES = new byte[] {
+    protected static final byte[] TRANSLATION_TEST_BYTES = new byte[] {
         (byte)0xde, (byte)0xbd, (byte)0xd8, (byte)0xda, (byte)0xdb, (byte)0xcc, (byte)0xce, (byte)0xcf
     };
     
-    private static final String TRANSLATION_TEST = "\u00df\u00a7\u00c4\u00d6\u00dc\u00e4\u00f6\u00fc";
+    protected static final String TRANSLATION_TEST = "\u00df\u00a7\u00c4\u00d6\u00dc\u00e4\u00f6\u00fc";
     
     /**
      * Test whether character translation code works correctly.
