@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.jca;
 
-import junit.framework.*;
-
 import java.sql.*;
 import java.util.*;
 

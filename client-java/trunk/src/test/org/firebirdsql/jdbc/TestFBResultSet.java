@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import junit.framework.TestCase;
 import java.sql.*;
 
 public class TestFBResultSet extends BaseFBTest {

@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import junit.framework.*;
 import java.sql.*;
 
 /**

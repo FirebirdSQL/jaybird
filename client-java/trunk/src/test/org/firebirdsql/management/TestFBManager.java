@@ -18,13 +18,7 @@
  */
 package org.firebirdsql.management;
 
-
-//import org.firebirdsql.management.FBManager;
-import java.io.*;
-import java.util.Properties;
-import java.sql.*;
 import org.firebirdsql.jdbc.BaseFBTest;
-
 
 import junit.framework.*;
 

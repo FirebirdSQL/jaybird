@@ -19,27 +19,12 @@
 package org.firebirdsql.jca;
 
 import javax.resource.spi.*;
-import javax.transaction.xa.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import javax.sql.DataSource;
 
-import org.firebirdsql.gds.Clumplet;
-import org.firebirdsql.management.FBManager;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBDatabaseMetaData;
 
-import java.io.*;
-import java.util.Properties;
-import java.util.HashSet;
 import java.sql.*;
-
-//for embedded xid implementation
-    import java.net.InetAddress;
-    import java.net.UnknownHostException;
-
-
-import junit.framework.*;
 
 /**
  * Describe class <code>TestFBDatabaseMetaData</code> here.

@@ -18,17 +18,9 @@
  */
 package org.firebirdsql.jca;
 
-import javax.resource.spi.*;
 import javax.transaction.xa.*;
-import java.sql.Connection;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.management.FBManager;
-
-import java.io.*;
-import java.util.Properties;
-import java.util.HashSet;
-import java.sql.*;
 
 import org.firebirdsql.jdbc.BaseFBTest;
 
@@ -36,8 +28,6 @@ import org.firebirdsql.jdbc.BaseFBTest;
     import java.net.InetAddress;
     import java.net.UnknownHostException;
 
-
-import junit.framework.*;
 
 /**
  * THIS FILE INCLUDES AN XID IMPLEMENTATION FROM THE JBOSS PROJECT

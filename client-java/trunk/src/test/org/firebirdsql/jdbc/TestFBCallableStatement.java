@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import junit.framework.*;
-
 /**
  * This test case checks callable statements by executing procedure through
  * {@link java.sql.CallableStatement} and {@link java.sql.PreparedStatement}.

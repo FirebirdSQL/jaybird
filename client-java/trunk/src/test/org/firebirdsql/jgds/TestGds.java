@@ -21,15 +21,8 @@ package org.firebirdsql.jgds;
 
 
 import org.firebirdsql.gds.*;
-//import org.firebirdsql.jgds.*;
 import java.io.*;
-import java.util.Properties;
-import java.util.HashSet;
-import java.sql.*;
 import java.util.Arrays;
-
-
-import junit.framework.*;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;

@@ -25,7 +25,6 @@ import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
 
 import java.sql.*;
-import java.io.*;
 
 /**
  * Describe class <code>TestFBTimeField</code> here.

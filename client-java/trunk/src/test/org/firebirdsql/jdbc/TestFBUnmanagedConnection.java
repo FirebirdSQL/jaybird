@@ -22,6 +22,9 @@
  * CVS modification log:
 
  * $Log$
+ * Revision 1.2  2002/08/29 13:41:16  d_jencks
+ * Changed to lgpl only license.  Moved driver to subdirectory to make build system more consistent.
+ *
  * Revision 1.1  2002/08/14 13:22:46  d_jencks
  * Moved tests to separate directory. Removed need for jmx classes, and removed jmxri.jar
  *
@@ -70,8 +73,6 @@ package org.firebirdsql.jdbc;
 
 import junit.framework.*;
 import java.sql.*;
-import org.firebirdsql.logging.Logger;
-
 
 /**
  * Describe class <code>TestFBUnmanagedConnection</code> here.
