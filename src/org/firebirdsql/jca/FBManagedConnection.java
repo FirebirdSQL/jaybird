@@ -579,7 +579,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException {
         if (log!=null) log.debug("preparing sql: " + sql);
         //Should we test for dbhandle?
-        XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, sql, GDS.SQL_DIALECT_CURRENT);
+        
+        String encoding = cri.getStringProperty(GDS.isc_dpb_lc_ctype);
+        
+        XSQLDA out = mcf.gds.isc_dsql_prepare(currentTr, stmt, sql, encoding, GDS.SQL_DIALECT_CURRENT);
         if (out.sqld != out.sqln) {
             throw new GDSException("Not all columns returned");
         }
@@ -587,7 +590,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             mcf.gds.isc_dsql_describe_bind(stmt, GDS.SQLDA_VERSION1);
         }
     }
-
+    
     public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda) throws GDSException {
         mcf.gds.isc_dsql_execute2(currentTr, stmt,
                                  GDS.SQLDA_VERSION1, stmt.getInSqlda(), (sendOutSqlda) ? stmt.getOutSqlda() : null);

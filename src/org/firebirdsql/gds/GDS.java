@@ -1077,10 +1077,24 @@ public interface GDS {
                                       String statement,
                                       int dialect,
                                       XSQLDA xsqlda) throws GDSException;
+    void isc_dsql_execute_immediate(isc_db_handle db_handle,
+                                      isc_tr_handle tr_handle,
+                                      String statement,
+                                      String encoding,
+                                      int dialect,
+                                      XSQLDA xsqlda) throws GDSException;
 
     void isc_dsql_exec_immed2(isc_db_handle db_handle,
                                isc_tr_handle tr_handle,
                                String statement,
+                               int dialect,
+                               XSQLDA in_xsqlda,
+                               XSQLDA out_xsqlda) throws GDSException;
+                               
+    void isc_dsql_exec_immed2(isc_db_handle db_handle,
+                               isc_tr_handle tr_handle,
+                               String statement,
+                               String encoding,
                                int dialect,
                                XSQLDA in_xsqlda,
                                XSQLDA out_xsqlda) throws GDSException;
@@ -1095,6 +1109,12 @@ public interface GDS {
     XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
                            isc_stmt_handle stmt_handle,
                            String statement,
+                           int dialect) throws GDSException;
+                           
+    XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
+                           isc_stmt_handle stmt_handle,
+                           String statement,
+                           String encoding,
                            int dialect) throws GDSException;
 
     void isc_dsql_set_cursor_name(isc_stmt_handle stmt_handle,

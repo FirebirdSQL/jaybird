@@ -36,6 +36,8 @@ import java.io.*;
 import java.util.Set;
 import java.util.Iterator;
 
+import org.firebirdsql.jdbc.FBConnectionHelper;
+
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -79,14 +81,33 @@ class XdrOutputStream extends DataOutputStream {
     }
 
     public final void writeString(String s) throws IOException {
+        writeString(s, null);
+        /*
         byte[] buffer = s.getBytes();
 		  int len = buffer.length;
         writeInt(len);
         if (len > 0) {
             write(buffer, 0, len);
             write(pad,0,((4 - len) & 3));
-        }
+        */
     }
+    
+    public final void writeString(String s, String encoding) throws IOException {
+        String javaEncoding = null;
+        
+        if (encoding != null && !"NONE".equals(encoding))
+            javaEncoding = FBConnectionHelper.getJavaEncoding(encoding);
+        
+        byte[] buffer;
+        
+        if (javaEncoding != null)
+            buffer = s.getBytes(javaEncoding);
+        else
+            buffer = s.getBytes();
+            
+        writeBuffer(buffer, buffer.length);
+    }
+    
     public final void writeSet(int type, Set s) throws IOException {
 //      if (log != null) log.debug("writeSet: type: " + type);
         if (s == null) {
