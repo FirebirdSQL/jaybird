@@ -520,29 +520,28 @@ public class FBConnection implements Connection
             try {
                 if (mc != null) {
                     //if we are in a transaction started 
-                    //automatically because autocommit = false, end it.
+                    //automatically because autocommit = false, roll it back.
                     
-                    // commented by R.Rokytskyy because this code commits
-                    // transaction if it was started but is not in autcommit
-                    // mode, and specification requires "database changes 
-                    // will not be saved"
+                    //leave managed transactions alone, they are normally
+                    //committed after the Connection handle is closed.
                     
-                    /*
                     if (!getAutoCommit()) 
                     {
-                        setAutoCommit(true);
+                        //autocommit is always true for managed tx.
+                        try {
+                            if (inTransaction())
+                            {
+                                getLocalTransaction().rollback();
+                            }
+                        } catch(javax.resource.ResourceException resex) {
+                            throw new FBSQLException(resex);
+                        }
+                        finally
+                        {
+                            //always reset Autocommit for the next user.
+                            setAutoCommit(true);
+                        }
                     } // end of if ()
-                    */
-                    
-                    // rollback transaction if it was started
-                    
-                    try {
-                        if (inTransaction())
-                            getLocalTransaction().rollback();
-        
-                    } catch(javax.resource.ResourceException resex) {
-                        throw new FBSQLException(resex);
-                    }
                     
                     mc.close(this);
                     mc = null;
