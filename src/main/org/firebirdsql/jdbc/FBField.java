@@ -30,6 +30,7 @@ import java.sql.Timestamp;
 import java.sql.Blob;
 
 import java.math.BigDecimal;
+import java.util.Calendar;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -132,7 +133,7 @@ abstract class FBField {
     static final double MIN_DOUBLE_VALUE = -1 * MAX_DOUBLE_VALUE;
     
     XSQLVAR field;
-
+	 
     FBField(XSQLVAR field) throws SQLException {
         if (field == null) throw new SQLException(
             "Cannot create FBField instance for null as XSQLVAR.");
@@ -360,18 +361,20 @@ abstract class FBField {
      * @return converted string.
      */
     public final static String toString(byte[] bytes, String iscEncoding) {
-        String javaEncoding = null;
-        
-        if (iscEncoding != null && !iscEncoding.equalsIgnoreCase("NONE"))
-            javaEncoding = FBConnection.getJavaEncoding(iscEncoding);
-        
-        if (javaEncoding == null)
-            return new String(bytes);        
-        
-        try {
-            return new String(bytes, javaEncoding);
-        } catch(java.io.UnsupportedEncodingException ex) {
+        if (iscEncoding==null){
             return new String(bytes);
+        }
+        else {
+            String javaEncoding = FBConnection.getJavaEncoding(iscEncoding);
+        
+            if (javaEncoding == null)
+                return new String(bytes);        
+        
+            try {
+                return new String(bytes, javaEncoding);
+            } catch(java.io.UnsupportedEncodingException ex) {
+                return new String(bytes);
+            }
         }
     }
 
@@ -387,18 +390,20 @@ abstract class FBField {
     public final static String toString(byte[] bytes, int offset, int count, 
         String iscEncoding) 
     {
-        String javaEncoding = null;
-        
-        if (iscEncoding != null && !iscEncoding.equalsIgnoreCase("NONE"))
-            javaEncoding = FBConnection.getJavaEncoding(iscEncoding);
-        
-        if (javaEncoding == null)
-            return new String(bytes, offset, count);        
-            
-        try {
-            return new String(bytes, offset, count, javaEncoding);
-        } catch(java.io.UnsupportedEncodingException ex) {
+        if (iscEncoding==null){
             return new String(bytes, offset, count);
+        }
+        else {
+            String javaEncoding = FBConnection.getJavaEncoding(iscEncoding);
+        
+            if (javaEncoding == null)
+                return new String(bytes, offset, count);        
+            
+            try {
+                return new String(bytes, offset, count, javaEncoding);
+            } catch(java.io.UnsupportedEncodingException ex) {
+                return new String(bytes, offset, count);
+            }
         }
     }
         
@@ -411,18 +416,20 @@ abstract class FBField {
      * @return converted byte array
      */
     public final static byte[] getBytes(String str, String iscEncoding) {
-        String javaEncoding = null;
-        
-        if (iscEncoding != null && !iscEncoding.equalsIgnoreCase("NONE"))
-            javaEncoding = FBConnection.getJavaEncoding(iscEncoding);
-        
-        if (javaEncoding == null)
+        if (iscEncoding==null){
             return str.getBytes();
+        }
+        else {
+            String javaEncoding = FBConnection.getJavaEncoding(iscEncoding);
         
-        try {
-            return str.getBytes(javaEncoding);
-        } catch(java.io.UnsupportedEncodingException ex) {
-            return str.getBytes();
+            if (javaEncoding == null)
+                return str.getBytes();
+        
+            try {
+                return str.getBytes(javaEncoding);
+            } catch(java.io.UnsupportedEncodingException ex) {
+                return str.getBytes();
+            }
         }
     }
 
@@ -478,6 +485,9 @@ abstract class FBField {
         throw (SQLException)createException(
             BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
     }
+    java.math.BigDecimal getBigDecimal(int scale) throws SQLException {
+        return getBigDecimal();
+    }
     boolean getBoolean() throws SQLException {
         throw (SQLException)createException(
             BOOLEAN_CONVERSION_ERROR).fillInStackTrace();
@@ -489,6 +499,9 @@ abstract class FBField {
     Object getObject() throws SQLException {
         throw (SQLException)createException(
             OBJECT_CONVERSION_ERROR);
+    }
+    public Object getObject(java.util.Map map) throws  SQLException {
+              throw new SQLException("Not yet implemented");
     }
     InputStream getAsciiStream() throws SQLException {
         throw (SQLException)createException(
@@ -502,6 +515,13 @@ abstract class FBField {
         throw (SQLException)createException(
             BINARY_STREAM_CONVERSION_ERROR).fillInStackTrace();
     }
+    java.io.Reader getCharacterStream() throws  SQLException {
+        InputStream is =  getUnicodeStream();
+        if (is==null)
+            return null;
+        else
+            return new java.io.InputStreamReader(getUnicodeStream());
+    }	 
     byte[] getBytes() throws SQLException {
         throw (SQLException)createException(
             BYTES_CONVERSION_ERROR).fillInStackTrace();
@@ -514,15 +534,68 @@ abstract class FBField {
         throw (SQLException)createException(
             DATE_CONVERSION_ERROR).fillInStackTrace();
     }
+    java.sql.Date getDate(Calendar cal)
+        throws  SQLException
+    {
+        java.sql.Date d = getDate();
+        if (cal == null) 
+        {
+            return d;
+        } // end of if ()
+        else
+        {
+            cal.setTime(d);
+            return new java.sql.Date(cal.getTime().getTime());    
+        } // end of else
+    }	 
     java.sql.Time getTime() throws SQLException {
         throw (SQLException)createException(
             TIME_CONVERSION_ERROR).fillInStackTrace();
     }
+    java.sql.Time getTime(Calendar cal)
+        throws  SQLException
+    {
+        java.sql.Time d = getTime();
+        if (cal == null) 
+        {
+            return d;
+        } // end of if ()
+        else
+        {
+            cal.setTime(d);
+            return new java.sql.Time(cal.getTime().getTime());    
+        } // end of else
+    }	 
     java.sql.Timestamp getTimestamp() throws SQLException {
         throw (SQLException)createException(
             TIMESTAMP_CONVERSION_ERROR).fillInStackTrace();
     }
-
+    java.sql.Timestamp getTimestamp(Calendar cal)
+        throws  SQLException
+    {
+        java.sql.Timestamp x = getTimestamp();
+        //return d;
+        
+        if (cal == null) 
+        {
+            return x;
+        } // end of if ()
+        else
+        {
+            long time = x.getTime() + cal.getTimeZone().getRawOffset();
+            return new java.sql.Timestamp(time);    
+        } // end of else
+        
+    }
+    java.sql.Ref getRef() throws  SQLException {
+                throw new SQLException("Not yet implemented");
+    }
+    java.sql.Clob getClob() throws  SQLException {
+                throw new SQLException("Not yet implemented");
+    }
+    java.sql.Array getArray() throws  SQLException {
+                throw new SQLException("Not yet implemented");
+    }
     //--- setters
 
     void setByte(byte value) throws SQLException {

@@ -82,7 +82,9 @@ public class FBResultSet implements ResultSet {
     private boolean isLast = false;
     private boolean isAfterLast = false;
     
-    private int wasNullColumnIndex = -1;
+//    private int wasNullColumnIndex = -1;
+    private boolean wasNull = false;
+    private boolean wasNullValid = false;
 
     //might be a bit of a kludge, or a useful feature.
     protected boolean trimStrings;
@@ -90,7 +92,8 @@ public class FBResultSet implements ResultSet {
     java.sql.SQLWarning firstWarning = null;
      
     private FBField[] fields = null;
-    /**
+    private java.util.HashMap colNames = new java.util.HashMap();
+	 /**
      * Creates a new <code>FBResultSet</code> instance.
      *
      * @param c a <code>FBConnection</code> value
@@ -140,14 +143,15 @@ public class FBResultSet implements ResultSet {
 
     private void prepareVars() throws SQLException {
         fields = new FBField[xsqlvars.length];
+        colNames = new java.util.HashMap(xsqlvars.length,1);
         for (int i=0; i<xsqlvars.length; i++){
-        	   fields[i] = FBField.createField(xsqlvars[i]);
-		      if (fields[i] instanceof FBBlobField)
+            fields[i] = FBField.createField(xsqlvars[i]);
+            if (fields[i] instanceof FBBlobField)
                 ((FBBlobField)fields[i]).setConnection(c);
             else{
                 if (fields[i] instanceof FBStringField)
                    ((FBStringField)fields [i]).setConnection(c);
-				}
+            }
         }
     }
 
@@ -169,6 +173,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public boolean next() throws  SQLException {
+         wasNullValid = false;		 
          return fbFetcher.next();
     }
 
@@ -207,13 +212,15 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public boolean wasNull() throws  SQLException {
-        if (wasNullColumnIndex == -1) {
+//        if (wasNullColumnIndex == -1) {
+        if (!wasNullValid) {
             throw new SQLException("look at a column before testing null!");
         }
         if (row == null) {
             throw new SQLException("No row available for wasNull!");
         }
-        return row[wasNullColumnIndex - 1] == null;
+        return wasNull;		  
+//        return row[wasNullColumnIndex - 1] == null;
     }
 
     public InputStream getAsciiStream(int columnIndex) throws SQLException {
@@ -319,25 +326,35 @@ public class FBResultSet implements ResultSet {
      * Factory method for the field access objects
      */
     private FBField getField(int columnIndex) throws SQLException {
-         if (columnIndex> xsqlvars.length)
+        if (columnIndex> xsqlvars.length)
              throw new SQLException("invalid column index");
-/*    
-        FBField thisField = FBField.createField(getXsqlvar(columnIndex));
-
-        if (thisField instanceof FBBlobField)
-            ((FBBlobField)thisField).setConnection(c);
-        else
-        if (thisField instanceof FBStringField)
-            ((FBStringField)thisField).setConnection(c);
-*/
-        setWasNullColumnIndex(columnIndex);
+        wasNullValid = true;
+        wasNull = fields[columnIndex-1].isNull();
 
         return fields[columnIndex-1];
     }
 
+    private FBField getField(String columnName) throws SQLException {
+        if (columnName == null) {
+            throw new SQLException("column identifier must be not null");
+        }
 
-
-
+        FBField field = (FBField) colNames.get(columnName);
+        // If it is the first time the columnName is used
+        if (field == null){
+            int colNum = findColumn(columnName);
+            colNames.put(columnName,fields[colNum-1]);
+            field = fields[colNum-1];
+        }
+        //
+        if (field == null)
+            throw new SQLException("column name " + columnName + " not found in result set.");
+        else{
+            wasNullValid = true;
+            wasNull = field.isNull();
+            return field;
+        }
+    }
      /**
      * Gets the value of the designated column in the current row
      * of this <code>ResultSet</code> object as
@@ -351,23 +368,7 @@ public class FBResultSet implements ResultSet {
      * @deprecated
      */
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws  SQLException {
-        return getField(columnIndex).getBigDecimal();
-        /*Object obj = getObject(columnIndex);
-        if (obj == null) {
-            return null;
-        } if (obj instanceof BigDecimal) {
-            return (BigDecimal) obj;
-        } if (obj instanceof Number) {
-            return new BigDecimal(((Number) obj).doubleValue());
-        } if (obj instanceof String) {
-            try {
-                return new BigDecimal((String) obj);
-            } catch (NumberFormatException ex) {
-                throw new SQLException("Number format error");
-            }
-        } else {
-            throw new SQLException("Illegal type conversion");
-            }*/
+        return getField(columnIndex).getBigDecimal(scale);
     }
 
 
@@ -378,39 +379,43 @@ public class FBResultSet implements ResultSet {
     //======================================================================
 
     public String getString(String columnName) throws  SQLException {
-        return getString(findColumn(columnName));
+        if (trimStrings) {
+            String result = getField(columnName).getString();
+            return result != null ? result.trim() : null;
+        } else
+            return getField(columnName).getString();
     }
 
 
     public boolean getBoolean(String columnName) throws  SQLException {
-        return getBoolean(findColumn(columnName));
+        return getField(columnName).getBoolean();
     }
 
 
     public byte getByte(String columnName) throws  SQLException {
-        return getByte(findColumn(columnName));
+        return getField(columnName).getByte();
     }
 
     public short getShort(String columnName) throws  SQLException {
-        return getShort(findColumn(columnName));
+        return getField(columnName).getShort();
     }
 
     public int getInt(String columnName) throws  SQLException {
-        return getInt(findColumn(columnName));
+        return getField(columnName).getInt();
     }
 
 
     public long getLong(String columnName) throws  SQLException {
-        return getLong(findColumn(columnName));
+        return getField(columnName).getLong();
     }
 
     public float getFloat(String columnName) throws  SQLException {
-        return getFloat(findColumn(columnName));
+        return getField(columnName).getFloat();
     }
 
 
     public double getDouble(String columnName) throws  SQLException {
-        return getDouble(findColumn(columnName));
+        return getField(columnName).getDouble();
     }
 
 
@@ -424,31 +429,31 @@ public class FBResultSet implements ResultSet {
      * @deprecated
      */
     public BigDecimal getBigDecimal(String columnName, int scale) throws  SQLException {
-        return getBigDecimal(findColumn(columnName), scale);
+        return getField(columnName).getBigDecimal(scale);
     }
 
 
     public byte[] getBytes(String columnName) throws  SQLException {
-        return getBytes(findColumn(columnName));
+        return getField(columnName).getBytes();
     }
 
 
     public java.sql.Date getDate(String columnName) throws  SQLException {
-        return getDate(findColumn(columnName));
+        return getField(columnName).getDate();
     }
 
 
     public java.sql.Time getTime(String columnName) throws  SQLException {
-        return getTime(findColumn(columnName));
+        return getField(columnName).getTime();
     }
 
 
     public java.sql.Timestamp getTimestamp(String columnName) throws  SQLException {
-        return getTimestamp(findColumn(columnName));
+        return getField(columnName).getTimestamp();
     }
 
     public java.io.InputStream getAsciiStream(String columnName) throws  SQLException {
-        return getAsciiStream(findColumn(columnName));
+        return getField(columnName).getAsciiStream();
     }
 
 
@@ -461,11 +466,11 @@ public class FBResultSet implements ResultSet {
      * @deprecated
      */
     public java.io.InputStream getUnicodeStream(String columnName) throws  SQLException {
-        return getUnicodeStream(findColumn(columnName));
+        return getField(columnName).getUnicodeStream();
     }
 
     public java.io.InputStream getBinaryStream(String columnName) throws  SQLException {
-        return getBinaryStream(findColumn(columnName));
+        return getField(columnName).getBinaryStream();
     }
 
 
@@ -578,7 +583,7 @@ public class FBResultSet implements ResultSet {
      * @exception SQLException if a database access error occurs
      */
     public Object getObject(String columnName) throws  SQLException {
-        return getObject(findColumn(columnName));
+        return getField(columnName).getObject();
     }
 
 
@@ -592,35 +597,30 @@ public class FBResultSet implements ResultSet {
      * @return the column index of the given column name
      * @exception SQLException if a database access error occurs
      */
-    public int findColumn(String columnName) throws  SQLException {
+    // See section 14.2.3 of jdbc-3.0 specification
+    // "Column names supplied to getter methods are case insensitive
+    // If a select list contains the same column more than once, 
+    // the first instance of the column will be returned
+    public int findColumn(String columnName) throws SQLException {
         if (columnName == null || columnName.equals("")) {
             throw new SQLException("zero length identifiers not allowed");
         }
-        
-        boolean doCaseInsensitiveSearch = true;
-        
         if (columnName.startsWith("\"") && columnName.endsWith("\"")) {
-            columnName = columnName.substring(1, columnName.length() - 1);
-            doCaseInsensitiveSearch = false;
-        }
-            
-        // case-sensitively check column aliases 
-        for (int i = 0; i< xsqlvars.length; i++) {
-            if (columnName.equals(xsqlvars[i].aliasname)) {
-                return ++i;
+            columnName = columnName.substring(1, columnName.length() - 1);				
+            // case-sensitively check column aliases 
+            for (int i = 0; i< xsqlvars.length; i++) {
+                if (columnName.equals(xsqlvars[i].aliasname)) {
+                    return ++i;
+                }
             }
+            // case-sensitively check column names
+            for (int i = 0; i< xsqlvars.length; i++) {
+                if (columnName.equals(xsqlvars[i].sqlname)) {
+                    return ++i;
+                }
+            } 
         }
-        // case-sensitively check column names
-        for (int i = 0; i< xsqlvars.length; i++) {
-            if (columnName.equals(xsqlvars[i].sqlname)) {
-                return ++i;
-            }
-        }
-        
-        if (doCaseInsensitiveSearch) {
-        
-            // do the same with case insensitive comparison
-            
+		  else {
             for (int i = 0; i< xsqlvars.length; i++) {
                 if (columnName.equalsIgnoreCase(xsqlvars[i].aliasname)) {
                     return ++i;
@@ -631,9 +631,9 @@ public class FBResultSet implements ResultSet {
                     return ++i;
                 }
             }
-        }
-        
-        throw new SQLException("column name " + columnName + " not found in result set.");
+        }        
+
+        throw new SQLException("column name " + columnName + " not found in result set."); 
     }
 
 
@@ -657,11 +657,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public java.io.Reader getCharacterStream(int columnIndex) throws  SQLException {
-        InputStream is =  getField(columnIndex).getUnicodeStream();
-        if (is==null)
-            return null;
-        else
-            return new java.io.InputStreamReader(getField(columnIndex).getUnicodeStream());
+        return getField(columnIndex).getCharacterStream();
     }
 
 
@@ -680,7 +676,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public java.io.Reader getCharacterStream(String columnName) throws  SQLException {
-        return getCharacterStream(findColumn(columnName));
+        return getField(columnName).getCharacterStream();
     }
 
 
@@ -701,7 +697,7 @@ public class FBResultSet implements ResultSet {
      *
      */
     public BigDecimal getBigDecimal(String columnName) throws  SQLException {
-        return getBigDecimal(findColumn(columnName));
+        return getField(columnName).getBigDecimal();
     }
 
 
@@ -2150,7 +2146,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public Object getObject(int i, java.util.Map map) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getField(i).getObject(map);
     }
 
 
@@ -2166,7 +2162,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public Ref getRef(int i) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getField(i).getRef();
     }
 
 
@@ -2184,7 +2180,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public Clob getClob(int i) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getField(i).getClob();
     }
 
 
@@ -2201,7 +2197,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public Array getArray(int i) throws  SQLException {
-                throw new SQLException("Not yet implemented");
+        return getField(i).getArray();
     }
 
 
@@ -2221,7 +2217,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public Object getObject(String columnName, java.util.Map map) throws  SQLException {
-        return getObject(findColumn(columnName), map);
+        return getField(columnName).getObject(map);
     }
 
 
@@ -2238,7 +2234,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public Ref getRef(String columnName) throws  SQLException {
-        return getRef(findColumn(columnName));
+        return getField(columnName).getRef();
     }
 
 
@@ -2255,7 +2251,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public Blob getBlob(String columnName) throws  SQLException {
-        return getBlob(findColumn(columnName));
+        return getField(columnName).getBlob();
     }
 
 
@@ -2272,7 +2268,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public Clob getClob(String columnName) throws  SQLException {
-        return getClob(findColumn(columnName));
+        return getField(columnName).getClob();
     }
 
 
@@ -2289,7 +2285,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public Array getArray(String columnName) throws  SQLException {
-        return getArray(findColumn(columnName));
+        return getField(columnName).getArray();
     }
 
 
@@ -2315,16 +2311,7 @@ public class FBResultSet implements ResultSet {
     public java.sql.Date getDate(int columnIndex, Calendar cal)
         throws  SQLException
     {
-        java.sql.Date d = getDate(columnIndex);
-        if (cal == null) 
-        {
-            return d;
-        } // end of if ()
-        else
-        {
-            cal.setTime(d);
-            return new java.sql.Date(cal.getTime().getTime());    
-        } // end of else
+        return getField(columnIndex).getDate(cal);
     }
 
 
@@ -2348,7 +2335,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public java.sql.Date getDate(String columnName, Calendar cal) throws  SQLException {
-        return getDate(findColumn(columnName), cal);
+        return getField(columnName).getDate(cal);
     }
 
 
@@ -2374,16 +2361,7 @@ public class FBResultSet implements ResultSet {
     public java.sql.Time getTime(int columnIndex, Calendar cal)
         throws  SQLException
     {
-        java.sql.Time d = getTime(columnIndex);
-        if (cal == null) 
-        {
-            return d;
-        } // end of if ()
-        else
-        {
-            cal.setTime(d);
-            return new java.sql.Time(cal.getTime().getTime());    
-        } // end of else
+        return getField(columnIndex).getTime(cal);
     }
 
 
@@ -2408,7 +2386,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public java.sql.Time getTime(String columnName, Calendar cal) throws  SQLException {
-       return getTime(findColumn(columnName), cal);
+       return getField(columnName).getTime(cal);
      }
 
 
@@ -2434,19 +2412,7 @@ public class FBResultSet implements ResultSet {
     public java.sql.Timestamp getTimestamp(int columnIndex, Calendar cal)
         throws  SQLException
     {
-        java.sql.Timestamp x = getTimestamp(columnIndex);
-        //return d;
-        
-        if (cal == null) 
-        {
-            return x;
-        } // end of if ()
-        else
-        {
-            long time = x.getTime() + cal.getTimeZone().getRawOffset();
-            return new java.sql.Timestamp(time);    
-        } // end of else
-        
+        return getField(columnIndex).getTimestamp(cal);
     }
 
 
@@ -2470,7 +2436,7 @@ public class FBResultSet implements ResultSet {
      *      2.0 API</a>
      */
     public java.sql.Timestamp getTimestamp(String columnName, Calendar cal) throws  SQLException {
-       return getTimestamp(findColumn(columnName), cal);
+       return getField(columnName).getTimestamp(cal);
      }
 
     //jdbc 3 methods
@@ -2805,12 +2771,11 @@ public class FBResultSet implements ResultSet {
             }
         }
     }
-
+/*
     protected void setWasNullColumnIndex(int columnIndex) {
         wasNullColumnIndex = columnIndex;
     }
-
-
+*/
      protected void addWarning(java.sql.SQLWarning warning){
          if (firstWarning == null)
              firstWarning = warning;
