@@ -1148,13 +1148,9 @@ public final class ISCConstants {
         isc_blocking_signal,
         isc_lockmanerr,
         isc_bad_detach,     //detach failed...fatal, but there's nothing we can do.
-        isc_obj_in_use,     //User-level error in metadata updates.
-                            //Not fatal.  However, it was the cause of
-                            //this work, so I'm leaving it
-                            //in... perhaps it was a firebird bug?
         isc_buf_invalid,
         isc_bad_lock_level,  //PC_ENGINE only, handles record locking
-                             //issues from the attemptto make
+                             //issues from the attempt to make
                              //InterBase just like Dbase.
 
         isc_shutdown,
