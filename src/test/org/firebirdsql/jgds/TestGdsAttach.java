@@ -9,10 +9,11 @@ import org.firebirdsql.gds.isc_db_handle;
 import junit.framework.TestCase;
 
 
-public class TestGdsAttach extends TestCase {
+public class TestGdsAttach extends org.firebirdsql.common.SimpleFBTestBase {
 
-    
-private static final String DATABASE = "localhost/3050:c:/testdb.gdb";
+    private final String DATABASE = DB_SERVER_URL + ":" + DB_PATH 
+        + "/" + DB_NAME;
+
     public TestGdsAttach(String name) {
         super(name);
     }
