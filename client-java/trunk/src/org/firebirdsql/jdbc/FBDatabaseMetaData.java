@@ -2145,7 +2145,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
           rows.add(new Object[] {ALL_TYPES[i]});
 
         return new FBResultSet(xsqlvars, rows);
-        // throw new SQLException("Not yet implemented");
     }
 
 
@@ -2607,7 +2606,92 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getValue());
         }
-        return c.doQuery(sql, params, statements);
+        ResultSet rs = c.doQuery(sql, params, statements);
+
+        XSQLVAR[] xsqlvars = new XSQLVAR[7];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = GDS.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlind = -1;
+        xsqlvars[0].sqlname = "TABLE_CAT";
+        xsqlvars[0].relname = "TABLEPRIV";
+
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = GDS.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlind = -1;
+        xsqlvars[1].sqlname = "TABLE_SCHEM";
+        xsqlvars[1].relname = "TABLEPRIV";
+
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = GDS.SQL_VARYING;
+        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqlind = 0;
+        xsqlvars[2].sqlname = "TABLE_NAME";
+        xsqlvars[2].relname = "TABLEPRIV";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = GDS.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlind = -1;
+        xsqlvars[3].sqlname = "GRANTOR";
+        xsqlvars[3].relname = "TABLEPRIV";
+
+        xsqlvars[4] = new XSQLVAR();
+        xsqlvars[4].sqltype = GDS.SQL_VARYING;
+        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqlind = 0;
+        xsqlvars[4].sqlname = "GRANTEE";
+        xsqlvars[4].relname = "TABLEPRIV";
+
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = GDS.SQL_VARYING;
+        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqlind = 0;
+        xsqlvars[5].sqlname = "PRIVILEGE";
+        xsqlvars[5].relname = "TABLEPRIV";
+
+        xsqlvars[6] = new XSQLVAR();
+        xsqlvars[6].sqltype = GDS.SQL_VARYING;
+        xsqlvars[6].sqllen = 31;
+        xsqlvars[6].sqlind = 0;
+        xsqlvars[6].sqlname = "IS_GRANTABLE";
+        xsqlvars[6].relname = "TABLEPRIV";
+
+        ArrayList rows = new ArrayList();
+        while (rs.next()) {
+            Object[] row = new Object[7];
+            row[0] = null;
+            row[1] = null;
+            row[2] = rs.getString("TABLE_NAME");
+            row[3] = rs.getString("GRANTOR");
+            row[4] = rs.getString("GRANTEE");
+            String privilege = rs.getString("PRIVILEGE");
+            if (privilege.equals("A"))
+                row[5] = "ALL";
+            else if (privilege.equals("S"))
+                row[5] = "SELECT";
+            else if (privilege.equals("D"))
+                row[5] = "DELETE";
+            else if (privilege.equals("I"))
+                row[5] = "INSERT";
+            else if (privilege.equals("U"))
+                row[5] = "UPDATE";
+            else if (privilege.equals("R"))
+                row[5] = "REFERENCE";
+            else if (privilege.equals("M"))
+                row[5] = "MEMBEROF";				
+            int isGrantable = rs.getShort("IS_GRANTABLE");
+            if (isGrantable==0)
+                row[6] = "NO";
+            else
+                row[6] = "YES";
+
+            rows.add(row);
+        }
+        // return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(xsqlvars, rows);
     }
 
 
@@ -2700,7 +2784,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         ArrayList rows = new ArrayList(0);
 
         return new FBResultSet(xsqlvars, rows);
-//        throw new SQLException("Not yet implemented");
     }
 
 
@@ -2795,7 +2878,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public ResultSet getVersionColumns(String catalog, String schema,
                 String table) throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[7];
+        XSQLVAR[] xsqlvars = new XSQLVAR[8];
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = GDS.SQL_SHORT;
@@ -2823,23 +2906,27 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 		  
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = GDS.SQL_LONG;
-        xsqlvars[4].sqlname = "BUFFER_LENGTH";
+        xsqlvars[4].sqlname = "COLUMN_SIZE";
         xsqlvars[4].relname = "VERSIONCOL";
 		  
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = GDS.SQL_SHORT;
-        xsqlvars[5].sqlname = "DECIMAL_DIGITS";
+        xsqlvars[5].sqltype = GDS.SQL_LONG;
+        xsqlvars[5].sqlname = "BUFFER_LENGTH";
         xsqlvars[5].relname = "VERSIONCOL";
-
+		  
         xsqlvars[6] = new XSQLVAR();
         xsqlvars[6].sqltype = GDS.SQL_SHORT;
-        xsqlvars[6].sqlname = "PSEUDO_COLUMN";
+        xsqlvars[6].sqlname = "DECIMAL_DIGITS";
         xsqlvars[6].relname = "VERSIONCOL";
+
+        xsqlvars[7] = new XSQLVAR();
+        xsqlvars[7].sqltype = GDS.SQL_SHORT;
+        xsqlvars[7].sqlname = "PSEUDO_COLUMN";
+        xsqlvars[7].relname = "VERSIONCOL";
 		  
         ArrayList rows = new ArrayList(0);
 
         return new FBResultSet(xsqlvars, rows);
-//        throw new SQLException("Not yet implemented");
     }
 
 
@@ -3003,10 +3090,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 	 +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
 	 +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
 	 +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
-//	 +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
-//	 +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
-	 +" ,0 as UPDATE_RULE"
-	 +" ,0 as DELETE_RULE"
+	 +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
+	 +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
 	 +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
 	 +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
 	 +" ,null as DEFERRABILITY "
@@ -3212,14 +3297,30 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[3] = rs.getString("PKCOLUMN_NAME").trim();
             row[4] = null;
             row[5] = null;
-            row[6] = rs.getString("PKTABLE_NAME").trim();
-            row[7] = rs.getString("PKCOLUMN_NAME").trim();				
+            row[6] = rs.getString("FKTABLE_NAME").trim();
+            row[7] = rs.getString("FKCOLUMN_NAME").trim();
             row[8] = new Short(rs.getShort("KEY_SEQ"));
-            row[9] = new Short(rs.getShort("UPDATE_RULE"));
-            row[10] = new Short(rs.getShort("DELETE_RULE"));				
+            String updateRule = rs.getString("UPDATE_RULE");
+            if (updateRule.equals("NO ACTION"))
+                row[9] = new Short((short) DatabaseMetaData.importedKeyNoAction);
+            else if (updateRule.equals("CASCADE"))
+                row[9] = new Short((short) DatabaseMetaData.importedKeyCascade);
+            else if (updateRule.equals("SET NULL"))
+                row[9] = new Short((short) DatabaseMetaData.importedKeySetNull);
+            else if (updateRule.equals("SET DEFAULT"))
+                row[9] = new Short((short) DatabaseMetaData.importedKeySetDefault);
+            String deleteRule = rs.getString("DELETE_RULE");
+            if (deleteRule.equals("NO ACTION"))
+                row[10] = new Short((short) DatabaseMetaData.importedKeyNoAction);
+            else if (deleteRule.equals("CASCADE"))
+                row[10] = new Short((short) DatabaseMetaData.importedKeyCascade);
+            else if (deleteRule.equals("SET NULL"))
+                row[10] = new Short((short) DatabaseMetaData.importedKeySetNull);
+            else if (deleteRule.equals("SET DEFAULT"))
+                row[10] = new Short((short) DatabaseMetaData.importedKeySetDefault);
             row[11] = rs.getString("FK_NAME");
             row[12] = rs.getString("PK_NAME");
-				row[13] = new Short(rs.getShort("DEFERRABILITY"));
+            row[13] = new Short((short) DatabaseMetaData.importedKeyNotDeferrable);
             rows.add(row);
         }
 //        rows.add(null);
@@ -3342,10 +3443,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 	 +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
 	 +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
 	 +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
-//	 +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
-//	 +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
-	 +" ,0 as UPDATE_RULE"
-	 +" ,0 as DELETE_RULE"
+	 +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
+	 +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
 	 +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
 	 +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
 	 +" ,null as DEFERRABILITY "
@@ -3547,14 +3646,30 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[3] = rs.getString("PKCOLUMN_NAME").trim();
             row[4] = null;
             row[5] = null;
-            row[6] = rs.getString("PKTABLE_NAME").trim();
-            row[7] = rs.getString("PKCOLUMN_NAME").trim();				
+            row[6] = rs.getString("FKTABLE_NAME").trim();
+            row[7] = rs.getString("FKCOLUMN_NAME").trim();				
             row[8] = new Short(rs.getShort("KEY_SEQ"));
-            row[9] = new Short(rs.getShort("UPDATE_RULE"));
-            row[10] = new Short(rs.getShort("DELETE_RULE"));				
+            String updateRule = rs.getString("UPDATE_RULE");
+            if (updateRule.equals("NO ACTION"))
+                row[9] = new Short((short) DatabaseMetaData.importedKeyNoAction);
+            else if (updateRule.equals("CASCADE"))
+                row[9] = new Short((short) DatabaseMetaData.importedKeyCascade);
+            else if (updateRule.equals("SET NULL"))
+                row[9] = new Short((short) DatabaseMetaData.importedKeySetNull);
+            else if (updateRule.equals("SET DEFAULT"))
+                row[9] = new Short((short) DatabaseMetaData.importedKeySetDefault);
+            String deleteRule = rs.getString("DELETE_RULE");
+            if (deleteRule.equals("NO ACTION"))
+                row[10] = new Short((short) DatabaseMetaData.importedKeyNoAction);
+            else if (deleteRule.equals("CASCADE"))
+                row[10] = new Short((short) DatabaseMetaData.importedKeyCascade);
+            else if (deleteRule.equals("SET NULL"))
+                row[10] = new Short((short) DatabaseMetaData.importedKeySetNull);
+            else if (deleteRule.equals("SET DEFAULT"))
+                row[10] = new Short((short) DatabaseMetaData.importedKeySetDefault);				
             row[11] = rs.getString("FK_NAME");
             row[12] = rs.getString("PK_NAME");
-				row[13] = new Short(rs.getShort("DEFERRABILITY"));
+            row[13] = new Short((short) DatabaseMetaData.importedKeyNotDeferrable);
 
             rows.add(row);
         }
@@ -3575,10 +3690,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 	 +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
 	 +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
 	 +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
-//	 +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
-//	 +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
-	 +" ,0 as UPDATE_RULE"
-	 +" ,0 as DELETE_RULE"
+	 +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
+	 +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
 	 +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
 	 +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
 	 +" ,null as DEFERRABILITY "
@@ -3800,11 +3913,27 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[6] = rs.getString("PKTABLE_NAME").trim();
             row[7] = rs.getString("PKCOLUMN_NAME").trim();				
             row[8] = new Short(rs.getShort("KEY_SEQ"));
-            row[9] = new Short(rs.getShort("UPDATE_RULE"));
-            row[10] = new Short(rs.getShort("DELETE_RULE"));				
+            String updateRule = rs.getString("UPDATE_RULE");
+            if (updateRule.equals("NO ACTION"))
+                row[9] = new Short((short) DatabaseMetaData.importedKeyNoAction);
+            else if (updateRule.equals("CASCADE"))
+                row[9] = new Short((short) DatabaseMetaData.importedKeyCascade);
+            else if (updateRule.equals("SET NULL"))
+                row[9] = new Short((short) DatabaseMetaData.importedKeySetNull);
+            else if (updateRule.equals("SET DEFAULT"))
+                row[9] = new Short((short) DatabaseMetaData.importedKeySetDefault);
+            String deleteRule = rs.getString("DELETE_RULE");
+            if (deleteRule.equals("NO ACTION"))
+                row[10] = new Short((short) DatabaseMetaData.importedKeyNoAction);
+            else if (deleteRule.equals("CASCADE"))
+                row[10] = new Short((short) DatabaseMetaData.importedKeyCascade);
+            else if (deleteRule.equals("SET NULL"))
+                row[10] = new Short((short) DatabaseMetaData.importedKeySetNull);
+            else if (deleteRule.equals("SET DEFAULT"))
+                row[10] = new Short((short) DatabaseMetaData.importedKeySetDefault);
             row[11] = rs.getString("FK_NAME");
             row[12] = rs.getString("PK_NAME");
-				row[13] = new Short(rs.getShort("DEFERRABILITY"));
+            row[13] = new Short((short) DatabaseMetaData.importedKeyNotDeferrable);
 
             rows.add(row);
         }
@@ -4194,7 +4323,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 		+" ,null as INDEX_QUALIFIER "
 		+" ,ind.RDB$INDEX_NAME as INDEX_NAME "
 		+" ,null as ITYPE "
-		+" ,ise.rdb$field_position as ORDINAL_POSITION "
+		+" ,ise.rdb$field_position+1 as ORDINAL_POSITION "
 		+" ,ise.rdb$field_name as COLUMN_NAME "
 		+" ,'A' as ASC_OR_DESC "
 		+" ,0 as CARDINALITY "
@@ -4354,11 +4483,15 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[0] = null;
             row[1] = null;
             row[2] = rs.getString("TABLE_NAME").trim();
-            row[3] = "F";
+            int nonUnique = rs.getInt("NON_UNIQUE");
+            if (nonUnique==0)
+                row[3] = "T";
+            else
+                row[3] = "F";
             row[4] = null;
             row[5] = rs.getString("INDEX_NAME").trim();
-            row[6] = null;
-            row[7] = new Short(rs.getShort("ORDINAL_POSITION"));				
+            row[6] = new Short((short) DatabaseMetaData.tableIndexOther);
+            row[7] = new Short(rs.getShort("ORDINAL_POSITION"));
             row[8] = rs.getString("COLUMN_NAME").trim();
             row[9] = null;
             row[10] = new Integer(0);
@@ -4714,8 +4847,6 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         ArrayList rows = new ArrayList(0);
 
         return new FBResultSet(xsqlvars, rows);
-					  
-//      throw new SQLException("Not yet implemented");
     }
 
 
