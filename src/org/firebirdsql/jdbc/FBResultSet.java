@@ -264,6 +264,9 @@ public class FBResultSet implements ResultSet {
 
     private int wasNullColumnIndex = -1;
 
+    //might be a bit of a kludge, or a useful feature.
+    private boolean trimStrings;
+
     FBResultSet(FBManagedConnection mc, FBStatement fbstatement, isc_stmt_handle stmt) {
         fbFetcher = new FBStatementFetcher(mc, fbstatement, stmt);
         this.mc = mc;
@@ -273,7 +276,8 @@ public class FBResultSet implements ResultSet {
         mc.registerStatement(fbstatement);*/
     }
 
-    FBResultSet(FBManagedConnection mc, isc_stmt_handle stmt) throws SQLException {
+    FBResultSet(FBManagedConnection mc, isc_stmt_handle stmt, boolean trimStrings) throws SQLException {
+        this.trimStrings = trimStrings;
         fbFetcher = new FBCachedFetcher(mc, stmt);
         this.mc = mc;
         xsqlvars = stmt.getOutSqlda().sqlvar;
@@ -380,7 +384,12 @@ public class FBResultSet implements ResultSet {
         if (obj == null) {
             return null;
         } else {
-            return obj.toString();
+            if (trimStrings) {
+                return obj.toString().trim();
+            }
+            else {
+                return obj.toString();
+            }
         }
     }
 
