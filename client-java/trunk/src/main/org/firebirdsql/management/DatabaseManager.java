@@ -40,77 +40,41 @@
  */
 package org.firebirdsql.management;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
 /**
- * Implements the backup and restore functionality of Firebird Services API.
+ * The base Firebird Service API functionality.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
+ * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
  */
-public interface BackupManager extends ServiceManager {
+public interface DatabaseManager extends ServiceManager {
 
     /**
-     * Returns the location of the backup file.
-     * @return the location of the backup file.
+     * isc_action_svc_properties action
      */
-    public String getBackupPath();
+    public void getProperties();
 
     /**
-     * Sets the location of the backup file.
-     * @param backupPath the location of the backup file.
+     * isc_action_svc_repair action
      */
-    public void setBackupPath(String backupPath);
+    public void repair();
 
     /**
-     * Perform the backup operation.
-     * @param verbose output to the logger.
-     * @throws SQLException
-     * @throws IOException
+     * isc_action_svc_db_stats action
      */
-    public void backupDatabase(boolean verbose) throws SQLException,
-            IOException;
+    public void getStats();
 
     /**
-     * Perform the backup operation, metadata only.
-     * @param verbose output to the logger.
-     * @throws SQLException
-     * @throws IOException
+     * isc_action_svc_get_ib_log
      */
-    public void backupMetadata(boolean verbose) throws SQLException,
-            IOException;
+    public void getLog();
 
     /**
-     * Perform the backup operation.
-     * @param options for the backup operation
-     * @param verbose output to the logger.
-     * @throws SQLException
-     * @throws IOException
+     * isc_action_svc_add_license
      */
-    public void backupDatabase(int options, boolean verbose)
-            throws SQLException, IOException;
+    public void addLicense();
 
     /**
-     * Perform the restore operation.
-     * @param  verbose output to the logger.
-     * @throws SQLException
-     * @throws IOException
+     * isc_action_svc_remove_license
      */
-    public void restoreDatabase(boolean verbose) throws SQLException,
-            IOException;
+    public void removeLicense();
 
-    /**
-     * Perform the restore operation.
-     * @param buffers 
-     * @param pageSize
-     * @param restoreReadOnly
-     * @param options
-     * @param verbose
-     * @throws SQLException
-     * @throws IOException
-     */
-    public void restoreDatabase(int buffers, int pageSize,
-            boolean restoreReadOnly, int options, boolean verbose)
-            throws SQLException, IOException;
 }
