@@ -23,9 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.sql.Blob;
 
@@ -46,8 +44,9 @@ public class FBBlobField extends FBField implements FBFlushableField {
     private FBBlob blob;
 
 	// Rather then hold cached data in the XSQLDAVar we will hold it in here.
-	int length;
-	byte[] data;
+	private int length;
+	private InputStream binaryStream;
+    private Reader characterStream;
 
     FBBlobField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
         throws SQLException 
@@ -80,7 +79,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
             return BLOB_NULL_VALUE;
 
         /*@todo convert this into a method of FirebirdConnection */
-        blob = new FBBlob(c, field.decodeLong( bytes ));
+        blob = new FBBlob(gdsHelper, field.decodeLong( bytes ));
 
         return blob;
     }
@@ -105,9 +104,9 @@ public class FBBlobField extends FBField implements FBFlushableField {
 
     public byte[] getBytes() throws SQLException {
         // getBytes() is not defined for BLOB types, only for BINARY
-        if (field.sqlsubtype < 0)
-            throw (SQLException)createException(
-                BYTES_CONVERSION_ERROR);
+//        if (field.sqlsubtype < 0)
+//            throw (SQLException)createException(
+//                BYTES_CONVERSION_ERROR);
 
         return getBytesInternal();
     }
@@ -152,17 +151,6 @@ public class FBBlobField extends FBField implements FBFlushableField {
         return bout.toByteArray();
     }
 
-    /*
-    public Object getObject() throws SQLException {
-        if (field.sqlsubtype < 0)
-            return getBlob();
-        else if (field.sqlsubtype == 1)
-            return getString();
-        else
-            return getBytes();
-    }
-    */
-
     public byte[] getCachedObject() throws SQLException {
         if (getFieldData()==null) 
             return BYTES_NULL_VALUE;
@@ -190,6 +178,8 @@ public class FBBlobField extends FBField implements FBFlushableField {
 
     //--- setXXX methods
 
+    
+    
     public void setAsciiStream(InputStream in, int length) throws SQLException {
         setBinaryStream(in, length);
     }
@@ -201,98 +191,45 @@ public class FBBlobField extends FBField implements FBFlushableField {
             return;
         }
         
-        if (!c.getAutoCommit()) {
-            copyCharacterStream(in, length, javaEncoding);
-        } else {
-            char[] buff = new char[BUFF_SIZE];
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(length);
-            try {
-            OutputStreamWriter boutw = new OutputStreamWriter(bout, javaEncoding);
-
-            int chunk;
-            try {
-                while (length >0) {
-                    chunk =in.read(buff, 0, ((length<BUFF_SIZE) ? length:BUFF_SIZE));
-                    boutw.write(buff, 0, chunk);
-                    length -= chunk;
-                }
-                boutw.close();
-                bout.close();
-            }
-            catch (IOException ioe) {
-                throw new FBSQLException(ioe);
-            }
-            } catch(UnsupportedEncodingException ex) {
-                throw new FBSQLException("Cannot set character stream because " +
-                        "the unsupported encoding is detected in the JVM: " +
-                        javaEncoding + ". Please report this to the driver developers."
-                    );
-            }
-            
-            this.data = bout.toByteArray();
-            this.length = ((byte[])this.data).length;
-            isCachedData = true;
-        }
+        this.characterStream = in;
+        this.length = length;
     }
-    
+
     public void setBinaryStream(InputStream in, int length) throws SQLException {
         
         if (in == STREAM_NULL_VALUE) {
             setNull();
             return;
         }
-        
-        if (!c.getAutoCommit()) {
-            copyBinaryStream(in, length);
-        } else {
-            byte[] buff = new byte[BUFF_SIZE];
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(length);
             
-            int chunk;
-            try {
-                while (length >0) {
-                    chunk =in.read(buff, 0, ((length<BUFF_SIZE) ? length:BUFF_SIZE));
-                    bout.write(buff, 0, chunk);
-                    length -= chunk;
-                }
-                bout.close();
-            }
-            catch (IOException ioe) {
-                throw new FBSQLException(ioe);
-            }
-            
-            this.data = bout.toByteArray();
-            this.length = ((byte[])this.data).length;
-            isCachedData = true;
-        }
+        this.binaryStream = in;
+        this.length = length;
     }
     
     public void flushCachedData() throws SQLException {
-        if (isCachedData){
-            copyBinaryStream(
-                new ByteArrayInputStream((byte[])this.data), this.length);
-            isCachedData=false;
-        }
+        if (binaryStream != null)
+            copyBinaryStream(this.binaryStream, this.length);
+        else
+        if (characterStream != null)
+            copyCharacterStream(characterStream, length, javaEncoding);
+        else
+        if (blob == null)
+            setNull();
+        
+        this.characterStream = null;
+        this.binaryStream = null;
+        this.length = 0;
     }
     
     private void copyBinaryStream(InputStream in, int length) throws SQLException {
         
-        /** @todo check if this is correct!!! */
-        if (!c.getAutoCommit())
-            c.ensureInTransaction();
-        
-        FBBlob blob =  new FBBlob(c);
+        FBBlob blob =  new FBBlob(gdsHelper);
         blob.copyStream(in, length);
         setFieldData(field.encodeLong(blob.getBlobId()));
     }
 
     private void copyCharacterStream(Reader in, int length, String encoding) throws SQLException {
-        
-        /** @todo check if this is correct!!! */
-        if (!c.getAutoCommit())
-            c.ensureInTransaction();
-        
-        FBBlob blob =  new FBBlob(c);
+        FBBlob blob =  new FBBlob(gdsHelper);
         blob.copyCharacterStream(in, length, encoding);
         setFieldData(field.encodeLong(blob.getBlobId()));
     }
@@ -322,5 +259,14 @@ public class FBBlobField extends FBField implements FBFlushableField {
 
     public void setBlob(FBBlob blob) throws SQLException {
         setFieldData(field.encodeLong(blob.getBlobId()));
+        this.blob = blob;
+    }
+
+    public void setNull() {
+        super.setNull();
+        
+        this.binaryStream = null;
+        this.characterStream = null;
+        this.length = 0;
     }
 }

@@ -66,7 +66,8 @@ public class FBStandAloneConnectionManager
        ConnectionRequestInfo cxRequestInfo)
        throws ResourceException {
 
-       ManagedConnection mc = ((FBManagedConnectionFactory)mcf).createManagedConnection(null, cxRequestInfo);
+       FBManagedConnection mc = (FBManagedConnection)((FBManagedConnectionFactory)mcf).createManagedConnection(null, cxRequestInfo);
+       mc.setManagedEnvironment(false);
        mc.addConnectionEventListener(this);
        return mc.getConnection(null, cxRequestInfo);
     }

@@ -64,6 +64,8 @@ class FBXid implements Xid {
     *  This identifies the branch of a transaction.
     */
    private byte[] branchId;
+   
+   private long firebirdTransactionId;
 
 
    /**
@@ -101,8 +103,10 @@ class FBXid implements Xid {
      * @param bytes a <code>byte[]</code> value
      * @exception ResourceException if an error occurs
      */
-    FBXid(InputStream rawIn) throws ResourceException
+    FBXid(InputStream rawIn, long firebirdTransactionId) throws ResourceException
     {
+        this.firebirdTransactionId = firebirdTransactionId;
+        
         try 
         {
             XdrInputStream in = new XdrInputStream(rawIn);
@@ -168,6 +172,15 @@ class FBXid implements Xid {
     }
 
     /**
+     * Return Firebird transaction ID.
+     * 
+     * @return Firebird transaction ID or 0 if no is available.
+     */
+    public long getFirebirdTransactionId() {
+        return firebirdTransactionId;
+    }
+    
+    /**
      *  Compare for equality.
      *
      *  Instances are considered equal if they are both instances of XidImpl,
@@ -217,7 +230,7 @@ class FBXid implements Xid {
     //package
 
     int getLength() {
-        return 1 + 1 + 4 + 1 + 1 + globalId.length + 1 + 1 + branchId.length;
+        return 1 + 1 + 4 + 1 + 4 + globalId.length + 1 + 4 + branchId.length;
     }
 
     byte[] toBytes() {
@@ -230,11 +243,17 @@ class FBXid implements Xid {
         b[i++] = (byte)((formatId >>>  8) & 0xff);
         b[i++] = (byte)((formatId >>>  0) & 0xff);
         b[i++] = (byte)TDR_XID_GLOBAL_ID;
-        b[i++] = (byte)globalId.length;
+        b[i++] = (byte)((globalId.length >>> 24) & 0xff);
+        b[i++] = (byte)((globalId.length >>> 16) & 0xff);
+        b[i++] = (byte)((globalId.length >>>  8) & 0xff);
+        b[i++] = (byte)((globalId.length >>>  0) & 0xff);
         System.arraycopy(globalId, 0, b, i, globalId.length);
         i += globalId.length;
         b[i++] = (byte)TDR_XID_BRANCH_ID;
-        b[i++] = (byte)branchId.length;
+        b[i++] = (byte)((branchId.length >>> 24) & 0xff);
+        b[i++] = (byte)((branchId.length >>> 16) & 0xff);
+        b[i++] = (byte)((branchId.length >>>  8) & 0xff);
+        b[i++] = (byte)((branchId.length >>>  0) & 0xff);
         System.arraycopy(branchId, 0, b, i, branchId.length);
         return b;
     }

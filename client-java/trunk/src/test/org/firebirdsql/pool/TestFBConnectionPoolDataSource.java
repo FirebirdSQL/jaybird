@@ -102,6 +102,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         Properties props = new Properties();
         props.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
         props.put(Context.OBJECT_FACTORIES, FBConnectionPoolDataSource.class.getName());
+        props.put(Context.PROVIDER_URL, "file:.");
         
         checkJNDI(props);
     }

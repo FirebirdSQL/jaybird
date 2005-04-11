@@ -105,6 +105,9 @@ public class TestFBBlobAutocommit extends FBTestBase {
         
         assertTrue("Should insert one row.", inserted == 1);
         
+        connection.close();
+        connection = getConnectionViaDriverManager();
+        
         stmt = connection.prepareStatement(
             "SELECT * FROM test_blob WHERE id = ?");
             
@@ -135,6 +138,9 @@ public class TestFBBlobAutocommit extends FBTestBase {
                 Arrays.equals(
                     rs.getBlob(4).getBytes(1, TEST_BYTES.length), 
                     TEST_BYTES));
+            assertTrue("content of text field should be same to written", 
+                Arrays.equals(rs.getBytes(4), TEST_BYTES));
+            
     
             
             assertTrue("Result set should contain only one row.", !rs.next());

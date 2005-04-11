@@ -458,6 +458,9 @@ public class TestFBPreparedStatement extends FBTestBase{
                     assertTrue("Server should see the same timestamp",
                         ts3.toString().substring(0, maxLength).equals(ts3Str));
 
+                } catch(SQLException ex) {
+                    ex.printStackTrace();
+                    throw ex;
                 } finally {
                     selectStmt.close();
                 }

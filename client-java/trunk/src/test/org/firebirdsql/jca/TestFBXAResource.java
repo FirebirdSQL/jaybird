@@ -81,7 +81,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        if (fbmc.getIscDBHandle(new HashSet()) == null) {
+        if (fbmc.getGDSHelper().getCurrentDbHandle() == null) {
             throw new Exception("no db handle after start xid");
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -98,7 +98,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        if (fbmc.getIscDBHandle(new HashSet()) == null) {
+        if (fbmc.getGDSHelper().getCurrentDbHandle() == null) {
             throw new Exception("no db handle after start xid");
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -115,7 +115,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        if (fbmc.getIscDBHandle(new HashSet()) == null) {
+        if (fbmc.getGDSHelper().getCurrentDbHandle() == null) {
             throw new Exception("no db handle after start xid");
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -133,7 +133,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        if (fbmc.getIscDBHandle(new HashSet()) == null) {
+        if (fbmc.getGDSHelper().getCurrentDbHandle() == null) {
             throw new Exception("no db handle after start xid");
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -151,7 +151,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa1 = mc1.getXAResource();
         Xid xid1 = new XidImpl();
         xa1.start(xid1, XAResource.TMNOFLAGS);
-        if (fbmc1.getIscDBHandle(new HashSet()) == null) {
+        if (fbmc1.getGDSHelper().getCurrentDbHandle() == null) {
             throw new Exception("no db handle after start xid");
         }
         ManagedConnection mc2 = mcf.createManagedConnection(null, null);
@@ -159,7 +159,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa2 = mc2.getXAResource();
         Xid xid2 = new XidImpl();
         xa2.start(xid2, XAResource.TMNOFLAGS);
-        if (fbmc2.getIscDBHandle(new HashSet()) == null) {
+        if (fbmc2.getGDSHelper().getCurrentDbHandle() == null) {
             throw new Exception("no db handle after start xid");
         }
         //commit each tr on other xares
@@ -180,8 +180,37 @@ public class TestFBXAResource extends TestXABase {
         ManagedConnection mc1 = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc1 = (FBManagedConnection)mc1;
         XAResource xa1 = mc1.getXAResource();
-        Xid[] xids = xa1.recover(XAResource.TMSTARTRSCAN);
-        assertTrue("Xid[] was null from recover!", xids != null);
+//        Xid[] xids = xa1.recover(XAResource.TMSTARTRSCAN);
+//        assertTrue("Xid[] was null from recover!", xids != null);
+        
+        Xid xid1 = new XidImpl();
+        xa1.start(xid1, XAResource.TMNOFLAGS);
+        xa1.end(xid1, XAResource.TMSUCCESS);
+        xa1.prepare(xid1);
+        
+        // kill connection after prepare.
+        mc1.destroy();
+        
+
+        FBManagedConnectionFactory mcf2 = initMcf();
+        ManagedConnection mc2 = mcf2.createManagedConnection(null, null);
+        XAResource xa2 = mc2.getXAResource();
+        
+        Xid[] xids = xa2.recover(XAResource.TMSTARTRSCAN);
+        assertTrue("Should recover non-null array", xids != null);
+        assertTrue("Should recover at least one transaction", xids.length > 0);
+        
+        boolean found = false;
+        for (int i = 0; i < xids.length; i++) {
+            if (xids[i].equals(xid1)) {
+                found = true;
+                break;
+            }
+        }
+        
+        assertTrue("Should find our transaction", found);
+        
+        xa2.commit(xid1, false);
     }
 
 }

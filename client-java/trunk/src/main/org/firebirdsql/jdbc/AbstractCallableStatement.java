@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.GDSHelper;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConvertionException;
 import org.firebirdsql.logging.Logger;
@@ -96,10 +97,10 @@ public abstract class AbstractCallableStatement
     protected FBProcedureCall procedureCall;
 
 
-    protected AbstractCallableStatement(AbstractConnection c, String sql, 
-                                        int rsType, int rsConcurrency) 
+    protected AbstractCallableStatement(GDSHelper c, String sql, 
+                                        int rsType, int rsConcurrency, FBObjectListener.StatementListener statementListener) 
     throws SQLException {
-        super(c, rsType, rsConcurrency);
+        super(c, rsType, rsConcurrency, statementListener);
         
         DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
         
@@ -114,7 +115,7 @@ public abstract class AbstractCallableStatement
         // and second time in parser.parseCall(...)... not nice, maybe 
         // in the future should be fixed by calling FBEscapedParser for
         // each parameter in FBEscapedCallParser class
-        procedureCall = parser.parseCall(c.nativeSQL(sql));
+        procedureCall = parser.parseCall(nativeSQL(sql));
     }
     
     public void addBatch() throws SQLException {
@@ -178,16 +179,15 @@ public abstract class AbstractCallableStatement
      * data for the callable statement is obtained.
      */
     public ResultSetMetaData getMetaData() throws SQLException {
+
+        statementListener.executionStarted(this);
         
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
             try {
-                c.ensureInTransaction();
                 prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
             } catch (GDSException ge) {
                 throw new FBSQLException(ge);
-            } finally {
-                c.checkEndTransaction();
             } 
         }
         
@@ -205,31 +205,36 @@ public abstract class AbstractCallableStatement
      * @see Statement#execute
      */
     public boolean execute() throws  SQLException {
-        Object syncObject = getSynchronizationObject();
-        synchronized(syncObject) {
-            try {
-                c.ensureInTransaction();
-                
-                currentRs = null;
-                
-                prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
-                boolean hasResultSet = internalExecute(!selectableProcedure);
 
-                if (hasResultSet) {
-                    if (c.willEndTransaction())
-                        cacheResultSet();
-                
-                    setRequiredTypes();
-                }
-                
-                return hasResultSet;
-                
-            } catch (GDSException ge) {
-                throw new FBSQLException(ge);
-            } finally {
-                c.checkEndTransaction();
-            } // end of try-catch-finally
+        statementListener.executionStarted(this);
+        this.completed = false;
+        
+        boolean hasResultSet = false;
+        
+        try {
+            Object syncObject = getSynchronizationObject();
+            synchronized(syncObject) {
+                try {
+                    currentRs = null;
+                    
+                    prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
+                    hasResultSet = internalExecute(!selectableProcedure);
+    
+                    if (hasResultSet) 
+                        setRequiredTypes();
+                    
+                } catch (GDSException ge) {
+                    throw new FBSQLException(ge);
+                } // end of try-catch-finally
+            }
+        } finally {
+            if (!hasResultSet) {
+                this.completed = true;
+                statementListener.statementCompleted(this);
+            }
         }
+        
+        return hasResultSet;
     }
     
     /**
@@ -237,12 +242,13 @@ public abstract class AbstractCallableStatement
      * the processing is done by superclass.
      */
 	public ResultSet executeQuery() throws SQLException {
-        Object syncObject = getSynchronizationObject();
+
+        statementListener.executionStarted(this);
+        this.completed = false;
         
+        Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
             try {
-                c.ensureInTransaction();
-                
                 currentRs = null;
                 
                 prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
@@ -253,10 +259,7 @@ public abstract class AbstractCallableStatement
                             FBSQLException.SQL_STATE_NO_RESULT_SET);
                 
 
-                if (c.willEndTransaction()) 
-                    cacheResultSet();
-                else 
-                    getResultSet();
+                getResultSet();
 
                 setRequiredTypes();
                 
@@ -264,8 +267,6 @@ public abstract class AbstractCallableStatement
                 
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
-            } finally {
-                c.checkEndTransaction();
             }
         }
     }
@@ -275,42 +276,43 @@ public abstract class AbstractCallableStatement
      * the processing is done by superclass.
      */
     public int executeUpdate() throws SQLException {
-        Object syncObject = getSynchronizationObject();
+
+        statementListener.executionStarted(this);
+        this.completed = false;
         
-        synchronized(syncObject) {
-            try {
-                c.ensureInTransaction();
-                
-                currentRs = null;
-                
-                prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
-                
-                /*
-                // R.Rokytskyy: JDBC CTS suite uses executeUpdate()
-                // together with output parameters, therefore we cannot
-                // throw exception if we want to pass the test suite
-                
-                if (internalExecute(true)) 
-                    throw new FBSQLException(
-                    "Update statement returned results.");
-                */
-                
-                boolean hasResults = internalExecute(!selectableProcedure);
-                
-                if (hasResults) {
-                    if (c.willEndTransaction())
-                        cacheResultSet();
-                
-                    setRequiredTypes();
+        try {
+            Object syncObject = getSynchronizationObject();
+            synchronized(syncObject) {
+                try {
+                    currentRs = null;
+                    
+                    prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
+                    
+                    /*
+                    // R.Rokytskyy: JDBC CTS suite uses executeUpdate()
+                    // together with output parameters, therefore we cannot
+                    // throw exception if we want to pass the test suite
+                    
+                    if (internalExecute(true)) 
+                        throw new FBSQLException(
+                        "Update statement returned results.");
+                    */
+                    
+                    boolean hasResults = internalExecute(!selectableProcedure);
+                    
+                    if (hasResults) {
+                        setRequiredTypes();
+                    }
+                    
+                    return getUpdateCount();
+                    
+                } catch(GDSException ex) {
+                    throw new FBSQLException(ex);
                 }
-                
-                return getUpdateCount();
-                
-            } catch(GDSException ex) {
-                throw new FBSQLException(ex);
-            } finally {
-                c.checkEndTransaction();
             }
+        } finally {
+            this.completed = true;
+            statementListener.statementCompleted(this);
         }
     }
 
@@ -955,14 +957,14 @@ public abstract class AbstractCallableStatement
         return currentRs;
     }
     
-    protected void cacheResultSet() throws SQLException {
-        
-        if (currentRs != null)
-            throw new FBDriverConsistencyCheckException(
-                    "Trying to cache result set before closing exitsing one.");
-        
-        currentRs = getCachedResultSet(false);
-    }
+//    protected void cacheResultSet() throws SQLException {
+//        
+//        if (currentRs != null)
+//            throw new FBDriverConsistencyCheckException(
+//                    "Trying to cache result set before closing exitsing one.");
+//        
+//        currentRs = getCachedResultSet(false);
+//    }
     
     /**
      * Returns the current result as a <code>ResultSet</code> object.

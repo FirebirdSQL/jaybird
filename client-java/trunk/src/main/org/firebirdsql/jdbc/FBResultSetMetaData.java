@@ -25,6 +25,7 @@ import java.sql.*;
 import java.sql.Date;
 import java.util.*;
 
+import org.firebirdsql.gds.GDSHelper;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
 
@@ -38,7 +39,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
 
     private final XSQLVAR[] xsqlvars;
     private Map extendedInfo;
-    private final AbstractConnection connection;
+    private final GDSHelper connection;
 
     /**
      * Creates a new <code>FBResultSetMetaData</code> instance.
@@ -50,7 +51,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @todo Need another constructor for metadata from constructed
      * result set, where we supply the ext field info.
      */
-    protected FBResultSetMetaData(XSQLVAR[] xsqlvars, AbstractConnection connection) throws SQLException {
+    protected FBResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
     }
@@ -723,7 +724,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      *
      * @throws SQLException if extended field information cannot be obtained.
      */
-    private Map getExtendedFieldInfo(AbstractConnection connection) throws SQLException {
+    private Map getExtendedFieldInfo(GDSHelper connection) throws SQLException {
 
         if (connection == null) return Collections.EMPTY_MAP;
 
@@ -756,10 +757,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
 
             }
 
-            ResultSet rs = connection.doQuery(
-                sb.toString(),
-                params,
-                ((FBDatabaseMetaData)connection.getMetaData()).statements);
+            FBDatabaseMetaData metaData = new FBDatabaseMetaData(connection);
+            ResultSet rs = metaData.doQuery(sb.toString(), params);
 
             try {
 

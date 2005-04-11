@@ -53,8 +53,7 @@ public class FirebirdStatementInfoFactory {
      * @param GDS A <code>GDS</code> implementation around which the 
      *        <code>FirebirdStatementInfoFactory</code> is to be built
      */
-    public synchronized static FirebirdStatementInfoFactory getInstance(
-                                                                    GDS gds){
+    public synchronized static FirebirdStatementInfoFactory getInstance(GDS gds){
         if (!factoryMap.containsKey(gds)){
             factoryMap.put(gds, new FirebirdStatementInfoFactory(gds));
         }

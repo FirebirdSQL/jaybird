@@ -50,7 +50,7 @@ public class TestXABase extends FBTestBase {
 
     public FBManagedConnectionFactory initMcf() {
 
-        FBManagedConnectionFactory mcf = createFBManagedConnectionFactory();
+        FBManagedConnectionFactory mcf = createFBManagedConnectionFactory(new InternalConnectionManager());
         mcf.setDatabase(DB_DATASOURCE_URL);
         FBConnectionRequestInfo cri = createFBConnectionRequestInfo();
         cri.setProperty(ISCConstants.isc_dpb_user_name, DB_USER);

@@ -47,7 +47,7 @@ public class TestFBLongField extends BaseTestFBField {
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
         xsqlvars[0] = createXSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_INT64;
-        field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), false);
+        field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), null, false);
     }
     protected void tearDown() {
     }

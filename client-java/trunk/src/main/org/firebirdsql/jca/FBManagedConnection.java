@@ -63,6 +63,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     private final FBTpb tpb;
 
     public boolean autoCommit = true;
+    private boolean managedEnvironment = true;
 
     FBManagedConnection(Subject subject, ConnectionRequestInfo cri,
             FBManagedConnectionFactory mcf) throws ResourceException {
@@ -76,7 +77,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             this.dbHandle = gds.get_new_isc_db_handle();
             gds.isc_attach_database(mcf.getDatabase(), dbHandle, this.cri.getDpb());
             
-            this.gdsHelper = new GDSHelper(this.gds, this.cri.getDpb(), this.tpb, this.dbHandle);
+            this.gdsHelper = new GDSHelper(this.gds, this.cri.getDpb(), this.dbHandle);
         } catch(GDSException ex) {
             throw new FBResourceException(ex);
         }
@@ -129,8 +130,14 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         return mcf.getDatabase();
     }
 
-    // javax.resource.spi.ManagedConnection implementation
-
+    public boolean isManagedEnvironment() {
+        return managedEnvironment;
+    }
+    
+    public void setManagedEnvironment(boolean managedEnvironment) {
+        this.managedEnvironment = managedEnvironment;
+    }
+    
     /**
      * Returns a <code>javax.resource.spi.LocalTransaction</code> instance.
      * The LocalTransaction interface is used by the container to manage local
@@ -350,6 +357,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      */
     public Object getConnection(Subject subject, ConnectionRequestInfo cri)
             throws ResourceException {
+        
         if (!matches(subject, cri))
             throw new FBResourceException("Incompatible subject or "
                     + "ConnectionRequestInfo in getConnection!");  
@@ -434,7 +442,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         try {
             
             mcf.notifyCommit(this, id, onePhase);
-            //internalCommit(id, twoPhase);
         } catch (GDSException ge) {
             throw new XAException(ge.getXAErrorCode());
         }
@@ -483,7 +490,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             }
             
         } catch (GDSException ge) {
-            if (log != null) log.debug("Fatal error committing, ", ge);
             ge.setXAErrorCode(XAException.XAER_RMERR);
             throw ge;
         }
@@ -593,9 +599,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public int prepare(Xid xid) throws javax.transaction.xa.XAException {
         try {
             return mcf.notifyPrepare(this, xid);
-            //return internalPrepare(xid);
         } catch (GDSException ge) {
-            if (log != null) log.debug("Exception in prepare", ge);
             throw new FBXAException(XAException.XAER_RMERR, ge);
         }
     }
@@ -670,7 +674,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
                     try {
                         long transactionID = recoveredRS.getLong(1);
                         InputStream xidIn = recoveredRS.getBinaryStream(2);
-                        FBXid xid = new FBXid(xidIn);
+                        FBXid xid = new FBXid(xidIn, transactionID);
                         xids.add(xid);
                         // what do we do with the Firebird transactionID?
                     } catch (SQLException sqle) {
@@ -679,7 +683,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
                     } 
 
                 }
-                return (Xid[]) xids.toArray(new Xid[xids.size()]);
+                return (FBXid[]) xids.toArray(new FBXid[xids.size()]);
             } finally {
                 conn.close();
             } 
@@ -709,10 +713,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     public void rollback(Xid id) throws XAException {
         try {
             mcf.notifyRollback(this, id);
-            //internalRollback(id);
         } catch (GDSException ge) {
-            throw new XAException(ge.getXAErrorCode());
-        } // end of try-catch
+            throw new FBXAException(ge.getXAErrorCode(), ge);
+        }
     }
 
     void internalRollback(Xid xid) throws XAException, GDSException {
@@ -876,7 +879,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             
             gdsHelper.setCurrentTrHandle(trHandle);
         } catch (GDSException ge) {
-
+            
             // Notify the connection manager.
             ConnectionEvent ce = new ConnectionEvent(this,
                     ConnectionEvent.CONNECTION_ERROR_OCCURRED, ge);
@@ -886,19 +889,22 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         }
     }
 
-//    isc_db_handle getIscDBHandle(Set reserved) throws GDSException {
-//        final isc_db_handle currentDbHandle = gdsHelper.getCurrentDbHandle();
-//        
-//        if (currentDbHandle == null) {
-//            gdsHelper.setCurrentDbHandle(mcf.getDbHandle(cri));
-//        } else if (reserved.contains(currentDbHandle)) {
-//            mcf.releaseDbHandle(currentDbHandle, cri);
-//            gdsHelper.setCurrentDbHandle(mcf.getDbHandle(cri));
-//        } // end of if ()
-//
-//        return currentDbHandle;
-//    }
-
+    /**
+     * The <code>checkFatal</code> method checks if the supplied
+     * GDSException is fatal and sends the ConnectionErrorOccurred
+     * notification if it is.
+     *
+     * @param ge a <code>GDSException</code> value
+     */
+    private void checkFatal(GDSException ge)
+    {
+        if (!ge.isFatal())
+            return;
+        
+        ConnectionEvent ce = new ConnectionEvent(this, ConnectionEvent.CONNECTION_ERROR_OCCURRED, ge);
+        notify(connectionErrorOccurredNotifier, ce);
+    }
+    
     void notify(CELNotifier notifier, ConnectionEvent ce) {
         if (connectionEventListeners.size() == 0) { return; }
         if (connectionEventListeners.size() == 1) {
@@ -973,4 +979,121 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         return tpb;
     }
 
+    /**
+     * Get the transaction isolation level of this connection. The level is one
+     * of the static final fields of <code>java.sql.Connection</code> (i.e.
+     * <code>TRANSACTION_READ_COMMITTED</code>,
+     * <code>TRANSACTION_READ_UNCOMMITTED</code>,
+     * <code>TRANSACTION_REPEATABLE_READ</code>,
+     * <code>TRANSACTION_SERIALIZABLE</code>.
+     * 
+     * @see java.sql.Connection
+     * @see setTransactionIsolation
+     * @return Value representing a transaction isolation level defined in
+     *         {@link java.sql.Connection}.
+     * @throws ResourceException
+     *             If the transaction level cannot be retrieved
+     */
+    public int getTransactionIsolation() throws ResourceException {
+        return tpb.getTransactionIsolation();
+    }
+
+    /**
+     * Set the transaction level for this connection. The level is one of the
+     * static final fields of <code>java.sql.Connection</code> (i.e.
+     * <code>TRANSACTION_READ_COMMITTED</code>,
+     * <code>TRANSACTION_READ_UNCOMMITTED</code>,
+     * <code>TRANSACTION_REPEATABLE_READ</code>,
+     * <code>TRANSACTION_SERIALIZABLE</code>.
+     * 
+     * @see java.sql.Connection
+     * @see getTransactionIsolation
+     * @param isolation
+     *            Value representing a transaction isolation level defined in
+     *            {@link java.sql.Connection}.
+     * @throws ResourceException
+     *             If the transaction level cannot be retrieved
+     */
+    public void setTransactionIsolation(int isolation) throws ResourceException {
+        tpb.setTransactionIsolation(isolation);
+    }
+
+    /**
+     * Get the name of the current transaction isolation level for this
+     * connection.
+     * 
+     * @see getTransactionIsolation
+     * @see setTransactionIsolationName
+     * @return The name of the current transaction isolation level
+     * @throws ResourceException
+     *             If the transaction level cannot be retrieved
+     */
+    public String getTransactionIsolationName() throws ResourceException {
+        return tpb.getTransactionIsolationName();
+    }
+
+    /**
+     * Set the current transaction isolation level for this connection by name
+     * of the level. The transaction isolation name must be one of the
+     * TRANSACTION_* static final fields in {@link org.firebirdsql.jca.FBTpb}.
+     * 
+     * @see getTransactionIsolationName
+     * @see FBTpb
+     * @param isolation
+     *            The name of the transaction isolation level to be set
+     * @throws ResourceException
+     *             if the transaction isolation level cannot be set to the
+     *             requested level, or if <code>isolation</code> is not a
+     *             valid transaction isolation name
+     */
+    public void setTransactionIsolationName(String isolation)
+            throws ResourceException {
+        tpb.setTransactionIsolationName(isolation);
+    }
+
+    /**
+     * @deprecated you should not use internal transaction isolation levels
+     *             directrly.
+     */
+    public int getIscTransactionIsolation() throws ResourceException {
+        return tpb.getIscTransactionIsolation();
+    }
+
+    /**
+     * @deprecated you should not use internal transaction isolation levels
+     *             directrly.
+     */
+    public void setIscTransactionIsolation(int isolation)
+            throws ResourceException {
+        tpb.setIscTransactionIsolation(isolation);
+    }
+
+    /**
+     * Set whether this connection is to be readonly
+     * 
+     * @param readOnly
+     *            If <code>true</code>, the connection will be set read-only,
+     *            otherwise it will be writable
+     */
+    public void setReadOnly(boolean readOnly) {
+        tpb.setReadOnly(readOnly);
+    }
+
+    /**
+     * Retrieve whether this connection is readonly.
+     * 
+     * @return <code>true</code> if this connection is readonly,
+     *         <code>false</code> otherwise
+     */
+    public boolean isReadOnly() {
+        return tpb.isReadOnly();
+    }
+
+    public boolean getAutoCommit() {
+        return autoCommit;
+    }
+    
+    public void setAutoCommit(boolean autoCommit) {
+        this.autoCommit = autoCommit;
+    }
 }
