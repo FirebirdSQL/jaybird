@@ -438,6 +438,15 @@ public class GDS_Impl extends AbstractGDS implements GDS {
             //                                Set tpb) throws GDSException;
             byte[] tpb) throws GDSException;
 
+    
+    
+    /* (non-Javadoc)
+     * @see org.firebirdsql.gds.GDS#isc_reconnect_transaction(org.firebirdsql.gds.isc_tr_handle, org.firebirdsql.gds.isc_db_handle, byte[])
+     */
+    public void isc_reconnect_transaction(isc_tr_handle tr_handle,
+            isc_db_handle db_handle, long transactionId) throws GDSException {
+        throw new UnsupportedOperationException();
+    }
     // isc_commit_transaction
     // ---------------------------------------------------------------------------------------------
     public void isc_commit_transaction(isc_tr_handle tr_handle)
