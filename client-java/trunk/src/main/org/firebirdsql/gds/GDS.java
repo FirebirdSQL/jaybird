@@ -179,11 +179,23 @@ public interface GDS {
      * @throws GDSException if an error occurs while starting the transaction
      * @see get_new_isc_tr_handle
      */
-    void isc_start_transaction(    isc_tr_handle tr_handle,
-                                isc_db_handle db_handle,
-//                                Set tpb) throws GDSException;
+    void isc_start_transaction(isc_tr_handle tr_handle, isc_db_handle db_handle,
                                 byte[] tpb) throws GDSException;
 
+
+    /**
+     * Reconnect "in limbo" transaction using new database handle.
+     * 
+     * @param tr_handle transaction handle that will be reconnected.
+     * @param db_handle database handle in which "in limbo" transaction will
+     * be reconnected.
+     * @param message message that was passed in {@link #isc_prepare_transaction2(isc_tr_handle, byte[])}
+     * method call.
+     * 
+     * @throws GDSException if something went wrong.
+     */
+    void isc_reconnect_transaction(isc_tr_handle tr_handle,
+            isc_db_handle db_handle, long transactionId) throws GDSException;
 
     /**
      * Commit a transaction.

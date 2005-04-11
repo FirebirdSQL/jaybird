@@ -456,10 +456,10 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
         }
 
         synchronized (db) {
-            if (db_handle.hasTransactions())
-            {
-                throw new GDSException(ISCConstants.isc_open_trans, db.getOpenTransactionCount());
-            } // end of if ()
+//            if (db_handle.hasTransactions())
+//            {
+//                throw new GDSException(ISCConstants.isc_open_trans, db.getOpenTransactionCount());
+//            } // end of if ()
             try {
                 if (debug) log.debug("op_detach ");
                 db.out.writeInt(op_detach);
@@ -552,6 +552,51 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
                 if (debug) log.debug("sent");
                 //out.flush();
                 receiveResponse(db,-1);
+            } catch (IOException ex) {
+                throw new GDSException(ISCConstants.isc_network_error);
+            }
+            tr.setTransactionId(db.getResp_object());
+
+            //tr.rtr_rdb = db;
+            tr.setDbHandle(db);
+            tr.setState(isc_tr_handle.TRANSACTIONSTARTED);
+            //db.rdb_transactions.addElement(tr);
+        }//end synch on db
+
+    }
+    
+    public void isc_reconnect_transaction(isc_tr_handle tr_handle,
+            isc_db_handle db_handle,
+            long transactionId) throws GDSException {
+
+        boolean debug = log != null && log.isDebugEnabled();
+        isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
+        isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
+
+        if (tr_handle == null) 
+            throw new GDSException(ISCConstants.isc_bad_trans_handle); 
+
+        if (db_handle == null) 
+            throw new GDSException(ISCConstants.isc_bad_db_handle); 
+        
+        synchronized (db) {
+            if (tr.getState() != isc_tr_handle.NOTRANSACTION) 
+                throw new GDSException(ISCConstants.isc_tra_state); 
+            
+            tr.setState(isc_tr_handle.TRANSACTIONSTARTING);
+
+            try {
+                if (debug) log.debug("op_transaction ");
+                db.out.writeInt(op_reconnect);
+                
+                // TODO check if sending db handle is needed, most likely not
+                db.out.writeInt(db.getRdb_id());
+                db.out.writeInt(8);
+                db.out.writeLong(transactionId);
+                db.out.flush();
+                if (debug) log.debug("sent");
+                // out.flush();
+                receiveResponse(db, -1);
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_network_error);
             }

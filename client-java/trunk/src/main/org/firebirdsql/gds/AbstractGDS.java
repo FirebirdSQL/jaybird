@@ -25,59 +25,50 @@ import java.io.IOException;
 import java.io.ObjectInput;
 
 /**
- * Base class for GDS implementations. This base class allows the GDS implementation
- * to be serialized and deserialized safeley.
- *
+ * Base class for GDS implementations. This base class allows the GDS
+ * implementation to be serialized and deserialized safeley.
+ * 
  */
-public abstract class AbstractGDS implements GDS, Externalizable
-    {
-    public AbstractGDS()
-        {
-        }
+public abstract class AbstractGDS implements GDS, Externalizable {
 
-    public AbstractGDS(GDSType gdsType)
-        {
+    public AbstractGDS() {
+    }
+
+    public AbstractGDS(GDSType gdsType) {
         this.gdsType = gdsType;
-        }
+    }
 
     /**
      * Get the type of this <code>GDS</code> implementation. The returned
-     * value will be equal to one of the static final fields of
-     * {@link GDSType}.
-     *
+     * value will be equal to one of the static final fields of {@link GDSType}.
+     * 
      * @return The type of the current <code>GDS</code> implementation
      * 
-     * @deprecated use {@link #getType()} instead. 
+     * @deprecated use {@link #getType()}instead.
      */
-    public GDSType getGdsType()
-        {
+    public GDSType getGdsType() {
         return getType();
-        }
-    
+    }
+
     public GDSType getType() {
         return gdsType;
     }
 
-    public void close()
-        {
-        }
+    public void close() {
+    }
 
-
-    public void writeExternal(ObjectOutput out) throws IOException
-        {
+    public void writeExternal(ObjectOutput out) throws IOException {
         out.writeObject(gdsType);
-        }
+    }
 
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException
-        {
+    public void readExternal(ObjectInput in) throws IOException,
+            ClassNotFoundException {
         gdsType = (GDSType) in.readObject();
-        }
+    }
 
-    public Object readResolve()
-        {
+    public Object readResolve() {
         return GDSFactory.getGDSForType(gdsType);
-        }
-
+    }
 
     private GDSType gdsType;
-    }
+}
