@@ -22,6 +22,7 @@ import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jca.FBConnectionRequestInfo;
+import org.firebirdsql.jca.InternalConnectionManager;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -35,6 +36,8 @@ import java.util.Properties;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Connection;
+
+import javax.resource.spi.ConnectionManager;
 
 /**
  * Base class for test cases which could be run against more then a single GDS implementation.
@@ -87,6 +90,12 @@ public class FBTestBase extends SimpleFBTestBase
         {
         return new FBManagedConnectionFactory(getGdsType());
         }
+    
+    protected FBManagedConnectionFactory createFBManagedConnectionFactory(ConnectionManager cm) {
+        FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(getGdsType());
+        mcf.setDefaultConnectionManager(new InternalConnectionManager());
+        return mcf;
+    }
 
     /**
      *

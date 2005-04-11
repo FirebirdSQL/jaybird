@@ -20,6 +20,7 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.GDSHelper;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jdbc.*;
@@ -145,7 +146,7 @@ public abstract class FBField {
     protected XSQLVAR field;
     private FieldDataProvider dataProvider;
     protected int numCol;
-    protected AbstractConnection c = null;
+    protected GDSHelper gdsHelper = null;
     protected String iscEncoding = null;
     protected String javaEncoding	= null;
     protected String mappingPath = null;
@@ -192,18 +193,18 @@ public abstract class FBField {
         setFieldData(null);
     }
 
-    public void setConnection(AbstractConnection c) {
-        this.c = c;
-        if (c!=null)
-            iscEncoding = c.getIscEncoding();
+    public void setConnection(GDSHelper gdsHelper) {
+        this.gdsHelper = gdsHelper;
+        if (gdsHelper != null)
+            iscEncoding = gdsHelper.getIscEncoding();
         
         if (iscEncoding != null && (iscEncoding.equalsIgnoreCase("NONE") 
 		  || iscEncoding.equalsIgnoreCase("BINARY")))
             iscEncoding = null;
         
-        if (c != null) {
-            javaEncoding = c.getJavaEncoding();
-            mappingPath = c.getMappingPath();
+        if (gdsHelper != null) {
+            javaEncoding = gdsHelper.getJavaEncoding();
+            mappingPath = gdsHelper.getMappingPath();
         }
     }
     
@@ -355,8 +356,15 @@ public abstract class FBField {
      * <code>FBField</code> class according to the SQL datatype. This instance
      * knows how to perform all necessary type conversions.
      */
-    public final static FBField createField(XSQLVAR field, FieldDataProvider dataProvider, boolean cached)
+    public final static FBField createField(XSQLVAR field, FieldDataProvider dataProvider, GDSHelper gdsHelper, boolean cached)
     throws SQLException {
+        FBField result = createField(field, dataProvider, cached);
+        result.setConnection(gdsHelper);
+        return result;
+    }
+        
+    private static FBField createField(XSQLVAR field, FieldDataProvider dataProvider, boolean cached)
+        throws SQLException {
         
         if (isType(field, Types.SMALLINT))
             if (field.sqlscale == 0)
@@ -794,9 +802,9 @@ public abstract class FBField {
     }
 
     protected boolean isInvertTimeZone() {
-        if (c == null) return false;
+        if (gdsHelper == null) return false;
         
-        DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
+        DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
         return dpb.hasArgument(DatabaseParameterBuffer.timestamp_uses_local_timezone);
     }
 }

@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.GDSHelper;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.jdbc.field.FBField;
@@ -55,7 +56,7 @@ import org.firebirdsql.jdbc.field.FieldDataProvider;
  */
 public class FBRowUpdater  {
 
-    private AbstractConnection connection;
+    private GDSHelper gdsHelper;
     private Synchronizable syncProvider;
     private XSQLVAR[] xsqlvars;
     
@@ -76,10 +77,10 @@ public class FBRowUpdater  {
     private isc_stmt_handle insertStatement;
     private isc_stmt_handle selectStatement;
 
-    public FBRowUpdater(AbstractConnection connection, XSQLVAR[] xsqlvars, 
-            Synchronizable syncProvider) throws SQLException {
+    public FBRowUpdater(GDSHelper connection, XSQLVAR[] xsqlvars, 
+            Synchronizable syncProvider, boolean cached) throws SQLException {
         
-        this.connection = connection;
+        this.gdsHelper = connection;
         this.syncProvider = syncProvider;
         
         this.xsqlvars = new XSQLVAR[xsqlvars.length];
@@ -119,8 +120,8 @@ public class FBRowUpdater  {
                 }
 
             };
-            
-            fields[i] = FBField.createField(this.xsqlvars[i], dataProvider, cached);
+
+            fields[i] = FBField.createField(this.xsqlvars[i], dataProvider, connection, cached);
         }
         
         // find the table name (there can be only one table per result set)
@@ -165,7 +166,9 @@ public class FBRowUpdater  {
     private boolean[] getParameterMask() throws SQLException {
 
         // loop through the "best row identifiers" and set appropriate falgs.
-        ResultSet bestRowIdentifier = connection.getMetaData().getBestRowIdentifier(
+        FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
+        
+        ResultSet bestRowIdentifier = metaData.getBestRowIdentifier(
             "", "", tableName, DatabaseMetaData.bestRowSession, true);
 
         try {
@@ -329,17 +332,13 @@ public class FBRowUpdater  {
         synchronized(mutex) {
             try {
                 
-                connection.ensureInTransaction();
-                
                 if (updateStatement == null)
-                    updateStatement = connection.getAllocatedStatement();
+                    updateStatement = gdsHelper.allocateStatement();
                 
                 executeStatement(UPDATE_STATEMENT_TYPE, updateStatement);
                 
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
-            } finally {
-                connection.checkEndTransaction();
             }
         }
     }
@@ -348,17 +347,13 @@ public class FBRowUpdater  {
         Object mutex = syncProvider.getSynchronizationObject();
         synchronized(mutex) {
             try {
-                connection.ensureInTransaction();
-                
                 if (deleteStatement == null)
-                    deleteStatement = connection.getAllocatedStatement();
+                    deleteStatement = gdsHelper.allocateStatement();
                 
                 executeStatement(DELETE_STATEMENT_TYPE, deleteStatement);
                 
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
-            } finally {
-                connection.checkEndTransaction();
             }
         }
     }
@@ -368,17 +363,13 @@ public class FBRowUpdater  {
         synchronized(mutex) {
             try {
                 
-                connection.ensureInTransaction();
-                
                 if (insertStatement == null)
-                    insertStatement = connection.getAllocatedStatement();
+                    insertStatement = gdsHelper.allocateStatement();
                 
                 executeStatement(INSERT_STATEMENT_TYPE, insertStatement);
                 
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
-            } finally {
-                connection.checkEndTransaction();
             }
         }
     }
@@ -388,10 +379,8 @@ public class FBRowUpdater  {
         synchronized(mutex) {
             try {
                 
-                connection.ensureInTransaction();
-                
                 if (selectStatement == null)
-                    selectStatement = connection.getAllocatedStatement();
+                    selectStatement = gdsHelper.allocateStatement();
                 
                 executeStatement(SELECT_STATEMENT_TYPE, selectStatement);
                 
@@ -406,8 +395,6 @@ public class FBRowUpdater  {
                 
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
-            } finally {
-                connection.checkEndTransaction();
             }
         }
     }
@@ -450,7 +437,7 @@ public class FBRowUpdater  {
                         "Incorrect statement type specified.");
             }
             
-            connection.prepareSQL(stmt, sql, true);
+            gdsHelper.prepareStatement(stmt, sql, true);
 
             XSQLVAR[] params = stmt.getInSqlda().sqlvar;
             
@@ -484,7 +471,7 @@ public class FBRowUpdater  {
                 paramIterator++;
             }
             
-            connection.executeStatement(stmt, false);
+            gdsHelper.executeStatement(stmt, false);
             
         } catch(GDSException ex) {
             throw new FBSQLException(ex);

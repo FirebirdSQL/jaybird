@@ -48,11 +48,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
 
     protected FBManagedConnection mc;
 
-    private FBLocalTransaction localTransaction = null;
+    private FBLocalTransaction localTransaction;
+    private FBDatabaseMetaData metaData;
+    
+    protected InternalTransactionCoordinator txCoordinator;
 
-    private FBDatabaseMetaData metaData = null;
-
-    private SQLWarning firstWarning = null;
+    private SQLWarning firstWarning;
      
     // This set contains all allocated but not closed statements
     // It is used to close them before the connection is closed
@@ -66,6 +67,17 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public AbstractConnection(FBManagedConnection mc) {
         this.mc = mc;
+        
+        this.localTransaction = new FBLocalTransaction(mc, this);
+        
+        if (!mc.isManagedEnvironment())
+            this.txCoordinator = new InternalTransactionCoordinator(new InternalTransactionCoordinator.AutoCommitCoordinator(this, localTransaction));
+        else
+            this.txCoordinator = new InternalTransactionCoordinator(new InternalTransactionCoordinator.ManagedTransactionCoordinator(this));
+    }
+    
+    public FBObjectListener.StatementListener getStatementListener() {
+        return txCoordinator;
     }
     
     /**
@@ -111,8 +123,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
         SQLException e = null;
         while(iter.hasNext()) {
             try {
-                Statement stmt = (Statement)iter.next();
-                stmt.close();
+                AbstractStatement stmt = (AbstractStatement)iter.next();
+                stmt.close(true);
             } catch(SQLException ex) {
                 if (e != null)
                     e.setNextException(ex);
@@ -328,19 +340,19 @@ public abstract class AbstractConnection implements FirebirdConnection {
         throws SQLException 
     {
         checkValidity();
+
+        if (mc.autoCommit == autoCommit) 
+            return;
         
         synchronized(mc) {
-            if (mc.autoCommit != autoCommit) {
-                try {
-                    if (inTransaction())
-                            getLocalTransaction().internalCommit();
-
-                    this.mc.autoCommit = autoCommit;
-
-                } catch (ResourceException ge) {
-                    throw new FBSQLException(ge);
-                }
-            } 
+            InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
+            if (autoCommit)
+                coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, localTransaction);
+            else
+                coordinator = new InternalTransactionCoordinator.LocalTransactionCoordinator(this, localTransaction);
+            
+            txCoordinator.setCoordinator(coordinator);
+            mc.setAutoCommit(autoCommit);
         }
     }
 
@@ -379,15 +391,17 @@ public abstract class AbstractConnection implements FirebirdConnection {
         if (getAutoCommit() && getInternalAPIHandler().getType() != GDSType.ORACLE_MODE)
             throw new FBSQLException("commit called with AutoCommit true!");
 
-        synchronized(mc) {
-            try {
-                if (inTransaction())
-                    getLocalTransaction().internalCommit();
-                
-            } catch(ResourceException ge) {
-                throw new FBSQLException(ge);
-            }
-        } 
+//        synchronized(mc) {
+//            try {
+//                if (inTransaction())
+//                    getLocalTransaction().internalCommit();
+//                
+//            } catch(ResourceException ge) {
+//                throw new FBSQLException(ge);
+//            }
+//        }
+        
+        txCoordinator.commit();
     }
 
 
@@ -409,15 +423,17 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 "You cannot rollback closed connection.",
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
 
-        synchronized(mc) {
-            try{
-                if (inTransaction())
-                    getLocalTransaction().internalRollback();
-                
-            } catch(ResourceException ex) {
-                throw new FBSQLException(ex);
-            }
-        }
+//        synchronized(mc) {
+//            try{
+//                if (inTransaction())
+//                    getLocalTransaction().internalRollback();
+//                
+//            } catch(ResourceException ex) {
+//                throw new FBSQLException(ex);
+//            }
+//        }
+        
+        txCoordinator.rollback();
     }
 
     /**
@@ -444,14 +460,16 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 //committed after the Connection handle is closed.
                 
                 synchronized(mc) {
-                    if (!getAutoCommit()) {
+                    if (!getAutoCommit() && localTransaction.inTransaction()) {
                         //autocommit is always true for managed tx.
                         try {
-                            if (inTransaction())
-                                    getLocalTransaction().internalRollback();
-
-                        } catch (ResourceException ge) {
-                            throw new FBSQLException(ge);
+//                            if (inTransaction())
+//                                    getLocalTransaction().internalRollback();
+//
+//                        } catch (ResourceException ge) {
+//                            throw new FBSQLException(ge);
+                            
+                            txCoordinator.rollback();
                         } finally {
                             //always reset Autocommit for the next user.
                             setAutoCommit(true);
@@ -491,10 +509,15 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public synchronized DatabaseMetaData getMetaData() throws SQLException {
-        if (metaData == null) {
-            metaData = new FBDatabaseMetaData(this);
+        try {
+            if (metaData == null) 
+                metaData = new FBDatabaseMetaData(this);
+            
+            
+            return metaData;
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
         }
-        return metaData;
     }
 
 
@@ -510,7 +533,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public synchronized void setReadOnly(boolean readOnly) throws SQLException {
-        mc.getGDSHelper().setReadOnly(readOnly);
+        mc.setReadOnly(readOnly);
     }
 
 
@@ -521,7 +544,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public boolean isReadOnly() throws SQLException {
-        return mc.getGDSHelper().isReadOnly();
+        return mc.isReadOnly();
     }
 
 
@@ -578,7 +601,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
                     if (inTransaction())
                             getLocalTransaction().internalCommit();
 
-                    mc.getGDSHelper().setTransactionIsolation(level);
+                    mc.setTransactionIsolation(level);
 
                 } catch (ResourceException re) {
                     throw new FBSQLException(re);
@@ -596,7 +619,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public int getTransactionIsolation() throws SQLException {
         try 
         {
-            return mc.getGDSHelper().getTransactionIsolation();
+            return mc.getTransactionIsolation();
         }
         catch (ResourceException e)
         {
@@ -672,9 +695,13 @@ public abstract class AbstractConnection implements FirebirdConnection {
             
         }			  
           
-        Statement stmt =  new FBStatement(this, resultSetType, resultSetConcurrency);
-        activeStatements.add(stmt);
-        return stmt;
+        try {
+            Statement stmt =  new FBStatement(getGDSHelper(), resultSetType, resultSetConcurrency, txCoordinator);
+            activeStatements.add(stmt);
+            return stmt;
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
+        }
     }
 
 
@@ -707,11 +734,16 @@ public abstract class AbstractConnection implements FirebirdConnection {
               
 		  }
           
-          stmt = new FBPreparedStatement(
-                  this, sql, resultSetType, resultSetConcurrency);
-          
-          activeStatements.add(stmt);
-          return stmt;
+          try {
+              stmt = new FBPreparedStatement(
+                      getGDSHelper(), sql, resultSetType, resultSetConcurrency, txCoordinator);
+              
+              activeStatements.add(stmt);
+              return stmt;
+              
+          } catch(GDSException ex) {
+              throw new FBSQLException(ex);
+          }
     }
 
     /**
@@ -744,12 +776,14 @@ public abstract class AbstractConnection implements FirebirdConnection {
             
             resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
         }	
-        
-        stmt = new FBCallableStatement(this, sql, resultSetType, resultSetConcurrency);
-        
-        activeStatements.add(stmt);
-        
-        return stmt;
+
+        try {
+            stmt = new FBCallableStatement(getGDSHelper(), sql, resultSetType, resultSetConcurrency, txCoordinator);
+            activeStatements.add(stmt);
+            return stmt;
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
+        }
     }
 
 
@@ -792,12 +826,13 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * demarcate resource manager local transactions on this connection.
      */
     public synchronized FBLocalTransaction getLocalTransaction() {
-        synchronized(mc) {
-            if (localTransaction == null) {
-                localTransaction = new FBLocalTransaction(mc, this);
-            }
-            return localTransaction;
-        }
+//        synchronized(mc) {
+//            if (localTransaction == null) {
+//                localTransaction = new FBLocalTransaction(mc, this);
+//            }
+//            return localTransaction;
+//        }
+        return localTransaction;
     }
 
     /**
@@ -807,12 +842,11 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * to modify.
     */
     public synchronized FirebirdBlob createBlob() throws SQLException {
-        
-        /** @todo check if this is correct code */
-        if (!getAutoCommit())
-            ensureInTransaction();
-
-        return new FBBlob(this);
+        try {
+            return new FBBlob(getGDSHelper(), txCoordinator);
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
+        }
     }
 
     //package methods
@@ -849,27 +883,27 @@ public abstract class AbstractConnection implements FirebirdConnection {
      *
      * @return a <code>boolean</code> value, true if transaction was started.
      */
-    public synchronized void ensureInTransaction() throws SQLException {
-        if (autoTransaction)
-            transactionCount++;
-        
-        synchronized (mc) {
-            try {
-                if (inTransaction()) {
-                    // autoTransaction = false;
-                    return;
-                }
-
-                //We have to start our own transaction
-                getLocalTransaction().begin();
-                autoTransaction = true;
-                transactionCount = 1;
-
-            } catch (ResourceException re) {
-                throw new FBSQLException(re);
-            }
-        }
-    }
+//    public synchronized void ensureInTransaction() throws SQLException {
+//        if (autoTransaction)
+//            transactionCount++;
+//        
+//        synchronized (mc) {
+//            try {
+//                if (inTransaction()) {
+//                    // autoTransaction = false;
+//                    return;
+//                }
+//
+//                //We have to start our own transaction
+//                getLocalTransaction().begin();
+//                autoTransaction = true;
+//                transactionCount = 1;
+//
+//            } catch (ResourceException re) {
+//                throw new FBSQLException(re);
+//            }
+//        }
+//    }
 
     /**
      * The <code>willEndTransaction</code> method determines if the current 
@@ -884,9 +918,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
      *
      * @return a <code>boolean</code> value
      */
-    public synchronized boolean willEndTransaction() throws SQLException {
-        return getAutoCommit() && autoTransaction;
-    }
+//    public synchronized boolean willEndTransaction() throws SQLException {
+//        return getAutoCommit() && autoTransaction;
+//    }
 
     /**
      * Ensure that the current implicit transaction is ended (if there is
@@ -894,9 +928,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
      *
      * @throws SQLException if a database access error occurs
      */
-    public synchronized void checkEndTransaction() throws SQLException {
-        checkEndTransaction(true);
-    }
+//    public synchronized void checkEndTransaction() throws SQLException {
+//        checkEndTransaction(true);
+//    }
     
     /**
      * Ensure that the current implicit transaction is ended (if there is one),
@@ -906,26 +940,26 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * end the transaction with a rollback
      * @throws SQLException if a database access error occurrs
      */
-    public synchronized void checkEndTransaction(boolean commit) throws SQLException {
-        if (autoTransaction)
-            transactionCount--;
-        
-        if (willEndTransaction() && transactionCount == 0)
-        {
-            autoTransaction = false;
-            synchronized(mc) {
-                try {
-                    if (commit)
-                        getLocalTransaction().internalCommit();
-                    else
-                        getLocalTransaction().internalRollback();
-                } catch (ResourceException ge) {
-                    throw new FBSQLException(ge);
-                }
-            }
-
-        }
-    }
+//    public synchronized void checkEndTransaction(boolean commit) throws SQLException {
+//        if (autoTransaction)
+//            transactionCount--;
+//        
+//        if (willEndTransaction() && transactionCount == 0)
+//        {
+//            autoTransaction = false;
+//            synchronized(mc) {
+//                try {
+//                    if (commit)
+//                        getLocalTransaction().internalCommit();
+//                    else
+//                        getLocalTransaction().internalRollback();
+//                } catch (ResourceException ge) {
+//                    throw new FBSQLException(ge);
+//                }
+//            }
+//
+//        }
+//    }
 
 	 protected synchronized void addWarning(SQLWarning warning){
 		 if (firstWarning == null)
@@ -985,7 +1019,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public isc_stmt_handle getAllocatedStatement() throws GDSException {
         checkManagedConnection();    
-        return mc.getGDSHelper().getAllocatedStatement();
+        return mc.getGDSHelper().allocateStatement();
     }
 
     /**
@@ -1011,12 +1045,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * statement is just closed
      * @throws GDSException if an error occurs with the underlying connection
      */
-    public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
-        checkManagedConnection();
-        if (stmt == null || !stmt.isValid())
-            throw new GDSException(ISCConstants.isc_bad_req_handle);
-        mc.getGDSHelper().closeStatement(stmt,deallocate);
-    }	 
+//    public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
+//        checkManagedConnection();
+//        if (stmt == null || !stmt.isValid())
+//            throw new GDSException(ISCConstants.isc_bad_req_handle);
+//        mc.getGDSHelper().closeStatement(stmt,deallocate);
+//    }	 
 
     /**
      * Prepare an sql statement for a given statement handle.
@@ -1029,7 +1063,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException, SQLException {
         checkManagedConnection();
-        mc.getGDSHelper().prepareSQL(stmt, sql, describeBind);
+        mc.getGDSHelper().prepareStatement(stmt, sql, describeBind);
     }
 	 
     /**
@@ -1038,9 +1072,16 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @param fbStatement The statement to be registered
      */
     public void registerStatement(AbstractStatement fbStatement) {
-        mc.getGDSHelper().registerStatement(fbStatement.fixedStmt);
+        // FIXME throw this code away
+        // mc.getGDSHelper().registerStatement(fbStatement.fixedStmt);
     }
 	 
+    public GDSHelper getGDSHelper() throws GDSException {
+        checkManagedConnection();
+        
+        return mc.getGDSHelper();
+    }
+    
     /**
      * Fetch the next batch of row data from a statement handle.
      * 
@@ -1142,7 +1183,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public isc_blob_handle openBlobHandle(long blob_id, boolean segmented) throws GDSException {
         checkManagedConnection();
-        return mc.getGDSHelper().openBlobHandle(blob_id, segmented);
+        return mc.getGDSHelper().openBlob(blob_id, segmented);
     }	 
 	 
     /**
@@ -1177,7 +1218,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public isc_blob_handle createBlobHandle(boolean segmented) throws GDSException {
         checkManagedConnection();
-        return mc.getGDSHelper().createBlobHandle(segmented);
+        return mc.getGDSHelper().createBlob(segmented);
     }
 	 
     /**
@@ -1212,34 +1253,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
             DatabaseParameterBuffer.mapping_path);
     }
 	 
-    private AbstractPreparedStatement getStatement(String sql,HashMap statements) 
-	 throws SQLException {
-        AbstractPreparedStatement s = (AbstractPreparedStatement)statements.get(sql);
-        if (s == null) {
-            s = (AbstractPreparedStatement)prepareStatement(sql);
-            statements.put(sql, s);
-        }
-        return s;
-    }
-	 
-    /**
-     * Execute an sql query with a given set of parameters.
-     *
-     * @param sql The sql statement to be used for the query
-     * @param params The parameters to be used in the query
-     * @param statements map of sql-&gt;AbstractStatements mappings
-     * @throws SQLException if a database access error occurs
-     */
-    public synchronized ResultSet doQuery(String sql, List params,HashMap statements) 
-	 throws SQLException
-    {
-        AbstractPreparedStatement s = getStatement(sql, statements);
-        for (int i = 0; i < params.size(); i++) 
-            s.setStringForced(i + 1, (String) params.get(i));
-        
-        return s.executeMetaDataQuery();
-    }
-
     protected void finalize() throws Throwable {
         close();
     }

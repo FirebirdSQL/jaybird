@@ -23,6 +23,7 @@ import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.firebirdsql.gds.GDSHelper;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.jdbc.AbstractConnection;
 import org.firebirdsql.jdbc.FBConnectionHelper;
@@ -50,6 +51,7 @@ public class FBWorkaroundStringField extends FBStringField {
 
     private int possibleCharLength;
     private int bytesPerCharacter;
+    private boolean trimString;
     
     /**
      * Create instance of this class for the specified field and result set.
@@ -74,11 +76,15 @@ public class FBWorkaroundStringField extends FBStringField {
      * Set connection for this field. This method estimates character
      * length and bytes per chracter.
      */
-    public void setConnection(AbstractConnection c) {
-        super.setConnection(c);
+    public void setConnection(GDSHelper gdsHelper) {
+        super.setConnection(gdsHelper);
 
         bytesPerCharacter = FBConnectionHelper.getIscEncodingSize(iscEncoding);
         possibleCharLength = field.sqllen / bytesPerCharacter;
+    }
+    
+    public void setTrimString(boolean trimString) {
+        this.trimString = trimString;
     }
 
     public void setString(String value) throws SQLException {
@@ -125,6 +131,9 @@ public class FBWorkaroundStringField extends FBStringField {
         // fix incorrect padding done by the database for multibyte charsets
         if ((field.sqllen % bytesPerCharacter) == 0 && result.length() > possibleCharLength)
             result = result.substring(0, possibleCharLength);
+        
+        if (trimString)
+            result = result.trim();
         
         return result;
     }

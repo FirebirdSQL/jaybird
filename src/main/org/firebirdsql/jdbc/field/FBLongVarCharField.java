@@ -79,7 +79,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (getFieldData()==null)
             return BLOB_NULL_VALUE;
 
-        blob = new FBBlob(c, field.decodeLong(getFieldData()));
+        blob = new FBBlob(gdsHelper, field.decodeLong(getFieldData()));
         return blob;
     }
     
@@ -176,12 +176,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     }
 
     private void copyBinaryStream(InputStream in, int length) throws SQLException {
-        
-        /** @todo check if this is correct!!! */
-        if (!c.getAutoCommit())
-            c.ensureInTransaction();
-        
-        FBBlob blob =  new FBBlob(c, 0);
+        FBBlob blob =  new FBBlob(gdsHelper);
         blob.copyStream(in, length);
         setFieldData(field.encodeLong(blob.getBlobId()));
     }
@@ -193,29 +188,29 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
             return;
         }
         
-        if (!c.getAutoCommit()) {
+//        if (!gdsHelper.getAutoCommit()) {
             copyBinaryStream(in, length);
-        } else {
-            byte[] buff = new byte[BUFF_SIZE];
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(length);
-
-            int chunk;
-            try {
-                while (length >0) {
-                    chunk =in.read(buff, 0, ((length<BUFF_SIZE) ? length:BUFF_SIZE));
-                    bout.write(buff, 0, chunk);
-                    length -= chunk;
-                }
-                bout.close();
-            }
-            catch (IOException ioe) {
-                throw new FBSQLException(ioe);
-            }
-
-            this.data = bout.toByteArray();
-            this.length = data.length;
-            isCachedData = true;
-        }
+//        } else {
+//            byte[] buff = new byte[BUFF_SIZE];
+//            ByteArrayOutputStream bout = new ByteArrayOutputStream(length);
+//
+//            int chunk;
+//            try {
+//                while (length >0) {
+//                    chunk =in.read(buff, 0, ((length<BUFF_SIZE) ? length:BUFF_SIZE));
+//                    bout.write(buff, 0, chunk);
+//                    length -= chunk;
+//                }
+//                bout.close();
+//            }
+//            catch (IOException ioe) {
+//                throw new FBSQLException(ioe);
+//            }
+//
+//            this.data = bout.toByteArray();
+//            this.length = data.length;
+//            isCachedData = true;
+//        }
     }
 
     public void flushCachedData() throws SQLException {

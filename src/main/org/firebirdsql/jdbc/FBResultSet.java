@@ -38,13 +38,13 @@ import org.firebirdsql.jdbc.field.*;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBResultSet implements ResultSet, Synchronizable {
+public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.FetcherListener {
 
     private AbstractStatement fbStatement;
     private FBFetcher fbFetcher;
     private FBRowUpdater rowUpdater;
 
-    protected AbstractConnection c;
+    protected GDSHelper gdsHelper;
 
     public XSQLVAR[] xsqlvars;
 
@@ -74,14 +74,35 @@ public class FBResultSet implements ResultSet, Synchronizable {
     
     private boolean paranoiaModa;
     
+    
+    
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#allRowsFetched(org.firebirdsql.jdbc.FBFetcher)
+     */
+    public void allRowsFetched(FBFetcher fetcher) throws SQLException {
+        // notify our listener that all rows were fetched.
+        listener.allRowsFetched(this);
+    }
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#fetcherClosed(org.firebirdsql.jdbc.FBFetcher)
+     */
+    public void fetcherClosed(FBFetcher fetcher) throws SQLException {
+        // ignore, there nothing to do here
+    }
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#rowChanged(org.firebirdsql.jdbc.FBFetcher, byte[][])
+     */
+    public void rowChanged(FBFetcher fetcher, byte[][] newRow) throws SQLException {
+        this.row = newRow;
+    }
 	 /**
      * Creates a new <code>FBResultSet</code> instance.
      *
-     * @param c a <code>AbstractConnection</code> value
+     * @param gdsHelper a <code>AbstractConnection</code> value
      * @param fbStatement a <code>AbstractStatement</code> value
      * @param stmt an <code>isc_stmt_handle</code> value
      */
-    protected FBResultSet(AbstractConnection c, 
+    protected FBResultSet(GDSHelper gdsHelper, 
                           AbstractStatement fbStatement, 
                           isc_stmt_handle stmt, 
                           FBObjectListener.ResultSetListener listener,
@@ -91,7 +112,7 @@ public class FBResultSet implements ResultSet, Synchronizable {
                           boolean cached) 
     throws SQLException {
         
-        this.c = c;
+        this.gdsHelper = gdsHelper;
         this.cursorName = fbStatement.getCursorName();
         
         this.listener = listener;
@@ -102,7 +123,7 @@ public class FBResultSet implements ResultSet, Synchronizable {
         this.trimStrings = trimStrings;
         
         // check if we are running in paranoia mode
-        checkParanoiaMode(c);
+        checkParanoiaMode(gdsHelper);
         
         this.xsqlvars = stmt.getOutSqlda().sqlvar;
         this.maxRows = fbStatement.getMaxRows();
@@ -111,16 +132,19 @@ public class FBResultSet implements ResultSet, Synchronizable {
         
         boolean updatableCursor = fbStatement.isUpdatableCursor();
 
-        //prepareVars((!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE) || cached);
+        if (rsType == ResultSet.TYPE_SCROLL_INSENSITIVE)
+            cached = true;
         
-        if (cached || rsType == ResultSet.TYPE_SCROLL_INSENSITIVE) {
+        if (cached) {
             prepareVars(true);
-            fbFetcher = new FBCachedFetcher(this.c, fbStatement, stmt, this);
+            fbFetcher = new FBCachedFetcher(gdsHelper,
+                    fbStatement.fetchSize, fbStatement.maxRows, stmt, this,
+                    rsType == ResultSet.TYPE_FORWARD_ONLY);
         } else {
             prepareVars(false);
             
             if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
-                c.addWarning(new FBSQLWarning(
+                fbStatement.addWarning(new FBSQLWarning(
                     "Result set type changed. " +
                     "ResultSet.TYPE_SCROLL_SENSITIVE is not supported."));
                     
@@ -128,48 +152,26 @@ public class FBResultSet implements ResultSet, Synchronizable {
             }
             
             if (updatableCursor)  
-                fbFetcher = new FBUpdatableCursorFetcher(this.c, fbStatement, stmt, this);
+                fbFetcher = new FBUpdatableCursorFetcher(gdsHelper,
+                        fbStatement, stmt, this, fbStatement.getMaxRows(),
+                        fbStatement.getFetchSize());
             else
-                fbFetcher = new FBStatementFetcher(this.c, fbStatement, stmt, this);
+                fbFetcher = new FBStatementFetcher(gdsHelper,
+                        fbStatement, stmt, this, fbStatement.getMaxRows(),
+                        fbStatement.getFetchSize());
         }
         
         if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
             try {
-                rowUpdater = new FBRowUpdater(c, xsqlvars, this);
+                rowUpdater = new FBRowUpdater(gdsHelper, xsqlvars, this, cached);
             } catch (FBResultSetNotUpdatableException ex) {
-                c.addWarning(new FBSQLWarning(
+                fbStatement.addWarning(new FBSQLWarning(
                     "Result set concurrency changed to READ ONLY."));
 
                 rsConcurrency = ResultSet.CONCUR_READ_ONLY;
             }
         }
     }
-
-    /*
-     * Creates an instance of this class and caches complete result set for
-     * later use. This constructor should be used only in auto-commit case.
-     * 
-     * @param c active database connection
-     * @param stmt statement handle
-     * @param trimStrings <code>true</code> if we should trim strings (used 
-     * in {@link FBDatabaseMetaData} class).
-     * @throws SQLException if database access error occurs
-     */
-//    protected FBResultSet(AbstractConnection c, AbstractStatement fbStatement,isc_stmt_handle stmt, 
-//        boolean trimStrings, FBObjectListener.ResultSetListener listener) 
-//        throws SQLException 
-//    {
-//        this.c = c;
-//        this.trimStrings = trimStrings;
-//        this.listener = listener;
-//        
-//        checkParanoiaMode(c);
-//        
-//        maxRows = fbStatement.getMaxRows();
-//        xsqlvars = stmt.getOutSqlda().sqlvar;
-//        prepareVars(true);
-//        fbFetcher = new FBCachedFetcher(this.c, fbStatement, stmt, this);
-//    }
 
     protected FBResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
         maxRows = 0;
@@ -178,8 +180,8 @@ public class FBResultSet implements ResultSet, Synchronizable {
         prepareVars(true);
     }
     
-    private void checkParanoiaMode(AbstractConnection c) {
-        DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
+    private void checkParanoiaMode(GDSHelper gdsHelper) {
+        DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
         paranoiaModa = dpb.hasArgument(DatabaseParameterBuffer.paranoia_mode);
     }
 
@@ -200,8 +202,7 @@ public class FBResultSet implements ResultSet, Synchronizable {
                   }
               };
               
-            fields[i] = FBField.createField(xsqlvars[i], dataProvider, cached);
-            fields[i].setConnection(c);
+            fields[i] = FBField.createField(xsqlvars[i], dataProvider, gdsHelper, cached);
         }
     }
     
@@ -278,6 +279,10 @@ public class FBResultSet implements ResultSet, Synchronizable {
      * @exception SQLException if a database access error occurs
      */
     public void close() throws  SQLException {
+        close(true);
+    }
+    
+    void close(boolean notifyListener) throws SQLException {
         if (closed && paranoiaModa) throw new FBSQLException("The resultSet is closed");
         wasNullValid = false;
         closed = true;
@@ -288,12 +293,15 @@ public class FBResultSet implements ResultSet, Synchronizable {
                 fields[i].close();
             
         } finally {
-            fbFetcher.close();
+            if (fbFetcher != null) {
+                fbFetcher.close();
+
+                if (listener != null && notifyListener)
+                    listener.resultSetClosed(this);
+
+            }
             fbFetcher = null;
         }
-        
-        if (listener != null)
-            listener.resultSetClosed(this);
     }
 
 
@@ -961,7 +969,7 @@ public class FBResultSet implements ResultSet, Synchronizable {
      * this result set is constructed in code.
      */
     public ResultSetMetaData getMetaData() throws  SQLException {
-        return new FBResultSetMetaData(xsqlvars, c);
+        return new FBResultSetMetaData(xsqlvars, gdsHelper);
     }
 
 

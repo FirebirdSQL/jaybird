@@ -56,14 +56,20 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
     private static final String SPACES = "                               ";//31 spaces
 
-    private AbstractConnection c;
+    private GDSHelper gdsHelper;
+    private AbstractConnection connection;
 
     HashMap statements = new HashMap();
 
     //PreparedStatement tables = null;
 
-    FBDatabaseMetaData(AbstractConnection c) {
-        this.c = c;
+    FBDatabaseMetaData(GDSHelper gdsHelper) {
+        this.gdsHelper = gdsHelper;
+    }
+    
+    FBDatabaseMetaData(AbstractConnection c) throws GDSException {
+        this.gdsHelper = c.getGDSHelper();
+        this.connection = c;
     }
 
     void close() {
@@ -121,7 +127,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getURL() throws SQLException {
-        return FBDriver.FIREBIRD_PROTOCOL + c.mc.getDatabase();
+        return FBDriver.FIREBIRD_PROTOCOL + connection.mc.getDatabase();
     }
 
 
@@ -132,7 +138,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getUserName() throws SQLException {
-        return c.getUserName();
+        return gdsHelper.getUserName();
     }
 
 
@@ -202,7 +208,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getDatabaseProductName() throws SQLException {
-        return c.getDatabaseProductName();
+        return gdsHelper.getDatabaseProductName();
     }
 
 
@@ -213,7 +219,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getDatabaseProductVersion() throws SQLException {
-        return c.getDatabaseProductVersion();
+        return gdsHelper.getDatabaseProductVersion();
     }
 
 
@@ -1873,7 +1879,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!procedureClause.getCondition().equals("")) {
             params.add(procedureClause.getValue());
         }
-        ResultSet rs = c.doQuery(sql, params, statements);
+        ResultSet rs = doQuery(sql, params);
         XSQLVAR[] xsqlvars = new XSQLVAR[8];
 
         xsqlvars[0] = new XSQLVAR();
@@ -2042,7 +2048,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             params.add(columnClause.getValue());
         }
 
-        ResultSet rs = c.doQuery(sql, params, statements);
+        ResultSet rs = doQuery(sql, params);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[13];
 
@@ -2327,7 +2333,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             params.add(getWantsViews(types));
             params.add(tableNamePattern);
         }
-        return c.doQuery(sql, params, statements);
+        return doQuery(sql, params);
     }
 
 
@@ -2513,7 +2519,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             params.add(columnClause.getValue());
         }
 
-        ResultSet rs = c.doQuery(sql, params, statements);
+        ResultSet rs = doQuery(sql, params);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[18];
 
@@ -2908,7 +2914,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!columnClause.getCondition().equals("")) {
             params.add(columnClause.getValue());
         }
-        ResultSet rs = c.doQuery(sql, params, statements);
+        ResultSet rs = doQuery(sql, params);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[8];
 
@@ -3057,7 +3063,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getValue());
         }
-        ResultSet rs = c.doQuery(sql, params, statements);
+        ResultSet rs = doQuery(sql, params);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[7];
 
@@ -3292,7 +3298,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         params.add(table);
         params.add(table);
         
-        ResultSet rs = c.doQuery(GET_BEST_ROW_IDENT, params, statements);
+        ResultSet rs = doQuery(GET_BEST_ROW_IDENT, params);
         
         while (rs.next()) {
             byte[][] row = new byte[8][];
@@ -3445,7 +3451,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getValue());
         }
-        ResultSet rs = c.doQuery(sql, params, statements);
+        ResultSet rs = doQuery(sql, params);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[6];
 
@@ -3610,7 +3616,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getValue());
         }
-        ResultSet rs = c.doQuery(sql, params, statements);
+        ResultSet rs = doQuery(sql, params);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
 
@@ -3844,7 +3850,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             params.add(tableClause.getValue());
         }
 
-        ResultSet rs = c.doQuery(sql, params, statements);
+        ResultSet rs = doQuery(sql, params);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
 
@@ -4098,7 +4104,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             params.add(foreignTableClause.getValue());
         }
 
-        ResultSet rs = c.doQuery(sql, params, statements);
+        ResultSet rs = doQuery(sql, params);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
 
@@ -4592,7 +4598,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         ArrayList params = new ArrayList();
         params.add(table.toUpperCase());
 
-        ResultSet rs = c.doQuery(sql, params, statements);
+        ResultSet rs = doQuery(sql, params);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[13];
 
@@ -5018,7 +5024,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public Connection getConnection() throws SQLException {
-        return c;
+        return connection;
     }
 
     //jdbc 3 methods
@@ -5267,7 +5273,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public int getDatabaseMajorVersion() throws SQLException {
         try {
-            return c.getIscDBHandle().getDatabaseProductMajorVersion();
+            return gdsHelper.getIscDBHandle().getDatabaseProductMajorVersion();
         } catch (GDSException e) {
             throw new FBSQLException(e);
         }
@@ -5280,7 +5286,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public int getDatabaseMinorVersion() throws SQLException {
         try {
-            return c.getIscDBHandle().getDatabaseProductMinorVersion();
+            return gdsHelper.getIscDBHandle().getDatabaseProductMinorVersion();
         } catch (GDSException e) {
             throw new FBSQLException(e);
         }
@@ -5519,5 +5525,50 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             return value.getBytes();
         else
             return null;
+    }
+    
+    private AbstractPreparedStatement getStatement(String sql) throws SQLException {
+        
+        AbstractPreparedStatement s = 
+            (AbstractPreparedStatement)statements.get(sql);
+        
+        if (s != null) 
+            return s;
+        
+        if (connection == null) {
+            s = new FBPreparedStatement(gdsHelper, sql,
+                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
+                    new InternalTransactionCoordinator.DummyTransactionCoordinator());
+        } else {
+            s = (AbstractPreparedStatement)connection.prepareStatement(
+                sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        }
+            
+        statements.put(sql, s);
+        
+        return s;
+    }
+
+    /**
+     * Execute an sql query with a given set of parameters.
+     * 
+     * @param sql
+     *            The sql statement to be used for the query
+     * @param params
+     *            The parameters to be used in the query
+     * @param statements
+     *            map of sql-&gt;AbstractStatements mappings
+     * @throws SQLException
+     *             if a database access error occurs
+     */
+    public ResultSet doQuery(String sql, List params)
+            throws SQLException {
+        
+        AbstractPreparedStatement s = getStatement(sql);
+        
+        for (int i = 0; i < params.size(); i++)
+            s.setStringForced(i + 1, (String) params.get(i));
+
+        return s.executeMetaDataQuery();
     }
 }

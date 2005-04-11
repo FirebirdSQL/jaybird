@@ -20,6 +20,8 @@ package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 
+import org.firebirdsql.gds.GDSHelper;
+
 /**
  * JDBC 2.0 compliant implementation of {@link PreparedStatement} interface.
  * 
@@ -35,10 +37,11 @@ public class FBPreparedStatement extends AbstractPreparedStatement {
      * 
      * @throws SQLException if something went wrong.
      */
-    public FBPreparedStatement(AbstractConnection c, String sql, 
-                               int rsType, int rsConcurrency)
+    public FBPreparedStatement(GDSHelper gdsHelper, String sql, 
+                               int rsType, int rsConcurrency,
+                               FBObjectListener.StatementListener statementListener)
     throws SQLException {
-        super(c, sql, rsType, rsConcurrency);
+        super(gdsHelper, sql, rsType, rsConcurrency, statementListener);
     }
 
 }

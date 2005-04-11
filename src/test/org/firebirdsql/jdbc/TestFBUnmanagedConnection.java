@@ -94,7 +94,7 @@ public class TestFBUnmanagedConnection extends FBTestBase {
     }
 
     public void testCommit() throws Exception {
-        try{
+//        try{
             connection.setAutoCommit(false);
             Statement statement = connection.createStatement();
             try {
@@ -116,10 +116,13 @@ public class TestFBUnmanagedConnection extends FBTestBase {
             }
             statement.executeUpdate(DROP_TEST_TABLE);
             connection.commit();
-        } catch(Exception ex) {
-            if (log!=null) log.warn("failing testCommit",  ex);
-            assertTrue(ex.getMessage(), false);
-        }
+//        } catch(Exception ex) {
+//
+//            if (log!=null) log.warn("failing testCommit",  ex);
+//
+//            assertTrue(ex.getMessage(), false);
+//
+//        }
     }
 
     public void testCreateStatement() throws Exception {

@@ -45,11 +45,11 @@ public class TestFBDateField extends BaseTestFBField {
 		return new TestSuite(TestFBDateField.class);
 	}
 	protected void setUp() throws SQLException{
-        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+        final XSQLVAR[] xsqlvars = new XSQLVAR[1];
         xsqlvars[0] = createXSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_TYPE_DATE;
-
-		field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), false);
+        
+		field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), null, false);
 	}
 	protected void tearDown() {
 	}

@@ -264,7 +264,7 @@ public class TestFBResultSet extends FBTestBase {
         }
         */
         
-        connection.setAutoCommit(true);
+        connection.setAutoCommit(false);
         
         select = connection.createStatement();
         try {
@@ -307,6 +307,7 @@ public class TestFBResultSet extends FBTestBase {
             throw e;
         } finally {
             select.close();
+            connection.commit();
         }
     }
     

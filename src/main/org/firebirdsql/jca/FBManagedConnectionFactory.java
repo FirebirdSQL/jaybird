@@ -75,6 +75,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     private String dbAlias;
 
     private FBConnectionRequestInfo defaultCri;
+    private ConnectionManager defaultCm;
 
     private final FBTpb tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);
 
@@ -88,24 +89,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     GDS gds;
 
     private GDSType type;
-
-    /**
-     * The <code>criToFreeDbHandlesMap</code> maps cri to lists of physical
-     * connections that are not currently used by a managed connection.
-     * 
-     */
-    private transient final Map criToFreeDbHandlesMap = new HashMap();
-
-    /**
-     * The <code>waitingToClose</code> set holds physical connections that
-     * should be closed as soon as all transactions on them are complete.
-     * 
-     */
-    private transient final Set waitingToClose = Collections
-            .synchronizedSet(new HashSet());
-
-    private transient final Set rolledback = Collections
-            .synchronizedSet(new HashSet());
 
     // Maps supplied XID to internal transaction handle.
     // a concurrent reader map would be better
@@ -135,6 +118,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         this.type = type;
         gds = GDSFactory.getGDSForType(type);
         defaultCri = FBConnectionHelper.getDefaultCri(gds);
+        defaultCm = new FBStandAloneConnectionManager();
     }
 
     /**
@@ -445,6 +429,10 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         } 
     }
 
+    public void setDefaultConnectionManager(ConnectionManager defaultCm) {
+        this.defaultCm = defaultCm;
+    }
+    
     public int hashCode() {
         if (hashCode != 0) 
             return hashCode;
@@ -503,7 +491,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      */
     public Object createConnectionFactory() throws ResourceException {
         start();
-        return new FBDataSource(this, new FBStandAloneConnectionManager());
+        return new FBDataSource(this, defaultCm);
     }
 
     /**
@@ -698,8 +686,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         FBManagedConnection targetMc = (FBManagedConnection)xidMap.get(xid);
         
         if (targetMc == null)
-            throw new FBXAException("Commit called with unknown transaction",
-                XAException.XAER_NOTA);
+            tryCompleteInLimboTransaction(gds, xid,  true);
 
         targetMc.internalCommit(xid, onePhase);
         xidMap.remove(xid);
@@ -709,8 +696,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         FBManagedConnection targetMc = (FBManagedConnection)xidMap.get(xid);
         
         if (targetMc == null)
-            throw new FBXAException("Commit called with unknown transaction",
-                XAException.XAER_NOTA);
+            tryCompleteInLimboTransaction(gds, xid,  false);
 
         targetMc.internalRollback(xid);
         xidMap.remove(xid);
@@ -722,5 +708,79 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     
     void recover(FBManagedConnection mc, Xid xid) throws GDSException {
         
+    }
+    
+    /**
+     * Try to complete the "in limbo" transaction. This method tries to 
+     * reconnect an "in limbo" transaction and complete it either by commit or
+     * rollback. If no "in limbo" transaction can be found, or error happens
+     * during completion, an exception is thrown.
+     * 
+     * @param gdsHelper instance of {@link GDSHelper} that will be used to
+     * reconnect transaction.
+     * @param xid Xid of the transaction to reconnect.
+     * @param commit <code>true</code> if "in limbo" transaction should be 
+     * committed, otherwise <code>false</code>.
+     * 
+     * @throws XAException if "in limbo" transaction cannot be completed.
+     */
+    private void tryCompleteInLimboTransaction(GDS gds, Xid xid, 
+            boolean commit) throws XAException {
+        
+        // construct our own Xid implementation that can produce us a
+        // byte array that is used in isc_prepare_transaction2 call
+        FBXid fbXid;
+        if (xid instanceof FBXid)
+            fbXid = (FBXid)xid;
+        else
+            fbXid = new FBXid(xid);
+        
+        // this flag is used in exception handler to return correct error
+        // code depending on the situation
+        boolean knownTransaction = false;
+        
+        try {
+            FBManagedConnection tempMc = null;
+            try {
+                tempMc = new FBManagedConnection(null, null, this);
+                
+                long fbTransactionId = 0;
+                boolean found = false;
+                
+                FBXid[] inLimboIds = (FBXid[])tempMc.recover(XAResource.TMSTARTRSCAN);
+                for (int i = 0; i < inLimboIds.length; i++) {
+                    if (inLimboIds[i].equals(xid)) {
+                        found = true;
+                        fbTransactionId = inLimboIds[i].getFirebirdTransactionId();
+                    }
+                }
+                
+                if (!found)
+                    throw new FBXAException((commit ? "Commit" : "Rollback") + 
+                        " called with unknown transaction.", XAException.XAER_NOTA);
+                
+                isc_db_handle dbHandle = tempMc.getGDSHelper().getCurrentDbHandle();
+    
+                isc_tr_handle trHandle = gds.get_new_isc_tr_handle();
+                gds.isc_reconnect_transaction(trHandle, dbHandle, fbTransactionId);
+                
+                // tell exception handler that we know the transaction
+                knownTransaction = true;
+                
+                // complete transaction by commit or rollback
+                if (commit)
+                    gds.isc_commit_transaction(trHandle);
+                else
+                    gds.isc_rollback_transaction(trHandle);
+                
+            } catch(GDSException ex) {
+                throw new FBXAException(XAException.XAER_RMERR, ex);
+            } finally {
+                if (tempMc != null)
+                    tempMc.destroy();
+            }
+        } catch(ResourceException ex) {
+            throw new FBXAException(XAException.XAER_RMERR, ex);
+        }
     }
 }

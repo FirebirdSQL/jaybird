@@ -104,7 +104,7 @@ public class TestFatalErrors extends FBTestBase {
      * 
      * @throws Exception
      */
-    public void _testFatalInTransaction() throws Exception {
+    public void testFatalInTransaction() throws Exception {
         Connection connection = getConnectionViaDriverManager();
         
         int[] savedFatalErrors = ISCConstants.FATAL_ERRORS;
@@ -181,7 +181,7 @@ public class TestFatalErrors extends FBTestBase {
         }
     }
     
-    public void _testFatalOnCommit() throws Exception {
+    public void testFatalOnCommit() throws Exception {
         FirebirdConnection connection = (FirebirdConnection)getConnectionViaDriverManager();
         
         connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);

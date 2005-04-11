@@ -3,6 +3,8 @@ package org.firebirdsql.jdbc;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.firebirdsql.gds.GDSHelper;
+
 /**
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
@@ -12,8 +14,8 @@ public class FBStatement extends AbstractStatement {
 	/**
 	 * 
 	 */
-	public FBStatement(AbstractConnection c, int rsType, int rsConcurrency) {
-		super(c, rsType, rsConcurrency);
+	public FBStatement(GDSHelper c, int rsType, int rsConcurrency, FBObjectListener.StatementListener statementListener) {
+		super(c, rsType, rsConcurrency, statementListener);
 	}
 
     

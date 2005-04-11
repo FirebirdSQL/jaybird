@@ -46,7 +46,7 @@ public class TestFBDoubleField extends BaseTestFBField {
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
         xsqlvars[0] = createXSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_DOUBLE;
-        field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), false);
+        field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), null, false);
 	}
 	protected void tearDown() {
 	}

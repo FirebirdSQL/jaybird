@@ -271,9 +271,10 @@ public class TestFBBlobStream extends FBTestBase {
 
         Statement stmt = connection.createStatement();
 
+        for (int i = 0; i < 10; i++) {
         ResultSet rs = stmt.executeQuery("SELECT id, bin_data FROM test_blob");
-
         start = System.currentTimeMillis();
+
         size = 0;
 
         try {
@@ -302,11 +303,12 @@ public class TestFBBlobStream extends FBTestBase {
 
             System.out.println("Read " + size + " bytes in " + duration + " ms, " +
                 "speed " + ((size * 1000 * 1000 / duration / 1024 / 1024) / 1000.0) + " MB/s");
-
         } finally {
             rs.close();
-            stmt.close();
+//            stmt.close();
         }
+        }
+        stmt.close();
     }
     
     /**

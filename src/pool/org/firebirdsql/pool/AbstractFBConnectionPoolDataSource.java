@@ -274,6 +274,7 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
         try {
             FBManagedConnection managedConnection = (FBManagedConnection)
                 getManagedConnectionFactory().createManagedConnection(null, cri);
+            managedConnection.setManagedEnvironment(false);
 
             PingablePooledConnection pooledConnection = null;
 
