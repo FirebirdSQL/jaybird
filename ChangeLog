@@ -1,3 +1,79 @@
+2005-04-11 23:22  rrokytskyy
+
+	* client-java/src/: test/org/firebirdsql/jdbc/TestBoundary.java,
+	test/org/firebirdsql/jdbc/TestDDL.java,
+	test/org/firebirdsql/jdbc/TestFBBlobAutocommit.java,
+	test/org/firebirdsql/jdbc/TestFBBlobStream.java,
+	test/org/firebirdsql/jdbc/TestFBDriver.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java,
+	test/org/firebirdsql/jdbc/TestFBUnmanagedConnection.java,
+	main/org/firebirdsql/jca/FBLocalTransaction.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	main/org/firebirdsql/jca/FBStandAloneConnectionManager.java,
+	main/org/firebirdsql/jca/FBXid.java,
+	main/org/firebirdsql/jca/GDSHelper.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FBBlob.java,
+	main/org/firebirdsql/jdbc/FBCachedBlob.java,
+	main/org/firebirdsql/jdbc/FBCachedFetcher.java,
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/FBObjectListener.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	main/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	main/org/firebirdsql/jdbc/FBRowUpdater.java,
+	main/org/firebirdsql/jdbc/FBStatementFetcher.java,
+	main/org/firebirdsql/jdbc/FBUpdatableCursorFetcher.java,
+	main/org/firebirdsql/jdbc/FirebirdStatementInfoFactory.java,
+	main/org/firebirdsql/jdbc/InternalTransactionCoordinator.java,
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBConnection.java,
+	jdbc_30/org/firebirdsql/jdbc/FBParameterMetaData.java,
+	jdbc_30/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBStatement.java,
+	main/org/firebirdsql/jdbc/field/FBBlobField.java,
+	main/org/firebirdsql/jdbc/field/FBField.java,
+	main/org/firebirdsql/jdbc/field/FBLongVarCharField.java,
+	main/org/firebirdsql/jdbc/field/FBWorkaroundStringField.java,
+	test/org/firebirdsql/gds/TestFatalErrors.java,
+	test/org/firebirdsql/gds/TestReconnectTransaction.java,
+	test/org/firebirdsql/jca/InternalConnectionManager.java,
+	test/org/firebirdsql/jca/TestFBDatabaseMetaData.java,
+	test/org/firebirdsql/jca/TestFBXAResource.java,
+	test/org/firebirdsql/jca/TestXABase.java,
+	test/org/firebirdsql/jdbc/field/TestFBDateField.java,
+	test/org/firebirdsql/jdbc/field/TestFBDoubleField.java,
+	test/org/firebirdsql/jdbc/field/TestFBFloatField.java,
+	test/org/firebirdsql/jdbc/field/TestFBIntegerField.java,
+	test/org/firebirdsql/jdbc/field/TestFBLongField.java,
+	test/org/firebirdsql/jdbc/field/TestFBShortField.java,
+	test/org/firebirdsql/jdbc/field/TestFBStringField.java,
+	test/org/firebirdsql/jdbc/field/TestFBTimeField.java,
+	test/org/firebirdsql/jdbc/field/TestFBTimestampField.java,
+	jdbc_20/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_20/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_20/org/firebirdsql/jdbc/FBStatement.java,
+	main/org/firebirdsql/gds/GDSHelper.java,
+	pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.java,
+	test/org/firebirdsql/common/FBTestBase.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+	
+	refactoring and recoding of transaction handling mechanism,
+	especially for auto-commit case.
+	
+	phase 1, not fully completed, but a definitive checkpoint.
+
+2005-04-11 23:14  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/AbstractGDS.java,
+	gds/GDS.java, jgds/GDS_Impl.java, ngds/GDS_Impl.java:
+	
+	added isc_reconnect_transaction
+
 2005-03-30 22:47  gab_reid
 
 	*
