@@ -33,6 +33,7 @@ public class InternalConnectionManager implements ConnectionManager,
 
         FBManagedConnection mc = (FBManagedConnection)((FBManagedConnectionFactory)mcf).createManagedConnection(null, cxRequestInfo);
         mc.setManagedEnvironment(true);
+        mc.setConnectionSharing(true);
         mc.addConnectionEventListener(this);
         return mc.getConnection(null, cxRequestInfo);
     }

@@ -21,6 +21,7 @@ package org.firebirdsql.pool;
 
 import java.lang.reflect.Proxy;
 import java.sql.*;
+
 import javax.sql.*;
 
 import org.firebirdsql.logging.Logger;
@@ -317,11 +318,23 @@ public class PingablePooledConnection implements PooledConnection,
         currentConnection = new PooledConnectionHandler(jdbcConnection, this);
 
         Connection result = currentConnection.getProxy();
-        result.setAutoCommit(true);
-        result.setReadOnly(false);
-        result.setTransactionIsolation(transactionIsolation);
+        
+        configureConnectionDefaults(result);
 
         return result;
+    }
+
+    /**
+     * Configure default values for this connection.
+     * 
+     * @param connection instance of {@link Connection} to configure.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    protected void configureConnectionDefaults(Connection connection) throws SQLException {
+        connection.setAutoCommit(true);
+        connection.setReadOnly(false);
+        connection.setTransactionIsolation(transactionIsolation);
     }
 
     /**

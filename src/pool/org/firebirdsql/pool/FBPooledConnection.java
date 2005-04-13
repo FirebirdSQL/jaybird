@@ -82,6 +82,7 @@ class FBPooledConnection extends PingablePooledConnection
 
     private FBManagedConnection managedConnection;
     private FBConnectionRequestInfo cri;
+    private int transactionIsolation;
     
     private FBManagedConnectionEvetListener listener = 
         new FBManagedConnectionEvetListener();
@@ -107,6 +108,7 @@ class FBPooledConnection extends PingablePooledConnection
         
         this.managedConnection = managedConnection;
         this.cri = cri;
+        this.transactionIsolation = transactionIsolation;
         
         this.managedConnection.addConnectionEventListener(this.listener);
     }
@@ -137,10 +139,20 @@ class FBPooledConnection extends PingablePooledConnection
         
         this.managedConnection = managedConnection;
         this.cri = cri;
+        this.transactionIsolation = transactionIsolation;
         
         this.managedConnection.addConnectionEventListener(this.listener);
     }
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.pool.PingablePooledConnection#configureConnectionDefaults(java.sql.Connection)
+     */
+    protected void configureConnectionDefaults(Connection connection) throws SQLException {
+        if (!managedConnection.isManagedEnvironment())
+            connection.setAutoCommit(true);
+        connection.setReadOnly(false);
+        connection.setTransactionIsolation(transactionIsolation);
+    }
     /**
      * Get XA resource for this connection.
      * 
@@ -192,5 +204,13 @@ class FBPooledConnection extends PingablePooledConnection
         }
         
         super.statementClosed(statement, proxy);
+    }
+    
+    void setManagedEnvironment(boolean managedEnvironment) throws SQLException {
+        try {
+            managedConnection.setManagedEnvironment(managedEnvironment);
+        } catch(ResourceException ex) {
+            throw new FBSQLException(ex);
+        }
     }
 }
