@@ -31,6 +31,8 @@ import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.gds.isc_tr_handle;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * Describe class <code>isc_tr_handle_impl</code> here.
@@ -43,7 +45,7 @@ public final class isc_tr_handle_impl implements isc_tr_handle {
     private int rtr_id;
     private isc_db_handle_impl rtr_rdb;
     private ArrayList blobs = new ArrayList();
-    private ArrayList stmts = new ArrayList();
+    private HashSet stmts = new HashSet();
 
     private int state = NOTRANSACTION;
 
@@ -100,8 +102,10 @@ public final class isc_tr_handle_impl implements isc_tr_handle {
 
     public void forgetResultSets() {
         synchronized(stmts) {
-            for (int i = 0; i < stmts.size(); i++)
-                ((isc_stmt_handle) stmts.get(i)).clearRows();
+            for (Iterator iter = stmts.iterator(); iter.hasNext();) {
+                isc_stmt_handle stmt = (isc_stmt_handle) iter.next();
+                stmt.clearRows();
+            }
             
             stmts.clear();
         }

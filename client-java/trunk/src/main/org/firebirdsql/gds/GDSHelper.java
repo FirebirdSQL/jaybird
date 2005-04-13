@@ -182,6 +182,9 @@ public class GDSHelper {
     public void fetch(isc_stmt_handle stmt, int fetchSize) throws GDSException {
         gds.isc_dsql_fetch(stmt, ISCConstants.SQLDA_VERSION1, 
             stmt.getOutSqlda(), fetchSize);
+        
+        if (!getDatabaseParameterBuffer().hasArgument(ISCConstants.isc_dpb_no_result_set_tracking))
+            currentTr.registerStatementWithTransaction(stmt);
     }
 
     /**
@@ -215,8 +218,33 @@ public class GDSHelper {
     public void closeStatement(isc_stmt_handle stmt, boolean deallocate)
             throws GDSException {
 
-        gds.isc_dsql_free_statement(stmt, (deallocate) ? ISCConstants.DSQL_drop
-                : ISCConstants.DSQL_close);
+        if (!deallocate && !stmt.hasOpenResultSet())
+            return;
+        
+        try {
+            gds.isc_dsql_free_statement(stmt, (deallocate) ? ISCConstants.DSQL_drop
+                    : ISCConstants.DSQL_close);
+        } catch(GDSException ex) {
+            
+            // we do not handle exceptions comming from statement closing
+            if (deallocate)
+                throw ex;
+            
+            boolean recloseClosedCursorError = false;
+            
+            GDSException tempEx = ex;
+            do {
+                if (tempEx.getIntParam() == ISCConstants.isc_dsql_cursor_close_err) {
+                    recloseClosedCursorError = true;
+                    break;
+                }
+                
+                tempEx = tempEx.getNext();
+            } while(tempEx != null);
+            
+            if (!recloseClosedCursorError)
+                throw ex;
+        }
     }
 
     /**

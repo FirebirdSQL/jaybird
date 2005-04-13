@@ -133,6 +133,7 @@ public final class ISCConstants {
     public final static int isc_dpb_use_standard_udf        = 134;
     public final static int isc_dpb_local_encoding          = 135;
     public final static int isc_dpb_mapping_path            = 136;
+    public final static int isc_dpb_no_result_set_tracking  = 137; 
     
 
     /*************************************/
