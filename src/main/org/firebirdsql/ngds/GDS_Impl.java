@@ -256,11 +256,11 @@ public class GDS_Impl extends AbstractGDS implements GDS {
         result.removeArgument(ISCConstants.isc_dpb_blob_buffer_size);
         result.removeArgument(ISCConstants.isc_dpb_use_stream_blobs);
         result.removeArgument(ISCConstants.isc_dpb_paranoia_mode);
-        result
-                .removeArgument(ISCConstants.isc_dpb_timestamp_uses_local_timezone);
+        result.removeArgument(ISCConstants.isc_dpb_timestamp_uses_local_timezone);
         result.removeArgument(ISCConstants.isc_dpb_use_standard_udf);
         result.removeArgument(ISCConstants.isc_dpb_local_encoding);
         result.removeArgument(ISCConstants.isc_dpb_mapping_path);
+        result.removeArgument(ISCConstants.isc_dpb_no_result_set_tracking);
 
         return result;
     }
