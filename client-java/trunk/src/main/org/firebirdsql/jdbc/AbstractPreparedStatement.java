@@ -99,7 +99,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
      */
     public ResultSet executeQuery() throws  SQLException {
 
-        statementListener.executionStarted(this);
+        notifyStatementStarted();
         
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
@@ -127,7 +127,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
      */
     public int executeUpdate() throws  SQLException {
 
-        statementListener.executionStarted(this);
+        notifyStatementStarted();
         try {
             Object syncObject = getSynchronizationObject();
             synchronized(syncObject) {
@@ -139,7 +139,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
                 return getUpdateCount();
             }
         } finally {
-            statementListener.statementCompleted(this);
+            notifyStatementCompleted();
         }
     }
 
@@ -535,7 +535,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
      */
     public boolean execute() throws  SQLException {
 
-        statementListener.executionStarted(this);
+        notifyStatementStarted();
         
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
@@ -543,7 +543,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
                 isExecuteProcedureStatement);
             try {
                 if (!hasResultSet)
-                    statementListener.statementCompleted(this);
+                    notifyStatementCompleted();
             } finally {
                 return hasResultSet;
             }
@@ -563,7 +563,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
      */
     ResultSet executeMetaDataQuery() throws SQLException {
 
-        statementListener.executionStarted(this);
+        notifyStatementStarted();
 
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
@@ -731,7 +731,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
      */
     public int[] executeBatch() throws SQLException {
         
-        statementListener.executionStarted(this);
+        notifyStatementStarted();
         try {
             Object syncObject = getSynchronizationObject();
             
@@ -777,7 +777,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
                 }
             }
         } finally {
-            statementListener.statementCompleted(this);
+            notifyStatementCompleted();
         }
 	}
 

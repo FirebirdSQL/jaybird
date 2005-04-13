@@ -69,11 +69,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         this.mc = mc;
         
         this.localTransaction = new FBLocalTransaction(mc, this);
-        
-        if (!mc.isManagedEnvironment())
-            this.txCoordinator = new InternalTransactionCoordinator(new InternalTransactionCoordinator.AutoCommitCoordinator(this, localTransaction));
-        else
-            this.txCoordinator = new InternalTransactionCoordinator(new InternalTransactionCoordinator.ManagedTransactionCoordinator(this));
+        this.txCoordinator = new InternalTransactionCoordinator();
     }
     
     public FBObjectListener.StatementListener getStatementListener() {
@@ -356,6 +352,23 @@ public abstract class AbstractConnection implements FirebirdConnection {
         }
     }
 
+    public void setManagedEnvironment(boolean managedConnection) throws SQLException {
+        checkValidity();
+        
+        synchronized(mc) {
+            InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
+            
+            if (managedConnection) {
+                coordinator = new InternalTransactionCoordinator.ManagedTransactionCoordinator(this);
+                mc.setAutoCommit(false);
+            } else {
+                coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, localTransaction);
+                mc.setAutoCommit(true);
+            }
+             
+            txCoordinator.setCoordinator(coordinator);
+        }
+    }
 
     /**
      * Gets the current auto-commit state.

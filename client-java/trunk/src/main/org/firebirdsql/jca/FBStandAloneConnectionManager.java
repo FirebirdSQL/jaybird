@@ -68,6 +68,7 @@ public class FBStandAloneConnectionManager
 
        FBManagedConnection mc = (FBManagedConnection)((FBManagedConnectionFactory)mcf).createManagedConnection(null, cxRequestInfo);
        mc.setManagedEnvironment(false);
+       mc.setConnectionSharing(false);
        mc.addConnectionEventListener(this);
        return mc.getConnection(null, cxRequestInfo);
     }

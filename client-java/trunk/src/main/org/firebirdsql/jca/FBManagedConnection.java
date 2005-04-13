@@ -64,6 +64,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     public boolean autoCommit = true;
     private boolean managedEnvironment = true;
+    private boolean connectionSharing = true;
 
     FBManagedConnection(Subject subject, ConnectionRequestInfo cri,
             FBManagedConnectionFactory mcf) throws ResourceException {
@@ -134,10 +135,57 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         return managedEnvironment;
     }
     
-    public void setManagedEnvironment(boolean managedEnvironment) {
+    public void setManagedEnvironment(boolean managedEnvironment) throws ResourceException{
         this.managedEnvironment = managedEnvironment;
+        
+        // if connection sharing is not enabled, notify currently associated
+        // connection handle about the state change.
+        if (!connectionSharing) {
+            if (connectionHandles.size() > 1)
+                throw new java.lang.IllegalStateException(
+                    "Multiple connections associated with this managed " +
+                    "connection in non-sharing mode.");
+            
+            // there will be at most one connection.
+            for (Iterator iter = connectionHandles.iterator(); iter.hasNext();) {
+                AbstractConnection connection = (AbstractConnection) iter.next();
+                
+                try {
+                    connection.setManagedEnvironment(managedEnvironment);
+                } catch(SQLException ex) {
+                    throw new FBResourceException(ex);
+                }
+            }
+        }
     }
     
+    /**
+     * Check if connection sharing is enabled. When connection sharing is 
+     * enabled, multiple connection handles ({@link AbstractConnection} instances)
+     * can access this managed connection in thread-safe manner (they synchronize
+     * on this instance). This feature can be enabled only in JCA environment,
+     * any other environment must not use connection sharing.
+     * 
+     * @return <code>true</code> if connection sharing is enabled.
+     */
+    public boolean isConnectionSharing() {
+        return connectionSharing;
+    }
+    
+    /**
+     * Enable or disable connection sharing. See {@link #isConnectionSharing()}
+     * method for details.
+     * 
+     * @param connectionSharing <code>true</code> if connection sharing must be
+     * enabled.
+     */
+    public void setConnectionSharing(boolean connectionSharing) {
+        if (!connectionHandles.isEmpty())
+            throw new java.lang.IllegalStateException(
+                "Cannot change connection sharing with active connection handles.");
+        
+        this.connectionSharing = connectionSharing;
+    }
     /**
      * Returns a <code>javax.resource.spi.LocalTransaction</code> instance.
      * The LocalTransaction interface is used by the container to manage local
@@ -264,6 +312,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *             Resource adapter internal error condition
      */
     public void associateConnection(Object connection) throws ResourceException {
+        
+        if (!connectionSharing)
+            disassociateConnections();
+        
         try {
             ((AbstractConnection) connection).setManagedConnection(this);
             connectionHandles.add(connection);
@@ -309,15 +361,39 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *             connection cleanup
      */
     public void cleanup() throws ResourceException {
-        for (Iterator i = connectionHandles.iterator(); i.hasNext();) {
-            AbstractConnection connection = (AbstractConnection) i.next();
-            connection.setManagedConnection(null);
-        }
-        connectionHandles.clear();
+        disassociateConnections();
+        
         this.gdsHelper.setCurrentTrHandle(null);
 
         // reset the TPB from the previous transaction.
         this.tpb.setTpb(mcf.getTpb());
+    }
+
+    /**
+     * Disassociate connections from current managed connection.
+     *
+     */
+    private void disassociateConnections() throws ResourceException {
+        
+        ResourceException ex = null;
+        
+        for (Iterator i = connectionHandles.iterator(); i.hasNext();) {
+            AbstractConnection connection = (AbstractConnection) i.next();
+            
+            try {
+                connection.close();
+            } catch(SQLException sqlex) {
+                if (ex == null)
+                    ex = new FBResourceException(sqlex);
+                else
+                    ((SQLException)ex.getLinkedException()).setNextException(sqlex);
+            }
+        }
+        
+        connectionHandles.clear();
+        
+        if (ex != null)
+            throw ex;
     }
 
     /**
@@ -362,9 +438,17 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             throw new FBResourceException("Incompatible subject or "
                     + "ConnectionRequestInfo in getConnection!");  
 
+        if (!connectionSharing)
+            disassociateConnections();
+        
         AbstractConnection c = new FBConnection(this);
-        connectionHandles.add(c);
-        return c;
+        try {
+            c.setManagedEnvironment(isManagedEnvironment());
+            connectionHandles.add(c);
+            return c;
+        } catch(SQLException ex) {
+            throw new FBResourceException(ex);
+        }
     }
 
     /**

@@ -58,7 +58,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     private FBResultSet currentRs;
 
     private boolean closed;
-    protected boolean completed;
+    protected boolean completed = true;
     private boolean escapedProcessing = true;
 
 	 protected SQLWarning firstWarning = null;
@@ -94,8 +94,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             currentRs = null;
             
             // notify listener that statement is completed.
-            if (statementListener != null)
-                statementListener.statementCompleted(AbstractStatement.this);
+            notifyStatementCompleted();
         }
         
         
@@ -156,8 +155,10 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     }
     
     public void completeStatement() throws SQLException {
-        closeResultSet(true);
-        this.completed = true;
+        closeResultSet(false);
+        
+        if (!completed)
+            notifyStatementCompleted();
     }
     
     /**
@@ -172,9 +173,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         if (closed)
             throw new FBSQLException("Statement is closed");
 
-        // notify listener that statement execution is about to start 
-        statementListener.executionStarted(this);
-        this.completed = false;
+        notifyStatementStarted();
         
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
@@ -197,6 +196,16 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         }
     }
 
+    protected void notifyStatementStarted() throws SQLException {
+        
+        closeResultSet(false);
+        
+        // notify listener that statement execution is about to start
+        statementListener.executionStarted(this);
+        
+        this.completed = false;
+    }
+
 
     /**
      * Executes an SQL <code>INSERT</code>, <code>UPDATE</code> or
@@ -214,8 +223,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         if(closed)
             throw new FBSQLException("Statement is closed");
 
-        statementListener.executionStarted(this);
-        this.completed = false;
+        notifyStatementStarted();
         try {
             Object syncObject = getSynchronizationObject();
             synchronized(syncObject) {
@@ -229,9 +237,13 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                 }
             }
         } finally {
-            this.completed = true;
-            statementListener.statementCompleted(this);
+            notifyStatementCompleted();
         }
+    }
+
+    protected void notifyStatementCompleted() throws SQLException {
+        this.completed = true;
+        statementListener.statementCompleted(this);
     }
 
     /**
@@ -262,7 +274,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             if (fixedStmt != null) {
                 try {
                     try {
-                        closeResultSet(true);
+                        closeResultSet(false);
 
                     } finally {
                         //may need ensureTransaction?
@@ -520,8 +532,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         if (closed)
             throw new FBSQLException("Statement is closed");
 
-        statementListener.executionStarted(this);
-        this.completed = false;
+        notifyStatementStarted();
         
         boolean hasResultSet = false;
         try {
@@ -535,8 +546,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             }
         } finally {
             if (!hasResultSet) {
-                this.completed = true;
-                statementListener.statementCompleted(this);
+                notifyStatementCompleted();
             }
             
         }
@@ -902,8 +912,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             addWarning(new SQLWarning("Batch updates should be run " +
                     "with auto-commit disabled.", "1000"));
         
-        statementListener.executionStarted(this);
-        this.completed = false;
+        notifyStatementStarted();
         
         try {
             Object syncObject = getSynchronizationObject();
@@ -942,8 +951,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                 }
             }
         } finally {
-            this.completed = true;
-            statementListener.statementCompleted(this);
+            notifyStatementCompleted();
         }
     }
     
@@ -1062,7 +1070,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         if (closed)
             throw new FBSQLException("Statement is already closed.");
 
-        closeResultSet(false);
+        // closeResultSet(false);
         prepareFixedStatement(sql, false);
         gdsHelper.executeStatement(fixedStmt, isExecuteProcedureStatement(sql));
         isResultSet = (fixedStmt.getOutSqlda().sqld > 0);

@@ -17,6 +17,10 @@ import org.firebirdsql.jca.FBLocalTransaction;
 public class InternalTransactionCoordinator implements FBObjectListener.StatementListener, FBObjectListener.BlobListener {
 
     private AbstractTransactionCoordinator coordinator;
+
+    public InternalTransactionCoordinator() {
+        // empty
+    }
     
     public InternalTransactionCoordinator(AbstractTransactionCoordinator coordinator) {
         this.coordinator = coordinator;
@@ -130,7 +134,6 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         public AutoCommitCoordinator(AbstractConnection connection,
                 FBLocalTransaction localTransaction) {
             super(connection, localTransaction);
-            // TODO Auto-generated constructor stub
         }
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.StatementListener#executionStarted(java.sql.Statement)
@@ -179,7 +182,6 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          */
         public void statementClosed(AbstractStatement stmt) throws SQLException {
             stmt.completeStatement();
-            statements.remove(stmt);
             connection.notifyStatementClosed(stmt);
         }
         /* (non-Javadoc)
@@ -188,7 +190,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         public void statementCompleted(AbstractStatement stmt) throws SQLException {
             statements.remove(stmt);
             try {
-                if (localTransaction.inTransaction())
+//                if (localTransaction.inTransaction())
                     localTransaction.commit();
             } catch(ResourceException ex) {
                 
@@ -259,7 +261,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          */
         public void commit() throws SQLException {
             try {
-                if (localTransaction.inTransaction())
+//                if (localTransaction.inTransaction())
                     localTransaction.commit();
             } catch(ResourceException ex) {
                 throw new FBSQLException(ex);
@@ -270,7 +272,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          */
         public void rollback() throws SQLException {
             try {
-                if (localTransaction.inTransaction())
+//                if (localTransaction.inTransaction())
                     localTransaction.rollback();
             } catch(ResourceException ex) {
                 throw new FBSQLException(ex);

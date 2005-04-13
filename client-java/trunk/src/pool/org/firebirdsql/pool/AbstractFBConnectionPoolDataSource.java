@@ -274,6 +274,7 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
         try {
             FBManagedConnection managedConnection = (FBManagedConnection)
                 getManagedConnectionFactory().createManagedConnection(null, cri);
+            managedConnection.setConnectionSharing(false);
             managedConnection.setManagedEnvironment(false);
 
             PingablePooledConnection pooledConnection = null;
@@ -349,10 +350,11 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
 	protected synchronized PooledObject getPooledConnection(
         PooledConnectionQueue queue) throws SQLException
     {
-		PingablePooledConnection connection = 
-            (PingablePooledConnection)super.getPooledConnection(queue);
+		FBPooledConnection connection = 
+            (FBPooledConnection)super.getPooledConnection(queue);
 
         connection.addConnectionEventListener(this);
+        connection.setManagedEnvironment(false);
 
         return connection;
 	}
@@ -399,7 +401,11 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
      * @throws SQLException if pooled connection cannot be obtained.
      */
     public XAConnection getXAConnection() throws SQLException {
-        return (XAConnection)getPooledConnection();
+        FBPooledConnection result = (FBPooledConnection)getPooledConnection();
+        
+        result.setManagedEnvironment(true);
+        
+        return result;
     }
 
     /**
@@ -416,7 +422,11 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
     public XAConnection getXAConnection(String user, String password)
             throws SQLException 
     {
-        return (XAConnection)getPooledConnection(user, password);
+        FBPooledConnection result = (FBPooledConnection)getPooledConnection(user, password);
+        
+        result.setManagedEnvironment(true);
+        
+        return result;
     }
     
     /**
