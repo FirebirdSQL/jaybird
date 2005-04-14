@@ -1,3 +1,31 @@
+2005-04-13 23:39  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/GDSHelper.java,
+	gds/ISCConstants.java, jgds/GDS_Impl.java,
+	jgds/isc_tr_handle_impl.java, ngds/GDS_Impl.java,
+	ngds/isc_tr_handle_impl.java:
+	
+	restored the possibility to skip closing result set if
+	commit/rollback were issued, but it costs some memory. more checks
+	are needed.
+
+2005-04-13 23:32  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/InternalTransactionCoordinator.java,
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	test/org/firebirdsql/jca/InternalConnectionManager.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBPooledConnection.java,
+	main/org/firebirdsql/jca/FBStandAloneConnectionManager.java:
+	
+	changes to support connection sharing in JCA mode and fixes to run
+	correctly in non-shared mode in XADataSource
+
 2005-04-11 23:22  rrokytskyy
 
 	* client-java/src/: test/org/firebirdsql/jdbc/TestBoundary.java,
