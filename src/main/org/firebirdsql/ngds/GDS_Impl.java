@@ -791,20 +791,24 @@ public class GDS_Impl extends AbstractGDS implements GDS {
             stmt.ensureCapacity(fetchSize);
 
             for (int i = 0; i < fetchSize; i++) {
-                boolean isRowPresent = native_isc_dsql_fetch(stmt_handle,
-                    da_version, xsqlda, fetchSize);
-                if (isRowPresent) {
+                try {
+                    boolean isRowPresent = native_isc_dsql_fetch(stmt_handle,
+                        da_version, xsqlda, fetchSize);
+                    if (isRowPresent) {
+                        // stmt.notifyOpenResultSet();
+                        readSQLData(xsqlda, stmt);
+                    } else {
+    
+                        // workaround for the JNI driver
+                        // without this code driver complains that it is trying to
+                        // re-execute statement with an open cursor.
+                        // stmt.notifyOpenResultSet();
+                        
+                        stmt.setAllRowsFetched(true);
+                        return;
+                    }
+                } finally {
                     stmt.notifyOpenResultSet();
-                    readSQLData(xsqlda, stmt);
-                } else {
-
-                    // workaround for the JNI driver
-                    // without this code driver complains that it is trying to
-                    // re-execute statement with an open cursor.
-                    stmt.notifyOpenResultSet();
-                    
-                    stmt.setAllRowsFetched(true);
-                    return;
                 }
             }
         }
