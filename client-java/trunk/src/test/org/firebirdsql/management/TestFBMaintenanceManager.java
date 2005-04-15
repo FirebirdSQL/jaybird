@@ -45,7 +45,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
         fbManager.setForceCreate(true);
         fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
 
-        GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type"));
+        GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type", "PURE_JAVA"));
         maintenanceManager = new FBMaintenanceManager(gdsType);
         maintenanceManager.setHost("localhost");
         maintenanceManager.setUser(DB_USER);
