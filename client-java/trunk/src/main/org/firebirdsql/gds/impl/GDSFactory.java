@@ -17,9 +17,10 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.gds;
+package org.firebirdsql.gds.impl;
 
 
+import org.firebirdsql.gds.GDS;
 import org.firebirdsql.jgds.GDS_Impl;
 
 import java.util.Map;

@@ -20,9 +20,9 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.GDSHelper;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.*;
 
 import java.sql.Array;
@@ -805,6 +805,6 @@ public abstract class FBField {
         if (gdsHelper == null) return false;
         
         DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
-        return dpb.hasArgument(DatabaseParameterBuffer.timestamp_uses_local_timezone);
+        return dpb.hasArgument(DatabaseParameterBuffer.TIMESTAMP_USES_LOCAL_TIMEZONE);
     }
 }

@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.util.Arrays;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
 import org.firebirdsql.jdbc.field.FBField;
@@ -43,10 +45,10 @@ public class TestReconnectTransaction extends FBTestBase {
         gds = GDSFactory.getGDSForType(getGdsType());
         
         dpb = gds.newDatabaseParameterBuffer();
-        dpb.addArgument(DatabaseParameterBuffer.user, this.DB_USER);
-        dpb.addArgument(DatabaseParameterBuffer.password, this.DB_PASSWORD);
+        dpb.addArgument(DatabaseParameterBuffer.USER, this.DB_USER);
+        dpb.addArgument(DatabaseParameterBuffer.PASSWORD, this.DB_PASSWORD);
         
-        tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);
+        tpb = new FBTpb(FBTpbMapper.getDefaultMapper(gds));
         tpb.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
     }
     
@@ -84,7 +86,7 @@ public class TestReconnectTransaction extends FBTestBase {
         
 
         isc_tr_handle trHandle1 = gds.get_new_isc_tr_handle();
-        gds.isc_start_transaction(trHandle1, dbHandle1, tpb.getArray());
+        gds.isc_start_transaction(trHandle1, dbHandle1, tpb.getTransactionParameterBuffer());
         
         gds.isc_prepare_transaction2(trHandle1, message);
         
@@ -97,7 +99,7 @@ public class TestReconnectTransaction extends FBTestBase {
         gds.isc_attach_database(getdbpath(DB_NAME), dbHandle2, dpb);
         
         isc_tr_handle trHandle2 = gds.get_new_isc_tr_handle();
-        gds.isc_start_transaction(trHandle2, dbHandle2, tpb.getArray());
+        gds.isc_start_transaction(trHandle2, dbHandle2, tpb.getTransactionParameterBuffer());
         
         isc_stmt_handle stmtHandle2 = gds.get_new_isc_stmt_handle();
         gds.isc_dsql_allocate_statement(dbHandle2, stmtHandle2);

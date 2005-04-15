@@ -25,8 +25,8 @@ import java.util.*;
 
 import javax.resource.ResourceException;
 
-import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -125,7 +125,7 @@ public class FBDriver implements Driver {
 
             //handleEncoding(info, conCri);
 
-            FBTpbMapper tpbMapper = FBConnectionHelper.getTpbMapper(info);
+            FBTpbMapper tpbMapper = FBConnectionHelper.getTpbMapper(mcf.getGDS(), info);
 
             // extract the user
             String user = conCri.getStringProperty(ISCConstants.isc_dpb_user);

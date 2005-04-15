@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.util.Set;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 
 import org.firebirdsql.common.FBTestBase;
 
@@ -65,48 +66,48 @@ public class TestFBTpbMapper extends FBTestBase {
      * @throws Exception if something went wrong.
      */
     public void testTpbMapper() throws Exception {
-        FBTpbMapper mapper = new FBTpbMapper(TEST_TPB_MAPPING, getClass().getClassLoader());
+        FBTpbMapper mapper = new FBTpbMapper(mcf.getGDS(), TEST_TPB_MAPPING, getClass().getClassLoader());
         
         mcf.setTpbMapper(mapper);
         
         mcf.setTransactionIsolation(
             new Integer(Connection.TRANSACTION_READ_COMMITTED));
         
-        Set tpbValue = mcf.getTpb().getInternalTpb();
+        TransactionParameterBuffer tpbValue = mcf.getTpb().getTransactionParameterBuffer();
         
         assertTrue(
             "READ_COMMITED must be isc_tpb_read_committed+" + 
             "isc_tpb_no_rec_version+isc_tpb_write+isc_tpb_nowait",
-            tpbValue.contains(new Integer(ISCConstants.isc_tpb_read_committed)) &&
-            tpbValue.contains(new Integer(ISCConstants.isc_tpb_no_rec_version)) &&
-            tpbValue.contains(new Integer(ISCConstants.isc_tpb_write)) &&
-            tpbValue.contains(new Integer(ISCConstants.isc_tpb_nowait))
+            tpbValue.hasArgument(ISCConstants.isc_tpb_read_committed) &&
+            tpbValue.hasArgument(ISCConstants.isc_tpb_no_rec_version) &&
+            tpbValue.hasArgument(ISCConstants.isc_tpb_write) &&
+            tpbValue.hasArgument(ISCConstants.isc_tpb_nowait)
         );
         
         mcf.setTransactionIsolation(
             new Integer(Connection.TRANSACTION_REPEATABLE_READ));
         
-        tpbValue = mcf.getTpb().getInternalTpb();
+        tpbValue = mcf.getTpb().getTransactionParameterBuffer();
         
         assertTrue(
             "REPEATABLE_READ must be isc_tpb_consistency+" + 
             "isc_tpb_write+isc_tpb_wait",
-            tpbValue.contains(new Integer(ISCConstants.isc_tpb_consistency)) &&
-            tpbValue.contains(new Integer(ISCConstants.isc_tpb_write)) &&
-            tpbValue.contains(new Integer(ISCConstants.isc_tpb_wait))
+            tpbValue.hasArgument(ISCConstants.isc_tpb_consistency) &&
+            tpbValue.hasArgument(ISCConstants.isc_tpb_write) &&
+            tpbValue.hasArgument(ISCConstants.isc_tpb_wait)
         );
 
         mcf.setTransactionIsolation(
             new Integer(Connection.TRANSACTION_SERIALIZABLE));
         
-        tpbValue = mcf.getTpb().getInternalTpb();
+        tpbValue = mcf.getTpb().getTransactionParameterBuffer();
         
         assertTrue(
             "SERIALIZABLE must be isc_tpb_concurrency+" + 
             "isc_tpb_write+isc_tpb_wait",
-            tpbValue.contains(new Integer(ISCConstants.isc_tpb_concurrency)) &&
-            tpbValue.contains(new Integer(ISCConstants.isc_tpb_write)) &&
-            tpbValue.contains(new Integer(ISCConstants.isc_tpb_wait))
+            tpbValue.hasArgument(ISCConstants.isc_tpb_concurrency) &&
+            tpbValue.hasArgument(ISCConstants.isc_tpb_write) &&
+            tpbValue.hasArgument(ISCConstants.isc_tpb_wait)
         );
         
     }

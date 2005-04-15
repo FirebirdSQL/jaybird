@@ -18,7 +18,7 @@
  */
 package org.firebirdsql.common;
 
-import org.firebirdsql.gds.GDSType;
+import org.firebirdsql.gds.impl.GDSType;
 
 import junit.framework.TestCase;
 

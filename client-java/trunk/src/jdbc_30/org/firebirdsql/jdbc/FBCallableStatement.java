@@ -28,7 +28,7 @@ import java.util.Calendar;
 import java.util.Map;
 
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.GDSHelper;
+import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * JDBC 3.0 compliant implementation of {@link java.sql.CallableStatement}.

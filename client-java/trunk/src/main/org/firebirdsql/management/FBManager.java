@@ -20,6 +20,8 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -91,9 +93,9 @@ public class FBManager implements FBManagerMBean
         gds = GDSFactory.getGDSForType(type);
       
         c = gds.newDatabaseParameterBuffer();
-        c.addArgument(DatabaseParameterBuffer.num_buffers, new byte[] {90});
-        c.addArgument(DatabaseParameterBuffer.dummy_packet_interval, new byte[] {120, 10, 0, 0});
-        c.addArgument(DatabaseParameterBuffer.sql_dialect, new byte[] {3, 0, 0, 0});
+        c.addArgument(DatabaseParameterBuffer.NUM_BUFFERS, new byte[] {90});
+        c.addArgument(DatabaseParameterBuffer.DUMMY_PACKET_INTERVAL, new byte[] {120, 10, 0, 0});
+        c.addArgument(DatabaseParameterBuffer.SQL_DIALECT, new byte[] {3, 0, 0, 0});
 
         state = STARTED;
         if (isCreateOnStart())
@@ -352,8 +354,8 @@ public class FBManager implements FBManagerMBean
         db = gds.get_new_isc_db_handle();
         try {
             DatabaseParameterBuffer dpb = c.deepCopy();
-                dpb.addArgument(DatabaseParameterBuffer.user_name, user);
-                dpb.addArgument(DatabaseParameterBuffer.password, password);
+                dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
+                dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
             gds.isc_attach_database(getConnectString(fileName), db, dpb);
             
             // if forceCreate is set, drop the database correctly
@@ -371,8 +373,8 @@ public class FBManager implements FBManagerMBean
     	db = gds.get_new_isc_db_handle();
         try {
             DatabaseParameterBuffer dpb = c.deepCopy();
-            dpb.addArgument(DatabaseParameterBuffer.user_name, user);
-            dpb.addArgument(DatabaseParameterBuffer.password, password);
+            dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
+            dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
             gds.isc_create_database(getConnectString(fileName), db, dpb);
             gds.isc_detach_database(db);
         }
@@ -394,8 +396,8 @@ public class FBManager implements FBManagerMBean
         try {
             isc_db_handle db = gds.get_new_isc_db_handle();
             DatabaseParameterBuffer dpb = c.deepCopy();
-            dpb.addArgument(DatabaseParameterBuffer.user_name, user);
-            dpb.addArgument(DatabaseParameterBuffer.password, password);
+            dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
+            dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
             gds.isc_attach_database(getConnectString(fileName), db, dpb);
             gds.isc_drop_database(db);
 
@@ -418,8 +420,8 @@ public class FBManager implements FBManagerMBean
         db = gds.get_new_isc_db_handle();
         try {
             DatabaseParameterBuffer dpb = c.deepCopy();
-                dpb.addArgument(DatabaseParameterBuffer.user_name, user);
-                dpb.addArgument(DatabaseParameterBuffer.password, password);
+                dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
+                dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
             gds.isc_attach_database(getConnectString(fileName), db, dpb);
             
             gds.isc_detach_database(db);

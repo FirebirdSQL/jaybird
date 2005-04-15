@@ -28,6 +28,9 @@ import javax.security.auth.Subject;
 import javax.transaction.xa.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -77,7 +80,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     private FBConnectionRequestInfo defaultCri;
     private ConnectionManager defaultCm;
 
-    private final FBTpb tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);
+    private FBTpb tpb;
 
     // must be less than 1024 * 32: 1-24 * 32 - is ok.
     private int blobBufferLength = FBConnectionDefaults.DEFAULT_BLOB_BUFFER_SIZE;
@@ -119,8 +122,13 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         gds = GDSFactory.getGDSForType(type);
         defaultCri = FBConnectionHelper.getDefaultCri(gds);
         defaultCm = new FBStandAloneConnectionManager();
+        tpb = new FBTpb(FBTpbMapper.getDefaultMapper(gds));
     }
 
+    public GDS getGDS() {
+        return gds;
+    }
+    
     /**
      * Get the GDS implementation type around which this factory is based.
      * 

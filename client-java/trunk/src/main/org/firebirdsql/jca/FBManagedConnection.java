@@ -31,6 +31,7 @@ import javax.security.auth.Subject;
 import javax.transaction.xa.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -957,7 +958,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             
             // new xid for us
             trHandle = gdsHelper.getInternalAPIHandler().get_new_isc_tr_handle();
-            gdsHelper.getInternalAPIHandler().isc_start_transaction(trHandle, dbHandle, tpb.getArray());
+            gdsHelper.getInternalAPIHandler().isc_start_transaction(trHandle, dbHandle, tpb.getTransactionParameterBuffer());
 
             xidMap.put(xid, trHandle);
             

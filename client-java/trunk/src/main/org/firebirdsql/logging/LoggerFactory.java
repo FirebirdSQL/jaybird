@@ -26,7 +26,7 @@ package org.firebirdsql.logging;
  */
 public class LoggerFactory{
     
-    private static final boolean forceConsoleLogger = false;
+    private static final boolean forceConsoleLogger = true;
     
     private static boolean checked = false;
     private static boolean log4j = false;

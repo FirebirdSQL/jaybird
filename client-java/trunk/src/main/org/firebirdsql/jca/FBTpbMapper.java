@@ -19,20 +19,20 @@
 
 package org.firebirdsql.jca;
 
+import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.jdbc.FBConnectionHelper;
 
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-import java.util.Set;
 import java.util.StringTokenizer;
 
 /**
@@ -44,7 +44,11 @@ import java.util.StringTokenizer;
 public class FBTpbMapper implements Serializable {
     
     public static final String DEFAULT_MAPPING_RESOURCE = "isc_tpb_mapping";
-    public static final FBTpbMapper DEFAULT_MAPPER = new FBTpbMapper();
+    // public static final FBTpbMapper DEFAULT_MAPPER = new FBTpbMapper();
+    
+    public static FBTpbMapper getDefaultMapper(GDS gds) {
+        return new FBTpbMapper(gds);
+    }
     
     private static final String TRANSACTION_SERIALIZABLE = FBTpb.TRANSACTION_SERIALIZABLE;
     private static final String TRANSACTION_REPEATABLE_READ = FBTpb.TRANSACTION_REPEATABLE_READ;
@@ -58,23 +62,23 @@ public class FBTpbMapper implements Serializable {
      * Create instance of this class with the default mapping of JDBC
      * transaction isolation levels to Firebird TPB.
      */
-    public FBTpbMapper() {
+    public FBTpbMapper(GDS gds) {
         
-        HashSet serializableTpb = new HashSet();
-        serializableTpb.add(new Integer(ISCConstants.isc_tpb_write));
-        serializableTpb.add(new Integer(ISCConstants.isc_tpb_wait));
-        serializableTpb.add(new Integer(ISCConstants.isc_tpb_consistency));
+        TransactionParameterBuffer serializableTpb = gds.newTransactionParameterBuffer();
+        serializableTpb.addArgument(ISCConstants.isc_tpb_write);
+        serializableTpb.addArgument(ISCConstants.isc_tpb_wait);
+        serializableTpb.addArgument(ISCConstants.isc_tpb_consistency);
         
-        HashSet repeatableReadTpb = new HashSet();
-        repeatableReadTpb.add(new Integer(ISCConstants.isc_tpb_write));
-        repeatableReadTpb.add(new Integer(ISCConstants.isc_tpb_wait));
-        repeatableReadTpb.add(new Integer(ISCConstants.isc_tpb_concurrency));
+        TransactionParameterBuffer repeatableReadTpb = gds.newTransactionParameterBuffer();
+        repeatableReadTpb.addArgument(ISCConstants.isc_tpb_write);
+        repeatableReadTpb.addArgument(ISCConstants.isc_tpb_wait);
+        repeatableReadTpb.addArgument(ISCConstants.isc_tpb_concurrency);
         
-        HashSet readCommittedTpb = new HashSet();
-        readCommittedTpb.add(new Integer(ISCConstants.isc_tpb_write));
-        readCommittedTpb.add(new Integer(ISCConstants.isc_tpb_wait));
-        readCommittedTpb.add(new Integer(ISCConstants.isc_tpb_read_committed));
-        readCommittedTpb.add(new Integer(ISCConstants.isc_tpb_rec_version));
+        TransactionParameterBuffer readCommittedTpb = gds.newTransactionParameterBuffer();
+        readCommittedTpb.addArgument(ISCConstants.isc_tpb_write);
+        readCommittedTpb.addArgument(ISCConstants.isc_tpb_wait);
+        readCommittedTpb.addArgument(ISCConstants.isc_tpb_read_committed);
+        readCommittedTpb.addArgument(ISCConstants.isc_tpb_rec_version);
         
         mapping.put(new Integer(Connection.TRANSACTION_SERIALIZABLE), serializableTpb);
         mapping.put(new Integer(Connection.TRANSACTION_REPEATABLE_READ), repeatableReadTpb);
@@ -115,9 +119,9 @@ public class FBTpbMapper implements Serializable {
      * 
      * @throws FBResourceException if mapping contains incorrect values.
      */
-    public FBTpbMapper(Map stringMapping) throws FBResourceException {
-        this();
-        processMapping(stringMapping);
+    public FBTpbMapper(GDS gds, Map stringMapping) throws FBResourceException {
+        this(gds);
+        processMapping(gds, stringMapping);
     }
     
     /**
@@ -128,7 +132,7 @@ public class FBTpbMapper implements Serializable {
      * 
      * @throws FBResourceException if mapping contains incorrect values.
      */
-    private void processMapping(Map stringMapping) throws FBResourceException {
+    private void processMapping(GDS gds, Map stringMapping) throws FBResourceException {
         
         Iterator iter = stringMapping.entrySet().iterator();
         while (iter.hasNext()) {
@@ -139,22 +143,22 @@ public class FBTpbMapper implements Serializable {
             if (TRANSACTION_SERIALIZABLE.equalsIgnoreCase(jdbcTxIsolation))
                 mapping.put(
                     new Integer(Connection.TRANSACTION_SERIALIZABLE), 
-                    processMapping((String)entry.getValue()));
+                    processMapping(gds, (String)entry.getValue()));
             else
             if (TRANSACTION_REPEATABLE_READ.equalsIgnoreCase(jdbcTxIsolation))
                 mapping.put(
                     new Integer(Connection.TRANSACTION_REPEATABLE_READ),
-                    processMapping((String)entry.getValue()));
+                    processMapping(gds, (String)entry.getValue()));
             else
             if (TRANSACTION_READ_COMMITTED.equalsIgnoreCase(jdbcTxIsolation))
                 mapping.put(
                     new Integer(Connection.TRANSACTION_READ_COMMITTED),
-                    processMapping((String)entry.getValue()));
+                    processMapping(gds, (String)entry.getValue()));
             else
             if (TRANSACTION_READ_UNCOMMITTED.equalsIgnoreCase(jdbcTxIsolation))
                 mapping.put(
                     new Integer(Connection.TRANSACTION_READ_UNCOMMITTED),
-                    processMapping((String)entry.getValue()));
+                    processMapping(gds, (String)entry.getValue()));
             else
                 throw new FBResourceException(
                     "Transaction isolation " + jdbcTxIsolation + 
@@ -172,8 +176,8 @@ public class FBTpbMapper implements Serializable {
      * @throws FBResourceException if resource cannot be loaded or contains
      * incorrect values.
      */
-    public FBTpbMapper(String mappingResource, ClassLoader cl) throws FBResourceException {
-        this();
+    public FBTpbMapper(GDS gds, String mappingResource, ClassLoader cl) throws FBResourceException {
+        this(gds);
         try {
             ResourceBundle res = ResourceBundle.getBundle(
                 mappingResource, Locale.getDefault(), cl);
@@ -187,7 +191,7 @@ public class FBTpbMapper implements Serializable {
                 mapping.put(key, value);
             }
             
-            processMapping(mapping);
+            processMapping(gds, mapping);
             
         } catch(MissingResourceException mrex) {
             throw new FBResourceException(
@@ -206,8 +210,8 @@ public class FBTpbMapper implements Serializable {
      * @throws FBResourceException if mapping contains keyword that is not
      * a TPB parameter.
      */
-    private Set processMapping(String mapping) throws FBResourceException {
-        Set result = new HashSet();
+    private TransactionParameterBuffer processMapping(GDS gds, String mapping) throws FBResourceException {
+        TransactionParameterBuffer result = gds.newTransactionParameterBuffer();
         
         StringTokenizer st = new StringTokenizer(mapping, ",");
         while(st.hasMoreTokens()) {
@@ -217,7 +221,7 @@ public class FBTpbMapper implements Serializable {
                 throw new FBResourceException(
                     "Keyword " + token + " unknown. Please check your mapping.");
                     
-            result.add(value);
+            result.addArgument(value.intValue());
         }
         
         return result;
@@ -233,20 +237,20 @@ public class FBTpbMapper implements Serializable {
      * @throws FBResourceException if specified transaction isolation level
      * is unknown.
      */
-    public Set getMapping(int transactionIsolation) throws FBResourceException {
+    public TransactionParameterBuffer getMapping(int transactionIsolation) throws FBResourceException {
         
         switch(transactionIsolation) {
             
             case Connection.TRANSACTION_SERIALIZABLE: 
             case Connection.TRANSACTION_REPEATABLE_READ:
             case Connection.TRANSACTION_READ_COMMITTED:
-                return new HashSet((Set)mapping.get(
-                    new Integer(transactionIsolation)));
+                return ((TransactionParameterBuffer)mapping.get(
+                    new Integer(transactionIsolation))).deepCopy();
                 
             // promote transaction 
             case Connection.TRANSACTION_READ_UNCOMMITTED:
-                return new HashSet((Set)mapping.get(
-                    new Integer(Connection.TRANSACTION_READ_COMMITTED)));
+                return ((TransactionParameterBuffer)mapping.get(
+                    new Integer(Connection.TRANSACTION_READ_COMMITTED))).deepCopy();
                 
             case Connection.TRANSACTION_NONE:
             default:
@@ -264,7 +268,7 @@ public class FBTpbMapper implements Serializable {
      * 
      * @throws FBResourceException if incorrect isolation level is specified.
      */
-    public void setMapping(int transactionIsolation, Set tpb) 
+    public void setMapping(int transactionIsolation, TransactionParameterBuffer tpb) 
         throws FBResourceException 
     {
         switch(transactionIsolation) {
@@ -289,7 +293,7 @@ public class FBTpbMapper implements Serializable {
      * 
      * @return mapping for the default transaction isolation level.
      */
-    public Set getDefaultMapping() {
-        return (Set)mapping.get(new Integer(Connection.TRANSACTION_READ_COMMITTED));
+    public TransactionParameterBuffer getDefaultMapping() {
+        return (TransactionParameterBuffer)mapping.get(new Integer(Connection.TRANSACTION_READ_COMMITTED));
     }
 }

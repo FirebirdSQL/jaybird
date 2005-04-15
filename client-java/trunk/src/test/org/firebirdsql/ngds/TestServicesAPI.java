@@ -24,6 +24,8 @@ import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSType;
 
 import java.io.*;
 import java.sql.Connection;

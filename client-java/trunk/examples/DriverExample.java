@@ -24,10 +24,11 @@ public class DriverExample
     // Note: localhost is a TCP/IP keyword which resolves to your local machine's IP address.
     //       If localhost is not recognized, try using your local machine's name or
     //       the loopback IP address 127.0.0.1 in place of localhost.
-    String databaseURL = "jdbc:firebirdsql:localhost/3050:c:/database/employee.gdb";
+//    String databaseURL = "jdbc:firebirdsql:localhost/3050:c:/database/employee.gdb";
     //String databaseURL = "jdbc:firebirdsql:native:localhost/3050:c:/database/employee.gdb";
     //String databaseURL = "jdbc:firebirdsql:local:c:/database/employee.gdb";
-    //String databaseURL = "jdbc:firebirdsql:embedded:c:/database/employee.gdb";
+    //String databaseURL = "jdbc:firebirdsql:embedded:c:/database/employee.fdb?lc_ctype=WIN1251";
+    String databaseURL = "jdbc:firebirdsql:local:c:/database/dialect1.fdb?sql_dialect=1";
     String user = "sysdba";
     String password = "masterkey";
     String driverName = "org.firebirdsql.jdbc.FBDriver";
@@ -223,6 +224,7 @@ public class DriverExample
           System.out.println ("Connection established.");
         }
         catch (java.sql.SQLException e) {
+            e.printStackTrace();
           System.out.println ("Unable to establish a connection through the driver manager.");
           showSQLException (e);
           return;
@@ -236,10 +238,12 @@ public class DriverExample
           java.util.Properties connectionProperties = new java.util.Properties ();
           connectionProperties.put ("user", user);
           connectionProperties.put ("password", password);
+          connectionProperties.put ("lc_ctype", "WIN1251");
           c = d.connect (databaseURL, connectionProperties);
           System.out.println ("Connection established.");
         }
         catch (java.sql.SQLException e) {
+            e.printStackTrace();
           System.out.println ("Unable to establish a connection through the driver.");
           showSQLException (e);
           return;
@@ -286,9 +290,13 @@ public class DriverExample
       //       of an integrity constraint violation.  
       try {
         s = c.createStatement ();
+        
+        s.executeQuery("select cast('????' as varchar(30) character set win1251) from rdb$database order by 1 collate pxw_cyrl");
+        
         s.executeUpdate ("update employee set salary = salary + 10000");
       }
       catch (java.sql.SQLException e) {
+          e.printStackTrace();
         System.out.println ("Unable to increase everyone's salary.");
         showSQLException (e);
         // We expected this to fail, so don't return, let's keep going...

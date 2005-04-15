@@ -22,7 +22,7 @@ import java.net.URL;
 import java.sql.ParameterMetaData;
 import java.sql.SQLException;
 
-import org.firebirdsql.gds.GDSHelper;
+import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * 

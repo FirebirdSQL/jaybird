@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * The representation (mapping) in
@@ -761,7 +762,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                     DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
                     
                     boolean useStreamBlobs = 
-                        dpb.hasArgument(DatabaseParameterBuffer.use_stream_blobs);
+                        dpb.hasArgument(DatabaseParameterBuffer.USE_STREAM_BLOBS);
                     
                     blob = gdsHelper.createBlob(!useStreamBlobs);
                     

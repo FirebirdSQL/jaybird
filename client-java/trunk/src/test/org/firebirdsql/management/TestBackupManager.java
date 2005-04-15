@@ -7,7 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.gds.GDSType;
+import org.firebirdsql.gds.impl.GDSType;
 
 
 /**

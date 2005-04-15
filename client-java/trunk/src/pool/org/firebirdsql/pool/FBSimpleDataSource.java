@@ -19,7 +19,7 @@
  
 package org.firebirdsql.pool;
 
-import org.firebirdsql.gds.GDSType;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 
 import java.io.PrintWriter;
@@ -223,7 +223,7 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
     }
     
     public void setTpbMapping(String tpbMapping) throws FBResourceException {
-        mcf.setTpbMapper(new FBTpbMapper(tpbMapping, getClass().getClassLoader()));
+        mcf.setTpbMapper(new FBTpbMapper(mcf.getGDS(), tpbMapping, getClass().getClassLoader()));
         this.tpbMapping = tpbMapping;
     }
     

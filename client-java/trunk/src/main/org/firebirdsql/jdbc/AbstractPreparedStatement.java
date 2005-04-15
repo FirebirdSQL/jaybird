@@ -26,6 +26,7 @@ import java.sql.Date;
 import java.util.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.*;
 import org.firebirdsql.logging.*;
 

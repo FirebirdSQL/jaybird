@@ -19,6 +19,8 @@
 package org.firebirdsql.ngds;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.jca.FBTpb;
@@ -42,7 +44,7 @@ import java.util.Arrays;
 public class TestNgdsBlobReadBug  extends SimpleFBTestBase
     {
     private Logger log = LoggerFactory.getLogger(getClass(), false);
-    private FBTpb tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);
+//    private FBTpb tpb;
 
 
     public TestNgdsBlobReadBug(String name) {
@@ -52,10 +54,6 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
 
     protected void setUp()
         {
-        tpb.add(new Integer(ISCConstants.isc_tpb_write));
-        tpb.add(new Integer(ISCConstants.isc_tpb_read_committed));
-        tpb.add(new Integer(ISCConstants.isc_tpb_no_rec_version));
-        tpb.add(new Integer(ISCConstants.isc_tpb_wait));
         }
 
     protected void tearDown()
@@ -355,8 +353,13 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
         isc_tr_handle tr = gds.get_new_isc_tr_handle();
 
         if (log != null) log.info("test- isc_start_transaction");
+        FBTpb tpb = new FBTpb(FBTpbMapper.getDefaultMapper(gds));
+        tpb.add(new Integer(ISCConstants.isc_tpb_write));
+        tpb.add(new Integer(ISCConstants.isc_tpb_read_committed));
+        tpb.add(new Integer(ISCConstants.isc_tpb_no_rec_version));
+        tpb.add(new Integer(ISCConstants.isc_tpb_wait));
 
-        gds.isc_start_transaction(tr, database_handle, tpb.getArray());
+        gds.isc_start_transaction(tr, database_handle, tpb.getTransactionParameterBuffer());
 
         return tr;
         }

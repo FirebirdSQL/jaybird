@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceParameterBuffer;
-import org.firebirdsql.gds.XdrOutputStream;
+import org.firebirdsql.gds.impl.XdrOutputStream;
 
 /**
  * ngds implementation for ServiceParameterBuffer.

@@ -21,6 +21,8 @@ package org.firebirdsql.ngds;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.impl.AbstractGDS;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.jdbc.FBConnectionHelper;
@@ -169,6 +171,10 @@ public class GDS_Impl extends AbstractGDS implements GDS {
 
     public DatabaseParameterBuffer newDatabaseParameterBuffer() {
         return new DatabaseParameterBufferImp();
+    }
+    
+    public TransactionParameterBuffer newTransactionParameterBuffer() {
+        return new TransactionParameterBufferImpl();
     }
 
     public BlobParameterBuffer newBlobParameterBuffer() {
@@ -406,10 +412,11 @@ public class GDS_Impl extends AbstractGDS implements GDS {
     // isc_start_transaction
     // ---------------------------------------------------------------------------------------------
     public void isc_start_transaction(isc_tr_handle tr_handle,
-            isc_db_handle db_handle, byte[] tpb) throws GDSException {
+            isc_db_handle db_handle, TransactionParameterBuffer tpb) throws GDSException {
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
-
+        TransactionParameterBufferImpl tpbImpl = (TransactionParameterBufferImpl)tpb;
+        
         if (tr == null) { throw new GDSException(
                 ISCConstants.isc_bad_trans_handle); }
 
@@ -421,10 +428,11 @@ public class GDS_Impl extends AbstractGDS implements GDS {
 
             tr.setState(isc_tr_handle.TRANSACTIONSTARTING);
 
-            final byte[] arg = new byte[tpb.length + 1];
-            arg[0] = 3;
-            System.arraycopy(tpb, 0, arg, 1, tpb.length);
+//            final byte[] arg = new byte[tpb.length + 1];
+//            arg[0] = 3;
+//            System.arraycopy(tpb, 0, arg, 1, tpb.length);
 
+            byte[] arg = tpbImpl.getBytesForNativeCode();
             native_isc_start_transaction(tr_handle, db_handle, arg);
 
             tr.setDbHandle((isc_db_handle_impl) db_handle);

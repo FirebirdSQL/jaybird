@@ -24,9 +24,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.GDSHelper;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 

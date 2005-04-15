@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 
 import org.firebirdsql.common.FBTestBase;
 
-import org.firebirdsql.gds.GDSType;
+import org.firebirdsql.gds.impl.GDSType;
 
 
 /** 

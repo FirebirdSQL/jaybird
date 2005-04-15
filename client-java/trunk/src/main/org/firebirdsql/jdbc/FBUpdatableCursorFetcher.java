@@ -20,8 +20,8 @@ package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 
-import org.firebirdsql.gds.GDSHelper;
 import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * Statement fetcher for updatable cursor case. This fetcher keeps cursor

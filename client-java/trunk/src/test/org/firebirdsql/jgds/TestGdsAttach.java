@@ -2,9 +2,9 @@ package org.firebirdsql.jgds;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.isc_db_handle;
+import org.firebirdsql.gds.impl.GDSFactory;
 
 import junit.framework.TestCase;
 

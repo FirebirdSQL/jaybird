@@ -34,6 +34,11 @@ import java.net.UnknownHostException;
 import java.text.NumberFormat;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.AbstractGDS;
+import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.impl.XdrInputStream;
+import org.firebirdsql.gds.impl.XdrOutputStream;
+import org.firebirdsql.gds.impl.Xdrable;
 import org.firebirdsql.jdbc.FBConnectionHelper;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -524,12 +529,14 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
                                         isc_db_handle db_handle,
 //                                        Set tpb
 //                                int tpb_length,
-                                byte[] tpb) throws GDSException {
+                                TransactionParameterBuffer tpb) throws GDSException {
 
         boolean debug = log != null && log.isDebugEnabled();
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
-
+        
+        TransactionParameterBufferImpl tpbImpl = (TransactionParameterBufferImpl)tpb;
+        
         if (tr_handle == null) {
             throw new GDSException(ISCConstants.isc_bad_trans_handle);
         }
@@ -547,7 +554,9 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
                 if (debug) log.debug("op_transaction ");
                 db.out.writeInt(op_transaction);
                 db.out.writeInt(db.getRdb_id());
-                db.out.writeSet(ISCConstants.isc_tpb_version3, tpb);
+                
+                db.out.writeTyped(ISCConstants.isc_tpb_version3, tpbImpl);
+//                db.out.writeSet(ISCConstants.isc_tpb_version3, tpb);
                 //            db.out.writeBuffer(tpb, tpb_length);
                 db.out.flush();
                 if (debug) log.debug("sent");
@@ -2268,6 +2277,10 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
 
     public DatabaseParameterBuffer newDatabaseParameterBuffer() {
         return new DatabaseParameterBufferImp();
+    }
+    
+    public TransactionParameterBuffer newTransactionParameterBuffer() {
+        return new TransactionParameterBufferImpl();
     }
 
     public BlobParameterBuffer newBlobParameterBuffer() {

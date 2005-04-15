@@ -24,6 +24,7 @@ import java.util.Arrays;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
 import org.firebirdsql.common.SimpleFBTestBase;
@@ -72,7 +73,7 @@ public class TestGds extends SimpleFBTestBase {
 
     private DatabaseParameterBuffer c;
 
-    private FBTpb tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);
+    private FBTpb tpb;
 
     public TestGds(String name) {
         super(name);
@@ -82,6 +83,7 @@ public class TestGds extends SimpleFBTestBase {
     protected void setUp() {
        //super.setUp(); we will create our own db's directly
         gds = GDSFactory.getDefaultGDS();
+        tpb  = new FBTpb(FBTpbMapper.getDefaultMapper(gds));
 
         c = gds.newDatabaseParameterBuffer();
 
@@ -118,7 +120,7 @@ public class TestGds extends SimpleFBTestBase {
         isc_tr_handle tr = gds.get_new_isc_tr_handle();
 
         if (log!=null) log.info("test- isc_start_transaction");
-        gds.isc_start_transaction(tr, db, tpb.getArray());
+        gds.isc_start_transaction(tr, db, tpb.getTransactionParameterBuffer());
         return tr;
     }
 

@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.XdrOutputStream;
+import org.firebirdsql.gds.impl.XdrOutputStream;
 import org.firebirdsql.jgds.ParameterBufferBase.Argument;
 
 /**

@@ -3,7 +3,7 @@ package org.firebirdsql.jdbc;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.firebirdsql.gds.GDSHelper;
+import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  *
