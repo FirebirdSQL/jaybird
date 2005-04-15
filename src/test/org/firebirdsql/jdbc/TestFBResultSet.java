@@ -613,7 +613,13 @@ public class TestFBResultSet extends FBTestBase {
         }
     }
     
-    public void testMemoryGrowth() throws Exception {
+    public void _testMemoryGrowth() throws Exception {
+        
+        Properties props = getDefaultPropertiesForConnection();
+        props.put("no_result_set_tracking", "");
+        
+        Class.forName(FBDriver.class.getName());
+        Connection connection = DriverManager.getConnection(getUrl(), props);
         
         connection.setAutoCommit(false);
         
