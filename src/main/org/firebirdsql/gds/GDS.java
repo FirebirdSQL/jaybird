@@ -1,20 +1,26 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Public Firebird Java API.
  *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
- *
- * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *    1. Redistributions of source code must retain the above copyright notice, 
+ *       this list of conditions and the following disclaimer.
+ *    2. Redistributions in binary form must reproduce the above copyright 
+ *       notice, this list of conditions and the following disclaimer in the 
+ *       documentation and/or other materials provided with the distribution. 
+ *    3. The name of the author may not be used to endorse or promote products 
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /* The Original Code is the Firebird Java GDS implementation.
@@ -43,8 +49,7 @@ public interface GDS {
      *
      * @return a new <code>ServiceParameterBuffer</code>
      */
-    public ServiceParameterBuffer  newServiceParameterBuffer();
-
+    ServiceParameterBuffer  newServiceParameterBuffer();
 
     /**
      * Create a new <code>ServiceRequestBuffer</code> instance for setting
@@ -57,7 +62,7 @@ public interface GDS {
      *        <code>ServiceRequestBuffer</code> is created
      * @return A new <code>ServiceRequestBuffer</code>
      */
-    public ServiceRequestBuffer    newServiceRequestBuffer(int taskIdentifier);
+    ServiceRequestBuffer    newServiceRequestBuffer(int taskIdentifier);
 
     /**
      * Create a new <code>DatabaseParameterBuffer</code> instance for setting
@@ -65,7 +70,7 @@ public interface GDS {
      *
      * @return A new <code>DatabaseParameterBuffer</code>
      */
-    public DatabaseParameterBuffer newDatabaseParameterBuffer();
+    DatabaseParameterBuffer newDatabaseParameterBuffer();
 
     /**
      * Create a new <code>BlobParameterBuffer</code> instance for setting
@@ -73,16 +78,15 @@ public interface GDS {
      *
      * @return A new <code>BlobParameterBuffer</code>
      */
-    public BlobParameterBuffer     newBlobParameterBuffer();
-
+    BlobParameterBuffer     newBlobParameterBuffer();
 
     /**
-     * Get the type of the GDS implementation.
+     * Create new <code>TransactionParameterBuffer</code> instance for setting
+     * transaction parameters in the current GDS implementation.
      * 
-     * @return instance of {@link GDSType}.
+     * @return A new <code>TransactionParameterBuffer</code>.
      */
-    GDSType getType();
-
+    TransactionParameterBuffer newTransactionParameterBuffer();
 
     // --------------------  Database functions -----------------------
 
@@ -180,7 +184,7 @@ public interface GDS {
      * @see get_new_isc_tr_handle
      */
     void isc_start_transaction(isc_tr_handle tr_handle, isc_db_handle db_handle,
-                                byte[] tpb) throws GDSException;
+                                TransactionParameterBuffer tpb) throws GDSException;
 
 
     /**
@@ -736,25 +740,5 @@ public interface GDS {
      */
     void close();
 
-    /** @link dependency */
-    /*# XSQLDA lnkXSQLDA; */
-
-    /** @link dependency */
-    /*# XSQLVAR lnkXSQLVAR; */
-
-    /** @link dependency */
-    /*# isc_blob_handle lnkisc_blob_handle; */
-
-    /** @link dependency */
-    /*# isc_tr_handle lnkisc_tr_handle; */
-
-    /** @link dependency */
-    /*# isc_stmt_handle lnkisc_stmt_handle; */
-
-    /** @link dependency */
-    /*# isc_db_handle lnkisc_db_handle; */
-
-    /** @link dependency */
-    /*# Clumplet lnkClumplet; */
 }
 

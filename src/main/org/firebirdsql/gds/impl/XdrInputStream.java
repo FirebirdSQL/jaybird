@@ -26,7 +26,7 @@
  *
  */
 
-package org.firebirdsql.gds;
+package org.firebirdsql.gds.impl;
 
 import java.io.EOFException;
 import java.io.IOException;

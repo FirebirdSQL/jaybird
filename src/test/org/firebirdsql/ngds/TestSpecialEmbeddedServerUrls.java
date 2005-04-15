@@ -2,7 +2,7 @@ package org.firebirdsql.ngds;
 
 import junit.framework.TestCase;
 import org.firebirdsql.management.FBManager;
-import org.firebirdsql.gds.GDSType;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.jdbc.FBDriver;

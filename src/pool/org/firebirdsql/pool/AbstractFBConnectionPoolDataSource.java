@@ -27,8 +27,8 @@ import javax.naming.*;
 import javax.resource.ResourceException;
 import javax.sql.*;
 
-import org.firebirdsql.gds.GDSFactory;
-import org.firebirdsql.gds.GDSType;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.*;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.logging.Logger;

@@ -25,9 +25,9 @@ import java.sql.*;
 import java.sql.Date;
 import java.util.*;
 
-import org.firebirdsql.gds.GDSHelper;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * Implementation of {@link ResultSetMetaData} interface.

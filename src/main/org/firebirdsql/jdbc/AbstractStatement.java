@@ -25,8 +25,8 @@ import java.util.*;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.GDSHelper;
 import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * <P>The object used for executing a static SQL statement
@@ -1108,7 +1108,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         
         int mode = FBEscapedParser.USE_BUILT_IN;
         
-        if (dpb.hasArgument(DatabaseParameterBuffer.use_standard_udf))
+        if (dpb.hasArgument(DatabaseParameterBuffer.USE_STANDARD_UDF))
             mode = FBEscapedParser.USE_STANDARD_UDF;
         
         return new FBEscapedParser(mode).parse(sql);

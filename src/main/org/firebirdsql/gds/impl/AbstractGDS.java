@@ -17,12 +17,14 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.gds;
+package org.firebirdsql.gds.impl;
 
 import java.io.Externalizable;
 import java.io.ObjectOutput;
 import java.io.IOException;
 import java.io.ObjectInput;
+
+import org.firebirdsql.gds.GDS;
 
 /**
  * Base class for GDS implementations. This base class allows the GDS

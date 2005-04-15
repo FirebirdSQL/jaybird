@@ -1,22 +1,27 @@
- /*
- * Firebird Open Source J2ee connector - jdbc driver
+/*
+ * Public Firebird Java API.
  *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
- *
- * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *    1. Redistributions of source code must retain the above copyright notice, 
+ *       this list of conditions and the following disclaimer.
+ *    2. Redistributions in binary form must reproduce the above copyright 
+ *       notice, this list of conditions and the following disclaimer in the 
+ *       documentation and/or other materials provided with the distribution. 
+ *    3. The name of the author may not be used to endorse or promote products 
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package org.firebirdsql.gds;
 
 
@@ -33,15 +38,15 @@ package org.firebirdsql.gds;
  */
 public interface BlobParameterBuffer
     {
-    int source_type             =  ISCConstants.isc_bpb_source_type;
-    int target_type             =  ISCConstants.isc_bpb_target_type;
-    int type                    =  ISCConstants.isc_bpb_type;
-    int source_interp           =  ISCConstants.isc_bpb_source_interp;
-    int target_interp           =  ISCConstants.isc_bpb_target_interp;
-    int filter_parameter        =  ISCConstants.isc_bpb_filter_parameter;
+    int SOURCE_TYPE             =  ISCConstants.isc_bpb_source_type;
+    int TARGET_TYPE             =  ISCConstants.isc_bpb_target_type;
+    int TYPE                    =  ISCConstants.isc_bpb_type;
+    int SOURCE_INTERP           =  ISCConstants.isc_bpb_source_interp;
+    int TARGET_INTERP           =  ISCConstants.isc_bpb_target_interp;
+    int FILTER_PARAMETER        =  ISCConstants.isc_bpb_filter_parameter;
 
-    int type_segmented          =  ISCConstants.isc_bpb_type_segmented;
-    int type_stream             =  ISCConstants.isc_bpb_type_stream;
+    int TYPE_SEGMENTED          =  ISCConstants.isc_bpb_type_segmented;
+    int TYPE_STREAM             =  ISCConstants.isc_bpb_type_stream;
 
     /**
      * Set a void (valueless) parameter on this 

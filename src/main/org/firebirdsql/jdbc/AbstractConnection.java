@@ -24,6 +24,9 @@ import java.util.*;
 import javax.resource.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.AbstractGDS;
+import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.*;
 
 /**
@@ -182,9 +185,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
             FBTpb tpb = mc.getTpb();
             FBTpbMapper tpbMapper = tpb.getMapper();
             
-            Set tpbParams = new HashSet();
+            TransactionParameterBuffer tpbParams = getInternalAPIHandler().newTransactionParameterBuffer();
             for (int i = 0; i < parameters.length; i++) {
-    			tpbParams.add(new Integer(parameters[i]));
+    			tpbParams.addArgument(parameters[i]);
     		}
             
             tpbMapper.setMapping(isolationLevel, tpbParams);
@@ -303,7 +306,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         
         int mode = FBEscapedParser.USE_BUILT_IN;
         
-        if (dpb.hasArgument(DatabaseParameterBuffer.use_standard_udf))
+        if (dpb.hasArgument(DatabaseParameterBuffer.USE_STANDARD_UDF))
             mode = FBEscapedParser.USE_STANDARD_UDF;
         
         return new FBEscapedParser(mode).parse(sql);
@@ -401,7 +404,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 "You cannot commit a closed connection.",
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
 
-        if (getAutoCommit() && getInternalAPIHandler().getType() != GDSType.ORACLE_MODE)
+        if (getAutoCommit() && ((AbstractGDS)getInternalAPIHandler()).getType() != GDSType.ORACLE_MODE)
             throw new FBSQLException("commit called with AutoCommit true!");
 
 //        synchronized(mc) {
@@ -428,7 +431,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see #setAutoCommit
      */
     public synchronized void rollback() throws SQLException {
-        if (getAutoCommit() && getInternalAPIHandler().getType() != GDSType.ORACLE_MODE)
+        if (getAutoCommit() && ((AbstractGDS)getInternalAPIHandler()).getType() != GDSType.ORACLE_MODE)
             throw new FBSQLException("Rollback called with AutoCommit true!");
 
         if (isClosed())
@@ -1253,7 +1256,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public String getJavaEncoding() {
         return getDatabaseParameterBuffer().getArgumentAsString(
-            DatabaseParameterBuffer.local_encoding);
+            DatabaseParameterBuffer.LOCAL_ENCODING);
     }
     
     /**
@@ -1263,7 +1266,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public String getMappingPath() {
         return getDatabaseParameterBuffer().getArgumentAsString(
-            DatabaseParameterBuffer.mapping_path);
+            DatabaseParameterBuffer.MAPPING_PATH);
     }
 	 
     protected void finalize() throws Throwable {

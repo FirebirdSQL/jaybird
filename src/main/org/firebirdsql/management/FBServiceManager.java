@@ -25,12 +25,12 @@ import java.io.OutputStream;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.GDSFactory;
-import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.isc_svc_handle;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBSQLException;
 
 /**

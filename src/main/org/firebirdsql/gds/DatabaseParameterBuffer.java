@@ -1,20 +1,26 @@
- /*
- * Firebird Open Source J2ee connector - jdbc driver
+/*
+ * Public Firebird Java API.
  *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
- *
- * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *    1. Redistributions of source code must retain the above copyright notice, 
+ *       this list of conditions and the following disclaimer.
+ *    2. Redistributions in binary form must reproduce the above copyright 
+ *       notice, this list of conditions and the following disclaimer in the 
+ *       documentation and/or other materials provided with the distribution. 
+ *    3. The name of the author may not be used to endorse or promote products 
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 package org.firebirdsql.gds;
@@ -32,6 +38,8 @@ package org.firebirdsql.gds;
  */
 public interface DatabaseParameterBuffer
     {
+    
+    /*
     int cdd_pathname            = ISCConstants.isc_dpb_cdd_pathname;
     int allocation              = ISCConstants.isc_dpb_allocation;
     int journal                 = ISCConstants.isc_dpb_journal;
@@ -101,19 +109,91 @@ public interface DatabaseParameterBuffer
     int gfix_attach             = ISCConstants.isc_dpb_gfix_attach;
     int gstat_attach            = ISCConstants.isc_dpb_gstat_attach;
     int set_db_charset          = ISCConstants.isc_dpb_set_db_charset;
+
+     */
+
+    int CDD_PATHNAME            = ISCConstants.isc_dpb_cdd_pathname;
+    int ALLOCATION              = ISCConstants.isc_dpb_allocation;
+    int JOURNAL                 = ISCConstants.isc_dpb_journal;
+    int PAGE_SIZE               = ISCConstants.isc_dpb_page_size;
+    int NUM_BUFFERS             = ISCConstants.isc_dpb_num_buffers;
+    int BUFFER_LENGTH           = ISCConstants.isc_dpb_buffer_length;
+    int DEBUG                   = ISCConstants.isc_dpb_debug;
+    int GARBAGE_COLLECT         = ISCConstants.isc_dpb_garbage_collect;
+    int VERIFY                  = ISCConstants.isc_dpb_verify;
+    int SWEEP                   = ISCConstants.isc_dpb_sweep;
+    int ENABLE_JOURNAL          = ISCConstants.isc_dpb_enable_journal;
+    int DISABLE_JOURNAL         = ISCConstants.isc_dpb_disable_journal;
+    int DBKEY_SCOPE             = ISCConstants.isc_dpb_dbkey_scope;
+    int NUMBER_OF_USERS         = ISCConstants.isc_dpb_number_of_users;
+    int TRACE                   = ISCConstants.isc_dpb_trace;
+    int NO_GARBAGE_COLLECT      = ISCConstants.isc_dpb_no_garbage_collect;
+    int DAMAGED                 = ISCConstants.isc_dpb_damaged;
+    int LICENSE                 = ISCConstants.isc_dpb_license;
+    int SYS_USER_NAME           = ISCConstants.isc_dpb_sys_user_name;
+    int ENCRYPT_KEY             = ISCConstants.isc_dpb_encrypt_key;
+    int ACTIVATE_SHADOW         = ISCConstants.isc_dpb_activate_shadow;
+    int SWEEP_INTERVAL          = ISCConstants.isc_dpb_sweep_interval;
+    int DELETE_SHADOW           = ISCConstants.isc_dpb_delete_shadow;
+    int FORCE_WRITE             = ISCConstants.isc_dpb_force_write;
+    int BEGIN_LOG               = ISCConstants.isc_dpb_begin_log;
+    int QUIT_LOG                = ISCConstants.isc_dpb_quit_log;
+    int NO_RESERVE              = ISCConstants.isc_dpb_no_reserve;
+    int USER_NAME               = ISCConstants.isc_dpb_user_name;
+    int USER                    = ISCConstants.isc_dpb_user; // alias to isc_dpb_user_name
+    int PASSWORD                = ISCConstants.isc_dpb_password;
+    int PASSWORD_ENC            = ISCConstants.isc_dpb_password_enc;
+    int SYS_USER_NAME_ENC       = ISCConstants.isc_dpb_sys_user_name_enc;
+    int INTERP                  = ISCConstants.isc_dpb_interp;
+    int ONLINE_DUMP             = ISCConstants.isc_dpb_online_dump;
+    int OLD_FILE_SIZE           = ISCConstants.isc_dpb_old_file_size;
+    int OLD_NUM_FILES           = ISCConstants.isc_dpb_old_num_files;
+    int OLD_FILE                = ISCConstants.isc_dpb_old_file;
+    int OLD_START_PAGE          = ISCConstants.isc_dpb_old_start_page;
+    int OLD_START_SEQNO         = ISCConstants.isc_dpb_old_start_seqno;
+    int OLD_START_FILE          = ISCConstants.isc_dpb_old_start_file;
+    int DROP_WALFILE            = ISCConstants.isc_dpb_drop_walfile;
+    int OLD_DUMP_ID             = ISCConstants.isc_dpb_old_dump_id;
+    int WAL_BACKUP_DIR          = ISCConstants.isc_dpb_wal_backup_dir;
+    int WAL_CHKPTLEN            = ISCConstants.isc_dpb_wal_chkptlen;
+    int WAL_NUMBUFS             = ISCConstants.isc_dpb_wal_numbufs;
+    int WAL_BUFSIZE             = ISCConstants.isc_dpb_wal_bufsize;
+    int WAL_GRP_CMT_WAIT        = ISCConstants.isc_dpb_wal_grp_cmt_wait;
+    int LC_MESSAGES             = ISCConstants.isc_dpb_lc_messages;
+    int LC_CTYPE                = ISCConstants.isc_dpb_lc_ctype;
+    int CACHE_MANAGER           = ISCConstants.isc_dpb_cache_manager;
+    int SHUTDOWN                = ISCConstants.isc_dpb_shutdown;
+    int ONLINE                  = ISCConstants.isc_dpb_online;
+    int SHUTDOWN_DELAY          = ISCConstants.isc_dpb_shutdown_delay;
+    int RESERVED                = ISCConstants.isc_dpb_reserved;
+    int OVERWRITE               = ISCConstants.isc_dpb_overwrite;
+    int SEC_ATTACH              = ISCConstants.isc_dpb_sec_attach;
+    int DISABLE_WAL             = ISCConstants.isc_dpb_disable_wal;
+    int CONNECT_TIMEOUT         = ISCConstants.isc_dpb_connect_timeout;
+    int DUMMY_PACKET_INTERVAL   = ISCConstants.isc_dpb_dummy_packet_interval;
+    int GBAK_ATTACH             = ISCConstants.isc_dpb_gbak_attach;
+    int SQL_ROLE_NAME           = ISCConstants.isc_dpb_sql_role_name;
+    int SET_PAGE_BUFFERS        = ISCConstants.isc_dpb_set_page_buffers;
+    int WORKING_DIRECTORY       = ISCConstants.isc_dpb_working_directory;
+    int SQL_DIALECT             = ISCConstants.isc_dpb_sql_dialect;
+    int SET_DB_READONLY         = ISCConstants.isc_dpb_set_db_readonly;
+    int SET_DB_SQL_DIALECT      = ISCConstants.isc_dpb_set_db_sql_dialect;
+    int GFIX_ATTACH             = ISCConstants.isc_dpb_gfix_attach;
+    int GSTAT_ATTACH            = ISCConstants.isc_dpb_gstat_attach;
+    int SET_DB_CHARSET          = ISCConstants.isc_dpb_set_db_charset;
     
     /*
      * Driver-specific DPB params that will be removed before sending them
      * to the server. These params influence only client side.
      */
-    int socket_buffer_size      = ISCConstants.isc_dpb_socket_buffer_size;
-    int blob_buffer_size        = ISCConstants.isc_dpb_blob_buffer_size;
-    int use_stream_blobs        = ISCConstants.isc_dpb_use_stream_blobs;
-    int paranoia_mode           = ISCConstants.isc_dpb_paranoia_mode;
-	int timestamp_uses_local_timezone =     ISCConstants.isc_dpb_timestamp_uses_local_timezone;
-    int use_standard_udf        = ISCConstants.isc_dpb_use_standard_udf;
-    int local_encoding          = ISCConstants.isc_dpb_local_encoding;
-    int mapping_path            = ISCConstants.isc_dpb_mapping_path;
+    int SOCKET_BUFFER_SIZE      = ISCConstants.isc_dpb_socket_buffer_size;
+    int BLOB_BUFFER_SIZE        = ISCConstants.isc_dpb_blob_buffer_size;
+    int USE_STREAM_BLOBS        = ISCConstants.isc_dpb_use_stream_blobs;
+    int PARANOIA_MODE           = ISCConstants.isc_dpb_paranoia_mode;
+	int TIMESTAMP_USES_LOCAL_TIMEZONE =     ISCConstants.isc_dpb_timestamp_uses_local_timezone;
+    int USE_STANDARD_UDF        = ISCConstants.isc_dpb_use_standard_udf;
+    int LOCAL_ENCODING          = ISCConstants.isc_dpb_local_encoding;
+    int MAPPING_PATH            = ISCConstants.isc_dpb_mapping_path;
 	
 	
     /**

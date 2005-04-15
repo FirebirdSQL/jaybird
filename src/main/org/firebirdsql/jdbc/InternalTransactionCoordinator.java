@@ -261,7 +261,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          */
         public void commit() throws SQLException {
             try {
-//                if (localTransaction.inTransaction())
+                if (localTransaction.inTransaction())
                     localTransaction.commit();
             } catch(ResourceException ex) {
                 throw new FBSQLException(ex);

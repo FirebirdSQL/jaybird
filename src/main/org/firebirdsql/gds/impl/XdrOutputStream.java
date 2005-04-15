@@ -25,13 +25,16 @@
  * Boix i Oltra, S.L. All Rights Reserved.
  */
 
-package org.firebirdsql.gds;
+package org.firebirdsql.gds.impl;
 
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.XSQLDA;
+import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.jdbc.FBConnectionHelper;
 
 import org.firebirdsql.logging.Logger;

@@ -25,9 +25,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBSQLException;
 
 /**

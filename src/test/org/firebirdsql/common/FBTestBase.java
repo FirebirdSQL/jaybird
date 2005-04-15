@@ -18,8 +18,8 @@
  */
 package org.firebirdsql.common;
 
-import org.firebirdsql.gds.GDSType;
-import org.firebirdsql.gds.GDSFactory;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.InternalConnectionManager;

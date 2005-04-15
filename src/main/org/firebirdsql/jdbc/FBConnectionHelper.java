@@ -238,8 +238,8 @@ public class FBConnectionHelper {
      * @return a TPB containing all relevant parameters extracted from
      * <code>info</code>
      */
-    public static FBTpb getTpb(Properties info) {
-        FBTpb tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);
+    public static FBTpb getTpb(GDS gds, Properties info) {
+        FBTpb tpb = new FBTpb(FBTpbMapper.getDefaultMapper(gds));
 
         Iterator keys = info.keySet().iterator();
         while(keys.hasNext()) {
@@ -273,13 +273,13 @@ public class FBConnectionHelper {
      * 
      * @throws FBResourceException if specified mapping is incorrect.
      */
-    public static FBTpbMapper getTpbMapper(Properties info) throws FBResourceException {
+    public static FBTpbMapper getTpbMapper(GDS gds, Properties info) throws FBResourceException {
         String tpbMapping = (String)info.getProperty(FBDriver.TPB_MAPPING);
         
         FBTpbMapper tpbMapper = null;
         
         if (tpbMapping != null) 
-            tpbMapper = new FBTpbMapper(tpbMapping, 
+            tpbMapper = new FBTpbMapper(gds, tpbMapping, 
                 FBConnectionHelper.class.getClassLoader());
         else {
             HashMap mapping = new HashMap();
@@ -297,7 +297,7 @@ public class FBConnectionHelper {
                     info.get(TRANSACTION_READ_COMMITTED));
                     
             if (mapping.size() > 0)
-                tpbMapper = new FBTpbMapper(mapping);
+                tpbMapper = new FBTpbMapper(gds, mapping);
         }
         
         return tpbMapper;

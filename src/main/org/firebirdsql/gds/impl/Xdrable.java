@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.gds;
+package org.firebirdsql.gds.impl;
 
 import java.io.IOException;
 

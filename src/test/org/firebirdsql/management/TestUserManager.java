@@ -25,7 +25,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.gds.GDSType;
+import org.firebirdsql.gds.impl.GDSType;
 
 /**
  * Tests the UserManager class which uses the Services API to display, add,

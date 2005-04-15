@@ -19,9 +19,9 @@
 
 package org.firebirdsql.jgds;
 
-import org.firebirdsql.gds.Xdrable;
-import org.firebirdsql.gds.XdrInputStream;
-import org.firebirdsql.gds.XdrOutputStream;
+import org.firebirdsql.gds.impl.XdrInputStream;
+import org.firebirdsql.gds.impl.XdrOutputStream;
+import org.firebirdsql.gds.impl.Xdrable;
 
 import java.util.List;
 import java.util.ArrayList;

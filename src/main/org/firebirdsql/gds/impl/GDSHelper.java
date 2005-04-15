@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.gds;
+package org.firebirdsql.gds.impl;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -25,6 +25,16 @@ import java.util.List;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.XSQLDA;
+import org.firebirdsql.gds.isc_blob_handle;
+import org.firebirdsql.gds.isc_db_handle;
+import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.isc_tr_handle;
 import org.firebirdsql.jdbc.FBConnectionDefaults;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -267,9 +277,9 @@ public class GDSHelper {
 
         BlobParameterBuffer blobParameterBuffer = gds.newBlobParameterBuffer();
 
-        blobParameterBuffer.addArgument(BlobParameterBuffer.type,
-            segmented ? BlobParameterBuffer.type_segmented
-                    : BlobParameterBuffer.type_stream);
+        blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
+            segmented ? BlobParameterBuffer.TYPE_SEGMENTED
+                    : BlobParameterBuffer.TYPE_STREAM);
 
         gds.isc_open_blob2(currentDbHandle, currentTr, blob,
             blobParameterBuffer);
@@ -292,9 +302,9 @@ public class GDSHelper {
 
         BlobParameterBuffer blobParameterBuffer = gds.newBlobParameterBuffer();
 
-        blobParameterBuffer.addArgument(BlobParameterBuffer.type,
-            segmented ? BlobParameterBuffer.type_segmented
-                    : BlobParameterBuffer.type_stream);
+        blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
+            segmented ? BlobParameterBuffer.TYPE_SEGMENTED
+                    : BlobParameterBuffer.TYPE_STREAM);
 
         gds.isc_create_blob2(currentDbHandle, currentTr, blob,
             blobParameterBuffer);
@@ -437,11 +447,11 @@ public class GDSHelper {
     }
 
     public String getJavaEncoding() {
-        return dpb.getArgumentAsString(DatabaseParameterBuffer.local_encoding);
+        return dpb.getArgumentAsString(DatabaseParameterBuffer.LOCAL_ENCODING);
     }
     
     public String getMappingPath() {
-        return dpb.getArgumentAsString(DatabaseParameterBuffer.mapping_path);
+        return dpb.getArgumentAsString(DatabaseParameterBuffer.MAPPING_PATH);
     }
     
     /**

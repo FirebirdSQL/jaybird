@@ -20,9 +20,9 @@
 package org.firebirdsql.jdbc;
 
 
-import org.firebirdsql.gds.GDSHelper;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.impl.GDSHelper;
 
 import java.math.BigDecimal;
 

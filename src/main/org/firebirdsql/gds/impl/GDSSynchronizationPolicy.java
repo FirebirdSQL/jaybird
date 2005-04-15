@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds;
+package org.firebirdsql.gds.impl;
 
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
@@ -24,6 +24,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashSet;
+
+import org.firebirdsql.gds.GDS;
 
 
 /**

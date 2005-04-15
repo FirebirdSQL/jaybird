@@ -5,9 +5,9 @@ import java.sql.*;
 import java.util.ArrayList;
 
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.GDSHelper;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;

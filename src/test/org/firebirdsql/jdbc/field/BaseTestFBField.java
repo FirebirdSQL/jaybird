@@ -31,8 +31,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
-import org.firebirdsql.gds.GDSType;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.ngds.XSQLVARLittleEndianImpl;
 

@@ -21,6 +21,8 @@ package org.firebirdsql.ngds;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSType;
 
 
 
@@ -52,7 +54,7 @@ public class TestNgds extends SimpleFBTestBase {
 
     private DatabaseParameterBuffer c;
 
-    private FBTpb tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);
+    private FBTpb tpb;
 
 
 
@@ -70,6 +72,8 @@ public class TestNgds extends SimpleFBTestBase {
         else
             gds = GDSFactory.getGDSForType(GDSType.NATIVE);
 
+        tpb  = new FBTpb(FBTpbMapper.getDefaultMapper(gds));
+        
         c= gds.newDatabaseParameterBuffer();
 
         c.addArgument(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
@@ -121,7 +125,7 @@ public class TestNgds extends SimpleFBTestBase {
 
        if (log!=null) log.info("test- isc_start_transaction");
 
-        gds.isc_start_transaction(tr, db, tpb.getArray());
+        gds.isc_start_transaction(tr, db, tpb.getTransactionParameterBuffer());
 
         return tr;
      }
