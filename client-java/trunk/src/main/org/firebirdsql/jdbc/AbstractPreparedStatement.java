@@ -78,7 +78,7 @@ public abstract class AbstractPreparedStatement extends FBStatement
     {
         super(c, rsType, rsConcurrency, statementListener);
 
-        statementListener.executionStarted(this);
+        notifyStatementStarted();
         
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
