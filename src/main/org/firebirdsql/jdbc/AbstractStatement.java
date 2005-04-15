@@ -178,18 +178,14 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
             try {
-                ResultSet result;
-                try {
-                    if (!internalExecute(sql)) {
-                        throw new FBSQLException(
-                            "Query did not return a result set.",
-                            FBSQLException.SQL_STATE_NO_RESULT_SET);
-                    }
-                } finally {
-                    result = getResultSet();
+                if (!internalExecute(sql)) {
+                    throw new FBSQLException(
+                        "Query did not return a result set.",
+                        FBSQLException.SQL_STATE_NO_RESULT_SET);
                 }
+
+                return getResultSet();
                 
-                return result;
             } catch (GDSException ge) {
                 throw new FBSQLException(ge);
             }
