@@ -27,7 +27,7 @@ import org.firebirdsql.gds.*;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class isc_blob_handle_impl implements isc_blob_handle {
+public final class isc_blob_handle_impl implements IscBlobHandle {
 
     private isc_db_handle_impl db;
     private isc_tr_handle_impl tr;
@@ -58,11 +58,11 @@ public final class isc_blob_handle_impl implements isc_blob_handle {
         db = value;
     }
 
-    public long getBlob_id() {
+    public long getBlobId() {
         return blob_id;
     }
 
-    public void setBlob_id(long value) {
+    public void setBlobId(long value) {
         blob_id = value;
     }
 

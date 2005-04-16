@@ -24,7 +24,7 @@ import java.util.HashMap;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.IscStmtHandle;
 import org.firebirdsql.gds.ISCConstants;
 
 import org.firebirdsql.jdbc.AbstractStatement;
@@ -77,7 +77,7 @@ public class FirebirdStatementInfoFactory {
     public FirebirdStatementInfo getStatementInfo(AbstractStatement stmt)
             throws FBSQLException, GDSException {
         
-        isc_stmt_handle stmtHandle = stmt.fixedStmt;
+        IscStmtHandle stmtHandle = stmt.fixedStmt;
 
         if (stmtHandle == null){
             throw new FBSQLException("Statement info cannot be retrieved for "
@@ -87,7 +87,7 @@ public class FirebirdStatementInfoFactory {
       
         int bufferSize = BUFFER_SIZE;
         while (true){
-            byte[] buffer = gds.isc_dsql_sql_info(
+            byte[] buffer = gds.iscDsqlSqlInfo(
                 stmtHandle, REQUEST, bufferSize); 
             if (buffer[0] != ISCConstants.isc_info_truncated){
                 return buildStatementInfo(buffer);
@@ -109,16 +109,16 @@ public class FirebirdStatementInfoFactory {
         for (int i = 0; i < buffer.length; i++){
             switch(buffer[i]){
                 case ISCConstants.isc_info_sql_get_plan:
-                    dataLength = gds.isc_vax_integer(buffer, ++i, 2);
+                    dataLength = gds.iscVaxInteger(buffer, ++i, 2);
                     i += 2;
                     statementInfo.executionPlan = 
                         new String(buffer, i + 1, dataLength);
                     i += dataLength - 1;
                     break;
                 case ISCConstants.isc_info_sql_stmt_type:
-                    dataLength = gds.isc_vax_integer(buffer, ++i, 2);
+                    dataLength = gds.iscVaxInteger(buffer, ++i, 2);
                     i += 2;
-                    int stmtType = gds.isc_vax_integer(buffer, i, dataLength);
+                    int stmtType = gds.iscVaxInteger(buffer, i, dataLength);
                     i += dataLength;
                     statementInfo.statementType = stmtType;
                 case ISCConstants.isc_info_end:

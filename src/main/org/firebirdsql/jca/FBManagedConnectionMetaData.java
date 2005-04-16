@@ -25,6 +25,7 @@ import javax.resource.spi.ManagedConnectionMetaData;
 import javax.resource.ResourceException;
 
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 
 
 /**
@@ -53,7 +54,7 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
      */
      public String getEISProductName() throws ResourceException {
          try {
-             return mc.getGDSHelper().getIscDBHandle().getDatabaseProductName();
+             return ((AbstractIscDbHandle)mc.getGDSHelper().getIscDBHandle()).getDatabaseProductName();
          } catch(GDSException ex) {
              throw new FBResourceException(ex);
          }
@@ -68,7 +69,7 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
       */
      public String getEISProductVersion() throws ResourceException {
          try {
-             return mc.getGDSHelper().getIscDBHandle().getDatabaseProductVersion();
+             return ((AbstractIscDbHandle)mc.getGDSHelper().getIscDBHandle()).getDatabaseProductVersion();
          } catch(GDSException ex) {
              throw new FBResourceException(ex);
          }

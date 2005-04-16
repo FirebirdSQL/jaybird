@@ -767,19 +767,19 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                     throw new FBXAException((commit ? "Commit" : "Rollback") + 
                         " called with unknown transaction.", XAException.XAER_NOTA);
                 
-                isc_db_handle dbHandle = tempMc.getGDSHelper().getCurrentDbHandle();
+                IscDbHandle dbHandle = tempMc.getGDSHelper().getCurrentDbHandle();
     
-                isc_tr_handle trHandle = gds.get_new_isc_tr_handle();
-                gds.isc_reconnect_transaction(trHandle, dbHandle, fbTransactionId);
+                IscTrHandle trHandle = gds.createIscTrHandle();
+                gds.iscReconnectTransaction(trHandle, dbHandle, fbTransactionId);
                 
                 // tell exception handler that we know the transaction
                 knownTransaction = true;
                 
                 // complete transaction by commit or rollback
                 if (commit)
-                    gds.isc_commit_transaction(trHandle);
+                    gds.iscCommitTransaction(trHandle);
                 else
-                    gds.isc_rollback_transaction(trHandle);
+                    gds.iscRollbackTransaction(trHandle);
                 
             } catch(GDSException ex) {
                 throw new FBXAException(XAException.XAER_RMERR, ex);

@@ -21,7 +21,7 @@ package org.firebirdsql.jdbc;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -47,7 +47,7 @@ class FBStatementFetcher implements FBFetcher {
 
     protected Synchronizable syncProvider;
 
-    protected isc_stmt_handle stmt;
+    protected AbstractIscStmtHandle stmt;
 
     private Object[] rowsArray;
 
@@ -73,7 +73,7 @@ class FBStatementFetcher implements FBFetcher {
     private boolean isAfterLast = false;
 
     FBStatementFetcher(GDSHelper gdsHelper, Synchronizable syncProvider,
-            isc_stmt_handle stmth,
+            AbstractIscStmtHandle stmth,
             FBObjectListener.FetcherListener fetcherListener, int maxRows,
             int fetchSize) throws SQLException {
 
@@ -94,7 +94,7 @@ class FBStatementFetcher implements FBFetcher {
             isAfterLast = false;
 
             // stored procedures
-            if (stmt.getAllRowsFetched()) {
+            if (stmt.isAllRowsFetched()) {
                 rowsArray = stmt.getRows();
                 size = stmt.size();
             }
@@ -200,7 +200,7 @@ class FBStatementFetcher implements FBFetcher {
 
             if (maxRows != 0 && fetchSize > maxRows) fetchSize = maxRows;
 
-            if (!stmt.getAllRowsFetched()
+            if (!stmt.isAllRowsFetched()
                     && (rowsArray == null || size == rowPosition)) {
                 try {
                     gdsHelper.fetch(stmt, fetchSize);

@@ -36,48 +36,18 @@ package org.firebirdsql.gds;
 
 
 /**
- * The interface <code>isc_tr_handle</code> represents a transaction handle.
+ * The interface <code>IscTrHandle</code> represents a transaction handle.
  *
  * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro Alberola</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public interface isc_tr_handle {
-
-    public final static int NOTRANSACTION = 0;
-    public final static int TRANSACTIONSTARTING = 1;
-    public final static int TRANSACTIONSTARTED = 2;
-    public final static int TRANSACTIONPREPARING = 3;
-    public final static int TRANSACTIONPREPARED = 4;
-    public final static int TRANSACTIONCOMMITTING = 5;
-    public final static int TRANSACTIONROLLINGBACK = 6;
+public interface IscTrHandle {
 
     /**
      * Retrieve a handle to the database to which this transaction is linked.
      *
      * @return Handle to the database
      */
-    isc_db_handle getDbHandle();
-
-    /**
-     * Get the current state of the transaction to which this handle is
-     * pointing. The state is equal to one of the <code>TRANSACTION*</code> 
-     * constants of this interface, or the <code>NOTRANSACTION</code> constant,
-     * also of this interface.
-     *
-     * @return The corresponding value for the current state
-     */
-    int getState();
-
-    /**
-     * Register a statement within the transaction to which this handle points.
-     *
-     * @param fbStatement Handle to the statement to be registered
-     */
-    void registerStatementWithTransaction(isc_stmt_handle fbStatement);
-
-    /**
-     * Clear all the saved result sets from this handle.
-     */
-    void forgetResultSets();
+    IscDbHandle getDbHandle();
 }

@@ -39,7 +39,7 @@ package org.firebirdsql.gds;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public interface isc_stmt_handle {
+public interface IscStmtHandle {
 
     /**
      * Get the input data structure that contains data that is put into
@@ -58,80 +58,11 @@ public interface isc_stmt_handle {
     XSQLDA getOutSqlda();
 
     /**
-     * Clear all rows that have been fetched for this statement. This 
-     * method differs from {@link #removeRows} in that it only affects rows 
-     * that have already been fetched.
-     *
-     * @see #removeRows
-     */
-    void clearRows();
-
-    /**
-     * Get the number of rows that were inserted by executing this statement.
-     *
-     * @return The number of inserted rows
-     */
-    int getInsertCount();
-
-    /**
-     * Get the number of rows that were updated by executing this statement.
-     *
-     * @return The number of updated rows
-     */
-    int getUpdateCount();
-
-    /**
-     * Get the number of rows that were deleted by executing this statement.
-     *
-     * @return The number of deleted rows
-     */
-    int getDeleteCount();
-
-    /**
      * Retrieve whether all rows have been fetched of the rows selected
      * by executing this statement.
      *
      * @return <code>true</code> if all rows have been fetched,
      *         <code>false</code> otherwise
      */
-    boolean getAllRowsFetched();
-
-    /**
-     * Get the rows retrieved by executing this statement.
-     *
-     * @return Array of rows retrieved
-     */
-    Object[] getRows();
-
-    /**
-     * Get the number of rows contained in this statement.
-     *
-     * @return The rowcount for this statement
-     */
-    int size();
-
-    /**
-     * Remove all rows contained by this statement. This method differs from
-     * {@link #clearRows} in that it effectively clears all rows from this
-     * statement.
-     *
-     * @see #clearRows
-     */
-    void removeRows();
-    
-    /**
-     * Retrieve whether or not this statement is valid.
-     *
-     * @return <code>true</code> if this is a valid statement, 
-     *         <code>false</code> otherwise
-     */
-    boolean isValid();
-    
-    /**
-     * Retrieve whether this statement has an open <code>ResultSet</code>.
-     *
-     * @return <code>true</code> if this statement has an open 
-     *         <code>ResultSet</code>, false otherwise
-     */
-    boolean hasOpenResultSet();
+    boolean isAllRowsFetched();
 }

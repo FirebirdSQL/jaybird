@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.*;
 import org.firebirdsql.logging.Logger;
@@ -23,7 +23,7 @@ class FBCachedFetcher implements FBFetcher {
     private final static Logger log = LoggerFactory.getLogger(FBCachedFetcher.class,false);
           
     FBCachedFetcher(GDSHelper gdsHelper, int fetchSize, int maxRows, 
-            isc_stmt_handle stmt_handle, FBObjectListener.FetcherListener fetcherListener, boolean forwardOnly) throws SQLException 
+            AbstractIscStmtHandle stmt_handle, FBObjectListener.FetcherListener fetcherListener, boolean forwardOnly) throws SQLException 
     {
         
         this.fetcherListener = fetcherListener;
@@ -32,7 +32,7 @@ class FBCachedFetcher implements FBFetcher {
         ArrayList rowsSets = new ArrayList(100);
         ArrayList rows = new ArrayList(100);
 
-        isc_stmt_handle stmt =  stmt_handle;
+        AbstractIscStmtHandle stmt =  stmt_handle;
         byte[][] localRow = null;
 
         XSQLVAR[] xsqlvars = stmt_handle.getOutSqlda().sqlvar;
@@ -57,7 +57,7 @@ class FBCachedFetcher implements FBFetcher {
             if (fetchSize == 0)
                 fetchSize = MAX_FETCH_ROWS;
 				// the following if, is only for callable statement				
-				if (!stmt.getAllRowsFetched() && stmt.size() == 0) {
+				if (!stmt.isAllRowsFetched() && stmt.size() == 0) {
                 do {
                     if (maxRows != 0 && fetchSize > maxRows - stmt.size())
                         fetchSize = maxRows - stmt.size();
@@ -67,7 +67,7 @@ class FBCachedFetcher implements FBFetcher {
                         rowsCount += stmt.size();
                         stmt.removeRows();
                     }
-                } while (!stmt.getAllRowsFetched() && (maxRows==0 || rowsCount <maxRows));
+                } while (!stmt.isAllRowsFetched() && (maxRows==0 || rowsCount <maxRows));
                 // now create one list with known capacity					 
                 int rowCount = 0;
                 rowsArray  = new Object[rowsCount];

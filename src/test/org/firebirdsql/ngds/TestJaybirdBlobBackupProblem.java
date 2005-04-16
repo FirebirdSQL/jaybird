@@ -139,7 +139,7 @@ public class TestJaybirdBlobBackupProblem extends TestCase
 		{
 		final GDS gds = GDSFactory.getGDSForType(GDSType.NATIVE_EMBEDDED);
 
-        isc_svc_handle handle = attatchToServiceManager(gds);
+        IscSvcHandle handle = attatchToServiceManager(gds);
 
         backupDatabase(gds, handle, "WithoutBlobData");
 
@@ -152,7 +152,7 @@ public class TestJaybirdBlobBackupProblem extends TestCase
 		
 		final GDS gds = GDSFactory.getGDSForType(GDSType.NATIVE_EMBEDDED);
 
-        isc_svc_handle handle = attatchToServiceManager(gds);
+        IscSvcHandle handle = attatchToServiceManager(gds);
 
         backupDatabase(gds, handle, "WithBlobData");
 
@@ -214,7 +214,7 @@ public class TestJaybirdBlobBackupProblem extends TestCase
 
 	
 	
-	private void backupDatabase(final GDS gds, final isc_svc_handle handle, String logFilePostfix) throws Exception, IOException
+	private void backupDatabase(final GDS gds, final IscSvcHandle handle, String logFilePostfix) throws Exception, IOException
         {
         new File(mAbsoluteBackupPath).delete();
 
@@ -225,9 +225,9 @@ public class TestJaybirdBlobBackupProblem extends TestCase
         assertTrue("Backup file doesent exist !", new File(mAbsoluteBackupPath).exists());
         }
 
-    private void queryService(final GDS gds, final isc_svc_handle handle, String outputFilename) throws Exception, IOException
+    private void queryService(final GDS gds, final IscSvcHandle handle, String outputFilename) throws Exception, IOException
         {
-        final ServiceRequestBuffer serviceRequestBuffer = gds.newServiceRequestBuffer(ISCConstants.isc_info_svc_to_eof);
+        final ServiceRequestBuffer serviceRequestBuffer = gds.createServiceRequestBuffer(ISCConstants.isc_info_svc_to_eof);
 
         final byte[] buffer = new byte[1024];
 		final StringBuffer stringBuffer = new StringBuffer();
@@ -239,7 +239,7 @@ public class TestJaybirdBlobBackupProblem extends TestCase
 			{
 			while(finished==false)
 				{
-				gds.isc_service_query(handle, null, serviceRequestBuffer, buffer);
+				gds.iscServiceQuery(handle, null, serviceRequestBuffer, buffer);
 	
 				final ByteArrayInputStream byteArrayInputStream  = new ByteArrayInputStream(buffer);
 	
@@ -276,47 +276,47 @@ public class TestJaybirdBlobBackupProblem extends TestCase
         assertTrue( "Looks like the backup failed. See logfile "+outputFilename, stringBuffer.toString().indexOf("closing file, committing, and finishing.") != -1 );
         }
 
-    private void startBackup(final GDS gds, final isc_svc_handle handle) throws GDSException
+    private void startBackup(final GDS gds, final IscSvcHandle handle) throws GDSException
         {
-        final ServiceRequestBuffer serviceRequestBuffer = gds.newServiceRequestBuffer(ISCConstants.isc_action_svc_backup);
+        final ServiceRequestBuffer serviceRequestBuffer = gds.createServiceRequestBuffer(ISCConstants.isc_action_svc_backup);
 
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_verbose);
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname,    mAbsoluteDatabasePath);
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file,  mAbsoluteBackupPath);
 
-        gds.isc_service_start( handle, serviceRequestBuffer );
+        gds.iscServiceStart( handle, serviceRequestBuffer );
         }
 	
 	
 	
-	private isc_svc_handle attatchToServiceManager(GDS gds) throws GDSException
+	private IscSvcHandle attatchToServiceManager(GDS gds) throws GDSException
         {
         final ServiceParameterBuffer serviceParameterBuffer = createServiceParameterBuffer(gds);
 
-        final isc_svc_handle handle = gds.get_new_isc_svc_handle();
+        final IscSvcHandle handle = gds.createIscSvcHandle();
 
         assertTrue("Handle should be invalid when created.", handle.isNotValid());
 
-        gds.isc_service_attach( "service_mgr", handle, serviceParameterBuffer );
+        gds.iscServiceAttach( "service_mgr", handle, serviceParameterBuffer );
 
         assertTrue("Handle should be valid when isc_service_attach returns normally.", handle.isValid());
 
         return handle;
         }
 
-    private void detachFromServiceManager(GDS gds, isc_svc_handle handle) throws GDSException
+    private void detachFromServiceManager(GDS gds, IscSvcHandle handle) throws GDSException
         {
         if( handle.isNotValid() )
             throw new Error("Handle should be valid here");
 
-        gds.isc_service_detach(handle);
+        gds.iscServiceDetach(handle);
 
         assertTrue("Handle should be invalid when isc_service_detach returns normally.", handle.isNotValid());
         }
 	
 	private ServiceParameterBuffer createServiceParameterBuffer(GDS gds)
         {
-        final ServiceParameterBuffer returnValue = gds.newServiceParameterBuffer();
+        final ServiceParameterBuffer returnValue = gds.createServiceParameterBuffer();
 
         returnValue.addArgument(ISCConstants.isc_spb_user_name, "SYSDBA");
         returnValue.addArgument(ISCConstants.isc_spb_password,  "masterkey");

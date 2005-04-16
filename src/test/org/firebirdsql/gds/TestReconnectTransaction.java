@@ -4,6 +4,9 @@ import java.sql.Connection;
 import java.util.Arrays;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.gds.impl.AbstractIscDbHandle;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
+import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jca.FBTpb;
@@ -44,7 +47,7 @@ public class TestReconnectTransaction extends FBTestBase {
         
         gds = GDSFactory.getGDSForType(getGdsType());
         
-        dpb = gds.newDatabaseParameterBuffer();
+        dpb = gds.createDatabaseParameterBuffer();
         dpb.addArgument(DatabaseParameterBuffer.USER, this.DB_USER);
         dpb.addArgument(DatabaseParameterBuffer.PASSWORD, this.DB_PASSWORD);
         
@@ -58,11 +61,11 @@ public class TestReconnectTransaction extends FBTestBase {
     
     private static class DataProvider implements FieldDataProvider {
 
-        private isc_stmt_handle stmtHandle;
+        private AbstractIscStmtHandle stmtHandle;
         private int fieldPos;
         private int row;
         
-        private DataProvider(isc_stmt_handle stmtHandle, int fieldPos) {
+        private DataProvider(AbstractIscStmtHandle stmtHandle, int fieldPos) {
             this.stmtHandle = stmtHandle;
             this.fieldPos = fieldPos;
         }
@@ -81,28 +84,28 @@ public class TestReconnectTransaction extends FBTestBase {
     
     public void testReconnectTransaction() throws Exception {
         
-        isc_db_handle dbHandle1 = gds.get_new_isc_db_handle();
-        gds.isc_attach_database(getdbpath(DB_NAME), dbHandle1, dpb);
+        AbstractIscDbHandle dbHandle1 = (AbstractIscDbHandle)gds.createIscDbHandle();
+        gds.iscAttachDatabase(getdbpath(DB_NAME), dbHandle1, dpb);
         
 
-        isc_tr_handle trHandle1 = gds.get_new_isc_tr_handle();
-        gds.isc_start_transaction(trHandle1, dbHandle1, tpb.getTransactionParameterBuffer());
+        AbstractIscTrHandle trHandle1 = (AbstractIscTrHandle)gds.createIscTrHandle();
+        gds.iscStartTransaction(trHandle1, dbHandle1, tpb.getTransactionParameterBuffer());
         
-        gds.isc_prepare_transaction2(trHandle1, message);
+        gds.iscPrepareTransaction2(trHandle1, message);
         
         //gds.isc_commit_transaction(trHandle1);
         
         //gds.isc_detach_database(dbHandle1);
         ((isc_db_handle_impl)dbHandle1).out.close();
         
-        isc_db_handle dbHandle2 = gds.get_new_isc_db_handle();
-        gds.isc_attach_database(getdbpath(DB_NAME), dbHandle2, dpb);
+        AbstractIscDbHandle dbHandle2 = (AbstractIscDbHandle)gds.createIscDbHandle();
+        gds.iscAttachDatabase(getdbpath(DB_NAME), dbHandle2, dpb);
         
-        isc_tr_handle trHandle2 = gds.get_new_isc_tr_handle();
-        gds.isc_start_transaction(trHandle2, dbHandle2, tpb.getTransactionParameterBuffer());
+        AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();
+        gds.iscStartTransaction(trHandle2, dbHandle2, tpb.getTransactionParameterBuffer());
         
-        isc_stmt_handle stmtHandle2 = gds.get_new_isc_stmt_handle();
-        gds.isc_dsql_allocate_statement(dbHandle2, stmtHandle2);
+        AbstractIscStmtHandle stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
+        gds.iscDsqlAllocateStatement(dbHandle2, stmtHandle2);
         
         GDSHelper gdsHelper2 = new GDSHelper(gds, dpb, dbHandle2);
         gdsHelper2.setCurrentTrHandle(trHandle2);
@@ -131,10 +134,10 @@ public class TestReconnectTransaction extends FBTestBase {
             byte[] inLimboMessage = field1.getBytes();
         
             if (Arrays.equals(message, inLimboMessage)) {
-                isc_tr_handle inLimboTrHandle = gds.get_new_isc_tr_handle();
-                gds.isc_reconnect_transaction(inLimboTrHandle, dbHandle2, inLimboTxId);
+                IscTrHandle inLimboTrHandle = gds.createIscTrHandle();
+                gds.iscReconnectTransaction(inLimboTrHandle, dbHandle2, inLimboTxId);
                 
-                gds.isc_rollback_transaction(inLimboTrHandle);
+                gds.iscRollbackTransaction(inLimboTrHandle);
             }
             
             row++;
@@ -142,7 +145,7 @@ public class TestReconnectTransaction extends FBTestBase {
         
         gdsHelper2.closeStatement(stmtHandle2, true);
         
-        gds.isc_commit_transaction(trHandle2);
-        gds.isc_detach_database(dbHandle2);
+        gds.iscCommitTransaction(trHandle2);
+        gds.iscDetachDatabase(dbHandle2);
     }
 }

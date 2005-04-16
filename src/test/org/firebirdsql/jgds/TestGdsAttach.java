@@ -3,7 +3,7 @@ package org.firebirdsql.jgds;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.isc_db_handle;
+import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 
 import junit.framework.TestCase;
@@ -24,7 +24,7 @@ public class TestGdsAttach extends org.firebirdsql.common.SimpleFBTestBase {
     protected void setUp() throws Exception {
         gds = GDSFactory.getDefaultGDS();
 
-        c = gds.newDatabaseParameterBuffer();
+        c = gds.createDatabaseParameterBuffer();
 
         c.addArgument(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
         c.addArgument(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
@@ -32,18 +32,18 @@ public class TestGdsAttach extends org.firebirdsql.common.SimpleFBTestBase {
         c.addArgument(ISCConstants.isc_dpb_user_name, "SYSDBA");
         c.addArgument(ISCConstants.isc_dpb_password, "masterkey");
         
-        isc_db_handle db = gds.get_new_isc_db_handle();
+        IscDbHandle db = gds.createIscDbHandle();
 
-        gds.isc_create_database(DATABASE, db, c);
-        gds.isc_detach_database(db);
+        gds.iscCreateDatabase(DATABASE, db, c);
+        gds.iscDetachDatabase(db);
 
     }
 
     protected void tearDown() throws Exception {
-        isc_db_handle db = gds.get_new_isc_db_handle();
+        IscDbHandle db = gds.createIscDbHandle();
 
-        gds.isc_attach_database(DATABASE, db, c);
-        gds.isc_drop_database(db);
+        gds.iscAttachDatabase(DATABASE, db, c);
+        gds.iscDropDatabase(db);
         
     }
     
@@ -52,29 +52,29 @@ public class TestGdsAttach extends org.firebirdsql.common.SimpleFBTestBase {
     }
     
     public void _testMultipleAttach() throws Exception {
-        isc_db_handle db1 = gds.get_new_isc_db_handle();
-        isc_db_handle db2 = gds.get_new_isc_db_handle();
-        isc_db_handle db3 = gds.get_new_isc_db_handle();
+        IscDbHandle db1 = gds.createIscDbHandle();
+        IscDbHandle db2 = gds.createIscDbHandle();
+        IscDbHandle db3 = gds.createIscDbHandle();
         
-        gds.isc_attach_database(DATABASE, db1, c);
+        gds.iscAttachDatabase(DATABASE, db1, c);
         try {
-            gds.isc_attach_database(DATABASE, db2, c);
+            gds.iscAttachDatabase(DATABASE, db2, c);
             try {
                 try {
-                    gds.isc_attach_database(DATABASE, db3, c);
+                    gds.iscAttachDatabase(DATABASE, db3, c);
                     
                     assertTrue("DB1 object id is 0", ((isc_db_handle_impl)db1).getResp_object() != 0);
                     assertTrue("DB2 object id is 0", ((isc_db_handle_impl)db2).getResp_object() != 0);
                     assertTrue("DB3 object id is 0", ((isc_db_handle_impl)db3).getResp_object() != 0);
                     
                 } finally {
-                    gds.isc_detach_database(db3);
+                    gds.iscDetachDatabase(db3);
                 }
             } finally {
-                gds.isc_detach_database(db2);
+                gds.iscDetachDatabase(db2);
             }
         } finally {
-            gds.isc_detach_database(db1);
+            gds.iscDetachDatabase(db1);
         }
     }
 }

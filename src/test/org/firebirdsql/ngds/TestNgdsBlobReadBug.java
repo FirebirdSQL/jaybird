@@ -19,6 +19,7 @@
 package org.firebirdsql.ngds;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.logging.Logger;
@@ -101,9 +102,9 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
         {
         DatabaseParameterBuffer databaseParameterBuffer = createDatabaseParameterBuffer(gds);
 
-        isc_db_handle database_handle = gds.get_new_isc_db_handle();
+        IscDbHandle database_handle = gds.createIscDbHandle();
 
-        gds.isc_attach_database(getdbpath(DB_NAME), database_handle, databaseParameterBuffer);
+        gds.iscAttachDatabase(getdbpath(DB_NAME), database_handle, databaseParameterBuffer);
         final byte[] data;
         try
             {
@@ -111,44 +112,44 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
             }
         finally
             {
-            gds.isc_detach_database(database_handle);
+            gds.iscDetachDatabase(database_handle);
             }
 
         return data;
         }
 
-    private byte[] readAndBlobRecord(GDS gds, isc_db_handle database_handle) throws Exception
+    private byte[] readAndBlobRecord(GDS gds, IscDbHandle database_handle) throws Exception
         {
         int readcount = 0;
         final List results = new ArrayList();
 
-        isc_tr_handle transaction_handle = startTransaction(gds, database_handle);
+        IscTrHandle transaction_handle = startTransaction(gds, database_handle);
         try
             {
-            final BlobParameterBuffer blobParameterBuffer = gds.newBlobParameterBuffer();
+            final BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
 
             blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
 
-            isc_stmt_handle statement_handle =  gds.get_new_isc_stmt_handle();
+            AbstractIscStmtHandle statement_handle =  (AbstractIscStmtHandle)gds.createIscStmtHandle();
 
             if (log != null) log.info("test- isc_dsql_allocate_statement");
 
-            gds.isc_dsql_allocate_statement(database_handle, statement_handle);
+            gds.iscDsqlAllocateStatement(database_handle, statement_handle);
 
-            XSQLDA out_xsqlda = gds.isc_dsql_prepare(transaction_handle, statement_handle, "SELECT COL1, COL2 FROM R2",
+            XSQLDA out_xsqlda = gds.iscDsqlPrepare(transaction_handle, statement_handle, "SELECT COL1, COL2 FROM R2",
                     ISCConstants.SQL_DIALECT_CURRENT);
 
             if (log != null) log.info("test- isc_dsql_execute2");
 
-            gds.isc_dsql_execute2(transaction_handle, statement_handle, 1, null, null);
+            gds.iscDsqlExecute2(transaction_handle, statement_handle, 1, null, null);
 
-            isc_blob_handle blob_handle =  gds.get_new_isc_blob_handle();
+            IscBlobHandle blob_handle =  gds.createIscBlobHandle();
 
             byte[][] row = null;
 
-            gds.isc_dsql_fetch(statement_handle, 1, out_xsqlda, 200);
+            gds.iscDsqlFetch(statement_handle, 1, out_xsqlda, 200);
 
-            Object[] rows = statement_handle.getRows();
+            byte[][][] rows = statement_handle.getRows();
 
             int size = statement_handle.size();
 
@@ -169,14 +170,14 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
 
                 if (log != null) log.info(out);
 
-                blob_handle.setBlob_id(out_xsqlda.sqlvar[0].decodeLong(row[1]));
+                blob_handle.setBlobId(out_xsqlda.sqlvar[0].decodeLong(row[1]));
 
-                gds.isc_open_blob2(database_handle, transaction_handle, blob_handle, blobParameterBuffer);
+                gds.iscOpenBlob2(database_handle, transaction_handle, blob_handle, blobParameterBuffer);
 
 
                 do
                     {
-                    byte[] answer = gds.isc_get_segment(blob_handle, SEGMENT_SIZE);// 1050)
+                    byte[] answer = gds.iscGetSegment(blob_handle, SEGMENT_SIZE);// 1050)
 
                     if (log != null) log.info("test- answer length: " + answer.length + ", answer string: " + new String(answer));
 
@@ -188,12 +189,12 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
                     }
                 while (!blob_handle.isEof());
 
-                gds.isc_close_blob(blob_handle);
+                gds.iscCloseBlob(blob_handle);
                 }
 
             if (log != null) log.info("test- isc_dsql_free_statement");
 
-            gds.isc_dsql_free_statement(statement_handle, ISCConstants.DSQL_drop);
+            gds.iscDsqlFreeStatement(statement_handle, ISCConstants.DSQL_drop);
             }
         finally
             {
@@ -219,26 +220,26 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
         {
         final GDS gds = getType4Gds();
 
-        isc_db_handle database_handle = createAndSetupDatabase(gds);
+        IscDbHandle database_handle = createAndSetupDatabase(gds);
 
         writeBlobRecord(gds, database_handle, testBuffer);
 
-        gds.isc_detach_database(database_handle);
+        gds.iscDetachDatabase(database_handle);
         }
 
-    private isc_db_handle createAndSetupDatabase(GDS gds) throws Exception
+    private IscDbHandle createAndSetupDatabase(GDS gds) throws Exception
         {
         DatabaseParameterBuffer databaseParameterBuffer = createDatabaseParameterBuffer(gds);
 
-        isc_db_handle database_handle = gds.get_new_isc_db_handle();
+        IscDbHandle database_handle = gds.createIscDbHandle();
 
         if (log != null) log.info("test- isc_create_database");
 
-        gds.isc_create_database(getdbpath(DB_NAME), database_handle, databaseParameterBuffer);
+        gds.iscCreateDatabase(getdbpath(DB_NAME), database_handle, databaseParameterBuffer);
 
-        isc_tr_handle transaction_handle = startTransaction(gds, database_handle);
+        IscTrHandle transaction_handle = startTransaction(gds, database_handle);
 
-        gds.isc_dsql_exec_immed2(database_handle, transaction_handle, "create table r2 (col1 smallint not null primary key, col2 blob)",
+        gds.iscDsqlExecImmed2(database_handle, transaction_handle, "create table r2 (col1 smallint not null primary key, col2 blob)",
                 ISCConstants.SQL_DIALECT_CURRENT, null, null);
 
         commit(gds, transaction_handle);
@@ -246,25 +247,25 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
         return database_handle;
         }
 
-    private void writeBlobRecord(GDS gds, isc_db_handle database_handle,  byte[] testBuffer) throws Exception
+    private void writeBlobRecord(GDS gds, IscDbHandle database_handle,  byte[] testBuffer) throws Exception
         {
-        final BlobParameterBuffer blobParameterBuffer = gds.newBlobParameterBuffer();
+        final BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
 
         blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
 
-        isc_blob_handle blob_handle = gds.get_new_isc_blob_handle();
+        IscBlobHandle blob_handle = gds.createIscBlobHandle();
 
-        isc_tr_handle transaction_handle = startTransaction(gds, database_handle);
+        IscTrHandle transaction_handle = startTransaction(gds, database_handle);
 
-        gds.isc_create_blob2(database_handle, transaction_handle, blob_handle, blobParameterBuffer);
+        gds.iscCreateBlob2(database_handle, transaction_handle, blob_handle, blobParameterBuffer);
 
-        if (log != null) log.info("test- new blob_id: " + blob_handle.getBlob_id());
+        if (log != null) log.info("test- new blob_id: " + blob_handle.getBlobId());
 
         final byte[][] segments = segmentData(testBuffer);
 
         for (int i = 0; i < segments.length; i++)
             {
-            gds.isc_put_segment(blob_handle, segments[i]);
+            gds.iscPutSegment(blob_handle, segments[i]);
 
             if (log != null) log.info("test- wrote bytes: " + (i * testBuffer.length));
             }
@@ -288,16 +289,16 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
 
         xsqlvar.sqllen = 8;
 
-        xsqlvar.sqldata = xsqlvar.encodeLong(blob_handle.getBlob_id());
+        xsqlvar.sqldata = xsqlvar.encodeLong(blob_handle.getBlobId());
 
         xsqlda.sqlvar[1] = xsqlvar;
 
         GDS_Impl.calculateBLR(xsqlda);
         GDS_Impl.calculateIOLength(xsqlda);
 
-        gds.isc_close_blob(blob_handle);
+        gds.iscCloseBlob(blob_handle);
 
-        gds.isc_dsql_exec_immed2(database_handle, transaction_handle, "INSERT INTO R2 VALUES (?, ?)",
+        gds.iscDsqlExecImmed2(database_handle, transaction_handle, "INSERT INTO R2 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
 
         commit(gds, transaction_handle);
@@ -310,18 +311,18 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
         {
         DatabaseParameterBuffer c = createDatabaseParameterBuffer(gds);
 
-        isc_db_handle db = gds.get_new_isc_db_handle();
+        IscDbHandle db = gds.createIscDbHandle();
 
-        gds.isc_attach_database(getdbpath(DB_NAME), db, c);
+        gds.iscAttachDatabase(getdbpath(DB_NAME), db, c);
 
-        gds.isc_drop_database(db);
+        gds.iscDropDatabase(db);
         }
 
     // basic helper for creating an appropriate DPB for the suplied GDS ------------------------------------------------
 
     private DatabaseParameterBuffer createDatabaseParameterBuffer(GDS gds)
         {
-        final DatabaseParameterBuffer databaseParameterBuffer = gds.newDatabaseParameterBuffer();
+        final DatabaseParameterBuffer databaseParameterBuffer = gds.createDatabaseParameterBuffer();
 
         databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
         databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
@@ -348,9 +349,9 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
 
     // basic helpers for starting and ending transactions --------------------------------------------------------------
 
-    private isc_tr_handle startTransaction(GDS gds, isc_db_handle database_handle) throws Exception
+    private IscTrHandle startTransaction(GDS gds, IscDbHandle database_handle) throws Exception
         {
-        isc_tr_handle tr = gds.get_new_isc_tr_handle();
+        IscTrHandle tr = gds.createIscTrHandle();
 
         if (log != null) log.info("test- isc_start_transaction");
         FBTpb tpb = new FBTpb(FBTpbMapper.getDefaultMapper(gds));
@@ -359,19 +360,19 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
         tpb.add(new Integer(ISCConstants.isc_tpb_no_rec_version));
         tpb.add(new Integer(ISCConstants.isc_tpb_wait));
 
-        gds.isc_start_transaction(tr, database_handle, tpb.getTransactionParameterBuffer());
+        gds.iscStartTransaction(tr, database_handle, tpb.getTransactionParameterBuffer());
 
         return tr;
         }
 
 
-    private void commit(GDS gds, isc_tr_handle transaction_handle) throws Exception
+    private void commit(GDS gds, IscTrHandle transaction_handle) throws Exception
         {
         if (log != null) log.info("test- isc_commit_transaction");
 
         try
             {
-            gds.isc_commit_transaction(transaction_handle);
+            gds.iscCommitTransaction(transaction_handle);
             }
         catch (Exception e)
             {

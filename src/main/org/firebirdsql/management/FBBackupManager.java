@@ -202,7 +202,7 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
      */
     private ServiceRequestBuffer getBackupSRB(int options) throws SQLException {
 
-        ServiceRequestBuffer backupSPB = getGds().newServiceRequestBuffer(
+        ServiceRequestBuffer backupSPB = getGds().createServiceRequestBuffer(
                 ISCConstants.isc_action_svc_backup);
 
         backupSPB.addArgument(ISCConstants.isc_spb_dbname, getDatabase());
@@ -319,7 +319,7 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
 
         GDS gds = getGds();
         ServiceRequestBuffer restoreSPB = gds
-                .newServiceRequestBuffer(ISCConstants.isc_action_svc_restore);
+                .createServiceRequestBuffer(ISCConstants.isc_action_svc_restore);
 
         // backup files without sizes
         for (Iterator iter = backupPaths.iterator(); iter.hasNext();) {

@@ -36,8 +36,8 @@ import java.util.List;
 
 import javax.security.auth.Subject;
 
-import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 import org.firebirdsql.gds.impl.XdrInputStream;
 import org.firebirdsql.gds.impl.XdrOutputStream;
 
@@ -47,7 +47,7 @@ import org.firebirdsql.gds.impl.XdrOutputStream;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_handle {
+public final class isc_db_handle_impl extends AbstractIscDbHandle {
     private int rdb_id;
     private Subject subject;
     private Collection rdb_transactions = new ArrayList();
