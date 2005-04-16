@@ -31,7 +31,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.text.NumberFormat;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractGDS;

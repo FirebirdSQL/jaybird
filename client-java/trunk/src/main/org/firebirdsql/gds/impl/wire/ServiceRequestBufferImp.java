@@ -20,11 +20,9 @@ package org.firebirdsql.gds.impl.wire;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.List;
 
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.XdrOutputStream;
-import org.firebirdsql.gds.impl.wire.ParameterBufferBase.Argument;
 
 /**
  * ngds implementation for ServiceRequestBufferImp.
