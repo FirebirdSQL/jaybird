@@ -25,7 +25,6 @@ import java.sql.Types;
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.jdbc.AbstractConnection;
 import org.firebirdsql.jdbc.FBConnectionHelper;
 
 

@@ -27,7 +27,6 @@
 package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.gds.IscDbHandle;
-import org.firebirdsql.gds.IscStmtHandle;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 
