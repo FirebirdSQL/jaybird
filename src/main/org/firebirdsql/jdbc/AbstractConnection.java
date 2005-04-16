@@ -25,7 +25,6 @@ import javax.resource.*;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractGDS;
-import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.*;
@@ -39,11 +38,6 @@ import org.firebirdsql.jca.*;
  */
 public abstract class AbstractConnection implements FirebirdConnection {
 
-    //flag that is set to true when a transaction is started automatically,
-    //so the transaction may be committed automatically after a
-    //statement is executed.
-    private boolean autoTransaction = false;
-    private int transactionCount;
     
     // This flag is set tu true in close() method to indicate that this 
     // instance is invalid and cannot be used anymore
@@ -408,16 +402,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
         if (getAutoCommit() && ((AbstractGDS)getInternalAPIHandler()).getType() != GDSType.ORACLE_MODE)
             throw new FBSQLException("commit called with AutoCommit true!");
 
-//        synchronized(mc) {
-//            try {
-//                if (inTransaction())
-//                    getLocalTransaction().internalCommit();
-//                
-//            } catch(ResourceException ge) {
-//                throw new FBSQLException(ge);
-//            }
-//        }
-        
         txCoordinator.commit();
     }
 
@@ -440,16 +424,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 "You cannot rollback closed connection.",
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
 
-//        synchronized(mc) {
-//            try{
-//                if (inTransaction())
-//                    getLocalTransaction().internalRollback();
-//                
-//            } catch(ResourceException ex) {
-//                throw new FBSQLException(ex);
-//            }
-//        }
-        
         txCoordinator.rollback();
     }
 
@@ -480,18 +454,11 @@ public abstract class AbstractConnection implements FirebirdConnection {
                     if (!getAutoCommit() && localTransaction.inTransaction()) {
                         //autocommit is always true for managed tx.
                         try {
-//                            if (inTransaction())
-//                                    getLocalTransaction().internalRollback();
-//
-//                        } catch (ResourceException ge) {
-//                            throw new FBSQLException(ge);
-                            
                             txCoordinator.rollback();
                         } finally {
-                            //always reset Autocommit for the next user.
                             setAutoCommit(true);
                         }
-                    } // end of if ()
+                    }
 
                     mc.close(this);
                 }
@@ -843,12 +810,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * demarcate resource manager local transactions on this connection.
      */
     public synchronized FBLocalTransaction getLocalTransaction() {
-//        synchronized(mc) {
-//            if (localTransaction == null) {
-//                localTransaction = new FBLocalTransaction(mc, this);
-//            }
-//            return localTransaction;
-//        }
         return localTransaction;
     }
 
@@ -875,11 +836,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return mc.getGDSHelper().inTransaction();
     }
 
-    //for DatabaseMetaData
-//    String getDatabase() {
-//        return mc.getGDSHelper().getDatabase();
-//    }
-
     String getUserName() {
         return mc.getGDSHelper().getUserName();
     }
@@ -893,90 +849,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public String getIscEncoding() {
         return mc.getGDSHelper().getIscEncoding();
     }
-
-    /**
-     * The <code>ensureInTransaction</code> method starts a local transaction
-     * if a transaction is not associated with this connection.
-     *
-     * @return a <code>boolean</code> value, true if transaction was started.
-     */
-//    public synchronized void ensureInTransaction() throws SQLException {
-//        if (autoTransaction)
-//            transactionCount++;
-//        
-//        synchronized (mc) {
-//            try {
-//                if (inTransaction()) {
-//                    // autoTransaction = false;
-//                    return;
-//                }
-//
-//                //We have to start our own transaction
-//                getLocalTransaction().begin();
-//                autoTransaction = true;
-//                transactionCount = 1;
-//
-//            } catch (ResourceException re) {
-//                throw new FBSQLException(re);
-//            }
-//        }
-//    }
-
-    /**
-     * The <code>willEndTransaction</code> method determines if the current 
-     * transaction should be automatically ended when the current statement 
-     * executes.
-     * 
-     * for use in jca contexts, autocommit is always true, and autoTransaction 
-     * is true if the current transaction was started automatically.
-     * 
-     * Using jdbc transaction control, if autocommit is false, transactions are 
-     * started automatically but not ended automatically.
-     *
-     * @return a <code>boolean</code> value
-     */
-//    public synchronized boolean willEndTransaction() throws SQLException {
-//        return getAutoCommit() && autoTransaction;
-//    }
-
-    /**
-     * Ensure that the current implicit transaction is ended (if there is
-     * one) with a commit. 
-     *
-     * @throws SQLException if a database access error occurs
-     */
-//    public synchronized void checkEndTransaction() throws SQLException {
-//        checkEndTransaction(true);
-//    }
-    
-    /**
-     * Ensure that the current implicit transaction is ended (if there is one),
-     * either with a commit or rollback.
-     *
-     * @param commit if true, end the transaction with a commit, otherwise
-     * end the transaction with a rollback
-     * @throws SQLException if a database access error occurrs
-     */
-//    public synchronized void checkEndTransaction(boolean commit) throws SQLException {
-//        if (autoTransaction)
-//            transactionCount--;
-//        
-//        if (willEndTransaction() && transactionCount == 0)
-//        {
-//            autoTransaction = false;
-//            synchronized(mc) {
-//                try {
-//                    if (commit)
-//                        getLocalTransaction().internalCommit();
-//                    else
-//                        getLocalTransaction().internalRollback();
-//                } catch (ResourceException ge) {
-//                    throw new FBSQLException(ge);
-//                }
-//            }
-//
-//        }
-//    }
 
 	 protected synchronized void addWarning(SQLWarning warning){
 		 if (firstWarning == null)
@@ -1029,247 +901,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
             throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_req_no_trans);
     }
 	 
-    /**
-     * Allocate a statement handle from the underlying FBManagedConnection
-     * @return The newly allocated statement handle
-     * @throws GDSException if an error occurs in the underlying connection
-     */
-    public IscStmtHandle getAllocatedStatement() throws GDSException {
-        checkManagedConnection();    
-        return mc.getGDSHelper().allocateStatement();
-    }
-
-    /**
-     * Execute a statement based on a statement handle.
-     * 
-     * @param stmt The statement handle to be executed
-     * @param sendOutSqlda Determine if the XSQLDA datastructure should be sent
-     * to the server
-     * @throws GDSException if an error occurs with the underlying connection
-     */
-    public void executeStatement(AbstractIscStmtHandle stmt, boolean sendOutSqlda) throws GDSException {
-        checkManagedConnection();
-        if (stmt == null || !stmt.isValid())
-            throw new GDSException(ISCConstants.isc_bad_req_handle);
-        mc.getGDSHelper().executeStatement(stmt,sendOutSqlda);
-    }
-	 	 
-    /**
-     * Close a statement based on a statment handle.
-     *
-     * @param stmt The statement to be closed
-     * @param deallocate if true, the statement is deallocated, if false the 
-     * statement is just closed
-     * @throws GDSException if an error occurs with the underlying connection
-     */
-//    public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
-//        checkManagedConnection();
-//        if (stmt == null || !stmt.isValid())
-//            throw new GDSException(ISCConstants.isc_bad_req_handle);
-//        mc.getGDSHelper().closeStatement(stmt,deallocate);
-//    }	 
-
-    /**
-     * Prepare an sql statement for a given statement handle.
-     * 
-     * @param stmt The statement that is being prepared
-     * @param sql The sql statement to prepare in the statement
-     * @param describeBind Send bind information to the server
-     * @throws GDSException if an error occurs with the underlying connection
-     * @throws SQLException if a general database error occurs
-     */
-    public void prepareSQL(AbstractIscStmtHandle stmt, String sql, boolean describeBind) throws GDSException, SQLException {
-        checkManagedConnection();
-        mc.getGDSHelper().prepareStatement(stmt, sql, describeBind);
-    }
-	 
-    /**
-     * Register a statement with the current transaction.
-     * 
-     * @param fbStatement The statement to be registered
-     */
-    public void registerStatement(AbstractStatement fbStatement) {
-        // FIXME throw this code away
-        // mc.getGDSHelper().registerStatement(fbStatement.fixedStmt);
-    }
-	 
     public GDSHelper getGDSHelper() throws GDSException {
         checkManagedConnection();
         
         return mc.getGDSHelper();
     }
     
-    /**
-     * Fetch the next batch of row data from a statement handle.
-     * 
-     * @param stmt The underlying statement handle from which data should 
-     * be fetched
-     * @param fetchSize The number of rows to fetch
-     * @throws GDSException if an error occurs with the underlying connection
-     */
-    public void fetch(AbstractIscStmtHandle stmt, int fetchSize) throws GDSException {
-        checkManagedConnection();
-        if (stmt == null || !stmt.isValid())
-            throw new GDSException(ISCConstants.isc_bad_req_handle);
-        mc.getGDSHelper().fetch(stmt, fetchSize);
-    }
-    
-    /**
-     * Set the cursor name to be used with the given statement handle.
-     * 
-     * @param stmt The statement whose cursor is being named
-     * @param cursorName The name for the cursor
-     * @throws GDSException if an error occurs
-     */
-    public void setCursorName(AbstractIscStmtHandle stmt, String cursorName) throws GDSException {
-        checkManagedConnection();
-        if (stmt == null || !stmt.isValid())
-            throw new GDSException(ISCConstants.isc_bad_req_handle);
-        mc.getGDSHelper().setCursorName(stmt, cursorName);
-    }
-
-    /**
-     * Fetch the count information for a statement handle. The count 
-     * information that is updated includes the counts for update, insert,
-     * delete and select, and it is set in the handle itself.
-     * 
-     * @param stmt The statement handle for which count info is being fetched
-     * @throws GDSException if an error occurs
-     */
-    public void getSqlCounts(AbstractIscStmtHandle stmt) throws GDSException {
-        checkManagedConnection();
-        if (stmt == null || !stmt.isValid())
-            throw new GDSException(ISCConstants.isc_bad_req_handle);
-        mc.getGDSHelper().getSqlCounts(stmt);
-    }
-
-    /**
-     * Get the product name for the database involved in this connection.
-     * 
-     * @return The name of the database product
-     */
-    public String getDatabaseProductName() {
-        return mc.getGDSHelper().getDatabaseProductName();
-    }
-
-    /**
-     * Get the version of the database involved in this connection
-     *
-     * @return The version of the database
-     */
-    public String getDatabaseProductVersion() {
-        return mc.getGDSHelper().getDatabaseProductVersion();
-    }
-
-    /**
-     * Get the major version number for the database involved in this 
-     * connection
-     * 
-     * @return The major version number of the database
-     */
-    public int getDatabaseProductMajorVersion() {
-        return mc.getGDSHelper().getDatabaseProductMajorVersion();
-    }
-
-    /**
-     * Get the minor version number for the database involved in this
-     * connection
-     *
-     * @return The minor version number of the database
-     */
-    public int getDatabaseProductMinorVersion() {
-        return mc.getGDSHelper().getDatabaseProductMinorVersion();
-    }
-
-    /**
-     * Get the blob buffer length used for this connection.
-     * 
-     * @return The size of the blob buffer length
-     */
-    public Integer getBlobBufferLength() {
-        return new Integer(mc.getGDSHelper().getBlobBufferLength());
-    }
-	 
-    /**
-     * Open a blob handle with the given identifier.
-     *
-     * @param blob_id The id given to the blob handle
-     * @param segmented If true, the blob handle will be segmented, otherwise
-     * it will be a stream
-     * @throws GDSException if an error occurs with the underlying connection
-     */
-    public IscBlobHandle openBlobHandle(long blob_id, boolean segmented) throws GDSException {
-        checkManagedConnection();
-        return mc.getGDSHelper().openBlob(blob_id, segmented);
-    }	 
-	 
-    /**
-     * Fetch a segment of of a blob.
-     * 
-     * @param blob The handle to the blob for which a segment is requested
-     * @param len The length of the segment that is being requested
-     * @throws GDSException if an error occurs with the underlying connection
-     */
-    public byte[] getBlobSegment(IscBlobHandle blob, int len) throws GDSException {
-        checkManagedConnection();
-        return mc.getGDSHelper().getBlobSegment(blob,len);
-    }
-	 
-    /**
-     * Close a blob handle.
-     *
-     * @param blob The handle to the blob to be closed
-     * @throws GDSException if an error occurs with the underlying connection
-     */
-    public void closeBlob(IscBlobHandle blob) throws GDSException {
-        checkManagedConnection();
-        mc.getGDSHelper().closeBlob(blob);
-    }
-	 
-    /**
-     * Create a new blob handle.
-     *
-     * @param segmented If true, the new blob will be segmented, otherwise
-     * it will be streamed.
-     * @throws GDSException if an error occurs with the underlying connection
-     */
-    public IscBlobHandle createBlobHandle(boolean segmented) throws GDSException {
-        checkManagedConnection();
-        return mc.getGDSHelper().createBlob(segmented);
-    }
-	 
-    /**
-     * Put a segment data data into a blob handle.
-     *
-     * @param blob The blob to which data is being added
-     * @param buf The data to be added to the blob
-     * @throws GDSException if an error occurs with the underlying connection
-     */
-    public void putBlobSegment(IscBlobHandle blob, byte[] buf) throws GDSException {
-        checkManagedConnection();
-        mc.getGDSHelper().putBlobSegment(blob, buf);
-    }
-
-    /**
-     * Get the name of the encoding that is being used by the java driver.
-     *
-     * @return The name of the encoding
-     */
-    public String getJavaEncoding() {
-        return getDatabaseParameterBuffer().getArgumentAsString(
-            DatabaseParameterBuffer.LOCAL_ENCODING);
-    }
-    
-    /**
-     * Get the path to the character mapping for this connection.
-     * 
-     * @return The path to the character mapping
-     */
-    public String getMappingPath() {
-        return getDatabaseParameterBuffer().getArgumentAsString(
-            DatabaseParameterBuffer.MAPPING_PATH);
-    }
-	 
     protected void finalize() throws Throwable {
         close();
     }
