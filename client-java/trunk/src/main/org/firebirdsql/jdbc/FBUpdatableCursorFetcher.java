@@ -20,7 +20,7 @@ package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 
-import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
@@ -34,7 +34,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 public class FBUpdatableCursorFetcher extends FBStatementFetcher {
 
     FBUpdatableCursorFetcher(GDSHelper gdsHelper, Synchronizable syncProvider,
-            isc_stmt_handle stmth,
+            AbstractIscStmtHandle stmth,
             FBObjectListener.FetcherListener fetcherListener, int maxRows,
             int fetchSize) throws SQLException {
         super(gdsHelper, syncProvider, stmth, fetcherListener, maxRows,

@@ -57,7 +57,7 @@ public class FBConnectionRequestInfo
      *         GDS implementation
      */            
     public static FBConnectionRequestInfo newInstance(GDS gds) {
-        return new FBConnectionRequestInfo(gds.newDatabaseParameterBuffer());
+        return new FBConnectionRequestInfo(gds.createDatabaseParameterBuffer());
         }
 
     /**

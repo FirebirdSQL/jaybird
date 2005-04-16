@@ -22,43 +22,40 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+ * The Original Code is the Firebird Java GDS implementation.
+ *
+ * The Initial Developer of the Original Code is Alejandro Alberola.
+ * Portions created by Alejandro Alberola are Copyright (C) 2001
+ * Boix i Oltra, S.L. All Rights Reserved.
+ */
 
 package org.firebirdsql.gds;
 
-
-// imports --------------------------------------
-
+import java.util.List;
 
 /**
- * The interface <code>isc_blob_handle</code> is a java mapping for a blob handle..
+ * The interface <code>isc_db_handle</code> represents a socket connection
+ * to the database server.
  *
+ * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro Alberola</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public interface isc_blob_handle {
+public interface IscDbHandle {
 
     /**
-     * Get the identifier for the blob to which this handle is linked.
-     *
-     * @return identifier for the blob
+     * Get list of warnings that were returned by the server.
+     * 
+     * @return instance of {@link List} containing instances of 
+     * {@link GDSException} representing server warnings (method 
+     * {@link GDSException#isWarning()} returns <code>true</code>).
      */
-    long getBlob_id();
-
-    /**
-     * Set the identifier for the blob to which this handle is linked.
-     *
-     * @param blob_id The identifier to be set
-     */
-    void setBlob_id(long blob_id);
+    List getWarnings();
     
-    // only used in the tests
-
     /**
-     * Retrieve whether the <code>EOF</code> has been reached with this blob.
-     *
-     * @return <code>true</code> if <code>EOF</code> has been reached, 
-     *         <code>false</code> otherwise
+     * Clear warning list associated with this connection.
      */
-    boolean isEof();
-
+    void clearWarnings();
 }
+

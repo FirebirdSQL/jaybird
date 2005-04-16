@@ -29,6 +29,7 @@ import java.sql.Date;
 import java.util.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.*;
 
@@ -105,7 +106,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      */
     protected FBResultSet(GDSHelper gdsHelper, 
                           AbstractStatement fbStatement, 
-                          isc_stmt_handle stmt, 
+                          AbstractIscStmtHandle stmt, 
                           FBObjectListener.ResultSetListener listener,
                           boolean trimStrings, 
                           int rsType, 

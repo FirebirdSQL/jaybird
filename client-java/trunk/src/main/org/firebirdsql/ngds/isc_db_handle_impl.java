@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.Collection;
 import javax.security.auth.Subject;
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 
 /**
  * Describe class <code>isc_db_handle_impl</code> here.
@@ -40,7 +41,7 @@ import org.firebirdsql.gds.GDSException;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class isc_db_handle_impl implements org.firebirdsql.gds.isc_db_handle {
+public final class isc_db_handle_impl extends AbstractIscDbHandle {
     private int rdb_id;
     private int rdb_id_ptr = 0;
 

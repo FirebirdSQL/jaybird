@@ -31,6 +31,8 @@ import javax.security.auth.Subject;
 import javax.transaction.xa.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.AbstractIscDbHandle;
+import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.logging.Logger;
@@ -57,7 +59,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     private Map xidMap = new HashMap();
     
     private GDS gds;
-    private isc_db_handle dbHandle;
+    private IscDbHandle dbHandle;
     private GDSHelper gdsHelper;
 
     protected FBConnectionRequestInfo cri;
@@ -76,10 +78,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         this.tpb = mcf.getTpb(); // getTpb supplies a copy.
         
         try {
-            this.dbHandle = gds.get_new_isc_db_handle();
-            gds.isc_attach_database(mcf.getDatabase(), dbHandle, this.cri.getDpb());
+            this.dbHandle = gds.createIscDbHandle();
+            gds.iscAttachDatabase(mcf.getDatabase(), dbHandle, this.cri.getDpb());
             
-            this.gdsHelper = new GDSHelper(this.gds, this.cri.getDpb(), this.dbHandle);
+            this.gdsHelper = new GDSHelper(this.gds, this.cri.getDpb(), (AbstractIscDbHandle)this.dbHandle);
         } catch(GDSException ex) {
             throw new FBResourceException(ex);
         }
@@ -475,7 +477,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
                 "Can't destroy managed connection  with active transaction");
         
         try {
-            gdsHelper.getInternalAPIHandler().isc_detach_database(dbHandle);
+            gdsHelper.getInternalAPIHandler().iscDetachDatabase(dbHandle);
         } catch (GDSException ge) {
             throw new FBResourceException("Can't detach from db.", ge);
         } finally {
@@ -502,11 +504,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     // --------------------------------------------------------------
 
     boolean isXidActive(Xid xid) {
-        isc_tr_handle trHandle = (isc_tr_handle)xidMap.get(xid); //mcf.getTrHandleForXid(xid);
+        IscTrHandle trHandle = (IscTrHandle)xidMap.get(xid); //mcf.getTrHandleForXid(xid);
 
         if (trHandle == null) return false;
 
-        isc_db_handle dbHandle = trHandle.getDbHandle();
+        AbstractIscDbHandle dbHandle = (AbstractIscDbHandle)trHandle.getDbHandle();
 
         if (dbHandle == null) return false;
 
@@ -546,7 +548,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     void internalCommit(Xid xid, boolean onePhase) throws XAException,
             GDSException {
         if (log != null) log.debug("Commit called: " + xid);
-        isc_tr_handle committingTr = (isc_tr_handle)xidMap.get(xid); //mcf.getTrHandleForXid(id);
+        AbstractIscTrHandle committingTr = (AbstractIscTrHandle)xidMap.get(xid);
 
         if (committingTr == null)
             throw new FBXAException("Commit called with unknown transaction",
@@ -556,15 +558,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             throw new FBXAException("Commit called with current xid",
                     XAException.XAER_PROTO);
 
-        isc_db_handle committingDbHandle = committingTr.getDbHandle();
+        IscDbHandle committingDbHandle = committingTr.getDbHandle();
 
         try {
             committingTr.forgetResultSets();
             try {
-                gdsHelper.getInternalAPIHandler().isc_commit_transaction(committingTr);
+                gdsHelper.getInternalAPIHandler().iscCommitTransaction(committingTr);
             } catch (GDSException ge) {
                 try {
-                    gdsHelper.getInternalAPIHandler().isc_rollback_transaction(committingTr);
+                    gdsHelper.getInternalAPIHandler().iscRollbackTransaction(committingTr);
                 } catch (GDSException ge2) {
                     if (log != null)
                         log.debug("Exception rolling back failed tx: ", ge2);
@@ -618,7 +620,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     void internalEnd(Xid xid, int flags) throws XAException {
 
         if (log != null) log.debug("End called: " + xid);
-        isc_tr_handle endingTr = (isc_tr_handle)xidMap.get(xid);
+        IscTrHandle endingTr = (IscTrHandle)xidMap.get(xid);
 
         if (endingTr == null)
             throw new FBXAException("Unrecognized transaction",
@@ -691,14 +693,14 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     int internalPrepare(Xid xid) throws FBXAException, GDSException {
         if (log != null) log.debug("prepare called: " + xid);
-        isc_tr_handle committingTr = (isc_tr_handle)xidMap.get(xid);
+        IscTrHandle committingTr = (IscTrHandle)xidMap.get(xid);
         if (committingTr == null)
             throw new FBXAException("Prepare called with unknown transaction",
                     XAException.XAER_INVAL);
         if (committingTr == gdsHelper.getCurrentTrHandle())
             throw new FBXAException("Prepare called with current xid",
                     XAException.XAER_PROTO);
-        isc_db_handle committingDbHandle = committingTr.getDbHandle();
+        IscDbHandle committingDbHandle = committingTr.getDbHandle();
             try {
                 FBXid fbxid;
                 if (xid instanceof FBXid) {
@@ -706,10 +708,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
                 } else {
                     fbxid = new FBXid(xid);
                 }
-                gdsHelper.getInternalAPIHandler().isc_prepare_transaction2(committingTr, fbxid.toBytes());
+                gdsHelper.getInternalAPIHandler().iscPrepareTransaction2(committingTr, fbxid.toBytes());
             } catch (GDSException ge) {
                 try {
-                    gdsHelper.getInternalAPIHandler().isc_rollback_transaction(committingTr);
+                    gdsHelper.getInternalAPIHandler().iscRollbackTransaction(committingTr);
                 } catch (GDSException ge2) {
                     if (log != null)
                         log.debug("Exception rolling back failed tx: ", ge2);
@@ -805,7 +807,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
 
     void internalRollback(Xid xid) throws XAException, GDSException {
         if (log != null) log.debug("rollback called: " + xid);
-        isc_tr_handle committingTr = (isc_tr_handle)xidMap.get(xid); //mcf.getTrHandleForXid(id);
+        AbstractIscTrHandle committingTr = (AbstractIscTrHandle)xidMap.get(xid); //mcf.getTrHandleForXid(id);
         if (committingTr == null) {
             if (log != null)
                 log.warn("rollback called with unknown transaction: " + xid);
@@ -816,12 +818,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             throw new FBXAException("Rollback called with current xid",
                     XAException.XAER_PROTO);
 
-        isc_db_handle committingDbHandle = committingTr.getDbHandle();
+        IscDbHandle committingDbHandle = committingTr.getDbHandle();
 
         try {
             committingTr.forgetResultSets();
             try {
-                gdsHelper.getInternalAPIHandler().isc_rollback_transaction(committingTr);
+                gdsHelper.getInternalAPIHandler().iscRollbackTransaction(committingTr);
             } finally {
                 xidMap.remove(xid);
             }
@@ -935,7 +937,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         
         try {
             
-            isc_tr_handle trHandle = (isc_tr_handle) xidMap.get(xid);
+            AbstractIscTrHandle trHandle = (AbstractIscTrHandle) xidMap.get(xid);
             
             if (trHandle != null) {
                 if (flags != XAResource.TMJOIN && flags != XAResource.TMRESUME) {
@@ -957,8 +959,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             }
             
             // new xid for us
-            trHandle = gdsHelper.getInternalAPIHandler().get_new_isc_tr_handle();
-            gdsHelper.getInternalAPIHandler().isc_start_transaction(trHandle, dbHandle, tpb.getTransactionParameterBuffer());
+            trHandle = (AbstractIscTrHandle)gdsHelper.getInternalAPIHandler().createIscTrHandle();
+            gdsHelper.getInternalAPIHandler().iscStartTransaction(trHandle, dbHandle, tpb.getTransactionParameterBuffer());
 
             xidMap.put(xid, trHandle);
             

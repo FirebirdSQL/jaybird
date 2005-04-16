@@ -25,7 +25,7 @@ import java.sql.SQLException;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
@@ -72,10 +72,10 @@ public class FBRowUpdater  {
 
     private String tableName;
     
-    private isc_stmt_handle updateStatement;
-    private isc_stmt_handle deleteStatement;
-    private isc_stmt_handle insertStatement;
-    private isc_stmt_handle selectStatement;
+    private AbstractIscStmtHandle updateStatement;
+    private AbstractIscStmtHandle deleteStatement;
+    private AbstractIscStmtHandle insertStatement;
+    private AbstractIscStmtHandle selectStatement;
 
     public FBRowUpdater(GDSHelper connection, XSQLVAR[] xsqlvars, 
             Synchronizable syncProvider, boolean cached) throws SQLException {
@@ -399,7 +399,7 @@ public class FBRowUpdater  {
         }
     }
     
-    private void executeStatement(int statementType, isc_stmt_handle stmt) throws SQLException {
+    private void executeStatement(int statementType, AbstractIscStmtHandle stmt) throws SQLException {
         try {
             if (!stmt.isValid())
                 throw new FBSQLException("Corresponding connection is not valid.",

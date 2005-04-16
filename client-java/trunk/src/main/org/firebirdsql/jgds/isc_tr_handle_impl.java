@@ -26,9 +26,10 @@
 
 package org.firebirdsql.jgds;
 
-import org.firebirdsql.gds.isc_db_handle;
-import org.firebirdsql.gds.isc_stmt_handle;
-import org.firebirdsql.gds.isc_tr_handle;
+import org.firebirdsql.gds.IscDbHandle;
+import org.firebirdsql.gds.IscStmtHandle;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
+import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -41,7 +42,7 @@ import java.util.Iterator;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class isc_tr_handle_impl implements isc_tr_handle {
+public final class isc_tr_handle_impl extends AbstractIscTrHandle {
     private int rtr_id;
     private isc_db_handle_impl rtr_rdb;
     private ArrayList blobs = new ArrayList();
@@ -52,7 +53,7 @@ public final class isc_tr_handle_impl implements isc_tr_handle {
     public isc_tr_handle_impl() {
     }
 
-    public isc_db_handle getDbHandle() {
+    public IscDbHandle getDbHandle() {
         return rtr_rdb;
     }
 
@@ -94,7 +95,7 @@ public final class isc_tr_handle_impl implements isc_tr_handle {
         blobs.remove(blob);
     }
 	 
-    public void registerStatementWithTransaction(isc_stmt_handle stmt) {
+    public void registerStatementWithTransaction(AbstractIscStmtHandle stmt) {
         synchronized(stmts) {
             stmts.add(stmt);
         }
@@ -103,7 +104,7 @@ public final class isc_tr_handle_impl implements isc_tr_handle {
     public void forgetResultSets() {
         synchronized(stmts) {
             for (Iterator iter = stmts.iterator(); iter.hasNext();) {
-                isc_stmt_handle stmt = (isc_stmt_handle) iter.next();
+                AbstractIscStmtHandle stmt = (AbstractIscStmtHandle) iter.next();
                 stmt.clearRows();
             }
             

@@ -25,7 +25,7 @@ import java.util.*;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
@@ -52,7 +52,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     protected GDSHelper gdsHelper;
     protected FBObjectListener.StatementListener statementListener;
 
-    protected isc_stmt_handle fixedStmt;
+    protected AbstractIscStmtHandle fixedStmt;
     
     //The normally retrieved resultset. (no autocommit, not a cached rs).
     private FBResultSet currentRs;

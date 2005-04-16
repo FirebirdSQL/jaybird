@@ -92,7 +92,7 @@ public class FBManager implements FBManagerMBean
     public void start() throws Exception {
         gds = GDSFactory.getGDSForType(type);
       
-        c = gds.newDatabaseParameterBuffer();
+        c = gds.createDatabaseParameterBuffer();
         c.addArgument(DatabaseParameterBuffer.NUM_BUFFERS, new byte[] {90});
         c.addArgument(DatabaseParameterBuffer.DUMMY_PACKET_INTERVAL, new byte[] {120, 10, 0, 0});
         c.addArgument(DatabaseParameterBuffer.SQL_DIALECT, new byte[] {3, 0, 0, 0});
@@ -350,33 +350,33 @@ public class FBManager implements FBManagerMBean
     public void createDatabase (String fileName, String user, String password)
         throws Exception
     {
-        isc_db_handle db = null;
-        db = gds.get_new_isc_db_handle();
+        IscDbHandle db = null;
+        db = gds.createIscDbHandle();
         try {
             DatabaseParameterBuffer dpb = c.deepCopy();
                 dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
                 dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
-            gds.isc_attach_database(getConnectString(fileName), db, dpb);
+            gds.iscAttachDatabase(getConnectString(fileName), db, dpb);
             
             // if forceCreate is set, drop the database correctly
             // otherwise exit, database already exists
             if (forceCreate)
-                gds.isc_drop_database(db);
+                gds.iscDropDatabase(db);
             else {
-                gds.isc_detach_database(db);
+                gds.iscDetachDatabase(db);
                 return; //database exists, don't wipe it out.
             }
 	    } catch (GDSException e) {
             // we ignore it
 	    }
 
-    	db = gds.get_new_isc_db_handle();
+    	db = gds.createIscDbHandle();
         try {
             DatabaseParameterBuffer dpb = c.deepCopy();
             dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
             dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
-            gds.isc_create_database(getConnectString(fileName), db, dpb);
-            gds.isc_detach_database(db);
+            gds.iscCreateDatabase(getConnectString(fileName), db, dpb);
+            gds.iscDetachDatabase(db);
         }
         catch (Exception e) {
     	    if (log!=null)
@@ -394,12 +394,12 @@ public class FBManager implements FBManagerMBean
         throws Exception
     {
         try {
-            isc_db_handle db = gds.get_new_isc_db_handle();
+            IscDbHandle db = gds.createIscDbHandle();
             DatabaseParameterBuffer dpb = c.deepCopy();
             dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
             dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
-            gds.isc_attach_database(getConnectString(fileName), db, dpb);
-            gds.isc_drop_database(db);
+            gds.iscAttachDatabase(getConnectString(fileName), db, dpb);
+            gds.iscDropDatabase(db);
 
         }
         catch (Exception e) {
@@ -416,15 +416,15 @@ public class FBManager implements FBManagerMBean
      */
     public boolean isDatabaseExists(String fileName, String user,
             String password) throws Exception {
-        isc_db_handle db = null;
-        db = gds.get_new_isc_db_handle();
+        IscDbHandle db = null;
+        db = gds.createIscDbHandle();
         try {
             DatabaseParameterBuffer dpb = c.deepCopy();
                 dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
                 dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
-            gds.isc_attach_database(getConnectString(fileName), db, dpb);
+            gds.iscAttachDatabase(getConnectString(fileName), db, dpb);
             
-            gds.isc_detach_database(db);
+            gds.iscDetachDatabase(db);
             return true;
             
         } catch (GDSException e) {

@@ -19,7 +19,7 @@
 
 package org.firebirdsql.ngds;
 
-import org.firebirdsql.gds.isc_svc_handle;
+import org.firebirdsql.gds.IscSvcHandle;
 import org.firebirdsql.gds.GDSException;
 
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * ngds implementation for isc_svc_handle.
  */
-class isc_svc_handle_impl implements isc_svc_handle
+class isc_svc_handle_impl implements IscSvcHandle
     {
     /**
      */

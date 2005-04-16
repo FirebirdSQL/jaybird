@@ -27,7 +27,7 @@
 package org.firebirdsql.jgds;
 
 import org.firebirdsql.gds.XSQLDA;
-import org.firebirdsql.gds.isc_stmt_handle;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -38,7 +38,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class isc_stmt_handle_impl implements isc_stmt_handle {
+public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
     private static Logger log = LoggerFactory.getLogger(GDS_Impl.class, false);
 
     
@@ -46,7 +46,7 @@ public final class isc_stmt_handle_impl implements isc_stmt_handle {
     private isc_db_handle_impl rsr_rdb;
     private XSQLDA in_sqlda = null;
     private XSQLDA out_sqlda = null;
-    private Object[] rows;
+    private byte[][][] rows;
     private int size;
     private boolean allRowsFetched = false;
     private boolean isSingletonResult = false;
@@ -80,7 +80,7 @@ public final class isc_stmt_handle_impl implements isc_stmt_handle {
 
     public void ensureCapacity(int maxSize) {
         if (rows== null || rows.length<maxSize)
-            rows = new Object[maxSize];
+            rows = new byte[maxSize][][];
         size=0;
     }
 
@@ -132,7 +132,7 @@ public final class isc_stmt_handle_impl implements isc_stmt_handle {
         return selectCount;
     }
 
-    public boolean getAllRowsFetched() {
+    public boolean isAllRowsFetched() {
         return allRowsFetched;
     }
 
@@ -180,7 +180,7 @@ public final class isc_stmt_handle_impl implements isc_stmt_handle {
         return size;
     }
 
-    public Object[] getRows() {
+    public byte[][][] getRows() {
         return rows;
     }
 

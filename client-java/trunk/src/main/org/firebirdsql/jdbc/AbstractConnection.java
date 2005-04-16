@@ -25,6 +25,7 @@ import javax.resource.*;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractGDS;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.*;
@@ -156,7 +157,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return internal handle for connection
      * @exception GDSException if handle needed to be created and creation failed
      */
-    public isc_db_handle getIscDBHandle() throws GDSException {
+    public IscDbHandle getIscDBHandle() throws GDSException {
         return mc.getGDSHelper().getIscDBHandle();
     }
 
@@ -1033,7 +1034,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return The newly allocated statement handle
      * @throws GDSException if an error occurs in the underlying connection
      */
-    public isc_stmt_handle getAllocatedStatement() throws GDSException {
+    public IscStmtHandle getAllocatedStatement() throws GDSException {
         checkManagedConnection();    
         return mc.getGDSHelper().allocateStatement();
     }
@@ -1046,7 +1047,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * to the server
      * @throws GDSException if an error occurs with the underlying connection
      */
-    public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda) throws GDSException {
+    public void executeStatement(AbstractIscStmtHandle stmt, boolean sendOutSqlda) throws GDSException {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
             throw new GDSException(ISCConstants.isc_bad_req_handle);
@@ -1077,7 +1078,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @throws GDSException if an error occurs with the underlying connection
      * @throws SQLException if a general database error occurs
      */
-    public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException, SQLException {
+    public void prepareSQL(AbstractIscStmtHandle stmt, String sql, boolean describeBind) throws GDSException, SQLException {
         checkManagedConnection();
         mc.getGDSHelper().prepareStatement(stmt, sql, describeBind);
     }
@@ -1106,7 +1107,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @param fetchSize The number of rows to fetch
      * @throws GDSException if an error occurs with the underlying connection
      */
-    public void fetch(isc_stmt_handle stmt, int fetchSize) throws GDSException {
+    public void fetch(AbstractIscStmtHandle stmt, int fetchSize) throws GDSException {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
             throw new GDSException(ISCConstants.isc_bad_req_handle);
@@ -1120,7 +1121,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @param cursorName The name for the cursor
      * @throws GDSException if an error occurs
      */
-    public void setCursorName(isc_stmt_handle stmt, String cursorName) throws GDSException {
+    public void setCursorName(AbstractIscStmtHandle stmt, String cursorName) throws GDSException {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
             throw new GDSException(ISCConstants.isc_bad_req_handle);
@@ -1135,7 +1136,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @param stmt The statement handle for which count info is being fetched
      * @throws GDSException if an error occurs
      */
-    public void getSqlCounts(isc_stmt_handle stmt) throws GDSException {
+    public void getSqlCounts(AbstractIscStmtHandle stmt) throws GDSException {
         checkManagedConnection();
         if (stmt == null || !stmt.isValid())
             throw new GDSException(ISCConstants.isc_bad_req_handle);
@@ -1197,7 +1198,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * it will be a stream
      * @throws GDSException if an error occurs with the underlying connection
      */
-    public isc_blob_handle openBlobHandle(long blob_id, boolean segmented) throws GDSException {
+    public IscBlobHandle openBlobHandle(long blob_id, boolean segmented) throws GDSException {
         checkManagedConnection();
         return mc.getGDSHelper().openBlob(blob_id, segmented);
     }	 
@@ -1209,7 +1210,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @param len The length of the segment that is being requested
      * @throws GDSException if an error occurs with the underlying connection
      */
-    public byte[] getBlobSegment(isc_blob_handle blob, int len) throws GDSException {
+    public byte[] getBlobSegment(IscBlobHandle blob, int len) throws GDSException {
         checkManagedConnection();
         return mc.getGDSHelper().getBlobSegment(blob,len);
     }
@@ -1220,7 +1221,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @param blob The handle to the blob to be closed
      * @throws GDSException if an error occurs with the underlying connection
      */
-    public void closeBlob(isc_blob_handle blob) throws GDSException {
+    public void closeBlob(IscBlobHandle blob) throws GDSException {
         checkManagedConnection();
         mc.getGDSHelper().closeBlob(blob);
     }
@@ -1232,7 +1233,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * it will be streamed.
      * @throws GDSException if an error occurs with the underlying connection
      */
-    public isc_blob_handle createBlobHandle(boolean segmented) throws GDSException {
+    public IscBlobHandle createBlobHandle(boolean segmented) throws GDSException {
         checkManagedConnection();
         return mc.getGDSHelper().createBlob(segmented);
     }
@@ -1244,7 +1245,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @param buf The data to be added to the blob
      * @throws GDSException if an error occurs with the underlying connection
      */
-    public void putBlobSegment(isc_blob_handle blob, byte[] buf) throws GDSException {
+    public void putBlobSegment(IscBlobHandle blob, byte[] buf) throws GDSException {
         checkManagedConnection();
         mc.getGDSHelper().putBlobSegment(blob, buf);
     }

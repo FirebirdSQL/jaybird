@@ -30,7 +30,7 @@ import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.isc_svc_handle;
+import org.firebirdsql.gds.IscSvcHandle;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.management.FBUser;
@@ -116,7 +116,7 @@ public class FBUserManager extends FBServiceManager implements UserManager {
      */
     private ServiceRequestBuffer getUserSRB(int action, User user) {
 
-        ServiceRequestBuffer srb = gds.newServiceRequestBuffer(action);
+        ServiceRequestBuffer srb = gds.createServiceRequestBuffer(action);
 
         if (user.getUserName() != null)
             srb.addArgument(ISCConstants.isc_spb_sec_username, user
@@ -152,7 +152,7 @@ public class FBUserManager extends FBServiceManager implements UserManager {
     private int getSRBInteger(byte[] displayBuffer) {
         
         count += 1;
-        int integer = gds.isc_vax_integer(displayBuffer, count, 4);
+        int integer = gds.iscVaxInteger(displayBuffer, count, 4);
         count += 4;
         return integer;
         
@@ -167,7 +167,7 @@ public class FBUserManager extends FBServiceManager implements UserManager {
     private String getSRBString(byte[] displayBuffer) {
         
         count += 1;
-        int length = gds.isc_vax_integer(displayBuffer, count, 2);
+        int length = gds.iscVaxInteger(displayBuffer, count, 2);
         count += 2;
 
         String string = new String(displayBuffer, count, length);
@@ -196,11 +196,11 @@ public class FBUserManager extends FBServiceManager implements UserManager {
             IOException {
         
         try {
-            isc_svc_handle handle = attachServiceManager(gds);
+            IscSvcHandle handle = attachServiceManager(gds);
             try {
 
                 ServiceRequestBuffer srb = getUserSRB(action, user);
-                gds.isc_service_start(handle, srb);
+                gds.iscServiceStart(handle, srb);
 
                 queueService(gds, handle);
 

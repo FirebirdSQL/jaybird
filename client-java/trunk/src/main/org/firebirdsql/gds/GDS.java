@@ -43,13 +43,55 @@ package org.firebirdsql.gds;
  */
 public interface GDS {
     
+    // Handle declaration methods
+
+    /**
+     * Factory method to create a new <code>isc_db_handle</code> instance that 
+     * is linked to the current <code>GDS</code> implementation.
+     *
+     * @return A new <code>isc_db_handle</code> instance
+     */
+    IscDbHandle createIscDbHandle();
+
+    /**
+     * Factory method to create a new <code>isc_tr_handle</code> instance that
+     * is linked to the current <code>GDS</code> implementation.
+     *
+     * @return A new <code>isc_tr_handle</code> instance
+     */
+    IscTrHandle createIscTrHandle();
+
+    /**
+     * Factory method to create a new <code>isc_stmt_handle</code> instance
+     * that is linked to the current <code>GDS</code> implementation.
+     *
+     * @return A new <code>isc_stmt_handle</code> instance
+     */
+    IscStmtHandle createIscStmtHandle();
+
+    /**
+     * Factory method to create a new <code>isc_blob_handle</code> instance
+     * that is linked to the current <code>GDS</code> implementation.
+     *
+     * @return A new <code>isc_blob_handle</code> instance
+     */
+    IscBlobHandle createIscBlobHandle();
+
+    /**
+     * Factory method to create a new <code>isc_svc_handle</code> instance
+     * that is linked to the current <code>GDS</code> implemenation.
+     *
+     * @return A new <code>isc_svc_handle</code> instance
+     */
+    IscSvcHandle createIscSvcHandle();
+    
     /**
      * Create a new <code>ServiceParameterBuffer</code> instance for setting
      * service parameters in the current GDS implementation.
      *
      * @return a new <code>ServiceParameterBuffer</code>
      */
-    ServiceParameterBuffer  newServiceParameterBuffer();
+    ServiceParameterBuffer  createServiceParameterBuffer();
 
     /**
      * Create a new <code>ServiceRequestBuffer</code> instance for setting
@@ -62,7 +104,7 @@ public interface GDS {
      *        <code>ServiceRequestBuffer</code> is created
      * @return A new <code>ServiceRequestBuffer</code>
      */
-    ServiceRequestBuffer    newServiceRequestBuffer(int taskIdentifier);
+    ServiceRequestBuffer    createServiceRequestBuffer(int taskIdentifier);
 
     /**
      * Create a new <code>DatabaseParameterBuffer</code> instance for setting
@@ -70,7 +112,7 @@ public interface GDS {
      *
      * @return A new <code>DatabaseParameterBuffer</code>
      */
-    DatabaseParameterBuffer newDatabaseParameterBuffer();
+    DatabaseParameterBuffer createDatabaseParameterBuffer();
 
     /**
      * Create a new <code>BlobParameterBuffer</code> instance for setting
@@ -78,7 +120,7 @@ public interface GDS {
      *
      * @return A new <code>BlobParameterBuffer</code>
      */
-    BlobParameterBuffer     newBlobParameterBuffer();
+    BlobParameterBuffer     createBlobParameterBuffer();
 
     /**
      * Create new <code>TransactionParameterBuffer</code> instance for setting
@@ -87,6 +129,11 @@ public interface GDS {
      * @return A new <code>TransactionParameterBuffer</code>.
      */
     TransactionParameterBuffer newTransactionParameterBuffer();
+    
+    /**
+     * Close this GDS instance.
+     */
+    void close();
 
     // --------------------  Database functions -----------------------
 
@@ -95,33 +142,33 @@ public interface GDS {
      * parameters. The supplied <code>isc_db_handle</code> is attached to the
      * newly created database.
      *
-     * @param file_name The filename for the new database, including host
+     * @param fileName The filename for the new database, including host
      *        and port. The expected format is host:port:filepath. The value
      *        for host is localhost if not supplied. The value for port is
      *        3050 if not supplied.
-     * @param db_handle The handle to attach to the new database
+     * @param dbHandle The handle to attach to the new database
      * @param databaseParameterBuffer The parameters for the new database and
      *        attachment to it
      * @throws GDSException if an error occurs while creating the database
      */
-    void isc_create_database(String file_name,
-                            isc_db_handle db_handle,
+    void iscCreateDatabase(String fileName,
+                            IscDbHandle dbHandle,
                             DatabaseParameterBuffer databaseParameterBuffer ) throws GDSException;
 
     /**
      * Attach to an existing database via a filename.
      *
      *
-     * @param file_name The filename for the database, including host and port.
+     * @param fileName The filename for the database, including host and port.
      *        The expected format is host:port:filepath. The value for host is 
      *        localhost if not supplied. The value for port is 3050 if not 
      *        supplied.
-     * @param db_handle The handle to attach to the database
+     * @param dbHandle The handle to attach to the database
      * @param databaseParameterBuffer parameters for the database attachment
      * @throws GDSException if an error occurs while attaching to the database
      */
-    void isc_attach_database(String file_name,
-                            isc_db_handle db_handle,
+    void iscAttachDatabase(String fileName,
+                            IscDbHandle dbHandle,
                             DatabaseParameterBuffer databaseParameterBuffer) throws GDSException;
 
     /**
@@ -130,44 +177,44 @@ public interface GDS {
      * and the values in the returned byte-array correspond to the 
      * requested parameters in <code>items</code>
      *
-     * @param db_handle Handle to the database for which info is to 
+     * @param dbHandle Handle to the database for which info is to 
      *        be retrieved
      * @param items An array of values from the <code>isc_info_*</code> 
      *        constant fields from {@link ISCConstants}
-     * @param buffer_length The size of the byte array that is to be returned
+     * @param bufferLength The size of the byte array that is to be returned
      * @return array of bytes whose values correspond the requested 
      *         parameters in <code>items</code>
      * @throws GDSException if an error occurs while retrieving database info
      */
-    byte[] isc_database_info(isc_db_handle db_handle,
+    byte[] iscDatabaseInfo(IscDbHandle dbHandle,
                             byte[] items,
-                            int buffer_length) throws GDSException;
+                            int bufferLength) throws GDSException;
 
     /**
      * Detach the given database handle from its database. This effectively
      * closes the connection to the database.
      *
-     * @param db_handle The handle to be detached
+     * @param dbHandle The handle to be detached
      * @throws GDSException if an error occurs while detaching from 
      *         the database
      */
-    void isc_detach_database(isc_db_handle db_handle) throws GDSException;
+    void iscDetachDatabase(IscDbHandle dbHandle) throws GDSException;
 
     /**
      * Drop (delete) the database to which <code>db_handle</code> is attached.
      *
-     * @param db_handle Handle to the database to be dropped
+     * @param dbHandle Handle to the database to be dropped
      * @throws GDSException if an error occurs while dropping the database
      */
-    void isc_drop_database(isc_db_handle db_handle) throws GDSException;
+    void iscDropDatabase(IscDbHandle dbHandle) throws GDSException;
 
     /**
      * Expand the given database parameter buffer.
      *
      * @deprecated This method had been deprecated on the Firebird side
      */
-    byte[] isc_expand_dpb(byte[] dpb, int dpb_length,
-                          int param, Object[] params) throws GDSException;
+//    byte[] iscExpandDpb(byte[] dpb, int dpb_length,
+//                          int param, Object[] params) throws GDSException;
 
 
     // ------------------ Transactions -------------------------
@@ -175,58 +222,58 @@ public interface GDS {
     /**
      * Start a transaction based on a handle to a transaction. 
      *
-     * @param tr_handle Handle to the transaction that is to be started
-     * @param db_handle Handle to the database in which the transaction
+     * @param trHandle Handle to the transaction that is to be started
+     * @param dbHandle Handle to the database in which the transaction
      *        is to be started
      * @param tpb Transaction Parameter Block in the form of a byte array, 
      *        contains parameter data for the transaction attributes
      * @throws GDSException if an error occurs while starting the transaction
      * @see get_new_isc_tr_handle
      */
-    void isc_start_transaction(isc_tr_handle tr_handle, isc_db_handle db_handle,
+    void iscStartTransaction(IscTrHandle trHandle, IscDbHandle dbHandle,
                                 TransactionParameterBuffer tpb) throws GDSException;
 
 
     /**
      * Reconnect "in limbo" transaction using new database handle.
      * 
-     * @param tr_handle transaction handle that will be reconnected.
-     * @param db_handle database handle in which "in limbo" transaction will
+     * @param trHandle transaction handle that will be reconnected.
+     * @param dbHandle database handle in which "in limbo" transaction will
      * be reconnected.
-     * @param message message that was passed in {@link #isc_prepare_transaction2(isc_tr_handle, byte[])}
+     * @param message message that was passed in {@link #iscPrepareTransaction2(isc_tr_handle, byte[])}
      * method call.
      * 
      * @throws GDSException if something went wrong.
      */
-    void isc_reconnect_transaction(isc_tr_handle tr_handle,
-            isc_db_handle db_handle, long transactionId) throws GDSException;
+    void iscReconnectTransaction(IscTrHandle trHandle,
+            IscDbHandle dbHandle, long transactionId) throws GDSException;
 
     /**
      * Commit a transaction.
      *
-     * @param tr_handle Handle to the transaction to be committed.
+     * @param trHandle Handle to the transaction to be committed.
      * @throws GDSException if an error occurs while committing the transaction
      * @see isc_rollback_transaction
      */
-    void isc_commit_transaction(    isc_tr_handle tr_handle) throws GDSException;
+    void iscCommitTransaction(IscTrHandle trHandle) throws GDSException;
 
-    void isc_commit_retaining(isc_tr_handle tr_handle) throws GDSException;
+    void iscCommitRetaining(IscTrHandle trHandle) throws GDSException;
 
-    void isc_prepare_transaction(isc_tr_handle tr_handle) throws GDSException;
+    void iscPrepareTransaction(IscTrHandle trHandle) throws GDSException;
 
-    void isc_prepare_transaction2(isc_tr_handle tr_handle,
+    void iscPrepareTransaction2(IscTrHandle trHandle,
                                    byte[] bytes) throws GDSException;
 
     /**
      * Rollback a transaction.
      *
-     * @param tr_handle Handle to the transaction that is to be rolled back
+     * @param trHandle Handle to the transaction that is to be rolled back
      * @throws GDSException if an error occurs while rolling back
      * @see isc_commit_transaction
      */
-    void isc_rollback_transaction(isc_tr_handle tr_handle) throws GDSException;
+    void iscRollbackTransaction(IscTrHandle trHandle) throws GDSException;
 
-    void isc_rollback_retaining(isc_tr_handle tr_handle) throws GDSException;
+    void iscRollbackRetaining(IscTrHandle trHandle) throws GDSException;
 
 
     // ---------------------- Dynamic SQL ------------------------
@@ -235,82 +282,82 @@ public interface GDS {
      * Allocate a dynamic SQL (DSQL) statement on the database to which
      * <code>db_handle</code> is attached.
      *
-     * @param db_handle Handle to the database where the statement is to
+     * @param dbHandle Handle to the database where the statement is to
      *        be allocated
-     * @param stmt_handle Handle to attach to the newly allocated statement
+     * @param stmtHandle Handle to attach to the newly allocated statement
      * @throws GDSException if an error occurs while allocating the statement
      */
-    void isc_dsql_allocate_statement(isc_db_handle db_handle,
-                                       isc_stmt_handle stmt_handle) throws GDSException;
+    void iscDsqlAllocateStatement(IscDbHandle dbHandle,
+                                       IscStmtHandle stmtHandle) throws GDSException;
 
-    void isc_dsql_alloc_statement2(isc_db_handle db_handle,
-                                     isc_stmt_handle stmt_handle) throws GDSException;
+//    void isc_dsql_alloc_statement2(IscDbHandle db_handle,
+//                                     IscStmtHandle stmt_handle) throws GDSException;
 
     /**
      * Retrieve data for a statement.
      *
-     * @param stmt_handle Handle to the statement about which data is
+     * @param stmtHandle Handle to the statement about which data is
      *        to be retrieved
-     * @param da_version Version of the XSQLDA to be retrieved
+     * @param daVersion Version of the XSQLDA to be retrieved
      * @return data for the given statement
      * @throws GDSException if an error occurs while retrieving statement data
      */
-    XSQLDA isc_dsql_describe(isc_stmt_handle stmt_handle,
-                            int da_version) throws GDSException;
+    XSQLDA iscDsqlDescribe(IscStmtHandle stmtHandle,
+                            int daVersion) throws GDSException;
 
     /**
      * Retrieve data for a bind statement.
      *
-     * @param stmt_handle Handle to the bind statement about which bind data
+     * @param stmtHandle Handle to the bind statement about which bind data
      *        is to be retrieved
-     * @param da_version Version of the XSQLDA to be retrieved
+     * @param daVersion Version of the XSQLDA to be retrieved
      * @return data for the given bind statement
      * @throws GDSException if an error occurs while retrieving statement data
      */
-    XSQLDA isc_dsql_describe_bind(isc_stmt_handle stmt_handle,
-                                  int da_version) throws GDSException;
+    XSQLDA iscDsqlDescribeBind(IscStmtHandle stmtHandle,
+                                  int daVersion) throws GDSException;
 
     /**
      * Execute a statement with only outgoing data.
      *
-     * @param tr_handle Handle to the transaction in which the statement is to 
+     * @param trHandle Handle to the transaction in which the statement is to 
      *        be executed
-     * @param stmt_handle Handle to the statement to be executed
-     * @param da_version Version of XSQLDA to be used
+     * @param stmtHandle Handle to the statement to be executed
+     * @param daVersion Version of XSQLDA to be used
      * @param xsqlda Input data for executing the statement
      * @throws GDSException if an error occurs while executing the statement
      */
-    void isc_dsql_execute(isc_tr_handle tr_handle,
-                           isc_stmt_handle stmt_handle,
-                           int da_version,
+    void iscDsqlExecute(IscTrHandle trHandle,
+                           IscStmtHandle stmtHandle,
+                           int daVersion,
                            XSQLDA xsqlda) throws GDSException;
 
     /**
      * Execute a statement with outgoing and incoming data.
      *
-     * @param tr_handle Handle to the transaction in which the statement is to 
+     * @param trHandle Handle to the transaction in which the statement is to 
      *        be executed
-     * @param stmt_handle Handle to the statement to be executed
-     * @param da_version Version of XSQLDA to be used
+     * @param stmtHandle Handle to the statement to be executed
+     * @param daVersion Version of XSQLDA to be used
      * @param in_sqlda Data to be sent to the database for the statement
-     * @param out_xsqlda Holder for data to be received from executing the 
+     * @param outXSQLDA Holder for data to be received from executing the 
      *        statement
      * @throws GDSException if an error occurs while executing the statement
      */
-    void isc_dsql_execute2(isc_tr_handle tr_handle,
-                            isc_stmt_handle stmt_handle,
-                            int da_version,
-                            XSQLDA in_xsqlda,
-                            XSQLDA out_xsqlda) throws GDSException;
+    void iscDsqlExecute2(IscTrHandle trHandle,
+                            IscStmtHandle stmtHandle,
+                            int daVersion,
+                            XSQLDA inXSQLDA,
+                            XSQLDA outXSQLDA) throws GDSException;
 
    
     /**
      * Execute a string SQL statement directly, without first allocating
      * a statement handle. No data is retrieved using this method.
      *
-     * @param db_handle Handle to the database where the statement is 
+     * @param dbHandle Handle to the database where the statement is 
      *        to be executed
-     * @param tr_handle Handle to the transaction in which the
+     * @param trHandle Handle to the transaction in which the
      *        statement is to be executed
      * @param statement SQL command to be executed
      * @param dialect Interbase dialect for the SQL, should be one of the 
@@ -318,17 +365,17 @@ public interface GDS {
      * @param xsqlda Data to be sent to the database for the statement
      * @throws GDSException if an error occurs while executing the statement
      */
-    void isc_dsql_execute_immediate(isc_db_handle db_handle,
-                                      isc_tr_handle tr_handle,
+    void iscDsqlExecuteImmediate(IscDbHandle dbHandle,
+                                      IscTrHandle trHandle,
                                       String statement,
                                       int dialect,
                                       XSQLDA xsqlda) throws GDSException;
     
     /**
-     * @deprecated use {@link #isc_dsql_execute_immediate(isc_db_handle, isc_tr_handle, byte[], int, XSQLDA)
+     * @deprecated use {@link #iscDsqlExecuteImmediate(isc_db_handle, isc_tr_handle, byte[], int, XSQLDA)
      */
-    void isc_dsql_execute_immediate(isc_db_handle db_handle,
-                                      isc_tr_handle tr_handle,
+    void iscDsqlExecuteImmediate(IscDbHandle dbHandle,
+                                      IscTrHandle trHandle,
                                       String statement,
                                       String encoding,
                                       int dialect,
@@ -338,9 +385,9 @@ public interface GDS {
      * Execute a string SQL statement directly, without first allocating a 
      * statement handle. No data is retrieved using this method.
      *
-     * @param db_handle Handle to the database where the statement is
+     * @param dbHandle Handle to the database where the statement is
      *        to be executed
-     * @param tr_handle Handle to the transaction in which the
+     * @param trHandle Handle to the transaction in which the
      *        statement is to be executed
      * @param statement byte array holding the SQL to be executed
      * @param dialect Interbase dialect for the SQL, should be one of the 
@@ -348,8 +395,8 @@ public interface GDS {
      * @param xsqlda Data to be sent to the database for the statement
      * @throws GDSException if an error occurs while executing the statement
      */
-    void isc_dsql_execute_immediate(isc_db_handle db_handle,
-                                    isc_tr_handle tr_handle,
+    void iscDsqlExecuteImmediate(IscDbHandle dbHandle,
+                                    IscTrHandle trHandle,
                                     byte[] statement,
                                     int dialect,
                                     XSQLDA xsqlda) throws GDSException;
@@ -358,58 +405,58 @@ public interface GDS {
      * Execute a string SQL statement directly, without first allocating a 
      * statement handle. Data is retrieved using this method.
      *
-     * @param db_handle Handle to the database where the statement is
+     * @param dbHandle Handle to the database where the statement is
      *        to be executed
-     * @param tr_handle Handle to the transaction in which the
+     * @param trHandle Handle to the transaction in which the
      *        statement is to be executed
      * @param statement byte array holding the SQL to be executed
      * @param dialect Interbase dialect for the SQL, should be one of the 
      *        <code>SQL_DIALECT_*</code> constants from {@link ISCConstants}
-     * @param in_xsqlda Data to be sent to the database for the statement
-     * @param out_xsqlda Placeholder for data retrieved from executing the 
+     * @param inXSQLDA Data to be sent to the database for the statement
+     * @param outXSQLDA Placeholder for data retrieved from executing the 
      *        SQL statement
      * @throws GDSException if an error occurs while executing the statement
      */
-    void isc_dsql_exec_immed2(isc_db_handle db_handle,
-                               isc_tr_handle tr_handle,
+    void iscDsqlExecImmed2(IscDbHandle dbHandle,
+                               IscTrHandle trHandle,
                                String statement,
                                int dialect,
-                               XSQLDA in_xsqlda,
-                               XSQLDA out_xsqlda) throws GDSException;
+                               XSQLDA inXSQLDA,
+                               XSQLDA outXSQLDA) throws GDSException;
                                
     /**
      * @deprecated use {@link #isc_dsql_exec_immed2(isc_db_handle, isc_tr_handle, byte[], int, XSQLDA)
      */
-    void isc_dsql_exec_immed2(isc_db_handle db_handle,
-                               isc_tr_handle tr_handle,
+    void iscDsqlExecImmed2(IscDbHandle dbHandle,
+                               IscTrHandle trHandle,
                                String statement,
                                String encoding,
                                int dialect,
-                               XSQLDA in_xsqlda,
-                               XSQLDA out_xsqlda) throws GDSException;
+                               XSQLDA inXSQLDA,
+                               XSQLDA outXSQLDA) throws GDSException;
 
     /**
      * Execute a string SQL statement directly, without first allocating
      * a statement handle. Output data from executing the statement is stored
      * in out_xsqlda.
      *
-     * @param db_handle Handle to the database where the statement is
+     * @param dbHandle Handle to the database where the statement is
      *        to be executed
-     * @param tr_handle Handle to the transaction in which the
+     * @param trHandle Handle to the transaction in which the
      *        statement is to be executed
      * @param statement byte array holding the SQL to be executed
      * @param dialect Interbase dialect for the SQL, should be one of the 
      *        <code>SQL_DIALECT_*</code> constants from {@link ISCConstants}
-     * @param in_xsqlda Data to be sent to the database for the statement
-     * @param out_xsqlda Holder for data retrieved from the database
+     * @param inXSQLDA Data to be sent to the database for the statement
+     * @param outXSQLDA Holder for data retrieved from the database
      * @throws GDSException if an error occurs while executing the statement
      */
-    void isc_dsql_exec_immed2(isc_db_handle db_handle,
-                              isc_tr_handle tr_handle,
+    void iscDsqlExecImmed2(IscDbHandle dbHandle,
+                              IscTrHandle trHandle,
                               byte[] statement,
                               int dialect,
-                              XSQLDA in_xsqlda,
-                              XSQLDA out_xsqlda) throws GDSException;
+                              XSQLDA inXSQLDA,
+                              XSQLDA outXSQLDA) throws GDSException;
 
     /**
      * Retrieve record data from a statement. A maximum of 
@@ -417,13 +464,13 @@ public interface GDS {
      *
      * @param stmt_handle Handle to the statement for which records are
      *        to be fetched
-     * @param da_version Version of XSQLDA to be used
+     * @param daVersion Version of XSQLDA to be used
      * @param xsqlda Holder for records that are fetched
      * @param fetchSize The maximum number of records to be fetched
      * @throws GDSException if an error occurs while fetching the records
      */
-    void isc_dsql_fetch(isc_stmt_handle stmt_handle,
-                         int da_version,
+    void iscDsqlFetch(IscStmtHandle stmt_handle,
+                         int daVersion,
                          XSQLDA xsqlda, int fetchSize) throws GDSException;
 
     /**
@@ -432,21 +479,21 @@ public interface GDS {
      * value of <code>option</code>. <code>option</code> should be one of
      * {@link ISCConstants#DSQL_drop} or {@link ISCConstants#DSQL_close}.
      *
-     * @param stmt_handle Handle to the statement to be freed
+     * @param stmtHandle Handle to the statement to be freed
      * @param option Option to be used when freeing the statement. If the value
      *        is {@link ISCConstants#DSQL_drop}, the statement will be
      *        deallocated, if the value is {@link ISCConstants#DSQL_close},
      *        the statement will only be closed
      */
-    void isc_dsql_free_statement(isc_stmt_handle stmt_handle,
+    void iscDsqlFreeStatement(IscStmtHandle stmtHandle,
                                    int option) throws GDSException;
 
     /**
      * Prepare a string SQL statement for execution in the database.
      *
-     * @param tr_handle Handle to the transaction in which the SQL statement is
+     * @param trHandle Handle to the transaction in which the SQL statement is
      *        to be prepared
-     * @param stmt_handle Handle to the statement for which the SQL is
+     * @param stmtHandle Handle to the statement for which the SQL is
      *        to be prepared
      * @param statement The SQL statement to be prepared
      * @param dialect Interbase dialect for the SQL, should be one of the 
@@ -454,16 +501,16 @@ public interface GDS {
      * @return A datastructure with data about the prepared statement
      * @throws GDSException if an error occurs while preparing the SQL
      */
-    XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
-                           isc_stmt_handle stmt_handle,
+    XSQLDA iscDsqlPrepare(IscTrHandle trHandle,
+                           IscStmtHandle stmtHandle,
                            String statement,
                            int dialect) throws GDSException;
                            
     /**
-     * @deprecated use {@link #isc_dsql_prepare(isc_tr_handle, isc_stmt_handle, byte[], int)
+     * @deprecated use {@link #iscDsqlPrepare(isc_tr_handle, isc_stmt_handle, byte[], int)
      */
-    XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
-                           isc_stmt_handle stmt_handle,
+    XSQLDA iscDsqlPrepare(IscTrHandle trHandle,
+                           IscStmtHandle stmtHandle,
                            String statement,
                            String encoding,
                            int dialect) throws GDSException;
@@ -471,9 +518,9 @@ public interface GDS {
     /**
      * Prepare a string SQL statement for execution in the database.
      *
-     * @param tr_handle Handle to the transaction in which the SQL statement
+     * @param trHandle Handle to the transaction in which the SQL statement
      *        is to be prepared
-     * @param stmt_handle Handle to the statement for which the SQL is
+     * @param stmtHandle Handle to the statement for which the SQL is
      *        to be prepared
      * @param statement byte-array with containing the SQL to be prepared
      * @param dialect Interbase dialect for the SQL, should be one of the 
@@ -481,22 +528,22 @@ public interface GDS {
      * @return A datastructure with data about the prepared statement
      * @throws GDSException if an error occurs while preparing the SQL
      */
-    XSQLDA isc_dsql_prepare(isc_tr_handle tr_handle,
-                            isc_stmt_handle stmt_handle,
+    XSQLDA iscDsqlPrepare(IscTrHandle trHandle,
+                            IscStmtHandle stmtHandle,
                             byte[] statement,
                             int dialect) throws GDSException;
     
     /**
      * Set the name to be used for a given statement.
      *
-     * @param stmt_handle Handle to the statement for which the cursor 
+     * @param stmtHandle Handle to the statement for which the cursor 
      *        name is to be set
-     * @param cursor_name Name to set for the cursor
+     * @param cursorName Name to set for the cursor
      * @param type Reserved for future use
      * @throws GDSException if an error occurs while setting the cursor name
      */
-    void isc_dsql_set_cursor_name(isc_stmt_handle stmt_handle,
-                                    String cursor_name,
+    void iscDsqlSetCursorName(IscStmtHandle stmtHandle,
+                                    String cursorName,
                                     int type) throws GDSException;
 
 
@@ -506,18 +553,17 @@ public interface GDS {
      * in {@link ISCConstants}. An array with corresponding values for the
      * requested parameters is returned.
      *
-     * @param stmt_handle Handle to the statement about which data is 
+     * @param stmtHandle Handle to the statement about which data is 
      *        to be retrieved
      * @param items Array of parameters whose values are to be retrieved 
-     * @param buffer_length The length of the byte-array to be returned
+     * @param bufferLength The length of the byte-array to be returned
      * @return An array of values corresponding to the requested parameters
      * @throws GDSException if an error occurs while retrieving the 
      *         statement info
      */
-    byte[] isc_dsql_sql_info(isc_stmt_handle stmt_handle,
-                            /* int item_length, */
+    byte[] iscDsqlSqlInfo(IscStmtHandle stmtHandle,
                             byte[] items,
-                            int buffer_length) throws GDSException;
+                            int bufferLength) throws GDSException;
 
     /**
      * Fetch count information for a statement. The count information that is
@@ -528,7 +574,7 @@ public interface GDS {
      *        be retrieved
      * @throws GDSException if an error occurs while retrieving the count data
      */
-    void getSqlCounts(isc_stmt_handle stmt) throws GDSException;
+    void getSqlCounts(IscStmtHandle stmt) throws GDSException;
 
     /**
      * Retrieve an integer value from a sequence of bytes.
@@ -540,7 +586,7 @@ public interface GDS {
      *        value.
      * @return The integer value retrieved from the bytes
      */
-    int isc_vax_integer(byte[] buffer, int pos, int length);
+    int iscVaxInteger(byte[] buffer, int pos, int length);
 
 
     //-----------------------------------------------
@@ -557,9 +603,9 @@ public interface GDS {
      *        new blob, can be null
      * @throws GDSException if an error occurs while creating the blob
      */
-    void isc_create_blob2(isc_db_handle db,
-                        isc_tr_handle tr,
-                        isc_blob_handle blob,
+    void iscCreateBlob2(IscDbHandle db,
+                        IscTrHandle tr,
+                        IscBlobHandle blob,
                         BlobParameterBuffer blobParameterBuffer) throws GDSException;
 
     /**
@@ -571,9 +617,9 @@ public interface GDS {
      * @param blobParameterBuffer Contains parameters for the blob
      * @throws GDSException if an error occurs while opening the blob
      */
-    void isc_open_blob2(isc_db_handle db,
-                        isc_tr_handle tr,
-                        isc_blob_handle blob,
+    void iscOpenBlob2(IscDbHandle db,
+                        IscTrHandle tr,
+                        IscBlobHandle blob,
                         BlobParameterBuffer blobParameterBuffer) throws GDSException;
 
     /**
@@ -585,7 +631,7 @@ public interface GDS {
      *         of <code>maxread</code>
      * @throws GDSException if an error occurs while fetching the blob segment
      */
-    byte[] isc_get_segment(isc_blob_handle blob,
+    byte[] iscGetSegment(IscBlobHandle blob,
                            int maxread) throws GDSException;
 
     /**
@@ -595,7 +641,7 @@ public interface GDS {
      * @param buffer Data to be written to the blob
      * @throws GDSException if an error occurs while writing to the blob
      */
-    void isc_put_segment(isc_blob_handle blob_handle,
+    void iscPutSegment(IscBlobHandle blob_handle,
              byte[] buffer) throws GDSException;
 
     /**
@@ -604,7 +650,7 @@ public interface GDS {
      * @param blob Handle to the blob to be closed
      * @throws GDSException if an error occurs while closing the blob
      */
-    void isc_close_blob(isc_blob_handle blob) throws GDSException;
+    void iscCloseBlob(IscBlobHandle blob) throws GDSException;
     
     
     /**
@@ -615,13 +661,13 @@ public interface GDS {
      *
      * @param handle Handle to the blob for which data is to be retrieved
      * @param items Parameters to be fetched about the blob
-     * @param buffer_length Length of the byte array to be returned
+     * @param bufferLength Length of the byte array to be returned
      * @return Data corresponding to the parameters requested 
      *         in <code>items</code>
      * @throws GDSException if an error occurs while fetching data 
      *         about the blob
      */
-    byte[] isc_blob_info(isc_blob_handle handle, byte[] items, int buffer_length) 
+    byte[] iscBlobInfo(IscBlobHandle handle, byte[] items, int bufferLength) 
         throws GDSException;
         
 
@@ -644,7 +690,7 @@ public interface GDS {
      *        be negative if <code>seekMode</code> is equal to 2
      * @throws GDSException if an error occurs while seeking
      */
-    void isc_seek_blob(isc_blob_handle handle, int position, int seekMode) 
+    void iscSeekBlob(IscBlobHandle handle, int position, int seekMode) 
         throws GDSException;
 
 
@@ -661,7 +707,8 @@ public interface GDS {
      *        service manager
      * @throws GDSException if an error occurs while attaching
      */
-    void isc_service_attach(String service, isc_svc_handle serviceHandle, ServiceParameterBuffer serviceParameterBuffer ) throws GDSException;
+    void iscServiceAttach(String service, IscSvcHandle serviceHandle,
+            ServiceParameterBuffer serviceParameterBuffer) throws GDSException;
 
     /**
      * Detach from a Service Manager.
@@ -669,7 +716,7 @@ public interface GDS {
      * @param serviceHandle Handle to the service manager that is to be detached
      * @throws GDSException if an error occurs while detaching
      */
-    void isc_service_detach(isc_svc_handle serviceHandle) throws GDSException;
+    void iscServiceDetach(IscSvcHandle serviceHandle) throws GDSException;
 
     /**
      * Start a service operation.
@@ -678,7 +725,8 @@ public interface GDS {
      *        is to be started
      * @param serviceRequestBuffer parameters about the service to be started
      */
-    void isc_service_start(isc_svc_handle serviceHandle, ServiceRequestBuffer serviceRequestBuffer) throws GDSException;
+    void iscServiceStart(IscSvcHandle serviceHandle,
+            ServiceRequestBuffer serviceRequestBuffer) throws GDSException;
 
     /**
      * Query a service manager
@@ -689,56 +737,10 @@ public interface GDS {
      * @param resultBuffer buffer to hold the query results
      * @throws GDSException if an error occurs while querying
      */
-    void isc_service_query(isc_svc_handle serviceHandle, ServiceParameterBuffer serviceParameterBuffer, ServiceRequestBuffer serviceRequestBuffer, byte[] resultBuffer) throws GDSException;
-
-
-
-    // Handle declaration methods
-
-    /**
-     * Factory method to create a new <code>isc_db_handle</code> instance that 
-     * is linked to the current <code>GDS</code> implementation.
-     *
-     * @return A new <code>isc_db_handle</code> instance
-     */
-    isc_db_handle get_new_isc_db_handle();
-
-    /**
-     * Factory method to create a new <code>isc_tr_handle</code> instance that
-     * is linked to the current <code>GDS</code> implementation.
-     *
-     * @return A new <code>isc_tr_handle</code> instance
-     */
-    isc_tr_handle get_new_isc_tr_handle();
-
-    /**
-     * Factory method to create a new <code>isc_stmt_handle</code> instance
-     * that is linked to the current <code>GDS</code> implementation.
-     *
-     * @return A new <code>isc_stmt_handle</code> instance
-     */
-    isc_stmt_handle get_new_isc_stmt_handle();
-
-    /**
-     * Factory method to create a new <code>isc_blob_handle</code> instance
-     * that is linked to the current <code>GDS</code> implementation.
-     *
-     * @return A new <code>isc_blob_handle</code> instance
-     */
-    isc_blob_handle get_new_isc_blob_handle();
-
-    /**
-     * Factory method to create a new <code>isc_svc_handle</code> instance
-     * that is linked to the current <code>GDS</code> implemenation.
-     *
-     * @return A new <code>isc_svc_handle</code> instance
-     */
-    isc_svc_handle get_new_isc_svc_handle();
-
-    /**
-     * Close this GDS instance.
-     */
-    void close();
+    void iscServiceQuery(IscSvcHandle serviceHandle,
+            ServiceParameterBuffer serviceParameterBuffer,
+            ServiceRequestBuffer serviceRequestBuffer, byte[] resultBuffer)
+            throws GDSException;
 
 }
 

@@ -24,6 +24,7 @@ import java.sql.*;
 import java.util.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -5274,7 +5275,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public int getDatabaseMajorVersion() throws SQLException {
         try {
-            return gdsHelper.getIscDBHandle().getDatabaseProductMajorVersion();
+            return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getDatabaseProductMajorVersion();
         } catch (GDSException e) {
             throw new FBSQLException(e);
         }
@@ -5287,7 +5288,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      */
     public int getDatabaseMinorVersion() throws SQLException {
         try {
-            return gdsHelper.getIscDBHandle().getDatabaseProductMinorVersion();
+            return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getDatabaseProductMinorVersion();
         } catch (GDSException e) {
             throw new FBSQLException(e);
         }

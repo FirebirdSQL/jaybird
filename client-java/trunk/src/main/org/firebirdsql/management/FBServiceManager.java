@@ -28,7 +28,7 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.isc_svc_handle;
+import org.firebirdsql.gds.IscSvcHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBSQLException;
@@ -168,9 +168,9 @@ public class FBServiceManager implements ServiceManager {
         return sb.toString();
     }
     
-    public isc_svc_handle attachServiceManager(GDS gds) throws GDSException {
+    public IscSvcHandle attachServiceManager(GDS gds) throws GDSException {
         ServiceParameterBuffer serviceParameterBuffer = 
-            gds.newServiceParameterBuffer();
+            gds.createServiceParameterBuffer();
     
         serviceParameterBuffer.addArgument(
             ISCConstants.isc_spb_user_name, getUser());
@@ -181,25 +181,25 @@ public class FBServiceManager implements ServiceManager {
         serviceParameterBuffer.addArgument(
             ISCConstants.isc_spb_dummy_packet_interval, new byte[]{120, 10, 0, 0});
 
-        final isc_svc_handle handle = gds.get_new_isc_svc_handle();
-        gds.isc_service_attach(getServiceName(), handle, serviceParameterBuffer);
+        final IscSvcHandle handle = gds.createIscSvcHandle();
+        gds.iscServiceAttach(getServiceName(), handle, serviceParameterBuffer);
         
         return handle;
     }
     
-    public void detachServiceManager(GDS gds, isc_svc_handle handle) throws GDSException {
-        gds.isc_service_detach(handle);
+    public void detachServiceManager(GDS gds, IscSvcHandle handle) throws GDSException {
+        gds.iscServiceDetach(handle);
     }
 
-    public void queueService(GDS gds, isc_svc_handle handle) throws GDSException, FBSQLException, IOException {
-        ServiceRequestBuffer infoSRB = gds.newServiceRequestBuffer(ISCConstants.isc_info_svc_to_eof);
+    public void queueService(GDS gds, IscSvcHandle handle) throws GDSException, FBSQLException, IOException {
+        ServiceRequestBuffer infoSRB = gds.createServiceRequestBuffer(ISCConstants.isc_info_svc_to_eof);
 
         int bufferSize = BUFFER_SIZE;        
         byte[] buffer = new byte[bufferSize];
         
         boolean processing = true;
         while (processing) {
-            gds.isc_service_query(handle, gds.newServiceParameterBuffer() , infoSRB, buffer);
+            gds.iscServiceQuery(handle, gds.createServiceParameterBuffer() , infoSRB, buffer);
     
             switch(buffer[0]) {
             
@@ -242,9 +242,9 @@ public class FBServiceManager implements ServiceManager {
             throws FBSQLException {
 
         try {
-            isc_svc_handle svcHandle = attachServiceManager(gds);
+            IscSvcHandle svcHandle = attachServiceManager(gds);
             try {
-                gds.isc_service_start(svcHandle, srb);
+                gds.iscServiceStart(svcHandle, srb);
                 queueService(gds, svcHandle);
             } finally {
                 detachServiceManager(gds, svcHandle);
@@ -264,7 +264,7 @@ public class FBServiceManager implements ServiceManager {
      */
     protected ServiceRequestBuffer createRequestBuffer(int operation, 
                                                         int options){
-        ServiceRequestBuffer srb = gds.newServiceRequestBuffer(operation);
+        ServiceRequestBuffer srb = gds.createServiceRequestBuffer(operation);
         srb.addArgument(ISCConstants.isc_spb_dbname, getDatabase());
         srb.addArgument(ISCConstants.isc_spb_options, options);
         return srb;
