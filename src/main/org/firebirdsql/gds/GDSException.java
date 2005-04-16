@@ -247,34 +247,6 @@ public class GDSException extends Exception {
     }
 
     /**
-     * Retrieve whether this is a fatal exception, or if this exception
-     * is chained to a fatal exception.
-     *
-     * @return <code>true</code> if this is a fatal exception
-     *         <code>false</code> otherwise
-     */
-    public boolean isFatal()
-    {
-        return isThisFatal() || (next != null && next.isFatal());
-    }
-
-
-    private boolean isThisFatal()
-    {
-        for (int i = 0; i < ISCConstants.FATAL_ERRORS.length 
-                 && intParam >= ISCConstants.FATAL_ERRORS[i]; i++)
-        {
-            if (intParam == ISCConstants.FATAL_ERRORS[i]) 
-            {
-                return true;
-            } // end of if ()
-            
-        } // end of for ()
-        return false;
-    }
-
-
-    /**
      * Returns the parameter depending on the type of the
      * error code.
      */
