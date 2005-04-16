@@ -1,3 +1,144 @@
+2005-04-16 01:08  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/logging/LoggerFactory.java:
+	
+	rollback to previous version
+
+2005-04-16 01:04  rrokytskyy
+
+	* client-java/: src/main/org/firebirdsql/gds/impl/AbstractGDS.java,
+	src/main/org/firebirdsql/gds/impl/GDSFactory.java,
+	src/main/org/firebirdsql/gds/impl/GDSHelper.java,
+	src/main/org/firebirdsql/gds/impl/GDSSynchronizationPolicy.java,
+	src/main/org/firebirdsql/gds/impl/GDSType.java,
+	src/main/org/firebirdsql/gds/impl/XdrInputStream.java,
+	src/main/org/firebirdsql/gds/impl/XdrOutputStream.java,
+	src/main/org/firebirdsql/gds/impl/Xdrable.java,
+	src/main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	src/main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	src/main/org/firebirdsql/jdbc/AbstractConnection.java,
+	src/main/org/firebirdsql/jdbc/AbstractStatement.java,
+	src/main/org/firebirdsql/jdbc/FBBlob.java,
+	src/main/org/firebirdsql/jdbc/FBCachedFetcher.java,
+	src/main/org/firebirdsql/jdbc/FBDriver.java,
+	src/main/org/firebirdsql/jdbc/FBResultSet.java,
+	src/main/org/firebirdsql/jdbc/FBRowUpdater.java,
+	src/main/org/firebirdsql/jdbc/FBStatementFetcher.java,
+	src/main/org/firebirdsql/gds/BlobParameterBuffer.java,
+	src/main/org/firebirdsql/gds/DatabaseParameterBuffer.java,
+	src/main/org/firebirdsql/gds/GDS.java,
+	src/main/org/firebirdsql/gds/GDSException.java,
+	src/main/org/firebirdsql/gds/GDSHelper.java,
+	src/main/org/firebirdsql/gds/GDSSynchronizationPolicy.java,
+	src/main/org/firebirdsql/gds/GDSType.java,
+	src/main/org/firebirdsql/gds/ISCConstants.java,
+	src/main/org/firebirdsql/gds/ServiceRequestBuffer.java,
+	src/main/org/firebirdsql/gds/TransactionParameterBuffer.java,
+	src/main/org/firebirdsql/gds/XSQLDA.java,
+	src/main/org/firebirdsql/gds/XSQLVAR.java,
+	src/main/org/firebirdsql/gds/XdrInputStream.java,
+	src/main/org/firebirdsql/gds/XdrOutputStream.java,
+	src/main/org/firebirdsql/gds/isc_blob_handle.java,
+	src/main/org/firebirdsql/gds/isc_db_handle.java,
+	src/main/org/firebirdsql/gds/isc_stmt_handle.java,
+	src/main/org/firebirdsql/gds/isc_svc_handle.java,
+	src/main/org/firebirdsql/jdbc/FBConnectionHelper.java,
+	src/main/org/firebirdsql/jdbc/FBUpdatableCursorFetcher.java,
+	src/main/org/firebirdsql/jdbc/InternalTransactionCoordinator.java,
+	src/jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	src/jdbc_30/org/firebirdsql/jdbc/FBParameterMetaData.java,
+	src/jdbc_30/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	src/jdbc_30/org/firebirdsql/jdbc/FBStatement.java,
+	src/main/org/firebirdsql/gds/AbstractGDS.java,
+	src/main/org/firebirdsql/gds/GDSExceptionHelper.java,
+	src/main/org/firebirdsql/gds/GDSFactory.java,
+	src/main/org/firebirdsql/gds/ServiceParameterBuffer.java,
+	src/main/org/firebirdsql/gds/Xdrable.java,
+	src/main/org/firebirdsql/gds/isc_tr_handle.java,
+	src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	src/main/org/firebirdsql/jgds/GDS_Impl.java,
+	src/main/org/firebirdsql/jgds/ParameterBufferBase.java,
+	src/main/org/firebirdsql/jgds/ServiceParameterBufferImp.java,
+	src/main/org/firebirdsql/jgds/ServiceRequestBufferImp.java,
+	src/main/org/firebirdsql/jgds/TransactionParameterBufferImpl.java,
+	src/main/org/firebirdsql/jgds/isc_db_handle_impl.java,
+	src/main/org/firebirdsql/jgds/isc_svc_handle_impl.java,
+	src/main/org/firebirdsql/jca/FBTpb.java,
+	src/main/org/firebirdsql/jca/FBTpbMapper.java,
+	src/main/org/firebirdsql/jca/FBXid.java,
+	src/main/org/firebirdsql/jca/FBManagedConnection.java,
+	src/test/org/firebirdsql/gds/TestFatalErrors.java,
+	src/test/org/firebirdsql/gds/TestReconnectTransaction.java,
+	src/main/org/firebirdsql/jdbc/field/FBField.java,
+	src/main/org/firebirdsql/jdbc/field/FBWorkaroundStringField.java,
+	src/test/org/firebirdsql/jca/TestFBTpbMapper.java,
+	examples/DataSourceExample.java, examples/DriverExample.java,
+	src/test/org/firebirdsql/ngds/TestJaybirdBlobBackupProblem.java,
+	src/test/org/firebirdsql/ngds/TestNgds.java,
+	src/test/org/firebirdsql/ngds/TestNgdsBlobReadBug.java,
+	src/test/org/firebirdsql/ngds/TestServicesAPI.java,
+	src/test/org/firebirdsql/ngds/TestSpecialEmbeddedServerUrls.java,
+	src/main/org/firebirdsql/management/FBBackupManager.java,
+	src/main/org/firebirdsql/management/FBMaintenanceManager.java,
+	src/main/org/firebirdsql/management/FBManager.java,
+	src/main/org/firebirdsql/management/FBServiceManager.java,
+	src/main/org/firebirdsql/management/FBStatisticsManager.java,
+	src/main/org/firebirdsql/management/FBUserManager.java,
+	
+	introduced TransactionParameterBuffer, refactored related code,
+	extracted GDS implementation into separate package.
+	src/pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.ja
+	va, src/test/org/firebirdsql/management/TestBackupManager.java,
+	src/test/org/firebirdsql/management/TestFBMaintenanceManager.java,
+	src/test/org/firebirdsql/management/TestFBStatisticsManager.java,
+	src/test/org/firebirdsql/management/TestUserManager.java,
+	src/pool/org/firebirdsql/pool/FBSimpleDataSource.java,
+	src/test/org/firebirdsql/jdbc/field/BaseTestFBField.java,
+	src/test/org/firebirdsql/jgds/TestGds.java,
+	src/test/org/firebirdsql/jgds/TestGdsAttach.java,
+	src/main/org/firebirdsql/ngds/TransactionParameterBufferImpl.java,
+	src/test/org/firebirdsql/common/FBTestBase.java,
+	src/test/org/firebirdsql/common/SimpleFBTestBase.java,
+	src/main/org/firebirdsql/logging/LoggerFactory.java,
+	src/main/org/firebirdsql/ngds/GDS_Impl.java:
+
+2005-04-15 23:29  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	disabled result set tracking to save memory
+
+2005-04-15 23:20  rrokytskyy
+
+	*
+	
+	fixed the unknown gds type
+	client-java/src/test/org/firebirdsql/management/TestFBMaintenanceMa
+	nager.java:
+
+2005-04-15 14:52  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
+	
+	fixed nasty NPE in case of an error during execute
+
+2005-04-15 14:51  rrokytskyy
+
+	*
+	
+	fixed incorrect statement notification
+	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
+	.java:
+
+2005-04-15 13:56  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	
+	notifyOpenResultSet() must be called independently of the
+	isc_dsql_fetch outcome - cursor is marked as open.
+
 2005-04-13 23:39  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/: gds/GDSHelper.java,
