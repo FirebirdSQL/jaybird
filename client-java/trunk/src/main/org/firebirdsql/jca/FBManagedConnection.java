@@ -975,22 +975,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             throw ge;
         }
     }
-
-    /**
-     * The <code>checkFatal</code> method checks if the supplied
-     * GDSException is fatal and sends the ConnectionErrorOccurred
-     * notification if it is.
-     *
-     * @param ge a <code>GDSException</code> value
-     */
-    private void checkFatal(GDSException ge)
-    {
-        if (!ge.isFatal())
-            return;
-        
-        ConnectionEvent ce = new ConnectionEvent(this, ConnectionEvent.CONNECTION_ERROR_OCCURRED, ge);
-        notify(connectionErrorOccurredNotifier, ce);
-    }
     
     void notify(CELNotifier notifier, ConnectionEvent ce) {
         if (connectionEventListeners.size() == 0) { return; }
