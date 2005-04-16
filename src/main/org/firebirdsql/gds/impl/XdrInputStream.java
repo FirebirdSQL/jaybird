@@ -32,7 +32,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.firebirdsql.jgds.isc_stmt_handle_impl;
+import org.firebirdsql.gds.impl.wire.isc_stmt_handle_impl;
+
 
 /**
  * <code>XdrInputStream</code> is an input stream for reading in data that

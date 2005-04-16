@@ -9,11 +9,11 @@ import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.wire.isc_db_handle_impl;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
-import org.firebirdsql.jgds.isc_db_handle_impl;
 
 
 /**

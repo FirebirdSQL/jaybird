@@ -21,7 +21,7 @@ package org.firebirdsql.gds.impl;
 
 
 import org.firebirdsql.gds.GDS;
-import org.firebirdsql.jgds.GDS_Impl;
+import org.firebirdsql.gds.impl.wire.GDS_Impl;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -70,13 +70,13 @@ public class GDSFactory {
         if (gdsType == GDSType.PURE_JAVA)
             return new GDS_Impl();
         else if (gdsType == GDSType.NATIVE)
-            return new org.firebirdsql.ngds.GDS_Impl(gdsType);
+            return new org.firebirdsql.gds.impl.jni.GDS_Impl(gdsType);
         else if (gdsType == GDSType.NATIVE_LOCAL)
-            return new org.firebirdsql.ngds.GDS_Impl(gdsType);
+            return new org.firebirdsql.gds.impl.jni.GDS_Impl(gdsType);
         else if (gdsType == GDSType.NATIVE_EMBEDDED)
-            return new org.firebirdsql.ngds.GDS_Impl(gdsType);
+            return new org.firebirdsql.gds.impl.jni.GDS_Impl(gdsType);
         else if (gdsType == GDSType.ORACLE_MODE)
-            return new org.firebirdsql.ngds.GDS_Impl(gdsType);
+            return new org.firebirdsql.gds.impl.jni.GDS_Impl(gdsType);
         else
             throw new java.lang.IllegalArgumentException("gdsType not recognized.");
         }
