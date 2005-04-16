@@ -28,7 +28,6 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.IscStmtHandle;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 
