@@ -206,8 +206,7 @@ public abstract class AbstractCallableStatement
      */
     public boolean execute() throws  SQLException {
 
-        statementListener.executionStarted(this);
-        this.completed = false;
+        notifyStatementStarted();
         
         boolean hasResultSet = false;
         
@@ -228,10 +227,8 @@ public abstract class AbstractCallableStatement
                 } // end of try-catch-finally
             }
         } finally {
-            if (!hasResultSet) {
-                this.completed = true;
-                statementListener.statementCompleted(this);
-            }
+            if (!hasResultSet) 
+                notifyStatementCompleted();
         }
         
         return hasResultSet;
@@ -243,8 +240,7 @@ public abstract class AbstractCallableStatement
      */
 	public ResultSet executeQuery() throws SQLException {
 
-        statementListener.executionStarted(this);
-        this.completed = false;
+        notifyStatementStarted();
         
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
@@ -277,8 +273,7 @@ public abstract class AbstractCallableStatement
      */
     public int executeUpdate() throws SQLException {
 
-        statementListener.executionStarted(this);
-        this.completed = false;
+        notifyStatementStarted();
         
         try {
             Object syncObject = getSynchronizationObject();
@@ -311,8 +306,7 @@ public abstract class AbstractCallableStatement
                 }
             }
         } finally {
-            this.completed = true;
-            statementListener.statementCompleted(this);
+            notifyStatementCompleted();
         }
     }
 
