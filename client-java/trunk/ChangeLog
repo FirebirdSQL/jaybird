@@ -1,3 +1,186 @@
+2005-04-16 13:46  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/impl/wire/GDS_Impl.java,
+	main/org/firebirdsql/gds/impl/wire/ServiceRequestBufferImp.java,
+	main/org/firebirdsql/gds/impl/wire/isc_tr_handle_impl.java,
+	main/org/firebirdsql/jdbc/field/FBWorkaroundStringField.java,
+	jdk1_4/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	jdk1_4/org/firebirdsql/pool/FBConnectionPoolDataSource.java:
+	
+	removed unused imports
+
+2005-04-16 13:44  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/jni/:
+	GDS_Impl.java, isc_tr_handle_impl.java:
+	
+	removed some deprecations
+
+2005-04-16 13:38  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/impl/GDSFactory.java,
+	main/org/firebirdsql/gds/impl/XdrInputStream.java,
+	main/org/firebirdsql/gds/impl/jni/BlobParameterBufferImp.java,
+	main/org/firebirdsql/gds/impl/jni/DatabaseParameterBufferImp.java,
+	main/org/firebirdsql/gds/impl/jni/DynamicLibraryLoader.java,
+	main/org/firebirdsql/gds/impl/jni/GDS_Impl.java,
+	main/org/firebirdsql/gds/impl/jni/InternalError.java,
+	main/org/firebirdsql/gds/impl/jni/ParameterBufferBase.java,
+	main/org/firebirdsql/gds/impl/jni/ServiceParameterBufferImp.java,
+	main/org/firebirdsql/gds/impl/jni/ServiceRequestBufferImp.java,
+	
+	moved wire and jni implementations into new packages
+	main/org/firebirdsql/gds/impl/jni/TransactionParameterBufferImpl.ja
+	va, main/org/firebirdsql/gds/impl/jni/XSQLDAImpl.java,
+	main/org/firebirdsql/gds/impl/jni/XSQLVARBigEndianImpl.java,
+	main/org/firebirdsql/gds/impl/jni/XSQLVARImpl.java,
+	main/org/firebirdsql/gds/impl/jni/XSQLVARLittleEndianImpl.java,
+	main/org/firebirdsql/gds/impl/jni/isc_blob_handle_impl.java,
+	main/org/firebirdsql/gds/impl/jni/isc_db_handle_impl.java,
+	main/org/firebirdsql/gds/impl/jni/isc_stmt_handle_impl.java,
+	main/org/firebirdsql/gds/impl/jni/isc_svc_handle_impl.java,
+	main/org/firebirdsql/gds/impl/jni/isc_tr_handle_impl.java,
+	main/org/firebirdsql/jgds/BlobParameterBufferImp.java,
+	main/org/firebirdsql/jgds/DatabaseParameterBufferImp.java,
+	main/org/firebirdsql/jgds/GDS_Impl.java,
+	main/org/firebirdsql/jgds/ParameterBufferBase.java,
+	main/org/firebirdsql/jgds/ServiceParameterBufferImp.java,
+	main/org/firebirdsql/jgds/ServiceRequestBufferImp.java,
+	main/org/firebirdsql/jgds/TransactionParameterBufferImpl.java,
+	main/org/firebirdsql/jgds/isc_blob_handle_impl.java,
+	main/org/firebirdsql/jgds/isc_db_handle_impl.java,
+	main/org/firebirdsql/jgds/isc_stmt_handle_impl.java,
+	main/org/firebirdsql/jgds/isc_svc_handle_impl.java,
+	main/org/firebirdsql/jgds/isc_tr_handle_impl.java,
+	main/org/firebirdsql/ngds/BlobParameterBufferImp.java,
+	main/org/firebirdsql/ngds/DatabaseParameterBufferImp.java,
+	main/org/firebirdsql/ngds/DynamicLibraryLoader.java,
+	main/org/firebirdsql/ngds/GDS_Impl.java,
+	main/org/firebirdsql/ngds/InternalError.java,
+	main/org/firebirdsql/ngds/ParameterBufferBase.java,
+	main/org/firebirdsql/ngds/ServiceParameterBufferImp.java,
+	main/org/firebirdsql/ngds/ServiceRequestBufferImp.java,
+	main/org/firebirdsql/ngds/TransactionParameterBufferImpl.java,
+	main/org/firebirdsql/ngds/XSQLDAImpl.java,
+	main/org/firebirdsql/ngds/XSQLVARBigEndianImpl.java,
+	main/org/firebirdsql/ngds/XSQLVARImpl.java,
+	main/org/firebirdsql/ngds/XSQLVARLittleEndianImpl.java,
+	main/org/firebirdsql/ngds/isc_blob_handle_impl.java,
+	main/org/firebirdsql/ngds/isc_db_handle_impl.java,
+	main/org/firebirdsql/ngds/isc_stmt_handle_impl.java,
+	main/org/firebirdsql/ngds/isc_svc_handle_impl.java,
+	main/org/firebirdsql/ngds/isc_tr_handle_impl.java,
+	test/org/firebirdsql/gds/impl/jni/TestJaybirdBlobBackupProblem.java
+	, test/org/firebirdsql/gds/impl/jni/TestServicesAPI.java,
+	main/org/firebirdsql/gds/impl/wire/BlobParameterBufferImp.java,
+	main/org/firebirdsql/gds/impl/wire/DatabaseParameterBufferImp.java,
+	main/org/firebirdsql/gds/impl/wire/GDS_Impl.java,
+	main/org/firebirdsql/gds/impl/wire/ParameterBufferBase.java,
+	main/org/firebirdsql/gds/impl/wire/ServiceParameterBufferImp.java,
+	main/org/firebirdsql/gds/impl/wire/ServiceRequestBufferImp.java,
+	main/org/firebirdsql/gds/impl/wire/TransactionParameterBufferImpl.j
+	ava, main/org/firebirdsql/gds/impl/wire/isc_blob_handle_impl.java,
+	main/org/firebirdsql/gds/impl/wire/isc_db_handle_impl.java,
+	main/org/firebirdsql/gds/impl/wire/isc_stmt_handle_impl.java,
+	main/org/firebirdsql/gds/impl/wire/isc_svc_handle_impl.java,
+	main/org/firebirdsql/gds/impl/wire/isc_tr_handle_impl.java,
+	test/org/firebirdsql/gds/TestReconnectTransaction.java,
+	test/org/firebirdsql/gds/impl/jni/TestNgds.java,
+	test/org/firebirdsql/gds/impl/jni/TestNgdsBlobReadBug.java,
+	test/org/firebirdsql/gds/impl/jni/TestSpecialEmbeddedServerUrls.jav
+	a, test/org/firebirdsql/ngds/TestNgds.java,
+	test/org/firebirdsql/gds/impl/wire/TestGds.java,
+	test/org/firebirdsql/gds/impl/wire/TestGdsAttach.java,
+	test/org/firebirdsql/jdbc/field/BaseTestFBField.java,
+	test/org/firebirdsql/ngds/TestJaybirdBlobBackupProblem.java,
+	test/org/firebirdsql/ngds/TestNgdsBlobReadBug.java,
+	test/org/firebirdsql/ngds/TestServicesAPI.java,
+	test/org/firebirdsql/ngds/TestSpecialEmbeddedServerUrls.java,
+	test/org/firebirdsql/jgds/TestGds.java,
+	test/org/firebirdsql/jgds/TestGdsAttach.java:
+
+2005-04-16 13:26  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractCallableStatement.java, AbstractPreparedStatement.java:
+	
+	small refactoring of the internalExecute() method
+
+2005-04-16 13:13  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
+	
+	removed dead code
+
+2005-04-16 13:08  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/GDSException.java,
+	main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	test/org/firebirdsql/gds/TestFatalErrors.java:
+	
+	removed fatal errors
+
+2005-04-16 12:56  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/gds/impl/AbstractIscDbHandle.java,
+	main/org/firebirdsql/gds/impl/AbstractIscStmtHandle.java,
+	main/org/firebirdsql/gds/impl/AbstractIscTrHandle.java,
+	main/org/firebirdsql/gds/impl/GDSHelper.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FBBlob.java,
+	main/org/firebirdsql/jdbc/FBCachedFetcher.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	main/org/firebirdsql/jdbc/FBRowUpdater.java,
+	main/org/firebirdsql/jdbc/FBStatementFetcher.java,
+	main/org/firebirdsql/jdbc/FBUpdatableCursorFetcher.java,
+	main/org/firebirdsql/jdbc/FirebirdStatementInfoFactory.java,
+	main/org/firebirdsql/jgds/GDS_Impl.java,
+	main/org/firebirdsql/jgds/isc_blob_handle_impl.java,
+	main/org/firebirdsql/jgds/isc_db_handle_impl.java,
+	main/org/firebirdsql/jgds/isc_stmt_handle_impl.java,
+	main/org/firebirdsql/jgds/isc_svc_handle_impl.java,
+	main/org/firebirdsql/jgds/isc_tr_handle_impl.java,
+	main/org/firebirdsql/gds/GDS.java,
+	main/org/firebirdsql/gds/IscBlobHandle.java,
+	main/org/firebirdsql/gds/IscDbHandle.java,
+	main/org/firebirdsql/gds/IscStmtHandle.java,
+	main/org/firebirdsql/gds/IscSvcHandle.java,
+	main/org/firebirdsql/gds/IscTrHandle.java,
+	main/org/firebirdsql/gds/isc_blob_handle.java,
+	main/org/firebirdsql/gds/isc_db_handle.java,
+	main/org/firebirdsql/gds/isc_stmt_handle.java,
+	main/org/firebirdsql/gds/isc_svc_handle.java,
+	main/org/firebirdsql/gds/isc_tr_handle.java,
+	main/org/firebirdsql/ngds/isc_stmt_handle_impl.java,
+	main/org/firebirdsql/jca/FBConnectionRequestInfo.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	main/org/firebirdsql/jca/FBManagedConnectionMetaData.java,
+	main/org/firebirdsql/ngds/GDS_Impl.java,
+	main/org/firebirdsql/ngds/isc_blob_handle_impl.java,
+	main/org/firebirdsql/ngds/isc_db_handle_impl.java,
+	main/org/firebirdsql/ngds/isc_svc_handle_impl.java,
+	main/org/firebirdsql/ngds/isc_tr_handle_impl.java,
+	test/org/firebirdsql/gds/TestReconnectTransaction.java,
+	test/org/firebirdsql/ngds/TestNgds.java,
+	main/org/firebirdsql/management/FBBackupManager.java,
+	main/org/firebirdsql/management/FBManager.java,
+	main/org/firebirdsql/management/FBServiceManager.java,
+	main/org/firebirdsql/management/FBUserManager.java,
+	test/org/firebirdsql/jgds/TestGds.java,
+	test/org/firebirdsql/jgds/TestGdsAttach.java,
+	test/org/firebirdsql/ngds/TestJaybirdBlobBackupProblem.java,
+	test/org/firebirdsql/ngds/TestNgdsBlobReadBug.java,
+	test/org/firebirdsql/ngds/TestServicesAPI.java:
+	
+	refactored the public GDS API
+
 2005-04-16 01:08  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/logging/LoggerFactory.java:
