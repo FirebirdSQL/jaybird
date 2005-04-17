@@ -20,7 +20,6 @@ package org.firebirdsql.jca;
 
 
 import java.sql.Connection;
-import java.util.Set;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;

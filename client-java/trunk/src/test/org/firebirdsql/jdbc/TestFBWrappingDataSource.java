@@ -65,7 +65,7 @@ public class TestFBWrappingDataSource extends FBTestBase {
     public void testPersonalizedConnect() throws Exception {
         ds = createFBWrappingDataSource();
         ds.setDatabase(DB_DATASOURCE_URL);
-        ds.setSqlRole("USER");
+        ds.setRoleName("USER");
         ds.setEncoding("NONE");
         //ds.setNonStandardProperty("isc_dpb_sweep", null);
         ds.setNonStandardProperty("isc_dpb_num_buffers", "75");
@@ -79,7 +79,7 @@ public class TestFBWrappingDataSource extends FBTestBase {
 
         ds = createFBWrappingDataSource();
         ds.setDatabase(DB_DATASOURCE_URL);
-        ds.setMinConnections(0);
+        ds.setMinPoolSize(0);
         ds.setMaxPoolSize(5);
         ds.setBlockingTimeout(100);
         ds.setMaxIdleTime(1000);
@@ -117,7 +117,7 @@ public class TestFBWrappingDataSource extends FBTestBase {
 
         ds = createFBWrappingDataSource();
         ds.setDatabase(DB_DATASOURCE_URL);
-        ds.setMinConnections(3);
+        ds.setMinPoolSize(3);
         ds.setMaxPoolSize(5);
         ds.setBlockingTimeout(1000);
         ds.setMaxIdleTime(20000);
@@ -128,7 +128,7 @@ public class TestFBWrappingDataSource extends FBTestBase {
         assertTrue("Connection is null", connection != null);
         Thread.sleep(3000);
         int ccount = ds.getFreeSize(); // should be 2, 3 total, but one is working
-        assertTrue("Wrong number of connections! " + ccount + ", expected " + (ds.getMinConnections() - 1), ccount == (ds.getMinConnections() - 1));
+        assertTrue("Wrong number of connections! " + ccount + ", expected " + (ds.getMinPoolSize() - 1), ccount == (ds.getMinPoolSize() - 1));
         connection.close();
         ArrayList cs = new ArrayList();
         for (int i = 0; i < ds.getMaxPoolSize(); i++)

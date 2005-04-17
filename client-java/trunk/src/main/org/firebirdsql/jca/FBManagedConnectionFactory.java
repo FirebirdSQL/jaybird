@@ -29,7 +29,6 @@ import javax.transaction.xa.*;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.logging.Logger;

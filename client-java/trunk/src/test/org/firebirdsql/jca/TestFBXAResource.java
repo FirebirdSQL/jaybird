@@ -23,8 +23,6 @@ import javax.resource.spi.ManagedConnection;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
-import java.util.HashSet;
-
 /**
  * Describe class <code>TestFBXAResource</code> here.
  *

@@ -7,9 +7,6 @@ import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.wire.isc_db_handle_impl;
 
-import junit.framework.TestCase;
-
-
 public class TestGdsAttach extends org.firebirdsql.common.SimpleFBTestBase {
 
     private final String DATABASE = DB_SERVER_URL + ":" + DB_PATH 
