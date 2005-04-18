@@ -1,3 +1,17 @@
+2005-04-17 14:05  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/impl/XdrOutputStream.java,
+	main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	main/org/firebirdsql/jdbc/FBObjectListener.java,
+	main/org/firebirdsql/jdbc/InternalTransactionCoordinator.java,
+	test/org/firebirdsql/gds/impl/wire/TestGdsAttach.java,
+	test/org/firebirdsql/jca/TestFBTpbMapper.java,
+	test/org/firebirdsql/jca/TestFBXAResource.java,
+	test/org/firebirdsql/jdbc/TestFBWrappingDataSource.java:
+	
+	removed unused imports
+
 2005-04-16 13:46  rrokytskyy
 
 	* client-java/src/:
