@@ -125,12 +125,12 @@ public class GDS_Impl extends AbstractGDS implements GDS {
             try {
                 nativeInitilize(currentClientLibraryToTry);
             } catch (Throwable th) {
-                //th.printStackTrace(); // Dont hide it completly
+                th.printStackTrace(); // Dont hide it completly
 
-                if (logging)
-                        log.debug("Failed to load client library # " + i
-                                + " - \"" + currentClientLibraryToTry + "\".",
-                            th);
+//                if (logging)
+                        System.out.println("Failed to load client library # " + i
+                                + " - \"" + currentClientLibraryToTry + "\"." +
+                            th.toString());
 
                 // If we have just failed to load the last client library
                 // then we need to throw an exception.
@@ -706,10 +706,10 @@ public class GDS_Impl extends AbstractGDS implements GDS {
                 stmt.ensureCapacity(1);
                 readSQLData(out_xsqlda, stmt);
                 stmt.setAllRowsFetched(true);
-                stmt.setIsSingletonResult(true);
+                stmt.setSingletonResult(true);
             } else {
                 stmt.setAllRowsFetched(false);
-                stmt.setIsSingletonResult(false);
+                stmt.setSingletonResult(false);
             }
         }
     }
@@ -854,7 +854,7 @@ public class GDS_Impl extends AbstractGDS implements GDS {
 
             //Does not seem to be possible or necessary to close
             //an execute procedure statement.
-            if (stmt.getIsSingletonResult()
+            if (stmt.isSingletonResult()
                     && option == ISCConstants.DSQL_close) { return; }
 
             if (option == ISCConstants.DSQL_drop) {

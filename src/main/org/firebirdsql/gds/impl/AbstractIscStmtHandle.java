@@ -52,6 +52,13 @@ public abstract class AbstractIscStmtHandle implements IscStmtHandle {
      *         <code>ResultSet</code>, false otherwise
      */
     public abstract boolean hasOpenResultSet();
+    
+    /**
+     * Retrieve whether this statement has singleton result set.
+     * 
+     * @return <code>true</code> if result set has singleton result set.
+     */
+    public abstract boolean isSingletonResult();
 
     /**
      * Retrieve whether or not this statement is valid.
