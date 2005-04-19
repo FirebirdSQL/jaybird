@@ -267,6 +267,13 @@ typedef ISC_STATUS ISC_EXPORT_VARARG prototype_isc_start_transaction(ISC_STATUS 
 												   isc_tr_handle *,
 												   short, ...);
 
+typedef ISC_STATUS ISC_EXPORT_VARARG prototype_isc_reconnect_transaction(ISC_STATUS *,
+                                                   isc_db_handle *,
+                                                   isc_tr_handle *,
+                                                   short, 
+                                                   char*);
+
+
 typedef ISC_LONG ISC_EXPORT prototype_isc_sqlcode(ISC_STATUS *);
 
 typedef void ISC_EXPORT prototype_isc_sql_interprete(short,
@@ -373,6 +380,7 @@ class FirebirdApiBinding
 		static prototype_isc_rollback_retaining*	isc_rollback_retaining;
 		static prototype_isc_rollback_transaction*	isc_rollback_transaction;
 		static prototype_isc_start_transaction*		isc_start_transaction;
+		static prototype_isc_reconnect_transaction*		isc_reconnect_transaction;
 		static prototype_isc_sqlcode*				isc_sqlcode;
 		static prototype_isc_sql_interprete*		isc_sql_interprete;
 		static prototype_isc_seek_blob*				isc_seek_blob;

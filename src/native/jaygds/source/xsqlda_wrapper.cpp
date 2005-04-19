@@ -62,11 +62,11 @@ void		JXSqlda::Initilize( JNIEnv* javaEnvironment )
 	if( sIsInitilized )
 		throw InternalException("Initilize has been called twice without an unitilize.");
 
-	sXSQLDAClassBinding = JClassBinding( javaEnvironment,  "org/firebirdsql/ngds/XSQLDAImpl" );
+	sXSQLDAClassBinding = JClassBinding( javaEnvironment,  "org/firebirdsql/gds/impl/jni/XSQLDAImpl" );
 #ifdef ARCH_IS_BIG_ENDIAN
-	sXSQLVARClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/XSQLVARBigEndianImpl" );
+	sXSQLVARClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/gds/impl/jni/XSQLVARBigEndianImpl" );
 #else
-	sXSQLVARClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/XSQLVARLittleEndianImpl" );
+	sXSQLVARClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/gds/impl/jni/XSQLVARLittleEndianImpl" );
 #endif
 
 	sXSQLDAFieldBinding_sqln   = sXSQLDAClassBinding.GetFieldBinding( javaEnvironment, "sqln",   "I" );
