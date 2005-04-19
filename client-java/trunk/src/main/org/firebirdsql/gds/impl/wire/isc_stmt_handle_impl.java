@@ -140,11 +140,11 @@ public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
         allRowsFetched = value;
     }
 
-    public boolean getIsSingletonResult() {
+    public boolean isSingletonResult() {
         return isSingletonResult;
     }
 
-    public void setIsSingletonResult(boolean value) {
+    public void setSingletonResult(boolean value) {
         isSingletonResult = value;
     }
 

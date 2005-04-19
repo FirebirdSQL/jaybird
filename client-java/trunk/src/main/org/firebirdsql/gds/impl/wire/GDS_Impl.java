@@ -963,11 +963,11 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
                     receiveSqlResponse(db, out_xsqlda, stmt);
                     op = nextOperation(db);
                     stmt.setAllRowsFetched(true);
-                    stmt.setIsSingletonResult(true);
+                    stmt.setSingletonResult(true);
                 }
                 else
                 {
-                    stmt.setIsSingletonResult(false);
+                    stmt.setSingletonResult(false);
                     stmt.setAllRowsFetched(false);
                 } // end of else
                 receiveResponse(db,op);
@@ -1129,9 +1129,9 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
                     if (debug) log.debug("sent");
 
                     int op = nextOperation(db);
+                    stmt.notifyOpenResultSet();
                     if (op == op_fetch_response) {
                         
-                        stmt.notifyOpenResultSet();
                         
                         int sqldata_status;
                         int sqldata_messages;
@@ -1210,7 +1210,7 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
 
         //Does not seem to be possible or necessary to close
         //an execute procedure statement.
-        if (stmt.getIsSingletonResult() && option == ISCConstants.DSQL_close)
+        if (stmt.isSingletonResult() && option == ISCConstants.DSQL_close)
         {
             return;
         } // end of if ()
