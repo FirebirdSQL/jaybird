@@ -16,20 +16,54 @@
 
 
 
-	Current Supported Platforms:
+	Currently Supported Platforms:
 
 	Platform		    Compiler/Linker
 
-	Windows         MSVC 6
-	Solaris         GCC
+   AIX             xlC (Visual Age compiler)
+   HP-UX           aCC (HP aCC+ compiler)
 	Linux           GCC
+   MVS z/OS        os390 (c++) 
+	Solaris         GCC, CC (Sun ONE compiler)
+	Windows         MSVC 6
 
-	These are platforms that this build file should in theory build on correctly. Not all these platforms have been tested.
+   MVS Requirements:
+   =================
+	Jaybird was successfully built on MVS using z/OS. Several steps were
+	necessary to work around the ASCII/EBCDIC character issues.
+	These are the environment variables I used:
+	
+	export IBM_JAVA_OPTIONS="-Xnoargsconversion -Dfile.encoding=ISO8859-1"
+   export _CXX_CXXSUFFIX=cpp
+   export _BPXK_AUTOCVT="ON"
+	export _CEE_RUNOPTS="XPLINK(ON),POSIX(ON),FILETAG(NOAUTOCVT)"
+	export _BPX_SHAREAS=NO
+   export USE_os390=true
+   
+   Without _BPX_SHAREAS set to NO, the junit tests all fail with an
+   "unavailable database" error message.
+
+	In this configuration, the JVM writes all files using ISO8859-1 encoding.
+	My environment has a samba drive mounted at /net/bin/u/userid and
+	/net/txt/u/userid. By switching between /net/bin and /net/txt, the
+	user selects whether the network performs automatic file encoding
+	conversions. 
+
+	client-java was installed at /net/bin/u/userid/client-java. JNI
+	was built using the command
+	
+	cd /net/bin/u/userid/client-java
+	ant -Dsource.native=/net/txt/u/userid/client-java/src/native/jaygds/source compile-native 
+	
+	Our current directory is on /net/bin mount point for writing
+	binary output files. But, ant needs to read the .cpp source files
+	as text files, which is why the -Dsource.native option is specified.
+	
 -->
 <project name="FirebirdSQL_native" default="compile" basedir=".">
 
-    <taskdef resource="cpptasks.tasks"/>
-    <typedef resource="cpptasks.types"/>
+    <taskdef resource="cpptasks.tasks" />
+    <typedef resource="cpptasks.types" />
 
     <!--
     -->
@@ -100,26 +134,53 @@
     jaybirds_platform_headers
     -->
     <target name="set_platform_properties" depends="init">
+<echo message="os.name=${os.name}"/>
 
 
         <!-- set 'buildon-windows' - this should be all we ever need here  -->
         <condition property="buildon-windows">
             <os family="windows"/>
         </condition>
+
+			<condition property="buildon-mvs">
+				<os name="z/OS"/>
+			</condition>
+
          <condition property="buildon-unix">
             <not>
                 <isset property="buildon-windows"/>
             </not>
         </condition>
 
-        <condition property="buildon-solaris">
-            <equals arg1="${os.name}" arg2="Solaris" casesensitive="false"/>
+        <condition property="buildon-solaris" >
+            <or>
+               <equals arg1="${os.name}" arg2="Solaris" casesensitive="false"/>
+               <equals arg1="${os.name}" arg2="SunOs" casesensitive="false"/>
+            </or>
         </condition>
 
-        <!-- set 'jaybirds_platform_headers' - this should be fairly easy -->
+        <condition property="buildon-hp-ux" >
+            <or>
+               <equals arg1="${os.name}" arg2="HP-UX" casesensitive="false"/>
+            </or>
+        </condition>
+
+        <!-- set 'jaybirds_platform_headers' -->
+        <!-- there does not seem to be a need to set this on AIX -->
+			<condition property="jaybirds_platform_headers" value="mvs">
+				<isset property="buildon-mvs"/>
+			</condition>
 
         <condition property="jaybirds_platform_headers" value="win32">
             <isset property="buildon-windows"/>
+        </condition>
+
+        <condition property="jaybirds_platform_headers" value="solaris">
+                <isset property="buildon-solaris"/>
+        </condition>
+
+        <condition property="jaybirds_platform_headers" value="generic_unix">
+                <isset property="buildon-hp-ux"/>
         </condition>
 
         <condition property="jaybirds_platform_headers" value="generic_unix">
@@ -128,6 +189,9 @@
             </not>
         </condition>
 
+
+
+<echo message="jaybirds_platform_headers=${jaybirds_platform_headers}"/>
 
         <!-- set 'jdks_platform_headers' -->
 
@@ -143,6 +207,9 @@
             <os name="linux"/>
         </condition>
         
+        <condition property="jdks_platform_headers" value="hp-ux">
+            <os name="HP-UX"/>
+        </condition>
         
         <!-- check if we should build using MinGW -->
 		<condition property="use.mingw" value="true">
@@ -152,10 +219,61 @@
 		</and>
 		</condition>
 
+        <!-- check if we should build using CC -->
+		<condition property="use.CC" value="true">
+		<or>
+			<isset property="env.USE_CC"/>
+			<isset property="env.USE_CC_64"/>
+		</or>
+		</condition>
+
+		<!-- set flag for xlC compiles -->
+		<condition property="use.xlC" value="true">
+		<or>
+			<isset property="env.USE_xlC"/>
+			<isset property="env.USE_xlC_64"/>
+		</or>
+		</condition>
+
+		<!-- set flag for aCC compiles -->
+		<condition property="use.aCC" value="true">
+		<or>
+			<isset property="env.USE_aCC"/>
+			<isset property="env.USE_aCC_64"/>
+		</or>
+		</condition>
+
+		<!-- set flag for os390 compiles -->
+		<condition property="use.os390" value="true">
+		<or>
+			<isset property="env.USE_os390"/>
+		</or>
+		</condition>
+
+		<!-- final check for good ol' gcc -->
+		<condition property="use.gcc" value="true">
+		<and>
+			<os family="unix"/>
+         <not>
+				<isset property="use.CC"/>
+         </not>
+			<not>
+            <isset property="use.xlC" />
+         </not>
+			<not>
+            <isset property="use.aCC" />
+         </not>
+			<not>
+            <isset property="use.os390" />
+         </not>
+		</and>
+		</condition>
+
     </target>
+
     
     
-    <target name="prepare_compile" depends="prepare_mingw,prepare_msvc,prepare_gcc"/>
+    <target name="prepare_compile" depends="prepare_CC,prepare_aCC,prepare_mingw,prepare_msvc,prepare_gcc,prepare_xlC,prepare_os390"/>
     
     <!-- 
     	MinGW compiler and linker properties.
@@ -217,7 +335,8 @@
     <!--
     	Generic GCC compiler and linker definitions.
     -->
-    <target name="prepare_gcc" if="buildon-unix">
+    <target name="prepare_gcc" if="use.gcc">
+    <echo message="use.gcc=${use.gcc}"/>
     
         <compiler id="jaybird.compiler" name="gcc" if="buildon-unix">
 
@@ -241,6 +360,99 @@
     
     </target>
 
+	<!-- 
+    	CC (Sun ONE) compiler and linker properties.
+	-->
+   <target name="prepare_CC" if="use.CC">
+    
+      <compiler id="jaybird.compiler" name="CC">
+         <compilerarg value="-xarch=v9" if="env.USE_CC_64"/>
+        	<defineset>
+            <define name="ARCH_IS_BIG_ENDIAN=1"/>
+        	</defineset>
+      </compiler>
+    	
+      <linker id="jaybird.linker" name="CC">
+         <linkerarg value="-xarch=v9" if="env.USE_CC_64"/>
+      </linker>
+    	
+   </target>
+
+    <!-- 
+    	xlC (AIX Visaul Age) compiler and linker properties.
+    -->
+    <target name="prepare_xlC" if="use.xlC">
+    
+    <echo message="use.xlC=${use.xlC}"/>
+    <echo message="USE_xlC_64=${env.USE_xlC_64}"/>
+        <compiler id="jaybird.compiler" name="xlC">
+           <compilerarg value="-q64" if="env.USE_xlC_64"/>
+           <compilerarg value="-ma"/>
+				<defineset>
+					<define name="ARCH_IS_BIG_ENDIAN=1"/>
+				</defineset>
+        </compiler>
+    	
+			<linker id="jaybird.linker" name="xlC">
+            <linkerarg value="-X64" if="env.USE_xlC_64"/>
+				<linkerarg value="-p 0"/>
+			</linker>
+    	
+    </target>
+
+    <!-- 
+    	aCC (HP-UX) compiler and linker properties.
+    -->
+    <target name="prepare_aCC" if="use.aCC">
+    
+    <echo message="use.aCC=${use.aCC}"/>
+    <echo message="USE_aCC_64=${env.USE_aCC_64}"/>
+        <compiler id="jaybird.compiler" name="aCC">
+        <compilerarg value="-mt"/>
+        <compilerarg value="+DD64" if="env.USE_aCC_64"/>
+        <compilerarg value="-AA" if="env.USE_aCC_64"/>
+				<defineset>
+					<define name="ARCH_IS_BIG_ENDIAN=1"/>
+				</defineset>
+        </compiler>
+    	
+			<linker id="jaybird.linker" name="aCC">
+            <linkerarg value="+DD64" if="env.USE_aCC_64"/>
+<!--
+				<linkerarg value="-lstd_v2"/>
+				<linkerarg value="-lCsup"/>
+				<linkerarg value="-lpthread"/>
+				<linkerarg value="-lm"/>
+				<linkerarg value="-lunwind"/>
+				<linkerarg value="-lCsup"/>
+				<linkerarg value="-lc"/>
+				<linkerarg value="-ldl"/>
+-->
+			</linker>
+    	
+    </target>
+    <!-- 
+    	os390 (IBM MVS compiler)
+    -->
+    <target name="prepare_os390" if="use.os390">
+    
+    <echo message="use.os390=${use.os390}"/>
+        <compiler id="jaybird.compiler" name="os390">
+           <compilerarg value="-W"/>
+           <compilerarg value="c,xplink,ascii,chars(signed),dll,expo,langlvl(extended),float(ieee)"/>
+				<defineset>
+					<define name="_ALL_SOURCE"/>
+					<define name="ARCH_IS_BIG_ENDIAN=1"/>
+					<define name="JAVA_GDS_EXPORTS"/>
+				</defineset>
+			</compiler>
+    	
+		<linker id="jaybird.linker" name="os390">
+				<linkerarg value="-W"/>
+				<linkerarg value="l,xplink,compat=current,TERM"/>
+		</linker>
+    	
+    </target>
 
     <!--
     	Compile and link
@@ -248,6 +460,7 @@
     <target name="compile" depends="init,set_platform_properties,prepare_compile">
 
         <cc debug="false"
+            optimize="full"
             link="shared"
             objdir="${build.native.output}"
             outfile="${build.native.output}/jaybird"
@@ -272,7 +485,11 @@
             <compiler refid="jaybird.compiler"/>
             <linker refid="jaybird.linker"/>
 
+
         </cc>
+
+    <!-- next line added for 64-bit HP-UX -->
+    <move file="${native.library.location}/lib${native.library.name}.sl" tofile="${native.library.location}/lib${native.library.name}.so" failonerror="false" overwrite="true" />
 
         <!-- delete>
             <fileset dir="${build.native.output}" includes="*.obj"/>
