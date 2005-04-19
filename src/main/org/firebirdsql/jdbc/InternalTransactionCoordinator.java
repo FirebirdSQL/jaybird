@@ -189,7 +189,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         public void statementCompleted(AbstractStatement stmt) throws SQLException {
             statements.remove(stmt);
             try {
-//                if (localTransaction.inTransaction())
+                if (localTransaction.inTransaction())
                     localTransaction.commit();
             } catch(ResourceException ex) {
                 
@@ -271,7 +271,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          */
         public void rollback() throws SQLException {
             try {
-//                if (localTransaction.inTransaction())
+                if (localTransaction.inTransaction())
                     localTransaction.rollback();
             } catch(ResourceException ex) {
                 throw new FBSQLException(ex);
