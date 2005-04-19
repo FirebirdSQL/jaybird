@@ -141,19 +141,19 @@ public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
         allRowsFetched = value;
     }
 
-    public boolean getIsSingletonResult() {
+    public boolean isSingletonResult() {
         return isSingletonResult;
     }
 
-    public void setIsSingletonResult(boolean value) {
+    public void setSingletonResult(boolean value) {
         isSingletonResult = value;
     }
 
-    public int getRsr_id() {
+    public int getRsrId() {
         return rsr_id;
     }
 
-    public void setRsr_id(int value) {
+    public void setRsrId(int value) {
         rsr_id = value;
     }
 
@@ -162,7 +162,7 @@ public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
     }
 
     public void setRsr_id_ptr(int rsr_id_ptr,int value) {
-        setRsr_id(value);
+        setRsrId(value);
         this.rsr_id_ptr = rsr_id_ptr;
     }
 

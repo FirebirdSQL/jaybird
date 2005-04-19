@@ -78,18 +78,18 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
     // Vector rdb_sql_requests = new Vector();
     
 
-    void setRdb_id(int rdb_id) {
+    void setRdbId(int rdb_id) {
         checkValidity();
         this.rdb_id = rdb_id;
     }
 
-    public int getRdb_id() {
+    public int getRdbId() {
         checkValidity();
         return rdb_id;
     }
 
     void setRdb_id_ptr(int rdb_id_ptr, int value) {
-            setRdb_id(value);
+            setRdbId(value);
             this.rdb_id_ptr = rdb_id_ptr;
         }
 

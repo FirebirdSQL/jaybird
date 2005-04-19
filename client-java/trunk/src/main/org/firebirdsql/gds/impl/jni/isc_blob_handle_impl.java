@@ -66,11 +66,11 @@ public final class isc_blob_handle_impl implements IscBlobHandle {
         blob_id = value;
     }
 
-    public int getRbl_id() {
+    public int getRblId() {
         return rbl_id;
     }
 
-    public void setRbl_id(int value) {
+    public void setRblId(int value) {
         rbl_id = value;
     }
 /* not used
