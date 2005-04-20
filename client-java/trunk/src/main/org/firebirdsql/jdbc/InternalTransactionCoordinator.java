@@ -13,7 +13,7 @@ import org.firebirdsql.jca.FBLocalTransaction;
 /**
  * Transaction coordinator for the {@link org.firebirdsql.jdbc.FBConnection} class.
  */
-public class InternalTransactionCoordinator implements FBObjectListener.StatementListener, FBObjectListener.BlobListener {
+public class InternalTransactionCoordinator implements FBObjectListener.StatementListener, FBObjectListener.BlobListener, Synchronizable {
 
     private AbstractTransactionCoordinator coordinator;
 
@@ -21,47 +21,79 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         // empty
     }
     
+    public Object getSynchronizationObject() throws SQLException {
+        if (coordinator instanceof AutoCommitCoordinator)
+            return coordinator.getConnection();
+        else
+            return new Object();
+    }
+
     public InternalTransactionCoordinator(AbstractTransactionCoordinator coordinator) {
         this.coordinator = coordinator;
     }
     
     public void executionStarted(AbstractStatement stmt) throws SQLException {
-        coordinator.executionStarted(stmt);
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
+            coordinator.executionStarted(stmt);
+        }
     }
 
     public AbstractConnection getConnection() throws SQLException {
-         return coordinator.getConnection();
+        return coordinator.getConnection();
     }
     public void statementClosed(AbstractStatement stmt) throws SQLException {
+        
         coordinator.statementClosed(stmt);
     }
     public void statementCompleted(AbstractStatement stmt) throws SQLException {
-        coordinator.statementCompleted(stmt);
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
+            coordinator.statementCompleted(stmt);
+        }
     }
     public void executionCompleted(FirebirdBlob blob) throws SQLException {
-        executionCompleted(blob);
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
+            executionCompleted(blob);
+        }
     }
     public void executionStarted(FirebirdBlob blob) throws SQLException {
-        coordinator.executionStarted(blob);
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
+            coordinator.executionStarted(blob);
+        }
     }
     public void ensureTransaction() throws SQLException {
-        coordinator.ensureTransaction();
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
+            coordinator.ensureTransaction();
+        }
     }
     public void commit() throws SQLException {
-        coordinator.commit();
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
+            coordinator.commit();
+        }
     }
     
     public void rollback() throws SQLException {
-        coordinator.rollback();
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
+            coordinator.rollback();
+        }
     }
     
     public void setCoordinator(AbstractTransactionCoordinator coordinator) throws SQLException {
-        if (this.coordinator != null) {
-            this.coordinator.completeStatements();
-            coordinator.setStatements(this.coordinator.getStatements());
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
+            if (this.coordinator != null) {
+                this.coordinator.completeStatements();
+                coordinator.setStatements(this.coordinator.getStatements());
+            }
+            
+            this.coordinator = coordinator;
         }
-        
-        this.coordinator = coordinator;
     }
     
     public abstract static class AbstractTransactionCoordinator implements FBObjectListener.StatementListener, FBObjectListener.BlobListener {

@@ -93,7 +93,7 @@ public interface FirebirdConnection extends Connection {
      * 
      * @return current ISC encoding.
      */
-    String getIscEncoding();
+    String getIscEncoding() throws SQLException;
     
     /**
      * Set transaction parameters for the specified isolation level. They will 

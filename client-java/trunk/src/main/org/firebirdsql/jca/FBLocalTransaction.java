@@ -83,8 +83,12 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
       * Check whether a started transaction is associated with the current
       * database connection.
       */
-     public boolean inTransaction() {
-         return mc.getGDSHelper().inTransaction();
+     public boolean inTransaction() throws ResourceException {
+         try {
+             return mc.getGDSHelper().inTransaction();
+         } catch(GDSException ex) {
+             throw new FBResourceException(ex);
+         }
      }
      
     /**

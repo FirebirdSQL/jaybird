@@ -125,10 +125,10 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
      */
     public ResultSet executeQuery() throws SQLException {
 
-        notifyStatementStarted();
-
         Object syncObject = getSynchronizationObject();
         synchronized (syncObject) {
+            notifyStatementStarted();
+
             if (!internalExecute(isExecuteProcedureStatement)) { throw new FBSQLException(
                     "No resultset for sql",
                     FBSQLException.SQL_STATE_NO_RESULT_SET); }
@@ -149,17 +149,17 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
      */
     public int executeUpdate() throws SQLException {
 
-        notifyStatementStarted();
-        try {
-            Object syncObject = getSynchronizationObject();
-            synchronized (syncObject) {
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
+            notifyStatementStarted();
+            try {
                 if (internalExecute(isExecuteProcedureStatement)) { throw new FBSQLException(
                         "Update statement returned results."); }
 
                 return getUpdateCount();
+            } finally {
+                notifyStatementCompleted();
             }
-        } finally {
-            notifyStatementCompleted();
         }
     }
 
@@ -622,13 +622,14 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
      */
     public boolean execute() throws SQLException {
 
-        notifyStatementStarted();
-
         Object syncObject = getSynchronizationObject();
         synchronized (syncObject) {
+            notifyStatementStarted();
+            
             boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
 
-            if (!hasResultSet) notifyStatementCompleted();
+            if (!hasResultSet) 
+                notifyStatementCompleted();
 
             return hasResultSet;
         }
@@ -647,10 +648,10 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
      */
     ResultSet executeMetaDataQuery() throws SQLException {
 
-        notifyStatementStarted();
-
         Object syncObject = getSynchronizationObject();
         synchronized (syncObject) {
+            notifyStatementStarted();
+
             boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
 
             if (!hasResultSet)
@@ -816,16 +817,17 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
      *      </a>
      */
     public int[] executeBatch() throws SQLException {
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
 
-        notifyStatementStarted();
-        try {
-            Object syncObject = getSynchronizationObject();
+            try {
+                notifyStatementStarted();
 
-            ArrayList results = new ArrayList(batchList.size());
-            Iterator iter = batchList.iterator();
+                ArrayList results = new ArrayList(batchList.size());
+                Iterator iter = batchList.iterator();
 
-            boolean commit = false;
-            synchronized (syncObject) {
+                boolean commit = false;
+
                 XSQLVAR[] backupVars = null;
                 try {
                     while (iter.hasNext()) {
@@ -859,9 +861,9 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
                 } finally {
                     clearBatch();
                 }
+            } finally {
+                notifyStatementCompleted();
             }
-        } finally {
-            notifyStatementCompleted();
         }
     }
 

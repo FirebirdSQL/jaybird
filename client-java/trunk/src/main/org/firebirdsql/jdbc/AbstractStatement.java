@@ -146,7 +146,12 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @throws SQLException if something went wrong.
      */
     public Object getSynchronizationObject() throws SQLException {
-        return this;
+        boolean autocommit = statementListener.getConnection().getAutoCommit();
+        
+        if (autocommit)
+            return statementListener.getConnection();
+        else
+            return this;
     }
     
     protected void finalize() throws Throwable {
@@ -173,10 +178,10 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         if (closed)
             throw new FBSQLException("Statement is closed");
 
-        notifyStatementStarted();
-        
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
+            notifyStatementStarted();
+
             try {
                 if (!internalExecute(sql)) {
                     throw new FBSQLException(
@@ -215,25 +220,23 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * or <code>DELETE</code> statements, or 0 for SQL statements that return nothing
      * @exception SQLException if a database access error occurs
      */
-    public int executeUpdate(String sql) throws  SQLException {
-        if(closed)
-            throw new FBSQLException("Statement is closed");
+    public int executeUpdate(String sql) throws SQLException {
+        if (closed) throw new FBSQLException("Statement is closed");
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
 
-        notifyStatementStarted();
-        try {
-            Object syncObject = getSynchronizationObject();
-            synchronized(syncObject) {
+            notifyStatementStarted();
+            try {
                 try {
-                    if (internalExecute(sql)) {
-                        throw new FBSQLException("Update statement returned results.");
-                    }
+                    if (internalExecute(sql)) { throw new FBSQLException(
+                            "Update statement returned results."); }
                     return getUpdateCount();
                 } catch (GDSException ge) {
                     throw new FBSQLException(ge);
                 }
+            } finally {
+                notifyStatementCompleted();
             }
-        } finally {
-            notifyStatementCompleted();
         }
     }
 
@@ -525,29 +528,28 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @see #getMoreResults
      */
     public boolean execute(String sql) throws SQLException {
-        if (closed)
-            throw new FBSQLException("Statement is closed");
+        if (closed) throw new FBSQLException("Statement is closed");
 
-        notifyStatementStarted();
-        
-        boolean hasResultSet = false;
-        try {
-            Object syncObject = getSynchronizationObject();
-            synchronized(syncObject) {
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
+            notifyStatementStarted();
+
+            boolean hasResultSet = false;
+            try {
                 try {
                     hasResultSet = internalExecute(sql);
                 } catch (GDSException ge) {
                     throw new FBSQLException(ge);
-                } 
+                }
+            } finally {
+                if (!hasResultSet) {
+                    notifyStatementCompleted();
+                }
+
             }
-        } finally {
-            if (!hasResultSet) {
-                notifyStatementCompleted();
-            }
-            
+            return hasResultSet;
+
         }
-        
-        return hasResultSet;
     }
 
     /**
@@ -900,61 +902,62 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public int[] executeBatch() throws  SQLException {
-        if (closed)
-            throw new FBSQLException("Statement is closed");
-        
+    public int[] executeBatch() throws SQLException {
+        if (closed) throw new FBSQLException("Statement is closed");
+
         if (statementListener.getConnection().getAutoCommit())
-            addWarning(new SQLWarning("Batch updates should be run " +
-                    "with auto-commit disabled.", "1000"));
-        
+            addWarning(new SQLWarning("Batch updates should be run "
+                    + "with auto-commit disabled.", "1000"));
+
+        Object syncObject = getSynchronizationObject();
+
         notifyStatementStarted();
-        
-        try {
-            Object syncObject = getSynchronizationObject();
-            LinkedList responses = new LinkedList();
-            
-            boolean commit = false;
-            synchronized(syncObject) {
+        synchronized (syncObject) {
+
+            try {
+                LinkedList responses = new LinkedList();
+
+                boolean commit = false;
                 try {
-                    
+
                     Iterator iter = batchList.iterator();
-                    while(iter.hasNext()) {
-                    	String sql = (String)iter.next();
+                    while (iter.hasNext()) {
+                        String sql = (String) iter.next();
                         try {
-                        	boolean hasResultSet = internalExecute(sql);
-                            
+                            boolean hasResultSet = internalExecute(sql);
+
                             if (hasResultSet)
-                            	throw new BatchUpdateException(toArray(responses));
+                                throw new BatchUpdateException(
+                                        toArray(responses));
                             else
                                 responses.add(new Integer(getUpdateCount()));
                         } catch (GDSException ge) {
-                            
-                            throw new BatchUpdateException(
-                                    ge.getMessage(), 
-                                    FBSQLException.SQL_STATE_GENERAL_ERROR,
-                                    ge.getFbErrorCode(),
+
+                            throw new BatchUpdateException(ge.getMessage(),
+                                    FBSQLException.SQL_STATE_GENERAL_ERROR, ge
+                                            .getFbErrorCode(),
                                     toArray(responses));
                         }
                     }
-                   
+
                     commit = true;
-                    
+
                     return toArray(responses);
-                    
+
                 } finally {
                     clearBatch();
                 }
+            } finally {
+                notifyStatementCompleted();
             }
-        } finally {
-            notifyStatementCompleted();
         }
     }
     
     /**
      * Convert collection of {@link Integer} elements into array of int.
      * 
-     * @param list collection of integer elements.
+     * @param list
+     *            collection of integer elements.
      * 
      * @return array of int.
      */
@@ -1013,19 +1016,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             statementListener.statementCompleted(this);
     }
     
-//    void releaseResultSet() throws SQLException {
-//        if (currentRs != null) {
-//            try {
-//                if (fixedStmt.hasOpenResultSet())
-//                    gdsHelper.closeStatement(fixedStmt, false);
-//            }
-//            catch (GDSException ge) {
-//                throw new FBSQLException(ge);
-//            }
-//            currentRs = null;
-//        }
-//    }
-
     public void forgetResultSet() { //yuck should be package
         currentRs = null;
         if (fixedStmt != null) {
@@ -1070,7 +1060,8 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         prepareFixedStatement(sql, false);
         gdsHelper.executeStatement(fixedStmt, isExecuteProcedureStatement(sql));
         hasMoreResults = true;
-        return (fixedStmt.getOutSqlda().sqld > 0);
+        isResultSet = fixedStmt.getOutSqlda().sqld > 0;
+        return isResultSet;
     }
 
     protected void prepareFixedStatement(String sql, boolean describeBind)
