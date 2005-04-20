@@ -955,6 +955,8 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
                     out.writeInt(0); //out_message_number = out_message_type
                 }
                 out.flush();
+                if (stmt.getOutSqlda() != null)
+                    stmt.notifyOpenResultSet();
                 if (debug) log.debug("sent");
                 int op = nextOperation(db);
                 if (op == op_sql_response) {
