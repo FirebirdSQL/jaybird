@@ -1,3 +1,47 @@
+2005-04-19 17:28  rrokytskyy
+
+	*
+	
+	enabled testing for existing transaction before commit/rollback
+	(was disabled for debug purposes)
+	client-java/src/main/org/firebirdsql/jdbc/InternalTransactionCoordi
+	nator.java:
+
+2005-04-19 17:27  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
+	
+	removed unused code
+
+2005-04-19 17:25  rrokytskyy
+
+	* client-java/lib/cpptasks.jar:
+	
+	updated to version 1.0.3b
+
+2005-04-19 17:13  rrokytskyy
+
+	* client-java/src/: native/jaygds/source/entrypoints.cpp,
+	native/jaygds/source/entrypoints_generated.h,
+	native/jaygds/source/fb_binding.cpp,
+	native/jaygds/source/fb_binding.h,
+	native/jaygds/source/handle_wrappers.cpp,
+	native/jaygds/source/xsqlda_wrapper.cpp,
+	test/org/firebirdsql/gds/impl/jni/TestNgds.java,
+	main/org/firebirdsql/gds/impl/jni/isc_blob_handle_impl.java,
+	main/org/firebirdsql/gds/impl/jni/isc_db_handle_impl.java,
+	main/org/firebirdsql/gds/impl/jni/isc_stmt_handle_impl.java:
+	
+	adapted to the refactoring in GDS code
+
+2005-04-19 17:07  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/:
+	jni/GDS_Impl.java, wire/GDS_Impl.java,
+	wire/isc_stmt_handle_impl.java, AbstractIscStmtHandle.java:
+	
+	made isSingletonResultSet available on abstract class level
+
 2005-04-17 14:05  rrokytskyy
 
 	* client-java/src/:
