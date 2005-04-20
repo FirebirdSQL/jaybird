@@ -98,7 +98,11 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
      * @throws ResourceException generic exception
      */
     public String getUserName() throws ResourceException {
-        return mc.getGDSHelper().getUserName();
+        try {
+            return mc.getGDSHelper().getUserName();
+        } catch(GDSException ex) {
+            throw new FBResourceException(ex);
+        }
     }
 
  }

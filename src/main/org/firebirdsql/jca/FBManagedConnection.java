@@ -126,7 +126,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      * 
      * @return instance of {@link GDSHelper}.
      */
-    public GDSHelper getGDSHelper() {
+    public GDSHelper getGDSHelper() throws GDSException {
+        if (gdsHelper == null)
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_req_no_trans);
+        
         return gdsHelper;
     }
     

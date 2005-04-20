@@ -204,34 +204,33 @@ public abstract class AbstractCallableStatement
      * @exception SQLException if a database access error occurs
      * @see Statement#execute
      */
-    public boolean execute() throws  SQLException {
-
-        notifyStatementStarted();
-        
+    public boolean execute() throws SQLException {
         boolean hasResultSet = false;
-        
-        try {
-            Object syncObject = getSynchronizationObject();
-            synchronized(syncObject) {
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
+            notifyStatementStarted();
+
+            try {
+
                 try {
                     currentRs = null;
-                    
-                    prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
+
+                    prepareFixedStatement(procedureCall
+                            .getSQL(selectableProcedure), true);
                     hasResultSet = internalExecute(!selectableProcedure);
-    
-                    if (hasResultSet) 
-                        setRequiredTypes();
-                    
+
+                    if (hasResultSet) setRequiredTypes();
+
                 } catch (GDSException ge) {
                     throw new FBSQLException(ge);
                 } // end of try-catch-finally
+            } finally {
+                if (!hasResultSet) notifyStatementCompleted();
             }
-        } finally {
-            if (!hasResultSet) 
-                notifyStatementCompleted();
+
+            return hasResultSet;
         }
-        
-        return hasResultSet;
+
     }
     
     /**
@@ -240,10 +239,10 @@ public abstract class AbstractCallableStatement
      */
 	public ResultSet executeQuery() throws SQLException {
 
-        notifyStatementStarted();
-        
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
+            notifyStatementStarted();
+            
             try {
                 currentRs = null;
                 
@@ -272,47 +271,46 @@ public abstract class AbstractCallableStatement
      * the processing is done by superclass.
      */
     public int executeUpdate() throws SQLException {
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
+            try {
+                notifyStatementStarted();
 
-        notifyStatementStarted();
-        
-        try {
-            Object syncObject = getSynchronizationObject();
-            synchronized(syncObject) {
                 try {
                     currentRs = null;
-                    
-                    prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
-                    
+
+                    prepareFixedStatement(procedureCall
+                            .getSQL(selectableProcedure), true);
+
                     /*
-                    // R.Rokytskyy: JDBC CTS suite uses executeUpdate()
-                    // together with output parameters, therefore we cannot
-                    // throw exception if we want to pass the test suite
-                    
-                    if (internalExecute(true)) 
-                        throw new FBSQLException(
-                        "Update statement returned results.");
-                    */
-                    
+                     * // R.Rokytskyy: JDBC CTS suite uses executeUpdate() //
+                     * together with output parameters, therefore we cannot //
+                     * throw exception if we want to pass the test suite
+                     * 
+                     * if (internalExecute(true)) throw new FBSQLException(
+                     * "Update statement returned results.");
+                     */
+
                     boolean hasResults = internalExecute(!selectableProcedure);
-                    
+
                     if (hasResults) {
                         setRequiredTypes();
                     }
-                    
+
                     return getUpdateCount();
-                    
-                } catch(GDSException ex) {
+
+                } catch (GDSException ex) {
                     throw new FBSQLException(ex);
                 }
+            } finally {
+                notifyStatementCompleted();
             }
-        } finally {
-            notifyStatementCompleted();
         }
     }
 
     /**
-     * Execute statement internally. This method sets cached parameters. Rest
-     * of the processing is done by superclass.
+     * Execute statement internally. This method sets cached parameters. Rest of
+     * the processing is done by superclass.
      */
     protected boolean internalExecute(boolean sendOutParams)
     throws SQLException {

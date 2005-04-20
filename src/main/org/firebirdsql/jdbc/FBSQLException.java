@@ -92,8 +92,11 @@ public class FBSQLException extends SQLException {
                 
         } else
             original = ex;
-            
-        message = "Resource Exception. " + ex.getMessage();
+
+        if (original instanceof GDSException)
+            message = "GDS Exception. "+ ((GDSException)original).getIntParam() + ". " + ex.getMessage();
+        else
+            message = "Resource Exception. " + ex.getMessage();
     }
     
     public FBSQLException(String message) {

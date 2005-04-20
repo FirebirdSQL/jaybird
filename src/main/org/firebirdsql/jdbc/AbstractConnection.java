@@ -152,15 +152,19 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception GDSException if handle needed to be created and creation failed
      */
     public IscDbHandle getIscDBHandle() throws GDSException {
-        return mc.getGDSHelper().getIscDBHandle();
+        return getGDSHelper().getIscDBHandle();
     }
 
     /**
      * Get Firebird API handler (sockets/native/embeded/etc)
      * @return handler object for internal API calls
      */
-    public GDS getInternalAPIHandler() {
-        return mc.getGDSHelper().getInternalAPIHandler();
+    public GDS getInternalAPIHandler() throws SQLException {
+        try {
+            return getGDSHelper().getInternalAPIHandler();
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
+        }
     }
     
     /**
@@ -440,6 +444,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public synchronized void close() throws SQLException {
         try {
+        try {
             freeStatements();
         } finally {
             
@@ -464,6 +469,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 }
                 mc = null;
             }
+        }
+        } catch(ResourceException ex) {
+            throw new FBSQLException(ex);
         }
     }
 
@@ -832,22 +840,25 @@ public abstract class AbstractConnection implements FirebirdConnection {
     /**
      * Check if this connection is currently involved in a transaction
      */
-    public boolean inTransaction() {
-        return mc.getGDSHelper().inTransaction();
+    public boolean inTransaction() throws SQLException {
+        try {
+            return getGDSHelper().inTransaction();
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
+        }
     }
-
-    String getUserName() {
-        return mc.getGDSHelper().getUserName();
-    }
-
    
     /**
      * Get the encoding that is being used for this connection.
      *
      * @return The name of the encoding used
      */
-    public String getIscEncoding() {
-        return mc.getGDSHelper().getIscEncoding();
+    public String getIscEncoding() throws SQLException {
+        try {
+            return getGDSHelper().getIscEncoding();
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
+        }
     }
 
 	 protected synchronized void addWarning(SQLWarning warning){
@@ -868,42 +879,44 @@ public abstract class AbstractConnection implements FirebirdConnection {
       * @return instance of {@link SQLWarning} that is the first warning in 
       * a linked list of warnings.
       */
-     private SQLWarning getIscWarnings() {
-         SQLWarning firstWarning = null;
-         SQLWarning lastWarning = null;
-         Iterator iter = mc.getGDSHelper().getWarnings().iterator();
-         while (iter.hasNext()) {
-             GDSException item = (GDSException)iter.next();
-             
-             FBSQLWarning warning = new FBSQLWarning(item);
-             if (firstWarning == null) {
-                 firstWarning = warning;
-                 lastWarning = firstWarning;
-             } else {
-                lastWarning.setNextWarning(warning);
-                lastWarning = warning;
+     private SQLWarning getIscWarnings() throws SQLException {
+         try {
+             SQLWarning firstWarning = null;
+             SQLWarning lastWarning = null;
+             Iterator iter = getGDSHelper().getWarnings().iterator();
+             while (iter.hasNext()) {
+                 GDSException item = (GDSException)iter.next();
+                 
+                 FBSQLWarning warning = new FBSQLWarning(item);
+                 if (firstWarning == null) {
+                     firstWarning = warning;
+                     lastWarning = firstWarning;
+                 } else {
+                    lastWarning.setNextWarning(warning);
+                    lastWarning = warning;
+                 }
              }
+             return firstWarning;
+         } catch(GDSException ex) {
+             throw new FBSQLException(ex);
          }
-         return firstWarning;
      }
      
      /**
       * Clear warnings associated with this database connection.
       */
-     private void clearIscWarnings() {
-         mc.getGDSHelper().clearWarnings();
+     private void clearIscWarnings() throws SQLException {
+         try {
+             getGDSHelper().clearWarnings();
+         } catch(GDSException ex) {
+             throw new FBSQLException(ex);
+         }
      }
 	 
-	 //******** Proxies of ManagedConnection methods for jdbc methods
-     
-    private void checkManagedConnection() throws GDSException {
+    public GDSHelper getGDSHelper() throws GDSException {
         if (mc == null)
             throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_req_no_trans);
-    }
-	 
-    public GDSHelper getGDSHelper() throws GDSException {
-        checkManagedConnection();
-        
+
         return mc.getGDSHelper();
     }
     
