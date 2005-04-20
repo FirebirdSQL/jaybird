@@ -701,6 +701,9 @@ public class GDS_Impl extends AbstractGDS implements GDS {
             native_isc_dsql_execute2(tr_handle, stmt_handle, da_version,
                 in_xsqlda, out_xsqlda); /* @todo Fetch Statements */
 
+            if (stmt.getOutSqlda() != null)
+                stmt.notifyOpenResultSet();
+            
             if (out_xsqlda != null) {
                 //this would be an Execute procedure
                 stmt.ensureCapacity(1);
