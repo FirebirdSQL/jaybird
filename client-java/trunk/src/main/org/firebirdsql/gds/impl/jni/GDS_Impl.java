@@ -59,7 +59,7 @@ public class GDS_Impl extends AbstractGDS implements GDS {
                 log.info("Attempting to loadLibrary for \"" + "jaybird" + "\"");
 
         try {
-            System.loadLibrary("jaybird");
+            System.loadLibrary("jaybird2");
         } catch (SecurityException ex) {
             if (logging)
                     log

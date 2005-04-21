@@ -90,7 +90,7 @@
         	Name of the output library. On Windows this will be 
         	resolved to jaybird.dll, on Linux it will be libjaybird.so
         -->
-        <property name="build.native.name" value="jaybird"/>
+        <property name="build.native.name" value="jaybird2"/>
 
         <!--  -->
         <property name="source.native" value="${module.source}/native/jaygds/source"/>
@@ -463,7 +463,7 @@
             optimize="full"
             link="shared"
             objdir="${build.native.output}"
-            outfile="${build.native.output}/jaybird"
+            outfile="${build.native.output}/${build.native.name}"
             multithreaded="true"
             exceptions="true">
 
