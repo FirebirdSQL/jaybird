@@ -144,4 +144,28 @@ public class TestFBConnection extends FBTestBase {
     }
     
 
+    public void testStatementCompletion() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        try {
+            connection.setAutoCommit(false);
+            Statement stmt = connection.createStatement();
+            try {
+                stmt.executeQuery("SELECT * FROM rdb$database");
+                connection.rollback();
+                connection.setAutoCommit(true);
+            } finally {
+                stmt.close();
+            }
+            
+            stmt = connection.createStatement();
+            try {
+                stmt.executeQuery("SELECT * FROM rdb$database");
+                stmt.executeQuery("SELECT * FROM rdb$database");
+            } finally {
+                stmt.close();
+            }
+        } finally {
+            connection.close();
+        }
+    }
 }
