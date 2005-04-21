@@ -1,3 +1,22 @@
+2005-04-20 14:42  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jdbc/AbstractCallableStatement.java, jdbc/AbstractConnection.java,
+	jdbc/AbstractPreparedStatement.java, jdbc/AbstractStatement.java,
+	jdbc/FBSQLException.java, jdbc/FirebirdConnection.java,
+	jdbc/InternalTransactionCoordinator.java,
+	jca/FBLocalTransaction.java, jca/FBManagedConnection.java,
+	jca/FBManagedConnectionMetaData.java:
+	
+	fixed synchronization issues in auto-commit mode
+
+2005-04-20 14:24  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/:
+	jni/GDS_Impl.java, wire/GDS_Impl.java:
+	
+	added notification for an open result set for SELECT statements
+
 2005-04-19 17:28  rrokytskyy
 
 	*
