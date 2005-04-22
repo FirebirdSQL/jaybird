@@ -1,3 +1,16 @@
+2005-04-21 12:48  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/jni/GDS_Impl.java:
+	
+	changed library name to jaybird2
+
+2005-04-21 12:46  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBConnection.java:
+	
+	added test case to check subsequent query execution without calling
+	result set
+
 2005-04-20 14:42  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/:
