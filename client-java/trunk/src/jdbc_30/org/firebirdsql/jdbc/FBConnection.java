@@ -233,7 +233,7 @@ public class FBConnection extends AbstractConnection {
         try {
             txCoordinator.ensureTransaction();
             
-            mc.getGDSHelper().executeImmediate("SAVEPOINT " + savepoint.getServerSavepointId());
+            getGDSHelper().executeImmediate("SAVEPOINT " + savepoint.getServerSavepointId());
         } catch(GDSException ex) {
             throw new FBSQLException(ex);
         }
@@ -288,7 +288,7 @@ public class FBConnection extends AbstractConnection {
             throw new SQLException("Savepoint is no longer valid.");
         
         try {
-            mc.getGDSHelper().executeImmediate(
+            getGDSHelper().executeImmediate(
                     "ROLLBACK TO " + fbSavepoint.getServerSavepointId());
         } catch (GDSException ex) {
             throw new FBSQLException(ex);
@@ -321,7 +321,7 @@ public class FBConnection extends AbstractConnection {
             throw new SQLException("Savepoint is no longer valid.");
 
         try {
-            mc.getGDSHelper().executeImmediate(
+            getGDSHelper().executeImmediate(
                     "RELEASE SAVEPOINT " + fbSavepoint.getServerSavepointId() + " ONLY");
         } catch (GDSException ex) {
             throw new FBSQLException(ex);
