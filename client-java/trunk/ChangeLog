@@ -39,11 +39,11 @@
 2005-04-19 17:28  rrokytskyy
 
 	*
+	client-java/src/main/org/firebirdsql/jdbc/InternalTransactionCoordi
+	nator.java:
 	
 	enabled testing for existing transaction before commit/rollback
 	(was disabled for debug purposes)
-	client-java/src/main/org/firebirdsql/jdbc/InternalTransactionCoordi
-	nator.java:
 
 2005-04-19 17:27  rrokytskyy
 
@@ -125,8 +125,6 @@
 	main/org/firebirdsql/gds/impl/jni/ParameterBufferBase.java,
 	main/org/firebirdsql/gds/impl/jni/ServiceParameterBufferImp.java,
 	main/org/firebirdsql/gds/impl/jni/ServiceRequestBufferImp.java,
-	
-	moved wire and jni implementations into new packages
 	main/org/firebirdsql/gds/impl/jni/TransactionParameterBufferImpl.ja
 	va, main/org/firebirdsql/gds/impl/jni/XSQLDAImpl.java,
 	main/org/firebirdsql/gds/impl/jni/XSQLVARBigEndianImpl.java,
@@ -195,6 +193,8 @@
 	test/org/firebirdsql/ngds/TestSpecialEmbeddedServerUrls.java,
 	test/org/firebirdsql/jgds/TestGds.java,
 	test/org/firebirdsql/jgds/TestGdsAttach.java:
+	
+	moved wire and jni implementations into new packages
 
 2005-04-16 13:26  rrokytskyy
 
@@ -365,9 +365,6 @@
 	src/main/org/firebirdsql/management/FBServiceManager.java,
 	src/main/org/firebirdsql/management/FBStatisticsManager.java,
 	src/main/org/firebirdsql/management/FBUserManager.java,
-	
-	introduced TransactionParameterBuffer, refactored related code,
-	extracted GDS implementation into separate package.
 	src/pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.ja
 	va, src/test/org/firebirdsql/management/TestBackupManager.java,
 	src/test/org/firebirdsql/management/TestFBMaintenanceManager.java,
@@ -382,6 +379,9 @@
 	src/test/org/firebirdsql/common/SimpleFBTestBase.java,
 	src/main/org/firebirdsql/logging/LoggerFactory.java,
 	src/main/org/firebirdsql/ngds/GDS_Impl.java:
+	
+	introduced TransactionParameterBuffer, refactored related code,
+	extracted GDS implementation into separate package.
 
 2005-04-15 23:29  rrokytskyy
 
@@ -392,10 +392,10 @@
 2005-04-15 23:20  rrokytskyy
 
 	*
-	
-	fixed the unknown gds type
 	client-java/src/test/org/firebirdsql/management/TestFBMaintenanceMa
 	nager.java:
+	
+	fixed the unknown gds type
 
 2005-04-15 14:52  rrokytskyy
 
@@ -406,10 +406,10 @@
 2005-04-15 14:51  rrokytskyy
 
 	*
-	
-	fixed incorrect statement notification
 	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
 	.java:
+	
+	fixed incorrect statement notification
 
 2005-04-15 13:56  rrokytskyy
 
@@ -525,10 +525,10 @@
 2005-03-30 22:47  gab_reid
 
 	*
-	
-	Added missing isc_info_end to request buffer
 	client-java/src/main/org/firebirdsql/jdbc/FirebirdStatementInfoFact
 	ory.java:
+	
+	Added missing isc_info_end to request buffer
 
 2005-03-10 00:36  rrokytskyy
 
@@ -572,10 +572,10 @@
 2005-02-27 19:14  gab_reid
 
 	*
-	
-	Initial revision
 	client-java/src/test/org/firebirdsql/jdbc/TestStatementInfoFactory.
 	java:
+	
+	Initial revision
 
 2005-02-27 19:13  gab_reid
 
@@ -615,10 +615,10 @@
 2005-02-22 08:08  rrokytskyy
 
 	*
-	
-	removed unneeded line of code
 	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
 	.java:
+	
+	removed unneeded line of code
 
 2005-02-14 23:10  rrokytskyy
 
@@ -638,18 +638,18 @@
 2005-02-14 22:57  rrokytskyy
 
 	*
-	
-	removed methods that should not be visible to public
 	client-java/src/main/org/firebirdsql/management/ServiceManager.java
 	:
+	
+	removed methods that should not be visible to public
 
 2005-02-13 12:38  rrokytskyy
 
 	*
-	
-	added main method to run JDBC CTS without Ant
 	client-java/src/jdbccts/org/firebirdsql/jdbc/cts/FirebirdSuite.java
 	:
+	
+	added main method to run JDBC CTS without Ant
 
 2005-02-13 11:52  rrokytskyy
 
@@ -708,11 +708,11 @@
 2005-01-17 11:08  gab_reid
 
 	*
+	client-java/src/test/org/firebirdsql/management/TestFBMaintenanceMa
+	nager.java:
 	
 	Updated to reflect interface changes for handling limbo
 	transactions
-	client-java/src/test/org/firebirdsql/management/TestFBMaintenanceMa
-	nager.java:
 
 2005-01-17 11:07  gab_reid
 
@@ -725,83 +725,83 @@
 2005-01-10 11:09  gab_reid
 
 	*
+	client-java/src/test/org/firebirdsql/management/TestFBMaintenanceMa
+	nager.java:
 	
 	- Changed to use the correct GDS implemenation, based on the test
 	environment variables
 	
 	- Added basic running of new transaction-management methods
-	client-java/src/test/org/firebirdsql/management/TestFBMaintenanceMa
-	nager.java:
 
 2005-01-10 11:07  gab_reid
 
 	*
-	
-	Use whatever GDS implementation that the tests are using
 	client-java/src/test/org/firebirdsql/management/TestUserManager.jav
 	a:
+	
+	Use whatever GDS implementation that the tests are using
 
 2005-01-10 11:05  gab_reid
 
 	*
+	client-java/src/test/org/firebirdsql/management/TestFBStatisticsMan
+	ager.java:
 	
 	Changed to use whatever GDS implementation is being used by the
 	tests
-	client-java/src/test/org/firebirdsql/management/TestFBStatisticsMan
-	ager.java:
 
 2005-01-10 11:04  gab_reid
 
 	*
+	client-java/src/test/org/firebirdsql/management/TestBackupManager.j
+	ava:
 	
 	Cleanup, and added some tests to reflect changes in the
 	BackupManager interface
-	client-java/src/test/org/firebirdsql/management/TestBackupManager.j
-	ava:
 
 2005-01-10 11:02  gab_reid
 
 	*
-	
-	Updated to reflect refactoring of FBServiceManager
 	client-java/src/main/org/firebirdsql/management/FBStatisticsManager
 	.java:
+	
+	Updated to reflect refactoring of FBServiceManager
 
 2005-01-10 11:01  gab_reid
 
 	*
+	client-java/src/main/org/firebirdsql/management/FBServiceManager.ja
+	va:
 	
 	Moved common functionality of creating a ServiceRequestBuffer and
 	executing service operations into this base class
-	client-java/src/main/org/firebirdsql/management/FBServiceManager.ja
-	va:
 
 2005-01-10 11:00  gab_reid
 
 	*
+	client-java/src/main/org/firebirdsql/management/FBMaintenanceManage
+	r.java:
 	
 	- Updated to reflect refactoring of the ServiceManager hierarchy
 	
 	- Added empty implementations of transaction-handling methods
-	client-java/src/main/org/firebirdsql/management/FBMaintenanceManage
-	r.java:
 
 2005-01-10 10:58  gab_reid
 
 	*
-	
-	Added transaction management methods
 	client-java/src/main/org/firebirdsql/management/MaintenanceManager.
 	java:
+	
+	Added transaction management methods
 
 2005-01-10 10:57  gab_reid
 
 	*
+	client-java/src/main/org/firebirdsql/management/FBBackupManager.jav
+	a:
 	
 	Updated to reflect the refactoring changes in the BackupManager
 	interface
-	client-java/src/main/org/firebirdsql/management/FBBackupManager.jav
-	a:
 
 2005-01-10 10:56  gab_reid
 
@@ -940,18 +940,18 @@
 2004-12-14 13:00  rrokytskyy
 
 	*
-	
-	added test case that reproduces a bug in escaped parser
 	client-java/src/test/org/firebirdsql/jdbc/TestFBCallableStatement.j
 	ava:
+	
+	added test case that reproduces a bug in escaped parser
 
 2004-12-13 22:41  sjardine
 
 	*
-	
-	Changed tests to use PURE_JAVA.
 	client-java/src/test/org/firebirdsql/management/TestUserManager.jav
 	a:
+	
+	Changed tests to use PURE_JAVA.
 
 2004-12-12 17:43  rrokytskyy
 
@@ -1031,10 +1031,10 @@
 2004-12-07 22:11  rrokytskyy
 
 	*
-	
-	fixed the serialization issue
 	client-java/src/main/org/firebirdsql/gds/GDSSynchronizationPolicy.j
 	ava:
+	
+	fixed the serialization issue
 
 2004-12-07 08:18  rrokytskyy
 
@@ -1067,10 +1067,10 @@
 2004-12-05 21:30  rrokytskyy
 
 	*
-	
-	fixed javadoc
 	client-java/src/main/org/firebirdsql/jdbc/FirebirdCallableStatement
 	.java:
+	
+	fixed javadoc
 
 2004-12-05 21:28  rrokytskyy
 
@@ -1113,10 +1113,10 @@
 2004-12-05 10:50  rrokytskyy
 
 	*
-	
-	disabled testSqlRole
 	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
 	ource.java:
+	
+	disabled testSqlRole
 
 2004-12-04 23:36  rrokytskyy
 
@@ -1140,12 +1140,12 @@
 	jdk1_4/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
 	jdk1_5/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
 	jdk1_5/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
-	
-	Steven Jardine: refactoring to support jdk 1.5
 	pool/org/firebirdsql/pool/AbstractDriverConnectionPoolDataSource.ja
 	va,
 	pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.java,
 	pool/org/firebirdsql/pool/BasicAbstractConnectionPool.java:
+	
+	Steven Jardine: refactoring to support jdk 1.5
 
 2004-11-25 00:43  rrokytskyy
 
@@ -1157,19 +1157,19 @@
 2004-11-25 00:33  rrokytskyy
 
 	*
-	
-	fixed the bug with path
 	client-java/src/test/org/firebirdsql/ngds/TestJaybirdBlobBackupProb
 	lem.java:
+	
+	fixed the bug with path
 
 2004-11-25 00:32  rrokytskyy
 
 	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
+	ava:
 	
 	added some try/finally blocks and fixed the max length of the
 	timestamp string
-	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
-	ava:
 
 2004-11-25 00:30  rrokytskyy
 
@@ -1181,10 +1181,10 @@
 2004-11-24 22:04  rrokytskyy
 
 	*
-	
-	added setBlob() method
 	client-java/src/main/org/firebirdsql/jdbc/field/FBLongVarCharField.
 	java:
+	
+	added setBlob() method
 
 2004-11-24 21:50  rrokytskyy
 
@@ -1250,10 +1250,10 @@
 2004-10-29 23:49  rrokytskyy
 
 	*
-	
-	fixed almost nedless loop if testUser is not defined
 	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
 	ource.java:
+	
+	fixed almost nedless loop if testUser is not defined
 
 2004-10-28 01:35  rrokytskyy
 
@@ -1279,10 +1279,10 @@
 2004-10-24 21:51  rrokytskyy
 
 	*
-	
-	fixed testUnrecognizedTransaction, but disabled for now
 	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
 	ava:
+	
+	fixed testUnrecognizedTransaction, but disabled for now
 
 2004-10-24 18:07  rrokytskyy
 
@@ -1307,10 +1307,10 @@
 2004-10-24 17:46  rrokytskyy
 
 	*
-	
-	added keepStatements parameter
 	client-java/src/pool/org/firebirdsql/pool/FBWrappingDataSource.java
 	:
+	
+	added keepStatements parameter
 
 2004-10-24 16:52  rrokytskyy
 
@@ -1323,10 +1323,10 @@
 2004-10-24 00:11  rrokytskyy
 
 	*
-	
-	added test case for unrecognized tr handle
 	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
 	ava:
+	
+	added test case for unrecognized tr handle
 
 2004-10-23 23:30  rrokytskyy
 
@@ -1341,11 +1341,11 @@
 2004-10-23 13:21  rrokytskyy
 
 	*
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
+	.java:
 	
 	fixed an issue with local encodings when connection is obtained via
 	JCA framework
-	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
-	.java:
 
 2004-10-23 13:12  rrokytskyy
 
@@ -1404,18 +1404,18 @@
 2004-10-14 00:21  rrokytskyy
 
 	*
-	
-	fixed a bug with personalized connections in pool
 	client-java/src/pool/org/firebirdsql/pool/FBConnectionPoolDataSourc
 	e.java:
+	
+	fixed a bug with personalized connections in pool
 
 2004-10-14 00:11  rrokytskyy
 
 	*
-	
-	fixed the ClassCastException because of incorrect configuration
 	client-java/src/test/org/firebirdsql/pool/TestDriverConnectionPoolD
 	ataSource.java:
+	
+	fixed the ClassCastException because of incorrect configuration
 
 2004-10-13 23:59  rrokytskyy
 
@@ -1429,10 +1429,10 @@
 2004-10-13 23:36  rrokytskyy
 
 	*
-	
-	fixed ArrayIndexOutOfBoundsException
 	client-java/src/main/org/firebirdsql/ngds/XSQLVARBigEndianImpl.java
 	:
+	
+	fixed ArrayIndexOutOfBoundsException
 
 2004-10-11 23:03  rrokytskyy
 
@@ -1454,10 +1454,10 @@
 2004-10-11 08:42  rrokytskyy
 
 	*
-	
-	removed unused import
 	client-java/src/main/org/firebirdsql/gds/GDSSynchronizationPolicy.j
 	ava:
+	
+	removed unused import
 
 2004-10-11 08:41  rrokytskyy
 
@@ -1559,10 +1559,10 @@
 2004-10-10 13:01  rrokytskyy
 
 	*
-	
-	added support for character translation to character streams
 	client-java/src/test/org/firebirdsql/jdbc/TestFBLongVarCharEncoding
 	s.java:
+	
+	added support for character translation to character streams
 
 2004-10-10 12:58  rrokytskyy
 
@@ -1609,10 +1609,10 @@
 2004-10-09 00:43  rrokytskyy
 
 	*
-	
-	removed unused code and added LGPL license
 	client-java/src/main/org/firebirdsql/encodings/CharacterTranslator.
 	java:
+	
+	removed unused code and added LGPL license
 
 2004-10-09 00:41  rrokytskyy
 
@@ -1623,10 +1623,10 @@
 2004-10-09 00:41  rrokytskyy
 
 	*
-	
-	removed a test case that is not defined for this type of pool
 	client-java/src/test/org/firebirdsql/pool/TestDriverConnectionPoolD
 	ataSource.java:
+	
+	removed a test case that is not defined for this type of pool
 
 2004-10-09 00:39  rrokytskyy
 
@@ -1722,10 +1722,10 @@
 2004-10-03 22:53  rrokytskyy
 
 	*
-	
-	fixed incorrect interface querying when constructing dynamic proxy
 	client-java/src/main/org/firebirdsql/gds/GDSSynchronizationPolicy.j
 	ava:
+	
+	fixed incorrect interface querying when constructing dynamic proxy
 
 2004-10-03 22:51  rrokytskyy
 
@@ -1985,26 +1985,26 @@
 2004-09-09 17:25  rrokytskyy
 
 	*
-	
-	fixed NPE
 	client-java/src/pool/org/firebirdsql/pool/PingablePooledConnection.
 	java:
+	
+	fixed NPE
 
 2004-08-29 18:03  rrokytskyy
 
 	*
-	
-	added workaround for JDK 1.3
 	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
 	ava:
+	
+	added workaround for JDK 1.3
 
 2004-08-29 17:31  rrokytskyy
 
 	*
-	
-	fixed JDK 1.3 compatibility issue and added assertions
 	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
 	ava:
+	
+	fixed JDK 1.3 compatibility issue and added assertions
 
 2004-08-29 17:06  rrokytskyy
 
@@ -2023,10 +2023,10 @@
 2004-08-26 19:41  rrokytskyy
 
 	*
-	
-	fixed possible concurrent modification exception
 	client-java/src/pool/org/firebirdsql/pool/PingablePooledConnection.
 	java:
+	
+	fixed possible concurrent modification exception
 
 2004-08-25 22:38  rrokytskyy
 
@@ -2049,18 +2049,18 @@
 2004-08-25 00:15  rrokytskyy
 
 	*
-	
-	fixed division by 0 error
 	client-java/src/pool/org/firebirdsql/pool/PooledConnectionQueue.jav
 	a:
+	
+	fixed division by 0 error
 
 2004-08-24 23:52  rrokytskyy
 
 	*
-	
-	renamed to FirebirdPool
 	client-java/src/pool/org/firebirdsql/pool/FirebirdPoolConfiguration
 	.java:
+	
+	renamed to FirebirdPool
 
 2004-08-24 23:51  rrokytskyy
 
@@ -2122,10 +2122,10 @@
 2004-08-15 13:58  rrokytskyy
 
 	*
-	
-	removed statement cache cleanup on close
 	client-java/src/pool/org/firebirdsql/pool/PingablePooledConnection.
 	java:
+	
+	removed statement cache cleanup on close
 
 2004-08-15 12:58  rrokytskyy
 
@@ -2188,10 +2188,10 @@
 2004-08-13 22:11  rrokytskyy
 
 	*
-	
-	fixed possible NPE
 	client-java/src/main/org/firebirdsql/jdbc/field/FBBigDecimalField.j
 	ava:
+	
+	fixed possible NPE
 
 2004-08-13 22:09  rrokytskyy
 
@@ -2205,10 +2205,10 @@
 2004-08-13 22:08  rrokytskyy
 
 	*
-	
-	code cleanup
 	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
 	.java:
+	
+	code cleanup
 
 2004-08-13 22:07  rrokytskyy
 
@@ -2222,10 +2222,10 @@
 2004-07-31 19:25  rrokytskyy
 
 	*
-	
-	added test to check if {?= call ...} is correctly parsed
 	client-java/src/test/org/firebirdsql/jdbc/TestFBEscapedCallParser.j
 	ava:
+	
+	added test to check if {?= call ...} is correctly parsed
 
 2004-07-27 11:45  rrokytskyy
 
@@ -2259,10 +2259,10 @@
 2004-07-23 12:14  rrokytskyy
 
 	*
-	
-	deprecated batch updates until they are correctly implemented
 	client-java/src/main/org/firebirdsql/jdbc/AbstractCallableStatement
 	.java:
+	
+	deprecated batch updates until they are correctly implemented
 
 2004-07-22 19:32  rrokytskyy
 
@@ -2317,18 +2317,18 @@
 2004-07-18 11:26  rrokytskyy
 
 	*
-	
-	applied fixes re. data type handling
 	client-java/src/jdbc_30/org/firebirdsql/jdbc/FBParameterMetaData.ja
 	va:
+	
+	applied fixes re. data type handling
 
 2004-07-18 11:26  rrokytskyy
 
 	*
-	
-	fixed NPE
 	client-java/src/jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.ja
 	va:
+	
+	fixed NPE
 
 2004-07-18 11:24  rrokytskyy
 
@@ -2350,26 +2350,26 @@
 2004-07-18 10:52  rrokytskyy
 
 	*
-	
-	added debug method to print row (in release version not used)
 	client-java/src/main/org/firebirdsql/jgds/isc_stmt_handle_impl.java
 	:
+	
+	added debug method to print row (in release version not used)
 
 2004-07-18 10:50  rrokytskyy
 
 	*
-	
-	added catalogs and schema test
 	client-java/src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.jav
 	a:
+	
+	added catalogs and schema test
 
 2004-07-18 10:47  rrokytskyy
 
 	*
-	
-	initial revision
 	client-java/src/test/org/firebirdsql/jdbc/TestMultithreadedAccess.j
 	ava:
+	
+	initial revision
 
 2004-07-18 10:44  rrokytskyy
 
@@ -2439,18 +2439,18 @@
 2004-07-13 10:53  rrokytskyy
 
 	*
-	
-	fixed possible multithreading issue, thanks to J.A.C.K.
 	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
 	.java:
+	
+	fixed possible multithreading issue, thanks to J.A.C.K.
 
 2004-07-13 10:37  rrokytskyy
 
 	*
-	
-	code reformatting
 	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
 	.java:
+	
+	code reformatting
 
 2004-07-13 10:12  rrokytskyy
 
@@ -2510,11 +2510,11 @@
 2004-06-01 13:24  ryanbaldwin
 
 	*
+	client-java/src/pool/org/firebirdsql/pool/XPreparedStatementCache.j
+	ava:
 	
 	Fixed bug in error reporting which causes a null pointer exception
 	and hides actual exception.
-	client-java/src/pool/org/firebirdsql/pool/XPreparedStatementCache.j
-	ava:
 
 2004-05-29 22:10  rrokytskyy
 
@@ -2550,10 +2550,10 @@
 2004-05-29 00:58  rrokytskyy
 
 	*
-	
-	exported few properties, updated javadoc
 	client-java/src/pool/org/firebirdsql/pool/FBWrappingDataSource.java
 	:
+	
+	exported few properties, updated javadoc
 
 2004-05-27 23:51  rrokytskyy
 
@@ -2572,10 +2572,10 @@
 2004-05-20 14:15  rrokytskyy
 
 	*
-	
-	testPadding() is not relevant here
 	client-java/src/test/org/firebirdsql/jdbc/TestFBLongVarCharEncoding
 	s.java:
+	
+	testPadding() is not relevant here
 
 2004-05-20 14:14  rrokytskyy
 
@@ -2586,11 +2586,11 @@
 2004-05-20 14:13  rrokytskyy
 
 	*
+	client-java/src/main/org/firebirdsql/jdbc/field/FBWorkaroundStringF
+	ield.java:
 	
 	fixed possible div by zero (does not happen in reality, but in
 	syntetic tests is possible)
-	client-java/src/main/org/firebirdsql/jdbc/field/FBWorkaroundStringF
-	ield.java:
 
 2004-05-20 13:59  rrokytskyy
 
@@ -2615,10 +2615,10 @@
 2004-05-18 20:05  rrokytskyy
 
 	*
-	
-	added synchronization for embedded server on non-windows systems
 	client-java/src/main/org/firebirdsql/gds/GDSSynchronizationPolicy.j
 	ava:
+	
+	added synchronization for embedded server on non-windows systems
 
 2004-05-18 20:04  rrokytskyy
 
@@ -2632,11 +2632,11 @@
 2004-05-18 20:02  rrokytskyy
 
 	*
+	client-java/src/main/org/firebirdsql/jdbc/field/FBWorkaroundStringF
+	ield.java:
 	
 	fixed issue with incorrect padding of the multibyte char fields in
 	the server
-	client-java/src/main/org/firebirdsql/jdbc/field/FBWorkaroundStringF
-	ield.java:
 
 2004-05-18 19:59  rrokytskyy
 
@@ -2727,10 +2727,10 @@
 2004-04-26 23:07  rrokytskyy
 
 	*
-	
-	added test for long parameters
 	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
 	ava:
+	
+	added test for long parameters
 
 2004-04-25 17:18  rrokytskyy
 
@@ -2742,35 +2742,35 @@
 2004-04-22 21:53  rrokytskyy
 
 	*
-	
-	added test case for NPE in clearParameters()
 	client-java/src/test/org/firebirdsql/jdbc/TestFBCallableStatement.j
 	ava:
+	
+	added test case for NPE in clearParameters()
 
 2004-04-22 19:44  rrokytskyy
 
 	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
+	.java:
 	
 	fixed NPE when CallableStatemnt.clearParameters() was called right
 	after prepareCall()
-	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
-	.java:
 
 2004-04-21 21:52  rrokytskyy
 
 	*
-	
-	added test on null value
 	client-java/src/test/org/firebirdsql/jdbc/field/TestFBStringField.j
 	ava:
+	
+	added test on null value
 
 2004-04-21 20:57  rrokytskyy
 
 	*
-	
-	fixed NPE
 	client-java/src/main/org/firebirdsql/jdbc/field/FBWorkaroundStringF
 	ield.java:
+	
+	fixed NPE
 
 2004-04-19 00:40  rrokytskyy
 
@@ -2827,18 +2827,18 @@
 2004-04-17 23:08  rrokytskyy
 
 	*
-	
-	updated to reflect changes in FBWrappingDataSource class
 	client-java/src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.
 	java:
+	
+	updated to reflect changes in FBWrappingDataSource class
 
 2004-04-17 23:07  rrokytskyy
 
 	*
-	
-	added to make driver compatible with 1.0.1
 	client-java/src/compatibility/org/firebirdsql/jdbc/FBWrappingDataSo
 	urce.java:
+	
+	added to make driver compatible with 1.0.1
 
 2004-04-17 23:03  rrokytskyy
 
@@ -2853,10 +2853,10 @@
 2004-04-17 14:59  rrokytskyy
 
 	*
-	
-	added test for "operation was cancelled"
 	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
 	ava:
+	
+	added test for "operation was cancelled"
 
 2004-04-17 14:58  rrokytskyy
 
@@ -2930,10 +2930,10 @@
 2004-03-23 22:51  rrokytskyy
 
 	*
-	
-	added check of connection state
 	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
 	ource.java:
+	
+	added check of connection state
 
 2004-03-18 16:48  rrokytskyy
 
@@ -2973,11 +2973,11 @@
 2004-03-17 23:13  rrokytskyy
 
 	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.
+	java:
 	
 	added test to check obtaining connection with the specified
 	credentials
-	client-java/src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.
-	java:
 
 2004-03-17 23:11  rrokytskyy
 
@@ -3151,18 +3151,18 @@
 2003-12-30 15:43  rrokytskyy
 
 	*
-	
-	added callable statement tests
 	client-java/src/jdbccts/org/firebirdsql/jdbc/cts/FirebirdSuite.java
 	:
+	
+	added callable statement tests
 
 2003-12-30 14:47  rrokytskyy
 
 	*
-	
-	fixed deviation from JDBC spec
 	client-java/src/test/org/firebirdsql/jdbc/field/TestFBShortField.ja
 	va:
+	
+	fixed deviation from JDBC spec
 
 2003-12-30 01:05  rrokytskyy
 
@@ -3196,10 +3196,10 @@
 2003-12-28 00:55  rrokytskyy
 
 	*
-	
-	added JDBC 2.0 method
 	client-java/src/jdbc_20/org/firebirdsql/jdbc/FBCallableStatement.ja
 	va:
+	
+	added JDBC 2.0 method
 
 2003-12-28 00:50  rrokytskyy
 
@@ -3243,10 +3243,10 @@
 2003-12-19 09:08  rrokytskyy
 
 	*
-	
-	modified parser to accept function calls inside procedure params
 	client-java/src/test/org/firebirdsql/jdbc/TestFBEscapedCallParser.j
 	ava:
+	
+	modified parser to accept function calls inside procedure params
 
 2003-12-19 09:05  rrokytskyy
 
@@ -3292,10 +3292,10 @@
 2003-12-11 18:28  rrokytskyy
 
 	*
-	
-	fixed incorrect setup method
 	client-java/src/test/org/firebirdsql/jdbc/TestFBEscapedCallParser.j
 	ava:
+	
+	fixed incorrect setup method
 
 2003-12-11 18:27  rrokytskyy
 
@@ -3307,10 +3307,10 @@
 2003-12-11 16:13  rrokytskyy
 
 	*
-	
-	added test for escaped call parser
 	client-java/src/test/org/firebirdsql/jdbc/TestFBEscapedCallParser.j
 	ava:
+	
+	added test for escaped call parser
 
 2003-12-11 16:13  rrokytskyy
 
@@ -3347,18 +3347,18 @@
 2003-12-11 13:18  rrokytskyy
 
 	*
-	
-	fixed test faliure
 	client-java/src/test/org/firebirdsql/jdbc/field/TestFBStringField.j
 	ava:
+	
+	fixed test faliure
 
 2003-12-05 15:55  rrokytskyy
 
 	*
-	
-	added test for executing procedures that return values
 	client-java/src/test/org/firebirdsql/jdbc/TestFBCallableStatement.j
 	ava:
+	
+	added test for executing procedures that return values
 
 2003-12-05 15:54  rrokytskyy
 
@@ -3500,18 +3500,18 @@
 2003-11-26 09:35  ryanbaldwin
 
 	*
-	
-	Removed duff test case that I added.
 	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
 	ource.java:
+	
+	Removed duff test case that I added.
 
 2003-11-20 20:45  rrokytskyy
 
 	*
-	
-	fixed JDBC CTS compatibility tests
 	client-java/src/test/org/firebirdsql/jdbc/field/TestFBFloatField.ja
 	va:
+	
+	fixed JDBC CTS compatibility tests
 
 2003-11-20 20:26  rrokytskyy
 
@@ -3522,11 +3522,11 @@
 2003-11-20 17:36  ryanbaldwin
 
 	*
+	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
+	ource.java:
 	
 	Added test case which demonstrates recently discovered (probable)
 	bug in pooling code.
-	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
-	ource.java:
 
 2003-11-19 20:02  rrokytskyy
 
@@ -3567,10 +3567,10 @@
 2003-11-17 21:31  rrokytskyy
 
 	*
-	
-	deprecated
 	client-java/src/test/org/firebirdsql/jca/pool/TestPoolingConnection
 	Manager.java:
+	
+	deprecated
 
 2003-11-17 21:30  rrokytskyy
 
@@ -3769,10 +3769,10 @@
 2003-11-14 18:32  rrokytskyy
 
 	*
-	
-	made a subinterface of FirebirdStatement
 	client-java/src/main/org/firebirdsql/jdbc/FirebirdPreparedStatement
 	.java:
+	
+	made a subinterface of FirebirdStatement
 
 2003-11-14 18:32  rrokytskyy
 
@@ -3802,18 +3802,18 @@
 2003-11-14 18:24  rrokytskyy
 
 	*
-	
-	initial revision
 	client-java/src/main/org/firebirdsql/jdbc/FBDriverNotCapableExcepti
 	on.java:
+	
+	initial revision
 
 2003-11-14 18:24  rrokytskyy
 
 	*
-	
-	implemented batch updates and some code cleanup
 	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
 	.java:
+	
+	implemented batch updates and some code cleanup
 
 2003-11-14 18:24  rrokytskyy
 
@@ -3891,10 +3891,10 @@
 2003-11-12 22:42  rrokytskyy
 
 	*
-	
-	fixed JDK 1.3 incompatible change
 	client-java/src/test/org/firebirdsql/ngds/TestJaybirdBlobBackupProb
 	lem.java:
+	
+	fixed JDK 1.3 incompatible change
 
 2003-11-12 22:35  rrokytskyy
 
@@ -3965,11 +3965,11 @@
 2003-11-09 15:06  ryanbaldwin
 
 	*
+	client-java/src/test/org/firebirdsql/ngds/TestJaybirdBlobBackupProb
+	lem.java:
 	
 	Added test to demonstrate possible problem backing up database
 	created using streamed blobs.
-	client-java/src/test/org/firebirdsql/ngds/TestJaybirdBlobBackupProb
-	lem.java:
 
 2003-11-09 14:09  ryanbaldwin
 
@@ -4069,26 +4069,26 @@
 2003-11-06 12:01  rrokytskyy
 
 	*
-	
-	initial revision
 	client-java/src/test/org/firebirdsql/jdbc/TestFBEscapedFunctionHelp
 	er.java:
+	
+	initial revision
 
 2003-11-06 12:00  rrokytskyy
 
 	*
-	
-	fixed incorrect parameter parsing
 	client-java/src/main/org/firebirdsql/jdbc/FBEscapedFunctionHelper.j
 	ava:
+	
+	fixed incorrect parameter parsing
 
 2003-11-05 23:13  rrokytskyy
 
 	*
-	
-	initial revision
 	client-java/src/main/org/firebirdsql/jdbc/FBEscapedFunctionHelper.j
 	ava:
+	
+	initial revision
 
 2003-11-05 16:33  rrokytskyy
 
@@ -4253,10 +4253,10 @@
 2003-10-09 15:20  rrokytskyy
 
 	*
-	
-	added check of ResultSet.getStatement() correctness
 	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
 	ource.java:
+	
+	added check of ResultSet.getStatement() correctness
 
 2003-10-09 15:19  rrokytskyy
 
@@ -4281,10 +4281,10 @@
 2003-10-04 17:48  rrokytskyy
 
 	*
-	
-	fixed memory leak
 	client-java/src/pool/org/firebirdsql/pool/XPreparedStatementCache.j
 	ava:
+	
+	fixed memory leak
 
 2003-10-04 14:16  ryanbaldwin
 
@@ -4346,11 +4346,11 @@
 2003-09-10 13:19  ryanbaldwin
 
 	*
+	client-java/src/pool/org/firebirdsql/pool/FBConnectionPoolDataSourc
+	e.java:
 	
 	Fix for ClassCastException when using driver in mode type2 or
 	embedded.
-	client-java/src/pool/org/firebirdsql/pool/FBConnectionPoolDataSourc
-	e.java:
 
 2003-09-10 13:13  ryanbaldwin
 
@@ -4421,11 +4421,11 @@
 2003-08-21 00:06  rrokytskyy
 
 	*
+	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
+	ource.java:
 	
 	significant refactoring to make connection pools consistent
 	introduced idle remover test case
-	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
-	ource.java:
 
 2003-08-21 00:04  rrokytskyy
 
@@ -4448,10 +4448,10 @@
 2003-08-21 00:02  rrokytskyy
 
 	*
-	
-	removed CVS modification log changed minimum size of connections
 	client-java/src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.
 	java:
+	
+	removed CVS modification log changed minimum size of connections
 
 2003-08-21 00:00  rrokytskyy
 
@@ -4462,10 +4462,10 @@
 2003-08-21 00:00  rrokytskyy
 
 	*
-	
-	fixed possible NPE due to changes in logging subsystem
 	client-java/src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.jav
 	a:
+	
+	fixed possible NPE due to changes in logging subsystem
 
 2003-08-20 23:59  rrokytskyy
 
@@ -4555,10 +4555,10 @@
 2003-08-19 21:26  rrokytskyy
 
 	*
-	
-	fixed compilation error
 	client-java/src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.
 	java:
+	
+	fixed compilation error
 
 2003-08-12 00:06  rrokytskyy
 
@@ -4597,10 +4597,10 @@
 2003-08-11 23:55  rrokytskyy
 
 	*
-	
-	initial revision
 	client-java/src/main/org/firebirdsql/jdbc/FBConnectionDefaults.java
 	:
+	
+	initial revision
 
 2003-08-11 23:55  rrokytskyy
 
@@ -4755,10 +4755,10 @@
 2003-07-31 23:37  rrokytskyy
 
 	*
-	
-	added test case to check NPE
 	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
 	ava:
+	
+	added test case to check NPE
 
 2003-07-31 23:35  rrokytskyy
 
@@ -5053,10 +5053,10 @@
 2003-06-27 09:00  rrokytskyy
 
 	*
-	
-	extracted from AbstractConnectionPoolDataSource
 	client-java/src/pool/org/firebirdsql/pool/PooledConnectionQueue.jav
 	a:
+	
+	extracted from AbstractConnectionPoolDataSource
 
 2003-06-25 02:11  ryanbaldwin
 
@@ -5456,10 +5456,10 @@
 2003-05-09 11:59  rrokytskyy
 
 	*
-	
-	initial revision
 	client-java/src/pool/org/firebirdsql/pool/GenericConnectionPoolConf
 	iguration.java:
+	
+	initial revision
 
 2003-05-06 18:31  rrokytskyy
 
@@ -5471,10 +5471,10 @@
 2003-05-04 23:55  rrokytskyy
 
 	*
-	
-	fixed incorrect logging when pool was empty
 	client-java/src/pool/org/firebirdsql/pool/AbstractConnectionPoolDat
 	aSource.java:
+	
+	fixed incorrect logging when pool was empty
 
 2003-05-04 18:35  rrokytskyy
 
@@ -5487,10 +5487,10 @@
 2003-05-04 18:33  rrokytskyy
 
 	*
-	
-	organized imports and removed redundand "implements" interfaces
 	client-java/src/main/org/firebirdsql/jdbc/FBWrappingDataSource.java
 	:
+	
+	organized imports and removed redundand "implements" interfaces
 
 2003-05-04 18:31  rrokytskyy
 
@@ -5521,18 +5521,18 @@
 2003-05-04 18:27  rrokytskyy
 
 	*
-	
-	fixed possible NPE if no logger is available
 	client-java/src/pool/org/firebirdsql/pool/PingablePooledConnection.
 	java:
+	
+	fixed possible NPE if no logger is available
 
 2003-05-04 18:26  rrokytskyy
 
 	*
-	
-	modified logging
 	client-java/src/pool/org/firebirdsql/pool/AbstractConnectionPoolDat
 	aSource.java:
+	
+	modified logging
 
 2003-05-04 18:25  rrokytskyy
 
@@ -5543,26 +5543,26 @@
 2003-05-04 02:01  rrokytskyy
 
 	*
-	
-	added setProperty(String, String) method
 	client-java/src/pool/org/firebirdsql/pool/FBConnectionPoolConfigura
 	tion.java:
+	
+	added setProperty(String, String) method
 
 2003-05-03 20:28  rrokytskyy
 
 	*
-	
-	added few more tests
 	client-java/src/test/org/firebirdsql/pool/TestFBConnectionPoolDataS
 	ource.java:
+	
+	added few more tests
 
 2003-05-03 20:27  rrokytskyy
 
 	*
-	
-	made getLogger() abstract
 	client-java/src/pool/org/firebirdsql/pool/AbstractConnectionPoolDat
 	aSource.java:
+	
+	made getLogger() abstract
 
 2003-05-03 20:08  rrokytskyy
 
@@ -5575,11 +5575,11 @@
 2003-05-03 20:07  rrokytskyy
 
 	*
+	client-java/src/pool/org/firebirdsql/pool/XCachablePreparedStatemen
+	t.java:
 	
 	added method to obtain wrapped statement and changed access
 	modifier to package local
-	client-java/src/pool/org/firebirdsql/pool/XCachablePreparedStatemen
-	t.java:
 
 2003-05-03 02:07  rrokytskyy
 
@@ -5657,10 +5657,10 @@
 2003-04-09 03:57  d_jencks
 
 	*
-	
-	Back to jca 1.0 interfaces
 	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
 	.java:
+	
+	Back to jca 1.0 interfaces
 
 2003-04-06 19:09  rrokytskyy
 
@@ -5677,19 +5677,19 @@
 2003-03-25 05:26  d_jencks
 
 	*
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
+	.java:
 	
 	Update to use jca 1.5 interface.  NOTE: EVERYONE WILL HAVE TO RUN
 	THE total-clean TARGET TO GET THE NEW JCA1.5 CLASSES
-	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
-	.java:
 
 2003-03-09 19:59  rrokytskyy
 
 	*
-	
-	fixed test case failure
 	client-java/src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.
 	java:
+	
+	fixed test case failure
 
 2003-03-09 19:32  rrokytskyy
 
@@ -5708,10 +5708,10 @@
 2003-03-09 18:34  rrokytskyy
 
 	*
-	
-	removed some deprecations
 	client-java/src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.
 	java:
+	
+	removed some deprecations
 
 2003-03-09 18:32  rrokytskyy
 
@@ -5985,10 +5985,10 @@
 2003-01-14 15:36  brodsom
 
 	*
-	
-	Some more tests
 	client-java/src/test/org/firebirdsql/jdbc/TestFBCallableStatement.j
 	ava:
+	
+	Some more tests
 
 2003-01-13 20:07  brodsom
 
@@ -6027,18 +6027,18 @@
 2002-12-18 12:32  rrokytskyy
 
 	*
-	
-	added test that detects incorrect fatal exception handling
 	client-java/src/test/org/firebirdsql/jdbc/TestFBCallableStatement.j
 	ava:
+	
+	added test that detects incorrect fatal exception handling
 
 2002-12-17 22:35  rrokytskyy
 
 	*
-	
-	fixed test case for system table
 	client-java/src/test/org/firebirdsql/jdbc/TestFBResultSetMetaData.j
 	ava:
+	
+	fixed test case for system table
 
 2002-12-17 22:35  rrokytskyy
 
@@ -6057,20 +6057,20 @@
 2002-12-17 21:58  d_jencks
 
 	*
+	client-java/src/test/org/firebirdsql/jca/TestPoolingConnectionManag
+	er.java:
 	
 	Increased timeouts for blocking tests to ridiculous lengths to
 	match the somewhat random results on my system.  This needs more
 	investigation with good tools
-	client-java/src/test/org/firebirdsql/jca/TestPoolingConnectionManag
-	er.java:
 
 2002-12-17 18:04  brodsom
 
 	*
-	
-	Test case for RDB$DATABASE
 	client-java/src/test/org/firebirdsql/jdbc/TestFBResultSetMetaData.j
 	ava:
+	
+	Test case for RDB$DATABASE
 
 2002-12-17 17:43  d_jencks
 
@@ -6097,10 +6097,10 @@
 2002-12-16 12:48  rrokytskyy
 
 	*
-	
-	some changes to test case to check selectable procedures
 	client-java/src/test/org/firebirdsql/jdbc/TestFBCallableStatement.j
 	ava:
+	
+	some changes to test case to check selectable procedures
 
 2002-12-16 12:47  brodsom
 
@@ -6312,10 +6312,10 @@
 2002-12-05 13:06  brodsom
 
 	*
-	
-	getObject on blob subtype 1 should return String
 	client-java/src/test/org/firebirdsql/jdbc/TestFBBlobAutocommit.java
 	:
+	
+	getObject on blob subtype 1 should return String
 
 2002-12-03 19:21  brodsom
 
@@ -6351,10 +6351,10 @@
 2002-11-29 15:07  brodsom
 
 	*
-	
-	Each managed connection must use an instance of FBTpb
 	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
 	.java:
+	
+	Each managed connection must use an instance of FBTpb
 
 2002-11-26 23:05  rrokytskyy
 
@@ -6595,10 +6595,10 @@
 2002-11-20 16:04  d_jencks
 
 	*
-	
-	fix test from changed typeinfo count
 	client-java/src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.jav
 	a:
+	
+	fix test from changed typeinfo count
 
 2002-11-20 16:03  d_jencks
 
@@ -6749,10 +6749,10 @@
 2002-11-03 00:53  brodsom
 
 	*
-	
-	make log static
 	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
 	.java:
+	
+	make log static
 
 2002-11-03 00:49  brodsom
 
@@ -6833,10 +6833,10 @@
 2002-10-31 09:13  rrokytskyy
 
 	*
-	
-	f
 	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
 	.java:
+	
+	f
 
 2002-10-31 00:24  rrokytskyy
 
@@ -7203,18 +7203,18 @@
 2002-10-01 23:50  rrokytskyy
 
 	*
-	
-	added test to check empty and null blobls
 	client-java/src/test/org/firebirdsql/jdbc/TestFBBlobAutocommit.java
 	:
+	
+	added test to check empty and null blobls
 
 2002-09-30 23:49  rrokytskyy
 
 	*
-	
-	added test to check setBinaryStream(...) in autocommit case
 	client-java/src/test/org/firebirdsql/jdbc/TestFBBlobAutocommit.java
 	:
+	
+	added test to check setBinaryStream(...) in autocommit case
 
 2002-09-28 21:21  d_jencks
 
@@ -7272,10 +7272,10 @@
 2002-09-25 15:30  d_jencks
 
 	*
-	
-	Fixed typo spotted by Claudio, thanks
 	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
 	.java:
+	
+	Fixed typo spotted by Claudio, thanks
 
 2002-09-19 01:10  rrokytskyy
 
@@ -7531,10 +7531,10 @@
 2002-08-22 06:38  d_jencks
 
 	*
-	
-	removed bogus log statement, minor doc cleanup
 	client-java/src/org/firebirdsql/jca/FBManagedConnectionFactory.java
 	:
+	
+	removed bogus log statement, minor doc cleanup
 
 2002-08-22 03:08  brodsom
 
@@ -7724,18 +7724,18 @@
 2002-08-08 11:59  rrokytskyy
 
 	*
-	
-	removed unnecessary exceptions
 	client-java/src/org/firebirdsql/jca/FBManagedConnectionFactory.java
 	:
+	
+	removed unnecessary exceptions
 
 2002-08-08 11:56  rrokytskyy
 
 	*
-	
-	added possibility to set encoding
 	client-java/src/org/firebirdsql/jca/FBManagedConnectionFactory.java
 	:
+	
+	added possibility to set encoding
 
 2002-08-06 23:16  rrokytskyy
 
@@ -7894,10 +7894,10 @@
 2002-06-11 09:19  brodsom
 
 	*
-	
-	don't allow to change database
 	client-java/src/org/firebirdsql/jca/FBManagedConnectionFactory.java
 	:
+	
+	don't allow to change database
 
 2002-06-10 20:47  brodsom
 
@@ -8171,10 +8171,10 @@
 2002-05-09 14:19  rrokytskyy
 
 	*
-	
-	changed code for default DPB and TPB
 	client-java/src/org/firebirdsql/jca/FBManagedConnectionFactory.java
 	:
+	
+	changed code for default DPB and TPB
 
 2002-05-09 14:18  rrokytskyy
 
@@ -8207,10 +8207,10 @@
 2002-04-29 23:33  rrokytskyy
 
 	*
-	
-	removed unnecessary semicolon
 	client-java/src/org/firebirdsql/jca/FBManagedConnectionMetaData.jav
 	a:
+	
+	removed unnecessary semicolon
 
 2002-04-25 22:12  rrokytskyy
 
@@ -8322,10 +8322,10 @@
 2002-04-04 04:47  d_jencks
 
 	*
-	
-	fixed typo of maxSize=0 default
 	client-java/src/org/firebirdsql/jdbc/FBDataSourceObjectFactory.java
 	:
+	
+	fixed typo of maxSize=0 default
 
 2002-04-03 13:07  rrokytskyy
 
@@ -8374,10 +8374,10 @@
 2002-03-25 19:22  alberola
 
 	*
-	
-	Added client side character set support.
 	client-java/src/org/firebirdsql/jca/FBManagedConnectionFactory.java
 	:
+	
+	Added client side character set support.
 
 2002-03-25 17:27  alberola
 
@@ -8598,10 +8598,10 @@
 2002-02-17 03:14  d_jencks
 
 	*
-	
-	Remove ConnectionEventListeners. Thanks to patcom123
 	client-java/src/org/firebirdsql/jca/FBPoolingConnectionManager.java
 	:
+	
+	Remove ConnectionEventListeners. Thanks to patcom123
 
 2002-02-11 16:13  rrokytskyy
 
@@ -8810,11 +8810,11 @@
 2002-01-12 04:06  d_jencks
 
 	*
+	client-java/src/org/firebirdsql/jdbc/FBDataSourceObjectFactory.java
+	:
 	
 	Untested ObjectFactory implementation designed to work with the
 	Catalina resource binding framework
-	client-java/src/org/firebirdsql/jdbc/FBDataSourceObjectFactory.java
-	:
 
 2002-01-07 17:32  d_jencks
 
@@ -8918,10 +8918,10 @@
 2001-12-05 16:40  d_jencks
 
 	*
-	
-	Hopefully fix StandAloneConnectionManager so it will work again
 	client-java/src/org/firebirdsql/jca/FBStandAloneConnectionManager.j
 	ava:
+	
+	Hopefully fix StandAloneConnectionManager so it will work again
 
 2001-12-05 15:29  d_jencks
 
@@ -9232,13 +9232,13 @@
 	jdbcTestResources/JDBC-TESTS-RELEASE-NOTES,
 	jdbcTestResources/JDBC-TESTS-VERSION,
 	jdbcTestResources/JDBCTestWin.ini, jdbcTestResources/test.sh,
-	
-	removed due to licence problem
 	jdbcTestResources/firebird-resources/jdbcTest.firebird.CreateProced
 	ures.ini,
 	jdbcTestResources/firebird-resources/jdbcTest.firebird.CreateTables
 	.ini,
 	jdbcTestResources/firebird-resources/jdbcTest.firebird.Drop.ini:
+	
+	removed due to licence problem
 
 2001-08-29 05:40  d_jencks
 
@@ -9402,14 +9402,14 @@
 	jdbcTestResources/JDBC-TESTS-RELEASE-NOTES,
 	jdbcTestResources/JDBC-TESTS-VERSION,
 	jdbcTestResources/JDBCTestWin.ini, jdbcTestResources/test.sh,
-	
-	Added early Sun jdbc test found by Roman Rokytskyy.  Run with
-	jdbcTestResources/test.sh
 	jdbcTestResources/firebird-resources/jdbcTest.firebird.CreateProced
 	ures.ini,
 	jdbcTestResources/firebird-resources/jdbcTest.firebird.CreateTables
 	.ini,
 	jdbcTestResources/firebird-resources/jdbcTest.firebird.Drop.ini:
+	
+	Added early Sun jdbc test found by Roman Rokytskyy.  Run with
+	jdbcTestResources/test.sh
 
 2001-08-28 19:13  d_jencks
 
@@ -9748,19 +9748,12 @@
 
 	* client-java/lib/: ant.jar, jaxp.jar, parser.jar:
 	
-	Initial revision
+	jdbc-jca driver initial checkin
 
 2001-05-09 16:34  d_jencks
 
 	* client-java/lib/: ant.jar, jaxp.jar, parser.jar:
 	
-	jdbc-jca driver initial checkin
-
-2001-05-09 16:29  d_jencks
-
-	* client-java/src/lib/: jdbc-3_0-pfd2-classes.zip,
-	jta-spec1_0_1.jar, jaas.jar:
-	
 	Initial revision
 
 2001-05-09 16:29  d_jencks
@@ -9770,31 +9763,10 @@
 	
 	jdbc-jca driver initial checkin
 
-2001-05-09 16:26  d_jencks
+2001-05-09 16:29  d_jencks
 
-	* client-java/src/: org/firebirdsql/jdbc/FBRowSet.java,
-	org/firebirdsql/jdbc/FBRowSetMetaData.java,
-	org/firebirdsql/jdbc/FBXAConnection.java,
-	org/firebirdsql/jdbc/FBStatement.java,
-	org/firebirdsql/jdbc/FBRowSetReader.java,
-	org/firebirdsql/jdbc/FBStruct.java,
-	org/firebirdsql/jdbc/FBSQLData.java,
-	org/firebirdsql/jdbc/FBRowSetWriter.java,
-	org/firebirdsql/jdbc/FBArray.java,
-	org/firebirdsql/jdbc/FBConnectionPoolDataSource.java,
-	org/firebirdsql/jdbc/FBDataSource.java,
-	org/firebirdsql/jdbc/FBDatabaseMetaData.java,
-	org/firebirdsql/jdbc/FBPreparedStatement.java,
-	org/firebirdsql/jdbc/FBXADataSource.java,
-	org/firebirdsql/jdbc/FBDefaultConnectionManager.java,
-	org/firebirdsql/jdbc/FBCallableStatement.java,
-	org/firebirdsql/jca/FBLocalTransaction.java,
-	org/firebirdsql/jca/FBManagedConnection.java,
-	org/firebirdsql/jca/FBManagedConnectionMetaData.java,
-	org/firebirdsql/jca/FBConnectionRequestInfo.java,
-	org/firebirdsql/jca/FBManagedConnectionFactory.java,
-	org/firebirdsql/jca/FBStandAloneConnectionManager.java,
-	lib/connector.jar:
+	* client-java/src/lib/: jdbc-3_0-pfd2-classes.zip,
+	jta-spec1_0_1.jar, jaas.jar:
 	
 	Initial revision
 
@@ -9826,21 +9798,31 @@
 	
 	jdbc-jca driver initial checkin
 
-2001-05-09 16:22  d_jencks
+2001-05-09 16:26  d_jencks
 
-	* client-java/src/: build/build.xml,
-	org/firebirdsql/jdbc/FBBlob.java, org/firebirdsql/jdbc/FBClob.java,
-	org/firebirdsql/jdbc/FBRef.java,
-	org/firebirdsql/jdbc/FBConnection.java,
-	org/firebirdsql/jdbc/FBConnectionEventListener.java,
-	org/firebirdsql/jdbc/FBDriver.java,
-	org/firebirdsql/jdbc/FBXAResource.java,
-	org/firebirdsql/jdbc/FBRowSetInternal.java,
-	org/firebirdsql/jdbc/FBResultSetMetaData.java,
-	org/firebirdsql/jdbc/FBRowSetListener.java,
-	org/firebirdsql/jdbc/FBSQLOutput.java,
-	org/firebirdsql/jdbc/FBResultSet.java,
-	org/firebirdsql/jdbc/FBSQLInput.java:
+	* client-java/src/: org/firebirdsql/jdbc/FBRowSet.java,
+	org/firebirdsql/jdbc/FBRowSetMetaData.java,
+	org/firebirdsql/jdbc/FBXAConnection.java,
+	org/firebirdsql/jdbc/FBStatement.java,
+	org/firebirdsql/jdbc/FBRowSetReader.java,
+	org/firebirdsql/jdbc/FBStruct.java,
+	org/firebirdsql/jdbc/FBSQLData.java,
+	org/firebirdsql/jdbc/FBRowSetWriter.java,
+	org/firebirdsql/jdbc/FBArray.java,
+	org/firebirdsql/jdbc/FBConnectionPoolDataSource.java,
+	org/firebirdsql/jdbc/FBDataSource.java,
+	org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	org/firebirdsql/jdbc/FBPreparedStatement.java,
+	org/firebirdsql/jdbc/FBXADataSource.java,
+	org/firebirdsql/jdbc/FBDefaultConnectionManager.java,
+	org/firebirdsql/jdbc/FBCallableStatement.java,
+	org/firebirdsql/jca/FBLocalTransaction.java,
+	org/firebirdsql/jca/FBManagedConnection.java,
+	org/firebirdsql/jca/FBManagedConnectionMetaData.java,
+	org/firebirdsql/jca/FBConnectionRequestInfo.java,
+	org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	org/firebirdsql/jca/FBStandAloneConnectionManager.java,
+	lib/connector.jar:
 	
 	Initial revision
 
@@ -9861,4 +9843,22 @@
 	org/firebirdsql/jdbc/FBSQLInput.java:
 	
 	jdbc-jca driver initial checkin
+
+2001-05-09 16:22  d_jencks
+
+	* client-java/src/: build/build.xml,
+	org/firebirdsql/jdbc/FBBlob.java, org/firebirdsql/jdbc/FBClob.java,
+	org/firebirdsql/jdbc/FBRef.java,
+	org/firebirdsql/jdbc/FBConnection.java,
+	org/firebirdsql/jdbc/FBConnectionEventListener.java,
+	org/firebirdsql/jdbc/FBDriver.java,
+	org/firebirdsql/jdbc/FBXAResource.java,
+	org/firebirdsql/jdbc/FBRowSetInternal.java,
+	org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	org/firebirdsql/jdbc/FBRowSetListener.java,
+	org/firebirdsql/jdbc/FBSQLOutput.java,
+	org/firebirdsql/jdbc/FBResultSet.java,
+	org/firebirdsql/jdbc/FBSQLInput.java:
+	
+	Initial revision
 
