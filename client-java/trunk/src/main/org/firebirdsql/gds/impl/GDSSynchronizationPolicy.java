@@ -44,21 +44,19 @@ public class GDSSynchronizationPolicy {
      * @param gdsType type of the GDS implementation
      * @return
      */
-    public static GDS applySyncronizationPolicy(GDS gds, GDSType gdsType) {
+    public static GDS applySyncronizationPolicy(GDS gds, AbstractSynchronizationPolicy syncPolicy) {
         
-        AbstractSynchronizationPolicy syncPolicy = null;
-        
-        // if this is local mode, use thread-per-library policy
-        if (gdsType == GDSType.NATIVE_LOCAL) 
-            syncPolicy = new ClientLibrarySyncPolicy(gds);
-
-        // if this is embedded mode, use thread-per-library policy
-        // on all platforms except windows
-        if (gdsType == GDSType.NATIVE_EMBEDDED) {
-            String osName = System.getProperty("os.name");
-            if (osName != null && osName.indexOf("Windows") == -1)
-                syncPolicy = new ClientLibrarySyncPolicy(gds);
-        }
+//        // if this is local mode, use thread-per-library policy
+//        if (gdsType == GDSType.NATIVE_LOCAL) 
+//            syncPolicy = new ClientLibrarySyncPolicy(gds);
+//
+//        // if this is embedded mode, use thread-per-library policy
+//        // on all platforms except windows
+//        if (gdsType == GDSType.NATIVE_EMBEDDED) {
+//            String osName = System.getProperty("os.name");
+//            if (osName != null && osName.indexOf("Windows") == -1)
+//                syncPolicy = new ClientLibrarySyncPolicy(gds);
+//        }
 
         // no policy specified, use default sync policy (thread-per-connection)
         if (syncPolicy == null) 
@@ -71,6 +69,7 @@ public class GDSSynchronizationPolicy {
         
         return wrappedObject;
     }
+    
     
     /**
      * Get all implemented interfaces by the class.
@@ -97,7 +96,7 @@ public class GDSSynchronizationPolicy {
      * handler for dynamic proxy that will wrap corresponding {@link GDS} 
      * implementation.
      */
-    private abstract static class AbstractSynchronizationPolicy 
+    public abstract static class AbstractSynchronizationPolicy 
         implements InvocationHandler, Serializable
     {
        
@@ -142,7 +141,7 @@ public class GDSSynchronizationPolicy {
     /**
      * Synchronization policy that ensures one thread per library.
      */
-    private static class ClientLibrarySyncPolicy extends AbstractSynchronizationPolicy {
+    public static class ClientLibrarySyncPolicy extends AbstractSynchronizationPolicy {
         
         public static final Object SYNC_OBJECT = new Object();
         

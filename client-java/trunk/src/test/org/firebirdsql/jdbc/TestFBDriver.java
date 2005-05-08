@@ -88,7 +88,7 @@ public class TestFBDriver extends FBTestBase {
 
     public void testJdbcCompliant() {
         // current driver is not JDBC compliant.
-        assertTrue(!driver.jdbcCompliant());
+        assertTrue(driver.jdbcCompliant());
     }
     
     /**

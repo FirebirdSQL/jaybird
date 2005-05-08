@@ -20,6 +20,8 @@
 package org.firebirdsql.jca;
 
 import java.io.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import javax.resource.ResourceException;
@@ -28,6 +30,7 @@ import javax.security.auth.Subject;
 import javax.transaction.xa.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.*;
@@ -107,7 +110,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * Create a new pure-Java FBManagedConnectionFactory.
      */
     public FBManagedConnectionFactory() {
-        this(GDSType.PURE_JAVA);
+        this(((AbstractGDS)GDSFactory.getDefaultGDS()).getType());
     }
 
     /**
@@ -788,6 +791,44 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
             }
         } catch(ResourceException ex) {
             throw new FBXAException(XAException.XAER_RMERR, ex);
+        }
+    }
+    
+    AbstractConnection newConnection(FBManagedConnection mc) throws ResourceException {
+        Class connectionClass = GDSFactory.getConnectionClass(getType());
+        
+        if (!AbstractConnection.class.isAssignableFrom(connectionClass))
+            throw new IllegalArgumentException("Specified connection class" +
+                    " does not extend " + AbstractConnection.class.getName() + 
+                    " class");
+        
+        try {
+            Constructor constructor = connectionClass.getConstructor(new Class[]{FBManagedConnection.class});
+            
+            return (AbstractConnection)constructor.newInstance(new Object[]{mc});
+            
+        } catch(NoSuchMethodException ex) {
+            throw new FBResourceException(
+                    "Cannot instantiate connection class "
+                            + connectionClass.getName()
+                            + ", no constructor accepting "
+                            + FBManagedConnection.class
+                            + " class as single parameter was found.");
+        } catch(InvocationTargetException ex) {
+            
+            if (ex.getTargetException() instanceof RuntimeException)
+                throw (RuntimeException)ex.getTargetException();
+            
+            if (ex.getTargetException() instanceof Error)
+                throw (Error)ex.getTargetException();
+            
+            throw new FBResourceException((Exception)ex.getTargetException());
+        } catch(IllegalAccessException ex) {
+            throw new FBResourceException("Constructor for class "
+                    + connectionClass.getName() + " is not accessible.");
+        } catch(InstantiationException ex) {
+            throw new FBResourceException("Cannot instantiate class"
+                    + connectionClass.getName());
         }
     }
 }

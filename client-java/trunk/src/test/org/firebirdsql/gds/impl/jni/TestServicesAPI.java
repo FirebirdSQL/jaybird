@@ -52,7 +52,7 @@ public class TestServicesAPI extends TestCase
             {
             Class.forName(FBDriver.class.getName());
 
-            fbManager = new FBManager(GDSType.NATIVE_EMBEDDED);
+            fbManager = new FBManager(GDSType.getType("EMBEDDED"));
 
             fbManager.setServer("localhost");
             fbManager.setPort(5066);
@@ -88,7 +88,7 @@ public class TestServicesAPI extends TestCase
 
     public void testServicesManagerAttachAndDetach() throws GDSException
         {
-        final GDS gds = GDSFactory.getGDSForType(GDSType.NATIVE_EMBEDDED);
+        final GDS gds = GDSFactory.getGDSForType(GDSType.getType("EMBEDDED"));
 
         final ServiceParameterBuffer serviceParameterBuffer = createServiceParameterBuffer(gds);
 
@@ -108,7 +108,7 @@ public class TestServicesAPI extends TestCase
 
     public void testBackupAndRestore() throws Exception
         {
-        final GDS gds = GDSFactory.getGDSForType(GDSType.NATIVE_EMBEDDED);
+        final GDS gds = GDSFactory.getGDSForType(GDSType.getType("EMBEDDED"));
 
         IscSvcHandle handle = attatchToServiceManager(gds);
 
@@ -159,7 +159,7 @@ public class TestServicesAPI extends TestCase
 
     private void dropDatabase(GDS gds) throws Exception
         {
-        final FBManager testFBManager = new FBManager(GDSType.NATIVE_EMBEDDED);
+        final FBManager testFBManager = new FBManager(GDSType.getType("EMBEDDED"));
         testFBManager.start();
         testFBManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
         testFBManager.stop();

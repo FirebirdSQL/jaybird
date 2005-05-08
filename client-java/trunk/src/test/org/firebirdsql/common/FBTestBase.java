@@ -217,10 +217,10 @@ public class FBTestBase extends SimpleFBTestBase
     private static final Map gdsTypeToUrlPrefixMap = new HashMap();
     static
         {
-        gdsTypeToUrlPrefixMap.put(GDSType.PURE_JAVA,       "jdbc:firebirdsql:");
-        gdsTypeToUrlPrefixMap.put(GDSType.NATIVE_EMBEDDED, "jdbc:firebirdsql:embedded:");
-        gdsTypeToUrlPrefixMap.put(GDSType.NATIVE,          "jdbc:firebirdsql:native:");
-        gdsTypeToUrlPrefixMap.put(GDSType.ORACLE_MODE,     "jdbc:firebirdsql:oracle:");
-        gdsTypeToUrlPrefixMap.put(GDSType.NATIVE_LOCAL,    "jdbc:firebirdsql:local:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"),       "jdbc:firebirdsql:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"), "jdbc:firebirdsql:embedded:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("NATIVE"),          "jdbc:firebirdsql:native:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("ORACLE_MODE"),     "jdbc:firebirdsql:oracle:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("LOCAL"),    "jdbc:firebirdsql:local:");
         }
     }

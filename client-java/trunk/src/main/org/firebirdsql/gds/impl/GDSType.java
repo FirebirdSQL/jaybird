@@ -22,39 +22,52 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 /**
- * Type of GDS: pure java, native (or type 2), or embedded. 
+ * Type-safe "enumeration" of the GDS types registered in the system. 
  */
 public final class GDSType implements Serializable {
-    public static final String PURE_JAVA_STR = "PURE_JAVA";
-    public static final String TYPE4_STR = "TYPE4";
-    public static final String NATIVE_STR = "NATIVE";
-    public static final String TYPE2_STR = "TYPE2";
-    public static final String EMBEDDED_STR = "EMBEDDED";
-    public static final String LOCAL_STR = "LOCAL";
-    public static final String ORACLE_MODE_STR = "ORACLE_MODE";
     
-    private static int nextOrdinal = 0;
+    private static HashMap typeMap;
 
-    public static final GDSType PURE_JAVA = new GDSType(PURE_JAVA_STR);
-    public static final GDSType NATIVE = new GDSType(NATIVE_STR);
-    public static final GDSType NATIVE_EMBEDDED = new GDSType(EMBEDDED_STR);
-    public static final GDSType NATIVE_LOCAL = new GDSType(LOCAL_STR);
-    public static final GDSType ORACLE_MODE = new GDSType(ORACLE_MODE_STR);
-
-    private static final GDSType[] PRIVATE_VALUES = {
-        PURE_JAVA, NATIVE, NATIVE_EMBEDDED, NATIVE_LOCAL, ORACLE_MODE
-    };
-    
-    private static final HashMap STRING_MAP = new HashMap();
-    static {
-        STRING_MAP.put(PURE_JAVA_STR, PURE_JAVA);
-        STRING_MAP.put(TYPE4_STR, PURE_JAVA);
-        STRING_MAP.put(NATIVE_STR, NATIVE);
-        STRING_MAP.put(TYPE2_STR, NATIVE);
-        STRING_MAP.put(EMBEDDED_STR, NATIVE_EMBEDDED);
-        STRING_MAP.put(LOCAL_STR, NATIVE_LOCAL);
-        STRING_MAP.put(ORACLE_MODE_STR, ORACLE_MODE);
+    // Getter for the typeMap variable, please note that static initializer of
+    // the GDSFactory class will access the registerType(String) method
+    private static HashMap getTypeMap() {
+        if (typeMap == null)
+            typeMap = new HashMap();
+        
+        return typeMap;
     }
+    
+    // needed to initiate static initialization of the GDSFactory
+    private static final GDSFactory factory = new GDSFactory();
+    
+//    public static final String PURE_JAVA_STR = "PURE_JAVA";
+//    public static final String TYPE4_STR = "TYPE4";
+    
+//    public static final String NATIVE_STR = "NATIVE";
+//    public static final String TYPE2_STR = "TYPE2";
+//    public static final String EMBEDDED_STR = "EMBEDDED";
+//    public static final String LOCAL_STR = "LOCAL";
+//    public static final String ORACLE_MODE_STR = "ORACLE_MODE";
+//    
+//    public static final GDSType PURE_JAVA = new GDSType(PURE_JAVA_STR);
+//    public static final GDSType NATIVE = new GDSType(NATIVE_STR);
+//    public static final GDSType NATIVE_EMBEDDED = new GDSType(EMBEDDED_STR);
+//    public static final GDSType NATIVE_LOCAL = new GDSType(LOCAL_STR);
+//    public static final GDSType ORACLE_MODE = new GDSType(ORACLE_MODE_STR);
+//
+//    private static final GDSType[] PRIVATE_VALUES = {
+//        PURE_JAVA, NATIVE, NATIVE_EMBEDDED, NATIVE_LOCAL, ORACLE_MODE
+//    };
+    
+//    static {
+//        STRING_MAP.put(PURE_JAVA_STR, PURE_JAVA);
+//        STRING_MAP.put(TYPE4_STR, PURE_JAVA);
+//        STRING_MAP.put(NATIVE_STR, NATIVE);
+//        STRING_MAP.put(TYPE2_STR, NATIVE);
+//        STRING_MAP.put(EMBEDDED_STR, NATIVE_EMBEDDED);
+//        STRING_MAP.put(LOCAL_STR, NATIVE_LOCAL);
+//        STRING_MAP.put(ORACLE_MODE_STR, ORACLE_MODE);
+//    }
     
     /**
      * Factory method for instances of this class. There's only three possible
@@ -82,16 +95,38 @@ public final class GDSType implements Serializable {
         if (type == null)
             return null;
             
-        return (GDSType)STRING_MAP.get(type.toUpperCase());
+        return (GDSType)typeMap.get(type.toUpperCase());
     }
-
+    
+    /**
+     * Register the GDS type. Method can be called only by 
+     * {@link GDSFactory#registerPlugin(GDSFactoryPlugin)} method.
+     *  
+     * @param typeName name of the GDS type.
+     * 
+     * @return instance of {@link GDSType} corresponding to the specified type
+     * name.
+     */
+    static GDSType registerType(String typeName) {
+        HashMap typeMap = getTypeMap();
+        
+        synchronized(typeMap) {
+            if (typeMap.containsKey(typeName))
+                return (GDSType)typeMap.get(typeName);
+            
+            GDSType type = new GDSType(typeName);
+            typeMap.put(typeName, type);
+            
+            return type;
+        }
+    }
+    
     private GDSType(String s) {
         name = s;
-        ordinal = nextOrdinal++;
     }
 
     public Object readResolve() {
-        return PRIVATE_VALUES[ordinal];
+        return registerType(name);
     }
 
     public String toString() {
@@ -99,5 +134,4 @@ public final class GDSType implements Serializable {
     }
 
     private final String name;
-    private final int ordinal;
 }

@@ -19,6 +19,8 @@
  
 package org.firebirdsql.pool;
 
+import org.firebirdsql.gds.impl.AbstractGDS;
+import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 
@@ -61,7 +63,7 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
      * Create instance of this class.
      */
     public FBSimpleDataSource() {
-        this(GDSType.PURE_JAVA);
+        this(((AbstractGDS)GDSFactory.getDefaultGDS()).getType());
     }
 
     /**

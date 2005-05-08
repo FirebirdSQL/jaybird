@@ -339,12 +339,12 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
 
     private GDS getType2Gds()
         {
-        return GDSFactory.getGDSForType(GDSType.NATIVE);
+        return GDSFactory.getGDSForType(GDSType.getType("NATIVE"));
         }
 
     private GDS getType4Gds()
         {
-        return GDSFactory.getGDSForType(GDSType.PURE_JAVA);
+        return GDSFactory.getGDSForType(GDSType.getType("PURE_JAVA"));
         }
 
     // basic helpers for starting and ending transactions --------------------------------------------------------------

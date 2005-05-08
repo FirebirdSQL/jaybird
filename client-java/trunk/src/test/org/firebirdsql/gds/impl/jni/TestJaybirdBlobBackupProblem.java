@@ -100,7 +100,7 @@ public class TestJaybirdBlobBackupProblem extends TestCase
             {
             Class.forName(FBDriver.class.getName());
 
-            fbManager = new FBManager(GDSType.NATIVE_EMBEDDED);
+            fbManager = new FBManager(GDSType.getType("EMBEDDED"));
 
             fbManager.setServer("localhost");
             fbManager.setPort(5066);
@@ -137,7 +137,7 @@ public class TestJaybirdBlobBackupProblem extends TestCase
 	
 	public void testBacupOfEmptyDatabase() throws Exception, IOException
 		{
-		final GDS gds = GDSFactory.getGDSForType(GDSType.NATIVE_EMBEDDED);
+		final GDS gds = GDSFactory.getGDSForType(GDSType.getType("EMBEDDED"));
 
         IscSvcHandle handle = attatchToServiceManager(gds);
 
@@ -150,7 +150,7 @@ public class TestJaybirdBlobBackupProblem extends TestCase
 		{
 		writeSomeBlobData();
 		
-		final GDS gds = GDSFactory.getGDSForType(GDSType.NATIVE_EMBEDDED);
+		final GDS gds = GDSFactory.getGDSForType(GDSType.getType("EMBEDDED"));
 
         IscSvcHandle handle = attatchToServiceManager(gds);
 
