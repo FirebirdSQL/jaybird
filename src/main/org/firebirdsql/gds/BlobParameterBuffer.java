@@ -26,25 +26,34 @@ package org.firebirdsql.gds;
 
 
 /**
- * This interface replaces Clumplet in calls to <code>isc_create_blob2</code> 
- * and <code>isc_open_blob2</code>.
+ * Instance of this interface represents a BLOB Parameter Buffer from the
+ * Firebird API documentation and specifies attributes for
+ * {@link GDS#iscCreateBlob2(IscDbHandle, IscTrHandle, IscBlobHandle, BlobParameterBuffer)}
+ * or
+ * {@link GDS#iscOpenBlob2(IscDbHandle, IscTrHandle, IscBlobHandle, BlobParameterBuffer)}
+ * operations.
  * <p>
- * Instances are created via <code>GDS.newBlobParameterBuffer();</code>
- * <p>
- * Constants from <code>ISCConstants</code> that are relevant to a blob 
- * parameter buffer are duplicated on this interface. If the original name was
- * <code>isc_bpb_source_type</code> then the new name is 
- * <code>source_type</code>. 
+ * Two features are available:
+ * <ul>
+ * <li>Specifying the source and target BLOB types (server uses BLOB filters to
+ * perform the conversion)
+ * <li>Specifying type of the BLOB - either segmented or stream. The only
+ * visible to user difference between segmented and stream BLOBs is the fact
+ * that "seek" operation is not defined for segmented BLOBs (see
+ * {@link GDS#iscSeekBlob(IscBlobHandle, int, int)} for more details).
+ * </ul>
  */
-public interface BlobParameterBuffer
-    {
+public interface BlobParameterBuffer {
+    
     int SOURCE_TYPE             =  ISCConstants.isc_bpb_source_type;
     int TARGET_TYPE             =  ISCConstants.isc_bpb_target_type;
-    int TYPE                    =  ISCConstants.isc_bpb_type;
+
     int SOURCE_INTERP           =  ISCConstants.isc_bpb_source_interp;
     int TARGET_INTERP           =  ISCConstants.isc_bpb_target_interp;
+    
     int FILTER_PARAMETER        =  ISCConstants.isc_bpb_filter_parameter;
 
+    int TYPE                    =  ISCConstants.isc_bpb_type;
     int TYPE_SEGMENTED          =  ISCConstants.isc_bpb_type_segmented;
     int TYPE_STREAM             =  ISCConstants.isc_bpb_type_stream;
 

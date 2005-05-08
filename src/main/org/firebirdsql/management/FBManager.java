@@ -20,6 +20,7 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.logging.Logger;
@@ -37,6 +38,8 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public class FBManager implements FBManagerMBean
 	{
+    
+    private static final int DEFAULT_PORT = 3050;
     private final static Logger log = LoggerFactory.getLogger(FBManager.class,false);
 
     private GDS gds;
@@ -46,7 +49,7 @@ public class FBManager implements FBManagerMBean
 
     private String host = "localhost";
 
-    private int port = 3050;
+    private Integer port;
 
     private String fileName;
 
@@ -72,7 +75,7 @@ public class FBManager implements FBManagerMBean
 
     public FBManager()
         {
-        this(GDSType.PURE_JAVA);
+        this(((AbstractGDS)GDSFactory.getDefaultGDS()).getType());
         }
 
     public FBManager(GDSType type)
@@ -166,15 +169,15 @@ public class FBManager implements FBManagerMBean
     /**
      * @jmx.managed-attribute
      */
-    public void setPort(final int port) {
-        this.port = port;
+    public void setPort(int port) {
+        this.port = new Integer(port);
     }
 
     /**
      * @jmx.managed-attribute
      */
     public int getPort() {
-        return port;
+        return port != null ? port.intValue() : DEFAULT_PORT;
     }
 
 
@@ -433,11 +436,8 @@ public class FBManager implements FBManagerMBean
     }
     
     //private methods
-    private String getConnectString(String filename) {
-        if (type == GDSType.NATIVE_EMBEDDED || type == GDSType.NATIVE_LOCAL)
-            return filename;
-        else
-            return getServer() + "/" + getPort() + ":" + filename;
+    private String getConnectString(String filename) throws GDSException {
+        return GDSFactory.getDatabasePath(((AbstractGDS)gds).getType(), host, port, filename);
     }
 
 }

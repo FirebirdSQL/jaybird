@@ -447,7 +447,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         if (!connectionSharing)
             disassociateConnections();
         
-        AbstractConnection c = new FBConnection(this);
+        AbstractConnection c = mcf.newConnection(this);
         try {
             c.setManagedEnvironment(isManagedEnvironment());
             connectionHandles.add(c);

@@ -34,7 +34,7 @@ public class TestSpecialEmbeddedServerUrls extends TestCase
             {
             Class.forName(FBDriver.class.getName());
 
-            fbManager = new FBManager(GDSType.NATIVE_EMBEDDED);
+            fbManager = new FBManager(GDSType.getType("EMBEDDED"));
 
             fbManager.setServer("localhost");
             fbManager.setPort(5066);
@@ -67,7 +67,7 @@ public class TestSpecialEmbeddedServerUrls extends TestCase
 
     public void testFBManagerWithoutSettingServerAndPort() throws Exception
         {
-        FBManager testFBManager = new FBManager(GDSType.NATIVE_EMBEDDED);
+        FBManager testFBManager = new FBManager(GDSType.getType("EMBEDDED"));
         testFBManager.start();
 
         testFBManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
@@ -78,7 +78,7 @@ public class TestSpecialEmbeddedServerUrls extends TestCase
 
     public void testFBManagerWithRelativeDatabaseFile() throws Exception
         {
-        FBManager testFBManager = new FBManager(GDSType.NATIVE_EMBEDDED);
+        FBManager testFBManager = new FBManager(GDSType.getType("EMBEDDED"));
         testFBManager.start();
 
         testFBManager.dropDatabase(mRelativeDatabasePath, "SYSDBA", "masterkey");

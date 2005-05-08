@@ -25,7 +25,9 @@ import java.util.*;
 
 import javax.resource.ResourceException;
 
+import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.*;
 import org.firebirdsql.logging.Logger;
@@ -41,11 +43,7 @@ public class FBDriver implements Driver {
 
     private final static Logger log;
 
-    public static final String FIREBIRD_PROTOCOL = "jdbc:firebirdsql:";
-    public static final String FIREBIRD_PROTOCOL_NATIVE= FIREBIRD_PROTOCOL + "native:";
-    public static final String FIREBIRD_PROTOCOL_NATIVE_EMBEDDED = FIREBIRD_PROTOCOL + "embedded";
-    public static final String FIREBIRD_PROTOCOL_NATIVE_LOCAL = FIREBIRD_PROTOCOL + "local:";
-    public static final String FIREBIRD_PROTOCOL_ORACLE_MODE = FIREBIRD_PROTOCOL + "oracle:";
+//    public static final String FIREBIRD_PROTOCOL = "jdbc:firebirdsql:";
 
     public static final String CHARSET = "charSet";
     public static final String USE_TRANSLATION = "useTranslation";
@@ -100,10 +98,7 @@ public class FBDriver implements Driver {
     public Connection connect(String url, Properties info)
         throws SQLException
     {
-        if (url == null || !url.startsWith(FIREBIRD_PROTOCOL))
-            return null;
-
-        final GDSType type = getDriverType(url);
+        final GDSType type = GDSFactory.getTypeForProtocol(url);
 
         try {
             if (info == null)
@@ -151,17 +146,7 @@ public class FBDriver implements Driver {
             
             // extract the database URL
 
-            String databaseURL;
-            if( url.startsWith(FIREBIRD_PROTOCOL_NATIVE) )
-                databaseURL = url.substring(FIREBIRD_PROTOCOL_NATIVE.length());
-            else if( url.startsWith(FIREBIRD_PROTOCOL_NATIVE_EMBEDDED) )
-                databaseURL = url.substring(FIREBIRD_PROTOCOL_NATIVE_EMBEDDED.length()+1);
-            else if (url.startsWith(FIREBIRD_PROTOCOL_NATIVE_LOCAL))
-                databaseURL = url.substring(FIREBIRD_PROTOCOL_NATIVE_LOCAL.length());
-            else if (url.startsWith(FIREBIRD_PROTOCOL_ORACLE_MODE))
-                databaseURL = url.substring(FIREBIRD_PROTOCOL_ORACLE_MODE.length());
-            else
-                databaseURL = url.substring(FIREBIRD_PROTOCOL.length());
+            String databaseURL = GDSFactory.getDatabasePath(type, url);
 
             mcf.setDatabase(databaseURL);
             mcf.setConnectionRequestInfo(conCri);
@@ -189,6 +174,8 @@ public class FBDriver implements Driver {
             return dataSource.getConnection(user, password);
         } catch(ResourceException resex) {
             throw new FBSQLException(resex);
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
         }
     }
 
@@ -210,39 +197,6 @@ public class FBDriver implements Driver {
     }
 
     /**
-	 *
-	 *
-	 * @param url
-	 * @return
-	 */
-    private GDSType getDriverType(String url)
-    {
-        if(url.startsWith(FIREBIRD_PROTOCOL_NATIVE))
-        {
-            return GDSType.NATIVE;
-        } 
-        else
-        if(url.startsWith(FIREBIRD_PROTOCOL_NATIVE_EMBEDDED))
-        {
-            return GDSType.NATIVE_EMBEDDED;
-        }
-        else
-        if (url.startsWith(FIREBIRD_PROTOCOL_NATIVE_LOCAL))
-        {
-            return GDSType.NATIVE_LOCAL;
-        }
-        else
-        if (url.startsWith(FIREBIRD_PROTOCOL_ORACLE_MODE))
-        {
-            return GDSType.ORACLE_MODE;
-        }
-        {
-            return GDSType.PURE_JAVA;
-        }
-     }
-
-
-    /**
      * Returns true if the driver thinks that it can open a connection
      * to the given URL.  Typically drivers will return true if they
      * understand the subprotocol specified in the URL and false if
@@ -253,7 +207,15 @@ public class FBDriver implements Driver {
      * @exception SQLException if a database access error occurs
      */
     public boolean acceptsURL(String url) throws  SQLException {
-        return url.startsWith(FIREBIRD_PROTOCOL);
+        Set protocols = GDSFactory.getSupportedProtocols();
+        
+        for (Iterator iter = protocols.iterator(); iter.hasNext();) {
+            String protocol = (String) iter.next();
+            if (url.startsWith(protocol))
+                return true;
+        }
+        
+        return false;
     }
 
 
@@ -323,7 +285,7 @@ public class FBDriver implements Driver {
          * @return this driver's major version number
      */
     public int getMajorVersion() {
-        return 1;
+        return 2;
     }
 
     /**
@@ -331,7 +293,7 @@ public class FBDriver implements Driver {
          * @return this driver's minor version number
      */
     public int getMinorVersion() {
-        return 5;
+        return 0;
     }
 
 
@@ -353,11 +315,7 @@ public class FBDriver implements Driver {
      * implementation may not be feasible.
      */
     public boolean jdbcCompliant() {
-        return false; //Lets work to make it true!
+        return true;
     }
-
-    /** @link dependency
-     * @stereotype instantiate*/
-    /*#AbstractConnection lnkFBConnection;*/
 }
 

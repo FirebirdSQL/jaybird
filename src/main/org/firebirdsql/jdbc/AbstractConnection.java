@@ -403,8 +403,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 "You cannot commit a closed connection.",
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
 
-        if (getAutoCommit() && ((AbstractGDS)getInternalAPIHandler()).getType() != GDSType.ORACLE_MODE)
-            throw new FBSQLException("commit called with AutoCommit true!");
+//        if (getAutoCommit() && ((AbstractGDS)getInternalAPIHandler()).getType() != GDSType.ORACLE_MODE)
+//            throw new FBSQLException("commit called with AutoCommit true!");
 
         txCoordinator.commit();
     }
@@ -420,8 +420,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see #setAutoCommit
      */
     public synchronized void rollback() throws SQLException {
-        if (getAutoCommit() && ((AbstractGDS)getInternalAPIHandler()).getType() != GDSType.ORACLE_MODE)
-            throw new FBSQLException("Rollback called with AutoCommit true!");
+//        if (getAutoCommit() && ((AbstractGDS)getInternalAPIHandler()).getType() != GDSType.ORACLE_MODE)
+//            throw new FBSQLException("Rollback called with AutoCommit true!");
 
         if (isClosed())
             throw new FBSQLException(

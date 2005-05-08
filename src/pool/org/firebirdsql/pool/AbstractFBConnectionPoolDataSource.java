@@ -27,6 +27,7 @@ import javax.naming.*;
 import javax.resource.ResourceException;
 import javax.sql.*;
 
+import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.*;
@@ -196,7 +197,7 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
 
     private Properties properties = new Properties();
     private String database;
-    private GDSType gdsType = GDSType.PURE_JAVA;
+    private GDSType gdsType = ((AbstractGDS)GDSFactory.getDefaultGDS()).getType();
     
     /**
      * Create instance of this class.

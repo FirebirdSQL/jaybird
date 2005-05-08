@@ -80,12 +80,11 @@ public class GDS_Impl extends AbstractGDS implements GDS {
 
         if (logging) log.info("Attempting to initilize native library.");
 
-        if (this.getType() == GDSType.NATIVE
-                || this.getType() == GDSType.NATIVE_LOCAL)
+        if ("NATIVE".equals(getType().toString()) || "LOCAL".equals(getType()))
             attemptToLoadAClientLibraryFromList(LIST_OF_CLIENT_LIBRARIES_TO_TRY);
-        else if (this.getType() == GDSType.NATIVE_EMBEDDED)
+        else if ("EMBEDDED".equals(getType()))
             attemptToLoadAClientLibraryFromList(LIST_OF_EMBEDDED_SERVER_LIBRARIES_TO_TRY);
-        else if (this.getType() == GDSType.ORACLE_MODE)
+        else if ("ORACLE_MODE".equals(getType()))
             attemptToLoadAClientLibraryFromList(LIST_OF_ORACLE_MODE_LIBRARIES_TO_TRY);
         else
             throw new RuntimeException("Unrecognized GDS type.");
@@ -1241,11 +1240,11 @@ public class GDS_Impl extends AbstractGDS implements GDS {
             throws GDSException;
 
     private String getServerUrl(String file_name) throws GDSException {
-        if (this.getType() == GDSType.NATIVE
-                || this.getType() == GDSType.ORACLE_MODE)
+        if ("NATIVE".equals(getType())
+                || "ORACLE_MODE".equals(getType()))
             return getRemoteServerUrl(file_name);
-        else if (this.getType() == GDSType.NATIVE_LOCAL
-                || this.getType() == GDSType.NATIVE_EMBEDDED)
+        else if ("LOCAL".equals(getType())
+                || "EMBEDDED".equals(getType()))
             return getEmbeddedServerUrl(file_name);
         else
             throw new RuntimeException("Unrecognized gds type.");

@@ -191,11 +191,11 @@ public abstract class BaseTestFBField extends TestCase {
 
     protected XSQLVAR createXSQLVAR()
         {
-        if(getGdsType() == GDSType.PURE_JAVA)
+        if(getGdsType() == GDSType.getType("PURE_JAVA"))
             return new org.firebirdsql.gds.XSQLVAR();
         else
-        if(getGdsType() == GDSType.NATIVE ||
-           getGdsType() == GDSType.NATIVE_EMBEDDED)
+        if(getGdsType() == GDSType.getType("NATIVE") ||
+           getGdsType() == GDSType.getType("EMBEDDED"))
             return new XSQLVARLittleEndianImpl();
         else
             throw new RuntimeException("Unrecognised GDSType");
@@ -204,7 +204,7 @@ public abstract class BaseTestFBField extends TestCase {
 
     private GDSType getGdsType()
         {
-        return GDSType.PURE_JAVA;
+        return GDSType.getType("PURE_JAVA");
         }
 
 

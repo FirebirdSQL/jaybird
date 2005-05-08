@@ -72,10 +72,10 @@ public class TestNgds extends SimpleFBTestBase {
 
 
     protected void setUp() {
-        if (GDSType.EMBEDDED_STR.equals(System.getProperty("test.gds_type")))
-            gds = GDSFactory.getGDSForType(GDSType.NATIVE_EMBEDDED);
+        if ("EMBEDDED".equals(System.getProperty("test.gds_type")))
+            gds = GDSFactory.getGDSForType(GDSType.getType("EMBEDDED"));
         else
-            gds = GDSFactory.getGDSForType(GDSType.NATIVE);
+            gds = GDSFactory.getGDSForType(GDSType.getType("NATIVE"));
 
         tpb  = new FBTpb(FBTpbMapper.getDefaultMapper(gds));
         
@@ -195,10 +195,10 @@ public class TestNgds extends SimpleFBTestBase {
        
        GDS gds;
 
-       if (GDSType.EMBEDDED_STR.equals(System.getProperty("test.gds_type")))
+       if ("EMBEDDED".equals(System.getProperty("test.gds_type")))
            return;
        else
-           gds = GDSFactory.getGDSForType(GDSType.NATIVE);
+           gds = GDSFactory.getGDSForType(GDSType.getType("NATIVE"));
 
       DatabaseParameterBuffer databaseParameterBuffer = gds.createDatabaseParameterBuffer();
 

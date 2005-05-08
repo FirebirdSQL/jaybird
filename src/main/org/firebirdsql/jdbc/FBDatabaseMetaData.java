@@ -24,7 +24,9 @@ import java.sql.*;
 import java.util.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.AbstractIscDbHandle;
+import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -129,15 +131,18 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getURL() throws SQLException {
-        return FBDriver.FIREBIRD_PROTOCOL + connection.mc.getDatabase();
+        AbstractGDS gds = ((AbstractGDS) connection.getInternalAPIHandler());
+        
+        return GDSFactory.getJdbcUrl(gds.getType(), connection.mc.getDatabase());
     }
 
 
     /**
      * What's our user name as known to the database?
-     *
+     * 
      * @return our database user name
-     * @exception SQLException if a database access error occurs
+     * @exception SQLException
+     *                if a database access error occurs
      */
     public  String getUserName() throws SQLException {
         return gdsHelper.getUserName();
