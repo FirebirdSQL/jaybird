@@ -1,3 +1,39 @@
+2005-05-08 15:30  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/impl/GDSFactory.java,
+	main/org/firebirdsql/gds/impl/jni/EmbeddedGDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/jni/GDS_Impl.java,
+	main/org/firebirdsql/gds/impl/jni/LocalGDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/jni/NativeGDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/GDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/GDSSynchronizationPolicy.java,
+	main/org/firebirdsql/gds/impl/GDSType.java,
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/FBDriver.java,
+	main/org/firebirdsql/gds/impl/wire/GDS_Impl.java,
+	main/org/firebirdsql/gds/impl/wire/WireGDSFactoryPlugin.java,
+	pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBSimpleDataSource.java,
+	test/org/firebirdsql/gds/impl/jni/TestServicesAPI.java,
+	test/org/firebirdsql/jdbc/field/BaseTestFBField.java,
+	main/org/firebirdsql/gds/BlobParameterBuffer.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	test/org/firebirdsql/gds/impl/jni/TestJaybirdBlobBackupProblem.java
+	, test/org/firebirdsql/gds/impl/jni/TestNgds.java,
+	test/org/firebirdsql/gds/impl/jni/TestNgdsBlobReadBug.java,
+	test/org/firebirdsql/gds/impl/jni/TestSpecialEmbeddedServerUrls.jav
+	a, main/org/firebirdsql/management/FBManager.java,
+	test/org/firebirdsql/common/FBTestBase.java,
+	test/org/firebirdsql/common/SimpleFBTestBase.java,
+	test/org/firebirdsql/jdbc/TestFBDriver.java,
+	test/org/firebirdsql/jdbc/TestJDBCPerformance.java,
+	resources/META-INF/services/org.firebirdsql.gds.impl.GDSFactoryPlug
+	in:
+	
+	implemented pluggable GDS types and driver types
+
 2005-04-24 17:31  rrokytskyy
 
 	* client-java/src/jdbc_30/org/firebirdsql/jdbc/FBConnection.java:
