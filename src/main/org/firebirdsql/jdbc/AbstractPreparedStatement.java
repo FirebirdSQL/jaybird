@@ -41,6 +41,8 @@ import org.firebirdsql.logging.*;
 public abstract class AbstractPreparedStatement extends FBStatement implements
         FirebirdPreparedStatement {
 
+
+
     // this array contains either true or false indicating if parameter
     // was initialized, executeQuery, executeUpdate and execute methods
     // will throw an exception if this array contains at least one false value.
@@ -56,6 +58,10 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
 
     private final static Logger log = LoggerFactory.getLogger(
         AbstractStatement.class, false);
+
+    private int stmtType;
+
+    private String executionPlan;
 
     /**
      * Create instance of this class for the specified result set type and 
@@ -1165,5 +1171,81 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
         }
 
         this.isExecuteProcedureStatement = isExecuteProcedureStatement(sql);
+    }
+
+    /**
+     * Get the execution plan of this PreparedStatement
+     *
+     * @return The execution plan of the statement
+     */
+    public String getExecutionPlan() throws FBSQLException {
+        populateStatementInfo();
+        return executionPlan;
+    }
+
+    /**
+     * Get the statement type of this PreparedStatement.
+     * The returned value will be one of the <code>TYPE_*</code> constant
+     * values.
+     *
+     * @return The identifier for the given statement's type
+     */
+    public int getStatementType() throws FBSQLException {
+        populateStatementInfo();
+        return stmtType;
+    }
+
+
+    private void populateStatementInfo() throws FBSQLException {
+        if (executionPlan == null){
+            final byte [] REQUEST = new byte [] {
+                ISCConstants.isc_info_sql_get_plan,
+                ISCConstants.isc_info_sql_stmt_type,
+                ISCConstants.isc_info_end };
+
+            int bufferSize = 1024;
+            byte [] buffer;
+            GDS gds = gdsHelper.getInternalAPIHandler();
+            while (true){
+                try {
+                    buffer = gds.iscDsqlSqlInfo(
+                            fixedStmt, REQUEST, bufferSize); 
+                } catch (GDSException e){
+                    throw new FBSQLException(e);
+                }
+                if (buffer[0] != ISCConstants.isc_info_truncated){
+                    break;
+                } 
+                bufferSize *= 2;
+            }
+
+            if (buffer[0] == ISCConstants.isc_info_end){
+                throw new FBSQLException(
+                        "Statement info could not be retrieved");
+            }
+
+            int dataLength = -1; 
+            for (int i = 0; i < buffer.length; i++){
+                switch(buffer[i]){
+                    case ISCConstants.isc_info_sql_get_plan:
+                        dataLength = gds.iscVaxInteger(buffer, ++i, 2);
+                        i += 2;
+                        executionPlan = new String(buffer, i + 1, dataLength);
+                        i += dataLength - 1;
+                        break;
+                    case ISCConstants.isc_info_sql_stmt_type:
+                        dataLength = gds.iscVaxInteger(buffer, ++i, 2);
+                        i += 2;
+                        stmtType = gds.iscVaxInteger(buffer, i, dataLength);
+                        i += dataLength;
+                    case ISCConstants.isc_info_end:
+                    case 0:
+                        break;
+                    default:
+                        throw new FBSQLException("Unknown data block [" 
+                                + buffer[i] + "]");
+                }
+            }
+        }
     }
 }
