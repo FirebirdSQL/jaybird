@@ -31,6 +31,9 @@
          <exclude name="log4j.properties"/>
          <include name="**/*.properties"/>
        </fileset>
+       <zipfileset dir="${build.resources}/META-INF" prefix="META-INF">
+         <include name="services/**/*"/>
+       </zipfileset>
     </jar>
 
     <jar jarfile="${build.lib}/firebirdsql-pool.jar" manifest="${build.etc}/default.mf">
@@ -39,7 +42,7 @@
        </fileset>
     </jar>
 
-    <jar jarfile="${build.lib}/firebirdsql-full.jar">
+    <jar jarfile="${build.lib}/firebirdsql-full.jar" manifest="${build.etc}/default.mf">
        <fileset dir="${build.classes}">
          <include name="org/firebirdsql/**"/>
        </fileset>
@@ -59,6 +62,10 @@
        <fileset dir="${build.concurrent}">
          <include name="EDU/**"/>
        </fileset>
+       <zipfileset dir="${build.resources}/META-INF" prefix="META-INF">
+         <include name="services/**/*"/>
+       </zipfileset>
+       
     </jar>
 
   </target>
@@ -92,6 +99,9 @@
        <fileset dir="${build.resources}">
          <include name="**/*.properties"/>
        </fileset>
+       <zipfileset dir="${build.resources}/META-INF" prefix="META-INF">
+         <include name="services/**/*"/>
+       </zipfileset>
     </jar>
   </target>
 
