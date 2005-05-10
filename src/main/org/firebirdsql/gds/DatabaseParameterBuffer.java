@@ -26,15 +26,13 @@
 package org.firebirdsql.gds;
 
 /**
- * This interface replaces Clumplet in calls to 
- * <code>isc_create_database</code> and <code>isc_attach_database</code>.
+ * Instance of this interface represents a Database Parameter Buffer from the
+ * Firebird API documentation and specifies the attributes for the
+ * current connection.
  * <p>
- * Instances are created via <code>GDS.newDatabaseParameterBuffer();</code>
- * <p>
- * Constants from <code>ISCConstants</code> that are relevant to a database 
- * parameter buffer are duplicated on this interface. If the original name 
- * was <code>isc_dpb_cdd_pathname</code> then the new name is 
- * <code>cdd_pathname</code>. 
+ * Additionally it is possible to change some database properties in a permanent
+ * way, however this approach is not recommended. Please use instead management
+ * API.
  */
 public interface DatabaseParameterBuffer {
     
@@ -109,7 +107,8 @@ public interface DatabaseParameterBuffer {
     int SET_DB_CHARSET          = ISCConstants.isc_dpb_set_db_charset;
     
     /**
-     * Add argument.
+     * Add argument with no parameters.
+     * 
      * @param argumentType type of argument.
      */
     void addArgument(int argumentType);
