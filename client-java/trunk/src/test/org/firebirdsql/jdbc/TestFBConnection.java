@@ -168,4 +168,56 @@ public class TestFBConnection extends FBTestBase {
             connection.close();
         }
     }
+    
+    public void testExecuteStatementTwice() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        
+        Statement ddlStmt = connection.createStatement();
+        try {
+            try {
+                ddlStmt.execute("DROP TABLE test_exec_twice");
+            } catch(SQLException ex) {
+                // ignore
+            }
+            
+            ddlStmt.execute("CREATE TABLE test_exec_twice(col1 VARCHAR(100))");
+        } finally {
+            ddlStmt.close();
+        }
+        
+        try {
+            connection.setAutoCommit(false);
+            connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+            
+            String select1 = "SELECT * FROM test_exec_twice";
+            String select2 = select1 + " WHERE col1 > ? ORDER BY col1";
+
+            PreparedStatement pstmt = connection.prepareStatement(select2);
+
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery(select1);  // throws Exception on the 2nd call
+            rs.close();
+
+            pstmt.setString(1, "ABC");
+            rs = pstmt.executeQuery();
+            for (int i = 0; i < 10 && rs.next(); i++)
+                ;   // do something
+            rs.close();
+
+            // on the following 2nd call the exception gets thrown
+            rs = stmt.executeQuery(select1);  // throws Exception on the 2nd call
+            rs.close();
+
+            pstmt.setString(1, "ABC");
+            rs = pstmt.executeQuery();
+            for (int i = 0; i < 10 && rs.next(); i++)
+                ;   // do something
+            rs.close();
+
+            
+        } finally {
+            connection.commit();
+            connection.close();
+        }
+    }
 }
