@@ -11,12 +11,14 @@ public class NativeGDSFactoryPlugin implements GDSFactoryPlugin {
     private static final String[] TYPE_ALIASES = new String[]{"TYPE2"};
     private static final String[] JDBC_PROTOCOLS = new String[]{"jdbc:firebirdsql:native:"};
     
+    private static NativeGDSImpl gds;
+    
     public String getPluginName() {
         return "JNI-based GDS implementation.";
     }
 
     public String getTypeName() {
-        return "NATIVE";
+        return NativeGDSImpl.NATIVE_TYPE_NAME;
     }
 
     public String[] getTypeAliases() {
@@ -32,7 +34,10 @@ public class NativeGDSFactoryPlugin implements GDSFactoryPlugin {
     }
 
     public AbstractGDS getGDS() {
-        return new GDS_Impl();
+        if (gds == null)
+            gds = new NativeGDSImpl();
+        
+        return gds;
     }
 
     public String getDatabasePath(String server, Integer port, String path) throws GDSException{

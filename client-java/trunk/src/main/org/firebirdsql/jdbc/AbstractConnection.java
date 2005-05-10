@@ -24,9 +24,8 @@ import java.util.*;
 import javax.resource.*;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.AbstractGDS;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.*;
 
 /**
@@ -305,7 +304,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         
         int mode = FBEscapedParser.USE_BUILT_IN;
         
-        if (dpb.hasArgument(DatabaseParameterBuffer.USE_STANDARD_UDF))
+        if (dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF))
             mode = FBEscapedParser.USE_STANDARD_UDF;
         
         return new FBEscapedParser(mode).parse(sql);

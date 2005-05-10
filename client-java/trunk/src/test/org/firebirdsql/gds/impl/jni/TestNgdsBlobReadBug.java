@@ -22,7 +22,7 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.impl.wire.GDS_Impl;
+import org.firebirdsql.gds.impl.wire.JavaGDSImpl;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.jca.FBTpb;
@@ -293,8 +293,8 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
 
         xsqlda.sqlvar[1] = xsqlvar;
 
-        GDS_Impl.calculateBLR(xsqlda);
-        GDS_Impl.calculateIOLength(xsqlda);
+        JavaGDSImpl.calculateBLR(xsqlda);
+        JavaGDSImpl.calculateIOLength(xsqlda);
 
         gds.iscCloseBlob(blob_handle);
 

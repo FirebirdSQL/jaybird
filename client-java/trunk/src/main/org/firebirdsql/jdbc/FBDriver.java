@@ -88,39 +88,39 @@ public class FBDriver implements Driver {
      * included in the Properties.
      *
      * @param url the URL of the database to which to connect
-     * @param info a list of arbitrary string tag/value pairs as
+     * @param originalInfo a list of arbitrary string tag/value pairs as
      * connection arguments. Normally at least a "user" and
      * "password" property should be included.
      * @return a <code>Connection</code> object that represents a
      *         connection to the URL
      * @exception SQLException if a database access error occurs
      */
-    public Connection connect(String url, Properties info)
+    public Connection connect(String url, Properties originalInfo)
         throws SQLException
     {
         final GDSType type = GDSFactory.getTypeForProtocol(url);
 
         try {
-            if (info == null)
-                info = new Properties();
+            if (originalInfo == null)
+                originalInfo = new Properties();
 
-            info = FBDriverPropertyManager.normalize(url, info);
+            Properties normalizedInfo = FBDriverPropertyManager.normalize(url, originalInfo);
             
             int qMarkIndex = url.indexOf('?');
             if (qMarkIndex != -1)
                 url = url.substring(0, qMarkIndex);
 
-            Integer blobBufferLength = extractBlobBufferLength(info);
+            Integer blobBufferLength = extractBlobBufferLength(normalizedInfo);
             
 
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
             
             FBConnectionRequestInfo conCri =
-                FBConnectionHelper.getCri(info, mcf.getDefaultConnectionRequestInfo());
+                FBConnectionHelper.getCri(normalizedInfo, mcf.getDefaultConnectionRequestInfo());
 
             //handleEncoding(info, conCri);
 
-            FBTpbMapper tpbMapper = FBConnectionHelper.getTpbMapper(mcf.getGDS(), info);
+            FBTpbMapper tpbMapper = FBConnectionHelper.getTpbMapper(mcf.getGDS(), originalInfo);
 
             // extract the user
             String user = conCri.getStringProperty(ISCConstants.isc_dpb_user);
@@ -134,7 +134,7 @@ public class FBDriver implements Driver {
                     FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
 
             // extract the password
-            String password = info.getProperty(PASSWORD);
+            String password = normalizedInfo.getProperty(PASSWORD);
 
             if (password == null)
                 password = conCri.getStringProperty(ISCConstants.isc_dpb_password);

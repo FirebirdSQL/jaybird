@@ -23,20 +23,24 @@ import org.firebirdsql.gds.*;
 
 /**
  * Describe class <code>isc_blob_handle_impl</code> here.
- *
+ * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
 public final class isc_blob_handle_impl implements IscBlobHandle {
 
     private isc_db_handle_impl db;
-    private isc_tr_handle_impl tr;
-    private int rbl_id;
-    private long blob_id;
-//    private isc_blob_handle_impl next;
-   // private int rbl_flags;
 
-    isc_blob_handle_impl() {};
+    private isc_tr_handle_impl tr;
+
+    private int rbl_id;
+
+    private long blob_id;
+
+    boolean isEndOfFile = false;
+    
+    isc_blob_handle_impl() {
+    };
 
     public void addWarning(GDSException warning) {
         db.addWarning(warning);
@@ -73,22 +77,8 @@ public final class isc_blob_handle_impl implements IscBlobHandle {
     public void setRblId(int value) {
         rbl_id = value;
     }
-/* not used
-    public int getRbl_flags() {
-        return rbl_flags;
-    }
-*/
-   /* public void rbl_flagsAdd(int value) {
-        rbl_flags |= value;
-    }
 
-    public void rbl_flagsRemove(int value) {
-        rbl_flags &= ~value;
-    }*/
-    // only used in the tests
     public boolean isEof() {
         return isEndOfFile;
     }
-
-    boolean isEndOfFile = false;
 }

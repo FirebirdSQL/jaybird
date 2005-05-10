@@ -23,6 +23,7 @@ import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jca.FBTpbMapper;
 import org.firebirdsql.jca.FBResourceException;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.GDS;
 
@@ -210,20 +211,32 @@ public class FBConnectionHelper {
             // if the type is unknown, continue
             if (type == null) continue;
 
-            // set the value of the DPB
-            try {
-
-                // try to deal with a value as a byte
-                byte byteValue = Byte.parseByte(value);
-                cri.setProperty(type.intValue(), new byte[] {byteValue});
-
-            } catch(NumberFormatException nfex) {
-
-                // ok, that's not a byte, then set it as string
-                if ("".equals(value))
-                    cri.setProperty(type.intValue());
-                else
+            switch(type.intValue()) {
+                case DatabaseParameterBuffer.USER_NAME :
+                case DatabaseParameterBuffer.PASSWORD :
                     cri.setProperty(type.intValue(), value);
+                    break;
+                   
+                default:
+                    // set the value of the DPB by probing to convert string
+                    // into byte value, this method gives very good result 
+                    // for guessing the method to call from the actual value;
+                    // two exceptions, isc_dpb_user_name and isc_dpb_password
+                    // are handled above
+                    try {
+        
+                        // try to deal with a value as a byte
+                        byte byteValue = Byte.parseByte(value);
+                        cri.setProperty(type.intValue(), new byte[] {byteValue});
+        
+                    } catch(NumberFormatException nfex) {
+        
+                        // ok, that's not a byte, then set it as string
+                        if ("".equals(value))
+                            cri.setProperty(type.intValue());
+                        else
+                            cri.setProperty(type.intValue(), value);
+                    }
             }
         }
     }

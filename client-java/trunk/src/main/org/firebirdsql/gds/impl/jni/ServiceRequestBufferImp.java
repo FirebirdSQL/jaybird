@@ -25,40 +25,38 @@ import java.io.ByteArrayOutputStream;
 /**
  * ngds implementation for ServiceRequestBufferImp.
  */
-class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequestBuffer
-    {
+class ServiceRequestBufferImp extends ParameterBufferBase implements
+        ServiceRequestBuffer {
+
     /**
      * Every ServiceRequestBuffer has an associated taskIdentifier.
-     *
+     * 
      * @param taskIdentifier
      */
-    ServiceRequestBufferImp(int taskIdentifier)
-        {
+    ServiceRequestBufferImp(int taskIdentifier) {
         this.taskIdentifier = taskIdentifier;
-        }
-	
-	 // We will overide the addArgument(int argumentType, String value) method.
+    }
 
-    public void addArgument(int argumentType, String value)
-        {
-        getArgumentsList().add(new StringArgument(argumentType, value )
-            {
-            protected void writeLength(int length, ByteArrayOutputStream outputStream)
-                {
+    // We will overide the addArgument(int argumentType, String value) method.
+
+    public void addArgument(int argumentType, String value) {
+        getArgumentsList().add(new StringArgument(argumentType, value) {
+
+            protected void writeLength(int length,
+                    ByteArrayOutputStream outputStream) {
                 outputStream.write(length);
-				outputStream.write(length>>8);
-                }
-            });
-        }
-
+                outputStream.write(length >> 8);
+            }
+        });
+    }
 
     /**
-     * Pacakage local method for obtaining buffer suitable for passing to native method.
-     *
+     * Pacakage local method for obtaining buffer suitable for passing to native
+     * method.
+     * 
      * @return
      */
-    byte[] toByteArray()
-        {
+    byte[] toByteArray() {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         byteArrayOutputStream.write(taskIdentifier);
@@ -66,9 +64,9 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequ
         super.writeArgumentsTo(byteArrayOutputStream);
 
         return byteArrayOutputStream.toByteArray();
-        }
+    }
 
     // PRIVATE MEMBERS
 
     private int taskIdentifier;
-    }
+}

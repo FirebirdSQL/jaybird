@@ -12,12 +12,14 @@ public class LocalGDSFactoryPlugin implements GDSFactoryPlugin {
     private static final String[] JDBC_PROTOCOLS = new String[] {
             "jdbc:firebirdsql:local:"};
     
+    private static LocalGDSImpl gds;
+    
     public String getPluginName() {
         return "JNI-based GDS implementation using IPC communication.";
     }
 
     public String getTypeName() {
-        return "LOCAL";
+        return LocalGDSImpl.LOCAL_TYPE_NAME;
     }
 
     public String[] getTypeAliases() {
@@ -33,7 +35,11 @@ public class LocalGDSFactoryPlugin implements GDSFactoryPlugin {
     }
 
     public AbstractGDS getGDS() {
-        return new GDS_Impl();
+        
+        if (gds == null)
+            gds = new LocalGDSImpl();
+        
+        return gds;
     }
 
     public String getDatabasePath(String server, Integer port, String path) throws GDSException{

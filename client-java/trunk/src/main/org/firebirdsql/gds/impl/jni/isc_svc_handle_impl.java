@@ -28,64 +28,45 @@ import java.util.List;
 /**
  * ngds implementation for isc_svc_handle.
  */
-class isc_svc_handle_impl implements IscSvcHandle
-    {
-    /**
-     */
-    isc_svc_handle_impl()
-        {
-        }
+class isc_svc_handle_impl implements IscSvcHandle {
 
-    // isc_svc_handle interface methods.
-
-    public List getWarnings()
-        {
-        synchronized(this.warnings)
-            {
-            return new ArrayList(this.warnings);
-            }
-        }
-
-    public void clearWarnings()
-        {
-        synchronized(this.warnings)
-            {
-            this.warnings.clear();
-            }
-        }
-
-    public synchronized boolean isValid()
-        {
-        return this.handle != 0;
-        }
-
-    public synchronized boolean isNotValid()
-        {
-        return !isValid();
-        }
-
-    // Package local methods.
-
-    void setHandle(int value)
-        {
-        this.handle = value;
-        }
-
-    int getHandle()
-        {
-        return this.handle;
-        }
-
-    void addWarning(GDSException warning)
-        {
-        synchronized(this.warnings)
-            {
-            this.warnings.add(warning);
-            }
-        }
-
-
-    // PRIVATE MEMBERS
     private List warnings = new ArrayList();
     private int handle = 0;
+
+    isc_svc_handle_impl() {
     }
+
+    public List getWarnings() {
+        synchronized (this.warnings) {
+            return new ArrayList(this.warnings);
+        }
+    }
+
+    public void clearWarnings() {
+        synchronized (this.warnings) {
+            this.warnings.clear();
+        }
+    }
+
+    public synchronized boolean isValid() {
+        return this.handle != 0;
+    }
+
+    public synchronized boolean isNotValid() {
+        return !isValid();
+    }
+
+    void setHandle(int value) {
+        this.handle = value;
+    }
+
+    int getHandle() {
+        return this.handle;
+    }
+
+    void addWarning(GDSException warning) {
+        synchronized (this.warnings) {
+            this.warnings.add(warning);
+        }
+    }
+}

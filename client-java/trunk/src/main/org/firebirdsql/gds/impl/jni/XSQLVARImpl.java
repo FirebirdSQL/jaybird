@@ -23,21 +23,12 @@ import org.firebirdsql.gds.XSQLVAR;
 /**
  * Base class for big- and little-endian implementations.
  */
-public abstract class XSQLVARImpl extends XSQLVAR
-    {
-    XSQLVARImpl(
-            int sqltype,
-            int sqlscale,
-            int sqlsubtype,
-            int sqllen,
-            byte[] sqldata,
+public abstract class XSQLVARImpl extends XSQLVAR {
 
-            String sqlname,
-            String relname,
-            String ownname,
-            String aliasname
-            )
-        {
+    XSQLVARImpl(int sqltype, int sqlscale, int sqlsubtype, int sqllen,
+            byte[] sqldata, String sqlname, String relname, String ownname, 
+            String aliasname) {
+        
         this.sqltype = sqltype;
         this.sqlscale = sqlscale;
         this.sqlsubtype = sqlsubtype;
@@ -47,15 +38,14 @@ public abstract class XSQLVARImpl extends XSQLVAR
         this.relname = relname;
         this.ownname = ownname;
         this.aliasname = aliasname;
-        }
+    }
 
-	// Only for TestNgds
+    // Only for TestNgds
     public XSQLVARImpl() {
-	this.sqlname = "";
-	this.relname = "";
-	this.ownname = "";
-	this.aliasname = "";
+        this.sqlname = "";
+        this.relname = "";
+        this.ownname = "";
+        this.aliasname = "";
     }
 
-
-    }
+}

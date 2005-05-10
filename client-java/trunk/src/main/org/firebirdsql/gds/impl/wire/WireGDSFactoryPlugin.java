@@ -16,7 +16,7 @@ public class WireGDSFactoryPlugin implements GDSFactoryPlugin {
     }
 
     public String getTypeName() {
-        return "PURE_JAVA";
+        return JavaGDSImpl.PURE_JAVA_TYPE_NAME;
     }
 
     public String[] getTypeAliases() {
@@ -32,7 +32,7 @@ public class WireGDSFactoryPlugin implements GDSFactoryPlugin {
     }
 
     public AbstractGDS getGDS() {
-        return new GDS_Impl();
+        return new JavaGDSImpl();
     }
 
     public String getDatabasePath(String server, Integer port, String path) throws GDSException{
