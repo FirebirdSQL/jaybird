@@ -611,4 +611,60 @@ public class TestFBPreparedStatement extends FBTestBase{
             connection.close();
         }
     }
+
+
+    public void testGetExecutionPlan() throws SQLException {
+        Connection conn = getConnectionViaDriverManager();
+        try {
+            AbstractPreparedStatement stmt = 
+                (AbstractPreparedStatement)conn.prepareStatement(
+                    "SELECT * FROM TESTTAB WHERE ID = 2");
+            String executionPlan = stmt.getExecutionPlan();
+            assertTrue("Ensure that a valid execution plan is retrieved",
+                    executionPlan.indexOf("TESTTAB") >= 0);
+            stmt.close();
+        } finally {
+            conn.close(); 
+        }
+    }
+
+   public void testGetStatementType() throws SQLException {
+        Connection conn = getConnectionViaDriverManager();
+        try {
+            AbstractPreparedStatement stmt = 
+                (AbstractPreparedStatement)conn.prepareStatement(
+                    "SELECT * FROM TESTTAB");
+            assertEquals(
+                    "TYPE_SELECT should be returned for a SELECT statement",
+                    FirebirdPreparedStatement.TYPE_SELECT,
+                    stmt.getStatementType());
+            stmt.close(); 
+
+            stmt = (AbstractPreparedStatement)conn.prepareStatement(
+                "INSERT INTO testtab(id, field1, field6) VALUES(?, ?, ?)");
+            assertEquals(
+                    "TYPE_INSERT should be returned for an INSERT statement",
+                    FirebirdPreparedStatement.TYPE_INSERT,
+                    stmt.getStatementType());
+            stmt.close();
+
+            stmt = (AbstractPreparedStatement)conn.prepareStatement(
+                "DELETE FROM TESTTAB WHERE ID = ?");
+            assertEquals(
+                    "TYPE_DELETE should be returned for a DELETE statement",
+                    FirebirdPreparedStatement.TYPE_DELETE,
+                    stmt.getStatementType());
+            stmt.close();
+
+            stmt = (AbstractPreparedStatement)conn.prepareStatement(
+                "UPDATE TESTTAB SET FIELD1 = ? WHERE ID = ?");
+            assertEquals(
+                    "TYPE_UPDATE should be returned for an UPDATE statement",
+                    FirebirdPreparedStatement.TYPE_UPDATE,
+                    stmt.getStatementType());
+            stmt.close();
+        } finally {
+            conn.close();
+        }
+    }
 }
