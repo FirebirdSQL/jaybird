@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
@@ -762,7 +763,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                     DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
                     
                     boolean useStreamBlobs = 
-                        dpb.hasArgument(DatabaseParameterBuffer.USE_STREAM_BLOBS);
+                        dpb.hasArgument(DatabaseParameterBufferExtension.USE_STREAM_BLOBS);
                     
                     blob = gdsHelper.createBlob(!useStreamBlobs);
                     

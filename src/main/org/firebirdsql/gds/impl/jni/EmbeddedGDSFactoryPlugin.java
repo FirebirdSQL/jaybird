@@ -5,19 +5,22 @@ import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.GDSFactoryPlugin;
 import org.firebirdsql.jdbc.FBConnection;
 
-
 public class EmbeddedGDSFactoryPlugin implements GDSFactoryPlugin {
 
     private static final String[] TYPE_ALIASES = new String[0];
-    private static final String[] JDBC_PROTOCOLS = new String[] {
-            "jdbc:firebirdsql:embedded:"};
+
+    private static final String[] JDBC_PROTOCOLS = new String[] { 
+        "jdbc:firebirdsql:embedded:"
+    };
+
+    private static EmbeddedGDSImpl gds;
     
     public String getPluginName() {
         return "GDS implementation for embedded server.";
     }
 
     public String getTypeName() {
-        return "EMBEDDED";
+        return EmbeddedGDSImpl.EMBEDDED_TYPE_NAME;
     }
 
     public String[] getTypeAliases() {
@@ -32,11 +35,15 @@ public class EmbeddedGDSFactoryPlugin implements GDSFactoryPlugin {
         return JDBC_PROTOCOLS;
     }
 
-    public AbstractGDS getGDS() {
-        return new GDS_Impl();
+    public synchronized AbstractGDS getGDS() {
+        if (gds == null)
+            gds = new EmbeddedGDSImpl();
+        
+        return gds;
     }
 
-    public String getDatabasePath(String server, Integer port, String path) throws GDSException{
+    public String getDatabasePath(String server, Integer port, String path)
+            throws GDSException {
         return path;
     }
 

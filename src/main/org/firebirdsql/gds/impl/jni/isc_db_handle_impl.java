@@ -27,8 +27,6 @@
 
 package org.firebirdsql.gds.impl.jni;
 
-
-
 import java.util.*;
 import java.util.Collection;
 import javax.security.auth.Subject;
@@ -37,46 +35,37 @@ import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 
 /**
  * Describe class <code>isc_db_handle_impl</code> here.
- *
+ * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
 public final class isc_db_handle_impl extends AbstractIscDbHandle {
+
     private int rdb_id;
     private int rdb_id_ptr = 0;
-
-
     private Subject subject;
     private Collection rdb_transactions = new ArrayList();
     private List rdb_warnings = new ArrayList();
-    
-    private boolean invalid ;
-
+    private boolean invalid;
     private int resp_object;
     private long resp_blob_id;
     private byte[] resp_data;
-
     private int dialect = 0;
     private int protocol = 0;
     private String version = null;
     private int ODSMajorVersion = 0;
     private int ODSMinorVersion = 0;
-	 
+
     public isc_db_handle_impl() {
     }
 
-    public boolean isValid()
-    {
+    public boolean isValid() {
         return !invalid;
     }
 
     void invalidate() {
         invalid = true;
     }
-    
-    /** @todo Implement statement handle tracking correctly */
-    // Vector rdb_sql_requests = new Vector();
-    
 
     void setRdbId(int rdb_id) {
         checkValidity();
@@ -89,14 +78,13 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
     }
 
     void setRdb_id_ptr(int rdb_id_ptr, int value) {
-            setRdbId(value);
-            this.rdb_id_ptr = rdb_id_ptr;
-        }
+        setRdbId(value);
+        this.rdb_id_ptr = rdb_id_ptr;
+    }
 
-        public int getRdb_id_ptr() {
-            return rdb_id_ptr;
-        }
-
+    public int getRdb_id_ptr() {
+        return rdb_id_ptr;
+    }
 
     void setSubject(Subject subject) {
         this.subject = subject;
@@ -106,163 +94,154 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
         return subject;
     }
 
-    public boolean hasTransactions()
-    {
+    public boolean hasTransactions() {
         checkValidity();
         return !rdb_transactions.isEmpty();
     }
-    
+
     int getOpenTransactionCount() {
         checkValidity();
         return rdb_transactions.size();
     }
 
-    void addTransaction(isc_tr_handle_impl tr)
-    {
+    void addTransaction(isc_tr_handle_impl tr) {
         checkValidity();
         rdb_transactions.add(tr);
     }
 
-    void removeTransaction(isc_tr_handle_impl tr)
-    {
+    void removeTransaction(isc_tr_handle_impl tr) {
         checkValidity();
         rdb_transactions.remove(tr);
     }
-    
-    public Collection getTransactions()
-    {
+
+    public Collection getTransactions() {
         return new ArrayList(rdb_transactions);
     }
 
     public List getWarnings() {
         checkValidity();
-        synchronized(rdb_warnings) {
+        synchronized (rdb_warnings) {
             return new ArrayList(rdb_warnings);
         }
     }
-    
+
     public void addWarning(GDSException warning) {
         checkValidity();
-        synchronized(rdb_warnings) {
+        synchronized (rdb_warnings) {
             rdb_warnings.add(warning);
         }
     }
-    
+
     public void clearWarnings() {
         checkValidity();
-        synchronized(rdb_warnings) {
+        synchronized (rdb_warnings) {
             rdb_warnings.clear();
         }
     }
-    //
-    //
-    //
-    public void setDialect(int value){
+
+    public void setDialect(int value) {
         dialect = value;
     }
 
-    public int getDialect(){
+    public int getDialect() {
         return dialect;
     }
 
-    public void setProtocol(int value){
+    public void setProtocol(int value) {
         protocol = value;
     }
 
-    public int getProtocol(){
+    public int getProtocol() {
         return protocol;
     }
 
-    public void setVersion(String value){
+    public void setVersion(String value) {
         version = value;
     }
 
-    public String getVersion(){
+    public String getVersion() {
         return version;
     }
 
-    public String getDatabaseProductName(){
+    public String getDatabaseProductName() {
         if (version.indexOf("Firebird") != -1)
             return "Firebird";
         else
             return "Interbase";
     }
 
-    public String getDatabaseProductVersion(){
+    public String getDatabaseProductVersion() {
         return version;
     }
 
-    public int getDatabaseProductMajorVersion(){
-        if (version.indexOf("Firebird") != -1){
+    public int getDatabaseProductMajorVersion() {
+        if (version.indexOf("Firebird") != -1) {
             if (version.indexOf("Firebird 1.0") != -1)
                 return 1;
             else if (version.indexOf("Firebird 1.5") != -1)
                 return 1;
-            else 
+            else
                 return -1;
-        }
-        else
+        } else
             return -1;
     }
 
-    public int getDatabaseProductMinorVersion(){
-        if (version.indexOf("Firebird") != -1){
+    public int getDatabaseProductMinorVersion() {
+        if (version.indexOf("Firebird") != -1) {
             if (version.indexOf("Firebird 1.0") != -1)
                 return 0;
             else if (version.indexOf("Firebird 1.5") != -1)
                 return 5;
-            else 
+            else
                 return -1;
-        }
-        else
+        } else
             return -1;
     }
 
-    public void setODSMajorVersion(int value){
+    public void setODSMajorVersion(int value) {
         ODSMajorVersion = value;
     }
 
-    public int getODSMajorVersion(){
+    public int getODSMajorVersion() {
         return ODSMajorVersion;
     }
 
-    public void setODSMinorVersion(int value){
+    public void setODSMinorVersion(int value) {
         ODSMinorVersion = value;
     }
 
-    public int getODSMinorVersion(){
+    public int getODSMinorVersion() {
         return ODSMinorVersion;
     }
 
-    public void setResp_object(int value){
+    public void setResp_object(int value) {
         resp_object = value;
     }
 
-    public int getResp_object(){
+    public int getResp_object() {
         return resp_object;
     }
 
-    public void setResp_blob_id(long value){
+    public void setResp_blob_id(long value) {
         resp_blob_id = value;
     }
 
-    public long getResp_blob_id(){
+    public long getResp_blob_id() {
         return resp_blob_id;
     }
 
-    public void setResp_data(byte[] value){
+    public void setResp_data(byte[] value) {
         resp_data = value;
     }
 
-    public byte[] getResp_data(){
+    public byte[] getResp_data() {
         return resp_data;
     }
 
     private void checkValidity() {
         if (invalid)
             throw new IllegalStateException(
-                "This database handle is invalid and cannot be used anymore.");
+                    "This database handle is invalid and cannot be used anymore.");
     }
-    
 
 }

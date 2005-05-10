@@ -446,11 +446,11 @@ public class GDSHelper {
     }
 
     public String getJavaEncoding() {
-        return dpb.getArgumentAsString(DatabaseParameterBuffer.LOCAL_ENCODING);
+        return dpb.getArgumentAsString(DatabaseParameterBufferExtension.LOCAL_ENCODING);
     }
     
     public String getMappingPath() {
-        return dpb.getArgumentAsString(DatabaseParameterBuffer.MAPPING_PATH);
+        return dpb.getArgumentAsString(DatabaseParameterBufferExtension.MAPPING_PATH);
     }
     
     /**

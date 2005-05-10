@@ -30,6 +30,7 @@ import java.util.*;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.*;
 
@@ -184,7 +185,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     
     private void checkParanoiaMode(GDSHelper gdsHelper) {
         DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
-        paranoiaModa = dpb.hasArgument(DatabaseParameterBuffer.PARANOIA_MODE);
+        paranoiaModa = dpb.hasArgument(DatabaseParameterBufferExtension.PARANOIA_MODE);
     }
 
     private void prepareVars(boolean cached) throws SQLException {

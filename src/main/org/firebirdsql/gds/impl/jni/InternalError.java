@@ -18,19 +18,16 @@
  */
 package org.firebirdsql.gds.impl.jni;
 
-
 /**
  * Thrown from native code when unexpected errors occur.
  */
-public class InternalError extends RuntimeException
-    {
-    public InternalError(String message)
-        {
-        super(message);
-        }
+public class InternalError extends RuntimeException {
 
-    public InternalError(String message, Throwable cause)
-        {
+    public InternalError(String message) {
         super(message);
-        }
     }
+
+    public InternalError(String message, Throwable cause) {
+        super(message);
+    }
+}

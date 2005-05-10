@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConvertionException;
@@ -106,7 +107,7 @@ public abstract class AbstractCallableStatement
         
         int mode = FBEscapedParser.USE_BUILT_IN;
         
-        if (dpb.hasArgument(DatabaseParameterBuffer.USE_STANDARD_UDF))
+        if (dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF))
             mode = FBEscapedParser.USE_STANDARD_UDF;
         
         FBEscapedCallParser parser = new FBEscapedCallParser(mode);

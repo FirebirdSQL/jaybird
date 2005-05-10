@@ -20,10 +20,9 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.XSQLVAR;
 
-
 /**
- * Implementation of {@link XSQLVAR} class for big-endian platforms 
- * (like Solaris).
+ * Implementation of {@link XSQLVAR} class for big-endian platforms (like
+ * Solaris).
  */
 public class XSQLVARBigEndianImpl extends XSQLVARImpl {
 
@@ -34,7 +33,9 @@ public class XSQLVARBigEndianImpl extends XSQLVARImpl {
         super();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.firebirdsql.gds.XSQLVAR#deepCopy()
      */
     public XSQLVAR deepCopy() {
@@ -42,6 +43,7 @@ public class XSQLVARBigEndianImpl extends XSQLVARImpl {
         result.copyFrom(this);
         return result;
     }
+
     /**
      * Create instance of this class for the specified XSQLVAR parameters.
      */
@@ -51,18 +53,18 @@ public class XSQLVARBigEndianImpl extends XSQLVARImpl {
         super(sqltype, sqlscale, sqlsubtype, sqllen, sqldata, sqlname, relname,
                 ownname, aliasname);
     }
-    
-    public byte[] encodeShort(short value){
+
+    public byte[] encodeShort(short value) {
         byte ret[] = new byte[2];
         ret[1] = (byte) ((value >>> 0) & 0xff);
         ret[0] = (byte) ((value >>> 8) & 0xff);
         return ret;
     }
 
-    public short decodeShort(byte[] byte_int){
-        int b1 = byte_int[1]&0xFF;
-        int b2 = byte_int[0]&0xFF;
+    public short decodeShort(byte[] byte_int) {
+        int b1 = byte_int[1] & 0xFF;
+        int b2 = byte_int[0] & 0xFF;
 
-        return (short)((b1 << 0) + (b2 << 8));
+        return (short) ((b1 << 0) + (b2 << 8));
     }
 }

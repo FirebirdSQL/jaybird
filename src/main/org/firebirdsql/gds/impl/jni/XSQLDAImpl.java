@@ -22,23 +22,21 @@ import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLDA;
 
+public class XSQLDAImpl extends XSQLDA {
 
-public class XSQLDAImpl extends XSQLDA
-    {
-    XSQLDAImpl( int sqln, int sqld,  XSQLVAR[] sqlvar)
-        {
+    XSQLDAImpl(int sqln, int sqld, XSQLVAR[] sqlvar) {
         super();
 
         this.sqln = sqln;
         this.sqld = sqld;
         this.sqlvar = sqlvar;
-        }
+    }
 
-	// For TestNgds
-	public XSQLDAImpl(int n) {
+    // For TestNgds
+    public XSQLDAImpl(int n) {
         version = ISCConstants.SQLDA_VERSION1;
         sqln = n;
         sqld = n;
         sqlvar = new XSQLVARImpl[n];
     }
-    }
+}

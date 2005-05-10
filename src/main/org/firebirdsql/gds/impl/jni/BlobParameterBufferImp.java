@@ -1,4 +1,4 @@
- /*
+/*
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -25,38 +25,39 @@ import org.firebirdsql.gds.ISCConstants;
 import java.io.ByteArrayOutputStream;
 
 /**
- *
+ * 
  */
-public class BlobParameterBufferImp extends ParameterBufferBase implements BlobParameterBuffer
-    {
-    public BlobParameterBufferImp()
-        {
-        super();
-        }
+public class BlobParameterBufferImp extends ParameterBufferBase implements
+        BlobParameterBuffer {
 
-    public void addArgument(int argumentType, int value)
-        {
-		if(value > 65535)
-			throw new RuntimeException("Blob parameter buffer value out of range for type "+argumentType); 
-					
-        getArgumentsList().add(new NumericArgument(argumentType, value)
-            {
-            protected void writeValue(ByteArrayOutputStream outputStream, int value)
-                {
+    public BlobParameterBufferImp() {
+        super();
+    }
+
+    public void addArgument(int argumentType, int value) {
+        if (value > 65535)
+            throw new RuntimeException(
+                    "Blob parameter buffer value out of range for type "
+                            + argumentType);
+
+        getArgumentsList().add(new NumericArgument(argumentType, value) {
+
+            protected void writeValue(ByteArrayOutputStream outputStream,
+                    int value) {
                 outputStream.write(2);
                 outputStream.write(value);
-                outputStream.write(value>>8);
-                }
-            });
-        }
+                outputStream.write(value >> 8);
+            }
+        });
+    }
 
     /**
-     * Pacakage local method for obtaining buffer suitable for passing to native method.
-     *
+     * Pacakage local method for obtaining buffer suitable for passing to native
+     * method.
+     * 
      * @return
      */
-    byte[] getBytesForNativeCode()
-        {
+    byte[] getBytesForNativeCode() {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         byteArrayOutputStream.write(ISCConstants.isc_bpb_version1);
@@ -64,5 +65,5 @@ public class BlobParameterBufferImp extends ParameterBufferBase implements BlobP
         super.writeArgumentsTo(byteArrayOutputStream);
 
         return byteArrayOutputStream.toByteArray();
-        }
     }
+}

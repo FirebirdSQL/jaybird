@@ -26,15 +26,16 @@ import java.io.ByteArrayOutputStream;
 /**
  * ngds implementation for ServiceParameterBuffer.
  */
-class ServiceParameterBufferImp extends ParameterBufferBase implements ServiceParameterBuffer
-    {
+class ServiceParameterBufferImp extends ParameterBufferBase implements
+        ServiceParameterBuffer {
+
     /**
-     * Pacakage local method for obtaining buffer suitable for passing to native method.
-     *
+     * Pacakage local method for obtaining buffer suitable for passing to native
+     * method.
+     * 
      * @return
      */
-    byte[] toByteArray()
-        {
+    byte[] toByteArray() {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         byteArrayOutputStream.write(ISCConstants.isc_spb_version);
@@ -43,5 +44,5 @@ class ServiceParameterBufferImp extends ParameterBufferBase implements ServicePa
         super.writeArgumentsTo(byteArrayOutputStream);
 
         return byteArrayOutputStream.toByteArray();
-        }
     }
+}

@@ -25,7 +25,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.gds.impl.wire.GDS_Impl;
+import org.firebirdsql.gds.impl.wire.JavaGDSImpl;
 import org.firebirdsql.gds.impl.wire.isc_blob_handle_impl;
 import org.firebirdsql.gds.impl.wire.isc_db_handle_impl;
 import org.firebirdsql.gds.impl.wire.isc_stmt_handle_impl;
@@ -361,8 +361,8 @@ public class TestGds extends SimpleFBTestBase {
         xsqlvar.sqllen = 2;
         xsqlvar.sqldata = xsqlvar.encodeShort((short) 4);
         xsqlda.sqlvar[1] = xsqlvar;
-        GDS_Impl.calculateBLR(xsqlda);
-        GDS_Impl.calculateIOLength(xsqlda);
+        JavaGDSImpl.calculateBLR(xsqlda);
+        JavaGDSImpl.calculateIOLength(xsqlda);
         if (log!=null) log.info("test- isc_dsql_exec_immed2");
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R1 VALUES (?, ?)",
                                  ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
@@ -380,8 +380,8 @@ public class TestGds extends SimpleFBTestBase {
         xsqlvar.sqllen = 2;
         xsqlvar.sqldata = null;
         xsqlda.sqlvar[1] = xsqlvar;
-        GDS_Impl.calculateBLR(xsqlda);
-        GDS_Impl.calculateIOLength(xsqlda);
+        JavaGDSImpl.calculateBLR(xsqlda);
+        JavaGDSImpl.calculateIOLength(xsqlda);
 
         if (log!=null) log.info("test- isc_dsql_exec_immed2");
         gds.iscDsqlExecImmed2(db1, t1, "SELECT COL1, COL2 FROM R1 WHERE COL1 = 3",
@@ -500,8 +500,8 @@ public class TestGds extends SimpleFBTestBase {
         xsqlvar.sqllen = 8;
         xsqlvar.sqldata = xsqlvar.encodeLong(blob1.getBlobId());
         xsqlda.sqlvar[1] = xsqlvar;
-        GDS_Impl.calculateBLR(xsqlda);
-        GDS_Impl.calculateIOLength(xsqlda);
+        JavaGDSImpl.calculateBLR(xsqlda);
+        JavaGDSImpl.calculateIOLength(xsqlda);
     gds.iscCloseBlob(blob1);
 
         if (log!=null) log.info("test- isc_dsql_exec_immed2");
@@ -582,8 +582,8 @@ public class TestGds extends SimpleFBTestBase {
         xsqlvar.sqllen = 8;
         xsqlvar.sqldata = xsqlvar.encodeLong(blob1.getBlobId());
         xsqlda.sqlvar[1] = xsqlvar;
-        GDS_Impl.calculateBLR(xsqlda);
-        GDS_Impl.calculateIOLength(xsqlda);
+        JavaGDSImpl.calculateBLR(xsqlda);
+        JavaGDSImpl.calculateIOLength(xsqlda);
         gds.iscCloseBlob(blob1);
 
         if (log!=null) log.info("test- isc_dsql_exec_immed2");
@@ -669,8 +669,8 @@ public class TestGds extends SimpleFBTestBase {
         xsqlvar.sqllen = 8;
         xsqlvar.sqldata = xsqlvar.encodeLong(blob1.getBlobId());
         xsqlda.sqlvar[1] = xsqlvar;
-        GDS_Impl.calculateBLR(xsqlda);
-        GDS_Impl.calculateIOLength(xsqlda);
+        JavaGDSImpl.calculateBLR(xsqlda);
+        JavaGDSImpl.calculateIOLength(xsqlda);
         gds.iscCloseBlob(blob1);
 
         if (log!=null) log.info("test- isc_dsql_exec_immed2");
@@ -754,8 +754,8 @@ public class TestGds extends SimpleFBTestBase {
         xsqlvar.sqllen = 8;
         xsqlvar.sqldata = xsqlvar.encodeLong(blob1.getBlobId());
         xsqlda.sqlvar[1] = xsqlvar;
-        GDS_Impl.calculateBLR(xsqlda);
-        GDS_Impl.calculateIOLength(xsqlda);
+        JavaGDSImpl.calculateBLR(xsqlda);
+        JavaGDSImpl.calculateIOLength(xsqlda);
         gds.iscCloseBlob(blob1);
 
         if (log!=null) log.info("test- isc_dsql_exec_immed2");

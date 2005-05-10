@@ -35,6 +35,7 @@ import java.net.UnknownHostException;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.impl.XdrInputStream;
 import org.firebirdsql.gds.impl.XdrOutputStream;
@@ -52,8 +53,11 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class GDS_Impl extends AbstractGDS implements GDS {
-    private static Logger log = LoggerFactory.getLogger(GDS_Impl.class,false);
+public final class JavaGDSImpl extends AbstractGDS implements GDS {
+
+    public static final String PURE_JAVA_TYPE_NAME = "PURE_JAVA";
+
+    private static Logger log = LoggerFactory.getLogger(JavaGDSImpl.class,false);
 
     /* Operation (packet) types */
 
@@ -167,13 +171,12 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
     static final int op_rollback_retaining  = 86;
 
 
-    static final int MAX_BUFFER_SIZE = 1024; //8192;//4096; //max size for response for ??
+    static final int MAX_BUFFER_SIZE = 1024;
 
-    public GDS_Impl() {
-        super(GDSType.getType("PURE_JAVA"));
+    public JavaGDSImpl() {
+        super(GDSType.getType(PURE_JAVA_TYPE_NAME));
     }
-
-
+    
     // Database functions
 
 
@@ -217,7 +220,7 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
                 db.out.writeInt(0);           // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
 
-                databaseParameterBuffer = removeInternalDPB(databaseParameterBuffer);
+                databaseParameterBuffer = ((DatabaseParameterBufferExtension)databaseParameterBuffer).removeExtensionParams();
 
                 db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable)databaseParameterBuffer);
                 //            db.out.writeBuffer(dpb, dpb_length);
@@ -238,24 +241,7 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
 
     }
 
-     private DatabaseParameterBuffer removeInternalDPB(DatabaseParameterBuffer dpb) {
-         DatabaseParameterBuffer result = dpb.deepCopy();
-
-         result.removeArgument(ISCConstants.isc_dpb_socket_buffer_size);
-         result.removeArgument(ISCConstants.isc_dpb_blob_buffer_size);
-         result.removeArgument(ISCConstants.isc_dpb_use_stream_blobs);
-         result.removeArgument(ISCConstants.isc_dpb_paranoia_mode);
-         result.removeArgument(ISCConstants.isc_dpb_timestamp_uses_local_timezone);
-         result.removeArgument(ISCConstants.isc_dpb_use_standard_udf);
-         result.removeArgument(ISCConstants.isc_dpb_local_encoding);
-         result.removeArgument(ISCConstants.isc_dpb_mapping_path);
-         result.removeArgument(ISCConstants.isc_dpb_no_result_set_tracking);
- 
-         return result;
-     }
-
-
-    public void isc_attach_database(String host,
+     public void isc_attach_database(String host,
                                     Integer port,
                                     String file_name,
                                     IscDbHandle db_handle,
@@ -300,7 +286,7 @@ public final class GDS_Impl extends AbstractGDS implements GDS {
                 db.out.writeInt(0);                // packet->p_atch->p_atch_database
                 db.out.writeString(dbai.getFileName());
 
-                databaseParameterBuffer = removeInternalDPB(databaseParameterBuffer);
+                databaseParameterBuffer = ((DatabaseParameterBufferExtension)databaseParameterBuffer).removeExtensionParams();
 
                 db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable)databaseParameterBuffer);
                 db.out.flush();
