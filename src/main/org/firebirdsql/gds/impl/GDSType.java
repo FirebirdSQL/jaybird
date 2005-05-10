@@ -95,7 +95,7 @@ public final class GDSType implements Serializable {
         if (type == null)
             return null;
             
-        return (GDSType)typeMap.get(type.toUpperCase());
+        return (GDSType)getTypeMap().get(type.toUpperCase());
     }
     
     /**
