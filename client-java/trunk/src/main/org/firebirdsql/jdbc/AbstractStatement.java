@@ -147,6 +147,9 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @throws SQLException if something went wrong.
      */
     public Object getSynchronizationObject() throws SQLException {
+        if (statementListener == null || statementListener.getConnection() == null)
+            return this;
+        
         boolean autocommit = statementListener.getConnection().getAutoCommit();
         
         if (autocommit)
