@@ -1,3 +1,134 @@
+2005-05-10 23:36  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
+	
+	fixed NPE
+
+2005-05-10 23:25  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestJDBCPerformance.java:
+	
+	disabled performance testing
+
+2005-05-10 23:05  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSType.java:
+	
+	fixed NPE
+
+2005-05-10 20:56  gab_reid
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.j
+	ava:
+	
+	Added tests for getting statement type and execution plan
+
+2005-05-10 20:56  gab_reid
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestStatementInfoFactory.
+	java:
+	
+	No longer used
+
+2005-05-10 20:55  gab_reid
+
+	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
+	
+	Removed FirebirdStatementInfo
+
+2005-05-10 20:54  gab_reid
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractPreparedStatement.java, FirebirdPreparedStatement.java:
+	
+	Added methods for getting statement type and execution plan
+
+2005-05-10 20:51  gab_reid
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	FirebirdStatementInfo.java, FirebirdStatementInfoFactory.java:
+	
+	Moved data from here to AbstractPreparedStatement
+
+2005-05-10 18:32  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/: GDS.java,
+	ServiceRequestBuffer.java, DatabaseParameterBuffer.java,
+	ServiceParameterBuffer.java, package.html:
+	
+	improved javadoc
+
+2005-05-10 18:27  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBConnection.java:
+	
+	added test case that reproduces a bug with an open cursor,
+	reproducable in JayBird 1.5.5, fixed in HEAD
+
+2005-05-10 18:25  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: ngds/GDS_Impl.java,
+	jgds/GDS_Impl.java:
+	
+	Commit for a bug when cursor is not closed before preparing another
+	statement.
+
+2005-05-10 08:40  rrokytskyy
+
+	* client-java/src/native/jaygds/source/: entrypoints.cpp,
+	entrypoints_generated.h:
+	
+	updated code to reflect the refactoring in Java code
+
+2005-05-10 08:38  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/impl/jni/BaseGDSImpl.java,
+	main/org/firebirdsql/gds/impl/jni/BlobParameterBufferImp.java,
+	main/org/firebirdsql/gds/impl/jni/DatabaseParameterBufferImp.java,
+	main/org/firebirdsql/gds/impl/jni/EmbeddedGDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/jni/EmbeddedGDSImpl.java,
+	main/org/firebirdsql/gds/impl/jni/GDS_Impl.java,
+	main/org/firebirdsql/gds/impl/jni/InternalError.java,
+	main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java,
+	main/org/firebirdsql/gds/impl/jni/LocalGDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/jni/LocalGDSImpl.java,
+	main/org/firebirdsql/gds/impl/jni/NativeGDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/jni/NativeGDSImpl.java,
+	main/org/firebirdsql/gds/impl/jni/ParameterBufferBase.java,
+	main/org/firebirdsql/gds/impl/jni/ServiceParameterBufferImp.java,
+	main/org/firebirdsql/gds/impl/jni/ServiceRequestBufferImp.java,
+	main/org/firebirdsql/gds/impl/jni/XSQLDAImpl.java,
+	main/org/firebirdsql/gds/impl/jni/XSQLVARBigEndianImpl.java,
+	main/org/firebirdsql/gds/impl/jni/XSQLVARImpl.java,
+	main/org/firebirdsql/gds/impl/jni/XSQLVARLittleEndianImpl.java,
+	main/org/firebirdsql/gds/impl/jni/isc_blob_handle_impl.java,
+	main/org/firebirdsql/gds/impl/jni/isc_db_handle_impl.java,
+	main/org/firebirdsql/gds/impl/jni/isc_svc_handle_impl.java,
+	main/org/firebirdsql/gds/DatabaseParameterBuffer.java,
+	main/org/firebirdsql/gds/impl/DatabaseParameterBufferExtension.java
+	, main/org/firebirdsql/gds/impl/GDSHelper.java,
+	main/org/firebirdsql/gds/impl/wire/DatabaseParameterBufferImp.java,
+	main/org/firebirdsql/gds/impl/wire/GDS_Impl.java,
+	main/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java,
+	main/org/firebirdsql/gds/impl/wire/WireGDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/wire/isc_stmt_handle_impl.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FBBlob.java,
+	main/org/firebirdsql/jdbc/FBConnectionHelper.java,
+	main/org/firebirdsql/jdbc/FBDriver.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	main/org/firebirdsql/jdbc/field/FBField.java,
+	test/org/firebirdsql/gds/impl/jni/TestNgdsBlobReadBug.java,
+	test/org/firebirdsql/gds/impl/wire/TestGds.java:
+	
+	finished plugin implementation for GDS providers
+
 2005-05-08 15:30  rrokytskyy
 
 	* client-java/src/: main/org/firebirdsql/gds/impl/GDSFactory.java,
