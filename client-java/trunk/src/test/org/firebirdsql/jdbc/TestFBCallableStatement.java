@@ -117,6 +117,9 @@ public class TestFBCallableStatement extends FBTestBase {
     public static final String EXECUTE_PROCEDURE_EMP_INSERT_1 =
         "EXECUTE PROCEDURE set_emp_proj (?,?,?,?)";
 
+    public static final String EXECUTE_PROCEDURE_EMP_INSERT_SPACES =
+        "EXECUTE PROCEDURE \nset_emp_proj\t   ( ?,?\t,?\n  ,?)";
+
 	 public static final String CREATE_EMPLOYEE_PROJECT = ""
 	     + "CREATE TABLE employee_project( "
 		  + " emp_no INTEGER NOT NULL, "
@@ -409,6 +412,22 @@ public class TestFBCallableStatement extends FBTestBase {
           cstmt.execute();
         } finally {
           cstmt.close();
+        }
+
+        cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT_SPACES);
+        try {
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "DGPII");
+            cstmt.setString(3, "Smith");
+            cstmt.setString(4, "Automap");
+            cstmt.execute();
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "VBASE");
+            cstmt.setString(3, "Jenner");
+            cstmt.setString(4, "Video Database");
+            cstmt.execute();
+        } finally {
+            cstmt.close();
         }
 
         connection.setAutoCommit(false);
