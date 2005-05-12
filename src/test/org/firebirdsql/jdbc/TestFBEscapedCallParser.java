@@ -56,6 +56,11 @@ public class TestFBEscapedCallParser extends TestCase {
     public static final String CALL_TEST_7 =
         "EXECUTE PROCEDURE my_proc(UPPER(?), '11-dec-2001')";
     
+    public static final String CALL_TEST_8 =
+        "EXECUTE PROCEDURE my_proc (UPPER(?), '11-dec-2001')";
+
+    public static final String CALL_TEST_9 =
+        "   \t  EXECUTE\nPROCEDURE  my_proc   (    UPPER(?), '11-dec-2001')";
 
     public TestFBEscapedCallParser(String testName) {
         super(testName);
@@ -119,7 +124,6 @@ public class TestFBEscapedCallParser extends TestCase {
         } catch(SQLException ex) {
             // everything is ok
         }
-        
         assertTrue("Should correctly parse call. " + procedureCall.getSQL(false), 
                 testProcedureCall.equals(procedureCall));
         
@@ -128,9 +132,19 @@ public class TestFBEscapedCallParser extends TestCase {
         procedureCall.getInputParam(2).setValue("test value");
         assertTrue("Should correctly parse call. " + procedureCall.getSQL(false), 
                 testProcedureCall.equals(procedureCall));
-        
+
         procedureCall = parser.parseCall(CALL_TEST_7);
-        assertTrue("Should correctly parse call. " + procedureCall.getSQL(false), 
+        verifyParseSql(procedureCall);
+
+        procedureCall = parser.parseCall(CALL_TEST_8);
+        verifyParseSql(procedureCall);
+        
+        procedureCall = parser.parseCall(CALL_TEST_9);
+        verifyParseSql(procedureCall);
+    }
+
+    private void verifyParseSql(FBProcedureCall procedureCall) throws FBSQLException {
+        assertTrue("Should correctly parse call.\n[" + procedureCall.getSQL(false) + "] \n[" + testProcedureCall.getSQL(false) + "]", 
                 testProcedureCall.getSQL(false).equals(procedureCall.getSQL(false)));
     }
 
