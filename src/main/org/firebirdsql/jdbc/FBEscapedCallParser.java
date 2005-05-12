@@ -266,6 +266,16 @@ public class FBEscapedCallParser {
                      if (tokenProcessed) {
                      	buffer = new StringBuffer();
                         setState(NORMAL_STATE);
+                        if (isNameProcessed){
+                            // If we just found a name, fast-forward to the 
+                            // opening parenthesis, if there is one
+                            int j = i;
+                            while (j < sqlbuff.length - 1 
+                                && Character.isWhitespace(sqlbuff[j])) j++;
+                            if (sqlbuff[j] == '(') 
+                                i = j;
+                        }
+
                      }
                  } else {
                      buffer.append(sqlbuff[i]);
@@ -279,7 +289,6 @@ public class FBEscapedCallParser {
                  // EXECUTE PROCEDURE words, but still do not have procedure
                  // name set, we can be sure that buffer contains procedure 
                  // name.
-                 
                  boolean isProcedureName = 
                      sqlbuff[i] == '(' &&
                      isCallKeywordProcessed() &&
