@@ -828,8 +828,40 @@ public class TestFBResultSet extends FBTestBase {
         }
         
     }
+
+    public void testGetExecutionPlan() throws Exception {
+        Statement stmt = connection.createStatement();
+        try {
+            FBResultSet rs = (FBResultSet)stmt.executeQuery(
+                    "SELECT id, str FROM test_table");
+            String execPlan = rs.getExecutionPlan();
+            assertTrue("Execution plan should reference test_table",
+                    execPlan.toUpperCase().indexOf("TEST_TABLE") >= 0);
+        } finally {
+            stmt.close();
+        }
+
+        PreparedStatement pStmt = 
+            connection.prepareStatement("SELECT * FROM TEST_TABLE");
+        try {
+            FBResultSet rs = (FBResultSet)pStmt.executeQuery();
+            String execPlan = rs.getExecutionPlan();
+            assertTrue("Execution plan should reference test_table",
+                    execPlan.toUpperCase().indexOf("TEST_TABLE") >= 0);
+        } finally {
+            pStmt.close();
+        }
+        
+        // Ensure there isn't a crash when attempting to retrieve the
+        // execution plan from a non-statement-based ResultSet
+        java.sql.DatabaseMetaData metaData = connection.getMetaData();
+        FBResultSet rs = (FBResultSet)metaData.getSchemas();
+        assertEquals("Non-statement-based result set has no execution plan",
+                "", rs.getExecutionPlan());
+    }
     
     public static void main(String[] args) {
         TestRunner.run(new TestFBResultSet("testMemoryGrowth"));
     }
+
 }
