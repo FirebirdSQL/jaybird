@@ -76,8 +76,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     private int rsConcurrency = ResultSet.CONCUR_READ_ONLY;
     
     private boolean paranoiaModa;
-    
-    
+
     
     /* (non-Javadoc)
      * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#allRowsFetched(org.firebirdsql.jdbc.FBFetcher)
@@ -3075,6 +3074,14 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      */
     public void updateArray(String param1, Array param2) throws SQLException {
         throw new FBDriverNotCapableException();
+    }
+
+
+    public String getExecutionPlan() throws FBSQLException {
+        if (fbStatement != null){
+            return fbStatement.getExecutionPlan();
+        }
+        return "";
     }
 
     //--------------------------------------------------------------------
