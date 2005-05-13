@@ -1,3 +1,38 @@
+2005-05-13 00:14  gab_reid
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	Added testing of getExecutionPlan()
+
+2005-05-13 00:14  gab_reid
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	
+	Added getExecutionPlan() method
+
+2005-05-13 00:13  gab_reid
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractPreparedStatement.java, AbstractStatement.java:
+	
+	Moved execution plan and statement type implementation into
+	protected methods of AbstractStatement
+
+2005-05-12 07:31  gab_reid
+
+	* client-java/src/test/org/firebirdsql/jdbc/:
+	TestFBCallableStatement.java, TestFBEscapedCallParser.java:
+	
+	Added tests for spaces in procedure call statement sql
+
+2005-05-12 07:29  gab_reid
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBEscapedCallParser.java:
+	
+	Fixed parser bug when there was a space between procedure name and
+	opening parenthesis
+
 2005-05-10 23:36  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
