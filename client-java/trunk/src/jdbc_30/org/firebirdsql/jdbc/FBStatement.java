@@ -14,8 +14,8 @@ public class FBStatement extends AbstractStatement {
 	/**
 	 * 
 	 */
-	public FBStatement(GDSHelper c, int rsType, int rsConcurrency, FBObjectListener.StatementListener statementListener) {
-		super(c, rsType, rsConcurrency, statementListener);
+	public FBStatement(GDSHelper c, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) {
+		super(c, rsType, rsConcurrency, rsHoldability, statementListener);
 	}
 
     

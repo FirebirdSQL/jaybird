@@ -27,8 +27,8 @@ import org.firebirdsql.gds.GDSHelper;
  */
 public class FBStatement extends AbstractStatement {
 
-    public FBStatement(GDSHelper gdsHelper, int rsType, int rsConcurrency, FBObjectListener.StatementListener statementListenet) {
-    	super(gdsHelper, rsType, rsConcurrency, statementListenet);
+    public FBStatement(GDSHelper gdsHelper, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListenet) {
+    	super(gdsHelper, rsType, rsConcurrency, rsHoldability, statementListenet);
     }
         
 }

@@ -99,9 +99,9 @@ public abstract class AbstractCallableStatement
 
 
     protected AbstractCallableStatement(GDSHelper c, String sql, 
-                                        int rsType, int rsConcurrency, FBObjectListener.StatementListener statementListener) 
+                                        int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) 
     throws SQLException {
-        super(c, rsType, rsConcurrency, statementListener);
+        super(c, rsType, rsConcurrency, rsHoldability, statementListener);
         
         DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
         
