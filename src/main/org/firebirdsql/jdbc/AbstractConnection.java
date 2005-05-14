@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 
 import java.sql.*;
 import java.util.*;
+
 import javax.resource.*;
 
 import org.firebirdsql.gds.*;
@@ -55,6 +56,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
     // This set contains all allocated but not closed statements
     // It is used to close them before the connection is closed
     private HashSet activeStatements = new HashSet();
+    
+    private int resultSetHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
 	 
     /**
      * Create a new AbstractConnection instance based on a
@@ -73,6 +76,14 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return txCoordinator;
     }
     
+    public int getHoldability() throws SQLException {
+        return this.resultSetHoldability;
+    }
+
+    public void setHoldability(int holdability) throws SQLException {
+        this.resultSetHoldability = holdability;
+    }
+
     /**
      * Check if this connection is valid. This method should be invoked before
      * executing any action in this class.
@@ -215,7 +226,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized Statement createStatement() throws SQLException {
         return createStatement(
             ResultSet.TYPE_FORWARD_ONLY, 
-            ResultSet.CONCUR_READ_ONLY
+            ResultSet.CONCUR_READ_ONLY,
+            resultSetHoldability
         );
     }
 
@@ -674,25 +686,86 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
+    
     public synchronized Statement createStatement(int resultSetType, 
-        int resultSetConcurrency) throws SQLException 
+            int resultSetConcurrency) throws SQLException {
+        return createStatement(resultSetType, resultSetConcurrency, this.resultSetHoldability);
+    }
+    
+    /**
+     * Creates a <code>Statement</code> object that will generate
+     * <code>ResultSet</code> objects with the given type, concurrency,
+     * and holdability.
+     * This method is the same as the <code>createStatement</code> method
+     * above, but it allows the default result set
+     * type, concurrency, and holdability to be overridden.
+     *
+     * @param resultSetType one of the following <code>ResultSet</code> 
+     *        constants:
+     *         <code>ResultSet.TYPE_FORWARD_ONLY</code>, 
+     *         <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
+     *         <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
+     * @param resultSetConcurrency one of the following <code>ResultSet</code> 
+     *        constants:
+     *         <code>ResultSet.CONCUR_READ_ONLY</code> or
+     *         <code>ResultSet.CONCUR_UPDATABLE</code>
+     * @param resultSetHoldability one of the following <code>ResultSet</code> 
+     *        constants:
+     *         <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or
+     *         <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
+     * @return a new <code>Statement</code> object that will generate
+     *         <code>ResultSet</code> objects with the given type,
+     *         concurrency, and holdability
+     * @exception SQLException if a database access error occurs
+     *            or the given parameters are not <code>ResultSet</code> 
+     *            constants indicating type, concurrency, and holdability
+     * @see ResultSet
+     * @since 1.4
+     */
+    public synchronized Statement createStatement(int resultSetType, 
+        int resultSetConcurrency, int resultSetHoldability) throws SQLException 
     {
-        if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE) 
-        {
+        if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE) {
             addWarning(new FBSQLWarning("Unsupported type and/or concurrency"));
             
             if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
                 resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-            
         }			  
           
+        checkHoldability(resultSetType, resultSetHoldability);
+        
         try {
-            Statement stmt =  new FBStatement(getGDSHelper(), resultSetType, resultSetConcurrency, txCoordinator);
+            Statement stmt = new FBStatement(getGDSHelper(), resultSetType,
+                    resultSetConcurrency, resultSetHoldability, txCoordinator);
+            
             activeStatements.add(stmt);
             return stmt;
         } catch(GDSException ex) {
             throw new FBSQLException(ex);
         }
+    }
+
+    /**
+     * Check whether result set type and holdability are compatible.
+     * 
+     * @param resultSetType desired result set type.
+     * @param resultSetHoldability desired result set holdability.
+     * 
+     * @return new holdability, compatible with result set type.
+     * 
+     * @throws SQLException if specified result set type and holdability are
+     * not compatibe.
+     */
+    private void checkHoldability(int resultSetType, int resultSetHoldability) throws SQLException {
+        boolean holdable = 
+            resultSetHoldability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT;
+        
+        boolean notScrollable = resultSetType != ResultSet.TYPE_SCROLL_INSENSITIVE;
+
+        if (holdable && notScrollable) 
+            throw new FBDriverNotCapableException(
+                    "Holdable cursors are supported only " +
+                    "for scrollable insensitive result sets.");
     }
 
 
@@ -713,7 +786,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public synchronized PreparedStatement prepareStatement(String sql, 
-        int resultSetType, int resultSetConcurrency) throws SQLException 
+            int resultSetType, int resultSetConcurrency) throws SQLException {
+        return prepareStatement(sql, resultSetType, resultSetConcurrency, this.resultSetHoldability);
+    }
+
+    public synchronized PreparedStatement prepareStatement(String sql, 
+        int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException 
     {
           PreparedStatement stmt;
 		  if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
@@ -725,9 +803,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
               
 		  }
           
+          checkHoldability(resultSetType, resultSetHoldability);
+          
           try {
               stmt = new FBPreparedStatement(
-                      getGDSHelper(), sql, resultSetType, resultSetConcurrency, txCoordinator);
+                      getGDSHelper(), sql, resultSetType, resultSetConcurrency, 
+                      resultSetHoldability, txCoordinator);
               
               activeStatements.add(stmt);
               return stmt;
@@ -754,7 +835,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public synchronized CallableStatement prepareCall(String sql, 
-        int resultSetType, int resultSetConcurrency) throws SQLException 
+            int resultSetType, int resultSetConcurrency) throws SQLException {
+        return prepareCall(sql, resultSetType, resultSetConcurrency, this.resultSetHoldability);
+    }
+            
+    public synchronized CallableStatement prepareCall(String sql, 
+        int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException 
     {
         CallableStatement stmt;
 		if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE && 
@@ -768,8 +854,11 @@ public abstract class AbstractConnection implements FirebirdConnection {
             resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
         }	
 
+        checkHoldability(resultSetType, resultSetHoldability);
+        
         try {
-            stmt = new FBCallableStatement(getGDSHelper(), sql, resultSetType, resultSetConcurrency, txCoordinator);
+            stmt = new FBCallableStatement(getGDSHelper(), sql, resultSetType,
+                    resultSetConcurrency, resultSetHoldability, txCoordinator);
             activeStatements.add(stmt);
             return stmt;
         } catch(GDSException ex) {
@@ -808,6 +897,163 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized void setTypeMap(Map map) throws SQLException {
         throw new FBDriverNotCapableException();
     }
+    
+    
+    /*
+     * Savepoint stuff.  
+     */
+    
+    private int savepointCounter = 0;
+    private LinkedList savepoints = new LinkedList();
+
+    private int getNextSavepointCounter() {
+        return savepointCounter++;
+    }
+    
+    /**
+     * Creates an unnamed savepoint in the current transaction and 
+     * returns the new <code>Savepoint</code> object that represents it.
+     *
+     * @return the new <code>Savepoint</code> object
+     * @exception SQLException if a database access error occurs
+     *            or this <code>Connection</code> object is currently in
+     *            auto-commit mode
+     * @see Savepoint
+     */
+    public synchronized Savepoint setSavepoint() throws SQLException {
+        FBSavepoint savepoint = new FBSavepoint(getNextSavepointCounter());
+        
+        setSavepoint(savepoint);
+        
+        savepoints.addLast(savepoint);
+        
+        return savepoint;
+    }
+    
+    /**
+     * Set the savepoint on the server.
+     * 
+     * @param savepoint savepoint to set.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    private void setSavepoint(FBSavepoint savepoint) throws SQLException {
+        if (getAutoCommit())
+            throw new SQLException("Connection.setSavepoint() method cannot " + 
+                    "be used in auto-commit mode.");
+
+        try {
+            txCoordinator.ensureTransaction();
+            
+            getGDSHelper().executeImmediate("SAVEPOINT " + savepoint.getServerSavepointId());
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
+        }
+    }
+
+    /**
+     * Creates a savepoint with the given name in the current transaction
+     * and returns the new <code>Savepoint</code> object that represents it.
+     *
+     * @param name a <code>String</code> containing the name of the savepoint
+     * @return the new <code>Savepoint</code> object
+     * @exception SQLException if a database access error occurs
+     *            or this <code>Connection</code> object is currently in
+     *            auto-commit mode
+     * @see Savepoint
+     */
+    public synchronized Savepoint setSavepoint(String name) throws SQLException {
+        FBSavepoint savepoint = new FBSavepoint(name);
+        
+        setSavepoint(savepoint);
+        
+        return savepoint;
+    }
+    
+    /**
+     * Undoes all changes made after the given <code>Savepoint</code> object
+     * was set. 
+     * <P>
+     * This method should be used only when auto-commit has been disabled.
+     *
+     * @param savepoint the <code>Savepoint</code> object to roll back to
+     * @exception SQLException if a database access error occurs,
+     *            the <code>Savepoint</code> object is no longer valid,
+     *            or this <code>Connection</code> object is currently in
+     *            auto-commit mode
+     * @see Savepoint
+     * @see #rollback
+     */
+    public synchronized void rollback(Savepoint savepoint) throws SQLException {
+        
+        if (getAutoCommit())
+            throw new SQLException("Connection.setSavepoint() method cannot " + 
+                    "be used in auto-commit mode.");
+        
+        if (!(savepoint instanceof FBSavepoint))
+            throw new SQLException(
+                    "Specified savepoint was not obtained from this connection.");
+        
+        FBSavepoint fbSavepoint = (FBSavepoint)savepoint;
+        
+        if (!fbSavepoint.isValid())
+            throw new SQLException("Savepoint is no longer valid.");
+        
+        try {
+            getGDSHelper().executeImmediate(
+                    "ROLLBACK TO " + fbSavepoint.getServerSavepointId());
+        } catch (GDSException ex) {
+            throw new FBSQLException(ex);
+        }
+    }
+
+    /**
+     * Removes the given <code>Savepoint</code> object from the current 
+     * transaction. Any reference to the savepoint after it have been removed 
+     * will cause an <code>SQLException</code> to be thrown.
+     *
+     * @param savepoint the <code>Savepoint</code> object to be removed
+     * @exception SQLException if a database access error occurs or
+     *            the given <code>Savepoint</code> object is not a valid 
+     *            savepoint in the current transaction
+     */
+    public synchronized void releaseSavepoint(Savepoint savepoint) throws SQLException {
+        
+        if (getAutoCommit())
+            throw new SQLException("Connection.setSavepoint() method cannot " + 
+                    "be used in auto-commit mode.");
+        
+        if (!(savepoint instanceof FBSavepoint))
+            throw new SQLException(
+                    "Specified savepoint was not obtained from this connection.");
+        
+        FBSavepoint fbSavepoint = (FBSavepoint)savepoint;
+        
+        if (!fbSavepoint.isValid())
+            throw new SQLException("Savepoint is no longer valid.");
+
+        try {
+            getGDSHelper().executeImmediate(
+                    "RELEASE SAVEPOINT " + fbSavepoint.getServerSavepointId() + " ONLY");
+        } catch (GDSException ex) {
+            throw new FBSQLException(ex);
+        }
+        
+        fbSavepoint.invalidate();
+        
+        savepoints.remove(fbSavepoint);
+    }
+
+    /**
+     * Invalidate all savepoints.
+     */
+    protected synchronized void invalidateSavepoints() {
+        Iterator iter = savepoints.iterator();
+        while(iter.hasNext())
+            ((FBSavepoint)iter.next()).invalidate();
+        
+        savepoints.clear();
+    }    
 
     //-------------------------------------------
     //Borrowed from javax.resource.cci.Connection

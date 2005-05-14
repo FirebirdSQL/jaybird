@@ -76,11 +76,11 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
      * @throws SQLException if something went wrong.
      */
     protected AbstractPreparedStatement(GDSHelper c, int rsType,
-            int rsConcurrency,
+            int rsConcurrency, int rsHoldability,
             FBObjectListener.StatementListener statementListener)
             throws SQLException {
         
-        super(c, rsType, rsConcurrency, statementListener);
+        super(c, rsType, rsConcurrency, rsHoldability, statementListener);
     }
 
     /**
@@ -99,10 +99,10 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
      *             if something went wrong.
      */
     protected AbstractPreparedStatement(GDSHelper c, String sql, int rsType,
-            int rsConcurrency,
+            int rsConcurrency, int rsHoldability,
             FBObjectListener.StatementListener statementListener)
             throws SQLException {
-        super(c, rsType, rsConcurrency, statementListener);
+        super(c, rsType, rsConcurrency, rsHoldability, statementListener);
 
         notifyStatementStarted();
 

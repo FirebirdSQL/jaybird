@@ -32,10 +32,10 @@ import org.firebirdsql.gds.impl.GDSHelper;
 public class FBPreparedStatement extends AbstractPreparedStatement {
 
     public FBPreparedStatement(GDSHelper gdsHelper, String sql, int rsType,
-            int rsConcurrency,
+            int rsConcurrency, int rsHoldability,
             FBObjectListener.StatementListener statementListener)
             throws SQLException {
-        super(gdsHelper, sql, rsType, rsConcurrency, statementListener);
+        super(gdsHelper, sql, rsType, rsConcurrency, rsHoldability, statementListener);
     }
 
     /**

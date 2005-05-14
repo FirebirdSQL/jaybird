@@ -78,6 +78,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
 
     private int rsConcurrency;
     private int rsType;
+    private int rsHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
     
     private FBObjectListener.ResultSetListener resultSetListener = new RSListener();
 
@@ -128,10 +129,13 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         }
     }
 
-    protected AbstractStatement(GDSHelper c, int rsType, int rsConcurrency, FBObjectListener.StatementListener statementListener) {
+    protected AbstractStatement(GDSHelper c, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) {
         this.gdsHelper = c;
+        
         this.rsConcurrency = rsConcurrency;
         this.rsType = rsType;
+        this.rsHoldability = rsHoldability;
+        
         this.statementListener = statementListener;
         
         closed = false;
@@ -594,7 +598,8 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         else {
             if (isResultSet) {
                 currentRs = new FBResultSet(gdsHelper, this, fixedStmt,
-                        resultSetListener, trimStrings, rsType, rsConcurrency, false);
+                        resultSetListener, trimStrings, rsType, rsConcurrency, 
+                        rsHoldability, false);
                 
                 return currentRs;
             } else

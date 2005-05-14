@@ -74,10 +74,10 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     
     private int rsType = ResultSet.TYPE_FORWARD_ONLY;
     private int rsConcurrency = ResultSet.CONCUR_READ_ONLY;
+    private int rsHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
     
-    private boolean paranoiaModa;
+    private boolean paranoiaMode;
 
-    
     /* (non-Javadoc)
      * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#allRowsFetched(org.firebirdsql.jdbc.FBFetcher)
      */
@@ -111,6 +111,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
                           boolean trimStrings, 
                           int rsType, 
                           int rsConcurrency,
+                          int rsHoldability,
                           boolean cached) 
     throws SQLException {
         
@@ -121,6 +122,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         
         this.rsType = rsType;
         this.rsConcurrency = rsConcurrency;
+        this.rsHoldability = rsHoldability;
         
         this.trimStrings = trimStrings;
         
@@ -184,7 +186,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     
     private void checkParanoiaMode(GDSHelper gdsHelper) {
         DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
-        paranoiaModa = dpb.hasArgument(DatabaseParameterBufferExtension.PARANOIA_MODE);
+        paranoiaMode = dpb.hasArgument(DatabaseParameterBufferExtension.PARANOIA_MODE);
     }
 
     private void prepareVars(boolean cached) throws SQLException {
@@ -223,7 +225,9 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      * @throws SQLException if statement is closed.
      */
     protected void checkCursorMove() throws SQLException {
-        if (closed) throw new FBSQLException("The resultSet is closed");
+        if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
+            throw new FBSQLException("The result set is closed");
+        
         wasNullValid = false;
 
         // close current fields, so that resources are freed.
@@ -285,7 +289,9 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     }
     
     void close(boolean notifyListener) throws SQLException {
-        if (closed && paranoiaModa) throw new FBSQLException("The resultSet is closed");
+        if (closed && paranoiaMode && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
+            throw new FBSQLException("The resultSet is closed");
+        
         wasNullValid = false;
         closed = true;
         
@@ -302,7 +308,9 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
                     listener.resultSetClosed(this);
 
             }
-            fbFetcher = null;
+            
+            if (rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT)
+                fbFetcher = null;
         }
     }
 
@@ -612,7 +620,8 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      * Factory method for the field access objects
      */
     public FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
-        if (closed) throw new FBSQLException("The resultSet is closed");
+        if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
+            throw new FBSQLException("The resultSet is closed");
         
         if (checkRowPosition && row == null && rowUpdater == null)
             throw new FBSQLException(
@@ -637,7 +646,8 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      * @throws SQLException if the field cannot be retrieved
      */
     public FBField getField(String columnName) throws SQLException {
-        if (closed) throw new FBSQLException("The resultSet is closed");
+        if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
+            throw new FBSQLException("The resultSet is closed");
         
         if (row == null)
             throw new FBSQLException(

@@ -860,6 +860,39 @@ public class TestFBResultSet extends FBTestBase {
                 "", rs.getExecutionPlan());
     }
     
+    public void testHoldability() throws Exception {
+        connection.setHoldability(FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT);
+        
+        try {
+            Statement stmt = connection.createStatement(
+                    ResultSet.TYPE_FORWARD_ONLY,
+                    ResultSet.CONCUR_READ_ONLY);
+            
+            fail("Holdable cursor is not compatible with forward-only result set.");
+        } catch(FBDriverNotCapableException ex) {
+            // everything is ok
+        }
+        
+        Statement stmt = connection.createStatement(
+                ResultSet.TYPE_SCROLL_INSENSITIVE, 
+                ResultSet.CONCUR_READ_ONLY);
+        
+        try {
+            // execute first query
+            ResultSet rs = stmt.executeQuery("SELECT * FROM rdb$database");
+            
+            // now execute another query, causes commit in auto-commit mode
+            stmt.executeQuery("SELECT * FROM rdb$database");
+            
+            // now let's access the result set
+            while(rs.next()) {
+                String str1 = rs.getString(1);
+            }
+        } finally {
+            stmt.close();
+        }
+    }
+    
     public static void main(String[] args) {
         TestRunner.run(new TestFBResultSet("testMemoryGrowth"));
     }

@@ -38,11 +38,11 @@ public class FBCallableStatement extends AbstractCallableStatement {
      * @throws SQLException if something went wrong.
      */
     public FBCallableStatement(GDSHelper gdsHelper, String sql, 
-                               int rsType, int rsConcurrency, 
+                               int rsType, int rsConcurrency, int rsHoldability,
                                FBObjectListener.StatementListener statementListener)
         throws SQLException 
     {
-        super(gdsHelper, sql, rsType, rsConcurrency, statementListener);
+        super(gdsHelper, sql, rsType, rsConcurrency, rsHoldability, statementListener);
     }
 
     public void registerOutParameter(int paramIndex, int sqlType, 

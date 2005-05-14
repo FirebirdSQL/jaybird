@@ -473,6 +473,8 @@ public class FBRowUpdater  {
             
             gdsHelper.executeStatement(stmt, false);
             
+            // TODO think about adding COMMIT RETAIN in the auto-commit mode
+            
         } catch(GDSException ex) {
             throw new FBSQLException(ex);
         }

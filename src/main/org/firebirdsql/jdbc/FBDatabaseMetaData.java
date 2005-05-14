@@ -5259,7 +5259,8 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs 
      */
     public boolean supportsResultSetHoldability(int holdability) throws SQLException {
-        return holdability == 2; // same as ResultSet.CLOSE_CURSORS_AT_COMMIT, but JDK 1.3 friendly
+        return holdability == FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT ||
+            holdability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT;
     }
 
     /**
@@ -5269,7 +5270,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs 
      */
     public int getResultSetHoldability() throws SQLException {
-        return 2; // same as ResultSet.CLOSE_CURSORS_AT_COMMIT, but makes JDK 1.3 happy
+        return FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT; 
     }
 
     /**
@@ -5545,6 +5546,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         if (connection == null) {
             s = new FBPreparedStatement(gdsHelper, sql,
                     ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
+                    FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT, 
                     new InternalTransactionCoordinator.DummyTransactionCoordinator());
         } else {
             s = (AbstractPreparedStatement)connection.prepareStatement(
