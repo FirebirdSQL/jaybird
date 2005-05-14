@@ -160,10 +160,10 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
     FirebirdPool
 {
     
-    public static final String USER_NAME_PROPERTY = FBDriver.USER;
-    public static final String PASSWORD_PROPERTY = FBDriver.PASSWORD;
-    public static final String TPB_MAPPING_PROPERTY = FBDriver.TPB_MAPPING;
-    public static final String BLOB_BUFFER_PROPERTY = FBDriver.BLOB_BUFFER_LENGTH;
+    public static final String USER_NAME_PROPERTY = "user";
+    public static final String PASSWORD_PROPERTY = "password";
+    public static final String TPB_MAPPING_PROPERTY = "tpb_mapping";
+    public static final String BLOB_BUFFER_PROPERTY = "blob_buffer_length";
 
     public static final String ENCODING_PROPERTY = "lc_ctype";
     public static final String SOCKET_BUFFER_PROPERTY = "socket_buffer_size";
