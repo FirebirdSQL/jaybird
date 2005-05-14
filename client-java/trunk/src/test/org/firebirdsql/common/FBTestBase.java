@@ -152,8 +152,8 @@ public class FBTestBase extends SimpleFBTestBase
         {
         final Properties returnValue = new Properties();
 
-        returnValue.setProperty(FBDriver.USER, DB_USER);
-        returnValue.setProperty(FBDriver.PASSWORD, DB_PASSWORD);
+        returnValue.setProperty("user", DB_USER);
+        returnValue.setProperty("password", DB_PASSWORD);
         returnValue.setProperty("lc_ctype", DB_LC_CTYPE);
 
         return returnValue;
