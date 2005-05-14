@@ -55,6 +55,8 @@ public class FBConnectionHelper {
     public static final String DPB_PREFIX = "isc_dpb_";
     public static final String TPB_PREFIX = "isc_tpb_";
 
+    public static final String TPB_MAPPING_PROPERTY = "tpb_mapping";
+    
     public static final String ISC_ENCODINGS_RESOURCE =
         "isc_encodings.properties";
         
@@ -287,7 +289,7 @@ public class FBConnectionHelper {
      * @throws FBResourceException if specified mapping is incorrect.
      */
     public static FBTpbMapper getTpbMapper(GDS gds, Properties info) throws FBResourceException {
-        String tpbMapping = (String)info.getProperty(FBDriver.TPB_MAPPING);
+        String tpbMapping = (String)info.getProperty(TPB_MAPPING_PROPERTY);
         
         FBTpbMapper tpbMapper = null;
         
