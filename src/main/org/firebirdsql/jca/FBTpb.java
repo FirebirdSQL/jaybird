@@ -327,7 +327,6 @@ public class FBTpb implements Serializable {
                 throw new FBResourceException(
                         "Unsupported transaction isolation level");
         }
-//        createArray();
     }
 
     /**
@@ -426,5 +425,10 @@ public class FBTpb implements Serializable {
     
     public TransactionParameterBuffer getTransactionParameterBuffer() {
         return tpb;
+    }
+    
+    public void setTransactionParameterBuffer(TransactionParameterBuffer tpb) {
+        this.tpb = tpb;
+        this.readOnly = tpb.hasArgument(TransactionParameterBuffer.READ);
     }
 }
