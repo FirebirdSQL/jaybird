@@ -1,3 +1,68 @@
+2005-05-14 14:40  rrokytskyy
+
+	* client-java/src/: jdbc_30/org/firebirdsql/jdbc/FBStatement.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FirebirdStatement.java:
+	
+	implemented getMoreResults(int) method
+
+2005-05-14 14:30  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/common/SimpleFBTestBase.java:
+	
+	optimized import
+
+2005-05-14 14:29  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/common/FBTestBase.java:
+	
+	removed dependency on FBDriver class
+
+2005-05-14 14:26  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestJDBCPerformance.java:
+	
+	disabled performance test
+
+2005-05-14 14:25  rrokytskyy
+
+	* client-java/src/:
+	jdbc_20/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_20/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_20/org/firebirdsql/jdbc/FBStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBConnection.java,
+	jdbc_30/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBStatement.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	main/org/firebirdsql/jdbc/FBRowUpdater.java,
+	main/org/firebirdsql/jdbc/FirebirdResultSet.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	implemented support of holdable cursors for cached result sets
+
+2005-05-14 14:20  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	
+	moved tpb_mapping property into this class
+
+2005-05-14 14:17  rrokytskyy
+
+	*
+	client-java/src/pool/org/firebirdsql/pool/AbstractFBConnectionPoolD
+	ataSource.java:
+	
+	removed dependencies on the constants defined in FBDriver class
+
 2005-05-13 00:14  gab_reid
 
 	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
