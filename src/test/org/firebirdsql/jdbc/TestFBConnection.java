@@ -21,6 +21,8 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 
 /**
  * Test cases for FirebirdConnection interface.
@@ -217,6 +219,80 @@ public class TestFBConnection extends FBTestBase {
             
         } finally {
             connection.commit();
+            connection.close();
+        }
+    }
+    
+    public void testLockTable() throws Exception {
+        FirebirdConnection connection = 
+            (FirebirdConnection)getConnectionViaDriverManager();
+        
+        try {
+            Statement stmt = connection.createStatement();
+            try {
+                stmt.execute("CREATE TABLE test_lock(col1 INTEGER)");
+            } catch(SQLException ex) {
+                // ignore
+            }
+        } finally {
+            connection.close();
+        }
+
+        connection = (FirebirdConnection)getConnectionViaDriverManager();
+        try {
+            
+            Statement stmt = connection.createStatement();
+            try {
+            
+                TransactionParameterBuffer tpb = 
+                    connection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
+                
+                tpb.removeArgument(TransactionParameterBuffer.WAIT);
+                tpb.addArgument(TransactionParameterBuffer.NOWAIT);
+                
+                connection.setTransactionParameters(Connection.TRANSACTION_READ_COMMITTED, tpb);
+                
+                connection.setAutoCommit(false);
+                
+                FirebirdConnection anotherConnection = 
+                    (FirebirdConnection)getConnectionViaDriverManager();
+                anotherConnection.setAutoCommit(false);
+                
+                try {
+                    TransactionParameterBuffer anotherTpb = 
+                        anotherConnection.createTransactionParameterBuffer();
+                    
+                    anotherTpb.addArgument(TransactionParameterBuffer.CONSISTENCY);
+                    anotherTpb.addArgument(TransactionParameterBuffer.WRITE);
+                    anotherTpb.addArgument(TransactionParameterBuffer.NOWAIT);
+                    
+                    anotherTpb.addArgument(TransactionParameterBuffer.PROTECTED);
+                    anotherTpb.addArgument(TransactionParameterBuffer.LOCK_WRITE, "TEST_LOCK");
+                    
+                    anotherConnection.setTransactionParameters(anotherTpb);
+                    
+                    Statement anotherStmt = anotherConnection.createStatement();
+                    try {
+                        anotherStmt.execute("INSERT INTO test_lock VALUES(1)");
+                    } finally {
+                        anotherStmt.close();
+                    }
+                    
+                    try {
+                        stmt.execute("INSERT INTO test_lock VALUES(2)");
+                        fail("Should throw an error because of lock conflict.");
+                    } catch(SQLException ex) {
+                        assertEquals(ISCConstants.isc_lock_conflict, ex.getErrorCode());
+                    }
+                    
+                } finally {
+                    anotherConnection.close();
+                }
+            
+            } finally {
+                stmt.close();
+            }
+        } finally {
             connection.close();
         }
     }

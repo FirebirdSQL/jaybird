@@ -30,6 +30,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 
 /**
  * Extension of {@link Connection} interface providing access to Firebird
@@ -51,33 +52,6 @@ public interface FirebirdConnection extends Connection {
     
     int TPB_REC_VERSION = ISCConstants.isc_tpb_rec_version;
     int TPB_NO_REC_VERSION = ISCConstants.isc_tpb_no_rec_version;
-    
-    /*
-
-        // Following TPB parameters require additional API
-        // for table reservation, to be done
-
-        public final static int isc_tpb_shared                  = 3;
-        public final static int isc_tpb_protected               = 4;
-        public final static int isc_tpb_exclusive               = 5;
-        
-        public final static int isc_tpb_lock_read               = 10;
-        public final static int isc_tpb_lock_write              = 11;
-        
-
-        // Following TPB parameters are not described in documentation
-
-        public final static int isc_tpb_verb_time               = 12;
-        public final static int isc_tpb_commit_time             = 13;
-        
-        public final static int isc_tpb_ignore_limbo            = 14;
-        
-        public final static int isc_tpb_autocommit              = 16;
-        
-        public final static int isc_tpb_restart_requests        = 19;
-        
-        public final static int isc_tpb_no_auto_undo            = 20;
-     */
     
     /**
      * Create Blob object.
@@ -103,7 +77,65 @@ public interface FirebirdConnection extends Connection {
      * @param parameters array of TPB parameters, see all TPB_* constants.
      * 
      * @throws SQLException if specified transaction parameters cannot be set.
+     * 
+     * @deprecated use {@link #setTransactionParameters(int, TransactionParameterBuffer)}
+     * instead.
      */
     void setTransactionParameters(int isolationLevel, int[] parameters)
         throws SQLException;
+    
+    
+    /**
+     * Get transaction parameters for the specified transaction isolation level.
+     * 
+     * @param isolationLevel isolation level defined in the {@link Connection}
+     * interface.
+     * 
+     * @return instance of {@link TransactionParameterBuffer} containing current
+     * transaction parameters.
+     * 
+     * @throws SQLException if error occured obtaining transaction parameters.
+     */
+    TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException;
+    
+    /**
+     * Create new instance of {@link TransactionParameterBuffer}.
+     * 
+     * @return empty instance of {@link TransactionParameterBuffer}.
+     * 
+     * @throws SQLException if error occured during this operation.
+     */
+    TransactionParameterBuffer createTransactionParameterBuffer() throws SQLException;
+    
+    /**
+     * Set transaction parameters for the specified transaction isolation level.
+     * This method replaces the default TPB mapping with the specified one, 
+     * changes will be effective from the next transaction start.
+     * 
+     * @param isolationLevel isolation level defined in the {@link Connection}
+     * interface.
+     * 
+     * @param tpb instance of {@link TransactionParameterBuffer} with parameters
+     * to set.
+     * 
+     * @throws SQLException if error occured during this operation.
+     */
+    void setTransactionParameters(int isolationLevel, TransactionParameterBuffer tpb)
+        throws SQLException;
+    
+    /**
+     * Set transaction parameters for the next transactions. This method does
+     * not change the TPB mapping, but replaces the mapping for the current
+     * transaction isolation until {@link Connection#setTransactionIsolation(int)}
+     * is called.
+     * <p>
+     * Method cannot be called when transaction has already started. 
+     * 
+     * @param tpb instance of {@link TransactionParameterBuffer} with new
+     * transaction parameters.
+     * 
+     * @throws SQLException if method is called within a transaction.
+     */
+    void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException;
+
 }

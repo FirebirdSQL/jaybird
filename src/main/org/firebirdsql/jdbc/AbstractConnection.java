@@ -190,23 +190,50 @@ public abstract class AbstractConnection implements FirebirdConnection {
 	public void setTransactionParameters(int isolationLevel, int[] parameters)
 		throws SQLException {
         
-        try {
-            FBTpb tpb = mc.getTpb();
-            FBTpbMapper tpbMapper = tpb.getMapper();
-            
-            TransactionParameterBuffer tpbParams = getInternalAPIHandler().newTransactionParameterBuffer();
-            for (int i = 0; i < parameters.length; i++) {
-    			tpbParams.addArgument(parameters[i]);
-    		}
-            
-            tpbMapper.setMapping(isolationLevel, tpbParams);
-            
-            tpb.setMapper(tpbMapper);
-            
-        } catch(FBResourceException ex) {
-        	throw new FBSQLException(ex);   
-        }
+        TransactionParameterBuffer tpbParams = createTransactionParameterBuffer();
+        
+        for (int i = 0; i < parameters.length; i++) {
+			tpbParams.addArgument(parameters[i]);
+		}
+        
+        setTransactionParameters(isolationLevel, tpbParams);
 	}
+    
+    public TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException {
+        try {
+            return mc.getTpb().getMapper().getMapping(isolationLevel);
+        } catch(ResourceException ex) {
+            throw new FBSQLException(ex);
+        }
+    }
+
+    public TransactionParameterBuffer createTransactionParameterBuffer() throws SQLException {
+        return getInternalAPIHandler().newTransactionParameterBuffer();
+    }
+    
+    public void setTransactionParameters(int isolationLevel, TransactionParameterBuffer tpb) throws SQLException {
+        if (mc.isManagedEnvironment())
+            throw new FBSQLException("Cannot set transaction parameters " +
+                    "in managed environment.");
+        
+        try {
+            mc.getTpb().getMapper().setMapping(isolationLevel, tpb);
+        } catch(ResourceException ex) {
+            throw new FBSQLException(ex);
+        }
+    }
+    
+    public void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException {
+        try {
+            if (localTransaction.inTransaction())
+                throw new FBSQLException("Cannot set transaction parameters " +
+                        "when transaction is already started.");
+            
+            mc.getTpb().setTransactionParameterBuffer(tpb);
+        } catch(ResourceException ex) {
+            throw new FBSQLException(ex);
+        }
+    }
 
     /**
      * Creates a <code>Statement</code> object for sending
@@ -533,7 +560,15 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public synchronized void setReadOnly(boolean readOnly) throws SQLException {
-        mc.setReadOnly(readOnly);
+        try {
+            if (localTransaction.inTransaction())
+                throw new FBSQLException("Calling setReadOnly(boolean) method " +
+                        "is not allowed when transaction is already started.");
+            
+            mc.setReadOnly(readOnly);
+        } catch(ResourceException ex) {
+            throw new FBSQLException(ex);
+        }
     }
 
 
@@ -598,8 +633,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
             synchronized(mc) {
                 try {
 
-                    if (inTransaction())
-                            getLocalTransaction().internalCommit();
+                    if (!getAutoCommit() && !mc.isManagedEnvironment())
+                        txCoordinator.commit();
 
                     mc.setTransactionIsolation(level);
 
