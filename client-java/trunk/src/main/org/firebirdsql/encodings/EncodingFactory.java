@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.7  2004/10/10 10:58:01  rrokytskyy
+ * added support for character translation to character streams
+ *
  * Revision 1.6  2004/10/08 22:39:10  rrokytskyy
  * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
  * added possibility to translate characters if there are some encoding issues
@@ -98,9 +101,24 @@ public class EncodingFactory {
         return translator;
     }
 
+    private static HashMap encodings = new HashMap();
     public static Encoding getEncoding(String encoding){
-        if (encoding == null || encoding.equals("NONE"))
+        if (encoding == null)
             encoding = defaultEncoding;
+        
+        Encoding encodingObj = (Encoding)encodings.get(encoding);
+        if (encodingObj == null) {
+            encodingObj = createEncoding(encoding);
+            encodings.put(encoding, encodingObj);
+        }
+        
+        return encodingObj;
+    }
+        
+    public static Encoding createEncoding(String encoding) {
+        if (encoding.equals("NONE"))
+            encoding = defaultEncoding;
+        
         if (encoding.equals("Cp1250"))
             return new Encoding_Cp1250();
         else if (encoding.equals("Cp1251"))
