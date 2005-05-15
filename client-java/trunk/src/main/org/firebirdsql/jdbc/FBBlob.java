@@ -491,6 +491,19 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         this.isNew = false;
     }
 
+    public void copyBytes(byte[] bytes, int pos, int len) throws SQLException {
+        OutputStream out = setBinaryStream(0);
+        try {
+            try {
+                out.write(bytes, pos, len);
+            } finally {
+                out.close();
+            }
+        } catch(IOException ex) {
+            throw new FBSQLException(ex);
+        }
+    }
+    
     /**
      * Copy the contents of an <code>InputStream</code> into this Blob.
      *
@@ -500,7 +513,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      */
     public void copyStream(InputStream inputStream, int length) throws SQLException {
         OutputStream os = setBinaryStream(0);
-        byte[] buffer = new byte[bufferlength];
+        byte[] buffer = new byte[Math.min(bufferlength, length)];
         int chunk;
         try {
             while (length >0) {
@@ -529,7 +542,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         OutputStream os = setBinaryStream(0);
         try {
         OutputStreamWriter osw = new OutputStreamWriter(os, encoding);
-        char[] buffer = new char[bufferlength];
+        char[] buffer = new char[Math.min(bufferlength, length)];
         int chunk;
         try {
             while (length >0) {
@@ -808,32 +821,50 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             throw new IOException("FBBlobOutputStream.write(int b) not implemented");
         }
 
+        public void writeSegment(byte[] buf) throws GDSException {
+            Object syncObject = getSynchronizationObject();
+            synchronized(syncObject) {
+                gdsHelper.putBlobSegment(blob, buf);
+            }
+        }
+        
         public void write(byte[] b, int off, int len) throws IOException {
             try {
-                byte[] buf = new byte[bufferlength];
-                int chunk;
-                while (len > 0) {
-                    if (len >= bufferlength) {
-                        chunk = bufferlength;
+                if (off == 0 && len == b.length && len < bufferlength) {
+                    /*
+                     * If we are just writing the entire byte array, we need to
+                     * do nothing but just write it over
+                     */
+                    writeSegment(b);
+                } else {
+                    /*
+                     * In this case, we need to chunk it over since <code>putBlobSegment</code>
+                     * cannot currently support length and offset.
+                     */
+                    int chunk = bufferlength;
+                    int lastChunk = 0;
+                    byte[] buf = null;
+                    while (len > 0) {
+                        if (len < chunk) chunk = len;
+
+                        // this allows us to reused the chunk if its size has
+                        // not changed
+                        if (chunk != lastChunk) {
+                            buf = new byte[chunk];
+                            lastChunk = chunk;
+                        }
+
+                        System.arraycopy(b, off, buf, 0, chunk);
+                        writeSegment(buf);
+
+                        len -= chunk;
+                        off += chunk;
                     }
-                    else {
-                        buf = new byte[len];
-                        chunk = len;
-                    }
-                    System.arraycopy(b, off, buf, 0, chunk);
-                    
-                    Object syncObject = getSynchronizationObject();
-                    
-                    synchronized(syncObject) {
-                        gdsHelper.putBlobSegment(blob, buf);
-                    }
-                    
-                    len -= chunk;
-                    off += chunk;
+
                 }
-            }
-            catch (GDSException ge) {
-                throw new IOException("Problem writing to FBBlobOutputStream: " + ge);
+            } catch (GDSException ge) {
+                throw new IOException("Problem writing to FBBlobOutputStream: "
+                        + ge);
             }
         }
 

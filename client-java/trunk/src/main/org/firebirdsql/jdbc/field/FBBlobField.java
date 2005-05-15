@@ -19,7 +19,6 @@
  
 package org.firebirdsql.jdbc.field;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,6 +46,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
 	private int length;
 	private InputStream binaryStream;
     private Reader characterStream;
+    private byte[] bytes;
 
     FBBlobField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
         throws SQLException 
@@ -66,6 +66,10 @@ public class FBBlobField extends FBField implements FBFlushableField {
             // released by a server automatically later
             
             blob = null;
+            this.bytes = null;
+            this.binaryStream = null;
+            this.characterStream = null;
+            this.length = 0;
         }
     }
 
@@ -191,7 +195,9 @@ public class FBBlobField extends FBField implements FBFlushableField {
             return;
         }
         
+        this.binaryStream = null;
         this.characterStream = in;
+        this.bytes = null;
         this.length = length;
     }
 
@@ -203,6 +209,8 @@ public class FBBlobField extends FBField implements FBFlushableField {
         }
             
         this.binaryStream = in;
+        this.characterStream = null;
+        this.bytes = null;
         this.length = length;
     }
     
@@ -213,11 +221,15 @@ public class FBBlobField extends FBField implements FBFlushableField {
         if (characterStream != null)
             copyCharacterStream(characterStream, length, javaEncoding);
         else
+        if (bytes != null)
+            copyBytes(bytes, length);
+        else
         if (blob == null)
             setNull();
         
         this.characterStream = null;
         this.binaryStream = null;
+        this.bytes = null;
         this.length = 0;
     }
     
@@ -234,6 +246,12 @@ public class FBBlobField extends FBField implements FBFlushableField {
         setFieldData(field.encodeLong(blob.getBlobId()));
     }
     
+    private void copyBytes(byte[] bytes, int length) throws SQLException {
+        FBBlob blob = new FBBlob(gdsHelper);
+        blob.copyBytes(bytes, 0, length);
+        setFieldData(field.encodeLong(blob.getBlobId()));
+    }
+    
     public void setBytes(byte[] value) throws SQLException {
         
         if (value == BYTES_NULL_VALUE) {
@@ -241,7 +259,10 @@ public class FBBlobField extends FBField implements FBFlushableField {
             return;
         }
         
-        setBinaryStream(new ByteArrayInputStream(value), value.length);
+        this.binaryStream = null;
+        this.characterStream = null;
+        this.bytes = value;
+        this.length = value.length;
     }
 
     public void setString(String value) throws SQLException {
@@ -267,6 +288,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         
         this.binaryStream = null;
         this.characterStream = null;
+        this.bytes = null;
         this.length = 0;
     }
 }
