@@ -268,6 +268,7 @@ public class TestFBConnection extends FBTestBase {
                 tpb.addArgument(TransactionParameterBuffer.NOWAIT);
                 
                 connection.setTransactionParameters(Connection.TRANSACTION_READ_COMMITTED, tpb);
+                connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
                 
                 connection.setAutoCommit(false);
                 
