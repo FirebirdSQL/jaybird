@@ -629,19 +629,17 @@ public abstract class AbstractConnection implements FirebirdConnection {
                     "Connection has being closed.",
                     FBSQLException.SQL_STATE_CONNECTION_CLOSED);
         
-        if (getTransactionIsolation() != level) {
-            synchronized(mc) {
-                try {
+        synchronized(mc) {
+            try {
 
-                    if (!getAutoCommit() && !mc.isManagedEnvironment())
-                        txCoordinator.commit();
+                if (!getAutoCommit() && !mc.isManagedEnvironment())
+                    txCoordinator.commit();
 
-                    mc.setTransactionIsolation(level);
+                mc.setTransactionIsolation(level);
 
-                } catch (ResourceException re) {
-                    throw new FBSQLException(re);
-                } 
-            }
+            } catch (ResourceException re) {
+                throw new FBSQLException(re);
+            } 
         }
     }
 
