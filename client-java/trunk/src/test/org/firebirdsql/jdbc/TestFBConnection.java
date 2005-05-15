@@ -113,6 +113,22 @@ public class TestFBConnection extends FBTestBase {
             Connection conB = getConnectionViaDriverManager();
             try {
                 conB.setAutoCommit(false);
+
+                /*
+                
+                // This is correct way to set transaction parameters
+                // However, we use deprecated methods to check the
+                // backward compatibility
+                
+                TransactionParameterBuffer tpb = ((FirebirdConnection)conB).createTransactionParameterBuffer();
+                tpb.addArgument(TransactionParameterBuffer.READ_COMMITTED);
+                tpb.addArgument(TransactionParameterBuffer.REC_VERSION);
+                tpb.addArgument(TransactionParameterBuffer.WRITE);
+                tpb.addArgument(TransactionParameterBuffer.NOWAIT);
+                
+                ((FirebirdConnection)conB).setTransactionParameters(tpb);
+                */
+                
                 ((FirebirdConnection)conB).setTransactionParameters(
                         Connection.TRANSACTION_READ_COMMITTED,
                         new int[] {
@@ -121,6 +137,7 @@ public class TestFBConnection extends FBTestBase {
                             FirebirdConnection.TPB_WRITE,
                             FirebirdConnection.TPB_NOWAIT
                         });
+                conB.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
                 
                 Statement stmtA = conA.createStatement();
                 Statement stmtB = conB.createStatement();
