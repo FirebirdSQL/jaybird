@@ -938,45 +938,34 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         // FIXME return old tr handle if it is still valid before proceeding
         gdsHelper.setCurrentTrHandle(null);
         
-        try {
-            
-            AbstractIscTrHandle trHandle = (AbstractIscTrHandle) xidMap.get(xid);
-            
-            if (trHandle != null) {
-                if (flags != XAResource.TMJOIN && flags != XAResource.TMRESUME) {
-                    // this xid is already known, should have join or resume flag.
-                    // DUPID might be better?
-                    throw new FBXAException(
-                            "You are trying to start a transaction as new "
-                                    + "that is already known to this XAResource",
-                            XAException.XAER_INVAL);
-                }
-
-            }
-            
-            if (flags != XAResource.TMNOFLAGS) {
-                // We don't know this xid, should come with no flags.
+        AbstractIscTrHandle trHandle = (AbstractIscTrHandle) xidMap.get(xid);
+        
+        if (trHandle != null) {
+            if (flags != XAResource.TMJOIN && flags != XAResource.TMRESUME) {
+                // this xid is already known, should have join or resume flag.
+                // DUPID might be better?
                 throw new FBXAException(
-                        "You are trying to resume a transaction that has is new",
+                        "You are trying to start a transaction as new "
+                                + "that is already known to this XAResource",
                         XAException.XAER_INVAL);
             }
-            
-            // new xid for us
-            trHandle = (AbstractIscTrHandle)gdsHelper.getInternalAPIHandler().createIscTrHandle();
-            gdsHelper.getInternalAPIHandler().iscStartTransaction(trHandle, dbHandle, tpb.getTransactionParameterBuffer());
 
-            xidMap.put(xid, trHandle);
-            
-            gdsHelper.setCurrentTrHandle(trHandle);
-        } catch (GDSException ge) {
-            
-            // Notify the connection manager.
-            ConnectionEvent ce = new ConnectionEvent(this,
-                    ConnectionEvent.CONNECTION_ERROR_OCCURRED, ge);
-            notify(connectionErrorOccurredNotifier, ce);
-            ge.setXAErrorCode(XAException.XAER_RMERR);
-            throw ge;
         }
+        
+        if (flags != XAResource.TMNOFLAGS) {
+            // We don't know this xid, should come with no flags.
+            throw new FBXAException(
+                    "You are trying to resume a transaction that has is new",
+                    XAException.XAER_INVAL);
+        }
+        
+        // new xid for us
+        trHandle = (AbstractIscTrHandle)gdsHelper.getInternalAPIHandler().createIscTrHandle();
+        gdsHelper.getInternalAPIHandler().iscStartTransaction(trHandle, dbHandle, tpb.getTransactionParameterBuffer());
+
+        xidMap.put(xid, trHandle);
+        
+        gdsHelper.setCurrentTrHandle(trHandle);
     }
     
     void notify(CELNotifier notifier, ConnectionEvent ce) {
