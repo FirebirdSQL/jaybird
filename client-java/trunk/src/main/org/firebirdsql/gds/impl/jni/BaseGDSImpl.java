@@ -806,7 +806,11 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         }
         return value;
     }
-
+    
+    public int iscVaxInteger2(byte[] buffer, int pos) {
+        return (buffer[pos] & 0xff) | ((buffer[pos + 1] & 0xff) << 8);
+    }
+    
     public abstract void native_isc_attach_database(String file_name,
             IscDbHandle db_handle, byte[] dpbBytes);
 
@@ -1037,14 +1041,14 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         int length;
         int type;
         while ((type = buffer[pos++]) != ISCConstants.isc_info_end) {
-            length = iscVaxInteger(buffer, pos, 2);
+            length = iscVaxInteger2(buffer, pos);
             pos += 2;
             switch (type) {
                 case ISCConstants.isc_info_sql_records:
                     int l;
                     int t;
                     while ((t = buffer[pos++]) != ISCConstants.isc_info_end) {
-                        l = iscVaxInteger(buffer, pos, 2);
+                        l = iscVaxInteger2(buffer, pos);
                         pos += 2;
                         switch (t) {
                             case ISCConstants.isc_info_req_insert_count:
