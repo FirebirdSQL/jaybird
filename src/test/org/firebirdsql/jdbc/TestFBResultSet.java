@@ -892,6 +892,26 @@ public class TestFBResultSet extends FBTestBase {
             stmt.close();
         }
     }
+
+    public void testFetchSize() throws Exception {
+        final int FETCH_SIZE = 3;
+        Statement stmt = connection.createStatement();
+        try {
+            int fetchSize = stmt.getFetchSize();
+            ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
+            assertEquals(
+                "Default stmt fetch size must match ResultSet fetch size",
+                fetchSize, rs.getFetchSize());
+
+            stmt.setFetchSize(FETCH_SIZE);
+            rs = stmt.executeQuery("SELECT * FROM test_table");
+            assertEquals("ResultSet fetchsize must match Statement fetchSize",
+                    FETCH_SIZE, rs.getFetchSize());
+
+        } finally {
+            stmt.close();
+        }
+    }
     
     public static void main(String[] args) {
         TestRunner.run(new TestFBResultSet("testMemoryGrowth"));

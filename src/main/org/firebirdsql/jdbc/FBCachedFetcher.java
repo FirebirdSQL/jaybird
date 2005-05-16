@@ -17,6 +17,8 @@ class FBCachedFetcher implements FBFetcher {
     private boolean forwardOnly;
     private Object[] rowsArray;
     private int rowNum = 0;
+
+    private int fetchSize;
     
     private FBObjectListener.FetcherListener fetcherListener;
 
@@ -56,8 +58,10 @@ class FBCachedFetcher implements FBFetcher {
 //            int fetchSize = fbStatement.fetchSize;
             if (fetchSize == 0)
                 fetchSize = MAX_FETCH_ROWS;
+            this.fetchSize = fetchSize;
 				// the following if, is only for callable statement				
-				if (!stmt.isAllRowsFetched() && stmt.size() == 0) {
+
+            if (!stmt.isAllRowsFetched() && stmt.size() == 0) {
                 do {
                     if (maxRows != 0 && fetchSize > maxRows - stmt.size())
                         fetchSize = maxRows - stmt.size();
@@ -328,5 +332,13 @@ class FBCachedFetcher implements FBFetcher {
             rowsArray[rowNum - 1] = data;
             fetcherListener.rowChanged(this, data);
         }
+    }
+
+    public int getFetchSize(){
+        return fetchSize;
+    }
+
+    public void setFetchSize(int fetchSize){
+        this.fetchSize = fetchSize;
     }
 }
