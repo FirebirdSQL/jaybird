@@ -192,7 +192,12 @@ public class TestFBMaintenanceManager extends FBTestBase {
                 // Ignore
             }
         } finally {
-            conn.close();
+            try {
+                conn.close();
+            } catch (SQLException e2){
+                // Ignore this exception, which will always be thrown due 
+                // to the database being shutdown
+            }
         }
     }
 
