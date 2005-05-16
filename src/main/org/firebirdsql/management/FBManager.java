@@ -78,7 +78,9 @@ public class FBManager implements FBManagerMBean
         this.type = type;
         }
 
-
+    public FBManager(String type) {
+        this.type = GDSType.getType(type);
+    }
 
 
 
