@@ -54,7 +54,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     public byte[][] row = null;
 
     private int maxRows = 0;
-    private int fetchSize = 0;
      
     private boolean wasNull = false;
     private boolean wasNullValid = false;
@@ -149,8 +148,8 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
             
             if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
                 fbStatement.addWarning(new FBSQLWarning(
-                    "Result set type changed. " +
-                    "ResultSet.TYPE_SCROLL_SENSITIVE is not supported."));
+                    "Result set type changed. " 
+                    + "ResultSet.TYPE_SCROLL_SENSITIVE is not supported."));
                     
                 rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
             }
@@ -1466,7 +1465,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
              throw new FBSQLException("Can't set fetch size > maxRows.",
                      FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
          else
-        fetchSize = rows;
+        fbFetcher.setFetchSize(rows);
     }
 
 
@@ -1482,7 +1481,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public int getFetchSize() throws  SQLException {
-        return fetchSize;
+        return fbFetcher.getFetchSize();
     }
 
 

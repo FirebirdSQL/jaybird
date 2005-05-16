@@ -323,4 +323,12 @@ class FBStatementFetcher implements FBFetcher {
         // empty
     }
 
+    public void setFetchSize(int fetchSize){
+        this.fetchSize = fetchSize;
+    }
+
+    public int getFetchSize(){
+        return fetchSize;
+    }
+
 }

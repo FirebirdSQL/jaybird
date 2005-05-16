@@ -150,4 +150,19 @@ interface FBFetcher {
      * @throws SQLException if operation cannot be completed.
      */
     void updateRow(byte[][] data) throws SQLException;
+
+    /**
+     * Set the suggested number of rows to fetch with each batch fetch.
+     *
+     * @return The number of rows to be fetched
+     */
+    int getFetchSize() throws SQLException;
+
+    /**
+     * Get the suggested number of rows to fetch with each batch fetch.
+     *
+     * @param fetchSize The suggested number of rows to fetch
+     */
+    void setFetchSize(int fetchSize);
+
 }
