@@ -1,3 +1,81 @@
+2005-05-16 00:18  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSType.java:
+	
+	removed commented code
+
+2005-05-16 00:18  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/jni/BaseGDSImpl.java:
+	
+	small performance improvement for the 2 byte integer conversion
+
+2005-05-15 14:08  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBConnection.java:
+	
+	adapted test case to new TPB handling code
+
+2005-05-15 14:04  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBConnection.java:
+	
+	adapted test case to new TPB handling code
+
+2005-05-15 14:02  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
+	
+	setTransactionIsolation always commits current transaction
+
+2005-05-15 13:41  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jca/FBTpb.java:
+	
+	added possibility to set TPB by application
+
+2005-05-15 13:39  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	field/FBLongVarCharField.java, FBBlob.java, field/FBBlobField.java:
+	
+	blob handling improvements by Robert DiFalco
+
+2005-05-15 13:38  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	
+	removed error notification during transaction start
+
+2005-05-15 13:37  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/encodings/EncodingFactory.java
+	:
+	
+	added caching of the encoders
+
+2005-05-15 13:19  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/FirebirdConnection.java,
+	test/org/firebirdsql/jdbc/TestFBConnection.java:
+	
+	added new methods for transaction management
+
+2005-05-15 10:47  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	jdbc_30/org/firebirdsql/jdbc/FBConnection.java:
+	
+	fixed incorrect method declaration, moved some methods to
+	AbstractConnection, etc.
+
 2005-05-14 14:40  rrokytskyy
 
 	* client-java/src/: jdbc_30/org/firebirdsql/jdbc/FBStatement.java,
