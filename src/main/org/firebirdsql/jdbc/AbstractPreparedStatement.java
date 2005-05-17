@@ -106,13 +106,10 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
 
         notifyStatementStarted();
 
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
-            try {
-                prepareFixedStatement(sql, true);
-            } catch (GDSException ge) {
-                throw new FBSQLException(ge);
-            }
+        try {
+            prepareFixedStatement(sql, true);
+        } catch (GDSException ge) {
+            throw new FBSQLException(ge);
         }
     }
 
