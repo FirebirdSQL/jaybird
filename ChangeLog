@@ -1,3 +1,29 @@
+2005-05-16 22:04  gab_reid
+
+	* client-java/src/: main/org/firebirdsql/jdbc/FBCachedFetcher.java,
+	main/org/firebirdsql/jdbc/FBFetcher.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	main/org/firebirdsql/jdbc/FBStatementFetcher.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	Fixed ignored fetchSize
+
+2005-05-16 19:27  gab_reid
+
+	*
+	client-java/src/test/org/firebirdsql/management/TestFBMaintenanceMa
+	nager.java:
+	
+	Catch exception in AbstractConnection.close when closing on a
+	shutdown db
+
+2005-05-16 13:40  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/management/: FBManager.java,
+	FBManager.java:
+	
+	added constructor that takes type name as param
+
 2005-05-16 00:18  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/gds/impl/GDSType.java:
