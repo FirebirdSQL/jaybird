@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.8  2005/05/15 11:37:09  rrokytskyy
+ * added caching of the encoders
+ *
  * Revision 1.7  2004/10/10 10:58:01  rrokytskyy
  * added support for character translation to character streams
  *
@@ -48,7 +51,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 public class EncodingFactory {
     
@@ -74,7 +79,7 @@ public class EncodingFactory {
         }
     }
     
-    private static final HashMap translations = new HashMap();
+    private static final Map translations = Collections.synchronizedMap(new HashMap());
     
     public static Encoding getEncoding(String encoding, String mappingPath) throws SQLException {
         
@@ -89,14 +94,12 @@ public class EncodingFactory {
     public static CharacterTranslator getTranslator(String mappingPath) throws SQLException {
         CharacterTranslator translator;
         
-        synchronized(translations) {
-            translator = (CharacterTranslator)translations.get(mappingPath);
-            
-            if (translator == null) {
-                translator = new CharacterTranslator();
-                translator.init(mappingPath);
-                translations.put(mappingPath, translator);
-            }
+        translator = (CharacterTranslator)translations.get(mappingPath);
+        
+        if (translator == null) {
+            translator = new CharacterTranslator();
+            translator.init(mappingPath);
+            translations.put(mappingPath, translator);
         }
         return translator;
     }
