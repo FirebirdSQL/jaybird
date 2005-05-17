@@ -162,7 +162,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         
         boolean autocommit = statementListener.getConnection().getAutoCommit();
         
-        if (autocommit)
+        if (autocommit) 
             return statementListener.getConnection();
         else
             return this;
@@ -170,7 +170,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     
     protected void finalize() throws Throwable {
         if (!closed)
-            close();
+            close(true);
     }
     
     public void completeStatement() throws SQLException {
@@ -278,8 +278,12 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     
     void close(boolean ignoreAlreadyClosed) throws SQLException {
         
-        if (closed && !ignoreAlreadyClosed)
+        if (closed) { 
+            if (ignoreAlreadyClosed)
+                return;
+            
             throw new FBSQLException("This statement is already closed.");
+        }
             
         Object syncObject = getSynchronizationObject();
         
@@ -298,12 +302,11 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                     throw new FBSQLException(ge);
                 } finally {
                     fixedStmt = null;
-                    closed = true;
                 }
-            } else
-                closed = true;
+            } 
         }
-        
+
+        closed = true;
         statementListener.statementClosed(this);
     }
     
