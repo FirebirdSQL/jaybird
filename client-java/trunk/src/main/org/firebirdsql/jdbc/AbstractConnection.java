@@ -380,34 +380,30 @@ public abstract class AbstractConnection implements FirebirdConnection {
         if (mc.autoCommit == autoCommit) 
             return;
         
-        synchronized(mc) {
-            InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
-            if (autoCommit)
-                coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, localTransaction);
-            else
-                coordinator = new InternalTransactionCoordinator.LocalTransactionCoordinator(this, localTransaction);
-            
-            txCoordinator.setCoordinator(coordinator);
-            mc.setAutoCommit(autoCommit);
-        }
+        InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
+        if (autoCommit)
+            coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, localTransaction);
+        else
+            coordinator = new InternalTransactionCoordinator.LocalTransactionCoordinator(this, localTransaction);
+        
+        txCoordinator.setCoordinator(coordinator);
+        mc.setAutoCommit(autoCommit);
     }
 
     public void setManagedEnvironment(boolean managedConnection) throws SQLException {
         checkValidity();
         
-        synchronized(mc) {
-            InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
-            
-            if (managedConnection) {
-                coordinator = new InternalTransactionCoordinator.ManagedTransactionCoordinator(this);
-                mc.setAutoCommit(false);
-            } else {
-                coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, localTransaction);
-                mc.setAutoCommit(true);
-            }
-             
-            txCoordinator.setCoordinator(coordinator);
+        InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
+        
+        if (managedConnection) {
+            coordinator = new InternalTransactionCoordinator.ManagedTransactionCoordinator(this);
+            mc.setAutoCommit(false);
+        } else {
+            coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, localTransaction);
+            mc.setAutoCommit(true);
         }
+         
+        txCoordinator.setCoordinator(coordinator);
     }
 
     /**
@@ -490,14 +486,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 //leave managed transactions alone, they are normally
                 //committed after the Connection handle is closed.
                 
-                synchronized(mc) {
-                    if (!getAutoCommit() && localTransaction.inTransaction()) {
-                        //autocommit is always true for managed tx.
-                        try {
-                            txCoordinator.rollback();
-                        } finally {
-                            setAutoCommit(true);
-                        }
+                if (!getAutoCommit() && localTransaction.inTransaction()) {
+                    //autocommit is always true for managed tx.
+                    try {
+                        txCoordinator.rollback();
+                    } finally {
+                        setAutoCommit(true);
                     }
 
                     mc.close(this);
@@ -629,18 +623,16 @@ public abstract class AbstractConnection implements FirebirdConnection {
                     "Connection has being closed.",
                     FBSQLException.SQL_STATE_CONNECTION_CLOSED);
         
-        synchronized(mc) {
-            try {
+        try {
 
-                if (!getAutoCommit() && !mc.isManagedEnvironment())
-                    txCoordinator.commit();
+            if (!getAutoCommit() && !mc.isManagedEnvironment())
+                txCoordinator.commit();
 
-                mc.setTransactionIsolation(level);
+            mc.setTransactionIsolation(level);
 
-            } catch (ResourceException re) {
-                throw new FBSQLException(re);
-            } 
-        }
+        } catch (ResourceException re) {
+            throw new FBSQLException(re);
+        } 
     }
 
     /**
