@@ -1,3 +1,40 @@
+2005-05-17 10:12  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jdbc/AbstractConnection.java, jca/FBLocalTransaction.java:
+	
+	removed synchronization on managed connection
+
+2005-05-17 10:10  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/encodings/EncodingFactory.java
+	:
+	
+	changed the sync pattern by allowing the code to create more
+	encoders than needed, but using mutex for map access only
+
+2005-05-17 10:01  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
+	
+	improved finalization code
+
+2005-05-17 10:00  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
+	.java:
+	
+	removed unneeded synchronization
+
+2005-05-17 09:44  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/XdrOutputStream.java:
+	
+	removed code that decreased performance almost twice
+
 2005-05-16 22:04  gab_reid
 
 	* client-java/src/: main/org/firebirdsql/jdbc/FBCachedFetcher.java,
