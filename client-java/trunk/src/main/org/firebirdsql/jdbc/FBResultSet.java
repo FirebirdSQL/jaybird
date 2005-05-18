@@ -30,7 +30,6 @@ import java.util.*;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.*;
 
@@ -75,8 +74,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     private int rsConcurrency = ResultSet.CONCUR_READ_ONLY;
     private int rsHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
     
-    private boolean paranoiaMode;
-
     /* (non-Javadoc)
      * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#allRowsFetched(org.firebirdsql.jdbc.FBFetcher)
      */
@@ -124,9 +121,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         this.rsHoldability = rsHoldability;
         
         this.trimStrings = trimStrings;
-        
-        // check if we are running in paranoia mode
-        checkParanoiaMode(gdsHelper);
         
         this.xsqlvars = stmt.getOutSqlda().sqlvar;
         this.maxRows = fbStatement.getMaxRows();
@@ -183,11 +177,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         prepareVars(true);
     }
     
-    private void checkParanoiaMode(GDSHelper gdsHelper) {
-        DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
-        paranoiaMode = dpb.hasArgument(DatabaseParameterBufferExtension.PARANOIA_MODE);
-    }
-
     private void prepareVars(boolean cached) throws SQLException {
         fields = new FBField[xsqlvars.length];
         colNames = new HashMap(xsqlvars.length,1);
@@ -288,9 +277,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     }
     
     void close(boolean notifyListener) throws SQLException {
-        if (closed && paranoiaMode && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
-            throw new FBSQLException("The resultSet is closed");
-        
         wasNullValid = false;
         closed = true;
         
