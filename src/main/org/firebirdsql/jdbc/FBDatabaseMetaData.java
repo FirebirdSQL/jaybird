@@ -248,7 +248,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getDriverVersion() throws SQLException {
-        return "1.5";
+        return "2.0";
     }
 
 
@@ -258,7 +258,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @return JDBC driver major version
      */
     public  int getDriverMajorVersion() {
-        return 1;
+        return 2;
     }
 
 
@@ -268,7 +268,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
      * @return JDBC driver minor version number
      */
     public  int getDriverMinorVersion() {
-        return 5;
+        return 0;
     }
 
 
