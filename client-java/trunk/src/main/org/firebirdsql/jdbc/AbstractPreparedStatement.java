@@ -128,9 +128,10 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
         synchronized (syncObject) {
             notifyStatementStarted();
 
-            if (!internalExecute(isExecuteProcedureStatement)) { throw new FBSQLException(
+            if (!internalExecute(isExecuteProcedureStatement))  
+                throw new FBSQLException(
                     "No resultset for sql",
-                    FBSQLException.SQL_STATE_NO_RESULT_SET); }
+                    FBSQLException.SQL_STATE_NO_RESULT_SET); 
 
             return getResultSet();
         }
