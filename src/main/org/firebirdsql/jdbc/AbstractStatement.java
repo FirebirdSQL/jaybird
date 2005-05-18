@@ -85,6 +85,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     private int stmtType;
 
     private String executionPlan;
+    private AbstractConnection connection;
 
     /**
      * Listener for the result sets.
@@ -129,7 +130,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         }
     }
 
-    protected AbstractStatement(GDSHelper c, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) {
+    protected AbstractStatement(GDSHelper c, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) throws SQLException {
         this.gdsHelper = c;
         
         this.rsConcurrency = rsConcurrency;
@@ -137,6 +138,9 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         this.rsHoldability = rsHoldability;
         
         this.statementListener = statementListener;
+        
+        this.connection = statementListener != null ? 
+                statementListener.getConnection() : null;
         
         closed = false;
     }
@@ -157,13 +161,12 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @throws SQLException if something went wrong.
      */
     public Object getSynchronizationObject() throws SQLException {
-        if (statementListener == null || statementListener.getConnection() == null)
+        
+        if (connection == null)
             return this;
         
-        boolean autocommit = statementListener.getConnection().getAutoCommit();
-        
-        if (autocommit) 
-            return statementListener.getConnection();
+        if (connection.getAutoCommit()) 
+            return connection;
         else
             return this;
     }
