@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.5.2.1  2004/10/10 12:32:05  rrokytskyy
+ * merged with HEAD
+ *
  * Revision 1.7  2004/10/10 10:58:01  rrokytskyy
  * added support for character translation to character streams
  *
@@ -101,8 +104,15 @@ public class EncodingFactory {
         return translator;
     }
 
-    public static Encoding getEncoding(String encoding){
-        if (encoding == null || encoding.equals("NONE"))
+    public static synchronized Encoding getEncoding( String encoding ) {
+        if ( encoding == null )
+            encoding = defaultEncoding;
+
+        return createEncoding(encoding);
+    }
+
+    private static final Encoding createEncoding(String encoding){
+        if (encoding.equals("NONE"))
             encoding = defaultEncoding;
         if (encoding.equals("Cp1250"))
             return new Encoding_Cp1250();
