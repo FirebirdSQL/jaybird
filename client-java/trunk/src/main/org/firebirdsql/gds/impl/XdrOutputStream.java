@@ -338,7 +338,9 @@ public final class XdrOutputStream {
         else {
             checkBufferSize(len + pad);
             System.arraycopy(b, 0, buf, count, len);
-            count += len + pad;
+            count += len;
+            System.arraycopy(textPad, 0, buf, count, pad);
+            count += pad;
         }
     }
 
