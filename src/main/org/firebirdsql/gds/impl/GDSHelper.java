@@ -56,6 +56,8 @@ public class GDSHelper {
     protected DatabaseParameterBuffer dpb;
     private boolean autoCommit = true;
     
+    private boolean registerResultSets;
+    
     /**
      * 
      */
@@ -63,6 +65,9 @@ public class GDSHelper {
         this.gds = gds;
         this.dpb = dpb;
         this.currentDbHandle = dbHandle;
+
+        this.registerResultSets = !getDatabaseParameterBuffer().hasArgument(
+                ISCConstants.isc_dpb_no_result_set_tracking);
     }
 
     public IscTrHandle getCurrentTrHandle() {
@@ -192,7 +197,7 @@ public class GDSHelper {
         gds.iscDsqlFetch(stmt, ISCConstants.SQLDA_VERSION1, 
             stmt.getOutSqlda(), fetchSize);
         
-        if (!getDatabaseParameterBuffer().hasArgument(ISCConstants.isc_dpb_no_result_set_tracking))
+        if (registerResultSets)
             currentTr.registerStatementWithTransaction(stmt);
     }
 
