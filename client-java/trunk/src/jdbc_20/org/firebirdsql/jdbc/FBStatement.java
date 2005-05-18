@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.sql.SQLException;
+
 import org.firebirdsql.gds.GDSHelper;
 
 /**
@@ -27,8 +29,13 @@ import org.firebirdsql.gds.GDSHelper;
  */
 public class FBStatement extends AbstractStatement {
 
-    public FBStatement(GDSHelper gdsHelper, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListenet) {
-    	super(gdsHelper, rsType, rsConcurrency, rsHoldability, statementListenet);
+    public FBStatement(GDSHelper gdsHelper, int rsType, int rsConcurrency,
+            int rsHoldability,
+            FBObjectListener.StatementListener statementListenet)
+            throws SQLException {
+        
+        super(gdsHelper, rsType, rsConcurrency, rsHoldability,
+                statementListenet);
     }
         
 }
