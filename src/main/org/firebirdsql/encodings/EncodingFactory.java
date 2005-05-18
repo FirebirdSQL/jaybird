@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.9  2005/05/17 08:10:38  rrokytskyy
+ * changed the sync pattern by allowing the code to create more encoders than needed, but using mutex for map access only
+ *
  * Revision 1.8  2005/05/15 11:37:09  rrokytskyy
  * added caching of the encoders
  *
@@ -109,13 +112,7 @@ public class EncodingFactory {
         if (encoding == null)
             encoding = defaultEncoding;
         
-        Encoding encodingObj = (Encoding)encodings.get(encoding);
-        if (encodingObj == null) {
-            encodingObj = createEncoding(encoding);
-            encodings.put(encoding, encodingObj);
-        }
-        
-        return encodingObj;
+        return createEncoding(encoding);
     }
         
     public static Encoding createEncoding(String encoding) {
