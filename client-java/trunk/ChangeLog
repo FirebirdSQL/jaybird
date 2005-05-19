@@ -1,3 +1,67 @@
+2005-05-18 09:21  rrokytskyy
+
+	* client-java/src/: jdbc_20/org/firebirdsql/jdbc/FBStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBStatement.java:
+	
+	adapted the method signature
+
+2005-05-18 09:21  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/encodings/EncodingFactory.java
+	:
+	
+	removed encoder caching as it leads to stream corruption
+
+2005-05-18 09:20  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSHelper.java:
+	
+	optimized the result set registration flag
+
+2005-05-18 09:12  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/XdrOutputStream.java:
+	
+	fixed possible buffer corruption
+
+2005-05-18 09:11  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	
+	removed paranoia mode switch (it decreases the performance)
+
+2005-05-18 09:11  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
+	
+	optimized Synchronizable implementation
+
+2005-05-18 09:05  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	changed driver version
+
+2005-05-18 09:04  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
+	.java:
+	
+	changed code formatting
+
+2005-05-18 08:30  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/encodings/EncodingFactory.java
+	:
+	
+	removed encoder caching since it influences the performance and
+	correctness
+
 2005-05-17 10:12  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/:
