@@ -124,7 +124,6 @@ public class TestReconnectTransaction extends FBTestBase {
         field1.setConnection(gdsHelper2);
         
         int row = 0;
-        
         while(row < stmtHandle2.getRows().length) {
         
             dataProvider0.setRow(row);
@@ -136,12 +135,14 @@ public class TestReconnectTransaction extends FBTestBase {
             if (Arrays.equals(message, inLimboMessage)) {
                 IscTrHandle inLimboTrHandle = gds.createIscTrHandle();
                 gds.iscReconnectTransaction(inLimboTrHandle, dbHandle2, inLimboTxId);
-                
                 gds.iscRollbackTransaction(inLimboTrHandle);
+                break;
             }
             
             row++;
         }
+
+
         
         gdsHelper2.closeStatement(stmtHandle2, true);
         
