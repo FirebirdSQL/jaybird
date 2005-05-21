@@ -45,6 +45,10 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.ByteArrayOutputStream;
+
 
 
 /**
@@ -367,7 +371,28 @@ public class FBMaintenanceManager extends FBServiceManager
      * @throws SQLException if a database access error occurs
      */
     public void listLimboTransactions() throws SQLException {
-        executeRepairOperation(ISCConstants.isc_spb_rpr_list_limbo_trans);
+        OutputStream saveOut = getLogger();
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            PrintStream ps = new PrintStream(saveOut);
+            setLogger(out);
+            executeRepairOperation(ISCConstants.isc_spb_rpr_list_limbo_trans);
+            byte output[] = out.toByteArray();
+            int trId = 0, shift = 0;
+            for (int i = 0; i < output.length; i++){
+                if (output[i] == ISCConstants.isc_spb_single_tra_id){
+                    trId = 0;
+                    shift = 0;
+                } else if (output[i] == 0){
+                    ps.println(trId);
+                } else {
+                    trId += ((output[i] & 0xff) << shift);
+                    shift += 8;
+                }
+            }
+        } finally {
+            setLogger(saveOut);
+        }
     }
 
     /**
