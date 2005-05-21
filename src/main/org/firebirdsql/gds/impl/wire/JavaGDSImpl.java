@@ -582,13 +582,16 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
             tr.setState(AbstractIscTrHandle.TRANSACTIONSTARTING);
 
             try {
-                if (debug) log.debug("op_transaction ");
+                if (debug) log.debug("op_reconnect ");
                 db.out.writeInt(op_reconnect);
                 
                 // TODO check if sending db handle is needed, most likely not
                 db.out.writeInt(db.getRdb_id());
-                db.out.writeInt(8);
-                db.out.writeLong(transactionId);
+                byte[] buf = new byte[4];
+                for (int i = 0; i < 4; i++){
+                    buf[i] = (byte)(transactionId >>> (i * 8));
+                }
+                db.out.writeBuffer(buf);
                 db.out.flush();
                 if (debug) log.debug("sent");
                 // out.flush();
