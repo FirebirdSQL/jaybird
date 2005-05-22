@@ -19,7 +19,7 @@
 
 package org.firebirdsql.jca;
 
-import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.io.PrintWriter;
 import java.sql.*;
 import java.util.*;
@@ -32,9 +32,12 @@ import javax.transaction.xa.*;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractIscDbHandle;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.*;
+import org.firebirdsql.jdbc.field.FBField;
+import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -711,7 +714,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
                 } else {
                     fbxid = new FBXid(xid);
                 }
-                gdsHelper.getInternalAPIHandler().iscPrepareTransaction2(committingTr, fbxid.toBytes());
+                byte[] message = fbxid.toBytes();
+                
+                gdsHelper.getInternalAPIHandler().iscPrepareTransaction2(committingTr, message);
             } catch (GDSException ge) {
                 try {
                     gdsHelper.getInternalAPIHandler().iscRollbackTransaction(committingTr);
@@ -751,44 +756,101 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *             XAER_RMFAIL, XAER_INVAL, and XAER_PROTO.
      */
     public Xid[] recover(int flag) throws javax.transaction.xa.XAException {
-        ArrayList xids = new ArrayList();
-        Connection conn = null;
         try {
-            conn = (Connection) getConnection(null, null);
-
-            try {
-
-                Statement statement = conn.createStatement();
-                ResultSet recoveredRS = statement.executeQuery(RECOVERY_QUERY);
-                while (recoveredRS.next()) {
-                    try {
-                        long transactionID = recoveredRS.getLong(1);
-                        InputStream xidIn = recoveredRS.getBinaryStream(2);
-                        FBXid xid = new FBXid(xidIn, transactionID);
-                        xids.add(xid);
-                        // what do we do with the Firebird transactionID?
-                    } catch (SQLException sqle) {
-                    } 
-                    catch (ResourceException sqle) {
-                    } 
-
+            ArrayList xids = new ArrayList();
+            
+            AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();
+            gds.iscStartTransaction(trHandle2, gdsHelper.getCurrentDbHandle(), tpb.getTransactionParameterBuffer());
+            
+            AbstractIscStmtHandle stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
+            gds.iscDsqlAllocateStatement(gdsHelper.getCurrentDbHandle(), stmtHandle2);
+            
+            GDSHelper gdsHelper2 = new GDSHelper(gds, 
+                    gdsHelper.getDatabaseParameterBuffer(), 
+                    (AbstractIscDbHandle) gdsHelper.getCurrentDbHandle());
+            gdsHelper2.setCurrentTrHandle(trHandle2);
+            
+            gdsHelper2.prepareStatement(stmtHandle2, RECOVERY_QUERY, false);
+            gdsHelper2.executeStatement(stmtHandle2, false);
+            gdsHelper2.fetch(stmtHandle2, 10);
+            
+            DataProvider dataProvider0 = new DataProvider(stmtHandle2, 0);
+            DataProvider dataProvider1 = new DataProvider(stmtHandle2, 1);
+            
+            FBField field0 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[0], dataProvider0, gdsHelper2, false);
+            FBField field1 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[1], dataProvider1, gdsHelper2, false);
+            
+            field0.setConnection(gdsHelper2);
+            field1.setConnection(gdsHelper2);
+            
+            int row = 0;
+            while(row < stmtHandle2.getRows().length) {
+            
+                if (stmtHandle2.getRows()[row] == null) {
+                    row++;
+                    continue;
                 }
-                return (FBXid[]) xids.toArray(new FBXid[xids.size()]);
-            } finally {
-                conn.close();
-            } 
+                
+                dataProvider0.setRow(row);
+                dataProvider1.setRow(row);
+                
+                long inLimboTxId = field0.getLong();
+                byte[] inLimboMessage = field1.getBytes();
+            
+                try {
+                    FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
+                    xids.add(xid);
+                } catch(FBIncorrectXidException ex) {
+                    // ignore this Xid
+                }
+    
+                row++;
+            }
+    
+            gdsHelper2.closeStatement(stmtHandle2, true);
+            gds.iscCommitTransaction(trHandle2);
+            
+            return (FBXid[])xids.toArray(new FBXid[xids.size()]);
+
+        } catch(GDSException ex) {
+            if (log != null)
+                log.debug("can't perform query to fetch xids", ex);
+            throw new FBXAException(XAException.XAER_RMFAIL, ex);
         } catch (SQLException sqle) {
             if (log != null)
                 log.debug("can't perform query to fetch xids", sqle);
-            throw new XAException(XAException.XAER_RMFAIL);
+            throw new FBXAException(XAException.XAER_RMFAIL, sqle);
         } 
         catch (ResourceException re) {
             if (log != null)
                 log.debug("can't perform query to fetch xids", re);
-            throw new XAException(XAException.XAER_RMFAIL);
+            throw new FBXAException(XAException.XAER_RMFAIL, re);
         } 
     }
 
+    private static class DataProvider implements FieldDataProvider {
+
+        private AbstractIscStmtHandle stmtHandle;
+        private int fieldPos;
+        private int row;
+        
+        private DataProvider(AbstractIscStmtHandle stmtHandle, int fieldPos) {
+            this.stmtHandle = stmtHandle;
+            this.fieldPos = fieldPos;
+        }
+        
+        public void setRow(int row) {
+            this.row = row;
+        }
+        
+        public byte[] getFieldData() {
+            return ((byte[][])stmtHandle.getRows()[row])[fieldPos];
+        }
+        public void setFieldData(byte[] data) {
+            throw new UnsupportedOperationException();
+        }
+    }
+    
     /**
      * Rolls back the work, assuming it was done on behalf of the specified
      * transaction.

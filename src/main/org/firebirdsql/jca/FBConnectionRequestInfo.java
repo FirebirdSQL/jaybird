@@ -16,12 +16,7 @@
  *
  * All rights reserved.
  */
-
-
 package org.firebirdsql.jca;
-
-
-
 
 import java.io.Serializable;
 import javax.resource.cci.ConnectionSpec;

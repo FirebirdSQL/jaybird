@@ -113,21 +113,21 @@ class FBXid implements Xid {
             
             if (in.read() != TDR_VERSION)
             {
-                throw new FBResourceException("Wrong TDR_VERSION for xid");
+                throw new FBIncorrectXidException("Wrong TDR_VERSION for xid");
             }
             if (in.read() != TDR_XID_FORMAT_ID)
             {
-                throw new FBResourceException("Wrong TDR_XID_FORMAT_ID for xid");
+                throw new FBIncorrectXidException("Wrong TDR_XID_FORMAT_ID for xid");
             }
             formatId = in.readInt(); 
             if (in.read() != TDR_XID_GLOBAL_ID)
             {
-                throw new FBResourceException("Wrong TDR_XID_GLOBAL_ID for xid");
+                throw new FBIncorrectXidException("Wrong TDR_XID_GLOBAL_ID for xid");
             }
             globalId = in.readBuffer();
             if (in.read() != TDR_XID_BRANCH_ID)
             {
-                throw new FBResourceException("Wrong TDR_XID_BRANCH_ID for xid");
+                throw new FBIncorrectXidException("Wrong TDR_XID_BRANCH_ID for xid");
             }
             branchId = in.readBuffer();
         } 

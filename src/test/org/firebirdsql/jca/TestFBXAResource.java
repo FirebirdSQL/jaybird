@@ -19,6 +19,11 @@
 package org.firebirdsql.jca;
 
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 import javax.resource.spi.ManagedConnection;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
@@ -173,16 +178,43 @@ public class TestFBXAResource extends TestXABase {
     public void testRecover() throws Exception
     {
         
+        Connection connection = getConnectionViaDriverManager();
+        try {
+            Statement stmt = connection.createStatement();
+            try {
+                try {
+                    stmt.execute("DROP TABLE test_reconnect");
+                } catch(SQLException ex) {
+                    // empty
+                }
+                
+                stmt.execute("CREATE TABLE test_reconnect(id INTEGER)");
+            } finally {
+                stmt.close();
+            }
+            
+        } finally {
+            connection.close();
+        }
+        
         if (log != null) log.info("testRecover");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc1 = mcf.createManagedConnection(null, null);
+        
         FBManagedConnection fbmc1 = (FBManagedConnection)mc1;
         XAResource xa1 = mc1.getXAResource();
-//        Xid[] xids = xa1.recover(XAResource.TMSTARTRSCAN);
-//        assertTrue("Xid[] was null from recover!", xids != null);
         
         Xid xid1 = new XidImpl();
         xa1.start(xid1, XAResource.TMNOFLAGS);
+        
+        Connection fbc1 = (Connection)fbmc1.getConnection(null, null);
+        Statement fbstmt1 = fbc1.createStatement();
+        try {
+            fbstmt1.execute("INSERT INTO test_reconnect(id) VALUES(1)");
+        } finally {
+            fbstmt1.close();
+        }
+        
         xa1.end(xid1, XAResource.TMSUCCESS);
         xa1.prepare(xid1);
         
@@ -193,8 +225,15 @@ public class TestFBXAResource extends TestXABase {
         FBManagedConnectionFactory mcf2 = initMcf();
         ManagedConnection mc2 = mcf2.createManagedConnection(null, null);
         XAResource xa2 = mc2.getXAResource();
+
+        Xid xid2 = new XidImpl();
+        xa2.start(xid2, XAResource.TMNOFLAGS);
         
         Xid[] xids = xa2.recover(XAResource.TMSTARTRSCAN);
+        
+        xa2.end(xid2, XAResource.TMSUCCESS);
+        xa2.commit(xid2, true);
+        
         assertTrue("Should recover non-null array", xids != null);
         assertTrue("Should recover at least one transaction", xids.length > 0);
         
@@ -209,6 +248,21 @@ public class TestFBXAResource extends TestXABase {
         assertTrue("Should find our transaction", found);
         
         xa2.commit(xid1, false);
+        
+        connection = getConnectionViaDriverManager();
+        try {
+            Statement stmt = connection.createStatement();
+            try {
+                ResultSet rs = stmt.executeQuery("SELECT * FROM test_reconnect");
+                assertTrue("Should find at least one row.", rs.next());
+                assertTrue("Should read correct value", rs.getInt(1) == 1);
+                assertTrue("Should select only one row", !rs.next());
+            } finally {
+                stmt.close();
+            }
+        } finally {
+            connection.close();
+        }
     }
 
 }
