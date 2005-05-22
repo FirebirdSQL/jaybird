@@ -86,6 +86,7 @@ prototype_isc_service_attach*		FirebirdApiBinding::isc_service_attach  = NULL;
 prototype_isc_service_detach*		FirebirdApiBinding::isc_service_detach  = NULL;
 prototype_isc_service_query*		FirebirdApiBinding::isc_service_query  = NULL;
 prototype_isc_service_start*		FirebirdApiBinding::isc_service_start  = NULL;
+prototype_isc_transaction_info*		FirebirdApiBinding::isc_transaction_info = NULL;
 
 
 
@@ -156,6 +157,7 @@ void FirebirdApiBinding::Load(const char* const firebirdDllName)
 		FB_ENTRYPOINT(isc_service_detach);
 		FB_ENTRYPOINT(isc_service_query);
 		FB_ENTRYPOINT(isc_service_start);
+		FB_ENTRYPOINT(isc_transaction_info);
 
 		sIsLoaded = true;
 		}
