@@ -324,8 +324,8 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
                 db.out.flush();
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
-                if (debug) log.debug("parseSqlInfo: first 2 bytes are " + iscVaxInteger(db.getResp_data(), 0, 2) + " or: " + db.getResp_data()[0] + ", " + db.getResp_data()[1]);
-                return db.getResp_data();
+                // if (debug) log.debug("parseSqlInfo: first 2 bytes are " + iscVaxInteger(db.getResp_data(), 0, 2) + " or: " + db.getResp_data()[0] + ", " + db.getResp_data()[1]);
+                return db.getResp_data_truncated();
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_network_error);
             }
@@ -349,8 +349,8 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
                 db.out.flush();
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
-                if (debug) log.debug("parseSqlInfo: first 2 bytes are " + iscVaxInteger(db.getResp_data(), 0, 2) + " or: " + db.getResp_data()[0] + ", " + db.getResp_data()[1]);
-                return db.getResp_data();
+                // if (debug) log.debug("parseSqlInfo: first 2 bytes are " + iscVaxInteger(db.getResp_data(), 0, 2) + " or: " + db.getResp_data()[0] + ", " + db.getResp_data()[1]);
+                return db.getResp_data_truncated();
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_network_error);
             }
@@ -893,7 +893,7 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
         byte[] buffer = iscDsqlSqlInfo(stmt_handle,
                               /* describe_select_info.length,*/ describe_select_info,
                               MAX_BUFFER_SIZE);
-        return parseSqlInfo(stmt_handle, buffer, describe_select_info);
+        return parseSqlInfo(stmt_handle, buffer, buffer.length, describe_select_info);
     }
 
     final static byte[] describe_bind_info = new byte[] { ISCConstants.isc_info_sql_bind,
@@ -918,7 +918,7 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
                               /* describe_bind_info.length,*/ describe_bind_info,
                               MAX_BUFFER_SIZE);
 
-        stmt.setInSqlda(parseSqlInfo(stmt_handle, buffer, describe_bind_info));
+        stmt.setInSqlda(parseSqlInfo(stmt_handle, buffer, buffer.length, describe_bind_info));
         return stmt.getInSqlda();
     }
 
@@ -1341,7 +1341,7 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
 
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
-                stmt.setOutSqlda(parseSqlInfo(stmt_handle, db.getResp_data(), sql_prepare_info));
+                stmt.setOutSqlda(parseSqlInfo(stmt_handle, db.getResp_data(), db.getResp_data_len(), sql_prepare_info));
                 return stmt.getOutSqlda();
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
@@ -1409,7 +1409,7 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
                 db.out.flush();
                 if (debug) log.debug("sent");
                 receiveResponse(db,-1);
-                return db.getResp_data();
+                return db.getResp_data_truncated();
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_net_read_err);
             }
@@ -1584,14 +1584,19 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
                 else if (db.getResp_object() == 2) {
                     blob.rbl_flagsAdd(ISCConstants.RBL_eof_pending);
                 }
+                
+                if (db.getResp_data_len() == 0)
+                    return new byte[0];
+                
                 byte[] buffer = db.getResp_data();
-                if (buffer.length == 0) {//previous segment was last, this has no data
-                    return buffer;
-                }
+                int bufferLength = db.getResp_data_len();
+//                if (buffer.length == 0) {//previous segment was last, this has no data
+//                    return buffer;
+//                }
                 int len = 0;
                 int srcpos = 0;
                 int destpos = 0;
-                while (srcpos < buffer.length) {
+                while (srcpos < bufferLength) {
                     len = iscVaxInteger(buffer, srcpos, 2);
                     srcpos += 2;
                     System.arraycopy(buffer, srcpos, buffer, destpos, len);
@@ -1732,7 +1737,7 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
             }
 
             db.out = new XdrOutputStream(db.socket.getOutputStream());
-            db.in = new XdrInputStream(db.socket.getInputStream());
+            db.in = new WireXdrInputStream(db.socket.getInputStream());
 
             //Here we identify the user to the engine.  This may or may not be used
             //as login info to a database.
@@ -1833,12 +1838,15 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
             if (op == op_response) {
                 db.setResp_object(db.in.readInt());
                 db.setResp_blob_id(db.in.readLong());
-                db.setResp_data(db.in.readBuffer());
-                if (debug) {
-                    log.debug("op_response resp_object: " + db.getResp_object());
-                    log.debug("op_response resp_blob_id: " + db.getResp_blob_id());
-                    log.debug("op_response resp_data size: " + db.getResp_data().length);
-                }
+                
+                db.in.readBuffer(db);
+                
+//                // db.setResp_data(db.in.readBuffer());
+//                if (debug) {
+//                    log.debug("op_response resp_object: " + db.getResp_object());
+//                    log.debug("op_response resp_blob_id: " + db.getResp_blob_id());
+//                    log.debug("op_response resp_data size: " + db.getResp_data().length);
+//                }
 //              for (int i = 0; i < ((r.resp_data.length< 16) ? r.resp_data.length: 16) ; i++) {
 //                  if (debug) log.debug("byte: " + r.resp_data[i]);
 //              }
@@ -2056,7 +2064,7 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
     }
 
     private XSQLDA parseSqlInfo(IscStmtHandle stmt_handle,
-                                byte[] info,
+                                byte[] info, int infoLength,
                                 byte[] items) throws GDSException {
 
         boolean debug = log != null && log.isDebugEnabled();
@@ -2065,7 +2073,7 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
         XSQLDA xsqlda = new XSQLDA();
         int lastindex = 0;
         int index = 0;
-        while ((index = parseTruncSqlInfo(info, xsqlda, lastindex)) > 0) {
+        while ((index = parseTruncSqlInfo(info, infoLength, xsqlda, lastindex)) > 0) {
             byte[] new_items = new byte[4 + items.length];
             new_items[0] = ISCConstants.isc_info_sql_sqlda_start;
             new_items[1] = 2;
@@ -2073,13 +2081,13 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
             new_items[3] = (byte) (index >> 8);
             System.arraycopy(items, 0, new_items, 4, items.length);
             
-            int size = info.length;
+            int size = infoLength;
             
             // this situation happens only if one XSQLVAR does not fit
             // the buffer. in this case we increase buffer twice and try
             // again
             if (index == lastindex)
-                size = info.length * 2;
+                size = infoLength * 2;
             
             info = iscDsqlSqlInfo(stmt_handle, new_items, size);
             lastindex = index;
@@ -2091,7 +2099,7 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
     }
 
 
-    private int parseTruncSqlInfo(byte[] info,
+    private int parseTruncSqlInfo(byte[] info, int infoLength,
                                   XSQLDA xsqlda,
                                   int lastindex) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();

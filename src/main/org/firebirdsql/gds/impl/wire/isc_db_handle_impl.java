@@ -38,7 +38,6 @@ import javax.security.auth.Subject;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.AbstractIscDbHandle;
-import org.firebirdsql.gds.impl.XdrInputStream;
 import org.firebirdsql.gds.impl.XdrOutputStream;
 
 /**
@@ -48,6 +47,9 @@ import org.firebirdsql.gds.impl.XdrOutputStream;
  * @version 1.0
  */
 public final class isc_db_handle_impl extends AbstractIscDbHandle {
+    
+    private static final int DEFAULT_RESP_DATA = 65536;
+    
     private int rdb_id;
     private Subject subject;
     private Collection rdb_transactions = new ArrayList();
@@ -57,10 +59,11 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
 
     Socket socket;
     public XdrOutputStream out;
-    public XdrInputStream in;
+    public WireXdrInputStream in;
     private int resp_object;
     private long resp_blob_id;
-    private byte[] resp_data;
+    private byte[] resp_data = new byte[DEFAULT_RESP_DATA];
+    private int resp_data_len;
 
     private int dialect = 0;
     private int protocol = 0;
@@ -262,6 +265,20 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
         return resp_data;
     }
 
+    public byte[] getResp_data_truncated() {
+        byte[] dest = new byte[getResp_data_len()];
+        System.arraycopy(resp_data, 0, dest, 0, dest.length);
+        return dest;
+    }
+    
+    public void setResp_data_len(int len) {
+        this.resp_data_len = len;
+    }
+    
+    public int getResp_data_len() {
+        return this.resp_data_len;
+    }
+    
     private void checkValidity() {
         if (invalid)
             throw new IllegalStateException(
