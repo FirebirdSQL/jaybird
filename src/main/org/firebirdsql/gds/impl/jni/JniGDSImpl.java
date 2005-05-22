@@ -228,4 +228,10 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
             IscDbHandle db_handle,
             byte[] tpb) throws GDSException;
 
+    public native void native_isc_reconnect_transaction(IscDbHandle dbHandle,
+            IscTrHandle tr_handle, byte[] txId) throws GDSException;
+
+    public native byte[] native_isc_transaction_info(IscTrHandle tr_handle, 
+            byte[] info, int bufferLength) throws GDSException;
+
 }
