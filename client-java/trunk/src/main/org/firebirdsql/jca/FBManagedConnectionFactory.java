@@ -697,8 +697,9 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         
         if (targetMc == null)
             tryCompleteInLimboTransaction(gds, xid,  true);
-
-        targetMc.internalCommit(xid, onePhase);
+        else
+            targetMc.internalCommit(xid, onePhase);
+        
         xidMap.remove(xid);
     }
     
@@ -707,8 +708,9 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         
         if (targetMc == null)
             tryCompleteInLimboTransaction(gds, xid,  false);
-
-        targetMc.internalRollback(xid);
+        else
+            targetMc.internalRollback(xid);
+        
         xidMap.remove(xid);
     }
     
@@ -751,8 +753,11 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         
         try {
             FBManagedConnection tempMc = null;
+            FBLocalTransaction tempLocalTx = null;
             try {
                 tempMc = new FBManagedConnection(null, null, this);
+                tempLocalTx = (FBLocalTransaction)tempMc.getLocalTransaction();
+                tempLocalTx.begin();
                 
                 long fbTransactionId = 0;
                 boolean found = false;
@@ -786,8 +791,13 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
             } catch(GDSException ex) {
                 throw new FBXAException(XAException.XAER_RMERR, ex);
             } finally {
-                if (tempMc != null)
-                    tempMc.destroy();
+                try {
+                    if (tempLocalTx != null && tempLocalTx.inTransaction())
+                        tempLocalTx.commit();
+                } finally {
+                    if (tempMc != null)
+                        tempMc.destroy();
+                }
             }
         } catch(ResourceException ex) {
             throw new FBXAException(XAException.XAER_RMERR, ex);
