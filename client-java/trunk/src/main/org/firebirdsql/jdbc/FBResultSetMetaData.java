@@ -264,7 +264,12 @@ public class FBResultSetMetaData implements ResultSetMetaData {
     }
 
     public String getSourceColumnName(int column) throws SQLException {
-        return getXsqlvar(column).sqlname;
+        String result = getXsqlvar(column).sqlname;
+        
+        if (result == null)
+            result = "";
+        
+        return result;
     }
 
     /**
