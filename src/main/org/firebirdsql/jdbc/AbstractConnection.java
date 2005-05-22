@@ -493,9 +493,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
                     } finally {
                         setAutoCommit(true);
                     }
-
-                    mc.close(this);
                 }
+
+                mc.close(this);
                 mc = null;
             }
         }
