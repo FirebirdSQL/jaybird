@@ -317,7 +317,13 @@ typedef ISC_STATUS ISC_EXPORT prototype_isc_service_start(ISC_STATUS *,
 										unsigned short,
 										char *);
 
-
+typedef ISC_STATUS ISC_EXPORT prototype_isc_transaction_info(ISC_STATUS *,
+										isc_tr_handle *,
+										short,
+										char *,
+										short,
+										char *);
+										
 
 
 
@@ -388,6 +394,7 @@ class FirebirdApiBinding
 		static prototype_isc_service_detach*			isc_service_detach;
 		static prototype_isc_service_query*			isc_service_query;
 		static prototype_isc_service_start*			isc_service_start;
+		static prototype_isc_transaction_info*		isc_transaction_info;
 
 	
 

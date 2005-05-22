@@ -48,7 +48,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
   (JNIEnv *, jobject, jobject, jint, jbyteArray, jint, jbyteArray);
 
 /*
- * Class:     org_firebirdsql_gds_impl_jni_GDS_0005fImpl
+ * Class:     org_	firebirdsql_gds_impl_jni_GDS_0005fImpl
  * Method:    native_isc_detach_database
  * Signature: (Lorg/firebirdsql/gds/IscDbHandle;)V
  */
@@ -86,7 +86,15 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
  */
 JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1rollback_1transaction
   (JNIEnv *, jobject, jobject);
-
+  
+/*
+ * Class:     org_firebirdsql_gds_impl_jni_JniGDSImpl
+ * Method:    native_isc_reconnect_transaction
+ * Signature: (Lorg/firebirdsql/gds/IscDbHandle;Lorg/firebirdsql/gds/IscTrHandle;[B)V
+ */
+JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1reconnect_1transaction
+  (JNIEnv *, jobject, jobject, jobject, jbyteArray);
+  
 /*
  * Class:     org_firebirdsql_gds_impl_jni_GDS_0005fImpl
  * Method:    native_isc_commit_retaining
@@ -294,6 +302,14 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
  */
 JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1service_1query
   (JNIEnv *, jobject, jobject, jbyteArray, jbyteArray, jbyteArray);
+
+/*
+ * Class:     org_firebirdsql_gds_impl_jni_JniGDSImpl
+ * Method:    native_isc_transaction_info
+ * Signature: (Lorg/firebirdsql/gds/IscTrHandle;[BI)V
+ */
+JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1transaction_1info
+  (JNIEnv *, jobject, jobject, jbyteArray, jint);
 
 #ifdef __cplusplus
 }

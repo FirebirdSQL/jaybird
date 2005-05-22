@@ -250,6 +250,27 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
+JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1reconnect_1transaction
+  (JNIEnv * javaEnvironment, jobject jThis, jobject jDatabaseHandle, jobject jTransactionHandle, jbyteArray jTransactionId)
+{
+	ENTER_PROTECTED_BLOCK
+		JIscTransactionHandle transactionHandle(javaEnvironment, jTransactionHandle);
+		JIscDatabaseHandle databaseHandle(javaEnvironment, jDatabaseHandle);
+		JByteArray transactionId(javaEnvironment, jTransactionId);
+
+		FirebirdStatusVector status;
+		isc_db_handle rawDatabaseHandle = databaseHandle.GetHandleValue();
+		isc_tr_handle rawTransactionHandle = transactionHandle.GetHandleValue();
+
+		FirebirdApiBinding::isc_reconnect_transaction( status.RawAccess(), &rawDatabaseHandle, &rawTransactionHandle, transactionId.Size(), transactionId.Read()  );
+		
+		transactionHandle.SetHandleValue(rawTransactionHandle);
+		databaseHandle.SetHandleValue( rawDatabaseHandle );
+
+		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, databaseHandle);
+	LEAVE_PROTECTED_BLOCK
+}
+
 JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1commit_1transaction
   (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle)
 	{
@@ -341,7 +362,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 	LEAVE_PROTECTED_BLOCK
 
 	}
-
+	
 JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1rollback_1retaining
  (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle)
 	{
@@ -580,6 +601,34 @@ ENTER_PROTECTED_BLOCK
 		jbyteArray returnValue = buffer.GetHandle();
 			
 		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, statementHandle);
+
+		return returnValue;
+	LEAVE_PROTECTED_BLOCK
+
+	return NULL;
+	}
+
+
+JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1transaction_1info
+  (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle, jbyteArray jItemsArray, jint jBufferLength)
+{
+
+ENTER_PROTECTED_BLOCK
+		JIscTransactionHandle transactionHandle(javaEnvironment, jTransactionHandle);
+
+		JByteArray itemsArray( javaEnvironment, jItemsArray );
+		JByteArray buffer( javaEnvironment, jBufferLength );
+	
+		FirebirdStatusVector status;
+		isc_tr_handle rawTransactionHandle = transactionHandle.GetHandleValue();
+
+		FirebirdApiBinding::isc_transaction_info( status.RawAccess(), &rawTransactionHandle, itemsArray.Size(), itemsArray.Read(), buffer.Size(), buffer.Read() );
+	
+		transactionHandle.SetHandleValue(rawTransactionHandle);
+
+		jbyteArray returnValue = buffer.GetHandle();
+			
+		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, transactionHandle);
 
 		return returnValue;
 	LEAVE_PROTECTED_BLOCK
