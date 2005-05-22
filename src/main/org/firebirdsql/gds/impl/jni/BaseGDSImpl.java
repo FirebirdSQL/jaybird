@@ -687,6 +687,12 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         }
     }
 
+
+    public byte [] iscTransactionInformation(IscTrHandle trHandle, 
+            byte [] requestBuffer, int bufferLen) throws GDSException {
+        throw new UnsupportedOperationException();
+    }
+
     public void iscSeekBlob(IscBlobHandle handle, int position, int mode)
             throws GDSException {
         isc_blob_handle_impl blob = (isc_blob_handle_impl) handle;

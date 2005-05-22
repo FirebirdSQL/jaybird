@@ -300,6 +300,9 @@ public interface GDS {
 
     void iscRollbackRetaining(IscTrHandle trHandle) throws GDSException;
 
+    byte [] iscTransactionInformation(IscTrHandle trHandle, 
+            byte [] requestBuffer, int bufferLen) throws GDSException;
+
     // ---------------------- Dynamic SQL ------------------------
 
     /**
