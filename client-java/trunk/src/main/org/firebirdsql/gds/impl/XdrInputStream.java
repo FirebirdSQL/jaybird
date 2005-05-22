@@ -44,15 +44,15 @@ import org.firebirdsql.gds.impl.wire.isc_stmt_handle_impl;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class XdrInputStream {
+public class XdrInputStream {
 
-    private final static byte[] pad = new byte[8];
-    private InputStream in = null;
+    protected final static byte[] pad = new byte[8];
+    protected InputStream in = null;
     // Buffer
-    private static int defaultBufferSize = 16384;
-    private byte buf[];
-    private int count;
-    private int pos;
+    protected static int defaultBufferSize = 16384;
+    protected byte buf[];
+    protected int count;
+    protected int pos;
 
     /**
      * Create a new instance of <code>XdrInputStream</code>.
@@ -78,7 +78,7 @@ public final class XdrInputStream {
         readFully(pad,0,(4 - len) & 3);
         return buffer;
     }
-
+    
     /**
      * Read in a <code>String</code>.
      *
