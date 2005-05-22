@@ -263,6 +263,9 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         return getColumnLabel(column);
     }
 
+    public String getSourceColumnName(int column) throws SQLException {
+        return getXsqlvar(column).sqlname;
+    }
 
     /**
      * Get the designated column's table's schema.
