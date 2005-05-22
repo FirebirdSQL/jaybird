@@ -120,6 +120,9 @@ public class GDSFactory {
      * @return A <code>GDS</code> implementation of the given type
      */
     public synchronized static GDS getGDSForType(GDSType gdsType) {
+        if (gdsType == null)
+            gdsType = defaultType;
+        
         GDSFactoryPlugin gdsPlugin = 
             (GDSFactoryPlugin)typeToPluginMap.get(gdsType);
         
