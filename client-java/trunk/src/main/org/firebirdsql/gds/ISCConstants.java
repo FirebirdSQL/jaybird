@@ -588,6 +588,11 @@ public final class ISCConstants {
     public final static int isc_info_blob_type              = 7;
 
 
+    /*********************************/
+    /* Transaction information items */
+    /*********************************/
+    public final static int isc_info_tra_id = 4;
+
 
     /********************/
     /* ISC Error Codes */

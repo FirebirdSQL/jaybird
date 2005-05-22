@@ -801,6 +801,35 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
 
     }
 
+
+    public byte [] iscTransactionInformation(IscTrHandle tr_handle, 
+            byte [] requestBuffer, int bufferLen) throws GDSException {
+
+        boolean debug = log != null && log.isDebugEnabled();
+        isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
+        if (tr == null) {
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
+        }
+        isc_db_handle_impl db = (isc_db_handle_impl)tr.getDbHandle();
+
+        synchronized (db) {
+            try {
+                if (debug) log.debug("op_info_transaction ");
+                db.out.writeInt(op_info_transaction);
+                db.out.writeInt(tr.getTransactionId());
+                db.out.writeInt(0);
+                db.out.writeBuffer(requestBuffer);
+                db.out.writeInt(bufferLen);
+                db.out.flush();
+                if (debug) log.debug("sent");
+                receiveResponse(db,-1);
+                return db.getResp_data();
+            } catch (IOException ex) {
+                throw new GDSException(ISCConstants.isc_net_read_err);
+            }
+        }
+    }
+
     // Dynamic SQL
 
     public void iscDsqlAllocateStatement(        IscDbHandle db_handle,

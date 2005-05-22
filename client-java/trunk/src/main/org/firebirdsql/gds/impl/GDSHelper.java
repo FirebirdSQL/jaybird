@@ -108,6 +108,17 @@ public class GDSHelper {
     public boolean inTransaction() {
         return currentTr != null;
     }
+
+    public int getTransactionId(IscTrHandle trHandle) 
+            throws GDSException {
+        byte [] trInfo = gds.iscTransactionInformation(
+                trHandle, new byte[]{ ISCConstants.isc_info_tra_id}, 32);
+        if (trInfo.length < 3 || trInfo[0] != ISCConstants.isc_info_tra_id){
+            throw new GDSException("Unexpected response buffer");
+        }
+        int length = gds.iscVaxInteger(trInfo, 1, 2);
+        return gds.iscVaxInteger(trInfo, 3, length);
+    }
     
     /**
      * Prepare an SQL string for execution (within the database server) in the

@@ -135,6 +135,9 @@ public class TestReconnectTransaction extends FBTestBase {
             if (Arrays.equals(message, inLimboMessage)) {
                 IscTrHandle inLimboTrHandle = gds.createIscTrHandle();
                 gds.iscReconnectTransaction(inLimboTrHandle, dbHandle2, inLimboTxId);
+                assertEquals(
+                        inLimboTxId,
+                        gdsHelper2.getTransactionId(inLimboTrHandle));
                 gds.iscRollbackTransaction(inLimboTrHandle);
                 break;
             }
