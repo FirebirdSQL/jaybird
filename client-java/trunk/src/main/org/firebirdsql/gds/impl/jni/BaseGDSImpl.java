@@ -238,8 +238,8 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         if (db == null) { throw new GDSException(ISCConstants.isc_bad_db_handle); }
 
         synchronized (this) {
-            if (db.hasTransactions()) { throw new GDSException(
-                    ISCConstants.isc_open_trans, db.getOpenTransactionCount()); }
+//            if (db.hasTransactions()) { throw new GDSException(
+//                    ISCConstants.isc_open_trans, db.getOpenTransactionCount()); }
 
             native_isc_detach_database(db_handle);
             ((isc_db_handle_impl) db_handle).invalidate();
@@ -642,7 +642,23 @@ public abstract class BaseGDSImpl extends AbstractGDS {
      */
     public void iscReconnectTransaction(IscTrHandle tr_handle,
             IscDbHandle db_handle, long transactionId) throws GDSException {
-        throw new UnsupportedOperationException();
+
+        isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
+        isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
+        
+        byte[] buffer = new byte[4];
+        for (int i = 0; i < 4; i++){
+            buffer[i] = (byte)(transactionId >>> (i * 8));
+        }
+
+        synchronized (db_handle) {
+            tr.setState(AbstractIscTrHandle.TRANSACTIONSTARTING);
+
+            native_isc_reconnect_transaction(db_handle, tr_handle, buffer);
+            tr.setDbHandle((isc_db_handle_impl) db_handle);
+
+            tr.setState(AbstractIscTrHandle.TRANSACTIONSTARTED);
+        }
     }
 
     // isc_rollback_retaining
@@ -690,7 +706,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
     public byte [] iscTransactionInformation(IscTrHandle trHandle, 
             byte [] requestBuffer, int bufferLen) throws GDSException {
-        throw new UnsupportedOperationException();
+        synchronized (trHandle) {
+            return native_isc_transaction_info(trHandle, requestBuffer, bufferLen);
+        }
     }
 
     public void iscSeekBlob(IscBlobHandle handle, int position, int mode)
@@ -931,6 +949,12 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             IscDbHandle db_handle,
             // Set tpb) throws GDSException;
             byte[] tpb) throws GDSException;
+    
+    public abstract void native_isc_reconnect_transaction(IscDbHandle dbHandle,
+            IscTrHandle trHandle, byte[] txId) throws GDSException;
+    
+    public abstract byte[] native_isc_transaction_info(IscTrHandle tr_handle,
+            byte[] items, int bufferSize) throws GDSException;
 
     public TransactionParameterBuffer newTransactionParameterBuffer() {
         return new TransactionParameterBufferImpl();
