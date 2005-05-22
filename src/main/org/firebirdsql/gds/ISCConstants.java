@@ -458,6 +458,7 @@ public final class ISCConstants {
     public final static int isc_info_sql_stmt_rollback       = 11;
     public final static int isc_info_sql_stmt_select_for_upd = 12;
     public final static int isc_info_sql_stmt_set_generator  = 13;
+    public final static int isc_info_sql_stmt_savepoint      = 14;
 
     /*****************************/
     /* Request information items */
@@ -1114,6 +1115,23 @@ public final class ISCConstants {
     public final static int isc_valid_client_dialects            = 335544812;
     public final static int isc_optimizer_between_err            = 335544813;
     public final static int isc_service_not_supported            = 335544814;
+    public final static int isc_generator_name                   = 335544815;
+    public final static int isc_udf_name                         = 335544816;
+    public final static int isc_bad_limit_param                  = 335544817;
+    public final static int isc_bad_skip_param                   = 335544818;
+    public final static int isc_io_32bit_exceeded_err            = 335544819;
+    public final static int isc_invalid_savepoint                = 335544820;
+    public final static int isc_dsql_column_pos_err              = 335544821;
+    public final static int isc_dsql_agg_where_err               = 335544822;
+    public final static int isc_dsql_agg_group_err               = 335544823;
+    public final static int isc_dsql_agg_column_err              = 335544824;
+    public final static int isc_dsql_agg_having_err              = 335544825;
+    public final static int isc_dsql_agg_nested_err              = 335544826;
+    public final static int isc_exec_sql_invalid_arg             = 335544827;
+    public final static int isc_exec_sql_invalid_req             = 335544828;
+    public final static int isc_exec_sql_invalid_var             = 335544829;
+    public final static int isc_exec_sql_max_call_exceeded       = 335544830;
+    public final static int isc_conf_access_denied               = 335544831;
     public final static int isc_gfix_db_name                     = 335740929;
     public final static int isc_gfix_invalid_sw                  = 335740930;
     public final static int isc_gfix_incmp_sw                    = 335740932;
