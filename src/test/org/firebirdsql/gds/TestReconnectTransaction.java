@@ -87,9 +87,12 @@ public class TestReconnectTransaction extends FBTestBase {
         AbstractIscDbHandle dbHandle1 = (AbstractIscDbHandle)gds.createIscDbHandle();
         gds.iscAttachDatabase(getdbpath(DB_NAME), dbHandle1, dpb);
         
+        GDSHelper gdsHelper1 = new GDSHelper(gds, dpb, dbHandle1);
 
         AbstractIscTrHandle trHandle1 = (AbstractIscTrHandle)gds.createIscTrHandle();
         gds.iscStartTransaction(trHandle1, dbHandle1, tpb.getTransactionParameterBuffer());
+
+        int trId1 = gdsHelper1.getTransactionId(trHandle1);
         
         gds.iscPrepareTransaction2(trHandle1, message);
         
@@ -123,8 +126,15 @@ public class TestReconnectTransaction extends FBTestBase {
         field0.setConnection(gdsHelper2);
         field1.setConnection(gdsHelper2);
         
+        boolean foundInLimboTx = false;
         int row = 0;
         while(row < stmtHandle2.getRows().length) {
+            
+            if (stmtHandle2.getRows()[row] == null) {
+                row++;
+                continue;
+            }
+                
         
             dataProvider0.setRow(row);
             dataProvider1.setRow(row);
@@ -133,6 +143,8 @@ public class TestReconnectTransaction extends FBTestBase {
             byte[] inLimboMessage = field1.getBytes();
         
             if (Arrays.equals(message, inLimboMessage)) {
+                foundInLimboTx = true;
+                
                 IscTrHandle inLimboTrHandle = gds.createIscTrHandle();
                 gds.iscReconnectTransaction(inLimboTrHandle, dbHandle2, inLimboTxId);
                 assertEquals(
@@ -151,5 +163,7 @@ public class TestReconnectTransaction extends FBTestBase {
         
         gds.iscCommitTransaction(trHandle2);
         gds.iscDetachDatabase(dbHandle2);
+        
+        assertTrue("Should find in-limbo tx.", foundInLimboTx);
     }
 }
