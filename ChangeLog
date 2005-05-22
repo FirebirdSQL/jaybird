@@ -1,3 +1,30 @@
+2005-05-22 02:04  gab_reid
+
+	* client-java/src/: main/org/firebirdsql/gds/GDS.java,
+	main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/gds/impl/GDSHelper.java,
+	main/org/firebirdsql/gds/impl/jni/BaseGDSImpl.java,
+	main/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java,
+	test/org/firebirdsql/gds/TestReconnectTransaction.java:
+	
+	Added ability to fetch transaction id (isc_transaction_information)
+
+2005-05-21 16:18  gab_reid
+
+	*
+	client-java/src/main/org/firebirdsql/management/FBMaintenanceManage
+	r.java:
+	
+	Fixed formatting of in-limbo transactions
+
+2005-05-21 14:59  gab_reid
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java,
+	test/org/firebirdsql/gds/TestReconnectTransaction.java:
+	
+	Fixed iscReconnectTransaction
+
 2005-05-18 09:21  rrokytskyy
 
 	* client-java/src/: jdbc_20/org/firebirdsql/jdbc/FBStatement.java,
