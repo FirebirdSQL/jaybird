@@ -6,10 +6,20 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.ResultSet;
 
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
+
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.jdbc.AbstractConnection;
+
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.IscDbHandle;
+import org.firebirdsql.gds.IscTrHandle;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 
 import org.firebirdsql.gds.impl.GDSType;
-
 
 /** 
  * Test the FBMaintenanceManager class
@@ -395,8 +405,74 @@ public class TestFBMaintenanceManager extends FBTestBase {
     }
 
     public void testListLimboTransactions() throws Exception {
-        // Just run it to see if it throws an exception
+        final int COUNT_LIMBO = 5;
+        createLimboTransaction(COUNT_LIMBO);
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        maintenanceManager.setLogger(byteOut);
         maintenanceManager.listLimboTransactions();
+        String [] limboTransactions = byteOut.toString().split("\n");
+        assertEquals(COUNT_LIMBO, limboTransactions.length);
+    }
+
+    public void testRollbackLimboTransaction() throws Exception {
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        maintenanceManager.setLogger(byteOut);
+        maintenanceManager.listLimboTransactions();
+        String [] limboTransactions = byteOut.toString().split("\n");
+        assertEquals("[]", Arrays.asList(limboTransactions).toString());
+        createLimboTransaction(3);
+        byteOut.reset();
+        maintenanceManager.listLimboTransactions();
+        limboTransactions = byteOut.toString().split("\n");
+        assertEquals(3, limboTransactions.length);
+        int trId = Integer.parseInt(limboTransactions[0]);
+        maintenanceManager.rollbackTransaction(trId);
+        byteOut.reset();
+        maintenanceManager.listLimboTransactions();
+        limboTransactions = byteOut.toString().split("\n");
+        assertEquals(2, limboTransactions.length);
+    }
+
+    public void testCommitLimboTransaction() throws Exception {
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        maintenanceManager.setLogger(byteOut);
+        maintenanceManager.listLimboTransactions();
+        String [] limboTransactions = byteOut.toString().split("\n");
+        assertEquals("[]", Arrays.asList(limboTransactions).toString());
+        createLimboTransaction(3);
+        byteOut.reset();
+        maintenanceManager.listLimboTransactions();
+        limboTransactions = byteOut.toString().split("\n");
+        assertEquals(3, limboTransactions.length);
+        int trId = Integer.parseInt(limboTransactions[0]);
+        maintenanceManager.commitTransaction(trId);
+        byteOut.reset();
+        maintenanceManager.listLimboTransactions();
+        limboTransactions = byteOut.toString().split("\n");
+        assertEquals(2, limboTransactions.length);
+    }
+
+
+    private void createLimboTransaction(int count) throws Exception {
+        AbstractConnection conn = (AbstractConnection)getConnection();
+        try {
+            GDS gds = conn.getInternalAPIHandler();
+            DatabaseParameterBuffer dpb = gds.createDatabaseParameterBuffer();
+            dpb.addArgument(DatabaseParameterBuffer.USER, DB_USER);
+            dpb.addArgument(DatabaseParameterBuffer.PASSWORD, DB_PASSWORD);
+            IscDbHandle dbh = gds.createIscDbHandle();
+            gds.iscAttachDatabase(getDatabasePath(), dbh, dpb);
+            for (int i = 0; i < count; i++){
+                TransactionParameterBuffer tpBuf = 
+                    gds.newTransactionParameterBuffer();
+                IscTrHandle trh = gds.createIscTrHandle();
+                gds.iscStartTransaction(trh, dbh, tpBuf);
+                gds.iscPrepareTransaction(trh);
+            }
+            gds.iscDetachDatabase(dbh);
+        } finally {
+            conn.close();
+        }
     }
 
 }
