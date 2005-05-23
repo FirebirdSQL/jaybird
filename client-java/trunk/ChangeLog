@@ -1,3 +1,81 @@
+2005-05-22 21:07  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/ISCConstants.java:
+	
+	added few constants defined in Firebird 1.5
+
+2005-05-22 18:34  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/jni/:
+	BaseGDSImpl.java, JniGDSImpl.java:
+	
+	implemented methods iscReconnectTransaction and iscTransactionInfo
+
+2005-05-22 18:33  rrokytskyy
+
+	* client-java/src/native/jaygds/source/: entrypoints.cpp,
+	entrypoints_generated.h, fb_binding.cpp, fb_binding.h:
+	
+	added support for isc_reconnect_transaction and
+	isc_transaction_info
+
+2005-05-22 17:11  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/gds/TestReconnectTransaction.j
+	ava:
+	
+	fixed possible NPE
+
+2005-05-22 16:58  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jca/FBConnectionRequestInfo.java,
+	main/org/firebirdsql/jca/FBIncorrectXidException.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	main/org/firebirdsql/jca/FBXid.java,
+	test/org/firebirdsql/jca/TestFBXAResource.java:
+	
+	finished the transaction reconnection code
+
+2005-05-22 11:12  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/:
+	XdrInputStream.java, wire/JavaGDSImpl.java,
+	wire/WireXdrInputStream.java, wire/isc_db_handle_impl.java:
+	
+	improved XdrInputStream to produce less garbage
+
+2005-05-22 11:10  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/TransactionParam
+	eterBufferImpl.java:
+	
+	added license and comments
+
+2005-05-22 11:06  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSFactory.java:
+	
+	added enhancement when gdsType is null, it is considered to be the
+	default GDS type
+
+2005-05-22 11:05  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
+	
+	fixed bug in close method
+
+2005-05-22 10:53  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	FBResultSetMetaData.java, FBResultSetMetaData.java:
+	
+	added source column name as suggested in feature request 1154690
+
 2005-05-22 02:04  gab_reid
 
 	* client-java/src/: main/org/firebirdsql/gds/GDS.java,
