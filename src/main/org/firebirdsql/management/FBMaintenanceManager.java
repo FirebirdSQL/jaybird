@@ -383,9 +383,10 @@ public class FBMaintenanceManager extends FBServiceManager
                 if (output[i] == ISCConstants.isc_spb_single_tra_id){
                     trId = 0;
                     shift = 0;
-                } else if (output[i] == 0){
+                } else if (output[i] == 0 && shift != -1){
                     ps.println(trId);
-                } else {
+                    shift = -1;
+                } else if (shift != -1) {
                     trId += ((output[i] & 0xff) << shift);
                     shift += 8;
                 }
