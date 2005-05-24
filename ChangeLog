@@ -1,3 +1,11 @@
+2005-05-23 20:17  gab_reid
+
+	* client-java/src/:
+	main/org/firebirdsql/management/FBMaintenanceManager.java,
+	test/org/firebirdsql/management/TestFBMaintenanceManager.java:
+	
+	Fixed limbo transaction listing
+
 2005-05-22 21:07  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/gds/ISCConstants.java:
