@@ -35,8 +35,6 @@ import java.util.List;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.IscSvcHandle;
-import org.firebirdsql.gds.impl.XdrInputStream;
-import org.firebirdsql.gds.impl.XdrOutputStream;
 
 /**
  * Describe class <code>isc_svc_handle_impl</code> here.

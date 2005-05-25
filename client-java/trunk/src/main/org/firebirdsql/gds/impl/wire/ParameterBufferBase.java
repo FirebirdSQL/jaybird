@@ -25,9 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.io.IOException;
 
-import org.firebirdsql.gds.impl.XdrInputStream;
-import org.firebirdsql.gds.impl.XdrOutputStream;
-import org.firebirdsql.gds.impl.Xdrable;
 
 /**
  * Base class for BlobParameterBufferImp and DatabaseParameterBufferImp and perhaps eventualy TransactionParameterBuffer.

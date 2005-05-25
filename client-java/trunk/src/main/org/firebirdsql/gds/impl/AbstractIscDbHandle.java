@@ -1,12 +1,36 @@
+/*
+ * Public Firebird Java API.
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *    1. Redistributions of source code must retain the above copyright notice, 
+ *       this list of conditions and the following disclaimer.
+ *    2. Redistributions in binary form must reproduce the above copyright 
+ *       notice, this list of conditions and the following disclaimer in the 
+ *       documentation and/or other materials provided with the distribution. 
+ *    3. The name of the author may not be used to endorse or promote products 
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package org.firebirdsql.gds.impl;
-
-import java.util.Collection;
 
 import org.firebirdsql.gds.IscDbHandle;
 
 
 /**
- * 
+ * Abstract implementation of {@link org.firebirdsql.gds.IscDbHandle} interface.
+ * This class defines additional information that can be obtained when 
+ * connecting to the database. 
  */
 public abstract class AbstractIscDbHandle implements IscDbHandle {
 
@@ -48,26 +72,20 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
      */
     public abstract int getDialect();
 
+    /**
+     * @return the major ODS version of the database. 
+     */
     public abstract int getODSMajorVersion();
 
+    /**
+     * @return the minor ODS version of the database.
+     */
     public abstract int getODSMinorVersion();
 
     /**
-     * Get all active transactions for this handle.
-     *
-     * @return All active transactions
+     * @return database server version.
      */
-    public abstract Collection getTransactions();
-
     public abstract String getVersion();
-
-    /**
-     * Retrieve whether this handle has active transactions.
-     *
-     * @return <code>true</code> if this handle has active transactions,
-     *         <code>false</code> otherwise
-     */
-    public abstract boolean hasTransactions();
 
     /**
      * Retrieve whether this handle is valid.
@@ -76,18 +94,5 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
      *         <code>false</code> otherwise
      */
     public abstract boolean isValid();
-
-    /**
-     * Set the Interbase/Firebird dialect to be used with this handle.
-     *
-     * @param value The dialect to be used
-     */
-    public abstract void setDialect(int value);
-
-    public abstract void setODSMajorVersion(int value);
-
-    public abstract void setODSMinorVersion(int value);
-
-    public abstract void setVersion(String value);
 
 }

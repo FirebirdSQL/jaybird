@@ -19,12 +19,15 @@
 
 package org.firebirdsql.jca;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+
 import javax.resource.ResourceException;
 import javax.transaction.xa.Xid;
 
-import org.firebirdsql.gds.impl.XdrInputStream;
+//import org.firebirdsql.gds.impl.XdrInputStream;
 
 
 
@@ -109,27 +112,25 @@ class FBXid implements Xid {
         
         try 
         {
-            XdrInputStream in = new XdrInputStream(rawIn);
-            
-            if (in.read() != TDR_VERSION)
+            if (read(rawIn) != TDR_VERSION)
             {
                 throw new FBIncorrectXidException("Wrong TDR_VERSION for xid");
             }
-            if (in.read() != TDR_XID_FORMAT_ID)
+            if (read(rawIn) != TDR_XID_FORMAT_ID)
             {
                 throw new FBIncorrectXidException("Wrong TDR_XID_FORMAT_ID for xid");
             }
-            formatId = in.readInt(); 
-            if (in.read() != TDR_XID_GLOBAL_ID)
+            formatId = readInt(rawIn); 
+            if (read(rawIn) != TDR_XID_GLOBAL_ID)
             {
                 throw new FBIncorrectXidException("Wrong TDR_XID_GLOBAL_ID for xid");
             }
-            globalId = in.readBuffer();
-            if (in.read() != TDR_XID_BRANCH_ID)
+            globalId = readBuffer(rawIn);
+            if (read(rawIn) != TDR_XID_BRANCH_ID)
             {
                 throw new FBIncorrectXidException("Wrong TDR_XID_BRANCH_ID for xid");
             }
-            branchId = in.readBuffer();
+            branchId = readBuffer(rawIn);
         } 
         catch (IOException ioe) 
         {
@@ -189,36 +190,22 @@ class FBXid implements Xid {
      */
     public boolean equals(Object obj)
     {
-        if (obj instanceof Xid) {
+        if (!(obj instanceof Xid)) 
+            return false;
+        
             Xid other = (Xid)obj;
 
-            if (formatId != other.getFormatId()) {
-                return false;
-            }
-
+            boolean result = true;
+            
+            result &= formatId == other.getFormatId();
+            
             byte[] otherGlobalID = other.getGlobalTransactionId();
             byte[] otherBranchID = other.getBranchQualifier();
 
-            if (globalId.length != otherGlobalID.length ||
-                 branchId.length != otherBranchID.length) {
-                return false;
-            }
-
-            for (int i = 0; i < globalId.length; ++i) {
-                if (globalId[i] != otherGlobalID[i]) {
-                    return false;
-                }
-            }
-
-            for (int i = 0; i < branchId.length; ++i) {
-                if (branchId[i] != otherBranchID[i]) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-        return false;
+            result &= Arrays.equals(globalId, otherGlobalID);
+            result &= Arrays.equals(branchId, otherBranchID);
+            
+            return result;
     }
 
 
@@ -258,6 +245,38 @@ class FBXid implements Xid {
         return b;
     }
 
+    private int read(InputStream in) throws IOException {
+        return in.read();
+    }
+    
+    private int readInt(InputStream in) throws IOException {
+        return (read(in) << 24) | (read(in) << 16) | (read(in) << 8) | (read(in) << 0);
+    }
+    
+    private byte[] readBuffer(InputStream in) throws IOException {
+        int len = readInt(in);
+        byte[] buffer = new byte[len];
 
+        readFully(in, buffer, 0, len);
+        
+        return buffer;
+    }
+    
+    private void readFully(InputStream in, byte[] buffer, int offset, int length) throws IOException {
+        if (length == 0)
+            return;
+        
+        int counter = 0;
+        
+        do {
+            counter = in.read(buffer, offset, length);
+            if (counter == -1 && length != 0)
+                throw new EOFException();
+            
+            offset += counter;
+            length -= counter;
+            
+        } while(length > 0);
+    }
 }
 

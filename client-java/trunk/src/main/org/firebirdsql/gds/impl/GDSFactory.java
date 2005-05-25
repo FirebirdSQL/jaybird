@@ -1,22 +1,27 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Public Firebird Java API.
  *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
- *
- * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *    1. Redistributions of source code must retain the above copyright notice, 
+ *       this list of conditions and the following disclaimer.
+ *    2. Redistributions in binary form must reproduce the above copyright 
+ *       notice, this list of conditions and the following disclaimer in the 
+ *       documentation and/or other materials provided with the distribution. 
+ *    3. The name of the author may not be used to endorse or promote products 
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.GDS;
@@ -161,18 +166,51 @@ public class GDSFactory {
         return getPlugin(gdsType).getDatabasePath(server, port, path);
     }
 
+    /**
+     * Get path to the database from the specified JDBC URL. This method finds 
+     * the appropriate plugin and delegates the call to it. Plugin is 
+     * responsible for the call execution.
+     * 
+     * @param gdsType type of the plugin, to which operation will be delegated to.
+     * @param jdbcUrl JDBC url from which the database path must be extracted.
+     * 
+     * @return path to the database specified in the JDBC URL.
+     * 
+     * @throws GDSException error when database path cannot be extracted.
+     */
     public static String getDatabasePath(GDSType gdsType, String jdbcUrl) throws GDSException {
         return getPlugin(gdsType).getDatabasePath(jdbcUrl);
     }
 
+    /**
+     * Get collection of the supported JDBC protocols.
+     * 
+     * @return set of the supported protocols.
+     */
     public static Set getSupportedProtocols() {
         return jdbcUrlToPluginMap.keySet();
     }
     
+    /**
+     * Create JDBC URL for the specified GDS type and database path.
+     * 
+     * @param gdsType type of the plugin, to which operation will be delegated to.
+     * @param databasePath path to the database.
+     * 
+     * @return newly created JDBC URL.
+     */
     public static String getJdbcUrl(GDSType gdsType, String databasePath) {
         return getPlugin(gdsType).getDefaultProtocol() + databasePath;
     }
     
+    /**
+     * Get GDS type for the specified JDBC URL. This method finds the plugin 
+     * corresponding to the specified type and delegates the call to it. 
+     * 
+     * @param jdbcUrl JDBC URL for which GDS type should be obtained.
+     * 
+     * @return instance of {@link GDSType}.
+     */
     public static GDSType getTypeForProtocol(String jdbcUrl) {
         for (Iterator iter = jdbcUrlToPluginMap.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Map.Entry)iter.next();
@@ -187,10 +225,28 @@ public class GDSFactory {
         return null;
     }
     
+    /**
+     * Get class extending the {@link org.firebirdsql.jdbc.AbstractConnection}
+     * that will be instantiated when new connection is created. This method
+     * finds the plugin for the specified type and delegates the call to it.
+     * 
+     * @param gdsType instance of {@link GDSType}
+     * 
+     * @return class to instantiate for the database connection.
+     */
     public static Class getConnectionClass(GDSType gdsType) {
         return getPlugin(gdsType).getConnectionClass();
     }
 
+    /**
+     * Get plugin for the specified GDS type.
+     * 
+     * @param gdsType GDS type.
+     * 
+     * @return instance of {@link GDSFactoryPlugin}
+     * 
+     * @throws IllegalArgumentException if specified type is not known.
+     */
     private static GDSFactoryPlugin getPlugin(GDSType gdsType) {
         GDSFactoryPlugin gdsPlugin = 
             (GDSFactoryPlugin) typeToPluginMap.get(gdsType);
