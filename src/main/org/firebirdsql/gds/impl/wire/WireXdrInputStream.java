@@ -21,10 +21,9 @@ package org.firebirdsql.gds.impl.wire;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.firebirdsql.gds.impl.XdrInputStream;
 
 /**
- * Improved version of the {@link org.firebirdsql.gds.impl.XdrInputStream} that
+ * Improved version of the {@link org.firebirdsql.gds.impl.wire.XdrInputStream} that
  * can read some data directly in {@link org.firebirdsql.gds.impl.wire.isc_db_handle_impl}
  * object, this reduces garbage produced by the similar method in superclass.
  */

@@ -38,7 +38,6 @@ import javax.security.auth.Subject;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.AbstractIscDbHandle;
-import org.firebirdsql.gds.impl.XdrOutputStream;
 
 /**
  * Describe class <code>isc_db_handle_impl</code> here.
