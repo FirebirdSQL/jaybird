@@ -1,3 +1,33 @@
+2005-05-25 15:49  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/:
+	GDSSynchronizationPolicy.java, XdrInputStream.java,
+	XdrOutputStream.java, Xdrable.java:
+	
+	refactored code
+
+2005-05-25 15:45  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/impl/AbstractGDS.java,
+	gds/impl/AbstractIscDbHandle.java,
+	gds/impl/AbstractIscStmtHandle.java,
+	gds/impl/AbstractIscTrHandle.java,
+	gds/impl/DatabaseParameterBufferExtension.java,
+	gds/impl/GDSFactory.java, gds/impl/GDSFactoryPlugin.java,
+	gds/impl/GDSType.java, gds/impl/package.html,
+	gds/impl/jni/GDSSynchronizationPolicy.java,
+	gds/impl/wire/JavaGDSImpl.java,
+	gds/impl/wire/ParameterBufferBase.java,
+	gds/impl/wire/ServiceParameterBufferImp.java,
+	gds/impl/wire/ServiceRequestBufferImp.java,
+	gds/impl/wire/WireXdrInputStream.java,
+	gds/impl/wire/XdrInputStream.java,
+	gds/impl/wire/XdrOutputStream.java, gds/impl/wire/Xdrable.java,
+	gds/impl/wire/isc_db_handle_impl.java,
+	gds/impl/wire/isc_svc_handle_impl.java, jca/FBXid.java:
+	
+	code refactoring and javadoc fixes
+
 2005-05-23 20:17  gab_reid
 
 	* client-java/src/:
