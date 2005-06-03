@@ -61,6 +61,7 @@ class PooledConnectionQueue {
     private int totalConnections;
 
     private HashSet workingConnections = new HashSet();
+    private HashSet workingConnectionsToClose = new HashSet();
     private HashMap connectionIdleTime = new HashMap();
 
     /**
@@ -167,6 +168,39 @@ class PooledConnectionQueue {
     }
 
     /**
+     * Restart this queue.
+     */
+    public synchronized void restart()
+    {
+    	// flag working connections for deallocation when returned to the queue.
+   		workingConnectionsToClose.addAll(workingConnections);
+    	
+        // close all free connections
+        while (size() > 0)
+            try {
+            	PooledObject connection = take();
+                if (connection.isValid()) {
+                	connection.deallocate();
+                	
+                	physicalConnectionDeallocated(connection);
+                }
+            } catch (SQLException ex) {
+                if (getLogger() != null)
+                getLogger().warn("Could not close connection.", ex);
+            }
+        //Create enough connections to restore the queue to MinPoolSize.
+        while (totalSize() < getConfiguration().getMinPoolSize())
+        	try {
+        		addConnection(queue);
+        	}
+            catch (Exception e)
+            {
+            	if (getLogger() != null)
+                    getLogger().warn("Could not add connection.", e);
+            }
+    }
+    
+    /**
      * Shutdown this queue.
      */
     public void shutdown() {
@@ -245,13 +279,23 @@ class PooledConnectionQueue {
                 getLogger().warn("Pool " + queueName + " will be unblocked");
 
             if (getConfiguration().isPooling()) {
-                queue.put(connection);
+            	
+            	if (workingConnectionsToClose.remove(connection)) {
+            		connection.deallocate();
+            		
+            		physicalConnectionDeallocated(connection);
+            		
+            		addConnection(queue);
+            	}
+            	else {
+            		queue.put(connection);
                 
-                // save timestamp when connection was returned to queue
-                connectionIdleTime.put(
-                    connection, new Long(System.currentTimeMillis()));
+            		// save timestamp when connection was returned to queue
+            		connectionIdleTime.put(
+            				connection, new Long(System.currentTimeMillis()));
     
-                size++;
+            		size++;
+            	}
             } else {
                 connectionIdleTime.remove(connection);
             }

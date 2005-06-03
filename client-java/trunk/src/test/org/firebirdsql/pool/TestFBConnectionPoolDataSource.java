@@ -23,7 +23,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Properties;
 
 import javax.naming.Context;
@@ -614,6 +616,37 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         } finally {
             pool.shutdown();
         }
+    }
+    
+    /**
+     * Tests restart functionality.
+     * 
+     * @throws Exception
+     */
+    public void testRestart() throws Exception {
+        pool.setMinPoolSize(0);
+        pool.setMaxPoolSize(5);
+    	
+    	DataSource datasource = new SimpleDataSource(pool);
+    	
+    	assertTrue("Total size should equal MinPoolSize", pool.getTotalSize() == pool.getMinPoolSize());
+    	
+    	ArrayList connections = new ArrayList(pool.getMaxPoolSize());
+    	while (connections.size() < pool.getMaxPoolSize())
+    		connections.add(datasource.getConnection());
+
+    	assertTrue("Total size should equal MaxPoolSize", pool.getTotalSize() == pool.getMaxPoolSize());
+    	
+    	Iterator iter = connections.iterator();
+    	while (iter.hasNext())
+          ((Connection)iter.next()).close();
+    	connections.clear();
+    	
+    	assertTrue("Total size should still equal MaxPoolSize", pool.getTotalSize() == pool.getMaxPoolSize());
+    	
+    	pool.restart();
+    	
+    	assertTrue("Total size should equal MinPoolSize", pool.getTotalSize() == pool.getMinPoolSize());
     }
     
     /**
