@@ -187,6 +187,17 @@ public class FBWrappingDataSource implements DataSource,
         super.finalize();
     }
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.pool.FirebirdPool#restart()
+     */
+    public void restart() {
+    	if (pool != null)
+    		pool.restart();
+    }
+    
+    /* (non-Javadoc)
+     * @see org.firebirdsql.pool.FirebirdPool#shutdown()
+     */
     public void shutdown() {
         if (pool != null)
             pool.shutdown();

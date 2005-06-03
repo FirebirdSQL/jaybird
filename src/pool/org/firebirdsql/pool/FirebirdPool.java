@@ -149,6 +149,7 @@ import java.sql.SQLException;
  */
 public interface FirebirdPool {
     
+    void restart();
     void shutdown();
 
     /*
