@@ -1,3 +1,14 @@
+2005-06-03 23:51  sjardine
+
+	* client-java/src/:
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/AbstractConnectionPool.java,
+	pool/org/firebirdsql/pool/FBWrappingDataSource.java,
+	pool/org/firebirdsql/pool/FirebirdPool.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java:
+	
+	Added connection pool restart functionality.
+
 2005-05-25 15:49  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/gds/impl/:
