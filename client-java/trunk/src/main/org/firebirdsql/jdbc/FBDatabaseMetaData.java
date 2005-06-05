@@ -55,7 +55,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBDatabaseMetaData implements DatabaseMetaData {
+public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
     private static final String SPACES = "                               ";//31 spaces
@@ -2444,7 +2444,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
         " F.RDB$FIELD_SCALE as FIELD_SCALE," +
         " F.RDB$FIELD_LENGTH as FIELD_LENGTH," +
         " F.RDB$CHARACTER_LENGTH as CHARACTER_LENGTH," +
-        " RF.RDB$DESCRIPTION," +
+        " RF.RDB$DESCRIPTION AS REMARKS," +
         " RF.RDB$DEFAULT_SOURCE as DEFAULT_SOURCE," +
         " RF.RDB$FIELD_POSITION as FIELD_POSITION, " +
         " RF.RDB$NULL_FLAG as NULL_FLAG " +
@@ -2592,7 +2592,7 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
 
         xsqlvars[11] = new XSQLVAR();
         xsqlvars[11].sqltype = ISCConstants.SQL_VARYING | 1;
-        xsqlvars[11].sqllen = 31;
+        xsqlvars[11].sqllen = 80;
         xsqlvars[11].sqlname = "REMARKS";
         xsqlvars[11].relname = "COLUMNINFO";
 
@@ -2696,7 +2696,11 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             row[10] = (nullFlag == 1) ? xsqlvars[0].encodeInt(columnNoNulls) :
                                         xsqlvars[0].encodeInt(columnNullable);
 
-            row[11] = null;
+            String remarks = rs.getString("REMARKS");  
+            row[11] = getBytes(remarks);             
+            if (remarks != null && remarks.length() > xsqlvars[11].sqllen)               
+                xsqlvars[11].sqllen = remarks.length();
+            
             String column_def = rs.getString("DEFAULT_SOURCE");
             if (column_def!=null) {
                 String defaultValue = column_def.trim();
@@ -5440,49 +5444,64 @@ public class FBDatabaseMetaData implements DatabaseMetaData {
             return pattern.toUpperCase();
         }
     }
-/*
-    private PreparedStatement getStatement(String sql) throws SQLException {
-        PreparedStatement s = (PreparedStatement)statements.get(sql);
-        if (s == null) {
-            s = c.prepareStatement(sql);
-            statements.put(sql, s);
-        }
-        return s;
+
+     /*
+         * (non-Javadoc)
+         * 
+         * @see org.firebirdsql.jdbc.FirebirdDatabaseMetaData#getProcedureSourceCode(java.lang.String)
+         */
+    public String getProcedureSourceCode(String procedureName)
+            throws SQLException {
+        String sResult = null;
+        String sql = "Select RDB$PROCEDURE_SOURCE From RDB$PROCEDURES Where "
+                + "RDB$PROCEDURE_NAME = ?";
+        ArrayList params = new ArrayList();
+        params.add(procedureName);
+        ResultSet rs = doQuery(sql, params);
+        if (rs.next()) sResult = rs.getString(1);
+        rs.close();
+
+        return sResult;
+    } // public String getProcedureSourceCode(String procedureName) throws
+        // SQLException
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.firebirdsql.jdbc.FirebirdDatabaseMetaData#getTriggerSourceCode(java.lang.String)
+     */
+    public String getTriggerSourceCode(String triggerName) throws SQLException {
+        String sResult = null;
+        String sql = "Select RDB$TRIGGER_SOURCE From RDB$TRIGGERS Where "
+                + "RDB$TRIGGER_NAME = ?";
+        ArrayList params = new ArrayList();
+        params.add(triggerName);
+        ResultSet rs = doQuery(sql, params);
+        if (rs.next()) sResult = rs.getString(1);
+        rs.close();
+
+        return sResult;
     }
 
-    private ResultSet doQuery(String sql, List params) throws SQLException {
-        boolean ourTransaction = false;
-        if (!c.inTransaction()) {
-            try {
-                trans.begin();
-                ourTransaction = true;
-            }
-            catch (ResourceException re) {
-                throw new SQLException("couldn't work with local transaction: " + re);
-            }
-        }
-        PreparedStatement s = getStatement(sql);
-        for (int i = 0; i < params.size(); i++) {
-            s.setString(i + 1, (String)params.get(i));
-        }
-        ResultSet rs = null;
-        try {
-            s.execute();
-            rs = ((AbstractStatement)s).getCachedResultSet(true); //trim strings
-        }
-        finally {
-            if (ourTransaction) {
-                try {
-                    trans.commit();
-                }
-                catch (ResourceException re) {
-                    throw new SQLException("couldn't work with local transaction: " + re);
-                }
-            }
-        }
-        return rs;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.firebirdsql.jdbc.FirebirdDatabaseMetaData#getViewSourceCode(java.lang.String)
+     */
+    public String getViewSourceCode(String viewName) throws SQLException {
+        String sResult = null;
+        String sql = "Select RDB$VIEW_SOURCE From RDB$RELATIONS Where "
+                + "RDB$RELATION_NAME = ?";
+        ArrayList params = new ArrayList();
+        params.add(viewName);
+        ResultSet rs = doQuery(sql, params);
+        if (rs.next()) sResult = rs.getString(1);
+        rs.close();
+
+        return sResult;
     }
-*/
+
+    
     private void checkCatalogAndSchema(String catalog, String schema) throws SQLException {
         /*
         // we ignore incorrect catalog and schema specification as
