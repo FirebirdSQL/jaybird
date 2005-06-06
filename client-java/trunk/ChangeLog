@@ -1,3 +1,12 @@
+2005-06-05 15:36  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	FBDatabaseMetaData.java, FirebirdDatabaseMetaData.java:
+	
+	added patch by Michael Romankiewicz to retrieve sources of
+	procedures, triggers and views, and patch by Flavio Peinado to
+	obtain column descriptions.
+
 2005-06-03 23:51  sjardine
 
 	* client-java/src/:
