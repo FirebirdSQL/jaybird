@@ -5,11 +5,9 @@ import java.io.ByteArrayOutputStream;
 
 import java.sql.Connection;
 import java.sql.Statement;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.gds.impl.GDSType;
 
 /**
  * Test the FBStatisticsManager class
@@ -36,7 +34,8 @@ public class TestFBStatisticsManager extends FBTestBase {
         super.setUp();
 
         fbManager = createFBManager();
-        fbManager.setServer("localhost");
+        fbManager.setServer(DB_SERVER_URL);
+        fbManager.setPort(DB_SERVER_PORT);
         fbManager.start();
 
         fbManager.setForceCreate(true);
@@ -44,9 +43,8 @@ public class TestFBStatisticsManager extends FBTestBase {
 
         loggingStream = new ByteArrayOutputStream();
     
-        GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type"));
-        statManager = new FBStatisticsManager(gdsType);
-        statManager.setHost("localhost");
+        statManager = new FBStatisticsManager(getGdsType());
+        statManager.setHost(DB_SERVER_URL);
         statManager.setUser(DB_USER);
         statManager.setPassword(DB_PASSWORD);
         statManager.setDatabase(getDatabasePath());
@@ -58,22 +56,12 @@ public class TestFBStatisticsManager extends FBTestBase {
         super.tearDown();
     }
 
-    private String getDatabasePath(){
-        return DB_PATH + "/" + DB_NAME;
-    }
-
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(
-            "jdbc:firebirdsql:localhost:" + getDatabasePath(), 
-            DB_USER, DB_PASSWORD);
-    }
-
     private void createTestTable() throws SQLException {
         createTestTable(DEFAULT_TABLE);
     }
 
     private void createTestTable(String tableDef) throws SQLException {
-        Connection conn = getConnection();
+        Connection conn = getConnectionViaDriverManager();
         try {
             Statement stmt = conn.createStatement();
             stmt.executeUpdate(tableDef);
@@ -81,7 +69,6 @@ public class TestFBStatisticsManager extends FBTestBase {
             conn.close();
         }
     }
-
 
     public void testGetHeaderPage() throws SQLException {
         statManager.getHeaderPage();

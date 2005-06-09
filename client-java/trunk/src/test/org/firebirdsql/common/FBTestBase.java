@@ -175,6 +175,11 @@ public class FBTestBase extends SimpleFBTestBase
 
         return gdsType;
         }
+        
+    protected String getDatabasePath()
+    {
+    	return DB_PATH + "/" + DB_NAME;
+    }
 
 
     // STANDARD RIG
