@@ -1,17 +1,7 @@
   <!-- =================================================================== -->
   <!-- Creates the jar archives                                            -->
   <!-- =================================================================== -->
-  <target name="jars" depends="jar-concurrent, jar-j2ee, jar-jmx, rar, jar-test"/>
-
-  <target name="jar-concurrent" depends="compile">
-
-    <mkdir dir="${build.lib}"/>
-    <jar jarfile="${build.lib}/mini-concurrent.jar">
-       <fileset dir="${build.concurrent}">
-         <include name="EDU/**"/>
-       </fileset>
-    </jar>
-  </target>
+  <target name="jars" depends="jar-j2ee, jar-jmx, rar, jar-test"/>
 
   <!-- Not really a jar operation but necessary :) -->
   <target name="jar-j2ee" depends="compile">
@@ -58,9 +48,6 @@
        </fileset>
        <fileset dir="${build.j2ee}">
          <include name="javax/**"/>
-       </fileset>
-       <fileset dir="${build.concurrent}">
-         <include name="EDU/**"/>
        </fileset>
        <zipfileset dir="${build.resources}/META-INF" prefix="META-INF">
          <include name="services/**/*"/>
