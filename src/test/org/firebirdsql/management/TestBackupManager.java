@@ -3,11 +3,9 @@ package org.firebirdsql.management;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.Statement;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.gds.impl.GDSType;
 
 
 /**
@@ -22,58 +20,40 @@ public class TestBackupManager extends FBTestBase {
 
     private static final String TEST_TABLE = "CREATE TABLE TEST (A INT)";
 
-
-
     /**
      * @param name
      */
     public TestBackupManager(String name) {
         super(name);
     }
-
     
     protected void setUp() throws Exception {
         super.setUp();
         
         fbManager = createFBManager();
-        fbManager.setServer("localhost");
+        fbManager.setServer(DB_SERVER_URL);
+        fbManager.setPort(DB_SERVER_PORT);
         fbManager.start();
 
         fbManager.setForceCreate(true);
         fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
 
-        GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type", "PURE_JAVA"));
-        backupManager = new FBBackupManager(gdsType);
-        backupManager.setHost("localhost");
-        backupManager.setUser("SYSDBA");
-        backupManager.setPassword("masterkey");
+        backupManager = new FBBackupManager(getGdsType());
+        backupManager.setHost(DB_SERVER_URL);
+        backupManager.setUser(DB_USER);
+        backupManager.setPassword(DB_PASSWORD);
         backupManager.setDatabase(getDatabasePath());
         backupManager.setBackupPath(getBackupPath());
         backupManager.setLogger(System.out);
         backupManager.setVerbose(true);
     }
 
-    private String getDatabasePath() {
-        return  DB_PATH + "/" + DB_NAME;
-    }
-    
     private String getBackupPath() {
         return DB_PATH + "/" + DB_NAME + ".fbk";
     }
     
-    private Connection getConnection() throws SQLException {
-        try {
-            Class.forName("org.firebirdsql.jdbc.FBDriver");
-            return DriverManager.getConnection(
-                "jdbc:firebirdsql:localhost:" + getDatabasePath(), 
-                DB_USER, DB_PASSWORD);
-        } catch(ClassNotFoundException ex) {
-            throw new SQLException("JayBird not found.");
-        }
-    }
-
     private void createTestTable() throws SQLException {
-        Connection conn = getConnection();
+        Connection conn = getConnectionViaDriverManager();
         Statement stmt = conn.createStatement();
         stmt.executeUpdate(TEST_TABLE);
         stmt.close();
@@ -81,13 +61,17 @@ public class TestBackupManager extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        try { 
+        try {
+        	//Drop database.
             fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
-            fbManager.stop();
+            fbManager.stop();            
+            //Delete backup file.            
+            File file = new File(getBackupPath());
+            file.delete();
+            
         } catch (Exception e){
             e.printStackTrace();
         }
-        
         super.tearDown();
     }
     
@@ -98,7 +82,7 @@ public class TestBackupManager extends FBTestBase {
         fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
         
         try {
-            Connection c = getConnection();
+            Connection c = getConnectionViaDriverManager();
             c.close();
             fail("Should not be able to connect to a dropped database");
         } catch(SQLException ex) {
@@ -108,8 +92,10 @@ public class TestBackupManager extends FBTestBase {
         System.out.println();
         backupManager.restoreDatabase();
         
-        Connection c = getConnection();
+        Connection c = getConnectionViaDriverManager();
         c.close();
+        
+        
     }
 
     public void testSetBadBufferCount() {
@@ -136,7 +122,7 @@ public class TestBackupManager extends FBTestBase {
         createTestTable();
         Connection conn = null;
         try {
-            conn = getConnection();
+            conn = getConnectionViaDriverManager();
             Statement stmt = conn.createStatement();
             stmt.executeUpdate("INSERT INTO TEST VALUES (1)");
             conn.close();
@@ -146,7 +132,7 @@ public class TestBackupManager extends FBTestBase {
             backupManager.setRestoreReadOnly(true);
             backupManager.restoreDatabase();
 
-            conn = getConnection();
+            conn = getConnectionViaDriverManager();
             stmt = conn.createStatement();
             try {
                 stmt.executeUpdate("INSERT INTO TEST VALUES (2)");
@@ -160,7 +146,7 @@ public class TestBackupManager extends FBTestBase {
             backupManager.setRestoreReadOnly(false);
             backupManager.setRestoreReplace(true);
             backupManager.restoreDatabase();
-            conn = getConnection();
+            conn = getConnectionViaDriverManager();
             stmt = conn.createStatement();
             stmt.executeUpdate("INSERT INTO TEST VALUES (3)");
         } finally {
@@ -188,8 +174,8 @@ public class TestBackupManager extends FBTestBase {
         backupManager.clearBackupPaths();
         backupManager.clearRestorePaths();
         
-        String backupPath1 = DB_PATH + "/" + DB_NAME + "-1.fbk";
-        String backupPath2 = DB_PATH + "/" + DB_NAME + "-2.fbk";
+        String backupPath1 =  getDatabasePath() + "-1.fbk";
+        String backupPath2 =  getDatabasePath() + "-2.fbk";
 
         backupManager.addBackupPath(backupPath1, 2048);
         backupManager.addBackupPath(backupPath2);
@@ -207,12 +193,22 @@ public class TestBackupManager extends FBTestBase {
         backupManager.addBackupPath(backupPath1);
         backupManager.addBackupPath(backupPath2);
         
-        String restorePath1 = DB_PATH + "/" + DB_NAME + "-1.fdb";
-        String restorePath2 = DB_PATH + "/" + DB_NAME + "-2.fdb";
+        String restorePath1 = getDatabasePath() + "-1.fdb";
+        String restorePath2 = getDatabasePath() + "-2.fdb";
         
         backupManager.addRestorePath(restorePath1, 10);
         backupManager.addRestorePath(restorePath2, 100);
         
         backupManager.restoreDatabase();
+        
+        //Remove test files from filesystem.
+        File file3 = new File(restorePath1);
+        assertTrue("File " + restorePath1 + " should exist.", file1.exists());
+        file1.delete();
+        file3.delete();        
+        File file4 = new File(restorePath2);
+        assertTrue("File " + restorePath2 + " should exist.", file2.exists());
+        file2.delete();
+        file4.delete();
     }
 }

@@ -20,12 +20,7 @@
  */
 package org.firebirdsql.management;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.gds.impl.GDSType;
 
 /**
  * Tests the UserManager class which uses the Services API to display, add,
@@ -49,26 +44,12 @@ public class TestUserManager extends FBTestBase {
 
         fbManager = createFBManager();
         fbManager.setDropOnStop(false);
-        fbManager.setServer("localhost");
-        // fbManager.setPort(3060);
+        fbManager.setServer(DB_SERVER_URL);
+        fbManager.setPort(DB_SERVER_PORT);
         fbManager.start();
-
-        fbManager.setForceCreate(true);
-        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
-    }
-
-    private String getDatabasePath() {
-        return DB_PATH + "/" + DB_NAME;
-    }
-
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection("jdbc:firebirdsql:localhost:"
-                + getDatabasePath(), DB_USER, DB_PASSWORD);
     }
 
     protected void tearDown() throws Exception {
-
-        // fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
         fbManager.stop();
         super.tearDown();
     }
@@ -76,11 +57,10 @@ public class TestUserManager extends FBTestBase {
     public void testUsers() throws Exception {
 
         // Initialize the UserManager.
-        GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type")); 
-        UserManager userManager = new FBUserManager(gdsType);
-        userManager.setHost("localhost");
-        userManager.setUser("SYSDBA");
-        userManager.setPassword("masterkey");
+        UserManager userManager = new FBUserManager(getGdsType());
+        userManager.setHost(DB_SERVER_URL);
+        userManager.setUser(DB_USER);
+        userManager.setPassword(DB_PASSWORD);
         userManager.setDatabase(getDatabasePath());
 
         // Add a user.

@@ -1,6 +1,5 @@
 package org.firebirdsql.management;
 
-import java.sql.DriverManager;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -15,11 +14,8 @@ import org.firebirdsql.jdbc.AbstractConnection;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.IscTrHandle;
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-
-import org.firebirdsql.gds.impl.GDSType;
 
 /** 
  * Test the FBMaintenanceManager class
@@ -49,29 +45,20 @@ public class TestFBMaintenanceManager extends FBTestBase {
         super.setUp();
         
         fbManager = createFBManager();
-        fbManager.setServer("localhost");
+        fbManager.setServer(DB_SERVER_URL);
+        fbManager.setPort(DB_SERVER_PORT);
+
         fbManager.start();
 
         fbManager.setForceCreate(true);
         fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
 
-        GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type", "PURE_JAVA"));
-        maintenanceManager = new FBMaintenanceManager(gdsType);
-        maintenanceManager.setHost("localhost");
+        maintenanceManager = new FBMaintenanceManager(getGdsType());
+        maintenanceManager.setHost(DB_SERVER_URL);
         maintenanceManager.setUser(DB_USER);
         maintenanceManager.setPassword(DB_PASSWORD);
         maintenanceManager.setDatabase(getDatabasePath());
         maintenanceManager.setLogger(System.out);
-    }
-
-    private String getDatabasePath() {
-        return DB_PATH + "/" + DB_NAME;
-    }
-   
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(
-            "jdbc:firebirdsql:localhost:" + getDatabasePath(), 
-            DB_USER, DB_PASSWORD);
     }
 
     private void createTestTable() throws SQLException {
@@ -79,7 +66,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
     }
 
     private void createTestTable(String tableDef) throws SQLException {
-        Connection conn = getConnection();
+        Connection conn = getConnectionViaDriverManager();
         try {
             Statement stmt = conn.createStatement();
             stmt.executeUpdate(tableDef);
@@ -95,7 +82,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
     
     public void testSetModeReadOnly() throws Exception {
         createTestTable();
-        Connection conn = getConnection();
+        Connection conn = getConnectionViaDriverManager();
         try {
             Statement stmt = conn.createStatement();
 
@@ -107,7 +94,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
             maintenanceManager.setDatabaseAccessMode(
                     MaintenanceManager.ACCESS_MODE_READ_ONLY);
             
-            conn = getConnection();
+            conn = getConnectionViaDriverManager();
             stmt = conn.createStatement();
             ResultSet resultSet = stmt.executeQuery("SELECT * FROM TEST");
             assertTrue("SELECT should succeed while in read-only mode", 
@@ -134,7 +121,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
             maintenanceManager.setDatabaseAccessMode(
                     MaintenanceManager.ACCESS_MODE_READ_WRITE);
 
-            conn = getConnection();
+            conn = getConnectionViaDriverManager();
             Statement stmt = conn.createStatement();
 
             // This has to fail unless the db is read-write
@@ -187,7 +174,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
     }
 
     public void testForcedShutdown() throws Exception {
-        Connection conn = getConnection();
+        Connection conn = getConnectionViaDriverManager();
         String sql = "SELECT * FROM TEST";
         createTestTable();
         try {
@@ -212,7 +199,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
     }
 
     public void testTransactionalShutdown() throws Exception {
-        Connection conn = getConnection();
+        Connection conn = getConnectionViaDriverManager();
         String sql = "UPDATE TEST SET TESTVAL = 5";
         createTestTable();
         try {
@@ -226,7 +213,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
                     MaintenanceManager.SHUTDOWN_TRANSACTIONAL, 0);
             maintenanceManager.bringDatabaseOnline();
             conn.close();
-            conn = getConnection();
+            conn = getConnectionViaDriverManager();
             conn.setAutoCommit(false);
 
             try {
@@ -414,6 +401,14 @@ public class TestFBMaintenanceManager extends FBTestBase {
         assertEquals(COUNT_LIMBO, limboTransactions.length);
     }
 
+    public void testGetLimboTransactions() throws Exception {
+        final int COUNT_LIMBO = 5;
+        createLimboTransaction(COUNT_LIMBO);
+        int[] limboTransactions = maintenanceManager.getLimboTransactions();
+        assertEquals(COUNT_LIMBO, limboTransactions.length);
+    }
+
+    
     public void testRollbackLimboTransaction() throws Exception {
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         maintenanceManager.setLogger(byteOut);
@@ -454,7 +449,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
 
 
     private void createLimboTransaction(int count) throws Exception {
-        AbstractConnection conn = (AbstractConnection)getConnection();
+        AbstractConnection conn = (AbstractConnection)getConnectionViaDriverManager();
         try {
             GDS gds = conn.getInternalAPIHandler();
             DatabaseParameterBuffer dpb = gds.createDatabaseParameterBuffer();
