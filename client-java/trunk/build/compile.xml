@@ -1,34 +1,13 @@
   <!-- =================================================================== -->
   <!-- Compiles the source code                                            -->
   <!-- =================================================================== -->
-  <target name="compile" depends="compile-concurrent, compile-driver, compile-pool, compile-compatibility, compile-tests, compile-etc, compile-examples, compile-resources, compile-stylesheets"/>
+  <target name="compile" depends="compile-j2ee, compile-driver, compile-pool, compile-compatibility, compile-tests, compile-etc, compile-examples, compile-resources, compile-stylesheets"/>
 
   <!-- calling this unjar a compile is stretching the truth a bit-->
-  <target name="compile-concurrent" depends="init">
-    <mkdir dir="${build.concurrent}"/>
-
-    <unjar src="${module.thirdparty}/concurrent.jar"
-           dest="${build.concurrent}">
-      <patternset>
-        <include name="EDU/oswego/cs/dl/util/concurrent/FIFOSemaphore.class"/>
-        <include name="EDU/oswego/cs/dl/util/concurrent/FIFOSemaphore$FIFOWaitQueue.class"/>
-        <include name="EDU/oswego/cs/dl/util/concurrent/QueuedSemaphore.class"/>
-        <include name="EDU/oswego/cs/dl/util/concurrent/QueuedSemaphore$WaitQueue.class"/>
-        <include name="EDU/oswego/cs/dl/util/concurrent/QueuedSemaphore$WaitQueue$WaitNode.class"/>
-        <include name="EDU/oswego/cs/dl/util/concurrent/Semaphore.class"/>
-        <include name="EDU/oswego/cs/dl/util/concurrent/Sync.class"/>
-
-        <include name="EDU/oswego/cs/dl/util/concurrent/LinkedQueue.class"/>
-        <include name="EDU/oswego/cs/dl/util/concurrent/LinkedNode.class"/>
-        <include name="EDU/oswego/cs/dl/util/concurrent/Channel.class"/>
-        <include name="EDU/oswego/cs/dl/util/concurrent/Puttable.class"/>
-        <include name="EDU/oswego/cs/dl/util/concurrent/Takable.class"/>
-      </patternset>
-    </unjar>
-
+  <target name="compile-j2ee" depends="init">
+    <mkdir dir="${build.j2ee}"/>
     <unjar src="${module.thirdparty}/mini-j2ee.jar" dest="${build.j2ee}"/>
   </target>
-
 
   <target name="compile-native" depends="init">
     <ant antfile="build_native.xml"/>

@@ -61,12 +61,11 @@
       <fileset dir=".">
         <include name="ChangeLog"/>
       </fileset>
-      <fileset dir="native">
+      <fileset dir="${build.native}">
         <include name="*"/>
       </fileset>
       <zipfileset dir="${build.lib}" prefix="lib">
         <include name="mini-j2ee.jar"/>
-        <include name="mini-concurrent.jar"/>
       </zipfileset>
       <zipfileset dir="${module.thirdparty}" prefix="lib">
         <include name="log4j-core.jar"/>

@@ -35,7 +35,6 @@
 
         <pathelement location="${build.lib}/firebirdsql.jar"/>
         <pathelement location="${build.lib}/firebirdsql-test.jar"/>
-        <pathelement location="${build.lib}/mini-concurrent.jar"/>
         <pathelement location="${build.lib}/mini-j2ee.jar"/>
 
         <fileset dir="lib">
@@ -100,7 +99,6 @@
 
         <pathelement location="${build.lib}/firebirdsql.jar"/>
         <pathelement location="${build.lib}/firebirdsql-test.jar"/>
-        <pathelement location="${build.lib}/mini-concurrent.jar"/>
         <pathelement location="${build.lib}/mini-j2ee.jar"/>
 
         <fileset dir="lib">
@@ -169,7 +167,6 @@
 
         <pathelement location="${build.lib}/firebirdsql.jar"/>
         <pathelement location="${build.lib}/firebirdsql-test.jar"/>
-        <pathelement location="${build.lib}/mini-concurrent.jar"/>
         <pathelement location="${build.lib}/mini-j2ee.jar"/>
 
         <fileset dir="lib">
