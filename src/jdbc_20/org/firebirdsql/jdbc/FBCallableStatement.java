@@ -18,9 +18,10 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.sql.CallableStatement;
 import java.sql.SQLException;
 
-import org.firebirdsql.gds.GDSHelper;
+import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * JDBC 2.0 compliant implementation of {@link CallableStatement} interface.

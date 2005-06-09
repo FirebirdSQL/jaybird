@@ -19,8 +19,9 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
+import java.sql.Statement;
 
-import org.firebirdsql.gds.GDSHelper;
+import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * JDBC 2.0 compliant implementation of {@link Statement} interface.
