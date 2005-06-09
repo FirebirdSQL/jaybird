@@ -40,6 +40,7 @@ package org.firebirdsql.management;
 
 
 import java.sql.SQLException;
+import java.util.StringTokenizer;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
@@ -401,10 +402,12 @@ public class FBMaintenanceManager extends FBServiceManager
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         setLogger(byteOut);
         listLimboTransactions();
-        String [] limboTransactions = byteOut.toString().split("\n");
-        int[] trans = new int[limboTransactions.length];
-        for (int count = 0; count < limboTransactions.length; count++)
-        	trans[count] = Integer.parseInt(limboTransactions[count].trim());
+        
+        StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        int[] trans = new int[limboTransactions.countTokens()];
+        int count = 0;
+        while(limboTransactions.hasMoreTokens())
+        	trans[count++] = Integer.parseInt(limboTransactions.nextToken().trim());
         return trans;
     }
 

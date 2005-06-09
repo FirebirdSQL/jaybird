@@ -6,7 +6,7 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
+import java.util.StringTokenizer;
 
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.jdbc.AbstractConnection;
@@ -397,8 +397,9 @@ public class TestFBMaintenanceManager extends FBTestBase {
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         maintenanceManager.setLogger(byteOut);
         maintenanceManager.listLimboTransactions();
-        String [] limboTransactions = byteOut.toString().split("\n");
-        assertEquals(COUNT_LIMBO, limboTransactions.length);
+        
+        StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        assertEquals(COUNT_LIMBO, limboTransactions.countTokens());
     }
 
     public void testGetLimboTransactions() throws Exception {
@@ -413,38 +414,44 @@ public class TestFBMaintenanceManager extends FBTestBase {
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         maintenanceManager.setLogger(byteOut);
         maintenanceManager.listLimboTransactions();
-        String [] limboTransactions = byteOut.toString().split("\n");
-        assertEquals("[]", Arrays.asList(limboTransactions).toString());
+        StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        assertEquals(0, limboTransactions.countTokens());
         createLimboTransaction(3);
         byteOut.reset();
         maintenanceManager.listLimboTransactions();
-        limboTransactions = byteOut.toString().split("\n");
-        assertEquals(3, limboTransactions.length);
-        int trId = Integer.parseInt(limboTransactions[0]);
-        maintenanceManager.rollbackTransaction(trId);
+        limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        assertEquals(3, limboTransactions.countTokens());
+        if (limboTransactions.hasMoreTokens()) {
+            int trId = Integer.parseInt(limboTransactions.nextToken());
+            maintenanceManager.rollbackTransaction(trId);
+        }
+        else fail("There should be 3 limbo transactions.");
         byteOut.reset();
         maintenanceManager.listLimboTransactions();
-        limboTransactions = byteOut.toString().split("\n");
-        assertEquals(2, limboTransactions.length);
+        limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        assertEquals(2, limboTransactions.countTokens());
     }
 
     public void testCommitLimboTransaction() throws Exception {
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         maintenanceManager.setLogger(byteOut);
         maintenanceManager.listLimboTransactions();
-        String [] limboTransactions = byteOut.toString().split("\n");
-        assertEquals("[]", Arrays.asList(limboTransactions).toString());
+        StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        assertEquals(0, limboTransactions.countTokens());
         createLimboTransaction(3);
         byteOut.reset();
         maintenanceManager.listLimboTransactions();
-        limboTransactions = byteOut.toString().split("\n");
-        assertEquals(3, limboTransactions.length);
-        int trId = Integer.parseInt(limboTransactions[0]);
-        maintenanceManager.commitTransaction(trId);
+        limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        assertEquals(3, limboTransactions.countTokens());
+        if (limboTransactions.hasMoreTokens()) {
+            int trId = Integer.parseInt(limboTransactions.nextToken());
+            maintenanceManager.commitTransaction(trId);
+        }
+        else fail("There should be 3 limbo transactions.");
         byteOut.reset();
         maintenanceManager.listLimboTransactions();
-        limboTransactions = byteOut.toString().split("\n");
-        assertEquals(2, limboTransactions.length);
+        limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        assertEquals(2, limboTransactions.countTokens());
     }
 
 
