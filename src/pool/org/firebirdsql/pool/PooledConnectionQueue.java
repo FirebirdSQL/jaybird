@@ -26,8 +26,6 @@ import java.util.Iterator;
 
 import org.firebirdsql.logging.Logger;
 
-import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
-
 /**
  * Implementation of free connection queue.
  * 
@@ -38,7 +36,6 @@ class PooledConnectionQueue {
     private static final boolean LOG_DEBUG_INFO = PoolDebugConfiguration.LOG_DEBUG_INFO;
     private static final boolean SHOW_STACK_ON_BLOCK = PoolDebugConfiguration.SHOW_TRACE;
     private static final boolean SHOW_STACK_ON_ALLOCATION = PoolDebugConfiguration.SHOW_TRACE;
-    
 
     private PooledConnectionManager connectionManager;
     private Logger logger;
@@ -51,7 +48,7 @@ class PooledConnectionQueue {
     private int blockingTimeout;
 
     private int size;
-    private LinkedQueue queue = new LinkedQueue();
+    private BlockingStack stack = new BlockingStack();
     private boolean blocked;
     
     private Object takeMutex = new Object();
@@ -155,7 +152,7 @@ class PooledConnectionQueue {
     public void start() throws SQLException {
         for (int i = 0; i < getConfiguration().getMinPoolSize(); i++) {
             try {
-                addConnection(queue);
+                addConnection(stack);
             } catch (InterruptedException iex) {
                 throw new SQLException("Could not start connection queue.");
             }
@@ -191,7 +188,7 @@ class PooledConnectionQueue {
         //Create enough connections to restore the queue to MinPoolSize.
         while (totalSize() < getConfiguration().getMinPoolSize())
         	try {
-        		addConnection(queue);
+        		addConnection(stack);
         	}
             catch (Exception e)
             {
@@ -285,10 +282,10 @@ class PooledConnectionQueue {
             		
             		physicalConnectionDeallocated(connection);
             		
-            		addConnection(queue);
+            		addConnection(stack);
             	}
             	else {
-            		queue.put(connection);
+            		stack.push(connection);
                 
             		// save timestamp when connection was returned to queue
             		connectionIdleTime.put(
@@ -349,7 +346,7 @@ class PooledConnectionQueue {
         try {
 
             synchronized(takeMutex) {
-                if (queue.isEmpty()) {
+                if (stack.isEmpty()) {
     
                     while (result == null) {
                         
@@ -361,7 +358,7 @@ class PooledConnectionQueue {
                         boolean connectionAdded = false;
     
                         try {
-                            connectionAdded = addConnection(queue);
+                            connectionAdded = addConnection(stack);
                         } catch (SQLException sqlex) {
                             if (getLogger() != null)
                                 getLogger().warn(
@@ -392,7 +389,7 @@ class PooledConnectionQueue {
                             blocked = true;
                         }
                         
-                        result = (PooledObject) queue.poll(
+                        result = (PooledObject) stack.pop(
                             getConfiguration().getRetryInterval());
                             
                         if (result == null && getLogger() != null)
@@ -405,7 +402,7 @@ class PooledConnectionQueue {
                     }
     
                 } else {
-                    result = (PooledObject)queue.take();
+                    result = (PooledObject)stack.pop();
                 }
             }
 
@@ -443,7 +440,7 @@ class PooledConnectionQueue {
      * @throws SQLException if new connection cannot be opened.
      * @throws InterruptedException if thread was interrupted.
      */
-    private boolean addConnection(LinkedQueue queue)
+    private boolean addConnection(BlockingStack queue)
         throws SQLException, InterruptedException {
 
         synchronized (this) {
@@ -476,7 +473,7 @@ class PooledConnectionQueue {
                         + Thread.currentThread().getName()
                         + " created connection.");
 
-            queue.put(pooledConnection);
+            queue.push(pooledConnection);
             size++;
 
             totalConnections++;
@@ -501,7 +498,7 @@ class PooledConnectionQueue {
             if (totalSize() <= getConfiguration().getMinPoolSize())
                 return false;
             
-            PooledObject candidate = (PooledObject)queue.peek();
+            PooledObject candidate = (PooledObject)stack.peek();
             
             if (candidate == null)
                 return false;

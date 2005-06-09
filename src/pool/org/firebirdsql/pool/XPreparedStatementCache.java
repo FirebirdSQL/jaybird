@@ -23,7 +23,6 @@ import java.sql.*;
 import java.util.*;
 import java.util.Iterator;
 
-import EDU.oswego.cs.dl.util.concurrent.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -45,7 +44,7 @@ class XPreparedStatementCache {
         LoggerFactory.getLogger(XPreparedStatementCache.class, false);
 
     private XStatementManager owner;
-    private LinkedQueue freeReferences = new LinkedQueue();
+    private BlockingStack freeReferences = new BlockingStack();
     private HashMap workingReferences = new HashMap();
     private String sql;
     private int resultSetType;
@@ -123,7 +122,7 @@ class XPreparedStatementCache {
                         logChannel.info(
                             "Found free prepared statement in pool.");    
 
-                    result = (XCachablePreparedStatement)freeReferences.take();
+                    result = (XCachablePreparedStatement)freeReferences.pop();
                 }
             }
             
@@ -162,7 +161,7 @@ class XPreparedStatementCache {
                 
                 if (statement.isCached()) {
                     statement.setConnection(null);
-                    freeReferences.put(reference);
+                    freeReferences.push(reference);
                 } 
                 
                 workingReferences.remove(statement.getOriginal());
@@ -194,7 +193,7 @@ class XPreparedStatementCache {
         while(!freeReferences.isEmpty()) {
             try {
                 XCachablePreparedStatement result =
-                    (XCachablePreparedStatement)freeReferences.take();
+                    (XCachablePreparedStatement)freeReferences.pop();
 
                 result.forceClose();
             } catch(InterruptedException ex) {
