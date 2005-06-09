@@ -384,7 +384,7 @@ public class FBMaintenanceManager extends FBServiceManager
                     trId = 0;
                     shift = 0;
                 } else if (output[i] == 0 && shift != -1){
-                    ps.println(trId);
+                    ps.print(trId + "\n");
                     shift = -1;
                 } else if (shift != -1) {
                     trId += ((output[i] & 0xff) << shift);
@@ -394,6 +394,18 @@ public class FBMaintenanceManager extends FBServiceManager
         } finally {
             setLogger(saveOut);
         }
+    }
+    
+    public int[] getLimboTransactions() throws SQLException
+    {
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        setLogger(byteOut);
+        listLimboTransactions();
+        String [] limboTransactions = byteOut.toString().split("\n");
+        int[] trans = new int[limboTransactions.length];
+        for (int count = 0; count < limboTransactions.length; count++)
+        	trans[count] = Integer.parseInt(limboTransactions[count].trim());
+        return trans;
     }
 
     /**
