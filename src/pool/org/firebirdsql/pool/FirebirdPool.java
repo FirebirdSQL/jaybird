@@ -28,7 +28,7 @@ package org.firebirdsql.pool;
 import java.sql.SQLException;
 
 /**
- * Configuration for the {@link org.firebirdsql.jdbc.FBWrappingDataSource} and
+ * Configuration for the {@link org.firebirdsql.pool.FBWrappingDataSource} and
  * {@link org.firebirdsql.pool.FBConnectionPoolDataSource} objects.
  * 
  * Following properties are supported:
