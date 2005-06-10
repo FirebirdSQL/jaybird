@@ -28,6 +28,7 @@ import javax.sql.*;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.*;
 import org.firebirdsql.jdbc.*;
@@ -227,6 +228,9 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
             return mcf;
         
         GDSType gdsType = GDSType.getType(getType());
+        
+        if (gdsType == null)
+            gdsType = GDSFactory.getDefaultGDSType();
         
         mcf = new FBManagedConnectionFactory(gdsType, connectionProperties);
         
