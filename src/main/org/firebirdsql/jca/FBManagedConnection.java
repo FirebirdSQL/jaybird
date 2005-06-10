@@ -65,10 +65,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     private IscDbHandle dbHandle;
     private GDSHelper gdsHelper;
 
-    protected FBConnectionRequestInfo cri;
-    private final FBTpb tpb;
+    private FBConnectionRequestInfo cri;
+//    private TransactionParameterBuffer transactionParameterBuffer; 
+    private FBTpb tpb;
+    private int transactionIsolation;
 
-    public boolean autoCommit = true;
+//    public boolean autoCommit = true;
     private boolean managedEnvironment = true;
     private boolean connectionSharing = true;
 
@@ -76,15 +78,17 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             FBManagedConnectionFactory mcf) throws ResourceException {
         
         this.mcf = mcf;
-        this.gds = mcf.gds;
+        this.gds = mcf.getGDS();
         this.cri = getCombinedConnectionRequestInfo(subject, cri);
-        this.tpb = mcf.getTpb(); // getTpb supplies a copy.
+        this.tpb = mcf.getDefaultTpb();
         
         try {
             this.dbHandle = gds.createIscDbHandle();
-            gds.iscAttachDatabase(mcf.getDatabase(), dbHandle, this.cri.getDpb());
+
+            DatabaseParameterBuffer dpb = this.cri.getDpb();
+            gds.iscAttachDatabase(mcf.getDatabase(), dbHandle, dpb);
             
-            this.gdsHelper = new GDSHelper(this.gds, this.cri.getDpb(), (AbstractIscDbHandle)this.dbHandle);
+            this.gdsHelper = new GDSHelper(this.gds, dpb, (AbstractIscDbHandle)this.dbHandle);
         } catch(GDSException ex) {
             throw new FBResourceException(ex);
         }
@@ -111,7 +115,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
                         String user = pcred.getUserName();
                         String password = new String(pcred.getPassword());
                         fbcri.setPassword(password);
-                        fbcri.setUser(user);
+                        fbcri.setUserName(user);
                         break;
                     } 
                 } 
@@ -375,7 +379,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         this.gdsHelper.setCurrentTrHandle(null);
 
         // reset the TPB from the previous transaction.
-        this.tpb.setTpb(mcf.getTpb());
+        this.tpb = mcf.getDefaultTpb();
+        this.transactionIsolation = mcf.getDefaultTransactionIsolation();
     }
 
     /**
@@ -934,12 +939,18 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      */
     public void start(Xid id, int flags) throws XAException {
         try {
+            
+            // reset the transaction parameters for the managed scenario 
+            setTransactionIsolation(mcf.getDefaultTransactionIsolation());
+            
             internalStart(id, flags);
             
             mcf.notifyStart(this, id);
             
         } catch (GDSException ge) {
-            throw new XAException(ge.getXAErrorCode());
+            throw new FBXAException(ge.getXAErrorCode());
+        } catch(ResourceException ex) {
+            throw new FBXAException(XAException.XAER_RMERR, ex);
         }
     }
 
@@ -954,8 +965,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      * @param flags
      *            One of TMNOFLAGS, TMJOIN, or TMRESUME
      */
-    public void internalStart(Xid id, int flags) throws XAException,
-            GDSException {
+    public void internalStart(Xid id, int flags) throws XAException, GDSException {
         if (log != null) log.debug("start called: " + id);
 
         if (gdsHelper.getCurrentTrHandle() != null) throw new XAException(XAException.XAER_PROTO);
@@ -990,6 +1000,22 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         return cri;
     }
 
+    public TransactionParameterBuffer getTransactionParameters() {
+        return tpb.getTransactionParameterBuffer();
+    }
+    
+    public void setTransactionParameters(TransactionParameterBuffer transactionParameters) {
+        tpb.setTransactionParameterBuffer(transactionParameters);
+    }
+    
+    public TransactionParameterBuffer getTransactionParameters(int isolation) {
+        return mcf.getTransactionParameters(isolation);
+    }
+    
+    public void setTransactionParameters(int isolation, TransactionParameterBuffer transactionParams) {
+        mcf.setTransactionParameters(isolation, transactionParams);
+    }
+    
     // --------------------------------------------------------------------
     // package visibility
     // --------------------------------------------------------------------
@@ -1100,10 +1126,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         }
     }
 
-    public FBTpb getTpb() {
-        return tpb;
-    }
-
     /**
      * Get the transaction isolation level of this connection. The level is one
      * of the static final fields of <code>java.sql.Connection</code> (i.e.
@@ -1120,7 +1142,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *             If the transaction level cannot be retrieved
      */
     public int getTransactionIsolation() throws ResourceException {
-        return tpb.getTransactionIsolation();
+        return transactionIsolation;
     }
 
     /**
@@ -1140,59 +1162,61 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      *             If the transaction level cannot be retrieved
      */
     public void setTransactionIsolation(int isolation) throws ResourceException {
-        tpb.setTransactionIsolation(isolation);
+        transactionIsolation = isolation;
+        
+        tpb = mcf.getTpb(isolation);
     }
-
-    /**
-     * Get the name of the current transaction isolation level for this
-     * connection.
-     * 
-     * @see getTransactionIsolation
-     * @see setTransactionIsolationName
-     * @return The name of the current transaction isolation level
-     * @throws ResourceException
-     *             If the transaction level cannot be retrieved
-     */
-    public String getTransactionIsolationName() throws ResourceException {
-        return tpb.getTransactionIsolationName();
-    }
-
-    /**
-     * Set the current transaction isolation level for this connection by name
-     * of the level. The transaction isolation name must be one of the
-     * TRANSACTION_* static final fields in {@link org.firebirdsql.jca.FBTpb}.
-     * 
-     * @see getTransactionIsolationName
-     * @see FBTpb
-     * @param isolation
-     *            The name of the transaction isolation level to be set
-     * @throws ResourceException
-     *             if the transaction isolation level cannot be set to the
-     *             requested level, or if <code>isolation</code> is not a
-     *             valid transaction isolation name
-     */
-    public void setTransactionIsolationName(String isolation)
-            throws ResourceException {
-        tpb.setTransactionIsolationName(isolation);
-    }
-
-    /**
-     * @deprecated you should not use internal transaction isolation levels
-     *             directrly.
-     */
-    public int getIscTransactionIsolation() throws ResourceException {
-        return tpb.getIscTransactionIsolation();
-    }
-
-    /**
-     * @deprecated you should not use internal transaction isolation levels
-     *             directrly.
-     */
-    public void setIscTransactionIsolation(int isolation)
-            throws ResourceException {
-        tpb.setIscTransactionIsolation(isolation);
-    }
-
+//
+//    /**
+//     * Get the name of the current transaction isolation level for this
+//     * connection.
+//     * 
+//     * @see getTransactionIsolation
+//     * @see setTransactionIsolationName
+//     * @return The name of the current transaction isolation level
+//     * @throws ResourceException
+//     *             If the transaction level cannot be retrieved
+//     */
+//    public String getTransactionIsolationName() throws ResourceException {
+//        return tpb.getTransactionIsolationName();
+//    }
+//
+//    /**
+//     * Set the current transaction isolation level for this connection by name
+//     * of the level. The transaction isolation name must be one of the
+//     * TRANSACTION_* static final fields in {@link org.firebirdsql.jca.FBTpb}.
+//     * 
+//     * @see getTransactionIsolationName
+//     * @see FBTpb
+//     * @param isolation
+//     *            The name of the transaction isolation level to be set
+//     * @throws ResourceException
+//     *             if the transaction isolation level cannot be set to the
+//     *             requested level, or if <code>isolation</code> is not a
+//     *             valid transaction isolation name
+//     */
+//    public void setTransactionIsolationName(String isolation)
+//            throws ResourceException {
+//        tpb.setTransactionIsolationName(isolation);
+//    }
+//
+//    /**
+//     * @deprecated you should not use internal transaction isolation levels
+//     *             directrly.
+//     */
+//    public int getIscTransactionIsolation() throws ResourceException {
+//        return tpb.getIscTransactionIsolation();
+//    }
+//
+//    /**
+//     * @deprecated you should not use internal transaction isolation levels
+//     *             directrly.
+//     */
+//    public void setIscTransactionIsolation(int isolation)
+//            throws ResourceException {
+//        tpb.setIscTransactionIsolation(isolation);
+//    }
+//
     /**
      * Set whether this connection is to be readonly
      * 
@@ -1214,11 +1238,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         return tpb.isReadOnly();
     }
 
-    public boolean getAutoCommit() {
-        return autoCommit;
-    }
-    
-    public void setAutoCommit(boolean autoCommit) {
-        this.autoCommit = autoCommit;
-    }
+//    public boolean getAutoCommit() {
+//        return autoCommit;
+//    }
+//    
+//    public void setAutoCommit(boolean autoCommit) {
+//        this.autoCommit = autoCommit;
+//    }
 }

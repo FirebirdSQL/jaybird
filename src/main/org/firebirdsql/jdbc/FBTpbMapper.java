@@ -17,12 +17,12 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jca;
+package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.jdbc.FBConnectionHelper;
+import org.firebirdsql.jca.FBResourceException;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -44,19 +44,112 @@ import java.util.StringTokenizer;
 public class FBTpbMapper implements Serializable {
     
     public static final String DEFAULT_MAPPING_RESOURCE = "isc_tpb_mapping";
-    // public static final FBTpbMapper DEFAULT_MAPPER = new FBTpbMapper();
     
     public static FBTpbMapper getDefaultMapper(GDS gds) {
         return new FBTpbMapper(gds);
     }
     
-    private static final String TRANSACTION_SERIALIZABLE = FBTpb.TRANSACTION_SERIALIZABLE;
-    private static final String TRANSACTION_REPEATABLE_READ = FBTpb.TRANSACTION_REPEATABLE_READ;
-    private static final String TRANSACTION_READ_COMMITTED = FBTpb.TRANSACTION_READ_COMMITTED;
-    private static final String TRANSACTION_READ_UNCOMMITTED = FBTpb.TRANSACTION_READ_UNCOMMITTED;
-//    private static final String TRANSACTION_NONE = FBTpb.TRANSACTION_NONE;
+    /**
+     * Dirty reads, non-repeatable reads and phantom reads are prevented. This
+     * level includes the prohibitions in TRANSACTION_REPEATABLE_READ and
+     * further prohibits the situation where one transaction reads all rows that
+     * satisfy a WHERE condition, a second transaction inserts a row that
+     * satisfies that WHERE condition, and the first transaction rereads for the
+     * same condition, retrieving the additional "phantom" row in the second
+     * read.
+     */
+    public static final String TRANSACTION_SERIALIZABLE = "TRANSACTION_SERIALIZABLE";
+
+    /**
+     * Dirty reads and non-repeatable reads are prevented; phantom reads can
+     * occur. This level prohibits a transaction from reading a row with
+     * uncommitted changes in it, and it also prohibits the situation where one
+     * transaction reads a row, a second transaction alters the row, and the
+     * first transaction rereads the row, getting different values the second
+     * time (a "non-repeatable read").
+     */
+    public static final String TRANSACTION_REPEATABLE_READ = "TRANSACTION_REPEATABLE_READ";
+
+    /**
+     * Dirty reads are prevented; non-repeatable reads and phantom reads can
+     * occur. This level only prohibits a transaction from reading a row with
+     * uncommitted changes in it.
+     */
+    public static final String TRANSACTION_READ_COMMITTED = "TRANSACTION_READ_COMMITTED";
+
+    // read uncommitted actually not supported
+    /**
+     * Dirty reads, non-repeatable reads and phantom reads can occur. This level
+     * allows a row changed by one transaction to be read by another transaction
+     * before any changes in that row have been committed (a "dirty read"). If
+     * any of the changes are rolled back, the second transaction will have
+     * retrieved an invalid row. <b>This level is not actually supported </b>
+     */
+    public static final String TRANSACTION_READ_UNCOMMITTED = "TRANSACTION_READ_UNCOMMITTED";
+
+    /**
+     * Indicates that transactions are not supported. <b>This level is not
+     * supported </b>
+     */
+    public static final String TRANSACTION_NONE = "TRANSACTION_NONE";
+
+    /**
+     * Convert transaction isolation level into string.
+     * 
+     * @param isolationLevel transaction isolation level as integer constant.
+     * 
+     * @return corresponding string representation.
+     */
+    public static String getTransactionIsolationName(int isolationLevel) {
+        switch(isolationLevel) {
+            case Connection.TRANSACTION_NONE :
+                return TRANSACTION_NONE;
+                
+            case Connection.TRANSACTION_READ_UNCOMMITTED :
+                return TRANSACTION_READ_UNCOMMITTED;
+                
+            case Connection.TRANSACTION_READ_COMMITTED : 
+                return TRANSACTION_READ_COMMITTED;
+                
+            case Connection.TRANSACTION_REPEATABLE_READ :
+                return TRANSACTION_REPEATABLE_READ;
+                
+            case Connection.TRANSACTION_SERIALIZABLE :
+                return TRANSACTION_SERIALIZABLE;
+                
+            default :
+                throw new IllegalArgumentException("Incorrect transaction isolation level.");
+        }
+    }
+    
+    /**
+     * Convert transaction isolation level name into a corresponding constant.
+     * 
+     * @param isolationName name of the transaction isolation.
+     * 
+     * @return corresponding constant.
+     */
+    public static int getTransactionIsolationLevel(String isolationName) {
+        if (TRANSACTION_NONE.equals(isolationName))
+            return Connection.TRANSACTION_NONE;
+        else
+        if (TRANSACTION_READ_UNCOMMITTED.equals(isolationName))
+            return Connection.TRANSACTION_READ_UNCOMMITTED;
+        else
+        if (TRANSACTION_READ_COMMITTED.equals(isolationName))
+            return Connection.TRANSACTION_READ_COMMITTED;
+        else
+        if (TRANSACTION_REPEATABLE_READ.equals(isolationName))
+            return Connection.TRANSACTION_REPEATABLE_READ;
+        else
+        if (TRANSACTION_SERIALIZABLE.equals(isolationName))
+            return Connection.TRANSACTION_SERIALIZABLE;
+        else
+            throw new IllegalArgumentException("Invalid isolation name.");
+    }
     
     private HashMap mapping = new HashMap();
+    private int defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED;
     
     /**
      * Create instance of this class with the default mapping of JDBC
@@ -237,7 +330,7 @@ public class FBTpbMapper implements Serializable {
      * @throws FBResourceException if specified transaction isolation level
      * is unknown.
      */
-    public TransactionParameterBuffer getMapping(int transactionIsolation) throws FBResourceException {
+    public TransactionParameterBuffer getMapping(int transactionIsolation) {
         
         switch(transactionIsolation) {
             
@@ -254,7 +347,7 @@ public class FBTpbMapper implements Serializable {
                 
             case Connection.TRANSACTION_NONE:
             default:
-                throw new FBResourceException(
+                throw new IllegalArgumentException(
                     "Transaction isolation level " + transactionIsolation + 
                     " is not supported.");
         }
@@ -269,7 +362,6 @@ public class FBTpbMapper implements Serializable {
      * @throws FBResourceException if incorrect isolation level is specified.
      */
     public void setMapping(int transactionIsolation, TransactionParameterBuffer tpb) 
-        throws FBResourceException 
     {
         switch(transactionIsolation) {
         
@@ -282,7 +374,7 @@ public class FBTpbMapper implements Serializable {
             case Connection.TRANSACTION_READ_UNCOMMITTED:
             case Connection.TRANSACTION_NONE:
             default:
-                throw new FBResourceException(
+                throw new IllegalArgumentException(
                         "Transaction isolation level " + transactionIsolation + 
                         " is not supported.");
         }
@@ -294,6 +386,14 @@ public class FBTpbMapper implements Serializable {
      * @return mapping for the default transaction isolation level.
      */
     public TransactionParameterBuffer getDefaultMapping() {
-        return (TransactionParameterBuffer)mapping.get(new Integer(Connection.TRANSACTION_READ_COMMITTED));
+        return (TransactionParameterBuffer)mapping.get(new Integer(defaultIsolationLevel));
+    }
+    
+    public int getDefaultTransactionIsolation() {
+        return defaultIsolationLevel;
+    }
+    
+    public void setDefaultTransactionIsolation(int isolationLevel) {
+        this.defaultIsolationLevel = isolationLevel;
     }
 }

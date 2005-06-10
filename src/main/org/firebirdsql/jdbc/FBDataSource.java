@@ -114,7 +114,7 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
         {
            //mcf makes a copy for us.
             FBConnectionRequestInfo subjectCri = mcf.getDefaultConnectionRequestInfo();
-            subjectCri.setUser(username);
+            subjectCri.setUserName(username);
             subjectCri.setPassword(password);
             return (Connection)cm.allocateConnection(mcf, subjectCri);
         }

@@ -64,7 +64,7 @@ public class PingablePooledConnection implements PooledConnection,
     private boolean supportsStatementsAccrossRollback;
     private boolean statementPooling;
     
-    private int transactionIsolation;
+    private int transactionIsolation = -1;
 
     private HashMap statements = new HashMap();
 
@@ -74,13 +74,13 @@ public class PingablePooledConnection implements PooledConnection,
 
     protected PingablePooledConnection(Connection connection, 
                                        boolean statementPooling, 
-                                       int transactionIsolation,
+                                       /*int transactionIsolation,*/
                                        int maxStatements, boolean keepStatements) 
         throws SQLException 
     {
         this.jdbcConnection = connection;
         this.statementPooling = statementPooling;
-        this.transactionIsolation = transactionIsolation;
+        //this.transactionIsolation = transactionIsolation;
         this.maxStatements = maxStatements;
         this.keepStatements = keepStatements;
 
@@ -106,12 +106,16 @@ public class PingablePooledConnection implements PooledConnection,
 
     protected PingablePooledConnection(Connection connection,
         String pingStatement, int pingInterval, boolean statementPooling, 
-        int transactionIsolation, int maxStatements, boolean keepStatements) 
+        /*int transactionIsolation,*/ int maxStatements, boolean keepStatements) 
         throws SQLException 
     {
-        this(connection, statementPooling, transactionIsolation, maxStatements, keepStatements);
+        this(connection, statementPooling, /*transactionIsolation,*/ maxStatements, keepStatements);
         this.pingStatement = pingStatement;
         this.pingInterval = pingInterval;
+    }
+    
+    public void setDefaultTransactionIsolation(int isolation) {
+        this.transactionIsolation = isolation;
     }
 
     public long getLastPingTime() {
@@ -334,7 +338,9 @@ public class PingablePooledConnection implements PooledConnection,
     protected void configureConnectionDefaults(Connection connection) throws SQLException {
         connection.setAutoCommit(true);
         connection.setReadOnly(false);
-        connection.setTransactionIsolation(transactionIsolation);
+        
+        if (transactionIsolation != -1)
+            connection.setTransactionIsolation(transactionIsolation);
     }
 
     /**

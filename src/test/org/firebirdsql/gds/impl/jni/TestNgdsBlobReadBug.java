@@ -26,7 +26,7 @@ import org.firebirdsql.gds.impl.wire.JavaGDSImpl;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.jca.FBTpb;
-import org.firebirdsql.jca.FBTpbMapper;
+import org.firebirdsql.jdbc.FBTpbMapper;
 
 import org.firebirdsql.common.SimpleFBTestBase;
 
@@ -354,11 +354,11 @@ public class TestNgdsBlobReadBug  extends SimpleFBTestBase
         IscTrHandle tr = gds.createIscTrHandle();
 
         if (log != null) log.info("test- isc_start_transaction");
-        FBTpb tpb = new FBTpb(FBTpbMapper.getDefaultMapper(gds));
-        tpb.add(new Integer(ISCConstants.isc_tpb_write));
-        tpb.add(new Integer(ISCConstants.isc_tpb_read_committed));
-        tpb.add(new Integer(ISCConstants.isc_tpb_no_rec_version));
-        tpb.add(new Integer(ISCConstants.isc_tpb_wait));
+        FBTpb tpb = new FBTpb(FBTpbMapper.getDefaultMapper(gds).getDefaultMapping());
+        tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_write);
+        tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_read_committed);
+        tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_no_rec_version);
+        tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_wait);
 
         gds.iscStartTransaction(tr, database_handle, tpb.getTransactionParameterBuffer());
 

@@ -167,19 +167,19 @@ public class FBDriverPropertyManager {
      * @throws SQLException if original properties reference the same DPB 
      * parameter using both alias and original name.
      */
-    public static Properties normalize(String url, Properties props) throws SQLException {
+    public static HashMap normalize(String url, Map props) throws SQLException {
         
-        Properties tempProps = new Properties();
+        HashMap tempProps = new HashMap();
         tempProps.putAll(props);
         
         convertUrlParams(url, tempProps);
         
-        Properties result = new Properties();
+        HashMap result = new HashMap();
         
         for (Iterator iter = tempProps.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Map.Entry) iter.next();
             String propName = (String)entry.getKey();
-            String propValue = (String)entry.getValue();
+            Object propValue = entry.getValue();
             
             PropertyInfo propInfo = (PropertyInfo)aliases.get(propName);
             
@@ -191,6 +191,9 @@ public class FBDriverPropertyManager {
                 
                 boolean hasDuplicate = tempProps.keySet().contains(originalName)
                         || tempProps.keySet().contains(shortName);
+                
+                hasDuplicate &= !propName.equals(shortName);
+                hasDuplicate &= !propName.equals(originalName);
                 
                 if (hasDuplicate)
                     throw new FBSQLException("Specified properties contain " +
@@ -221,6 +224,23 @@ public class FBDriverPropertyManager {
         return result;
     }
     
+    public static String getCanonicalName(String propertyName) {
+        PropertyInfo propInfo = (PropertyInfo)aliases.get(propertyName);
+        
+        if (propInfo == null) {
+            String tempKey = propertyName;
+            if (!tempKey.startsWith(FBConnectionHelper.DPB_PREFIX))
+                tempKey = FBConnectionHelper.DPB_PREFIX + tempKey;
+            
+            propInfo = (PropertyInfo)dpbMap.get(tempKey);
+        }
+        
+        if (propInfo == null)
+            return propertyName;
+        
+        return propInfo.dpbName;
+    }
+    
     /**
      * Extract properties specified as URL parameter into the specified list
      * of properties.
@@ -230,7 +250,7 @@ public class FBDriverPropertyManager {
      * @param info instance of {@link Properties} into which values should
      * be extracted.
      */
-    private static void convertUrlParams(String url, Properties info) {
+    private static void convertUrlParams(String url, HashMap info) {
         if (url == null)
             return;
         
@@ -248,9 +268,9 @@ public class FBDriverPropertyManager {
             if(iIs > -1) {
                 String property = propertyString.substring(0, iIs);
                 String value = propertyString.substring(iIs+1);
-                info.setProperty(property,value);
+                info.put(property,value);
             } else {
-                info.setProperty(propertyString, "");
+                info.put(propertyString, "");
             }
         }
     }
@@ -266,26 +286,26 @@ public class FBDriverPropertyManager {
      * @throws SQLException if both isc_dpb_local_encoding and charSet are
      * specified.
      */
-    private static void handleEncodings(Properties info) throws SQLException {
-        String iscEncoding = info.getProperty("isc_dpb_lc_ctype");
-        String localEncoding = info.getProperty("isc_dpb_local_encoding");
+    public static void handleEncodings(HashMap info) throws SQLException {
+        String iscEncoding = (String)info.get("isc_dpb_lc_ctype");
+        String localEncoding = (String)info.get("isc_dpb_local_encoding");
         
         if (iscEncoding != null && localEncoding == null) {
             String javaEncoding = FBConnectionHelper.getJavaEncoding(iscEncoding);
             
             if (javaEncoding != null)
-                info.setProperty("isc_dpb_local_encoding", javaEncoding);
+                info.put("isc_dpb_local_encoding", javaEncoding);
         }
         
         if (iscEncoding == null && localEncoding != null) {
             iscEncoding = FBConnectionHelper.getIscEncoding(localEncoding); 
-            info.setProperty("isc_dpb_lc_ctype", iscEncoding);
+            info.put("isc_dpb_lc_ctype", iscEncoding);
         }
         
         // ensure that we fail before any connection is obtained
         // in case when incorrect mapping path is specified 
         // (note, EncodingFactory.getEncoding(String, String) throws exception)
-        String mappingPath = info.getProperty("isc_dpb_mapping_path");
+        String mappingPath = (String)info.get("isc_dpb_mapping_path");
         if (mappingPath != null) {
             EncodingFactory.getEncoding(localEncoding, mappingPath);
         }
@@ -304,7 +324,7 @@ public class FBDriverPropertyManager {
         for (Iterator iter = props.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Map.Entry) iter.next();
             String propName = (String)entry.getKey();
-            String propValue = (String)entry.getValue();
+            Object propValue = entry.getValue();
             
             PropertyInfo propInfo = (PropertyInfo)aliases.get(propName);
             
@@ -318,8 +338,8 @@ public class FBDriverPropertyManager {
                 propInfo = (PropertyInfo)dpbMap.get(tempKey);
             }
             
-            DriverPropertyInfo driverPropInfo = 
-                new DriverPropertyInfo(propName, propValue);
+            DriverPropertyInfo driverPropInfo = new DriverPropertyInfo(
+                    propName, propValue != null ? propValue.toString() : "");
 
             if (propInfo != null)
                 driverPropInfo.description = propInfo.description;

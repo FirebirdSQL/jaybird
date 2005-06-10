@@ -18,26 +18,20 @@
  */
 package org.firebirdsql.common;
 
-import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
-import org.firebirdsql.jca.FBConnectionRequestInfo;
-import org.firebirdsql.jca.InternalConnectionManager;
-import org.firebirdsql.management.FBManager;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
-import org.firebirdsql.pool.FBWrappingDataSource;
-import org.firebirdsql.pool.FBConnectionPoolDataSource;
-import org.firebirdsql.jdbc.FBDriver;
-
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Properties;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Connection;
+import java.sql.*;
+import java.util.*;
 
 import javax.resource.spi.ConnectionManager;
+
+import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jca.InternalConnectionManager;
+import org.firebirdsql.jdbc.FBDriver;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.management.FBManager;
+import org.firebirdsql.pool.FBConnectionPoolDataSource;
+import org.firebirdsql.pool.FBWrappingDataSource;
 
 /**
  * Base class for test cases which could be run against more then a single GDS implementation.
@@ -123,11 +117,11 @@ public class FBTestBase extends SimpleFBTestBase
     /**
      *
      * @return
-     */
-    protected FBConnectionRequestInfo createFBConnectionRequestInfo()
-        {
-        return FBConnectionRequestInfo.newInstance(GDSFactory.getGDSForType(getGdsType()));
-        }
+//     */
+//    protected FBConnectionRequestInfo createFBConnectionRequestInfo()
+//        {
+//        return FBConnectionRequestInfo.newInstance(GDSFactory.getGDSForType(getGdsType()));
+//        }
 
     /**
      *
@@ -227,5 +221,6 @@ public class FBTestBase extends SimpleFBTestBase
         gdsTypeToUrlPrefixMap.put(GDSType.getType("NATIVE"),          "jdbc:firebirdsql:native:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("ORACLE_MODE"),     "jdbc:firebirdsql:oracle:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("LOCAL"),    "jdbc:firebirdsql:local:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("NIO"),    "jdbc:firebirdsql:nio:");
         }
     }

@@ -20,14 +20,14 @@ package org.firebirdsql.pool;
 
 import java.io.PrintWriter;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Properties;
+import java.util.*;
 
 import javax.naming.*;
 import javax.resource.ResourceException;
 import javax.sql.*;
 
-import org.firebirdsql.gds.impl.AbstractGDS;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.*;
@@ -160,27 +160,6 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
     FirebirdPool
 {
     
-    public static final String USER_NAME_PROPERTY = "user";
-    public static final String PASSWORD_PROPERTY = "password";
-    public static final String TPB_MAPPING_PROPERTY = "tpb_mapping";
-    public static final String BLOB_BUFFER_PROPERTY = "blob_buffer_length";
-
-    public static final String ENCODING_PROPERTY = "lc_ctype";
-    public static final String SOCKET_BUFFER_PROPERTY = "socket_buffer_size";
-    public static final String SQL_ROLE_PROPERTY = "sql_role_name";
-
-    private static final HashMap PROPERTY_NAME_MAPPING = new HashMap();
-    static {
-        PROPERTY_NAME_MAPPING.put("blobBufferSize", BLOB_BUFFER_PROPERTY);
-        PROPERTY_NAME_MAPPING.put("encoding", ENCODING_PROPERTY);
-        PROPERTY_NAME_MAPPING.put("userName", USER_NAME_PROPERTY);
-        PROPERTY_NAME_MAPPING.put("socketBufferSize", SOCKET_BUFFER_PROPERTY);
-        PROPERTY_NAME_MAPPING.put("sqlRole", SQL_ROLE_PROPERTY);
-        PROPERTY_NAME_MAPPING.put("roleName", SQL_ROLE_PROPERTY);
-        PROPERTY_NAME_MAPPING.put("tpbMapping", TPB_MAPPING_PROPERTY);
-    }
-    
-
     public static final AbstractConnectionPool.UserPasswordPair 
         EMPTY_USER_PASSWORD = new AbstractConnectionPool.UserPasswordPair();
     
@@ -193,12 +172,10 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
         
 	private transient PrintWriter logWriter;
     
-    private transient FBManagedConnectionFactory managedConnectionFactory;
-
-    private Properties properties = new Properties();
-    private String database;
-    private GDSType gdsType = ((AbstractGDS)GDSFactory.getDefaultGDS()).getType();
+    private transient FBManagedConnectionFactory mcf;
     
+    private FBConnectionProperties connectionProperties = new FBConnectionProperties();
+
     /**
      * Create instance of this class.
      */
@@ -206,22 +183,55 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
         super();
     }
     
-    private synchronized FBManagedConnectionFactory getManagedConnectionFactory() {
-        if (managedConnectionFactory == null) {
-            managedConnectionFactory = new FBManagedConnectionFactory(getGDSType());
+    /**
+     * Get connection properties. This method returns a live object where 
+     * connection properties can be set. Usually application does not need to
+     * call this method, since this class implements appropriate interface and
+     * all properties can set directly. However, this is needed for custom
+     * serialization.
+     * 
+     * @return "live" instance of {@link FBConnectionProperties}.
+     */
+    public FBConnectionProperties getConnectionProperties() {
+        return connectionProperties;
+    }
+    
+    /**
+     * Set the connection properties in bulk. This method replaces the instance
+     * created in constructor, therefore, if the managed connection factory was
+     * already initialized with that instance, change will not be visible to it.
+     * In this case appropriate exception is thrown.
+     * 
+     * @param props instance of {@link FBConnectionProperties}.
+     * 
+     * @throws IllegalPoolStateException if managed connection factory is already
+     * initialized.
+     */
+    public void setConnectionProperties(FBConnectionProperties props) throws IllegalPoolStateException {
+        if (props == null)
+            throw new NullPointerException();
+        
+        checkNotStarted();
+        
+        this.connectionProperties = props;
+    }
 
-            managedConnectionFactory.setDatabase(getDatabase());
+    private void checkNotStarted() throws IllegalStateException {
+        if (mcf != null)
+            throw new IllegalStateException(
+                    "ManagedConnectionFactory is already instantiated, " +
+                    "changing connection properties in bulk is not allowed.");
+    }
+    
+    private synchronized FBManagedConnectionFactory getManagedConnectionFactory() {
+        if (mcf != null)
+            return mcf;
         
-            FBConnectionRequestInfo defaultCri = 
-                managedConnectionFactory.getDefaultConnectionRequestInfo();
-            
-            FBConnectionRequestInfo cri = FBConnectionHelper.getCri(
-                getProperties(), defaultCri);
-            
-            managedConnectionFactory.setConnectionRequestInfo(cri);
-        }
+        GDSType gdsType = GDSType.getType(getType());
         
-        return managedConnectionFactory;
+        mcf = new FBManagedConnectionFactory(GDSFactory.getGDSForType(gdsType), connectionProperties);
+        
+        return mcf;
     }
 
     protected Logger getLogger() {
@@ -255,26 +265,18 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
         String userName = pair.getUserName(); 
         String password = pair.getPassword();
 
-        Properties props = new Properties();
-        props.putAll(getProperties());
-
-        if (userName != null)
-            props.setProperty(USER_NAME_PROPERTY, userName);
-            
-        if (password != null)
-            props.setProperty(PASSWORD_PROPERTY, password);
-
-        props = FBDriverPropertyManager.normalize(null, props);
-
-        FBConnectionRequestInfo defaultCri = 
-            getManagedConnectionFactory().getDefaultConnectionRequestInfo();
-             
-        FBConnectionRequestInfo cri = FBConnectionHelper.getCri(props,
-                GDSFactory.getGDSForType(this.getGDSType()));
-            
         try {
+            FBConnectionRequestInfo defaultCri = 
+                getManagedConnectionFactory().getDefaultConnectionRequestInfo();
+            
+            if (userName != null)
+                defaultCri.setUserName(userName);
+            
+            if (password != null)
+                defaultCri.setPassword(password);
+
             FBManagedConnection managedConnection = (FBManagedConnection)
-                getManagedConnectionFactory().createManagedConnection(null, cri);
+                getManagedConnectionFactory().createManagedConnection(null, defaultCri);
             managedConnection.setConnectionSharing(false);
             managedConnection.setManagedEnvironment(false);
 
@@ -284,20 +286,20 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
                 pooledConnection =
                     new FBPooledConnection(
                         managedConnection,
-                        cri,
+                        defaultCri,
                         getPingStatement(),
                         getPingInterval(),
                         isStatementPooling(),
-                        getTransactionIsolationLevel(),
+                        /*getTransactionIsolationLevel(),*/
                         getMaxStatements(),
                         isKeepStatements());
             else
                 pooledConnection = 
                     new FBPooledConnection(
                         managedConnection, 
-                        cri, 
+                        defaultCri, 
                         isStatementPooling(),
-                        getTransactionIsolationLevel(),
+                        /*getTransactionIsolationLevel(),*/
                         getMaxStatements(),
                         isKeepStatements());
 
@@ -492,57 +494,6 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
     }
     
     /**
-     * Get database to which we will connect.
-     * 
-     * @return path to the database to which we will connect.
-     */
-    public String getDatabase() {
-        return database;
-    }
-
-    /**
-     * Get JDBC connection properties.
-     */
-    public Properties getProperties() {
-        Properties result = new Properties();
-        result.putAll(properties);
-        return result;
-    }
-    
-    /**
-     * Get JDBC connection property by key.
-     * 
-     * @param key key of the property.
-     * 
-     * @return value of the property or <code>null</code> if propery not yet.
-     */
-    private String getProperty(String key) {
-        return properties.getProperty(key);
-    }
-    
-    /**
-     * Get JDBC connection property as integer value. Note, it is not possible
-     * to determine null value in this case.
-     * 
-     * @param key key of the property.
-     * 
-     * @return integer value of the property, or <code>0</code> if specified
-     * property is not set.
-     */
-    private int getIntProperty(String key) {
-        String value = getProperty(key);
-        
-        if (value == null)
-            return 0;
-        
-        try {
-            return Integer.parseInt(value);
-        } catch(NumberFormatException ex) {
-            return 0;
-        }
-    }
-    
-    /**
      * Check if this configuation defines a pingable connection JDBC pool.
      * 
      * @see org.firebirdsql.pool.ConnectionPoolConfiguration#isPingable()
@@ -565,17 +516,6 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
     }
 
     /**
-     * Set database name.
-     * 
-     * @param database connection URL without <code>"jdbc:firebirdsql:"</code>
-     * prefix (<code>"//localhost:3050/c:/database/employee.gdb"</code>) for
-     * example).
-     */
-    public void setDatabase(String database) {
-        this.database = database;
-    }
-
-    /**
      * Set JDBC properties that will be passed when opening a connection.
      * 
      * @param properties instance of {@link Properties} containing properties
@@ -584,34 +524,13 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
      * @see #getProperties()
      */
     public void setProperties(Properties properties) {
-        if (properties == null)
-            throw new NullPointerException("Specified properties are null.");
-        
-        this.properties.putAll(properties);
-    }
-    
-    /**
-     * Set specified property.
-     * 
-     * @param name name of the property.
-     * @param value value of the property.
-     */
-    protected void setProperty(String name, String value) {
-        String canonicalName = (String)PROPERTY_NAME_MAPPING.get(name);
-        if (canonicalName == null)
-            canonicalName = name;
-        
-        this.properties.setProperty(canonicalName, value);
-    }
-    
-    /**
-     * Set specified property as integer value.
-     * 
-     * @param name name of the property.
-     * @param value value of the property.
-     */
-    public void setIntProperty(String name, int value) {
-        setProperty(name, Integer.toString(value));
+        for (Iterator iter = properties.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            String key = (String)entry.getKey();
+            String value = (String)entry.getValue();
+            
+            setNonStandardProperty(key, value);
+        }
     }
     
     /**
@@ -629,7 +548,7 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
      * </ul>
      */
     public String getType() {
-        return getGDSType().toString();
+        return connectionProperties.getType();
     }
     
     /**
@@ -647,13 +566,9 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
      * 
      * @throws SQLException if specified type is not known.
      */
-    public void setType(String type) throws SQLException {
-        GDSType gdsType = GDSType.getType(type);
-        
-        if (gdsType == null)
-            throw new UnknownDriverTypeException(type);
-            
-        setGDSType(gdsType);
+    public void setType(String type) {
+        checkNotStarted();
+        connectionProperties.setType(type);
     }
     
     /**
@@ -662,7 +577,7 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
      * @return type of JDBC driver that is used.
      */
     public GDSType getGDSType() {
-        return gdsType;
+        return GDSType.getType(getType());
     }
     
     /**
@@ -671,7 +586,8 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
      * @param gdsType type of the JDBC driver.
      */
     public void setGDSType(GDSType gdsType) {
-        this.gdsType = gdsType;
+        checkNotStarted();
+        setType(gdsType.toString());
     }
 
 
@@ -683,11 +599,12 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
      */
 
     public String getNonStandardProperty(String key) {
-        return getProperty(key);
+        return connectionProperties.getNonStandardProperty(key);
     }
     
     public void setNonStandardProperty(String key, String value) {
-        setProperty(key, value);
+        checkNotStarted();
+        connectionProperties.setNonStandardProperty(key, value);
     }
     
     /**
@@ -702,94 +619,63 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
      * a new line mark.
      */
     public void setNonStandardProperty(String propertyMapping) {
-        char[] chars = propertyMapping.toCharArray();
-        StringBuffer key = new StringBuffer();
-        StringBuffer value = new StringBuffer();
-        
-        boolean keyProcessed = false;
-        for (int i = 0; i < chars.length; i++) {
-            char ch = chars[i];
-            
-            boolean isSeparator = Character.isWhitespace(ch) || ch == '=' || ch == ':';
-            
-            // if no key was processed, ignore white spaces
-            if (key.length() == 0 && isSeparator)
-                continue;
-            
-            if (!keyProcessed && !isSeparator) {
-                key.append(ch);
-            } else if (!keyProcessed && isSeparator) {
-                keyProcessed = true;
-            } else if (keyProcessed && value.length() == 0 && isSeparator) {
-                continue;
-            } else if (keyProcessed) {
-                value.append(ch);
-            }
-        }
-        
-        String keyStr = key.toString().trim();
-        String valueStr = value.length() > 0 ? value.toString().trim() : null;
-        
-        setProperty(keyStr, valueStr);
+        checkNotStarted();
+        connectionProperties.setNonStandardProperty(propertyMapping);
     }
 
     public int getBlobBufferSize() {
-        if (getProperty(BLOB_BUFFER_PROPERTY) != null)
-            return getIntProperty(BLOB_BUFFER_PROPERTY);
-        else
-            return FBConnectionDefaults.DEFAULT_BLOB_BUFFER_SIZE;
+        return connectionProperties.getBlobBufferSize();
     }
 
     public void setBlobBufferSize(int blobBufferSize) {
-        setIntProperty(BLOB_BUFFER_PROPERTY, blobBufferSize);
+        checkNotStarted();
+        connectionProperties.setBlobBufferSize(blobBufferSize);
     }
 
     public String getEncoding() {
-        return getProperty(ENCODING_PROPERTY);
+        return connectionProperties.getEncoding();
     }
 
     public void setEncoding(String encoding) {
-        setProperty(ENCODING_PROPERTY, encoding);
+        checkNotStarted();
+        connectionProperties.setEncoding(encoding);
     }
 
     public String getCharSet() {
-        return FBConnectionHelper.getJavaEncoding(getEncoding());
+        return connectionProperties.getCharSet();
     }
     
-    public void setCharSet(String charSet) throws SQLException {
-        String iscEncoding = FBConnectionHelper.getIscEncoding(charSet);
-        if (iscEncoding == null)
-            throw new SQLException("Unknown character set " + charSet);
-        
-        setEncoding(iscEncoding);
+    public void setCharSet(String charSet) {
+        checkNotStarted();
+        connectionProperties.setCharSet(charSet);
     }
     
     public String getPassword() {
-        return getProperty(PASSWORD_PROPERTY);
+        return connectionProperties.getPassword();
     }
 
     public void setPassword(String password) {
-        setProperty(PASSWORD_PROPERTY, password);
+        checkNotStarted();
+        connectionProperties.setPassword(password);
     }
 
     public int getSocketBufferSize() {
-        if (getProperty(SOCKET_BUFFER_PROPERTY) != null)
-            return getIntProperty(SOCKET_BUFFER_PROPERTY);
-        else
-            return FBConnectionDefaults.DEFAULT_SOCKET_BUFFER_SIZE;
+        checkNotStarted();
+        return connectionProperties.getSocketBufferSize();
     }
 
     public void setSocketBufferSize(int socketBufferSize) {
-        setIntProperty(SOCKET_BUFFER_PROPERTY, socketBufferSize);
+        checkNotStarted();
+        connectionProperties.setSocketBufferSize(socketBufferSize);
     }
     
-    
     public String getRoleName() {
-        return getProperty(SQL_ROLE_PROPERTY);
+        return connectionProperties.getRoleName();
     }
     
     public void setRoleName(String roleName) {
-        setProperty(SQL_ROLE_PROPERTY, roleName);
+        checkNotStarted();
+        connectionProperties.setRoleName(roleName);
     }
 
     /**
@@ -807,36 +693,125 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
     }
 
     public String getTpbMapping() {
-        return getProperty(TPB_MAPPING_PROPERTY);
+        return connectionProperties.getTpbMapping();
     }
 
     public void setTpbMapping(String tpbMapping) {
-        setProperty(TPB_MAPPING_PROPERTY, tpbMapping);
+        checkNotStarted();
+        connectionProperties.setTpbMapping(tpbMapping);
     }
 
     public String getUserName() {
-        return getProperty(USER_NAME_PROPERTY);
+        return connectionProperties.getUserName();
     }
 
     public void setUserName(String userName) {
-        setProperty(USER_NAME_PROPERTY, userName);
+        checkNotStarted();
+        connectionProperties.setUserName(userName);
     }
     
-    protected static final String REF_DATABASE = "database";
-    protected static final String REF_TYPE = "type";
+    public int getBuffersNumber() {
+        return connectionProperties.getBlobBufferSize();
+    }
+
+    public String getDatabase() {
+        return connectionProperties.getDatabase();
+    }
+
+    public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
+        return connectionProperties.getDatabaseParameterBuffer();
+    }
+
+    public String getDefaultIsolation() {
+        return connectionProperties.getDefaultIsolation();
+    }
+
+    public int getDefaultTransactionIsolation() {
+        return connectionProperties.getDefaultTransactionIsolation();
+    }
+
+    public String getSqlDialect() {
+        return connectionProperties.getSqlDialect();
+    }
+
+    public TransactionParameterBuffer getTransactionParameters(int isolation) {
+        return connectionProperties.getTransactionParameters(isolation);
+    }
+
+    public String getUseTranslation() {
+        return connectionProperties.getUseTranslation();
+    }
+
+    public boolean isTimestampUsesLocalTimezone() {
+        return connectionProperties.isTimestampUsesLocalTimezone();
+    }
+
+    public boolean isUseStandardUdf() {
+        return connectionProperties.isUseStandardUdf();
+    }
+
+    public boolean isUseStreamBlobs() {
+        return connectionProperties.isUseStreamBlobs();
+    }
+
+    public void setBuffersNumber(int buffersNumber) {
+        checkNotStarted();
+        connectionProperties.setBuffersNumber(buffersNumber);
+    }
+
+    public void setDatabase(String database) {
+        checkNotStarted();
+        connectionProperties.setDatabase(database);
+    }
+
+    public void setDefaultIsolation(String isolation) {
+        checkNotStarted();
+        connectionProperties.setDefaultIsolation(isolation);
+    }
+
+    public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
+        checkNotStarted();
+        connectionProperties.setDefaultTransactionIsolation(defaultIsolationLevel);
+    }
+
+    public void setSqlDialect(String sqlDialect) {
+        checkNotStarted();
+        connectionProperties.setSqlDialect(sqlDialect);
+    }
+
+    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
+        checkNotStarted();
+        connectionProperties.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
+    }
+
+    public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
+        checkNotStarted();
+        connectionProperties.setTransactionParameters(isolation, tpb);
+    }
+
+    public void setUseStandardUdf(boolean useStandardUdf) {
+        checkNotStarted();
+        connectionProperties.setUseStandardUdf(useStandardUdf);
+    }
+
+    public void setUseStreamBlobs(boolean useStreamBlobs) {
+        checkNotStarted();
+        connectionProperties.setUseStreamBlobs(useStreamBlobs);
+    }
+
+    public void setUseTranslation(String translationPath) {
+        checkNotStarted();
+        connectionProperties.setUseTranslation(translationPath);
+    }
+
+    
     protected static final String REF_PROPERTIES = "properties";
     protected static final String REF_NON_STANDARD_PROPERTY = "nonStandard";
     
     public Reference getDefaultReference() {
         Reference ref = super.getDefaultReference();
         
-        if (getDatabase() != null)            
-            ref.add(new StringRefAddr(REF_DATABASE, getDatabase()));
-
-        if (getType() != null)
-            ref.add(new StringRefAddr(REF_TYPE, getType()));
-        
-        byte[] data = serialize(getProperties());
+        byte[] data = serialize(connectionProperties);
         ref.add(new BinaryRefAddr(REF_PROPERTIES, data));
         
         return ref;
@@ -852,20 +827,17 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
 
             String type = element.getType();
 
-            if (REF_DATABASE.equals(type))
-                ds.setDatabase(element.getContent().toString());
-            else if (REF_TYPE.equals(type))
-                ds.setType(element.getContent().toString());
-            else if (REF_PROPERTIES.equals(element.getType())) {
+            if (REF_NON_STANDARD_PROPERTY.equals(type))
+                ds.setNonStandardProperty(element.getContent().toString());
+            else
+            if (REF_PROPERTIES.equals(type)) {
 
                 byte[] data = (byte[]) element.getContent();
-                Properties props = (Properties) deserialize(data);
-                if (props != null)
-                    ds.setProperties(props);
-            } else if (REF_NON_STANDARD_PROPERTY.equals(type))
-                ds.setNonStandardProperty(element.getContent().toString());
-            else if (element.getContent() instanceof String)
-                ds.setProperty(type, element.getContent().toString());
+                FBConnectionProperties props = (FBConnectionProperties) deserialize(data);
+                ds.setConnectionProperties(props);
+            } else 
+            if (element.getContent() instanceof String)
+                ds.setNonStandardProperty(type, element.getContent().toString());
         }
 
         return ds;
@@ -875,4 +847,5 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
     protected BasicAbstractConnectionPool createObjectInstance() {
         return new FBConnectionPoolDataSource();
     }
+
 }

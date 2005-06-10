@@ -1,17 +1,12 @@
 package org.firebirdsql.gds;
 
-import java.sql.Connection;
 import java.util.Arrays;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.gds.impl.AbstractIscDbHandle;
-import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
-import org.firebirdsql.gds.impl.AbstractIscTrHandle;
-import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.gds.impl.wire.isc_db_handle_impl;
 import org.firebirdsql.jca.FBTpb;
-import org.firebirdsql.jca.FBTpbMapper;
+import org.firebirdsql.jdbc.FBTpbMapper;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 
@@ -51,8 +46,8 @@ public class TestReconnectTransaction extends FBTestBase {
         dpb.addArgument(DatabaseParameterBuffer.USER, this.DB_USER);
         dpb.addArgument(DatabaseParameterBuffer.PASSWORD, this.DB_PASSWORD);
         
-        tpb = new FBTpb(FBTpbMapper.getDefaultMapper(gds));
-        tpb.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+        tpb = new FBTpb(FBTpbMapper.getDefaultMapper(gds).getDefaultMapping());
+//        tpb.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
     }
     
     protected void tearDown() throws Exception {
