@@ -116,6 +116,15 @@ public class GDSFactory {
     public static GDS getDefaultGDS() {
         return getGDSForType(defaultType);
     }
+    
+    /**
+     * Get default GDS type.
+     * 
+     * @return instance of {@link GDSType}.
+     */
+    public static GDSType getDefaultGDSType() {
+        return defaultType;
+    }
 
     /**
      * Get an instance of the specified implemenation of <code>GDS</code>.
