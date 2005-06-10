@@ -261,7 +261,7 @@ public class FBDriverPropertyManager {
 
         String propString = url.substring(iQuestionMark+1);
         
-        StringTokenizer st = new StringTokenizer(propString,"&");
+        StringTokenizer st = new StringTokenizer(propString,"&;");
         while(st.hasMoreTokens()) {
             String propertyString = st.nextToken();
             int iIs = propertyString.indexOf("=");
