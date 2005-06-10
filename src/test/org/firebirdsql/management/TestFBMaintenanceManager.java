@@ -463,7 +463,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
             dpb.addArgument(DatabaseParameterBuffer.USER, DB_USER);
             dpb.addArgument(DatabaseParameterBuffer.PASSWORD, DB_PASSWORD);
             IscDbHandle dbh = gds.createIscDbHandle();
-            gds.iscAttachDatabase(getDatabasePath(), dbh, dpb);
+            gds.iscAttachDatabase(getdbpath(DB_NAME), dbh, dpb);
             for (int i = 0; i < count; i++){
                 TransactionParameterBuffer tpBuf = 
                     gds.newTransactionParameterBuffer();
