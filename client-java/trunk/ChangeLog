@@ -1,3 +1,57 @@
+2005-06-09 17:59  sjardine
+
+	* client-java/src/jdbc_20/org/firebirdsql/jdbc/:
+	FBCallableStatement.java, FBPreparedStatement.java,
+	FBStatement.java:
+	
+	Modified imports to allow for JDK1.3 compile.
+
+2005-06-09 17:59  sjardine
+
+	* client-java/src/:
+	main/org/firebirdsql/management/FBMaintenanceManager.java,
+	test/org/firebirdsql/management/TestFBMaintenanceManager.java:
+	
+	Fixed limbo transactions to be compatible with JDK1.3
+
+2005-06-09 04:40  sjardine
+
+	* client-java/src/test/org/firebirdsql/: common/FBTestBase.java,
+	management/TestBackupManager.java,
+	management/TestFBMaintenanceManager.java,
+	management/TestFBManager.java,
+	management/TestFBStatisticsManager.java,
+	management/TestUserManager.java:
+	
+	Consolidated frequently used code.  Added code to clean up test
+	databases and backups.
+
+2005-06-09 04:38  sjardine
+
+	*
+	client-java/src/main/org/firebirdsql/management/FBMaintenanceManage
+	r.java:
+	
+	Fixed bug with line separater and multi-platform environments. 
+	Added getLimboTransactions function.
+
+2005-06-09 04:34  sjardine
+
+	* client-java/src/: lib/concurrent.jar,
+	pool/org/firebirdsql/pool/BlockingStack.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java,
+	pool/org/firebirdsql/pool/XPreparedStatementCache.java,
+	test/org/firebirdsql/pool/TestBlockingStack.java:
+	
+	Replaced LinkedQueue class with BlockingStack class.  Removed
+	dependency on concurrent.jar
+
+2005-06-09 04:29  sjardine
+
+	* client-java/src/pool/org/firebirdsql/pool/FirebirdPool.java:
+	
+	Fixed javadoc reference.
+
 2005-06-05 15:36  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/:
