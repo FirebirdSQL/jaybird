@@ -81,6 +81,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         this.gds = mcf.getGDS();
         this.cri = getCombinedConnectionRequestInfo(subject, cri);
         this.tpb = mcf.getDefaultTpb();
+        this.transactionIsolation = mcf.getDefaultTransactionIsolation();
         
         try {
             this.dbHandle = gds.createIscDbHandle();
