@@ -32,7 +32,7 @@ import org.firebirdsql.gds.impl.jni.isc_stmt_handle_impl;
 
 
 import org.firebirdsql.jca.FBTpb;
-import org.firebirdsql.jca.FBTpbMapper;
+import org.firebirdsql.jdbc.FBTpbMapper;
 
 import org.firebirdsql.common.SimpleFBTestBase;
 
@@ -77,7 +77,7 @@ public class TestNgds extends SimpleFBTestBase {
         else
             gds = GDSFactory.getGDSForType(GDSType.getType("NATIVE"));
 
-        tpb  = new FBTpb(FBTpbMapper.getDefaultMapper(gds));
+        tpb  = new FBTpb(FBTpbMapper.getDefaultMapper(gds).getDefaultMapping());
         
         c= gds.createDatabaseParameterBuffer();
 
@@ -87,13 +87,10 @@ public class TestNgds extends SimpleFBTestBase {
         c.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
         c.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
 
-        tpb.add(new Integer(ISCConstants.isc_tpb_write));
-
-        tpb.add(new Integer(ISCConstants.isc_tpb_read_committed));
-
-        tpb.add(new Integer(ISCConstants.isc_tpb_no_rec_version));
-
-        tpb.add(new Integer(ISCConstants.isc_tpb_wait));
+        tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_write);
+        tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_read_committed);
+        tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_no_rec_version);
+        tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_wait);
 
     }
 

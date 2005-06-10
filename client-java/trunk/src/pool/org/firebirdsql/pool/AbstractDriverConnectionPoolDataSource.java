@@ -25,6 +25,7 @@ import java.util.Properties;
 import javax.naming.*;
 import javax.sql.*;
 
+import org.firebirdsql.jdbc.FBConnectionHelper;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -49,6 +50,8 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
         
     private String jdbcUrl;
     private String driverClassName;
+    private int transactionIsolation = FBPoolingDefaults.DEFAULT_ISOLATION;
+
     
     private Properties props = new Properties();
     
@@ -135,6 +138,48 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
     public void setLoginTimeout(int seconds) {
         setBlockingTimeout(seconds * 1000);
     }
+    
+    public int getTransactionIsolationLevel() {
+        return transactionIsolation;
+    }
+
+    public void setTransactionIsolationLevel(int transactionIsolation) {
+        this.transactionIsolation = transactionIsolation;
+    }
+
+    public String getIsolation() {
+        switch (getTransactionIsolationLevel()) {
+
+            case Connection.TRANSACTION_READ_COMMITTED:
+                return FBConnectionHelper.TRANSACTION_READ_COMMITTED;
+
+            case Connection.TRANSACTION_REPEATABLE_READ:
+                return FBConnectionHelper.TRANSACTION_REPEATABLE_READ;
+
+            case Connection.TRANSACTION_SERIALIZABLE:
+                return FBConnectionHelper.TRANSACTION_SERIALIZABLE;
+
+            default:
+                throw new IllegalStateException(
+                        "Unknown transaction isolation level");
+        }
+    }
+
+    public void setIsolation(String isolation) throws SQLException {
+        if (FBConnectionHelper.TRANSACTION_READ_COMMITTED
+                .equalsIgnoreCase(isolation))
+            setTransactionIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
+        else if (FBConnectionHelper.TRANSACTION_REPEATABLE_READ
+                .equalsIgnoreCase(isolation))
+            setTransactionIsolationLevel(Connection.TRANSACTION_REPEATABLE_READ);
+        else if (FBConnectionHelper.TRANSACTION_SERIALIZABLE
+                .equalsIgnoreCase(isolation))
+            setTransactionIsolationLevel(Connection.TRANSACTION_SERIALIZABLE);
+        else
+            throw new FBSQLException("Unknown transaction isolation.",
+                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+    }
+
     
     /**
      * Get connection manager that will allocate physical connections to the
@@ -381,12 +426,14 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
             if (isPingable())
                 pooledConnection = new PingablePooledConnection(
                     connection, getPingStatement(), getPingInterval(),
-                    isStatementPooling(), getTransactionIsolationLevel(),
+                    isStatementPooling(), 
                     getMaxStatements(), isKeepStatements());
             else
                 pooledConnection = new PingablePooledConnection(
-                    connection, isStatementPooling(), getTransactionIsolationLevel(),
+                    connection, isStatementPooling(), 
                     getMaxStatements(), isKeepStatements());
+            
+            pooledConnection.setDefaultTransactionIsolation(getTransactionIsolationLevel());
 
             return pooledConnection;
         }

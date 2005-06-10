@@ -58,6 +58,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
     private HashSet activeStatements = new HashSet();
     
     private int resultSetHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
+    
+    private boolean autoCommit;
 	 
     /**
      * Create a new AbstractConnection instance based on a
@@ -200,11 +202,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
 	}
     
     public TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException {
-        try {
-            return mc.getTpb().getMapper().getMapping(isolationLevel);
-        } catch(ResourceException ex) {
-            throw new FBSQLException(ex);
-        }
+        return mc.getTransactionParameters(isolationLevel);
     }
 
     public TransactionParameterBuffer createTransactionParameterBuffer() throws SQLException {
@@ -216,11 +214,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
             throw new FBSQLException("Cannot set transaction parameters " +
                     "in managed environment.");
         
-        try {
-            mc.getTpb().getMapper().setMapping(isolationLevel, tpb);
-        } catch(ResourceException ex) {
-            throw new FBSQLException(ex);
-        }
+        mc.setTransactionParameters(isolationLevel, tpb);
     }
     
     public void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException {
@@ -229,7 +223,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 throw new FBSQLException("Cannot set transaction parameters " +
                         "when transaction is already started.");
             
-            mc.getTpb().setTransactionParameterBuffer(tpb);
+            mc.setTransactionParameters(tpb);
         } catch(ResourceException ex) {
             throw new FBSQLException(ex);
         }
@@ -377,7 +371,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     {
         checkValidity();
 
-        if (mc.autoCommit == autoCommit) 
+        if (this.autoCommit == autoCommit) 
             return;
         
         InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
@@ -387,7 +381,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
             coordinator = new InternalTransactionCoordinator.LocalTransactionCoordinator(this, localTransaction);
         
         txCoordinator.setCoordinator(coordinator);
-        mc.setAutoCommit(autoCommit);
+        this.autoCommit = autoCommit;
     }
 
     public void setManagedEnvironment(boolean managedConnection) throws SQLException {
@@ -397,10 +391,10 @@ public abstract class AbstractConnection implements FirebirdConnection {
         
         if (managedConnection) {
             coordinator = new InternalTransactionCoordinator.ManagedTransactionCoordinator(this);
-            mc.setAutoCommit(false);
+            this.autoCommit = false;
         } else {
             coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, localTransaction);
-            mc.setAutoCommit(true);
+            this.autoCommit = true;
         }
          
         txCoordinator.setCoordinator(coordinator);
@@ -418,7 +412,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
             throw new FBSQLException("You cannot getAutomcommit on an " +
                     "unassociated closed connection.");
 
-        return mc.autoCommit;
+        return this.autoCommit;
     }
 
 
@@ -555,7 +549,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public synchronized void setReadOnly(boolean readOnly) throws SQLException {
         try {
-            if (localTransaction.inTransaction())
+            if (localTransaction.inTransaction() && !mc.isManagedEnvironment())
                 throw new FBSQLException("Calling setReadOnly(boolean) method " +
                         "is not allowed when transaction is already started.");
             

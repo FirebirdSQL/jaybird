@@ -19,6 +19,8 @@
  
 package org.firebirdsql.pool;
 
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
@@ -33,9 +35,8 @@ import javax.naming.Reference;
 import javax.resource.Referenceable;
 import javax.resource.ResourceException;
 
-import org.firebirdsql.jca.FBTpbMapper;
-import org.firebirdsql.jca.FBResourceException;
 import org.firebirdsql.jdbc.FBDataSource;
+import org.firebirdsql.jdbc.FirebirdConnectionProperties;
 
 import javax.naming.NamingException;
 
@@ -48,7 +49,7 @@ import javax.naming.NamingException;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBSimpleDataSource implements DataSource, Serializable, Referenceable {
+public class FBSimpleDataSource implements DataSource, Serializable, Referenceable, FirebirdConnectionProperties {
     
     transient protected FBManagedConnectionFactory mcf;
     transient protected FBDataSource ds;
@@ -57,7 +58,6 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
     protected Reference jndiReference;
     protected String description;
     protected int loginTimeout;
-    protected String tpbMapping;
 
     /**
      * Create instance of this class.
@@ -79,7 +79,7 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
      * @return length of BLOB buffer.
      */
     public Integer getBlobBufferLength() {
-        return mcf.getBlobBufferLength();
+        return new Integer(mcf.getBlobBufferSize());
     }
     
     /**
@@ -89,8 +89,10 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
      * @param length new length of the BLOB buffer.
      */
     public void setBlobBufferLength(Integer length) {
-        mcf.setBlobBufferLength(length);
+        mcf.setBlobBufferSize(length.intValue());
     }
+    
+    
     
     /**
      * Get name of the database. 
@@ -221,17 +223,147 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
     }
     
     public String getTpbMapping() {
-        return tpbMapping;
+        return mcf.getTpbMapping();
     }
     
-    public void setTpbMapping(String tpbMapping) throws FBResourceException {
-        mcf.setTpbMapper(new FBTpbMapper(mcf.getGDS(), tpbMapping, getClass().getClassLoader()));
-        this.tpbMapping = tpbMapping;
+    public void setTpbMapping(String tpbMapping) {
+        mcf.setTpbMapping(tpbMapping);
     }
+    
+    public int getBlobBufferSize() {
+        return mcf.getBlobBufferSize();
+    }
+
+    public int getBuffersNumber() {
+        return mcf.getBuffersNumber();
+    }
+
+    public String getCharSet() {
+        return mcf.getCharSet();
+    }
+
+    public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
+        return mcf.getDatabaseParameterBuffer();
+    }
+
+    public String getDefaultIsolation() {
+        return mcf.getDefaultIsolation();
+    }
+
+    public int getDefaultTransactionIsolation() {
+        return mcf.getDefaultTransactionIsolation();
+    }
+
+    public String getNonStandardProperty(String key) {
+        return mcf.getNonStandardProperty(key);
+    }
+
+    public String getRoleName() {
+        return mcf.getRoleName();
+    }
+
+    public int getSocketBufferSize() {
+        return mcf.getSocketBufferSize();
+    }
+
+    public String getSqlDialect() {
+        return mcf.getSqlDialect();
+    }
+
+    public TransactionParameterBuffer getTransactionParameters(int isolation) {
+        return mcf.getTransactionParameters(isolation);
+    }
+
+    public String getType() {
+        return mcf.getType();
+    }
+
+    public String getUseTranslation() {
+        return mcf.getUseTranslation();
+    }
+
+    public boolean isTimestampUsesLocalTimezone() {
+        return mcf.isTimestampUsesLocalTimezone();
+    }
+
+    public boolean isUseStandardUdf() {
+        return mcf.isUseStandardUdf();
+    }
+
+    public boolean isUseStreamBlobs() {
+        return mcf.isUseStreamBlobs();
+    }
+
+    public void setBlobBufferSize(int bufferSize) {
+        mcf.setBlobBufferSize(bufferSize);
+    }
+
+    public void setBuffersNumber(int buffersNumber) {
+        mcf.setBuffersNumber(buffersNumber);
+    }
+
+    public void setCharSet(String charSet) {
+        mcf.setCharSet(charSet);
+    }
+
+    public void setDefaultIsolation(String isolation) {
+        mcf.setDefaultIsolation(isolation);
+    }
+
+    public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
+        mcf.setDefaultTransactionIsolation(defaultIsolationLevel);
+    }
+
+    public void setNonStandardProperty(String key, String value) {
+        mcf.setNonStandardProperty(key, value);
+    }
+
+    public void setNonStandardProperty(String propertyMapping) {
+        mcf.setNonStandardProperty(propertyMapping);
+    }
+
+    public void setRoleName(String roleName) {
+        mcf.setRoleName(roleName);
+    }
+
+    public void setSocketBufferSize(int socketBufferSize) {
+        mcf.setSocketBufferSize(socketBufferSize);
+    }
+
+    public void setSqlDialect(String sqlDialect) {
+        mcf.setSqlDialect(sqlDialect);
+    }
+
+    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
+        mcf.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
+    }
+
+    public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
+        mcf.setTransactionParameters(isolation, tpb);
+    }
+
+    public void setType(String type) {
+        mcf.setType(type);
+    }
+
+    public void setUseStandardUdf(boolean useStandardUdf) {
+        mcf.setUseStandardUdf(useStandardUdf);
+    }
+
+    public void setUseStreamBlobs(boolean useStreamBlobs) {
+        mcf.setUseStreamBlobs(useStreamBlobs);
+    }
+
+    public void setUseTranslation(String translationPath) {
+        mcf.setUseTranslation(translationPath);
+    }
+
+    
     
     /*
      * INTERFACES IMPLEMENTATION
      */
+
 
 
     /**

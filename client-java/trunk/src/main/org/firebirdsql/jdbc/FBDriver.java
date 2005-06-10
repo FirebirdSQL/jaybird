@@ -25,10 +25,8 @@ import java.util.*;
 
 import javax.resource.ResourceException;
 
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.jca.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -39,7 +37,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBDriver implements Driver {
+public class FBDriver implements FirebirdDriver {
 
     private final static Logger log;
 
@@ -104,74 +102,29 @@ public class FBDriver implements Driver {
             if (originalInfo == null)
                 originalInfo = new Properties();
 
-            Properties normalizedInfo = FBDriverPropertyManager.normalize(url, originalInfo);
+            Map normalizedInfo = FBDriverPropertyManager.normalize(url, originalInfo);
             
             int qMarkIndex = url.indexOf('?');
             if (qMarkIndex != -1)
                 url = url.substring(0, qMarkIndex);
 
-            Integer blobBufferLength = extractBlobBufferLength(normalizedInfo);
-            
-
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
             
-            FBConnectionRequestInfo conCri =
-                FBConnectionHelper.getCri(normalizedInfo, mcf.getDefaultConnectionRequestInfo());
-
-            //handleEncoding(info, conCri);
-
-            FBTpbMapper tpbMapper = FBConnectionHelper.getTpbMapper(mcf.getGDS(), originalInfo);
-
-            // extract the user
-            String user = conCri.getStringProperty(ISCConstants.isc_dpb_user);
-
-            if (user == null)
-                user = conCri.getStringProperty(ISCConstants.isc_dpb_user_name);
-
-            if (user == null)
-                throw new FBSQLException(
-                    "User for database connection not specified.",
-                    FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
-
-            // extract the password
-            String password = normalizedInfo.getProperty(PASSWORD);
-
-            if (password == null)
-                password = conCri.getStringProperty(ISCConstants.isc_dpb_password);
-
-            if (password == null)
-                throw new FBSQLException(
-                    "Password for database connection not specified.",
-                    FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
-            
-            // extract the database URL
-
             String databaseURL = GDSFactory.getDatabasePath(type, url);
 
             mcf.setDatabase(databaseURL);
-            mcf.setConnectionRequestInfo(conCri);
-            
-            if (tpbMapper != null)
-                mcf.setTpbMapper(tpbMapper);
+            for (Iterator iter = normalizedInfo.entrySet().iterator(); iter.hasNext();) {
+                Map.Entry entry = (Map.Entry) iter.next();
                 
-            if (blobBufferLength != null) 
-            {
-                mcf.setBlobBufferLength(blobBufferLength);                
-            } // end of if ()
-            mcf = mcf.canonicalize();
-
-            FBDataSource dataSource = null;
-            synchronized (mcfToDataSourceMap)
-            {
-                dataSource = (FBDataSource)mcfToDataSourceMap.get(mcf);
-                
-                if (dataSource == null) {
-                    dataSource = (FBDataSource)mcf.createConnectionFactory();
-                    mcfToDataSourceMap.put(mcf, dataSource);
-                } // end of if ()
+                mcf.setNonStandardProperty((String)entry.getKey(), (String)entry.getValue());
             }
 
-            return dataSource.getConnection(user, password);
+            mcf = mcf.canonicalize();
+
+            FBDataSource dataSource = createDataSource(mcf);
+
+            return dataSource.getConnection(mcf.getUserName(), mcf.getPassword());
+            
         } catch(ResourceException resex) {
             throw new FBSQLException(resex);
         } catch(GDSException ex) {
@@ -180,21 +133,59 @@ public class FBDriver implements Driver {
     }
 
 
-    private Integer extractBlobBufferLength(Properties info) throws SQLException {
-        String blobBufferLengthStr = (String)info.get(
-            FBConnectionHelper.DPB_PREFIX + BLOB_BUFFER_LENGTH);
+    private FBDataSource createDataSource(FBManagedConnectionFactory mcf) throws ResourceException {
+        FBDataSource dataSource = null;
+        synchronized (mcfToDataSourceMap)
+        {
+            dataSource = (FBDataSource)mcfToDataSourceMap.get(mcf);
+            
+            if (dataSource == null) {
+                dataSource = (FBDataSource)mcf.createConnectionFactory();
+                mcfToDataSourceMap.put(mcf, dataSource);
+            }
+        }
+        return dataSource;
+    }
+    
+    
+    public FirebirdConnection connect(FirebirdConnectionProperties properties) throws SQLException {
+        GDSType type = GDSType.getType(properties.getType());
         
-        if (blobBufferLengthStr == null)
-            return null;
-        
+        if (type == null)
+            type = ((AbstractGDS)GDSFactory.getDefaultGDS()).getType();
         try {
-            return new Integer(blobBufferLengthStr);
-        } catch (NumberFormatException e) {
-            throw new FBSQLException("Blob buffer length " + blobBufferLengthStr
-                    + " could not be converted to an integer",
-                    FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
+            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
+    
+            mcf = mcf.canonicalize();
+    
+            FBDataSource dataSource = createDataSource(mcf);
+    
+            return (FirebirdConnection)dataSource.getConnection(mcf.getUserName(), mcf.getPassword());
+        } catch(ResourceException ex) {
+            throw new FBSQLException(ex);
         }
     }
+
+
+    public FirebirdConnectionProperties newConnectionProperties() {
+        return new  FBConnectionProperties();
+    }
+
+//    private Integer extractBlobBufferLength(Properties info) throws SQLException {
+//        String blobBufferLengthStr = (String)info.get(
+//            FBConnectionHelper.DPB_PREFIX + BLOB_BUFFER_LENGTH);
+//        
+//        if (blobBufferLengthStr == null)
+//            return null;
+//        
+//        try {
+//            return new Integer(blobBufferLengthStr);
+//        } catch (NumberFormatException e) {
+//            throw new FBSQLException("Blob buffer length " + blobBufferLengthStr
+//                    + " could not be converted to an integer",
+//                    FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
+//        }
+//    }
 
     /**
      * Returns true if the driver thinks that it can open a connection
@@ -240,41 +231,8 @@ public class FBDriver implements Driver {
      * @todo convert parameters into constants
      */
     public DriverPropertyInfo[] getPropertyInfo(String url,
-        Properties info) throws  SQLException
-    {
-        /*
-        Vector properties = new Vector();
-        String database = url.substring(FIREBIRD_PROTOCOL.length());
-        String user = info.getProperty(USER);
-        String passwd = info.getProperty(PASSWORD);
-
-        // add non-empty database
-        if ((database != null) && (database != "")) {
-            DriverPropertyInfo dinfo =
-                new DriverPropertyInfo(DATABASE, database);
-            dinfo.required = true;
-            properties.add(dinfo);
-        }
-
-        // add user if it is not null
-        if (user != null) {
-            DriverPropertyInfo dinfo =
-                new DriverPropertyInfo(USER, user);
-            dinfo.required = true;
-            properties.add(dinfo);
-        }
-
-        // add password if it is not null
-        if (passwd != null) {
-            DriverPropertyInfo dinfo =
-                new DriverPropertyInfo(PASSWORD, passwd);
-            dinfo.required = true;
-            properties.add(dinfo);
-        }
-
-        return (DriverPropertyInfo[])
-            properties.toArray(new DriverPropertyInfo[0]);
-        */
+        Properties info) throws  SQLException {
+        
         return FBDriverPropertyManager.getDriverPropertyInfo(info);
     }
 

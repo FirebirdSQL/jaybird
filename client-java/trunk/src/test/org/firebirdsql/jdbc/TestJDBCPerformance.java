@@ -1,9 +1,12 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import junit.textui.TestRunner;
 
 import org.firebirdsql.common.FBTestBase;
 
@@ -46,14 +49,14 @@ public class TestJDBCPerformance extends FBTestBase {
 
     static boolean verbose = true;
     
-    static boolean useSingleConnection = true;
+    static boolean useSingleConnection = false;
 
     public TestJDBCPerformance(String name) {
         super(name);
     }
 
     private class JDBCBench {
-        MemoryWatcherThread MemoryWatcher;
+        MemoryWatcherThread memoryWatcher;
 
 
         /*
@@ -61,8 +64,8 @@ public class TestJDBCPerformance extends FBTestBase {
          * runs one TPC BM B transaction
          */
 
-        public void main(Connection connection, String[] Args) {
-            boolean initialize_dataset = true;
+        public void main(Connection connection, String[] Args) throws Exception {
+            boolean initialize_dataset = false;
 
             for (int i = 0; i < Args.length; i++) {
                 if (Args[i].equals("-clients")) {
@@ -106,10 +109,12 @@ public class TestJDBCPerformance extends FBTestBase {
                     System.out.println("done.\n");
                     System.out.println("Complete: "
                             + (new java.util.Date()).toString());
+                    return;
                 }
                 System.out.println("* Starting Benchmark Run *");
-                MemoryWatcher = new MemoryWatcherThread();
-                MemoryWatcher.start();
+                memoryWatcher = new MemoryWatcherThread();
+//                memoryWatcher.setDaemon(true);
+                memoryWatcher.start();
 
                 start_time = System.currentTimeMillis();
 
@@ -117,16 +122,28 @@ public class TestJDBCPerformance extends FBTestBase {
                 
                 ClientThread[] threads = new ClientThread[n_clients];
                 for (int i = 0; i < n_clients; i++) {
-                    threads[i] = new ClientThread(useSingleConnection ? singleConnection : getConnectionViaDriverManager(), n_txn_per_client);
+                    threads[i] = new ClientThread(
+                            useSingleConnection ? singleConnection
+                                    : getConnectionViaDriverManager(),
+                            n_txn_per_client, 1);
                     threads[i].start();
                 }
 
                 for (int i = 0; i < threads.length; i++) {
-                    threads[i].join();
+                    if (threads[i] != null)
+                        threads[i].join();
                 }
+                
+//                ClientThread testThread = new ClientThread(
+//                        getConnectionViaDriverManager(), n_txn_per_client, 1000);
+//                
+//                testThread.run();
+                
             } catch (Exception E) {
                 System.out.println(E.getMessage());
                 E.printStackTrace();
+                
+                throw E;
             }
         }
 
@@ -137,7 +154,8 @@ public class TestJDBCPerformance extends FBTestBase {
             n_clients--;
 
             if (n_clients <= 0) {
-                MemoryWatcher.interrupt();
+                if (memoryWatcher != null)
+                    memoryWatcher.interrupt();
 
                 long end_time = System.currentTimeMillis();
                 double completion_time = ((double) end_time - (double) start_time) / 1000;
@@ -146,8 +164,8 @@ public class TestJDBCPerformance extends FBTestBase {
                 System.out.println("--------------------\n");
                 System.out.println("Time to execute " + transaction_count
                         + " transactions: " + completion_time + " seconds.");
-                System.out.println("Max/Min memory usage: " + MemoryWatcher.max
-                        + " / " + MemoryWatcher.min + " kb");
+                System.out.println("Max/Min memory usage: " + memoryWatcher.max
+                        + " / " + memoryWatcher.min + " kb");
                 System.out.println(failed_transactions + " / "
                         + transaction_count + " failed to complete.");
                 System.out.println("Transaction rate: "
@@ -281,10 +299,12 @@ public class TestJDBCPerformance extends FBTestBase {
         class ClientThread extends Thread {
 
             int ntrans = 0;
+            int loopCount;
             Connection connection;
 
-            public ClientThread(Connection connection, int number_of_txns) throws SQLException {
+            public ClientThread(Connection connection, int number_of_txns, int loopCount) throws SQLException {
                 ntrans = number_of_txns;
+                this.loopCount = loopCount;
                 this.connection = connection;
                 if (!useSingleConnection)
                     connection.setAutoCommit(false);
@@ -299,7 +319,7 @@ public class TestJDBCPerformance extends FBTestBase {
                         int teller = JDBCBench.this.getRandomID(TELLER);
                         int delta = JDBCBench.this.getRandomInt(0, 1000);
     
-                        doOne(connection, account, branch, teller, delta);
+                        doOne(connection, account, branch, teller, delta, loopCount);
                         incrementTransactionCount();
                     }
                     reportDone();
@@ -317,57 +337,65 @@ public class TestJDBCPerformance extends FBTestBase {
              * doOne() - Executes a single TPC BM B transaction.
              */
 
-            int doOne(Connection connection, int bid, int tid, int aid, int delta) {
+            int doOne(Connection connection, int bid, int tid, int aid, int delta, int loopCount) {
+                
                 try {
-                    Statement Stmt = connection.createStatement(
+                    Statement stmt = connection.createStatement(
                             ResultSet.TYPE_SCROLL_INSENSITIVE,
                             ResultSet.CONCUR_READ_ONLY);
 
-                    String Query = "UPDATE accounts ";
-                    Query += "SET     Abalance = Abalance + " + delta + " ";
-                    Query += "WHERE   Aid = " + aid;
-
-                    Stmt.executeUpdate(Query);
-                    Stmt.clearWarnings();
-
-                    Query = "SELECT Abalance ";
-                    Query += "FROM   accounts ";
-                    Query += "WHERE  Aid = " + aid;
-
                     int aBalance = 0;
-
-                    synchronized(connection) {
-                        ResultSet RS = Stmt.executeQuery(Query);
-                        Stmt.clearWarnings();
+                    
+                            
+                        String query = "UPDATE accounts ";
+                        query += "SET     Abalance = Abalance + " + delta + " ";
+                        query += "WHERE   Aid = " + aid;
     
-                        while (RS.next()) {
-                            aBalance = RS.getInt(1);
+                        stmt.executeUpdate(query);
+                        stmt.clearWarnings();
+    
+                        query = "SELECT Abalance ";
+                        query += "FROM   accounts ";
+                        query += "WHERE  Aid = " + aid;
+    
+                        synchronized(connection) {
+                        PreparedStatement ps = connection.prepareStatement(query);
+                        try {
+                        for(int i = 0; i < loopCount; i++) {
+                            ResultSet rs = ps.executeQuery();
+        
+                            while (rs.next()) {
+                                aBalance = rs.getInt(1);
+                            }
                         }
-                    }
-
-                    Query = "UPDATE tellers ";
-                    Query += "SET    Tbalance = Tbalance + " + delta + " ";
-                    Query += "WHERE  Tid = " + tid;
-
-                    Stmt.executeUpdate(Query);
-                    Stmt.clearWarnings();
-
-                    Query = "UPDATE branches ";
-                    Query += "SET    Bbalance = Bbalance + " + delta + " ";
-                    Query += "WHERE  Bid = " + bid;
-
-                    Stmt.executeUpdate(Query);
-                    Stmt.clearWarnings();
-
-                    Query = "INSERT INTO history(Tid, Bid, Aid, delta) ";
-                    Query += "VALUES (";
-                    Query += tid + ",";
-                    Query += bid + ",";
-                    Query += aid + ",";
-                    Query += delta + ")";
-
-                    Stmt.executeUpdate(Query);
-                    Stmt.clearWarnings();
+                        } finally {
+                            ps.close();
+                        }
+                        }
+    
+                        query = "UPDATE tellers ";
+                        query += "SET    Tbalance = Tbalance + " + delta + " ";
+                        query += "WHERE  Tid = " + tid;
+    
+                        stmt.executeUpdate(query);
+                        stmt.clearWarnings();
+    
+                        query = "UPDATE branches ";
+                        query += "SET    Bbalance = Bbalance + " + delta + " ";
+                        query += "WHERE  Bid = " + bid;
+    
+                        stmt.executeUpdate(query);
+                        stmt.clearWarnings();
+    
+                        query = "INSERT INTO history(Tid, Bid, Aid, delta) ";
+                        query += "VALUES (";
+                        query += tid + ",";
+                        query += bid + ",";
+                        query += aid + ",";
+                        query += delta + ")";
+    
+                        stmt.executeUpdate(query);
+                        stmt.clearWarnings();
 
                     if (!useSingleConnection)
                         connection.commit();
@@ -381,6 +409,7 @@ public class TestJDBCPerformance extends FBTestBase {
                     }
                     incrementFailedTransactionCount();
                 }
+                
                 return 0;
 
             } /* end of DoOne */
@@ -414,11 +443,16 @@ public class TestJDBCPerformance extends FBTestBase {
 
     }
 
-    public void _testPerformance() throws Exception {
+    public void testPerformance() throws Exception {
         new JDBCBench().main(getConnectionViaDriverManager(), new String[0]);
     }
     
     public void testDummy() {
         // empty
     }
+    
+    public static void main(String[] args) {
+        TestRunner.run(TestJDBCPerformance.class);
+    }
+
 }

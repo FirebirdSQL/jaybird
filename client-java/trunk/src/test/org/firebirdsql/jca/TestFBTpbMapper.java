@@ -23,6 +23,7 @@ import java.sql.Connection;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.jdbc.FBTpbMapper;
 
 import org.firebirdsql.common.FBTestBase;
 
@@ -54,7 +55,7 @@ public class TestFBTpbMapper extends FBTestBase {
      */
     public void testDefaultIsolationLevel() throws Exception {
         assertTrue("Default tx isolation level must be READ_COMMITTED", 
-            mcf.getTransactionIsolation().intValue() == Connection.TRANSACTION_READ_COMMITTED);
+            mcf.getDefaultTransactionIsolation() == Connection.TRANSACTION_READ_COMMITTED);
     }
     
     /**
@@ -67,12 +68,10 @@ public class TestFBTpbMapper extends FBTestBase {
     public void testTpbMapper() throws Exception {
         FBTpbMapper mapper = new FBTpbMapper(mcf.getGDS(), TEST_TPB_MAPPING, getClass().getClassLoader());
         
-        mcf.setTpbMapper(mapper);
+        mcf.setTpbMapping(TEST_TPB_MAPPING);
+        mcf.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         
-        mcf.setTransactionIsolation(
-            new Integer(Connection.TRANSACTION_READ_COMMITTED));
-        
-        TransactionParameterBuffer tpbValue = mcf.getTpb().getTransactionParameterBuffer();
+        TransactionParameterBuffer tpbValue = mcf.getDefaultTpb().getTransactionParameterBuffer();
         
         assertTrue(
             "READ_COMMITED must be isc_tpb_read_committed+" + 
@@ -83,10 +82,9 @@ public class TestFBTpbMapper extends FBTestBase {
             tpbValue.hasArgument(ISCConstants.isc_tpb_nowait)
         );
         
-        mcf.setTransactionIsolation(
-            new Integer(Connection.TRANSACTION_REPEATABLE_READ));
+        mcf.setDefaultTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
         
-        tpbValue = mcf.getTpb().getTransactionParameterBuffer();
+        tpbValue = mcf.getDefaultTpb().getTransactionParameterBuffer();
         
         assertTrue(
             "REPEATABLE_READ must be isc_tpb_consistency+" + 
@@ -96,10 +94,9 @@ public class TestFBTpbMapper extends FBTestBase {
             tpbValue.hasArgument(ISCConstants.isc_tpb_wait)
         );
 
-        mcf.setTransactionIsolation(
-            new Integer(Connection.TRANSACTION_SERIALIZABLE));
+        mcf.setDefaultTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
         
-        tpbValue = mcf.getTpb().getTransactionParameterBuffer();
+        tpbValue = mcf.getDefaultTpb().getTransactionParameterBuffer();
         
         assertTrue(
             "SERIALIZABLE must be isc_tpb_concurrency+" + 

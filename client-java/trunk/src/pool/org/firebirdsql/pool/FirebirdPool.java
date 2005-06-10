@@ -27,6 +27,8 @@ package org.firebirdsql.pool;
 
 import java.sql.SQLException;
 
+import org.firebirdsql.jdbc.FirebirdConnectionProperties;
+
 /**
  * Configuration for the {@link org.firebirdsql.pool.FBWrappingDataSource} and
  * {@link org.firebirdsql.pool.FBConnectionPoolDataSource} objects.
@@ -147,7 +149,7 @@ import java.sql.SQLException;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public interface FirebirdPool {
+public interface FirebirdPool extends FirebirdConnectionProperties, ConnectionPoolConfiguration {
     
     void restart();
     void shutdown();
@@ -158,18 +160,6 @@ public interface FirebirdPool {
      int getBlockingTimeout();
 
      void setBlockingTimeout(int blockingTimeoutValue);
-
-     String getDatabase();
-
-     void setDatabase(String databaseValue);
-
-     String getEncoding();
-
-     void setEncoding(String encodingValue);
-
-     String getCharSet();
-
-     void setCharSet(String charSet) throws SQLException;
 
      int getMaxIdleTime();
 
@@ -187,43 +177,9 @@ public interface FirebirdPool {
     
      void setMinPoolSize(int minPoolSize);
 
-     String getPassword();
-
-     void setPassword(String passwordValue);
-
-     String getTpbMapping();
-
-     void setTpbMapping(String tpbMappingValue);
-
-     String getUserName();
-
-     void setUserName(String userNameValue);
-
-     int getBlobBufferSize();
-
-     void setBlobBufferSize(int blobBufferSizeValue);
-
-     String getType();
-
-     void setType(String typeValue) throws SQLException;
-
      int getPingInterval();
 
      void setPingInterval(int pingIntervalValue);
-
-     int getSocketBufferSize();
-
-     void setSocketBufferSize(int socketBufferSize);
-
-     String getRoleName();
-
-     void setRoleName(String roleName);
-
-     String getNonStandardProperty(String key);
-
-     void setNonStandardProperty(String key, String value);
-
-     void setNonStandardProperty(String propertyMapping);
 
      boolean isPooling();
 
@@ -238,12 +194,4 @@ public interface FirebirdPool {
      int getWorkingSize() throws SQLException;
 
      int getTotalSize() throws SQLException;
-
-     int getTransactionIsolationLevel();
-
-     void setTransactionIsolationLevel(int level);
-
-     String getIsolation();
-
-     void setIsolation(String isolation) throws SQLException;
 }

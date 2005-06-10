@@ -220,7 +220,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         assertEquals(5, ds.getMaxPoolSize());
         assertEquals(2, ds.getMinPoolSize());
         assertEquals(12000, ds.getPingInterval());
-        assertEquals("TRANSACTION_REPEATABLE_READ", ds.getIsolation());
+        assertEquals("TRANSACTION_REPEATABLE_READ", ds.getDefaultIsolation());
 
         // These properties are not avaiable via FBWrappingDataSource interface
         //
