@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 
 import org.firebirdsql.gds.*;
@@ -50,7 +51,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class JavaGDSImpl extends AbstractGDS implements GDS {
+public class JavaGDSImpl extends AbstractGDS implements GDS {
 
     public static final String PURE_JAVA_TYPE_NAME = "PURE_JAVA";
 
@@ -1696,7 +1697,7 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
         connect(db, dbai, databaseParameterBuffer);
     }
 
-    private void connect(isc_db_handle_impl db,
+    protected void connect(isc_db_handle_impl db,
                             DbAttachInfo dbai, DatabaseParameterBuffer databaseParameterBuffer) throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
 
@@ -1716,25 +1717,7 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
         }
 
         try {
-            try {
-                db.socket = new Socket(dbai.getServer(), dbai.getPort());
-                db.socket.setTcpNoDelay(true);
-
-                if (socketBufferSize != -1) {
-                    db.socket.setReceiveBufferSize(socketBufferSize);
-                    db.socket.setSendBufferSize(socketBufferSize);
-                }
-
-                if (debug) log.debug("Got socket");
-            } catch (UnknownHostException ex2) {
-                String message = "Cannot resolve host " + dbai.getServer();
-                if (debug) log.error(message, ex2);
-                throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_network_error
-                , dbai.getServer());
-            }
-
-            db.out = new XdrOutputStream(db.socket.getOutputStream());
-            db.in = new WireXdrInputStream(db.socket.getInputStream());
+            openSocket(db, dbai, debug, socketBufferSize);
 
             //Here we identify the user to the engine.  This may or may not be used
             //as login info to a database.
@@ -1742,7 +1725,6 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
             if (debug) log.debug("user.name: " + user);
             String host = InetAddress.getLocalHost().getHostName();
 
-//            byte[] user_id = new byte[200];
             byte[] user_id = new byte[6+user.length()+host.length()];
             int n = 0;
             user_id[n++] = 1;   // CNCT_user
@@ -1798,6 +1780,28 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
             throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_network_error
             , dbai.getServer());
         }
+    }
+
+    protected void openSocket(isc_db_handle_impl db, DbAttachInfo dbai, boolean debug, int socketBufferSize) throws IOException, SocketException, GDSException {
+        try {
+            db.socket = new Socket(dbai.getServer(), dbai.getPort());
+            db.socket.setTcpNoDelay(true);
+
+            if (socketBufferSize != -1) {
+                db.socket.setReceiveBufferSize(socketBufferSize);
+                db.socket.setSendBufferSize(socketBufferSize);
+            }
+
+            if (debug) log.debug("Got socket");
+        } catch (UnknownHostException ex2) {
+            String message = "Cannot resolve host " + dbai.getServer();
+            if (debug) log.error(message, ex2);
+            throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_network_error
+            , dbai.getServer());
+        }
+
+        db.out = new XdrOutputStream(db.socket.getOutputStream());
+        db.in = new WireXdrInputStream(db.socket.getInputStream());
     }
 
     public void disconnect(isc_db_handle_impl db) throws IOException {
@@ -1867,7 +1871,7 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
         }
     }
 
-    private int nextOperation(isc_db_handle_impl db) throws IOException {
+    protected int nextOperation(isc_db_handle_impl db) throws IOException {
         boolean debug = log != null && log.isDebugEnabled();
         int op = 0;
         do {
@@ -2434,7 +2438,7 @@ public final class JavaGDSImpl extends AbstractGDS implements GDS {
         }
     }
 
-    private int nextOperation(isc_svc_handle_impl svc) throws IOException {
+    protected int nextOperation(isc_svc_handle_impl svc) throws IOException {
         boolean debug = log != null && log.isDebugEnabled();
         int op = 0;
         do {

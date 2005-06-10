@@ -45,7 +45,7 @@ import org.firebirdsql.gds.impl.AbstractIscDbHandle;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class isc_db_handle_impl extends AbstractIscDbHandle {
+public class isc_db_handle_impl extends AbstractIscDbHandle {
     
     private static final int DEFAULT_RESP_DATA = 65536;
     
@@ -54,7 +54,7 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
     private Collection rdb_transactions = new ArrayList();
     private List rdb_warnings = new ArrayList();
     
-    private boolean invalid;
+    public boolean invalid;
 
     Socket socket;
     public XdrOutputStream out;
@@ -78,7 +78,7 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
         return !invalid;
     }
 
-    void invalidate() throws IOException {
+    protected void invalidate() throws IOException {
         in.close();
         out.close();
         socket.close();

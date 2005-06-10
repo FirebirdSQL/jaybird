@@ -53,6 +53,10 @@ public class XdrInputStream {
     protected int count;
     protected int pos;
 
+    protected XdrInputStream() {
+        // empty, for subclasses only
+    }
+    
     /**
      * Create a new instance of <code>XdrInputStream</code>.
      *
@@ -152,7 +156,7 @@ public class XdrInputStream {
      * @throws IOException if an error occurs while reading from the 
      *         underlying input stream
      */
-    public final long readLong() throws IOException {
+    public long readLong() throws IOException {
         return (read() << 56) | (read() << 48) | (read() << 40) | (read() << 32) 
         | (read() << 24) | (read() << 16) | (read() << 8) | (read() << 0);
     }
@@ -179,7 +183,7 @@ public class XdrInputStream {
      * @throws IOException if an error occurs while reading from the 
      *         underlying input stream
      */
-    public final void readFully(byte b[], int off, int len) throws IOException {
+    public void readFully(byte b[], int off, int len) throws IOException {
 
         if (len <= count-pos){
             System.arraycopy(buf, pos, b, off, len);
