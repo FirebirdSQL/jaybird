@@ -119,6 +119,8 @@ public class FBDriver implements FirebirdDriver {
                 mcf.setNonStandardProperty((String)entry.getKey(), (String)entry.getValue());
             }
 
+            FBConnectionHelper.processTpbMapping(mcf.getGDS(), mcf, originalInfo);
+            
             mcf = mcf.canonicalize();
 
             FBDataSource dataSource = createDataSource(mcf);

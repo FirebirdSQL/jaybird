@@ -22,10 +22,13 @@ package org.firebirdsql.jdbc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.util.*;
 
+import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jca.FBConnectionRequestInfo;
+import org.firebirdsql.jca.FBResourceException;
 
 /**
  * This class maps the extended JDBC properties to the
@@ -114,30 +117,6 @@ public class FBConnectionHelper {
         loadDpbParameterTypes();
 
     }
-
-//    /**
-//     * Get the instance of {@link FBConnectionRequestInfo} containing all
-//     * relevant parameters from the <code>info</code> properties.
-//     *
-//     * The FBConnectionRequestInfo instance returned will be 'bound' to the
-//     * same GDS implementation supplied in the gdsToUse parameter.
-//     *
-//     * @param info instance of {@link Properties} containing connection
-//     * parameters.
-//     *
-//     * @param gdsToUse The GDS implementation to which the returned
-//     * {@link FBConnectionRequestInfo} will be bound.
-//     *
-//     * @return instance of {@link FBConnectionRequestInfo} containing all
-//     * relevant connection parameters.
-//     */
-//    public static DatabaseParameterBuffer getCri(Map info, GDS gdsToUse) {
-//        final DatabaseParameterBuffer cri = gdsToUse.createDatabaseParameterBuffer();
-//
-//        copyPropertiesIntoCri(info, cri);
-//
-//        return cri;
-//    }
 
     /**
      * Get integer value of the DPB key corresponding to the specified name.
@@ -228,115 +207,48 @@ public class FBConnectionHelper {
                 }
         }
     }
-//
-//    public Integer getDpbType(String propertyName) {
-//        return (Integer)dpbTypes.get(propertyName);
-//    }
-    
-//    /**
-//     * Copy the properties supplied in the 'info' parameter into the FBConnectionRequestInfo
-//     * instance supplied in the 'cri' parameter.
-//     */
-//    private static void copyPropertiesIntoCri(Map info, DatabaseParameterBuffer cri) {
-//        // process all set keys
-//        Iterator keys = info.keySet().iterator();
-//        while(keys.hasNext()) {
-//            String key = (String)keys.next();
-//            Object value = info.get(key);
-//
-//            Integer type = (Integer)dpbTypes.get(key);
-//
-//            // if the type is unknown, continue
-//            if (type == null) continue;
-//
-//            switch(type.intValue()) {
-//                case DatabaseParameterBuffer.USER_NAME :
-//                case DatabaseParameterBuffer.PASSWORD :
-//                    cri.addArgument(type.intValue(), (String)value);
-//                    break;
-//                   
-//                default:
-//                    
-//                    if (value instanceof Integer) {
-//                        cri.addArgument(type.intValue(), ((Integer)value).intValue());
-//                    } else
-//                    if (value == null) {
-//                        cri.addArgument(type.intValue());
-//                    } else
-//                    if (value instanceof String) {
-//                    
-//                        // set the value of the DPB by probing to convert string
-//                        // into byte value, this method gives very good result 
-//                        // for guessing the method to call from the actual value;
-//                        // two exceptions, isc_dpb_user_name and isc_dpb_password
-//                        // are handled above
-//                        try {
-//            
-//                            // try to deal with a value as a byte
-//                            byte byteValue = Byte.parseByte((String)value);
-//                            cri.addArgument(type.intValue(), new byte[] {byteValue});
-//            
-//                        } catch(NumberFormatException nfex) {
-//            
-//                            // ok, that's not a byte, then set it as string
-//                            if ("".equals(value))
-//                                cri.addArgument(type.intValue());
-//                            else
-//                                cri.addArgument(type.intValue(), (String)value);
-//                        }
-//                    }
-//            }
-//        }
-//    }
-    
-//    /**
-//     * This method extracts TPB mapping information from the connection 
-//     * parameters. Two formats are supported:
-//     * <ul>
-//     * <li><code>info</code> contains <code>"tpb_mapping"</code> parameter
-//     * pointing to a resource bundle with mapping information;
-//     * <li><code>info</code> contains separate mappings for each of following
-//     * transaction isolation levels: <code>"TRANSACTION_SERIALIZABLE"</code>, 
-//     * <code>"TRANSACTION_REPEATABLE_READ"</code> and 
-//     * <code>"TRANSACTION_READ_COMMITTED"</code>.
-//     * </ul>
-//     * 
-//     * @param info connection parameters passed into a driver.
-//     * 
-//     * @return instance of {@link FBTpbMapper} containing specified TPB mapping
-//     * or <code>null</code> if not TPB mapping was specified.
-//     * 
-//     * @throws FBResourceException if specified mapping is incorrect.
-//     */
-//    public static FBTpbMapper getTpbMapper(GDS gds, Properties info) throws FBResourceException {
-//        String tpbMapping = (String)info.getProperty(TPB_MAPPING_PROPERTY);
-//        
-//        FBTpbMapper tpbMapper = null;
-//        
-//        if (tpbMapping != null) 
-//            tpbMapper = new FBTpbMapper(gds, tpbMapping, 
-//                FBConnectionHelper.class.getClassLoader());
-//        else {
-//            HashMap mapping = new HashMap();
-//            
-//            if (info.containsKey(TRANSACTION_SERIALIZABLE))
-//                mapping.put(TRANSACTION_SERIALIZABLE, 
-//                    info.get(TRANSACTION_SERIALIZABLE));
-//                
-//            if (info.containsKey(TRANSACTION_REPEATABLE_READ))
-//                mapping.put(TRANSACTION_REPEATABLE_READ, 
-//                    info.get(TRANSACTION_REPEATABLE_READ));
-//                    
-//            if (info.containsKey(TRANSACTION_READ_COMMITTED))
-//                mapping.put(TRANSACTION_READ_COMMITTED,
-//                    info.get(TRANSACTION_READ_COMMITTED));
-//                    
-//            if (mapping.size() > 0)
-//                tpbMapper = new FBTpbMapper(gds, mapping);
-//        }
-//        
-//        return tpbMapper;
-//    }
+    /**
+     * This method extracts TPB mapping information from the connection 
+     * parameters. Two formats are supported:
+     * <ul>
+     * <li><code>info</code> contains <code>"tpb_mapping"</code> parameter
+     * pointing to a resource bundle with mapping information;
+     * <li><code>info</code> contains separate mappings for each of following
+     * transaction isolation levels: <code>"TRANSACTION_SERIALIZABLE"</code>, 
+     * <code>"TRANSACTION_REPEATABLE_READ"</code> and 
+     * <code>"TRANSACTION_READ_COMMITTED"</code>.
+     * </ul>
+     * 
+     * @param info connection parameters passed into a driver.
+     * 
+     * @return instance of {@link FBTpbMapper} containing specified TPB mapping
+     * or <code>null</code> if not TPB mapping was specified.
+     * 
+     * @throws FBResourceException if specified mapping is incorrect.
+     */
+    public static void processTpbMapping(GDS gds,
+            FirebirdConnectionProperties connectionProperties, Properties info)
+            throws FBResourceException {
+        
+        if (info.containsKey(TRANSACTION_SERIALIZABLE))
+            connectionProperties.setTransactionParameters(
+                    Connection.TRANSACTION_SERIALIZABLE, 
+                    FBTpbMapper.processMapping(gds, 
+                            info.getProperty(TRANSACTION_SERIALIZABLE)));
+            
+        if (info.containsKey(TRANSACTION_REPEATABLE_READ))
+            connectionProperties.setTransactionParameters(
+                    Connection.TRANSACTION_REPEATABLE_READ, 
+                    FBTpbMapper.processMapping(gds, 
+                            info.getProperty(TRANSACTION_REPEATABLE_READ)));
+                
+        if (info.containsKey(TRANSACTION_READ_COMMITTED))
+            connectionProperties.setTransactionParameters(
+                    Connection.TRANSACTION_READ_COMMITTED, 
+                    FBTpbMapper.processMapping(gds, 
+                            info.getProperty(TRANSACTION_READ_COMMITTED)));
+                
+    }
     
     /**
      * Get value of TPB parameter for the specified name. This method tries to

@@ -303,7 +303,7 @@ public class FBTpbMapper implements Serializable {
      * @throws FBResourceException if mapping contains keyword that is not
      * a TPB parameter.
      */
-    private TransactionParameterBuffer processMapping(GDS gds, String mapping) throws FBResourceException {
+    public static TransactionParameterBuffer processMapping(GDS gds, String mapping) throws FBResourceException {
         TransactionParameterBuffer result = gds.newTransactionParameterBuffer();
         
         StringTokenizer st = new StringTokenizer(mapping, ",");
