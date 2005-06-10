@@ -80,9 +80,8 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
 
 
     private ConnectionManager defaultCm;
-    private GDS gds;
-    private GDSType type;
     private int hashCode;
+    private GDSType gdsType;
 
     // Maps supplied XID to internal transaction handle.
     // a concurrent reader map would be better
@@ -97,7 +96,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * Create a new pure-Java FBManagedConnectionFactory.
      */
     public FBManagedConnectionFactory() {
-        this(GDSFactory.getDefaultGDS(), new FBConnectionProperties());
+        this(GDSFactory.getDefaultGDSType(), new FBConnectionProperties());
     }
 
     /**
@@ -106,19 +105,18 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * @param GDSType
      *            The GDS implementation to use
      */
-    public FBManagedConnectionFactory(GDSType type) {
-        this(GDSFactory.getGDSForType(type), new FBConnectionProperties());
-        this.type = type;
+    public FBManagedConnectionFactory(GDSType gdsType) {
+        this(gdsType, new FBConnectionProperties());
     }
-
-    public FBManagedConnectionFactory(GDS gds, FBConnectionProperties connectionProperties) {
-        this.gds = gds;
+    
+    public FBManagedConnectionFactory(GDSType gdsType, FBConnectionProperties connectionProperties) {
         this.defaultCm = new FBStandAloneConnectionManager();
         this.connectionProperties = connectionProperties;
+        setType(gdsType.toString());
     }
 
     public GDS getGDS() {
-        return gds;
+        return GDSFactory.getGDSForType(getGDSType());
     }
 
     /**
@@ -127,10 +125,12 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * @return The GDS implementation type
      */
     public GDSType getGDSType() {
-        if (type != null)
-            return type;
-        else
-            return ((AbstractGDS)gds).getType();
+        if (gdsType != null)
+            return gdsType;
+        
+        gdsType = GDSType.getType(getType());
+        
+        return gdsType;
     }
 
     public int getBlobBufferSize() {
@@ -194,9 +194,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     }
 
     public String getType() {
-        if (type != null)
-            return type.toString();
-        
         return connectionProperties.getType();
     }
 
@@ -285,10 +282,11 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     }
 
     public void setType(String type) {
-        if (this.type != null)
-            throw new java.lang.IllegalStateException("Cannot change GDS type at runtime.");
+        if (gdsType != null)
+            throw new java.lang.IllegalStateException(
+                    "Cannot change GDS type at runtime.");
         
-        connectionProperties.setType(type);        
+        connectionProperties.setType(type);
     }
 
     public void setUserName(String userName) {
@@ -318,10 +316,12 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         int result = 17;
         result = 37 * result + connectionProperties.hashCode();
         if (result == 0)
-            result ^= 17;
+            result = 17;
         
-        hashCode = result;
-        return hashCode;
+        if (gdsType != null)
+            hashCode = result;
+        
+        return result;
     }
 
     public boolean equals(Object other) {
@@ -447,6 +447,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     public ManagedConnection matchManagedConnections(Set connectionSet,
             javax.security.auth.Subject subject,
             ConnectionRequestInfo cxRequestInfo) throws ResourceException {
+        
         Iterator i = connectionSet.iterator();
         while (i.hasNext()) {
             FBManagedConnection mc = (FBManagedConnection) i.next();
@@ -512,8 +513,9 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         
         if (mcf != null)  return mcf; 
         
-        mcf = new FBManagedConnectionFactory(type);
-        mcf.connectionProperties = (FBConnectionProperties)this.connectionProperties.clone();
+        mcf = new FBManagedConnectionFactory(getGDSType(), 
+                (FBConnectionProperties)this.connectionProperties.clone());
+        
         return mcf;
     }
 
@@ -578,7 +580,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         FBManagedConnection targetMc = (FBManagedConnection) xidMap.get(xid);
 
         if (targetMc == null)
-            tryCompleteInLimboTransaction(gds, xid, true);
+            tryCompleteInLimboTransaction(getGDS(), xid, true);
         else
             targetMc.internalCommit(xid, onePhase);
 
@@ -590,7 +592,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         FBManagedConnection targetMc = (FBManagedConnection) xidMap.get(xid);
 
         if (targetMc == null)
-            tryCompleteInLimboTransaction(gds, xid, false);
+            tryCompleteInLimboTransaction(getGDS(), xid, false);
         else
             targetMc.internalRollback(xid);
 
