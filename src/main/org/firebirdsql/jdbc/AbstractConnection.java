@@ -936,7 +936,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      *            auto-commit mode
      * @see Savepoint
      */
-    public synchronized Savepoint setSavepoint() throws SQLException {
+    public synchronized FirebirdSavepoint setFirebirdSavepoint() throws SQLException {
         FBSavepoint savepoint = new FBSavepoint(getNextSavepointCounter());
         
         setSavepoint(savepoint);
@@ -978,7 +978,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      *            auto-commit mode
      * @see Savepoint
      */
-    public synchronized Savepoint setSavepoint(String name) throws SQLException {
+    public synchronized FirebirdSavepoint setFirebirdSavepoint(String name) throws SQLException {
         FBSavepoint savepoint = new FBSavepoint(name);
         
         setSavepoint(savepoint);
@@ -1000,7 +1000,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see Savepoint
      * @see #rollback
      */
-    public synchronized void rollback(Savepoint savepoint) throws SQLException {
+    public synchronized void rollback(FirebirdSavepoint savepoint) throws SQLException {
         
         if (getAutoCommit())
             throw new SQLException("Connection.setSavepoint() method cannot " + 
@@ -1033,7 +1033,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      *            the given <code>Savepoint</code> object is not a valid 
      *            savepoint in the current transaction
      */
-    public synchronized void releaseSavepoint(Savepoint savepoint) throws SQLException {
+    public synchronized void releaseSavepoint(FirebirdSavepoint savepoint) throws SQLException {
         
         if (getAutoCommit())
             throw new SQLException("Connection.setSavepoint() method cannot " + 
