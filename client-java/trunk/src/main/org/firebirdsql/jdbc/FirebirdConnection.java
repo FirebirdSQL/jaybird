@@ -138,4 +138,56 @@ public interface FirebirdConnection extends Connection {
      */
     void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException;
 
+    
+    /**
+     * Creates an unnamed savepoint in the current transaction and 
+     * returns the new {@link FirebirdSavepoint} object that represents it.
+     * <p>
+     * This method corresponds to the <code>Connection.setSavepoint()</code>
+     * method in JDBC 3.0.
+     *
+     * @return instance of {@link FirebirdSavepoint}
+     * @throws SQLException if a an error occured.
+     */
+    FirebirdSavepoint setFirebirdSavepoint() throws SQLException;
+
+    /**
+     * Creates a named savepoint in the current transaction and 
+     * returns the new {@link FirebirdSavepoint} object that represents it.
+     * <p>
+     * This method corresponds to the <code>Connection.setSavepoint(String)</code>
+     * method in JDBC 3.0.
+     *
+     * @param name a <code>String</code> containing the name of the savepoint
+     * 
+     * @return instance of {@link FirebirdSavepoint}
+     * @throws SQLException if a an error occured.
+     */
+    FirebirdSavepoint setFirebirdSavepoint(String name) throws SQLException;
+
+    /**
+     * Undoes all changes made after the given {@link FirebirdSavepoint} object
+     * was set.
+     * <p>
+     * This method corresponds to the <code>Connection.rollback(Savepoint)</code>
+     * method in JDBC 3.0.
+     *  
+     * @param savepoint the {@link FirebirdSavepoint} object to roll back to
+     * 
+     * @exception SQLException if a database access error occurs.
+     */
+    void rollback(FirebirdSavepoint savepoint) throws SQLException;
+
+    /**
+     * Removes the given {@link FirebirdSavepoint} object from the current 
+     * transaction. Any reference to the savepoint after it have been removed 
+     * will cause an <code>SQLException</code> to be thrown.
+     * <p>
+     * This method corresponds to the <code>Connection.releaseSavepoint(Savepoint)</code>
+     * method in JDBC 3.0.
+     *
+     * @param savepoint the <code>FirebirdSavepoint</code> object to be removed
+     * @exception SQLException if a database access error occurs
+     */
+    void releaseSavepoint(FirebirdSavepoint savepoint) throws SQLException;
 }

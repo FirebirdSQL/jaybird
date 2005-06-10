@@ -19,14 +19,12 @@
 
 package org.firebirdsql.jdbc;
 
-import java.sql.Savepoint;
-
 /**
  * Savepoint implementation.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBSavepoint extends AbstractSavepoint implements Savepoint {
+public class FBSavepoint extends AbstractSavepoint {
 
     public FBSavepoint(int id) {
         super(id);
