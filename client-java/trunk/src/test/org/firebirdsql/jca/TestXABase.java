@@ -26,7 +26,6 @@ import java.net.UnknownHostException;
 import javax.transaction.xa.Xid;
 
 import org.firebirdsql.common.FBTestBase;
-import org.jboss.tm.TransactionImpl;
 
 /**
  * THIS FILE INCLUDES AN XID IMPLEMENTATION FROM THE JBOSS PROJECT
