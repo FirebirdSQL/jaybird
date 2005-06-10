@@ -47,7 +47,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class XdrOutputStream {
+public class XdrOutputStream {
 
     private static final int BUF_SIZE = 32767;
 
@@ -62,6 +62,10 @@ public final class XdrOutputStream {
 
     private OutputStream out = null;
 
+    protected XdrOutputStream() {
+        // empty, for subclasses.
+    }
+    
     /**
      * Create a new instance of <code>XdrOutputStream</code>.
      *
@@ -285,7 +289,7 @@ public final class XdrOutputStream {
      * @throws IOException if an error occurs while writing to the 
      *         underlying output stream
      */
-    public final void writeLong(long v) throws IOException {
+    public void writeLong(long v) throws IOException {
         checkBufferSize(8);
         buf[count++] = (byte) (v >>> 56 & 0xFF);
         buf[count++] = (byte) (v >>> 48 & 0xFF);
@@ -304,7 +308,7 @@ public final class XdrOutputStream {
      * @throws IOException if an error occurs while writing to the 
      *         underlying output stream
      */
-    public final void writeInt(int v) throws IOException {
+    public void writeInt(int v) throws IOException {
         checkBufferSize(4);
         buf[count++] = (byte) (v >>> 24);
         buf[count++] = (byte) (v >>> 16);

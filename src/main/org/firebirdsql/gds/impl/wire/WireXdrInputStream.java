@@ -29,6 +29,10 @@ import java.io.InputStream;
  */
 public class WireXdrInputStream extends XdrInputStream {
 
+    public WireXdrInputStream() {
+        super();
+    }
+    
     public WireXdrInputStream(InputStream in) {
         super(in);
     }
