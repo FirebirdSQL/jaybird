@@ -207,7 +207,7 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
      * @throws IllegalPoolStateException if managed connection factory is already
      * initialized.
      */
-    public void setConnectionProperties(FBConnectionProperties props) throws IllegalPoolStateException {
+    public void setConnectionProperties(FBConnectionProperties props) {
         if (props == null)
             throw new NullPointerException();
         
