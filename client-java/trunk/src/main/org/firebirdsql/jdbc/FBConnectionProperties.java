@@ -369,6 +369,8 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             if (value instanceof String) {
                 dpb.addArgument(dpbType.intValue(), (String)value);
             } else
+            if (value == null)
+                dpb.addArgument(dpbType.intValue());
                 continue;
                 
         }
