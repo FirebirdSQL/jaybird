@@ -1,3 +1,174 @@
+2005-06-10 23:09  rrokytskyy
+
+	*
+	client-java/src/pool/org/firebirdsql/pool/AbstractFBConnectionPoolD
+	ataSource.java:
+	
+	fixed NPE when type is not specified
+
+2005-06-10 22:46  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDriverPropertyManager.j
+	ava:
+	
+	added semicolon as URL delimiter
+
+2005-06-10 22:39  rrokytskyy
+
+	* client-java/src/etc/: release_notes.pdf, release_notes.html:
+	
+	synchronized with main version
+
+2005-06-10 22:36  rrokytskyy
+
+	* client-java/src/etc/release_notes.odt:
+	
+	initial version of JayBird 2.0 release notes in OpenOffice 2.0
+	format
+
+2005-06-10 21:05  rrokytskyy
+
+	*
+	client-java/src/pool/org/firebirdsql/pool/AbstractFBConnectionPoolD
+	ataSource.java:
+	
+	adapted to the changed in FBManagedConnectionFactory
+
+2005-06-10 20:47  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	FBConnectionHelper.java, FBDriver.java, FBTpbMapper.java:
+	
+	fixed code to handle TPB mapping overrides in JDBC URL
+
+2005-06-10 20:46  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSFactory.java:
+	
+	added method to get the default GDS type
+
+2005-06-10 20:44  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/wire/:
+	JavaGDSImpl.java, WireXdrInputStream.java, XdrOutputStream.java,
+	XdrInputStream.java, isc_db_handle_impl.java:
+	
+	changes to allow NIO implementation of wire handling (though seems
+	to be 25% slower than pure Java)
+
+2005-06-10 20:36  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/WireGDSFactoryPl
+	ugin.java:
+	
+	made wire GDS implementation sigleton
+
+2005-06-10 20:34  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
+	.java:
+	
+	changed the way GDS instances are handled by the
+	ManagedConnectionFactory
+
+2005-06-10 14:39  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestJDBCPerformance.java:
+	
+	removed performance test since it is not correct JUnit test
+
+2005-06-10 14:33  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FirebirdConnection.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	added holdability methods
+
+2005-06-10 14:26  rrokytskyy
+
+	* client-java/src/: jdbc_30/org/firebirdsql/jdbc/FBConnection.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractSavepoint.java,
+	main/org/firebirdsql/jdbc/FirebirdConnection.java,
+	main/org/firebirdsql/jdbc/FirebirdSavepoint.java,
+	jdbc_20/org/firebirdsql/jdbc/FBSavepoint.java,
+	jdbc_30/org/firebirdsql/jdbc/FBSavepoint.java:
+	
+	fixed compilation issues with Savepoint support in JDK 1.3
+
+2005-06-10 14:05  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/management/TestFBMaintenanceMa
+	nager.java:
+	
+	fixed incorrect database path specification
+
+2005-06-10 13:55  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	
+	fixed incorrect transaction isolation initialization
+
+2005-06-10 13:35  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jca/TestXABase.java:
+	
+	removed reference to JBoss classes
+
+2005-06-10 13:28  rrokytskyy
+
+	*
+	client-java/src/pool/org/firebirdsql/pool/AbstractFBConnectionPoolD
+	ataSource.java:
+	
+	removed incorrect "throws" declaration
+
+2005-06-10 13:24  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/FBConnectionHelper.java,
+	main/org/firebirdsql/jdbc/FBConnectionProperties.java,
+	main/org/firebirdsql/jdbc/FBDataSource.java,
+	main/org/firebirdsql/jdbc/FBDriver.java,
+	main/org/firebirdsql/jdbc/FBDriverPropertyManager.java,
+	main/org/firebirdsql/jdbc/FBTpbMapper.java,
+	main/org/firebirdsql/jdbc/FirebirdConnectionProperties.java,
+	main/org/firebirdsql/jdbc/FirebirdDriver.java,
+	pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/BasicAbstractConnectionPool.java,
+	pool/org/firebirdsql/pool/FBPooledConnection.java,
+	pool/org/firebirdsql/pool/FBWrappingDataSource.java,
+	test/org/firebirdsql/jca/TestFBTpbMapper.java,
+	test/org/firebirdsql/jca/TestXABase.java,
+	main/org/firebirdsql/jca/FBConnectionRequestInfo.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	main/org/firebirdsql/jca/FBTpb.java,
+	main/org/firebirdsql/jca/FBTpbMapper.java,
+	pool/org/firebirdsql/pool/AbstractDriverConnectionPoolDataSource.ja
+	va, pool/org/firebirdsql/pool/FBSimpleDataSource.java,
+	pool/org/firebirdsql/pool/FirebirdPool.java,
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	resources/driver_property_info.properties,
+	resources/isc_dpb_types.properties,
+	test/org/firebirdsql/gds/TestReconnectTransaction.java,
+	test/org/firebirdsql/gds/impl/jni/TestNgds.java,
+	test/org/firebirdsql/gds/impl/jni/TestNgdsBlobReadBug.java,
+	test/org/firebirdsql/gds/impl/wire/TestGds.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java,
+	test/org/firebirdsql/common/FBTestBase.java,
+	test/org/firebirdsql/jdbc/TestJDBCPerformance.java:
+	
+	unified connection properties support in driver
+
 2005-06-09 17:59  sjardine
 
 	* client-java/src/jdbc_20/org/firebirdsql/jdbc/:
