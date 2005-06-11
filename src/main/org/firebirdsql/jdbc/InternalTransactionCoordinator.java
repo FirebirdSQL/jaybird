@@ -55,7 +55,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
     public void executionCompleted(FirebirdBlob blob) throws SQLException {
         Object syncObject = getSynchronizationObject();
         synchronized (syncObject) {
-            executionCompleted(blob);
+            coordinator.executionCompleted(blob);
         }
     }
     public void executionStarted(FirebirdBlob blob) throws SQLException {
@@ -203,7 +203,8 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          */
         public void ensureTransaction() throws SQLException {
             try {
-                localTransaction.begin();
+                if (!localTransaction.inTransaction())
+                    localTransaction.begin();
             } catch(ResourceException ex) {
                 throw new FBSQLException(ex);
             }
