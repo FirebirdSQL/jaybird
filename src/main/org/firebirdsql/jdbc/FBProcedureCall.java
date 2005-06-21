@@ -24,7 +24,43 @@ import java.util.*;
 /**
  * Represents procedure call.
  */
-public class FBProcedureCall {
+public class FBProcedureCall implements Cloneable {
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#clone()
+	 */
+	public Object clone()
+	{
+		try
+		{
+			FBProcedureCall newProcedureCall = (FBProcedureCall)super.clone();
+			
+			//Copy each input parameter.
+			Vector params = new Vector();
+			Iterator iterator = inputParams.iterator();
+			while (iterator.hasNext()) {
+				FBProcedureParam param = (FBProcedureParam)iterator.next();
+				params.add(param == null ? null : param.clone());
+			}
+			newProcedureCall.inputParams = params;
+			
+			//Copy each output parameter.
+			params = new Vector();
+			iterator = outputParams.iterator();
+			while (iterator.hasNext()) {
+				FBProcedureParam param = (FBProcedureParam)iterator.next();
+				params.add(param == null ? null : param.clone());
+			}
+			newProcedureCall.outputParams = params;
+
+			return newProcedureCall;
+			
+		} catch (CloneNotSupportedException e){
+			
+			return null;
+			
+		}
+	}
     
     private static final boolean OLD_CALLABLE_STATEMENT_COMPATIBILITY = true;
 
