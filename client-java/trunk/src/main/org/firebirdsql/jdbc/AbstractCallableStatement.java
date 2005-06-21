@@ -80,6 +80,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
  */
 public abstract class AbstractCallableStatement 
     extends AbstractPreparedStatement 
@@ -119,16 +120,67 @@ public abstract class AbstractCallableStatement
         procedureCall = parser.parseCall(nativeSQL(sql));
     }
     
+    private ArrayList batchList = new ArrayList();
+    
     public void addBatch() throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-    public void clearBatch() throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-    public int[] executeBatch() throws SQLException {
-        throw new FBDriverNotCapableException();
+
+    	batchList.add(procedureCall.clone());
+    	
     }
     
+    public void clearBatch() throws SQLException {
+    	
+    	batchList.clear();
+    	
+    }
+    
+    public int[] executeBatch() throws SQLException {
+    	
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
+
+            try {
+                notifyStatementStarted();
+
+                ArrayList results = new ArrayList(batchList.size());
+                Iterator iterator = batchList.iterator();
+
+                boolean commit = false;
+
+                try {
+                    while (iterator.hasNext()) {
+                    	
+                    	procedureCall = (FBProcedureCall)iterator.next();
+
+                        try {
+                            prepareFixedStatement(procedureCall
+                                    .getSQL(selectableProcedure), true);
+
+                        	if (internalExecute(!selectableProcedure))
+                                throw new BatchUpdateException(toArray(results));
+
+                            results.add(new Integer(getUpdateCount()));
+
+                        } catch (GDSException ex) {
+                            throw new BatchUpdateException(ex.getMessage(), "", ex.getFbErrorCode(),
+                                    toArray(results));
+                        }
+                    }
+
+                    commit = true;
+
+                    return toArray(results);
+
+                } finally {
+                    clearBatch();
+                }
+            } finally {
+                notifyStatementCompleted();
+            }
+        }
+    	
+    }
+
     /* (non-Javadoc)
      * @see org.firebirdsql.jdbc.FirebirdCallableStatement#setSelectableProcedure(boolean)
      */

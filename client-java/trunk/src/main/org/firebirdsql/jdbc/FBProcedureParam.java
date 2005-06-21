@@ -24,7 +24,7 @@ import java.sql.SQLException;
 /**
  * Represents procedure call parameter.
  */
-public class FBProcedureParam {
+public class FBProcedureParam implements Cloneable {
     
     private boolean isParam;
     private Object value;
@@ -35,6 +35,21 @@ public class FBProcedureParam {
     private boolean valueSet;
     
     public FBProcedureParam() {
+    }
+    
+    /* (non-Javadoc)
+     * @see java.lang.Object#clone()
+     */
+    public Object clone()
+    {
+    	try
+    	{
+    		return super.clone();
+    	}
+    	catch (CloneNotSupportedException e)
+    	{
+    		return null;
+    	}
     }
     
     /**

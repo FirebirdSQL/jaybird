@@ -568,5 +568,139 @@ public class TestFBCallableStatement extends FBTestBase {
         }
         
     }
+    
+    public void testBatch() throws Exception {
+        CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
+        try {
+          cstmt.setInt(1, 44);
+          cstmt.setString(2, "DGPII");
+          cstmt.setString(3, "Smith");
+          cstmt.setString(4, "Automap");
+          cstmt.addBatch();
+          cstmt.setInt(1, 44);
+          cstmt.setString(2, "VBASE");
+          cstmt.setString(3, "Jenner");
+          cstmt.setString(4, "Video Database");
+          cstmt.addBatch();
+          cstmt.setInt(1, 44);
+          cstmt.setString(2, "HWRII");
+          cstmt.setString(3, "Stevens");
+          cstmt.setString(4, "Translator upgrade");
+          cstmt.addBatch();
+          cstmt.setInt(1, 22);
+          cstmt.setString(2, "OTHER");
+          cstmt.setString(3, "Smith");
+          cstmt.setString(4, "Automap");
+          cstmt.addBatch();
+          
+          cstmt.executeBatch();
+          
+          
+        } finally {
+          cstmt.close();
+        }
+
+    }
+    
+    public void testBatchResultSet() throws Exception
+    {
+        CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
+        try {
+          cstmt.setInt(1, 44);
+          cstmt.setString(2, "DGPII");
+          cstmt.setString(3, "Smith");
+          cstmt.setString(4, "Automap");
+          cstmt.execute();
+          cstmt.setInt(1, 44);
+          cstmt.setString(2, "VBASE");
+          cstmt.setString(3, "Jenner");
+          cstmt.setString(4, "Video Database");
+          cstmt.execute();
+          cstmt.setInt(1, 44);
+          cstmt.setString(2, "HWRII");
+          cstmt.setString(3, "Stevens");
+          cstmt.setString(4, "Translator upgrade");
+          cstmt.execute();			 
+          cstmt.setInt(1, 22);
+          cstmt.setString(2, "OTHER");
+          cstmt.setString(3, "Smith");
+          cstmt.setString(4, "Automap");
+          cstmt.execute();
+        } finally {
+          cstmt.close();
+        }
+        
+        cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
+        try {
+            cstmt.setInt(1, 44);
+            cstmt.addBatch();
+            cstmt.setInt(1, 22);
+            cstmt.addBatch();
+            cstmt.executeBatch();
+            fail("Result sets not allowed in batch execution.");
+        }
+        catch (BatchUpdateException e)
+        {
+        	
+        	//Do nothing.  Exception should be thrown.
+        
+        } finally {
+          cstmt.close();
+        }
+    	
+    }
+    
+    /**
+     * Test Batch.  IN-OUT parameters are prohibited in batch execution.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testBatchInOut() throws Exception {
+       CallableStatement stmt = 
+            connection.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
+        try {
+            stmt.clearParameters();
+            stmt.setInt(1, 1);
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.addBatch();
+            stmt.clearParameters();
+            stmt.setInt(1, 2);
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.addBatch();
+            stmt.executeBatch();
+            fail("IN-OUT parameters not allowed in batch execution");
+        }
+        catch (BatchUpdateException e){}
+        finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test Batch.  OUT parameters are prohibited in batch execution.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testBatchOut() throws Exception {
+        CallableStatement stmt = 
+            connection.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        try {
+            stmt.setInt(1, 1);
+            stmt.registerOutParameter(2, Types.INTEGER);
+            stmt.addBatch();
+
+            stmt.setInt(1, 1);
+            stmt.registerOutParameter(2, Types.INTEGER);
+            stmt.addBatch();
+            
+            stmt.executeBatch();            
+            
+            fail("OUT parameters not allowed in batch execution");
+        }
+        catch (BatchUpdateException e){}
+        finally {
+            stmt.close();
+        }
+    }
 
 }
