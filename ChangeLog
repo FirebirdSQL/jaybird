@@ -1,3 +1,13 @@
+2005-06-21 19:23  sjardine
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/FBProcedureCall.java,
+	main/org/firebirdsql/jdbc/FBProcedureParam.java,
+	test/org/firebirdsql/jdbc/TestFBCallableStatement.java:
+	
+	Added support for batch updates in CallableStatement.
+
 2005-06-11 18:03  rrokytskyy
 
 	*
