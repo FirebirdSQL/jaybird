@@ -3076,7 +3076,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         checkCursorMove();
         
         if (fbStatement == null)
-            throw new FBSQLException("No statement is currently available.");
+            return "";
             
         return fbStatement.getExecutionPlan();
     }
