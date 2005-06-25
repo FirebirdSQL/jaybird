@@ -5,7 +5,7 @@
 	<TITLE></TITLE>
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.9.104  (Win32)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
-	<META NAME="CHANGED" CONTENT="20050610;22351300">
+	<META NAME="CHANGED" CONTENT="20050625;19295364">
 	<STYLE>
 	<!--
 		@page { size: 21cm 29.7cm; margin: 2cm }
@@ -239,11 +239,11 @@ code modularity, stability and maintainability.</P>
 Refactorings</H3>
 <UL>
 	<LI><P CLASS="western">Significant refactoring of the
-	org.firebirdsql.gds.* package. Goal is to create an official
-	Firebird API for Java programming language. Implementations of the
-	interfaces defined in this package are now dynamically loaded from
-	the classpath and provide possibilities to extend driver with custom
-	code without changing the driver itself.</P>
+	<CODE CLASS="western">org.firebirdsql.gds.*</CODE> package. Goal is
+	to create an official Firebird API for Java programming language.
+	Implementations of the interfaces defined in this package are now
+	dynamically loaded from the classpath and provide possibilities to
+	extend driver with custom code without changing the driver itself.</P>
 	<LI><P CLASS="western">JCA code was significantly changed, bringing
 	a long awaited stability when critical errors happen into that vital
 	part of code. There is no more so-called &ldquo;fatal&rdquo; errors
@@ -301,6 +301,30 @@ management tasks:</P>
 	modifying, and deleting user accounts.</P>
 </UL>
 <H3 CLASS="western"><A NAME="1.2.3.Firebird%20specific%20extensions|outline"></A>
+Incompatible changes since JayBird 1.5</H3>
+<UL>
+	<LI><P CLASS="western">Signatures of all <CODE CLASS="western">org.firebirdsql.gds.*</CODE>
+	classes have changed. This was done in preparation of the official
+	Firebird Java API. After the API release all signature changes will
+	be frozen and correctly versioned.</P>
+	<LI><P CLASS="western"><CODE CLASS="western">FirebirdConnection.getBlob()</CODE>
+	method signature changed to return <CODE CLASS="western">java.sql.Blob</CODE>,
+	previously it returned <CODE CLASS="western">org.firebirdsql.jdbc.FirebirdBlob</CODE>.
+	Object that is returned can safely be casted to
+	<CODE CLASS="western">org.firebirdsql.jdbc.FirebirdBlob</CODE>
+	interface. The change is caused by the coming JDBC 4.0 specification
+	to avoid conflict in next versions.</P>
+	<LI><P CLASS="western" ALIGN=LEFT>JayBird 2.0 commits transaction
+	when error happens during <CODE CLASS="western">Statement.executeBatch()</CODE>
+	and <CODE CLASS="western">PreparedStatement.executeBatch()</CODE>
+	calls in auto-commit mode. JDBC specification requires application
+	to switch the auto-commit mode off when executing batch updates to
+	be able to control the error recovery. Behavior in auto-commit case
+	is implementation dependent. New behavior differs from the JayBird
+	1.5 that would rollback the transaction. Non-auto-commit case
+	remains untouched.</P>
+</UL>
+<H3 CLASS="western"><A NAME="1.2.4.JDBC%203.0%20compatibility|outline"></A>
 JayBird JDBC extensions</H3>
 <P CLASS="western" ALIGN=LEFT>JayBird 2.0 provides extensions to some
 JDBC interfaces. JDBC extension interface classes are released under
@@ -336,6 +360,56 @@ version in which the extension was introduced.</P>
 			<TH WIDTH=32%>
 				<P CLASS="western">Description</P>
 			</TH>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">FirebirdDriver</CODE></P>
+			</TD>
+			<TD WIDTH=8%>
+				<P CLASS="western" ALIGN=CENTER>2.0</P>
+			</TD>
+			<TD WIDTH=35%>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">newConnectionProperties()</CODE></P>
+			</TD>
+			<TD WIDTH=32%>
+				<P CLASS="western" ALIGN=LEFT>Create new instance of
+				<CODE CLASS="western">FirebirdConnectionProperties</CODE>
+				interface that can be used to set connection properties
+				programmatically.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P CLASS="western" ALIGN=LEFT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=8%>
+				<P CLASS="western" ALIGN=CENTER><BR>
+				</P>
+			</TD>
+			<TD WIDTH=35%>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">connect(FirebirdConnectionProperties)</CODE></P>
+			</TD>
+			<TD WIDTH=32%>
+				<P CLASS="western" ALIGN=LEFT>Connect to the Firebird database
+				using the specified connection properties.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">FirebirdConnectionProperties</CODE></P>
+			</TD>
+			<TD WIDTH=8%>
+				<P CLASS="western" ALIGN=CENTER>2.0</P>
+			</TD>
+			<TD WIDTH=35%>
+				<P CLASS="western" ALIGN=LEFT>see <A HREF="#2.4.JDBC connection properties|outline">JDBC
+				connection properties</A> section for more details.</P>
+			</TD>
+			<TD WIDTH=32%>
+				<P CLASS="western" ALIGN=LEFT><BR>
+				</P>
+			</TD>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25%>
@@ -441,6 +515,56 @@ version in which the extension was introduced.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25%>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">FirebirdDatabaseMetaData</CODE></P>
+			</TD>
+			<TD WIDTH=8%>
+				<P CLASS="western" ALIGN=CENTER><BR>
+				</P>
+			</TD>
+			<TD WIDTH=35%>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">getProcedureSourceCode(String)</CODE></P>
+			</TD>
+			<TD WIDTH=32%>
+				<P CLASS="western" ALIGN=LEFT>Get source code for the specified
+				stored procedure name.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P CLASS="western" ALIGN=LEFT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=8%>
+				<P CLASS="western" ALIGN=CENTER><BR>
+				</P>
+			</TD>
+			<TD WIDTH=35%>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">getTriggerSourceCode(String)</CODE></P>
+			</TD>
+			<TD WIDTH=32%>
+				<P CLASS="western" ALIGN=LEFT>Get source code for the specified
+				trigger name.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P CLASS="western" ALIGN=LEFT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=8%>
+				<P CLASS="western" ALIGN=CENTER><BR>
+				</P>
+			</TD>
+			<TD WIDTH=35%>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">getViewSourceCode(String)</CODE></P>
+			</TD>
+			<TD WIDTH=32%>
+				<P CLASS="western" ALIGN=LEFT>Get source code for the specified
+				view name.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
 				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">FirebirdStatement</CODE></P>
 			</TD>
 			<TD WIDTH=8%>
@@ -509,6 +633,22 @@ version in which the extension was introduced.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25%>
+				<P CLASS="western" ALIGN=LEFT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=8%>
+				<P CLASS="western" ALIGN=CENTER>2.0</P>
+			</TD>
+			<TD WIDTH=35%>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">getLastExecutionPlan()</CODE></P>
+			</TD>
+			<TD WIDTH=32%>
+				<P CLASS="western" ALIGN=LEFT>Get execution plan for the last
+				executed statement.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
 				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">FirebirdPreparedStatement</CODE></P>
 			</TD>
 			<TD WIDTH=8%>
@@ -556,6 +696,21 @@ version in which the extension was introduced.</P>
 				procedures that return single row of output parameters or a
 				result set. In former case it retrieves only the first row of the
 				result set.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">FirebirdResultSet</CODE></P>
+			</TD>
+			<TD WIDTH=8%>
+				<P CLASS="western" ALIGN=CENTER>2.0</P>
+			</TD>
+			<TD WIDTH=35%>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">getExecutionPlan()</CODE></P>
+			</TD>
+			<TD WIDTH=32%>
+				<P CLASS="western" ALIGN=LEFT>Get execution plan for this result
+				set.</P>
 			</TD>
 		</TR>
 		<TR VALIGN=TOP>
@@ -640,10 +795,41 @@ version in which the extension was introduced.</P>
 				content will be read, works only for stream BLOBs.</P>
 			</TD>
 		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">FirebirdSavepoint</CODE></P>
+			</TD>
+			<TD WIDTH=8%>
+				<P CLASS="western" ALIGN=CENTER>2.0</P>
+			</TD>
+			<TD COLSPAN=2 WIDTH=67%>
+				<P CLASS="western" ALIGN=LEFT>interface is equivalent to the
+				java.sql.Savepoint interface introduced in JDBC 3.0
+				specification, however allows using Firebird savepoints also in
+				JDBC 2.0 (JDK 1.3.x) applications.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P CLASS="western" ALIGN=LEFT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=8%>
+				<P CLASS="western" ALIGN=CENTER><BR>
+				</P>
+			</TD>
+			<TD WIDTH=35%>
+				<P CLASS="western" ALIGN=LEFT><BR>
+				</P>
+			</TD>
+			<TD WIDTH=32%>
+				<P CLASS="western" ALIGN=LEFT><BR>
+				</P>
+			</TD>
+		</TR>
 	</TBODY>
 </TABLE>
-<H3 CLASS="western"><A NAME="1.2.4.JDBC%203.0%20compatibility|outline"></A>
-JDBC 3.0 compatibility</H3>
+<H3 CLASS="western">JDBC 3.0 compatibility</H3>
 <P CLASS="western">JayBird 2.0 includes number of fixes that allow it
 pass JDBC 3.0 compatibility suite. It successfully passes 1216 tests,
 60 tests were excluded, because they are either not applicable to
@@ -652,26 +838,24 @@ limitations of NUMERIC data type, etc.).</P>
 <H2 CLASS="western"><A NAME="1.3.Distribution%20package|outline"></A>Distribution
 package</H2>
 <P CLASS="western">JayBird driver has compile-time and run-time
-dependencies to JCA 1.0, JTA 1.0.1, JAAS 1.0, JDBC 2.0 Optional
-Package and to Doug Lea concurrent package<A CLASS="sdfootnoteanc" NAME="sdfootnote2anc" HREF="#sdfootnote2sym"><SUP>2</SUP></A>.
-Additionally, if Log4J classes are found in the class path, it is
-possible to enable extensive logging inside the driver.</P>
+dependencies to JCA 1.0, JTA 1.0.1, JAAS 1.0 and JDBC 2.0 Optional
+Package. Additionally, if Log4J classes are found in the class path,
+it is possible to enable extensive logging inside the driver.</P>
 <P CLASS="western">Following file groups can be found in distribution
 package:</P>
 <UL>
-	<LI><P CLASS="western"><CODE CLASS="western">firebirdsql.jar</CODE>
+	<LI><P CLASS="western"><CODE CLASS="western">jaybird-2.0.0.jar</CODE>
 	&ndash; archive containing JCA/JDBC driver and JMX management class.
 	It requires JCA 1.0, JTA 1.0.1, and JAAS 1.0.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">firebirdsql-pool.jar</CODE>
+	<LI><P CLASS="western"><CODE CLASS="western">jaybird-pool-2.0.0.jar</CODE>
 	&ndash; archive contains implementation of connection pooling and
-	statement pooling interfaces. It requires  JDBC 2.0 Optional Package
-	and Doug Lea <CODE CLASS="western">concurrent.jar</CODE>.</P>
-	<LI><P CLASS="western" ALIGN=LEFT><CODE CLASS="western">firebirdsql-full.jar</CODE>
-	&ndash; merge of <CODE CLASS="western">firebirdsql.jar</CODE>,
-	<CODE CLASS="western">mini-j2ee.jar</CODE> and <CODE CLASS="western">mini-concurrent.jar</CODE>.
-	This archive can be used for standalone<A CLASS="sdfootnoteanc" NAME="sdfootnote3anc" HREF="#sdfootnote3sym"><SUP>3</SUP></A>
+	statement pooling interfaces.</P>
+	<LI><P CLASS="western"><CODE CLASS="western">jaybird-full-2.0.0.jar</CODE>
+	&ndash; merge of <CODE CLASS="western">firebirdsql.jar</CODE> and
+	<CODE CLASS="western">mini-j2ee.jar</CODE>. This archive can be used
+	for standalone<A CLASS="sdfootnoteanc" NAME="sdfootnote2anc" HREF="#sdfootnote2sym"><SUP>2</SUP></A>
 	JayBird deployments.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">firebirdsql.rar</CODE>
+	<LI><P CLASS="western"><CODE CLASS="western">jaybird-2.0.0.rar</CODE>
 	&ndash; resource archive ready for deployment in JCA-enabled
 	application servers.</P>
 	<LI><P CLASS="western"><CODE CLASS="western">lib/jaas.jar</CODE> &ndash;
@@ -1295,15 +1479,6 @@ for their support are not implemented:</P>
 		application must fetch old BLOB from the server and pump old
 		content into a newly created BLOB.</P>
 	</UL>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.CallableStatement</CODE>
-		</P>
-	<UL>
-		<LI><P CLASS="western"><CODE CLASS="western">addBatch()</CODE>,
-		<CODE CLASS="western">clearBatch()</CODE> and <CODE CLASS="western">executeBatch()</CODE>
-		are not yet supported, a simple workaround is to use <CODE CLASS="western">EXECUTE
-		PROCEDURE</CODE> statement with <CODE CLASS="western">PreparedStatement</CODE>
-		batches.</P>
-	</UL>
 	<LI><P CLASS="western"><CODE CLASS="western">java.sql.Clob</CODE>
 	data type is not yet supported.</P>
 	<LI><P CLASS="western"><CODE CLASS="western">java.sql.Connection</CODE></P>
@@ -1350,7 +1525,9 @@ for their support are not implemented:</P>
 		return auto-generated keys are not implemented, because of server
 		incapability.</P>
 		<LI><P CLASS="western"><CODE CLASS="western">getGeneratedKeys()</CODE>
-		is not implemented because of server incapability.</P>
+		is not implemented because server does not support this feature
+		yet. As soon as support for this feature is available, driver will
+		be updated.</P>
 	</UL>
 	<LI><P CLASS="western"><CODE CLASS="western">java.sql.Struct</CODE>
 	data type is not supported by server.</P>
@@ -1416,6 +1593,14 @@ holdability is supported in JayBird only for result sets of type
 <CODE CLASS="western">ResultSet.TYPE_SCROLL_INSENSITIVE</CODE>. For
 other result set types driver will throw an exception.</P>
 <H3 CLASS="western"><A NAME="1.7.2.Using%20java.sql.ParameterMetaData%20with%20Callable%20Statements|outline"></A>
+Batch updates in auto-commit mode</H3>
+<P CLASS="western">JDBC specification requires the auto-commit mode
+to be turned off during batch updates to be able to control recovery
+from the error that happened during update. The behavior of the JDBC
+driver is implementation dependent in auto-commit case. JayBird 2.0
+will commit the transaction despite the error happened. This behavior
+changes from JayBird 1.5 that rolled the transaction back.</P>
+<H3 CLASS="western"><A NAME="1.7.3.Using%20ResultSet.getCharacterStream%20with%20BLOB%20fields|outline"></A>
 Using java.sql.ParameterMetaData with Callable Statements</H3>
 <P CLASS="western">This interface can be used only to obtain
 information about the IN parameters. Also it is not allowed to call
@@ -1425,8 +1610,8 @@ corresponding method of <CODE CLASS="western">CallableStatement</CODE>
 throws an <CODE CLASS="western">SQLException</CODE>, because the
 driver tries to prepare the procedure call with incorrect number of
 parameters.</P>
-<H3 CLASS="western"><A NAME="1.7.3.Using%20ResultSet.getCharacterStream%20with%20BLOB%20fields|outline"></A>
-Using ResultSet.getCharacterStream with BLOB fields</H3>
+<H3 CLASS="western">Using ResultSet.getCharacterStream with BLOB
+fields</H3>
 <P CLASS="western">JayBird JDBC driver always uses connection
 encoding when converting array of bytes into character stream. The
 BLOB SUB_TYPE 1 fields allow setting the character encoding for the
@@ -2094,13 +2279,7 @@ Firebird-Java@yahoogroups.com.</P>
 	compatible with JDK 1.4.x interface declarations.</P>
 </DIV>
 <DIV ID="sdfootnote2">
-	<P CLASS="sdfootnote"><A CLASS="sdfootnotesym" NAME="sdfootnote2sym" HREF="#sdfootnote2anc">2</A>Latest
-	version of Doug Lea concurrent package can be obtained from the
-	following address:
-	<A HREF="http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html">http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html</A></P>
-</DIV>
-<DIV ID="sdfootnote3">
-	<P CLASS="sdfootnote"><A CLASS="sdfootnotesym" NAME="sdfootnote3sym" HREF="#sdfootnote3anc">3</A>You
+	<P CLASS="sdfootnote"><A CLASS="sdfootnotesym" NAME="sdfootnote2sym" HREF="#sdfootnote2anc">2</A>You
 	have to ensure that your class path contains JAAS 1.0 classes when
 	using JDK 1.3.x.</P>
 </DIV>
