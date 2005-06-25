@@ -76,7 +76,6 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
     
     private boolean invalid;
     private ObjectCloseTraceException invalidateStackTrace;
-    private String invalidateStackTraceStr = "";
         
     /**
      * Create instance of this class.
@@ -123,7 +122,6 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
         associatedConnection = null;
         invalid = true;
         invalidateStackTrace = new ObjectCloseTraceException();
-        invalidateStackTraceStr = XConnectionUtil.getStackTrace(invalidateStackTrace);
     }
     
     protected boolean handleIsCached() throws SQLException {

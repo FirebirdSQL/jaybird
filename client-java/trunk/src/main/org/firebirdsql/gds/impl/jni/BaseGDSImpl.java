@@ -476,7 +476,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public XSQLDA iscDsqlPrepare(IscTrHandle tr_handle,
             IscStmtHandle stmt_handle, byte[] statement, int dialect)
             throws GDSException {
-        isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
         isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
         isc_db_handle_impl db = stmt.getRsr_rdb();
 
@@ -644,7 +643,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             IscDbHandle db_handle, long transactionId) throws GDSException {
 
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
-        isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
         
         byte[] buffer = new byte[4];
         for (int i = 0; i < 4; i++){
@@ -1029,7 +1027,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         // This only works if not (port->port_flags & PORT_symmetric)
         int numCols = xsqlda.sqld;
         byte[][] row = new byte[numCols][];
-        byte[] buffer;
         for (int i = 0; i < numCols; i++) {
 
             // isc_vax_integer( xsqlda.sqlvar[i].sqldata, 0,

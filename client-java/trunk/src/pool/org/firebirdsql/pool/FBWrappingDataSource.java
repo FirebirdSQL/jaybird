@@ -703,9 +703,6 @@ public class FBWrappingDataSource implements DataSource,
             if (REF_BLOCKING_TIMEOUT.equals(type))
                 ds.setBlockingTimeout(Integer.parseInt(element.getContent().toString()));
             else
-//            if (REF_DATABASE.equals(type))
-//                ds.setDatabase(element.getContent().toString());
-//            else
             if (REF_DESCRIPTION.equals(type))
                 ds.setDescription(element.getContent().toString());
             else
@@ -744,15 +741,6 @@ public class FBWrappingDataSource implements DataSource,
             else
             if (REF_PING_STATEMENT.equals(type))
                 ds.setPingStatement(element.getContent().toString());
-//            if (REF_TYPE.equals(type))
-//                ds.setType(element.getContent().toString());
-//            else
-//            if (REF_TX_ISOLATION.equals(type))
-//                ds.setDefaultTransactionIsolation(Integer.parseInt(element.getContent().toString()));
-//            else
-//            if (REF_ISOLATION.equals(type))
-//                ds.setDefaultIsolation(element.getContent().toString());
-//            else
             if (REF_NON_STANDARD_PROPERTY.equals(type))
                 ds.setNonStandardProperty(element.getContent().toString());
             else
@@ -768,15 +756,7 @@ public class FBWrappingDataSource implements DataSource,
         
         return ds;
     }
-    
-    private String getRefAddr(Reference ref, String type) {
-        RefAddr addr = ref.get(type);
-        if (addr == null)
-            return null;
-        else
-            return addr.getContent().toString();
-    }
-    
+
     /**
      * Get JDNI reference.
      * 

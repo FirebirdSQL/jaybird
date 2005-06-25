@@ -35,8 +35,6 @@ import javax.transaction.xa.*;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.jdbc.*;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * FBManagedConnectionFactory implements the jca ManagedConnectionFactory
@@ -59,9 +57,6 @@ import org.firebirdsql.logging.LoggerFactory;
 
 public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         Serializable, FirebirdConnectionProperties {
-
-    private final static Logger log = LoggerFactory.getLogger(
-            FBManagedConnectionFactory.class, false);
 
     /**
      * The <code>mcfInstances</code> weak hash map is used in deserialization
@@ -546,15 +541,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         }
     }
 
-    private void checkNotStarted() throws java.lang.IllegalStateException {
-        synchronized (startLock) {
-            if (started)
-                throw new java.lang.IllegalStateException(
-                        "Operation not permitted after "
-                                + "ManagedConnectionFactory in use");
-        }
-    }
-
     void notifyStart(FBManagedConnection mc, Xid xid) throws GDSException {
         xidMap.put(xid, mc);
     }
@@ -628,18 +614,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     private void tryCompleteInLimboTransaction(GDS gds, Xid xid, boolean commit)
             throws XAException {
 
-        // construct our own Xid implementation that can produce us a
-        // byte array that is used in isc_prepare_transaction2 call
-        FBXid fbXid;
-        if (xid instanceof FBXid)
-            fbXid = (FBXid) xid;
-        else
-            fbXid = new FBXid(xid);
-
-        // this flag is used in exception handler to return correct error
-        // code depending on the situation
-        boolean knownTransaction = false;
-
         try {
             FBManagedConnection tempMc = null;
             FBLocalTransaction tempLocalTx = null;
@@ -672,9 +646,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                 IscTrHandle trHandle = gds.createIscTrHandle();
                 gds.iscReconnectTransaction(trHandle, dbHandle,
                                 fbTransactionId);
-
-                // tell exception handler that we know the transaction
-                knownTransaction = true;
 
                 // complete transaction by commit or rollback
                 if (commit)

@@ -15,8 +15,6 @@ import org.firebirdsql.jca.FBResourceException;
 
 public class FBConnectionProperties implements FirebirdConnectionProperties, Serializable {
 
-    private static final String EMPTY_STRING = "";
-    
     public static final String DATABASE_PROPERTY = "database";
     public static final String TYPE_PROPERTY = "type";
     public static final String ISOLATION_PROPERTY = "isolation";

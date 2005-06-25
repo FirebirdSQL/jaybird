@@ -9,8 +9,6 @@ import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.*;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 class FBCachedFetcher implements FBFetcher {
 
@@ -22,8 +20,6 @@ class FBCachedFetcher implements FBFetcher {
     
     private FBObjectListener.FetcherListener fetcherListener;
 
-    private final static Logger log = LoggerFactory.getLogger(FBCachedFetcher.class,false);
-          
     FBCachedFetcher(GDSHelper gdsHelper, int fetchSize, int maxRows, 
             AbstractIscStmtHandle stmt_handle, FBObjectListener.FetcherListener fetcherListener, boolean forwardOnly) throws SQLException 
     {
@@ -32,7 +28,6 @@ class FBCachedFetcher implements FBFetcher {
         this.forwardOnly = forwardOnly;
         
         ArrayList rowsSets = new ArrayList(100);
-        ArrayList rows = new ArrayList(100);
 
         AbstractIscStmtHandle stmt =  stmt_handle;
         byte[][] localRow = null;
@@ -50,17 +45,17 @@ class FBCachedFetcher implements FBFetcher {
             if (isBlob[i]) 
                 hasBlobs = true;
         }
+        
         //
         // load all rows from statement
         //
         int rowsCount = 0;
         try {
-//            int fetchSize = fbStatement.fetchSize;
             if (fetchSize == 0)
                 fetchSize = MAX_FETCH_ROWS;
             this.fetchSize = fetchSize;
-				// the following if, is only for callable statement				
 
+            // the following if, is only for callable statement				
             if (!stmt.isAllRowsFetched() && stmt.size() == 0) {
                 do {
                     if (maxRows != 0 && fetchSize > maxRows - stmt.size())

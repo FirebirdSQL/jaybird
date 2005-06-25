@@ -28,7 +28,6 @@ import java.util.*;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.*;
-import org.firebirdsql.logging.*;
 
 /**
  * Implementation of {@link java.sql.PreparedStatement}interface. This class
@@ -55,9 +54,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
     private boolean isExecuteProcedureStatement;
 
     private boolean trimStrings;
-
-    private final static Logger log = LoggerFactory.getLogger(
-        AbstractStatement.class, false);
 
     /**
      * Create instance of this class for the specified result set type and 
@@ -828,7 +824,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
 
                 boolean commit = false;
 
-                XSQLVAR[] backupVars = null;
                 try {
                     while (iter.hasNext()) {
                         XSQLVAR[] data = (XSQLVAR[]) iter.next();
@@ -1136,7 +1131,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
         // initialize isParamSet member
         isParamSet = new boolean[inSqlda.sqln];
         fields = new FBField[inSqlda.sqln];
-        XSQLVAR[] inVars = inSqlda.sqlvar;
 
         for (int i = 0; i < isParamSet.length; i++) {
             // this is probably redundant, JVM initializes members to false

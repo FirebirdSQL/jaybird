@@ -2232,7 +2232,6 @@ public class JavaGDSImpl extends AbstractGDS implements GDS {
             // allows standard syntax //host:port/....
             // and old fb syntax host/port:....
             connectInfo = connectInfo.trim();
-            String node_name;
             char hostSepChar;
             char portSepChar;
             if (connectInfo.startsWith("//")){
@@ -2382,8 +2381,6 @@ public class JavaGDSImpl extends AbstractGDS implements GDS {
                 svc.out.writeInt(0);                
                 svc.out.writeString(host + ":" + serviceMgrStr);
 
-                ServiceParameterBufferImp spb = (ServiceParameterBufferImp)serviceParameterBuffer;
-                
                 svc.out.writeTyped(ISCConstants.isc_spb_version, (Xdrable)serviceParameterBuffer);
                 svc.out.flush();
                 

@@ -34,7 +34,6 @@ public class NativeGDSImpl extends JniGDSImpl {
             // allows standard syntax //host:port/....
             // and old fb syntax host/port:....
             connectInfo = connectInfo.trim();
-            String node_name;
             char hostSepChar;
             char portSepChar;
             if (connectInfo.startsWith("//")) {

@@ -38,8 +38,6 @@ import org.firebirdsql.jdbc.*;
 public class FBBlobField extends FBField implements FBFlushableField {
     private static final int BUFF_SIZE = 4096;
 
-    private boolean isCachedData = false;
-    
     private FBBlob blob;
 
 	// Rather then hold cached data in the XSQLDAVar we will hold it in here.

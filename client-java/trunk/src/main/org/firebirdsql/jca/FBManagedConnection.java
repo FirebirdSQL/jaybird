@@ -570,8 +570,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             throw new FBXAException("Commit called with current xid",
                     XAException.XAER_PROTO);
 
-        IscDbHandle committingDbHandle = committingTr.getDbHandle();
-
         try {
             committingTr.forgetResultSets();
             try {
@@ -712,7 +710,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         if (committingTr == gdsHelper.getCurrentTrHandle())
             throw new FBXAException("Prepare called with current xid",
                     XAException.XAER_PROTO);
-        IscDbHandle committingDbHandle = committingTr.getDbHandle();
             try {
                 FBXid fbxid;
                 if (xid instanceof FBXid) {
@@ -888,8 +885,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
         if (committingTr == gdsHelper.getCurrentTrHandle())
             throw new FBXAException("Rollback called with current xid",
                     XAException.XAER_PROTO);
-
-        IscDbHandle committingDbHandle = committingTr.getDbHandle();
 
         try {
             committingTr.forgetResultSets();

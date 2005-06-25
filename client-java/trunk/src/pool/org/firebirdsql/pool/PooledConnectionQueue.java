@@ -42,7 +42,6 @@ class PooledConnectionQueue {
     private ConnectionPoolConfiguration configuration;
     
     private Object key;
-    private boolean personalized;
 
     private String queueName;
     private int blockingTimeout;
@@ -94,9 +93,7 @@ class PooledConnectionQueue {
         String queueName, Object key)
     {
         this(connectionManager, logger, configuration, queueName);
-        
         this.key = key;
-        this.personalized = true;
     }
     
     /**

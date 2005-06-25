@@ -36,8 +36,6 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 class PooledConnectionHandler implements InvocationHandler {
 	
-	private static final boolean CACHE_PREPARED_STATEMENTS = true;
-	
 	private static final boolean LOG_REENTRANT_ACCESS = PoolDebugConfiguration.DEBUG_REENTRANT;
 	
 	private static Logger logChannel = LoggerFactory.getLogger(PooledConnectionHandler.class, false);
@@ -114,7 +112,6 @@ class PooledConnectionHandler implements InvocationHandler {
     
 	private boolean closed;
     private ObjectCloseTraceException closeStackTrace;
-	private String closeStackTraceStr = "";
 
     /**
      * Construct instance of this class. This method constructs new proxy
@@ -388,7 +385,6 @@ class PooledConnectionHandler implements InvocationHandler {
     
     		closed = true;
             closeStackTrace = new ObjectCloseTraceException();
-    		closeStackTraceStr = XConnectionUtil.getStackTrace(closeStackTrace);
         }
 	}
     
