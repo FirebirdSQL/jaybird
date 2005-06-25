@@ -124,4 +124,17 @@ public interface FirebirdStatement extends Statement {
      * execute SQL.
      */
     boolean isValid();
+    
+    /**
+     * Get execution plan for the last executed statement. Unlike the 
+     * {@link FirebirdPreparedStatement#getExecutionPlan()}, this method can be
+     * called only after executing a query or update statement. 
+     * 
+     * @return execution plan returned by the server.
+     * 
+     * @throws SQLException if no statement was executed before calling this 
+     * method, statement is not valid, or there was an error when obtaining
+     * the execution plan.
+     */
+    String getLastExecutionPlan() throws SQLException;
 }

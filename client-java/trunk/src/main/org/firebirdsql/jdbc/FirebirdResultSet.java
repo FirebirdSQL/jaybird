@@ -25,6 +25,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.sql.SQLException;
+
 
 public interface FirebirdResultSet {
 
@@ -44,4 +46,15 @@ public interface FirebirdResultSet {
      */
     int CLOSE_CURSORS_AT_COMMIT = 2;
 
+    /**
+     * Get execution plan for the specified result set. 
+     * 
+     * @return execution plan for this query.
+     * 
+     * @throws SQLException if execution plan cannot be obtained or this result
+     * set is already closed.
+     * 
+     * @see FirebirdPreparedStatement#getExecutionPlan();
+     */
+    String getExecutionPlan() throws SQLException;
 }
