@@ -21,23 +21,6 @@
   <!-- Creates the html documentation                                      -->
   <!-- =================================================================== -->
   <target name="docs" depends="init">
-
-    <!--echo message="Building html documentation. Please wait ..."/-->
-<!--    <style  basedir="${source.docs.dir}"
-             style="jboss.xsl"
-             destdir="${build.docs.dir}"
-             includes="jbossdocs.xml"
-    />
-    <move todir="${build.docs.dir}">
-      <fileset dir="${source.java}/build" includes="*.html"/>
-    </move>
-    <delete file="${build.docs.dir}/jbossdocs.html"/>-->
-
-    <!-- Stylesheets, images, and static HTML -->
- <!--   <copy todir="${build.docs.dir}">
-       <fileset dir="${source.java}/docs" excludes="*.xml,*.xsl,**/docbook/**,**/docbookx/**"/>
-     </copy>
-     -->
   </target>
 
   <!-- =================================================================== -->
@@ -47,12 +30,10 @@
     <mkdir dir="${build.dist}"/>
     <zip zipfile="${build.dist}/${Name}-${version.full}.zip">
       <fileset dir="${build.lib}">
-        <include name="firebirdsql.rar"/>
-        <include name="firebirdsql-test.jar"/>
-        <include name="firebirdsql-full.jar"/>
-        <include name="firebirdsql-pool.jar"/>
-        <include name="firebirdsql.jar"/>
-        <include name="firebirdjmx.jar"/>
+        <include name="${archive.name.rar}"/>
+        <include name="${archive.name.full}"/>
+        <include name="${archive.name.pool}"/>
+        <include name="${archive.name.simple}"/>
       </fileset>
       <fileset dir="${module.etc}">
         <include name="release_notes.pdf"/>

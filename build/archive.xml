@@ -1,19 +1,19 @@
   <!-- =================================================================== -->
   <!-- Creates the jar archives                                            -->
   <!-- =================================================================== -->
-  <target name="jars" depends="jar-j2ee, jar-jmx, rar, jar-test"/>
+  <target name="jars" depends="jar-j2ee, rar, jar-test"/>
 
   <!-- Not really a jar operation but necessary :) -->
   <target name="jar-j2ee" depends="compile">
  
     <mkdir dir="${build.lib}"/>
-    <copy file="${module.thirdparty}/mini-j2ee.jar" tofile="${build.lib}/mini.j2ee.jar"/>
+    <copy file="${module.thirdparty}/mini-j2ee.jar" tofile="${build.lib}/mini-j2ee.jar"/>
   </target>
 
   <target name="jar-ra" depends="compile">
 
     <mkdir dir="${build.lib}"/>
-    <jar jarfile="${build.lib}/firebirdsql.jar" manifest="${build.etc}/default.mf">
+    <jar jarfile="${build.lib}/${archive.name.simple}" manifest="${build.etc}/default.mf">
        <fileset dir="${build.classes}">
          <include name="org/firebirdsql/**"/>
        </fileset>
@@ -26,13 +26,13 @@
        </zipfileset>
     </jar>
 
-    <jar jarfile="${build.lib}/firebirdsql-pool.jar" manifest="${build.etc}/default.mf">
+    <jar jarfile="${build.lib}/${archive.name.pool}" manifest="${build.etc}/default.mf">
        <fileset dir="${build.pool}">
          <include name="org/firebirdsql/**"/>
        </fileset>
     </jar>
 
-    <jar jarfile="${build.lib}/firebirdsql-full.jar" manifest="${build.etc}/default.mf">
+    <jar jarfile="${build.lib}/${archive.name.full}" manifest="${build.etc}/default.mf">
        <fileset dir="${build.classes}">
          <include name="org/firebirdsql/**"/>
        </fileset>
@@ -60,7 +60,7 @@
   <target name="jar-test" depends="compile">
 
     <mkdir dir="${build.lib}"/>
-    <jar jarfile="${build.lib}/firebirdsql-test.jar" manifest="${build.etc}/default.mf">
+    <jar jarfile="${build.lib}/${archive.name.test}" manifest="${build.etc}/default.mf">
        <fileset dir="${build.test}">
          <include name="org/firebirdsql/**"/>
        </fileset>
@@ -72,35 +72,12 @@
 
 
   <!-- =================================================================== -->
-  <!-- Creates the jmx-jar archives                                            -->
-  <!-- =================================================================== -->
-  <target name="jar-jmx" depends="compile">
-
-    <mkdir dir="${build.lib}"/>
-    <jar jarfile="${build.lib}/firebirdjmx.jar" manifest="${build.etc}/default.mf">
-       <fileset dir="${build.classes}">
-         <include name="org/firebirdsql/**"/>
-         <exclude name="**/jca/**"/>
-         <exclude name="**/jdbc/**"/>
-       </fileset>
-       <fileset dir="${build.resources}">
-         <include name="**/*.properties"/>
-       </fileset>
-       <zipfileset dir="${build.resources}/META-INF" prefix="META-INF">
-         <include name="services/**/*"/>
-       </zipfileset>
-    </jar>
-  </target>
-
-
-
-  <!-- =================================================================== -->
   <!-- Creates the rar archives                                            -->
   <!-- =================================================================== -->
   <target name="rar" depends="jar-ra">
-    <jar jarfile="${build.lib}/firebirdsql.rar" manifest="${build.etc}/default.mf">
+    <jar jarfile="${build.lib}/${archive.name.rar}" manifest="${build.etc}/default.mf">
       <fileset dir="${build.lib}">
-        <include name="firebirdsql.jar"/>
+        <include name="${archive.name.simple}"/>
       </fileset>
       <fileset dir="${build.resources}">
         <include name="META-INF/ra.xml"/>

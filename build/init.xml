@@ -22,10 +22,10 @@
 	<property name="Name" value="FirebirdSQL"/>
     <property name="name" value="firebirdsql"/>
 
-    <property name="version.major" value="1"/>
-    <property name="version.minor" value="5"/>
+    <property name="version.major" value="2"/>
+    <property name="version.minor" value="0"/>
     <property name="version.revision" value="0"/>
-    <property name="version.tag" value=""/>
+    <property name="version.tag" value="beta"/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
@@ -107,6 +107,15 @@
     <property name="build.dist" value="${module.output}/dist"/>
     <property name="build.native" value="${module.output}/native"/>
     <property name="build.native.output" value="${build.native}"/>
+
+	<property name="archive.name.main" value="jaybird"/>
+	<property name="archive.name.version" value="${version.major}.${version.minor}.${version.revision}"/>
+	
+	<property name="archive.name.rar" value="${archive.name.main}-${archive.name.version}.rar"/>
+	<property name="archive.name.pool" value="${archive.name.main}-pool-${archive.name.version}.jar"/>
+	<property name="archive.name.full" value="${archive.name.main}-full-${archive.name.version}.jar"/>
+	<property name="archive.name.simple" value="${archive.name.main}-${archive.name.version}.jar"/>
+	<property name="archive.name.test" value="${archive.name.main}-test-${archive.name.version}.jar"/>
 
     <property name="junit.timeout" value="600000"/> <!-- 10 minutes -->
     <property name="junit.batchtest.todir" value="${build.reports}"/>
