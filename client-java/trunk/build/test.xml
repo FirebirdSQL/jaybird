@@ -54,7 +54,7 @@
 
         <fileset dir="${build.test}">
           <include name="**/Test*.class"/>
-          <exclude name="**/ngds/Test*.class"/>
+          <exclude name="**/jni/Test*.class"/>
           <exclude name="**/TestAll.class"/>
           <exclude name="**/TestXABase*.class"/>
           <exclude name="**/TestConst.class"/>
@@ -118,7 +118,7 @@
 
         <fileset dir="${build.test}">
           <include name="**/Test*.class"/>
-          <exclude name="**/jgds/Test*.class"/>
+          <exclude name="**/wire/Test*.class"/>
           <exclude name="**/TestAll.class"/>
           <exclude name="**/TestXABase*.class"/>
           <exclude name="**/TestConst.class"/>
@@ -186,7 +186,7 @@
 
         <fileset dir="${build.test}">
           <include name="**/Test*.class"/>
-          <exclude name="**/jgds/Test*.class"/>
+          <exclude name="**/wire/Test*.class"/>
           <exclude name="**/TestAll.class"/>
           <exclude name="**/TestXABase*.class"/>
           <exclude name="**/TestConst.class"/>
