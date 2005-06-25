@@ -61,7 +61,7 @@ public interface FirebirdConnection extends Connection {
      * 
      * @throws SQLException if something went wrong.
      */
-    FirebirdBlob createBlob() throws SQLException;
+    Blob createBlob() throws SQLException;
     
     /**
      * Get current ISC encoding.

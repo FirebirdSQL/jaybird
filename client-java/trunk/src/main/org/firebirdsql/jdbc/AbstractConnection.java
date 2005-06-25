@@ -1088,7 +1088,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * into a blob field without needing a preexisting blob
      * to modify.
     */
-    public synchronized FirebirdBlob createBlob() throws SQLException {
+    public synchronized Blob createBlob() throws SQLException {
         try {
             return new FBBlob(getGDSHelper(), txCoordinator);
         } catch(GDSException ex) {
