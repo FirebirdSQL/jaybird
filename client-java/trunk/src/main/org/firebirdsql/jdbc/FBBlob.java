@@ -605,22 +605,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             }
         }
         
-        /**
-         * Disgusting usage of method overloading. We need this method to avoid
-         * adding check if this stream is closed in each method, since
-         * {@link FBBlob#getSynchronizationObject()} is called there anyway.
-         * 
-         * @return synchronization object as described in 
-         * {@link FBBlob#getSynchronizationObject()} method.
-         * 
-         * @throws IOException if this stream is already closed.
-         */
-        private Object getSynchronizationObject1() throws IOException {
-            checkClosed();
-            
-            return FBBlob.this.getSynchronizationObject();
-        }
-        
         public FirebirdBlob getBlob() {
             return owner;
         }
@@ -720,7 +704,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         public void readFully(byte[] b, int off, int len) throws IOException {
             int counter = 0;
             int pos = 0;
-            byte[] buffer = new byte[READ_FULLY_BUFFER_SIZE];
+            byte[] buffer = new byte[Math.min(READ_FULLY_BUFFER_SIZE, len)];
 
             int toRead = len;
 
@@ -747,6 +731,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                 if (blob != null) {
                     try {
                         gdsHelper.closeBlob(blob);
+                        
+                        inputStreams.remove(this);
                     } catch (GDSException ge) {
                         throw new IOException("couldn't close blob: " + ge);
                     }
