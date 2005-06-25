@@ -3072,11 +3072,13 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     }
 
 
-    public String getExecutionPlan() throws FBSQLException {
-        if (fbStatement != null){
-            return fbStatement.getExecutionPlan();
-        }
-        return "";
+    public String getExecutionPlan() throws SQLException {
+        checkCursorMove();
+        
+        if (fbStatement == null)
+            throw new FBSQLException("No statement is currently available.");
+            
+        return fbStatement.getExecutionPlan();
     }
 
     //--------------------------------------------------------------------

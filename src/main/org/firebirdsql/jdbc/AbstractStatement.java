@@ -50,8 +50,6 @@ import org.firebirdsql.gds.impl.GDSHelper;
  */
 public abstract class AbstractStatement implements FirebirdStatement, Synchronizable {
     
-    private final Object statementSynchronizationObject = new Object();
-
     protected GDSHelper gdsHelper;
     protected FBObjectListener.StatementListener statementListener;
 
@@ -82,7 +80,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     
     private FBObjectListener.ResultSetListener resultSetListener = new RSListener();
 
-    private int stmtType;
+    private int statementType;
 
     private String executionPlan;
     private AbstractConnection connection;
@@ -1091,6 +1089,9 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     protected void prepareFixedStatement(String sql, boolean describeBind)
         throws GDSException, SQLException
     {
+        executionPlan = null;
+        statementType = 0;
+        
         if (fixedStmt == null) {
             fixedStmt = gdsHelper.allocateStatement();
         }
@@ -1139,6 +1140,17 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         populateStatementInfo();
         return executionPlan;
     }
+    
+    public String getLastExecutionPlan() throws SQLException {
+        
+        if (closed)
+            throw new FBSQLException("Statement is already closed.");
+        
+        if (fixedStmt == null)
+            throw new FBSQLException("No statement was executed, plan cannot be obtained.");
+        
+        return getExecutionPlan();
+    }
 
     /**
      * Get the statement type of this PreparedStatement.
@@ -1149,7 +1161,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      */
     int getStatementType() throws FBSQLException {
         populateStatementInfo();
-        return stmtType;
+        return statementType;
     }
 
 
@@ -1193,7 +1205,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                     case ISCConstants.isc_info_sql_stmt_type:
                         dataLength = gds.iscVaxInteger(buffer, ++i, 2);
                         i += 2;
-                        stmtType = gds.iscVaxInteger(buffer, i, dataLength);
+                        statementType = gds.iscVaxInteger(buffer, i, dataLength);
                         i += dataLength;
                     case ISCConstants.isc_info_end:
                     case 0:
