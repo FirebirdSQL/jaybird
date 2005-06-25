@@ -42,7 +42,7 @@
       <fileset dir=".">
         <include name="ChangeLog"/>
       </fileset>
-      <fileset dir="${build.native}">
+      <fileset dir="native">
         <include name="*"/>
       </fileset>
       <zipfileset dir="${build.lib}" prefix="lib">

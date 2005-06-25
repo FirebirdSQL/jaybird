@@ -19,8 +19,8 @@
 		<equals arg1="${ant.java.version}" arg2="1.5"/>
 	</condition>
 	
-	<property name="Name" value="FirebirdSQL"/>
-    <property name="name" value="firebirdsql"/>
+	<property name="Name" value="JayBird"/>
+    <property name="name" value="jaybird"/>
 
     <property name="version.major" value="2"/>
     <property name="version.minor" value="0"/>
