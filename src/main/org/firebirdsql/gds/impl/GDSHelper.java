@@ -49,12 +49,10 @@ public class GDSHelper {
     private GDS gds;
     private AbstractIscDbHandle currentDbHandle;
     private AbstractIscTrHandle currentTr;
-    private int timeout = 0;
     /**
      * Needed from mcf when killing a db handle when a new tx cannot be started.
      */
     protected DatabaseParameterBuffer dpb;
-    private boolean autoCommit = true;
     
     private boolean registerResultSets;
     

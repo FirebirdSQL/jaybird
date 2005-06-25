@@ -81,8 +81,6 @@ class FBPooledConnection extends PingablePooledConnection
     }
 
     private FBManagedConnection managedConnection;
-    private FBConnectionRequestInfo cri;
-    //private int transactionIsolation;
     
     private FBManagedConnectionEvetListener listener = 
         new FBManagedConnectionEvetListener();
@@ -100,15 +98,13 @@ class FBPooledConnection extends PingablePooledConnection
      */
     public FBPooledConnection(FBManagedConnection managedConnection, 
         FBConnectionRequestInfo cri, boolean statementPooling, 
-        /*int transactionIsolation,*/ int maxStatements, boolean keepStatements) 
+        int maxStatements, boolean keepStatements) 
         throws SQLException, ResourceException 
     {
         super((Connection)managedConnection.getConnection(null, cri), 
-            statementPooling, /*transactionIsolation,*/ maxStatements, keepStatements);
+            statementPooling, maxStatements, keepStatements);
         
         this.managedConnection = managedConnection;
-        this.cri = cri;
-        //this.transactionIsolation = transactionIsolation;
         
         this.managedConnection.addConnectionEventListener(this.listener);
     }
@@ -129,7 +125,7 @@ class FBPooledConnection extends PingablePooledConnection
      */
     protected FBPooledConnection(FBManagedConnection managedConnection, 
         FBConnectionRequestInfo cri, String pingStatement, int pingInterval, 
-        boolean statementPooling, /*int transactionIsolation,*/ int maxStatements, 
+        boolean statementPooling,int maxStatements, 
         boolean keepStatements) 
         throws SQLException, ResourceException 
     {
@@ -138,8 +134,6 @@ class FBPooledConnection extends PingablePooledConnection
             maxStatements, keepStatements);
         
         this.managedConnection = managedConnection;
-        this.cri = cri;
-        //this.transactionIsolation = transactionIsolation;
         
         this.managedConnection.addConnectionEventListener(this.listener);
     }
@@ -152,7 +146,6 @@ class FBPooledConnection extends PingablePooledConnection
             connection.setAutoCommit(true);
 
         connection.setReadOnly(false);
-        //connection.setTransactionIsolation(transactionIsolation);
     }
     /**
      * Get XA resource for this connection.

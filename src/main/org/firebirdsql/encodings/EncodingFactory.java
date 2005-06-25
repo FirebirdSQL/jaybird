@@ -17,37 +17,6 @@
  * All rights reserved.
  */
 
-/* added by Blas Rodriguez Somoza:
- *
- * CVS modification log:
- * $Log$
- * Revision 1.9  2005/05/17 08:10:38  rrokytskyy
- * changed the sync pattern by allowing the code to create more encoders than needed, but using mutex for map access only
- *
- * Revision 1.8  2005/05/15 11:37:09  rrokytskyy
- * added caching of the encoders
- *
- * Revision 1.7  2004/10/10 10:58:01  rrokytskyy
- * added support for character translation to character streams
- *
- * Revision 1.6  2004/10/08 22:39:10  rrokytskyy
- * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
- * added possibility to translate characters if there are some encoding issues
- *
- * Revision 1.5  2003/06/05 22:36:07  brodsom
- * Substitute package and inline imports
- *
- * Revision 1.4  2003/06/04 12:38:22  brodsom
- * Remove unused vars and imports
- *
- * Revision 1.3  2003/01/26 00:50:07  brodsom
- * New character sets support
- *
- * Revision 1.2  2003/01/23 01:37:05  brodsom
- * Encodings patch
- *
- */
-
 package org.firebirdsql.encodings;
 
 import java.io.ByteArrayInputStream;
@@ -107,7 +76,6 @@ public class EncodingFactory {
         return translator;
     }
 
-    private static HashMap encodings = new HashMap();
     public static Encoding getEncoding(String encoding){
         if (encoding == null)
             encoding = defaultEncoding;

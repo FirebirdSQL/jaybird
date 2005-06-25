@@ -25,8 +25,6 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
-import java.util.Calendar;
-import java.util.Map;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDSException;
@@ -34,8 +32,6 @@ import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConvertionException;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 
 /**
@@ -88,9 +84,6 @@ public abstract class AbstractCallableStatement
 {
     static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE";
     static final String NATIVE_SELECT_COMMAND = "SELECT * FROM";
-    
-    private final static Logger log = 
-        LoggerFactory.getLogger(AbstractStatement.class,false);
     
     private ResultSet currentRs;
     

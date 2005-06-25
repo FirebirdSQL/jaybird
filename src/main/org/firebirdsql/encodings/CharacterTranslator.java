@@ -35,7 +35,6 @@ import org.firebirdsql.jdbc.FBSQLException;
  */
 public class CharacterTranslator {
 
-    private String mappingPath;
     private char[] mapping = new char[256 * 256]; // cover all unicode chars
     
     public CharacterTranslator() {
@@ -75,7 +74,6 @@ public class CharacterTranslator {
      */
     public void init(String mappingPath) throws SQLException {
         
-        this.mappingPath = mappingPath;
         Properties props = new Properties();
 
         try {

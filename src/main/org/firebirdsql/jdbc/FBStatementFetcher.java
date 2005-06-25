@@ -23,8 +23,6 @@ import java.sql.SQLException;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * Statement fetcher for read-only case. It differs from updatable cursor case
@@ -54,9 +52,6 @@ class FBStatementFetcher implements FBFetcher {
     private int size;
 
     protected byte[][] _nextRow;
-
-    private final static Logger log = LoggerFactory.getLogger(
-        FBStatementFetcher.class, false);
 
     private int rowNum = 0;
 

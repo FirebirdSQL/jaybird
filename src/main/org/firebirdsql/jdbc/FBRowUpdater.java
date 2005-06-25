@@ -61,7 +61,6 @@ public class FBRowUpdater  {
     private XSQLVAR[] xsqlvars;
     
     private FBField[] fields;
-    private boolean cached;
     
     private boolean inInsertRow;
     

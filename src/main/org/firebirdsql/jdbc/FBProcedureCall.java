@@ -130,8 +130,6 @@ public class FBProcedureCall implements Cloneable {
      * @return instance of {@link FBProcedureParam}.
      */
     private FBProcedureParam getParam(Collection params, int index) {
-        int counter = 0;
-        
         Iterator iter = params.iterator();
         while(iter.hasNext()) {
             FBProcedureParam param = (FBProcedureParam)iter.next();
