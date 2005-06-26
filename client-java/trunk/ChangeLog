@@ -1,3 +1,111 @@
+2005-06-25 21:16  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/gds/TestReconnectTransaction.j
+	ava:
+	
+	fixed ClassCastException
+
+2005-06-25 20:15  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBBlobStream.java:
+	
+	fix for jdk 1.3 compatibility
+
+2005-06-25 19:33  rrokytskyy
+
+	* client-java/src/etc/: release_notes.html, release_notes.odt,
+	release_notes.pdf:
+	
+	new version of release notes
+
+2005-06-25 19:21  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBResultSet.java:
+	
+	reverted previous functionality that when no statement is
+	available, plan is empty
+
+2005-06-25 19:04  rrokytskyy
+
+	* client-java/src/etc/: faq.html, release_notes.odt,
+	release_notes.sxw:
+	
+	new version
+
+2005-06-25 18:37  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/impl/GDSHelper.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBProcedureCall.java,
+	main/org/firebirdsql/jdbc/FBSQLException.java,
+	pool/org/firebirdsql/pool/FBPooledConnection.java,
+	pool/org/firebirdsql/pool/FBWrappingDataSource.java,
+	pool/org/firebirdsql/pool/PooledConnectionHandler.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java,
+	pool/org/firebirdsql/pool/PooledPreparedStatementHandler.java,
+	pool/org/firebirdsql/pool/StatementHandler.java,
+	main/org/firebirdsql/gds/impl/jni/BaseGDSImpl.java,
+	main/org/firebirdsql/gds/impl/jni/NativeGDSImpl.java,
+	main/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	main/org/firebirdsql/jdbc/FBCachedFetcher.java,
+	main/org/firebirdsql/jdbc/FBConnectionProperties.java,
+	main/org/firebirdsql/jdbc/FBEscapedCallParser.java,
+	main/org/firebirdsql/jdbc/FBRowUpdater.java,
+	main/org/firebirdsql/jdbc/FBStatementFetcher.java,
+	main/org/firebirdsql/jdbc/field/FBBlobField.java,
+	main/org/firebirdsql/jdbc/field/FBLongVarCharField.java,
+	main/org/firebirdsql/encodings/CharacterTranslator.java,
+	main/org/firebirdsql/encodings/EncodingFactory.java:
+	
+	removed unused code
+
+2005-06-25 18:36  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/impl/jni/FyracleGDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/jni/FyracleGDSImpl.java,
+	resources/META-INF/services/org.firebirdsql.gds.impl.GDSFactoryPlug
+	in:
+	
+	added support for Fyracle
+
+2005-06-25 18:34  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBBlobStream.java:
+	
+	adapted with change in FirebirdConnection interface
+
+2005-06-25 18:22  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FBResultSet.java,
+	AbstractStatement.java, FirebirdResultSet.java,
+	FirebirdStatement.java:
+	
+	added execution plan to statement and result set
+
+2005-06-25 18:21  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FirebirdDriver.java:
+	
+	added license and comments
+
+2005-06-25 18:13  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBBlob.java:
+	
+	fixed memory leak in blob handling when multiple streams are open
+
+2005-06-25 18:11  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractConnection.java, FirebirdConnection.java:
+	
+	removed incompatibility with JDBC 4.0
+
 2005-06-21 19:23  sjardine
 
 	* client-java/src/:
