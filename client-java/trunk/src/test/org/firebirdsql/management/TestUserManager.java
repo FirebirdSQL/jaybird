@@ -61,7 +61,6 @@ public class TestUserManager extends FBTestBase {
         userManager.setHost(DB_SERVER_URL);
         userManager.setUser(DB_USER);
         userManager.setPassword(DB_PASSWORD);
-        userManager.setDatabase(getDatabasePath());
 
         // Add a user.
         User user1 = new FBUser();
