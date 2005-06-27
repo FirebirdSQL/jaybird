@@ -45,7 +45,35 @@ public class FBUserManager extends FBServiceManager implements UserManager {
 
     private int count = 0;
 
-    private GDS gds = getGds();
+    /**
+     * Create a new instance of <code>FBMaintenanceManager</code> based on
+     * the default GDSType.
+     */
+    public FBUserManager()
+    {
+    	super();
+    }
+
+    /**
+     * Create a new instance of <code>FBMaintenanceManager</code> based on
+     * a given GDSType.
+     * 
+     * @param gdsType type must be PURE_JAVA, EMBEDDED, or NATIVE
+     */
+    public FBUserManager(String gdsType)
+    {
+    	super(gdsType);
+    }
+
+    /**
+     * Create a new instance of <code>FBMaintenanceManager</code> based on
+     * a given GDSType.
+     *
+     * @param gdsType The GDS implementation type to use
+     */
+    public FBUserManager(GDSType gdsType){
+        super(gdsType);
+    }
 
     /**
      * Parses the displayBuffer and creates a map of users.
@@ -116,7 +144,7 @@ public class FBUserManager extends FBServiceManager implements UserManager {
      */
     private ServiceRequestBuffer getUserSRB(int action, User user) {
 
-        ServiceRequestBuffer srb = gds.createServiceRequestBuffer(action);
+        ServiceRequestBuffer srb = getGds().createServiceRequestBuffer(action);
 
         if (user.getUserName() != null)
             srb.addArgument(ISCConstants.isc_spb_sec_username, user
@@ -152,7 +180,7 @@ public class FBUserManager extends FBServiceManager implements UserManager {
     private int getSRBInteger(byte[] displayBuffer) {
         
         count += 1;
-        int integer = gds.iscVaxInteger(displayBuffer, count, 4);
+        int integer = getGds().iscVaxInteger(displayBuffer, count, 4);
         count += 4;
         return integer;
         
@@ -167,7 +195,7 @@ public class FBUserManager extends FBServiceManager implements UserManager {
     private String getSRBString(byte[] displayBuffer) {
         
         count += 1;
-        int length = gds.iscVaxInteger(displayBuffer, count, 2);
+        int length = getGds().iscVaxInteger(displayBuffer, count, 2);
         count += 2;
 
         String string = new String(displayBuffer, count, length);
@@ -194,6 +222,8 @@ public class FBUserManager extends FBServiceManager implements UserManager {
      */
     private void userAction(int action, User user) throws SQLException,
             IOException {
+    	
+    	GDS gds = getGds();
         
         try {
             IscSvcHandle handle = attachServiceManager(gds);
@@ -210,18 +240,6 @@ public class FBUserManager extends FBServiceManager implements UserManager {
         } catch (GDSException ex) {
             throw new FBSQLException(ex);
         }
-        
-    }
-
-    /**
-     * Create and instance of this class.
-     * 
-     * @param gdsType
-     */
-    public FBUserManager(GDSType gdsType) {
-        
-        super(gdsType);
-        setLogger(new ByteArrayOutputStream());
         
     }
 

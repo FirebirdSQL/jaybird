@@ -76,6 +76,26 @@ public class FBMaintenanceManager extends FBServiceManager
 
     /**
      * Create a new instance of <code>FBMaintenanceManager</code> based on
+     * the default GDSType.
+     */
+    public FBMaintenanceManager()
+    {
+    	super();
+    }
+
+    /**
+     * Create a new instance of <code>FBMaintenanceManager</code> based on
+     * a given GDSType.
+     * 
+     * @param gdsType type must be PURE_JAVA, EMBEDDED, or NATIVE
+     */
+    public FBMaintenanceManager(String gdsType)
+    {
+    	super(gdsType);
+    }
+
+    /**
+     * Create a new instance of <code>FBMaintenanceManager</code> based on
      * a given GDSType.
      *
      * @param gdsType The GDS implementation type to use

@@ -53,7 +53,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
         fbManager.setForceCreate(true);
         fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
 
-        maintenanceManager = new FBMaintenanceManager(getGdsType());
+        maintenanceManager = new FBMaintenanceManager();
         maintenanceManager.setHost(DB_SERVER_URL);
         maintenanceManager.setUser(DB_USER);
         maintenanceManager.setPassword(DB_PASSWORD);

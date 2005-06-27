@@ -98,14 +98,45 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
     private static final int RESTORE_REPLACE = ISCConstants.isc_spb_res_replace;
 
     private static final int RESTORE_CREATE = ISCConstants.isc_spb_res_create;
-
+    
+    /**
+     * Create a new instance of <code>FBBackupManager</code> based on
+     * the default GDSType.
+     */
+    public FBBackupManager()
+    {
+    	super();
+    	init();
+    }
 
     /**
-     * Create instance of this class.
+     * Create a new instance of <code>FBBackupManager</code> based on
+     * a given GDSType.
+     * 
+     * @param gdsType type must be PURE_JAVA, EMBEDDED, or NATIVE
+     */
+    public FBBackupManager(String gdsType)
+    {
+    	super(gdsType);
+    	init();
+    }
+
+    /**
+     * Create a new instance of <code>FBBackupManager</code> based on
+     * a given GDSType.
+     * 
+     * @param gdsType type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
     public FBBackupManager(GDSType gdsType) {
-        super(gdsType);
-
+    	super(gdsType);
+    	init();
+    }
+    
+    /**
+     * Initialize necessary parameters.
+     */
+    private void init()
+    {
         verbose = false;
         restoreBufferCount = -1;
         restorePageSize = -1;
