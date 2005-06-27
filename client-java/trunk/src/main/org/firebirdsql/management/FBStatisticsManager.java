@@ -64,12 +64,32 @@ public class FBStatisticsManager extends FBServiceManager
                                 implements StatisticsManager {
 
     /**
-     * Create a new <code>FBStatisticsManager</code> instance based around a
-     * given GDS implementation type.
-     *
-     * @param gdsType The GDS implementation type to be used
+     * Create a new instance of <code>FBMaintenanceManager</code> based on
+     * the default GDSType.
      */
-    public FBStatisticsManager(GDSType gdsType) {
+    public FBStatisticsManager()
+    {
+    	super();
+    }
+
+    /**
+     * Create a new instance of <code>FBMaintenanceManager</code> based on
+     * a given GDSType.
+     * 
+     * @param gdsType type must be PURE_JAVA, EMBEDDED, or NATIVE
+     */
+    public FBStatisticsManager(String gdsType)
+    {
+    	super(gdsType);
+    }
+
+    /**
+     * Create a new instance of <code>FBMaintenanceManager</code> based on
+     * a given GDSType.
+     *
+     * @param gdsType The GDS implementation type to use
+     */
+    public FBStatisticsManager(GDSType gdsType){
         super(gdsType);
     }
 

@@ -40,7 +40,6 @@ import org.firebirdsql.jdbc.FBSQLException;
  */
 public class FBServiceManager implements ServiceManager {
 
-
     private String user;
     private String password;
 
@@ -56,7 +55,28 @@ public class FBServiceManager implements ServiceManager {
     public final static int BUFFER_SIZE = 1024; //1K
 
     /**
+     * Create a new instance of <code>FBServiceManager</code> based on
+     * the default GDSType.
+     */
+    protected FBServiceManager() {
+    	this.gds = GDSFactory.getGDSForType(GDSFactory.getDefaultGDSType());
+    }
+
+    /**
+     * Create a new instance of <code>FBServiceManager</code> based on
+     * a given GDSType.
      * 
+     * @param gdsType type must be PURE_JAVA, EMBEDDED, or NATIVE
+     */
+    protected FBServiceManager(String gdsType) {
+    	this.gds = GDSFactory.getGDSForType(GDSType.getType(gdsType));
+    }
+
+    /**
+     * Create a new instance of <code>FBServiceManager</code> based on
+     * a given GDSType.
+     *
+     * @param gdsType The GDS implementation type to use
      */
     protected FBServiceManager(GDSType gdsType) {
         this.gds = GDSFactory.getGDSForType(gdsType);

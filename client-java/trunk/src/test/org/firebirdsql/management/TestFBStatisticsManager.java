@@ -43,7 +43,7 @@ public class TestFBStatisticsManager extends FBTestBase {
 
         loggingStream = new ByteArrayOutputStream();
     
-        statManager = new FBStatisticsManager(getGdsType());
+        statManager = new FBStatisticsManager();
         statManager.setHost(DB_SERVER_URL);
         statManager.setUser(DB_USER);
         statManager.setPassword(DB_PASSWORD);
