@@ -1,3 +1,25 @@
+2005-06-28 00:45  sjardine
+
+	* client-java/src/:
+	main/org/firebirdsql/management/FBServiceManager.java,
+	main/org/firebirdsql/management/FBBackupManager.java,
+	main/org/firebirdsql/management/FBMaintenanceManager.java,
+	main/org/firebirdsql/management/FBStatisticsManager.java,
+	main/org/firebirdsql/management/FBUserManager.java,
+	test/org/firebirdsql/management/TestFBMaintenanceManager.java,
+	test/org/firebirdsql/management/TestBackupManager.java,
+	test/org/firebirdsql/management/TestFBStatisticsManager.java:
+	
+	Added additional constructors for the ServicesAPI classes.
+
+2005-06-27 18:26  sjardine
+
+	*
+	client-java/src/test/org/firebirdsql/management/TestUserManager.jav
+	a:
+	
+	Removed unnecessary call to setDatabase.
+
 2005-06-25 21:16  rrokytskyy
 
 	*
