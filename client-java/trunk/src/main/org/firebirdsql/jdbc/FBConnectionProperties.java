@@ -183,7 +183,9 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             return;
         
         encoding = FBConnectionHelper.getIscEncoding(charSet);
-        setStringProperty(ENCODING_PROPERTY, encoding);
+        
+        if (encoding != null)
+            setStringProperty(ENCODING_PROPERTY, encoding);
     }
 
     public String getEncoding() {
@@ -198,7 +200,9 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             return;
         
         charSet = FBConnectionHelper.getJavaEncoding(encoding);
-        setStringProperty(LOCAL_ENCODING_PROPERTY, charSet);
+        
+        if (charSet != null)
+            setStringProperty(LOCAL_ENCODING_PROPERTY, charSet);
     }
 
     public String getRoleName() {

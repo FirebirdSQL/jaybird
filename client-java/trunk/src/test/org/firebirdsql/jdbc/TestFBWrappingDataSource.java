@@ -20,6 +20,7 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -193,6 +194,30 @@ public class TestFBWrappingDataSource extends FBTestBase {
            
        } finally {
            context.unbind("jdbc/test");
+       }
+   }
+   
+   public void testValueAsString() throws Exception {
+       FBWrappingDataSource ds = new FBWrappingDataSource();
+       ds.setType("type4");
+       ds.setDatabase(DB_DATASOURCE_URL);
+       ds.setUserName(DB_USER);
+       ds.setPassword(DB_PASSWORD);
+       ds.setEncoding("WIN1252");
+       ds.setPooling(true);
+       ds.setMinPoolSize(0);
+       ds.setMaxPoolSize(30);
+       ds.setPingInterval(1000);
+       ds.setBlockingTimeout(2000);
+       ds.setMaxIdleTime(3600000);
+       
+       Connection con = ds.getConnection();
+       try {
+           String query = "SELECT * FROM rdb$database";
+           PreparedStatement stmt = con.prepareStatement(query);
+           stmt.close();
+       } finally {
+           con.close();
        }
    }
 }

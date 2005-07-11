@@ -314,12 +314,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          * @see org.firebirdsql.jdbc.FBObjectListener.StatementListener#executionStarted(java.sql.Statement)
          */
         public void executionStarted(AbstractStatement stmt) throws SQLException {
-            try {
-                if (!localTransaction.inTransaction())
-                    localTransaction.begin();
-            } catch(ResourceException ex) {
-                throw new FBSQLException(ex);
-            }
+            ensureTransaction();
         }
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.StatementListener#statementClosed(java.sql.Statement)
@@ -409,17 +404,21 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         }
     }
 
-    public static class DummyTransactionCoordinator extends AbstractTransactionCoordinator {
+    public static class MetaDataTransactionCoordinator extends AbstractTransactionCoordinator {
         
-        public DummyTransactionCoordinator(AbstractConnection c) {
-            super(c, c.getLocalTransaction());
+        private InternalTransactionCoordinator tc;
+        
+        public MetaDataTransactionCoordinator(InternalTransactionCoordinator tc) {
+            super(tc.coordinator.connection, tc.coordinator.connection.getLocalTransaction());
+            
+            this.tc = tc;
         }
         
         /**
          * @param connection
          * @param localTransaction
          */
-        public DummyTransactionCoordinator() {
+        public MetaDataTransactionCoordinator() {
             super(null, null);
         }
         /* (non-Javadoc)
@@ -445,12 +444,20 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          */
         public void executionStarted(AbstractStatement stmt) throws SQLException {
 
+            if (tc == null)
+                return;
+
+            tc.ensureTransaction();
         }
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.StatementListener#statementClosed(java.sql.Statement)
          */
         public void statementClosed(AbstractStatement stmt) throws SQLException {
-
+            if (tc == null)
+                return;
+            
+            stmt.completeStatement();
+            tc.coordinator.connection.notifyStatementClosed(stmt);
         }
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.StatementListener#statementCompleted(java.sql.Statement)

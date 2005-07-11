@@ -806,8 +806,23 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return prepareStatement(sql, resultSetType, resultSetConcurrency, this.resultSetHoldability);
     }
 
+    public synchronized PreparedStatement prepareStatement(String sql,
+            int resultSetType, int resultSetConcurrency,
+            int resultSetHoldability) throws SQLException {
+        
+        return prepareStatement(sql, resultSetType, resultSetConcurrency,
+            resultSetHoldability, false);
+    }
+    
+    synchronized PreparedStatement prepareMetaDataStatement(String sql,
+            int resultSetType, int resultSetConcurrency) throws SQLException {
+        
+        return prepareStatement(sql, resultSetType, resultSetConcurrency,
+            resultSetHoldability, true);
+    }
+    
     public synchronized PreparedStatement prepareStatement(String sql, 
-        int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException 
+        int resultSetType, int resultSetConcurrency, int resultSetHoldability, boolean metaData) throws SQLException 
     {
           PreparedStatement stmt;
 		  if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
@@ -822,9 +837,13 @@ public abstract class AbstractConnection implements FirebirdConnection {
           checkHoldability(resultSetType, resultSetHoldability);
           
           try {
+              FBObjectListener.StatementListener coordinator = txCoordinator;
+              if (metaData) 
+                  coordinator = new InternalTransactionCoordinator.MetaDataTransactionCoordinator(txCoordinator);
+              
               stmt = new FBPreparedStatement(
                       getGDSHelper(), sql, resultSetType, resultSetConcurrency, 
-                      resultSetHoldability, txCoordinator);
+                      resultSetHoldability, coordinator, metaData);
               
               activeStatements.add(stmt);
               return stmt;

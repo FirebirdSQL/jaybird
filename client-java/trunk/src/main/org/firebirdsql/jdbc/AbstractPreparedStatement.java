@@ -41,6 +41,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
         FirebirdPreparedStatement {
 
 
+    private boolean metaDataQuery;
 
     // this array contains either true or false indicating if parameter
     // was initialized, executeQuery, executeUpdate and execute methods
@@ -96,10 +97,12 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
      */
     protected AbstractPreparedStatement(GDSHelper c, String sql, int rsType,
             int rsConcurrency, int rsHoldability,
-            FBObjectListener.StatementListener statementListener)
+            FBObjectListener.StatementListener statementListener, boolean metaDataQuery)
             throws SQLException {
         super(c, rsType, rsConcurrency, rsHoldability, statementListener);
 
+        this.metaDataQuery = metaDataQuery;
+        
         notifyStatementStarted();
 
         try {
@@ -107,6 +110,15 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
         } catch (GDSException ge) {
             throw new FBSQLException(ge);
         }
+    }
+    
+    public void completeStatement() throws SQLException {
+        
+        if (!metaDataQuery)
+            closeResultSet(false);
+            
+        if (!completed)
+            notifyStatementCompleted();
     }
 
     /**

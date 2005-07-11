@@ -46,7 +46,8 @@ public class TestFBResultSet extends FBTestBase {
         + "  id INTEGER NOT NULL PRIMARY KEY, " 
         + "  str VARCHAR(10), " 
         + "  long_str VARCHAR(255), "
-        + "  very_long_str VARCHAR(20000)"
+        + "  very_long_str VARCHAR(20000), "
+        + "  blob_str BLOB SUB_TYPE 1"
         + ")"
         ;
         
@@ -908,6 +909,59 @@ public class TestFBResultSet extends FBTestBase {
             assertEquals("ResultSet fetchsize must match Statement fetchSize",
                     FETCH_SIZE, rs.getFetchSize());
 
+        } finally {
+            stmt.close();
+        }
+    }
+
+    public void testInsertUpdatableCursor() throws Exception {
+        
+        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+        
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
+            // rs.next();
+            rs.moveToInsertRow();
+            rs.updateInt("id", 1);
+            rs.updateString("blob_str", "test");
+            try {
+                rs.updateRow();
+                fail("Should fail, since updateRow() is used to update rows.");
+            } catch(SQLException ex) {
+                // ok, let's try to insert row
+                rs.insertRow();
+            }
+            
+            rs.close();
+
+            rs = stmt.executeQuery("SELECT * FROM test_table");
+            assertTrue("Should have at least one row", rs.next());
+            assertTrue("First record should have ID=1", rs.getInt("id") == 1);
+            assertTrue("BLOB should be also saved", "test".equals(rs.getString("blob_str")));
+            assertTrue("Should have only one row.", !rs.next());
+            
+        } finally {
+            stmt.close();
+        }
+    }
+    
+    public void testMetaDataQueryShouldKeepRsOpen() throws Exception {
+        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+        
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
+            
+            try {
+                
+                ResultSet bestRowId = connection.getMetaData().getBestRowIdentifier(
+                    null, null, "test_table", 1, false);
+                assertTrue("Should have row ID", bestRowId.next());
+                bestRowId.close();
+                
+                rs.next();
+            } catch(SQLException ex) {
+                fail("Should throw no exception that result set is closed.");
+            }
         } finally {
             stmt.close();
         }

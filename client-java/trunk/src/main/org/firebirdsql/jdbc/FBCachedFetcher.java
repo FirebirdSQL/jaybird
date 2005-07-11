@@ -304,6 +304,10 @@ class FBCachedFetcher implements FBFetcher {
      */
     public void insertRow(byte[][] data) throws SQLException {
         Object[] newRows = new Object[rowsArray.length + 1];
+        
+        if (rowNum == 0)
+            rowNum++;
+        
         System.arraycopy(rowsArray, 0, newRows, 0, rowNum - 1);
         System.arraycopy(rowsArray, rowNum - 1, newRows, rowNum, rowsArray.length - rowNum + 1);
         newRows[rowNum - 1] = data;

@@ -634,7 +634,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
             throw new FBSQLException("The resultSet is closed");
         
-        if (row == null)
+        if (row == null && rowUpdater == null)
             throw new FBSQLException(
                     "The resultSet is not in a row, use next",
                     FBSQLException.SQL_STATE_NO_ROW_AVAIL);
@@ -656,7 +656,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         FBField field = rowUpdater != null ? rowUpdater.getField(colNum - 1)
                 : fields[colNum - 1];
         wasNullValid = true;
-        wasNull = (row[colNum - 1] == null);
+        wasNull = (row != null ? row[colNum - 1] == null : true);
         return field;
     }
      /**

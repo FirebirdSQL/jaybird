@@ -22,9 +22,11 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.FBTestBase;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
@@ -38,7 +40,7 @@ public class TestFBResultSetMetaData extends FBTestBase {
     
     public static String CREATE_TABLE = 
         "CREATE TABLE test_rs_metadata (" + 
-        "  id INTEGER, " +
+        "  id INTEGER NOT NULL PRIMARY KEY, " +
         "  simple_field VARCHAR(60) CHARACTER SET WIN1250, " +
         "  two_byte_field VARCHAR(60) CHARACTER SET BIG_5, " +
         "  three_byte_field VARCHAR(60) CHARACTER SET UNICODE_FSS, " +
@@ -153,10 +155,10 @@ public class TestFBResultSetMetaData extends FBTestBase {
         ResultSetMetaData metaData = rs.getMetaData();
         		  
         assertTrue("RDB$SECURITY_CLASS must have display size 31 ",metaData.getColumnDisplaySize(3)==10);
-		  
         assertTrue("RDB$CHARACTER_SET_NAME must have display size 31 ",metaData.getColumnDisplaySize(4)==10);
-		  
+        
         stmt.close();
         connection.close();
     }
+    
 }
