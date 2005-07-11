@@ -5566,9 +5566,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             s = new FBPreparedStatement(gdsHelper, sql,
                     ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
                     FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT, 
-                    new InternalTransactionCoordinator.DummyTransactionCoordinator());
+                    new InternalTransactionCoordinator.MetaDataTransactionCoordinator(), 
+                    true);
         } else {
-            s = (AbstractPreparedStatement)connection.prepareStatement(
+            s = (AbstractPreparedStatement)connection.prepareMetaDataStatement(
                 sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
         }
             

@@ -712,7 +712,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         boolean closeResultSet = mode == FirebirdStatement.CLOSE_ALL_RESULTS
                 || mode == FirebirdStatement.CLOSE_CURRENT_RESULT;
         
-        if (closeResultSet) {
+        if (closeResultSet && currentRs != null) {
             try {
                 currentRs.close();
             } finally {

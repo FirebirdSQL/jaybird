@@ -23,11 +23,14 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import javax.swing.plaf.metal.MetalBorders.Flush3DBorder;
+
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.FBField;
+import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 
 
@@ -410,6 +413,14 @@ public class FBRowUpdater  {
             
             if (statementType != INSERT_STATEMENT_TYPE && oldRow == null)
                 throw new FBSQLException("Result set is not positioned on a row.");
+
+            // we have to flush before constructing the parameters
+            // since flushable field can update the value, which 
+            // in turn can change the parameter distribution
+            for (int i = 0; i < xsqlvars.length; i++) {
+                if (fields[i] instanceof FBFlushableField)
+                    ((FBFlushableField)fields[i]).flushCachedData();
+            }
             
             boolean[] parameterMask = getParameterMask();
             
