@@ -33,6 +33,15 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     protected JniGDSImpl(GDSType gdsType) {
         super(gdsType);
         
+        initJNIBridge();
+    }
+
+    /**
+     * Init the JNI bridge for this class.
+     * 
+     * @throws UnsatisfiedLinkError if JNI bridge cannot be initialized.
+     */
+    protected void initJNIBridge() throws UnsatisfiedLinkError {
         final boolean logging = log != null;
 
         if (logging)

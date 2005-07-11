@@ -259,9 +259,12 @@ public class JavaGDSImpl extends AbstractGDS implements GDS {
 
 
       final static byte[] describe_database_info = new byte[] { ISCConstants.isc_info_db_sql_dialect,
-                                   ISCConstants.isc_info_isc_version,
+                                   ISCConstants.isc_info_firebird_version,
                                    ISCConstants.isc_info_ods_version,
                                    ISCConstants.isc_info_ods_minor_version,
+                                   ISCConstants.isc_info_implementation,
+                                   ISCConstants.isc_info_db_class,
+                                   ISCConstants.isc_info_base_level,
                                    ISCConstants.isc_info_end
                                    };
 
@@ -401,18 +404,6 @@ public class JavaGDSImpl extends AbstractGDS implements GDS {
                     db.setDialect(value);
                     if (debug) log.debug("isc_info_db_sql_dialect:"+value);
                     break;
-                case ISCConstants.isc_info_isc_version:
-                    len = iscVaxInteger(info, i, 2);
-                    i += 2;
-                    if (debug) log.debug("isc_info_version len:"+len);
-                    // This +/-2 offset is to skip count and version string length
-                    byte[] vers = new byte[len-2];
-                    System.arraycopy(info, i+2, vers, 0, len-2);
-                    String versS = new String(vers);
-                    i += len;
-                    db.setVersion(versS);
-                    if (debug) log.debug("isc_info_version:"+versS);
-                    break;
                 case ISCConstants.isc_info_ods_version:
                     len = iscVaxInteger(info, i, 2);
                     i += 2;
@@ -428,6 +419,37 @@ public class JavaGDSImpl extends AbstractGDS implements GDS {
                     i += len;
                     db.setODSMinorVersion(value);
                     if (debug) log.debug("isc_info_ods_minor_version:"+value);
+                    break;
+                case ISCConstants.isc_info_firebird_version :
+                    len = iscVaxInteger(info, i, 2);
+                    i += 2;
+                    byte[] fb_vers = new byte[len-2];
+                    System.arraycopy(info, i+2, fb_vers, 0, len-2);
+                    i += len;
+                    String fb_versS = new String(fb_vers);
+                    db.setVersion(fb_versS);
+                    if (debug) log.debug("isc_info_firebird_version:"+fb_versS);
+                    break;
+                case ISCConstants.isc_info_implementation:
+                    len = iscVaxInteger(info, i, 2);
+                    i += 2;
+                    byte[] impl = new byte[len-2];
+                    System.arraycopy(info, i+2, impl, 0, len-2);
+                    i += len;
+                    break;
+                case ISCConstants.isc_info_db_class:
+                    len = iscVaxInteger(info, i, 2);
+                    i += 2;
+                    byte[] db_class = new byte[len-2];
+                    System.arraycopy(info, i+2, db_class, 0, len-2);
+                    i += len;
+                    break;
+                case ISCConstants.isc_info_base_level:
+                    len = iscVaxInteger(info, i, 2);
+                    i += 2;
+                    byte[] base_level = new byte[len-2];
+                    System.arraycopy(info, i+2, base_level, 0, len-2);
+                    i += len;
                     break;
                 case ISCConstants.isc_info_truncated:
                     if (debug) log.debug("isc_info_truncated ");
