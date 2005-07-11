@@ -38,6 +38,7 @@ import javax.security.auth.Subject;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.AbstractIscDbHandle;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 
 /**
  * Describe class <code>isc_db_handle_impl</code> here.
@@ -67,6 +68,7 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
     private int dialect = 0;
     private int protocol = 0;
     private String version = null;
+    private GDSServerVersion serverVersion;
     private int ODSMajorVersion = 0;
     private int ODSMinorVersion = 0;
 	 
@@ -179,8 +181,9 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
         return protocol;
     }
 
-    public void setVersion(String value){
+    public void setVersion(String value) throws GDSException {
         version = value;
+        serverVersion = new GDSServerVersion(value);
     }
 
     public String getVersion(){
@@ -188,10 +191,7 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
     }
 
     public String getDatabaseProductName(){
-        if (version.indexOf("Firebird") != -1)
-            return "Firebird";
-        else
-            return "Interbase";
+        return serverVersion.getServerName();
     }
 
     public String getDatabaseProductVersion(){
@@ -199,29 +199,11 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
     }
 
     public int getDatabaseProductMajorVersion(){
-        if (version.indexOf("Firebird") != -1){
-            if (version.indexOf("Firebird 1.0") != -1)
-                return 1;
-            else if (version.indexOf("Firebird 1.5") != -1)
-                return 1;
-            else 
-                return -1;
-        }
-        else
-            return -1;
+        return serverVersion.getMajorVersion();
     }
 
     public int getDatabaseProductMinorVersion(){
-        if (version.indexOf("Firebird") != -1){
-            if (version.indexOf("Firebird 1.0") != -1)
-                return 0;
-            else if (version.indexOf("Firebird 1.5") != -1)
-                return 5;
-            else 
-                return -1;
-        }
-        else
-            return -1;
+        return serverVersion.getMinorVersion();
     }
 
     public void setODSMajorVersion(int value){

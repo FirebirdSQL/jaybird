@@ -558,7 +558,82 @@ public final class ISCConstants {
     public final static int isc_info_next_transaction = 107;
     public final static int isc_info_db_provider = 108;
     public final static int isc_info_active_transactions = 109;
-    	 
+    
+    public final static int isc_info_db_impl_rdb_vms = 1;
+    public final static int isc_info_db_impl_rdb_eln = 2;
+    public final static int isc_info_db_impl_rdb_eln_dev = 3;
+    public final static int isc_info_db_impl_rdb_vms_y = 4;
+    public final static int isc_info_db_impl_rdb_eln_y = 5;
+    public final static int isc_info_db_impl_jri = 6;
+    public final static int isc_info_db_impl_jsv = 7;
+
+    public final static int isc_info_db_impl_isc_apl_68K = 25;
+    public final static int isc_info_db_impl_isc_vax_ultr = 26;
+    public final static int isc_info_db_impl_isc_vms = 27;
+    public final static int isc_info_db_impl_isc_sun_68k = 28;
+    public final static int isc_info_db_impl_isc_os2 = 29;
+    public final static int isc_info_db_impl_isc_sun4 = 30;
+    
+    public final static int isc_info_db_impl_isc_hp_ux = 31;
+    public final static int isc_info_db_impl_isc_sun_386i = 32;
+    public final static int isc_info_db_impl_isc_vms_orcl = 33;
+    public final static int isc_info_db_impl_isc_mac_aux = 34;
+    public final static int isc_info_db_impl_isc_rt_aix = 35;
+    public final static int isc_info_db_impl_isc_mips_ult = 36;
+    public final static int isc_info_db_impl_isc_xenix = 37;
+    public final static int isc_info_db_impl_isc_dg = 38;
+    public final static int isc_info_db_impl_isc_hp_mpexl = 39;
+    public final static int isc_info_db_impl_isc_hp_ux68K = 40;
+
+    public final static int isc_info_db_impl_isc_sgi = 41;
+    public final static int isc_info_db_impl_isc_sco_unix = 42;
+    public final static int isc_info_db_impl_isc_cray = 43;
+    public final static int isc_info_db_impl_isc_imp = 44;
+    public final static int isc_info_db_impl_isc_delta = 45;
+    public final static int isc_info_db_impl_isc_next = 46;
+    public final static int isc_info_db_impl_isc_dos = 47;
+    public final static int isc_info_db_impl_m88K = 48;
+    public final static int isc_info_db_impl_unixware = 49;
+    public final static int isc_info_db_impl_isc_winnt_x86 = 50;
+
+    public final static int isc_info_db_impl_isc_epson = 51;
+    public final static int isc_info_db_impl_alpha_osf = 52;
+    public final static int isc_info_db_impl_alpha_vms = 53;
+    public final static int isc_info_db_impl_netware_386 = 54; 
+    public final static int isc_info_db_impl_win_only = 55;
+    public final static int isc_info_db_impl_ncr_3000 = 56;
+    public final static int isc_info_db_impl_winnt_ppc = 57;
+    public final static int isc_info_db_impl_dg_x86 = 58;
+    public final static int isc_info_db_impl_sco_ev = 59;
+    public final static int isc_info_db_impl_i386 = 60;
+
+    public final static int isc_info_db_impl_freebsd = 61;
+    public final static int isc_info_db_impl_netbsd = 62;
+    public final static int isc_info_db_impl_darwin = 63;
+    public final static int isc_info_db_impl_sinixz = 64;
+
+    public final static int isc_info_db_impl_linux_sparc = 65;
+    public final static int isc_info_db_impl_linux_amd64 = 66;
+
+    public final static int isc_info_db_class_access = 1;
+    public final static int isc_info_db_class_y_valve = 2;
+    public final static int isc_info_db_class_rem_int = 3;
+    public final static int isc_info_db_class_rem_srvr = 4;
+    public final static int isc_info_db_class_pipe_int = 7;
+    public final static int isc_info_db_class_pipe_srvr = 8;
+    public final static int isc_info_db_class_sam_int = 9;
+    public final static int isc_info_db_class_sam_srvr = 10;
+    public final static int isc_info_db_class_gateway = 11;
+    public final static int isc_info_db_class_cache = 12;
+    public final static int isc_info_db_class_classic_access = 13;
+    public final static int isc_info_db_class_server_access = 14;
+
+    public final static int isc_info_db_code_rdb_eln = 1;
+    public final static int isc_info_db_code_rdb_vms = 2;
+    public final static int isc_info_db_code_interbase = 3;
+    public final static int isc_info_db_code_firebird = 4;
+
+    
 /************************/
 /* Blob Parameter Block */
 /************************/
