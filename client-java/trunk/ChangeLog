@@ -1,3 +1,44 @@
+2005-07-11 10:18  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java,
+	test/org/firebirdsql/jdbc/TestFBResultSetMetaData.java,
+	test/org/firebirdsql/jdbc/TestFBWrappingDataSource.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBRowUpdater.java,
+	jdbc_20/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FBCachedFetcher.java,
+	main/org/firebirdsql/jdbc/FBConnectionProperties.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	main/org/firebirdsql/jdbc/InternalTransactionCoordinator.java:
+	
+	fixes to the bugs reported in the Firebird-Java group and bug
+	tracker
+
+2005-07-11 10:12  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/gds/impl/GDSServerVersion.java,
+	main/org/firebirdsql/gds/impl/GDSServerVersionException.java,
+	main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java,
+	main/org/firebirdsql/gds/impl/jni/isc_db_handle_impl.java,
+	main/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java,
+	main/org/firebirdsql/gds/impl/wire/isc_db_handle_impl.java,
+	test/org/firebirdsql/gds/TestGDSServerVersion.java:
+	
+	added better support for Firebird version handling
+
+2005-07-11 10:08  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSHelper.java:
+	
+	changed the license from LGPL to BSD to be consistent with the
+	package license
+
 2005-06-28 00:45  sjardine
 
 	* client-java/src/:
