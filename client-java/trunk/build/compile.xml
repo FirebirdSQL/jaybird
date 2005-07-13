@@ -40,19 +40,31 @@
     </path>
   </target>
 
-  <target name="set-jdk1.4-src" unless="jdk1.5">
-    <path id="source.jdk.specific">
-      <pathelement path="${source.jdk1.4}"/>
-    </path>
-  </target>
-  
-  <target name="set-jdk1.5-src" if="jdk1.5">
-    <path id="source.jdk.specific">
-      <pathelement path="${source.jdk1.5}"/>
+  <target name="set-wire1.3-src" if="jdk1.3">
+    <path id="source.java.wire">
+      <pathelement path="${source.wire1.3}"/>
     </path>
   </target>
 
-  <target name="compile-driver" depends="set-jdbc-20-src,set-jdbc-30-src,set-jdk1.4-src,set-jdk1.5-src">
+  <target name="set-wire1.4-src" unless="jdk1.3">
+    <path id="source.java.wire">
+      <pathelement path="${source.wire1.4}"/>
+    </path>
+  </target>
+
+  <target name="set-pool1.4-src" unless="jdk1.5">
+    <path id="source.java.pool">
+      <pathelement path="${source.pool1.4}"/>
+    </path>
+  </target>
+
+  <target name="set-pool1.5-src" if="jdk1.5">
+    <path id="source.java.pool">
+      <pathelement path="${source.pool1.5}"/>
+    </path>
+  </target>
+
+  <target name="compile-driver" depends="set-jdbc-20-src,set-jdbc-30-src,set-wire1.3-src,set-wire1.4-src">
     <mkdir dir="${build.classes}"/>
     <javac destdir="${build.classes}"
            target="${ant.java.version}"
@@ -65,10 +77,11 @@
       <classpath refid="javac.driver.classpath"/>
       <src path="${source.java}"/>
       <src refid="source.java.additional"/>
+      <src refid="source.java.wire"/>
     </javac>
   </target>
 
-  <target name="compile-pool" depends="compile-driver">
+  <target name="compile-pool" depends="set-pool1.4-src,set-pool1.5-src,compile-driver">
     <mkdir dir="${build.pool}"/>
     <javac srcdir="${source.pool}"
            destdir="${build.pool}"
@@ -80,7 +93,7 @@
            excludes="**/temp*"
     >
       <classpath refid="javac.pool.classpath"/>
-      <src refid="source.jdk.specific"/>
+      <src refid="source.java.pool"/>
     </javac>
   </target>
   
