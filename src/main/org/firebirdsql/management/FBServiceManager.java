@@ -212,6 +212,9 @@ public class FBServiceManager implements ServiceManager {
     }
 
     public void queueService(GDS gds, IscSvcHandle handle) throws GDSException, FBSQLException, IOException {
+        
+        OutputStream currentLogger = getLogger();
+        
         ServiceRequestBuffer infoSRB = gds.createServiceRequestBuffer(ISCConstants.isc_info_svc_to_eof);
 
         int bufferSize = BUFFER_SIZE;        
@@ -235,7 +238,9 @@ public class FBServiceManager implements ServiceManager {
                         }
                     }
 
-                    getLogger().write(buffer, 3, dataLength);
+                    if (currentLogger != null)
+                        currentLogger.write(buffer, 3, dataLength);
+                    
                     break;
                     
                 case ISCConstants.isc_info_truncated :
