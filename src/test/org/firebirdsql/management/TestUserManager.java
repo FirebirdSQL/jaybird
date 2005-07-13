@@ -20,6 +20,8 @@
  */
 package org.firebirdsql.management;
 
+import java.sql.SQLException;
+
 import org.firebirdsql.common.FBTestBase;
 
 /**
@@ -72,7 +74,11 @@ public class TestUserManager extends FBTestBase {
         user1.setUserId(222);
         user1.setGroupId(222);
 
-        userManager.add(user1);
+        try {
+            userManager.add(user1);
+        } catch(SQLException ex) {
+            // 
+        }
         
         // Check to make sure the user was added.
         User user2 = (User) userManager.getUsers().get(user1.getUserName());
