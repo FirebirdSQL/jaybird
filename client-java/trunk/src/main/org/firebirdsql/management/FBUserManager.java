@@ -22,6 +22,7 @@ package org.firebirdsql.management;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.TreeMap;
@@ -88,9 +89,7 @@ public class FBUserManager extends FBServiceManager implements UserManager {
 
         Map users = new TreeMap();
 
-        byte[] displayBuffer = ((ByteArrayOutputStream) getLogger())
-                .toByteArray();
-        setLogger(new ByteArrayOutputStream());
+        byte[] displayBuffer = ((ByteArrayOutputStream)getLogger()).toByteArray();
 
         count = 0;
         while (count < (displayBuffer.length)
@@ -293,9 +292,16 @@ public class FBUserManager extends FBServiceManager implements UserManager {
      */
 
     public Map getUsers() throws SQLException, IOException {
-
-        userAction(ISCConstants.isc_action_svc_display_user, new FBUser());
-        return getFBUsers();
+        
+        OutputStream savedStream = getLogger();
+        
+        setLogger(new ByteArrayOutputStream());
+        try {
+            userAction(ISCConstants.isc_action_svc_display_user, new FBUser());
+            return getFBUsers();
+        } finally {
+            setLogger(savedStream);
+        }
 
     }
 }
