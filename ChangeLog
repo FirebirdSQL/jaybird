@@ -1,3 +1,41 @@
+2005-07-13 23:27  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/management/TestUserManager.jav
+	a:
+	
+	added catch for the case when user already exists
+
+2005-07-13 23:26  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/management/:
+	FBServiceManager.java, FBUserManager.java:
+	
+	fixed NPE under some conditions
+
+2005-07-13 08:30  sjardine
+
+	* client-java/src/:
+	jdk1_4/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	jdk1_4/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	jdk1_5/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	jdk1_5/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java,
+	main/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java,
+	pool_jdk1_5/org/firebirdsql/pool/DriverConnectionPoolDataSource.jav
+	a,
+	pool_jdk1_5/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	wire_jdk1_4/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java,
+	pool_jdk1_4/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java,
+	pool_jdk1_4/org/firebirdsql/pool/DriverConnectionPoolDataSource.jav
+	a,
+	pool_jdk1_4/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	wire_jdk1_3/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java:
+	
+	Fixed bug introduced by JDK5.0 and new socket creation. 
+	Reorganized source for jdk specific pool code and add jdk specific
+	wire code.
+
 2005-07-11 10:18  rrokytskyy
 
 	* client-java/src/:
