@@ -22,6 +22,10 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     
     private static Logger log = LoggerFactory.getLogger(JniGDSImpl.class,
             false);
+
+    static {
+        initJNIBridge();
+    }
     
     /**
      * Create instance of this class. This constructor attempts to load JayBird
@@ -32,8 +36,6 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
      */
     protected JniGDSImpl(GDSType gdsType) {
         super(gdsType);
-        
-        initJNIBridge();
     }
 
     /**
@@ -41,7 +43,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
      * 
      * @throws UnsatisfiedLinkError if JNI bridge cannot be initialized.
      */
-    protected void initJNIBridge() throws UnsatisfiedLinkError {
+    protected static void initJNIBridge() throws UnsatisfiedLinkError {
         final boolean logging = log != null;
 
         if (logging)
