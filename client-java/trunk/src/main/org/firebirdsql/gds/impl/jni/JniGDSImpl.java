@@ -37,6 +37,15 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     protected JniGDSImpl(GDSType gdsType) {
         super(gdsType);
     }
+    
+    /**
+     * Default constructor for subclasses only. If subclass uses this constructor,
+     * it must ensure that correct type is returned from 
+     * {@link org.firebirdsql.gds.impl.AbstractGDS#getType()} method.
+     */
+    protected JniGDSImpl() {
+        super();
+    }
 
     /**
      * Init the JNI bridge for this class.
