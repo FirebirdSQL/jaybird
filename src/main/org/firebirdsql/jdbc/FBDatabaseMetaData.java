@@ -167,8 +167,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean nullsAreSortedHigh() throws SQLException {
-        //they always occur at end despite sort order
-        return false;
+        // in Firebird 1.5.x NULLs are always sorted at the end
+        // in Firebird 2.0.x NULLs are sorted low
+        if (getDatabaseMajorVersion() == 1) {
+            return false;
+        } else
+        if (getDatabaseMajorVersion() == 2) {
+            return false;
+        } else
+            throw new FBDriverNotCapableException();
     }
 
 
@@ -179,8 +186,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean nullsAreSortedLow() throws SQLException {
-        //they always occur at end despite sort order
-        return false;
+        // in Firebird 1.5.x NULLs are always sorted at the end
+        // in Firebird 2.0.x NULLs are sorted low
+        if (getDatabaseMajorVersion() == 1) {
+            return false;
+        } else
+        if (getDatabaseMajorVersion() == 2) {
+            return true;
+        } else
+            throw new FBDriverNotCapableException();
     }
 
 
@@ -191,8 +205,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean nullsAreSortedAtStart() throws SQLException {
-        //they always occur at end despite sort order
-        return false;
+        // in Firebird 1.5.x NULLs are always sorted at the end
+        // in Firebird 2.0.x NULLs are sorted low
+        if (getDatabaseMajorVersion() == 1) {
+            return false;
+        } else
+        if (getDatabaseMajorVersion() == 2) {
+            return false;
+        } else
+            throw new FBDriverNotCapableException();
     }
 
 
@@ -203,8 +224,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean nullsAreSortedAtEnd() throws SQLException {
-        //they always occur at end despite sort order
-        return true;
+        // in Firebird 1.5.x NULLs are always sorted at the end
+        // in Firebird 2.0.x NULLs are sorted low
+        if (getDatabaseMajorVersion() == 1) {
+            return true;
+        } else
+        if (getDatabaseMajorVersion() == 2) {
+            return false;
+        } else
+            throw new FBDriverNotCapableException();
     }
 
 
@@ -5284,11 +5312,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs 
      */
     public int getDatabaseMajorVersion() throws SQLException {
-        try {
-            return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getDatabaseProductMajorVersion();
-        } catch (GDSException e) {
-            throw new FBSQLException(e);
-        }
+        return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getDatabaseProductMajorVersion();
     }
 
     /**
@@ -5297,11 +5321,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs 
      */
     public int getDatabaseMinorVersion() throws SQLException {
-        try {
-            return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getDatabaseProductMinorVersion();
-        } catch (GDSException e) {
-            throw new FBSQLException(e);
-        }
+        return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getDatabaseProductMinorVersion();
     }
 
     /**
