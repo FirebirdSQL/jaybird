@@ -97,6 +97,9 @@ public class FBDriver implements FirebirdDriver {
         throws SQLException
     {
         final GDSType type = GDSFactory.getTypeForProtocol(url);
+        
+        if (type == null)
+            return null;
 
         try {
             if (originalInfo == null)
@@ -172,22 +175,6 @@ public class FBDriver implements FirebirdDriver {
     public FirebirdConnectionProperties newConnectionProperties() {
         return new  FBConnectionProperties();
     }
-
-//    private Integer extractBlobBufferLength(Properties info) throws SQLException {
-//        String blobBufferLengthStr = (String)info.get(
-//            FBConnectionHelper.DPB_PREFIX + BLOB_BUFFER_LENGTH);
-//        
-//        if (blobBufferLengthStr == null)
-//            return null;
-//        
-//        try {
-//            return new Integer(blobBufferLengthStr);
-//        } catch (NumberFormatException e) {
-//            throw new FBSQLException("Blob buffer length " + blobBufferLengthStr
-//                    + " could not be converted to an integer",
-//                    FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
-//        }
-//    }
 
     /**
      * Returns true if the driver thinks that it can open a connection
