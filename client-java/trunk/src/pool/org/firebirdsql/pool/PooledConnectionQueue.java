@@ -339,6 +339,8 @@ class PooledConnectionQueue {
                     + " wants to take connection.");
 
         PooledObject result = null;
+        
+        SQLException pendingExceptions = null;
 
         try {
 
@@ -347,10 +349,16 @@ class PooledConnectionQueue {
     
                     while (result == null) {
                         
-                        if (!keepBlocking(startTime))
-                            throw new SQLException(
+                        if (!keepBlocking(startTime)) {
+                            SQLException ex = new SQLException(
                                 "Could not obtain connection during " + 
                                 "blocking timeout (" + blockingTimeout + " ms)");
+                                
+                            if (pendingExceptions != null)
+                                ex.setNextException(ex);
+                            
+                            throw ex;
+                        };
     
                         boolean connectionAdded = false;
     
@@ -364,6 +372,12 @@ class PooledConnectionQueue {
     
                             // could not add connection... bad luck
                             // let's wait more
+                            
+                            if (pendingExceptions == null)
+                                pendingExceptions = sqlex;
+                            else
+                            if (pendingExceptions.getErrorCode() != sqlex.getErrorCode())
+                                pendingExceptions.setNextException(sqlex);
     
                         }
     
