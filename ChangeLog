@@ -1,3 +1,10 @@
+2005-07-20 09:33  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java:
+	
+	moved jaybird2.dll initialization into static initializer
+
 2005-07-13 23:27  rrokytskyy
 
 	*
