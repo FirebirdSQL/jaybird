@@ -1,3 +1,33 @@
+2005-07-21 09:30  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java:
+	
+	added a default constructor
+
+2005-07-21 09:27  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataNulls.java:
+	
+	fixed null sorting depending on the server version
+
+2005-07-21 09:25  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBDriver.java:
+	
+	fixed JDBC incompatibility - driver must return null if it
+	discovers that the specified URL is not applicable for it.
+
+2005-07-21 09:23  rrokytskyy
+
+	*
+	client-java/src/pool/org/firebirdsql/pool/PooledConnectionQueue.jav
+	a:
+	
+	added code to save exceptions that happen during blocking timeout
+
 2005-07-20 09:33  rrokytskyy
 
 	*
