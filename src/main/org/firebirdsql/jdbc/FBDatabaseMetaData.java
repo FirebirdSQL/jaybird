@@ -2471,7 +2471,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         " F.RDB$FIELD_PRECISION as FIELD_PRECISION," +
         " F.RDB$FIELD_SCALE as FIELD_SCALE," +
         " F.RDB$FIELD_LENGTH as FIELD_LENGTH," +
-        " F.RDB$CHARACTER_LENGTH as CHARACTER_LENGTH," +
+        " F.RDB$CHARACTER_LENGTH as CHAR_LEN," +
         " RF.RDB$DESCRIPTION AS REMARKS," +
         " RF.RDB$DEFAULT_SOURCE as DEFAULT_SOURCE," +
         " RF.RDB$FIELD_POSITION as FIELD_POSITION, " +
@@ -2680,7 +2680,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
-                   row[6] = xsqlvars[0].encodeInt(rs.getShort("CHARACTER_LENGTH"));
+                   row[6] = xsqlvars[0].encodeInt(rs.getShort("CHAR_LEN"));
                    row[15] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
                    break;
                 case Types.FLOAT:
