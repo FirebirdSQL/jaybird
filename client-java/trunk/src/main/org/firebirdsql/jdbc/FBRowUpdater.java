@@ -509,8 +509,12 @@ public class FBRowUpdater  {
                 result[i] = new byte[newRow[i].length];
                 System.arraycopy(newRow[i], 0, result[i], 0, newRow[i].length);
             } else {
-                result[i] = new byte[oldRow[i].length];
-                System.arraycopy(oldRow[i], 0, result[i], 0, oldRow[i].length);
+                if (oldRow[i] == null) { 
+                    result[i] = null;
+                } else {
+                    result[i] = new byte[oldRow[i].length];
+                    System.arraycopy(oldRow[i], 0, result[i], 0, oldRow[i].length);
+                }
             }
         }
         
