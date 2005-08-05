@@ -770,7 +770,7 @@ public class TestFBResultSet extends FBTestBase {
         try {
             assertTrue("No warnings should be added", connection.getWarnings() == null);
             
-            ResultSet rs = stmt.executeQuery("SELECT id, long_str FROM test_table ORDER BY id");
+            ResultSet rs = stmt.executeQuery("SELECT id, long_str, str FROM test_table ORDER BY id");
 
             int counter = 0;
             while(rs.next()) {
@@ -786,11 +786,15 @@ public class TestFBResultSet extends FBTestBase {
                 assertEquals(counter, rs.getInt(1)); 
                 assertEquals("newString" + counter, rs.getString(2));
 
+                assertEquals(null, rs.getString(3));
+                rs.updateString(3, "str" + counter);
+                
                 rs.updateRow();
 
                 assertEquals(counter, rs.getInt(1)); 
                 assertEquals("newString" + counter, rs.getString(2));
-
+                assertEquals("str" + counter, rs.getString(3));
+                
                 counter++;
             }
             
@@ -799,10 +803,11 @@ public class TestFBResultSet extends FBTestBase {
             rs.moveToInsertRow();
             rs.updateInt(1, recordCount);
             rs.updateString(2, "newString" + recordCount);
+            rs.updateString(3, "str" + recordCount);
             rs.insertRow();
 
             
-            rs = stmt.executeQuery("SELECT id, long_str FROM test_table ORDER BY id");
+            rs = stmt.executeQuery("SELECT id, long_str, str FROM test_table ORDER BY id");
             
             counter = 0;
             while(rs.next()) {
@@ -811,6 +816,7 @@ public class TestFBResultSet extends FBTestBase {
                 
                 String longStr = rs.getString(2);
                 assertTrue(("newString" + counter).equals(longStr));
+                assertTrue(("str" + counter).equals(rs.getString(3)));
                 counter++;
                 
                 if (counter == recordCount + 1)
