@@ -1,3 +1,10 @@
+2005-08-05 13:57  rrokytskyy
+
+	* client-java/src/: test/org/firebirdsql/jdbc/TestFBResultSet.java,
+	main/org/firebirdsql/jdbc/FBRowUpdater.java:
+	
+	fixed an NPE when old value contained null
+
 2005-07-25 11:53  rrokytskyy
 
 	*
