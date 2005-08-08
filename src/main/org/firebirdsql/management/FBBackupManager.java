@@ -300,7 +300,7 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
 
     /**
      * Set the page size that will be used for a restored database. The value 
-     * for <code>pageSize</code> must be one of: 1024, 2048, 4196, or 8192. The
+     * for <code>pageSize</code> must be one of: 1024, 2048, 4096, or 8192. The
      * default value is 1024.
      *
      * @param pageSize The page size to be used in a restored database,
@@ -308,9 +308,9 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
      */
     public void setRestorePageSize(int pageSize) {
         if (pageSize != 1024 && pageSize != 2048 
-                && pageSize != 4196 && pageSize != 8192){
+                && pageSize != 4096 && pageSize != 8192){
             throw new IllegalArgumentException(
-                    "Page size must be one of 1024, 2048, 4196 or 8192");
+                    "Page size must be one of 1024, 2048, 4096 or 8192");
         }
         this.restorePageSize = pageSize;
     }

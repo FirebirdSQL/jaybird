@@ -233,7 +233,7 @@ public interface BackupManager extends ServiceManager {
 
     /**
      * Set the page size that will be used for a restored database. The value 
-     * for <code>pageSize</code> must be one of: 1024, 2048, 4196, or 8192. The
+     * for <code>pageSize</code> must be one of: 1024, 2048, 4096, or 8192. The
      * default value is 1024.
      *
      * @param pageSize The page size to be used in a restored database, one
