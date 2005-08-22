@@ -202,8 +202,21 @@ public class TestFBDatabaseMetaData extends TestXABase {
             if (log != null) log.info("table name: " + name);
             count++;
         }
-        assertTrue("# of system tables is not 32: counted: " + count,
-            count == 32);
+        
+        int sysTableCount;
+        if (c.getMetaData().getDatabaseMajorVersion() < 2)
+            sysTableCount = 32;
+        else
+        if (c.getMetaData().getDatabaseMajorVersion() == 2)
+            sysTableCount = 33;
+        else {
+            fail("Unsupported database server version for this test case: found table count " + count);
+            
+            // needed to make compiler happy - it does not know that fail() throws an exception
+            return;
+        }
+        
+        assertTrue("# of system tables is not 32: counted: " + count, count == sysTableCount);
         rs.close();
         t.commit();
 
