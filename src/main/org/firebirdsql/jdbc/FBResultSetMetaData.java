@@ -732,9 +732,9 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      *
      * @throws SQLException if extended field information cannot be obtained.
      */
-    private Map getExtendedFieldInfo(GDSHelper connection) throws SQLException {
+    private Map getExtendedFieldInfo(GDSHelper gdsHelper) throws SQLException {
 
-        if (connection == null) return Collections.EMPTY_MAP;
+        if (gdsHelper == null) return Collections.EMPTY_MAP;
 
         //
         // Apparently there is a limit in the UNION
@@ -765,7 +765,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
 
             }
 
-            FBDatabaseMetaData metaData = new FBDatabaseMetaData(connection);
+            FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
             ResultSet rs = metaData.doQuery(sb.toString(), params);
 
             try {
