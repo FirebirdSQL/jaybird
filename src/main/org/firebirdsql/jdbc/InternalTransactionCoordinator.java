@@ -463,6 +463,9 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          * @see org.firebirdsql.jdbc.FBObjectListener.StatementListener#statementCompleted(java.sql.Statement)
          */
         public void statementCompleted(AbstractStatement stmt) throws SQLException {
+            if (connection == null)
+                return;
+            
             if (!connection.getAutoCommit())
                 return;
             
