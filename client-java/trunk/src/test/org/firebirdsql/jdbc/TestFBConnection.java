@@ -314,4 +314,16 @@ public class TestFBConnection extends FBTestBase {
             connection.close();
         }
     }
+    
+    public void testMetaDataTransaction() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        try {
+            connection.setAutoCommit(true);
+            DatabaseMetaData metaData = connection.getMetaData();
+            ResultSet rs = metaData.getTables(null, null, "RDB$DATABASE", null);
+            rs.close();
+        } finally {
+            connection.close();
+        }
+    }
 }
