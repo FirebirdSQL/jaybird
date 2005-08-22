@@ -463,7 +463,25 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          * @see org.firebirdsql.jdbc.FBObjectListener.StatementListener#statementCompleted(java.sql.Statement)
          */
         public void statementCompleted(AbstractStatement stmt) throws SQLException {
-
+            if (!connection.getAutoCommit())
+                return;
+            
+            
+            // commit in case of auto-commit mode to end the transaction that we started
+            try {
+                if (localTransaction.inTransaction())
+                    localTransaction.commit();
+            } catch(ResourceException ex) {
+                
+                try {
+                    if (localTransaction.inTransaction())
+                        localTransaction.rollback();
+                } catch(ResourceException ex1) {
+                    throw new FBSQLException(ex1);
+                }
+                
+                throw new FBSQLException(ex);
+            }
         }
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.BlobListener#executionCompleted(org.firebirdsql.jdbc.FirebirdBlob)
