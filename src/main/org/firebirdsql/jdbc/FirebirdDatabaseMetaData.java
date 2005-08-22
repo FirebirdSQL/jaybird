@@ -35,7 +35,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:mirommail@web.de">Michael Romankiewicz</a>
  */
 public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
-
+    
     /**
      * Get the source of a stored procedure.
      * 
@@ -69,4 +69,23 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      *             if specified view cannot be found.
      */
     public String getViewSourceCode(String viewName) throws SQLException;
+    
+    
+    // ---- Backported for JDK 1.3 compatibility ----
+    
+    /**
+     * Retrieves the major version number of the underlying database.
+     *
+     * @return the underlying database's major version
+     * @throws SQLException if a database access error occurs
+     */
+    int getDatabaseMajorVersion() throws SQLException;
+
+    /**
+     * Retrieves the minor version number of the underlying database.
+     *
+     * @return underlying database's minor version
+     * @throws SQLException if a database access error occurs
+     */
+    int getDatabaseMinorVersion() throws SQLException;
 }

@@ -26,8 +26,7 @@ import java.sql.Types;
 import javax.resource.spi.LocalTransaction;
 import javax.sql.DataSource;
 
-import org.firebirdsql.jdbc.AbstractConnection;
-import org.firebirdsql.jdbc.FBDatabaseMetaData;
+import org.firebirdsql.jdbc.*;
 
 /**
  * Describe class <code>TestFBDatabaseMetaData</code> here.
@@ -204,10 +203,13 @@ public class TestFBDatabaseMetaData extends TestXABase {
         }
         
         int sysTableCount;
-        if (c.getMetaData().getDatabaseMajorVersion() < 2)
+        
+        FirebirdDatabaseMetaData metaData = (FirebirdDatabaseMetaData)c.getMetaData();
+        
+        if (metaData.getDatabaseMajorVersion() < 2)
             sysTableCount = 32;
         else
-        if (c.getMetaData().getDatabaseMajorVersion() == 2)
+        if (metaData.getDatabaseMajorVersion() == 2)
             sysTableCount = 33;
         else {
             fail("Unsupported database server version for this test case: found table count " + count);
