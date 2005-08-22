@@ -115,7 +115,7 @@ public class TestBackupManager extends FBTestBase {
         } catch (IllegalArgumentException e) {
             // Ignore
         }
-        backupManager.setRestorePageSize(4196);
+        backupManager.setRestorePageSize(4096);
     }
 
     public void testRestoreReadOnly() throws Exception {
