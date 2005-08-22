@@ -498,7 +498,7 @@ public class GDSHelper {
      * 
      * @return internal handle for connection
      */
-    public IscDbHandle getIscDBHandle() throws GDSException {
+    public IscDbHandle getIscDBHandle() {
         return currentDbHandle;
     }
 
