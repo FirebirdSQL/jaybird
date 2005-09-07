@@ -840,10 +840,16 @@ public abstract class AbstractConnection implements FirebirdConnection {
               FBObjectListener.StatementListener coordinator = txCoordinator;
               if (metaData) 
                   coordinator = new InternalTransactionCoordinator.MetaDataTransactionCoordinator(txCoordinator);
+
+              FBObjectListener.BlobListener blobCoordinator;
+              if (metaData)
+                  blobCoordinator = null;
+              else
+                  blobCoordinator = txCoordinator;
               
               stmt = new FBPreparedStatement(
                       getGDSHelper(), sql, resultSetType, resultSetConcurrency, 
-                      resultSetHoldability, coordinator, metaData);
+                      resultSetHoldability, coordinator, blobCoordinator, metaData);
               
               activeStatements.add(stmt);
               return stmt;
@@ -893,7 +899,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         
         try {
             stmt = new FBCallableStatement(getGDSHelper(), sql, resultSetType,
-                    resultSetConcurrency, resultSetHoldability, txCoordinator);
+                    resultSetConcurrency, resultSetHoldability, txCoordinator, txCoordinator);
             activeStatements.add(stmt);
             return stmt;
         } catch(GDSException ex) {

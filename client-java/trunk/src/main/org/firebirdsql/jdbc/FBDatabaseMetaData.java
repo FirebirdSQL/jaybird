@@ -5583,10 +5583,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             return s;
         
         if (connection == null) {
+            InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator = 
+                new InternalTransactionCoordinator.MetaDataTransactionCoordinator();
+            
             s = new FBPreparedStatement(gdsHelper, sql,
                     ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
                     FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT, 
-                    new InternalTransactionCoordinator.MetaDataTransactionCoordinator(), 
+                    metaDataTransactionCoordinator, metaDataTransactionCoordinator,
                     true);
         } else {
             s = (AbstractPreparedStatement)connection.prepareMetaDataStatement(

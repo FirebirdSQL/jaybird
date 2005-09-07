@@ -92,10 +92,12 @@ public abstract class AbstractCallableStatement
     protected FBProcedureCall procedureCall;
 
 
-    protected AbstractCallableStatement(GDSHelper c, String sql, 
-                                        int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) 
+    protected AbstractCallableStatement(GDSHelper c, String sql, int rsType, 
+            int rsConcurrency, int rsHoldability, 
+            FBObjectListener.StatementListener statementListener, 
+            FBObjectListener.BlobListener blobListener) 
     throws SQLException {
-        super(c, rsType, rsConcurrency, rsHoldability, statementListener);
+        super(c, rsType, rsConcurrency, rsHoldability, statementListener, blobListener);
         
         DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
         

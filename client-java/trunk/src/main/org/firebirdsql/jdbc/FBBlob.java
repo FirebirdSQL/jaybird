@@ -530,6 +530,31 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             throw new FBSQLException(ioe);
         }
     }
+    
+    /**
+     * Copy the contents of an <code>InputStream</code> into this Blob. Unlike 
+     * the {@link #copyStream(InputStream, int)} method, this one copies bytes
+     * until the EOF is reached.
+     *
+     * @param inputStream the stream from which data will be copied
+     * @throws SQLException if a database access error occurs
+     */
+    public void copyStream(InputStream inputStream) throws SQLException {
+        OutputStream os = setBinaryStream(0);
+        try {
+            int chunk = 0;
+            byte[] buffer = new byte[bufferlength];
+
+            while((chunk = inputStream.read(buffer)) != -1)
+                os.write(buffer, 0, chunk);
+            
+            os.flush();
+            os.close();
+        }
+        catch (IOException ioe) {
+            throw new FBSQLException(ioe);
+        }
+    }
 
     /**
      * Copy data from a character stream into this Blob.
