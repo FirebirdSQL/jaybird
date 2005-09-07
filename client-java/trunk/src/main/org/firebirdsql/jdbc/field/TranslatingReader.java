@@ -51,7 +51,11 @@ class TranslatingReader extends InputStreamReader {
             String mappingPath) throws SQLException {
         
         try {
-            return new TranslatingReader(in, charsetName, mappingPath);
+            if (charsetName != null)
+                return new TranslatingReader(in, charsetName, mappingPath);
+            else
+                return new TranslatingReader(in, mappingPath);
+            
         } catch(UnsupportedEncodingException ex) {
             throw new FBSQLException("Cannot set character stream because " +
                 "the unsupported encoding is detected in the JVM: " +
@@ -77,6 +81,27 @@ class TranslatingReader extends InputStreamReader {
     private TranslatingReader(InputStream in, String charsetName, String mappingPath)
             throws UnsupportedEncodingException, SQLException {
         super(in, charsetName);
+        
+        if (mappingPath != null)
+            charMap = EncodingFactory.getTranslator(mappingPath).getMapping();
+        else
+            charMap = null;
+    }
+    
+    /**
+     * Create instance of this class.
+     * 
+     * @param in input stream from which characters are read.
+     * @param mappingPath path to the character mapping.
+     * 
+     * @throws java.io.UnsupportedEncodingException if the specified charset
+     * is not known.
+     * 
+     * @throws SQLException if the specified mapping path is not found.
+     */
+    private TranslatingReader(InputStream in, String mappingPath)
+            throws UnsupportedEncodingException, SQLException {
+        super(in);
         
         if (mappingPath != null)
             charMap = EncodingFactory.getTranslator(mappingPath).getMapping();

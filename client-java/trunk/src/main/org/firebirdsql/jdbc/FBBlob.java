@@ -541,24 +541,30 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     public void copyCharacterStream(Reader inputStream, int length, String encoding) throws SQLException {
         OutputStream os = setBinaryStream(0);
         try {
-        OutputStreamWriter osw = new OutputStreamWriter(os, encoding);
-        char[] buffer = new char[Math.min(bufferlength, length)];
-        int chunk;
-        try {
-            while (length >0) {
-                chunk =inputStream.read(buffer, 0, ((length<bufferlength) ? length:bufferlength));
-                if (chunk == -1)
-                    break;
-                osw.write(buffer, 0, chunk);                
-                length -= chunk;
+            
+            OutputStreamWriter osw;
+            if (encoding != null)
+                osw = new OutputStreamWriter(os, encoding);
+            else
+                osw = new OutputStreamWriter(os);
+            
+            char[] buffer = new char[Math.min(bufferlength, length)];
+            int chunk;
+            try {
+                while (length >0) {
+                    chunk =inputStream.read(buffer, 0, ((length<bufferlength) ? length:bufferlength));
+                    if (chunk == -1)
+                        break;
+                    osw.write(buffer, 0, chunk);                
+                    length -= chunk;
+                }
+                osw.flush();
+                os.flush();
+                os.close();
             }
-            osw.flush();
-            os.flush();
-            os.close();
-        }
-        catch (IOException ioe) {
-            throw new FBSQLException(ioe);
-        }
+            catch (IOException ioe) {
+                throw new FBSQLException(ioe);
+            }
         } catch(UnsupportedEncodingException ex) {
             throw new FBSQLException("Cannot set character stream because " +
                 "the unsupported encoding is detected in the JVM: " +
