@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.FBTestBase;
 
 import java.io.ByteArrayInputStream;
+import java.sql.*;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -240,6 +241,99 @@ public class TestFBBlobAutocommit extends FBTestBase {
             ex.printStackTrace();
             
             throw ex;
+        }
+    }
+    
+    /**
+     * Test if {@link PreparedStatement#setBinaryStream(int, InputStream)} stores
+     * data correctly in auto-commit case.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testSetBlob() throws Exception {
+        connection.setAutoCommit(false);
+        
+        PreparedStatement stmt = connection.prepareStatement(
+            "INSERT INTO test_blob(id, bin_data) VALUES(?, ?)");
+          
+        connection.commit();
+        
+        class TempBlobImpl implements Blob {
+            
+            private byte[] data;
+            
+            TempBlobImpl(byte[] data) {
+                this.data = data;
+            }
+            
+            public long length() {
+                return data.length;
+            }
+
+            public byte[] getBytes(long pos, int length) {
+                int lastPos = (int)pos + length;
+                
+                if (lastPos > data.length)
+                    lastPos = data.length;
+                
+                byte[] result = new byte[lastPos - (int)pos];
+                System.arraycopy(data, (int)pos, result, 0, result.length);
+                return result;
+            }
+            
+            public java.io.InputStream getBinaryStream () {
+                return new ByteArrayInputStream(data);
+            }
+
+            public long position(byte pattern[], long start) throws SQLException {
+                throw new FBDriverNotCapableException();
+            }
+
+            public long position(Blob pattern, long start) throws SQLException {
+                throw new FBDriverNotCapableException();
+            }
+
+            public int setBytes(long pos, byte[] bytes) throws SQLException {
+                throw new FBDriverNotCapableException();
+            }
+            
+            public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
+                throw new FBDriverNotCapableException();
+            }
+            
+            public java.io.OutputStream setBinaryStream(long pos) throws SQLException {
+                throw new FBDriverNotCapableException();
+            }
+
+            public void truncate(long len) throws SQLException {
+                throw new FBDriverNotCapableException();
+            }
+        }
+        
+        stmt.setInt(1, 2);
+        stmt.setBlob(2, new TempBlobImpl(TEST_BYTES));
+            
+        int insertedCount = stmt.executeUpdate();
+        stmt.close();
+        
+        assertTrue("Should insert one row.", insertedCount == 1);
+        
+        stmt = connection.prepareStatement(
+            "SELECT bin_data FROM test_blob WHERE id = ?");
+        stmt.setInt(1, 2);
+        
+        ResultSet rs = stmt.executeQuery();
+        
+        try {
+            assertTrue("Should get at least one record.", rs.next());
+            
+            byte[] bytes = rs.getBytes(1);
+            
+            assertTrue("Should read peviously saved data", Arrays.equals(TEST_BYTES, bytes));
+            assertTrue("Should have exactly one record.", !rs.next());
+        } finally {
+            rs.close();
+            stmt.close();
         }
     }
 }

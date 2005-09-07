@@ -55,6 +55,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
     private boolean isExecuteProcedureStatement;
 
     private boolean trimStrings;
+    
+    private FBObjectListener.BlobListener blobListener;
 
     /**
      * Create instance of this class for the specified result set type and 
@@ -74,10 +76,12 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
      */
     protected AbstractPreparedStatement(GDSHelper c, int rsType,
             int rsConcurrency, int rsHoldability,
-            FBObjectListener.StatementListener statementListener)
+            FBObjectListener.StatementListener statementListener,
+            FBObjectListener.BlobListener blobListener)
             throws SQLException {
         
         super(c, rsType, rsConcurrency, rsHoldability, statementListener);
+        this.blobListener = blobListener;
     }
 
     /**
@@ -97,10 +101,13 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
      */
     protected AbstractPreparedStatement(GDSHelper c, String sql, int rsType,
             int rsConcurrency, int rsHoldability,
-            FBObjectListener.StatementListener statementListener, boolean metaDataQuery)
+            FBObjectListener.StatementListener statementListener,
+            FBObjectListener.BlobListener blobListener,
+            boolean metaDataQuery)
             throws SQLException {
         super(c, rsType, rsConcurrency, rsHoldability, statementListener);
 
+        this.blobListener = blobListener;
         this.metaDataQuery = metaDataQuery;
         
         notifyStatementStarted();
@@ -938,9 +945,15 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
      *      </a>
      */
     public void setBlob(int parameterIndex, Blob blob) throws SQLException {
-        if (!(blob instanceof FBBlob)) { throw new FBSQLException(
-                "You must use FBBlobs with Firebird.",
-                FBSQLException.SQL_STATE_INVALID_PARAM_TYPE); }
+        
+        // if the passed BLOB is not instance of our class, copy its content
+        // into the our BLOB
+        if (!(blob instanceof FBBlob)) {
+            FBBlob fbb = new FBBlob(gdsHelper, blobListener);
+            fbb.copyStream(blob.getBinaryStream());
+            blob = fbb;
+        } 
+        
         getField(parameterIndex).setBlob((FBBlob) blob);
         isParamSet[parameterIndex - 1] = true;
     }
