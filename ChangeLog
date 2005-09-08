@@ -1,3 +1,27 @@
+2005-09-08 00:08  rrokytskyy
+
+	* client-java/src/:
+	test/org/firebirdsql/jdbc/TestFBBlobAutocommit.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBBlob.java,
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	jdbc_20/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_20/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBPreparedStatement.java:
+	
+	fixed an issue when a "foreign" java.sql.Blob implementation is
+	passed into PreparedStatement.setBlob(...) method
+
+2005-09-07 23:15  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FBBlob.java,
+	field/TranslatingReader.java:
+	
+	fixed NPE when no java encoding was specified
+
 2005-08-22 16:23  rrokytskyy
 
 	* client-java/src/:
