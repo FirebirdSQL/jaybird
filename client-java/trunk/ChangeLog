@@ -1,3 +1,9 @@
+2005-09-08 18:06  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSFactory.java:
+	
+	changed the way plugins are loaded (contributed by Eugeney Putilin)
+
 2005-09-08 00:08  rrokytskyy
 
 	* client-java/src/:
