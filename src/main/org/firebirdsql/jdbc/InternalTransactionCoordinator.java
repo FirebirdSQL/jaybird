@@ -125,8 +125,16 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         }
         protected void completeStatements() throws SQLException {
             SQLException resultEx = null;
-            for (Iterator iter = statements.iterator(); iter.hasNext();) {
-                AbstractStatement statement = (AbstractStatement) iter.next();
+            
+            // we have to loop through the array, since the 
+            // statement.completeStatement() call causes the 
+            // ConcurrentModificationException
+            Object[] statementsToComplete = statements.toArray(); 
+            for (int i = 0; i < statementsToComplete.length; i++) {
+                
+                AbstractStatement statement = 
+                    (AbstractStatement)statementsToComplete[i];
+                
                 try {
                     statement.completeStatement();
                 } catch(SQLException ex) {
@@ -135,8 +143,11 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
                     else
                         resultEx.setNextException(ex);
                 }
-                iter.remove();
             }
+            
+            // clear the statements (usually needed only for those that
+            // were not removed in the statement.completeStatement() call
+            statements.clear();
             
             try {
                 if (localTransaction.inTransaction())
@@ -360,8 +371,16 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          */
         protected void completeStatements() throws SQLException {
             SQLException resultEx = null;
-            for (Iterator iter = statements.iterator(); iter.hasNext();) {
-                AbstractStatement statement = (AbstractStatement) iter.next();
+
+            // we have to loop through the array, since the 
+            // statement.completeStatement() call causes the 
+            // ConcurrentModificationException
+            Object[] statementsToComplete = statements.toArray(); 
+            for (int i = 0; i < statementsToComplete.length; i++) {
+                
+                AbstractStatement statement = 
+                    (AbstractStatement)statementsToComplete[i];
+
                 try {
                     statement.completeStatement();
                 } catch(SQLException ex) {
@@ -371,6 +390,8 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
                         resultEx.setNextException(ex);
                 }
             }
+            
+            statements.clear();
         }
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.InternalTransactionCoordinator.AbstractTransactionCoordinator#ensureTransaction()

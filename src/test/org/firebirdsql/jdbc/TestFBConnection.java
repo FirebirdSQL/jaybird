@@ -326,4 +326,24 @@ public class TestFBConnection extends FBTestBase {
             connection.close();
         }
     }
+    
+    public void testTransactionCoordinatorAutoCommitChange() throws Exception {
+        
+        Connection connection = getConnectionViaDriverManager();
+        try {
+            
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT * FROM rdb$database");
+            
+            try {
+                connection.setAutoCommit(false);
+            } finally {
+                ps.close();
+            }
+            
+        } finally {
+            connection.close();
+        }
+        
+    }
 }
