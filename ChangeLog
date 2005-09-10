@@ -1,3 +1,12 @@
+2005-09-09 13:05  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/InternalTransactionCoordinator.java,
+	test/org/firebirdsql/jdbc/TestFBConnection.java:
+	
+	fixed a ConcurrentModificationException when auto-commit mode was
+	changed with open statements.
+
 2005-09-08 18:06  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/gds/impl/GDSFactory.java:
