@@ -1858,6 +1858,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 		int socketBufferSize = -1;
 
+        /*
 		String iscSocketBufferLength = databaseParameterBuffer
 				.getArgumentAsString(ISCConstants.isc_dpb_socket_buffer_size);
 
@@ -1869,6 +1870,10 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 						ISCConstants.isc_bad_dpb_content);
 			}
 		}
+        */
+        
+        if (databaseParameterBuffer.hasArgument(ISCConstants.isc_dpb_socket_buffer_size))
+            socketBufferSize = databaseParameterBuffer.getArgumentAsInt(ISCConstants.isc_dpb_socket_buffer_size);
 
 		try {
 			openSocket(db, dbai, debug, socketBufferSize);
