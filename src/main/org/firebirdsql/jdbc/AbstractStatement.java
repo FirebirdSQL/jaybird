@@ -148,7 +148,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     }
     
     public boolean isValid() {
-        return fixedStmt != null && fixedStmt.isValid();
+        return !closed && (fixedStmt == null || fixedStmt.isValid());
     }
     
     /**
