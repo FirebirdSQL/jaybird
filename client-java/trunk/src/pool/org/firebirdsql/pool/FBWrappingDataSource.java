@@ -165,7 +165,7 @@ public class FBWrappingDataSource implements DataSource,
     /**
      * Create instance of this class.
      */
-    public FBWrappingDataSource() throws SQLException {
+    public FBWrappingDataSource() {
         // empty
     }
     
