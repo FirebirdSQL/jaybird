@@ -1,3 +1,42 @@
+2005-09-24 03:57  sjardine
+
+	*
+	client-java/src/wire_jdk1_4/org/firebirdsql/gds/impl/wire/JavaGDSIm
+	pl.java:
+	
+	Re-fixed problem with socket creation.
+
+2005-09-24 03:57  sjardine
+
+	*
+	client-java/src/pool_jdk1_4/org/firebirdsql/gds/impl/wire/JavaGDSIm
+	pl.java:
+	
+	Removed unused code.
+
+2005-09-23 17:45  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSI
+	mpl.java:
+	
+	fixed exception when socket buffer size is specified
+
+2005-09-23 16:41  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
+	
+	improved the isValid() semantics (open, but not executed statements
+	are also valid)
+
+2005-09-23 16:36  rrokytskyy
+
+	*
+	client-java/src/pool/org/firebirdsql/pool/FBWrappingDataSource.java
+	:
+	
+	removed unneeded throws clause
+
 2005-09-09 13:05  rrokytskyy
 
 	* client-java/src/:
