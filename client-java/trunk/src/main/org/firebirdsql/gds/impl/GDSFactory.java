@@ -80,7 +80,12 @@ public class GDSFactory {
 
     static {
         try {
-            Enumeration res = GDSFactory.class.getClassLoader().getResources(
+            ClassLoader classLoader = GDSFactory.class.getClassLoader();
+            
+            if (classLoader == null)
+                classLoader = ClassLoader.getSystemClassLoader();
+            
+            Enumeration res = classLoader.getResources(
                 "META-INF/services/" + GDSFactoryPlugin.class.getName());
             
             while (res.hasMoreElements()) {
@@ -128,7 +133,9 @@ public class GDSFactory {
      */
     public static void registerPlugin(GDSFactoryPlugin plugin) {
 
-        registeredPlugins.add(plugin);
+        boolean newPlugin = registeredPlugins.add(plugin);
+        if (!newPlugin)
+            return;
 
         GDSType type = GDSType.registerType(plugin.getTypeName());
         typeToPluginMap.put(type, plugin);
@@ -146,11 +153,18 @@ public class GDSFactory {
         String[] jdbcUrls = (String[]) plugin.getSupportedProtocols();
         for (int i = 0; i < jdbcUrls.length; i++) {
 
-            if (jdbcUrlToPluginMap.containsKey(jdbcUrls[i]))
-                throw new IllegalArgumentException(
-                        "Duplicate JDBC URL pattern detected.");
+//            if (jdbcUrlToPluginMap.containsKey(jdbcUrls[i]))
 
-            jdbcUrlToPluginMap.put(jdbcUrls[i], plugin);
+            GDSFactoryPlugin otherPlugin = 
+                (GDSFactoryPlugin)jdbcUrlToPluginMap.put(jdbcUrls[i], plugin);
+            
+            if (otherPlugin == null)
+                continue;
+            
+            if (!otherPlugin.equals(plugin))
+                throw new IllegalArgumentException(
+                "Duplicate JDBC URL pattern detected: URL " + jdbcUrls[i] + ", " +
+                "plugin " + plugin.getTypeName() + ", other plugin " + otherPlugin.getTypeName());
         }
     }
 
