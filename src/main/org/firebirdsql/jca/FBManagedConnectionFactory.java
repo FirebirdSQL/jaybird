@@ -127,7 +127,64 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         
         return gdsType;
     }
+    
+    /**
+     * @deprecated use {@link #getBlobBufferSize()}
+     */
+    public int getBlobBufferLength() {
+        return getBlobBufferSize();
+    }
+    
+    /**
+     * @deprecated use {@link #setBlobBufferSize(int)}
+     */
+    public void setBlobBufferLength(int value) {
+        setBlobBufferSize(value);
+    }
+    
+    /**
+     * @deprecated use {@link #getDefaultTransactionIsolation()}
+     */
+    public Integer getTransactionIsolation() {
+        return new Integer(getDefaultTransactionIsolation());
+    }
+    
+    /**
+     * @deprecated use {@link #setDefaultTransactionIsolation(int)}
+     */
+    public void setTransactionIsolation(Integer value) {
+        if (value != null)
+            setDefaultTransactionIsolation(value.intValue());
+    }
+    
+    /**
+     * @deprecated use {@link #getDefaultIsolation()}
+     */
+    public String getTransactionIsolationName() {
+        return getDefaultIsolation();
+    }
 
+    /**
+     * @deprecated use {@link #setDefaultIsolation(String)} 
+     */
+    public void setTransactionIsolationName(String name) {
+        setDefaultIsolation(name);
+    }
+    
+    /**
+     * @deprecated use {@link #getCharSet()} instead.
+     */
+    public String getLocalEncoding() {
+        return getCharSet();
+    }
+    
+    /**
+     * @deprecated use {@link #setCharSet(String)} instead.
+     */
+    public void setLocalEncoding(String localEncoding) {
+        setCharSet(localEncoding);
+    }
+    
     public int getBlobBufferSize() {
         return connectionProperties.getBlobBufferSize();
     }
