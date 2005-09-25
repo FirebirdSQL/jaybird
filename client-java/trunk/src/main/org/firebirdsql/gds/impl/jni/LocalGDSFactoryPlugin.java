@@ -60,4 +60,18 @@ public class LocalGDSFactoryPlugin implements GDSFactoryPlugin {
     public String getDefaultProtocol() {
         return getSupportedProtocols()[0];
     }
+    
+    public int hashCode() {
+        return getTypeName().hashCode();
+    }
+    
+    public boolean equals(Object obj) {
+        if (obj == this) 
+            return true;
+        
+        if (!(obj instanceof LocalGDSFactoryPlugin))
+            return false;
+        
+        return true;
+    }   
 }
