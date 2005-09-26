@@ -1,3 +1,47 @@
+2005-09-25 19:26  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/sun/:
+	AppServerConnectionPoolDataSource.java, AppServerXADataSource.java:
+	
+	initial implementation of Sun-specific version
+
+2005-09-25 19:03  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSFactory.java:
+	
+	improved initialization logic
+
+2005-09-25 19:02  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/:
+	jni/EmbeddedGDSFactoryPlugin.java,
+	jni/FyracleGDSFactoryPlugin.java, jni/LocalGDSFactoryPlugin.java,
+	jni/NativeGDSFactoryPlugin.java, wire/WireGDSFactoryPlugin.java:
+	
+	added hashCode() and equals(Object) methods
+
+2005-09-25 19:01  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
+	.java:
+	
+	added deprecated properties for compatibility reasons
+
+2005-09-25 18:58  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/FBPoolingDefaults.java:
+	
+	changed the login timeout to 5 seconds
+
+2005-09-25 18:57  rrokytskyy
+
+	*
+	client-java/src/pool/org/firebirdsql/pool/sun/AppServerDataSource.j
+	ava:
+	
+	initial implementation of Sun-specific version
+
 2005-09-24 03:57  sjardine
 
 	*
