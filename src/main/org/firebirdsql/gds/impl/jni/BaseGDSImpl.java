@@ -30,6 +30,8 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
     private static int INFO_SIZE = 128;
 
+    public int isc_api_handle;
+    
     public BaseGDSImpl() {
         super();
     }
