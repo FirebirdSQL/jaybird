@@ -45,16 +45,24 @@ public class TestFBMaintenanceManager extends FBTestBase {
         super.setUp();
         
         fbManager = createFBManager();
-        fbManager.setServer(DB_SERVER_URL);
-        fbManager.setPort(DB_SERVER_PORT);
+        
+        String gdsType = System.getProperty("test.gds_type", "PURE_JAVA");
+        
+        if (!"EMBEDDED".equalsIgnoreCase(gdsType) && !"LOCAL".equalsIgnoreCase(gdsType)) {
+            fbManager.setServer(DB_SERVER_URL);
+            fbManager.setPort(DB_SERVER_PORT);
+        }
 
         fbManager.start();
 
         fbManager.setForceCreate(true);
         fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
 
-        maintenanceManager = new FBMaintenanceManager();
-        maintenanceManager.setHost(DB_SERVER_URL);
+        maintenanceManager = new FBMaintenanceManager(getGdsType());
+        if (!"EMBEDDED".equalsIgnoreCase(gdsType) && !"LOCAL".equalsIgnoreCase(gdsType)) {
+            maintenanceManager.setHost(DB_SERVER_URL);
+        }
+        
         maintenanceManager.setUser(DB_USER);
         maintenanceManager.setPassword(DB_PASSWORD);
         maintenanceManager.setDatabase(getDatabasePath());
