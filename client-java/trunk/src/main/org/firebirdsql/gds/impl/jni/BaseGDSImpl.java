@@ -16,14 +16,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
     private static Logger log = LoggerFactory.getLogger(BaseGDSImpl.class,
             false);
-
-//    protected static final byte[] DESCRIBE_DATABASE_INFO_BLOCK = new byte[] {
-//            ISCConstants.isc_info_db_sql_dialect,
-//            ISCConstants.isc_info_isc_version,
-//            ISCConstants.isc_info_ods_version,
-//            ISCConstants.isc_info_ods_minor_version, 
-//            ISCConstants.isc_info_end};
-    
+   
     protected static final byte[] DESCRIBE_DATABASE_INFO_BLOCK = new byte[] {
         ISCConstants.isc_info_db_sql_dialect,
         ISCConstants.isc_info_firebird_version,
@@ -982,60 +975,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
      * @throws GDSException
      *             if something went wrong :))
      */
-//    private void parseAttachDatabaseInfo(byte[] info, IscDbHandle handle)
-//            throws GDSException {
-//        boolean debug = log != null && log.isDebugEnabled();
-//        if (debug)
-//            log.debug("parseDatabaseInfo: first 2 bytes are "
-//                    + iscVaxInteger(info, 0, 2) + " or: " + info[0] + ", "
-//                    + info[1]);
-//        int value = 0;
-//        int len = 0;
-//        int i = 0;
-//        isc_db_handle_impl db = (isc_db_handle_impl) handle;
-//        while (info[i] != ISCConstants.isc_info_end) {
-//            switch (info[i++]) {
-//                case ISCConstants.isc_info_db_sql_dialect:
-//                    len = iscVaxInteger(info, i, 2);
-//                    i += 2;
-//                    value = iscVaxInteger(info, i, len);
-//                    i += len;
-//                    db.setDialect(value);
-//                    break;
-//                case ISCConstants.isc_info_isc_version:
-//                    len = iscVaxInteger(info, i, 2);
-//                    i += 2;
-//                    // This +/-2 offset is to skip count and version string
-//                    // length
-//                    byte[] vers = new byte[len - 2];
-//                    System.arraycopy(info, i + 2, vers, 0, len - 2);
-//                    String versS = new String(vers);
-//                    i += len;
-//                    db.setVersion(versS);
-//                    break;
-//                case ISCConstants.isc_info_ods_version:
-//                    len = iscVaxInteger(info, i, 2);
-//                    i += 2;
-//                    value = iscVaxInteger(info, i, len);
-//                    i += len;
-//                    db.setODSMajorVersion(value);
-//                    break;
-//                case ISCConstants.isc_info_ods_minor_version:
-//                    len = iscVaxInteger(info, i, 2);
-//                    i += 2;
-//                    value = iscVaxInteger(info, i, len);
-//                    i += len;
-//                    db.setODSMinorVersion(value);
-//                    if (debug)
-//                    break;
-//                case ISCConstants.isc_info_truncated:
-//                    return;
-//                default:
-//                    throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
-//            }
-//        }
-//    }
-
     private void parseAttachDatabaseInfo(byte[] info, IscDbHandle handle)
             throws GDSException {
         boolean debug = log != null && log.isDebugEnabled();
