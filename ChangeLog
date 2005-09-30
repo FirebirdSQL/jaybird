@@ -1,3 +1,41 @@
+2005-09-29 20:20  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/management/TestFBMaintenanceMa
+	nager.java:
+	
+	fixed test to handle embedded and local modes
+
+2005-09-29 20:16  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/jni/BaseGDSImpl.java:
+	
+	removed commented code
+
+2005-09-29 20:09  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/jni/BaseGDSImpl.java:
+	
+	fixed error caused by the incorrect DB_INFO block
+
+2005-09-29 19:54  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/gds/impl/jni/TestNgdsBlobReadB
+	ug.java:
+	
+	fixed test case for EMBEDDED or LOCAL modes
+
+2005-09-29 19:49  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBWrappingDataSource.
+	java:
+	
+	fixed incorrect handling of other GDS types
+
 2005-09-26 23:44  rrokytskyy
 
 	*
