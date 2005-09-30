@@ -36,13 +36,13 @@
     <property name="version.major" value="2"/>
     <property name="version.minor" value="0"/>
     <property name="version.revision" value="0"/>
-    <property name="version.tag" value="RC2"/>
+    <property name="version.tag" value="beta2"/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
 
     <!-- This must be set to the CVS tag for any release -->
-    <property name="version.cvstag" value="JayBird_2_0_0_RC2"/>
+    <property name="version.cvstag" value="HEAD"/>
 
     <!-- Manifest version info -->
     <property name="specification.title" value="FirebirdSQL JayBird"/>
