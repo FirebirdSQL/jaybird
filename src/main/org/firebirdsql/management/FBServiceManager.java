@@ -192,11 +192,13 @@ public class FBServiceManager implements ServiceManager {
         ServiceParameterBuffer serviceParameterBuffer = 
             gds.createServiceParameterBuffer();
     
-        serviceParameterBuffer.addArgument(
-            ISCConstants.isc_spb_user_name, getUser());
+        if (getUser() != null)
+            serviceParameterBuffer.addArgument(
+                ISCConstants.isc_spb_user_name, getUser());
         
-        serviceParameterBuffer.addArgument(
-            ISCConstants.isc_spb_password, getPassword());
+        if (getPassword() != null)
+            serviceParameterBuffer.addArgument(
+                ISCConstants.isc_spb_password, getPassword());
 
         serviceParameterBuffer.addArgument(
             ISCConstants.isc_spb_dummy_packet_interval, new byte[]{120, 10, 0, 0});
