@@ -1,3 +1,13 @@
+2005-10-01 23:44  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/management/FBServiceManager.ja
+	va:
+	
+	fixed NPE if no user name and/or password was specified. Does not
+	help at the end, since server expects either SYSDBA or db owner
+	account, but in this case clean error is generated.
+
 2005-09-29 20:20  rrokytskyy
 
 	*
