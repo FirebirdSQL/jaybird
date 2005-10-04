@@ -268,7 +268,11 @@ public class FBConnectionHelper {
      * Load mapping between Java and InterBase encodings. This method loads the
      * mapping using the classloader that loaded this class.
      */
-    private static void loadEncodings() {
+    private synchronized static void loadEncodings() {
+        
+        if (encodingsLoaded)
+            return;
+        
         Properties props;
         try {
             props = loadProperties(ISC_ENCODINGS_RESOURCE);
@@ -294,7 +298,11 @@ public class FBConnectionHelper {
      * Load mapping between Java and InterBase encodings. This method loads the
      * mapping using the classloader that loaded this class.
      */
-    private static void loadEncodingSizes() {
+    private synchronized static void loadEncodingSizes() {
+        
+        if (encodingSizesLoaded)
+            return;
+        
         Properties props;
         try {
             props = loadProperties(ISC_ENCODING_SIZE_RESOURCE);
