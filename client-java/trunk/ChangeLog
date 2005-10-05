@@ -1,3 +1,11 @@
+2005-10-04 22:30  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	
+	fixed hyperthreading/SMP issue caused by race condition -
+	contributed by Subramaniam Aiylam
+
 2005-10-01 23:44  rrokytskyy
 
 	*
