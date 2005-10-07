@@ -23,8 +23,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import javax.swing.plaf.metal.MetalBorders.Flush3DBorder;
-
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
@@ -141,11 +139,13 @@ public class FBRowUpdater  {
     public void setRow(byte[][] row) {
         this.oldRow = row;
         this.updatedFlags = new boolean[xsqlvars.length];
+        this.inInsertRow = false;
     }
 
     public void cancelRowUpdates() {
         this.newRow = new byte[xsqlvars.length][];
         this.updatedFlags = new boolean[xsqlvars.length];
+        this.inInsertRow = false;
     }
     
     public FBField getField(int fieldPosition) {
@@ -316,9 +316,9 @@ public class FBRowUpdater  {
             first = false;
         }
         
-        sb.append("(\n\t").append(columns).append("\n)");
+        sb.append("\n\t").append(columns).append("\n");
         sb.append("FROM");
-        sb.append("(\n\t").append(tableName).append("\n)");
+        sb.append("\n\t").append(tableName).append("\n");
         appendWhereClause(sb, parameterMask);
         return sb.toString();
     }
@@ -385,15 +385,21 @@ public class FBRowUpdater  {
                     selectStatement = gdsHelper.allocateStatement();
                 
                 executeStatement(SELECT_STATEMENT_TYPE, selectStatement);
-                
-                Object[] rows = selectStatement.getRows();
-                if (rows.length == 0)
-                    throw new FBSQLException("No rows could be fetched.");
-                
-                if (rows.length > 1)
-                throw new FBSQLException("More then one row fetched.");
-                
-                setRow((byte[][])rows[0]);
+                try {
+                    // should fetch one row anyway
+                    gdsHelper.fetch(selectStatement, 10);
+                    
+                    Object[] rows = selectStatement.getRows();
+                    if (selectStatement.size() == 0)
+                        throw new FBSQLException("No rows could be fetched.");
+                    
+                    if (selectStatement.size() > 1)
+                    throw new FBSQLException("More then one row fetched.");
+                    
+                    setRow((byte[][])rows[0]);
+                } finally {
+                    gdsHelper.closeStatement(selectStatement, false);
+                }
                 
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
