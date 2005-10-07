@@ -1,5 +1,6 @@
 package org.firebirdsql.gds.impl.jni;
 
+import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.IscBlobHandle;
 import org.firebirdsql.gds.IscDbHandle;

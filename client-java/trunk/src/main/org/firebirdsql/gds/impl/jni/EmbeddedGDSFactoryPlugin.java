@@ -1,7 +1,7 @@
 package org.firebirdsql.gds.impl.jni;
 
+import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.GDSFactoryPlugin;
 import org.firebirdsql.jdbc.FBConnection;
 
@@ -13,7 +13,7 @@ public class EmbeddedGDSFactoryPlugin implements GDSFactoryPlugin {
         "jdbc:firebirdsql:embedded:"
     };
 
-    private static EmbeddedGDSImpl gds;
+    private static GDS gds;
     
     public String getPluginName() {
         return "GDS implementation for embedded server.";
@@ -35,13 +35,31 @@ public class EmbeddedGDSFactoryPlugin implements GDSFactoryPlugin {
         return JDBC_PROTOCOLS;
     }
 
-    public synchronized AbstractGDS getGDS() {
+    public synchronized GDS getGDS() {
         if (gds == null)
-            gds = new EmbeddedGDSImpl();
+            gds = applySyncPolicy(new EmbeddedGDSImpl());
         
         return gds;
     }
 
+    /**
+     * Apply the synchronization policy if the current platform is not Windows.
+     * @param tempGds instance if {@link GDS} to which policy should be applied.
+     */
+    public static GDS applySyncPolicy(GDS tempGds) {
+        GDSSynchronizationPolicy.AbstractSynchronizationPolicy syncPolicy = null;
+
+        String osName = System.getProperty("os.name");
+        if (osName != null && osName.indexOf("Windows") == -1)
+            syncPolicy = new GDSSynchronizationPolicy.ClientLibrarySyncPolicy(tempGds);
+
+        if (syncPolicy != null)
+            return GDSSynchronizationPolicy.applySyncronizationPolicy(tempGds, syncPolicy);
+        else
+            return tempGds;
+    }
+
+    
     public String getDatabasePath(String server, Integer port, String path)
             throws GDSException {
         return path;
