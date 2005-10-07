@@ -42,7 +42,7 @@ public class GDSSynchronizationPolicy {
      * 
      * @param gds instance of {@link GDS} to wrap.
      * @param gdsType type of the GDS implementation
-     * @return
+     * @return instance {@link GDS} to which synchronization policy was applied.
      */
     public static GDS applySyncronizationPolicy(GDS gds, AbstractSynchronizationPolicy syncPolicy) {
         

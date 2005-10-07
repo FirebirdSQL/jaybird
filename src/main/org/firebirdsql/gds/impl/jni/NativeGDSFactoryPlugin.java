@@ -1,7 +1,7 @@
 package org.firebirdsql.gds.impl.jni;
 
+import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.GDSFactoryPlugin;
 import org.firebirdsql.jdbc.FBConnection;
 
@@ -11,7 +11,7 @@ public class NativeGDSFactoryPlugin implements GDSFactoryPlugin {
     private static final String[] TYPE_ALIASES = new String[]{"TYPE2"};
     private static final String[] JDBC_PROTOCOLS = new String[]{"jdbc:firebirdsql:native:"};
     
-    private static NativeGDSImpl gds;
+    private static GDS gds;
     
     public String getPluginName() {
         return "JNI-based GDS implementation.";
@@ -33,8 +33,8 @@ public class NativeGDSFactoryPlugin implements GDSFactoryPlugin {
         return JDBC_PROTOCOLS;
     }
 
-    public AbstractGDS getGDS() {
-        if (gds == null)
+    public GDS getGDS() {
+        if (gds == null) 
             gds = new NativeGDSImpl();
         
         return gds;

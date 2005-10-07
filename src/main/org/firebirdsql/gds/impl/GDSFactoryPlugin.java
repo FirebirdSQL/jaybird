@@ -24,6 +24,7 @@
  */
 package org.firebirdsql.gds.impl;
 
+import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 
 
@@ -41,7 +42,7 @@ public interface GDSFactoryPlugin {
     
     String[] getSupportedProtocols();
     
-    AbstractGDS getGDS();
+    GDS getGDS();
     
     String getDatabasePath(String server, Integer port, String path) throws GDSException;
     
