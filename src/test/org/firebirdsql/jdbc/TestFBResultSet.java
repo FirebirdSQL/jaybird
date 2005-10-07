@@ -789,7 +789,11 @@ public class TestFBResultSet extends FBTestBase {
                 assertEquals(null, rs.getString(3));
                 rs.updateString(3, "str" + counter);
                 
+                // check whether row can be updated
                 rs.updateRow();
+                
+                // check whether row can be refreshed
+                rs.refreshRow();
 
                 assertEquals(counter, rs.getInt(1)); 
                 assertEquals("newString" + counter, rs.getString(2));
@@ -799,13 +803,19 @@ public class TestFBResultSet extends FBTestBase {
             }
             
             assertTrue("Should process " + recordCount + " rows.", counter == recordCount);
-            
+
+            // check the insertRow() feature
             rs.moveToInsertRow();
             rs.updateInt(1, recordCount);
             rs.updateString(2, "newString" + recordCount);
-            rs.updateString(3, "str" + recordCount);
+            rs.updateString(3, "bug");
             rs.insertRow();
+            rs.moveToCurrentRow();
 
+            // check whether newly inserted row can be updated
+            rs.last();
+            rs.updateString(3, "str" + recordCount);
+            rs.updateRow();
             
             rs = stmt.executeQuery("SELECT id, long_str, str FROM test_table ORDER BY id");
             
