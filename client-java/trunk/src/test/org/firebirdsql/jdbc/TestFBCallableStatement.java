@@ -594,12 +594,46 @@ public class TestFBCallableStatement extends FBTestBase {
           cstmt.addBatch();
           
           cstmt.executeBatch();
+         
+          Statement stmt = connection.createStatement(
+              ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
           
+          try {
+              ResultSet rs = stmt.executeQuery("SELECT * FROM employee_project");
+              rs.last();
+              assertEquals("Should find 4 records.", 4, rs.getRow());
+
+              cstmt.setInt(1, 22);
+              cstmt.setString(2, "VBASE");
+              cstmt.setString(3, "Stevens");
+              cstmt.setString(4, "Translator upgrade");
+              cstmt.addBatch();
+              
+              cstmt.setInt(1, 22);
+              cstmt.setNull(2, Types.CHAR);
+              cstmt.setString(3, "Roman");
+              cstmt.setString(4, "Failure upgrade");
+              cstmt.addBatch();
+              
+              try {
+                  cstmt.executeBatch();
+                  fail("Should throw an error.");
+              } catch(SQLException ex) {
+                  // everything is ok
+              }
+
+
+              rs = stmt.executeQuery("SELECT * FROM employee_project");
+              rs.last();
+              assertEquals("Should find 4 records.", 4, rs.getRow());
+
+          } finally {
+              stmt.close();
+          }
           
         } finally {
           cstmt.close();
         }
-
     }
     
     public void testBatchResultSet() throws Exception

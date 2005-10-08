@@ -256,8 +256,12 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     }
 
     protected void notifyStatementCompleted() throws SQLException {
+        notifyStatementCompleted(true);
+    }
+    
+    protected void notifyStatementCompleted(boolean success) throws SQLException {
         this.completed = true;
-        statementListener.statementCompleted(this);
+        statementListener.statementCompleted(this, success);
     }
 
     /**
@@ -956,10 +960,10 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         notifyStatementStarted();
         synchronized (syncObject) {
 
+            boolean success = false;
             try {
                 LinkedList responses = new LinkedList();
 
-                boolean commit = false;
                 try {
 
                     Iterator iter = batchList.iterator();
@@ -982,7 +986,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                         }
                     }
 
-                    commit = true;
+                    success = true;
 
                     return toArray(responses);
 
@@ -990,7 +994,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                     clearBatch();
                 }
             } finally {
-                notifyStatementCompleted();
+                notifyStatementCompleted(success);
             }
         }
     }

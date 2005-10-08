@@ -134,13 +134,12 @@ public abstract class AbstractCallableStatement
         Object syncObject = getSynchronizationObject();
         synchronized (syncObject) {
 
+            boolean success = false;
             try {
                 notifyStatementStarted();
 
                 ArrayList results = new ArrayList(batchList.size());
                 Iterator iterator = batchList.iterator();
-
-                boolean commit = false;
 
                 try {
                     while (iterator.hasNext()) {
@@ -162,7 +161,7 @@ public abstract class AbstractCallableStatement
                         }
                     }
 
-                    commit = true;
+                    success = true;
 
                     return toArray(results);
 
@@ -170,7 +169,7 @@ public abstract class AbstractCallableStatement
                     clearBatch();
                 }
             } finally {
-                notifyStatementCompleted();
+                notifyStatementCompleted(success);
             }
         }
     	

@@ -47,11 +47,15 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         coordinator.statementClosed(stmt);
     }
     public void statementCompleted(AbstractStatement stmt) throws SQLException {
+        statementCompleted(stmt, true);
+    }
+    public void statementCompleted(AbstractStatement stmt, boolean success) throws SQLException {
         Object syncObject = getSynchronizationObject();
         synchronized (syncObject) {
-            coordinator.statementCompleted(stmt);
+            coordinator.statementCompleted(stmt, success);
         }
     }
+
     public void executionCompleted(FirebirdBlob blob) throws SQLException {
         Object syncObject = getSynchronizationObject();
         synchronized (syncObject) {
@@ -227,14 +231,24 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
             stmt.completeStatement();
             connection.notifyStatementClosed(stmt);
         }
+        
+        public void statementCompleted(AbstractStatement stmt) throws SQLException {
+            statementCompleted(stmt, true);
+        }
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.StatementListener#statementCompleted(java.sql.Statement)
          */
-        public void statementCompleted(AbstractStatement stmt) throws SQLException {
+        public void statementCompleted(AbstractStatement stmt, boolean success) throws SQLException {
             statements.remove(stmt);
             try {
-                if (localTransaction.inTransaction())
+                if (!localTransaction.inTransaction())
+                    return;
+                
+                if (success)
                     localTransaction.commit();
+                else
+                    localTransaction.rollback();
+                
             } catch(ResourceException ex) {
                 
                 try {
@@ -339,6 +353,10 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          */
         public void statementCompleted(AbstractStatement stmt) throws SQLException {
 
+        }
+        
+        public void statementCompleted(AbstractStatement stmt, boolean success) throws SQLException {
+            
         }
         
         /* (non-Javadoc)
@@ -480,10 +498,14 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
             stmt.completeStatement();
             tc.coordinator.connection.notifyStatementClosed(stmt);
         }
+        public void statementCompleted(AbstractStatement stmt) throws SQLException {
+            statementCompleted(stmt, true);
+        }
+
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.StatementListener#statementCompleted(java.sql.Statement)
          */
-        public void statementCompleted(AbstractStatement stmt) throws SQLException {
+        public void statementCompleted(AbstractStatement stmt, boolean success) throws SQLException {
             if (connection == null)
                 return;
             
@@ -493,8 +515,14 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
             
             // commit in case of auto-commit mode to end the transaction that we started
             try {
-                if (localTransaction.inTransaction())
+                if (!localTransaction.inTransaction())
+                    return;
+                
+                if (success)
                     localTransaction.commit();
+                else
+                    localTransaction.rollback();
+                
             } catch(ResourceException ex) {
                 
                 try {
