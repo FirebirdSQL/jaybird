@@ -339,7 +339,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *
      * @return a <code>boolean</code> value
      * @exception SQLException if an error occurs
-     * @todo implement statemet pooling on the server.. then in the driver
+     * TODO implement statemet pooling on the server.. then in the driver
      */
     public boolean supportsStatementPooling() throws SQLException {
         return false;
@@ -350,7 +350,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *
      * @return a <code>boolean</code> value
      * @exception SQLException if an error occurs
-     * @todo find out what this even means
+     * TODO find out what this even means
      */
     public boolean locatorsUpdateCopy() throws SQLException {
         return false;
@@ -5608,8 +5608,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *            The sql statement to be used for the query
      * @param params
      *            The parameters to be used in the query
-     * @param statements
-     *            map of sql-&gt;AbstractStatements mappings
      * @throws SQLException
      *             if a database access error occurs
      */
