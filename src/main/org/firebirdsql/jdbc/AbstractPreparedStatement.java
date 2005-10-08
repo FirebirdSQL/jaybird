@@ -835,13 +835,12 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
         Object syncObject = getSynchronizationObject();
         synchronized (syncObject) {
 
+            boolean commit = false;
             try {
                 notifyStatementStarted();
 
                 ArrayList results = new ArrayList(batchList.size());
                 Iterator iter = batchList.iterator();
-
-                boolean commit = false;
 
                 try {
                     while (iter.hasNext()) {
@@ -876,7 +875,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
                     clearBatch();
                 }
             } finally {
-                notifyStatementCompleted();
+                notifyStatementCompleted(commit);
             }
         }
     }

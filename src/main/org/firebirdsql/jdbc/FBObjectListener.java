@@ -107,11 +107,24 @@ public interface FBObjectListener {
         void statementClosed(AbstractStatement stmt) throws SQLException;
         
         /**
-         * Notify the listener that statement is completed.
+         * Notify the listener that statement is completed. This is shortcut
+         * method for <code>statementCompleted(AbstractStatement, true)</code>.
          * 
          * @param stmt statement that was completed.
          */
         void statementCompleted(AbstractStatement stmt) throws SQLException;
+        
+        /**
+         * Notify the listener that statement is completed and tell whether
+         * execution was successfull or not.
+         * 
+         * @param stmt statement that was completed.
+         * @param success <code>true</code> if completion was successfull.
+         * 
+         * @throws SQLException if an error occured.
+         */
+        void statementCompleted(AbstractStatement stmt, boolean success) 
+            throws SQLException;
     }
     
     /**
