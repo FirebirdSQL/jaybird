@@ -62,7 +62,11 @@ public class FBProcedureCall implements Cloneable {
 		}
 	}
     
-    private static final boolean OLD_CALLABLE_STATEMENT_COMPATIBILITY = true;
+    /**
+     * <code>true</code> if the old callable statement compatibility mode should
+     * be used, otherwise - <code>false</code>. Current value - <code>true</code>.
+     */
+    public static final boolean OLD_CALLABLE_STATEMENT_COMPATIBILITY = true;
 
     private String name;
     private Vector inputParams = new Vector();

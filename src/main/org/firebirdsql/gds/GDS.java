@@ -245,7 +245,7 @@ public interface GDS {
      *            contains parameter data for the transaction attributes
      * @throws GDSException
      *             if an error occurs while starting the transaction
-     * @see getNewIscTrHandle
+     * @see #createIscTrHandle()
      */
     void iscStartTransaction(IscTrHandle trHandle, IscDbHandle dbHandle,
             TransactionParameterBuffer tpb) throws GDSException;
@@ -258,10 +258,7 @@ public interface GDS {
      * @param dbHandle
      *            database handle in which "in limbo" transaction will be
      *            reconnected.
-     * @param message
-     *            message that was passed in
-     *            {@link #iscPrepareTransaction2(IscTrHandle, byte[])} method
-     *            call.
+     * @param transactionId ID of the transaction to reconnect.
      * 
      * @throws GDSException
      *             if something went wrong.
@@ -276,7 +273,7 @@ public interface GDS {
      *            Handle to the transaction to be committed.
      * @throws GDSException
      *             if an error occurs while committing the transaction
-     * @see iscRollbackTransaction
+     * @see #iscRollbackTransaction(IscTrHandle)
      */
     void iscCommitTransaction(IscTrHandle trHandle) throws GDSException;
 
@@ -294,7 +291,7 @@ public interface GDS {
      *            Handle to the transaction that is to be rolled back
      * @throws GDSException
      *             if an error occurs while rolling back
-     * @see iscCommitTransaction
+     * @see #iscCommitTransaction(IscTrHandle)
      */
     void iscRollbackTransaction(IscTrHandle trHandle) throws GDSException;
 
@@ -412,7 +409,7 @@ public interface GDS {
 
     /**
      * @deprecated use
-     *             {@link #iscDsqlExecuteImmediate(IscDbHandle, IscTrHandle, byte[], int, XSQLDA)
+     *             {@link #iscDsqlExecuteImmediate(IscDbHandle, IscTrHandle, byte[], int, XSQLDA)}
      */
     void iscDsqlExecuteImmediate(IscDbHandle dbHandle, IscTrHandle trHandle,
             String statement, String encoding, int dialect, XSQLDA xsqlda)
@@ -470,7 +467,7 @@ public interface GDS {
 
     /**
      * @deprecated use
-     *             {@link #iscDsqlExecImmed2(IscDbHandle, IscTrHandle, byte[], int, XSQLDA, XSQLDA)
+     *             {@link #iscDsqlExecImmed2(IscDbHandle, IscTrHandle, byte[], int, XSQLDA, XSQLDA)}
      */
     void iscDsqlExecImmed2(IscDbHandle dbHandle, IscTrHandle trHandle,
             String statement, String encoding, int dialect, XSQLDA inXSQLDA,
@@ -561,7 +558,7 @@ public interface GDS {
 
     /**
      * @deprecated use
-     *             {@link #iscDsqlPrepare(IscTrHandle, IscStmtHandle, byte[], int)
+     *             {@link #iscDsqlPrepare(IscTrHandle, IscStmtHandle, byte[], int)}
      */
     XSQLDA iscDsqlPrepare(IscTrHandle trHandle, IscStmtHandle stmtHandle,
             String statement, String encoding, int dialect) throws GDSException;

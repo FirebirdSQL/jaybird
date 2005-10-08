@@ -92,7 +92,7 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
         invalid = true;
     }
     
-    /** @todo Implement statement handle tracking correctly */
+    /* TODO Implement statement handle tracking correctly */
     // Vector rdb_sql_requests = new Vector();
     
 

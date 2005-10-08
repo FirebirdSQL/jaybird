@@ -56,8 +56,7 @@ public class FBWorkaroundStringField extends FBStringField {
      * Create instance of this class for the specified field and result set.
      * 
      * @param field instance of {@link XSQLVAR} containing field value.
-     * @param rs result set to which this field belongs to.
-     * @param numCol column number.
+     * @param dataProvider data provider for this field
      * @param requiredType required type.
      * 
      * @throws SQLException if something went wrong.

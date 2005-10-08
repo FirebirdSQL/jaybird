@@ -682,7 +682,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
      * executes the statement. 
      * 
      * @param sendOutParams
-     * @return
+     * @return <code>true</code> if the statement has more result sets. 
      * @throws SQLException
      */
     protected boolean internalExecute(boolean sendOutParams)

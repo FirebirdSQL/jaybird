@@ -48,7 +48,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @param connection a <code>AbstractConnection</code> value
      * @exception SQLException if an error occurs
      *
-     * @todo Need another constructor for metadata from constructed
+     * TODO Need another constructor for metadata from constructed
      * result set, where we supply the ext field info.
      */
     protected FBResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {

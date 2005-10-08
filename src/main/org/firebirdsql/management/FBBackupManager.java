@@ -145,15 +145,6 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
     }
 
     /**
-     * @see org.firebirdsql.management.BackupManager#getBackupPath()
-     * 
-     * @deprecated method is no longer supported.
-     */
-    public String getBackupPath() {
-        throw new UnsupportedOperationException("Deprecated");
-    }
-
-    /**
      * @see org.firebirdsql.management.BackupManager#setBackupPath(java.lang.String)
      */
     public void setBackupPath(String backupPath) {
@@ -211,7 +202,7 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
     }
 
     /**
-     * @see org.firebirdsql.management.BackupManager#backupMetadata(boolean)
+     * @see org.firebirdsql.management.BackupManager#backupMetadata()
      */
     public void backupMetadata() throws SQLException {
         backupDatabase(BACKUP_METADATA_ONLY);

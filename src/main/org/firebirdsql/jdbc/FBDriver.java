@@ -216,8 +216,8 @@ public class FBDriver implements FirebirdDriver {
      *          properties.  This array may be an empty array if no properties
      *          are required.
      * @exception SQLException if a database access error occurs
-     * @todo check the correctness of implementation
-     * @todo convert parameters into constants
+     * TODO check the correctness of implementation
+     * TODO convert parameters into constants
      */
     public DriverPropertyInfo[] getPropertyInfo(String url,
         Properties info) throws  SQLException {

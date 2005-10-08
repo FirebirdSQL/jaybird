@@ -962,7 +962,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      * @return the description of this <code>ResultSet</code> object's columns
      * @exception SQLException if a database access error occurs
      * 
-     * @todo we need another way of specifying the exended metadata if
+     * TODO we need another way of specifying the exended metadata if
      * this result set is constructed in code.
      */
     public ResultSetMetaData getMetaData() throws  SQLException {
