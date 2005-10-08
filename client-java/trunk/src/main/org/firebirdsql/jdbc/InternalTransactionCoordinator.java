@@ -110,7 +110,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         /**
          * Get the connection which owns this coordinator.
          * 
-         * @return instance of {@link Connection}
+         * @return instance of {@link AbstractConnection}
          */
         public AbstractConnection getConnection() throws SQLException {
             return connection;
@@ -359,8 +359,9 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         
         
         /**
-         * @param connection
-         * @param localTransaction
+         * Create instance of this class for the specified connection.
+         * 
+         * @param connection connection to coordinate.
          */
         public ManagedTransactionCoordinator(AbstractConnection connection) {
             super(connection, null);
@@ -436,8 +437,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         }
         
         /**
-         * @param connection
-         * @param localTransaction
+         * Create coordinator for the unspecified connection. 
          */
         public MetaDataTransactionCoordinator() {
             super(null, null);

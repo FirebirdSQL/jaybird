@@ -18,7 +18,6 @@
  */
 /*
  * The Original Code is the Firebird Java GDS implementation.
- *
  * The Initial Developer of the Original Code is Alejandro Alberola.
  * Portions created by Alejandro Alberola are Copyright (C) 2001
  * Boix i Oltra, S.L. All Rights Reserved.

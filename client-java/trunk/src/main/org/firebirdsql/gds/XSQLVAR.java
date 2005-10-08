@@ -317,7 +317,7 @@ public class XSQLVAR {
      *
      * @param value The value to be decoded
      * @param encoding The encoding to be used in the decoding process
-     * @param The character mapping path to be used in the decoding
+     * @param mappingPath The character mapping path to be used in the decoding
      * @return The decoded <code>String</code>
      * @throws SQLException if the given encoding cannot be found, or an
      *         error occurs during the decoding
@@ -412,7 +412,7 @@ public class XSQLVAR {
      * <code>Calendar</code>.
      *
      * @param value The <code>Timestamp</code> to be decoded
-     * @param value The <code>Calendar</code> to be used in decoding, 
+     * @param cal The <code>Calendar</code> to be used in decoding, 
      *        may be <code>null</code>
      * @param invertTimeZone If <code>true</code>, the timezone offset value 
      *        will be subtracted from the decoded value, otherwise it will
@@ -522,7 +522,7 @@ public class XSQLVAR {
     /**
      * Decode a <code>byte</code> array into a <code>Time</code> value.
      *
-     * @param int_type The <code>byte</code> array to be decoded
+     * @param int_byte The <code>byte</code> array to be decoded
      * @return The decoded <code>Time</code>
      */
     public Time decodeTime(byte[] int_byte) {
@@ -585,7 +585,7 @@ public class XSQLVAR {
     /**
      * Decode a <code>byte</code> array into a <code>Date</code> value.
      *
-     * @param int_type The <code>byte</code> array to be decoded
+     * @param byte_int The <code>byte</code> array to be decoded
      * @return The decoded <code>Date</code>
      */
     public Date decodeDate(byte[] byte_int) {

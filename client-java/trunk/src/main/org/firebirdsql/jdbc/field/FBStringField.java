@@ -52,7 +52,7 @@ import org.firebirdsql.gds.XSQLVAR;
  * @todo think about the right setBoolean and getBoolean (currently it is "Y"
  * and "N", or "TRUE" and "FALSE").
  * 
- * @todo check if the setBinaryStream(null) is allowed by specs.
+ * TODO check if the setBinaryStream(null) is allowed by specs.
  */
 public class FBStringField extends FBField {
     private static final String SHORT_TRUE = "Y";

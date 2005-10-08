@@ -245,7 +245,7 @@ public interface BackupManager extends ServiceManager {
      * Set the restore operation to create a new database, as opposed to
      * overwriting an existing database.
      *
-     * @param create If <code>true</code>, the restore operation will attempt
+     * @param replace If <code>true</code>, the restore operation will attempt
      *        to create a new database if it does not exit or overwrite an 
      *        existing one when it exists, <code>false</code> when restore 
      *        should fail if database already exist (if it doesn't, a database
@@ -263,7 +263,6 @@ public interface BackupManager extends ServiceManager {
 
     /**
      * Perform the restore operation.
-     * @param  verbose output to the logger.
      * @throws SQLException if a database error occurs during the restore
      */
     public void restoreDatabase() throws SQLException;

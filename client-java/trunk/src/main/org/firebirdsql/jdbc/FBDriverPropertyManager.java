@@ -281,7 +281,6 @@ public class FBDriverPropertyManager {
      * Additionally method handles the character translation stuff.
      * 
      * @param info connection properties
-     * @param cri mapping connection request info.
      * 
      * @throws SQLException if both isc_dpb_local_encoding and charSet are
      * specified.

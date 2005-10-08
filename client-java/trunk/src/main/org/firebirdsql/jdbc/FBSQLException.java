@@ -28,10 +28,7 @@ import java.io.PrintStream;
 import java.io.IOException;
 
 /**
- *@author Ken Richard
- *@created May 30, 2002
- *@see <related>
- *@version $ $
+ * @author Ken Richard
  */
 
 public class FBSQLException extends SQLException {

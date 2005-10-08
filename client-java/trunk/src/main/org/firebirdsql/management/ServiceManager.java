@@ -52,7 +52,7 @@ public interface ServiceManager {
 
     /**
      * Sets the username for the connection to the service manager.
-     * @param username for the connection to the service manager.
+     * @param user for the connection to the service manager.
      */
     public void setUser(String user);
 

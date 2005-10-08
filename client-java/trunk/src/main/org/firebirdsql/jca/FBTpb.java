@@ -41,9 +41,8 @@ public class FBTpb implements Serializable {
      * Create a new Transaction Parameters Block instance based around a
      * <code>FBTpbMapper</code>.
      * 
-     * @param mapper
-     *            The <code>FBTpbMapper</code> to be used with this
-     *            <code>FBTpb</code>
+     * @param transactionParams instance of {@link TransactionParameterBuffer}
+     * representing transaction parameters.
      */
     public FBTpb(TransactionParameterBuffer transactionParams) {
         this.transactionParams = transactionParams;

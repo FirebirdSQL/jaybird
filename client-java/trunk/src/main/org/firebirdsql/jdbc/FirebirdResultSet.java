@@ -54,7 +54,7 @@ public interface FirebirdResultSet {
      * @throws SQLException if execution plan cannot be obtained or this result
      * set is already closed.
      * 
-     * @see FirebirdPreparedStatement#getExecutionPlan();
+     * @see FirebirdPreparedStatement#getExecutionPlan()
      */
     String getExecutionPlan() throws SQLException;
 }

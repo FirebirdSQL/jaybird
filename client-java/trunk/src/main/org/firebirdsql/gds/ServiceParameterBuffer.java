@@ -93,7 +93,7 @@ public interface ServiceParameterBuffer {
      * @param argumentType
      *            The parameter to be set, one of the <code>isc_spb_*</code>
      *            constants from {@link ISCConstants}
-     * @param value
+     * @param data
      *            The value to set for the given parameter type
      */
     public void addArgument(int argumentType, byte[] data);

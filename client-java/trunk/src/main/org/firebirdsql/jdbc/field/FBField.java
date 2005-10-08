@@ -221,7 +221,7 @@ public abstract class FBField {
     
     /**
      * @return <code>true</code> if the field is of type <code>type</code>.
-     * @todo write correct ISCConstants.SQL_QUAD support
+     * TODO write correct ISCConstants.SQL_QUAD support
      */
     public final static boolean isType(XSQLVAR field, int type) {
         // turn off null flag, in this case we're not interested in it.

@@ -48,11 +48,7 @@ import org.firebirdsql.jdbc.*;
  * ManagedConnectionFactory is serialized and deserialized, and the deserialized
  * copy is expected to function as anything other than a key.
  * 
- * @see <related>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
- * @version 1.0
- * 
- * @todo add support for separate specification of host/port/filename.
  */
 
 public class FBManagedConnectionFactory implements ManagedConnectionFactory,
@@ -97,7 +93,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * Create a new FBManagedConnectionFactory based around the given GDSType.
      * 
-     * @param GDSType
+     * @param gdsType
      *            The GDS implementation to use
      */
     public FBManagedConnectionFactory(GDSType gdsType) {
@@ -443,9 +439,9 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * ResourceAdapter and opaque to application server) to create this new
      * connection.
      * 
-     * @param Subject
+     * @param subject
      *            Caller's security information
-     * @param cxRequestInfo
+     * @param cri
      *            Additional resource adapter specific connection request
      *            information
      * @return ManagedConnection instance
@@ -480,7 +476,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * 
      * @param connectionSet
      *            candidate connection set
-     * @param Subject
+     * @param subject
      *            caller's security information
      * @param cxRequestInfo
      *            additional resource adapter specific connection request
