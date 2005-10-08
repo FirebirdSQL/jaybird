@@ -1,3 +1,19 @@
+2005-10-08 01:19  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/:
+	GDSFactoryPlugin.java, jni/EmbeddedGDSFactoryPlugin.java,
+	jni/GDSSynchronizationPolicy.java, jni/JniGDSImpl.java,
+	jni/LocalGDSFactoryPlugin.java, jni/NativeGDSFactoryPlugin.java:
+	
+	enabled synchronization policy for JNI mode
+
+2005-10-08 00:04  rrokytskyy
+
+	* client-java/src/: test/org/firebirdsql/jdbc/TestFBResultSet.java,
+	main/org/firebirdsql/jdbc/FBRowUpdater.java:
+	
+	fixed bug with refreshRow() feature
+
 2005-10-04 22:30  rrokytskyy
 
 	*
