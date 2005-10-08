@@ -5331,7 +5331,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException should never be thrown in this implementation
      */
     public int getJDBCMajorVersion() throws SQLException {
-        return 2;
+        return 3;
     }
 
     /**
