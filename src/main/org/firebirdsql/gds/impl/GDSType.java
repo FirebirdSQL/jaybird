@@ -43,7 +43,7 @@ public final class GDSType implements Serializable {
         return typeMap;
     }
     
-    // needed to initiate static initialization of the GDSFactory
+    // DO NOT REMOVE: needed to initiate static initialization of the GDSFactory
     private static final GDSFactory factory = new GDSFactory();
     
     
