@@ -46,6 +46,11 @@ public class GDSFactory {
     private static Logger log = LoggerFactory.getLogger(JavaGDSImpl.class,
         false);
 
+    /**
+     * Class for string comparison in the descendant order. This effectively
+     * puts the most short JDBC URLs at the end of the list, so the correct
+     * default protocol handling can be implemented.
+     */
     private static class ReversedStringComparator implements Comparator {
 
         public int compare(Object o1, Object o2) {
@@ -68,57 +73,68 @@ public class GDSFactory {
 
     private static GDSType defaultType;
 
-    // initialize this class using the Sun implementation of the plugins
-    // interface
-    // static {
-    // Iterator iter = sun.misc.Service.providers(GDSFactoryPlugin.class);
-    // while(iter.hasNext()) {
-    // GDSFactoryPlugin plugin = (GDSFactoryPlugin) iter.next();
-    // registerPlugin(plugin);
-    // }
-    // }
-
     static {
+        
+        // register first all plugins that belong to the same classloader
+        // in which this class is loaded
         try {
             ClassLoader classLoader = GDSFactory.class.getClassLoader();
             
             if (classLoader == null)
                 classLoader = ClassLoader.getSystemClassLoader();
             
-            Enumeration res = classLoader.getResources(
-                "META-INF/services/" + GDSFactoryPlugin.class.getName());
+            loadPluginsFromClassLoader(classLoader);
             
-            while (res.hasMoreElements()) {
-                
-                URL url = (URL) res.nextElement();
-                
-                InputStreamReader rin = new InputStreamReader(url.openStream());
-                BufferedReader bin = new BufferedReader(rin);
-                
-                while (bin.ready()) {
-                    String className = bin.readLine();
-                    
-                    try {
-                        Class clazz = Class.forName(className);
-                    
-                        GDSFactoryPlugin plugin = (GDSFactoryPlugin)clazz.newInstance();
-                        
-                        registerPlugin(plugin);
-                    
-                    } catch (ClassNotFoundException ex) {
-                        if (log != null)
-                            log.error("Can't register plugin" + className, ex);
-                    } catch (IllegalAccessException ex) {
-                        if (log != null)
-                            log.error("Can't register plugin" + className, ex);
-                    } catch(InstantiationException ex) {
-                        if (log != null)
-                            log.error("Can't register plugin" + className, ex);
-                    }
-                }
-            }
+            classLoader = Thread.currentThread().getContextClassLoader();
+            if (classLoader != null)
+                loadPluginsFromClassLoader(classLoader);
+            
         } catch (IOException ex) {
             if (log != null) log.error("Can't register plugins ", ex);
+        }
+        
+    }
+
+    /**
+     * Load all existing plugins from the specified classloader.
+     * 
+     * @param classLoader instance of {@link ClassLoader}.
+     * 
+     * @throws IOException if I/O error occured.
+     */
+    private static void loadPluginsFromClassLoader(ClassLoader classLoader) throws IOException {
+        
+        Enumeration res = classLoader.getResources(
+            "META-INF/services/" + GDSFactoryPlugin.class.getName());
+        
+        while (res.hasMoreElements()) {
+            
+            URL url = (URL) res.nextElement();
+            
+            InputStreamReader rin = new InputStreamReader(url.openStream());
+            BufferedReader bin = new BufferedReader(rin);
+            
+            while (bin.ready()) {
+                String className = bin.readLine();
+                
+                try {
+                    Class clazz = Class.forName(className);
+                
+                    GDSFactoryPlugin plugin = (GDSFactoryPlugin)clazz.newInstance();
+                    
+                    registerPlugin(plugin);
+                
+                } catch (ClassNotFoundException ex) {
+                    if (log != null)
+                        log.error("Can't register plugin" + className, ex);
+                } catch (IllegalAccessException ex) {
+                    if (log != null)
+                        log.error("Can't register plugin" + className, ex);
+                } catch(InstantiationException ex) {
+                    if (log != null)
+                        log.error("Can't register plugin" + className, ex);
+                }
+            }
         }
     }
 
@@ -152,8 +168,6 @@ public class GDSFactory {
 
         String[] jdbcUrls = (String[]) plugin.getSupportedProtocols();
         for (int i = 0; i < jdbcUrls.length; i++) {
-
-//            if (jdbcUrlToPluginMap.containsKey(jdbcUrls[i]))
 
             GDSFactoryPlugin otherPlugin = 
                 (GDSFactoryPlugin)jdbcUrlToPluginMap.put(jdbcUrls[i], plugin);
