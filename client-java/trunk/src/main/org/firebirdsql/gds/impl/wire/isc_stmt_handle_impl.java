@@ -194,7 +194,7 @@ public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
         //if (log != null) printRow(row);
     }
 
-    private void printRow(byte[][] row) {
+    public static void printRow(byte[][] row) {
         StringBuffer sb = new StringBuffer();
         sb.append("\t");
         
