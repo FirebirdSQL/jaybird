@@ -249,9 +249,6 @@ public class PingablePooledConnection implements PooledConnection,
     /**
      * Close this connection.
      * 
-     * @param generateEvents <code>true</code> if event listeners should be
-     * notified about this operation.
-     * 
      * @throws SQLException if something went wrong.
      */
     protected void internalClose() throws SQLException {
