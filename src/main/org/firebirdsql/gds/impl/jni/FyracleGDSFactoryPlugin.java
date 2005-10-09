@@ -1,7 +1,7 @@
 package org.firebirdsql.gds.impl.jni;
 
+import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.GDSFactoryPlugin;
 import org.firebirdsql.jdbc.FBConnection;
 
@@ -33,7 +33,7 @@ public class FyracleGDSFactoryPlugin implements GDSFactoryPlugin {
         return JDBC_PROTOCOLS;
     }
 
-    public AbstractGDS getGDS() {
+    public GDS getGDS() {
         if (gds == null)
             gds = new NativeGDSImpl();
         
