@@ -1,13 +1,6 @@
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.IscBlobHandle;
-import org.firebirdsql.gds.IscDbHandle;
-import org.firebirdsql.gds.IscStmtHandle;
-import org.firebirdsql.gds.IscSvcHandle;
-import org.firebirdsql.gds.IscTrHandle;
-import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
