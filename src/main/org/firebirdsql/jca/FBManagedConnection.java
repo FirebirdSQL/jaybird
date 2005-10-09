@@ -35,6 +35,7 @@ import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.GDSHelper.GDSHelperErrorListener;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
@@ -48,7 +49,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
  * @version 1.0
  */
-public class FBManagedConnection implements ManagedConnection, XAResource {
+public class FBManagedConnection implements ManagedConnection, XAResource, GDSHelperErrorListener {
 
     private final Logger log = LoggerFactory.getLogger(getClass(), false);
 
@@ -66,11 +67,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
     private GDSHelper gdsHelper;
 
     private FBConnectionRequestInfo cri;
-//    private TransactionParameterBuffer transactionParameterBuffer; 
     private FBTpb tpb;
     private int transactionIsolation;
 
-//    public boolean autoCommit = true;
     private boolean managedEnvironment = true;
     private boolean connectionSharing = true;
 
@@ -89,11 +88,31 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             DatabaseParameterBuffer dpb = this.cri.getDpb();
             gds.iscAttachDatabase(mcf.getDatabase(), dbHandle, dpb);
             
-            this.gdsHelper = new GDSHelper(this.gds, dpb, (AbstractIscDbHandle)this.dbHandle);
+            this.gdsHelper = new GDSHelper(this.gds, dpb, (AbstractIscDbHandle)this.dbHandle, this);
+            
         } catch(GDSException ex) {
             throw new FBResourceException(ex);
         }
     }
+
+    /**
+     * Notify GDS container that error occured, if the <code>ex</code> 
+     * represents a "fatal" one
+     * 
+     * @see FatalGDSErrorHelper#isFatal(GDSException)
+     */
+    public void errorOccured(GDSException ex) {
+        if (!FatalGDSErrorHelper.isFatal(ex))
+            return;
+        
+        ConnectionEvent event = new ConnectionEvent(
+            FBManagedConnection.this, 
+            ConnectionEvent.CONNECTION_ERROR_OCCURRED, ex);
+        
+        FBManagedConnection.this.notify(
+            connectionErrorOccurredNotifier, event);
+    }
+
     
     private FBConnectionRequestInfo getCombinedConnectionRequestInfo(
             Subject subject, ConnectionRequestInfo cri)
@@ -427,7 +446,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      * 
      * @param subject
      *            security context as JAAS subject
-     * @param cxRequestInfo
+     * @param cri
      *            ConnectionRequestInfo instance
      * @return generic <code>Object</code> instance representing the
      *         connection handle. For CCI, the connection handle created by a
@@ -770,7 +789,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
             
             GDSHelper gdsHelper2 = new GDSHelper(gds, 
                     gdsHelper.getDatabaseParameterBuffer(), 
-                    (AbstractIscDbHandle) gdsHelper.getCurrentDbHandle());
+                    (AbstractIscDbHandle) gdsHelper.getCurrentDbHandle(), null);
             gdsHelper2.setCurrentTrHandle(trHandle2);
             
             gdsHelper2.prepareStatement(stmtHandle2, RECOVERY_QUERY, false);
@@ -923,7 +942,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      * transactions associated with one DB connection).
      * 
      * 
-     * @param xid
+     * @param id
      *            A global transaction identifier to be associated with the
      *            resource
      * @param flags
@@ -954,8 +973,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      * Perform the internal processing to start associate a JDBC connection with
      * a global transaction.
      * 
-     * @see start
-     * @param xid
+     * @see #start(Xid, int)
+     * @param id
      *            A global transaction identifier to be associated with the
      *            resource
      * @param flags
@@ -1131,7 +1150,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      * <code>TRANSACTION_SERIALIZABLE</code>.
      * 
      * @see java.sql.Connection
-     * @see setTransactionIsolation
+     * @see #setTransactionIsolation(int)
      * @return Value representing a transaction isolation level defined in
      *         {@link java.sql.Connection}.
      * @throws ResourceException
@@ -1150,7 +1169,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource {
      * <code>TRANSACTION_SERIALIZABLE</code>.
      * 
      * @see java.sql.Connection
-     * @see getTransactionIsolation
+     * @see #getTransactionIsolation()
      * @param isolation
      *            Value representing a transaction isolation level defined in
      *            {@link java.sql.Connection}.
