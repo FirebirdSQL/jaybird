@@ -1,3 +1,50 @@
+2005-10-09 01:32  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FBObjectListener.java,
+	main/org/firebirdsql/jdbc/InternalTransactionCoordinator.java,
+	test/org/firebirdsql/jdbc/TestFBCallableStatement.java:
+	
+	fixed an issue in batch execution in auto-commit case when in case
+	of error transaction was committed anyway
+
+2005-10-08 23:53  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/GDS.java,
+	gds/ServiceParameterBuffer.java, gds/XSQLVAR.java,
+	gds/impl/wire/AbstractJavaGDSImpl.java,
+	gds/impl/wire/isc_db_handle_impl.java,
+	jca/FBManagedConnectionFactory.java, jca/FBTpb.java,
+	jdbc/AbstractPreparedStatement.java, jdbc/AbstractStatement.java,
+	jdbc/FBDriver.java, jdbc/FBDriverPropertyManager.java,
+	jdbc/FBProcedureCall.java, jdbc/FBResultSet.java,
+	jdbc/FBResultSetMetaData.java, jdbc/FBSQLException.java,
+	jdbc/FirebirdResultSet.java,
+	jdbc/InternalTransactionCoordinator.java, jdbc/field/FBField.java,
+	jdbc/field/FBStringField.java,
+	jdbc/field/FBWorkaroundStringField.java,
+	management/BackupManager.java, management/FBBackupManager.java,
+	management/ServiceManager.java:
+	
+	javadoc fixes
+
+2005-10-08 23:25  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	increased major JDBC version
+
+2005-10-08 23:24  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	javadoc fixes
+
 2005-10-08 01:19  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/gds/impl/:
