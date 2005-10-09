@@ -267,7 +267,7 @@ public abstract class AbstractConnectionPool implements PooledObjectListener {
     
     /**
      * Notify about new available connection. This method is called by 
-     * {@link PooledConnection} when its wrapped connection being closed.
+     * {@link javax.sql.PooledConnection} when its wrapped connection being closed.
      * 
      * @param event instance of {@link PooledObjectEvent} containing 
      * information about closed connection.

@@ -39,7 +39,7 @@ import org.firebirdsql.jdbc.FirebirdConnectionProperties;
  *      size of the buffer used to transfer BLOB data.
  * 
  * <li><code>blockingTimeout</code> 
- *      time in milliseconds during which {@link #getConnection()} method will 
+ *      time in milliseconds during which {@link javax.sql.DataSource#getConnection()} method will 
  *      block if no free connection is in pool.
  * 
  * <li><code>charSet</code>
@@ -144,7 +144,7 @@ import org.firebirdsql.jdbc.FirebirdConnectionProperties;
  * 
  * <li><code>workingSize</code>
  *      number of connections that are in use (e.g. were obtained using
- *      {@link #getConnection()} method, but not yet closed).
+ *      {@link javax.sql.DataSource#getConnection()} method, but not yet closed).
  * </ul>
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>

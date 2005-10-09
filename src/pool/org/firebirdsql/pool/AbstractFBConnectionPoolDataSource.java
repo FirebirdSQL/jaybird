@@ -44,7 +44,7 @@ import org.firebirdsql.logging.LoggerFactory;
  *      size of the buffer used to transfer BLOB data.
  * 
  * <li><code>blockingTimeout</code> 
- *      time in milliseconds during which {@link #getConnection()} method will 
+ *      time in milliseconds during which {@link #getPooledConnection()} method will 
  *      block if no free connection is in pool.
  * 
  * <li><code>charSet</code>
@@ -149,7 +149,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * 
  * <li><code>workingSize</code>
  *      number of connections that are in use (e.g. were obtained using
- *      {@link #getConnection()} method, but not yet closed).
+ *      {@link #getPooledConnection()} method, but not yet closed).
  * </ul>
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
@@ -523,8 +523,6 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
      * 
      * @param properties instance of {@link Properties} containing properties
      * of a connection to open.
-     * 
-     * @see #getProperties()
      */
     public void setProperties(Properties properties) {
         for (Iterator iter = properties.entrySet().iterator(); iter.hasNext();) {
