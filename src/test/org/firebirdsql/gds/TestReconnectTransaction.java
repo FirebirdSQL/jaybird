@@ -82,7 +82,7 @@ public class TestReconnectTransaction extends FBTestBase {
         AbstractIscDbHandle dbHandle1 = (AbstractIscDbHandle)gds.createIscDbHandle();
         gds.iscAttachDatabase(getdbpath(DB_NAME), dbHandle1, dpb);
         
-        GDSHelper gdsHelper1 = new GDSHelper(gds, dpb, dbHandle1);
+        GDSHelper gdsHelper1 = new GDSHelper(gds, dpb, dbHandle1, null);
 
         AbstractIscTrHandle trHandle1 = (AbstractIscTrHandle)gds.createIscTrHandle();
         gds.iscStartTransaction(trHandle1, dbHandle1, tpb.getTransactionParameterBuffer());
@@ -106,7 +106,7 @@ public class TestReconnectTransaction extends FBTestBase {
         AbstractIscStmtHandle stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
         gds.iscDsqlAllocateStatement(dbHandle2, stmtHandle2);
         
-        GDSHelper gdsHelper2 = new GDSHelper(gds, dpb, dbHandle2);
+        GDSHelper gdsHelper2 = new GDSHelper(gds, dpb, dbHandle2, null);
         gdsHelper2.setCurrentTrHandle(trHandle2);
         
         gdsHelper2.prepareStatement(stmtHandle2, RECOVERY_QUERY, false);
