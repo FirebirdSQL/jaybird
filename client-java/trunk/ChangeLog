@@ -1,3 +1,62 @@
+2005-10-09 20:02  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/gds/TestReconnectTransaction.j
+	ava:
+	
+	added checking of the fatal errors on JCA level
+
+2005-10-09 19:59  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSFactory.java:
+	
+	added also a possibility to load plugins from context classpath
+
+2005-10-09 19:27  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/isc_stmt_handle_
+	impl.java:
+	
+	declared printRow(byte[][]) method as public
+
+2005-10-09 19:27  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java:
+	
+	optimized imports
+
+2005-10-09 19:26  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jca/FatalGDSErrorHelper.java, gds/impl/GDSHelper.java,
+	jca/FBManagedConnection.java:
+	
+	added checking of the fatal errors on JCA level
+
+2005-10-09 18:56  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/:
+	jni/FyracleGDSFactoryPlugin.java, wire/WireGDSFactoryPlugin.java:
+	
+	fixed incorrect method declaration
+
+2005-10-09 18:51  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSType.java:
+	
+	changed comments
+
+2005-10-09 18:22  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	AbstractConnectionPool.java,
+	AbstractFBConnectionPoolDataSource.java, FirebirdPool.java,
+	PingablePooledConnection.java, PooledConnectionEventListener.java:
+	
+	javadoc fixes
+
 2005-10-09 01:32  rrokytskyy
 
 	* client-java/src/:
