@@ -102,6 +102,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      * @see FatalGDSErrorHelper#isFatal(GDSException)
      */
     public void errorOccured(GDSException ex) {
+        
+        if (log != null) log.trace(ex.getMessage());
+        
         if (!FatalGDSErrorHelper.isFatal(ex))
             return;
         
@@ -166,6 +169,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     public boolean isManagedEnvironment() {
         return managedEnvironment;
+    }
+    
+    public boolean inTransaction() {
+        return gdsHelper.inTransaction();
     }
     
     public void setManagedEnvironment(boolean managedEnvironment) throws ResourceException{
@@ -578,7 +585,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      */
     void internalCommit(Xid xid, boolean onePhase) throws XAException,
             GDSException {
-        if (log != null) log.debug("Commit called: " + xid);
+        if (log != null) log.trace("Commit called: " + xid);
         AbstractIscTrHandle committingTr = (AbstractIscTrHandle)xidMap.get(xid);
 
         if (committingTr == null)
@@ -721,7 +728,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     }
 
     int internalPrepare(Xid xid) throws FBXAException, GDSException {
-        if (log != null) log.debug("prepare called: " + xid);
+        if (log != null) log.trace("prepare called: " + xid);
         IscTrHandle committingTr = (IscTrHandle)xidMap.get(xid);
         if (committingTr == null)
             throw new FBXAException("Prepare called with unknown transaction",
@@ -893,7 +900,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     }
 
     void internalRollback(Xid xid) throws XAException, GDSException {
-        if (log != null) log.debug("rollback called: " + xid);
+        if (log != null) log.trace("rollback called: " + xid);
         AbstractIscTrHandle committingTr = (AbstractIscTrHandle)xidMap.get(xid); //mcf.getTrHandleForXid(id);
         if (committingTr == null) {
             if (log != null)
@@ -981,7 +988,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      *            One of TMNOFLAGS, TMJOIN, or TMRESUME
      */
     public void internalStart(Xid id, int flags) throws XAException, GDSException {
-        if (log != null) log.debug("start called: " + id);
+        if (log != null) log.trace("start called: " + id);
 
         if (gdsHelper.getCurrentTrHandle() != null) throw new XAException(XAException.XAER_PROTO);
 

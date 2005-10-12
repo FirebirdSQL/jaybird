@@ -26,8 +26,6 @@ import javax.resource.spi.LocalTransaction;
 import javax.resource.ResourceException;
 
 import javax.transaction.xa.*;
-import javax.transaction.xa.XAResource;
-import javax.transaction.xa.Xid;
 
 import org.firebirdsql.gds.GDSException;
 
@@ -263,7 +261,10 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
 
          private static final int formatId = 0x0102;//????????????
 
+         private String strValue;
+         
          public FBLocalXid() {
+             strValue = "Xid[" + hashCode() + "]";
          }
 
         /**
@@ -290,6 +291,10 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
          */
         public int getFormatId() {
            return formatId;
+        }
+        
+        public String toString() {
+            return strValue;
         }
     }
 
