@@ -176,7 +176,7 @@ public class GDSHelper {
             boolean describeBind) throws GDSException, SQLException {
         
         try {
-            if (log != null) log.debug("preparing sql: " + sql);
+            if (log != null) log.trace("preparing sql: " + sql);
     
             String localEncoding = 
                 dpb.getArgumentAsString(ISCConstants.isc_dpb_local_encoding);
