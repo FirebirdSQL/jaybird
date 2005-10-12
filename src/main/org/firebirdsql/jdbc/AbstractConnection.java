@@ -389,7 +389,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         
         InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
         
-        if (managedConnection) {
+        if (managedConnection && mc.inTransaction()) {
             coordinator = new InternalTransactionCoordinator.ManagedTransactionCoordinator(this);
             this.autoCommit = false;
         } else {
@@ -469,31 +469,31 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public synchronized void close() throws SQLException {
         try {
-        try {
-            freeStatements();
-        } finally {
-            
-            if (mc != null) {
-                //if we are in a transaction started 
-                //automatically because autocommit = false, roll it back.
-                
-                //leave managed transactions alone, they are normally
-                //committed after the Connection handle is closed.
-                
-                if (!getAutoCommit() && localTransaction.inTransaction()) {
-                    //autocommit is always true for managed tx.
-                    try {
-                        txCoordinator.rollback();
-                    } finally {
-                        setAutoCommit(true);
-                    }
-                }
+            try {
+                freeStatements();
+            } finally {
 
-                mc.close(this);
-                mc = null;
+                if (mc != null) {
+                    // if we are in a transaction started
+                    // automatically because autocommit = false, roll it back.
+
+                    // leave managed transactions alone, they are normally
+                    // committed after the Connection handle is closed.
+
+                    if (!getAutoCommit() && localTransaction.inTransaction()) {
+                        // autocommit is always true for managed tx.
+                        try {
+                            txCoordinator.rollback();
+                        } finally {
+                            setAutoCommit(true);
+                        }
+                    }
+
+                    mc.close(this);
+                    mc = null;
+                }
             }
-        }
-        } catch(ResourceException ex) {
+        } catch (ResourceException ex) {
             throw new FBSQLException(ex);
         }
     }
