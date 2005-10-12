@@ -235,7 +235,8 @@ public class FBManagedConnectionFactory
         String localEncoding = defaultCri.getStringProperty(ISCConstants.isc_dpb_local_encoding);
         if (localEncoding == null) {
             localEncoding = FBConnectionHelper.getJavaEncoding(encoding);
-            defaultCri.setProperty(ISCConstants.isc_dpb_local_encoding, localEncoding);
+            if (localEncoding != null)
+                defaultCri.setProperty(ISCConstants.isc_dpb_local_encoding, localEncoding);
         }
     }
 
@@ -254,7 +255,8 @@ public class FBManagedConnectionFactory
         String iscEncoding = defaultCri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);
         if (iscEncoding == null) {
             iscEncoding = FBConnectionHelper.getIscEncoding(localEncoding);
-            defaultCri.setProperty(ISCConstants.isc_dpb_lc_ctype, iscEncoding);
+            if (iscEncoding != null)
+                defaultCri.setProperty(ISCConstants.isc_dpb_lc_ctype, iscEncoding);
         }
     }
     
