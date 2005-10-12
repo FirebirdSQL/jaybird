@@ -1,28 +1,21 @@
 /*
- * Public Firebird Java API.
+ * Firebird Open Source J2ee connector - jdbc driver
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright notice, 
- *       this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright 
- *       notice, this list of conditions and the following disclaimer in the 
- *       documentation and/or other materials provided with the distribution. 
- *    3. The name of the author may not be used to endorse or promote products 
- *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
- * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
  */
-
 
 /*
  * The Original Code is the Firebird Java GDS implementation.
@@ -32,6 +25,43 @@
  * Boix i Oltra, S.L. All Rights Reserved.
  *
  */
+
+/*
+ * CVS modification log:
+ * $Log$
+ * Revision 1.19.2.1  2004/10/10 12:32:14  rrokytskyy
+ * merged with HEAD
+ *
+ * Revision 1.20  2004/10/08 22:39:11  rrokytskyy
+ * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
+ * added possibility to translate characters if there are some encoding issues
+ *
+ * Revision 1.19  2004/08/15 00:10:34  rrokytskyy
+ * introduced new parameters to change the time zone behavior and escaped parser behavior for function calls
+ *
+ * Revision 1.18  2004/07/19 14:03:33  rrokytskyy
+ * fixed bug when incorrect data were used during batch execution
+ *
+ * Revision 1.17  2004/01/27 14:08:13  rrokytskyy
+ * javadoc fixes
+ *
+ * Revision 1.16  2003/12/30 14:53:32  rrokytskyy
+ * fixed incorrect timestamp encoding/decoding when using calendar
+ *
+ * Revision 1.15  2003/11/15 22:45:06  rrokytskyy
+ * fixed bug in time decoding
+ *
+ * Revision 1.14  2003/06/25 00:01:08  ryanbaldwin
+ * Initial type 2 jdbc driver support.
+ *
+ * Revision 1.13  2003/06/05 22:57:47  brodsom
+ * Substitute package and inline imports
+ *
+ * Revision 1.12  2003/01/23 01:37:05  brodsom
+ * Encodings patch
+ *
+ */
+
 
 package org.firebirdsql.gds;
 
@@ -71,36 +101,12 @@ public class XSQLVAR {
     public XSQLVAR() {
     }
     
-    /**
-     * Get a deep copy of this object.
-     *  
-     * @return deep copy of this object.
-     */
-    public XSQLVAR deepCopy() {
-        XSQLVAR result = new XSQLVAR();
-        result.copyFrom(this);
-        return result;
-    }
-    
-    /**
-     * Copy constructor. Initialize this instance of <code>XSQLVAR</code> with
-     * values from another instance.
-     *
-     * @param original The other instance of <code>XSQLVAR</code> to be used
-     *        as the base for initializing this instance
-     */
     public void copyFrom(XSQLVAR original) {
         this.sqltype = original.sqltype;
         this.sqlscale = original.sqlscale;
         this.sqlsubtype = original.sqlsubtype;
         this.sqllen = original.sqllen;
-        
-        if (original.sqldata != null) {
-            this.sqldata = new byte[original.sqldata.length]; 
-            System.arraycopy(original.sqldata, 0, this.sqldata, 0, original.sqldata.length);
-        } else
-            this.sqldata = null;
-        
+        this.sqldata = original.sqldata;
         this.sqlname = original.sqlname;
         this.relname = original.relname;
         this.ownname = original.ownname;
@@ -109,36 +115,14 @@ public class XSQLVAR {
     //
     // numbers
     //
-
-    /**
-     * Encode a <code>short</code> value as a <code>byte</code> array.
-     *
-     * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a 
-     *         <code>byte</code> array
-     */
     public byte[] encodeShort(short value){
         return encodeInt(value);
     }
 
-    /**
-     * Decode a <code>byte</code> array into a <code>short</code> value.
-     *
-     * @param byte_int The <code>byte</code> array to be decoded
-     * @return The <code>short</code> value of the decoded 
-     *         <code>byte</code> array
-     */
     public short decodeShort(byte[] byte_int){
         return (short) decodeInt(byte_int);		 
     }
 
-    /**
-     * Encode an <code>int</code> value as a <code>byte</code> array.
-     *
-     * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a 
-     *         <code>byte</code> array
-     */
     public byte[] encodeInt(int value){
         byte ret[] = new byte[4];
         ret[0] = (byte) ((value >>> 24) & 0xff);
@@ -148,13 +132,6 @@ public class XSQLVAR {
         return ret;
     }
 
-    /**
-     * Decode a <code>byte</code> array into an <code>int</code> value.
-     *
-     * @param byte_int The <code>byte</code> array to be decoded
-     * @return The <code>int</code> value of the decoded 
-     *         <code>byte</code> array
-     */
     public int decodeInt(byte[] byte_int){
         int b1 = byte_int[0]&0xFF;
         int b2 = byte_int[1]&0xFF;
@@ -163,13 +140,6 @@ public class XSQLVAR {
         return ((b1 << 24) + (b2 << 16) + (b3 << 8) + (b4 << 0));
     }
 
-    /**
-     * Encode a <code>long</code> value as a <code>byte</code> array.
-     *
-     * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a 
-     *         <code>byte</code> array
-     */
     public  byte[] encodeLong(long value){
         byte[] ret = new byte[8];
         ret[0] = (byte) (value >>> 56 & 0xFF);
@@ -183,14 +153,6 @@ public class XSQLVAR {
         return ret;
     }
 
-
-    /**
-     * Decode a <code>byte</code> array into a <code>long</code> value.
-     *
-     * @param byte_int The <code>byte</code> array to be decoded
-     * @return The <code>long</code> value of the decoded 
-     *         <code>byte</code> array
-     */
     public  long decodeLong(byte[] byte_int){
         long b1 = byte_int[0]&0xFF;
         long b2 = byte_int[1]&0xFF;
@@ -204,46 +166,18 @@ public class XSQLVAR {
         + (b5 << 24) + (b6 << 16) + (b7 << 8) + (b8 << 0));
     }
 
-    /**
-     * Encode a <code>float</code> value as a <code>byte</code> array.
-     *
-     * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a 
-     *         <code>byte</code> array
-     */
     public byte[] encodeFloat(float value){
         return encodeInt(Float.floatToIntBits(value));
     }
 
-    /**
-     * Decode a <code>byte</code> array into a <code>float</code> value.
-     *
-     * @param byte_int The <code>byte</code> array to be decoded
-     * @return The <code>float</code> value of the decoded 
-     *         <code>byte</code> array
-     */
     public float decodeFloat(byte[] byte_int){
         return Float.intBitsToFloat(decodeInt(byte_int));
     }
 
-    /**
-     * Encode a <code>double</code> value as a <code>byte</code> array.
-     *
-     * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a 
-     *         <code>byte</code> array
-     */
     public byte[] encodeDouble(double value){
         return encodeLong(Double.doubleToLongBits(value));
     }
 
-    /**
-     * Decode a <code>byte</code> array into a <code>double</code> value.
-     *
-     * @param byte_int The <code>byte</code> array to be decoded
-     * @return The <code>double</code> value of the decoded 
-     *         <code>byte</code> array
-     */
     public double decodeDouble(byte[] byte_int){
         return Double.longBitsToDouble(decodeLong(byte_int));
     }
@@ -273,34 +207,11 @@ public class XSQLVAR {
     //
     // Strings with mapping
     //
-
-    /**
-     * Encode a <code>String</code> value into a <code>byte</code> array using
-     * a given encoding.
-     *
-     * @param value The <code>String</code> to be encoded
-     * @param encoding The encoding to use in the encoding process
-     * @param mappingPath The character mapping path to be used in the encoding
-     * @return The value of <code>value</code> as a <code>byte</code> array
-     * @throws SQLException if the given encoding cannot be found, or an error 
-     *         occurs during the encoding
-     */
     public byte[] encodeString(String value, String encoding, String mappingPath) throws SQLException {
         if (coder == null)
             coder = EncodingFactory.getEncoding(encoding, mappingPath);
         return coder.encodeToCharset(value);
     }
-
-    /**
-     * Encode a <code>byte</code> array using a given encoding.
-     *
-     * @param value The <code>byte</code> array to be encoded
-     * @param encoding The encoding to use in the encoding process
-     * @param mappingPath The character mapping path to be used in the encoding
-     * @return The value of <code>value</code> encoded using the given encoding
-     * @throws SQLException if the given encoding cannot be found, or an error 
-     *         occurs during the encoding
-     */
     public byte[] encodeString(byte[] value, String encoding, String mappingPath)throws SQLException {
         if (encoding == null)
             return value;
@@ -311,17 +222,6 @@ public class XSQLVAR {
         }
     }
 
-    /**
-     * Decode an encoded <code>byte</code> array into a <code>String</code> 
-     * using a given encoding.
-     *
-     * @param value The value to be decoded
-     * @param encoding The encoding to be used in the decoding process
-     * @param mappingPath The character mapping path to be used in the decoding
-     * @return The decoded <code>String</code>
-     * @throws SQLException if the given encoding cannot be found, or an
-     *         error occurs during the decoding
-     */
     public String decodeString(byte[] value, String encoding, String mappingPath) throws SQLException{
         if (coder == null)
             coder = EncodingFactory.getEncoding(encoding, mappingPath);
@@ -330,29 +230,10 @@ public class XSQLVAR {
     // 
     // times,dates...
     //
-   
-    /**
-     * Encode a <code>Timestamp</code> using a given <code>Calendar</code>.
-     *
-     * @param value The <code>Timestamp</code> to be encoded
-     * @param cal The <code>Calendar</code> to be used for encoding,
-     *        may be <code>null</code>
-     */
     public Timestamp encodeTimestamp(java.sql.Timestamp value, Calendar cal){
         return encodeTimestamp(value, cal, false);
     }
     
-    /**
-     * Encode a <code>Timestamp</code> using a given <code>Calendar</code>.
-     *
-     * @param value The <code>Timestamp</code> to be encoded
-     * @param cal The <code>Calendar</code> to be used for encoding, 
-     *        may be <code>null</code>
-     * @param invertTimeZone If <code>true</code>, the timezone offset value 
-     *        will be subtracted from the encoded value, otherwise it will
-     *        be added
-     * @return The encoded <code>Timestamp</code>
-     */
     public Timestamp encodeTimestamp(java.sql.Timestamp value, Calendar cal, boolean invertTimeZone){
         if (cal == null) {
             return value;
@@ -367,13 +248,6 @@ public class XSQLVAR {
     }
 
 
-    /**
-     * Encode a <code>Timstamp</code> as a <code>byte</code> array.
-     *
-     * @param value The <code>Timstamp</code> to be encoded
-     * @return The array of <code>byte</code>s that represents the given
-     *         <code>Timestamp</code> value
-     */
     public byte[] encodeTimestamp(Timestamp value){
 
         // note, we cannot simply pass millis to the database, because
@@ -394,31 +268,10 @@ public class XSQLVAR {
         return result;
     }
 
-    /**
-     * Decode a <code>Timestamp</code> value using a given 
-     * <code>Calendar</code>.
-     *
-     * @param value The <code>Timestamp</code> to be decoded
-     * @param cal The <code>Calendar</code> to be used in decoding, 
-     *        may be <code>null</code>
-     * @return The decoded <code>Timestamp</code>
-     */
     public java.sql.Timestamp decodeTimestamp(Timestamp value, Calendar cal) {
         return decodeTimestamp(value, cal, false);
     }
 
-    /**
-     * Decode a <code>Timestamp</code> value using a given 
-     * <code>Calendar</code>.
-     *
-     * @param value The <code>Timestamp</code> to be decoded
-     * @param cal The <code>Calendar</code> to be used in decoding, 
-     *        may be <code>null</code>
-     * @param invertTimeZone If <code>true</code>, the timezone offset value 
-     *        will be subtracted from the decoded value, otherwise it will
-     *        be added
-     * @return The encoded <code>Timestamp</code>
-     */
     public java.sql.Timestamp decodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone){
 
         if (cal == null) {
@@ -434,13 +287,6 @@ public class XSQLVAR {
     }
 
 
-    /**
-     * Decode a <code>byte</code> array into a <code>Timestamp</code>.
-     *
-     * @param byte_int The <code>byte</code> array to be decoded
-     * @return A <code>Timestamp</code> value from the decoded 
-     *         <code>byte</code>s
-     */
     public Timestamp decodeTimestamp(byte[] byte_int){
 
         
@@ -483,13 +329,7 @@ public class XSQLVAR {
         }
     }
 
-    /**
-     * Encode a <code>Time</code> value into a <code>byte</code> array.
-     *
-     * @param d The <code>Time</code> to be encoded
-     * @return The array of <code>byte</code>s representing the given 
-     *         <code>Time</code>
-     */
+
     public byte[] encodeTime(Time d) {
 
         datetime dt = new datetime(d);
@@ -519,27 +359,13 @@ public class XSQLVAR {
         }
     }
 
-    /**
-     * Decode a <code>byte</code> array into a <code>Time</code> value.
-     *
-     * @param int_byte The <code>byte</code> array to be decoded
-     * @return The decoded <code>Time</code>
-     */
+
     public Time decodeTime(byte[] int_byte) {
         datetime dt = new datetime(null,int_byte);
         return dt.toTime();
     }
 
 
-    /**
-     * Encode a given <code>Date</code> value using a given 
-     * <code>Calendar</code>.
-     *
-     * @param d The <code>Date</code> to be encoded
-     * @param cal The <code>Calendar</code> to be used in the encoding,
-     *        may be <code>null</code>
-     * @return The encoded <code>Date</code>
-     */
     public Date encodeDate(java.sql.Date d, Calendar cal) {
         if (cal == null) {
             return (d);
@@ -550,27 +376,13 @@ public class XSQLVAR {
         }
     }
 
-    /**
-     * Encode a <code>Date</code> value into a <code>byte</code> array.
-     *
-     * @param d The <code>Date</code> to be encoded
-     * @return The array of <code>byte</code>s representing the given 
-     *         <code>Date</code>
-     */
+
     public byte[] encodeDate(Date d) {
         datetime dt = new datetime(d);
         return dt.toDateBytes();
     }
 
 
-    /**
-     * Decode a <code>Date</code> value using a given <code>Calendar</code>.
-     *
-     * @param d The <code>Date</code> to be decoded
-     * @param cal The <code>Calendar</code> to be used in the decoding, may
-     *        be <code>null</code>
-     * @return The decoded <code>Date</code>
-     */
     public java.sql.Date decodeDate(Date d, Calendar cal) {
         if (cal == null || d == null) {
             return d;
@@ -582,12 +394,6 @@ public class XSQLVAR {
     }
 
 
-    /**
-     * Decode a <code>byte</code> array into a <code>Date</code> value.
-     *
-     * @param byte_int The <code>byte</code> array to be decoded
-     * @return The decoded <code>Date</code>
-     */
     public Date decodeDate(byte[] byte_int) {
        datetime dt = new datetime(byte_int, null);
         return dt.toDate();

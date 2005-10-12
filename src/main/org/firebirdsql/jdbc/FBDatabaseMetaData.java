@@ -24,10 +24,6 @@ import java.sql.*;
 import java.util.*;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.AbstractGDS;
-import org.firebirdsql.gds.impl.AbstractIscDbHandle;
-import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -55,25 +51,19 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
+public class FBDatabaseMetaData implements DatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
     private static final String SPACES = "                               ";//31 spaces
 
-    private GDSHelper gdsHelper;
-    private AbstractConnection connection;
+    private AbstractConnection c;
 
     HashMap statements = new HashMap();
 
     //PreparedStatement tables = null;
 
-    FBDatabaseMetaData(GDSHelper gdsHelper) {
-        this.gdsHelper = gdsHelper;
-    }
-    
-    FBDatabaseMetaData(AbstractConnection c) throws GDSException {
-        this.gdsHelper = c.getGDSHelper();
-        this.connection = c;
+    FBDatabaseMetaData(AbstractConnection c) {
+        this.c = c;
     }
 
     void close() {
@@ -131,21 +121,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getURL() throws SQLException {
-        AbstractGDS gds = ((AbstractGDS) connection.getInternalAPIHandler());
-        
-        return GDSFactory.getJdbcUrl(gds.getType(), connection.mc.getDatabase());
+        return FBDriver.FIREBIRD_PROTOCOL + c.getDatabase();
     }
 
 
     /**
      * What's our user name as known to the database?
-     * 
+     *
      * @return our database user name
-     * @exception SQLException
-     *                if a database access error occurs
+     * @exception SQLException if a database access error occurs
      */
     public  String getUserName() throws SQLException {
-        return gdsHelper.getUserName();
+        return c.getUserName();
     }
 
 
@@ -167,15 +154,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean nullsAreSortedHigh() throws SQLException {
-        // in Firebird 1.5.x NULLs are always sorted at the end
-        // in Firebird 2.0.x NULLs are sorted low
-        if (getDatabaseMajorVersion() == 1) {
-            return false;
-        } else
-        if (getDatabaseMajorVersion() == 2) {
-            return false;
-        } else
-            throw new FBDriverNotCapableException();
+        //they always occur at end despite sort order
+        return false;
     }
 
 
@@ -186,15 +166,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean nullsAreSortedLow() throws SQLException {
-        // in Firebird 1.5.x NULLs are always sorted at the end
-        // in Firebird 2.0.x NULLs are sorted low
-        if (getDatabaseMajorVersion() == 1) {
-            return false;
-        } else
-        if (getDatabaseMajorVersion() == 2) {
-            return true;
-        } else
-            throw new FBDriverNotCapableException();
+        //they always occur at end despite sort order
+        return false;
     }
 
 
@@ -205,15 +178,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean nullsAreSortedAtStart() throws SQLException {
-        // in Firebird 1.5.x NULLs are always sorted at the end
-        // in Firebird 2.0.x NULLs are sorted low
-        if (getDatabaseMajorVersion() == 1) {
-            return false;
-        } else
-        if (getDatabaseMajorVersion() == 2) {
-            return false;
-        } else
-            throw new FBDriverNotCapableException();
+        //they always occur at end despite sort order
+        return false;
     }
 
 
@@ -224,15 +190,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean nullsAreSortedAtEnd() throws SQLException {
-        // in Firebird 1.5.x NULLs are always sorted at the end
-        // in Firebird 2.0.x NULLs are sorted low
-        if (getDatabaseMajorVersion() == 1) {
-            return true;
-        } else
-        if (getDatabaseMajorVersion() == 2) {
-            return false;
-        } else
-            throw new FBDriverNotCapableException();
+        //they always occur at end despite sort order
+        return true;
     }
 
 
@@ -243,7 +202,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getDatabaseProductName() throws SQLException {
-        return gdsHelper.getDatabaseProductName();
+        return c.getDatabaseProductName();
     }
 
 
@@ -254,7 +213,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getDatabaseProductVersion() throws SQLException {
-        return gdsHelper.getDatabaseProductVersion();
+        return c.getDatabaseProductVersion();
     }
 
 
@@ -276,7 +235,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getDriverVersion() throws SQLException {
-        return "2.0";
+        return "1.5";
     }
 
 
@@ -286,7 +245,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return JDBC driver major version
      */
     public  int getDriverMajorVersion() {
-        return 2;
+        return 1;
     }
 
 
@@ -296,7 +255,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return JDBC driver minor version number
      */
     public  int getDriverMinorVersion() {
-        return 0;
+        return 5;
     }
 
 
@@ -339,7 +298,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *
      * @return a <code>boolean</code> value
      * @exception SQLException if an error occurs
-     * TODO implement statemet pooling on the server.. then in the driver
+     * @todo implement statemet pooling on the server.. then in the driver
      */
     public boolean supportsStatementPooling() throws SQLException {
         return false;
@@ -350,7 +309,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *
      * @return a <code>boolean</code> value
      * @exception SQLException if an error occurs
-     * TODO find out what this even means
+     * @todo find out what this even means
      */
     public boolean locatorsUpdateCopy() throws SQLException {
         return false;
@@ -836,8 +795,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
 
     /**
-     * Retrieves whether concatenations between NULL and non-NULL values 
-     * equal NULL. For SQL-92 compliance, a JDBC technology-enabled driver will
+     * Are concatenations between NULL and non-NULL values NULL?
+     * For SQL-92 compliance, a JDBC technology-enabled driver will
      * return <code>true</code>.
      *
      * @return <code>true</code> if so; <code>false</code> otherwise
@@ -861,7 +820,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
 
     /**
-     * Retrieves whether CONVERT between the given SQL types supported.
+     * Is CONVERT between the given SQL types supported?
      *
      * @param fromType the type to convert from
      * @param toType the type to convert to
@@ -1914,7 +1873,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (!procedureClause.getCondition().equals("")) {
             params.add(procedureClause.getValue());
         }
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = c.doQuery(sql, params, statements);
         XSQLVAR[] xsqlvars = new XSQLVAR[8];
 
         xsqlvars[0] = new XSQLVAR();
@@ -2083,7 +2042,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             params.add(columnClause.getValue());
         }
 
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[13];
 
@@ -2368,7 +2327,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             params.add(getWantsViews(types));
             params.add(tableNamePattern);
         }
-        return doQuery(sql, params);
+        return c.doQuery(sql, params, statements);
     }
 
 
@@ -2471,8 +2430,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         " F.RDB$FIELD_PRECISION as FIELD_PRECISION," +
         " F.RDB$FIELD_SCALE as FIELD_SCALE," +
         " F.RDB$FIELD_LENGTH as FIELD_LENGTH," +
-        " F.RDB$CHARACTER_LENGTH as CHAR_LEN," +
-        " RF.RDB$DESCRIPTION AS REMARKS," +
+        " F.RDB$CHARACTER_LENGTH as CHARACTER_LENGTH," +
+        " RF.RDB$DESCRIPTION," +
         " RF.RDB$DEFAULT_SOURCE as DEFAULT_SOURCE," +
         " RF.RDB$FIELD_POSITION as FIELD_POSITION, " +
         " RF.RDB$NULL_FLAG as NULL_FLAG " +
@@ -2554,7 +2513,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             params.add(columnClause.getValue());
         }
 
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[18];
 
@@ -2620,7 +2579,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         xsqlvars[11] = new XSQLVAR();
         xsqlvars[11].sqltype = ISCConstants.SQL_VARYING | 1;
-        xsqlvars[11].sqllen = 80;
+        xsqlvars[11].sqllen = 31;
         xsqlvars[11].sqlname = "REMARKS";
         xsqlvars[11].relname = "COLUMNINFO";
 
@@ -2680,7 +2639,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
-                   row[6] = xsqlvars[0].encodeInt(rs.getShort("CHAR_LEN"));
+                   row[6] = xsqlvars[0].encodeInt(rs.getShort("CHARACTER_LENGTH"));
                    row[15] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
                    break;
                 case Types.FLOAT:
@@ -2724,11 +2683,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             row[10] = (nullFlag == 1) ? xsqlvars[0].encodeInt(columnNoNulls) :
                                         xsqlvars[0].encodeInt(columnNullable);
 
-            String remarks = rs.getString("REMARKS");  
-            row[11] = getBytes(remarks);             
-            if (remarks != null && remarks.length() > xsqlvars[11].sqllen)               
-                xsqlvars[11].sqllen = remarks.length();
-            
+            row[11] = null;
             String column_def = rs.getString("DEFAULT_SOURCE");
             if (column_def!=null) {
                 String defaultValue = column_def.trim();
@@ -2827,15 +2782,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    static String getDataTypeName(short sqltype, short sqlsubtype, short sqlscale) {
-        if (sqlscale < 0) {
-            switch (sqltype) {
+    private String getDataTypeName (short fieldType, short fieldSubType, short fieldScale) {
+        if (fieldScale < 0) {
+            switch (fieldType) {
                 case smallint_type:
                 case integer_type:
                 case int64_type:
                 case double_type:
                     // NOTE: can't be BIGINT because of scale
-                    if (sqlsubtype == 2)
+                    if (fieldSubType == 2)
                         return "DECIMAL";
                     else
                         return "NUMERIC";
@@ -2844,7 +2799,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             }
         }
 
-        switch (sqltype) {
+        switch (fieldType) {
             case smallint_type:
                 return "SMALLINT";
             case integer_type:
@@ -2866,21 +2821,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 return "DATE";
             case int64_type:
                 //this might need some help for long mapping
-                if (sqlsubtype == 1)
+                if (fieldSubType == 1)
                     return "NUMERIC";
-                else if (sqlsubtype == 2)
+                else if (fieldSubType == 2)
                     return "DECIMAL";
                 else
                     return "BIGINT";
             case blob_type:
-                if (sqlsubtype < 0)
+                if (fieldSubType < 0)
                     return "BLOB SUB_TYPE <0";
-                else if (sqlsubtype == 0)
+                else if (fieldSubType == 0)
                     return "BLOB SUB_TYPE 0";
-                else if (sqlsubtype == 1)
+                else if (fieldSubType == 1)
                     return "BLOB SUB_TYPE 1";
                 else
-                    return "BLOB SUB_TYPE " + sqlsubtype;
+                    return "BLOB SUB_TYPE >1";
             case quad_type:
                 return "ARRAY";
             default:
@@ -2953,7 +2908,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (!columnClause.getCondition().equals("")) {
             params.add(columnClause.getValue());
         }
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[8];
 
@@ -3102,7 +3057,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getValue());
         }
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[7];
 
@@ -3183,31 +3138,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(xsqlvars, rows);
     }
 
-    private static final String GET_BEST_ROW_IDENT = "" +
-        "select " +
-        "    rf.rdb$field_name as column_name, " +
-        "    f.rdb$field_type as field_type, " +
-        "    f.rdb$field_sub_type as field_sub_type, " +
-        "    f.rdb$field_scale as field_scale, " +
-        "    f.rdb$field_precision as field_precision " +
-        "from " +
-        "    rdb$relation_constraints rc," +
-        "    rdb$index_segments idx," +
-        "    rdb$relation_fields rf," +
-        "    rdb$fields f " +
-        "where " +
-        "    rc.rdb$relation_name = ? " +
-        "and " +
-        "    rc.rdb$constraint_type = 'PRIMARY KEY' " +
-        "and " +
-        "    idx.rdb$index_name = rc.rdb$index_name " +
-        "and " +
-        "    rf.rdb$field_name = idx.rdb$field_name " +
-        "and " +
-        "    rf.rdb$relation_name = ? " +
-        "and " +
-        "    f.rdb$field_name = rf.rdb$field_source"
-        ;
+
 
     /**
      * Gets a description of a table's optimal set of columns that
@@ -3292,70 +3223,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         xsqlvars[7].sqlname = "PSEUDO_COLUMN";
         xsqlvars[7].relname = "ROWIDENTIFIER";
 
-        ResultSet tables = getTables(catalog, schema, table, null);
-        
-        if (!tables.next())
-            return new FBResultSet(xsqlvars, new ArrayList());
-        
-        ArrayList rows = getPrimaryKeyIdentifier(table, scope, xsqlvars);
+        ArrayList rows = new ArrayList(0);
 
-        // if no primary key exists, add RDB$DB_KEY as pseudo-column
-        if (rows.size() == 0) {
-            byte[][] row = new byte[8][];
-            row[0] = xsqlvars[0].encodeShort((short)scope);
-            row[1] = getBytes("RDB$DB_KEY");
-            row[2] = xsqlvars[0].encodeShort((short)getDataType(char_type, (short)0, (short)0));
-            row[3] = getBytes(getDataTypeName(char_type, (short)0, (short)0));
-            row[4] = xsqlvars[0].encodeInt(0);
-            row[5] = null;
-            row[6] = xsqlvars[0].encodeShort((short)0);
-            row[7] = xsqlvars[0].encodeShort((short)bestRowPseudo);
-
-            rows.add(row);
-        }
-        
         return new FBResultSet(xsqlvars, rows);
     }
 
-
-    /**
-     * Get primary key of the table as best row identifier.
-     * 
-     * @param table name of the table.
-     * @param scope scope, we just include it in the result set.
-     * @param xsqlvars array of {@link XSQLVAR} instances describing result set.
-     * 
-     * @return list of result set values, when size is 0, no primary key has 
-     * been defined for a table.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    private ArrayList getPrimaryKeyIdentifier(String table, int scope, XSQLVAR[] xsqlvars) throws SQLException {
-        ArrayList rows = new ArrayList(0);
-
-        ArrayList params = new ArrayList(2);
-        params.add(table);
-        params.add(table);
-        
-        ResultSet rs = doQuery(GET_BEST_ROW_IDENT, params);
-        
-        while (rs.next()) {
-            byte[][] row = new byte[8][];
-            row[0] = xsqlvars[0].encodeShort((short)scope);
-            row[1] = getBytes(rs.getString("COLUMN_NAME").trim());
-            row[2] = xsqlvars[0].encodeShort((short)getDataType(rs.getShort("FIELD_TYPE"), 
-                rs.getShort("FIELD_SUB_TYPE"), rs.getShort("FIELD_SCALE")));
-            row[3] = getBytes(getDataTypeName(rs.getShort("FIELD_TYPE"), 
-                rs.getShort("FIELD_SUB_TYPE"), rs.getShort("FIELD_SCALE")));
-            row[4] = xsqlvars[0].encodeInt(rs.getInt("FIELD_PRECISION"));
-            row[5] = null;
-            row[6] = xsqlvars[0].encodeShort(rs.getShort("FIELD_SCALE"));
-            row[7] = xsqlvars[0].encodeShort((short)bestRowNotPseudo);
-
-            rows.add(row);
-        }
-        return rows;
-    }
 
     /**
      * Gets a description of a table's columns that are automatically
@@ -3490,7 +3362,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getValue());
         }
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[6];
 
@@ -3655,7 +3527,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getValue());
         }
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
 
@@ -3889,7 +3761,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             params.add(tableClause.getValue());
         }
 
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
 
@@ -4049,7 +3921,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * Gets a description of the foreign key columns in the foreign key
      * table that reference the primary key columns of the primary key
-     * table (describe how one table imports another's key). This
+     * table (describe how one table imports another's key.) This
      * should normally return a single foreign key/primary key pair
      * (most tables only import a foreign key from a table once.)  They
      * are ordered by FKTABLE_CAT, FKTABLE_SCHEM, FKTABLE_NAME, and
@@ -4143,7 +4015,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             params.add(foreignTableClause.getValue());
         }
 
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
 
@@ -4637,7 +4509,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         ArrayList params = new ArrayList();
         params.add(table.toUpperCase());
 
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = c.doQuery(sql, params, statements);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[13];
 
@@ -4785,8 +4657,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         switch(type) {
             case ResultSet.TYPE_FORWARD_ONLY:
             case ResultSet.TYPE_SCROLL_INSENSITIVE :
-                return concurrency == ResultSet.CONCUR_READ_ONLY || 
-                    concurrency == ResultSet.CONCUR_UPDATABLE;
+                return concurrency == ResultSet.CONCUR_READ_ONLY;
             default:
                 return false;
         }
@@ -4806,8 +4677,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean ownUpdatesAreVisible(int type) throws SQLException {
-        return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
-            ResultSet.TYPE_SCROLL_SENSITIVE == type;
+        return false;
     }
 
 
@@ -4824,8 +4694,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean ownDeletesAreVisible(int type) throws SQLException {
-        return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
-            ResultSet.TYPE_SCROLL_SENSITIVE == type;
+        return false;
     }
 
 
@@ -4842,8 +4711,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public boolean ownInsertsAreVisible(int type) throws SQLException {
-        return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
-            ResultSet.TYPE_SCROLL_SENSITIVE == type;
+        return false;
     }
 
 
@@ -5063,14 +4931,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public Connection getConnection() throws SQLException {
-        return connection;
+        return c;
     }
 
     //jdbc 3 methods
 
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -5084,42 +4951,36 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Retrieves whether this database supports savepoints.
      *
-     * @return true if savepoints are supported; false otherwise 
-     * @exception SQLException if a database access error occurs
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public boolean supportsSavepoints() throws SQLException {
         return getDatabaseMajorVersion() >= 1 && getDatabaseMinorVersion() >= 5;
     }
 
     /**
-     * Retrieve whether this database supports named parameters.
      *
-     * @return true if named parameters are supported, false otherwise 
-     * @exception SQLException if a database access error occurs
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public boolean supportsNamedParameters() throws SQLException {
         return false;
     }
 
     /**
-     * Retrieves whether it is possible to have multiple <code>ResultSet</code>
-     * objects returned from a <code>CallableStatement</code> object 
-     * simultaneously.
      *
-     * @return true if multiple open ResultSets are supported, false otherwise
-     * @exception SQLException if a database access error occurs 
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public boolean supportsMultipleOpenResults() throws SQLException {
         return false;
     }
 
     /**
-     * Retrieves whether auto-generated keys can be retrieved after creation.
      *
-     * @return true if auto-generated keys can be retrieved, false otherwise
-     * @exception SQLException if a database access error occurs 
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public boolean supportsGetGeneratedKeys() throws SQLException {
         return false;
@@ -5128,47 +4989,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     /**
      *
-     * Retrieves a description of the user-defined type (UDT) hierarchies 
-     * defined in a particular schema in this database. Only the immediate 
-     * super type/sub type relationship is modeled.
-     * <P>
-     * Only supertype information for UDTs matching the catalog, 
-     * schema, and type name is returned. The type name parameter
-     * may be a fully-qualified name. When the UDT name supplied is a 
-     * fully-qualified name, the catalog and schemaPattern parameters are 
-     * ignored. 
-     * <P>
-     * If a UDT does not have a direct super type, it is not listed here.
-     * A row of the <code>ResultSet</code> object returned by this method
-     * describes the designated UDT and a direct supertype. A row has the 
-     * following columns:
-     *  <OL>
-     *  <LI><B>TYPE_CAT</B> String => the UDT's catalog (may be 
-     *  <code>null</code>)
-     *  <LI><B>TYPE_SCHEM</B> String => UDT's schema (may be <code>null</code>)
-     *  <LI><B>TYPE_NAME</B> String => type name of the UDT
-     *  <LI><B>SUPERTYPE_CAT</B> String => the direct super type's catalog 
-     *                           (may be <code>null</code>)
-     *  <LI><B>SUPERTYPE_SCHEM</B> String => the direct super type's schema 
-     *                             (may be <code>null</code>)
-     *  <LI><B>SUPERTYPE_NAME</B> String => the direct super type's name
-     *  </OL>
-     *
-     * <P><B>Note:</B> If the driver does not support type hierarchies, an 
-     * empty result set is returned.
-     *
-     * @param catalog a catalog name; "" retrieves those without a catalog;
-     *        <code>null</code> means drop catalog name from the selection 
-     *        criteria
-     * @param schemaPattern a schema name pattern; "" retrieves those 
-     *        without a schema
-     * @param tableNamePattern a UDT name pattern; may be a fully-qualified
-     *        name
-     * @return a <code>ResultSet</code> object in which a row gives information
-     *         about the designated UDT
-     * @throws SQLException if a database access error occurs
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
-    public ResultSet getSuperTypes(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
+    public ResultSet getSuperTypes(String param1, String param2, String param3) throws SQLException {
         XSQLVAR[] xsqlvars = new XSQLVAR[6];
 
         xsqlvars[0] = new XSQLVAR();
@@ -5212,42 +5039,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Retrieves a description of the table hierarchies defined in a particular 
-     * schema in this database.
      *
-     * <P>Only supertable information for tables matching the catalog, schema
-     * and table name are returned. The table name parameter may be a fully-
-     * qualified name, in which case, the catalog and schemaPattern parameters
-     * are ignored. If a table does not have a super table, it is not listed 
-     * here. Supertables have to be defined in the same catalog and schema as 
-     * the sub tables. Therefore, the type description does not need to include
-     * this information for the supertable.
-     *
-     * <P>Each type description has the following columns:
-     *  <OL>
-     *  <LI><B>TABLE_CAT</B> String => the type's catalog (may be 
-     *  <code>null</code>)
-     *  <LI><B>TABLE_SCHEM</B> String => type's schema (may be 
-     *  <code>null</code>)
-     *  <LI><B>TABLE_NAME</B> String => type name
-     *  <LI><B>SUPERTABLE_NAME</B> String => the direct super type's name
-     *  </OL>
-     *
-     * <P><B>Note:</B> If the driver does not support type hierarchies, an 
-     * empty result set is returned.
-     *
-     * @param catalog a catalog name; "" retrieves those without a catalog;
-     *        <code>null</code> means drop catalog name from the selection 
-     *        criteria
-     * @param schemaPattern a schema name pattern; "" retrieves those 
-     *        without a schema
-     * @param tableNamePattern a table name pattern; may be a fully-qualified
-     *        name
-     * @return a <code>ResultSet</code> object in which each row is a type 
-     *         description
-     * @throws SQLException if a database access error occurs
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
-    public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
+    public ResultSet getSuperTables(String param1, String param2, String param3) throws SQLException {
         
         XSQLVAR[] xsqlvars = new XSQLVAR[4];
 
@@ -5281,75 +5080,72 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Retrieves whether this database supports the given results holdability.
      *
-     * @param holdability one of the following constants: 
-     * <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or 
-     * <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
-     * @return <code>true</code> if the holdability is supported, 
-     *         <code>false</code> otherwise 
-     * @exception SQLException if a database access error occurs 
+     * @param holdability <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public boolean supportsResultSetHoldability(int holdability) throws SQLException {
-        return holdability == FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT ||
-            holdability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT;
+        return holdability == 2; // same as ResultSet.CLOSE_CURSORS_AT_COMMIT, but JDK 1.3 friendly
     }
 
     /**
-     * Retrieves the default holdability of this <code>ResultSet</code>.
      *
-     * @return the default holdability
-     * @exception SQLException if a database access error occurs 
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int getResultSetHoldability() throws SQLException {
-        return FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT; 
+        return 2; // same as ResultSet.CLOSE_CURSORS_AT_COMMIT, but makes JDK 1.3 happy
     }
 
     /**
-     * Get the major version number of the database.
      *
-     * @return The major version number 
-     * @exception SQLException if a database access error occurs 
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int getDatabaseMajorVersion() throws SQLException {
-        return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getDatabaseProductMajorVersion();
+        try {
+            return c.getIscDBHandle().getDatabaseProductMajorVersion();
+        } catch (GDSException e) {
+            throw new FBSQLException(e);
+        }
     }
 
     /**
-     * Get the minor version number of the database.
-     * @return The minor version number 
-     * @exception SQLException if a database access error occurs 
+     *
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int getDatabaseMinorVersion() throws SQLException {
-        return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getDatabaseProductMinorVersion();
+        try {
+            return c.getIscDBHandle().getDatabaseProductMinorVersion();
+        } catch (GDSException e) {
+            throw new FBSQLException(e);
+        }
     }
 
     /**
-     * Get the JDBC major version for this driver.
      *
-     * @return the JDBC major version 
-     * @exception SQLException should never be thrown in this implementation
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int getJDBCMajorVersion() throws SQLException {
-        return 3;
+        return 2;
     }
 
     /**
-     * Get the JDBC minor version for this driver
      *
-     * @return the JDBC minor version
-     * @exception SQLException should never be thrown in this implementation
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int getJDBCMinorVersion() throws SQLException {
         return 0;
     }
 
     /**
-     * Indicates whether the SQLSTATEs returned by SQLException.getSQLState is 
-     * X/Open (now known as Open Group) SQL CLI or SQL99
      *
-     * @return the type of SQLSTATEs
-     * @exception SQLException should never be thrown in this implementation 
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int getSQLStateType() throws SQLException {
         // return sqlStateXOpen;
@@ -5367,14 +5163,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    /**
-     * Determine if there are no SQL wildcard characters ('%' or '_') in the 
-     * given pattern.
-     *
-     * @param pattern The pattern to be checked for wildcards
-     * @return <code>true</code> if there are no wildcards in the pattern, 
-     *         <code>false</code> otherwise
-     */
+
     public boolean hasNoWildcards(String pattern) {
         if (pattern == null)
             return true;
@@ -5403,12 +5192,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-    /**
-     * Strips all backslash-escapes from a string.
-     *
-     * @param pattern The string to be stripped
-     * @return pattern with all backslash-escapes removed
-     */
     public String stripEscape(String pattern) {
         StringBuffer stripped = new StringBuffer(pattern.length());
         for (int pos = 0; pos < pattern.length(); pos++) {
@@ -5446,13 +5229,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return "F";
     }
 
-    /**
-     * Strips a leading and trailing quote (double or single) from a string.
-     *
-     * @param pattern the string to be stripped
-     * @return a copy of <code>pattern</code> with leading and trailing quote 
-     * removed
-     */
     public String stripQuotes(String pattern) {
         if ((pattern.length() >= 2)
             && (pattern.charAt(0) == '\"')
@@ -5464,64 +5240,49 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             return pattern.toUpperCase();
         }
     }
-
-     /*
-         * (non-Javadoc)
-         * 
-         * @see org.firebirdsql.jdbc.FirebirdDatabaseMetaData#getProcedureSourceCode(java.lang.String)
-         */
-    public String getProcedureSourceCode(String procedureName)
-            throws SQLException {
-        String sResult = null;
-        String sql = "Select RDB$PROCEDURE_SOURCE From RDB$PROCEDURES Where "
-                + "RDB$PROCEDURE_NAME = ?";
-        ArrayList params = new ArrayList();
-        params.add(procedureName);
-        ResultSet rs = doQuery(sql, params);
-        if (rs.next()) sResult = rs.getString(1);
-        rs.close();
-
-        return sResult;
-    } // public String getProcedureSourceCode(String procedureName) throws
-        // SQLException
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.firebirdsql.jdbc.FirebirdDatabaseMetaData#getTriggerSourceCode(java.lang.String)
-     */
-    public String getTriggerSourceCode(String triggerName) throws SQLException {
-        String sResult = null;
-        String sql = "Select RDB$TRIGGER_SOURCE From RDB$TRIGGERS Where "
-                + "RDB$TRIGGER_NAME = ?";
-        ArrayList params = new ArrayList();
-        params.add(triggerName);
-        ResultSet rs = doQuery(sql, params);
-        if (rs.next()) sResult = rs.getString(1);
-        rs.close();
-
-        return sResult;
+/*
+    private PreparedStatement getStatement(String sql) throws SQLException {
+        PreparedStatement s = (PreparedStatement)statements.get(sql);
+        if (s == null) {
+            s = c.prepareStatement(sql);
+            statements.put(sql, s);
+        }
+        return s;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.firebirdsql.jdbc.FirebirdDatabaseMetaData#getViewSourceCode(java.lang.String)
-     */
-    public String getViewSourceCode(String viewName) throws SQLException {
-        String sResult = null;
-        String sql = "Select RDB$VIEW_SOURCE From RDB$RELATIONS Where "
-                + "RDB$RELATION_NAME = ?";
-        ArrayList params = new ArrayList();
-        params.add(viewName);
-        ResultSet rs = doQuery(sql, params);
-        if (rs.next()) sResult = rs.getString(1);
-        rs.close();
-
-        return sResult;
+    private ResultSet doQuery(String sql, List params) throws SQLException {
+        boolean ourTransaction = false;
+        if (!c.inTransaction()) {
+            try {
+                trans.begin();
+                ourTransaction = true;
+            }
+            catch (ResourceException re) {
+                throw new SQLException("couldn't work with local transaction: " + re);
+            }
+        }
+        PreparedStatement s = getStatement(sql);
+        for (int i = 0; i < params.size(); i++) {
+            s.setString(i + 1, (String)params.get(i));
+        }
+        ResultSet rs = null;
+        try {
+            s.execute();
+            rs = ((AbstractStatement)s).getCachedResultSet(true); //trim strings
+        }
+        finally {
+            if (ourTransaction) {
+                try {
+                    trans.commit();
+                }
+                catch (ResourceException re) {
+                    throw new SQLException("couldn't work with local transaction: " + re);
+                }
+            }
+        }
+        return rs;
     }
-
-    
+*/
     private void checkCatalogAndSchema(String catalog, String schema) throws SQLException {
         /*
         // we ignore incorrect catalog and schema specification as
@@ -5572,53 +5333,5 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             return value.getBytes();
         else
             return null;
-    }
-    
-    private AbstractPreparedStatement getStatement(String sql) throws SQLException {
-        
-        AbstractPreparedStatement s = 
-            (AbstractPreparedStatement)statements.get(sql);
-        
-        if (s != null) 
-            return s;
-        
-        if (connection == null) {
-            InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator = 
-                new InternalTransactionCoordinator.MetaDataTransactionCoordinator();
-            
-            s = new FBPreparedStatement(gdsHelper, sql,
-                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
-                    FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT, 
-                    metaDataTransactionCoordinator, metaDataTransactionCoordinator,
-                    true);
-        } else {
-            s = (AbstractPreparedStatement)connection.prepareMetaDataStatement(
-                sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        }
-            
-        statements.put(sql, s);
-        
-        return s;
-    }
-
-    /**
-     * Execute an sql query with a given set of parameters.
-     * 
-     * @param sql
-     *            The sql statement to be used for the query
-     * @param params
-     *            The parameters to be used in the query
-     * @throws SQLException
-     *             if a database access error occurs
-     */
-    public ResultSet doQuery(String sql, List params)
-            throws SQLException {
-        
-        AbstractPreparedStatement s = getStatement(sql);
-        
-        for (int i = 0; i < params.size(); i++)
-            s.setStringForced(i + 1, (String) params.get(i));
-
-        return s.executeMetaDataQuery();
     }
 }

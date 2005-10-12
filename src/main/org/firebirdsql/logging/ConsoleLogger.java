@@ -13,7 +13,6 @@ package org.firebirdsql.logging;
 public class ConsoleLogger extends Logger {
     
     private static final boolean debugEnabled = false;
-    private static final boolean traceEnabled = true;
     private static final boolean infoEnabled = true;
     private static final boolean warnEnabled = true;
     private static final boolean errEnabled = true;
@@ -22,11 +21,7 @@ public class ConsoleLogger extends Logger {
     private String name;
     
     public ConsoleLogger(String name){
-        int lastPoint = name.lastIndexOf('.');
-        if (lastPoint == -1)
-            this.name = name;
-        else
-            this.name = name.substring(lastPoint + 1);
+        this.name = name;
     }
     
     public boolean isDebugEnabled() {
@@ -59,20 +54,6 @@ public class ConsoleLogger extends Logger {
         }
     }
     
-    public boolean isTraceEnabled() {
-        return traceEnabled;
-    }
-
-    public void trace(Object message, Throwable t) {
-        if (isTraceEnabled()) {
-            out(message, t);
-        }
-    }
-
-    public void trace(Object message) {
-        trace(message, null);
-    }
-
     public boolean isInfoEnabled() {
         return infoEnabled;
     }

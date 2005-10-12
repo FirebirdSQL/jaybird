@@ -24,6 +24,7 @@ import java.sql.Blob;
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.jdbc.FBCachedBlob;
+import org.firebirdsql.jdbc.FBResultSet;
 
 /**
  * Describe class <code>FBBlobField</code> here.
@@ -33,16 +34,16 @@ import org.firebirdsql.jdbc.FBCachedBlob;
  */
 public class FBCachedBlobField extends FBBlobField {
 
-    FBCachedBlobField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
+    FBCachedBlobField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
         throws SQLException 
     {
-        super(field, dataProvider, requiredType);
+        super(field, rs, numCol, requiredType);
     }
 
     public Blob getBlob() throws SQLException {
-        if (getFieldData()==null)
+        if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 
-        return new FBCachedBlob(getFieldData());
+        return new FBCachedBlob(rs.row[numCol]);
     }
 }

@@ -26,8 +26,6 @@ import java.sql.SQLException;
 import java.util.*;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * The representation (mapping) in
@@ -70,17 +68,15 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
 
     private boolean isNew;
     private long blob_id;
-    private GDSHelper gdsHelper;
-    private FBObjectListener.BlobListener blobListener;
+    private AbstractConnection c;
 
     private Collection inputStreams = new HashSet();
     private FBBlobOutputStream blobOut = null;
 
-    private FBBlob(GDSHelper c, boolean isNew, FBObjectListener.BlobListener blobListener) {
-        this.gdsHelper = c;
+    private FBBlob(AbstractConnection c, boolean isNew) {
+        this.c = c;
         this.isNew = isNew;
-        this.bufferlength = c.getBlobBufferLength();
-        this.blobListener = blobListener;
+        this.bufferlength = c.getBlobBufferLength().intValue();
     }
 
     /**
@@ -89,12 +85,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * 
      * @param c connection that will be used to write data to blob.
      */
-    public FBBlob(GDSHelper c, FBObjectListener.BlobListener blobListener) {
-        this(c, true, blobListener);
-    }
-    
-    public FBBlob(GDSHelper c) {
-        this(c, null);
+    public FBBlob(AbstractConnection c) {
+        this(c, true);
     }
 
     /**
@@ -104,15 +96,10 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * 
      * @param blob_id ID of the Blob.
      */
-    public FBBlob(GDSHelper c, long blob_id, FBObjectListener.BlobListener blobListener) {
-        this(c, false, blobListener);
+    public FBBlob(AbstractConnection c, long blob_id) {
+        this(c, false);
         this.blob_id = blob_id;
     }
-    
-    public FBBlob(GDSHelper c, long blob_id) {
-        this(c, blob_id, null);
-    }
-
     
     /**
      * Get synchronization object that will be used to synchronize multithreaded
@@ -121,7 +108,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @return object that will be used for synchronization.
      */
     public Object getSynchronizationObject() {
-        return gdsHelper;
+        return c;
     }
 
     /**
@@ -169,22 +156,21 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         
         synchronized(syncObject) {
             try {
-                if (blobListener != null)
-                    blobListener.executionStarted(this);
+                c.ensureInTransaction();
                 
-                IscBlobHandle blob = gdsHelper.openBlob(blob_id, SEGMENTED);
+                isc_blob_handle blob = c.openBlobHandle(blob_id, SEGMENTED);
                 try {
-                    GDS gds = gdsHelper.getInternalAPIHandler();
-                    return gds.iscBlobInfo(blob, items, buffer_length);
+                    GDS gds = c.getInternalAPIHandler();
+                    return gds.isc_blob_info(blob, items, buffer_length);
                 } finally {
-                    gdsHelper.closeBlob(blob);
+                    c.closeBlob(blob);
                 }
                 
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
             } finally {
-                if (blobListener != null)
-                    blobListener.executionCompleted(this);
+                if (c.willEndTransaction())
+                    c.checkEndTransaction();
             }
         }
     }
@@ -221,9 +207,9 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             throw new FBSQLException("Length is not available.");
             
         int dataLength = 
-            gdsHelper.getInternalAPIHandler().iscVaxInteger(info, position + 1, 2);
+            c.getInternalAPIHandler().isc_vax_integer(info, position + 1, 2);
             
-        return gdsHelper.getInternalAPIHandler().iscVaxInteger(
+        return c.getInternalAPIHandler().isc_vax_integer(
             info, position + 3, dataLength);
     }
 
@@ -243,9 +229,9 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             throw new FBSQLException("Cannot determine BLOB type");
 
         int dataLength =
-            gdsHelper.getInternalAPIHandler().iscVaxInteger(info, 1, 2);
+            c.getInternalAPIHandler().isc_vax_integer(info, 1, 2);
 
-        int type = gdsHelper.getInternalAPIHandler().iscVaxInteger(
+        int type = c.getInternalAPIHandler().isc_vax_integer(
             info, 3, dataLength);
 
         return type == ISCConstants.isc_bpb_type_segmented;
@@ -268,7 +254,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException if Blob cannot be detached.
      */    
     public FirebirdBlob detach() throws SQLException {
-        return new FBBlob(gdsHelper, blob_id, blobListener);
+        return new FBBlob(c, blob_id);
     }
 
   /**
@@ -298,8 +284,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
-            if (blobListener != null)
-                blobListener.executionStarted(this);
+            c.ensureInTransaction();
             
             try {
                 FirebirdBlob.BlobInputStream in = 
@@ -308,9 +293,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                 try {
                     byte[] result = new byte[length];
                     
-                    if (pos != 1)
-                        in.seek((int)pos - 1);
-                    
+                    in.seek((int)pos - 1);
                     in.readFully(result);
                     
                     return result;
@@ -321,8 +304,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             } catch(IOException ex) {
                 throw new FBSQLException(ex);                    
             } finally {
-                if (blobListener != null)
-                    blobListener.executionCompleted(this);
+                if (c.willEndTransaction())
+                    c.checkEndTransaction();
             }
         }
      }
@@ -390,63 +373,45 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     //jdbc 3.0 additions
 
     /**
-     * <b>This operation is not currently supported</b>
-     * Truncate this <code>Blob</code> to a given length. 
      *
-     * @param param1 The length to truncate this Blob to 
-     * @exception java.sql.SQLException this operation is not supported     
-     * */
+     * @param param1 <description>
+     * @exception java.sql.SQLException <description>
+     */
     public void truncate(long param1) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
     /**
-     * <b>This operation is not currently supported</b>
-     * Writes all or part of the given byte array to the BLOB value that this 
-     * <code>Blob</code> object represents and returns the number of bytes 
-     * written.
      *
-     * @param param1 The position at which to start writing 
-     * @param param2 The array of bytes to be written 
-     * @return the number of bytes written 
-     * @exception java.sql.SQLException because this operation is not supported 
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int setBytes(long param1, byte[] param2) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
     /**
-     * <b>This operation is not currently supported</b>
-     * Writes all or part of the given byte array to the BLOB value that this 
-     * <code>Blob</code> object represents and returns the number of bytes 
-     * written.
      *
-     * @param param1 The position at which to start writing 
-     * @param param2 The array of bytes to be written 
-     * @param param3 the offset into the byte array at which to start reading 
-     * the bytes to be set 
-     * @param param4 the number of bytes to be written to the BLOB value from 
-     * the byte array   
-     * @return the number of bytes written 
-     * @exception java.sql.SQLException because this operation is not supported 
+     * @param param1 <description>
+     * @param param2 <description>
+     * @param param3 <description>
+     * @param param4 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int setBytes(long param1, byte[] param2, int param3, int param4) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
     /**
-     * Retrieves a stream that can be used to write to the BLOB value that 
-     * this Blob object represents. The stream begins at position pos. 
      *
      * @param pos The position in the blob to start writing.
      * @return OuputStream to write to.
-     * @exception java.sql.SQLException if a database access error occurs 
+     * @exception java.sql.SQLException <description>
      */
     public OutputStream setBinaryStream(long pos) throws SQLException {
-        
-        if (blobListener != null)
-            blobListener.executionStarted(this);
-        
         if (blobOut != null) 
             throw new FBSQLException("Only one blob output stream open at a time!");
 
@@ -464,7 +429,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         if (pos > 0) {
             //copy pos bytes from input to output
             //implement this later
-            throw new FBDriverNotCapableException("Non-null positions are not yet supported.");
         }
         
         return blobOut;
@@ -473,12 +437,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
 
     //package methods
 
-    /**
-     * Get the identifier for this <code>Blob</code>
-     *
-     * @return This <code>Blob</code>'s identifier
-     * @throws SQLException if a database access error occurs
-     */
     public long getBlobId() throws SQLException {
         if (isNew) 
             throw new FBSQLException("No Blob ID is available in new Blob object.");
@@ -491,29 +449,9 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         this.isNew = false;
     }
 
-    public void copyBytes(byte[] bytes, int pos, int len) throws SQLException {
-        OutputStream out = setBinaryStream(0);
-        try {
-            try {
-                out.write(bytes, pos, len);
-            } finally {
-                out.close();
-            }
-        } catch(IOException ex) {
-            throw new FBSQLException(ex);
-        }
-    }
-    
-    /**
-     * Copy the contents of an <code>InputStream</code> into this Blob.
-     *
-     * @param inputStream the stream from which data will be copied
-     * @param length The maximum number of bytes to read from the InputStream
-     * @throws SQLException if a database access error occurs
-     */
     public void copyStream(InputStream inputStream, int length) throws SQLException {
         OutputStream os = setBinaryStream(0);
-        byte[] buffer = new byte[Math.min(bufferlength, length)];
+        byte[] buffer = new byte[bufferlength];
         int chunk;
         try {
             while (length >0) {
@@ -530,66 +468,28 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             throw new FBSQLException(ioe);
         }
     }
-    
-    /**
-     * Copy the contents of an <code>InputStream</code> into this Blob. Unlike 
-     * the {@link #copyStream(InputStream, int)} method, this one copies bytes
-     * until the EOF is reached.
-     *
-     * @param inputStream the stream from which data will be copied
-     * @throws SQLException if a database access error occurs
-     */
-    public void copyStream(InputStream inputStream) throws SQLException {
+
+    public void copyCharacterStream(Reader inputStream, int length, String encoding) throws SQLException {
         OutputStream os = setBinaryStream(0);
         try {
-            int chunk = 0;
-            byte[] buffer = new byte[bufferlength];
-
-            while((chunk = inputStream.read(buffer)) != -1)
-                os.write(buffer, 0, chunk);
-            
+        OutputStreamWriter osw = new OutputStreamWriter(os, encoding);
+        char[] buffer = new char[bufferlength];
+        int chunk;
+        try {
+            while (length >0) {
+                chunk =inputStream.read(buffer, 0, ((length<bufferlength) ? length:bufferlength));
+                if (chunk == -1)
+                    break;
+                osw.write(buffer, 0, chunk);                
+                length -= chunk;
+            }
+            osw.flush();
             os.flush();
             os.close();
         }
         catch (IOException ioe) {
             throw new FBSQLException(ioe);
         }
-    }
-
-    /**
-     * Copy data from a character stream into this Blob.
-     *
-     * @param inputStream the source of data to copy
-     * @param length The maximum number of bytes to copy
-     * @param encoding The encoding used in the character stream
-     */
-    public void copyCharacterStream(Reader inputStream, int length, String encoding) throws SQLException {
-        OutputStream os = setBinaryStream(0);
-        try {
-            
-            OutputStreamWriter osw;
-            if (encoding != null)
-                osw = new OutputStreamWriter(os, encoding);
-            else
-                osw = new OutputStreamWriter(os);
-            
-            char[] buffer = new char[Math.min(bufferlength, length)];
-            int chunk;
-            try {
-                while (length >0) {
-                    chunk =inputStream.read(buffer, 0, ((length<bufferlength) ? length:bufferlength));
-                    if (chunk == -1)
-                        break;
-                    osw.write(buffer, 0, chunk);                
-                    length -= chunk;
-                }
-                osw.flush();
-                os.flush();
-                os.close();
-            }
-            catch (IOException ioe) {
-                throw new FBSQLException(ioe);
-            }
         } catch(UnsupportedEncodingException ex) {
             throw new FBSQLException("Cannot set character stream because " +
                 "the unsupported encoding is detected in the JVM: " +
@@ -601,16 +501,13 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
 
     //Inner classes
 
-    /**
-     * An input stream for reading directly from a FBBlob instance.
-     */
     public class FBBlobInputStream extends InputStream 
         implements FirebirdBlob.BlobInputStream
     {
 
 
         private byte[] buffer = null;
-        private IscBlobHandle blob;
+        private isc_blob_handle blob;
         private int pos = 0;
         
         private boolean closed;
@@ -629,11 +526,27 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             
             synchronized(syncObject) {
                 try {
-                    blob = gdsHelper.openBlob(blob_id, SEGMENTED);
+                    blob = c.openBlobHandle(blob_id, SEGMENTED);
                 } catch (GDSException ge) {
                     throw new FBSQLException(ge);
                 }
             }
+        }
+        
+        /**
+         * Disgusting usage of method overloading. We need this method to avoid
+         * adding check if this stream is closed in each method, since
+         * {@link FBBlob#getSynchronizationObject()} is called there anyway.
+         * 
+         * @return synchronization object as described in 
+         * {@link FBBlob#getSynchronizationObject()} method.
+         * 
+         * @throws IOException if this stream is already closed.
+         */
+        private Object getSynchronizationObject1() throws IOException {
+            checkClosed();
+            
+            return FBBlob.this.getSynchronizationObject();
         }
         
         public FirebirdBlob getBlob() {
@@ -651,7 +564,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             synchronized(syncObject) {
                 checkClosed();
                 try {
-                    gdsHelper.getInternalAPIHandler().iscSeekBlob(blob, position, seekMode);
+                    c.getInternalAPIHandler().isc_seek_blob(blob, position, seekMode);
                 } catch (GDSException ex) {
                     /** @todo fix this */
                     throw new IOException(ex.getMessage());
@@ -666,7 +579,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             synchronized(syncObject) {
                 checkClosed();
                 try {
-                    byte[] info = gdsHelper.getInternalAPIHandler().iscBlobInfo(
+                    byte[] info = c.getInternalAPIHandler().isc_blob_info(
                         blob, new byte[] {ISCConstants.isc_info_blob_total_length}, 20);
 
                     return interpretLength(info, 0);
@@ -690,7 +603,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                     
                     try {
                         //bufferlength is in FBBlob enclosing class
-                        buffer = gdsHelper.getBlobSegment(blob, bufferlength);
+                        buffer = c.getBlobSegment(blob, bufferlength);
                     } catch (GDSException ge) {
                         throw new IOException("Blob read problem: " +
                             ge.toString());
@@ -735,7 +648,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         public void readFully(byte[] b, int off, int len) throws IOException {
             int counter = 0;
             int pos = 0;
-            byte[] buffer = new byte[Math.min(READ_FULLY_BUFFER_SIZE, len)];
+            byte[] buffer = new byte[READ_FULLY_BUFFER_SIZE];
 
             int toRead = len;
 
@@ -761,9 +674,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             synchronized(syncObject) {
                 if (blob != null) {
                     try {
-                        gdsHelper.closeBlob(blob);
-                        
-                        inputStreams.remove(this);
+                        c.closeBlob(blob);
                     } catch (GDSException ge) {
                         throw new IOException("couldn't close blob: " + ge);
                     }
@@ -782,7 +693,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         implements FirebirdBlob.BlobOutputStream
     {
 
-        private IscBlobHandle blob;
+        private isc_blob_handle blob;
 
         private FBBlobOutputStream() throws SQLException {
             
@@ -790,12 +701,12 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             
             synchronized(syncObject) {
                 try {
-                    DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
+                    DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
                     
                     boolean useStreamBlobs = 
-                        dpb.hasArgument(DatabaseParameterBufferExtension.USE_STREAM_BLOBS);
+                        dpb.hasArgument(DatabaseParameterBuffer.use_stream_blobs);
                     
-                    blob = gdsHelper.createBlob(!useStreamBlobs);
+                    blob = c.createBlobHandle(!useStreamBlobs);
                     
                 } catch (GDSException ge) {
                     throw new FBSQLException(ge);
@@ -803,13 +714,13 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             }
             
             if (isNew) {
-                setBlobId(blob.getBlobId());
+                setBlobId(blob.getBlob_id());
             }
         }
         
         public void seek(int position, int seekMode) throws SQLException {
             try {
-                gdsHelper.getInternalAPIHandler().iscSeekBlob(blob, position, seekMode);
+                c.getInternalAPIHandler().isc_seek_blob(blob, position, seekMode);
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
             }
@@ -821,7 +732,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             
             synchronized(syncObject) {
                 try {
-                    byte[] info = gdsHelper.getInternalAPIHandler().iscBlobInfo(
+                    byte[] info = c.getInternalAPIHandler().isc_blob_info(
                         blob, new byte[] {ISCConstants.isc_info_blob_total_length}, 20);
 
                     return interpretLength(info, 0);
@@ -838,50 +749,32 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             throw new IOException("FBBlobOutputStream.write(int b) not implemented");
         }
 
-        public void writeSegment(byte[] buf) throws GDSException {
-            Object syncObject = getSynchronizationObject();
-            synchronized(syncObject) {
-                gdsHelper.putBlobSegment(blob, buf);
-            }
-        }
-        
         public void write(byte[] b, int off, int len) throws IOException {
             try {
-                if (off == 0 && len == b.length && len < bufferlength) {
-                    /*
-                     * If we are just writing the entire byte array, we need to
-                     * do nothing but just write it over
-                     */
-                    writeSegment(b);
-                } else {
-                    /*
-                     * In this case, we need to chunk it over since <code>putBlobSegment</code>
-                     * cannot currently support length and offset.
-                     */
-                    int chunk = bufferlength;
-                    int lastChunk = 0;
-                    byte[] buf = null;
-                    while (len > 0) {
-                        if (len < chunk) chunk = len;
-
-                        // this allows us to reused the chunk if its size has
-                        // not changed
-                        if (chunk != lastChunk) {
-                            buf = new byte[chunk];
-                            lastChunk = chunk;
-                        }
-
-                        System.arraycopy(b, off, buf, 0, chunk);
-                        writeSegment(buf);
-
-                        len -= chunk;
-                        off += chunk;
+                byte[] buf = new byte[bufferlength];
+                int chunk;
+                while (len > 0) {
+                    if (len >= bufferlength) {
+                        chunk = bufferlength;
                     }
-
+                    else {
+                        buf = new byte[len];
+                        chunk = len;
+                    }
+                    System.arraycopy(b, off, buf, 0, chunk);
+                    
+                    Object syncObject = getSynchronizationObject();
+                    
+                    synchronized(syncObject) {
+                        c.putBlobSegment(blob, buf);
+                    }
+                    
+                    len -= chunk;
+                    off += chunk;
                 }
-            } catch (GDSException ge) {
-                throw new IOException("Problem writing to FBBlobOutputStream: "
-                        + ge);
+            }
+            catch (GDSException ge) {
+                throw new IOException("Problem writing to FBBlobOutputStream: " + ge);
             }
         }
 
@@ -892,10 +785,10 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                     Object syncObject = getSynchronizationObject();
                     
                     synchronized(syncObject) {
-                        gdsHelper.closeBlob(blob);
+                        c.closeBlob(blob);
                     }
                     
-                    setBlobId(blob.getBlobId());
+                    setBlobId(blob.getBlob_id());
                     
                 } catch (GDSException ge) {
                     throw new IOException("could not close blob: " + ge);

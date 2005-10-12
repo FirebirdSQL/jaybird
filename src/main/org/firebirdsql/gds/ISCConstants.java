@@ -1,28 +1,21 @@
 /*
- * Public Firebird Java API.
+ * Firebird Open Source J2ee connector - jdbc driver
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright notice, 
- *       this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright 
- *       notice, this list of conditions and the following disclaimer in the 
- *       documentation and/or other materials provided with the distribution. 
- *    3. The name of the author may not be used to endorse or promote products 
- *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
- * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
  */
-
 
 /* The Original Code is the Firebird Java GDS implementation.
  *
@@ -140,7 +133,6 @@ public final class ISCConstants {
     public final static int isc_dpb_use_standard_udf        = 134;
     public final static int isc_dpb_local_encoding          = 135;
     public final static int isc_dpb_mapping_path            = 136;
-    public final static int isc_dpb_no_result_set_tracking  = 137; 
     
 
     /*************************************/
@@ -458,7 +450,6 @@ public final class ISCConstants {
     public final static int isc_info_sql_stmt_rollback       = 11;
     public final static int isc_info_sql_stmt_select_for_upd = 12;
     public final static int isc_info_sql_stmt_set_generator  = 13;
-    public final static int isc_info_sql_stmt_savepoint      = 14;
 
     /*****************************/
     /* Request information items */
@@ -558,82 +549,7 @@ public final class ISCConstants {
     public final static int isc_info_next_transaction = 107;
     public final static int isc_info_db_provider = 108;
     public final static int isc_info_active_transactions = 109;
-    
-    public final static int isc_info_db_impl_rdb_vms = 1;
-    public final static int isc_info_db_impl_rdb_eln = 2;
-    public final static int isc_info_db_impl_rdb_eln_dev = 3;
-    public final static int isc_info_db_impl_rdb_vms_y = 4;
-    public final static int isc_info_db_impl_rdb_eln_y = 5;
-    public final static int isc_info_db_impl_jri = 6;
-    public final static int isc_info_db_impl_jsv = 7;
-
-    public final static int isc_info_db_impl_isc_apl_68K = 25;
-    public final static int isc_info_db_impl_isc_vax_ultr = 26;
-    public final static int isc_info_db_impl_isc_vms = 27;
-    public final static int isc_info_db_impl_isc_sun_68k = 28;
-    public final static int isc_info_db_impl_isc_os2 = 29;
-    public final static int isc_info_db_impl_isc_sun4 = 30;
-    
-    public final static int isc_info_db_impl_isc_hp_ux = 31;
-    public final static int isc_info_db_impl_isc_sun_386i = 32;
-    public final static int isc_info_db_impl_isc_vms_orcl = 33;
-    public final static int isc_info_db_impl_isc_mac_aux = 34;
-    public final static int isc_info_db_impl_isc_rt_aix = 35;
-    public final static int isc_info_db_impl_isc_mips_ult = 36;
-    public final static int isc_info_db_impl_isc_xenix = 37;
-    public final static int isc_info_db_impl_isc_dg = 38;
-    public final static int isc_info_db_impl_isc_hp_mpexl = 39;
-    public final static int isc_info_db_impl_isc_hp_ux68K = 40;
-
-    public final static int isc_info_db_impl_isc_sgi = 41;
-    public final static int isc_info_db_impl_isc_sco_unix = 42;
-    public final static int isc_info_db_impl_isc_cray = 43;
-    public final static int isc_info_db_impl_isc_imp = 44;
-    public final static int isc_info_db_impl_isc_delta = 45;
-    public final static int isc_info_db_impl_isc_next = 46;
-    public final static int isc_info_db_impl_isc_dos = 47;
-    public final static int isc_info_db_impl_m88K = 48;
-    public final static int isc_info_db_impl_unixware = 49;
-    public final static int isc_info_db_impl_isc_winnt_x86 = 50;
-
-    public final static int isc_info_db_impl_isc_epson = 51;
-    public final static int isc_info_db_impl_alpha_osf = 52;
-    public final static int isc_info_db_impl_alpha_vms = 53;
-    public final static int isc_info_db_impl_netware_386 = 54; 
-    public final static int isc_info_db_impl_win_only = 55;
-    public final static int isc_info_db_impl_ncr_3000 = 56;
-    public final static int isc_info_db_impl_winnt_ppc = 57;
-    public final static int isc_info_db_impl_dg_x86 = 58;
-    public final static int isc_info_db_impl_sco_ev = 59;
-    public final static int isc_info_db_impl_i386 = 60;
-
-    public final static int isc_info_db_impl_freebsd = 61;
-    public final static int isc_info_db_impl_netbsd = 62;
-    public final static int isc_info_db_impl_darwin = 63;
-    public final static int isc_info_db_impl_sinixz = 64;
-
-    public final static int isc_info_db_impl_linux_sparc = 65;
-    public final static int isc_info_db_impl_linux_amd64 = 66;
-
-    public final static int isc_info_db_class_access = 1;
-    public final static int isc_info_db_class_y_valve = 2;
-    public final static int isc_info_db_class_rem_int = 3;
-    public final static int isc_info_db_class_rem_srvr = 4;
-    public final static int isc_info_db_class_pipe_int = 7;
-    public final static int isc_info_db_class_pipe_srvr = 8;
-    public final static int isc_info_db_class_sam_int = 9;
-    public final static int isc_info_db_class_sam_srvr = 10;
-    public final static int isc_info_db_class_gateway = 11;
-    public final static int isc_info_db_class_cache = 12;
-    public final static int isc_info_db_class_classic_access = 13;
-    public final static int isc_info_db_class_server_access = 14;
-
-    public final static int isc_info_db_code_rdb_eln = 1;
-    public final static int isc_info_db_code_rdb_vms = 2;
-    public final static int isc_info_db_code_interbase = 3;
-    public final static int isc_info_db_code_firebird = 4;
-
-    
+    	 
 /************************/
 /* Blob Parameter Block */
 /************************/
@@ -663,11 +579,6 @@ public final class ISCConstants {
     public final static int isc_info_blob_total_length      = 6;
     public final static int isc_info_blob_type              = 7;
 
-
-    /*********************************/
-    /* Transaction information items */
-    /*********************************/
-    public final static int isc_info_tra_id = 4;
 
 
     /********************/
@@ -1190,23 +1101,6 @@ public final class ISCConstants {
     public final static int isc_valid_client_dialects            = 335544812;
     public final static int isc_optimizer_between_err            = 335544813;
     public final static int isc_service_not_supported            = 335544814;
-    public final static int isc_generator_name                   = 335544815;
-    public final static int isc_udf_name                         = 335544816;
-    public final static int isc_bad_limit_param                  = 335544817;
-    public final static int isc_bad_skip_param                   = 335544818;
-    public final static int isc_io_32bit_exceeded_err            = 335544819;
-    public final static int isc_invalid_savepoint                = 335544820;
-    public final static int isc_dsql_column_pos_err              = 335544821;
-    public final static int isc_dsql_agg_where_err               = 335544822;
-    public final static int isc_dsql_agg_group_err               = 335544823;
-    public final static int isc_dsql_agg_column_err              = 335544824;
-    public final static int isc_dsql_agg_having_err              = 335544825;
-    public final static int isc_dsql_agg_nested_err              = 335544826;
-    public final static int isc_exec_sql_invalid_arg             = 335544827;
-    public final static int isc_exec_sql_invalid_req             = 335544828;
-    public final static int isc_exec_sql_invalid_var             = 335544829;
-    public final static int isc_exec_sql_max_call_exceeded       = 335544830;
-    public final static int isc_conf_access_denied               = 335544831;
     public final static int isc_gfix_db_name                     = 335740929;
     public final static int isc_gfix_invalid_sw                  = 335740930;
     public final static int isc_gfix_incmp_sw                    = 335740932;
@@ -1425,4 +1319,89 @@ public final class ISCConstants {
 
     /* Historical alias for pre V6 applications */
     public final static int SQL_DATE      = SQL_TIMESTAMP;
+
+    /**
+     * The constant array <code>FATAL_ERRORS</code> holds an ORDERED
+     * list of isc error codes that indicate that the connection is no
+     * longer usable.  This is used in the jca framework to determine
+     * if a GDSException should result in a ConnectionErrorOccurred
+     * notification to the Connection Manager to destroy the
+     * connection.  It is eesntial that this list be ordered so
+     * determining if a code is in it can proceed reliably.
+     *
+     *
+     * This list has been kindly reviewed by Ann Harrison, 12/13/2002
+     */
+    static int[] FATAL_ERRORS = new int[] {
+        isc_bad_db_format,   //probably not a firebird db
+        isc_bad_db_handle,   //couldn't get a connection
+        isc_bad_dpb_content, //couldn't get a connection
+        isc_bad_dpb_form,    //couldn't get a connection
+        isc_bug_check,
+        isc_db_corrupt,
+        //isc_excess_trans, oracle gateway only
+        //isc_integ_fail,  user trigger or check constraint failed
+        //isc_invalid_blr,  usually undefined udf or bad procedure/trigger
+        isc_io_error,
+        isc_metadata_corrupt,
+        //isc_not_valid,  field level check failed.
+        //isc_no_meta_update,  something went wrong trying to update metadata
+        isc_open_trans,  //could not forcibly close tx on server shutdown.
+        isc_port_len,    //user sent buffer too short or long for data
+                         //expected.  Should never occur
+        isc_req_sync,    //client asked for data when server expected
+                         //data or vice versa. Should never happen
+        isc_req_wrong_db,//In a multi-database application, a prepared
+                         //request has been opened against the wrong
+                         //database.  Not fatal, but also very
+                         //unlikely. I'm leaving it in because if we
+                         //get this, something is horribly wrong.
+        isc_sys_request, //A system service call failed.  Probably fatal.
+        //isc_stream_eof, Part of the scrolling cursors stuff, not
+        //fatal, simply indicates that you've got to the end of the
+        //cursor.
+
+        isc_unavailable,
+        isc_wrong_ods,
+        //isc_fatal_conflict, not used.
+        isc_badblk,
+        isc_relbadblk,
+        isc_blktoobig,
+        isc_bufexh,
+        isc_bufinuse,
+        isc_bdbincon,
+        //isc_reqinuse, User level error, unlikely with JayBird, not fatal.
+        isc_badodsver,
+        isc_dirtypage,
+        isc_doubleloc,
+        isc_nodnotfnd,
+        isc_dupnodfnd,
+        isc_locnotmar,
+        isc_badpagtyp,
+        isc_corrupt,
+        isc_badpage,
+        isc_badindex,
+        isc_badhndcnt,
+        isc_connect_reject, //no connection to close
+        isc_no_lock_mgr,    //no connection to close
+        isc_blocking_signal,
+        isc_lockmanerr,
+        isc_bad_detach,     //detach failed...fatal, but there's nothing we can do.
+        isc_buf_invalid,
+        isc_bad_lock_level,  //PC_ENGINE only, handles record locking
+                             //issues from the attempt to make
+                             //InterBase just like Dbase.
+
+        isc_shutdown,
+        isc_io_create_err,
+        isc_io_open_err,
+        isc_io_close_err,
+        isc_io_read_err,
+        isc_io_write_err,
+        isc_io_delete_err,
+        isc_io_access_err,
+        isc_lost_db_connection,
+        isc_bad_protocol,
+        isc_file_in_use
+    };
 }

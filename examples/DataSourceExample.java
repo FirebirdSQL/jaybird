@@ -28,7 +28,7 @@ public final class DataSourceExample
         new org.firebirdsql.pool.FBWrappingDataSource();
 
     // Set the standard properties
-    dataSource.setDatabase ("localhost/3050:c:/database/test_charset.fdb");
+    dataSource.setDatabase ("localhost/3050:c:/database/employee.gdb");
     dataSource.setDescription ("An example database of employees");
 
 	/*
@@ -55,7 +55,7 @@ public final class DataSourceExample
     // dataSource.setRoleName("USER");
     
     // Character encoding for the connection is set to NONE
-    dataSource.setEncoding("ISO8859_1");
+    dataSource.setEncoding("NONE");
     
     // other non-standard properties do not have setters
     // you can pass any DPB parameter
@@ -67,14 +67,6 @@ public final class DataSourceExample
     try {
       dataSource.setLoginTimeout (10);
       java.sql.Connection c = dataSource.getConnection ("sysdba", "masterkey");
-      
-      java.sql.Statement stmt = c.createStatement();
-      java.sql.ResultSet rs = stmt.executeQuery("SELECT * FROM test_charset");
-      while(rs.next())
-          System.out.println("a1 = " + rs.getString(1) + ", a2 = " + rs.getString(2));
-          
-      stmt.close();
-      
       // At this point, there is no implicit driver instance
       // registered with the driver manager!
       System.out.println ("got connection");

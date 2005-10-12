@@ -18,10 +18,7 @@
  */
 package org.firebirdsql.jdbc.cts;
 
-import java.io.File;
-
 import junit.framework.TestSuite;
-import junit.textui.TestRunner;
 
 /**
  * Firebird JDBC CTS suite.
@@ -170,19 +167,5 @@ public class FirebirdSuite {
         }
         
         return suite;
-    }
-    
-    public static void main(String[] args) {
-        
-        File workingDir = new File(".");
-        String workingDirStr = workingDir.getAbsolutePath();
-        
-        System.setProperty("cts.config.resource", "dml.properties");
-        System.setProperty("cts.excludes.resource", "excludes.properties");
-        System.setProperty("cts.db.url", "jdbc:firebirdsql:localhost/3050:" + workingDirStr +"/jdbccts.gdb");
-        System.setProperty("cts.db.username", "SYSDBA");
-        System.setProperty("cts.db.password", "masterkey");
-        
-        TestRunner.run(suite());
     }
 }

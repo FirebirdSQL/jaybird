@@ -39,17 +39,7 @@ public class NullLogger extends Logger{
 	public void debug(Object message, Throwable t) {
 	}
 	
-    public boolean isTraceEnabled() {
-        return false;
-    }
-
-    public void trace(Object message, Throwable t) {
-    }
-
-    public void trace(Object message) {
-    }
-
-    public boolean isInfoEnabled() {
+	public boolean isInfoEnabled() {
 		return false;
 	}
 	

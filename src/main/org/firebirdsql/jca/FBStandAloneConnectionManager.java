@@ -53,22 +53,11 @@ public class FBStandAloneConnectionManager
 
      //javax.resource.spi.ConnectionManager implementation
 
-    /**
-     * Allocate a new <code>ManagedConnection</code>.
-     *
-     * @param mcf The <code>ManagedConnectionFactory</code> used to create 
-     *        the new connection.
-     * @param cxRequestInfo The parameters to be used in creating the 
-     *        new connection
-     * @throws ResourceException If the connection cannot be allocated
-     */
     public Object allocateConnection(ManagedConnectionFactory mcf,
        ConnectionRequestInfo cxRequestInfo)
        throws ResourceException {
 
-       FBManagedConnection mc = (FBManagedConnection)((FBManagedConnectionFactory)mcf).createManagedConnection(null, cxRequestInfo);
-       mc.setManagedEnvironment(false);
-       mc.setConnectionSharing(false);
+       ManagedConnection mc = ((FBManagedConnectionFactory)mcf).createManagedConnection(null, cxRequestInfo);
        mc.addConnectionEventListener(this);
        return mc.getConnection(null, cxRequestInfo);
     }
@@ -76,12 +65,6 @@ public class FBStandAloneConnectionManager
 
     //javax.resource.spi.ConnectionEventListener implementation
 
-    /**
-     * <code>javax.resource.spi.ConnectionEventListener</code> callback for 
-     * when a <code>ManagedConnection</code> is closed.
-     *
-     * @param ce contains information about the connection that has be closed
-     */
     public void connectionClosed(ConnectionEvent ce) {
         PrintWriter externalLog = ((FBManagedConnection)ce.getSource()).getLogWriter();
         try {
@@ -93,13 +76,6 @@ public class FBStandAloneConnectionManager
 
     }
 
-    /**
-     * <code>javax.resource.spi.ConnectionEventListener</code> callback for 
-     * when a Local Transaction was rolled back within the context of a
-     * <code>ManagedConnection</code>.
-     *
-     * @param ce contains information about the connection 
-     */
     public void connectionErrorOccurred(ConnectionEvent ce) {
         PrintWriter externalLog = ((FBManagedConnection)ce.getSource()).getLogWriter();
         if (log!=null) log.debug("ConnectionErrorOccurred, ", ce.getException());
@@ -114,19 +90,9 @@ public class FBStandAloneConnectionManager
 
     //We are only supposed to be notified of local transactions that a Connection started.
     //Not much we can do with this info...
-    
-    /**
-     * Ignored event callback
-     */
     public void localTransactionStarted(ConnectionEvent event) {}
 
-    /**
-     * Ignored event callback
-     */
     public void localTransactionCommitted(ConnectionEvent event) {}
 
-    /**
-     * Ignored event callback
-     */
     public void localTransactionRolledback(ConnectionEvent event) {}
 }

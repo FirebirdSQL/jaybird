@@ -18,20 +18,23 @@
  */
 package org.firebirdsql.common;
 
-import java.sql.*;
-import java.util.*;
-
-import javax.resource.spi.ConnectionManager;
-
-import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.GDSType;
+import org.firebirdsql.gds.GDSFactory;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
-import org.firebirdsql.jca.InternalConnectionManager;
-import org.firebirdsql.jdbc.FBDriver;
+import org.firebirdsql.jca.FBConnectionRequestInfo;
+import org.firebirdsql.management.FBManager;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
-import org.firebirdsql.management.FBManager;
-import org.firebirdsql.pool.FBConnectionPoolDataSource;
 import org.firebirdsql.pool.FBWrappingDataSource;
+import org.firebirdsql.pool.FBConnectionPoolDataSource;
+import org.firebirdsql.jdbc.FBDriver;
+
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Properties;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Connection;
 
 /**
  * Base class for test cases which could be run against more then a single GDS implementation.
@@ -84,12 +87,6 @@ public class FBTestBase extends SimpleFBTestBase
         {
         return new FBManagedConnectionFactory(getGdsType());
         }
-    
-    protected FBManagedConnectionFactory createFBManagedConnectionFactory(ConnectionManager cm) {
-        FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(getGdsType());
-        mcf.setDefaultConnectionManager(new InternalConnectionManager());
-        return mcf;
-    }
 
     /**
      *
@@ -117,11 +114,11 @@ public class FBTestBase extends SimpleFBTestBase
     /**
      *
      * @return
-//     */
-//    protected FBConnectionRequestInfo createFBConnectionRequestInfo()
-//        {
-//        return FBConnectionRequestInfo.newInstance(GDSFactory.getGDSForType(getGdsType()));
-//        }
+     */
+    protected FBConnectionRequestInfo createFBConnectionRequestInfo()
+        {
+        return FBConnectionRequestInfo.newInstance(GDSFactory.getGDSForType(getGdsType()));
+        }
 
     /**
      *
@@ -146,8 +143,8 @@ public class FBTestBase extends SimpleFBTestBase
         {
         final Properties returnValue = new Properties();
 
-        returnValue.setProperty("user", DB_USER);
-        returnValue.setProperty("password", DB_PASSWORD);
+        returnValue.setProperty(FBDriver.USER, DB_USER);
+        returnValue.setProperty(FBDriver.PASSWORD, DB_PASSWORD);
         returnValue.setProperty("lc_ctype", DB_LC_CTYPE);
 
         return returnValue;
@@ -169,11 +166,6 @@ public class FBTestBase extends SimpleFBTestBase
 
         return gdsType;
         }
-        
-    protected String getDatabasePath()
-    {
-    	return DB_PATH + "/" + DB_NAME;
-    }
 
 
     // STANDARD RIG
@@ -216,11 +208,10 @@ public class FBTestBase extends SimpleFBTestBase
     private static final Map gdsTypeToUrlPrefixMap = new HashMap();
     static
         {
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"),       "jdbc:firebirdsql:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"), "jdbc:firebirdsql:embedded:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("NATIVE"),          "jdbc:firebirdsql:native:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("ORACLE_MODE"),     "jdbc:firebirdsql:oracle:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("LOCAL"),    "jdbc:firebirdsql:local:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("NIO"),    "jdbc:firebirdsql:nio:");
+        gdsTypeToUrlPrefixMap.put(GDSType.PURE_JAVA,       "jdbc:firebirdsql:");
+        gdsTypeToUrlPrefixMap.put(GDSType.NATIVE_EMBEDDED, "jdbc:firebirdsql:embedded:");
+        gdsTypeToUrlPrefixMap.put(GDSType.NATIVE,          "jdbc:firebirdsql:native:");
+        gdsTypeToUrlPrefixMap.put(GDSType.ORACLE_MODE,     "jdbc:firebirdsql:oracle:");
+        gdsTypeToUrlPrefixMap.put(GDSType.NATIVE_LOCAL,    "jdbc:firebirdsql:local:");
         }
     }

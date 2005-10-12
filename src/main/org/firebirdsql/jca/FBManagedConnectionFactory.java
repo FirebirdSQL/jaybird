@@ -20,573 +20,795 @@
 package org.firebirdsql.jca;
 
 import java.io.*;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.sql.SQLException;
 import java.util.*;
 
-import javax.resource.NotSupportedException;
 import javax.resource.ResourceException;
 import javax.resource.spi.*;
-import javax.resource.spi.SecurityException;
 import javax.security.auth.Subject;
 import javax.transaction.xa.*;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.jdbc.*;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * FBManagedConnectionFactory implements the jca ManagedConnectionFactory
- * interface and also many of the internal functions of ManagedConnection. This
- * nonstandard behavior is required due to firebird requiring all work done in a
- * transaction to be done over one connection. To support xa semantics, the
- * correct db handle must be located whenever a ManagedConnection is associated
- * with an xid.
- * 
- * WARNING: this adapter will probably not work properly in an environment where
- * ManagedConnectionFactory is serialized and deserialized, and the deserialized
- * copy is expected to function as anything other than a key.
- * 
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
+ * interface and also many of the internal functions of ManagedConnection.
+ * This nonstandard behavior is required due to firebird requiring
+ * all work done in a transaction to be done over one connection.
+ * To support xa semantics, the correct db handle must be located whenever
+ * a ManagedConnection is associated with an xid.
+ *
+ * WARNING: this adapter will probably not work properly in an environment
+ * where ManagedConnectionFactory is serialized and deserialized, and the
+ * deserialized copy is expected to function as anything other than a key.
+ *
+ * @see <related>
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @version $ $
+ *
+ * @todo add support for separate specification of host/port/filename.
  */
 
-public class FBManagedConnectionFactory implements ManagedConnectionFactory,
-        Serializable, FirebirdConnectionProperties {
+
+public class FBManagedConnectionFactory
+    implements  ManagedConnectionFactory, Serializable
+{
+
+    /**
+     * Describe constant <code>MAX_BLOB_BUFFER_LENGTH</code> here.
+     * @todo  Claudio suggests this should be 1024*64 -1, we should find out
+     *  I thought this was the largest value I could make work, but I didn't
+     *  write down my experiments.
+     */
+    private final static int MAX_BLOB_BUFFER_LENGTH = 1024 * 32 - 1;
+    private final static int MIN_BLOB_BUFFER_LENGTH = 1024;
 
     /**
      * The <code>mcfInstances</code> weak hash map is used in deserialization
-     * to find the correct instance of a mcf after deserializing.
+     * to find the correct instance of a mcf.
+     *
      */
     private final static Map mcfInstances = new WeakHashMap();
 
-    // /**
-    // * @todo Claudio suggests this should be 1024*64 -1, we should find out I
-    // * thought this was the largest value I could make work, but I didn't
-    // * write down my experiments.
-    // */
-    // public final static int MAX_BLOB_BUFFER_LENGTH = 1024 * 32 - 1;
-    //
-    // public final static int MIN_BLOB_BUFFER_LENGTH = 1024;
+    //These properties give the mcf its identity
+    //should add handling for host/port/file separately.
+    private String dbAlias;
+
+    private FBConnectionRequestInfo defaultCri;
+
+    private final FBTpb tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);
 
 
-    private ConnectionManager defaultCm;
-    private int hashCode;
-    private GDSType gdsType;
+    //must be less than 1024 * 32: 1-24 * 32 -  is ok.
+    private int blobBufferLength = FBConnectionDefaults.DEFAULT_BLOB_BUFFER_SIZE;
 
-    // Maps supplied XID to internal transaction handle.
-    // a concurrent reader map would be better
+    //These hold non-serializable stuff.
+    private transient final static Logger log = 
+        LoggerFactory.getLogger(FBManagedConnectionFactory.class,false);
+
+    GDS gds;
+
+    private GDSType type;
+
+    /**
+     * The <code>criToFreeDbHandlesMap</code> maps cri to lists of physical
+     * connections that are not currently used by a managed connection.
+     *
+     */
+    private transient final Map criToFreeDbHandlesMap = new HashMap();
+
+    /**
+     * The <code>waitingToClose</code> set holds physical connections that
+     * should be closed as soon as all transactions on them are complete.
+     *
+     */
+    private transient final Set waitingToClose = Collections.synchronizedSet(new HashSet());
+
+    private transient final Set rolledback =  Collections.synchronizedSet(new HashSet());
+
+    //Maps supplied XID to internal transaction handle.
+    //a concurrent reader map would be better
     private transient final Map xidMap = Collections.synchronizedMap(new HashMap());
 
     private transient final Object startLock = new Object();
     private transient boolean started = false;
 
-    private FBConnectionProperties connectionProperties;
+    private volatile int hashCode = 0;
 
-    /**
-     * Create a new pure-Java FBManagedConnectionFactory.
-     */
+		//Default constructor.
     public FBManagedConnectionFactory() {
-        this(GDSFactory.getDefaultGDSType(), new FBConnectionProperties());
-    }
+        this(GDSType.PURE_JAVA);
+        }
 
-    /**
-     * Create a new FBManagedConnectionFactory based around the given GDSType.
-     * 
-     * @param gdsType
-     *            The GDS implementation to use
-     */
-    public FBManagedConnectionFactory(GDSType gdsType) {
-        this(gdsType, new FBConnectionProperties());
-    }
-    
-    public FBManagedConnectionFactory(GDSType gdsType, FBConnectionProperties connectionProperties) {
-        this.defaultCm = new FBStandAloneConnectionManager();
-        this.connectionProperties = connectionProperties;
-        setType(gdsType.toString());
-    }
+    public FBManagedConnectionFactory(GDSType type) {
+        this.type = type;
+        gds = GDSFactory.getGDSForType(type);
+        defaultCri = FBConnectionHelper.getDefaultCri(gds);
+        }
 
-    public GDS getGDS() {
-        return GDSFactory.getGDSForType(getGDSType());
-    }
+    public GDSType getType()
+        {
+        return this.type;
+        }
 
-    /**
-     * Get the GDS implementation type around which this factory is based.
-     * 
-     * @return The GDS implementation type
-     */
-    public GDSType getGDSType() {
-        if (gdsType != null)
-            return gdsType;
-        
-        gdsType = GDSType.getType(getType());
-        
-        return gdsType;
-    }
-    
-    /**
-     * @deprecated use {@link #getBlobBufferSize()}
-     */
-    public int getBlobBufferLength() {
-        return getBlobBufferSize();
-    }
-    
-    /**
-     * @deprecated use {@link #setBlobBufferSize(int)}
-     */
-    public void setBlobBufferLength(int value) {
-        setBlobBufferSize(value);
-    }
-    
-    /**
-     * @deprecated use {@link #getDefaultTransactionIsolation()}
-     */
-    public Integer getTransactionIsolation() {
-        return new Integer(getDefaultTransactionIsolation());
-    }
-    
-    /**
-     * @deprecated use {@link #setDefaultTransactionIsolation(int)}
-     */
-    public void setTransactionIsolation(Integer value) {
-        if (value != null)
-            setDefaultTransactionIsolation(value.intValue());
-    }
-    
-    /**
-     * @deprecated use {@link #getDefaultIsolation()}
-     */
-    public String getTransactionIsolationName() {
-        return getDefaultIsolation();
-    }
 
-    /**
-     * @deprecated use {@link #setDefaultIsolation(String)} 
-     */
-    public void setTransactionIsolationName(String name) {
-        setDefaultIsolation(name);
-    }
-    
-    /**
-     * @deprecated use {@link #getCharSet()} instead.
-     */
-    public String getLocalEncoding() {
-        return getCharSet();
-    }
-    
-    /**
-     * @deprecated use {@link #setCharSet(String)} instead.
-     */
-    public void setLocalEncoding(String localEncoding) {
-        setCharSet(localEncoding);
-    }
-    
-    public int getBlobBufferSize() {
-        return connectionProperties.getBlobBufferSize();
-    }
 
-    public int getBuffersNumber() {
-        return connectionProperties.getBuffersNumber();
-    }
+    //rar properties
 
-    public String getCharSet() {
-        return connectionProperties.getCharSet();
+
+    public void setDatabase(String database)
+    {
+        checkNotStarted();
+        hashCode = 0;
+        this.dbAlias = database;
     }
 
     public String getDatabase() {
-        return connectionProperties.getDatabase();
+        return dbAlias;
     }
 
-    public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
-        return connectionProperties.getDatabaseParameterBuffer();
+    public void setConnectionRequestInfo(FBConnectionRequestInfo cri) {
+        checkNotStarted();
+        hashCode = 0;
+        this.defaultCri = cri.deepCopy();
     }
 
-    public String getDefaultIsolation() {
-        return connectionProperties.getDefaultIsolation();
+
+    public FBConnectionRequestInfo getDefaultConnectionRequestInfo() {
+        return defaultCri.deepCopy();
     }
 
-    public int getDefaultTransactionIsolation() {
-        return connectionProperties.getDefaultTransactionIsolation();
+    public void setUserName(String userName)
+    {
+        checkNotStarted();
+        hashCode = 0;
+        defaultCri.setUser(userName);
     }
 
-    public String getEncoding() {
-        return connectionProperties.getEncoding();
+    public String getUserName()
+    {
+        return defaultCri.getUser();
     }
 
-    public String getNonStandardProperty(String key) {
-        return connectionProperties.getNonStandardProperty(key);
+    public void setPassword(String password)
+    {
+        checkNotStarted();
+        hashCode = 0;
+        defaultCri.setPassword(password);
     }
 
-    public String getPassword() {
-        return connectionProperties.getPassword();
+    public String getPassword()
+    {
+        return defaultCri.getPassword();
     }
 
-    public String getRoleName() {
-        return connectionProperties.getRoleName();
+    public void setTpb(FBTpb tpb)
+    {
+        checkNotStarted();
+        hashCode = 0;
+        this.tpb.setTpb(tpb);
     }
 
-    public int getSocketBufferSize() {
-        return connectionProperties.getSocketBufferSize();
+
+    public FBTpb getTpb() {
+        return new FBTpb(tpb);
     }
 
-    public String getSqlDialect() {
-        return connectionProperties.getSqlDialect();
+    public void setTpbMapper(FBTpbMapper mapper) throws FBResourceException {
+        this.tpb.setMapper(mapper);
     }
 
-    public String getTpbMapping() {
-        return connectionProperties.getTpbMapping();
+    public void setTransactionIsolation(Integer level) throws ResourceException
+    {
+        checkNotStarted();
+        hashCode = 0;
+        if (level == null)
+            throw new FBResourceException("You must supply a isolation level");
+        else
+            tpb.setTransactionIsolation(level.intValue());
     }
 
-    public TransactionParameterBuffer getTransactionParameters(int isolation) {
-        return connectionProperties.getTransactionParameters(isolation);
+    public Integer getTransactionIsolation() throws ResourceException
+    {
+        return new Integer(tpb.getTransactionIsolation());
     }
 
-    public String getType() {
-        return connectionProperties.getType();
+    public void setTransactionIsolationName(String level) throws ResourceException
+    {
+        checkNotStarted();
+        hashCode = 0;
+        tpb.setTransactionIsolationName(level);
     }
 
-    public String getUserName() {
-        return connectionProperties.getUserName();
-    }
-
-    public String getUseTranslation() {
-        return connectionProperties.getUseTranslation();
-    }
-
-    public boolean isTimestampUsesLocalTimezone() {
-        return connectionProperties.isTimestampUsesLocalTimezone();
-    }
-
-    public boolean isUseStandardUdf() {
-        return connectionProperties.isUseStandardUdf();
-    }
-
-    public boolean isUseStreamBlobs() {
-        return connectionProperties.isUseStreamBlobs();
-    }
-
-    public void setBlobBufferSize(int bufferSize) {
-        connectionProperties.setBlobBufferSize(bufferSize);
-    }
-
-    public void setBuffersNumber(int buffersNumber) {
-        connectionProperties.setBuffersNumber(buffersNumber);
-    }
-
-    public void setCharSet(String charSet) {
-        connectionProperties.setCharSet(charSet);
-    }
-
-    public void setDatabase(String database) {
-        connectionProperties.setDatabase(database);
-    }
-
-    public void setDefaultIsolation(String isolation) {
-        connectionProperties.setDefaultIsolation(isolation);
-    }
-
-    public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
-        connectionProperties.setDefaultTransactionIsolation(defaultIsolationLevel);
+    public String getTransactionIsolationName() throws ResourceException
+    {
+        return tpb.getTransactionIsolationName();
     }
 
     public void setEncoding(String encoding) {
-        connectionProperties.setEncoding(encoding);
-    }
-
-    public void setNonStandardProperty(String key, String value) {
-        connectionProperties.setNonStandardProperty(key, value);        
-    }
-
-    public void setNonStandardProperty(String propertyMapping) {
-        connectionProperties.setNonStandardProperty(propertyMapping);
-    }
-
-    public void setPassword(String password) {
-        connectionProperties.setPassword(password);
-    }
-
-    public void setRoleName(String roleName) {
-        connectionProperties.setRoleName(roleName);        
-    }
-
-    public void setSocketBufferSize(int socketBufferSize) {
-        connectionProperties.setSocketBufferSize(socketBufferSize);        
-    }
-
-    public void setSqlDialect(String sqlDialect) {
-        connectionProperties.setSqlDialect(sqlDialect);
-    }
-
-    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        connectionProperties.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);        
-    }
-
-    public void setTpbMapping(String tpbMapping) {
-        connectionProperties.setTpbMapping(tpbMapping);        
-    }
-
-    public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
-        connectionProperties.setTransactionParameters(isolation, tpb);        
-    }
-
-    public void setType(String type) {
-        if (gdsType != null)
-            throw new java.lang.IllegalStateException(
-                    "Cannot change GDS type at runtime.");
+        checkNotStarted();
+        hashCode = 0;
+        defaultCri.setProperty(ISCConstants.isc_dpb_lc_ctype, encoding);
         
-        connectionProperties.setType(type);
+        String localEncoding = defaultCri.getStringProperty(ISCConstants.isc_dpb_local_encoding);
+        if (localEncoding == null) {
+            localEncoding = FBConnectionHelper.getJavaEncoding(encoding);
+            if (localEncoding != null)
+                defaultCri.setProperty(ISCConstants.isc_dpb_local_encoding, localEncoding);
+        }
     }
 
-    public void setUserName(String userName) {
-        connectionProperties.setUserName(userName);        
-    }
-
-    public void setUseStandardUdf(boolean useStandardUdf) {
-        connectionProperties.setUseStandardUdf(useStandardUdf);        
-    }
-
-    public void setUseStreamBlobs(boolean useStreamBlobs) {
-        connectionProperties.setUseStreamBlobs(useStreamBlobs);        
-    }
-
-    public void setUseTranslation(String translationPath) {
-        connectionProperties.setUseTranslation(translationPath);        
-    }
-
-    public void setDefaultConnectionManager(ConnectionManager defaultCm) {
-        this.defaultCm = defaultCm;
-    }
-
-    public int hashCode() {
-        if (hashCode != 0) 
-            return hashCode;
-
-        int result = 17;
-        result = 37 * result + connectionProperties.hashCode();
-        if (result == 0)
-            result = 17;
-        
-        if (gdsType != null)
-            hashCode = result;
-        
+    public String getEncoding() {
+        String result = defaultCri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);
+        if (result == null)
+            result = "NONE";
         return result;
     }
-
-    public boolean equals(Object other) {
-        if (other == this) return true;
-
-        if (!(other instanceof FBManagedConnectionFactory)) return false;
-
-        FBManagedConnectionFactory that = (FBManagedConnectionFactory) other;
-
-        return this.connectionProperties.equals(that.connectionProperties);
-    }
     
-    public FBConnectionRequestInfo getDefaultConnectionRequestInfo() throws ResourceException {
-        try {
-            return new FBConnectionRequestInfo(getDatabaseParameterBuffer().deepCopy());
-        } catch(SQLException ex) {
-            throw new FBResourceException(ex);
+    public void setLocalEncoding(String localEncoding) {
+        checkNotStarted();
+        hashCode = 0;
+        
+        defaultCri.setProperty(ISCConstants.isc_dpb_local_encoding, localEncoding);
+        String iscEncoding = defaultCri.getStringProperty(ISCConstants.isc_dpb_lc_ctype);
+        if (iscEncoding == null) {
+            iscEncoding = FBConnectionHelper.getIscEncoding(localEncoding);
+            if (iscEncoding != null)
+                defaultCri.setProperty(ISCConstants.isc_dpb_lc_ctype, iscEncoding);
         }
     }
     
-    public FBTpb getDefaultTpb() throws ResourceException {
-        int defaultTransactionIsolation = 
-            connectionProperties.getMapper().getDefaultTransactionIsolation();
-
-        return getTpb(defaultTransactionIsolation);
+    public String getLocalEncoding() {
+        return defaultCri.getStringProperty(ISCConstants.isc_dpb_local_encoding);
     }
 
-    public FBTpb getTpb(int defaultTransactionIsolation) throws FBResourceException {
-        return new FBTpb(connectionProperties.getMapper().getMapping(
-                defaultTransactionIsolation));
+    /**
+     * Get the BlobBufferLength value.
+     * @return the BlobBufferLength value.
+     */
+    public Integer getBlobBufferLength()
+    {
+        return new Integer(blobBufferLength);
+    }
+
+    /**
+     * Set the BlobBufferLength value.
+     * @param blobBufferLengthWrapper The new BlobBufferLength value.
+     */
+    public void setBlobBufferLength(final Integer blobBufferLengthWrapper)
+    {
+        checkNotStarted();
+        hashCode = 0;
+        int blobBufferLength = blobBufferLengthWrapper.intValue();
+        if (blobBufferLength > MAX_BLOB_BUFFER_LENGTH)
+        {
+            this.blobBufferLength = MAX_BLOB_BUFFER_LENGTH;
+            if (log!=null) log.warn("Supplied blob buffer length greater than maximum of " + MAX_BLOB_BUFFER_LENGTH);
+        } // end of if ()
+        else if (blobBufferLength < MIN_BLOB_BUFFER_LENGTH )
+        {
+            this.blobBufferLength = MIN_BLOB_BUFFER_LENGTH;
+            if (log!=null) log.warn("Supplied blob buffer length less than minimum of " + MIN_BLOB_BUFFER_LENGTH);
+        } // end of if ()
+        else
+        {
+            this.blobBufferLength = blobBufferLength;
+        } // end of else
+    }
+
+
+    public int hashCode()
+    {
+        if (hashCode != 0)
+        {
+            return hashCode;
+        } // end of if ()
+        int result = 17;
+        result = 37 * result + ((dbAlias == null)? 0: dbAlias.hashCode());
+        result = 37 * result + defaultCri.hashCode();
+        result = 37 * result + tpb.hashCode();
+        result = 37 * result + blobBufferLength;
+        result = 37 * result + type.hashCode();
+        hashCode = result;
+        return hashCode;
+    }
+
+    public boolean equals(Object other)
+    {
+        if (other == this)
+        {
+            return true;
+        } // end of if ()
+        if (!(other instanceof FBManagedConnectionFactory))
+        {
+            return false;
+        } // end of if ()
+        FBManagedConnectionFactory mcf = (FBManagedConnectionFactory)other;
+        return
+            (dbAlias == null ? mcf.dbAlias == null : dbAlias.equals(mcf.dbAlias))
+            && (defaultCri.equals(mcf.defaultCri))
+            && (tpb.equals(mcf.tpb))
+            && (blobBufferLength == mcf.blobBufferLength)
+            && (type == mcf.type);
     }
 
     /**
      * The <code>createConnectionFactory</code> method creates a DataSource
-     * using the supplied ConnectionManager.
-     * 
-     * @param cxManager
-     *            a <code>ConnectionManager</code> value
+     * using the supplied ConnectionManager..
+     *
+     * @param cxManager a <code>ConnectionManager</code> value
      * @return a <code>java.lang.Object</code> value
-     * @exception ResourceException
-     *                if an error occurs
+     * @exception ResourceException if an error occurs
      */
-    public Object createConnectionFactory(ConnectionManager cxManager)
-            throws ResourceException {
+    public Object createConnectionFactory(ConnectionManager cxManager) throws ResourceException {
         start();
         return new FBDataSource(this, cxManager);
     }
 
+
     /**
      * The <code>createConnectionFactory</code> method creates a DataSource
-     * with a default stand alone ConnectionManager. Ours can implement pooling.
-     * 
-     * @return a new <code>javax.sql.DataSource</code> based around this
-     *         connection factory
-     * @exception ResourceException
-     *                if an error occurs
+     * with a default stand alone ConnectionManager.  Ours can implement pooling.
+     *
+     * @return a <code>java.lang.Object</code> value
+     * @exception ResourceException if an error occurs
      */
     public Object createConnectionFactory() throws ResourceException {
         start();
-        return new FBDataSource(this, defaultCm);
+        return new FBDataSource(this, new FBStandAloneConnectionManager());
     }
 
-    /**
-     * Creates a new physical connection to the underlying EIS resource manager,
-     * ManagedConnectionFactory uses the security information (passed as
-     * Subject) and additional ConnectionRequestInfo (which is specific to
-     * ResourceAdapter and opaque to application server) to create this new
-     * connection.
-     * 
-     * @param subject
-     *            Caller's security information
-     * @param cri
-     *            Additional resource adapter specific connection request
-     *            information
-     * @return ManagedConnection instance
-     * @throws ResourceException
-     *             generic exception
-     * @throws SecurityException
-     *             security related error
-     * @throws ResourceAllocationException
-     *             failed to allocate system resources for connection request
-     * @throws ResourceAdapterInternalException
-     *             resource adapter related error condition
-     * @throws EISSystemException
-     *             internal error condition in EIS instance
-     */
+
+
+/**
+     Creates a new physical connection to the underlying EIS resource manager,
+
+     ManagedConnectionFactory uses the security information (passed as Subject) and additional
+     ConnectionRequestInfo (which is specific to ResourceAdapter and opaque to application server)
+     to create this new connection.
+     Parameters:
+         Subject - Caller's security information
+         cxRequestInfo - Additional resource adapter specific connection request information
+     Returns:
+         ManagedConnection instance
+     Throws:
+         ResourceException - generic exception
+         SecurityException - security related error
+         ResourceAllocationException - failed to allocate system resources for connection
+         request
+         ResourceAdapterInternalException - resource adapter related error condition
+         EISSystemException - internal error condition in EIS instance
+
+**/
     public ManagedConnection createManagedConnection(Subject subject,
-            ConnectionRequestInfo cri) throws ResourceException {
+                                                     ConnectionRequestInfo cri)
+        throws ResourceException
+    {
         start();
         return new FBManagedConnection(subject, cri, this);
     }
 
-    /**
-     * Returns a matched connection from the candidate set of connections.
-     * ManagedConnectionFactory uses the security info (as in
-     * <code>Subject</code>) and information provided through
-     * <code>ConnectionRequestInfo</code> and additional Resource Adapter
-     * specific criteria to do matching. Note that criteria used for matching is
-     * specific to a resource adapter and is not prescribed by the
-     * <code>Connector</code> specification.
-     * <p>
-     * This method returns a <code>ManagedConnection</code> instance that is
-     * the best match for handling the connection allocation request.
-     * 
-     * @param connectionSet
-     *            candidate connection set
-     * @param subject
-     *            caller's security information
-     * @param cxRequestInfo
-     *            additional resource adapter specific connection request
-     *            information
-     * @return ManagedConnection if resource adapter finds an acceptable match
-     *         otherwise null
-     * @throws ResourceException -
-     *             generic exception
-     * @throws SecurityException -
-     *             security related error
-     * @throws ResourceAdapterInternalException -
-     *             resource adapter related error condition
-     * @throws NotSupportedException -
-     *             if operation is not supported
-     */
+
+
+
+/**
+     Returns a matched connection from the candidate set of connections.
+
+     ManagedConnectionFactory uses the security info (as in Subject) and information provided
+     through ConnectionRequestInfo and additional Resource Adapter specific criteria to do
+     matching. Note that criteria used for matching is specific to a resource adapter and is not
+     prescribed by the Connector specification.
+
+     This method returns a ManagedConnection instance that is the best match for handling the
+     connection allocation request.
+
+     Parameters:
+         connectionSet - candidate connection set
+         Subject - caller's security information
+         cxRequestInfo - additional resource adapter specific connection request information
+     Returns:
+         ManagedConnection if resource adapter finds an acceptable match otherwise null
+     Throws:
+         ResourceException - generic exception
+         SecurityException - security related error
+         ResourceAdapterInternalException - resource adapter related error condition
+         NotSupportedException - if operation is not supported
+
+**/
+
     public ManagedConnection matchManagedConnections(Set connectionSet,
-            javax.security.auth.Subject subject,
-            ConnectionRequestInfo cxRequestInfo) throws ResourceException {
-        
-        Iterator i = connectionSet.iterator();
-        while (i.hasNext()) {
-            FBManagedConnection mc = (FBManagedConnection) i.next();
-
-            if (mc.matches(subject, (FBConnectionRequestInfo) cxRequestInfo))
+                                                 javax.security.auth.Subject subject,
+                                                 ConnectionRequestInfo cxRequestInfo)
+                                          throws ResourceException {
+    Iterator i = connectionSet.iterator();
+    while (i.hasNext()) {
+        FBManagedConnection mc = (FBManagedConnection)i.next();
+            if (mc.matches(subject, (FBConnectionRequestInfo)cxRequestInfo)) {
                 return mc;
-        }
-        return null;
+            }
+    }
+    return null;
     }
 
-    /**
-     * Set the log writer for this <code>ManagedConnectionFactory</code>
-     * instance. The log writer is a character output stream to which all
-     * logging and tracing messages for this
-     * <code>ManagedConnectionFactory</code> instance will be printed.
-     * ApplicationServer manages the association of output stream with the
-     * <code>ManagedConnectionFactory</code>. When a
-     * <code>ManagedConnectionFactory</code> object is created the log writer
-     * is initially <code>null</code>, in other words, logging is disabled.
-     * Once a log writer is associated with a
-     * <code>ManagedConnectionFactory</code>, logging and tracing for
-     * <code>ManagedConnectionFactory</code> instance is enabled.
-     * <p>
-     * The <code>ManagedConnection</code> instances created by
-     * <code>ManagedConnectionFactory</code> "inherits" the log writer, which
-     * can be overridden by ApplicationServer using
-     * {@link ManagedConnection#setLogWriter}to set
-     * <code>ManagedConnection</code> specific logging and tracing.
-     * 
-     * @param out
-     *            an out stream for error logging and tracing
-     * @throws ResourceException
-     *             generic exception
-     * @throws ResourceAdapterInternalException
-     *             resource adapter related error condition
-     */
+
+
+
+/**
+     Set the log writer for this ManagedConnectionFactory instance.
+
+     The log writer is a character output stream to which all logging and tracing messages for this
+     ManagedConnectionfactory instance will be printed.
+
+     ApplicationServer manages the association of output stream with the
+     ManagedConnectionFactory. When a ManagedConnectionFactory object is created the log
+     writer is initially null, in other words, logging is disabled. Once a log writer is associated with a
+     ManagedConnectionFactory, logging and tracing for ManagedConnectionFactory instance is
+     enabled.
+
+     The ManagedConnection instances created by ManagedConnectionFactory "inherits" the log
+     writer, which can be overridden by ApplicationServer using ManagedConnection.setLogWriter
+     to set ManagedConnection specific logging and tracing.
+     Parameters:
+         out - PrintWriter - an out stream for error logging and tracing
+     Throws:
+         ResourceException - generic exception
+         ResourceAdapterInternalException - resource adapter related error condition
+
+**/
+
     public void setLogWriter(PrintWriter out) throws ResourceException {
-        // ignore - we're using log4j
+       //ignore - we're using log4j
+    }
+
+
+
+/**
+     Get the log writer for this ManagedConnectionFactory instance.
+
+     The log writer is a character output stream to which all logging and tracing messages for this
+     ManagedConnectionFactory instance will be printed
+
+     ApplicationServer manages the association of output stream with the
+     ManagedConnectionFactory. When a ManagedConnectionFactory object is created the log
+     writer is initially null, in other words, logging is disabled.
+     Returns:
+         PrintWriter
+     Throws:
+         ResourceException - generic exception
+
+**/
+    public PrintWriter getLogWriter() {
+       return null;//we're using log4j
+    }
+
+
+    isc_tr_handle getTrHandleForXid(Xid xid)
+    {
+        return (isc_tr_handle)xidMap.get(xid);
+    }
+
+
+    isc_tr_handle getCurrentIscTrHandle(Xid xid, FBManagedConnection mc, int flags)
+        throws GDSException, XAException
+    {
+        isc_tr_handle tr = getTrHandleForXid(xid);
+        if (tr == null) {
+            if (flags != XAResource.TMNOFLAGS) {
+                //We don't know this xid, should come with no flags.
+                throw new FBXAException(
+                        "You are trying to resume a transaction that has is new",
+                        XAException.XAER_INVAL);
+            }
+            //new xid for us
+            isc_db_handle db = mc.getIscDBHandle(waitingToClose);
+            tr = gds.get_new_isc_tr_handle();
+            try
+            {
+                gds.isc_start_transaction(tr, db, mc.getTpb().getArray());
+            }
+            catch (GDSException ge)
+            {
+                //I think all errors here are fatal??
+                destroyDbHandle(db, mc.cri);
+                throw ge;
+            }
+
+
+            xidMap.put(xid, tr);
+        }
+        else {
+            if (flags != XAResource.TMJOIN && flags != XAResource.TMRESUME) {
+                //this xid is already known, should have join or resume flag.
+                //DUPID might be better?
+                throw new FBXAException(
+                    "You are trying to start a transaction as new " +
+                    "that is already known to this XAResource", 
+                    XAException.XAER_INVAL);
+            }
+        }
+        return tr;
+    }
+
+
+    isc_db_handle getDbHandle(FBConnectionRequestInfo cri) throws GDSException
+    {
+        try
+        {
+            LinkedList freeDbHandles = null;
+            synchronized (criToFreeDbHandlesMap)
+            {
+                freeDbHandles = (LinkedList)criToFreeDbHandlesMap.get(cri);
+            }
+            if (freeDbHandles != null)
+            {
+                isc_db_handle db = null;
+                synchronized (freeDbHandles)
+                {
+                    db = (isc_db_handle)freeDbHandles.removeLast();
+                }
+                return db;
+            } // end of if ()
+            return createDbHandle(cri);
+        }
+        catch (NoSuchElementException e)
+        {
+            return createDbHandle(cri);
+        }
+    }
+
+    isc_db_handle createDbHandle(FBConnectionRequestInfo cri) throws GDSException
+    {
+        isc_db_handle db = gds.get_new_isc_db_handle();
+        gds.isc_attach_database(dbAlias, db, cri.getDpb());
+        return db;
+    }
+
+    void returnDbHandle(isc_db_handle db, FBConnectionRequestInfo cri) throws GDSException
+    {
+        if (db == null)
+        {
+            return;
+        } // end of if ()
+
+        if (waitingToClose.contains(db))
+        {
+            releaseDbHandle(db, cri);
+        }
+        else
+        {
+            LinkedList freeDbHandles = null;
+            synchronized(criToFreeDbHandlesMap)
+            {
+                freeDbHandles = (LinkedList)criToFreeDbHandlesMap.get(cri);
+                if (freeDbHandles == null)
+                {
+                    freeDbHandles = new LinkedList();
+                    criToFreeDbHandlesMap.put(cri, freeDbHandles);
+                } // end of if ()
+            }
+            synchronized(freeDbHandles)
+            {
+                //This is slow, but there should be very few freeDbHandles.
+                if (!freeDbHandles.contains(db))
+                {
+                    freeDbHandles.addLast(db);
+                } // end of if ()
+            }
+        }
+    }
+
+    void releaseDbHandle(isc_db_handle db, FBConnectionRequestInfo cri)
+        throws GDSException
+    {
+        if (db == null)
+        {
+            throw new IllegalArgumentException("Attempt to release a null db handle!");
+        } // end of if ()
+
+        synchronized (db)
+        {
+            LinkedList freeDbHandles = null;
+            synchronized(criToFreeDbHandlesMap)
+            {
+                freeDbHandles = (LinkedList)criToFreeDbHandlesMap.get(cri);
+            }
+            if (freeDbHandles != null)
+            {
+                synchronized(freeDbHandles)
+                {
+                    freeDbHandles.remove(db);
+                } // end of if ()
+            }
+            try
+            {
+
+                if (db.hasTransactions())
+                {
+                    if (log!=null) log.debug("db has transactions!");
+                    synchronized (waitingToClose)
+                    {
+                        //double synchronization, but saves some ugly synch wrappers.
+                        if (!waitingToClose.contains(db))
+                        {
+                            waitingToClose.add(db);
+                        } // end of if ()
+                        return;
+                    }
+                }
+
+
+            }
+            catch (java.lang.IllegalStateException ise)
+            {
+                //db is already invalidated, no point in trying again.
+                waitingToClose.remove(db);
+                return;
+            } // end of try-catch
+            if (log!=null) log.debug("About to detach db");
+            waitingToClose.remove(db);
+            gds.isc_detach_database(db);
+        }
     }
 
     /**
-     * Get the log writer for this <code>ManagedConnectionFactory</code>
-     * instance. The log writer is a character output stream to which all
-     * logging and tracing messages for this
-     * <code>ManagedConnectionFactory</code> instance will be printed.
-     * ApplicationServer manages the association of output stream with the
-     * <code>ManagedConnectionFactory</code>. When a
-     * <code>ManagedConnectionFactory</code> object is created the log writer
-     * is initially null, in other words, logging is disabled.
-     * 
-     * @return PrintWriter instance
-     * @throws ResourceException
-     *             generic exception
+     * The <code>destroyDbHandle</code> method is called when a fatal
+     * error occurs on a isc_db_handle.  It attempts to rollback all
+     * associated transactions, marks the associated xids as
+     * rolledback, and detaches the db handle.
+     *
      */
-    public PrintWriter getLogWriter() {
-        return null;// we're using log4j
+    void destroyDbHandle(isc_db_handle db, FBConnectionRequestInfo cri)
+    {
+        Collection transactions = db.getTransactions();
+        Set xidTrs = xidMap.entrySet();
+        for (Iterator i = transactions.iterator(); i.hasNext();)
+        {
+            
+            isc_tr_handle tr = (isc_tr_handle)i.next();
+            
+            // synchronize iterations over the map
+            synchronized(xidMap) {
+                for (Iterator j = xidTrs.iterator(); j.hasNext(); )
+                {
+                    Map.Entry pair = (Map.Entry)j.next();
+                    if (pair.getValue() == tr)
+                    {
+                        rolledback.add(pair.getKey());
+                        j.remove();
+                    } // end of if ()
+                } // end of for ()
+            }
+
+            try
+            {
+                gds.isc_rollback_transaction(tr);
+            }
+            catch (GDSException ge)
+            {
+                if (log!=null) log.debug("exception rolling back transaction from dying connection: " + ge.getMessage());
+            } // end of try-catch
+
+        } // end of for ()
+        try
+        {
+            releaseDbHandle(db, cri);
+        }
+        catch (GDSException ge)
+        {
+            if (log!=null) log.debug("exception releasing db handle from dying connection: " + ge.getMessage());
+        } // end of try-catch
+
     }
 
-    // Serialization support
-    private Object readResolve() throws ObjectStreamException {
-        FBManagedConnectionFactory mcf = 
-            (FBManagedConnectionFactory) mcfInstances.get(this);
-        
-        if (mcf != null)  return mcf; 
-        
-        mcf = new FBManagedConnectionFactory(getGDSType(), 
-                (FBConnectionProperties)this.connectionProperties.clone());
-        
+
+    void commit(Xid xid) throws GDSException {
+        isc_tr_handle tr = getTrHandleForXid(xid);
+        tr.forgetResultSets();
+        try {
+            gds.isc_commit_transaction(tr);
+        }
+        catch (GDSException ge)
+        {
+            try
+            {
+                gds.isc_rollback_transaction(tr);
+            }
+            catch (GDSException ge2)
+            {
+                if (log!=null) log.debug("Exception rolling back failed tx: ", ge2);
+            } // end of try-catch
+            throw ge;
+        } // end of catch
+
+        finally {
+            xidMap.remove(xid);
+        }
+    }
+
+    void prepare(Xid xid) throws GDSException {
+        isc_tr_handle tr = getTrHandleForXid(xid);
+        try {
+            FBXid fbxid;
+            if (xid instanceof FBXid) {
+                fbxid = (FBXid)xid;
+            }
+            else {
+                fbxid = new FBXid(xid);
+            }
+            gds.isc_prepare_transaction2(tr, fbxid.toBytes());
+        }
+        catch (GDSException ge) {
+            try
+            {
+                gds.isc_rollback_transaction(tr);
+            }
+            catch (GDSException ge2)
+            {
+                if (log!=null) log.debug("Exception rolling back failed tx: ", ge2);
+            } // end of try-catch
+            finally
+            {
+                xidMap.remove(xid);
+            } // end of finally
+            if (log!=null) log.warn("error in prepare", ge);
+            throw ge;
+        }
+    }
+
+    void rollback(Xid xid) throws GDSException {
+        isc_tr_handle tr = getTrHandleForXid(xid);
+        tr.forgetResultSets();
+        try {
+            gds.isc_rollback_transaction(tr);
+        }
+        finally {
+            xidMap.remove(xid);
+        }
+    }
+
+    //Serialization support
+    private Object readResolve() throws ObjectStreamException
+    {
+        FBManagedConnectionFactory mcf = (FBManagedConnectionFactory)mcfInstances.get(this);
+        if (mcf != null)
+        {
+            return mcf;
+        } // end of if ()
+        mcf = new FBManagedConnectionFactory(type);
+        mcf.setDatabase(this.getDatabase());
+        mcf.setConnectionRequestInfo(this.getDefaultConnectionRequestInfo());
+        mcf.setTpb(this.getTpb());
+        mcf.setBlobBufferLength(this.getBlobBufferLength());
         return mcf;
     }
 
     /**
      * The <code>canonicalize</code> method is used in FBDriver to reuse
-     * previous fbmcf instances if they have been create. It should really be
-     * package access level
-     * 
+     * previous fbmcf instances if they have been create.  It should
+     * really be package access level
+     *
      * @return a <code>FBManagedConnectionFactory</code> value
      */
-    public FBManagedConnectionFactory canonicalize() {
-        FBManagedConnectionFactory mcf = (FBManagedConnectionFactory) mcfInstances.get(this);
-        
-        if (mcf != null) 
+    public FBManagedConnectionFactory canonicalize()
+    {
+        FBManagedConnectionFactory mcf = (FBManagedConnectionFactory)mcfInstances.get(this);
+        if (mcf != null)
+        {
             return mcf;
-        
+        } // end of if ()
         return this;
     }
 
-    private void start() {
-        synchronized (startLock) {
-            if (!started) {
-                synchronized (mcfInstances) {
+    private void start()
+    {
+        synchronized (startLock)
+        {
+            if (!started)
+            {
+                synchronized (mcfInstances)
+                {
                     mcfInstances.put(this, this);
                 }
                 started = true;
@@ -594,171 +816,20 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         }
     }
 
-    void notifyStart(FBManagedConnection mc, Xid xid) throws GDSException {
-        xidMap.put(xid, mc);
-    }
-
-    void notifyEnd(FBManagedConnection mc, Xid xid) throws XAException {
-        // empty
-    }
-
-    int notifyPrepare(FBManagedConnection mc, Xid xid) throws GDSException,
-            XAException {
-        FBManagedConnection targetMc = (FBManagedConnection) xidMap.get(xid);
-
-        if (targetMc == null)
-            throw new FBXAException("Commit called with unknown transaction",
-                    XAException.XAER_NOTA);
-
-        return targetMc.internalPrepare(xid);
-    }
-
-    void notifyCommit(FBManagedConnection mc, Xid xid, boolean onePhase)
-            throws GDSException, XAException {
-
-        FBManagedConnection targetMc = (FBManagedConnection) xidMap.get(xid);
-
-        if (targetMc == null)
-            tryCompleteInLimboTransaction(getGDS(), xid, true);
-        else
-            targetMc.internalCommit(xid, onePhase);
-
-        xidMap.remove(xid);
-    }
-
-    void notifyRollback(FBManagedConnection mc, Xid xid) throws GDSException,
-            XAException {
-        FBManagedConnection targetMc = (FBManagedConnection) xidMap.get(xid);
-
-        if (targetMc == null)
-            tryCompleteInLimboTransaction(getGDS(), xid, false);
-        else
-            targetMc.internalRollback(xid);
-
-        xidMap.remove(xid);
-    }
-
-    void forget(FBManagedConnection mc, Xid xid) throws GDSException {
-
-    }
-
-    void recover(FBManagedConnection mc, Xid xid) throws GDSException {
-
-    }
-
-    /**
-     * Try to complete the "in limbo" transaction. This method tries to
-     * reconnect an "in limbo" transaction and complete it either by commit or
-     * rollback. If no "in limbo" transaction can be found, or error happens
-     * during completion, an exception is thrown.
-     * 
-     * @param gdsHelper
-     *            instance of {@link GDSHelper} that will be used to reconnect
-     *            transaction.
-     * @param xid
-     *            Xid of the transaction to reconnect.
-     * @param commit
-     *            <code>true</code> if "in limbo" transaction should be
-     *            committed, otherwise <code>false</code>.
-     * 
-     * @throws XAException
-     *             if "in limbo" transaction cannot be completed.
-     */
-    private void tryCompleteInLimboTransaction(GDS gds, Xid xid, boolean commit)
-            throws XAException {
-
-        try {
-            FBManagedConnection tempMc = null;
-            FBLocalTransaction tempLocalTx = null;
-            try {
-                tempMc = new FBManagedConnection(null, null, this);
-                tempLocalTx = (FBLocalTransaction) tempMc.getLocalTransaction();
-                tempLocalTx.begin();
-
-                long fbTransactionId = 0;
-                boolean found = false;
-
-                FBXid[] inLimboIds = (FBXid[]) tempMc
-                        .recover(XAResource.TMSTARTRSCAN);
-                for (int i = 0; i < inLimboIds.length; i++) {
-                    if (inLimboIds[i].equals(xid)) {
-                        found = true;
-                        fbTransactionId = inLimboIds[i]
-                                .getFirebirdTransactionId();
-                    }
-                }
-
-                if (!found)
-                    throw new FBXAException((commit ? "Commit" : "Rollback")
-                            + " called with unknown transaction.",
-                            XAException.XAER_NOTA);
-
-                IscDbHandle dbHandle = tempMc.getGDSHelper()
-                        .getCurrentDbHandle();
-
-                IscTrHandle trHandle = gds.createIscTrHandle();
-                gds.iscReconnectTransaction(trHandle, dbHandle,
-                                fbTransactionId);
-
-                // complete transaction by commit or rollback
-                if (commit)
-                    gds.iscCommitTransaction(trHandle);
-                else
-                    gds.iscRollbackTransaction(trHandle);
-
-            } catch (GDSException ex) {
-                throw new FBXAException(XAException.XAER_RMERR, ex);
-            } finally {
-                try {
-                    if (tempLocalTx != null && tempLocalTx.inTransaction())
-                        tempLocalTx.commit();
-                } finally {
-                    if (tempMc != null) tempMc.destroy();
-                }
-            }
-        } catch (ResourceException ex) {
-            throw new FBXAException(XAException.XAER_RMERR, ex);
+    private void checkNotStarted() throws java.lang.IllegalStateException
+    {
+        synchronized (startLock)
+        {
+            if (started)
+                throw new java.lang.IllegalStateException(
+                    "Operation not permitted after " +
+                    "ManagedConnectionFactory in use");
         }
     }
 
-    AbstractConnection newConnection(FBManagedConnection mc)
-            throws ResourceException {
-        Class connectionClass = GDSFactory.getConnectionClass(getGDSType());
-
-        if (!AbstractConnection.class.isAssignableFrom(connectionClass))
-            throw new IllegalArgumentException("Specified connection class"
-                    + " does not extend " + AbstractConnection.class.getName()
-                    + " class");
-
-        try {
-            Constructor constructor = connectionClass
-                    .getConstructor(new Class[] { FBManagedConnection.class});
-
-            return (AbstractConnection) constructor
-                    .newInstance(new Object[] { mc});
-
-        } catch (NoSuchMethodException ex) {
-            throw new FBResourceException(
-                    "Cannot instantiate connection class "
-                            + connectionClass.getName()
-                            + ", no constructor accepting "
-                            + FBManagedConnection.class
-                            + " class as single parameter was found.");
-        } catch (InvocationTargetException ex) {
-
-            if (ex.getTargetException() instanceof RuntimeException)
-                throw (RuntimeException) ex.getTargetException();
-
-            if (ex.getTargetException() instanceof Error)
-                throw (Error) ex.getTargetException();
-
-            throw new FBResourceException((Exception) ex.getTargetException());
-        } catch (IllegalAccessException ex) {
-            throw new FBResourceException("Constructor for class "
-                    + connectionClass.getName() + " is not accessible.");
-        } catch (InstantiationException ex) {
-            throw new FBResourceException("Cannot instantiate class"
-                    + connectionClass.getName());
-        }
-    }
 }
+
+
+
+
+

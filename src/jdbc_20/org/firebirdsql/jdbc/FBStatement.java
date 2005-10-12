@@ -18,11 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.SQLException;
-import java.sql.Statement;
-
-import org.firebirdsql.gds.impl.GDSHelper;
-
 /**
  * JDBC 2.0 compliant implementation of {@link Statement} interface.
  * 
@@ -30,13 +25,8 @@ import org.firebirdsql.gds.impl.GDSHelper;
  */
 public class FBStatement extends AbstractStatement {
 
-    public FBStatement(GDSHelper gdsHelper, int rsType, int rsConcurrency,
-            int rsHoldability,
-            FBObjectListener.StatementListener statementListenet)
-            throws SQLException {
-        
-        super(gdsHelper, rsType, rsConcurrency, rsHoldability,
-                statementListenet);
+    public FBStatement(AbstractConnection c, int rsType, int rsConcurrency) {
+    	super(c, rsType, rsConcurrency);
     }
         
 }

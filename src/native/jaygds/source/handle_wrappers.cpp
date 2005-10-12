@@ -55,10 +55,10 @@ void		JIscDatabaseHandle::Initilize( JNIEnv* javaEnvironment )
 	if( sIsInitilized )
 		throw InternalException("Initilize has been called twice without an unitilize.");
 
-	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/gds/impl/jni/isc_db_handle_impl" );
+	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/isc_db_handle_impl" );
 
-	sMethodBinding_SetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "setRdbId", "(I)V" );
-	sMethodBinding_GetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "getRdbId", "()I" );
+	sMethodBinding_SetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "setRdb_id", "(I)V" );
+	sMethodBinding_GetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "getRdb_id", "()I" );
 
 	sMethodBinding_AddWarning = sClassBinding.GetMethodBinding( javaEnvironment, "addWarning", "(Lorg/firebirdsql/gds/GDSException;)V" );
 
@@ -146,7 +146,7 @@ void		JIscTransactionHandle::Initilize( JNIEnv* javaEnvironment )
 	if( sIsInitilized )
 		throw InternalException("Initilize has been called twice without an unitilize.");
 
-	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/gds/impl/jni/isc_tr_handle_impl" );
+	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/isc_tr_handle_impl" );
 
 	sMethodBinding_SetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "setTransactionId", "(I)V" );
 	sMethodBinding_GetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "getTransactionId", "()I" );
@@ -237,10 +237,10 @@ void		JIscStatementHandle::Initilize( JNIEnv* javaEnvironment )
 	if( sIsInitilized )
 		throw InternalException("Initilize has been called twice without an unitilize.");
 
-	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/gds/impl/jni/isc_stmt_handle_impl" );
+	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/isc_stmt_handle_impl" );
 
-	sMethodBinding_SetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "setRsrId", "(I)V" );
-	sMethodBinding_GetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "getRsrId", "()I" );
+	sMethodBinding_SetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "setRsr_id", "(I)V" );
+	sMethodBinding_GetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "getRsr_id", "()I" );
 
 		sMethodBinding_AddWarning = sClassBinding.GetMethodBinding( javaEnvironment, "addWarning", "(Lorg/firebirdsql/gds/GDSException;)V" );
 
@@ -333,13 +333,13 @@ void		JIscBlobHandle::Initilize( JNIEnv* javaEnvironment )
 	if( sIsInitilized )
 		throw InternalException("Initilize has been called twice without an unitilize.");
 
-	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/gds/impl/jni/isc_blob_handle_impl" );
+	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/isc_blob_handle_impl" );
 
-	sMethodBinding_SetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "setRblId", "(I)V" );
-	sMethodBinding_GetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "getRblId", "()I" );
+	sMethodBinding_SetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "setRbl_id", "(I)V" );
+	sMethodBinding_GetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "getRbl_id", "()I" );
 
-	sMethodBinding_SetId = sClassBinding.GetMethodBinding( javaEnvironment, "setBlobId", "(J)V" );
-	sMethodBinding_GetId = sClassBinding.GetMethodBinding( javaEnvironment, "getBlobId", "()J" );
+	sMethodBinding_SetId = sClassBinding.GetMethodBinding( javaEnvironment, "setBlob_id", "(J)V" );
+	sMethodBinding_GetId = sClassBinding.GetMethodBinding( javaEnvironment, "getBlob_id", "()J" );
 
 	sFieldBinding_IsEof = sClassBinding.GetFieldBinding( javaEnvironment, "isEndOfFile", "Z" );
 
@@ -510,7 +510,7 @@ void		JIscServiceHandle::Initilize( JNIEnv* javaEnvironment )
 	if( sIsInitilized )
 		throw InternalException("Initilize has been called twice without an unitilize.");
 
-	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/gds/impl/jni/isc_svc_handle_impl" );
+	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/isc_svc_handle_impl" );
 
 	sMethodBinding_SetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "setHandle", "(I)V" );
 	sMethodBinding_GetHandle = sClassBinding.GetMethodBinding( javaEnvironment, "getHandle", "()I" );

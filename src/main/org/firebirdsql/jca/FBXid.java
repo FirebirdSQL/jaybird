@@ -19,15 +19,12 @@
 
 package org.firebirdsql.jca;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-
 import javax.resource.ResourceException;
 import javax.transaction.xa.Xid;
 
-//import org.firebirdsql.gds.impl.XdrInputStream;
+import org.firebirdsql.gds.XdrInputStream;
 
 
 
@@ -67,8 +64,6 @@ class FBXid implements Xid {
     *  This identifies the branch of a transaction.
     */
    private byte[] branchId;
-   
-   private long firebirdTransactionId;
 
 
    /**
@@ -106,31 +101,31 @@ class FBXid implements Xid {
      * @param bytes a <code>byte[]</code> value
      * @exception ResourceException if an error occurs
      */
-    FBXid(InputStream rawIn, long firebirdTransactionId) throws ResourceException
+    FBXid(InputStream rawIn) throws ResourceException
     {
-        this.firebirdTransactionId = firebirdTransactionId;
-        
         try 
         {
-            if (read(rawIn) != TDR_VERSION)
+            XdrInputStream in = new XdrInputStream(rawIn);
+            
+            if (in.read() != TDR_VERSION)
             {
-                throw new FBIncorrectXidException("Wrong TDR_VERSION for xid");
+                throw new FBResourceException("Wrong TDR_VERSION for xid");
             }
-            if (read(rawIn) != TDR_XID_FORMAT_ID)
+            if (in.read() != TDR_XID_FORMAT_ID)
             {
-                throw new FBIncorrectXidException("Wrong TDR_XID_FORMAT_ID for xid");
+                throw new FBResourceException("Wrong TDR_XID_FORMAT_ID for xid");
             }
-            formatId = readInt(rawIn); 
-            if (read(rawIn) != TDR_XID_GLOBAL_ID)
+            formatId = in.readInt(); 
+            if (in.read() != TDR_XID_GLOBAL_ID)
             {
-                throw new FBIncorrectXidException("Wrong TDR_XID_GLOBAL_ID for xid");
+                throw new FBResourceException("Wrong TDR_XID_GLOBAL_ID for xid");
             }
-            globalId = readBuffer(rawIn);
-            if (read(rawIn) != TDR_XID_BRANCH_ID)
+            globalId = in.readBuffer();
+            if (in.read() != TDR_XID_BRANCH_ID)
             {
-                throw new FBIncorrectXidException("Wrong TDR_XID_BRANCH_ID for xid");
+                throw new FBResourceException("Wrong TDR_XID_BRANCH_ID for xid");
             }
-            branchId = readBuffer(rawIn);
+            branchId = in.readBuffer();
         } 
         catch (IOException ioe) 
         {
@@ -173,15 +168,6 @@ class FBXid implements Xid {
     }
 
     /**
-     * Return Firebird transaction ID.
-     * 
-     * @return Firebird transaction ID or 0 if no is available.
-     */
-    public long getFirebirdTransactionId() {
-        return firebirdTransactionId;
-    }
-    
-    /**
      *  Compare for equality.
      *
      *  Instances are considered equal if they are both instances of XidImpl,
@@ -190,22 +176,36 @@ class FBXid implements Xid {
      */
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof Xid)) 
-            return false;
-        
+        if (obj instanceof Xid) {
             Xid other = (Xid)obj;
 
-            boolean result = true;
-            
-            result &= formatId == other.getFormatId();
-            
+            if (formatId != other.getFormatId()) {
+                return false;
+            }
+
             byte[] otherGlobalID = other.getGlobalTransactionId();
             byte[] otherBranchID = other.getBranchQualifier();
 
-            result &= Arrays.equals(globalId, otherGlobalID);
-            result &= Arrays.equals(branchId, otherBranchID);
-            
-            return result;
+            if (globalId.length != otherGlobalID.length ||
+                 branchId.length != otherBranchID.length) {
+                return false;
+            }
+
+            for (int i = 0; i < globalId.length; ++i) {
+                if (globalId[i] != otherGlobalID[i]) {
+                    return false;
+                }
+            }
+
+            for (int i = 0; i < branchId.length; ++i) {
+                if (branchId[i] != otherBranchID[i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        return false;
     }
 
 
@@ -217,7 +217,7 @@ class FBXid implements Xid {
     //package
 
     int getLength() {
-        return 1 + 1 + 4 + 1 + 4 + globalId.length + 1 + 4 + branchId.length;
+        return 1 + 1 + 4 + 1 + 1 + globalId.length + 1 + 1 + branchId.length;
     }
 
     byte[] toBytes() {
@@ -230,53 +230,15 @@ class FBXid implements Xid {
         b[i++] = (byte)((formatId >>>  8) & 0xff);
         b[i++] = (byte)((formatId >>>  0) & 0xff);
         b[i++] = (byte)TDR_XID_GLOBAL_ID;
-        b[i++] = (byte)((globalId.length >>> 24) & 0xff);
-        b[i++] = (byte)((globalId.length >>> 16) & 0xff);
-        b[i++] = (byte)((globalId.length >>>  8) & 0xff);
-        b[i++] = (byte)((globalId.length >>>  0) & 0xff);
+        b[i++] = (byte)globalId.length;
         System.arraycopy(globalId, 0, b, i, globalId.length);
         i += globalId.length;
         b[i++] = (byte)TDR_XID_BRANCH_ID;
-        b[i++] = (byte)((branchId.length >>> 24) & 0xff);
-        b[i++] = (byte)((branchId.length >>> 16) & 0xff);
-        b[i++] = (byte)((branchId.length >>>  8) & 0xff);
-        b[i++] = (byte)((branchId.length >>>  0) & 0xff);
+        b[i++] = (byte)branchId.length;
         System.arraycopy(branchId, 0, b, i, branchId.length);
         return b;
     }
 
-    private int read(InputStream in) throws IOException {
-        return in.read();
-    }
-    
-    private int readInt(InputStream in) throws IOException {
-        return (read(in) << 24) | (read(in) << 16) | (read(in) << 8) | (read(in) << 0);
-    }
-    
-    private byte[] readBuffer(InputStream in) throws IOException {
-        int len = readInt(in);
-        byte[] buffer = new byte[len];
 
-        readFully(in, buffer, 0, len);
-        
-        return buffer;
-    }
-    
-    private void readFully(InputStream in, byte[] buffer, int offset, int length) throws IOException {
-        if (length == 0)
-            return;
-        
-        int counter = 0;
-        
-        do {
-            counter = in.read(buffer, offset, length);
-            if (counter == -1 && length != 0)
-                throw new EOFException();
-            
-            offset += counter;
-            length -= counter;
-            
-        } while(length > 0);
-    }
 }
 

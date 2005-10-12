@@ -22,7 +22,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.impl.GDSHelper;
 
 import java.math.BigDecimal;
 
@@ -45,7 +44,7 @@ import java.sql.Types;
 public class FBParameterMetaData implements ParameterMetaData {
 
     private final XSQLVAR[] xsqlvars;
-    private final GDSHelper connection;
+    private final AbstractConnection connection;
 
     /**
      * Creates a new <code>FBParameterMetaData</code> instance.
@@ -55,7 +54,7 @@ public class FBParameterMetaData implements ParameterMetaData {
      * @exception SQLException if an error occurs
      *
      */
-    protected FBParameterMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
+    protected FBParameterMetaData(XSQLVAR[] xsqlvars, AbstractConnection connection) throws SQLException {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
     }

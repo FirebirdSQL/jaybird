@@ -25,7 +25,9 @@ import java.sql.Time;
 import java.sql.SQLException;
 import java.util.Calendar;
 
+import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.FBResultSet;
 
 /**
  * Describe class <code>FBTimestampField</code> here.
@@ -35,54 +37,54 @@ import org.firebirdsql.gds.XSQLVAR;
  */
 class FBTimestampField extends FBField {
     
-    FBTimestampField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
+    FBTimestampField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
         throws SQLException 
     {
-        super(field, dataProvider, requiredType);
+        super(field, rs, numCol, requiredType);
     }
     
     /*
     public Object getObject() throws SQLException {
-        if (getFieldData()==null) return OBJECT_NULL_VALUE;
+        if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
-        return field.decodeTimestamp(getFieldData());
+        return field.decodeTimestamp(rs.row[numCol]);
     }
     */
     
     public String getString() throws SQLException {
-        if (getFieldData()==null) return STRING_NULL_VALUE;
+        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return String.valueOf(field.decodeTimestamp(getFieldData()));
+        return String.valueOf(field.decodeTimestamp(rs.row[numCol]));
     }
     public Date getDate(Calendar cal) throws SQLException {
-        if (getFieldData()==null) return DATE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
         return field.decodeDate(getDate(),cal);
     }
     public Date getDate() throws SQLException {
-        if (getFieldData()==null) return DATE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
         return new Date(getTimestamp().getTime());
     }
     public Time getTime(Calendar cal) throws SQLException {
-        if (getFieldData()==null) return TIME_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
         return field.decodeTime(getTime(),cal, isInvertTimeZone());
     }
     public Time getTime() throws SQLException {
-        if (getFieldData()==null) return TIME_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
         return new Time(getTimestamp().getTime());
     }
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 		  
         return field.decodeTimestamp(getTimestamp(),cal, isInvertTimeZone());
     }
     public Timestamp getTimestamp() throws SQLException {
-        if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
-        return field.decodeTimestamp(getFieldData());
+        return field.decodeTimestamp(rs.row[numCol]);
     }
     //--- setXXX methods
 
@@ -140,6 +142,6 @@ class FBTimestampField extends FBField {
             return;
         }
 
-        setFieldData(field.encodeTimestamp(value));
+        field.sqldata = field.encodeTimestamp(value);
     }
 }

@@ -28,7 +28,10 @@ import java.io.PrintStream;
 import java.io.IOException;
 
 /**
- * @author Ken Richard
+ *@author Ken Richard
+ *@created May 30, 2002
+ *@see <related>
+ *@version $ $
  */
 
 public class FBSQLException extends SQLException {
@@ -51,6 +54,8 @@ public class FBSQLException extends SQLException {
     
     private Exception original;
     private String message;
+    
+    private String sqlState;
     
     public FBSQLException(Exception ex) {
         super(ex.getMessage(), SQL_STATE_GENERAL_ERROR);
@@ -87,11 +92,8 @@ public class FBSQLException extends SQLException {
                 
         } else
             original = ex;
-
-        if (original instanceof GDSException)
-            message = "GDS Exception. "+ ((GDSException)original).getIntParam() + ". " + ex.getMessage();
-        else
-            message = "Resource Exception. " + ex.getMessage();
+            
+        message = "Resource Exception. " + ex.getMessage();
     }
     
     public FBSQLException(String message) {

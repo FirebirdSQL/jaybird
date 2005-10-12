@@ -19,13 +19,17 @@
 package org.firebirdsql.jca;
 
 
-import java.io.Serializable;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 import javax.transaction.xa.Xid;
 
+import org.firebirdsql.gds.ISCConstants;
+
 import org.firebirdsql.common.FBTestBase;
+
+//for embedded xid implementation
+    import java.net.InetAddress;
+    import java.net.UnknownHostException;
+
+import java.io.Serializable;
 
 /**
  * THIS FILE INCLUDES AN XID IMPLEMENTATION FROM THE JBOSS PROJECT
@@ -46,21 +50,15 @@ public class TestXABase extends FBTestBase {
 
     public FBManagedConnectionFactory initMcf() {
 
-        FBManagedConnectionFactory mcf = createFBManagedConnectionFactory(new InternalConnectionManager());
+        FBManagedConnectionFactory mcf = createFBManagedConnectionFactory();
         mcf.setDatabase(DB_DATASOURCE_URL);
-//        FBConnectionRequestInfo cri = createFBConnectionRequestInfo();
-//        cri.setProperty(ISCConstants.isc_dpb_user_name, DB_USER);
-//        cri.setProperty(ISCConstants.isc_dpb_password, DB_PASSWORD);
-//        cri.setProperty(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
-//        cri.setProperty(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
-//        cri.setProperty(ISCConstants.isc_dpb_sql_dialect, new byte[] {3});
-//        mcf.setConnectionRequestInfo(cri);
-        
-        mcf.setUserName(DB_USER);
-        mcf.setPassword(DB_PASSWORD);
-        mcf.setBuffersNumber(90);
-        mcf.setSqlDialect("3");
-        
+        FBConnectionRequestInfo cri = createFBConnectionRequestInfo();
+        cri.setProperty(ISCConstants.isc_dpb_user_name, DB_USER);
+        cri.setProperty(ISCConstants.isc_dpb_password, DB_PASSWORD);
+        cri.setProperty(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
+        cri.setProperty(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
+        cri.setProperty(ISCConstants.isc_dpb_sql_dialect, new byte[] {3});
+        mcf.setConnectionRequestInfo(cri);
         /*
         HashSet tpb = new HashSet();
         tpb.add(new Integer(ISCConstants.isc_tpb_write));

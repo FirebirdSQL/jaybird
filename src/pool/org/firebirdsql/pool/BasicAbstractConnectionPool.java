@@ -19,11 +19,17 @@
 package org.firebirdsql.pool;
 
 import java.io.*;
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Hashtable;
 
 import javax.naming.*;
+import javax.naming.spi.ObjectFactory;
 import javax.sql.ConnectionPoolDataSource;
 import javax.sql.PooledConnection;
+
+import org.firebirdsql.jdbc.FBConnectionHelper;
+import org.firebirdsql.jdbc.FBSQLException;
 
 /**
  * Base class for connection pool implementations. Main feature of this class is
@@ -39,7 +45,7 @@ import javax.sql.PooledConnection;
 public abstract class BasicAbstractConnectionPool 
     extends AbstractConnectionPool 
     implements ConnectionPoolConfiguration, ConnectionPoolDataSource,
-    Serializable, Referenceable
+    Serializable, Referenceable, ObjectFactory
 {
 
     /*
@@ -58,6 +64,7 @@ public abstract class BasicAbstractConnectionPool
     private boolean pooling = true;
     private boolean statementPooling = true;
     private boolean keepStatements = true;
+    private int transactionIsolation = FBPoolingDefaults.DEFAULT_ISOLATION;
     private int maxStatements = FBPoolingDefaults.DEFAULT_MAX_STATEMENTS;
     
     private Reference reference;
@@ -229,10 +236,51 @@ public abstract class BasicAbstractConnectionPool
             setStatementPooling(false);
     }
     
+    public int getTransactionIsolationLevel() {
+        return transactionIsolation;
+    }
+    
+    public void setTransactionIsolationLevel(int transactionIsolation) {
+        this.transactionIsolation = transactionIsolation;
+    }
+    
+    public String getIsolation() {
+        switch(getTransactionIsolationLevel()) {
+        
+            case Connection.TRANSACTION_READ_COMMITTED :
+                return FBConnectionHelper.TRANSACTION_READ_COMMITTED;
+            
+            case Connection.TRANSACTION_REPEATABLE_READ :
+                return FBConnectionHelper.TRANSACTION_REPEATABLE_READ;
+            
+            case Connection.TRANSACTION_SERIALIZABLE :
+                return FBConnectionHelper.TRANSACTION_SERIALIZABLE;
+            
+            default :
+                throw new IllegalStateException("Unknown transaction isolation level");
+        }
+    }
+    
+    public void setIsolation(String isolation) throws SQLException {
+        if (FBConnectionHelper.TRANSACTION_READ_COMMITTED.equalsIgnoreCase(isolation))
+            setTransactionIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
+        else
+        if (FBConnectionHelper.TRANSACTION_REPEATABLE_READ.equalsIgnoreCase(isolation))
+            setTransactionIsolationLevel(Connection.TRANSACTION_REPEATABLE_READ);
+        else
+        if (FBConnectionHelper.TRANSACTION_SERIALIZABLE.equalsIgnoreCase(isolation))
+            setTransactionIsolationLevel(Connection.TRANSACTION_SERIALIZABLE);
+        else
+            throw new FBSQLException("Unknown transaction isolation.", 
+                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+    }
+
     private static final String REF_BLOCKING_TIMEOUT = "blockingTimeout";
     private static final String REF_RETRY_INTERVAL = "retryInterval";
     private static final String REF_LOGIN_TIMEOUT = "loginTimeout";
 
+    private static final String REF_TX_ISOLATION = "isolation";
+    
     private static final String REF_PING_INTERVAL = "pingInterval";
     private static final String REF_PING_STATEMENT = "pingStatement";
     
@@ -249,13 +297,14 @@ public abstract class BasicAbstractConnectionPool
     private static final String REF_IDLE_TIMEOUT = "idleTimeout";
 
     protected abstract BasicAbstractConnectionPool createObjectInstance();
+    
     /**
      * Get object instance for the specified name in the specified context.
      * This method constructs new datasource if <code>obj</code> represents
      * {@link Reference}, whose factory class is equal to this class.
      */
-    
-    public Object getObjectInstance(Object obj) throws Exception 
+    public Object getObjectInstance(Object obj, Name name, Context nameCtx, 
+                                    Hashtable environment) throws Exception 
     {
         
         if (!(obj instanceof Reference)) return null;
@@ -282,7 +331,7 @@ public abstract class BasicAbstractConnectionPool
                 ds.setMaxIdleTime(Integer.parseInt(addr));
             else
             if (REF_IDLE_TIMEOUT.equals(type))
-                ds.setMaxIdleTime(Integer.parseInt(addr));
+                ds.setIdleTimeout(Integer.parseInt(addr));
             else
             if (REF_LOGIN_TIMEOUT.equals(type))
                 ds.setLoginTimeout(Integer.parseInt(addr));
@@ -294,13 +343,16 @@ public abstract class BasicAbstractConnectionPool
                 ds.setMinPoolSize(Integer.parseInt(addr));
             else
             if (REF_MAX_CONNECTIONS.equals(type))
-                ds.setMaxPoolSize(Integer.parseInt(addr));
+                ds.setMaxConnections(Integer.parseInt(addr));
             else
             if (REF_MIN_CONNECTIONS.equals(type))
-                ds.setMinPoolSize(Integer.parseInt(addr));
+                ds.setMinConnections(Integer.parseInt(addr));
             else
             if (REF_PING_INTERVAL.equals(type))
                 ds.setPingInterval(Integer.parseInt(addr));
+            else
+            if (REF_TX_ISOLATION.equals(type))
+                ds.setIsolation(addr);
             else
             if (REF_RETRY_INTERVAL.equals(type))
                 ds.setRetryInterval(Integer.parseInt(addr));
@@ -333,7 +385,6 @@ public abstract class BasicAbstractConnectionPool
         
         return ds;
     }
-    
 
     protected String getRefAddr(Reference ref, String type) {
         RefAddr addr = ref.get(type);
@@ -379,21 +430,25 @@ public abstract class BasicAbstractConnectionPool
             ref.add(new StringRefAddr(REF_BLOCKING_TIMEOUT, 
                 String.valueOf(getBlockingTimeout())));
     
-        if (getMaxIdleTime() != FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT)
+        if (getIdleTimeout() != FBPoolingDefaults.DEFAULT_IDLE_TIMEOUT)
             ref.add(new StringRefAddr(REF_MAX_IDLE_TIME,
-                String.valueOf(getMaxIdleTime())));
+                String.valueOf(getIdleTimeout())));
     
-        if (getMaxPoolSize() != FBPoolingDefaults.DEFAULT_MAX_SIZE)
+        if (getMaxConnections() != FBPoolingDefaults.DEFAULT_MAX_SIZE)
             ref.add(new StringRefAddr(REF_MAX_POOL_SIZE, 
-                String.valueOf(getMaxPoolSize())));
+                String.valueOf(getMaxConnections())));
     
-        if (getMinPoolSize() != FBPoolingDefaults.DEFAULT_MIN_SIZE)
+        if (getMinConnections() != FBPoolingDefaults.DEFAULT_MIN_SIZE)
             ref.add(new StringRefAddr(REF_MIN_POOL_SIZE,
-                String.valueOf(getMinPoolSize())));
+                String.valueOf(getMinConnections())));
             
         if (getPingInterval() != FBPoolingDefaults.DEFAULT_PING_INTERVAL)
             ref.add(new StringRefAddr(REF_PING_INTERVAL, 
                 String.valueOf(getPingInterval())));
+        
+        if (getTransactionIsolationLevel() != FBPoolingDefaults.DEFAULT_ISOLATION)
+            ref.add(new StringRefAddr(REF_TX_ISOLATION,
+                String.valueOf(getTransactionIsolationLevel())));
         
         if (getRetryInterval() != FBPoolingDefaults.DEFAULT_RETRY_INTERVAL)
             ref.add(new StringRefAddr(REF_RETRY_INTERVAL, 

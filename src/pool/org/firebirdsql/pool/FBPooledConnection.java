@@ -81,6 +81,7 @@ class FBPooledConnection extends PingablePooledConnection
     }
 
     private FBManagedConnection managedConnection;
+    private FBConnectionRequestInfo cri;
     
     private FBManagedConnectionEvetListener listener = 
         new FBManagedConnectionEvetListener();
@@ -98,13 +99,14 @@ class FBPooledConnection extends PingablePooledConnection
      */
     public FBPooledConnection(FBManagedConnection managedConnection, 
         FBConnectionRequestInfo cri, boolean statementPooling, 
-        int maxStatements, boolean keepStatements) 
+        int transactionIsolation, int maxStatements, boolean keepStatements) 
         throws SQLException, ResourceException 
     {
         super((Connection)managedConnection.getConnection(null, cri), 
-            statementPooling, maxStatements, keepStatements);
+            statementPooling, transactionIsolation, maxStatements, keepStatements);
         
         this.managedConnection = managedConnection;
+        this.cri = cri;
         
         this.managedConnection.addConnectionEventListener(this.listener);
     }
@@ -125,28 +127,20 @@ class FBPooledConnection extends PingablePooledConnection
      */
     protected FBPooledConnection(FBManagedConnection managedConnection, 
         FBConnectionRequestInfo cri, String pingStatement, int pingInterval, 
-        boolean statementPooling,int maxStatements, 
+        boolean statementPooling, int transactionIsolation, int maxStatements, 
         boolean keepStatements) 
         throws SQLException, ResourceException 
     {
         super((Connection)managedConnection.getConnection(null, cri), 
-            pingStatement, pingInterval, statementPooling, /*transactionIsolation,*/ 
+            pingStatement, pingInterval, statementPooling, transactionIsolation, 
             maxStatements, keepStatements);
         
         this.managedConnection = managedConnection;
+        this.cri = cri;
         
         this.managedConnection.addConnectionEventListener(this.listener);
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.pool.PingablePooledConnection#configureConnectionDefaults(java.sql.Connection)
-     */
-    protected void configureConnectionDefaults(Connection connection) throws SQLException {
-        if (!managedConnection.isManagedEnvironment()) 
-            connection.setAutoCommit(true);
-
-        connection.setReadOnly(false);
-    }
     /**
      * Get XA resource for this connection.
      * 
@@ -198,13 +192,5 @@ class FBPooledConnection extends PingablePooledConnection
         }
         
         super.statementClosed(statement, proxy);
-    }
-    
-    void setManagedEnvironment(boolean managedEnvironment) throws SQLException {
-        try {
-            managedConnection.setManagedEnvironment(managedEnvironment);
-        } catch(ResourceException ex) {
-            throw new FBSQLException(ex);
-        }
     }
 }

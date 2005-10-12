@@ -36,32 +36,6 @@ import java.sql.Statement;
  */
 public interface FirebirdStatement extends Statement {
 
-    /** 
-     * The constant indicating that the current <code>ResultSet</code> object 
-     * should be closed when calling <code>getMoreResults</code>.
-     * <p>
-     * Copied from JDBC 3.0 definition
-     */
-    int CLOSE_CURRENT_RESULT = 1;
-
-    /**
-     * The constant indicating that the current <code>ResultSet</code> object
-     * should not be closed when calling <code>getMoreResults</code>.
-     * <p>
-     * Copied from JDBC 3.0 definition
-     */
-    int KEEP_CURRENT_RESULT = 2;
-
-    /**
-     * The constant indicating that all <code>ResultSet</code> objects that
-     * have previously been kept open should be closed when calling
-     * <code>getMoreResults</code>.
-     * <p>
-     * Copied from JDBC 3.0 definition
-     */
-    int CLOSE_ALL_RESULTS = 3;
-
-    
     /**
      * Get number of inserted rows. You can call this method multiple times,
      * it does not affect the JDBC result number.
@@ -124,17 +98,4 @@ public interface FirebirdStatement extends Statement {
      * execute SQL.
      */
     boolean isValid();
-    
-    /**
-     * Get execution plan for the last executed statement. Unlike the 
-     * {@link FirebirdPreparedStatement#getExecutionPlan()}, this method can be
-     * called only after executing a query or update statement. 
-     * 
-     * @return execution plan returned by the server.
-     * 
-     * @throws SQLException if no statement was executed before calling this 
-     * method, statement is not valid, or there was an error when obtaining
-     * the execution plan.
-     */
-    String getLastExecutionPlan() throws SQLException;
 }

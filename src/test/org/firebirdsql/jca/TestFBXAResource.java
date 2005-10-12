@@ -19,14 +19,11 @@
 package org.firebirdsql.jca;
 
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 import javax.resource.spi.ManagedConnection;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
+
+import java.util.HashSet;
 
 /**
  * Describe class <code>TestFBXAResource</code> here.
@@ -84,7 +81,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        if (fbmc.getGDSHelper().getCurrentDbHandle() == null) {
+        if (fbmc.getIscDBHandle(new HashSet()) == null) {
             throw new Exception("no db handle after start xid");
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -101,7 +98,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        if (fbmc.getGDSHelper().getCurrentDbHandle() == null) {
+        if (fbmc.getIscDBHandle(new HashSet()) == null) {
             throw new Exception("no db handle after start xid");
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -118,7 +115,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        if (fbmc.getGDSHelper().getCurrentDbHandle() == null) {
+        if (fbmc.getIscDBHandle(new HashSet()) == null) {
             throw new Exception("no db handle after start xid");
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -136,7 +133,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        if (fbmc.getGDSHelper().getCurrentDbHandle() == null) {
+        if (fbmc.getIscDBHandle(new HashSet()) == null) {
             throw new Exception("no db handle after start xid");
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -154,7 +151,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa1 = mc1.getXAResource();
         Xid xid1 = new XidImpl();
         xa1.start(xid1, XAResource.TMNOFLAGS);
-        if (fbmc1.getGDSHelper().getCurrentDbHandle() == null) {
+        if (fbmc1.getIscDBHandle(new HashSet()) == null) {
             throw new Exception("no db handle after start xid");
         }
         ManagedConnection mc2 = mcf.createManagedConnection(null, null);
@@ -162,7 +159,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa2 = mc2.getXAResource();
         Xid xid2 = new XidImpl();
         xa2.start(xid2, XAResource.TMNOFLAGS);
-        if (fbmc2.getGDSHelper().getCurrentDbHandle() == null) {
+        if (fbmc2.getIscDBHandle(new HashSet()) == null) {
             throw new Exception("no db handle after start xid");
         }
         //commit each tr on other xares
@@ -178,91 +175,13 @@ public class TestFBXAResource extends TestXABase {
     public void testRecover() throws Exception
     {
         
-        Connection connection = getConnectionViaDriverManager();
-        try {
-            Statement stmt = connection.createStatement();
-            try {
-                try {
-                    stmt.execute("DROP TABLE test_reconnect");
-                } catch(SQLException ex) {
-                    // empty
-                }
-                
-                stmt.execute("CREATE TABLE test_reconnect(id INTEGER)");
-            } finally {
-                stmt.close();
-            }
-            
-        } finally {
-            connection.close();
-        }
-        
         if (log != null) log.info("testRecover");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc1 = mcf.createManagedConnection(null, null);
-        
         FBManagedConnection fbmc1 = (FBManagedConnection)mc1;
         XAResource xa1 = mc1.getXAResource();
-        
-        Xid xid1 = new XidImpl();
-        xa1.start(xid1, XAResource.TMNOFLAGS);
-        
-        Connection fbc1 = (Connection)fbmc1.getConnection(null, null);
-        Statement fbstmt1 = fbc1.createStatement();
-        try {
-            fbstmt1.execute("INSERT INTO test_reconnect(id) VALUES(1)");
-        } finally {
-            fbstmt1.close();
-        }
-        
-        xa1.end(xid1, XAResource.TMSUCCESS);
-        xa1.prepare(xid1);
-        
-        // kill connection after prepare.
-        mc1.destroy();
-        
-
-        FBManagedConnectionFactory mcf2 = initMcf();
-        ManagedConnection mc2 = mcf2.createManagedConnection(null, null);
-        XAResource xa2 = mc2.getXAResource();
-
-        Xid xid2 = new XidImpl();
-        xa2.start(xid2, XAResource.TMNOFLAGS);
-        
-        Xid[] xids = xa2.recover(XAResource.TMSTARTRSCAN);
-        
-        xa2.end(xid2, XAResource.TMSUCCESS);
-        xa2.commit(xid2, true);
-        
-        assertTrue("Should recover non-null array", xids != null);
-        assertTrue("Should recover at least one transaction", xids.length > 0);
-        
-        boolean found = false;
-        for (int i = 0; i < xids.length; i++) {
-            if (xids[i].equals(xid1)) {
-                found = true;
-                break;
-            }
-        }
-        
-        assertTrue("Should find our transaction", found);
-        
-        xa2.commit(xid1, false);
-        
-        connection = getConnectionViaDriverManager();
-        try {
-            Statement stmt = connection.createStatement();
-            try {
-                ResultSet rs = stmt.executeQuery("SELECT * FROM test_reconnect");
-                assertTrue("Should find at least one row.", rs.next());
-                assertTrue("Should read correct value", rs.getInt(1) == 1);
-                assertTrue("Should select only one row", !rs.next());
-            } finally {
-                stmt.close();
-            }
-        } finally {
-            connection.close();
-        }
+        Xid[] xids = xa1.recover(XAResource.TMSTARTRSCAN);
+        assertTrue("Xid[] was null from recover!", xids != null);
     }
 
 }

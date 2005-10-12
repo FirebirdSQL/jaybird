@@ -56,11 +56,6 @@ public class TestFBEscapedCallParser extends TestCase {
     public static final String CALL_TEST_7 =
         "EXECUTE PROCEDURE my_proc(UPPER(?), '11-dec-2001')";
     
-    public static final String CALL_TEST_8 =
-        "EXECUTE PROCEDURE my_proc (UPPER(?), '11-dec-2001')";
-
-    public static final String CALL_TEST_9 =
-        "   \t  EXECUTE\nPROCEDURE  my_proc   (    UPPER(?), '11-dec-2001')";
 
     public TestFBEscapedCallParser(String testName) {
         super(testName);
@@ -98,19 +93,11 @@ public class TestFBEscapedCallParser extends TestCase {
         procedureCall.getInputParam(2).setValue("test value");
         try {
         	procedureCall.registerOutParam(3, Types.CHAR);
-            fail("Should not allow registering param 3 as output, " +
-                    "since it does not exist.");
+            assertTrue("Should not allow registering param 3 as output, " +
+                    "since it does not exist.", false);
             
         } catch(SQLException ex) {
         	// everything is ok
-        }
-        assertEquals(1, procedureCall.mapOutParamIndexToPosition(1, false));
-        try {
-            int outPosition = procedureCall.mapOutParamIndexToPosition(2, false);
-            fail("Should not allow to obtain position when no compatibility " +
-                    "mode is specified.");
-        } catch(SQLException ex) {
-            // everything is ok
         }
 
         procedureCall = parser.parseCall(CALL_TEST_5_1);
@@ -124,6 +111,7 @@ public class TestFBEscapedCallParser extends TestCase {
         } catch(SQLException ex) {
             // everything is ok
         }
+        
         assertTrue("Should correctly parse call. " + procedureCall.getSQL(false), 
                 testProcedureCall.equals(procedureCall));
         
@@ -132,19 +120,9 @@ public class TestFBEscapedCallParser extends TestCase {
         procedureCall.getInputParam(2).setValue("test value");
         assertTrue("Should correctly parse call. " + procedureCall.getSQL(false), 
                 testProcedureCall.equals(procedureCall));
-
-        procedureCall = parser.parseCall(CALL_TEST_7);
-        verifyParseSql(procedureCall);
-
-        procedureCall = parser.parseCall(CALL_TEST_8);
-        verifyParseSql(procedureCall);
         
-        procedureCall = parser.parseCall(CALL_TEST_9);
-        verifyParseSql(procedureCall);
-    }
-
-    private void verifyParseSql(FBProcedureCall procedureCall) throws FBSQLException {
-        assertTrue("Should correctly parse call.\n[" + procedureCall.getSQL(false) + "] \n[" + testProcedureCall.getSQL(false) + "]", 
+        procedureCall = parser.parseCall(CALL_TEST_7);
+        assertTrue("Should correctly parse call. " + procedureCall.getSQL(false), 
                 testProcedureCall.getSQL(false).equals(procedureCall.getSQL(false)));
     }
 

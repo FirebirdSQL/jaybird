@@ -32,12 +32,6 @@ public abstract class Logger{
 	abstract public void debug(Object message);
 	
 	abstract public void debug(Object message, Throwable t);
-    
-    abstract public boolean isTraceEnabled();
-    
-    abstract public void trace(Object message);
-    
-    abstract public void trace(Object message, Throwable t);
 	
 	abstract public boolean isInfoEnabled();
 	

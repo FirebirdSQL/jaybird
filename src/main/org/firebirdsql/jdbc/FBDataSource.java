@@ -65,20 +65,10 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
     }
 
 
-    /**
-     * Set the JNDI <code>Reference</code> for this DataSource.
-     *
-     * @param ref The JNDI reference for this DataSource
-     */
     public void setReference(Reference ref) {
         this.jndiReference = ref;
     }
 
-    /**
-     * Get the JNDI <code>Reference</code> for this DataSource.
-     *
-     * @return The JNDI reference
-     */
     public Reference getReference() {
         return jndiReference;
     }
@@ -114,7 +104,7 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
         {
            //mcf makes a copy for us.
             FBConnectionRequestInfo subjectCri = mcf.getDefaultConnectionRequestInfo();
-            subjectCri.setUserName(username);
+            subjectCri.setUser(username);
             subjectCri.setPassword(password);
             return (Connection)cm.allocateConnection(mcf, subjectCri);
         }

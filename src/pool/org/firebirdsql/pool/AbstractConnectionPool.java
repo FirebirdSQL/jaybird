@@ -130,28 +130,6 @@ public abstract class AbstractConnectionPool implements PooledObjectListener {
     protected void finalize() throws Throwable {
         shutdown();
     }
-    
-    /**
-     * Restart this JDBC pool.  This method restarts all JDBC connections.
-     */
-    public void restart()
-    {
-       Iterator iter = connectionQueues.entrySet().iterator();
-        while(iter.hasNext()) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            
-            PooledConnectionQueue queue = 
-                (PooledConnectionQueue)entry.getValue();
-                
-            queue.restart();
-        }
-
-        if (getLogger() != null)
-            getLogger().info(
-                "Pool restarted.  Pool name was "
-                + getPoolName()
-                + ".");
-    }
 
     /**
      * Shutdown this JDBC pool. This method closes all JDBC connections
@@ -267,7 +245,7 @@ public abstract class AbstractConnectionPool implements PooledObjectListener {
     
     /**
      * Notify about new available connection. This method is called by 
-     * {@link javax.sql.PooledConnection} when its wrapped connection being closed.
+     * {@link PooledConnection} when its wrapped connection being closed.
      * 
      * @param event instance of {@link PooledObjectEvent} containing 
      * information about closed connection.

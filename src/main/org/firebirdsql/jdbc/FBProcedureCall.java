@@ -24,68 +24,18 @@ import java.util.*;
 /**
  * Represents procedure call.
  */
-public class FBProcedureCall implements Cloneable {
-	
-	/* (non-Javadoc)
-	 * @see java.lang.Object#clone()
-	 */
-	public Object clone()
-	{
-		try
-		{
-			FBProcedureCall newProcedureCall = (FBProcedureCall)super.clone();
-			
-			//Copy each input parameter.
-			Vector params = new Vector();
-			Iterator iterator = inputParams.iterator();
-			while (iterator.hasNext()) {
-				FBProcedureParam param = (FBProcedureParam)iterator.next();
-				params.add(param == null ? null : param.clone());
-			}
-			newProcedureCall.inputParams = params;
-			
-			//Copy each output parameter.
-			params = new Vector();
-			iterator = outputParams.iterator();
-			while (iterator.hasNext()) {
-				FBProcedureParam param = (FBProcedureParam)iterator.next();
-				params.add(param == null ? null : param.clone());
-			}
-			newProcedureCall.outputParams = params;
-
-			return newProcedureCall;
-			
-		} catch (CloneNotSupportedException e){
-			
-			return null;
-			
-		}
-	}
+public class FBProcedureCall {
     
-    /**
-     * <code>true</code> if the old callable statement compatibility mode should
-     * be used, otherwise - <code>false</code>. Current value - <code>true</code>.
-     */
-    public static final boolean OLD_CALLABLE_STATEMENT_COMPATIBILITY = true;
+    private static final boolean OLD_CALLABLE_STATEMENT_COMPATIBILITY = true;
 
     private String name;
     private Vector inputParams = new Vector();
     private Vector outputParams = new Vector();
 
-    /**
-     * Get the name of the procedure to be called.
-     *
-     * @return The procedure name
-     */
     public String getName() {
         return name;
     }
     
-    /**
-     * Set the name of the procedure to be called.
-     *
-     * @param name The name of the procedure
-     */
     public void setName(String name) {
         this.name = name;
     }
@@ -93,8 +43,7 @@ public class FBProcedureCall implements Cloneable {
     /**
      * Get input parameter by the specified index.
      * 
-     * @param index index for which parameter has to be returned, first
-     * index is 1
+     * @param index index for which parameter has to be returned.
      * 
      * @return instance of {@link FBProcedureParam}.
      */
@@ -115,12 +64,6 @@ public class FBProcedureCall implements Cloneable {
         return result;
     }
     
-    /**
-     * Get the output parameter at the specified index.
-     *
-     * @param index The index of the parameter, first index is 1
-     * @return The parameter at the given index
-     */
     public FBProcedureParam getOutputParam(int index) {
         return getParam(outputParams, index);    
     }
@@ -134,6 +77,8 @@ public class FBProcedureCall implements Cloneable {
      * @return instance of {@link FBProcedureParam}.
      */
     private FBProcedureParam getParam(Collection params, int index) {
+        int counter = 0;
+        
         Iterator iter = params.iterator();
         while(iter.hasNext()) {
             FBProcedureParam param = (FBProcedureParam)iter.next();
@@ -151,37 +96,12 @@ public class FBProcedureCall implements Cloneable {
      * 
      * @param index index to map.
      * 
-     * @return mapped column number or <code>index</code> if no output parameter
-     * with the specified index found (assuming that {@link #OLD_CALLABLE_STATEMENT_COMPATIBILITY}
-     * constant is set to <code>true</code>, otherwise throws exception).
-     * 
-     * @throws FBSQLException if compatibility mode is switched off and no
-     * parameter was found (see {@link #OLD_CALLABLE_STATEMENT_COMPATIBILITY} 
-     * constant).
+     * @return mapped column number or <code>-1</code> if no output parameter
+     * with the specified index found.
      */
     public int mapOutParamIndexToPosition(int index) throws FBSQLException {
-        return mapOutParamIndexToPosition(index, OLD_CALLABLE_STATEMENT_COMPATIBILITY);
-    }
-        
-    /**
-     * Map output parameter index to a column number of corresponding result 
-     * set.
-     * 
-     * @param index index to map.
-     * @param compatibilityMode <code>true</code> if we should run in old
-     * compatibility mode.
-     * 
-     * @return mapped column number or <code>index</code> if no output parameter
-     * with the specified index found and <code>compatibilityMode</code> is set.
-     * 
-     * @throws FBSQLException if compatibility mode is switched off and no
-     * parameter was found.
-     */
-    public int mapOutParamIndexToPosition(int index, boolean compatibilityMode)
-        throws FBSQLException {
-        
     	int position = -1;
-
+        
         Iterator iter = outputParams.iterator();
         while(iter.hasNext()) {
         	FBProcedureParam param = (FBProcedureParam)iter.next();
@@ -198,37 +118,24 @@ public class FBProcedureCall implements Cloneable {
         // an index that was asked if we run in compatibilty mode
         // 
         // we should switch it off as soon as people convert applications
-        if (compatibilityMode)
+        if (position == -1 && OLD_CALLABLE_STATEMENT_COMPATIBILITY)
             return index;
         else 
+        if (position == -1)
             throw new FBSQLException("Specified parameter does not exist.", 
                     FBSQLException.SQL_STATE_INVALID_COLUMN);
+        else
+        	return position;
     }
     
-
-    /**
-     * Get the list of input parameters for this procecedure call.
-     *
-     * @return A list of all input parameters
-     */
     public List getInputParams() {
     	return inputParams;
     }
     
-    /**
-     * Get a list of output parameters for this procedure call.
-     *
-     * @return A list of all output parameters
-     */
     public List getOutputParams() {
         return outputParams;
     }
     
-    /**
-     * Add an input parameter to this procedure call.
-     * 
-     * @param param The parameter to be added
-     */
     public void addInputParam(FBProcedureParam param) {
         if (inputParams.size() < param.getPosition() + 1)
             inputParams.setSize(param.getPosition() + 1);
@@ -236,11 +143,6 @@ public class FBProcedureCall implements Cloneable {
     	inputParams.set(param.getPosition(), param);
     }
     
-    /**
-     * Add an output parameter to this procedure call.
-     *
-     * @param param The parameter to be added
-     */
     public void addOutputParam(FBProcedureParam param) {
         if (outputParams.size() < param.getPosition() + 1)
         	outputParams.setSize(param.getPosition() + 1);

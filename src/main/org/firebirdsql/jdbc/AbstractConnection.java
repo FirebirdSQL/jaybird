@@ -21,23 +21,23 @@ package org.firebirdsql.jdbc;
 
 import java.sql.*;
 import java.util.*;
-
 import javax.resource.*;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jca.*;
 
 /**
- * The class <code>AbstractConnection</code> is a handle to a 
- * {@link FBManagedConnection}.
+ * The class <code>AbstractConnection</code> is a handle to a FBManagedConnection.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
 public abstract class AbstractConnection implements FirebirdConnection {
 
+    //flag that is set to true when a transaction is started automatically,
+    //so the transaction may be committed automatically after a
+    //statement is executed.
+    private boolean autoTransaction = false;
     
     // This flag is set tu true in close() method to indicate that this 
     // instance is invalid and cannot be used anymore
@@ -46,46 +46,20 @@ public abstract class AbstractConnection implements FirebirdConnection {
 
     protected FBManagedConnection mc;
 
-    private FBLocalTransaction localTransaction;
-    private FBDatabaseMetaData metaData;
-    
-    protected InternalTransactionCoordinator txCoordinator;
+    private FBLocalTransaction localTransaction = null;
 
-    private SQLWarning firstWarning;
+    private FBDatabaseMetaData metaData = null;
+
+    private SQLWarning firstWarning = null;
      
     // This set contains all allocated but not closed statements
     // It is used to close them before the connection is closed
     private HashSet activeStatements = new HashSet();
-    
-    private int resultSetHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
-    
-    private boolean autoCommit;
 	 
-    /**
-     * Create a new AbstractConnection instance based on a
-     * {@link FBManagedConnection}.
-     *
-     * @param mc A FBManagedConnection around which this connection is based
-     */
     public AbstractConnection(FBManagedConnection mc) {
         this.mc = mc;
-        
-        this.localTransaction = new FBLocalTransaction(mc, this);
-        this.txCoordinator = new InternalTransactionCoordinator();
     }
     
-    public FBObjectListener.StatementListener getStatementListener() {
-        return txCoordinator;
-    }
-    
-    public int getHoldability() throws SQLException {
-        return this.resultSetHoldability;
-    }
-
-    public void setHoldability(int holdability) throws SQLException {
-        this.resultSetHoldability = holdability;
-    }
-
     /**
      * Check if this connection is valid. This method should be invoked before
      * executing any action in this class.
@@ -129,8 +103,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
         SQLException e = null;
         while(iter.hasNext()) {
             try {
-                AbstractStatement stmt = (AbstractStatement)iter.next();
-                stmt.close(true);
+                Statement stmt = (Statement)iter.next();
+                stmt.close();
             } catch(SQLException ex) {
                 if (e != null)
                     e.setNextException(ex);
@@ -143,11 +117,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
         if (e != null) throw e;
     }
 
-    /**
-     * Set the {@link FBManagedConnection} around which this connection is
-     * based.
-     * @param mc The FBManagedConnection around which this connection is based
-     */
     public void setManagedConnection(FBManagedConnection mc) {
         //close any prepared statements we may have executed.
         if (this.mc != mc && metaData != null) {
@@ -163,20 +132,16 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return internal handle for connection
      * @exception GDSException if handle needed to be created and creation failed
      */
-    public IscDbHandle getIscDBHandle() throws GDSException {
-        return getGDSHelper().getIscDBHandle();
+    public isc_db_handle getIscDBHandle() throws GDSException {
+        return mc.getIscDBHandle();
     }
 
     /**
      * Get Firebird API handler (sockets/native/embeded/etc)
      * @return handler object for internal API calls
      */
-    public GDS getInternalAPIHandler() throws SQLException {
-        try {
-            return getGDSHelper().getInternalAPIHandler();
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
-        }
+    public GDS getInternalAPIHandler() {
+        return mc.getInternalAPIHandler();
     }
     
     /**
@@ -192,42 +157,23 @@ public abstract class AbstractConnection implements FirebirdConnection {
 	public void setTransactionParameters(int isolationLevel, int[] parameters)
 		throws SQLException {
         
-        TransactionParameterBuffer tpbParams = createTransactionParameterBuffer();
-        
-        for (int i = 0; i < parameters.length; i++) {
-			tpbParams.addArgument(parameters[i]);
-		}
-        
-        setTransactionParameters(isolationLevel, tpbParams);
-	}
-    
-    public TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException {
-        return mc.getTransactionParameters(isolationLevel);
-    }
-
-    public TransactionParameterBuffer createTransactionParameterBuffer() throws SQLException {
-        return getInternalAPIHandler().newTransactionParameterBuffer();
-    }
-    
-    public void setTransactionParameters(int isolationLevel, TransactionParameterBuffer tpb) throws SQLException {
-        if (mc.isManagedEnvironment())
-            throw new FBSQLException("Cannot set transaction parameters " +
-                    "in managed environment.");
-        
-        mc.setTransactionParameters(isolationLevel, tpb);
-    }
-    
-    public void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException {
         try {
-            if (localTransaction.inTransaction())
-                throw new FBSQLException("Cannot set transaction parameters " +
-                        "when transaction is already started.");
+            FBTpb tpb = mc.getTpb();
+            FBTpbMapper tpbMapper = tpb.getMapper();
             
-            mc.setTransactionParameters(tpb);
-        } catch(ResourceException ex) {
-            throw new FBSQLException(ex);
+            Set tpbParams = new HashSet();
+            for (int i = 0; i < parameters.length; i++) {
+    			tpbParams.add(new Integer(parameters[i]));
+    		}
+            
+            tpbMapper.setMapping(isolationLevel, tpbParams);
+            
+            tpb.setMapper(tpbMapper);
+            
+        } catch(FBResourceException ex) {
+        	throw new FBSQLException(ex);   
         }
-    }
+	}
 
     /**
      * Creates a <code>Statement</code> object for sending
@@ -247,8 +193,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized Statement createStatement() throws SQLException {
         return createStatement(
             ResultSet.TYPE_FORWARD_ONLY, 
-            ResultSet.CONCUR_READ_ONLY,
-            resultSetHoldability
+            ResultSet.CONCUR_READ_ONLY
         );
     }
 
@@ -337,7 +282,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         
         int mode = FBEscapedParser.USE_BUILT_IN;
         
-        if (dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF))
+        if (dpb.hasArgument(DatabaseParameterBuffer.use_standard_udf))
             mode = FBEscapedParser.USE_STANDARD_UDF;
         
         return new FBEscapedParser(mode).parse(sql);
@@ -370,35 +315,22 @@ public abstract class AbstractConnection implements FirebirdConnection {
         throws SQLException 
     {
         checkValidity();
+        
+        synchronized(mc) {
+            if (mc.autoCommit != autoCommit) {
+                try {
+                    if (inTransaction())
+                            getLocalTransaction().internalCommit();
 
-        if (this.autoCommit == autoCommit) 
-            return;
-        
-        InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
-        if (autoCommit)
-            coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, localTransaction);
-        else
-            coordinator = new InternalTransactionCoordinator.LocalTransactionCoordinator(this, localTransaction);
-        
-        txCoordinator.setCoordinator(coordinator);
-        this.autoCommit = autoCommit;
-    }
+                    this.mc.autoCommit = autoCommit;
 
-    public void setManagedEnvironment(boolean managedConnection) throws SQLException {
-        checkValidity();
-        
-        InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
-        
-        if (managedConnection && mc.inTransaction()) {
-            coordinator = new InternalTransactionCoordinator.ManagedTransactionCoordinator(this);
-            this.autoCommit = false;
-        } else {
-            coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, localTransaction);
-            this.autoCommit = true;
+                } catch (ResourceException ge) {
+                    throw new FBSQLException(ge);
+                }
+            } 
         }
-         
-        txCoordinator.setCoordinator(coordinator);
     }
+
 
     /**
      * Gets the current auto-commit state.
@@ -412,7 +344,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
             throw new FBSQLException("You cannot getAutomcommit on an " +
                     "unassociated closed connection.");
 
-        return this.autoCommit;
+        return mc.autoCommit;
     }
 
 
@@ -431,8 +363,18 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 "You cannot commit a closed connection.",
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
 
-        txCoordinator.commit();
-        invalidateSavepoints();
+        if (getAutoCommit() && getInternalAPIHandler().getType() != GDSType.ORACLE_MODE)
+            throw new FBSQLException("commit called with AutoCommit true!");
+
+        synchronized(mc) {
+            try {
+                if (inTransaction())
+                    getLocalTransaction().internalCommit();
+                
+            } catch(ResourceException ge) {
+                throw new FBSQLException(ge);
+            }
+        } 
     }
 
 
@@ -446,14 +388,23 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see #setAutoCommit
      */
     public synchronized void rollback() throws SQLException {
+        if (getAutoCommit() && getInternalAPIHandler().getType() != GDSType.ORACLE_MODE)
+            throw new FBSQLException("Rollback called with AutoCommit true!");
 
         if (isClosed())
             throw new FBSQLException(
                 "You cannot rollback closed connection.",
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
 
-        txCoordinator.rollback();
-        invalidateSavepoints();
+        synchronized(mc) {
+            try{
+                if (inTransaction())
+                    getLocalTransaction().internalRollback();
+                
+            } catch(ResourceException ex) {
+                throw new FBSQLException(ex);
+            }
+        }
     }
 
     /**
@@ -469,32 +420,35 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public synchronized void close() throws SQLException {
         try {
-            try {
-                freeStatements();
-            } finally {
-
-                if (mc != null) {
-                    // if we are in a transaction started
-                    // automatically because autocommit = false, roll it back.
-
-                    // leave managed transactions alone, they are normally
-                    // committed after the Connection handle is closed.
-
-                    if (!getAutoCommit() && localTransaction.inTransaction()) {
-                        // autocommit is always true for managed tx.
+            freeStatements();
+        } finally {
+            
+            if (mc != null) {
+                //if we are in a transaction started 
+                //automatically because autocommit = false, roll it back.
+                
+                //leave managed transactions alone, they are normally
+                //committed after the Connection handle is closed.
+                
+                synchronized(mc) {
+                    if (!getAutoCommit()) {
+                        //autocommit is always true for managed tx.
                         try {
-                            txCoordinator.rollback();
+                            if (inTransaction())
+                                    getLocalTransaction().internalRollback();
+
+                        } catch (ResourceException ge) {
+                            throw new FBSQLException(ge);
                         } finally {
+                            //always reset Autocommit for the next user.
                             setAutoCommit(true);
                         }
-                    }
+                    } // end of if ()
 
                     mc.close(this);
-                    mc = null;
                 }
+                mc = null;
             }
-        } catch (ResourceException ex) {
-            throw new FBSQLException(ex);
         }
     }
 
@@ -524,15 +478,10 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public synchronized DatabaseMetaData getMetaData() throws SQLException {
-        try {
-            if (metaData == null) 
-                metaData = new FBDatabaseMetaData(this);
-            
-            
-            return metaData;
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
+        if (metaData == null) {
+            metaData = new FBDatabaseMetaData(this);
         }
+        return metaData;
     }
 
 
@@ -548,15 +497,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public synchronized void setReadOnly(boolean readOnly) throws SQLException {
-        try {
-            if (localTransaction.inTransaction() && !mc.isManagedEnvironment())
-                throw new FBSQLException("Calling setReadOnly(boolean) method " +
-                        "is not allowed when transaction is already started.");
-            
-            mc.setReadOnly(readOnly);
-        } catch(ResourceException ex) {
-            throw new FBSQLException(ex);
-        }
+        mc.setReadOnly(readOnly);
     }
 
 
@@ -617,16 +558,20 @@ public abstract class AbstractConnection implements FirebirdConnection {
                     "Connection has being closed.",
                     FBSQLException.SQL_STATE_CONNECTION_CLOSED);
         
-        try {
+        if (getTransactionIsolation() != level) {
+            synchronized(mc) {
+                try {
 
-            if (!getAutoCommit() && !mc.isManagedEnvironment())
-                txCoordinator.commit();
+                    if (inTransaction())
+                            getLocalTransaction().internalCommit();
 
-            mc.setTransactionIsolation(level);
+                    mc.setTransactionIsolation(level);
 
-        } catch (ResourceException re) {
-            throw new FBSQLException(re);
-        } 
+                } catch (ResourceException re) {
+                    throw new FBSQLException(re);
+                } 
+            }
+        }
     }
 
     /**
@@ -702,86 +647,23 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    
     public synchronized Statement createStatement(int resultSetType, 
-            int resultSetConcurrency) throws SQLException {
-        return createStatement(resultSetType, resultSetConcurrency, this.resultSetHoldability);
-    }
-    
-    /**
-     * Creates a <code>Statement</code> object that will generate
-     * <code>ResultSet</code> objects with the given type, concurrency,
-     * and holdability.
-     * This method is the same as the <code>createStatement</code> method
-     * above, but it allows the default result set
-     * type, concurrency, and holdability to be overridden.
-     *
-     * @param resultSetType one of the following <code>ResultSet</code> 
-     *        constants:
-     *         <code>ResultSet.TYPE_FORWARD_ONLY</code>, 
-     *         <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
-     *         <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
-     * @param resultSetConcurrency one of the following <code>ResultSet</code> 
-     *        constants:
-     *         <code>ResultSet.CONCUR_READ_ONLY</code> or
-     *         <code>ResultSet.CONCUR_UPDATABLE</code>
-     * @param resultSetHoldability one of the following <code>ResultSet</code> 
-     *        constants:
-     *         <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or
-     *         <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
-     * @return a new <code>Statement</code> object that will generate
-     *         <code>ResultSet</code> objects with the given type,
-     *         concurrency, and holdability
-     * @exception SQLException if a database access error occurs
-     *            or the given parameters are not <code>ResultSet</code> 
-     *            constants indicating type, concurrency, and holdability
-     * @see ResultSet
-     * @since 1.4
-     */
-    public synchronized Statement createStatement(int resultSetType, 
-        int resultSetConcurrency, int resultSetHoldability) throws SQLException 
+        int resultSetConcurrency) throws SQLException 
     {
-        if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE) {
+        if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE ||
+           resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) 
+        {
             addWarning(new FBSQLWarning("Unsupported type and/or concurrency"));
             
             if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
                 resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+            
+            resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
         }			  
           
-        checkHoldability(resultSetType, resultSetHoldability);
-        
-        try {
-            Statement stmt = new FBStatement(getGDSHelper(), resultSetType,
-                    resultSetConcurrency, resultSetHoldability, txCoordinator);
-            
-            activeStatements.add(stmt);
-            return stmt;
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
-        }
-    }
-
-    /**
-     * Check whether result set type and holdability are compatible.
-     * 
-     * @param resultSetType desired result set type.
-     * @param resultSetHoldability desired result set holdability.
-     * 
-     * @return new holdability, compatible with result set type.
-     * 
-     * @throws SQLException if specified result set type and holdability are
-     * not compatibe.
-     */
-    private void checkHoldability(int resultSetType, int resultSetHoldability) throws SQLException {
-        boolean holdable = 
-            resultSetHoldability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT;
-        
-        boolean notScrollable = resultSetType != ResultSet.TYPE_SCROLL_INSENSITIVE;
-
-        if (holdable && notScrollable) 
-            throw new FBDriverNotCapableException(
-                    "Holdable cursors are supported only " +
-                    "for scrollable insensitive result sets.");
+        Statement stmt =  new FBStatement(this, resultSetType, resultSetConcurrency);
+        activeStatements.add(stmt);
+        return stmt;
     }
 
 
@@ -802,61 +684,25 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public synchronized PreparedStatement prepareStatement(String sql, 
-            int resultSetType, int resultSetConcurrency) throws SQLException {
-        return prepareStatement(sql, resultSetType, resultSetConcurrency, this.resultSetHoldability);
-    }
-
-    public synchronized PreparedStatement prepareStatement(String sql,
-            int resultSetType, int resultSetConcurrency,
-            int resultSetHoldability) throws SQLException {
-        
-        return prepareStatement(sql, resultSetType, resultSetConcurrency,
-            resultSetHoldability, false);
-    }
-    
-    synchronized PreparedStatement prepareMetaDataStatement(String sql,
-            int resultSetType, int resultSetConcurrency) throws SQLException {
-        
-        return prepareStatement(sql, resultSetType, resultSetConcurrency,
-            resultSetHoldability, true);
-    }
-    
-    public synchronized PreparedStatement prepareStatement(String sql, 
-        int resultSetType, int resultSetConcurrency, int resultSetHoldability, boolean metaData) throws SQLException 
+        int resultSetType, int resultSetConcurrency) throws SQLException 
     {
           PreparedStatement stmt;
-		  if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
+		  if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE && 
+              resultSetConcurrency != ResultSet.CONCUR_READ_ONLY)
 		  {
 		      addWarning(new FBSQLWarning("resultSetType or resultSetConcurrency changed"));
               
               if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
                   resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
               
+              resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
 		  }
           
-          checkHoldability(resultSetType, resultSetHoldability);
+          stmt = new FBPreparedStatement(
+                  this, sql, resultSetType, resultSetConcurrency);
           
-          try {
-              FBObjectListener.StatementListener coordinator = txCoordinator;
-              if (metaData) 
-                  coordinator = new InternalTransactionCoordinator.MetaDataTransactionCoordinator(txCoordinator);
-
-              FBObjectListener.BlobListener blobCoordinator;
-              if (metaData)
-                  blobCoordinator = null;
-              else
-                  blobCoordinator = txCoordinator;
-              
-              stmt = new FBPreparedStatement(
-                      getGDSHelper(), sql, resultSetType, resultSetConcurrency, 
-                      resultSetHoldability, coordinator, blobCoordinator, metaData);
-              
-              activeStatements.add(stmt);
-              return stmt;
-              
-          } catch(GDSException ex) {
-              throw new FBSQLException(ex);
-          }
+          activeStatements.add(stmt);
+          return stmt;
     }
 
     /**
@@ -876,12 +722,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public synchronized CallableStatement prepareCall(String sql, 
-            int resultSetType, int resultSetConcurrency) throws SQLException {
-        return prepareCall(sql, resultSetType, resultSetConcurrency, this.resultSetHoldability);
-    }
-            
-    public synchronized CallableStatement prepareCall(String sql, 
-        int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException 
+        int resultSetType, int resultSetConcurrency) throws SQLException 
     {
         CallableStatement stmt;
 		if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE && 
@@ -894,17 +735,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
             
             resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
         }	
-
-        checkHoldability(resultSetType, resultSetHoldability);
         
-        try {
-            stmt = new FBCallableStatement(getGDSHelper(), sql, resultSetType,
-                    resultSetConcurrency, resultSetHoldability, txCoordinator, txCoordinator);
-            activeStatements.add(stmt);
-            return stmt;
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
-        }
+        stmt = new FBCallableStatement(this, sql, resultSetType, resultSetConcurrency);
+        
+        activeStatements.add(stmt);
+        
+        return stmt;
     }
 
 
@@ -938,212 +774,112 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized void setTypeMap(Map map) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-    
-    
-    /*
-     * Savepoint stuff.  
-     */
-    
-    private int savepointCounter = 0;
-    private LinkedList savepoints = new LinkedList();
-
-    private int getNextSavepointCounter() {
-        return savepointCounter++;
-    }
-    
-    /**
-     * Creates an unnamed savepoint in the current transaction and 
-     * returns the new <code>Savepoint</code> object that represents it.
-     *
-     * @return the new <code>Savepoint</code> object
-     * @exception SQLException if a database access error occurs
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     */
-    public synchronized FirebirdSavepoint setFirebirdSavepoint() throws SQLException {
-        FBSavepoint savepoint = new FBSavepoint(getNextSavepointCounter());
-        
-        setSavepoint(savepoint);
-        
-        savepoints.addLast(savepoint);
-        
-        return savepoint;
-    }
-    
-    /**
-     * Set the savepoint on the server.
-     * 
-     * @param savepoint savepoint to set.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    private void setSavepoint(FBSavepoint savepoint) throws SQLException {
-        if (getAutoCommit())
-            throw new SQLException("Connection.setSavepoint() method cannot " + 
-                    "be used in auto-commit mode.");
-
-        try {
-            txCoordinator.ensureTransaction();
-            
-            getGDSHelper().executeImmediate("SAVEPOINT " + savepoint.getServerSavepointId());
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
-        }
-    }
-
-    /**
-     * Creates a savepoint with the given name in the current transaction
-     * and returns the new <code>Savepoint</code> object that represents it.
-     *
-     * @param name a <code>String</code> containing the name of the savepoint
-     * @return the new <code>Savepoint</code> object
-     * @exception SQLException if a database access error occurs
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     */
-    public synchronized FirebirdSavepoint setFirebirdSavepoint(String name) throws SQLException {
-        FBSavepoint savepoint = new FBSavepoint(name);
-        
-        setSavepoint(savepoint);
-        
-        return savepoint;
-    }
-    
-    /**
-     * Undoes all changes made after the given <code>Savepoint</code> object
-     * was set. 
-     * <P>
-     * This method should be used only when auto-commit has been disabled.
-     *
-     * @param savepoint the <code>Savepoint</code> object to roll back to
-     * @exception SQLException if a database access error occurs,
-     *            the <code>Savepoint</code> object is no longer valid,
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     * @see #rollback
-     */
-    public synchronized void rollback(FirebirdSavepoint savepoint) throws SQLException {
-        
-        if (getAutoCommit())
-            throw new SQLException("Connection.setSavepoint() method cannot " + 
-                    "be used in auto-commit mode.");
-        
-        if (!(savepoint instanceof FBSavepoint))
-            throw new SQLException(
-                    "Specified savepoint was not obtained from this connection.");
-        
-        FBSavepoint fbSavepoint = (FBSavepoint)savepoint;
-        
-        if (!fbSavepoint.isValid())
-            throw new SQLException("Savepoint is no longer valid.");
-        
-        try {
-            getGDSHelper().executeImmediate(
-                    "ROLLBACK TO " + fbSavepoint.getServerSavepointId());
-        } catch (GDSException ex) {
-            throw new FBSQLException(ex);
-        }
-    }
-
-    /**
-     * Removes the given <code>Savepoint</code> object from the current 
-     * transaction. Any reference to the savepoint after it have been removed 
-     * will cause an <code>SQLException</code> to be thrown.
-     *
-     * @param savepoint the <code>Savepoint</code> object to be removed
-     * @exception SQLException if a database access error occurs or
-     *            the given <code>Savepoint</code> object is not a valid 
-     *            savepoint in the current transaction
-     */
-    public synchronized void releaseSavepoint(FirebirdSavepoint savepoint) throws SQLException {
-        
-        if (getAutoCommit())
-            throw new SQLException("Connection.setSavepoint() method cannot " + 
-                    "be used in auto-commit mode.");
-        
-        if (!(savepoint instanceof FBSavepoint))
-            throw new SQLException(
-                    "Specified savepoint was not obtained from this connection.");
-        
-        FBSavepoint fbSavepoint = (FBSavepoint)savepoint;
-        
-        if (!fbSavepoint.isValid())
-            throw new SQLException("Savepoint is no longer valid.");
-
-        try {
-            getGDSHelper().executeImmediate(
-                    "RELEASE SAVEPOINT " + fbSavepoint.getServerSavepointId() + " ONLY");
-        } catch (GDSException ex) {
-            throw new FBSQLException(ex);
-        }
-        
-        fbSavepoint.invalidate();
-        
-        savepoints.remove(fbSavepoint);
-    }
-
-    /**
-     * Invalidate all savepoints.
-     */
-    protected synchronized void invalidateSavepoints() {
-        Iterator iter = savepoints.iterator();
-        while(iter.hasNext())
-            ((FBSavepoint)iter.next()).invalidate();
-        
-        savepoints.clear();
-    }    
 
     //-------------------------------------------
     //Borrowed from javax.resource.cci.Connection
 
-    /**
-     * Returns a FBLocalTransaction instance that enables a component to 
-     * demarcate resource manager local transactions on this connection.
-     */
     public synchronized FBLocalTransaction getLocalTransaction() {
-        return localTransaction;
+        synchronized(mc) {
+            if (localTransaction == null) {
+                localTransaction = new FBLocalTransaction(mc, this);
+            }
+            return localTransaction;
+        }
     }
-
     /**
-     * This non-interface method is included so you can
+     * This non- interface method is included so you can
      * actually get a blob object to use to write new data
      * into a blob field without needing a preexisting blob
      * to modify.
-    */
-    public synchronized Blob createBlob() throws SQLException {
-        try {
-            return new FBBlob(getGDSHelper(), txCoordinator);
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
-        }
+    **/
+    public synchronized FirebirdBlob createBlob() throws SQLException {
+        
+        /** @todo check if this is correct code */
+        if (!getAutoCommit())
+            ensureInTransaction();
+
+        return new FBBlob(this);
     }
 
     //package methods
 
+    public boolean inTransaction() {
+        return mc.inTransaction();
+    }
+
+    //for DatabaseMetaData
+    String getDatabase() {
+        return mc.getDatabase();
+    }
+
+    String getUserName() {
+        return mc.getUserName();
+    }
+
+    public String getIscEncoding() {
+        return mc.getIscEncoding();
+    }
+
     /**
-     * Check if this connection is currently involved in a transaction
+     * The <code>ensureInTransaction</code> method starts a local transaction
+     * if a transaction is not associated with this connection.
+     *
+     * @return a <code>boolean</code> value, true if transaction was started.
      */
-    public boolean inTransaction() throws SQLException {
-        try {
-            return getGDSHelper().inTransaction();
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
+    public synchronized void ensureInTransaction() throws SQLException {
+        synchronized (mc) {
+            try {
+                if (inTransaction()) {
+                    autoTransaction = false;
+                    return;
+                }
+
+                //We have to start our own transaction
+                getLocalTransaction().begin();
+                autoTransaction = true;
+
+            } catch (ResourceException re) {
+                throw new FBSQLException(re);
+            }
         }
     }
-   
+
     /**
-     * Get the encoding that is being used for this connection.
+     * The <code>willEndTransaction</code> method determines if the current 
+     * transaction should be automatically ended when the current statement 
+     * executes.
+     * 
+     * for use in jca contexts, autocommit is always true, and autoTransaction 
+     * is true if the current transaction was started automatically.
+     * 
+     * Using jdbc transaction control, if autocommit is false, transactions are 
+     * started automatically but not ended automatically.
      *
-     * @return The name of the encoding used
+     * @return a <code>boolean</code> value
      */
-    public String getIscEncoding() throws SQLException {
-        try {
-            return getGDSHelper().getIscEncoding();
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
+    public synchronized boolean willEndTransaction() throws SQLException {
+        return getAutoCommit() && autoTransaction;
+    }
+
+    public synchronized void checkEndTransaction() throws SQLException {
+        checkEndTransaction(true);
+    }
+    
+    public synchronized void checkEndTransaction(boolean commit) throws SQLException {
+        if (willEndTransaction())
+        {
+            autoTransaction = false;
+            synchronized(mc) {
+                try {
+                    if (commit)
+                        getLocalTransaction().internalCommit();
+                    else
+                        getLocalTransaction().internalRollback();
+                } catch (ResourceException ge) {
+                    throw new FBSQLException(ge);
+                }
+            }
+
         }
     }
 
@@ -1165,47 +901,210 @@ public abstract class AbstractConnection implements FirebirdConnection {
       * @return instance of {@link SQLWarning} that is the first warning in 
       * a linked list of warnings.
       */
-     private SQLWarning getIscWarnings() throws SQLException {
-         try {
-             SQLWarning firstWarning = null;
-             SQLWarning lastWarning = null;
-             Iterator iter = getGDSHelper().getWarnings().iterator();
-             while (iter.hasNext()) {
-                 GDSException item = (GDSException)iter.next();
-                 
-                 FBSQLWarning warning = new FBSQLWarning(item);
-                 if (firstWarning == null) {
-                     firstWarning = warning;
-                     lastWarning = firstWarning;
-                 } else {
-                    lastWarning.setNextWarning(warning);
-                    lastWarning = warning;
-                 }
+     private SQLWarning getIscWarnings() {
+         SQLWarning firstWarning = null;
+         SQLWarning lastWarning = null;
+         Iterator iter = mc.getWarnings().iterator();
+         while (iter.hasNext()) {
+             GDSException item = (GDSException)iter.next();
+             
+             FBSQLWarning warning = new FBSQLWarning(item);
+             if (firstWarning == null) {
+                 firstWarning = warning;
+                 lastWarning = firstWarning;
+             } else {
+                lastWarning.setNextWarning(warning);
+                lastWarning = warning;
              }
-             return firstWarning;
-         } catch(GDSException ex) {
-             throw new FBSQLException(ex);
          }
+         return firstWarning;
      }
      
      /**
       * Clear warnings associated with this database connection.
       */
-     private void clearIscWarnings() throws SQLException {
-         try {
-             getGDSHelper().clearWarnings();
-         } catch(GDSException ex) {
-             throw new FBSQLException(ex);
-         }
+     private void clearIscWarnings() {
+         mc.clearWarnings();
      }
 	 
-    public GDSHelper getGDSHelper() throws GDSException {
+	 //******** Proxies of ManagedConnection methods for jdbc methods
+     
+    private void checkManagedConnection() throws GDSException {
         if (mc == null)
             throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_req_no_trans);
+    }
+	 
+    public isc_stmt_handle getAllocatedStatement() throws GDSException {
+        checkManagedConnection();    
+        return mc.getAllocatedStatement();
+    }
 
-        return mc.getGDSHelper();
+    public void executeStatement(isc_stmt_handle stmt, boolean sendOutSqlda) throws GDSException {
+        checkManagedConnection();
+        if (stmt == null || !stmt.isValid())
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
+        mc.executeStatement(stmt,sendOutSqlda);
+    }
+	 	 
+    public void closeStatement(isc_stmt_handle stmt, boolean deallocate) throws GDSException {
+        checkManagedConnection();
+        if (stmt == null || !stmt.isValid())
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
+        mc.closeStatement(stmt,deallocate);
+    }	 
+
+    public void prepareSQL(isc_stmt_handle stmt, String sql, boolean describeBind) throws GDSException, SQLException {
+        checkManagedConnection();
+        mc.prepareSQL(stmt, sql, describeBind);
+    }
+	 
+    public void registerStatement(AbstractStatement fbStatement) {
+        mc.registerStatement(fbStatement.fixedStmt);
+    }
+	 
+    public void fetch(isc_stmt_handle stmt, int fetchSize) throws GDSException {
+        checkManagedConnection();
+        if (stmt == null || !stmt.isValid())
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
+        mc.fetch(stmt, fetchSize);
     }
     
+    public void setCursorName(isc_stmt_handle stmt, String cursorName) throws GDSException {
+        checkManagedConnection();
+        if (stmt == null || !stmt.isValid())
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
+        mc.setCursorName(stmt, cursorName);
+    }
+
+    public void getSqlCounts(isc_stmt_handle stmt) throws GDSException {
+        checkManagedConnection();
+        if (stmt == null || !stmt.isValid())
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
+        mc.getSqlCounts(stmt);
+    }
+
+    public String getDatabaseProductName() {
+        return mc.getDatabaseProductName();
+    }
+
+    public String getDatabaseProductVersion() {
+        return mc.getDatabaseProductVersion();
+    }
+
+    public int getDatabaseProductMajorVersion() {
+        return mc.getDatabaseProductMajorVersion();
+    }
+
+    public int getDatabaseProductMinorVersion() {
+        return mc.getDatabaseProductMinorVersion();
+    }
+
+    public Integer getBlobBufferLength() {
+        /**@todo add check if mc is not null */
+        return mc.getBlobBufferLength();
+    }
+	 
+    public isc_blob_handle openBlobHandle(long blob_id, boolean segmented) throws GDSException {
+        checkManagedConnection();
+        return mc.openBlobHandle(blob_id, segmented);
+    }	 
+	 
+    public byte[] getBlobSegment(isc_blob_handle blob, int len) throws GDSException {
+        checkManagedConnection();
+        return mc.getBlobSegment(blob,len);
+    }
+	 
+    public void closeBlob(isc_blob_handle blob) throws GDSException {
+        checkManagedConnection();
+        mc.closeBlob(blob);
+    }
+	 
+    public isc_blob_handle createBlobHandle(boolean segmented) throws GDSException {
+        checkManagedConnection();
+        return mc.createBlobHandle(segmented);
+    }
+	 
+    public void putBlobSegment(isc_blob_handle blob, byte[] buf) throws GDSException {
+        checkManagedConnection();
+        mc.putBlobSegment(blob, buf);
+    }
+
+    public String getJavaEncoding() {
+        return getDatabaseParameterBuffer().getArgumentAsString(
+            DatabaseParameterBuffer.local_encoding);
+    }
+    
+    public String getMappingPath() {
+        return getDatabaseParameterBuffer().getArgumentAsString(
+            DatabaseParameterBuffer.mapping_path);
+    }
+	 
+    private AbstractPreparedStatement getStatement(String sql,HashMap statements) 
+	 throws SQLException {
+        AbstractPreparedStatement s = (AbstractPreparedStatement)statements.get(sql);
+        if (s == null) {
+            s = (AbstractPreparedStatement)prepareStatement(sql);
+            statements.put(sql, s);
+        }
+        return s;
+    }
+	 
+    public synchronized ResultSet doQuery(String sql, List params,HashMap statements) 
+	 throws SQLException
+    {
+        /*
+        
+        // Commented out by R.Rokytskyy on 29.05.2004 
+        // during simplification of the metadata query handling.
+        // Remove after next release.
+         
+        boolean ourTransaction = false;
+        FBLocalTransaction trans = null;
+        if (!inTransaction())
+        {
+            trans = getLocalTransaction();
+				 
+            try 
+            {
+                trans.internalBegin();
+                ourTransaction = true;
+            }
+            catch (ResourceException ge)
+            {
+                throw new FBSQLException(ge);
+            }
+        }
+        */
+        AbstractPreparedStatement s = getStatement(sql,statements);
+        for (int i = 0; i < params.size(); i++)
+        {
+            s.setStringForced(i + 1, (String)params.get(i));
+        }
+        ResultSet rs = null;
+        try
+        {
+            rs = s.executeMetaDataQuery();
+            // rs = ((AbstractStatement)s).getCachedResultSet(true); //trim strings
+        }
+        finally
+        {
+            /*
+            if (ourTransaction) 
+            {
+                try 
+                {
+                    trans.internalCommit();
+                }
+                catch (ResourceException ge) 
+                {
+                    throw new FBSQLException(ge);
+                }
+            }
+            */
+        }
+        return rs;
+    }
+
     protected void finalize() throws Throwable {
         close();
     }

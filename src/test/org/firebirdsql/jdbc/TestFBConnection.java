@@ -21,8 +21,6 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.TransactionParameterBuffer;
 
 /**
  * Test cases for FirebirdConnection interface.
@@ -113,22 +111,6 @@ public class TestFBConnection extends FBTestBase {
             Connection conB = getConnectionViaDriverManager();
             try {
                 conB.setAutoCommit(false);
-
-                /*
-                
-                // This is correct way to set transaction parameters
-                // However, we use deprecated methods to check the
-                // backward compatibility
-                
-                TransactionParameterBuffer tpb = ((FirebirdConnection)conB).createTransactionParameterBuffer();
-                tpb.addArgument(TransactionParameterBuffer.READ_COMMITTED);
-                tpb.addArgument(TransactionParameterBuffer.REC_VERSION);
-                tpb.addArgument(TransactionParameterBuffer.WRITE);
-                tpb.addArgument(TransactionParameterBuffer.NOWAIT);
-                
-                ((FirebirdConnection)conB).setTransactionParameters(tpb);
-                */
-                
                 ((FirebirdConnection)conB).setTransactionParameters(
                         Connection.TRANSACTION_READ_COMMITTED,
                         new int[] {
@@ -137,7 +119,6 @@ public class TestFBConnection extends FBTestBase {
                             FirebirdConnection.TPB_WRITE,
                             FirebirdConnection.TPB_NOWAIT
                         });
-                conB.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
                 
                 Statement stmtA = conA.createStatement();
                 Statement stmtB = conB.createStatement();
@@ -163,187 +144,4 @@ public class TestFBConnection extends FBTestBase {
     }
     
 
-    public void testStatementCompletion() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
-        try {
-            connection.setAutoCommit(false);
-            Statement stmt = connection.createStatement();
-            try {
-                stmt.executeQuery("SELECT * FROM rdb$database");
-                connection.rollback();
-                connection.setAutoCommit(true);
-            } finally {
-                stmt.close();
-            }
-            
-            stmt = connection.createStatement();
-            try {
-                stmt.executeQuery("SELECT * FROM rdb$database");
-                stmt.executeQuery("SELECT * FROM rdb$database");
-            } finally {
-                stmt.close();
-            }
-        } finally {
-            connection.close();
-        }
-    }
-    
-    public void testExecuteStatementTwice() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
-        
-        Statement ddlStmt = connection.createStatement();
-        try {
-            try {
-                ddlStmt.execute("DROP TABLE test_exec_twice");
-            } catch(SQLException ex) {
-                // ignore
-            }
-            
-            ddlStmt.execute("CREATE TABLE test_exec_twice(col1 VARCHAR(100))");
-        } finally {
-            ddlStmt.close();
-        }
-        
-        try {
-            connection.setAutoCommit(false);
-            connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-            
-            String select1 = "SELECT * FROM test_exec_twice";
-            String select2 = select1 + " WHERE col1 > ? ORDER BY col1";
-
-            PreparedStatement pstmt = connection.prepareStatement(select2);
-
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery(select1);  // throws Exception on the 2nd call
-            rs.close();
-
-            pstmt.setString(1, "ABC");
-            rs = pstmt.executeQuery();
-            for (int i = 0; i < 10 && rs.next(); i++)
-                ;   // do something
-            rs.close();
-
-            // on the following 2nd call the exception gets thrown
-            rs = stmt.executeQuery(select1);  // throws Exception on the 2nd call
-            rs.close();
-
-            pstmt.setString(1, "ABC");
-            rs = pstmt.executeQuery();
-            for (int i = 0; i < 10 && rs.next(); i++)
-                ;   // do something
-            rs.close();
-
-            
-        } finally {
-            connection.commit();
-            connection.close();
-        }
-    }
-    
-    public void testLockTable() throws Exception {
-        FirebirdConnection connection = 
-            (FirebirdConnection)getConnectionViaDriverManager();
-        
-        try {
-            Statement stmt = connection.createStatement();
-            try {
-                stmt.execute("CREATE TABLE test_lock(col1 INTEGER)");
-            } catch(SQLException ex) {
-                // ignore
-            }
-        } finally {
-            connection.close();
-        }
-
-        connection = (FirebirdConnection)getConnectionViaDriverManager();
-        try {
-            
-            Statement stmt = connection.createStatement();
-            try {
-            
-                TransactionParameterBuffer tpb = 
-                    connection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
-                
-                tpb.removeArgument(TransactionParameterBuffer.WAIT);
-                tpb.addArgument(TransactionParameterBuffer.NOWAIT);
-                
-                connection.setTransactionParameters(Connection.TRANSACTION_READ_COMMITTED, tpb);
-                connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-                
-                connection.setAutoCommit(false);
-                
-                FirebirdConnection anotherConnection = 
-                    (FirebirdConnection)getConnectionViaDriverManager();
-                anotherConnection.setAutoCommit(false);
-                
-                try {
-                    TransactionParameterBuffer anotherTpb = 
-                        anotherConnection.createTransactionParameterBuffer();
-                    
-                    anotherTpb.addArgument(TransactionParameterBuffer.CONSISTENCY);
-                    anotherTpb.addArgument(TransactionParameterBuffer.WRITE);
-                    anotherTpb.addArgument(TransactionParameterBuffer.NOWAIT);
-                    
-                    anotherTpb.addArgument(TransactionParameterBuffer.PROTECTED);
-                    anotherTpb.addArgument(TransactionParameterBuffer.LOCK_WRITE, "TEST_LOCK");
-                    
-                    anotherConnection.setTransactionParameters(anotherTpb);
-                    
-                    Statement anotherStmt = anotherConnection.createStatement();
-                    try {
-                        anotherStmt.execute("INSERT INTO test_lock VALUES(1)");
-                    } finally {
-                        anotherStmt.close();
-                    }
-                    
-                    try {
-                        stmt.execute("INSERT INTO test_lock VALUES(2)");
-                        fail("Should throw an error because of lock conflict.");
-                    } catch(SQLException ex) {
-                        assertEquals(ISCConstants.isc_lock_conflict, ex.getErrorCode());
-                    }
-                    
-                } finally {
-                    anotherConnection.close();
-                }
-            
-            } finally {
-                stmt.close();
-            }
-        } finally {
-            connection.close();
-        }
-    }
-    
-    public void testMetaDataTransaction() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
-        try {
-            connection.setAutoCommit(true);
-            DatabaseMetaData metaData = connection.getMetaData();
-            ResultSet rs = metaData.getTables(null, null, "RDB$DATABASE", null);
-            rs.close();
-        } finally {
-            connection.close();
-        }
-    }
-    
-    public void testTransactionCoordinatorAutoCommitChange() throws Exception {
-        
-        Connection connection = getConnectionViaDriverManager();
-        try {
-            
-            PreparedStatement ps = connection.prepareStatement(
-                "SELECT * FROM rdb$database");
-            
-            try {
-                connection.setAutoCommit(false);
-            } finally {
-                ps.close();
-            }
-            
-        } finally {
-            connection.close();
-        }
-        
-    }
 }

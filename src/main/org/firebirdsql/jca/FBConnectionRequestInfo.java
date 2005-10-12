@@ -16,107 +16,133 @@
  *
  * All rights reserved.
  */
+
+
 package org.firebirdsql.jca;
+
+
+
 
 import java.io.Serializable;
 import javax.resource.cci.ConnectionSpec;
 import javax.resource.spi.ConnectionRequestInfo;
 
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
+
+
 
 /**
- * The class <code>FBConnectionRequestInfo</code> holds a clumplet that is
- * used to store and transfer connection-specific information such as user,
- * password, and other dpb information..
- * 
+ * The class <code>FBConnectionRequestInfo</code> holds a clumplet that is used
+ * to store and transfer connection-specific information such as user, password,
+ * and other dpb information..
+ *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @version 2.0
+ * @version 1.0
  */
 
-public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension,
-        ConnectionRequestInfo, ConnectionSpec, Serializable {
+public class FBConnectionRequestInfo 
+    implements ConnectionRequestInfo, ConnectionSpec, Serializable
+{
+    public static FBConnectionRequestInfo newInstance(GDS gds)
+        {
+        return new FBConnectionRequestInfo(gds.newDatabaseParameterBuffer());
+        }
 
-    private DatabaseParameterBuffer dpb;
-    
-    public FBConnectionRequestInfo(DatabaseParameterBuffer dpb) {
-        this.dpb = dpb;
-    }
-    
-    /**
-     * Perform a deep copy of this object, returning the copied instance.
-     * 
-     * @return A deep-copied copy of this FBConnectionRequestInfo object
-     */
-    public DatabaseParameterBuffer deepCopy() {
-        return new FBConnectionRequestInfo(dpb.deepCopy());
+    public FBConnectionRequestInfo deepCopy()
+        {
+        return new FBConnectionRequestInfo(c.deepCopy());
+        }
+
+
+
+   private FBConnectionRequestInfo(DatabaseParameterBuffer src) {
+        c = src.deepCopy();
     }
 
-    /**
-     * Get the underlying Database Parameter Buffer for this object.
-     * 
-     * @return The underlying dpb for this object
-     */
     public DatabaseParameterBuffer getDpb() {
-        return dpb;
+        return c;
     }
 
-
-    public void addArgument(int argumentType, byte[] content) {
-        dpb.addArgument(argumentType, content);
+    public void setProperty(int type, String content) {
+        c.addArgument(type, content);
     }
 
-
-    public void addArgument(int argumentType, int value) {
-        dpb.addArgument(argumentType, value);
+    public void setProperty(int type) {
+        c.addArgument(type);
     }
 
-
-    public void addArgument(int argumentType, String value) {
-        dpb.addArgument(argumentType, value);
+    public void setProperty(int type, int content) {
+        c.addArgument(type, content);
     }
 
-
-    public void addArgument(int argumentType) {
-        dpb.addArgument(argumentType);
+    public void setProperty(int type, byte[] content) {
+        c.addArgument(type, content);
     }
 
-
-    public int getArgumentAsInt(int argumentType) {
-        return dpb.getArgumentAsInt(argumentType);
+    public String getStringProperty(int type)
+    {
+        return c.getArgumentAsString(type);
     }
 
-
-    public String getArgumentAsString(int argumentType) {
-        return dpb.getArgumentAsString(argumentType);
+    public int getIntProperty(int type) {
+        return c.getArgumentAsInt(type);
     }
 
-
-    public boolean hasArgument(int argumentType) {
-        return dpb.hasArgument(argumentType);
+    public boolean hasArgument(int type) {
+        return c.hasArgument(type);
     }
 
-
-    public void removeArgument(int argumentType) {
-        dpb.removeArgument(argumentType);
+    public void setUser(String user) {
+        setProperty(ISCConstants.isc_dpb_user_name, user);
     }
 
-    public DatabaseParameterBuffer removeExtensionParams() {
-        
-        if (dpb instanceof DatabaseParameterBufferExtension)
-            return ((DatabaseParameterBufferExtension)dpb).removeExtensionParams();
-        else
-            return dpb;
+    public String getUser()
+    {
+        return getStringProperty(ISCConstants.isc_dpb_user_name);
     }
 
-    public void setUserName(String userName) {
-        removeArgument(DatabaseParameterBufferExtension.USER_NAME);
-        addArgument(DatabaseParameterBufferExtension.USER_NAME, userName);
+    public void setPassword(String password) {
+        setProperty(ISCConstants.isc_dpb_password, password);
+    }
+
+    public String getPassword()
+    {
+        return getStringProperty(ISCConstants.isc_dpb_password);
     }
     
-    public void setPassword(String password) {
-        removeArgument(DatabaseParameterBufferExtension.PASSWORD);
-        addArgument(DatabaseParameterBufferExtension.PASSWORD, password);
+    /**
+     Checks whether this instance is equal to another. Since connectionRequestInfo is defined
+     specific to a resource adapter, the resource adapter is required to implement this method. The
+     conditions for equality are specific to the resource adapter.
+     Overrides:
+         equals in class java.lang.Object
+     Returns:
+         True if the two instances are equal.
+    **/
+
+
+    public boolean equals(Object other) {
+        if ((other == null) || !(other instanceof FBConnectionRequestInfo)) {
+            return false;
+        }
+        DatabaseParameterBuffer otherc = ((FBConnectionRequestInfo)other).c;
+        return c.equals(otherc);
     }
-}
+
+    /**
+     Returns the hashCode of the ConnectionRequestInfo.
+     Overrides:
+         hashCode in class java.lang.Object
+     Returns:
+         hash code os this instance
+    **/
+
+    public int hashCode() {
+       return c.hashCode();
+    }
+
+
+    private final DatabaseParameterBuffer c;
+    }

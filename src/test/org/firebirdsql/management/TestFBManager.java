@@ -33,6 +33,10 @@ import junit.framework.TestSuite;
  */
 public class TestFBManager extends FBTestBase {
 
+   // private static String dbPath = System.getProperty("test.db.dir");
+
+   // public static String DBNAME = dbPath + "/fbmtest.gdb";
+
     public TestFBManager(String name) {
         super(name);
     }
@@ -44,16 +48,16 @@ public class TestFBManager extends FBTestBase {
 
     public void testStart() throws Exception {
         FBManager m = createFBManager();
-        m.setServer(DB_SERVER_URL);
-        m.setPort(DB_SERVER_PORT);
+        m.setServer("localhost");
+        m.setPort(3050);
         m.start();
         m.stop();
     }
 
     public void testCreateDrop() throws Exception {
         FBManager m = createFBManager();
-        m.setServer(DB_SERVER_URL);
-        m.setPort(DB_SERVER_PORT);
+        m.setServer("localhost");
+        m.setPort(3050);
         m.start();
         // check create
         m.createDatabase(getdbpath(DB_NAME + ".fdb"), DB_USER, DB_PASSWORD);

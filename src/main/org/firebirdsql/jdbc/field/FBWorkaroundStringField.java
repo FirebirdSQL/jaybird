@@ -24,8 +24,9 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.jdbc.AbstractConnection;
 import org.firebirdsql.jdbc.FBConnectionHelper;
+import org.firebirdsql.jdbc.FBResultSet;
 
 
 /**
@@ -50,21 +51,21 @@ public class FBWorkaroundStringField extends FBStringField {
 
     private int possibleCharLength;
     private int bytesPerCharacter;
-    private boolean trimString;
     
     /**
      * Create instance of this class for the specified field and result set.
      * 
      * @param field instance of {@link XSQLVAR} containing field value.
-     * @param dataProvider data provider for this field
+     * @param rs result set to which this field belongs to.
+     * @param numCol column number.
      * @param requiredType required type.
      * 
      * @throws SQLException if something went wrong.
      */
-    public FBWorkaroundStringField(XSQLVAR field, FieldDataProvider dataProvider,
+    public FBWorkaroundStringField(XSQLVAR field, FBResultSet rs, int numCol,
             int requiredType) throws SQLException 
     {
-        super(field, dataProvider, requiredType);
+        super(field, rs, numCol, requiredType);
         
         bytesPerCharacter = 1;
         possibleCharLength = field.sqllen / bytesPerCharacter;
@@ -74,15 +75,11 @@ public class FBWorkaroundStringField extends FBStringField {
      * Set connection for this field. This method estimates character
      * length and bytes per chracter.
      */
-    public void setConnection(GDSHelper gdsHelper) {
-        super.setConnection(gdsHelper);
+    public void setConnection(AbstractConnection c) {
+        super.setConnection(c);
 
         bytesPerCharacter = FBConnectionHelper.getIscEncodingSize(iscEncoding);
         possibleCharLength = field.sqllen / bytesPerCharacter;
-    }
-    
-    public void setTrimString(boolean trimString) {
-        this.trimString = trimString;
     }
 
     public void setString(String value) throws SQLException {
@@ -91,8 +88,8 @@ public class FBWorkaroundStringField extends FBStringField {
         if (value == STRING_NULL_VALUE)
             return;
         
-        if (getFieldData().length > field.sqllen && !isSystemTable(field.relname))
-            throw new DataTruncation(-1, true, false, getFieldData().length, field.sqllen);
+        if (field.sqldata.length > field.sqllen && !isSystemTable(field.relname))
+            throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);
     }    
     
     /**
@@ -108,7 +105,7 @@ public class FBWorkaroundStringField extends FBStringField {
             setNull();
             return;
         }
-        setFieldData(field.encodeString(value,javaEncoding, mappingPath));
+        field.sqldata = field.encodeString(value,javaEncoding, mappingPath);
     }   
     
     /**
@@ -129,9 +126,6 @@ public class FBWorkaroundStringField extends FBStringField {
         // fix incorrect padding done by the database for multibyte charsets
         if ((field.sqllen % bytesPerCharacter) == 0 && result.length() > possibleCharLength)
             result = result.substring(0, possibleCharLength);
-        
-        if (trimString)
-            result = result.trim();
         
         return result;
     }

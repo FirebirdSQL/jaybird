@@ -19,16 +19,21 @@
  
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.jca.FBConnectionRequestInfo;
+import org.firebirdsql.jca.FBTpb;
+import org.firebirdsql.jca.FBTpbMapper;
+import org.firebirdsql.jca.FBResourceException;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.GDS;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.util.*;
-
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.jca.FBConnectionRequestInfo;
-import org.firebirdsql.jca.FBResourceException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Properties;
+import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * This class maps the extended JDBC properties to the
@@ -41,12 +46,6 @@ import org.firebirdsql.jca.FBResourceException;
  */
 public class FBConnectionHelper {
     
-    private static final int TYPE_UNKNOWN = 0;
-    private static final int TYPE_BOOLEAN = 1;
-    private static final int TYPE_BYTE = 2;
-    private static final int TYPE_INT = 3;
-    private static final int TYPE_STRING = 4;
-    
     public static final String TRANSACTION_SERIALIZABLE = "TRANSACTION_SERIALIZABLE";
     public static final String TRANSACTION_REPEATABLE_READ = "TRANSACTION_REPEATABLE_READ";
     public static final String TRANSACTION_READ_COMMITTED = "TRANSACTION_READ_COMMITTED";
@@ -55,26 +54,19 @@ public class FBConnectionHelper {
     public static final String DPB_PREFIX = "isc_dpb_";
     public static final String TPB_PREFIX = "isc_tpb_";
 
-    public static final String TPB_MAPPING_PROPERTY = "tpb_mapping";
-    
     public static final String ISC_ENCODINGS_RESOURCE =
         "isc_encodings.properties";
         
     public static final String ISC_ENCODING_SIZE_RESOURCE = 
         "isc_encoding_size.properties";
-    
-    public static final String ISC_DPB_TYPES_RESOURCE = 
-        "isc_dpb_types.properties";
 
     private static final HashMap dpbTypes = new HashMap();
-    private static final HashMap dpbParameterTypes = new HashMap();
-    
     private static final HashMap tpbTypes = new HashMap();
 
     private static final HashMap iscEncodings = new HashMap();
     private static final HashMap javaEncodings = new HashMap();
     private static final HashMap iscEncodingSizes = new HashMap();
-    
+
     private static boolean encodingsLoaded = false;
     private static boolean encodingSizesLoaded = false;
 
@@ -113,9 +105,62 @@ public class FBConnectionHelper {
             } else
                 continue;
         }
-        
-        loadDpbParameterTypes();
 
+    }
+    
+    public static FBConnectionRequestInfo getDefaultCri(GDS gds) {
+        FBConnectionRequestInfo result = FBConnectionRequestInfo.newInstance(gds);
+        return result;
+    }
+
+    /**
+     * Get the instance of {@link FBConnectionRequestInfo} containing all
+     * relevant parameters from the <code>info</code> properties.
+     *
+     * The FBConnectionRequestInfo instance returned will be 'bound' to the
+     * same GDS implementation as baseCri.
+     *
+     * @param info instance of {@link Properties} containing connection
+     * parameters.
+     *
+     * @param baseCri connection request info used as the base for a newly
+     * created one. All types are copied from the <code>baseCri</code> into
+     * the result, but these properties can be overriden by the <code>info</code>
+     * properties. Can be <code>null</code>.
+     *
+     * @return instance of {@link FBConnectionRequestInfo} containing all
+     * relevant connection parameters.
+     */
+    public static FBConnectionRequestInfo getCri(Properties info, FBConnectionRequestInfo baseCri) {
+        final FBConnectionRequestInfo cri = baseCri.deepCopy();
+
+        copyPropertiesIntoCri(info, cri);
+
+        return cri;
+    }
+
+    /**
+     * Get the instance of {@link FBConnectionRequestInfo} containing all
+     * relevant parameters from the <code>info</code> properties.
+     *
+     * The FBConnectionRequestInfo instance returned will be 'bound' to the
+     * same GDS implementation supplied in the gdsToUse parameter.
+     *
+     * @param info instance of {@link Properties} containing connection
+     * parameters.
+     *
+     * @param gdsToUse The GDS implementation to which the returned
+     * {@link FBConnectionRequestInfo} will be bound.
+     *
+     * @return instance of {@link FBConnectionRequestInfo} containing all
+     * relevant connection parameters.
+     */
+    public static FBConnectionRequestInfo getCri(Properties info, GDS gdsToUse) {
+        final FBConnectionRequestInfo cri = getDefaultCri(gdsToUse).deepCopy();
+
+        copyPropertiesIntoCri(info, cri);
+
+        return cri;
     }
 
     /**
@@ -140,73 +185,66 @@ public class FBConnectionHelper {
         return Collections.unmodifiableMap(dpbTypes);
     }
     
-    public static Object parseDpbString(String name, Object value) {
-        
-        // for the sake of unification we allow passing boolean, byte and integer
-        // types too, we loose some cycles here, but that is called relatively
-        // rarely, a tradeoff between code maintainability and CPU cycles.
-        if (value instanceof Boolean)
-            return value;
-        else
-        if (value instanceof Byte)
-            return value;
-        else
-        if (value instanceof Integer)
-            return value;
-        
-        // if passed value is not string, throw an exception
-        if (value != null && !(value instanceof String))
-            throw new ClassCastException(value.getClass().getName());
-        
-        Integer type = (Integer)dpbParameterTypes.get(name);
-        
-        if (type == null)
-            type = new Integer(TYPE_UNKNOWN);
-        
-        switch(type.intValue()) {
-            case TYPE_BOOLEAN : 
-                return "".equals(value) ? Boolean.TRUE : new Boolean((String)value);
-            
-            case TYPE_BYTE : 
-                return new Byte((String)value);
-                
-            case TYPE_INT :
-                return new Integer((String)value);
-                
-            case TYPE_STRING : 
-                return value;
-                
-            case TYPE_UNKNOWN :
-            default :
-                
-                // set the value of the DPB by probing to convert string
-                // into int or byte value, this method gives very good result 
-                // for guessing the method to call from the actual value;
-                // null values are assumed to be booleans.
-                
-                if (value == null)
-                    return Boolean.TRUE;
-            
-                try {
+    /**
+     * Copy the properties supplied in the 'info' parameter into the FBConnectionRequestInfo
+     * instance supplied in the 'cri' parameter.
+     */
+    private static void copyPropertiesIntoCri(Properties info, FBConnectionRequestInfo cri) {
+        // process all set keys
+        Iterator keys = info.keySet().iterator();
+        while(keys.hasNext()) {
+            String key = (String)keys.next();
+            String value = info.getProperty(key);
 
-                    // try to deal with a value as a byte
-                    int intValue = Integer.parseInt((String)value);
+            Integer type = (Integer)dpbTypes.get(key);
 
-                    if (intValue < 256)
-                        return new Byte((byte) intValue);
-                    else
-                        return new Integer(intValue);
+            // if the type is unknown, continue
+            if (type == null) continue;
 
-                } catch (NumberFormatException nfex) {
+            // set the value of the DPB
+            try {
 
-                    // ok, that's not a byte, then set it as string
-                    if ("".equals(value))
-                        return Boolean.TRUE;
-                    else
-                        return value;
-                }
+                // try to deal with a value as a byte
+                byte byteValue = Byte.parseByte(value);
+                cri.setProperty(type.intValue(), new byte[] {byteValue});
+
+            } catch(NumberFormatException nfex) {
+
+                // ok, that's not a byte, then set it as string
+                if ("".equals(value))
+                    cri.setProperty(type.intValue());
+                else
+                    cri.setProperty(type.intValue(), value);
+            }
         }
     }
+
+    /**
+     * Get the transaction parameter buffer using the information supplied
+     * with connection.
+     *
+     * @param info instance of {@link Properties} containing the connection
+     * parameters.
+     *
+     * @return a TPB containing all relevant parameters extracted from
+     * <code>info</code>
+     */
+    public static FBTpb getTpb(Properties info) {
+        FBTpb tpb = new FBTpb(FBTpbMapper.DEFAULT_MAPPER);
+
+        Iterator keys = info.keySet().iterator();
+        while(keys.hasNext()) {
+            String key = (String)keys.next();
+            Integer type = (Integer)tpbTypes.get(key);
+
+            if (type == null) continue;
+
+            tpb.add(type);
+        }
+
+        return tpb;
+    }
+    
     /**
      * This method extracts TPB mapping information from the connection 
      * parameters. Two formats are supported:
@@ -226,28 +264,34 @@ public class FBConnectionHelper {
      * 
      * @throws FBResourceException if specified mapping is incorrect.
      */
-    public static void processTpbMapping(GDS gds,
-            FirebirdConnectionProperties connectionProperties, Properties info)
-            throws FBResourceException {
+    public static FBTpbMapper getTpbMapper(Properties info) throws FBResourceException {
+        String tpbMapping = (String)info.getProperty(FBDriver.TPB_MAPPING);
         
-        if (info.containsKey(TRANSACTION_SERIALIZABLE))
-            connectionProperties.setTransactionParameters(
-                    Connection.TRANSACTION_SERIALIZABLE, 
-                    FBTpbMapper.processMapping(gds, 
-                            info.getProperty(TRANSACTION_SERIALIZABLE)));
+        FBTpbMapper tpbMapper = null;
+        
+        if (tpbMapping != null) 
+            tpbMapper = new FBTpbMapper(tpbMapping, 
+                FBConnectionHelper.class.getClassLoader());
+        else {
+            HashMap mapping = new HashMap();
             
-        if (info.containsKey(TRANSACTION_REPEATABLE_READ))
-            connectionProperties.setTransactionParameters(
-                    Connection.TRANSACTION_REPEATABLE_READ, 
-                    FBTpbMapper.processMapping(gds, 
-                            info.getProperty(TRANSACTION_REPEATABLE_READ)));
+            if (info.containsKey(TRANSACTION_SERIALIZABLE))
+                mapping.put(TRANSACTION_SERIALIZABLE, 
+                    info.get(TRANSACTION_SERIALIZABLE));
                 
-        if (info.containsKey(TRANSACTION_READ_COMMITTED))
-            connectionProperties.setTransactionParameters(
-                    Connection.TRANSACTION_READ_COMMITTED, 
-                    FBTpbMapper.processMapping(gds, 
-                            info.getProperty(TRANSACTION_READ_COMMITTED)));
-                
+            if (info.containsKey(TRANSACTION_REPEATABLE_READ))
+                mapping.put(TRANSACTION_REPEATABLE_READ, 
+                    info.get(TRANSACTION_REPEATABLE_READ));
+                    
+            if (info.containsKey(TRANSACTION_READ_COMMITTED))
+                mapping.put(TRANSACTION_READ_COMMITTED,
+                    info.get(TRANSACTION_READ_COMMITTED));
+                    
+            if (mapping.size() > 0)
+                tpbMapper = new FBTpbMapper(mapping);
+        }
+        
+        return tpbMapper;
     }
     
     /**
@@ -268,18 +312,34 @@ public class FBConnectionHelper {
      * Load mapping between Java and InterBase encodings. This method loads the
      * mapping using the classloader that loaded this class.
      */
-    private synchronized static void loadEncodings() {
-        
-        if (encodingsLoaded)
-            return;
-        
-        Properties props;
+    private static void loadEncodings() {
+        ClassLoader cl = FBConnectionHelper.class.getClassLoader();
+
+        InputStream in = null;
+
+        // get the stream from the classloader or system classloader
+        if (cl == null)
+            in = ClassLoader.getSystemResourceAsStream(ISC_ENCODINGS_RESOURCE);
+        else
+            in = cl.getResourceAsStream(ISC_ENCODINGS_RESOURCE);
+
+        if (in == null) return;
+
+        // load properties
+        Properties props = new Properties();
         try {
-            props = loadProperties(ISC_ENCODINGS_RESOURCE);
+            props.load(in);
         } catch(IOException ioex) {
             ioex.printStackTrace();
             return;
-        } 
+        } finally {
+            try {
+                in.close();
+            } catch(IOException ex) {
+                ex.printStackTrace();
+                // do nothing here
+            }
+        }
 
         // fill the direct and inversed mappings
         iscEncodings.putAll(props);
@@ -298,17 +358,33 @@ public class FBConnectionHelper {
      * Load mapping between Java and InterBase encodings. This method loads the
      * mapping using the classloader that loaded this class.
      */
-    private synchronized static void loadEncodingSizes() {
-        
-        if (encodingSizesLoaded)
-            return;
-        
-        Properties props;
+    private static void loadEncodingSizes() {
+        ClassLoader cl = FBConnectionHelper.class.getClassLoader();
+
+        InputStream in = null;
+
+        // get the stream from the classloader or system classloader
+        if (cl == null)
+            in = ClassLoader.getSystemResourceAsStream(ISC_ENCODING_SIZE_RESOURCE);
+        else
+            in = cl.getResourceAsStream(ISC_ENCODING_SIZE_RESOURCE);
+
+        if (in == null) return;
+
+        // load properties
+        Properties props = new Properties();
         try {
-            props = loadProperties(ISC_ENCODING_SIZE_RESOURCE);
-        } catch(IOException ex) {
-            ex.printStackTrace();
+            props.load(in);
+        } catch(IOException ioex) {
+            ioex.printStackTrace();
             return;
+        } finally {
+            try {
+                in.close();
+            } catch(IOException ex) {
+                ex.printStackTrace();
+                // do nothing here
+            }
         }
 
         Iterator iterator = props.keySet().iterator();
@@ -319,80 +395,6 @@ public class FBConnectionHelper {
         }
 
         encodingSizesLoaded = true;
-    }
-    
-    /**
-     * Load mapping between DPB key and their parameter types.
-     */
-    private static void loadDpbParameterTypes() {
-        Properties props;
-        try {
-            props = loadProperties(ISC_DPB_TYPES_RESOURCE);
-        } catch(IOException ex) {
-            ex.printStackTrace();
-            return;
-        }
-        
-        for (Iterator iter = props.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            
-            String key = (String)entry.getKey();
-            String shortKey = key.substring(DPB_PREFIX.length());
-            String value = (String)entry.getValue();
-            
-            if ("boolean".equals(value)) {
-                dpbParameterTypes.put(key, new Integer(TYPE_BOOLEAN));
-                dpbParameterTypes.put(shortKey, new Integer(TYPE_BOOLEAN));
-            } else
-            if ("byte".equals(value)) {
-                dpbParameterTypes.put(key, new Integer(TYPE_BYTE));
-                dpbParameterTypes.put(shortKey, new Integer(TYPE_BYTE));
-            } else
-            if ("int".equals(value)) {
-                dpbParameterTypes.put(key, new Integer(TYPE_INT));
-                dpbParameterTypes.put(shortKey, new Integer(TYPE_INT));
-            } else
-            if ("string".equals(value)) {
-                dpbParameterTypes.put(key, new Integer(TYPE_STRING));
-                dpbParameterTypes.put(shortKey, new Integer(TYPE_STRING));
-            } else
-                continue;
-        }
-    }
-    
-    /**
-     * Load properties from the specified resource. This method uses the same
-     * class loader that loaded this class.
-     * 
-     * @param resource path to the resource relative to the root of the 
-     * classloader.
-     * 
-     * @return instance of {@link Properties} containing loaded resources or
-     * <code>null</code> if resource was not found.
-     * 
-     * @throws IOException if I/O error occured.
-     */
-    private static Properties loadProperties(String resource) throws IOException {
-        ClassLoader cl = FBConnectionHelper.class.getClassLoader();
-
-        InputStream in = null;
-
-        // get the stream from the classloader or system classloader
-        if (cl == null)
-            in = ClassLoader.getSystemResourceAsStream(resource);
-        else
-            in = cl.getResourceAsStream(resource);
-
-        if (in == null) 
-            return null;
-
-        try {
-            Properties props = new Properties();
-            props.load(in);
-            return props;
-        } finally {
-            in.close();
-        }
     }
     
 

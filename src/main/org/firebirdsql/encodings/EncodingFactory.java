@@ -17,15 +17,41 @@
  * All rights reserved.
  */
 
+/* added by Blas Rodriguez Somoza:
+ *
+ * CVS modification log:
+ * $Log$
+ * Revision 1.5.2.1  2004/10/10 12:32:05  rrokytskyy
+ * merged with HEAD
+ *
+ * Revision 1.7  2004/10/10 10:58:01  rrokytskyy
+ * added support for character translation to character streams
+ *
+ * Revision 1.6  2004/10/08 22:39:10  rrokytskyy
+ * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
+ * added possibility to translate characters if there are some encoding issues
+ *
+ * Revision 1.5  2003/06/05 22:36:07  brodsom
+ * Substitute package and inline imports
+ *
+ * Revision 1.4  2003/06/04 12:38:22  brodsom
+ * Remove unused vars and imports
+ *
+ * Revision 1.3  2003/01/26 00:50:07  brodsom
+ * New character sets support
+ *
+ * Revision 1.2  2003/01/23 01:37:05  brodsom
+ * Encodings patch
+ *
+ */
+
 package org.firebirdsql.encodings;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 
 public class EncodingFactory {
     
@@ -51,7 +77,7 @@ public class EncodingFactory {
         }
     }
     
-    private static final Map translations = Collections.synchronizedMap(new HashMap());
+    private static final HashMap translations = new HashMap();
     
     public static Encoding getEncoding(String encoding, String mappingPath) throws SQLException {
         
@@ -66,27 +92,28 @@ public class EncodingFactory {
     public static CharacterTranslator getTranslator(String mappingPath) throws SQLException {
         CharacterTranslator translator;
         
-        translator = (CharacterTranslator)translations.get(mappingPath);
-        
-        if (translator == null) {
-            translator = new CharacterTranslator();
-            translator.init(mappingPath);
-            translations.put(mappingPath, translator);
+        synchronized(translations) {
+            translator = (CharacterTranslator)translations.get(mappingPath);
+            
+            if (translator == null) {
+                translator = new CharacterTranslator();
+                translator.init(mappingPath);
+                translations.put(mappingPath, translator);
+            }
         }
         return translator;
     }
 
-    public static Encoding getEncoding(String encoding){
-        if (encoding == null)
+    public static synchronized Encoding getEncoding( String encoding ) {
+        if ( encoding == null )
             encoding = defaultEncoding;
-        
+
         return createEncoding(encoding);
     }
-        
-    public static Encoding createEncoding(String encoding) {
+
+    private static final Encoding createEncoding(String encoding){
         if (encoding.equals("NONE"))
             encoding = defaultEncoding;
-        
         if (encoding.equals("Cp1250"))
             return new Encoding_Cp1250();
         else if (encoding.equals("Cp1251"))

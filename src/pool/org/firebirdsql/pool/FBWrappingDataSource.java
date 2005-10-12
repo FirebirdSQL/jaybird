@@ -30,9 +30,7 @@ import javax.naming.spi.ObjectFactory;
 import javax.resource.Referenceable;
 import javax.sql.DataSource;
 
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.jdbc.FBConnectionProperties;
+import org.firebirdsql.jdbc.FBConnectionHelper;
 
 /**
  * Implementation of {@link javax.sql.DataSource} including connection pooling.
@@ -165,7 +163,7 @@ public class FBWrappingDataSource implements DataSource,
     /**
      * Create instance of this class.
      */
-    public FBWrappingDataSource() {
+    public FBWrappingDataSource() throws SQLException {
         // empty
     }
     
@@ -189,17 +187,6 @@ public class FBWrappingDataSource implements DataSource,
         super.finalize();
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.pool.FirebirdPool#restart()
-     */
-    public void restart() {
-    	if (pool != null)
-    		pool.restart();
-    }
-    
-    /* (non-Javadoc)
-     * @see org.firebirdsql.pool.FirebirdPool#shutdown()
-     */
     public void shutdown() {
         if (pool != null)
             pool.shutdown();
@@ -277,12 +264,40 @@ public class FBWrappingDataSource implements DataSource,
         getPool().setBlockingTimeout(blockingTimeoutValue);
     }
 
+    public String getDatabase() {
+        return getPool().getDatabase();
+    }
+
+    public void setDatabase(String databaseValue) {
+        getPool().setDatabase(databaseValue);
+    }
+
     public String getDescription() {
         return description;
     }
 
     public void setDescription(String descriptionValue) {
         this.description = descriptionValue;
+    }
+
+    public String getEncoding() {
+        return getPool().getEncoding();
+    }
+
+    public void setEncoding(String encodingValue) {
+        getPool().setEncoding(encodingValue);
+    }
+    
+    public String getCharSet() {
+    	return FBConnectionHelper.getJavaEncoding(getEncoding());
+    }
+    
+    public void setCharSet(String charSet) throws SQLException {
+        String iscEncoding = FBConnectionHelper.getIscEncoding(charSet);
+        if (iscEncoding == null)
+            throw new SQLException("Unknown character set " + charSet);
+        
+    	setEncoding(iscEncoding);
     }
 
     public int getMaxIdleTime() {
@@ -367,6 +382,46 @@ public class FBWrappingDataSource implements DataSource,
         getPool().setKeepStatements(keepStatements);
     }
     
+    public String getPassword() {
+        return getPool().getPassword();
+    }
+
+    public void setPassword(String passwordValue) {
+        getPool().setPassword(passwordValue);
+    }
+
+    public String getTpbMapping() {
+        return getPool().getTpbMapping();
+    }
+
+    public void setTpbMapping(String tpbMappingValue) {
+        getPool().setTpbMapping(tpbMappingValue);
+    }
+
+    public String getUserName() {
+        return getPool().getUserName();
+    }
+
+    public void setUserName(String userNameValue) {
+        getPool().setUserName(userNameValue);
+    }
+
+    public int getBlobBufferSize() {
+        return getPool().getBlobBufferSize();
+    }
+
+    public void setBlobBufferSize(int blobBufferSizeValue) {
+        getPool().setBlobBufferSize(blobBufferSizeValue);
+    }
+
+    public String getType() {
+        return getPool().getType();
+    }
+
+    public void setType(String typeValue) throws SQLException {
+        getPool().setType(typeValue);
+    }
+
     public int getPingInterval() {
         return getPool().getPingInterval();
     }
@@ -374,27 +429,23 @@ public class FBWrappingDataSource implements DataSource,
     public void setPingInterval(int pingIntervalValue) {
         getPool().setPingInterval(pingIntervalValue);
     }
-    
-    public String getPingStatement() {
-        return getPool().getPingStatement();
+
+    public int getSocketBufferSize() {
+        return getPool().getSocketBufferSize();
     }
 
-    public void setPingStatement(String pingStatement) {
-        getPool().setPingStatement(pingStatement);
-    }
-    
-    public int getRetryInterval() {
-        return getPool().getRetryInterval();
-    }
-    
-    public void setRetryInterval(int retryInterval) {
-        getPool().setRetryInterval(retryInterval);
+    public void setSocketBufferSize(int socketBufferSize) {
+        getPool().setSocketBufferSize(socketBufferSize);
     }
 
-    public boolean isPingable() {
-        return getPool().isPingable();
+    public String getRoleName() {
+        return getPool().getRoleName();
     }
-
+    
+    public void setRoleName(String roleName) {
+        getPool().setRoleName(roleName);
+    }
+    
     /**
      * @deprecated please use {@link #getRoleName()} instead.
      */
@@ -409,6 +460,24 @@ public class FBWrappingDataSource implements DataSource,
         setRoleName(sqlRole);
     }
 
+    public String getNonStandardProperty(String key) {
+        return getPool().getNonStandardProperty(key);
+    }
+    
+    public void setNonStandardProperty(String key, String value) {
+        if (key == null)
+            throw new NullPointerException("Key is null");
+            
+        if (value == null)
+            value = "";
+            
+        getPool().setNonStandardProperty(key, value);
+    }
+    
+    public void setNonStandardProperty(String propertyMapping) {
+        getPool().setNonStandardProperty(propertyMapping);
+    }
+    
     /**
      * @deprecated use {@link #isPooling()} method.
      */
@@ -451,212 +520,32 @@ public class FBWrappingDataSource implements DataSource,
         return getPool().getTotalSize();
     }
     
-    /**
-     * @deprecated Use {@link #getDefaultTransactionIsolation()} instead.
-     */
     public int getTransactionIsolationLevel() {
-        return getDefaultTransactionIsolation();
+        return getPool().getTransactionIsolationLevel();
     }
     
-    /**
-     * @deprecated Use {@link #setDefaultTransactionIsolation(int)} instead.
-     */
     public void setTransactionIsolationLevel(int level) {
-        setDefaultTransactionIsolation(level);
+        getPool().setTransactionIsolationLevel(level);
     }
     
-    /**
-     * @deprecated Use {@link #getDefaultIsolation()} instead.
-     */
     public String getIsolation() {
-        return getDefaultIsolation();
+        return getPool().getIsolation();
     }
     
-    /**
-     * @deprecated Use {@link #setDefaultIsolation(String)} instead.
-     */
     public void setIsolation(String isolation) throws SQLException {
-        setDefaultIsolation(isolation);
+        getPool().setIsolation(isolation);
     }
     
     public void setProperties(Properties props) {
         getPool().setProperties(props);
     }
     
-    public int getBlobBufferSize() {
-        return getPool().getBlobBufferSize();
-    }
-
-    public int getBuffersNumber() {
-        return getPool().getBuffersNumber();
-    }
-
-    public String getCharSet() {
-        return getPool().getCharSet();
-    }
-
-    public String getDatabase() {
-        return getPool().getDatabase();
-    }
-
-    public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
-        return getPool().getDatabaseParameterBuffer();
-    }
-
-    public String getDefaultIsolation() {
-        return getPool().getDefaultIsolation();
-    }
-
-    public int getDefaultTransactionIsolation() {
-        return getPool().getDefaultTransactionIsolation();
-    }
-
-    public String getEncoding() {
-        return getPool().getEncoding();
-    }
-
-    public String getNonStandardProperty(String key) {
-        return getPool().getNonStandardProperty(key);
-    }
-
-    public String getPassword() {
-        return getPool().getPassword();
-    }
-
-    public String getRoleName() {
-        return getPool().getRoleName();
-    }
-
-    public int getSocketBufferSize() {
-        return getPool().getSocketBufferSize();
-    }
-
-    public String getSqlDialect() {
-        return getPool().getSqlDialect();
-    }
-
-    public String getTpbMapping() {
-        return getPool().getTpbMapping();
-    }
-
-    public TransactionParameterBuffer getTransactionParameters(int isolation) {
-        return getPool().getTransactionParameters(isolation);
-    }
-
-    public String getType() {
-        return getPool().getType();
-    }
-
-    public String getUserName() {
-        return getPool().getUserName();
-    }
-
-    public String getUseTranslation() {
-        return getPool().getUseTranslation();
-    }
-
-    public boolean isTimestampUsesLocalTimezone() {
-        return getPool().isTimestampUsesLocalTimezone();
-    }
-
-    public boolean isUseStandardUdf() {
-        return getPool().isUseStandardUdf();
-    }
-
-    public boolean isUseStreamBlobs() {
-        return getPool().isUseStreamBlobs();
-    }
-
-    public void setBlobBufferSize(int bufferSize) {
-        getPool().setBlobBufferSize(bufferSize);
-    }
-
-    public void setBuffersNumber(int buffersNumber) {
-        getPool().setBuffersNumber(buffersNumber);
-    }
-
-    public void setCharSet(String charSet) {
-        getPool().setCharSet(charSet);
-    }
-
-    public void setDatabase(String database) {
-        getPool().setDatabase(database);
-    }
-
-    public void setDefaultIsolation(String isolation) {
-        getPool().setDefaultIsolation(isolation);
-    }
-
-    public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
-        getPool().setDefaultTransactionIsolation(defaultIsolationLevel);
-    }
-
-    public void setEncoding(String encoding) {
-        getPool().setEncoding(encoding);
-    }
-
-    public void setNonStandardProperty(String key, String value) {
-        getPool().setNonStandardProperty(key, value);
-    }
-
-    public void setNonStandardProperty(String propertyMapping) {
-        getPool().setNonStandardProperty(propertyMapping);
-    }
-
-    public void setPassword(String password) {
-        getPool().setPassword(password);
-    }
-
-    public void setRoleName(String roleName) {
-        getPool().setRoleName(roleName);
-    }
-
-    public void setSocketBufferSize(int socketBufferSize) {
-        getPool().setSocketBufferSize(socketBufferSize);
-    }
-
-    public void setSqlDialect(String sqlDialect) {
-        getPool().setSqlDialect(sqlDialect);
-    }
-
-    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        getPool().setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
-    }
-
-    public void setTpbMapping(String tpbMapping) {
-        getPool().setTpbMapping(tpbMapping);
-    }
-
-    public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
-        getPool().setTransactionParameters(isolation, tpb);
-    }
-
-    public void setType(String type) {
-        getPool().setType(type);
-    }
-
-    public void setUserName(String userName) {
-        getPool().setUserName(userName);
-    }
-
-    public void setUseStandardUdf(boolean useStandardUdf) {
-        getPool().setUseStandardUdf(useStandardUdf);
-    }
-
-    public void setUseStreamBlobs(boolean useStreamBlobs) {
-        getPool().setUseStreamBlobs(useStreamBlobs);
-    }
-
-    public void setUseTranslation(String translationPath) {
-        getPool().setUseTranslation(translationPath);
-    }
-
     /*
      * JNDI-related code. 
      */
 
     private static final String REF_BLOCKING_TIMEOUT = "blockingTimeout";
-//    private static final String REF_DATABASE = "database";
+    private static final String REF_DATABASE = "database";
     private static final String REF_DESCRIPTION = "description";
     private static final String REF_MAX_IDLE_TIME = "maxIdleTime";
     private static final String REF_IDLE_TIMEOUT = "idleTimeout";
@@ -665,16 +554,10 @@ public class FBWrappingDataSource implements DataSource,
     private static final String REF_MIN_POOL_SIZE = "minPoolSize";
     private static final String REF_MAX_CONNECTIONS = "maxConnections";
     private static final String REF_MIN_CONNECTIONS = "minConnections";
-    
     private static final String REF_PING_INTERVAL = "pingInterval";
-    private static final String REF_RETRY_INTERVAL = "retryInterval";
-    private static final String REF_POOLING = "pooling";
-    private static final String REF_STATEMENT_POOLING = "statementPooling";
-    private static final String REF_PING_STATEMENT = "pingStatement";
-    
-//    private static final String REF_TYPE = "type";
-//    private static final String REF_TX_ISOLATION = "transactionIsolationLevel";
-//    private static final String REF_ISOLATION = "isolation";
+    private static final String REF_TYPE = "type";
+    private static final String REF_TX_ISOLATION = "transactionIsolationLevel";
+    private static final String REF_ISOLATION = "isolation";
     private static final String REF_PROPERTIES = "properties";
     private static final String REF_NON_STANDARD_PROPERTY = "nonStandard";
 
@@ -703,6 +586,9 @@ public class FBWrappingDataSource implements DataSource,
             if (REF_BLOCKING_TIMEOUT.equals(type))
                 ds.setBlockingTimeout(Integer.parseInt(element.getContent().toString()));
             else
+            if (REF_DATABASE.equals(type))
+                ds.setDatabase(element.getContent().toString());
+            else
             if (REF_DESCRIPTION.equals(type))
                 ds.setDescription(element.getContent().toString());
             else
@@ -730,24 +616,23 @@ public class FBWrappingDataSource implements DataSource,
             if (REF_PING_INTERVAL.equals(type))
                 ds.setPingInterval(Integer.parseInt(element.getContent().toString()));
             else
-            if (REF_RETRY_INTERVAL.equals(type))
-                ds.setRetryInterval(Integer.parseInt(element.getContent().toString()));
+            if (REF_TYPE.equals(type))
+                ds.setType(element.getContent().toString());
             else
-            if (REF_POOLING.equals(type))
-                ds.setPooling(Boolean.valueOf(element.getContent().toString()).booleanValue());
+            if (REF_TX_ISOLATION.equals(type))
+                ds.setTransactionIsolationLevel(Integer.parseInt(element.getContent().toString()));
             else
-            if (REF_STATEMENT_POOLING.equals(type))
-                ds.setStatementPooling(Boolean.valueOf(element.getContent().toString()).booleanValue());
+            if (REF_ISOLATION.equals(type))
+                ds.setIsolation(element.getContent().toString());
             else
-            if (REF_PING_STATEMENT.equals(type))
-                ds.setPingStatement(element.getContent().toString());
             if (REF_NON_STANDARD_PROPERTY.equals(type))
                 ds.setNonStandardProperty(element.getContent().toString());
             else
             if (REF_PROPERTIES.equals(type)) {
                 byte[] data = (byte[])element.getContent();
-                FBConnectionProperties props = (FBConnectionProperties)BasicAbstractConnectionPool.deserialize(data);
-                ds.getPool().setConnectionProperties(props);
+                Properties props = (Properties)BasicAbstractConnectionPool.deserialize(data);
+                if (props != null) 
+                    ds.setProperties(props);
             } else
             if (element.getContent() instanceof String) 
                 ds.setNonStandardProperty(type, element.getContent().toString());
@@ -756,7 +641,15 @@ public class FBWrappingDataSource implements DataSource,
         
         return ds;
     }
-
+    
+    private String getRefAddr(Reference ref, String type) {
+        RefAddr addr = ref.get(type);
+        if (addr == null)
+            return null;
+        else
+            return addr.getContent().toString();
+    }
+    
     /**
      * Get JDNI reference.
      * 
@@ -793,8 +686,8 @@ public class FBWrappingDataSource implements DataSource,
             ref.add(new StringRefAddr(REF_BLOCKING_TIMEOUT, 
                 String.valueOf(getBlockingTimeout())));
 
-//        if (getDatabase() != null)            
-//            ref.add(new StringRefAddr(REF_DATABASE, getDatabase()));
+        if (getDatabase() != null)            
+            ref.add(new StringRefAddr(REF_DATABASE, getDatabase()));
             
         if (getDescription() != null)
             ref.add(new StringRefAddr(REF_DESCRIPTION, getDescription()));
@@ -819,28 +712,15 @@ public class FBWrappingDataSource implements DataSource,
             ref.add(new StringRefAddr(REF_PING_INTERVAL, 
                 String.valueOf(getPingInterval())));
         
-        if (getRetryInterval() != FBPoolingDefaults.DEFAULT_RETRY_INTERVAL)
-            ref.add(new StringRefAddr(REF_RETRY_INTERVAL, 
-                    String.valueOf(getRetryInterval())));
+        if (getType() != null)
+       	    ref.add(new StringRefAddr(REF_TYPE, getType()));
         
-        if (!isPooling())
-            ref.add(new StringRefAddr(REF_POOLING, String.valueOf(isPooling())));
-        
-        if (!isStatementPooling())
-            ref.add(new StringRefAddr(REF_STATEMENT_POOLING, 
-                    String.valueOf(isStatementPooling())));
-        
-        ref.add(new StringRefAddr(REF_PING_STATEMENT, getPingStatement()));
-        
-//        if (getType() != null)
-//       	    ref.add(new StringRefAddr(REF_TYPE, getType()));
-//        
-//        if (getDefaultTransactionIsolation() != FBPoolingDefaults.DEFAULT_ISOLATION)
-//            ref.add(new StringRefAddr(REF_TX_ISOLATION, 
-//                String.valueOf(getDefaultTransactionIsolation())));
+        if (getTransactionIsolationLevel() != FBPoolingDefaults.DEFAULT_ISOLATION)
+            ref.add(new StringRefAddr(REF_TX_ISOLATION, 
+                String.valueOf(getTransactionIsolationLevel())));
         
         byte[] data = 
-            BasicAbstractConnectionPool.serialize(getPool().getConnectionProperties());
+            BasicAbstractConnectionPool.serialize(getPool().getProperties());
         ref.add(new BinaryRefAddr(REF_PROPERTIES, data));
         
         return ref;

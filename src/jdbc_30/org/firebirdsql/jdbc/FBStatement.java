@@ -3,8 +3,6 @@ package org.firebirdsql.jdbc;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.firebirdsql.gds.impl.GDSHelper;
-
 /**
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
@@ -14,9 +12,21 @@ public class FBStatement extends AbstractStatement {
 	/**
 	 * 
 	 */
-	public FBStatement(GDSHelper c, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) throws SQLException {
-		super(c, rsType, rsConcurrency, rsHoldability, statementListener);
+	public FBStatement(AbstractConnection c, int rsType, int rsConcurrency) {
+		super(c, rsType, rsConcurrency);
 	}
+
+    
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean getMoreResults(int param1) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
+    }
 
     /**
      * jdbc 3
@@ -96,6 +106,16 @@ public class FBStatement extends AbstractStatement {
      * @exception java.sql.SQLException <description>
      */
     public boolean execute(String param1, String[] param2) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     * jdbc 3
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int getResultSetHoldability() throws SQLException {
         // TODO: implement this java.sql.Statement method
         throw new SQLException("not yet implemented");
     }

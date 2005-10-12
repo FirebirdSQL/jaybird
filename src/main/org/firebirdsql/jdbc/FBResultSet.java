@@ -1,5 +1,4 @@
 /*
- *
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -29,8 +28,6 @@ import java.sql.Date;
 import java.util.*;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
-import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.*;
 
 
@@ -40,19 +37,18 @@ import org.firebirdsql.jdbc.field.*;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.FetcherListener {
+public class FBResultSet implements ResultSet {
 
-    private AbstractStatement fbStatement;
     private FBFetcher fbFetcher;
-    private FBRowUpdater rowUpdater;
 
-    protected GDSHelper gdsHelper;
+    protected AbstractConnection c;
 
     public XSQLVAR[] xsqlvars;
 
     public byte[][] row = null;
 
     private int maxRows = 0;
+    private int fetchSize = 0;
      
     private boolean wasNull = false;
     private boolean wasNullValid = false;
@@ -72,103 +68,104 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     
     private int rsType = ResultSet.TYPE_FORWARD_ONLY;
     private int rsConcurrency = ResultSet.CONCUR_READ_ONLY;
-    private int rsHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#allRowsFetched(org.firebirdsql.jdbc.FBFetcher)
-     */
-    public void allRowsFetched(FBFetcher fetcher) throws SQLException {
-        // notify our listener that all rows were fetched.
-        listener.allRowsFetched(this);
-    }
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#fetcherClosed(org.firebirdsql.jdbc.FBFetcher)
-     */
-    public void fetcherClosed(FBFetcher fetcher) throws SQLException {
-        // ignore, there nothing to do here
-    }
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#rowChanged(org.firebirdsql.jdbc.FBFetcher, byte[][])
-     */
-    public void rowChanged(FBFetcher fetcher, byte[][] newRow) throws SQLException {
-        this.row = newRow;
-    }
+    private boolean paranoiaModa;
+    
 	 /**
      * Creates a new <code>FBResultSet</code> instance.
      *
-     * @param gdsHelper a <code>AbstractConnection</code> value
-     * @param fbStatement a <code>AbstractStatement</code> value
+     * @param c a <code>AbstractConnection</code> value
+     * @param fbstatement a <code>AbstractStatement</code> value
      * @param stmt an <code>isc_stmt_handle</code> value
      */
-    protected FBResultSet(GDSHelper gdsHelper, 
-                          AbstractStatement fbStatement, 
-                          AbstractIscStmtHandle stmt, 
+    protected FBResultSet(AbstractConnection c, 
+                          AbstractStatement fbstatement, 
+                          isc_stmt_handle stmt, 
                           FBObjectListener.ResultSetListener listener,
                           boolean trimStrings, 
                           int rsType, 
                           int rsConcurrency,
-                          int rsHoldability,
                           boolean cached) 
     throws SQLException {
         
-        this.gdsHelper = gdsHelper;
-        this.cursorName = fbStatement.getCursorName();
+        this.c = c;
+        this.cursorName = fbstatement.getCursorName();
         
         this.listener = listener;
         
         this.rsType = rsType;
         this.rsConcurrency = rsConcurrency;
-        this.rsHoldability = rsHoldability;
         
         this.trimStrings = trimStrings;
         
+        // check if we are running in paranoia mode
+        checkParanoiaMode(c);
+        
         this.xsqlvars = stmt.getOutSqlda().sqlvar;
-        this.maxRows = fbStatement.getMaxRows();
+        this.maxRows = fbstatement.getMaxRows();
         
-        this.fbStatement = fbStatement;
-        
-        boolean updatableCursor = fbStatement.isUpdatableCursor();
+        boolean updatableCursor = fbstatement.isUpdatableCursor();
 
-        if (rsType == ResultSet.TYPE_SCROLL_INSENSITIVE)
-            cached = true;
+        //prepareVars((!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE) || cached);
         
         if (cached) {
             prepareVars(true);
-            fbFetcher = new FBCachedFetcher(gdsHelper,
-                    fbStatement.fetchSize, fbStatement.maxRows, stmt, this,
-                    rsType == ResultSet.TYPE_FORWARD_ONLY);
+            fbFetcher = new FBCachedFetcher(this.c, fbstatement, stmt, this);
+        } else
+        if (!updatableCursor && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE) {
+            prepareVars(true);
+            fbFetcher = new FBCachedFetcher(this.c, fbstatement, stmt, this);
         } else {
             prepareVars(false);
             
+            if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
+                c.addWarning(new FBSQLWarning(
+                    "Result set concurrency changed. " +
+                    "Only ResultSet.CONCUR_READ_ONLY concurrency is supported."));
+                    
+                rsConcurrency = ResultSet.CONCUR_READ_ONLY;
+            }
+                    
             if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
-                fbStatement.addWarning(new FBSQLWarning(
-                    "Result set type changed. " 
-                    + "ResultSet.TYPE_SCROLL_SENSITIVE is not supported."));
+                c.addWarning(new FBSQLWarning(
+                    "Result set type changed. " +
+                    "ResultSet.TYPE_SCROLL_SENSITIVE is not supported."));
                     
                 rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
             }
             
             if (updatableCursor)  
-                fbFetcher = new FBUpdatableCursorFetcher(gdsHelper,
-                        fbStatement, stmt, this, fbStatement.getMaxRows(),
-                        fbStatement.getFetchSize());
+                fbFetcher = new FBUpdatableFetcher(this.c, fbstatement, stmt, this);
             else
-                fbFetcher = new FBStatementFetcher(gdsHelper,
-                        fbStatement, stmt, this, fbStatement.getMaxRows(),
-                        fbStatement.getFetchSize());
-        }
-        
-        if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
-            try {
-                rowUpdater = new FBRowUpdater(gdsHelper, xsqlvars, this, cached);
-            } catch (FBResultSetNotUpdatableException ex) {
-                fbStatement.addWarning(new FBSQLWarning(
-                    "Result set concurrency changed to READ ONLY."));
-
-                rsConcurrency = ResultSet.CONCUR_READ_ONLY;
-            }
+                fbFetcher = new FBStatementFetcher(this.c, fbstatement, stmt, this);
         }
     }
+
+    /**
+     * Creates an instance of this class and caches complete result set for
+     * later use. This constructor should be used only in auto-commit case.
+     * 
+     * @param c active database connection
+     * @param stmt statement handle
+     * @param trimStrings <code>true</code> if we should trim strings (used 
+     * in {@link FBDatabaseMetaData} class).
+     * @throws SQLException if database access error occurs
+     */
+//    protected FBResultSet(AbstractConnection c, AbstractStatement fbStatement,isc_stmt_handle stmt, 
+//        boolean trimStrings, FBObjectListener.ResultSetListener listener) 
+//        throws SQLException 
+//    {
+//        this.c = c;
+//        this.trimStrings = trimStrings;
+//        this.listener = listener;
+//        
+//        checkParanoiaMode(c);
+//        
+//        maxRows = fbStatement.getMaxRows();
+//        xsqlvars = stmt.getOutSqlda().sqlvar;
+//        prepareVars(true);
+//        fbFetcher = new FBCachedFetcher(this.c, fbStatement, stmt, this);
+//    }
 
     protected FBResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
         maxRows = 0;
@@ -177,34 +174,18 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         prepareVars(true);
     }
     
+    private void checkParanoiaMode(AbstractConnection c) {
+        DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
+        paranoiaModa = dpb.hasArgument(DatabaseParameterBuffer.paranoia_mode);
+    }
+
     private void prepareVars(boolean cached) throws SQLException {
         fields = new FBField[xsqlvars.length];
         colNames = new HashMap(xsqlvars.length,1);
         for (int i=0; i<xsqlvars.length; i++){
-            final int fieldPosition = i;
-            
-              // anonymous implementation of the FieldDataProvider interface
-              FieldDataProvider dataProvider = new FieldDataProvider() {
-                  public byte[] getFieldData() {
-                      return row[fieldPosition];
-                  }
-                  
-                  public void setFieldData(byte[] data) {
-                      row[fieldPosition] = data;
-                  }
-              };
-              
-            fields[i] = FBField.createField(xsqlvars[i], dataProvider, gdsHelper, cached);
+            fields[i] = FBField.createField(xsqlvars[i], this, i, cached);
+            fields[i].setConnection(c);
         }
-    }
-    
-    /**
-     * Notify the row updater about the new row that was fetched. This method
-     * must be called after each change in cursor position.
-     */
-    private void notifyRowUpdater() {
-        if (rowUpdater != null)
-            rowUpdater.setRow(row);
     }
 
     /**
@@ -213,22 +194,14 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      * @throws SQLException if statement is closed.
      */
     protected void checkCursorMove() throws SQLException {
-        if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
-            throw new FBSQLException("The result set is closed");
-        
+        if (closed) throw new FBSQLException("The resultSet is closed");
         wasNullValid = false;
 
         // close current fields, so that resources are freed.
         for(int i = 0; i < fields.length; i++) 
             fields[i].close();
     }
-    
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.Synchronizable#getSynchronizationObject()
-     */
-    public Object getSynchronizationObject() throws SQLException {
-        return fbStatement.getSynchronizationObject();
-    }
+
     /**
      * Moves the cursor down one row from its current position.
      * A <code>ResultSet</code> cursor is initially positioned
@@ -247,12 +220,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      */
     public boolean next() throws  SQLException {
         checkCursorMove();
-        boolean result = fbFetcher.next();
-        
-        if (result)
-            notifyRowUpdater();
-        
-        return result;
+        return fbFetcher.next();
     }
 
 
@@ -273,10 +241,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      * @exception SQLException if a database access error occurs
      */
     public void close() throws  SQLException {
-        close(true);
-    }
-    
-    void close(boolean notifyListener) throws SQLException {
+        if (closed && paranoiaModa) throw new FBSQLException("The resultSet is closed");
         wasNullValid = false;
         closed = true;
         
@@ -286,17 +251,11 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
                 fields[i].close();
             
         } finally {
-            if (fbFetcher != null) {
-                fbFetcher.close();
-
-                if (listener != null && notifyListener)
-                    listener.resultSetClosed(this);
-
-            }
-            
-            if (rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT)
-                fbFetcher = null;
+            fbFetcher.close();
         }
+        
+        if (listener != null)
+            listener.resultSetClosed(this);
     }
 
 
@@ -322,216 +281,62 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         return wasNull;		  
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * ResultSet object as a stream of ASCII characters. The value can then be 
-     * read in chunks from the stream. This method is particularly suitable 
-     * for retrieving large LONGVARCHAR values. 
-     *
-     * @param columnIndex The index of the parameter to retrieve, first 
-     * parameter is 1, second is 2, ...
-     * @return a stream of ascii characters
-     * @throws SQLException if this parameter cannot be retrieved as an ASCII
-     * stream
-     */
     public InputStream getAsciiStream(int columnIndex) throws SQLException {
         return getField(columnIndex).getAsciiStream();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a BigDecimal object.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The value of the field as a BigDecimal
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a BigDecimal
-     */
     public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
         return getField(columnIndex).getBigDecimal();
     }
 
-
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a binary InputStream.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The value of the field as a binary input stream 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a binary InputStream 
-     */
     public InputStream getBinaryStream(int columnIndex) throws SQLException {
         return getField(columnIndex).getBinaryStream();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a Blob object.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The value of the field as a Blob object 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a Blob 
-     */
     public Blob getBlob(int columnIndex) throws SQLException {
         return getField(columnIndex).getBlob();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>boolean</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>boolean</code> value of the field 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a <code>boolean</code>
-     */
     public boolean getBoolean(int columnIndex) throws SQLException {
         return getField(columnIndex).getBoolean();
     }
 
-
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>byte</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>byte</code> value of the field 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a <code>byte</code>
-     */
     public byte getByte(int columnIndex) throws SQLException {
         return getField(columnIndex).getByte();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>byte</code> array.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>byte</code> array value of the field 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a <code>byte</code> array
-     */
     public byte[] getBytes(int columnIndex) throws SQLException {
         return getField(columnIndex).getBytes();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>Date</code> object.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>Date</code> object of the field 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a <code>Date</code> object
-     */
     public Date getDate(int columnIndex) throws SQLException {
         return getField(columnIndex).getDate();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>double</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>double</code> value of the field 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a <code>double</code>
-     */
     public double getDouble(int columnIndex) throws SQLException {
         return getField(columnIndex).getDouble();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>float</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>float</code> value of the field 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a <code>float</code>
-     */
     public float getFloat(int columnIndex) throws SQLException {
         return getField(columnIndex).getFloat();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as an <code>int</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>int</code> value of the field 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * an <code>int</code>
-     */
     public int getInt(int columnIndex) throws SQLException {
         return getField(columnIndex).getInt();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>long</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>long</code> value of the field 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a <code>long</code>
-     */
     public long getLong(int columnIndex) throws SQLException {
         return getField(columnIndex).getLong();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as an <code>Object</code>.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>Object</code> representation of the field 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * an <code>Object</code>
-     */
     public Object getObject(int columnIndex) throws SQLException {
         return getField(columnIndex).getObject();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>short</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>short</code> value of the field 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a <code>short</code>
-     */
     public short getShort(int columnIndex) throws SQLException {
         return getField(columnIndex).getShort();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>String</code> object.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>String</code> representation of the field 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a <code>String</code>
-     */
     public String getString(int columnIndex) throws SQLException {
         if (trimStrings) {
             String result = getField(columnIndex).getString();
@@ -540,30 +345,10 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
             return getField(columnIndex).getString();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>Time</code> object.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>Time</code> representation of the field 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a <code>Time</code> object
-     */
     public Time getTime(int columnIndex) throws SQLException {
         return getField(columnIndex).getTime();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>Timestamp</code> object.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>Timestamp</code> representation of the field 
-     * @throws SQLException if this paramater cannot be retrieved as 
-     * a <code>Timestamp</code> object
-     */
     public Timestamp getTimestamp(int columnIndex) throws SQLException {
         return getField(columnIndex).getTimestamp();
     }
@@ -582,21 +367,12 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         return xsqlvars[columnIndex - 1];
     }
 
-    /**
-     * Get the <code>FBField</code> object at the given column index
-     *
-     * @param columnIndex The index of the parameter, 1 is the first index
-     * @throws SQLException If there is an error accessing the field
-     */
     public FBField getField(int columnIndex) throws SQLException {
         FBField field = getField(columnIndex, true);
 
         wasNullValid = true;
         // wasNull = field.isNull();
-        if (row != null)
-            wasNull = (row[columnIndex - 1] == null);
-        else
-            wasNull = true;
+        wasNull = (row[columnIndex - 1] == null);
         
         return field;
     }
@@ -605,10 +381,9 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      * Factory method for the field access objects
      */
     public FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
-        if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
-            throw new FBSQLException("The resultSet is closed");
+        if (closed) throw new FBSQLException("The resultSet is closed");
         
-        if (checkRowPosition && row == null && rowUpdater == null)
+        if (checkRowPosition && row == null)
             throw new FBSQLException(
                     "The resultSet is not in a row, use next",
                     FBSQLException.SQL_STATE_NO_ROW_AVAIL);
@@ -618,23 +393,13 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
                     "Invalid column index.",
                     FBSQLException.SQL_STATE_INVALID_COLUMN);
         
-        if (rowUpdater != null)
-            return rowUpdater.getField(columnIndex - 1);
-        else
-            return fields[columnIndex-1];
+        return fields[columnIndex-1];
     }
 
-    /**
-     * Get a <code>FBField</code> by name.
-     *
-     * @param columnName The name of the field to be retrieved
-     * @throws SQLException if the field cannot be retrieved
-     */
     public FBField getField(String columnName) throws SQLException {
-        if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
-            throw new FBSQLException("The resultSet is closed");
+        if (closed) throw new FBSQLException("The resultSet is closed");
         
-        if (row == null && rowUpdater == null)
+        if (row == null)
             throw new FBSQLException(
                     "The resultSet is not in a row, use next",
                     FBSQLException.SQL_STATE_NO_ROW_AVAIL);
@@ -653,10 +418,9 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
             colNames.put(columnName, fieldNum);
         }
         int colNum = fieldNum.intValue();
-        FBField field = rowUpdater != null ? rowUpdater.getField(colNum - 1)
-                : fields[colNum - 1];
+        FBField field = fields[colNum - 1];
         wasNullValid = true;
-        wasNull = (row != null ? row[colNum - 1] == null : true);
+        wasNull = (row[colNum - 1] == null);
         return field;
     }
      /**
@@ -682,13 +446,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     // Methods for accessing results by column name
     //======================================================================
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a <code>String</code>. 
-     *
-     * @param columnName The SQL name of the column
-     * @throws SQLException if the given column cannot be retrieved
-     */
     public String getString(String columnName) throws  SQLException {
         if (trimStrings) {
             String result = getField(columnName).getString();
@@ -698,188 +455,88 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     }
 
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a <code>boolean</code> value. 
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>String</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
     public boolean getBoolean(String columnName) throws  SQLException {
         return getField(columnName).getBoolean();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a <code>byte</code> value. 
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>byte</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+
     public byte getByte(String columnName) throws  SQLException {
         return getField(columnName).getByte();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a <code>short</code> value. 
-     *
-     * @param columnName The SQL name of the column
-     * @return THe <code>short</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
     public short getShort(String columnName) throws  SQLException {
         return getField(columnName).getShort();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as an <code>int</code> value. 
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>int</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
     public int getInt(String columnName) throws  SQLException {
         return getField(columnName).getInt();
     }
 
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a <code>long</code> value. 
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>long</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
     public long getLong(String columnName) throws  SQLException {
         return getField(columnName).getLong();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a <code>float</code> value. 
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>float</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
     public float getFloat(String columnName) throws  SQLException {
         return getField(columnName).getFloat();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a <code>double</code> value. 
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>double</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+
     public double getDouble(String columnName) throws  SQLException {
         return getField(columnName).getDouble();
     }
 
+
     /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a <code>BigDecimal</code>. 
+     * Describe <code>getBigDecimal</code> method here.
      *
-     * @param columnName The SQL name of the column
-     * @return The <code>BigDecimal</code> value
-     * @throws SQLException if the given column cannot be retrieved
+     * @param columnName a <code>String</code> value
+     * @param scale an <code>int</code> value
+     * @return a <code>BigDecimal</code> value
+     * @exception SQLException if an error occurs
      * @deprecated
      */
     public BigDecimal getBigDecimal(String columnName, int scale) throws  SQLException {
         return getField(columnName).getBigDecimal(scale);
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a <code>byte</code> array. 
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>byte</code> array value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+
     public byte[] getBytes(String columnName) throws  SQLException {
         return getField(columnName).getBytes();
     }
 
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a <code>Date</code>. 
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>Date</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
     public Date getDate(String columnName) throws  SQLException {
         return getField(columnName).getDate();
     }
 
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a <code>Time</code> object. 
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>Time</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
     public Time getTime(String columnName) throws  SQLException {
         return getField(columnName).getTime();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a <code>Timestamp</code> object. 
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>Timestamp</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+
     public Timestamp getTimestamp(String columnName) throws  SQLException {
         return getField(columnName).getTimestamp();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as an <code>InputStream</code>. 
-     *
-     * @param columnName The SQL name of the column
-     * @return The value as an <code>InputStream</code> 
-     * @throws SQLException if the given column cannot be retrieved
-     */
     public InputStream getAsciiStream(String columnName) throws  SQLException {
         return getField(columnName).getAsciiStream();
     }
 
+
     /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a unicode <code>InputStream</code>. 
+     * Describe <code>getUnicodeStream</code> method here.
      *
-     * @param columnName The SQL name of the column
-     * @return The value as a unicode <code>InputStream</code> 
-     * @throws SQLException if the given column cannot be retrieved
+     * @param columnName a <code>String</code> value
+     * @return a <code>java.io.InputStream</code> value
+     * @exception SQLException if an error occurs
      * @deprecated
      */
     public InputStream getUnicodeStream(String columnName) throws  SQLException {
         return getField(columnName).getUnicodeStream();
     }
 
-
-    /**
-     * Retrieves the value of the designated column in the current row of this 
-     * <code>ResultSet</code> object as a binary <code>InputStream</code>. 
-     *
-     * @param columnName The SQL name of the column
-     * @return The value as a binary <code>InputStream</code> 
-     * @throws SQLException if the given column cannot be retrieved
-     */
     public InputStream getBinaryStream(String columnName) throws  SQLException {
         return getField(columnName).getBinaryStream();
     }
@@ -962,11 +619,11 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      * @return the description of this <code>ResultSet</code> object's columns
      * @exception SQLException if a database access error occurs
      * 
-     * TODO we need another way of specifying the exended metadata if
+     * @todo we need another way of specifying the exended metadata if
      * this result set is constructed in code.
      */
     public ResultSetMetaData getMetaData() throws  SQLException {
-        return new FBResultSetMetaData(xsqlvars, gdsHelper);
+        return new FBResultSetMetaData(xsqlvars, c);
     }
 
 
@@ -1207,7 +864,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     public void beforeFirst() throws  SQLException {
         checkCursorMove();
         fbFetcher.beforeFirst();
-        notifyRowUpdater();
     }
 
 
@@ -1224,7 +880,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     public void afterLast() throws  SQLException {
         checkCursorMove();
         fbFetcher.afterLast();
-        notifyRowUpdater();
     }
 
 
@@ -1242,10 +897,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      */
     public boolean first() throws  SQLException {
         checkCursorMove();
-        boolean result = fbFetcher.first();
-        if (result)
-            notifyRowUpdater();
-        return result;
+        return fbFetcher.first();
     }
 
 
@@ -1263,10 +915,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      */
     public boolean last() throws  SQLException {
         checkCursorMove();
-        boolean result = fbFetcher.last();
-        if (result)
-            notifyRowUpdater();
-        return result;
+        return fbFetcher.last();
     }
 
 
@@ -1320,10 +969,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      */
     public boolean absolute( int row ) throws  SQLException {
         checkCursorMove();
-        boolean result = fbFetcher.absolute(row);
-        if (result)
-            notifyRowUpdater();
-        return result;
+        return fbFetcher.absolute(row);
     }
 
 
@@ -1352,10 +998,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      */
     public boolean relative( int rows ) throws  SQLException {
         checkCursorMove();
-        boolean result = fbFetcher.relative(rows);
-        if (result)
-            notifyRowUpdater();
-        return result;
+        return fbFetcher.relative(rows);
     }
 
 
@@ -1377,10 +1020,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      */
     public boolean previous() throws  SQLException {
         checkCursorMove();
-        boolean result = fbFetcher.previous();
-        if (result)
-            notifyRowUpdater();
-        return result;
+        return fbFetcher.previous();
     }
 
 
@@ -1451,7 +1091,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
              throw new FBSQLException("Can't set fetch size > maxRows.",
                      FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
          else
-        fbFetcher.setFetchSize(rows);
+        fetchSize = rows;
     }
 
 
@@ -1467,7 +1107,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public int getFetchSize() throws  SQLException {
-        return fbFetcher.getFetchSize();
+        return fetchSize;
     }
 
 
@@ -1523,10 +1163,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public boolean rowUpdated() throws  SQLException {
-        if (rowUpdater != null)
-            return rowUpdater.rowUpdated();
-        else
-            throw new FBResultSetNotUpdatableException();
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1545,10 +1182,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public boolean rowInserted() throws  SQLException {
-        if (rowUpdater != null)
-            return rowUpdater.rowUpdated();
-        else
-            throw new FBResultSetNotUpdatableException();
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1568,10 +1202,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public boolean rowDeleted() throws  SQLException {
-        if (rowUpdater != null)
-            return rowUpdater.rowUpdated();
-        else
-            throw new FBResultSetNotUpdatableException();
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1590,10 +1221,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateNull(int columnIndex) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setNull();
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1612,10 +1240,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateBoolean(int columnIndex, boolean x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setBoolean(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1635,10 +1260,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateByte(int columnIndex, byte x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setByte(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1657,10 +1279,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateShort(int columnIndex, short x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setShort(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1679,10 +1298,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateInt(int columnIndex, int x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setInteger(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1701,10 +1317,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateLong(int columnIndex, long x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setLong(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1723,10 +1336,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateFloat(int columnIndex, float x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setFloat(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1745,10 +1355,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateDouble(int columnIndex, double x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setDouble(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1768,10 +1375,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateBigDecimal(int columnIndex, BigDecimal x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setBigDecimal(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1790,10 +1394,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateString(int columnIndex, String x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setString(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1812,10 +1413,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateBytes(int columnIndex, byte x[]) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setBytes(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1834,10 +1432,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateDate(int columnIndex, Date x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setDate(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1856,10 +1451,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateTime(int columnIndex, Time x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setTime(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1879,10 +1471,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateTimestamp(int columnIndex, Timestamp x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setTimestamp(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1904,10 +1493,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     public void updateAsciiStream(int columnIndex, InputStream x,
                int length) throws  SQLException 
     {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setAsciiStream(x, length);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1929,10 +1515,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     public void updateBinaryStream(int columnIndex, InputStream x,
                 int length) throws  SQLException 
     {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setBinaryStream(x, length);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1954,10 +1537,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     public void updateCharacterStream(int columnIndex, Reader x,
                  int length) throws  SQLException 
     {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setCharacterStream(x, length);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -1982,10 +1562,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     public void updateObject(int columnIndex, Object x, int scale) 
         throws  SQLException 
     {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setObject(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2004,10 +1581,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateObject(int columnIndex, Object x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnIndex).setObject(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2025,10 +1599,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateNull(String columnName) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setNull();
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2047,10 +1618,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateBoolean(String columnName, boolean x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setBoolean(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2069,10 +1637,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateByte(String columnName, byte x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setByte(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2091,10 +1656,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateShort(String columnName, short x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setShort(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2113,10 +1675,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateInt(String columnName, int x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setInteger(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2135,10 +1694,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateLong(String columnName, long x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setLong(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2157,10 +1713,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateFloat(String columnName, float x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setFloat(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2179,10 +1732,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateDouble(String columnName, double x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setDouble(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2202,10 +1752,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateBigDecimal(String columnName, BigDecimal x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setBigDecimal(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2224,10 +1771,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateString(String columnName, String x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setString(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2255,10 +1799,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateBytes(String columnName, byte x[]) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setBytes(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2277,10 +1818,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateDate(String columnName, Date x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setDate(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2299,10 +1837,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateTime(String columnName, Time x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setTime(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2322,10 +1857,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateTimestamp(String columnName, Timestamp x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setTimestamp(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2347,10 +1879,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     public void updateAsciiStream(String columnName, InputStream x,
                int length) throws  SQLException 
     {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setAsciiStream(x, length);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2372,10 +1901,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     public void updateBinaryStream(String columnName, InputStream x,
                 int length) throws  SQLException 
     {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setBinaryStream(x, length);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2397,10 +1923,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     public void updateCharacterStream(String columnName, Reader reader,
                  int length) throws  SQLException 
     {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setCharacterStream(reader, length);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2425,10 +1948,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     public void updateObject(String columnName, Object x, int scale) 
         throws  SQLException 
     {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setObject(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2447,10 +1967,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateObject(String columnName, Object x) throws  SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-        
-        getField(columnName).setObject(x);
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2468,12 +1985,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void insertRow() throws  SQLException {
-        if (rowUpdater != null) {
-            rowUpdater.insertRow();
-            fbFetcher.insertRow(rowUpdater.getInsertRow());
-            notifyRowUpdater();
-        } else
-            throw new FBResultSetNotUpdatableException();
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2489,12 +2001,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void updateRow() throws  SQLException {
-        if (rowUpdater != null) {
-            rowUpdater.updateRow();
-            fbFetcher.updateRow(rowUpdater.getNewRow());
-            notifyRowUpdater();
-        } else
-            throw new FBResultSetNotUpdatableException();
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2510,12 +2017,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void deleteRow() throws  SQLException {
-        if (rowUpdater != null) {
-            rowUpdater.deleteRow();
-            fbFetcher.deleteRow();
-            notifyRowUpdater();
-        } else
-            throw new FBResultSetNotUpdatableException();
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2547,14 +2049,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void refreshRow() throws  SQLException {
-        if (rowUpdater != null) {
-            rowUpdater.refreshRow();
-            fbFetcher.updateRow(rowUpdater.getOldRow());
-            
-            // this is excessive, but we do this to keep the code uniform
-            notifyRowUpdater();
-        } else
-            throw new FBResultSetNotUpdatableException();
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2575,10 +2070,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void cancelRowUpdates() throws  SQLException {
-        if (rowUpdater != null)
-            rowUpdater.cancelRowUpdates();
-        else
-            throw new FBResultSetNotUpdatableException();
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2606,10 +2098,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void moveToInsertRow() throws  SQLException {
-        if (rowUpdater != null)
-            rowUpdater.moveToInsertRow();
-        else
-            throw new FBResultSetNotUpdatableException();
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2625,10 +2114,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      *      2.0 API</a>
      */
     public void moveToCurrentRow() throws  SQLException {
-        if (rowUpdater != null)
-            rowUpdater.moveToCurrentRow();
-        else
-            throw new FBResultSetNotUpdatableException();
+        throw new FBDriverNotCapableException();
     }
 
 
@@ -2644,7 +2130,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      * if the result set was produced some other way
      */
     public Statement getStatement() {
-        return fbStatement;
+        return fbFetcher.getStatement();
     }
 
 
@@ -2961,7 +2447,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     //jdbc 3 methods
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @return <description>
@@ -2972,7 +2457,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     }
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @return <description>
@@ -2984,7 +2468,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
 
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -2995,7 +2478,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     }
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -3006,7 +2488,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     }
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -3017,7 +2498,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     }
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -3028,7 +2508,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     }
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -3039,7 +2518,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     }
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -3050,7 +2528,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     }
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -3061,7 +2538,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
     }
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -3069,16 +2545,6 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      */
     public void updateArray(String param1, Array param2) throws SQLException {
         throw new FBDriverNotCapableException();
-    }
-
-
-    public String getExecutionPlan() throws SQLException {
-        checkCursorMove();
-        
-        if (fbStatement == null)
-            return "";
-            
-        return fbStatement.getExecutionPlan();
     }
 
     //--------------------------------------------------------------------

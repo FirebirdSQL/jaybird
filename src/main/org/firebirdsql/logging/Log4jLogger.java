@@ -64,19 +64,7 @@ public class Log4jLogger extends Logger{
             log.log(Priority.DEBUG, message, t);
         }
     }
-    
-    public boolean isTraceEnabled() {
-        return isDebugEnabled();
-    }
-
-    public void trace(Object message, Throwable t) {
-        debug(message, t);
-    }
-
-    public void trace(Object message) {
-        debug(message);
-    }
-
+	
     public boolean isInfoEnabled() {
         return loggingAvailable && log.isEnabledFor(Priority.INFO);
     }

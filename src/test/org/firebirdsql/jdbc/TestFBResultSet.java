@@ -43,11 +43,10 @@ public class TestFBResultSet extends FBTestBase {
         
     public static final String CREATE_TABLE_STATEMENT = ""
         + "CREATE TABLE test_table(" 
-        + "  id INTEGER NOT NULL PRIMARY KEY, " 
+        + "  id INTEGER, " 
         + "  str VARCHAR(10), " 
         + "  long_str VARCHAR(255), "
-        + "  very_long_str VARCHAR(20000), "
-        + "  blob_str BLOB SUB_TYPE 1"
+        + "  very_long_str VARCHAR(20000)"
         + ")"
         ;
         
@@ -265,7 +264,7 @@ public class TestFBResultSet extends FBTestBase {
         }
         */
         
-        connection.setAutoCommit(false);
+        connection.setAutoCommit(true);
         
         select = connection.createStatement();
         try {
@@ -308,7 +307,6 @@ public class TestFBResultSet extends FBTestBase {
             throw e;
         } finally {
             select.close();
-            connection.commit();
         }
     }
     
@@ -614,13 +612,7 @@ public class TestFBResultSet extends FBTestBase {
         }
     }
     
-    public void _testMemoryGrowth() throws Exception {
-        
-        Properties props = getDefaultPropertiesForConnection();
-        props.put("no_result_set_tracking", "");
-        
-        Class.forName(FBDriver.class.getName());
-        Connection connection = DriverManager.getConnection(getUrl(), props);
+    public void testMemoryGrowth() throws Exception {
         
         connection.setAutoCommit(false);
         
@@ -691,7 +683,7 @@ public class TestFBResultSet extends FBTestBase {
     public void testResultSetNotClosed() throws Exception {
         
 
-        //System.setProperty("test.gds_type", "NATIVE");
+        System.setProperty("test.gds_type", "NATIVE");
         
         connection.setAutoCommit(false);
         
@@ -739,252 +731,7 @@ public class TestFBResultSet extends FBTestBase {
         }
     }
     
-    public void testUpdatableResultSet() throws Exception {
-        connection.setAutoCommit(false);
-        
-        int recordCount = 10;
-        PreparedStatement ps = connection
-                .prepareStatement("INSERT INTO test_table("
-                        + "id, long_str) VALUES (?, ?)");
-
-        try {
-
-            for (int i = 0; i < recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setString(2, "oldString" + i);
-                ps.executeUpdate();
-            }
-        } finally {
-            ps.close();
-        }
-
-        connection.commit();
-
-        connection.setAutoCommit(true);
-        
-        connection.clearWarnings();
-        Statement stmt = connection.createStatement(
-            ResultSet.TYPE_SCROLL_INSENSITIVE, 
-            ResultSet.CONCUR_UPDATABLE);
-        
-        try {
-            assertTrue("No warnings should be added", connection.getWarnings() == null);
-            
-            ResultSet rs = stmt.executeQuery("SELECT id, long_str, str FROM test_table ORDER BY id");
-
-            int counter = 0;
-            while(rs.next()) {
-                
-                int id = rs.getInt(1);
-                assertEquals(counter, id);
-                
-                String longStr = rs.getString(2);
-                assertEquals("oldString" + counter, longStr);
-                
-                rs.updateString(2, "newString" + counter);
-                
-                assertEquals(counter, rs.getInt(1)); 
-                assertEquals("newString" + counter, rs.getString(2));
-
-                assertEquals(null, rs.getString(3));
-                rs.updateString(3, "str" + counter);
-                
-                // check whether row can be updated
-                rs.updateRow();
-                
-                // check whether row can be refreshed
-                rs.refreshRow();
-
-                assertEquals(counter, rs.getInt(1)); 
-                assertEquals("newString" + counter, rs.getString(2));
-                assertEquals("str" + counter, rs.getString(3));
-                
-                counter++;
-            }
-            
-            assertTrue("Should process " + recordCount + " rows.", counter == recordCount);
-
-            // check the insertRow() feature
-            rs.moveToInsertRow();
-            rs.updateInt(1, recordCount);
-            rs.updateString(2, "newString" + recordCount);
-            rs.updateString(3, "bug");
-            rs.insertRow();
-            rs.moveToCurrentRow();
-
-            // check whether newly inserted row can be updated
-            rs.last();
-            rs.updateString(3, "str" + recordCount);
-            rs.updateRow();
-            
-            rs = stmt.executeQuery("SELECT id, long_str, str FROM test_table ORDER BY id");
-            
-            counter = 0;
-            while(rs.next()) {
-                int id = rs.getInt(1);
-                assertTrue(id == counter);
-                
-                String longStr = rs.getString(2);
-                assertTrue(("newString" + counter).equals(longStr));
-                assertTrue(("str" + counter).equals(rs.getString(3)));
-                counter++;
-                
-                if (counter == recordCount + 1)
-                    rs.deleteRow();
-            }
-            
-            assertTrue(counter == recordCount + 1);
-            
-            rs = stmt.executeQuery("SELECT count(*) FROM test_table");
-            
-            assertTrue(rs.next());
-            assertTrue(rs.getInt(1) == recordCount);
-            
-        } finally {
-            stmt.close();
-        }
-        
-    }
-
-    public void testGetExecutionPlan() throws Exception {
-        Statement stmt = connection.createStatement();
-        try {
-            FBResultSet rs = (FBResultSet)stmt.executeQuery(
-                    "SELECT id, str FROM test_table");
-            String execPlan = rs.getExecutionPlan();
-            assertTrue("Execution plan should reference test_table",
-                    execPlan.toUpperCase().indexOf("TEST_TABLE") >= 0);
-        } finally {
-            stmt.close();
-        }
-
-        PreparedStatement pStmt = 
-            connection.prepareStatement("SELECT * FROM TEST_TABLE");
-        try {
-            FBResultSet rs = (FBResultSet)pStmt.executeQuery();
-            String execPlan = rs.getExecutionPlan();
-            assertTrue("Execution plan should reference test_table",
-                    execPlan.toUpperCase().indexOf("TEST_TABLE") >= 0);
-        } finally {
-            pStmt.close();
-        }
-        
-        // Ensure there isn't a crash when attempting to retrieve the
-        // execution plan from a non-statement-based ResultSet
-        java.sql.DatabaseMetaData metaData = connection.getMetaData();
-        FBResultSet rs = (FBResultSet)metaData.getSchemas();
-        assertEquals("Non-statement-based result set has no execution plan",
-                "", rs.getExecutionPlan());
-    }
-    
-    public void testHoldability() throws Exception {
-        ((FirebirdConnection)connection).setHoldability(FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT);
-        
-        try {
-            Statement stmt = connection.createStatement(
-                    ResultSet.TYPE_FORWARD_ONLY,
-                    ResultSet.CONCUR_READ_ONLY);
-            
-            fail("Holdable cursor is not compatible with forward-only result set.");
-        } catch(FBDriverNotCapableException ex) {
-            // everything is ok
-        }
-        
-        Statement stmt = connection.createStatement(
-                ResultSet.TYPE_SCROLL_INSENSITIVE, 
-                ResultSet.CONCUR_READ_ONLY);
-        
-        try {
-            // execute first query
-            ResultSet rs = stmt.executeQuery("SELECT * FROM rdb$database");
-            
-            // now execute another query, causes commit in auto-commit mode
-            stmt.executeQuery("SELECT * FROM rdb$database");
-            
-            // now let's access the result set
-            while(rs.next()) {
-                String str1 = rs.getString(1);
-            }
-        } finally {
-            stmt.close();
-        }
-    }
-
-    public void testFetchSize() throws Exception {
-        final int FETCH_SIZE = 3;
-        Statement stmt = connection.createStatement();
-        try {
-            int fetchSize = stmt.getFetchSize();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
-            assertEquals(
-                "Default stmt fetch size must match ResultSet fetch size",
-                fetchSize, rs.getFetchSize());
-
-            stmt.setFetchSize(FETCH_SIZE);
-            rs = stmt.executeQuery("SELECT * FROM test_table");
-            assertEquals("ResultSet fetchsize must match Statement fetchSize",
-                    FETCH_SIZE, rs.getFetchSize());
-
-        } finally {
-            stmt.close();
-        }
-    }
-
-    public void testInsertUpdatableCursor() throws Exception {
-        
-        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
-        
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
-            // rs.next();
-            rs.moveToInsertRow();
-            rs.updateInt("id", 1);
-            rs.updateString("blob_str", "test");
-            try {
-                rs.updateRow();
-                fail("Should fail, since updateRow() is used to update rows.");
-            } catch(SQLException ex) {
-                // ok, let's try to insert row
-                rs.insertRow();
-            }
-            
-            rs.close();
-
-            rs = stmt.executeQuery("SELECT * FROM test_table");
-            assertTrue("Should have at least one row", rs.next());
-            assertTrue("First record should have ID=1", rs.getInt("id") == 1);
-            assertTrue("BLOB should be also saved", "test".equals(rs.getString("blob_str")));
-            assertTrue("Should have only one row.", !rs.next());
-            
-        } finally {
-            stmt.close();
-        }
-    }
-    
-    public void testMetaDataQueryShouldKeepRsOpen() throws Exception {
-        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
-        
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
-            
-            try {
-                
-                ResultSet bestRowId = connection.getMetaData().getBestRowIdentifier(
-                    null, null, "test_table", 1, false);
-                assertTrue("Should have row ID", bestRowId.next());
-                bestRowId.close();
-                
-                rs.next();
-            } catch(SQLException ex) {
-                fail("Should throw no exception that result set is closed.");
-            }
-        } finally {
-            stmt.close();
-        }
-    }
-    
     public static void main(String[] args) {
         TestRunner.run(new TestFBResultSet("testMemoryGrowth"));
     }
-
 }

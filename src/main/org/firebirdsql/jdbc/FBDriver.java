@@ -25,23 +25,27 @@ import java.util.*;
 
 import javax.resource.ResourceException;
 
-import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.*;
+import org.firebirdsql.gds.GDSType;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jca.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 /**
- * The Jaybird JDBC Driver implementation for the Firebird database.
+ * Describe class <code>FBDriver</code> here.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBDriver implements FirebirdDriver {
+public class FBDriver implements Driver {
 
     private final static Logger log;
 
-//    public static final String FIREBIRD_PROTOCOL = "jdbc:firebirdsql:";
+    public static final String FIREBIRD_PROTOCOL = "jdbc:firebirdsql:";
+    public static final String FIREBIRD_PROTOCOL_NATIVE= FIREBIRD_PROTOCOL + "native:";
+    public static final String FIREBIRD_PROTOCOL_NATIVE_EMBEDDED = FIREBIRD_PROTOCOL + "embedded";
+    public static final String FIREBIRD_PROTOCOL_NATIVE_LOCAL = FIREBIRD_PROTOCOL + "local:";
+    public static final String FIREBIRD_PROTOCOL_ORACLE_MODE = FIREBIRD_PROTOCOL + "oracle:";
 
     public static final String CHARSET = "charSet";
     public static final String USE_TRANSLATION = "useTranslation";
@@ -86,95 +90,157 @@ public class FBDriver implements FirebirdDriver {
      * included in the Properties.
      *
      * @param url the URL of the database to which to connect
-     * @param originalInfo a list of arbitrary string tag/value pairs as
+     * @param info a list of arbitrary string tag/value pairs as
      * connection arguments. Normally at least a "user" and
      * "password" property should be included.
      * @return a <code>Connection</code> object that represents a
      *         connection to the URL
      * @exception SQLException if a database access error occurs
      */
-    public Connection connect(String url, Properties originalInfo)
+    public Connection connect(String url, Properties info)
         throws SQLException
     {
-        final GDSType type = GDSFactory.getTypeForProtocol(url);
-        
-        if (type == null)
+        if (url == null || !url.startsWith(FIREBIRD_PROTOCOL))
             return null;
 
-        try {
-            if (originalInfo == null)
-                originalInfo = new Properties();
+        final GDSType type = getDriverType(url);
 
-            Map normalizedInfo = FBDriverPropertyManager.normalize(url, originalInfo);
+        try {
+            if (info == null)
+                info = new Properties();
+
+            info = FBDriverPropertyManager.normalize(url, info);
             
             int qMarkIndex = url.indexOf('?');
             if (qMarkIndex != -1)
                 url = url.substring(0, qMarkIndex);
 
+            Integer blobBufferLength = extractBlobBufferLength(info);
+            
+
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
             
-            String databaseURL = GDSFactory.getDatabasePath(type, url);
+            FBConnectionRequestInfo conCri =
+                FBConnectionHelper.getCri(info, mcf.getDefaultConnectionRequestInfo());
+
+            //handleEncoding(info, conCri);
+
+            FBTpbMapper tpbMapper = FBConnectionHelper.getTpbMapper(info);
+
+            // extract the user
+            String user = conCri.getStringProperty(ISCConstants.isc_dpb_user);
+
+            if (user == null)
+                user = conCri.getStringProperty(ISCConstants.isc_dpb_user_name);
+
+            if (user == null)
+                throw new FBSQLException(
+                    "User for database connection not specified.",
+                    FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
+
+            // extract the password
+            String password = info.getProperty(PASSWORD);
+
+            if (password == null)
+                password = conCri.getStringProperty(ISCConstants.isc_dpb_password);
+
+            if (password == null)
+                throw new FBSQLException(
+                    "Password for database connection not specified.",
+                    FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
+            
+            // extract the database URL
+
+            String databaseURL;
+            if( url.startsWith(FIREBIRD_PROTOCOL_NATIVE) )
+                databaseURL = url.substring(FIREBIRD_PROTOCOL_NATIVE.length());
+            else if( url.startsWith(FIREBIRD_PROTOCOL_NATIVE_EMBEDDED) )
+                databaseURL = url.substring(FIREBIRD_PROTOCOL_NATIVE_EMBEDDED.length()+1);
+            else if (url.startsWith(FIREBIRD_PROTOCOL_NATIVE_LOCAL))
+                databaseURL = url.substring(FIREBIRD_PROTOCOL_NATIVE_LOCAL.length());
+            else if (url.startsWith(FIREBIRD_PROTOCOL_ORACLE_MODE))
+                databaseURL = url.substring(FIREBIRD_PROTOCOL_ORACLE_MODE.length());
+            else
+                databaseURL = url.substring(FIREBIRD_PROTOCOL.length());
 
             mcf.setDatabase(databaseURL);
-            for (Iterator iter = normalizedInfo.entrySet().iterator(); iter.hasNext();) {
-                Map.Entry entry = (Map.Entry) iter.next();
-                
-                mcf.setNonStandardProperty((String)entry.getKey(), (String)entry.getValue());
-            }
-
-            FBConnectionHelper.processTpbMapping(mcf.getGDS(), mcf, originalInfo);
+            mcf.setConnectionRequestInfo(conCri);
             
+            if (tpbMapper != null)
+                mcf.setTpbMapper(tpbMapper);
+                
+            if (blobBufferLength != null) 
+            {
+                mcf.setBlobBufferLength(blobBufferLength);                
+            } // end of if ()
             mcf = mcf.canonicalize();
 
-            FBDataSource dataSource = createDataSource(mcf);
+            FBDataSource dataSource = null;
+            synchronized (mcfToDataSourceMap)
+            {
+                dataSource = (FBDataSource)mcfToDataSourceMap.get(mcf);
+                
+                if (dataSource == null) {
+                    dataSource = (FBDataSource)mcf.createConnectionFactory();
+                    mcfToDataSourceMap.put(mcf, dataSource);
+                } // end of if ()
+            }
 
-            return dataSource.getConnection(mcf.getUserName(), mcf.getPassword());
-            
+            return dataSource.getConnection(user, password);
         } catch(ResourceException resex) {
             throw new FBSQLException(resex);
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
         }
     }
 
 
-    private FBDataSource createDataSource(FBManagedConnectionFactory mcf) throws ResourceException {
-        FBDataSource dataSource = null;
-        synchronized (mcfToDataSourceMap)
-        {
-            dataSource = (FBDataSource)mcfToDataSourceMap.get(mcf);
-            
-            if (dataSource == null) {
-                dataSource = (FBDataSource)mcf.createConnectionFactory();
-                mcfToDataSourceMap.put(mcf, dataSource);
-            }
-        }
-        return dataSource;
-    }
-    
-    
-    public FirebirdConnection connect(FirebirdConnectionProperties properties) throws SQLException {
-        GDSType type = GDSType.getType(properties.getType());
+    private Integer extractBlobBufferLength(Properties info) throws SQLException {
+        String blobBufferLengthStr = (String)info.get(
+            FBConnectionHelper.DPB_PREFIX + BLOB_BUFFER_LENGTH);
         
-        if (type == null)
-            type = ((AbstractGDS)GDSFactory.getDefaultGDS()).getType();
+        if (blobBufferLengthStr == null)
+            return null;
+        
         try {
-            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
-    
-            mcf = mcf.canonicalize();
-    
-            FBDataSource dataSource = createDataSource(mcf);
-    
-            return (FirebirdConnection)dataSource.getConnection(mcf.getUserName(), mcf.getPassword());
-        } catch(ResourceException ex) {
-            throw new FBSQLException(ex);
+            return new Integer(blobBufferLengthStr);
+        } catch (NumberFormatException e) {
+            throw new FBSQLException("Blob buffer length " + blobBufferLengthStr
+                    + " could not be converted to an integer",
+                    FBSQLException.SQL_STATE_INVALID_CONN_ATTR);
         }
     }
 
+    /**
+	 *
+	 *
+	 * @param url
+	 * @return
+	 */
+    private GDSType getDriverType(String url)
+    {
+        if(url.startsWith(FIREBIRD_PROTOCOL_NATIVE))
+        {
+            return GDSType.NATIVE;
+        } 
+        else
+        if(url.startsWith(FIREBIRD_PROTOCOL_NATIVE_EMBEDDED))
+        {
+            return GDSType.NATIVE_EMBEDDED;
+        }
+        else
+        if (url.startsWith(FIREBIRD_PROTOCOL_NATIVE_LOCAL))
+        {
+            return GDSType.NATIVE_LOCAL;
+        }
+        else
+        if (url.startsWith(FIREBIRD_PROTOCOL_ORACLE_MODE))
+        {
+            return GDSType.ORACLE_MODE;
+        }
+        {
+            return GDSType.PURE_JAVA;
+        }
+     }
 
-    public FirebirdConnectionProperties newConnectionProperties() {
-        return new  FBConnectionProperties();
-    }
 
     /**
      * Returns true if the driver thinks that it can open a connection
@@ -187,15 +253,7 @@ public class FBDriver implements FirebirdDriver {
      * @exception SQLException if a database access error occurs
      */
     public boolean acceptsURL(String url) throws  SQLException {
-        Set protocols = GDSFactory.getSupportedProtocols();
-        
-        for (Iterator iter = protocols.iterator(); iter.hasNext();) {
-            String protocol = (String) iter.next();
-            if (url.startsWith(protocol))
-                return true;
-        }
-        
-        return false;
+        return url.startsWith(FIREBIRD_PROTOCOL);
     }
 
 
@@ -216,12 +274,45 @@ public class FBDriver implements FirebirdDriver {
      *          properties.  This array may be an empty array if no properties
      *          are required.
      * @exception SQLException if a database access error occurs
-     * TODO check the correctness of implementation
-     * TODO convert parameters into constants
+     * @todo check the correctness of implementation
+     * @todo convert parameters into constants
      */
     public DriverPropertyInfo[] getPropertyInfo(String url,
-        Properties info) throws  SQLException {
-        
+        Properties info) throws  SQLException
+    {
+        /*
+        Vector properties = new Vector();
+        String database = url.substring(FIREBIRD_PROTOCOL.length());
+        String user = info.getProperty(USER);
+        String passwd = info.getProperty(PASSWORD);
+
+        // add non-empty database
+        if ((database != null) && (database != "")) {
+            DriverPropertyInfo dinfo =
+                new DriverPropertyInfo(DATABASE, database);
+            dinfo.required = true;
+            properties.add(dinfo);
+        }
+
+        // add user if it is not null
+        if (user != null) {
+            DriverPropertyInfo dinfo =
+                new DriverPropertyInfo(USER, user);
+            dinfo.required = true;
+            properties.add(dinfo);
+        }
+
+        // add password if it is not null
+        if (passwd != null) {
+            DriverPropertyInfo dinfo =
+                new DriverPropertyInfo(PASSWORD, passwd);
+            dinfo.required = true;
+            properties.add(dinfo);
+        }
+
+        return (DriverPropertyInfo[])
+            properties.toArray(new DriverPropertyInfo[0]);
+        */
         return FBDriverPropertyManager.getDriverPropertyInfo(info);
     }
 
@@ -232,7 +323,7 @@ public class FBDriver implements FirebirdDriver {
          * @return this driver's major version number
      */
     public int getMajorVersion() {
-        return 2;
+        return 1;
     }
 
     /**
@@ -240,7 +331,7 @@ public class FBDriver implements FirebirdDriver {
          * @return this driver's minor version number
      */
     public int getMinorVersion() {
-        return 0;
+        return 5;
     }
 
 
@@ -262,7 +353,11 @@ public class FBDriver implements FirebirdDriver {
      * implementation may not be feasible.
      */
     public boolean jdbcCompliant() {
-        return true;
+        return false; //Lets work to make it true!
     }
+
+    /** @link dependency
+     * @stereotype instantiate*/
+    /*#AbstractConnection lnkFBConnection;*/
 }
 

@@ -5,68 +5,68 @@ import java.sql.*;
 import java.util.ArrayList;
 
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
-import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.isc_stmt_handle;
 import org.firebirdsql.jdbc.field.*;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 class FBCachedFetcher implements FBFetcher {
 
     private boolean forwardOnly;
     private Object[] rowsArray;
+    private AbstractStatement fbStatement;
+    private FBResultSet rs;
     private int rowNum = 0;
 
-    private int fetchSize;
-    
-    private FBObjectListener.FetcherListener fetcherListener;
-
-    FBCachedFetcher(GDSHelper gdsHelper, int fetchSize, int maxRows, 
-            AbstractIscStmtHandle stmt_handle, FBObjectListener.FetcherListener fetcherListener, boolean forwardOnly) throws SQLException 
+    private final static Logger log = LoggerFactory.getLogger(FBCachedFetcher.class,false);
+          
+    FBCachedFetcher(AbstractConnection c, AbstractStatement fbStatement, 
+            isc_stmt_handle stmt_handle, FBResultSet rs) throws SQLException 
     {
         
-        this.fetcherListener = fetcherListener;
-        this.forwardOnly = forwardOnly;
+        this.forwardOnly = rs.getType() == ResultSet.TYPE_FORWARD_ONLY;
         
         ArrayList rowsSets = new ArrayList(100);
+        ArrayList rows = new ArrayList(100);
 
-        AbstractIscStmtHandle stmt =  stmt_handle;
+        isc_stmt_handle stmt =  stmt_handle;
         byte[][] localRow = null;
-
-        XSQLVAR[] xsqlvars = stmt_handle.getOutSqlda().sqlvar;
+            
+        this.fbStatement = fbStatement;
+        this.rs = rs;
+            
         //
         // Check if there is blobs to catch
         //
-        boolean[] isBlob = new boolean[xsqlvars.length];
+        boolean[] isBlob = new boolean[rs.xsqlvars.length];
         boolean hasBlobs = false;
-        for (int i = 0; i < xsqlvars.length; i++){
-            isBlob[i] = FBField.isType(xsqlvars[i], Types.BLOB) ||
-                FBField.isType(xsqlvars[i], Types.BINARY) ||
-                FBField.isType(xsqlvars[i], Types.LONGVARCHAR);
+        for (int i = 0; i < rs.xsqlvars.length; i++){
+            isBlob[i] = FBField.isType(rs.xsqlvars[i], Types.BLOB) ||
+                FBField.isType(rs.xsqlvars[i], Types.BINARY) ||
+                FBField.isType(rs.xsqlvars[i], Types.LONGVARCHAR);
             if (isBlob[i]) 
                 hasBlobs = true;
         }
-        
         //
         // load all rows from statement
         //
         int rowsCount = 0;
         try {
+            int fetchSize = fbStatement.fetchSize;
             if (fetchSize == 0)
                 fetchSize = MAX_FETCH_ROWS;
-            this.fetchSize = fetchSize;
-
-            // the following if, is only for callable statement				
-            if (!stmt.isAllRowsFetched() && stmt.size() == 0) {
+				// the following if, is only for callable statement				
+				if (!stmt.getAllRowsFetched() && stmt.size() == 0) {
                 do {
-                    if (maxRows != 0 && fetchSize > maxRows - stmt.size())
-                        fetchSize = maxRows - stmt.size();
-                    gdsHelper.fetch(stmt, fetchSize);
+                    if (fbStatement.maxRows != 0 && fetchSize > fbStatement.maxRows - stmt.size())
+                        fetchSize = fbStatement.maxRows - stmt.size();
+                    c.fetch(stmt, fetchSize);
                     if (stmt.size() > 0){
                         rowsSets.add(stmt.getRows());
                         rowsCount += stmt.size();
                         stmt.removeRows();
                     }
-                } while (!stmt.isAllRowsFetched() && (maxRows==0 || rowsCount <maxRows));
+                } while (!stmt.getAllRowsFetched() && (fbStatement.maxRows==0 || rowsCount <fbStatement.maxRows));
                 // now create one list with known capacity					 
                 int rowCount = 0;
                 rowsArray  = new Object[rowsCount];
@@ -97,38 +97,39 @@ class FBCachedFetcher implements FBFetcher {
                         // if field is blob and there is a value in cache
                         if (isBlob[j] && localRow[j] != null ) {
                             
-                            // anonymous implementation of the FieldDataProvider interface
-                            final byte[] tempData = localRow[j];
-                            FieldDataProvider dataProvider = new FieldDataProvider() {
-                                public byte[] getFieldData() {
-                                    return tempData;
-                                }
-                                
-                                public void setFieldData(byte[] data) {
-                                    throw new UnsupportedOperationException();
-                                }
-                            };
-
+                            // make this row current in result set
+                            rs.row = localRow;
+                            
                             // copy data from current row
                             FBField localField = FBField.createField(
-                                    xsqlvars[j], dataProvider, gdsHelper, false);
+                                    rs.xsqlvars[j], rs, j,false);
                             
                             FBFlushableField blob = (FBFlushableField)localField;
+                                  
+                            if (blob instanceof FBBlobField)
+                                ((FBBlobField)blob).setConnection(c);
+                            else
+                            if (blob instanceof FBLongVarCharField)
+                                ((FBLongVarCharField)blob).setConnection(c);
+                                
                             localRow[j] = blob.getCachedObject();
+                            
+                            // set current row in result set to null
+                            rs.row = null;
                         }
                     }
                 }
             }
-            gdsHelper.closeStatement(stmt, false);
+            c.closeStatement(stmt, false);
         }
         catch (GDSException ge) {
             throw new FBSQLException(ge);
         }
     }
 
-    FBCachedFetcher(ArrayList rows, FBObjectListener.FetcherListener fetcherListener) throws SQLException {
+    FBCachedFetcher(ArrayList rows, FBResultSet rs) throws SQLException {
         rowsArray = rows.toArray();
-        this.fetcherListener = fetcherListener;
+        this.rs = rs;
     }
 
     public boolean next() throws SQLException {
@@ -138,14 +139,14 @@ class FBCachedFetcher implements FBFetcher {
         rowNum++;
         
         if (isAfterLast()) {
-            fetcherListener.rowChanged(this, null);
+            rs.row = null;
             // keep cursor right after last row 
             rowNum = rowsArray.length + 1;
             
             return false;
         }
 
-        fetcherListener.rowChanged(this, (byte[][])rowsArray[rowNum-1]);
+        rs.row = (byte[][])rowsArray[rowNum-1];		  
                
         return true;
     }
@@ -162,14 +163,14 @@ class FBCachedFetcher implements FBFetcher {
         rowNum--;
 
         if(isBeforeFirst()) {
-            fetcherListener.rowChanged(this, null);
+            rs.row = null;
             
             // keep cursor right before the first row
             rowNum = 0;
             return false;
         }
-
-        fetcherListener.rowChanged(this, (byte[][])rowsArray[rowNum-1]);
+            
+        rs.row = (byte[][])rowsArray[rowNum-1];       
         
         return true;
     }
@@ -201,7 +202,7 @@ class FBCachedFetcher implements FBFetcher {
         rowNum = row;
 
         if(isBeforeFirst()) {
-            fetcherListener.rowChanged(this, null);
+            rs.row = null;
             
             // keep cursor right before the first row
             rowNum = 0;
@@ -209,12 +210,12 @@ class FBCachedFetcher implements FBFetcher {
         } 
         
         if (isAfterLast()) {
-            fetcherListener.rowChanged(this, null);
+            rs.row = null;
             rowNum = rowsArray.length + 1;
             return false;
         }
-
-        fetcherListener.rowChanged(this, (byte[][])rowsArray[rowNum-1]);
+        
+        rs.row = (byte[][])rowsArray[rowNum-1];       
         
         return true;
     }
@@ -259,6 +260,9 @@ class FBCachedFetcher implements FBFetcher {
     public void close() throws SQLException {
     }
 
+    public AbstractStatement getStatement() {
+        return fbStatement;
+    }
     public int getRowNum() {
         return rowNum;
     }
@@ -276,68 +280,5 @@ class FBCachedFetcher implements FBFetcher {
     }
     public boolean isAfterLast() {
         return rowNum > rowsArray.length;
-    }
-
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FBFetcher#deleteRow()
-     */
-    public void deleteRow() throws SQLException {
-        Object[] newRows = new Object[rowsArray.length - 1];
-        System.arraycopy(rowsArray, 0, newRows, 0, rowNum - 1);
-        
-        if (rowNum < rowsArray.length)
-            System.arraycopy(rowsArray, rowNum, newRows, rowNum - 1, rowsArray.length - rowNum);
-        
-        rowsArray = newRows;
-        
-        if (isAfterLast())
-            fetcherListener.rowChanged(this, null);
-        else
-        if (isBeforeFirst())
-            fetcherListener.rowChanged(this, null);
-        else
-            fetcherListener.rowChanged(this, (byte[][])rowsArray[rowNum-1]);
-    }
-
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FBFetcher#insertRow(byte[][])
-     */
-    public void insertRow(byte[][] data) throws SQLException {
-        Object[] newRows = new Object[rowsArray.length + 1];
-        
-        if (rowNum == 0)
-            rowNum++;
-        
-        System.arraycopy(rowsArray, 0, newRows, 0, rowNum - 1);
-        System.arraycopy(rowsArray, rowNum - 1, newRows, rowNum, rowsArray.length - rowNum + 1);
-        newRows[rowNum - 1] = data;
-
-        rowsArray = newRows;
-
-        if (isAfterLast())
-            fetcherListener.rowChanged(this, null);
-        else
-        if (isBeforeFirst())
-            fetcherListener.rowChanged(this, null);
-        else
-            fetcherListener.rowChanged(this, (byte[][])rowsArray[rowNum-1]);
-    }
-
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FBFetcher#updateRow(byte[][])
-     */
-    public void updateRow(byte[][] data) throws SQLException {
-        if (!isAfterLast() && !isBeforeFirst()) {
-            rowsArray[rowNum - 1] = data;
-            fetcherListener.rowChanged(this, data);
-        }
-    }
-
-    public int getFetchSize(){
-        return fetchSize;
-    }
-
-    public void setFetchSize(int fetchSize){
-        this.fetchSize = fetchSize;
     }
 }

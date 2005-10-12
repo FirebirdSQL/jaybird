@@ -88,7 +88,7 @@ public class TestFBDriver extends FBTestBase {
 
     public void testJdbcCompliant() {
         // current driver is not JDBC compliant.
-        assertTrue(driver.jdbcCompliant());
+        assertTrue(!driver.jdbcCompliant());
     }
     
     /**
@@ -137,17 +137,16 @@ public class TestFBDriver extends FBTestBase {
     
     public void testDialect1() throws Exception {
         Properties info = (Properties)getDefaultPropertiesForConnection().clone();
-        info.setProperty("isc_dpb_sql_dialect", "1");
+        info.setProperty("sqlDialect", "1");
         
         Connection dialect1Connection = DriverManager.getConnection(getUrl(), info);
         try {
             
             Statement stmt = dialect1Connection.createStatement();
             try {
-                ResultSet rs = stmt.executeQuery("SELECT  cast(\"today\" as date) - 7 FROM rdb$database");
+                ResultSet rs = stmt.executeQuery("SELECT  CAST(\"NOW\" AS DATE) FROM rdb$database");
                 assertTrue("Should have at least one row.", rs.next());
             } catch(SQLException ex) {
-                ex.printStackTrace();
                 fail("In dialect doublequotes are allowed.");
             } finally {
                 stmt.close();

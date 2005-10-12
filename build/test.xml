@@ -6,6 +6,7 @@
 
    <!-- Override JUnit defaults -->
 
+
     <!--create local db dir, if you are running on remote machine
       you must provide it yourself -->
     <mkdir dir="${module.output}/db"/>
@@ -33,14 +34,15 @@
         <!-- pathelement location="${build.test}"/ -->
         <!-- pathelement location="${build.resources}"/ -->
 
-        <pathelement location="${build.lib}/${archive.name.simple}"/>
-        <pathelement location="${build.lib}/${archive.name.test}"/>
+        <pathelement location="${build.lib}/firebirdsql.jar"/>
+        <pathelement location="${build.lib}/firebirdsql-test.jar"/>
+        <pathelement location="${build.lib}/mini-concurrent.jar"/>
         <pathelement location="${build.lib}/mini-j2ee.jar"/>
+        <pathelement location="${build.lib}/firebirdsql-test.jar"/>
 
-        <fileset dir="lib">
-          <include name="**/*.jar"/>
-        </fileset>
 
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
         <path refid="javac.test.classpath"/>
       </classpath>
 
@@ -54,7 +56,7 @@
 
         <fileset dir="${build.test}">
           <include name="**/Test*.class"/>
-          <exclude name="**/jni/Test*.class"/>
+          <exclude name="**/ngds/Test*.class"/>
           <exclude name="**/TestAll.class"/>
           <exclude name="**/TestXABase*.class"/>
           <exclude name="**/TestConst.class"/>
@@ -64,6 +66,8 @@
       </batchtest>
     </junit>
   </target>
+
+
 
   <target name="all-tests-native" depends="jars,compile-native,copy_native_to_test_path">
 
@@ -97,14 +101,15 @@
         <!-- pathelement location="${build.test}"/ -->
         <!-- pathelement location="${build.resources}"/ -->
 
-        <pathelement location="${build.lib}/${archive.name.simple}"/>
-        <pathelement location="${build.lib}/${archive.name.test}"/>
+        <pathelement location="${build.lib}/firebirdsql.jar"/>
+        <pathelement location="${build.lib}/firebirdsql-test.jar"/>
+        <pathelement location="${build.lib}/mini-concurrent.jar"/>
         <pathelement location="${build.lib}/mini-j2ee.jar"/>
+        <pathelement location="${build.lib}/firebirdsql-test.jar"/>
 
-        <fileset dir="lib">
-          <include name="**/*.jar"/>
-        </fileset>
 
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
         <path refid="javac.test.classpath"/>
       </classpath>
 
@@ -118,7 +123,7 @@
 
         <fileset dir="${build.test}">
           <include name="**/Test*.class"/>
-          <exclude name="**/wire/Test*.class"/>
+          <exclude name="**/jgds/Test*.class"/>
           <exclude name="**/TestAll.class"/>
           <exclude name="**/TestXABase*.class"/>
           <exclude name="**/TestConst.class"/>
@@ -165,14 +170,15 @@
         <!-- pathelement location="${build.test}"/ -->
         <!-- pathelement location="${build.resources}"/ -->
 
-        <pathelement location="${build.lib}/${archive.name.simple}"/>
-        <pathelement location="${build.lib}/${archive.name.test}"/>
+        <pathelement location="${build.lib}/firebirdsql.jar"/>
+        <pathelement location="${build.lib}/firebirdsql-test.jar"/>
+        <pathelement location="${build.lib}/mini-concurrent.jar"/>
         <pathelement location="${build.lib}/mini-j2ee.jar"/>
+        <pathelement location="${build.lib}/firebirdsql-test.jar"/>
 
-        <fileset dir="lib">
-          <include name="**/*.jar"/>
-        </fileset>
 
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
         <path refid="javac.test.classpath"/>
       </classpath>
 
@@ -186,7 +192,7 @@
 
         <fileset dir="${build.test}">
           <include name="**/Test*.class"/>
-          <exclude name="**/wire/Test*.class"/>
+          <exclude name="**/jgds/Test*.class"/>
           <exclude name="**/TestAll.class"/>
           <exclude name="**/TestXABase*.class"/>
           <exclude name="**/TestConst.class"/>
@@ -228,7 +234,8 @@
         <pathelement location="${build.classes}"/>
         <pathelement location="${build.test}"/>
         <pathelement location="${build.resources}"/>
-        <pathelement location="${lib.dir}/*.jar"/>
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
         <path refid="javac.test.classpath"/>
       </classpath>
 
@@ -272,11 +279,8 @@
         <pathelement location="${build.classes}"/>
         <pathelement location="${build.test}"/>
         <pathelement location="${build.resources}"/>
-
-        <fileset dir="lib">
-          <include name="**/*.jar"/>
-        </fileset>
-
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
         <path refid="javac.test.classpath"/>
       </classpath>
 
@@ -320,11 +324,8 @@
         <pathelement location="${build.classes}"/>
         <pathelement location="${build.test}"/>
         <pathelement location="${build.resources}"/>
-
-        <fileset dir="lib">
-          <include name="**/*.jar"/>
-        </fileset>
-
+        <pathelement location="${lib.dir}/ant.jar"/>
+        <pathelement location="${lib.dir}/optional.jar"/>
         <path refid="javac.test.classpath"/>
       </classpath>
 
@@ -342,6 +343,7 @@
       </batchtest>
     </junit>
   </target>
+
 
 
   <target name="tests-report-html-pure-java" depends="all-tests-pure-java">

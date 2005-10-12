@@ -1,33 +1,25 @@
 /*
- * Public Firebird Java API.
+ * Firebird Open Source J2ee connector - jdbc driver
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright notice, 
- *       this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright 
- *       notice, this list of conditions and the following disclaimer in the 
- *       documentation and/or other materials provided with the distribution. 
- *    3. The name of the author may not be used to endorse or promote products 
- *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
- * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
  */
 
 package org.firebirdsql.gds;
 
 /**
- * A GDS-specific exception
- *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
@@ -53,13 +45,6 @@ public class GDSException extends Exception {
      */
     protected GDSException next;
 
-    /**
-     * Factory method to create a new instance with a given <code>XA</code>
-     * error code.
-     *
-     * @param message Message for the new instance
-     * @param xaErrorCode The <code>XA</code> error code
-     */
     public static GDSException createWithXAErrorCode(String message, int xaErrorCode)
     {
         GDSException gdse = new GDSException(message);
@@ -67,29 +52,11 @@ public class GDSException extends Exception {
         return gdse;
     }
 
-    /**
-     * Create a new instance.
-     *
-     * @param type type of the exception, should be always 
-     *        {@link ISCConstants#isc_arg_gds}, otherwise no message will be 
-     *        displayed.
-     * @param intParam Additional int parameter about the new exception
-     */
     public GDSException(int type, int intParam) {
         this.type = type;
         this.intParam = intParam;
     }
 
-    /**
-     * Create a new instance.
-     *
-     * @param type type of the exception, should be always 
-     *        {@link ISCConstants#isc_arg_gds}, otherwise no message will be 
-     *        displayed.
-     * @param strParam value of the string parameter that will substitute 
-     *        <code>{0}</code> entry in error message corresponding to the 
-     *        specified error code.
-     */
     public GDSException(int type, String strParam) {
         this.type = type;
         this.strParam = strParam;
@@ -115,33 +82,17 @@ public class GDSException extends Exception {
         setNext(new GDSException(ISCConstants.isc_arg_string, strParam));
     }
 
-    /**
-     * Create a new instance.
-     *
-     * @param fbErrorCode Firebird error code, one of the constants declared
-     *        in {@link GDS} interface
-     */
     public GDSException(int fbErrorCode) {
         // this.fbErrorCode = fbErrorCode;
         this.intParam = fbErrorCode;
         this.type = ISCConstants.isc_arg_gds;
     }
 
-    /**
-     * Create a new instance with only a simple message.
-     *
-     * @param message Message for the new exception
-     */
     public GDSException(String message) {
         super(message);
         this.type = ISCConstants.isc_arg_string;
     }
 
-    /**
-     * Get the Firebird-specific error code for this exception.
-     *
-     * @return The Firebird error code
-     */
     public int getFbErrorCode() {
         //return fbErrorCode;
         if (type == ISCConstants.isc_arg_number)
@@ -150,11 +101,6 @@ public class GDSException extends Exception {
             return -1;
     }
 
-    /**
-     * Get the <code>int</code> parameter for this exception.
-     *
-     * @return The <code>int</code> parameter
-     */
     public int getIntParam() {
         return intParam;
     }
@@ -178,30 +124,16 @@ public class GDSException extends Exception {
         this.xaErrorCode = xaErrorCode;
     }
 
-    /**
-     * Set the next exception in the chain.
-     *
-     * @param e The next chained exception
-     */
+    
+    
     public void setNext(GDSException e) {
         next = e;
     }
 
-    /**
-     * Get the next chained exception.
-     *
-     * @return The next chained exception
-     */
     public GDSException getNext() {
         return next;
     }
     
-    /**
-     * Retrieve whether this exception is a warning.
-     *
-     * @return <code>true</code> if this is a warning, 
-     *         <code>false</code> otherwise
-     */
     public boolean isWarning() {
         return type == ISCConstants.isc_arg_warning;
     }
@@ -245,6 +177,28 @@ public class GDSException extends Exception {
  
         return msg;
     }
+
+
+    public boolean isFatal()
+    {
+        return isThisFatal() || (next != null && next.isFatal());
+    }
+
+
+    private boolean isThisFatal()
+    {
+        for (int i = 0; i < ISCConstants.FATAL_ERRORS.length 
+                 && intParam >= ISCConstants.FATAL_ERRORS[i]; i++)
+        {
+            if (intParam == ISCConstants.FATAL_ERRORS[i]) 
+            {
+                return true;
+            } // end of if ()
+            
+        } // end of for ()
+        return false;
+    }
+
 
     /**
      * Returns the parameter depending on the type of the

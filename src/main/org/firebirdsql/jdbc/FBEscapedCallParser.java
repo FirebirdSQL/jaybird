@@ -24,6 +24,7 @@ package org.firebirdsql.jdbc;
  */
 public class FBEscapedCallParser {
     
+    private static final int UNDEFINED_STATE = 0;
     private static final int NORMAL_STATE = 1;
     private static final int LITERAL_STATE = 2;
     private static final int BRACE_STATE = 4;
@@ -31,8 +32,10 @@ public class FBEscapedCallParser {
     private static final int SPACE_STATE = 16;
     private static final int COMMA_STATE = 32;
     
+    private boolean parameterTerminated;
     
     private int state = NORMAL_STATE;
+    private int lastState = NORMAL_STATE;
 
     private int paramPosition;
     private int paramCount;
@@ -80,6 +83,7 @@ public class FBEscapedCallParser {
      * @param testChar character to test
      */
     protected void switchState(char testChar) throws FBSQLParseException {
+        parameterTerminated = false;
         
         switch (testChar) {
             case '\'' : 
@@ -202,6 +206,7 @@ public class FBEscapedCallParser {
         
         char[] sqlbuff = sql.toCharArray();
         StringBuffer buffer = new StringBuffer();
+        StringBuffer escape = new StringBuffer();
         
          for(int i = 0; i < sqlbuff.length; i++) {
              switchState(sqlbuff[i]);
@@ -261,16 +266,6 @@ public class FBEscapedCallParser {
                      if (tokenProcessed) {
                      	buffer = new StringBuffer();
                         setState(NORMAL_STATE);
-                        if (isNameProcessed){
-                            // If we just found a name, fast-forward to the 
-                            // opening parenthesis, if there is one
-                            int j = i;
-                            while (j < sqlbuff.length - 1 
-                                && Character.isWhitespace(sqlbuff[j])) j++;
-                            if (sqlbuff[j] == '(') 
-                                i = j;
-                        }
-
                      }
                  } else {
                      buffer.append(sqlbuff[i]);
@@ -284,6 +279,7 @@ public class FBEscapedCallParser {
                  // EXECUTE PROCEDURE words, but still do not have procedure
                  // name set, we can be sure that buffer contains procedure 
                  // name.
+                 
                  boolean isProcedureName = 
                      sqlbuff[i] == '(' &&
                      isCallKeywordProcessed() &&

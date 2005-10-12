@@ -27,7 +27,6 @@ import java.util.*;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * Implementation of {@link ResultSetMetaData} interface.
@@ -39,7 +38,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
 
     private final XSQLVAR[] xsqlvars;
     private Map extendedInfo;
-    private final GDSHelper connection;
+    private final AbstractConnection connection;
 
     /**
      * Creates a new <code>FBResultSetMetaData</code> instance.
@@ -48,10 +47,10 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * @param connection a <code>AbstractConnection</code> value
      * @exception SQLException if an error occurs
      *
-     * TODO Need another constructor for metadata from constructed
+     * @todo Need another constructor for metadata from constructed
      * result set, where we supply the ext field info.
      */
-    protected FBResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
+    protected FBResultSetMetaData(XSQLVAR[] xsqlvars, AbstractConnection connection) throws SQLException {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
     }
@@ -263,14 +262,6 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         return getColumnLabel(column);
     }
 
-    public String getSourceColumnName(int column) throws SQLException {
-        String result = getXsqlvar(column).sqlname;
-        
-        if (result == null)
-            result = "";
-        
-        return result;
-    }
 
     /**
      * Get the designated column's table's schema.
@@ -463,10 +454,64 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         int sqlscale = getXsqlvar(column).sqlscale;
         int sqlsubtype = getXsqlvar(column).sqlsubtype;
 
-        return FBDatabaseMetaData.getDataTypeName((short) sqltype,
-            (short) sqlscale, (short) sqlsubtype);
-    }
+        if (sqlscale < 0) {
+            switch (sqltype) {
+                case ISCConstants.SQL_SHORT:
+                case ISCConstants.SQL_LONG:
+                case ISCConstants.SQL_INT64:
+                case ISCConstants.SQL_DOUBLE:
+                    // NOTE: can't be BIGINT because of scale
+                    if (sqlsubtype == 2)
+                        return "DECIMAL";
+                    else
+                        return "NUMERIC";
+                default:
+                    break;
+            }
+        }
 
+        switch (sqltype) {
+            case ISCConstants.SQL_SHORT:
+                return "SMALLINT";
+            case ISCConstants.SQL_LONG:
+                return "INTEGER";
+            case ISCConstants.SQL_DOUBLE:
+            case ISCConstants.SQL_D_FLOAT:
+                return "DOUBLE PRECISION";
+            case ISCConstants.SQL_FLOAT:
+                return "FLOAT";
+            case ISCConstants.SQL_TEXT:
+                return "CHAR";
+            case ISCConstants.SQL_VARYING:
+                return "VARCHAR";
+            case ISCConstants.SQL_TIMESTAMP:
+                return "TIMESTAMP";
+            case ISCConstants.SQL_TYPE_TIME:
+                return "TIME";
+            case ISCConstants.SQL_TYPE_DATE:
+                return "DATE";
+            case ISCConstants.SQL_INT64:
+                if (sqlsubtype == 1)
+                    return "NUMERIC";
+                else if (sqlsubtype == 2)
+                    return "DECIMAL";
+                else
+                    return "BIGINT";
+            case ISCConstants.SQL_BLOB:
+                if (sqlsubtype < 0)
+                    return "BLOB SUB_TYPE " + sqlsubtype;
+                else if (sqlsubtype == 0)
+                    return "BLOB SUB_TYPE 0";
+                else if (sqlsubtype == 1)
+                    return "BLOB SUB_TYPE 1";
+                else
+                    return "BLOB SUB_TYPE " + sqlsubtype;
+            case ISCConstants.SQL_QUAD:
+                return "ARRAY";
+            default:
+                return "NULL";
+        }
+    }
 
 
     /**
@@ -732,9 +777,9 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      *
      * @throws SQLException if extended field information cannot be obtained.
      */
-    private Map getExtendedFieldInfo(GDSHelper gdsHelper) throws SQLException {
+    private Map getExtendedFieldInfo(AbstractConnection connection) throws SQLException {
 
-        if (gdsHelper == null) return Collections.EMPTY_MAP;
+        if (connection == null) return Collections.EMPTY_MAP;
 
         //
         // Apparently there is a limit in the UNION
@@ -765,8 +810,10 @@ public class FBResultSetMetaData implements ResultSetMetaData {
 
             }
 
-            FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
-            ResultSet rs = metaData.doQuery(sb.toString(), params);
+            ResultSet rs = connection.doQuery(
+                sb.toString(),
+                params,
+                ((FBDatabaseMetaData)connection.getMetaData()).statements);
 
             try {
 

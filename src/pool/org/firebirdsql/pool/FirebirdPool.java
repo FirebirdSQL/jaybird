@@ -27,10 +27,8 @@ package org.firebirdsql.pool;
 
 import java.sql.SQLException;
 
-import org.firebirdsql.jdbc.FirebirdConnectionProperties;
-
 /**
- * Configuration for the {@link org.firebirdsql.pool.FBWrappingDataSource} and
+ * Configuration for the {@link org.firebirdsql.jdbc.FBWrappingDataSource} and
  * {@link org.firebirdsql.pool.FBConnectionPoolDataSource} objects.
  * 
  * Following properties are supported:
@@ -39,7 +37,7 @@ import org.firebirdsql.jdbc.FirebirdConnectionProperties;
  *      size of the buffer used to transfer BLOB data.
  * 
  * <li><code>blockingTimeout</code> 
- *      time in milliseconds during which {@link javax.sql.DataSource#getConnection()} method will 
+ *      time in milliseconds during which {@link #getConnection()} method will 
  *      block if no free connection is in pool.
  * 
  * <li><code>charSet</code>
@@ -144,14 +142,13 @@ import org.firebirdsql.jdbc.FirebirdConnectionProperties;
  * 
  * <li><code>workingSize</code>
  *      number of connections that are in use (e.g. were obtained using
- *      {@link javax.sql.DataSource#getConnection()} method, but not yet closed).
+ *      {@link #getConnection()} method, but not yet closed).
  * </ul>
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public interface FirebirdPool extends FirebirdConnectionProperties, ConnectionPoolConfiguration {
+public interface FirebirdPool {
     
-    void restart();
     void shutdown();
 
     /*
@@ -160,6 +157,18 @@ public interface FirebirdPool extends FirebirdConnectionProperties, ConnectionPo
      int getBlockingTimeout();
 
      void setBlockingTimeout(int blockingTimeoutValue);
+
+     String getDatabase();
+
+     void setDatabase(String databaseValue);
+
+     String getEncoding();
+
+     void setEncoding(String encodingValue);
+
+     String getCharSet();
+
+     void setCharSet(String charSet) throws SQLException;
 
      int getMaxIdleTime();
 
@@ -177,9 +186,43 @@ public interface FirebirdPool extends FirebirdConnectionProperties, ConnectionPo
     
      void setMinPoolSize(int minPoolSize);
 
+     String getPassword();
+
+     void setPassword(String passwordValue);
+
+     String getTpbMapping();
+
+     void setTpbMapping(String tpbMappingValue);
+
+     String getUserName();
+
+     void setUserName(String userNameValue);
+
+     int getBlobBufferSize();
+
+     void setBlobBufferSize(int blobBufferSizeValue);
+
+     String getType();
+
+     void setType(String typeValue) throws SQLException;
+
      int getPingInterval();
 
      void setPingInterval(int pingIntervalValue);
+
+     int getSocketBufferSize();
+
+     void setSocketBufferSize(int socketBufferSize);
+
+     String getRoleName();
+
+     void setRoleName(String roleName);
+
+     String getNonStandardProperty(String key);
+
+     void setNonStandardProperty(String key, String value);
+
+     void setNonStandardProperty(String propertyMapping);
 
      boolean isPooling();
 
@@ -194,4 +237,12 @@ public interface FirebirdPool extends FirebirdConnectionProperties, ConnectionPo
      int getWorkingSize() throws SQLException;
 
      int getTotalSize() throws SQLException;
+
+     int getTransactionIsolationLevel();
+
+     void setTransactionIsolationLevel(int level);
+
+     String getIsolation();
+
+     void setIsolation(String isolation) throws SQLException;
 }

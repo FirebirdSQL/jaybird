@@ -20,7 +20,6 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -66,7 +65,7 @@ public class TestFBWrappingDataSource extends FBTestBase {
     public void testPersonalizedConnect() throws Exception {
         ds = createFBWrappingDataSource();
         ds.setDatabase(DB_DATASOURCE_URL);
-        ds.setRoleName("USER");
+        ds.setSqlRole("USER");
         ds.setEncoding("NONE");
         //ds.setNonStandardProperty("isc_dpb_sweep", null);
         ds.setNonStandardProperty("isc_dpb_num_buffers", "75");
@@ -80,7 +79,7 @@ public class TestFBWrappingDataSource extends FBTestBase {
 
         ds = createFBWrappingDataSource();
         ds.setDatabase(DB_DATASOURCE_URL);
-        ds.setMinPoolSize(0);
+        ds.setMinConnections(0);
         ds.setMaxPoolSize(5);
         ds.setBlockingTimeout(100);
         ds.setMaxIdleTime(1000);
@@ -118,7 +117,7 @@ public class TestFBWrappingDataSource extends FBTestBase {
 
         ds = createFBWrappingDataSource();
         ds.setDatabase(DB_DATASOURCE_URL);
-        ds.setMinPoolSize(3);
+        ds.setMinConnections(3);
         ds.setMaxPoolSize(5);
         ds.setBlockingTimeout(1000);
         ds.setMaxIdleTime(20000);
@@ -129,7 +128,7 @@ public class TestFBWrappingDataSource extends FBTestBase {
         assertTrue("Connection is null", connection != null);
         Thread.sleep(3000);
         int ccount = ds.getFreeSize(); // should be 2, 3 total, but one is working
-        assertTrue("Wrong number of connections! " + ccount + ", expected " + (ds.getMinPoolSize() - 1), ccount == (ds.getMinPoolSize() - 1));
+        assertTrue("Wrong number of connections! " + ccount + ", expected " + (ds.getMinConnections() - 1), ccount == (ds.getMinConnections() - 1));
         connection.close();
         ArrayList cs = new ArrayList();
         for (int i = 0; i < ds.getMaxPoolSize(); i++)
@@ -194,30 +193,6 @@ public class TestFBWrappingDataSource extends FBTestBase {
            
        } finally {
            context.unbind("jdbc/test");
-       }
-   }
-   
-   public void testValueAsString() throws Exception {
-       FBWrappingDataSource ds = new FBWrappingDataSource();
-       ds.setType(System.getProperty("test.gds_type"));
-       ds.setDatabase(DB_DATASOURCE_URL);
-       ds.setUserName(DB_USER);
-       ds.setPassword(DB_PASSWORD);
-       ds.setEncoding("WIN1252");
-       ds.setPooling(true);
-       ds.setMinPoolSize(0);
-       ds.setMaxPoolSize(30);
-       ds.setPingInterval(1000);
-       ds.setBlockingTimeout(2000);
-       ds.setMaxIdleTime(3600000);
-       
-       Connection con = ds.getConnection();
-       try {
-           String query = "SELECT * FROM rdb$database";
-           PreparedStatement stmt = con.prepareStatement(query);
-           stmt.close();
-       } finally {
-           con.close();
        }
    }
 }

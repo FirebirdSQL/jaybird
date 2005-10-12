@@ -175,7 +175,6 @@ public class TestDDL extends FBTestBase {
             try {
                 executeUpdate(connection, ADD_FOREIGN_KEY);
             } catch(SQLException sqlex) {
-                sqlex.printStackTrace();
                 assertTrue("Should add foreign key constraint.", false);
             } 
             

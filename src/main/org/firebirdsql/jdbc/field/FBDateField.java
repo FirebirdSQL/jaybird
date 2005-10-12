@@ -25,6 +25,7 @@ import java.sql.Date;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.FBResultSet;
 
 /**
  * Describe class <code>FBDateField</code> here.
@@ -34,36 +35,36 @@ import org.firebirdsql.gds.XSQLVAR;
  */
 class FBDateField extends FBField {
 
-    FBDateField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
+    FBDateField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
         throws SQLException
     {
-        super(field, dataProvider, requiredType);
+        super(field, rs, numCol, requiredType);
     }
 
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 		  
         return field.decodeTimestamp(getTimestamp(),cal);
     }
     public Timestamp getTimestamp() throws SQLException {
-        if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
         return new Timestamp(getDate().getTime());
     }
     public Date getDate(Calendar cal) throws SQLException {
-        if (getFieldData()==null) return DATE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
         return field.decodeDate(getDate(),cal);
     }
     public Date getDate() throws SQLException {
-        if (getFieldData()==null) return DATE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
-        return field.decodeDate(getFieldData());
+        return field.decodeDate(rs.row[numCol]);
     }
     public String getString() throws SQLException {
-        if (getFieldData()==null) return STRING_NULL_VALUE;
+        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return field.decodeDate(getFieldData()).toString();
+        return field.decodeDate(rs.row[numCol]).toString();
     }
     
     //--- setXXX methods
@@ -106,6 +107,6 @@ class FBDateField extends FBField {
             return;
         }
 
-        setFieldData(field.encodeDate(value));
+        field.sqldata = field.encodeDate(value);
     }
 }

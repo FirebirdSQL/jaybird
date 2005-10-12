@@ -30,18 +30,7 @@ import java.io.InputStream;
 
 
 /**
- * The mapping in the JavaTM programming language for the SQL CLOB type. 
- * An SQL CLOB is a built-in type that stores a Character Large Object as a 
- * column value in a row of a database table. <b>CLOBS are not currently 
- * supported by the Jaybird driver</b>.
- * 
- * The Clob interface provides methods for getting the length of an SQL CLOB 
- * (Character Large Object) value, for materializing a CLOB value on the 
- * client, and for searching for a substring or CLOB object within a CLOB 
- * value. Methods in the interfaces ResultSet, CallableStatement, and 
- * PreparedStatement, such as getClob and setClob allow a programmer to access 
- * an SQL CLOB value. In addition, this interface has methods for updating a 
- * CLOB value. 
+ * Describe class <code>FBClob</code> here.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
@@ -63,11 +52,9 @@ public class FBClob implements Clob {
     }
 
     /**
-     * <b>This operation is not currently supported</b>
-     * Truncate this <code>Clob</code> to a given length. 
      *
-     * @param param1 The length to truncate this Clob to 
-     * @exception java.sql.SQLException this operation is not supported     
+     * @param param1 <description>
+     * @exception java.sql.SQLException <description>
      */
     public void truncate(long param1) throws SQLException {
         throw new FBDriverNotCapableException();
@@ -165,14 +152,11 @@ public class FBClob implements Clob {
     }
 
     /**
-     * <b>This operation is not supported</b>
-     * Writes the given Java String to the CLOB value that this 
-     * <code>Clob</code> object designates at the position <code>pos</code>. 
      *
-     * @param param1 position at which to start writing 
-     * @param param2 The <code>String</code> value to write 
-     * @return The number of characters written
-     * @exception java.sql.SQLException because this operation is not supported 
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
      */
     public int setString(long param1, String param2) throws SQLException {
         throw new FBDriverNotCapableException();
@@ -180,7 +164,6 @@ public class FBClob implements Clob {
     }
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @param param2 <description>
@@ -195,7 +178,6 @@ public class FBClob implements Clob {
     }
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @return <description>
@@ -206,7 +188,6 @@ public class FBClob implements Clob {
     }
 
     /**
-     * <b>This operation is not supported</b>
      *
      * @param param1 <description>
      * @return <description>

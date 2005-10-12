@@ -21,7 +21,6 @@ package org.firebirdsql.pool;
 
 import java.lang.reflect.Proxy;
 import java.sql.*;
-
 import javax.sql.*;
 
 import org.firebirdsql.logging.Logger;
@@ -64,7 +63,7 @@ public class PingablePooledConnection implements PooledConnection,
     private boolean supportsStatementsAccrossRollback;
     private boolean statementPooling;
     
-    private int transactionIsolation = -1;
+    private int transactionIsolation;
 
     private HashMap statements = new HashMap();
 
@@ -74,13 +73,13 @@ public class PingablePooledConnection implements PooledConnection,
 
     protected PingablePooledConnection(Connection connection, 
                                        boolean statementPooling, 
-                                       /*int transactionIsolation,*/
+                                       int transactionIsolation,
                                        int maxStatements, boolean keepStatements) 
         throws SQLException 
     {
         this.jdbcConnection = connection;
         this.statementPooling = statementPooling;
-        //this.transactionIsolation = transactionIsolation;
+        this.transactionIsolation = transactionIsolation;
         this.maxStatements = maxStatements;
         this.keepStatements = keepStatements;
 
@@ -106,16 +105,12 @@ public class PingablePooledConnection implements PooledConnection,
 
     protected PingablePooledConnection(Connection connection,
         String pingStatement, int pingInterval, boolean statementPooling, 
-        /*int transactionIsolation,*/ int maxStatements, boolean keepStatements) 
+        int transactionIsolation, int maxStatements, boolean keepStatements) 
         throws SQLException 
     {
-        this(connection, statementPooling, /*transactionIsolation,*/ maxStatements, keepStatements);
+        this(connection, statementPooling, transactionIsolation, maxStatements, keepStatements);
         this.pingStatement = pingStatement;
         this.pingInterval = pingInterval;
-    }
-    
-    public void setDefaultTransactionIsolation(int isolation) {
-        this.transactionIsolation = isolation;
     }
 
     public long getLastPingTime() {
@@ -249,6 +244,9 @@ public class PingablePooledConnection implements PooledConnection,
     /**
      * Close this connection.
      * 
+     * @param generateEvents <code>true</code> if event listeners should be
+     * notified about this operation.
+     * 
      * @throws SQLException if something went wrong.
      */
     protected void internalClose() throws SQLException {
@@ -319,25 +317,11 @@ public class PingablePooledConnection implements PooledConnection,
         currentConnection = new PooledConnectionHandler(jdbcConnection, this);
 
         Connection result = currentConnection.getProxy();
-        
-        configureConnectionDefaults(result);
+        result.setAutoCommit(true);
+        result.setReadOnly(false);
+        result.setTransactionIsolation(transactionIsolation);
 
         return result;
-    }
-
-    /**
-     * Configure default values for this connection.
-     * 
-     * @param connection instance of {@link Connection} to configure.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    protected void configureConnectionDefaults(Connection connection) throws SQLException {
-        connection.setAutoCommit(true);
-        connection.setReadOnly(false);
-        
-        if (transactionIsolation != -1)
-            connection.setTransactionIsolation(transactionIsolation);
     }
 
     /**

@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.sql.Blob;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.jdbc.FBCachedBlob;
+import org.firebirdsql.jdbc.FBResultSet;
 
 /**
  * This is Blob-based implementation of {@link FBStringField} for auto-commit case. 
@@ -35,16 +36,16 @@ import org.firebirdsql.jdbc.FBCachedBlob;
 
 public class FBCachedLongVarCharField extends FBLongVarCharField {
 
-    FBCachedLongVarCharField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
+    FBCachedLongVarCharField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
         throws SQLException 
     {
-        super(field, dataProvider, requiredType);
+        super(field, rs, numCol, requiredType);
     }
 
     public Blob getBlob() throws SQLException {
-        if (getFieldData()==null)
+        if (rs.row[numCol]==null)
             return BLOB_NULL_VALUE;
 
-        return new FBCachedBlob(getFieldData());
+        return new FBCachedBlob(rs.row[numCol]);
     }
 }

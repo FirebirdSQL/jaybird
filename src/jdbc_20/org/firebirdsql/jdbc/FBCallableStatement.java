@@ -18,11 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.CallableStatement;
 import java.sql.SQLException;
-
-import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.jdbc.FBObjectListener;
 
 /**
  * JDBC 2.0 compliant implementation of {@link CallableStatement} interface.
@@ -39,13 +35,11 @@ public class FBCallableStatement extends AbstractCallableStatement {
      * 
      * @throws SQLException if something went wrong.
      */
-    public FBCallableStatement(GDSHelper gdsHelper, String sql, 
-                               int rsType, int rsConcurrency, int rsHoldability,
-                               FBObjectListener.StatementListener statementListener,
-                               FBObjectListener.BlobListener blobListener)
+    public FBCallableStatement(AbstractConnection c, String sql, 
+                               int rsType, int rsConcurrency)
         throws SQLException 
     {
-        super(gdsHelper, sql, rsType, rsConcurrency, rsHoldability, statementListener, blobListener);
+        super(c, sql, rsType, rsConcurrency);
     }
 
     public void registerOutParameter(int paramIndex, int sqlType, 

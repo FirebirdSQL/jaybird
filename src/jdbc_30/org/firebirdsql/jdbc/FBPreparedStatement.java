@@ -22,57 +22,47 @@ import java.net.URL;
 import java.sql.ParameterMetaData;
 import java.sql.SQLException;
 
-import org.firebirdsql.gds.impl.GDSHelper;
-
 /**
- * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy
- *         </a>
+ *
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class FBPreparedStatement extends AbstractPreparedStatement {
 
-    public FBPreparedStatement(GDSHelper gdsHelper, String sql, int rsType,
-            int rsConcurrency, int rsHoldability,
-            FBObjectListener.StatementListener statementListener,
-            FBObjectListener.BlobListener blobListener,
-            boolean metaDataQuery)
-            throws SQLException {
-        super(gdsHelper, sql, rsType, rsConcurrency, rsHoldability, 
-            statementListener, blobListener, metaDataQuery);
-    }
+	public FBPreparedStatement(AbstractConnection c, String sql, int rsType, 
+                               int rsConcurrency) throws SQLException 
+    {
+		super(c, sql, rsType, rsConcurrency);
+	}
 
     /**
-     * Sets the designated parameter to the given <code>java.net.URL</code>
-     * value. The driver converts this to an SQL <code>DATALINK</code> value
+     * Sets the designated parameter to the given <code>java.net.URL</code> value. 
+     * The driver converts this to an SQL <code>DATALINK</code> value
      * when it sends it to the database.
-     * 
-     * @param parameterIndex
-     *            the first parameter is 1, the second is 2, ...
-     * @param url
-     *            the <code>java.net.URL</code> object to be set
-     * @exception SQLException
-     *                if a database access error occurs
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param url the <code>java.net.URL</code> object to be set
+     * @exception SQLException if a database access error occurs
      * @since 1.4
-     */
+     */ 
     public void setURL(int parameterIndex, URL url) throws SQLException {
         // TODO: implement this java.sql.PreparedStatement method
         throw new SQLException("Not yet implemented");
     }
 
+
     /**
-     * Retrieves the number, types and properties of this
+     * Retrieves the number, types and properties of this 
      * <code>PreparedStatement</code> object's parameters.
-     * 
-     * @return a <code>ParameterMetaData</code> object that contains
-     *         information about the number, types and properties of this
+     *
+     * @return a <code>ParameterMetaData</code> object that contains information
+     *         about the number, types and properties of this 
      *         <code>PreparedStatement</code> object's parameters
-     * @exception SQLException
-     *                if a database access error occurs
+     * @exception SQLException if a database access error occurs
      * @see ParameterMetaData
      * @since 1.4
      */
     public ParameterMetaData getParameterMetaData() throws SQLException {
-        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
+        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, c);
     }
-
+    
 }

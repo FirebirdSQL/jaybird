@@ -23,7 +23,7 @@ import javax.sql.ConnectionEventListener;
 
 
 /**
- * Event listener that is notified about the events in the {@link javax.sql.PooledConnection}.
+ * Event listener that is notified about the events in the {@link PooledConnection}.
  *  
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */

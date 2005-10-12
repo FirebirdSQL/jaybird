@@ -20,10 +20,9 @@ package org.firebirdsql.jca;
 
 
 import java.sql.Connection;
+import java.util.Set;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.jdbc.FBTpbMapper;
 
 import org.firebirdsql.common.FBTestBase;
 
@@ -55,7 +54,7 @@ public class TestFBTpbMapper extends FBTestBase {
      */
     public void testDefaultIsolationLevel() throws Exception {
         assertTrue("Default tx isolation level must be READ_COMMITTED", 
-            mcf.getDefaultTransactionIsolation() == Connection.TRANSACTION_READ_COMMITTED);
+            mcf.getTransactionIsolation().intValue() == Connection.TRANSACTION_READ_COMMITTED);
     }
     
     /**
@@ -66,44 +65,48 @@ public class TestFBTpbMapper extends FBTestBase {
      * @throws Exception if something went wrong.
      */
     public void testTpbMapper() throws Exception {
-        FBTpbMapper mapper = new FBTpbMapper(mcf.getGDS(), TEST_TPB_MAPPING, getClass().getClassLoader());
+        FBTpbMapper mapper = new FBTpbMapper(TEST_TPB_MAPPING, getClass().getClassLoader());
         
-        mcf.setTpbMapping(TEST_TPB_MAPPING);
-        mcf.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+        mcf.setTpbMapper(mapper);
         
-        TransactionParameterBuffer tpbValue = mcf.getDefaultTpb().getTransactionParameterBuffer();
+        mcf.setTransactionIsolation(
+            new Integer(Connection.TRANSACTION_READ_COMMITTED));
+        
+        Set tpbValue = mcf.getTpb().getInternalTpb();
         
         assertTrue(
             "READ_COMMITED must be isc_tpb_read_committed+" + 
             "isc_tpb_no_rec_version+isc_tpb_write+isc_tpb_nowait",
-            tpbValue.hasArgument(ISCConstants.isc_tpb_read_committed) &&
-            tpbValue.hasArgument(ISCConstants.isc_tpb_no_rec_version) &&
-            tpbValue.hasArgument(ISCConstants.isc_tpb_write) &&
-            tpbValue.hasArgument(ISCConstants.isc_tpb_nowait)
+            tpbValue.contains(new Integer(ISCConstants.isc_tpb_read_committed)) &&
+            tpbValue.contains(new Integer(ISCConstants.isc_tpb_no_rec_version)) &&
+            tpbValue.contains(new Integer(ISCConstants.isc_tpb_write)) &&
+            tpbValue.contains(new Integer(ISCConstants.isc_tpb_nowait))
         );
         
-        mcf.setDefaultTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+        mcf.setTransactionIsolation(
+            new Integer(Connection.TRANSACTION_REPEATABLE_READ));
         
-        tpbValue = mcf.getDefaultTpb().getTransactionParameterBuffer();
+        tpbValue = mcf.getTpb().getInternalTpb();
         
         assertTrue(
             "REPEATABLE_READ must be isc_tpb_consistency+" + 
             "isc_tpb_write+isc_tpb_wait",
-            tpbValue.hasArgument(ISCConstants.isc_tpb_consistency) &&
-            tpbValue.hasArgument(ISCConstants.isc_tpb_write) &&
-            tpbValue.hasArgument(ISCConstants.isc_tpb_wait)
+            tpbValue.contains(new Integer(ISCConstants.isc_tpb_consistency)) &&
+            tpbValue.contains(new Integer(ISCConstants.isc_tpb_write)) &&
+            tpbValue.contains(new Integer(ISCConstants.isc_tpb_wait))
         );
 
-        mcf.setDefaultTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+        mcf.setTransactionIsolation(
+            new Integer(Connection.TRANSACTION_SERIALIZABLE));
         
-        tpbValue = mcf.getDefaultTpb().getTransactionParameterBuffer();
+        tpbValue = mcf.getTpb().getInternalTpb();
         
         assertTrue(
             "SERIALIZABLE must be isc_tpb_concurrency+" + 
             "isc_tpb_write+isc_tpb_wait",
-            tpbValue.hasArgument(ISCConstants.isc_tpb_concurrency) &&
-            tpbValue.hasArgument(ISCConstants.isc_tpb_write) &&
-            tpbValue.hasArgument(ISCConstants.isc_tpb_wait)
+            tpbValue.contains(new Integer(ISCConstants.isc_tpb_concurrency)) &&
+            tpbValue.contains(new Integer(ISCConstants.isc_tpb_write)) &&
+            tpbValue.contains(new Integer(ISCConstants.isc_tpb_wait))
         );
         
     }

@@ -35,6 +35,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.FBResultSet;
 
 /**
  * Describe class <code>FBStringField</code> here.
@@ -52,7 +53,7 @@ import org.firebirdsql.gds.XSQLVAR;
  * @todo think about the right setBoolean and getBoolean (currently it is "Y"
  * and "N", or "TRUE" and "FALSE").
  * 
- * TODO check if the setBinaryStream(null) is allowed by specs.
+ * @todo check if the setBinaryStream(null) is allowed by specs.
  */
 public class FBStringField extends FBField {
     private static final String SHORT_TRUE = "Y";
@@ -63,16 +64,16 @@ public class FBStringField extends FBField {
     private static final String SHORT_TRUE_3 = "1";
     
 
-    FBStringField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
+    FBStringField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
         throws SQLException 
     {
-        super(field, dataProvider, requiredType);
+        super(field, rs, numCol, requiredType);
     }
 	 
     //----- Math code
 
     public byte getByte() throws SQLException {
-        if (getFieldData()==null) return BYTE_NULL_VALUE;
+        if (rs.row[numCol]==null) return BYTE_NULL_VALUE;
 
         try {
             return Byte.parseByte(getString().trim());
@@ -82,7 +83,7 @@ public class FBStringField extends FBField {
         }
     }
     public short getShort() throws SQLException {
-        if (getFieldData()==null) return SHORT_NULL_VALUE;
+        if (rs.row[numCol]==null) return SHORT_NULL_VALUE;
 
         try {
             return Short.parseShort(getString().trim());
@@ -92,7 +93,7 @@ public class FBStringField extends FBField {
         }
     }
     public int getInt() throws SQLException {
-        if (getFieldData()==null) return INT_NULL_VALUE;
+        if (rs.row[numCol]==null) return INT_NULL_VALUE;
 
         try {
             return Integer.parseInt(getString().trim());
@@ -102,7 +103,7 @@ public class FBStringField extends FBField {
         }
     }
     public long getLong() throws SQLException {
-        if (getFieldData()==null) return LONG_NULL_VALUE;
+        if (rs.row[numCol]==null) return LONG_NULL_VALUE;
 
         try {
             return Long.parseLong(getString().trim());
@@ -113,13 +114,13 @@ public class FBStringField extends FBField {
         }
     }
     public BigDecimal getBigDecimal() throws SQLException {
-        if (getFieldData()==null) return BIGDECIMAL_NULL_VALUE;
+        if (rs.row[numCol]==null) return BIGDECIMAL_NULL_VALUE;
 
         /**@todo check what exceptions can be thrown here */
         return new BigDecimal(getString().trim());
     }
     public float getFloat() throws SQLException {
-        if (getFieldData()==null) return FLOAT_NULL_VALUE;
+        if (rs.row[numCol]==null) return FLOAT_NULL_VALUE;
 
         try {
             return Float.parseFloat(getString().trim());
@@ -130,7 +131,7 @@ public class FBStringField extends FBField {
         }
     }
     public double getDouble() throws SQLException {
-        if (getFieldData()==null) return DOUBLE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DOUBLE_NULL_VALUE;
 
         try {
             return Double.parseDouble(getString().trim());
@@ -144,7 +145,7 @@ public class FBStringField extends FBField {
     //----- getBoolean, getString and getObject code
 
     public boolean getBoolean() throws SQLException {
-        if (getFieldData()==null) return BOOLEAN_NULL_VALUE;
+        if (rs.row[numCol]==null) return BOOLEAN_NULL_VALUE;
 
         return getString().trim().equalsIgnoreCase(LONG_TRUE) ||
                 getString().trim().equalsIgnoreCase(SHORT_TRUE) ||
@@ -152,14 +153,14 @@ public class FBStringField extends FBField {
                 getString().trim().equalsIgnoreCase(SHORT_TRUE_3);
     }
     public String getString() throws SQLException {
-        if (getFieldData()==null) return STRING_NULL_VALUE;
+        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return field.decodeString(getFieldData(), javaEncoding, mappingPath);
+        return field.decodeString(rs.row[numCol], javaEncoding, mappingPath);
     }
     
     /*
     public Object getObject() throws SQLException {
-        if (getFieldData()==null) return OBJECT_NULL_VALUE;
+        if (rs.row[numCol]==null) return OBJECT_NULL_VALUE;
 
         return getString();
     }
@@ -168,55 +169,55 @@ public class FBStringField extends FBField {
     //----- getXXXStream code
 
     public InputStream getBinaryStream() throws SQLException {
-        if (getFieldData()==null) return STREAM_NULL_VALUE;
+        if (rs.row[numCol]==null) return STREAM_NULL_VALUE;
 
-        return new ByteArrayInputStream(getFieldData());
+        return new ByteArrayInputStream(rs.row[numCol]);
     }
     public InputStream getUnicodeStream() throws SQLException {
-        if (getFieldData()==null) return STREAM_NULL_VALUE;
+        if (rs.row[numCol]==null) return STREAM_NULL_VALUE;
 
         return getBinaryStream();
     }
     public InputStream getAsciiStream() throws SQLException {
-        if (getFieldData()==null) return STREAM_NULL_VALUE;
+        if (rs.row[numCol]==null) return STREAM_NULL_VALUE;
 
         return getBinaryStream();
     }
     public byte[] getBytes() throws SQLException {
-        if (getFieldData()==null) return BYTES_NULL_VALUE;
+        if (rs.row[numCol]==null) return BYTES_NULL_VALUE;
 
-        return getFieldData();
+        return rs.row[numCol];
     }
 
     //----- getDate, getTime and getTimestamp code
 
     public Date getDate(Calendar cal) throws SQLException {
-        if (getFieldData()==null) return DATE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
         return field.decodeDate(getDate(),cal);
     }
     public Date getDate() throws SQLException {
-        if (getFieldData()==null) return DATE_NULL_VALUE;
+        if (rs.row[numCol]==null) return DATE_NULL_VALUE;
 
         return Date.valueOf(getString().trim());
     }
     public Time getTime(Calendar cal) throws SQLException {
-        if (getFieldData()==null) return TIME_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
         return field.decodeTime(getTime(),cal, isInvertTimeZone());
     }
     public Time getTime() throws SQLException {
-        if (getFieldData()==null) return TIME_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
         return Time.valueOf(getString().trim());
     }
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 		  
         return field.decodeTimestamp(getTimestamp(),cal, isInvertTimeZone());
     }
     public Timestamp getTimestamp() throws SQLException {
-        if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
         return Timestamp.valueOf(getString().trim());
     }
@@ -266,7 +267,10 @@ public class FBStringField extends FBField {
             setNull();
             return;
         }
-        setFieldData(field.encodeString(value,javaEncoding, mappingPath));
+        field.sqldata = field.encodeString(value,javaEncoding, mappingPath);
+
+//        if (field.sqldata.length > field.sqllen)
+//            throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);
     }
 
     //----- setXXXStream code
@@ -331,10 +335,10 @@ public class FBStringField extends FBField {
             return;
         }
 
-        setFieldData(value);
+        field.sqldata = value;
 
-        if (value.length > field.sqllen)
-            throw new DataTruncation(-1, true, false, value.length, field.sqllen);
+        if (field.sqldata.length > field.sqllen)
+            throw new DataTruncation(-1, true, false, field.sqldata.length, field.sqllen);
     }
 
     //----- setDate, setTime and setTimestamp code

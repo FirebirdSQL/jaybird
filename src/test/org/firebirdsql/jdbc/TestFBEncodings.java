@@ -413,19 +413,15 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
 
             assertTrue("Upper(Cyrl_field) must be != Cyrl_field ", !cyrlValue.equals(cyrlValueUpper));
             assertTrue("Upper(Win1251_field) must be != Win1251_field ", !win1251Value.equals(win1251ValueUpper));
-            // Unicode only uppercase ASCII characters (until Firebird 2.0)
-            if (((FirebirdDatabaseMetaData)connection.getMetaData()).getDatabaseMajorVersion() < 2)
-                assertTrue("Upper(unicode) must be == Unicode_field ", unicodeValue.equals(unicodeValueUpper));
+            // Unicode only uppercase ASCII characters
+            assertTrue("Upper(unicode) must be == Unicode_field ", unicodeValue.equals(unicodeValueUpper));
 
             assertTrue("Upper(win1251_field) must == upper test string ", win1251ValueUpper.equals(CYRL_TEST_STRING_UPPER));
             // The CYRL charset fails because the mapping is 1251 and the uppercase
             // and lowercase functions work as if the charset is CP866
             assertTrue("Upper(cyrl_field) must be == wrong upper test string ", cyrlValueUpper.equals(CYRL_TEST_STRING_UPPER_WRONG));
-
-            // unicode does not uppercase (until FB 2.0)
-            
-            if (((FirebirdDatabaseMetaData)connection.getMetaData()).getDatabaseMajorVersion() < 2)
-                assertTrue("Upper(Unicode_field) must be != upper test string ", ! unicodeValueUpper.equals(CYRL_TEST_STRING_UPPER));
+            // unicode does not uppercase
+            assertTrue("Upper(Unicode_field) must be != upper test string ", ! unicodeValueUpper.equals(CYRL_TEST_STRING_UPPER));
 
             assertTrue("Should have exactly one row", !rs.next());
             

@@ -38,6 +38,9 @@ public class StatementHandler implements InvocationHandler {
     private static final Method STATEMENT_CLOSE = 
         PooledConnectionHandler.findMethod(Statement.class, "close", new Class[0]);
     
+    private static final Method STATEMENT_GET_CONNECTION = 
+        PooledConnectionHandler.findMethod(Statement.class, "getConnection", new Class[0]);
+    
     private PooledConnectionHandler connectionHandler;
     private Statement wrappedObject;
     

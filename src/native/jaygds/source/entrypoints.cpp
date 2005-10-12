@@ -42,7 +42,7 @@
 // catch block in each JNI entrypoint.
 
 
-// Must be initilized in Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_nativeInitilize
+// Must be initilized in Java_org_firebirdsql_ngds_GDS_1Impl_nativeInitilize
 JClassBinding  sInternalErrorClassBinding;
 JClassBinding  sOutOfMemoryErrorClassBinding;
 
@@ -100,14 +100,14 @@ void MaybeIssueOutOfMemory(JNIEnv * javaEnvironment, std::bad_alloc& badAlloc)
 // until a client library is located.
 bool sHasMostInitilizationBeenDone = false;
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_nativeInitilize
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_nativeInitilize
   (JNIEnv *javaEnvironment, jobject jThis, jstring firebirdDllName)
 	{
 	ENTER_PROTECTED_BLOCK
 		if(sHasMostInitilizationBeenDone == false)
 			{
 			// Todo : If these fail then the exception handling for this method will not work.
-			sInternalErrorClassBinding    = JClassBinding( javaEnvironment, "org/firebirdsql/gds/impl/jni/InternalError" );
+			sInternalErrorClassBinding    = JClassBinding( javaEnvironment, "org/firebirdsql/ngds/InternalError" );
 			sOutOfMemoryErrorClassBinding = JClassBinding( javaEnvironment, "java/lang/OutOfMemoryError" );
 
 			JIscDatabaseHandle::Initilize(javaEnvironment);
@@ -126,7 +126,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_nativeInitil
 	LEAVE_PROTECTED_BLOCK
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1create_1database
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1create_1database
   (JNIEnv * javaEnvironment, jobject jThis, jstring jFileName, jobject jDatabaseHandle, jbyteArray jDpb)
 	{
 
@@ -150,7 +150,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1attach_1database
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1attach_1database
   (JNIEnv * javaEnvironment, jobject jThis, jstring jFileName, jobject jDatabaseHandle, jbyteArray jDpb)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -172,7 +172,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1database_1info
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1database_1info
   (JNIEnv * javaEnvironment, jobject jThis, jobject jDatabaseHandle, jint jItemLength, jbyteArray jItems, jint jBufferLength, jbyteArray jBuffer)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -192,7 +192,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1detach_1database
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1detach_1database
   (JNIEnv * javaEnvironment, jobject jThis, jobject jDatabaseHandle)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -210,7 +210,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1drop_1database
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1drop_1database
   (JNIEnv * javaEnvironment, jobject jThis, jobject jDatabaseHandle)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -228,7 +228,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1start_1transaction
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1start_1transaction
   (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle, jobject jDatabaseHandle, jbyteArray jTpb)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -250,28 +250,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1reconnect_1transaction
-  (JNIEnv * javaEnvironment, jobject jThis, jobject jDatabaseHandle, jobject jTransactionHandle, jbyteArray jTransactionId)
-{
-	ENTER_PROTECTED_BLOCK
-		JIscTransactionHandle transactionHandle(javaEnvironment, jTransactionHandle);
-		JIscDatabaseHandle databaseHandle(javaEnvironment, jDatabaseHandle);
-		JByteArray transactionId(javaEnvironment, jTransactionId);
-
-		FirebirdStatusVector status;
-		isc_db_handle rawDatabaseHandle = databaseHandle.GetHandleValue();
-		isc_tr_handle rawTransactionHandle = transactionHandle.GetHandleValue();
-
-		FirebirdApiBinding::isc_reconnect_transaction( status.RawAccess(), &rawDatabaseHandle, &rawTransactionHandle, transactionId.Size(), transactionId.Read()  );
-		
-		transactionHandle.SetHandleValue(rawTransactionHandle);
-		databaseHandle.SetHandleValue( rawDatabaseHandle );
-
-		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, databaseHandle);
-	LEAVE_PROTECTED_BLOCK
-}
-
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1commit_1transaction
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1commit_1transaction
   (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -289,7 +268,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1commit_1retaining
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1commit_1retaining
   (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -307,7 +286,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1prepare_1transaction
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1prepare_1transaction
  (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -325,7 +304,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1prepare_1transaction2
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1prepare_1transaction2
   (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle, jbyteArray jBytes)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -345,7 +324,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1rollback_1transaction
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1rollback_1transaction
   (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -362,8 +341,8 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 	LEAVE_PROTECTED_BLOCK
 
 	}
-	
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1rollback_1retaining
+
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1rollback_1retaining
  (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -381,7 +360,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1dsql_1allocate_1statement
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1allocate_1statement
   (JNIEnv * javaEnvironment, jobject jThis, jobject jDatabaseHandle, jobject jStatementHandle )
 	{
 	ENTER_PROTECTED_BLOCK
@@ -402,7 +381,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1dsql_1free_1statement
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1free_1statement
   (JNIEnv *javaEnvironment, jobject jThis, jobject jStatementHandle, jint jValue)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -425,7 +404,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1dsql_1alloc_1statement2
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1alloc_1statement2
   (JNIEnv * javaEnvironment, jobject jThis, jobject jDatabaseHandle, jobject jStatementHandle )
 	{
 	ENTER_PROTECTED_BLOCK
@@ -447,7 +426,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT jobject JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1dsql_1prepare
+JNIEXPORT jobject JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1prepare
   (JNIEnv *javaEnvironment, jobject jThis, jobject jTransactionHandle, jobject jStatementHandle, jbyteArray statement, jint dialect)
 
 {
@@ -489,7 +468,7 @@ JNIEXPORT jobject JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1i
 
 	}
 
-JNIEXPORT jobject JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1dsql_1describe
+JNIEXPORT jobject JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1describe
   (JNIEnv * javaEnvironment, jobject jThis, jobject jStatementHandle, jint jDaVersion)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -518,7 +497,7 @@ JNIEXPORT jobject JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1i
 	return NULL;
 	}
 
-JNIEXPORT jobject JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1dsql_1describe_1bind
+JNIEXPORT jobject JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1describe_1bind
   (JNIEnv * javaEnvironment, jobject jThis, jobject jStatementHandle, jint jDaVersion)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -547,7 +526,7 @@ JNIEXPORT jobject JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1i
 	return NULL;
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1dsql_1execute2
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1execute2
 (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle, jobject jStatementHandle, jint jDaVersion, jobject jInXSqlda, jobject jOutXSqlda)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -579,7 +558,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
 	}
 
-JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1dsql_1sql_1info
+JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1sql_1info
   (JNIEnv *javaEnvironment, jobject jThis, jobject jStatementHandle, jbyteArray jItemsArray, jint jBufferLength)
 {
 
@@ -609,35 +588,7 @@ ENTER_PROTECTED_BLOCK
 	}
 
 
-JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1transaction_1info
-  (JNIEnv * javaEnvironment, jobject jThis, jobject jTransactionHandle, jbyteArray jItemsArray, jint jBufferLength)
-{
-
-ENTER_PROTECTED_BLOCK
-		JIscTransactionHandle transactionHandle(javaEnvironment, jTransactionHandle);
-
-		JByteArray itemsArray( javaEnvironment, jItemsArray );
-		JByteArray buffer( javaEnvironment, jBufferLength );
-	
-		FirebirdStatusVector status;
-		isc_tr_handle rawTransactionHandle = transactionHandle.GetHandleValue();
-
-		FirebirdApiBinding::isc_transaction_info( status.RawAccess(), &rawTransactionHandle, itemsArray.Size(), itemsArray.Read(), buffer.Size(), buffer.Read() );
-	
-		transactionHandle.SetHandleValue(rawTransactionHandle);
-
-		jbyteArray returnValue = buffer.GetHandle();
-			
-		status.IssueExceptionsAndOrAddWarnings(javaEnvironment, transactionHandle);
-
-		return returnValue;
-	LEAVE_PROTECTED_BLOCK
-
-	return NULL;
-	}
-
-
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1dsql_1exec_1immed2
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1exec_1immed2
   (JNIEnv *javaEnvironment, jobject jThis, jobject jDatabaseHandle, jobject jTransactionHandle, jbyteArray jStatement, jint jDialect, jobject jInXsqlda, jobject jOutXsqlda)
 {
 	ENTER_PROTECTED_BLOCK
@@ -676,7 +627,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 	}
 
 
-JNIEXPORT jboolean JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1dsql_1fetch
+JNIEXPORT jboolean JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1fetch
   (JNIEnv *javaEnvironment, jobject jThis, jobject jStatementHandle, jint jDaVersion, jobject jXsqlda, jint jFetchSize)
 {
 ENTER_PROTECTED_BLOCK
@@ -714,7 +665,7 @@ ENTER_PROTECTED_BLOCK
 	}
 
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1dsql_1set_1cursor_1name
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1dsql_1set_1cursor_1name
   (JNIEnv *javaEnvironment, jobject jThis, jobject jStatementHandle , jstring jCursorName, jint jType)
 {
 	ENTER_PROTECTED_BLOCK
@@ -742,7 +693,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 	}
 
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1create_1blob2
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1create_1blob2
   (JNIEnv *javaEnvironment, jobject jThis, jobject jDatabaseHandle, jobject jTransctionHandle, jobject jBlobHandle, jbyteArray jClumpetBytes)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -776,7 +727,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 	}
 
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1open_1blob2
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1open_1blob2
   (JNIEnv *javaEnvironment, jobject jThis, jobject jDatabaseHandle, jobject jTransctionHandle, jobject jBlobHandle, jbyteArray jClumpetBytes)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -810,7 +761,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 	}
 
 
-JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1get_1segment
+JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1get_1segment
   (JNIEnv *javaEnvironment, jobject jThis, jobject jBlobHandle, jint jMaxRead)
 {
 	ENTER_PROTECTED_BLOCK
@@ -856,7 +807,7 @@ JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native
 	}	
 
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1put_1segment
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1put_1segment
   (JNIEnv *javaEnvironment, jobject jThis, jobject jBlobHandle, jbyteArray jBytesToWrite)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -880,7 +831,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 	}
 
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1close_1blob
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1close_1blob
   (JNIEnv *javaEnvironment, jobject jThis, jobject jBlobHandle)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -903,7 +854,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 	}
 
 
-JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1blob_1info
+JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1blob_1info
   (JNIEnv *javaEnvironment, jobject jThis, jobject jBlobHandle, jbyteArray jItemsArrayHandle, jint jBufferLength)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -934,7 +885,7 @@ JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native
 	}
 
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1seek_1blob
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1seek_1blob
   (JNIEnv *javaEnvironment, jobject jThis, jobject jBlobHandle, jint position, jint mode)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -958,7 +909,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 	}
 
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1service_1attach
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1service_1attach
   (JNIEnv *javaEnvironment, jobject jThis, jstring jServiceString, jobject jServiceHandle, jbyteArray jServiceParameterBuffer)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -980,7 +931,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 	LEAVE_PROTECTED_BLOCK
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1service_1detach
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1service_1detach
   (JNIEnv *javaEnvironment, jobject jThis, jobject jServiceHandle)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -998,7 +949,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 	LEAVE_PROTECTED_BLOCK
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1service_1start
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1service_1start
   (JNIEnv *javaEnvironment, jobject jThis, jobject jServiceHandle, jbyteArray jServiceParameterBuffer)
 	{
 	ENTER_PROTECTED_BLOCK
@@ -1017,7 +968,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 	LEAVE_PROTECTED_BLOCK
 	}
 
-JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1service_1query
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Impl_native_1isc_1service_1query
   (JNIEnv *javaEnvironment, jobject jThis, jobject jServiceHandle, jbyteArray jSendServiceParameterBuffer, 
    jbyteArray jRequestServiceParameterBuffer, jbyteArray jResultBuffer)
 	{

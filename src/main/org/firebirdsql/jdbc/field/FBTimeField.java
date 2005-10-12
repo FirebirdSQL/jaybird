@@ -23,6 +23,7 @@ import java.sql.Timestamp;
 import java.sql.SQLException;
 import java.util.Calendar;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.jdbc.FBResultSet;
 
 import java.sql.Time;
 
@@ -33,34 +34,34 @@ import java.sql.Time;
  * @version 1.0
  */
 class FBTimeField extends FBField {
-    FBTimeField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
+    FBTimeField(XSQLVAR field, FBResultSet rs, int numCol, int requiredType) 
         throws SQLException 
     {
-        super(field, dataProvider, requiredType);
+        super(field, rs, numCol, requiredType);
     }
 
     public String getString() throws SQLException {
-        if (getFieldData()==null) return STRING_NULL_VALUE;
+        if (rs.row[numCol]==null) return STRING_NULL_VALUE;
 
-        return String.valueOf(field.decodeTime(getFieldData()));
+        return String.valueOf(field.decodeTime(rs.row[numCol]));
     }
     public Time getTime(Calendar cal) throws SQLException {
-        if (getFieldData()==null) return TIME_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
         return field.decodeTime(getTime(),cal, isInvertTimeZone());
     }
     public Time getTime() throws SQLException {
-        if (getFieldData()==null) return TIME_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIME_NULL_VALUE;
 
-        return field.decodeTime(getFieldData());
+        return field.decodeTime(rs.row[numCol]);
     }
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 		  
         return field.decodeTimestamp(getTimestamp(),cal);
     }
     public Timestamp getTimestamp() throws SQLException {
-        if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
+        if (rs.row[numCol]==null) return TIMESTAMP_NULL_VALUE;
 
         return new Timestamp(getTime().getTime());
     }
@@ -101,6 +102,6 @@ class FBTimeField extends FBField {
             return;
         }
 
-        setFieldData(field.encodeTime(value));
+        field.sqldata = field.encodeTime(value);
     }
 }

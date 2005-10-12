@@ -26,6 +26,8 @@ import javax.resource.spi.LocalTransaction;
 import javax.resource.ResourceException;
 
 import javax.transaction.xa.*;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
 
 import org.firebirdsql.gds.GDSException;
 
@@ -77,43 +79,21 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
          }
      }
 
-     /**
-      * Check whether a started transaction is associated with the current
-      * database connection.
-      */
-     public boolean inTransaction() throws ResourceException {
-         try {
-             return mc.getGDSHelper().inTransaction();
-         } catch(GDSException ex) {
-             throw new FBResourceException(ex);
-         }
-     }
-     
     /**
-     * Begin a local transaction.
-     *
-     * @throws ResourceException generic exception if operation fails
-     * @throws LocalTransactionException error condition related to local 
+     * Begin a local transaction
+     *  Throws:
+     *    ResourceException - generic exception if operation fails
+     *    LocalTransactionException - error condition related to local 
      *      transaction management
-     * @throws ResourceAdapterInternalException error condition internal to 
+     *    ResourceAdapterInternalException - error condition internal to 
      *      resource adapter
-     * @throws EISSystemException EIS instance specific error condition
-     */
+     *    EISSystemException - EIS instance specific error condition
+     **/
      public void begin() throws ResourceException
      {
         internalBegin();
      }
 
-    /**
-     * Perform the internal operations to begin a local transaction.
-     *
-     * @throws ResourceException generic exception if operation fails
-     * @throws LocalTransactionException error condition related to local 
-     *         transaction management
-     * @throws ResourceAdapterInternalException error condition internal to 
-     *         resource adapter
-     * @throws EISSystemException EIS instance specific error condition
-     */
      public void internalBegin() throws ResourceException {
          if (xid != null) {
              
@@ -126,48 +106,40 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
          
          xid = new FBLocalXid();
          
-         try {
-             mc.internalStart(xid, XAResource.TMNOFLAGS);
-         } catch(XAException ex) {
-             xid = null;
-             throw new FBResourceException(ex);
-         } catch(GDSException ex) {
-             xid = null;
-             throw new FBResourceException(ex);
+         synchronized(mc) {
+             try {
+                 mc.internalStart(xid, XAResource.TMNOFLAGS);
+             } catch(XAException ex) {
+                 xid = null;
+                 throw new FBResourceException(ex);
+             } catch(GDSException ex) {
+                 xid = null;
+                 throw new FBResourceException(ex);
+             }
+             
+             if (beginEvent != null) 
+                 mc.notify(
+                         FBManagedConnection.localTransactionStartedNotifier, 
+                         beginEvent);
          }
-         
-         if (beginEvent != null) 
-             mc.notify(
-                     FBManagedConnection.localTransactionStartedNotifier, 
-                     beginEvent);
      }
 
 
     /**
-     * Commit a local transaction.
-     *
-     * @throws ResourceException generic exception if operation fails
-     * @throws LocalTransactionException error condition related to local 
-     *         transaction management
-     * @throws ResourceAdapterInternalException error condition internal to 
-     *         resource adapter
-     * @throws EISSystemException EIS instance specific error condition
-     */
+     Commit a local transaction
+     Throws:
+         ResourceException - generic exception if operation fails
+         LocalTransactionException - error condition related to local 
+           transaction management
+         ResourceAdapterInternalException - error condition internal to 
+           resource adapter
+         EISSystemException - EIS instance specific error condition
+    **/
      public void commit() throws ResourceException {
          internalCommit();             
      }
 
 
-    /**
-     * Perform the internal processing to commit a local transaction.
-     *
-     * @throws ResourceException generic exception if operation fails
-     * @throws LocalTransactionException error condition related to local 
-     *         transaction management
-     * @throws ResourceAdapterInternalException error condition internal to 
-     *         resource adapter
-     * @throws EISSystemException EIS instance specific error condition
-     */
      public void internalCommit() throws ResourceException {
          if (xid == null) {
              throw new FBResourceTransactionException(
@@ -202,30 +174,22 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
 
 
      /**
-    * Rollback a local transaction.
-    *
-    * @throws ResourceException - generic exception if operation fails
-    * @throws LocalTransactionException - error condition related to local 
-    *         transaction management
-    * @throws ResourceAdapterInternalException - error condition internal to 
-    *         resource adapter
-    * @throws EISSystemException - EIS instance specific error condition
-    */
-    public void rollback() throws ResourceException {
+     Rollback a local transaction
+     Throws:
+         ResourceException - generic exception if operation fails
+         LocalTransactionException - error condition related to local 
+           transaction management
+         ResourceAdapterInternalException - error condition internal to 
+           resource adapter
+         EISSystemException - EIS instance specific error condition
+    **/
+
+    public void rollback() throws ResourceException
+    {
         internalRollback();
      }
 
 
-   /**
-    * Perform the internal processing to rollback a local transaction.
-    *
-    * @throws ResourceException - generic exception if operation fails
-    * @throws LocalTransactionException - error condition related to local 
-    *         transaction management
-    * @throws ResourceAdapterInternalException - error condition internal to 
-    *         resource adapter
-    * @throws EISSystemException - EIS instance specific error condition
-    */
     public void internalRollback() throws ResourceException {
          if (xid == null) {
              throw new FBResourceTransactionException(
@@ -261,10 +225,7 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
 
          private static final int formatId = 0x0102;//????????????
 
-         private String strValue;
-         
          public FBLocalXid() {
-             strValue = "Xid[" + hashCode() + "]";
          }
 
         /**
@@ -291,10 +252,6 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
          */
         public int getFormatId() {
            return formatId;
-        }
-        
-        public String toString() {
-            return strValue;
         }
     }
 

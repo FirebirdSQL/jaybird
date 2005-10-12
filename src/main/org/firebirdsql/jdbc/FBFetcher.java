@@ -29,6 +29,13 @@ interface FBFetcher {
     static final int MAX_FETCH_ROWS = 400;
 	
     /**
+     * Get statement to which this fetcher belongs to.
+     * 
+     * @return instance of {@link AbstractStatement}.
+     */
+    AbstractStatement getStatement();
+    
+    /**
      * Move cursor to the rist row.
      * 
      * @return <code>true</code> if cursor was moved to the first row.
@@ -119,50 +126,4 @@ interface FBFetcher {
 	boolean isFirst() throws SQLException;
 	boolean isLast() throws SQLException;
 	boolean isAfterLast() throws SQLException;
-    
-    /**
-     * Insert row at current position. This method adds a row at the current
-     * position in case of updatable result sets after successfull execution of
-     * the {@link ResultSet#insertRow()} method.
-     * 
-     * @param data row data
-     * 
-     * @throws SQLException if operation cannot be completed.
-     */
-    void insertRow(byte[][] data) throws SQLException;
-    
-    /**
-     * Delete row at current position. This method deletes a row at the current
-     * position in case of updatable result sets after successfull execution of
-     * the {@link ResultSet#deleteRow()} method.
-     * 
-     * @throws SQLException if operation cannot be completed.
-     */
-    void deleteRow() throws SQLException;
-    
-    /**
-     * Update row at current position. This method updates a row at the current
-     * position in case of updatable result sets after successfull execution of
-     * the {@link ResultSet#updateRow()} method.
-     * 
-     * @param data row data
-     * 
-     * @throws SQLException if operation cannot be completed.
-     */
-    void updateRow(byte[][] data) throws SQLException;
-
-    /**
-     * Set the suggested number of rows to fetch with each batch fetch.
-     *
-     * @return The number of rows to be fetched
-     */
-    int getFetchSize() throws SQLException;
-
-    /**
-     * Get the suggested number of rows to fetch with each batch fetch.
-     *
-     * @param fetchSize The suggested number of rows to fetch
-     */
-    void setFetchSize(int fetchSize);
-
 }

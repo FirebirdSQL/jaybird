@@ -25,6 +25,7 @@ import org.firebirdsql.gds.ISCConstants;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -46,7 +47,15 @@ public class TestFBDoubleField extends BaseTestFBField {
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
         xsqlvars[0] = createXSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_DOUBLE;
-        field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), null, false);
+        byte[][] row = new byte[1][];
+        ArrayList rows = new ArrayList();
+        rows.add(row);		  
+        FBFieldResultSet rs = new FBFieldResultSet(xsqlvars,rows);
+		  rs.next();
+//		doubleField.sqldata = new Double(TEST_DOUBLE);
+//		doubleField.sqlind = 0;
+
+		field = FBField.createField(xsqlvars[0],rs,0, false);
 	}
 	protected void tearDown() {
 	}

@@ -28,7 +28,6 @@ import java.util.Calendar;
 import java.util.Map;
 
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * JDBC 3.0 compliant implementation of {@link java.sql.CallableStatement}.
@@ -46,12 +45,10 @@ public class FBCallableStatement extends AbstractCallableStatement {
 	 * @throws SQLException
 	 *             if SQL error occured.
 	 */
-	public FBCallableStatement(GDSHelper c, String sql, int rsType,
-            int rsConcurrency, int rsHoldability,
-            FBObjectListener.StatementListener statementListener,
-            FBObjectListener.BlobListener blobListener)
+	public FBCallableStatement(AbstractConnection c, String sql, 
+                               int rsType, int rsConcurrency)
 		throws SQLException {
-		super(c, sql, rsType, rsConcurrency, rsHoldability, statementListener, blobListener);
+		super(c, sql, rsType, rsConcurrency);
 	}
 
     // ----------JDBC 3.0 --- java.sql.PreparedStatement methods ---------------
@@ -83,19 +80,20 @@ public class FBCallableStatement extends AbstractCallableStatement {
      * @since 1.4
      */
     public ParameterMetaData getParameterMetaData() throws SQLException {
-
-        statementListener.executionStarted(this);
         
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
             try {
+                c.ensureInTransaction();
                 prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
             } catch (GDSException ge) {
                 throw new FBSQLException(ge);
+            } finally {
+                c.checkEndTransaction();
             } 
         }
         
-        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
+        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, c);
     }
     
     
