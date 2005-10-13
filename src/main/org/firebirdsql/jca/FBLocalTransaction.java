@@ -169,11 +169,13 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
      * @throws EISSystemException EIS instance specific error condition
      */
      public void internalCommit() throws ResourceException {
-         if (xid == null) {
-             throw new FBResourceTransactionException(
-                     "No local transaction active: can't commit",
-                     FBResourceTransactionException.SQL_STATE_INVALID_TRANSACTION_STATE);
-         }
+         
+         // if there is no xid assigned, but we are still here, 
+         // that means that automatic commit was called in managed
+         // scenario when managed connection was enlisted in global
+         // transaction
+         if (xid == null) 
+             return;
          
          synchronized(mc)
          {
@@ -227,11 +229,13 @@ public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.
     * @throws EISSystemException - EIS instance specific error condition
     */
     public void internalRollback() throws ResourceException {
-         if (xid == null) {
-             throw new FBResourceTransactionException(
-                     "No local transaction active: can't rollback",
-                     FBResourceTransactionException.SQL_STATE_INVALID_TRANSACTION_STATE);
-         }
+
+        // if there is no xid assigned, but we are still here, 
+        // that means that automatic commit was called in managed
+        // scenario when managed connection was enlisted in global
+        // transaction
+         if (xid == null) 
+             return;
          
          synchronized(mc) {
              try {
