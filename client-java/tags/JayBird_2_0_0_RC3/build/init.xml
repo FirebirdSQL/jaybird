@@ -1,0 +1,213 @@
+  <target name="init">
+    <!-- Setup the build timestamp & build identifer properties -->
+    <tstamp>
+      <format property="build.number" pattern="yyyyMMddHHmm"/>
+      <format property="YEAR" pattern="yyyy"/>
+    </tstamp>
+    <property name="build.id" value="${build.number}"/>
+
+	
+	<!-- We set jdbc.30 property if JDK version is 1.4 -->
+	<condition property="jdbc.30" value="true">
+	  <or>
+		<equals arg1="${ant.java.version}" arg2="1.4"/>
+		<equals arg1="${ant.java.version}" arg2="1.5"/>
+	  </or>		
+	</condition>
+	
+	<!-- We set jdk1.3 property if JDK version is 1.3 -->
+	<condition property="jdk1.3" value="true">
+		<equals arg1="${ant.java.version}" arg2="1.3"/>
+	</condition>
+
+	<!-- We set jdk1.4 property if JDK version is 1.4 -->
+	<condition property="jdk1.4" value="true">
+		<equals arg1="${ant.java.version}" arg2="1.4"/>
+	</condition>
+
+	<!-- We set jdk1.5 property if JDK version is 1.5 -->
+	<condition property="jdk1.5" value="true">
+		<equals arg1="${ant.java.version}" arg2="1.5"/>
+	</condition>
+	
+	<property name="Name" value="JayBird"/>
+    <property name="name" value="jaybird"/>
+
+    <property name="version.major" value="2"/>
+    <property name="version.minor" value="0"/>
+    <property name="version.revision" value="0"/>
+    <property name="version.tag" value="RC3"/>
+    <property name="version.name" value="JDK_${ant.java.version}"/>
+
+    <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
+
+    <!-- This must be set to the CVS tag for any release -->
+    <property name="version.cvstag" value="JayBird_2_0_0_RC3"/>
+
+    <!-- Manifest version info -->
+    <property name="specification.title" value="Firebird JayBird"/>
+    <property name="specification.version" value="${version.major}.${version.minor}"/>
+    <property name="specification.vendor" value="FirebirdSQL (http://www.firebirdsql.org)"/>
+
+    <property name="implementation.title" value="JayBird"/>
+    <property name="implementation.url" value="http://www.firebirdsql.org"/>
+    <property name="implementation.version"
+            value="${version.full} (build: CVSTag=${version.cvstag} date=${build.id})"/>
+    <property name="implementation.vendor" value="Firebird project"/>
+    <property name="implementation.vendor.id" value="${implementation.url}"/>
+
+    <!--where everything goes -->
+    <property name="lib.dir" value="${basedir}/lib"/>
+
+    <!--you will presumably need to change this if you want to use it.-->
+    <!--
+    <property name="jboss.base.dir" value="/usr/java/jboss/rc1/jboss-all/build/output/jboss-3.0.1RC1"/>
+    <property name="jboss.deploy.dir" value="${jboss.base.dir}/server/all/deploy"/>
+    -->
+
+    <!-- Setup the module environment. -->
+    <property name="module.root" value="${basedir}"/>
+
+    <property file="${module.root}/local.properties"/>
+    <property name="module.source" value="${module.root}/src"/>
+    <property name="module.output" value="${module.root}/output"/>
+    <property name="module.tools" value="${module.root}/lib"/>
+    <property name="module.thirdparty" value="${module.source}/lib"/>
+    <property name="module.etc" value="${module.source}/etc"/>
+    <property name="module.examples" value="${module.root}/examples"/>
+
+    <!-- Where source files live -->
+    <property name="source.java" value="${module.source}/main"/>
+    <property name="source.jdbc.20" value="${module.source}/jdbc_20"/>
+    <property name="source.jdbc.30" value="${module.source}/jdbc_30"/>
+    <property name="source.wire1.3" value="${module.source}/wire_jdk1_3"/>
+    <property name="source.wire1.4" value="${module.source}/wire_jdk1_4"/>
+    <property name="source.pool1.4" value="${module.source}/pool_jdk1_4"/>
+    <property name="source.pool1.5" value="${module.source}/pool_jdk1_5"/>
+    <property name="source.etc" value="${module.source}/etc"/>
+    <property name="source.examples" value="${module.examples}"/>
+    <property name="source.examples" value="${module.root}/examples"/>
+    <property name="source.resources" value="${module.source}/resources"/>
+    <property name="source.stylesheets" value="${module.source}/stylesheets"/>
+    <property name="source.test" value="${module.source}/test"/>
+    <property name="source.test.30" value="${module.source}/test_30"/>
+    <property name="source.pool" value="${module.source}/pool"/>
+    <property name="source.compatibility" value="${module.source}/compatibility"/>
+
+    <property name="thirdparty" value="${module.root}/thirdparty"/>
+    <property name="jboss.source.root"
+	    location="${thirdparty}/jboss/"/>
+
+
+    <!-- Where build generated files will go -->
+    <property name="build.j2ee" value="${module.output}/j2ee"/>
+    <property name="build.classes" value="${module.output}/classes"/>
+    <property name="build.pool" value="${module.output}/pool"/>
+    <property name="build.compatibility" value="${module.output}/compatibility"/>
+    <property name="build.test" value="${module.output}/test"/>
+    <property name="build.lib" value="${module.output}/lib"/>
+    <property name="build.api" value="${module.output}/api"/>
+    <property name="build.examples" value="${module.output}/examples"/>
+    <property name="build.etc" value="${module.output}/etc"/>
+    <property name="build.bin" value="${module.output}/bin"/>
+    <property name="build.docs" value="${module.output}/docs"/>
+    <property name="build.resources" value="${module.output}/resources"/>
+    <property name="build.stylesheets" value="${module.output}/stylesheets"/>
+    <property name="build.reports.pure_java" value="${module.output}/reports/pure_java"/>
+    <property name="build.reports.native" value="${module.output}/reports/native"/>
+    <property name="build.reports.embedded" value="${module.output}/reports/embedded"/>
+    <property name="build.testlog" value="${module.output}/log"/>
+    <property name="build.dist" value="${module.output}/dist"/>
+    <property name="build.native" value="${module.output}/native"/>
+    <property name="build.native.output" value="${build.native}"/>
+
+	<property name="archive.name.main" value="jaybird"/>
+	<property name="archive.name.version" value="${version.major}.${version.minor}.${version.revision}"/>
+	
+	<property name="archive.name.rar" value="${archive.name.main}-${archive.name.version}.rar"/>
+	<property name="archive.name.pool" value="${archive.name.main}-pool-${archive.name.version}.jar"/>
+	<property name="archive.name.full" value="${archive.name.main}-full-${archive.name.version}.jar"/>
+	<property name="archive.name.simple" value="${archive.name.main}-${archive.name.version}.jar"/>
+	<property name="archive.name.test" value="${archive.name.main}-test-${archive.name.version}.jar"/>
+
+    <property name="junit.timeout" value="600000"/> <!-- 10 minutes -->
+    <property name="junit.batchtest.todir" value="${build.reports}"/>
+    <property name="junit.jvm" value="java"/>
+    <property name="junit.jvm.options" value="-Ddummy"/>
+
+    <property name="junit.formatter.type" value="xml"/>
+    <property name="junit.formatter.usefile" value="true"/>
+    <property name="junit.printsummary" value="true"/>
+    <property name="junit.haltonerror"  value="true"/>
+    <property name="junit.haltonfailure"  value="true"/>
+    <property name="junit.fork" value="true"/>
+    <property name="junit.timeout" value="60000"/>
+    <!--property name="junit.jvm" value="true"/-->
+
+<!-- these may be overridden on the command line to test against a server
+  on another host.  For example,
+./build.sh -Dtest.db.host=192.168.0.3 -Dtest.db.dir=/usr/local/firebird/dev/client-java/output/db tests-report-html
+-->
+    <property name="test.db.host" value="localhost"/>
+    <property name="test.db.port" value="3050"/>
+    <property name="test.db.dir" value="${module.output}/db"/>
+    <property name="test.db.lc_ctype" value="NONE"/>
+
+
+    <property name="packages" value="org.firebirdsql.gds,org.firebirdsql.jca,org.firebirdsql.jdbc,org.firebirdsql.management,org.firebirdsql.pool"/>
+
+    <property name="build.compiler" value="classic"/>
+
+    <path id="javac.j2ee.classpath">
+      <pathelement location="${module.thirdparty}/mini-j2ee.jar"/>
+      <pathelement location="${module.thirdparty}/jaas.jar"/>
+    </path>
+
+    <path id="javac.driver.classpath">
+      <path refid="javac.j2ee.classpath"/>
+      <pathelement location="${build.j2ee}"/>
+      <pathelement location="${module.thirdparty}/log4j-core.jar"/>
+    </path>
+
+    <path id="javac.pool.classpath">
+      <path refid="javac.driver.classpath"/>
+      <pathelement location="${build.classes}"/>
+    </path>
+    
+    <path id="javac.compatibility.classpath">
+      <path refid="javac.driver.classpath"/>
+      <pathelement location="${build.classes}"/>
+      <pathelement location="${build.pool}"/>
+    </path>
+
+    <path id="javac.test.classpath">
+      <path refid="javac.driver.classpath"/>
+      <pathelement location="${build.classes}"/>
+      <pathelement location="${build.pool}"/>
+      <pathelement location="${lib.dir}/junit.jar"/>
+      <pathelement location="${module.thirdparty}/fscontext.jar"/>
+      <pathelement location="${module.thirdparty}/providerutil.jar"/>
+    </path>
+
+    <path id="javac.examples.classpath">
+      <path refid="javac.driver.classpath"/>
+      <pathelement location="${build.classes}"/>
+      <pathelement location="${build.pool}"/>
+    </path>
+
+    <!--
+    Determine if native code has been built and if so set 'native_library_present' property
+    -->
+    <property name="native.library.name" value="jaybird"/>
+    <property name="native.library.location" value="${module.output}/native"/>
+    <condition property="native_library_present">
+        <available file="${native.library.location}/${native.library.name}.dll"/>
+    </condition>
+    <condition property="native_library_present">
+        <available file="${native.library.location}/lib${native.library.name}.so"/>
+    </condition>
+    <condition property="no_type2_tests">
+        <not><isset property="native_library_present"/></not>
+    </condition>
+
+  </target>
