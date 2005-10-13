@@ -1,30 +1,3 @@
-2005-10-12 20:09  rrokytskyy
-
-	*
-	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory
-	.java:
-	
-	fixed NPE in JCA code when local encoding is equal to the
-	platform's default one
-
-2005-10-12 07:30  rrokytskyy
-
-	*
-	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
-	
-	fixed bug in managed scenario when managed connection is not
-	enlisted into transaction
-
-2005-10-12 07:29  rrokytskyy
-
-	* client-java/src/main/org/firebirdsql/:
-	logging/ConsoleLogger.java, logging/Log4jLogger.java,
-	logging/Logger.java, logging/NullLogger.java,
-	jca/FBLocalTransaction.java, jca/FBManagedConnection.java,
-	gds/impl/GDSHelper.java:
-	
-	added new trace level
-
 2005-10-09 20:02  rrokytskyy
 
 	*
