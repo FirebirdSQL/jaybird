@@ -1060,6 +1060,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
                         XAException.XAER_INVAL);
             }
 
+            gdsHelper.setCurrentTrHandle(trHandle);
+            return;
         }
         
         if (flags != XAResource.TMNOFLAGS) {
@@ -1071,7 +1073,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         
         // new xid for us
         trHandle = (AbstractIscTrHandle)gdsHelper.getInternalAPIHandler().createIscTrHandle();
-        gdsHelper.getInternalAPIHandler().iscStartTransaction(trHandle, dbHandle, tpb.getTransactionParameterBuffer());
+        gdsHelper.getInternalAPIHandler().iscStartTransaction(
+            trHandle, dbHandle, tpb.getTransactionParameterBuffer());
 
         xidMap.put(xid, trHandle);
         
