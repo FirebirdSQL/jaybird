@@ -119,4 +119,18 @@ public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension
         removeArgument(DatabaseParameterBufferExtension.PASSWORD);
         addArgument(DatabaseParameterBufferExtension.PASSWORD, password);
     }
+    
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+        
+        if (!(obj instanceof FBConnectionRequestInfo))
+            return false;
+        
+        return this.dpb.equals(((FBConnectionRequestInfo)obj).dpb);
+    }
+    
+    public int hashCode() {
+        return dpb.hashCode();
+    }
 }
