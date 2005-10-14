@@ -428,13 +428,13 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          * @see org.firebirdsql.jdbc.InternalTransactionCoordinator#commit()
          */
         public void commit() throws SQLException {
-            throw new FBSQLException("Calling commit() in managed environment is not allowed.");
+            // do nothing, we are in managed environment.
         }
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.InternalTransactionCoordinator#rollback()
          */
         public void rollback() throws SQLException {
-            throw new FBSQLException("Calling rollback() in managed environment is not allowed.");
+            // do nothing, we are in managed environment.
         }
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.BlobListener#executionStarted(org.firebirdsql.jdbc.FirebirdBlob)
