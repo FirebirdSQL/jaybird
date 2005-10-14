@@ -1,3 +1,10 @@
+2005-10-13 21:33  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jca/FBLocalTransaction.java:
+	
+	fixed issue when Connection was obtained before the start of global
+	transaction (but no local transaction was initiated).
+
 2005-10-12 20:09  rrokytskyy
 
 	*
