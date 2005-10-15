@@ -1,3 +1,26 @@
+2005-10-14 22:15  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/InternalTransactionCoordi
+	nator.java:
+	
+	fixed issue when connection is closed in managed environment
+
+2005-10-14 22:14  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnection.java:
+	
+	fixed bug when global transaction is resumed
+
+2005-10-14 10:58  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FBConnectionRequestInfo.ja
+	va:
+	
+	fixed equals() and hashCode() methods
+
 2005-10-13 21:33  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jca/FBLocalTransaction.java:
