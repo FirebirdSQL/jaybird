@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE connector PUBLIC "-//Sun Microsystems, Inc.//DTD Connector 1.0//EN" "http://java.sun.com/dtd/connector_1_0.dtd">
+
+
+<connector>
+  <display-name>Firebird Database Connector</display-name>
+  <vendor-name>Firebird Database</vendor-name>
+  <spec-version>1.0</spec-version>
+  <eis-type>Relational Database</eis-type>
+  <version>1.0</version>
+  <resourceadapter>
+    <managedconnectionfactory-class>org.firebirdsql.jca.FBManagedConnectionFactory</managedconnectionfactory-class>
+    <connectionfactory-interface>javax.sql.DataSource</connectionfactory-interface>
+    <connectionfactory-impl-class>org.firebirdsql.jdbc.FBDataSource</connectionfactory-impl-class>
+    <connection-interface>java.sql.Connection</connection-interface>
+    <connection-impl-class>org.firebirdsql.jdbc.FBConnection</connection-impl-class>
+    <transaction-support>XATransaction</transaction-support>
+<!-- TODO: add server and port properties.  Right now, you must specify 
+them in the Database property like this: <host>/<port>:<path to db file> -->
+    <config-property>
+      <config-property-name>Database</config-property-name>
+      <config-property-type>java.lang.String</config-property-type>
+      <config-property-value></config-property-value>
+    </config-property>
+    <config-property>
+      <config-property-name>TransactionIsolation</config-property-name>
+      <config-property-type>java.lang.Integer</config-property-type>
+      <config-property-value></config-property-value>
+    </config-property>
+    <config-property>
+      <config-property-name>TransactionIsolationName</config-property-name>
+      <config-property-type>java.lang.String</config-property-type>
+      <config-property-value>TRANSACTION_READ_COMMITTED</config-property-value>
+    </config-property>
+    <config-property>
+      <config-property-name>UserName</config-property-name>
+      <config-property-type>java.lang.String</config-property-type>
+      <config-property-value></config-property-value>
+    </config-property>
+    <config-property>
+      <config-property-name>Password</config-property-name>
+      <config-property-type>java.lang.String</config-property-type>
+      <config-property-value></config-property-value>
+    </config-property>
+    <config-property>
+      <config-property-name>BlobBufferLength</config-property-name>
+      <config-property-type>java.lang.Integer</config-property-type>
+      <config-property-value></config-property-value>
+    </config-property>
+    <config-property>
+      <config-property-name>Encoding</config-property-name>
+      <config-property-type>java.lang.String</config-property-type>
+      <config-property-value></config-property-value>
+    </config-property>
+    <authentication-mechanism>
+      <authentication-mechanism-type>BasicPassword</authentication-mechanism-type>
+      <credential-interface>javax.resource.security.PasswordCredential</credential-interface>
+    </authentication-mechanism>
+    <reauthentication-support>false</reauthentication-support>
+  </resourceadapter>
+</connector>
