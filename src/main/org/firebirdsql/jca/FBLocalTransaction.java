@@ -19,288 +19,291 @@
 
 package org.firebirdsql.jca;
 
-
-import javax.resource.spi.ConnectionEvent;
-import javax.resource.spi.LocalTransaction;
-
 import javax.resource.ResourceException;
-
+import javax.resource.spi.*;
 import javax.transaction.xa.*;
 
 import org.firebirdsql.gds.GDSException;
-
 import org.firebirdsql.jdbc.AbstractConnection;
 
 /**
- * The class <code>FBLocalTransaction</code> implements
- * LocalTransaction both in the cci and spi meanings.  A flag is used
- * to distinguish the current functionality. This class works by
- * delegating the operations to the internal implementations of the
- * XAResource functionality in FBManagedConnection.
- *
+ * The class <code>FBLocalTransaction</code> implements LocalTransaction both
+ * in the cci and spi meanings. A flag is used to distinguish the current
+ * functionality. This class works by delegating the operations to the internal
+ * implementations of the XAResource functionality in FBManagedConnection.
+ * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBLocalTransaction implements LocalTransaction, javax.resource.cci.LocalTransaction {
+public class FBLocalTransaction implements FirebirdLocalTransaction,
+        javax.resource.cci.LocalTransaction {
 
-     private final FBManagedConnection mc;
+    protected final FBManagedConnection mc;
 
-     private Xid xid = null;
+    protected Xid xid = null;
 
-     //used to determine if local transaction events notify
-     //ConnectionEventListeners see jca spec section 6.8.  Basically
-     //not null means this is cci LocalTransaction, null means
-     //spi.LocalTransaction.
-     private final ConnectionEvent beginEvent;
-     private final ConnectionEvent commitEvent;
-     private final ConnectionEvent rollbackEvent;
+    // used to determine if local transaction events notify
+    // ConnectionEventListeners see jca spec section 6.8. Basically
+    // not null means this is cci LocalTransaction, null means
+    // spi.LocalTransaction.
+    protected final ConnectionEvent beginEvent;
 
-     //should be package!!! perhaps reorganize and eliminate jdbc!!!
-     public FBLocalTransaction(FBManagedConnection mc, AbstractConnection c) {
-         this.mc = mc;
-         if (c == null) {
-             beginEvent = null;
-             commitEvent = null;
-             rollbackEvent = null;
-         } else {
-             beginEvent = new ConnectionEvent(mc, 
-                     ConnectionEvent.LOCAL_TRANSACTION_STARTED, null);
-             beginEvent.setConnectionHandle(c);
-             
-             commitEvent = new ConnectionEvent(mc, 
-                     ConnectionEvent.LOCAL_TRANSACTION_COMMITTED, null);
-             commitEvent.setConnectionHandle(c);
+    protected final ConnectionEvent commitEvent;
 
-             rollbackEvent = new ConnectionEvent(mc, 
-                     ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK, null);
-             rollbackEvent.setConnectionHandle(c);
-         }
-     }
+    protected final ConnectionEvent rollbackEvent;
 
-     /**
-      * Check whether a started transaction is associated with the current
-      * database connection.
-      */
-     public boolean inTransaction() throws ResourceException {
-         try {
-             return mc.getGDSHelper().inTransaction();
-         } catch(GDSException ex) {
-             throw new FBResourceException(ex);
-         }
-     }
-     
+    // should be package!!! perhaps reorganize and eliminate jdbc!!!
+    public FBLocalTransaction(FBManagedConnection mc, AbstractConnection c) {
+        this.mc = mc;
+        if (c == null) {
+            beginEvent = null;
+            commitEvent = null;
+            rollbackEvent = null;
+        } else {
+            beginEvent = new ConnectionEvent(mc,
+                    ConnectionEvent.LOCAL_TRANSACTION_STARTED, null);
+            beginEvent.setConnectionHandle(c);
+
+            commitEvent = new ConnectionEvent(mc,
+                    ConnectionEvent.LOCAL_TRANSACTION_COMMITTED, null);
+            commitEvent.setConnectionHandle(c);
+
+            rollbackEvent = new ConnectionEvent(mc,
+                    ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK, null);
+            rollbackEvent.setConnectionHandle(c);
+        }
+    }
+
+    /**
+     * Get the associated Xid.
+     * 
+     * @return instance of {@link Xid} representing a transaction ID that is
+     *         managed by this local transaction.
+     */
+    public Xid getXid() {
+        return xid;
+    }
+
+    /**
+     * Check whether a started transaction is associated with the current
+     * database connection.
+     */
+    public boolean inTransaction() throws ResourceException {
+        try {
+            return mc.getGDSHelper().inTransaction();
+        } catch (GDSException ex) {
+            throw new FBResourceException(ex);
+        }
+    }
+
     /**
      * Begin a local transaction.
-     *
-     * @throws ResourceException generic exception if operation fails
-     * @throws LocalTransactionException error condition related to local 
-     *      transaction management
-     * @throws ResourceAdapterInternalException error condition internal to 
-     *      resource adapter
-     * @throws EISSystemException EIS instance specific error condition
+     * 
+     * @throws ResourceException
+     *             generic exception if operation fails
+     * @throws LocalTransactionException
+     *             error condition related to local transaction management
+     * @throws ResourceAdapterInternalException
+     *             error condition internal to resource adapter
+     * @throws EISSystemException
+     *             EIS instance specific error condition
      */
-     public void begin() throws ResourceException
-     {
+    public void begin() throws ResourceException {
         internalBegin();
-     }
+    }
 
     /**
      * Perform the internal operations to begin a local transaction.
-     *
-     * @throws ResourceException generic exception if operation fails
-     * @throws LocalTransactionException error condition related to local 
-     *         transaction management
-     * @throws ResourceAdapterInternalException error condition internal to 
-     *         resource adapter
-     * @throws EISSystemException EIS instance specific error condition
+     * 
+     * @throws ResourceException
+     *             generic exception if operation fails
+     * @throws LocalTransactionException
+     *             error condition related to local transaction management
+     * @throws ResourceAdapterInternalException
+     *             error condition internal to resource adapter
+     * @throws EISSystemException
+     *             EIS instance specific error condition
      */
-     public void internalBegin() throws ResourceException {
-         if (xid != null) {
-             
-             // throw exception only if xid is known to the managed connection 
-             if (mc.isXidActive(xid))
-                 throw new FBResourceTransactionException(
-                     "Local transaction active: can't begin another",
-                     FBResourceTransactionException.SQL_STATE_TRANSACTION_ACTIVE);
-         }
-         
-         xid = new FBLocalXid();
-         
-         try {
-             mc.internalStart(xid, XAResource.TMNOFLAGS);
-         } catch(XAException ex) {
-             xid = null;
-             throw new FBResourceException(ex);
-         } catch(GDSException ex) {
-             xid = null;
-             throw new FBResourceException(ex);
-         }
-         
-         if (beginEvent != null) 
-             mc.notify(
-                     FBManagedConnection.localTransactionStartedNotifier, 
-                     beginEvent);
-     }
+    public void internalBegin() throws ResourceException {
+        if (xid != null) {
 
+            // throw exception only if xid is known to the managed connection
+            if (mc.isXidActive(xid))
+                throw new FBResourceTransactionException(
+                        "Local transaction active: can't begin another",
+                        FBResourceTransactionException.SQL_STATE_TRANSACTION_ACTIVE);
+        }
+
+        xid = new FBLocalXid();
+
+        try {
+            mc.internalStart(xid, XAResource.TMNOFLAGS);
+        } catch (XAException ex) {
+            xid = null;
+            throw new FBResourceException(ex);
+        } catch (GDSException ex) {
+            xid = null;
+            throw new FBResourceException(ex);
+        }
+
+        if (beginEvent != null)
+            mc.notify(FBManagedConnection.localTransactionStartedNotifier,
+                beginEvent);
+    }
 
     /**
      * Commit a local transaction.
-     *
-     * @throws ResourceException generic exception if operation fails
-     * @throws LocalTransactionException error condition related to local 
-     *         transaction management
-     * @throws ResourceAdapterInternalException error condition internal to 
-     *         resource adapter
-     * @throws EISSystemException EIS instance specific error condition
+     * 
+     * @throws ResourceException
+     *             generic exception if operation fails
+     * @throws LocalTransactionException
+     *             error condition related to local transaction management
+     * @throws ResourceAdapterInternalException
+     *             error condition internal to resource adapter
+     * @throws EISSystemException
+     *             EIS instance specific error condition
      */
-     public void commit() throws ResourceException {
-         internalCommit();             
-     }
-
+    public void commit() throws ResourceException {
+        internalCommit();
+    }
 
     /**
      * Perform the internal processing to commit a local transaction.
-     *
-     * @throws ResourceException generic exception if operation fails
-     * @throws LocalTransactionException error condition related to local 
-     *         transaction management
-     * @throws ResourceAdapterInternalException error condition internal to 
-     *         resource adapter
-     * @throws EISSystemException EIS instance specific error condition
+     * 
+     * @throws ResourceException
+     *             generic exception if operation fails
+     * @throws LocalTransactionException
+     *             error condition related to local transaction management
+     * @throws ResourceAdapterInternalException
+     *             error condition internal to resource adapter
+     * @throws EISSystemException
+     *             EIS instance specific error condition
      */
-     public void internalCommit() throws ResourceException {
-         
-         // if there is no xid assigned, but we are still here, 
-         // that means that automatic commit was called in managed
-         // scenario when managed connection was enlisted in global
-         // transaction
-         if (xid == null) 
-             return;
-         
-         synchronized(mc)
-         {
-             try 
-             {
-                 mc.internalEnd(xid, XAResource.TMSUCCESS);
-                 mc.internalCommit(xid, true);
-             } catch(XAException ex) {
-                 throw new FBResourceTransactionException(
-                         ex.getMessage(), ex);
-             } catch(GDSException ex) {
-                 throw new FBResourceException(ex);
-             }
-             finally {
-                 xid = null;
-             }
-             if (commitEvent != null) {
-                 mc.notify(
-                         FBManagedConnection.localTransactionCommittedNotifier, 
-                         commitEvent);
-             }
-         }
-     }
+    public void internalCommit() throws ResourceException {
 
-
-
-
-     /**
-    * Rollback a local transaction.
-    *
-    * @throws ResourceException - generic exception if operation fails
-    * @throws LocalTransactionException - error condition related to local 
-    *         transaction management
-    * @throws ResourceAdapterInternalException - error condition internal to 
-    *         resource adapter
-    * @throws EISSystemException - EIS instance specific error condition
-    */
-    public void rollback() throws ResourceException {
-        internalRollback();
-     }
-
-
-   /**
-    * Perform the internal processing to rollback a local transaction.
-    *
-    * @throws ResourceException - generic exception if operation fails
-    * @throws LocalTransactionException - error condition related to local 
-    *         transaction management
-    * @throws ResourceAdapterInternalException - error condition internal to 
-    *         resource adapter
-    * @throws EISSystemException - EIS instance specific error condition
-    */
-    public void internalRollback() throws ResourceException {
-
-        // if there is no xid assigned, but we are still here, 
+        // if there is no xid assigned, but we are still here,
         // that means that automatic commit was called in managed
         // scenario when managed connection was enlisted in global
         // transaction
-         if (xid == null) 
-             return;
-         
-         synchronized(mc) {
-             try {
-                 mc.internalEnd(xid, XAResource.TMSUCCESS);  //??? on flags --FBManagedConnection is its own XAResource
-                 mc.internalRollback(xid);
-             } catch(XAException ex) {
-                 throw new FBResourceTransactionException(ex.getMessage());
-             } catch(GDSException ex) {
-                 throw new FBResourceTransactionException(ex.getMessage(), ex);
-             }
-             finally {
-                 xid = null;
-             }
-             if (rollbackEvent != null) {
-                 mc.notify(
-                         FBManagedConnection.localTransactionRolledbackNotifier, 
-                         rollbackEvent);
-             }
-         }
-     }
+        if (xid == null) return;
 
+        synchronized (mc) {
+            try {
+                mc.internalEnd(xid, XAResource.TMSUCCESS);
+                mc.internalCommit(xid, true);
+            } catch (XAException ex) {
+                throw new FBResourceTransactionException(ex.getMessage(), ex);
+            } catch (GDSException ex) {
+                throw new FBResourceException(ex);
+            } finally {
+                xid = null;
+            }
+            if (commitEvent != null) {
+                mc.notify(
+                    FBManagedConnection.localTransactionCommittedNotifier,
+                    commitEvent);
+            }
+        }
+    }
 
-     //This is an intentionally non-implemented xid, so if prepare is called 
+    /**
+     * Rollback a local transaction.
+     * 
+     * @throws ResourceException -
+     *             generic exception if operation fails
+     * @throws LocalTransactionException -
+     *             error condition related to local transaction management
+     * @throws ResourceAdapterInternalException -
+     *             error condition internal to resource adapter
+     * @throws EISSystemException -
+     *             EIS instance specific error condition
+     */
+    public void rollback() throws ResourceException {
+        internalRollback();
+    }
+
+    /**
+     * Perform the internal processing to rollback a local transaction.
+     * 
+     * @throws ResourceException -
+     *             generic exception if operation fails
+     * @throws LocalTransactionException -
+     *             error condition related to local transaction management
+     * @throws ResourceAdapterInternalException -
+     *             error condition internal to resource adapter
+     * @throws EISSystemException -
+     *             EIS instance specific error condition
+     */
+    public void internalRollback() throws ResourceException {
+
+        // if there is no xid assigned, but we are still here,
+        // that means that automatic commit was called in managed
+        // scenario when managed connection was enlisted in global
+        // transaction
+        if (xid == null) return;
+
+        synchronized (mc) {
+            try {
+                mc.internalEnd(xid, XAResource.TMSUCCESS); // ??? on flags
+                                                            // --FBManagedConnection
+                                                            // is its own
+                                                            // XAResource
+                mc.internalRollback(xid);
+            } catch (XAException ex) {
+                throw new FBResourceTransactionException(ex.getMessage());
+            } catch (GDSException ex) {
+                throw new FBResourceTransactionException(ex.getMessage(), ex);
+            } finally {
+                xid = null;
+            }
+            if (rollbackEvent != null) {
+                mc.notify(
+                    FBManagedConnection.localTransactionRolledbackNotifier,
+                    rollbackEvent);
+            }
+        }
+    }
+
+    // This is an intentionally non-implemented xid, so if prepare is called
     // with it, it won't work.
-     //Only object identity works for equals!
-     static class FBLocalXid implements Xid {
+    // Only object identity works for equals!
+    public static class FBLocalXid implements Xid {
 
-         private static final int formatId = 0x0102;//????????????
+        private static final int formatId = 0x0102;// ????????????
 
-         private String strValue;
-         
-         public FBLocalXid() {
-             strValue = "Xid[" + hashCode() + "]";
-         }
+        private String strValue;
 
-        /**
-         *  Return the global transaction id of this transaction.
-         */
-        public byte[] getGlobalTransactionId()
-        {
-           return null;
+        public FBLocalXid() {
+            strValue = "Xid[" + hashCode() + "]";
         }
 
         /**
-         *  Return the branch qualifier of this transaction.
+         * Return the global transaction id of this transaction.
          */
-        public byte[] getBranchQualifier()
-        {
+        public byte[] getGlobalTransactionId() {
             return null;
         }
 
         /**
-         *  Return the format identifier of this transaction.
-         *
-         *  The format identifier augments the global id and specifies
-         *  how the global id and branch qualifier should be interpreted.
+         * Return the branch qualifier of this transaction.
+         */
+        public byte[] getBranchQualifier() {
+            return null;
+        }
+
+        /**
+         * Return the format identifier of this transaction.
+         * 
+         * The format identifier augments the global id and specifies how the
+         * global id and branch qualifier should be interpreted.
          */
         public int getFormatId() {
-           return formatId;
+            return formatId;
         }
-        
+
         public String toString() {
             return strValue;
         }
     }
 
-
- }
+}
