@@ -638,11 +638,11 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         xidMap.remove(xid);
     }
 
-    void forget(FBManagedConnection mc, Xid xid) throws GDSException {
-
+    public void forget(FBManagedConnection mc, Xid xid) throws GDSException {
+        xidMap.remove(xid);
     }
 
-    void recover(FBManagedConnection mc, Xid xid) throws GDSException {
+    public void recover(FBManagedConnection mc, Xid xid) throws GDSException {
 
     }
 
@@ -669,10 +669,10 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
 
         try {
             FBManagedConnection tempMc = null;
-            FBLocalTransaction tempLocalTx = null;
+            FirebirdLocalTransaction tempLocalTx = null;
             try {
                 tempMc = new FBManagedConnection(null, null, this);
-                tempLocalTx = (FBLocalTransaction) tempMc.getLocalTransaction();
+                tempLocalTx = (FirebirdLocalTransaction) tempMc.getLocalTransaction();
                 tempLocalTx.begin();
 
                 long fbTransactionId = 0;

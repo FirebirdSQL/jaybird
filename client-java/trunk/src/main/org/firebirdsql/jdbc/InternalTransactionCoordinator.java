@@ -7,7 +7,7 @@ import java.util.Iterator;
 
 import javax.resource.ResourceException;
 
-import org.firebirdsql.jca.FBLocalTransaction;
+import org.firebirdsql.jca.FirebirdLocalTransaction;
 
 
 /**
@@ -101,12 +101,12 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
     }
     
     public abstract static class AbstractTransactionCoordinator implements FBObjectListener.StatementListener, FBObjectListener.BlobListener {
-        protected FBLocalTransaction localTransaction;
+        protected FirebirdLocalTransaction localTransaction;
         protected AbstractConnection connection;
         
         protected Collection statements = new ArrayList();
 
-        protected AbstractTransactionCoordinator(AbstractConnection connection, FBLocalTransaction localTransaction) {
+        protected AbstractTransactionCoordinator(AbstractConnection connection, FirebirdLocalTransaction localTransaction) {
             this.localTransaction = localTransaction;
             this.connection = connection;
         }
@@ -178,7 +178,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          * @param localTransaction
          */
         public AutoCommitCoordinator(AbstractConnection connection,
-                FBLocalTransaction localTransaction) {
+                FirebirdLocalTransaction localTransaction) {
             super(connection, localTransaction);
         }
         /* (non-Javadoc)
@@ -299,7 +299,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          * @param localTransaction
          */
         public LocalTransactionCoordinator(AbstractConnection connection,
-                FBLocalTransaction localTransaction) {
+                FirebirdLocalTransaction localTransaction) {
             super(connection, localTransaction);
         }
         /* (non-Javadoc)

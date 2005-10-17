@@ -70,7 +70,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public AbstractConnection(FBManagedConnection mc) {
         this.mc = mc;
         
-        this.localTransaction = new FBLocalTransaction(mc, this);
         this.txCoordinator = new InternalTransactionCoordinator();
     }
     
@@ -219,7 +218,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     
     public void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException {
         try {
-            if (localTransaction.inTransaction())
+            if (getLocalTransaction().inTransaction())
                 throw new FBSQLException("Cannot set transaction parameters " +
                         "when transaction is already started.");
             
@@ -376,9 +375,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
         
         InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
         if (autoCommit)
-            coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, localTransaction);
+            coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, getLocalTransaction());
         else
-            coordinator = new InternalTransactionCoordinator.LocalTransactionCoordinator(this, localTransaction);
+            coordinator = new InternalTransactionCoordinator.LocalTransactionCoordinator(this, getLocalTransaction());
         
         txCoordinator.setCoordinator(coordinator);
         this.autoCommit = autoCommit;
@@ -393,7 +392,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
             coordinator = new InternalTransactionCoordinator.ManagedTransactionCoordinator(this);
             this.autoCommit = false;
         } else {
-            coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, localTransaction);
+            coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, getLocalTransaction());
             this.autoCommit = true;
         }
          
@@ -480,7 +479,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
                     // leave managed transactions alone, they are normally
                     // committed after the Connection handle is closed.
 
-                    if (!getAutoCommit() && localTransaction.inTransaction()) {
+                    if (!getAutoCommit() && getLocalTransaction().inTransaction()) {
                         // autocommit is always true for managed tx.
                         try {
                             txCoordinator.rollback();
@@ -549,7 +548,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public synchronized void setReadOnly(boolean readOnly) throws SQLException {
         try {
-            if (localTransaction.inTransaction() && !mc.isManagedEnvironment())
+            if (getLocalTransaction().inTransaction() && !mc.isManagedEnvironment())
                 throw new FBSQLException("Calling setReadOnly(boolean) method " +
                         "is not allowed when transaction is already started.");
             
@@ -1103,7 +1102,10 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * Returns a FBLocalTransaction instance that enables a component to 
      * demarcate resource manager local transactions on this connection.
      */
-    public synchronized FBLocalTransaction getLocalTransaction() {
+    public synchronized FirebirdLocalTransaction getLocalTransaction() {
+        if (localTransaction == null)
+            localTransaction = new FBLocalTransaction(mc, this);
+
         return localTransaction;
     }
 

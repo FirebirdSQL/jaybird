@@ -1191,57 +1191,16 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         
         tpb = mcf.getTpb(isolation);
     }
-//
-//    /**
-//     * Get the name of the current transaction isolation level for this
-//     * connection.
-//     * 
-//     * @see getTransactionIsolation
-//     * @see setTransactionIsolationName
-//     * @return The name of the current transaction isolation level
-//     * @throws ResourceException
-//     *             If the transaction level cannot be retrieved
-//     */
-//    public String getTransactionIsolationName() throws ResourceException {
-//        return tpb.getTransactionIsolationName();
-//    }
-//
-//    /**
-//     * Set the current transaction isolation level for this connection by name
-//     * of the level. The transaction isolation name must be one of the
-//     * TRANSACTION_* static final fields in {@link org.firebirdsql.jca.FBTpb}.
-//     * 
-//     * @see getTransactionIsolationName
-//     * @see FBTpb
-//     * @param isolation
-//     *            The name of the transaction isolation level to be set
-//     * @throws ResourceException
-//     *             if the transaction isolation level cannot be set to the
-//     *             requested level, or if <code>isolation</code> is not a
-//     *             valid transaction isolation name
-//     */
-//    public void setTransactionIsolationName(String isolation)
-//            throws ResourceException {
-//        tpb.setTransactionIsolationName(isolation);
-//    }
-//
-//    /**
-//     * @deprecated you should not use internal transaction isolation levels
-//     *             directrly.
-//     */
-//    public int getIscTransactionIsolation() throws ResourceException {
-//        return tpb.getIscTransactionIsolation();
-//    }
-//
-//    /**
-//     * @deprecated you should not use internal transaction isolation levels
-//     *             directrly.
-//     */
-//    public void setIscTransactionIsolation(int isolation)
-//            throws ResourceException {
-//        tpb.setIscTransactionIsolation(isolation);
-//    }
-//
+
+    /**
+     * Get the managed connection factory that created this managed connection.
+     * 
+     * @return instance of {@link ManagedConnectionFactory}.
+     */
+    public ManagedConnectionFactory getManagedConnectionFactory() {
+        return mcf;
+    }
+    
     /**
      * Set whether this connection is to be readonly
      * 
@@ -1263,11 +1222,4 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         return tpb.isReadOnly();
     }
 
-//    public boolean getAutoCommit() {
-//        return autoCommit;
-//    }
-//    
-//    public void setAutoCommit(boolean autoCommit) {
-//        this.autoCommit = autoCommit;
-//    }
 }
