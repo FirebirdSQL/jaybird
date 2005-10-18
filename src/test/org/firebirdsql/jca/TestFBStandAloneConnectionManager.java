@@ -80,7 +80,7 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
         DataSource ds = (DataSource)mcf.createConnectionFactory();
         AbstractConnection c = (AbstractConnection)ds.getConnection();
         Statement s = c.createStatement();
-        LocalTransaction t = c.getLocalTransaction();
+        FirebirdLocalTransaction t = c.getLocalTransaction();
         assertTrue("Could not get LocalTransaction", t != null);
         Exception ex = null;
         t.begin();
