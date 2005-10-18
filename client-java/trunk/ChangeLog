@@ -1,3 +1,13 @@
+2005-10-17 22:36  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jca/FBLocalTransaction.java, jca/FBManagedConnection.java,
+	jca/FBManagedConnectionFactory.java,
+	jca/FirebirdLocalTransaction.java, jdbc/AbstractConnection.java,
+	jdbc/InternalTransactionCoordinator.java:
+	
+	refactoring to allow third-party LocalTransaction implementations
+
 2005-10-14 22:15  rrokytskyy
 
 	*
