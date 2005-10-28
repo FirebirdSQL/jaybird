@@ -266,5 +266,19 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
                 "This database handle is invalid and cannot be used anymore.");
     }
     
-
+    public boolean equals(Object obj) {
+        if (obj == this) 
+            return true;
+        
+        if (!(obj instanceof isc_db_handle_impl))
+            return false;
+        
+        isc_db_handle_impl that = (isc_db_handle_impl)obj;
+        
+        return this.rdb_id == that.rdb_id;
+    }
+    
+    public int hashCode() {
+        return rdb_id;
+    }
 }

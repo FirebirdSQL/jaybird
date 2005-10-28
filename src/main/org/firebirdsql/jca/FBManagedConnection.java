@@ -708,7 +708,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     public boolean isSameRM(XAResource res)
             throws javax.transaction.xa.XAException {
         return (res instanceof FBManagedConnection)
-                && (mcf == ((FBManagedConnection) res).mcf);
+                && (dbHandle.equals(((FBManagedConnection) res).dbHandle));
     }
 
     /**
