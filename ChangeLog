@@ -1,3 +1,11 @@
+2005-10-29 00:40  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	jca/FBManagedConnection.java, gds/impl/jni/isc_db_handle_impl.java,
+	gds/impl/wire/isc_db_handle_impl.java:
+	
+	fixed issue with TMJOIN optimization
+
 2005-10-18 08:29  rrokytskyy
 
 	*
