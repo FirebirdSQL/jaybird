@@ -65,8 +65,8 @@ public class TestFBXAResource extends TestXABase {
         FBManagedConnectionFactory mcf3 = initMcf();
         ManagedConnection mc3 = mcf3.createManagedConnection(null, null);
         XAResource xa3 = mc3.getXAResource();
-        if (!xa1.isSameRM(xa2)) {
-            throw new Exception("isSameRM reports difference from same mcf");
+        if (xa1.isSameRM(xa2)) {
+            throw new Exception("isSameRM reports no difference from same mcf");
         }
         if (xa1.isSameRM(xa3)) {
             throw new Exception("isSameRM reports no difference from different mcf");
