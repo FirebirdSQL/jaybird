@@ -1,3 +1,24 @@
+2005-11-04 15:49  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jca/TestFBXAResource.java:
+	
+	adapted to the change in the isSameRM method
+
+2005-11-04 15:47  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/:
+	jni/isc_db_handle_impl.java, wire/isc_db_handle_impl.java:
+	
+	fixed the issue that rdb_id is the same for the same database
+	object (even with different handles)
+
+2005-11-04 14:27  rrokytskyy
+
+	* client-java/src/etc/: release_notes.html, release_notes.odt,
+	release_notes.pdf:
+	
+	updates to release notes
+
 2005-10-29 00:40  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/:
