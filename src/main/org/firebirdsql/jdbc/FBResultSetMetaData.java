@@ -457,14 +457,71 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * a user-defined type, then a fully-qualified type name is returned.
      * @exception SQLException if a database access error occurs
      */
-    public  String getColumnTypeName(int column) throws  SQLException {
-        // Must return the same value as DatamaseMetaData getColumns Type_Name
+    public  String getColumnTypeName(int column) throws  SQLException {    	
+        // Must return the same value as DatabaseMetaData getColumns Type_Name
         int sqltype = getXsqlvar(column).sqltype & ~1;
         int sqlscale = getXsqlvar(column).sqlscale;
         int sqlsubtype = getXsqlvar(column).sqlsubtype;
 
-        return FBDatabaseMetaData.getDataTypeName((short) sqltype,
-            (short) sqlscale, (short) sqlsubtype);
+        if (sqlscale < 0) {
+            switch (sqltype) {
+                case ISCConstants.SQL_SHORT:
+                case ISCConstants.SQL_LONG:
+                case ISCConstants.SQL_INT64:
+                case ISCConstants.SQL_DOUBLE:
+                    // NOTE: can't be BIGINT because of scale
+                    if (sqlsubtype == 2)
+                        return "DECIMAL";
+                    else
+                        return "NUMERIC";
+                default:
+                    break;
+            }
+        }
+
+        switch (sqltype) {
+            case ISCConstants.SQL_SHORT:
+                return "SMALLINT";
+            case ISCConstants.SQL_LONG:
+                return "INTEGER";
+            case ISCConstants.SQL_DOUBLE:
+            case ISCConstants.SQL_D_FLOAT:
+                return "DOUBLE PRECISION";
+            case ISCConstants.SQL_FLOAT:
+                return "FLOAT";
+            case ISCConstants.SQL_TEXT:
+                return "CHAR";
+            case ISCConstants.SQL_VARYING:
+                return "VARCHAR";
+            case ISCConstants.SQL_TIMESTAMP:
+                return "TIMESTAMP";
+            case ISCConstants.SQL_TYPE_TIME:
+                return "TIME";
+            case ISCConstants.SQL_TYPE_DATE:
+                return "DATE";
+            case ISCConstants.SQL_INT64:
+                //this might need some help for long mapping
+                if (sqlsubtype == 1)
+                    return "NUMERIC";
+                else if (sqlsubtype == 2)
+                    return "DECIMAL";
+                else
+                    return "BIGINT";
+            case ISCConstants.SQL_BLOB:
+                if (sqlsubtype < 0)
+                    return "BLOB SUB_TYPE <0";
+                else if (sqlsubtype == 0)
+                    return "BLOB SUB_TYPE 0";
+                else if (sqlsubtype == 1)
+                    return "BLOB SUB_TYPE 1";
+                else
+                    return "BLOB SUB_TYPE " + sqlsubtype;
+            case ISCConstants.SQL_QUAD:
+                return "ARRAY";
+            default:
+                return "NULL";
+        }
+        
     }
 
 
