@@ -5,7 +5,7 @@
 	<TITLE></TITLE>
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.0  (Win32)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
-	<META NAME="CHANGED" CONTENT="20051104;14240004">
+	<META NAME="CHANGED" CONTENT="20051111;21213900">
 	<STYLE>
 	<!--
 		@page { size: 21cm 29.7cm; margin: 2cm }
@@ -1621,6 +1621,15 @@ connection does not match the character encoding of the field,
 conversion errors might happen. Therefore it is recommended to
 convert such fields in the application using the appropriate
 encoding.</P>
+<H3 CLASS="western">Heuristic transaction completion support</H3>
+<P CLASS="western">Current JCA implementation does not support
+<CODE CLASS="western">XAResource.forget(Xid)</CODE> method. It might
+be important in cases when distributed transaction that was some time
+in-limbo was either committed or rolled back by database
+administrator. Such transactions appear to JayBird as successfully
+completed, however XA specification requires resource manager to
+&ldquo;remember&rdquo; such transaction until the
+<CODE CLASS="western">XAResource.forget(Xid)</CODE> is called.</P>
 <H2 CLASS="western"><A NAME="0.0.Connection pooling with JayBird 2.0|outline"></A>
 Connection pooling with JayBird 2.0</H2>
 <P CLASS="western">Connection pooling provides effective way to
