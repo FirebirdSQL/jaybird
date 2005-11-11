@@ -1,3 +1,12 @@
+2005-11-10 05:58  sjardine
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	test/org/firebirdsql/jdbc/TestFBResultSetMetaData.java:
+	
+	Fixed  getColumnTypeName function to return valid column type.	Add
+	junit test case.
+
 2005-11-04 15:49  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/jca/TestFBXAResource.java:
