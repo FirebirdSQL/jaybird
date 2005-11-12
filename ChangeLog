@@ -1,3 +1,10 @@
+2005-11-11 23:53  rrokytskyy
+
+	* client-java/src/etc/: release_notes.html, release_notes.odt,
+	release_notes.pdf:
+	
+	updated notes to include XAResource.forget issue
+
 2005-11-10 05:58  sjardine
 
 	* client-java/src/:
