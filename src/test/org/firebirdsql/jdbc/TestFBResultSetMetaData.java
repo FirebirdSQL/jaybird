@@ -65,6 +65,7 @@ public class TestFBResultSetMetaData extends FBTestBase {
         super(testName);
     }
     
+    
     protected void setUp() throws Exception {
         super.setUp();
         
@@ -140,7 +141,6 @@ public class TestFBResultSetMetaData extends FBTestBase {
         stmt.close();
         connection.close();
     }
-    
     public void testResultSetMetaData2() throws Exception {
         Properties props = new Properties();
         props.putAll(this.getDefaultPropertiesForConnection());
@@ -161,42 +161,4 @@ public class TestFBResultSetMetaData extends FBTestBase {
         connection.close();
     }
     
-	public void testColumnTypeName() throws Exception {
-		
-		Properties props = new Properties();
-		props.putAll(this.getDefaultPropertiesForConnection());
-		props.put("lc_ctype", "UNICODE_FSS");
-
-		Connection connection = 
-			DriverManager.getConnection(this.getUrl(), props);
-
-		Statement stmt = connection.createStatement();
-
-		ResultSet rs = stmt.executeQuery(TEST_QUERY);
-
-		ResultSetMetaData metaData = rs.getMetaData();
-
-		assertTrue("simple_field must be of type VARCHAR",
-				metaData.getColumnTypeName(1).equals("VARCHAR"));
-
-		assertTrue("two_byte_field must be of type VARCHAR",
-				metaData.getColumnTypeName(2).equals("VARCHAR"));
-
-		assertTrue("three_byte_field must be of type VARCHAR",
-				metaData.getColumnTypeName(3).equals("VARCHAR"));
-
-		assertTrue("long_field must be of type NUMERIC",
-				metaData.getColumnTypeName(4).equals("NUMERIC"));
-
-		assertTrue("int_field must be of type NUMERIC",
-				metaData.getColumnTypeName(5).equals("NUMERIC"));
-
-		assertTrue("short_field must be of type NUMERIC",
-				metaData.getColumnTypeName(6).equals("NUMERIC"));
-
-		stmt.close();
-		connection.close();
-		
-	}
-
 }
