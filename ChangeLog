@@ -1,3 +1,13 @@
+2005-11-17 19:37  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/impl/jni/FyracleGDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/jni/FyracleGDSImpl.java,
+	resources/META-INF/services/org.firebirdsql.gds.impl.GDSFactoryPlug
+	in:
+	
+	removed Fyracle plugin
+
 2005-11-11 23:53  rrokytskyy
 
 	* client-java/src/etc/: release_notes.html, release_notes.odt,
