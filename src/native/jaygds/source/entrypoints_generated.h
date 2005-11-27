@@ -311,6 +311,43 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1transaction_1info
   (JNIEnv *, jobject, jobject, jbyteArray, jint);
 
+
+/*
+ * Class:     org_firebirdsql_gds_impl_jni_JniGDSImpl
+ * Method:    native_isc_que_events
+ * Signature: (Lorg/firebirdsql/gds/IscDbHandle;Lorg/firebirdsql/gds/impl/jni/EventHandleImp;Lorg/firebirdsql/gds/EventHandler;)I
+ */
+JNIEXPORT jint JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1que_1events
+  (JNIEnv *, jobject, jobject, jobject, jobject);
+
+
+
+/*
+ * Class:     org_firebirdsql_gds_impl_jni_JniGDSImpl
+ * Method:    native_isc_event_block
+ * Signature: (Lorg/firebirdsql/gds/impl/jni/EventHandleImp;Ljava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1event_1block
+  (JNIEnv *, jobject, jobject, jstring);
+
+/*
+ * Class:     org_firebirdsql_gds_impl_jni_JniGDSImpl
+ * Method:    native_isc_event_counts
+ * Signature: (Lorg/firebirdsql/gds/impl/jni/EventHandleImp;)V
+ */
+JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1event_1counts
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     org_firebirdsql_gds_impl_jni_JniGDSImpl
+ * Method:    native_isc_cancel_events
+ * Signature: (Lorg/firebirdsql/gds/IscDbHandle;Lorg/firebirdsql/gds/impl/jni/EventHandleImp;)V
+ */
+JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1cancel_1events
+  (JNIEnv *, jobject, jobject, jobject);
+
+
+
 #ifdef __cplusplus
 }
 #endif

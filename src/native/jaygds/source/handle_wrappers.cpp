@@ -572,6 +572,195 @@ void		JIscServiceHandle::AddWarning( jthrowable warning )
 	sMethodBinding_AddWarning.CallVoid( mJavaEnvironment, mJavaObjectHandle, warning );
 	}
 	
+	
 
+// JEventHandle Class -----------------------------------------------
+
+// Static Members
+
+
+JClassBinding  JEventHandle::sClassBinding;
 	
+JMethodBinding JEventHandle::sMethodBinding_GetInputHandle;
+JMethodBinding JEventHandle::sMethodBinding_GetOutputHandle;
+JMethodBinding JEventHandle::sMethodBinding_SetInputHandle;
+JMethodBinding JEventHandle::sMethodBinding_SetOutputHandle;
+JMethodBinding JEventHandle::sMethodBinding_SetSize;
+JMethodBinding JEventHandle::sMethodBinding_GetSize;
+JMethodBinding JEventHandle::sMethodBinding_SetEventCount;
+JMethodBinding JEventHandle::sMethodBinding_SetEventId;
+JMethodBinding JEventHandle::sMethodBinding_GetEventId;
+JMethodBinding JEventHandle::sMethodBinding_SetEventStructHandle;
+JMethodBinding JEventHandle::sMethodBinding_GetEventStructHandle;
+
+bool	JEventHandle::sIsInitialized = false;
+
+// Static Methods
+
+/*
+ *
+ */
+void JEventHandle::Initialize( JNIEnv* javaEnvironment )
+	{
+	if( sIsInitialized )
+		throw InternalException("Initialize has been called twice without an unitialize.");
+
+	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/gds/impl/jni/EventHandleImp" );
+
+	sMethodBinding_SetInputHandle = sClassBinding.GetMethodBinding( javaEnvironment, "setInputBufferHandle", "(I)V" );
+	sMethodBinding_SetOutputHandle = sClassBinding.GetMethodBinding( javaEnvironment, "setOutputBufferHandle", "(I)V" );
+	sMethodBinding_GetInputHandle = sClassBinding.GetMethodBinding( javaEnvironment, "getInputBufferHandle", "()I" );
+	sMethodBinding_GetOutputHandle = sClassBinding.GetMethodBinding( javaEnvironment, "getOutputBufferHandle", "()I" );
+	sMethodBinding_SetSize = sClassBinding.GetMethodBinding( javaEnvironment, "setSize", "(I)V" );
+	sMethodBinding_GetSize = sClassBinding.GetMethodBinding( javaEnvironment, "getSize", "()I" );
+        sMethodBinding_SetEventCount = sClassBinding.GetMethodBinding(javaEnvironment, "setEventCount", "(I)V");
+        sMethodBinding_SetEventId = sClassBinding.GetMethodBinding(javaEnvironment, "setEventId", "(I)V");
+        sMethodBinding_GetEventId = sClassBinding.GetMethodBinding(javaEnvironment, "getEventId", "()I");
+        sMethodBinding_GetEventStructHandle = sClassBinding.GetMethodBinding(javaEnvironment, "getEventStructHandle", "()I");
+        sMethodBinding_SetEventStructHandle = sClassBinding.GetMethodBinding(javaEnvironment, "setEventStructHandle", "(I)V");
+
+	sIsInitialized = true;
+	}
+
+
+// Members
+
+/*
+ *
+ */
+JEventHandle::JEventHandle( JNIEnv* javaEnvironment, jobject objectHandle ) :
+	mJavaEnvironment( javaEnvironment )	,
+	mJavaObjectHandle( objectHandle )
+	{
+	}
+
+JEventHandle::~JEventHandle()
+	{
+	}
+
+/*
+ *
+ */
+void JEventHandle::SetInputHandleValue( char* handle )
+	{
+	sMethodBinding_SetInputHandle.CallVoid( mJavaEnvironment, mJavaObjectHandle, handle );
+	}
+
+
+/*
+ *
+ */
+void JEventHandle::SetOutputHandleValue( char* handle)
+	{
+	sMethodBinding_SetOutputHandle.CallVoid( mJavaEnvironment, mJavaObjectHandle, handle );
+	}
+
+
+/*
+ *
+ */	
+char* JEventHandle::GetInputHandleValue()
+	{
+	return (char*)sMethodBinding_GetInputHandle.CallInteger( mJavaEnvironment, mJavaObjectHandle );
+	}
+
+
+/*
+ *
+ */	
+char* JEventHandle::GetOutputHandleValue()
+	{
+	return (char*)sMethodBinding_GetOutputHandle.CallInteger( mJavaEnvironment, mJavaObjectHandle );
+	}
+
+void JEventHandle::SetSize(int size)
+{
+    sMethodBinding_SetSize.CallVoid(mJavaEnvironment, mJavaObjectHandle, size);
+}
+
+int JEventHandle::GetSize()
+{
+    return sMethodBinding_GetSize.CallInteger(mJavaEnvironment, mJavaObjectHandle);
+}
+
+
+void JEventHandle::SetEventCount(int count)
+{
+    sMethodBinding_SetEventCount.CallVoid(mJavaEnvironment, mJavaObjectHandle, count);
+}
+
+void JEventHandle::SetEventId(int eventId)
+{
+    sMethodBinding_SetEventId.CallVoid(mJavaEnvironment, mJavaObjectHandle, eventId);
+}
+
+int JEventHandle::GetEventId()
+{
+    return sMethodBinding_GetEventId.CallInteger(mJavaEnvironment, mJavaObjectHandle);
+}
+
+int JEventHandle::GetEventStructHandle()
+{
+    return sMethodBinding_GetEventStructHandle.CallInteger(mJavaEnvironment, mJavaObjectHandle);
+}
+
+void JEventHandle::SetEventStructHandle(int handle)
+{
+    sMethodBinding_SetEventStructHandle.CallVoid(mJavaEnvironment, mJavaObjectHandle, handle);
+}
+
+
+
+// JEventHandler Class -----------------------------------------------
+
+// Static Members
+
+
+JClassBinding  JEventHandler::sClassBinding;
 	
+JMethodBinding JEventHandler::sMethodBinding_EventOccurred;
+
+bool JEventHandler::sIsInitialized = false;
+
+// Static Methods
+
+/*
+ *
+ */
+void JEventHandler::Initialize( JNIEnv* javaEnvironment )
+	{
+	if( sIsInitialized )
+		throw InternalException("Initialize has been called twice without an unitialize.");
+
+	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/gds/EventHandler" );
+
+	sMethodBinding_EventOccurred = sClassBinding.GetMethodBinding( javaEnvironment, "eventOccurred", "()V" );
+
+        sIsInitialized = true;
+	}
+
+
+// Members
+
+/*
+ *
+ */
+JEventHandler::JEventHandler( JNIEnv* javaEnvironment, jobject objectHandle ) :
+	mJavaEnvironment( javaEnvironment )	,
+	mJavaObjectHandle( objectHandle )
+	{
+	}
+
+JEventHandler::~JEventHandler()
+	{
+	}
+
+/*
+ *
+ */
+void JEventHandler::EventOccurred()
+	{
+	sMethodBinding_EventOccurred.CallVoid( mJavaEnvironment, mJavaObjectHandle);
+	}
+
+

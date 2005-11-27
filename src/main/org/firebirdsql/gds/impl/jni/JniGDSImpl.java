@@ -248,4 +248,18 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     public native byte[] native_isc_transaction_info(IscTrHandle tr_handle, 
             byte[] info, int bufferLength) throws GDSException;
 
+    public native int native_isc_que_events(IscDbHandle db_handle,
+            EventHandleImp eventHandle, EventHandler handler) 
+            throws GDSException;
+
+    public native long native_isc_event_block(
+            EventHandleImp eventHandle,
+            String eventName) throws GDSException;
+
+    public native void native_isc_event_counts(EventHandleImp eventHandle)
+            throws GDSException;
+
+    public native void native_isc_cancel_events(IscDbHandle db_handle,
+            EventHandleImp eventHandle) throws GDSException;
+
 }
