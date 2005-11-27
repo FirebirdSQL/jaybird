@@ -32,6 +32,9 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
+import java.util.Map;
+import java.util.HashMap;
+
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
@@ -47,6 +50,8 @@ import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.EventHandle;
+import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
@@ -2873,5 +2878,299 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	public IscSvcHandle createIscSvcHandle() {
 		return new isc_svc_handle_impl();
 	}
+
+
+    public int iscQueueEvents(IscDbHandle dbHandle, 
+            EventHandle eventHandle, EventHandler eventHandler) 
+            throws GDSException {
+
+        boolean debug = log != null && log.isDebugEnabled();
+        isc_db_handle_impl db = (isc_db_handle_impl)dbHandle;
+
+        if (db == null) {
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
+        }
+
+        synchronized (db) {
+            try {
+                if (db.eventCoordinator == null){
+                    if (debug)
+                        log.debug("op_connect_request ");
+                    
+                    db.out.writeInt(op_connect_request);
+                    db.out.writeInt(1);  // Connection type
+                    db.out.writeInt(db.getRdb_id());
+                    db.out.writeInt(0);
+                    db.out.flush();
+                   
+                    nextOperation(db); 
+
+                    int auxHandle = db.in.readInt();
+
+                    int port = iscVaxInteger(db.in.readRawBuffer(2), 0, 2);
+
+                    // sin family
+                    db.in.readRawBuffer(2);
+
+                    // IP address
+                    byte[] ipBytes = db.in.readRawBuffer(4);
+                    StringBuffer ipBuf = new StringBuffer();
+                    for (int i = 3; i >= 0; i--){
+                        ipBuf.append(ipBytes[i]);
+                        if (i > 0) ipBuf.append(".");
+                    }
+                    String ipAddress = ipBuf.toString();
+
+                    // Ignore
+                    db.in.readRawBuffer(12);
+                    readStatusVector(db);
+
+                    db.eventCoordinator = 
+                        new EventCoordinatorImp(auxHandle, ipAddress, port);
+                }
+
+                db.eventCoordinator.queueEvents(
+                    db,
+                    (EventHandleImp)eventHandle, 
+                    eventHandler);
+            } catch (IOException ioe){
+                throw new GDSException(
+                        ISCConstants.isc_arg_gds, 
+                        ISCConstants.isc_net_read_err, 
+                        ioe.getMessage());
+            }
+        }
+
+        return 0;
+    }
+
+    public void iscEventBlock(EventHandle eventHandle) 
+            throws GDSException {
+
+        // Don't need to do anything here, this method just exists
+        // for the Type2 driver to map directly to the Interbase API
+    }
+
+    public void iscEventCounts(EventHandle eventHandle)
+            throws GDSException {
+        EventHandleImp handleImp = (EventHandleImp)eventHandle;
+        handleImp.calculateCount();
+    }
+
+
+    public void iscCancelEvents(IscDbHandle dbHandle, EventHandle eventHandle)
+            throws GDSException {
+        isc_db_handle_impl db = (isc_db_handle_impl)dbHandle;
+        EventHandleImp handleImp = (EventHandleImp)eventHandle;
+        if (db == null){
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
+        }
+        
+        if (db.eventCoordinator.cancelEvents(handleImp)){
+            synchronized (db){
+                try {
+                    db.out.writeInt(op_cancel_events);
+                    db.out.writeInt(db.getRdb_id());
+                    db.out.writeInt(handleImp.getLocalId());
+                    db.out.flush();
+                    receiveResponse(db, -1);
+                } catch (IOException ioe){
+                    throw new GDSException(
+                            ISCConstants.isc_arg_gds, 
+                            ISCConstants.isc_net_read_err, 
+                            ioe.getMessage());
+                }
+            }
+        }
+    }
+
+    public EventHandle createEventHandle(String eventName){
+        return new EventHandleImp(eventName);
+    }
+
+
+    class EventCoordinatorImp implements EventCoordinator, Runnable {
+
+        private int handle;
+        private String ipAddress;
+        private int port;
+        private Socket socket;
+        private XdrOutputStream out;
+        private WireXdrInputStream in;
+        private int eventsId = 0;
+        isc_db_handle_impl db;
+        private Map globMap = new HashMap();
+        private boolean running = true;
+
+        public EventCoordinatorImp(int handle, String ipAddress, int port) 
+                throws GDSException {
+            this.handle = handle;
+            this.ipAddress = ipAddress;
+            this.port = port;
+            connect();
+            new Thread(this).start();
+        }
+
+        public boolean cancelEvents(EventHandleImp eventHandle){
+            synchronized (globMap){
+                return globMap.remove(
+                    Integer.toString(eventHandle.getLocalId())) != null;
+            }
+        }
+
+
+        public void run(){
+            try {
+                while (running){
+                    int op = nextOperation(db);
+                    switch (op){
+                        case op_response:
+                            receiveResponse(db, op);
+                            break;
+
+                        case op_exit:
+                        case op_disconnect:
+                            this.close();
+                            break;
+
+                        case op_event:
+                            int dbHandle = db.in.readInt();
+                            byte [] buffer = db.in.readBuffer();
+
+                            // AST info, can be ignored
+                            for (int i = 0; i < 8; i++){
+                                db.in.read();
+                            }
+
+                            int eventId = db.in.readInt();
+                            
+                            int count = 0;
+                            int shift = 0;
+                            for (int i = buffer.length - 4; 
+                                    i < buffer.length; i++){
+                                count += ((buffer[i] & 0xff) << shift);
+                                shift += 8;
+                            }
+
+                            EventGlob glob = null;
+                            synchronized (globMap){
+                                glob = (EventGlob)globMap.remove(
+                                        Integer.toString(eventId));
+                            }
+                            if (glob != null){
+                                glob.getEventHandle().setInternalCount(count);
+                                glob.getEventHandler().eventOccurred();
+                            }
+                            break;
+                    }
+                }                 
+                doClose();
+            } catch (IOException ioe){
+                throw new RuntimeException(ioe);
+            } catch (GDSException gdse){
+                throw new RuntimeException(gdse);
+            }
+        }
+
+        
+        /**
+         * Connect to receive event callbacks
+         */
+        private void connect() throws GDSException {
+            try {
+                db = new isc_db_handle_impl();
+                socket = new Socket(ipAddress, port);
+                socket.setTcpNoDelay(true);
+                out = new XdrOutputStream(socket.getOutputStream());
+                in = new WireXdrInputStream(socket.getInputStream());
+                db.in = in;
+                db.out = out;
+            } catch (UnknownHostException uhe){
+                throw new GDSException(
+                        ISCConstants.isc_arg_gds, 
+                        ISCConstants.isc_network_error,
+                        ipAddress);
+            } catch (IOException ioe){
+                throw new GDSException(
+                        ISCConstants.isc_arg_gds, 
+                        ISCConstants.isc_network_error, 
+                        ipAddress);
+            }
+        }
+
+        public void close() throws IOException {
+            running = false;
+        }
+
+        private void doClose() throws IOException {
+            if (in != null){
+                in.close();
+                in = null;
+            }
+            if (out != null){
+                out.close();
+                out = null;
+            }
+            if (socket != null){
+                socket.close();
+                socket = null;
+            }
+
+        }
+
+
+        public void queueEvents(isc_db_handle_impl mainDb, 
+                EventHandleImp eventHandle, 
+                EventHandler eventHandler) throws GDSException {
+            synchronized (mainDb){
+                try {
+                    synchronized (globMap){
+                        eventHandle.setLocalId(++this.eventsId);
+                        mainDb.out.writeInt(op_que_events);
+                        mainDb.out.writeInt(this.handle);
+                        byte [] epb = eventHandle.toByteArray();
+                        mainDb.out.writeBuffer(epb);
+                        mainDb.out.writeInt(0); // Address of ast
+                        mainDb.out.writeInt(0); // Address of ast arg
+                        mainDb.out.writeInt(eventHandle.getLocalId());
+                        mainDb.out.flush();
+
+
+                        receiveResponse(mainDb,-1);
+                        int eventId = mainDb.getResp_object();
+                        eventHandle.setEventId(eventId);
+                        globMap.put(
+                                Integer.toString(eventHandle.getLocalId()), 
+                                new EventGlob(eventHandler, eventHandle));
+                    }
+
+                } catch (IOException ioe){
+                    throw new GDSException(
+                            ISCConstants.isc_arg_gds, 
+                            ISCConstants.isc_net_read_err, 
+                            ioe.getMessage());
+                }
+            }
+        }
+    }
+
+    class EventGlob {
+        private EventHandler eventHandler;
+        private EventHandleImp eventHandle;
+
+        public EventGlob(EventHandler handler, EventHandleImp handle){
+            this.eventHandler = handler;
+            this.eventHandle = handle;
+        }
+
+        public EventHandler getEventHandler(){
+            return this.eventHandler;
+        }
+
+        public EventHandleImp getEventHandle(){
+            return this.eventHandle;
+        }
+    }
+
 
 }

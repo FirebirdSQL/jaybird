@@ -87,6 +87,12 @@ prototype_isc_service_detach*		FirebirdApiBinding::isc_service_detach  = NULL;
 prototype_isc_service_query*		FirebirdApiBinding::isc_service_query  = NULL;
 prototype_isc_service_start*		FirebirdApiBinding::isc_service_start  = NULL;
 prototype_isc_transaction_info*		FirebirdApiBinding::isc_transaction_info = NULL;
+prototype_isc_que_events*               FirebirdApiBinding::isc_que_events = NULL;
+prototype_isc_event_block*              FirebirdApiBinding::isc_event_block = NULL;
+prototype_isc_wait_for_event*           FirebirdApiBinding::isc_wait_for_event = NULL;
+prototype_isc_event_counts*             FirebirdApiBinding::isc_event_counts = NULL;
+prototype_isc_cancel_events*            FirebirdApiBinding::isc_cancel_events = NULL;
+prototype_isc_free*                     FirebirdApiBinding::isc_free = NULL;
 
 
 
@@ -158,7 +164,12 @@ void FirebirdApiBinding::Load(const char* const firebirdDllName)
 		FB_ENTRYPOINT(isc_service_query);
 		FB_ENTRYPOINT(isc_service_start);
 		FB_ENTRYPOINT(isc_transaction_info);
-
+                FB_ENTRYPOINT(isc_que_events);
+                FB_ENTRYPOINT(isc_event_block);
+                FB_ENTRYPOINT(isc_event_counts);
+                FB_ENTRYPOINT(isc_wait_for_event);
+                FB_ENTRYPOINT(isc_cancel_events);
+                FB_ENTRYPOINT(isc_free);
 		sIsLoaded = true;
 		}
 	else

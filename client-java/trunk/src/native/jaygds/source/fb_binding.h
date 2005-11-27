@@ -324,6 +324,39 @@ typedef ISC_STATUS ISC_EXPORT prototype_isc_transaction_info(ISC_STATUS *,
 										short,
 										char *);
 										
+typedef ISC_STATUS ISC_EXPORT prototype_isc_que_events(ISC_STATUS*,
+        isc_db_handle*,
+        ISC_LONG*,
+        short,
+        char*,
+        isc_callback,
+        void*);
+
+typedef long ISC_EXPORT prototype_isc_event_block(
+        char** ,
+        char** ,
+        unsigned short ,
+        ...);
+
+typedef ISC_STATUS ISC_EXPORT prototype_isc_wait_for_event(
+        ISC_STATUS*,
+        isc_db_handle*,
+        short,
+        char*,
+        char*);
+
+typedef void ISC_EXPORT prototype_isc_event_counts(
+        ISC_STATUS*,
+        short,
+        char*,
+        char*);
+
+typedef void ISC_EXPORT prototype_isc_cancel_events(
+        ISC_STATUS*,
+        isc_db_handle*,
+        ISC_LONG*);
+
+typedef void ISC_EXPORT prototype_isc_free(char *);
 
 
 
@@ -395,6 +428,12 @@ class FirebirdApiBinding
 		static prototype_isc_service_query*			isc_service_query;
 		static prototype_isc_service_start*			isc_service_start;
 		static prototype_isc_transaction_info*		isc_transaction_info;
+                static prototype_isc_que_events*                        isc_que_events;
+                static prototype_isc_event_block*                       isc_event_block;
+                static prototype_isc_wait_for_event*                    isc_wait_for_event;
+                static prototype_isc_event_counts*                      isc_event_counts;
+                static prototype_isc_cancel_events*                     isc_cancel_events;
+                static prototype_isc_free*                              isc_free;
 
 	
 

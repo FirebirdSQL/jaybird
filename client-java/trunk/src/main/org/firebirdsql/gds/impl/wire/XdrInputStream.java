@@ -81,6 +81,20 @@ public class XdrInputStream {
         readFully(pad,0,(4 - len) & 3);
         return buffer;
     }
+
+    /**
+     * Read in a raw array of bytes.
+     *
+     * @param len The number of bytes to read
+     * @return The byte buffer that was read
+     * @throws IOException if an error occurs while reading from the 
+     *         underlying input stream
+     */
+    public byte [] readRawBuffer(int len) throws IOException {
+        byte [] buffer = new byte[len];
+        readFully(buffer, 0, len);
+        return buffer;
+    }
     
     /**
      * Read in a <code>String</code>.
@@ -96,6 +110,7 @@ public class XdrInputStream {
         readFully(pad,0,(4 - len) & 3);
         return new String(buffer);
     }
+
 
     //
     // Read SQL data
