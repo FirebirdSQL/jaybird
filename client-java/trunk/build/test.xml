@@ -9,6 +9,7 @@
     <!--create local db dir, if you are running on remote machine
       you must provide it yourself -->
     <mkdir dir="${module.output}/db"/>
+    <chmod dir="${module.output}/db" perm="777"/>
     <mkdir dir="${build.reports.pure_java}"/>
     <mkdir dir="${build.testlog}"/>
     <junit dir="${module.output}"
@@ -74,6 +75,7 @@
     <mkdir dir="${module.output}/db"/>
     <mkdir dir="${build.reports.native}"/>
     <mkdir dir="${build.testlog}"/>
+    <chmod dir="${module.output}/db" perm="777"/>
     <junit dir="${module.output}"
 	   printsummary="${junit.printsummary}"
 	   haltonerror="${junit.haltonerror}"
@@ -206,6 +208,7 @@
   <target name="one-test-pure-java" depends="jars"
 	  description="Execute a single test.">
     <mkdir dir="${test.db.dir}"/>
+    <chmod dir="${test.db.dir}" perm="777"/>
     <mkdir dir="${build.reports.pure_java}"/>
     <mkdir dir="${build.testlog}"/>
     <junit dir="${module.output}"
@@ -241,15 +244,18 @@
 		 fork="${junit.batchtest.fork}">
 
         <fileset dir="${build.test}">
-          <include name="org/firebirdsql/*/Test${test}*.class"/>
+            <include name="org/firebirdsql/*/Test${test}*.class"/>
+            <exclude name="org/firebirdsql/*/*$$*.class"/>
         </fileset>
       </batchtest>
     </junit>
   </target>
 
-  <target name="one-test-native" depends="jars"
-	  description="Execute a single test.">
+  <target name="one-test-native" 
+            depends="jars,compile-native,copy_native_to_test_path"
+	    description="Execute a single test.">
     <mkdir dir="${test.db.dir}"/>
+    <chmod dir="${test.db.dir}" perm="777"/>
     <mkdir dir="${build.reports.native}"/>
     <mkdir dir="${build.testlog}"/>
     <junit dir="${module.output}"
@@ -261,12 +267,14 @@
 	   jvm="${junit.jvm}">
 
       <jvmarg value="${junit.jvm.options}"/>
+      <sysproperty key="java.library.path" value="${module.output}/native"/>
       <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
       <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
       <sysproperty key="test.db.dir" value="${test.db.dir}"/>
       <sysproperty key="test.db.host" value="${test.db.host}"/>
       <sysproperty key="test.db.port" value="${test.db.port}"/>
       <sysproperty key="test.db.lc_ctype" value="${test.db.lc_ctype}"/>
+      <sysproperty key="test.gds_type" value="NATIVE"/>
 
       <classpath>
         <pathelement location="${build.classes}"/>
