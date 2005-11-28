@@ -1,3 +1,40 @@
+2005-11-27 13:22  gab_reid
+
+	*
+	client-java/src/test/org/firebirdsql/event/TestFBEventManager.java:
+	
+	Initial revision
+
+2005-11-27 13:15  gab_reid
+
+	* client-java/src/: main/org/firebirdsql/gds/EventHandle.java,
+	main/org/firebirdsql/gds/EventHandler.java,
+	main/org/firebirdsql/gds/GDS.java,
+	main/org/firebirdsql/gds/impl/jni/BaseGDSImpl.java,
+	main/org/firebirdsql/gds/impl/jni/EventHandleImp.java,
+	main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java,
+	main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java,
+	main/org/firebirdsql/gds/impl/wire/EventCoordinator.java,
+	main/org/firebirdsql/gds/impl/wire/EventHandleImp.java,
+	main/org/firebirdsql/gds/impl/wire/XdrInputStream.java,
+	main/org/firebirdsql/gds/impl/wire/isc_db_handle_impl.java,
+	native/jaygds/source/entrypoints.cpp,
+	native/jaygds/source/entrypoints_generated.h,
+	native/jaygds/source/fb_binding.cpp,
+	native/jaygds/source/fb_binding.h,
+	native/jaygds/source/handle_wrappers.cpp,
+	native/jaygds/source/handle_wrappers.h:
+	
+	Added Events API implementation
+
+2005-11-27 13:13  gab_reid
+
+	* client-java/src/main/org/firebirdsql/event/: DatabaseEvent.java,
+	EventListener.java, EventManager.java, FBDatabaseEvent.java,
+	FBEventManager.java:
+	
+	Initial revision
+
 2005-11-17 19:37  rrokytskyy
 
 	* client-java/src/:
