@@ -512,8 +512,12 @@ public class FBRowUpdater  {
         byte[][] result = new byte[oldRow.length][];
         for (int i = 0; i < result.length; i++) {
             if (updatedFlags[i]) {
-                result[i] = new byte[newRow[i].length];
-                System.arraycopy(newRow[i], 0, result[i], 0, newRow[i].length);
+                if (newRow[i] == null)
+                    result[i] = null;
+                else {
+                    result[i] = new byte[newRow[i].length];
+                    System.arraycopy(newRow[i], 0, result[i], 0, newRow[i].length);
+                }
             } else {
                 if (oldRow[i] == null) { 
                     result[i] = null;

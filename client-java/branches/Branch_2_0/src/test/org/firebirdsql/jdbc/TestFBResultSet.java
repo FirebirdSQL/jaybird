@@ -983,6 +983,34 @@ public class TestFBResultSet extends FBTestBase {
         }
     }
     
+    public void testUpdatableResultSetMutipleStatements() throws Exception {
+        connection.setAutoCommit(false);
+        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+        
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
+            
+            Statement anotherStmt = stmt.getConnection().createStatement();
+            try {
+                ResultSet anotherRs = anotherStmt.executeQuery("SELECT * FROM rdb$database");
+            } finally {
+                anotherStmt.close();
+            }
+            
+            rs.moveToInsertRow();
+            rs.updateInt("id", 1);
+            rs.updateString("blob_str", "test");
+            rs.updateNull("str");
+            rs.insertRow();
+            
+            rs.close();
+
+        } finally {
+            stmt.close();
+        }
+        connection.setAutoCommit(true);
+    }
+    
     public static void main(String[] args) {
         TestRunner.run(new TestFBResultSet("testMemoryGrowth"));
     }
