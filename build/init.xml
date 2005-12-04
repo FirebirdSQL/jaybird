@@ -35,14 +35,14 @@
 
     <property name="version.major" value="2"/>
     <property name="version.minor" value="0"/>
-    <property name="version.revision" value="0"/>
+    <property name="version.revision" value="1"/>
     <property name="version.tag" value=""/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
 
     <!-- This must be set to the CVS tag for any release -->
-    <property name="version.cvstag" value="JayBird_2_0_0"/>
+    <property name="version.cvstag" value="JayBird_2_0_1"/>
 
     <!-- Manifest version info -->
     <property name="specification.title" value="Firebird JayBird"/>
@@ -154,7 +154,7 @@
     <property name="test.db.lc_ctype" value="NONE"/>
 
 
-    <property name="packages" value="org.firebirdsql.gds,org.firebirdsql.jca,org.firebirdsql.jdbc,org.firebirdsql.management,org.firebirdsql.pool,org.firebirdsql.event"/>
+    <property name="packages" value="org.firebirdsql.gds,org.firebirdsql.jca,org.firebirdsql.jdbc,org.firebirdsql.management,org.firebirdsql.pool"/>
 
     <property name="build.compiler" value="classic"/>
 

@@ -5,7 +5,7 @@
 	<TITLE></TITLE>
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.0  (Win32)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
-	<META NAME="CHANGED" CONTENT="20051111;21213900">
+	<META NAME="CHANGED" CONTENT="20051204;19440600">
 	<STYLE>
 	<!--
 		@page { size: 21cm 29.7cm; margin: 2cm }
@@ -37,7 +37,7 @@
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <H1 CLASS="western" ALIGN=CENTER>JayBird JCA/JDBC Driver<BR>Release
-Notes v 2.0</H1>
+Notes v 2.0.1</H1>
 <DIV ID="Table of Contents1" DIR="LTR">
 	<DIV ID="Table of Contents1_Head" DIR="LTR">
 		<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Table
@@ -64,6 +64,8 @@ Notes v 2.0</H1>
 	JDBC extensions</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#0.0.0.JDBC 3.0 compatibility|outline">JDBC
 	3.0 compatibility</A></FONT></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#0.0.0.List of bugs fixes since JayBird 2.0.0|outline">List
+	of bugs fixes since JayBird 2.0.0</A></FONT></P>
 	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#0.0.Distribution package|outline">Distribution
 	package</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#0.0.0.License|outline">License</A></FONT></P>
@@ -97,6 +99,8 @@ Notes v 2.0</H1>
 	java.sql.ParameterMetaData with Callable Statements</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#0.0.0.Using ResultSet.getCharacterStream with BLOB fields|outline">Using
 	ResultSet.getCharacterStream with BLOB fields</A></FONT></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#0.0.0.Heuristic transaction completion support|outline">Heuristic
+	transaction completion support</A></FONT></P>
 	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#0.0.Connection pooling with JayBird 2.0|outline">Connection
 	pooling with JayBird 2.0</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><A HREF="#0.0.0.Usage scenario|outline">Usage
@@ -829,6 +833,39 @@ pass JDBC 3.0 compatibility suite. It successfully passes 1216 tests,
 60 tests were excluded, because they are either not applicable to
 Firebird or fail due to some server problems (math rounding issues,
 limitations of NUMERIC data type, etc.).</P>
+<H3 CLASS="western"><A NAME="0.0.0.List of bugs fixes since JayBird 2.0.0|outline"></A>
+List of bugs fixes since JayBird 2.0.0</H3>
+<TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0 STYLE="page-break-after: avoid">
+	<COL WIDTH=38*>
+	<COL WIDTH=218*>
+	<THEAD>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western">04-12-2005</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western">Fixed bug 1370017. When one or more
+				field-values in an updatable <CODE CLASS="western">ResultSet</CODE>
+				are set to null and <CODE CLASS="western">ResultSet.updateRow()</CODE>
+				is called it fails throwing a <CODE CLASS="western">NullPointerException</CODE>.</P>
+			</TD>
+		</TR>
+	</THEAD>
+	<TBODY>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15%>
+				<P CLASS="western"><BR>
+				</P>
+			</TD>
+			<TD WIDTH=85%>
+				<P CLASS="western"><BR>
+				</P>
+			</TD>
+		</TR>
+	</TBODY>
+</TABLE>
+<P STYLE="margin-top: 0.21cm"><BR><BR>
+</P>
 <H2 CLASS="western"><A NAME="0.0.Distribution package|outline"></A>Distribution
 package</H2>
 <P CLASS="western">JayBird driver has compile-time and run-time
@@ -1621,7 +1658,8 @@ connection does not match the character encoding of the field,
 conversion errors might happen. Therefore it is recommended to
 convert such fields in the application using the appropriate
 encoding.</P>
-<H3 CLASS="western">Heuristic transaction completion support</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Heuristic transaction completion support|outline"></A>
+Heuristic transaction completion support</H3>
 <P CLASS="western">Current JCA implementation does not support
 <CODE CLASS="western">XAResource.forget(Xid)</CODE> method. It might
 be important in cases when distributed transaction that was some time
