@@ -126,6 +126,24 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             if (statementListener.getConnection().getAutoCommit())
                 rs.close();
         }
+
+
+        /* (non-Javadoc)
+         * @see org.firebirdsql.jdbc.FBObjectListener.ResultSetListener#executionCompleted(org.firebirdsql.jdbc.FirebirdRowUpdater, boolean)
+         */
+        public void executionCompleted(FirebirdRowUpdater updater, boolean success) throws SQLException {
+            notifyStatementCompleted(success);
+        }
+
+
+        /* (non-Javadoc)
+         * @see org.firebirdsql.jdbc.FBObjectListener.ResultSetListener#executionStarted(org.firebirdsql.jdbc.FirebirdRowUpdater)
+         */
+        public void executionStarted(FirebirdRowUpdater updater) throws SQLException {
+            notifyStatementStarted();
+        }
+        
+        
     }
 
     protected AbstractStatement(GDSHelper c, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) throws SQLException {
@@ -222,7 +240,15 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         this.completed = false;
     }
 
-
+    protected void notifyStatementCompleted() throws SQLException {
+        notifyStatementCompleted(true);
+    }
+    
+    protected void notifyStatementCompleted(boolean success) throws SQLException {
+        this.completed = true;
+        statementListener.statementCompleted(this, success);
+    }
+    
     /**
      * Executes an SQL <code>INSERT</code>, <code>UPDATE</code> or
      * <code>DELETE</code> statement. In addition,
@@ -253,15 +279,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                 notifyStatementCompleted();
             }
         }
-    }
-
-    protected void notifyStatementCompleted() throws SQLException {
-        notifyStatementCompleted(true);
-    }
-    
-    protected void notifyStatementCompleted(boolean success) throws SQLException {
-        this.completed = true;
-        statementListener.statementCompleted(this, success);
     }
 
     /**

@@ -73,6 +73,27 @@ public interface FBObjectListener {
          * @param rs result set that was completed.
          */
         void allRowsFetched(ResultSet rs) throws SQLException;
+        
+        
+        /**
+         * Notify listener that execution of some row updating operation 
+         * started.
+         * 
+         * @param updater instance of {@link FirebirdRowUpdater}
+         * 
+         * @throws SQLException if somewthing went wrong.
+         */
+        void executionStarted(FirebirdRowUpdater updater) throws SQLException;
+        
+        /**
+         * Notify listener that execution of some row updating operation is
+         * completed.
+         * 
+         * @param updater instance of {@link FirebirdRowUpdater}.
+         * 
+         * @throws SQLException if something went wrong.
+         */
+        void executionCompleted(FirebirdRowUpdater updater, boolean success) throws SQLException;
     }
     
     /**
