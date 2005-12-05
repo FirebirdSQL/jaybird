@@ -1,3 +1,23 @@
+2005-12-04 19:46  rrokytskyy
+
+	* client-java/src/etc/: release_notes.html, release_notes.odt,
+	release_notes.pdf:
+	
+	updated release notes
+
+2005-12-04 19:06  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/jdbc/FBRowUpdater.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	merged with HEAD to include fix for the bug 1370017
+
+2005-12-04 18:49  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	added code to check multiple updates
+
 2005-11-30 12:23  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/FBRowUpdater.java:
