@@ -140,7 +140,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
          * @see org.firebirdsql.jdbc.FBObjectListener.ResultSetListener#executionStarted(org.firebirdsql.jdbc.FirebirdRowUpdater)
          */
         public void executionStarted(FirebirdRowUpdater updater) throws SQLException {
-            notifyStatementStarted();
+            notifyStatementStarted(false);
         }
         
         
@@ -231,8 +231,13 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     }
 
     protected void notifyStatementStarted() throws SQLException {
+        notifyStatementStarted(true);
+    }
+    
+    protected void notifyStatementStarted(boolean closeResultSet) throws SQLException {
         
-        closeResultSet(false);
+        if (closeResultSet)
+            closeResultSet(false);
         
         // notify listener that statement execution is about to start
         statementListener.executionStarted(this);
