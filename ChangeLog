@@ -1,3 +1,23 @@
+2005-12-05 18:43  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
+	
+	fixed bug introduced by previous commit that caused fetcher to be
+	closed when event was generated from row updater
+
+2005-12-05 17:50  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FBObjectListener.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	main/org/firebirdsql/jdbc/FBRowUpdater.java,
+	main/org/firebirdsql/jdbc/FirebirdRowUpdater.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	fixed a bug when no transaction was started for updatable result
+	set
+
 2005-12-04 19:46  rrokytskyy
 
 	* client-java/src/etc/: release_notes.html, release_notes.odt,
