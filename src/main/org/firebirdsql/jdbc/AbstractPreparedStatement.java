@@ -115,6 +115,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements
         try {
             prepareFixedStatement(sql, true);
         } catch (GDSException ge) {
+            notifyStatementCompleted(false);
             throw new FBSQLException(ge);
         }
     }
