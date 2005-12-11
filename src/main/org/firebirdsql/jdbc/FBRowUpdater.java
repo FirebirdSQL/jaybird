@@ -55,7 +55,7 @@ import org.firebirdsql.jdbc.field.FieldDataProvider;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBRowUpdater  {
+public class FBRowUpdater implements FirebirdRowUpdater  {
 
     private GDSHelper gdsHelper;
     private Synchronizable syncProvider;
@@ -77,8 +77,15 @@ public class FBRowUpdater  {
     private AbstractIscStmtHandle insertStatement;
     private AbstractIscStmtHandle selectStatement;
 
+    private FBObjectListener.ResultSetListener rsListener;
+    private boolean closed;
+    private boolean processing;
+    
     public FBRowUpdater(GDSHelper connection, XSQLVAR[] xsqlvars, 
-            Synchronizable syncProvider, boolean cached) throws SQLException {
+            Synchronizable syncProvider, boolean cached, 
+            FBObjectListener.ResultSetListener rsListener) throws SQLException {
+        
+        this.rsListener = rsListener;
         
         this.gdsHelper = connection;
         this.syncProvider = syncProvider;
@@ -136,18 +143,52 @@ public class FBRowUpdater  {
         }
     }
     
+    private void notifyExecutionStarted() throws SQLException {
+        if (closed)
+            throw new FBSQLException("Corresponding result set is closed.");
+        
+        if (processing)
+            return;
+        
+        rsListener.executionStarted(this);
+        this.processing = true;
+    }
+    
+    private void notifyExecutionCompleted(boolean success) throws SQLException {
+        if (!processing)
+            return;
+        
+        rsListener.executionCompleted(this, success);
+        this.processing = false;
+    }
+    
+    public void close() throws SQLException {
+        this.closed = true;
+        if (processing)
+            notifyExecutionCompleted(true);
+    }
+    
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#setRow(byte[][])
+     */
     public void setRow(byte[][] row) {
         this.oldRow = row;
         this.updatedFlags = new boolean[xsqlvars.length];
         this.inInsertRow = false;
     }
 
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#cancelRowUpdates()
+     */
     public void cancelRowUpdates() {
         this.newRow = new byte[xsqlvars.length][];
         this.updatedFlags = new boolean[xsqlvars.length];
         this.inInsertRow = false;
     }
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#getField(int)
+     */
     public FBField getField(int fieldPosition) {
         return fields[fieldPosition];
     }
@@ -328,58 +369,102 @@ public class FBRowUpdater  {
     private static final int INSERT_STATEMENT_TYPE = 3;
     private static final int SELECT_STATEMENT_TYPE = 4;
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#updateRow()
+     */
     public void updateRow() throws SQLException {
+        
+        boolean success = false;
         
         Object mutex = syncProvider.getSynchronizationObject();
         synchronized(mutex) {
             try {
+                
+                notifyExecutionStarted();
                 
                 if (updateStatement == null)
                     updateStatement = gdsHelper.allocateStatement();
                 
                 executeStatement(UPDATE_STATEMENT_TYPE, updateStatement);
                 
+                success = true;
+                
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
+            } finally {
+                notifyExecutionCompleted(success);
             }
         }
     }
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#deleteRow()
+     */
     public void deleteRow() throws SQLException {
+        
+        boolean success = false;
+        
         Object mutex = syncProvider.getSynchronizationObject();
         synchronized(mutex) {
             try {
+                
+                notifyExecutionStarted();
+                
                 if (deleteStatement == null)
                     deleteStatement = gdsHelper.allocateStatement();
                 
                 executeStatement(DELETE_STATEMENT_TYPE, deleteStatement);
                 
+                success = true;
+                
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
+            } finally {
+                notifyExecutionCompleted(success);
             }
         }
     }
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#insertRow()
+     */
     public void insertRow() throws SQLException {
+        
+        boolean success = false;
+        
         Object mutex = syncProvider.getSynchronizationObject();
         synchronized(mutex) {
             try {
+                
+                notifyExecutionStarted();
                 
                 if (insertStatement == null)
                     insertStatement = gdsHelper.allocateStatement();
                 
                 executeStatement(INSERT_STATEMENT_TYPE, insertStatement);
                 
+                success = true;
+                
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
+            } finally {
+                notifyExecutionCompleted(success);
             }
         }
     }
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#refreshRow()
+     */
     public void refreshRow() throws SQLException {
+        
+        boolean success = false;
+        
         Object mutex = syncProvider.getSynchronizationObject();
         synchronized(mutex) {
             try {
+                
+                notifyExecutionStarted();
                 
                 if (selectStatement == null)
                     selectStatement = gdsHelper.allocateStatement();
@@ -401,8 +486,12 @@ public class FBRowUpdater  {
                     gdsHelper.closeStatement(selectStatement, false);
                 }
                 
+                success = true;
+                
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
+            } finally {
+                notifyExecutionCompleted(success);
             }
         }
     }
@@ -496,18 +585,30 @@ public class FBRowUpdater  {
         }
     }
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#rowInserted()
+     */
     public boolean rowInserted() throws SQLException {
         return false;
     }
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#rowDeleted()
+     */
     public boolean rowDeleted() throws SQLException {
         return false;
     }
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#rowUpdated()
+     */
     public boolean rowUpdated() throws SQLException {
         return false;
     }
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#getNewRow()
+     */
     public byte[][] getNewRow() {
         byte[][] result = new byte[oldRow.length][];
         for (int i = 0; i < result.length; i++) {
@@ -531,20 +632,32 @@ public class FBRowUpdater  {
         return result;
     }
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#getInsertRow()
+     */
     public byte[][] getInsertRow() {
         return insertRow;
     }
 
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#getOldRow()
+     */
     public byte[][] getOldRow() {
         return oldRow;
     }
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#moveToInsertRow()
+     */
     public void moveToInsertRow() throws SQLException {
         inInsertRow = true;
         insertRow = new byte[xsqlvars.length][];
         this.updatedFlags = new boolean[xsqlvars.length];
     }
     
+    /* (non-Javadoc)
+     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#moveToCurrentRow()
+     */
     public void moveToCurrentRow() throws SQLException {
         inInsertRow = false;
         insertRow = new byte[xsqlvars.length][];
