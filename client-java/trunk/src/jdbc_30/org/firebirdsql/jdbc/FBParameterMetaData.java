@@ -84,7 +84,7 @@ public class FBParameterMetaData implements ParameterMetaData {
     /**
      * Retrieves whether null values are allowed in the designated parameter.
      *
-     * @param param the first parameter is 1, the second is 2, ...
+     * @param parameter the first parameter is 1, the second is 2, ...
      * @return the nullability status of the given parameter; one of
      *        <code>ParameterMetaData.parameterNoNulls</code>,
      *        <code>ParameterMetaData.parameterNullable</code>, or
@@ -176,7 +176,7 @@ public class FBParameterMetaData implements ParameterMetaData {
     /**
      * Retrieves the designated parameter's number of digits to right of the decimal point.
      *
-     * @param param the first parameter is 1, the second is 2, ...
+     * @param parameter the first parameter is 1, the second is 2, ...
      * @return scale
      * @exception SQLException if a database access error occurs
      * @since 1.4
