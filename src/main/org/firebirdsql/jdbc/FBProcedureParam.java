@@ -27,6 +27,7 @@ import java.sql.SQLException;
 public class FBProcedureParam implements Cloneable {
     
     private boolean isParam;
+    private boolean isLiteral;
     private Object value;
     private String paramValue;
     private int position;
@@ -61,8 +62,9 @@ public class FBProcedureParam implements Cloneable {
      */
     public FBProcedureParam(int position, String paramValue) {
         this.position = position;
-        this.isParam = paramValue.indexOf('?') >= 0;
-        this.paramValue = paramValue.trim(); 
+        this.isLiteral = paramValue.startsWith("'") && paramValue.endsWith("'");
+        this.isParam = !isLiteral && paramValue.indexOf('?') >= 0;
+        this.paramValue = paramValue.trim();
     }
     
     /**
