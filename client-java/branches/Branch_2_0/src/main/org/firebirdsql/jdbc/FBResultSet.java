@@ -44,7 +44,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
 
     private AbstractStatement fbStatement;
     private FBFetcher fbFetcher;
-    private FBRowUpdater rowUpdater;
+    private FirebirdRowUpdater rowUpdater;
 
     protected GDSHelper gdsHelper;
 
@@ -160,7 +160,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         
         if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
             try {
-                rowUpdater = new FBRowUpdater(gdsHelper, xsqlvars, this, cached);
+                rowUpdater = new FBRowUpdater(gdsHelper, xsqlvars, this, cached, listener);
             } catch (FBResultSetNotUpdatableException ex) {
                 fbStatement.addWarning(new FBSQLWarning(
                     "Result set concurrency changed to READ ONLY."));
@@ -202,7 +202,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      * Notify the row updater about the new row that was fetched. This method
      * must be called after each change in cursor position.
      */
-    private void notifyRowUpdater() {
+    private void notifyRowUpdater() throws SQLException {
         if (rowUpdater != null)
             rowUpdater.setRow(row);
     }
@@ -286,11 +286,18 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
                 fields[i].close();
             
         } finally {
+
             if (fbFetcher != null) {
                 fbFetcher.close();
 
-                if (listener != null && notifyListener)
-                    listener.resultSetClosed(this);
+                if (notifyListener) {
+                
+                    if (rowUpdater != null)
+                        rowUpdater.close();
+                    
+                    if (listener != null)
+                        listener.resultSetClosed(this);
+                }
 
             }
             
