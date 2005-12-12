@@ -1,3 +1,62 @@
+2005-12-11 21:46  rrokytskyy
+
+	*
+	client-java/src/jdbc_30/org/firebirdsql/jdbc/FBParameterMetaData.ja
+	va:
+	
+	javadoc fixes
+
+2005-12-11 12:56  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBCallableStatement.j
+	ava:
+	
+	merged with HEAD (fixed bug when CallableStatement treated literal
+	with question mark as parameter)
+
+2005-12-11 12:53  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBProcedureParam.java:
+	
+	merged with HEAD (fixed bug when CallableStatement treated literal
+	with question mark as parameter)
+
+2005-12-11 12:51  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FBProcedureParam.java,
+	test/org/firebirdsql/jdbc/TestFBCallableStatement.java:
+	
+	fixed bug when CallableStatement treated literal with question mark
+	as parameter.
+
+2005-12-11 12:20  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractStatement.java, FBObjectListener.java, FBResultSet.java,
+	FBRowUpdater.java, FirebirdRowUpdater.java:
+	
+	merged with HEAD (fixed error when transaction was not started in
+	updatable and holdable result set)
+
+2005-12-11 12:17  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
+	.java:
+	
+	merged with HEAD (fixed leaving active transaction when error
+	happens in constructor)
+
+2005-12-11 12:15  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement
+	.java:
+	
+	fixed leaving active transaction in case of an error in constructor
+
 2005-12-05 18:43  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/AbstractStatement.java:
@@ -17,6 +76,14 @@
 	
 	fixed a bug when no transaction was started for updatable result
 	set
+
+2005-12-05 17:50  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FirebirdRowUpdater.java:
+	
+	file FirebirdRowUpdater.java was added on branch Branch_2_0 on
+	2005-12-11 11:20:43 +0000
 
 2005-12-04 19:46  rrokytskyy
 
