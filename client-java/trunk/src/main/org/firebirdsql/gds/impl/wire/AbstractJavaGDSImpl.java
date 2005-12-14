@@ -607,6 +607,10 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			// db.getOpenTransactionCount());
 			// } // end of if ()
 			try {
+                                if (db.eventCoordinator != null){
+                                    db.eventCoordinator.close();
+                                }
+
 				if (debug)
 					log.debug("op_detach ");
 				db.out.writeInt(op_detach);
@@ -3008,7 +3012,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
             this.ipAddress = ipAddress;
             this.port = port;
             connect();
-            new Thread(this).start();
+            Thread eventThread = new Thread(this);
+            eventThread.setDaemon(true);
+            eventThread.start();
         }
 
         public boolean cancelEvents(EventHandleImp eventHandle){
