@@ -1,3 +1,11 @@
+2005-12-14 21:14  gab_reid
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSI
+	mpl.java:
+	
+	Fix for event dispatch thread not shutting down correctly
+
 2005-12-11 21:46  rrokytskyy
 
 	*
