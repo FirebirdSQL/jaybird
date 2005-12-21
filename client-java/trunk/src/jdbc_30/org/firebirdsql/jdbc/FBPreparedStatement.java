@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import java.net.URL;
 import java.sql.ParameterMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -73,6 +74,88 @@ public class FBPreparedStatement extends AbstractPreparedStatement {
      */
     public ParameterMetaData getParameterMetaData() throws SQLException {
         return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
+    }
+    
+    /**
+     * jdbc 3
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public ResultSet getGeneratedKeys() throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
+    }
+    
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int executeUpdate(String param1, int param2) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("Not yet implemented");
+    }
+    
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int executeUpdate(String param1, int[] param2) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("Not yet implemented");
+    }
+    
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public int executeUpdate(String param1, String[] param2) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("Not yet implemented");
+    }
+    
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean execute(String param1, int param2) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean execute(String param1, int[] param2) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
+    }
+
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
+    public boolean execute(String param1, String[] param2) throws SQLException {
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
     }
 
 }

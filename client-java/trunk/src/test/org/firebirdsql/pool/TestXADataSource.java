@@ -51,7 +51,7 @@ public class TestXADataSource extends FBTestBase {
     protected void setUp() throws Exception {
         super.setUp();
         
-        FBConnectionPoolDataSource connectionPool = new FBConnectionPoolDataSource();
+        AbstractFBConnectionPoolDataSource connectionPool = FBPooledDataSourceFactory.createFBConnectionPoolDataSource();
 
         connectionPool.setType(getGdsType().toString());
         

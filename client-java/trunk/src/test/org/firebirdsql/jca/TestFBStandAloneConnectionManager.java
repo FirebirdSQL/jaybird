@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jca;
 
-import javax.resource.cci.LocalTransaction;
 import java.sql.Connection;
 import java.sql.Statement;
 

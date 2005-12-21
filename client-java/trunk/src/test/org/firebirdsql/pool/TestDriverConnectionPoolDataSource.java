@@ -22,6 +22,7 @@ import java.util.Properties;
 
 import javax.naming.Context;
 
+import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.jdbc.FBDriver;
 
 /**
@@ -38,8 +39,8 @@ public class TestDriverConnectionPoolDataSource extends
     protected void setUp() throws Exception {
         super.setUp();
         
-        DriverConnectionPoolDataSource connectionPool = 
-            new DriverConnectionPoolDataSource();
+        AbstractDriverConnectionPoolDataSource connectionPool = 
+            FBPooledDataSourceFactory.createDriverConnectionPoolDataSource();
 
         connectionPool.setJdbcUrl(getUrl());
         connectionPool.setDriverClassName(
@@ -80,7 +81,7 @@ public class TestDriverConnectionPoolDataSource extends
 
         Properties props = new Properties();
         props.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
-        props.put(Context.OBJECT_FACTORIES, DriverConnectionPoolDataSource.class.getName());
+        props.put(Context.OBJECT_FACTORIES, ClassFactory.get(ClassFactory.DriverConnectionPoolDataSource).getName());
         
         checkJNDI(props);
     }

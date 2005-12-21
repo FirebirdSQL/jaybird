@@ -37,7 +37,7 @@ import org.firebirdsql.jdbc.field.*;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy
  *         </a>
  */
-public abstract class AbstractPreparedStatement extends FBStatement implements
+public abstract class AbstractPreparedStatement extends AbstractStatement implements
         FirebirdPreparedStatement {
 
 
