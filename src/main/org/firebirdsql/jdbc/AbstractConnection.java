@@ -750,7 +750,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         checkHoldability(resultSetType, resultSetHoldability);
         
         try {
-            Statement stmt = new FBStatement(getGDSHelper(), resultSetType,
+            Statement stmt = FBStatementFactory.createStatement(getGDSHelper(), resultSetType,
                     resultSetConcurrency, resultSetHoldability, txCoordinator);
             
             activeStatements.add(stmt);
@@ -846,7 +846,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
               else
                   blobCoordinator = txCoordinator;
               
-              stmt = new FBPreparedStatement(
+              stmt = FBStatementFactory.createPreparedStatement(
                       getGDSHelper(), sql, resultSetType, resultSetConcurrency, 
                       resultSetHoldability, coordinator, blobCoordinator, metaData);
               
@@ -897,7 +897,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         checkHoldability(resultSetType, resultSetHoldability);
         
         try {
-            stmt = new FBCallableStatement(getGDSHelper(), sql, resultSetType,
+            stmt = FBStatementFactory.createCallableStatement(getGDSHelper(), sql, resultSetType,
                     resultSetConcurrency, resultSetHoldability, txCoordinator, txCoordinator);
             activeStatements.add(stmt);
             return stmt;
@@ -961,7 +961,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see Savepoint
      */
     public synchronized FirebirdSavepoint setFirebirdSavepoint() throws SQLException {
-        FBSavepoint savepoint = new FBSavepoint(getNextSavepointCounter());
+        AbstractSavepoint savepoint = FBStatementFactory.createSavepoint(getNextSavepointCounter());
         
         setSavepoint(savepoint);
         
@@ -977,7 +977,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * 
      * @throws SQLException if something went wrong.
      */
-    private void setSavepoint(FBSavepoint savepoint) throws SQLException {
+    private void setSavepoint(AbstractSavepoint savepoint) throws SQLException {
         if (getAutoCommit())
             throw new SQLException("Connection.setSavepoint() method cannot " + 
                     "be used in auto-commit mode.");
@@ -1003,7 +1003,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see Savepoint
      */
     public synchronized FirebirdSavepoint setFirebirdSavepoint(String name) throws SQLException {
-        FBSavepoint savepoint = new FBSavepoint(name);
+        AbstractSavepoint savepoint = FBStatementFactory.createSavepoint(name);
         
         setSavepoint(savepoint);
         
@@ -1030,11 +1030,11 @@ public abstract class AbstractConnection implements FirebirdConnection {
             throw new SQLException("Connection.setSavepoint() method cannot " + 
                     "be used in auto-commit mode.");
         
-        if (!(savepoint instanceof FBSavepoint))
+        if (!(savepoint instanceof AbstractSavepoint))
             throw new SQLException(
                     "Specified savepoint was not obtained from this connection.");
         
-        FBSavepoint fbSavepoint = (FBSavepoint)savepoint;
+        AbstractSavepoint fbSavepoint = (AbstractSavepoint)savepoint;
         
         if (!fbSavepoint.isValid())
             throw new SQLException("Savepoint is no longer valid.");
@@ -1063,11 +1063,11 @@ public abstract class AbstractConnection implements FirebirdConnection {
             throw new SQLException("Connection.setSavepoint() method cannot " + 
                     "be used in auto-commit mode.");
         
-        if (!(savepoint instanceof FBSavepoint))
+        if (!(savepoint instanceof AbstractSavepoint))
             throw new SQLException(
                     "Specified savepoint was not obtained from this connection.");
         
-        FBSavepoint fbSavepoint = (FBSavepoint)savepoint;
+        AbstractSavepoint fbSavepoint = (AbstractSavepoint)savepoint;
         
         if (!fbSavepoint.isValid())
             throw new SQLException("Savepoint is no longer valid.");
@@ -1090,7 +1090,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     protected synchronized void invalidateSavepoints() {
         Iterator iter = savepoints.iterator();
         while(iter.hasNext())
-            ((FBSavepoint)iter.next()).invalidate();
+            ((AbstractSavepoint)iter.next()).invalidate();
         
         savepoints.clear();
     }    

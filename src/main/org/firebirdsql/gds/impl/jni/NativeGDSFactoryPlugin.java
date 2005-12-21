@@ -1,9 +1,9 @@
 package org.firebirdsql.gds.impl.jni;
 
+import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.GDSFactoryPlugin;
-import org.firebirdsql.jdbc.FBConnection;
 
 
 public class NativeGDSFactoryPlugin implements GDSFactoryPlugin {
@@ -26,7 +26,7 @@ public class NativeGDSFactoryPlugin implements GDSFactoryPlugin {
     }
 
     public Class getConnectionClass() {
-        return FBConnection.class;
+        return ClassFactory.get(ClassFactory.FBConnection);
     }
 
     public String[] getSupportedProtocols() {

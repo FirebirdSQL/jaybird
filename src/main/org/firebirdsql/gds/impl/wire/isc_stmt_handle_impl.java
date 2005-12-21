@@ -39,7 +39,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * @version 1.0
  */
 public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
-    private static Logger log = LoggerFactory.getLogger(JavaGDSImpl.class, false);
+    private static Logger log = LoggerFactory.getLogger(isc_stmt_handle_impl.class, false);
 
     
     private int rsr_id;

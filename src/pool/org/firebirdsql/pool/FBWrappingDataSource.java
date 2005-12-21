@@ -156,7 +156,7 @@ public class FBWrappingDataSource implements DataSource,
     ObjectFactory, Referenceable, Serializable, FirebirdPool 
 {
 
-    private FBConnectionPoolDataSource pool;
+    private AbstractFBConnectionPoolDataSource pool;
     
     private Reference reference;
 
@@ -169,9 +169,9 @@ public class FBWrappingDataSource implements DataSource,
         // empty
     }
     
-    private synchronized FBConnectionPoolDataSource getPool() {
+    private synchronized AbstractFBConnectionPoolDataSource getPool() {
         if (pool == null)
-            pool = new FBConnectionPoolDataSource();
+            pool = FBPooledDataSourceFactory.createFBConnectionPoolDataSource();
             
         return pool;
     }

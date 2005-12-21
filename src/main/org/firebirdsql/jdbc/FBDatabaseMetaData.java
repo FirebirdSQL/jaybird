@@ -5586,7 +5586,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator = 
                 new InternalTransactionCoordinator.MetaDataTransactionCoordinator();
             
-            s = new FBPreparedStatement(gdsHelper, sql,
+            s = FBStatementFactory.createPreparedStatement(gdsHelper, sql,
                     ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
                     FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT, 
                     metaDataTransactionCoordinator, metaDataTransactionCoordinator,

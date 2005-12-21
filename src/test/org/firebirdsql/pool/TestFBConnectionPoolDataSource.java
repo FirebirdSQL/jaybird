@@ -35,8 +35,8 @@ import javax.naming.StringRefAddr;
 import javax.sql.DataSource;
 import javax.sql.PooledConnection;
 
-
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jdbc.FirebirdPreparedStatement;
 
@@ -60,7 +60,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     protected void setUp() throws Exception {
         super.setUp();
         
-        FBConnectionPoolDataSource connectionPool = new FBConnectionPoolDataSource();
+        AbstractFBConnectionPoolDataSource connectionPool = FBPooledDataSourceFactory.createFBConnectionPoolDataSource();
 
         connectionPool.setType(getGdsType().toString());
         
@@ -103,7 +103,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
 
         Properties props = new Properties();
         props.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
-        props.put(Context.OBJECT_FACTORIES, FBConnectionPoolDataSource.class.getName());
+        props.put(Context.OBJECT_FACTORIES, ClassFactory.get(ClassFactory.FBConnectionPoolDataSource).getName());
         props.put(Context.PROVIDER_URL, "file:.");
         
         checkJNDI(props);
@@ -175,7 +175,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     }
     
     public void testReferenceSupport() throws Exception {
-        Reference ref = new Reference(FBConnectionPoolDataSource.class.getName());
+        Reference ref = new Reference(ClassFactory.get(ClassFactory.FBConnectionPoolDataSource).getName());
         
         fillReference(ref);
         
@@ -183,7 +183,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
 
         Properties props = new Properties();
         props.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
-        props.put(Context.OBJECT_FACTORIES, FBConnectionPoolDataSource.class.getName());
+        props.put(Context.OBJECT_FACTORIES,ClassFactory.get(ClassFactory.FBConnectionPoolDataSource).getName());
         
         Context ctx = new InitialContext(props);
         try {
@@ -191,9 +191,9 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             
             Object obj = ctx.lookup("jdbc/test");
             
-            assertTrue("Should provide correct data source", obj instanceof FBConnectionPoolDataSource);
+            assertTrue("Should provide correct data source", obj instanceof AbstractFBConnectionPoolDataSource);
             
-            FBConnectionPoolDataSource ds = (FBConnectionPoolDataSource)obj;
+            AbstractFBConnectionPoolDataSource ds = (AbstractFBConnectionPoolDataSource)obj;
             
             assertPoolConfiguration(ds);
         } finally {
@@ -873,7 +873,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     };
 
     public void testEncoding() throws Exception {
-        FBConnectionPoolDataSource fbPool = (FBConnectionPoolDataSource)pool;
+    	AbstractFBConnectionPoolDataSource fbPool = (AbstractFBConnectionPoolDataSource)pool;
         
         fbPool.setEncoding("WIN1251");
         
