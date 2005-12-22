@@ -65,8 +65,6 @@ public class TestBlockingStack extends TestCase {
 		}
 	}
 
-	private boolean done = false;
-
 	private Random random = new Random();
 
 	private BlockingStack stack = new BlockingStack();
@@ -112,9 +110,7 @@ public class TestBlockingStack extends TestCase {
 		value = (Integer) stack.pop();
 		assertTrue("First item in stack should be 1", value.intValue() == 1);
 
-		long start = System.currentTimeMillis();
 		value = (Integer) stack.pop(0);
-		long executionTime = System.currentTimeMillis() - start;
 		assertTrue("Stack should be empty, null return", value == null);
 	}
 }
