@@ -20,7 +20,6 @@ package org.firebirdsql.pool.sun;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -322,7 +321,6 @@ public class AppServerXADataSource
 		}
 	}
 
-	private Method getObjectInstanceMethod = null;
 	public Object getObjectInstance(Object obj, Name name, Context nameCtx,
 			Hashtable environment) throws Exception {
 
@@ -335,27 +333,14 @@ public class AppServerXADataSource
 		if (!getClass().getName().equals(passedRef.getClassName()))
 			return null;
 
-		Reference ref = new Reference(ClassFactory.get(
-				ClassFactory.FBConnectionPoolDataSource).getName(),
-				ClassFactory.get(ClassFactory.FBConnectionPoolDataSource)
-						.getName(), null);
 
-		convertReference(ref, passedRef);
+        Reference ref = new Reference(ClassFactory.FBConnectionPoolDataSource,
+                ClassFactory.FBConnectionPoolDataSource, null);
 
-		Object objectFactory = FBPooledDataSourceFactory
-				.createFBConnectionPoolDataSource();
+        convertReference(ref, passedRef);
 
-		if (getObjectInstanceMethod == null)
-			getObjectInstanceMethod = objectFactory.getClass().getMethod(
-					"getObjectInstance",
-					new Class[]{Reference.class, Name.class, Context.class,
-							Hashtable.class});
-
-		AbstractFBConnectionPoolDataSource dataSource = (AbstractFBConnectionPoolDataSource) getObjectInstanceMethod
-				.invoke(objectFactory, new Object[]{ref, name, nameCtx,
-						environment});
-
-		return new AppServerXADataSource(dataSource);
+		return new AppServerXADataSource(FBPooledDataSourceFactory
+                .getFBConnectionPoolInstance(ref, name, nameCtx, environment));
 	}
 
 }
