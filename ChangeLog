@@ -1,3 +1,57 @@
+2005-12-22 03:17  sjardine
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FBStatementFactory.java,
+	test/org/firebirdsql/jdbc/TestFBResultSetMetaData.java,
+	test/org/firebirdsql/pool/TestBlockingStack.java:
+	
+	Removed unused code.
+
+2005-12-22 03:02  sjardine
+
+	* client-java/src/: main/org/firebirdsql/gds/ClassFactory.java,
+	main/org/firebirdsql/gds/GDSObjectFactory.java,
+	main/org/firebirdsql/jdbc/FBStatementFactory.java,
+	pool/org/firebirdsql/pool/FBPooledDataSourceFactory.java:
+	
+	Added license and comments to new classes.
+
+2005-12-22 00:14  sjardine
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/AbstractSavepoint.java,
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/FBStatementFactory.java,
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	main/org/firebirdsql/gds/ClassFactory.java,
+	main/org/firebirdsql/gds/GDSObjectFactory.java,
+	main/org/firebirdsql/gds/impl/GDSFactory.java,
+	main/org/firebirdsql/gds/impl/jni/EmbeddedGDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/jni/LocalGDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/jni/NativeGDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/wire/WireGDSFactoryPlugin.java,
+	main/org/firebirdsql/gds/impl/wire/isc_stmt_handle_impl.java,
+	pool/org/firebirdsql/pool/AbstractDriverConnectionPoolDataSource.ja
+	va,
+	pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBPooledDataSourceFactory.java,
+	pool/org/firebirdsql/pool/FBWrappingDataSource.java,
+	pool/org/firebirdsql/pool/sun/AppServerConnectionPoolDataSource.jav
+	a, pool/org/firebirdsql/pool/sun/AppServerXADataSource.java,
+	test/org/firebirdsql/common/FBTestBase.java,
+	test/org/firebirdsql/gds/impl/jni/TestNgdsBlobReadBug.java,
+	test/org/firebirdsql/gds/impl/wire/TestGds.java,
+	test/org/firebirdsql/jca/TestFBStandAloneConnectionManager.java,
+	test/org/firebirdsql/pool/TestDriverConnectionPoolDataSource.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java,
+	test/org/firebirdsql/pool/TestXADataSource.java:
+	
+	Fixed JDK specific code references to use abstract classes.  Added
+	reflection to JDK specific instance creation.
+
 2005-12-14 21:14  gab_reid
 
 	*
