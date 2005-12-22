@@ -20,8 +20,6 @@
  */
 package org.firebirdsql.gds;
 
-import java.util.HashMap;
-
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -33,8 +31,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public class ClassFactory {
 
-    private static HashMap classes = new HashMap();
-
+    // Many commonly used class names.
     public static final String DriverConnectionPoolDataSource = "org.firebirdsql.pool.DriverConnectionPoolDataSource";
 
     public static final String FBCallableStatement = "org.firebirdsql.jdbc.FBCallableStatement";
@@ -54,23 +51,22 @@ public class ClassFactory {
     private static Logger log = LoggerFactory.getLogger(ClassFactory.class, false);
 
     /**
-     * @param className
-     *            the class name to return.
+     * @param className the class name to return.
      * @return the class corresponding to the string class name.
      */
     public static Class get(String className) {
-        Class clazz = null;
-        if (!classes.containsKey(className)) {
-            try {
-                clazz = Class.forName(className);
-            } catch (ClassNotFoundException e) {
-                log.error(e.getMessage(), e);
-                clazz = null;
-            }
-        } else {
-            clazz = (Class) classes.get(className);
-        }
-        return clazz;
-    }
 
+        try {
+
+            return Class.forName(className);
+
+        } catch (ClassNotFoundException e) {
+
+            log.error(e.getMessage(), e);
+
+        }
+
+        return null;
+
+    }
 }

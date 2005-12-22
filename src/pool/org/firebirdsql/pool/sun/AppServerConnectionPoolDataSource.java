@@ -20,7 +20,6 @@ package org.firebirdsql.pool.sun;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -117,189 +116,189 @@ public class AppServerConnectionPoolDataSource implements Serializable,
 		dataSource.setCharSet(value);
 	}
 
-	public String getDatabaseName() {
-		return dataSource.getDatabase();
-	}
+    public String getDatabaseName() {
+        return dataSource.getDatabase();
+    }
 
-	public void setDatabaseName(String value) {
-		dataSource.setDatabase(value);
-	}
+    public void setDatabaseName(String value) {
+        dataSource.setDatabase(value);
+    }
 
-	public String getDefaultIsolation() {
-		return dataSource.getDefaultIsolation();
-	}
+    public String getDefaultIsolation() {
+        return dataSource.getDefaultIsolation();
+    }
 
-	public void setDefaultIsolation(String value) {
-		dataSource.setDefaultIsolation(value);
-	}
+    public void setDefaultIsolation(String value) {
+        dataSource.setDefaultIsolation(value);
+    }
 
-	public String getEncoding() {
-		return dataSource.getEncoding();
-	}
+    public String getEncoding() {
+        return dataSource.getEncoding();
+    }
 
-	public void setEncoding(String value) {
-		dataSource.setEncoding(value);
-	}
+    public void setEncoding(String value) {
+        dataSource.setEncoding(value);
+    }
 
-	public boolean isKeepStatements() {
-		return dataSource.isKeepStatements();
-	}
+    public boolean isKeepStatements() {
+        return dataSource.isKeepStatements();
+    }
 
-	public void setKeepStatements(boolean value) {
-		dataSource.setKeepStatements(value);
-	}
+    public void setKeepStatements(boolean value) {
+        dataSource.setKeepStatements(value);
+    }
 
-	public int getMaxIdleTime() {
-		return dataSource.getMaxIdleTime();
-	}
+    public int getMaxIdleTime() {
+        return dataSource.getMaxIdleTime();
+    }
 
-	public void setMaxIdleTime(int value) {
-		dataSource.setMaxIdleTime(value);
-	}
+    public void setMaxIdleTime(int value) {
+        dataSource.setMaxIdleTime(value);
+    }
 
-	public int getMaxPoolSize() {
-		return dataSource.getMaxPoolSize();
-	}
+    public int getMaxPoolSize() {
+        return dataSource.getMaxPoolSize();
+    }
 
-	public void setMaxPoolSize(int value) {
-		dataSource.setMaxPoolSize(value);
-	}
+    public void setMaxPoolSize(int value) {
+        dataSource.setMaxPoolSize(value);
+    }
 
-	public int getMaxStatements() {
-		return dataSource.getMaxStatements();
-	}
+    public int getMaxStatements() {
+        return dataSource.getMaxStatements();
+    }
 
-	public void setMaxStatements(int value) {
-		dataSource.setMaxStatements(value);
-	}
+    public void setMaxStatements(int value) {
+        dataSource.setMaxStatements(value);
+    }
 
-	public int getMinPoolSize() {
-		return dataSource.getMinPoolSize();
-	}
+    public int getMinPoolSize() {
+        return dataSource.getMinPoolSize();
+    }
 
-	public void setMinPoolSize(int value) {
-		dataSource.setMinPoolSize(value);
-	}
+    public void setMinPoolSize(int value) {
+        dataSource.setMinPoolSize(value);
+    }
 
-	public String getPassword() {
-		return dataSource.getPassword();
-	}
+    public String getPassword() {
+        return dataSource.getPassword();
+    }
 
-	public void setPassword(String value) {
-		dataSource.setPassword(value);
-	}
+    public void setPassword(String value) {
+        dataSource.setPassword(value);
+    }
 
-	public int getPingInterval() {
-		return dataSource.getPingInterval();
-	}
+    public int getPingInterval() {
+        return dataSource.getPingInterval();
+    }
 
-	public void setPingInterval(int value) {
-		dataSource.setPingInterval(value);
-	}
+    public void setPingInterval(int value) {
+        dataSource.setPingInterval(value);
+    }
 
-	public String getPingStatement() {
-		return dataSource.getPingStatement();
-	}
+    public String getPingStatement() {
+        return dataSource.getPingStatement();
+    }
 
-	public void setPingStatement(String value) {
-		dataSource.setPingStatement(value);
-	}
+    public void setPingStatement(String value) {
+        dataSource.setPingStatement(value);
+    }
 
-	public boolean isPooling() {
-		return dataSource.isPooling();
-	}
+    public boolean isPooling() {
+        return dataSource.isPooling();
+    }
 
-	public void setPooling(boolean value) {
-		dataSource.setPooling(value);
-	}
+    public void setPooling(boolean value) {
+        dataSource.setPooling(value);
+    }
 
-	public int getRetryInterval() {
-		return dataSource.getRetryInterval();
-	}
+    public int getRetryInterval() {
+        return dataSource.getRetryInterval();
+    }
 
-	public void setRetryInterval(int value) {
-		dataSource.setRetryInterval(value);
-	}
+    public void setRetryInterval(int value) {
+        dataSource.setRetryInterval(value);
+    }
 
-	public String getRoleName() {
-		return dataSource.getRoleName();
-	}
+    public String getRoleName() {
+        return dataSource.getRoleName();
+    }
 
-	public void setRoleName(String value) {
-		dataSource.setRoleName(value);
-	}
+    public void setRoleName(String value) {
+        dataSource.setRoleName(value);
+    }
 
-	public int getSocketBufferSize() {
-		return dataSource.getSocketBufferSize();
-	}
+    public int getSocketBufferSize() {
+        return dataSource.getSocketBufferSize();
+    }
 
-	public void setSocketBufferSize(int value) {
-		dataSource.setSocketBufferSize(value);
-	}
+    public void setSocketBufferSize(int value) {
+        dataSource.setSocketBufferSize(value);
+    }
 
-	public String getSqlDialect() {
-		return dataSource.getSqlDialect();
-	}
+    public String getSqlDialect() {
+        return dataSource.getSqlDialect();
+    }
 
-	public void setSqlDialect(String value) {
-		dataSource.setSqlDialect(value);
-	}
+    public void setSqlDialect(String value) {
+        dataSource.setSqlDialect(value);
+    }
 
-	public boolean isStatementPooling() {
-		return dataSource.isStatementPooling();
-	}
+    public boolean isStatementPooling() {
+        return dataSource.isStatementPooling();
+    }
 
-	public void setStatementPooling(boolean value) {
-		dataSource.setStatementPooling(value);
-	}
+    public void setStatementPooling(boolean value) {
+        dataSource.setStatementPooling(value);
+    }
 
-	public boolean isTimestampUsesLocalTimezone() {
-		return dataSource.isTimestampUsesLocalTimezone();
-	}
+    public boolean isTimestampUsesLocalTimezone() {
+        return dataSource.isTimestampUsesLocalTimezone();
+    }
 
-	public void setTimestampUsesLocalTimezone(boolean value) {
-		dataSource.setTimestampUsesLocalTimezone(value);
-	}
+    public void setTimestampUsesLocalTimezone(boolean value) {
+        dataSource.setTimestampUsesLocalTimezone(value);
+    }
 
-	public String getType() {
-		return dataSource.getType();
-	}
+    public String getType() {
+        return dataSource.getType();
+    }
 
-	public void setType(String value) {
-		dataSource.setType(value);
-	}
+    public void setType(String value) {
+        dataSource.setType(value);
+    }
 
-	public String getUser() {
-		return dataSource.getUserName();
-	}
+    public String getUser() {
+        return dataSource.getUserName();
+    }
 
-	public void setUser(String value) {
-		dataSource.setUserName(value);
-	}
+    public void setUser(String value) {
+        dataSource.setUserName(value);
+    }
 
-	public boolean isUseStandardUdf() {
-		return dataSource.isUseStandardUdf();
-	}
+    public boolean isUseStandardUdf() {
+        return dataSource.isUseStandardUdf();
+    }
 
-	public void setUseStandardUdf(boolean value) {
-		dataSource.setUseStandardUdf(value);
-	}
+    public void setUseStandardUdf(boolean value) {
+        dataSource.setUseStandardUdf(value);
+    }
 
-	public boolean isUseStreamBlobs() {
-		return dataSource.isUseStreamBlobs();
-	}
+    public boolean isUseStreamBlobs() {
+        return dataSource.isUseStreamBlobs();
+    }
 
-	public void setUseStreamBlobs(boolean value) {
-		dataSource.setUseStreamBlobs(value);
-	}
+    public void setUseStreamBlobs(boolean value) {
+        dataSource.setUseStreamBlobs(value);
+    }
 
-	public String getUseTranslation() {
-		return dataSource.getUseTranslation();
-	}
+    public String getUseTranslation() {
+        return dataSource.getUseTranslation();
+    }
 
-	public void setUseTranslation(String value) {
-		dataSource.setUseTranslation(value);
-	}
+    public void setUseTranslation(String value) {
+        dataSource.setUseTranslation(value);
+    }
 
 	public Reference getReference() throws NamingException {
 		Reference ref = new Reference(getClass().getName(), getClass()
@@ -308,51 +307,36 @@ public class AppServerConnectionPoolDataSource implements Serializable,
 		Reference defaultRef = dataSource.getDefaultReference();
 		convertReference(ref, defaultRef);
 
-		return ref;
-	}
+        return ref;
+    }
 
-	private void convertReference(Reference ref, Reference defaultRef) {
-		Enumeration en = defaultRef.getAll();
-		while (en.hasMoreElements()) {
-			RefAddr addr = (RefAddr) en.nextElement();
-			ref.add(addr);
-		}
-	}
+    private void convertReference(Reference ref, Reference defaultRef) {
+        Enumeration en = defaultRef.getAll();
+        while (en.hasMoreElements()) {
+            RefAddr addr = (RefAddr) en.nextElement();
+            ref.add(addr);
+        }
+    }
 
-	private Method getObjectInstanceMethod = null;
 	public Object getObjectInstance(Object obj, Name name, Context nameCtx,
 			Hashtable environment) throws Exception {
 
-		if (!(obj instanceof Reference))
-			return null;
+        if (!(obj instanceof Reference))
+            return null;
 
-		Reference passedRef = (Reference) obj;
-		passedRef = (Reference) passedRef.clone();
+        Reference passedRef = (Reference) obj;
+        passedRef = (Reference) passedRef.clone();
 
-		if (!getClass().getName().equals(passedRef.getClassName()))
-			return null;
+        if (!getClass().getName().equals(passedRef.getClassName()))
+            return null;
 
-		Reference ref = new Reference(ClassFactory.get(
-				ClassFactory.FBConnectionPoolDataSource).getName(),
-				ClassFactory.get(ClassFactory.FBConnectionPoolDataSource)
-						.getName(), null);
+        Reference ref = new Reference(ClassFactory.FBConnectionPoolDataSource,
+                ClassFactory.FBConnectionPoolDataSource, null);
 
-		convertReference(ref, passedRef);
+        convertReference(ref, passedRef);
 
-		Object objectFactory = FBPooledDataSourceFactory
-				.createFBConnectionPoolDataSource();
-
-		if (getObjectInstanceMethod == null)
-			getObjectInstanceMethod = objectFactory.getClass().getMethod(
-					"getObjectInstance",
-					new Class[]{Reference.class, Name.class, Context.class,
-							Hashtable.class});
-
-		AbstractFBConnectionPoolDataSource dataSource = (AbstractFBConnectionPoolDataSource) getObjectInstanceMethod
-				.invoke(objectFactory, new Object[]{ref, name, nameCtx,
-						environment});
-
-		return new AppServerConnectionPoolDataSource(dataSource);
-	}
+        return new AppServerConnectionPoolDataSource(FBPooledDataSourceFactory
+                .getFBConnectionPoolInstance(ref, name, nameCtx, environment));
+    }
 
 }

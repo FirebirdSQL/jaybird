@@ -34,8 +34,6 @@ import org.firebirdsql.jdbc.FBObjectListener.StatementListener;
  */
 public class FBStatementFactory {
 
-    private static Constructor callableStatementConst = null;
-
     /**
      * @return a new instance of FBCallableStatement.
      */
@@ -45,20 +43,14 @@ public class FBStatementFactory {
 
         try {
 
-            AbstractCallableStatement statement = null;
+            Constructor constructor = ClassFactory.get(ClassFactory.FBCallableStatement)
+                    .getConstructor(
+                            new Class[] { GDSHelper.class, String.class, int.class, int.class,
+                                    int.class, StatementListener.class, BlobListener.class });
 
-            if (callableStatementConst == null)
-                callableStatementConst = ClassFactory.get(ClassFactory.FBCallableStatement)
-                        .getConstructor(
-                                new Class[] { GDSHelper.class, String.class, int.class, int.class,
-                                        int.class, StatementListener.class, BlobListener.class });
-
-            statement = (AbstractCallableStatement) callableStatementConst
-                    .newInstance(new Object[] { gdsHelper, sql, new Integer(resultSetType),
-                            new Integer(resultSetConcurrency), new Integer(resultSetHoldability),
-                            statementListener, blobListener });
-
-            return statement;
+            return (AbstractCallableStatement) constructor.newInstance(new Object[] { gdsHelper,
+                    sql, new Integer(resultSetType), new Integer(resultSetConcurrency),
+                    new Integer(resultSetHoldability), statementListener, blobListener });
 
         } catch (Exception e) {
 
@@ -66,8 +58,6 @@ public class FBStatementFactory {
 
         }
     }
-
-    private static Constructor preparedStatementConst = null;
 
     /**
      * @return a new instance of FBPreparedStatement
@@ -78,22 +68,17 @@ public class FBStatementFactory {
             throws FBSQLException {
 
         try {
+            
+            Constructor constructor = ClassFactory.get(ClassFactory.FBPreparedStatement)
+                    .getConstructor(
+                            new Class[] { GDSHelper.class, String.class, int.class, int.class,
+                                    int.class, StatementListener.class, BlobListener.class,
+                                    boolean.class });
 
-            AbstractPreparedStatement statement = null;
-
-            if (preparedStatementConst == null)
-                preparedStatementConst = ClassFactory.get(ClassFactory.FBPreparedStatement)
-                        .getConstructor(
-                                new Class[] { GDSHelper.class, String.class, int.class, int.class,
-                                        int.class, StatementListener.class, BlobListener.class,
-                                        boolean.class });
-
-            statement = (AbstractPreparedStatement) preparedStatementConst
-                    .newInstance(new Object[] { gdsHelper, sql, new Integer(resultSetType),
-                            new Integer(resultSetConcurrency), new Integer(resultSetHoldability),
-                            statementListener, blobListener, new Boolean(metadata) });
-
-            return statement;
+            return (AbstractPreparedStatement) constructor.newInstance(new Object[] { gdsHelper,
+                    sql, new Integer(resultSetType), new Integer(resultSetConcurrency),
+                    new Integer(resultSetHoldability), statementListener, blobListener,
+                    new Boolean(metadata) });
 
         } catch (Exception e) {
 
@@ -102,8 +87,6 @@ public class FBStatementFactory {
         }
 
     }
-
-    private static Constructor savepointIntConst = null;
 
     /**
      * @return a new FBSavepoint object using the integer constructor.
@@ -112,16 +95,11 @@ public class FBStatementFactory {
 
         try {
 
-            AbstractSavepoint savepoint = null;
+            Constructor constructor = ClassFactory.get(ClassFactory.FBSavepoint).getConstructor(
+                    new Class[] { int.class });
 
-            if (savepointIntConst == null)
-                savepointIntConst = ClassFactory.get(ClassFactory.FBSavepoint).getConstructor(
-                        new Class[] { int.class });
-
-            savepoint = (AbstractSavepoint) savepointIntConst
+            return (AbstractSavepoint) constructor
                     .newInstance(new Object[] { new Integer(counter) });
-
-            return savepoint;
 
         } catch (Exception e) {
 
@@ -130,8 +108,6 @@ public class FBStatementFactory {
         }
 
     }
-
-    private static Constructor savepointStrConst = null;
 
     /**
      * @return a new FBSavepoint object using the String constructor.
@@ -140,15 +116,10 @@ public class FBStatementFactory {
 
         try {
 
-            AbstractSavepoint savepoint = null;
+            Constructor constructor = ClassFactory.get(ClassFactory.FBSavepoint).getConstructor(
+                    new Class[] { String.class });
 
-            if (savepointStrConst == null)
-                savepointStrConst = ClassFactory.get(ClassFactory.FBSavepoint).getConstructor(
-                        new Class[] { String.class });
-
-            savepoint = (AbstractSavepoint) savepointStrConst.newInstance(new Object[] { name });
-
-            return savepoint;
+            return (AbstractSavepoint) constructor.newInstance(new Object[] { name });
 
         } catch (Exception e) {
 
@@ -157,8 +128,6 @@ public class FBStatementFactory {
         }
 
     }
-
-    private static Constructor statementConst = null;
 
     /**
      * @return a new instance FBStatement.
@@ -169,18 +138,13 @@ public class FBStatementFactory {
 
         try {
 
-            AbstractStatement statement = null;
+            Constructor constructor = ClassFactory.get(ClassFactory.FBStatement).getConstructor(
+                    new Class[] { GDSHelper.class, int.class, int.class, int.class,
+                            StatementListener.class });
 
-            if (statementConst == null)
-                statementConst = ClassFactory.get(ClassFactory.FBStatement).getConstructor(
-                        new Class[] { GDSHelper.class, int.class, int.class, int.class,
-                                StatementListener.class });
-
-            statement = (AbstractStatement) statementConst.newInstance(new Object[] { gdsHelper,
+            return (AbstractStatement) constructor.newInstance(new Object[] { gdsHelper,
                     new Integer(resultSetType), new Integer(resultSetConcurrency),
                     new Integer(resultSetHoldability), statementListener });
-
-            return statement;
 
         } catch (Exception e) {
 

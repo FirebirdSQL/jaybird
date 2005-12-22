@@ -20,7 +20,15 @@
  */
 package org.firebirdsql.pool;
 
+import java.lang.reflect.Method;
+import java.util.Hashtable;
+
+import javax.naming.Context;
+import javax.naming.Name;
+import javax.naming.Reference;
+
 import org.firebirdsql.gds.ClassFactory;
+import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -37,12 +45,17 @@ public class FBPooledDataSourceFactory {
      * @return a new DriverConnectionPoolDatasource object.
      */
     public static AbstractDriverConnectionPoolDataSource createDriverConnectionPoolDataSource() {
+
         try {
+
             return (AbstractDriverConnectionPoolDataSource) ClassFactory.get(
                     ClassFactory.DriverConnectionPoolDataSource).newInstance();
+
         } catch (Exception e) {
+
             log.error(e.getMessage(), e);
             return null;
+
         }
     }
 
@@ -50,13 +63,45 @@ public class FBPooledDataSourceFactory {
      * @return a new FBConnectionPoolDataSource object.
      */
     public static AbstractFBConnectionPoolDataSource createFBConnectionPoolDataSource() {
+
         try {
+
             return (AbstractFBConnectionPoolDataSource) ClassFactory.get(
                     ClassFactory.FBConnectionPoolDataSource).newInstance();
+
         } catch (Exception e) {
+
             log.error(e.getMessage(), e);
             return null;
+
         }
+    }
+
+    /**
+     * Creates an objectFactory and returns an object instance of
+     * AbstractFBConnectionPoolDataSource.
+     */
+    public static AbstractFBConnectionPoolDataSource getFBConnectionPoolInstance(
+            Reference reference, Name name, Context context, Hashtable environment)
+            throws FBSQLException {
+
+        try {
+
+            AbstractFBConnectionPoolDataSource objectFactory = createFBConnectionPoolDataSource();
+
+            Method method = createFBConnectionPoolDataSource().getClass().getMethod(
+                    "getObjectInstance",
+                    new Class[] { Reference.class, Name.class, Context.class, Hashtable.class });
+
+            return (AbstractFBConnectionPoolDataSource) method.invoke(objectFactory, new Object[] {
+                    reference, name, context, environment });
+
+        } catch (Exception e) {
+
+            throw new FBSQLException(e);
+
+        }
+
     }
 
 }

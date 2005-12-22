@@ -37,12 +37,19 @@ public class GDSObjectFactory {
      * @return a new JavaGDSImpl object.
      */
     public static AbstractJavaGDSImpl createJavaGDSImpl() {
+
         try {
+
             return (AbstractJavaGDSImpl) ClassFactory.get(ClassFactory.JavaGDSImpl).newInstance();
+
         } catch (Exception e) {
+
             log.error(e.getMessage(), e);
-            return null;
+
         }
+
+        return null;
+
     }
 
 }
