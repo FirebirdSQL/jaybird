@@ -26,8 +26,6 @@ import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.FBObjectListener.BlobListener;
 import org.firebirdsql.jdbc.FBObjectListener.StatementListener;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * Creates statement/savepoint objects.
@@ -35,8 +33,6 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
  */
 public class FBStatementFactory {
-
-    private static Logger log = LoggerFactory.getLogger(FBStatementFactory.class, false);
 
     private static Constructor callableStatementConst = null;
 
