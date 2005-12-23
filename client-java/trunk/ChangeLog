@@ -1,3 +1,14 @@
+2005-12-22 17:37  sjardine
+
+	* client-java/src/: main/org/firebirdsql/gds/ClassFactory.java,
+	main/org/firebirdsql/gds/GDSObjectFactory.java,
+	main/org/firebirdsql/jdbc/FBStatementFactory.java,
+	pool/org/firebirdsql/pool/FBPooledDataSourceFactory.java,
+	pool/org/firebirdsql/pool/sun/AppServerConnectionPoolDataSource.jav
+	a, pool/org/firebirdsql/pool/sun/AppServerXADataSource.java:
+	
+	Removed unnecessary code.
+
 2005-12-22 03:17  sjardine
 
 	* client-java/src/:
