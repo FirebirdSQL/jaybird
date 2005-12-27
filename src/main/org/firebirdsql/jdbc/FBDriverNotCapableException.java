@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.FBSQLException;
+
 /**
  * Tell that driver is not able to serve the request due to missing capabilities.
  * 

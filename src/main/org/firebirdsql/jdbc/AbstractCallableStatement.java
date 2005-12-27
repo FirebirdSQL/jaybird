@@ -27,6 +27,7 @@ import java.sql.*;
 import java.util.*;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;

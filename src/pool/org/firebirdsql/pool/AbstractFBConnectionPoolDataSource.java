@@ -27,6 +27,7 @@ import javax.resource.ResourceException;
 import javax.sql.*;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;

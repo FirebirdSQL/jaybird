@@ -35,6 +35,7 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
@@ -56,7 +57,6 @@ import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jdbc.FBConnectionHelper;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -1824,7 +1824,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			throws UnsupportedEncodingException {
 		String javaEncoding = null;
 		if (encoding != null && !"NONE".equals(encoding))
-			javaEncoding = FBConnectionHelper.getJavaEncoding(encoding);
+			javaEncoding = EncodingFactory.getJavaEncoding(encoding);
 
 		final byte[] stringBytes;
 		if (javaEncoding != null)

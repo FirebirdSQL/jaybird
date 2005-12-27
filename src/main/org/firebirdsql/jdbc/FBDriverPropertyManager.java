@@ -32,6 +32,7 @@ import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.FBSQLException;
 
 
 /**
@@ -290,14 +291,14 @@ public class FBDriverPropertyManager {
         String localEncoding = (String)info.get("isc_dpb_local_encoding");
         
         if (iscEncoding != null && localEncoding == null) {
-            String javaEncoding = FBConnectionHelper.getJavaEncoding(iscEncoding);
+            String javaEncoding = EncodingFactory.getJavaEncoding(iscEncoding);
             
             if (javaEncoding != null)
                 info.put("isc_dpb_local_encoding", javaEncoding);
         }
         
         if (iscEncoding == null && localEncoding != null) {
-            iscEncoding = FBConnectionHelper.getIscEncoding(localEncoding); 
+            iscEncoding = EncodingFactory.getIscEncoding(localEncoding); 
             info.put("isc_dpb_lc_ctype", iscEncoding);
         }
         

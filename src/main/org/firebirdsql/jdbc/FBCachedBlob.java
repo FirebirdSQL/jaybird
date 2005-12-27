@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.ByteArrayInputStream;
 
+import org.firebirdsql.gds.FBSQLException;
+
 /**
  * This class represents a cached blob field.
  */

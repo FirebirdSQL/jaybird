@@ -7,6 +7,7 @@ import java.util.Iterator;
 
 import javax.resource.ResourceException;
 
+import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.jca.FirebirdLocalTransaction;
 
 

@@ -27,6 +27,7 @@ package org.firebirdsql.jdbc;
 
 import java.sql.PreparedStatement;
 
+import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.ISCConstants;
 
 /**

@@ -51,7 +51,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public class FBManagedConnection implements ManagedConnection, XAResource, GDSHelperErrorListener {
 
-    private final Logger log = LoggerFactory.getLogger(getClass(), false);
+    private static final Logger log = LoggerFactory.getLogger(FBManagedConnection.class, false);
 
     private FBManagedConnectionFactory mcf;
 

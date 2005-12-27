@@ -29,9 +29,9 @@ import javax.resource.spi.ConnectionEventListener;
 import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
 
+import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBManagedConnection;
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FirebirdStatement;
 
 

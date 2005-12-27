@@ -25,6 +25,8 @@ import java.sql.*;
 import java.sql.Date;
 import java.util.*;
 
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -209,8 +211,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                 XSQLVAR var = getXsqlvar(column);
                 int charset = var.sqlsubtype & 0xFF;
                 int charSetSize = charset == 127 /* CS_dynamic */ ?
-                    FBConnectionHelper.getIscEncodingSize(getIscEncoding()) :
-                    FBConnectionHelper.getCharacterSetSize(charset);
+                    EncodingFactory.getIscEncodingSize(getIscEncoding()) :
+                    EncodingFactory.getCharacterSetSize(charset);
                 return var.sqllen / charSetSize;
             }
 
@@ -311,8 +313,8 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                 XSQLVAR var = getXsqlvar(column);
                 int charset = var.sqlsubtype & 0xFF;
                 int charSetSize = charset == 127 /* CS_dynamic */ ?
-                    FBConnectionHelper.getIscEncodingSize(getIscEncoding()) :
-                    FBConnectionHelper.getCharacterSetSize(charset);
+                    EncodingFactory.getIscEncodingSize(getIscEncoding()) :
+                    EncodingFactory.getCharacterSetSize(charset);
                 return var.sqllen / charSetSize;
             }
 
@@ -842,7 +844,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                     if (rs.wasNull())
                         fieldInfo.characterLength =
                             fieldInfo.fieldLength /
-                            FBConnectionHelper.getCharacterSetSize(fieldInfo.characterSetId);
+                            EncodingFactory.getCharacterSetSize(fieldInfo.characterSetId);
 
                     result.put(
                         new FieldKey(fieldInfo.relationName, fieldInfo.fieldName),

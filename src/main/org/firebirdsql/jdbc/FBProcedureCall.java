@@ -21,6 +21,8 @@ package org.firebirdsql.jdbc;
 import java.sql.SQLException;
 import java.util.*;
 
+import org.firebirdsql.gds.FBSQLException;
+
 /**
  * Represents procedure call.
  */

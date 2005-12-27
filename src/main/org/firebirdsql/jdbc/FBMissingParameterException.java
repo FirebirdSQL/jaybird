@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.FBSQLException;
+
 
 /**
  * Exception notifying developer that not all parameters were set when calling

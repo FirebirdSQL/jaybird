@@ -2,13 +2,26 @@ package org.firebirdsql.gds.impl.jni;
 
 import java.io.UnsupportedEncodingException;
 
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.EventHandle;
+import org.firebirdsql.gds.EventHandler;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.IscBlobHandle;
+import org.firebirdsql.gds.IscDbHandle;
+import org.firebirdsql.gds.IscStmtHandle;
+import org.firebirdsql.gds.IscSvcHandle;
+import org.firebirdsql.gds.IscTrHandle;
+import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.impl.AbstractGDS;
+import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.ServiceParameterBuffer;
-import org.firebirdsql.gds.impl.AbstractIscTrHandle;
-import org.firebirdsql.jdbc.FBConnectionHelper;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -1085,7 +1098,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             throws UnsupportedEncodingException {
         String javaEncoding = null;
         if (encoding != null && !"NONE".equals(encoding))
-            javaEncoding = FBConnectionHelper.getJavaEncoding(encoding);
+            javaEncoding = EncodingFactory.getJavaEncoding(encoding);
 
         final byte[] stringBytes;
         if (javaEncoding != null)
