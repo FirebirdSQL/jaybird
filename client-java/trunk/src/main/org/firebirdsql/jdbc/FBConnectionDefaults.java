@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.impl.GDSHelper;
+
 /**
  * Default values for JDBC connection.
  * 
@@ -25,7 +27,7 @@ package org.firebirdsql.jdbc;
  */
 public class FBConnectionDefaults {
     
-    public static final int DEFAULT_BLOB_BUFFER_SIZE = 16 * 1024;
+    public static final int DEFAULT_BLOB_BUFFER_SIZE = GDSHelper.DEFAULT_BLOB_BUFFER_SIZE;
     
     /**
      * Default socket buffer size is <code>-1</code>, meaning that we

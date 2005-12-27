@@ -20,6 +20,8 @@ package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 
+import org.firebirdsql.gds.FBSQLException;
+
 
 /**
  * Represents procedure call parameter.

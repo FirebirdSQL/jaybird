@@ -7,7 +7,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 public class EmbeddedGDSImpl extends JniGDSImpl {
 
-    private static Logger log = LoggerFactory.getLogger(NativeGDSImpl.class,
+    private static Logger log = LoggerFactory.getLogger(EmbeddedGDSImpl.class,
             false);
 
     private static final String[] EMBEDDED_LIBRARIES_TO_TRY = { 

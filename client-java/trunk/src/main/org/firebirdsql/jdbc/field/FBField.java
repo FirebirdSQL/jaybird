@@ -20,6 +20,7 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;

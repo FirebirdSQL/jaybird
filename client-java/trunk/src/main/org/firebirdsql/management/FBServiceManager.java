@@ -23,6 +23,7 @@ package org.firebirdsql.management;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
@@ -31,7 +32,6 @@ import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.IscSvcHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jdbc.FBSQLException;
 
 /**
  * An implementation of the basic Firebird Service API functionality.

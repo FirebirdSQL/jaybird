@@ -26,7 +26,7 @@ import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.gds.FBSQLException;
 
 
 /**

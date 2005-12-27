@@ -4,6 +4,7 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 import java.util.ArrayList;
 
+import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;

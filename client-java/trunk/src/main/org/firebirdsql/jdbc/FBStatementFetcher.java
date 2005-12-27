@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 
+import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;

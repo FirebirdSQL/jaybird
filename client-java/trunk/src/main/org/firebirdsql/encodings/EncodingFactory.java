@@ -19,28 +19,87 @@
 
 package org.firebirdsql.encodings;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class EncodingFactory {
     
+    private static final int[][] CHARSET_MAXIMUM_SIZE = new int[][] {
+        { 0, 1}   // NONE
+      , { 1, 1}   // OCTETS
+      , { 2, 1}   // ASCII
+      , { 3, 3}   // UNICODE_FSS
+      , { 5, 2}   // SJIS_0208
+      , { 6, 2}   // EUJC_0208
+      , { 9, 1}   // DOS737
+      , {10, 1}   // DOS437
+      , {11, 1}   // DOS850
+      , {12, 1}   // DOS865
+      , {13, 1}   // DOS775
+      , {14, 1}   // DOS863
+      , {15, 1}   // DOS775
+      , {16, 1}   // DOS858
+      , {17, 1}   // DOS862
+      , {18, 1}   // DOS864
+      , {19, 1}   // NEXT
+      , {21, 1}   // ISO8859_1
+      , {22, 1}   // ISO8859_2
+      , {23, 1}   // ISO8859_3
+      , {34, 1}   // ISO8859_4
+      , {35, 1}   // ISO8859_5
+      , {36, 1}   // ISO8859_6
+      , {37, 1}   // ISO8859_7
+      , {38, 1}   // ISO8859_8
+      , {39, 1}   // ISO8859_9
+      , {40, 1}   // ISO8859_13
+      , {44, 2}   // KSC_5601
+      , {45, 1}   // DOS852
+      , {46, 1}   // DOS857
+      , {47, 1}   // DOS861
+      , {48, 1}   // DOS866
+      , {49, 1}   // DOS869
+      , {50, 1}   // CYRL
+      , {51, 1}   // WIN1250
+      , {52, 1}   // WIN1251
+      , {53, 1}   // WIN1252
+      , {54, 1}   // WIN1253
+      , {55, 1}   // WIN1254
+      , {56, 2}   // BIG_5
+      , {57, 2}   // GB2312
+      , {58, 1}   // WIN1255
+      , {59, 1}   // WIN1256
+      , {60, 1}   // WIN1257
+  };
     /**
      * Default mapping table, provides an "identity" mapping.
      */
     public static final char[] DEFAULT_MAPPING = new char[256 * 256];
+
+    static String defaultEncoding = null;
+
+    private static boolean encodingSizesLoaded = false;
+    
+    private static boolean encodingsLoaded = false;
+    
+    public static final String ISC_ENCODING_SIZE_RESOURCE = 
+        "isc_encoding_size.properties";
+    
+    public static final String ISC_ENCODINGS_RESOURCE =
+        "isc_encodings.properties";
+
+    private static final HashMap iscEncodings = new HashMap();
+        
+    private static final HashMap iscEncodingSizes = new HashMap();
+    
+    private static final HashMap javaEncodings = new HashMap();
+
+    private static final Map translations = Collections.synchronizedMap(new HashMap());
     static {
         for (int i = 0; i < DEFAULT_MAPPING.length; i++) {
             DEFAULT_MAPPING[i] = (char)i;
         }
     }
-
-    static String defaultEncoding = null;
-
     static {
         InputStreamReader reader = new InputStreamReader(new ByteArrayInputStream(new byte[2])); 
         defaultEncoding = reader.getEncoding();
@@ -51,38 +110,6 @@ public class EncodingFactory {
         }
     }
     
-    private static final Map translations = Collections.synchronizedMap(new HashMap());
-    
-    public static Encoding getEncoding(String encoding, String mappingPath) throws SQLException {
-        
-        if (mappingPath == null)
-            return getEncoding(encoding);
-        
-        CharacterTranslator translator = getTranslator(mappingPath);
-        
-        return getEncoding(encoding, translator.getMapping());
-    }
-    
-    public static CharacterTranslator getTranslator(String mappingPath) throws SQLException {
-        CharacterTranslator translator;
-        
-        translator = (CharacterTranslator)translations.get(mappingPath);
-        
-        if (translator == null) {
-            translator = new CharacterTranslator();
-            translator.init(mappingPath);
-            translations.put(mappingPath, translator);
-        }
-        return translator;
-    }
-
-    public static Encoding getEncoding(String encoding){
-        if (encoding == null)
-            encoding = defaultEncoding;
-        
-        return createEncoding(encoding);
-    }
-        
     public static Encoding createEncoding(String encoding) {
         if (encoding.equals("NONE"))
             encoding = defaultEncoding;
@@ -156,7 +183,31 @@ public class EncodingFactory {
         else 
             return new Encoding_NotOneByte(encoding);
     }
-    
+    /**
+     * Get size of a character for the specified character set.
+     *
+     * @param characterSetId of the character set.
+     * @return maximum size of the character in bytes or 1 if charset was 
+     * not found.
+     */
+    public static int getCharacterSetSize(int characterSetId) {
+        
+        for (int i = 0; i < CHARSET_MAXIMUM_SIZE.length; i++) {
+            if (CHARSET_MAXIMUM_SIZE[i][0] == characterSetId)
+                return CHARSET_MAXIMUM_SIZE[i][1];
+        }
+
+        // let's assume that default length is 1
+        return 1;
+    }
+
+    public static Encoding getEncoding(String encoding){
+        if (encoding == null)
+            encoding = defaultEncoding;
+        
+        return createEncoding(encoding);
+    }
+
     public static Encoding getEncoding(String encoding, char[] charMapping){
         if (encoding == null || encoding.equals("NONE"))
             encoding = defaultEncoding;
@@ -229,5 +280,175 @@ public class EncodingFactory {
             return new Encoding_ISO8859_13(charMapping);
         else 
             return new Encoding_NotOneByte(encoding, charMapping);
+    }
+    
+    public static Encoding getEncoding(String encoding, String mappingPath) throws SQLException {
+        
+        if (mappingPath == null)
+            return getEncoding(encoding);
+        
+        CharacterTranslator translator = getTranslator(mappingPath);
+        
+        return getEncoding(encoding, translator.getMapping());
+    }
+    
+    /**
+     * Get InterBase encoding for given Java language encoding.
+     *
+     * @param javaEncoding Java language encoding.
+     * @return corresponding InterBase encoding or <code>null</code> if none
+     * found.
+     */
+    public static String getIscEncoding(String javaEncoding) {
+        if (!encodingsLoaded)
+            loadEncodings();
+
+        return (String)javaEncodings.get(javaEncoding);
+    }
+    
+    /**
+     * Get size of a character for the specified InterBase encoding.
+     *
+     * @param iscEncoding InterBase encoding.
+     * @return maximum size of the character in bytes or 1 if encoding was 
+     * not found.
+     */
+    public static int getIscEncodingSize(String iscEncoding) {
+        if (!encodingSizesLoaded)
+            loadEncodingSizes();
+            
+        Byte result = (Byte)iscEncodingSizes.get(iscEncoding);
+        if (result == null)
+            return 1;
+        else
+            return result.byteValue();
+    }
+        
+    /**
+     * Get Java language encoding for given InterBase encoding.
+     *
+     * @param iscEncoding InterBase encoding
+     * @return corresponding Java encoding or <code>null</code> if none found.
+     */
+    public static String getJavaEncoding(String iscEncoding) {
+        if (!encodingsLoaded)
+            loadEncodings();
+
+        // 
+        // very important for performance
+        // if javaEncoding is the default one, set to null
+        //
+        String javaEncoding = (String)iscEncodings.get(iscEncoding);
+        String defaultEncoding = System.getProperty("file.encoding");
+        if (javaEncoding == null || javaEncoding.equalsIgnoreCase(defaultEncoding)) 
+            return null;
+        else 
+            return javaEncoding;
+    }
+    
+    
+    public static CharacterTranslator getTranslator(String mappingPath) throws SQLException {
+        CharacterTranslator translator;
+        
+        translator = (CharacterTranslator)translations.get(mappingPath);
+        
+        if (translator == null) {
+            translator = new CharacterTranslator();
+            translator.init(mappingPath);
+            translations.put(mappingPath, translator);
+        }
+        return translator;
+    }
+
+    /**
+     * Load mapping between Java and InterBase encodings. This method loads the
+     * mapping using the classloader that loaded this class.
+     */
+    private synchronized static void loadEncodings() {
+        
+        if (encodingsLoaded)
+            return;
+        
+        Properties props;
+        try {
+            props = loadProperties(ISC_ENCODINGS_RESOURCE);
+        } catch(IOException ioex) {
+            ioex.printStackTrace();
+            return;
+        } 
+
+        // fill the direct and inversed mappings
+        iscEncodings.putAll(props);
+
+        Iterator iterator = props.keySet().iterator();
+        while(iterator.hasNext()) {
+            String iscEncoding = (String)iterator.next();
+            String javaEncoding = (String)props.get(iscEncoding);
+            javaEncodings.put(javaEncoding, iscEncoding);
+        }
+
+        encodingsLoaded = true;
+    }
+    
+    /**
+     * Load mapping between Java and InterBase encodings. This method loads the
+     * mapping using the classloader that loaded this class.
+     */
+    private synchronized static void loadEncodingSizes() {
+        
+        if (encodingSizesLoaded)
+            return;
+        
+        Properties props;
+        try {
+            props = loadProperties(ISC_ENCODING_SIZE_RESOURCE);
+        } catch(IOException ex) {
+            ex.printStackTrace();
+            return;
+        }
+
+        Iterator iterator = props.keySet().iterator();
+        while(iterator.hasNext()) {
+            String iscEncoding = (String)iterator.next();
+            String size = (String)props.get(iscEncoding);
+            iscEncodingSizes.put(iscEncoding, new Byte(size));
+        }
+
+        encodingSizesLoaded = true;
+    }
+    
+    /**
+     * Load properties from the specified resource. This method uses the same
+     * class loader that loaded this class.
+     * 
+     * @param resource path to the resource relative to the root of the 
+     * classloader.
+     * 
+     * @return instance of {@link Properties} containing loaded resources or
+     * <code>null</code> if resource was not found.
+     * 
+     * @throws IOException if I/O error occured.
+     */
+    private static Properties loadProperties(String resource) throws IOException {
+        ClassLoader cl = EncodingFactory.class.getClassLoader();
+
+        InputStream in = null;
+
+        // get the stream from the classloader or system classloader
+        if (cl == null)
+            in = ClassLoader.getSystemResourceAsStream(resource);
+        else
+            in = cl.getResourceAsStream(resource);
+
+        if (in == null) 
+            return null;
+
+        try {
+            Properties props = new Properties();
+            props.load(in);
+            return props;
+        } finally {
+            in.close();
+        }
     }
 }

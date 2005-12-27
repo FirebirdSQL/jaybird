@@ -3,8 +3,11 @@ package org.firebirdsql.jdbc;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.TransactionParameterBuffer;
@@ -182,7 +185,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         if (encoding != null)
             return;
         
-        encoding = FBConnectionHelper.getIscEncoding(charSet);
+        encoding = EncodingFactory.getIscEncoding(charSet);
         
         if (encoding != null)
             setStringProperty(ENCODING_PROPERTY, encoding);
@@ -199,7 +202,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         if (charSet != null)
             return;
         
-        charSet = FBConnectionHelper.getJavaEncoding(encoding);
+        charSet = EncodingFactory.getJavaEncoding(encoding);
         
         if (charSet != null)
             setStringProperty(LOCAL_ENCODING_PROPERTY, charSet);

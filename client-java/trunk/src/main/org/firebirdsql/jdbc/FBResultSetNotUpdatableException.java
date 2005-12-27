@@ -1,5 +1,7 @@
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.FBSQLException;
+
 /**
  * Exception is thrown when trying to modify the non-updatable result set. 
  */

@@ -17,15 +17,14 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.gds;
 
-import java.sql.SQLException;
-import javax.resource.ResourceException;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.jca.FBResourceException;
-import java.io.PrintWriter;
-import java.io.PrintStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+
+import javax.resource.ResourceException;
 
 /**
  * @author Ken Richard
@@ -76,9 +75,9 @@ public class FBSQLException extends SQLException {
                                           SQL_STATE_GENERAL_ERROR);
         
         // try to unwrap wrapped exception
-        if (ex instanceof FBResourceException) {
+        if (ex instanceof ResourceException) {
             
-            FBResourceException rex = (FBResourceException)ex;
+            ResourceException rex = (ResourceException)ex;
             
             if (rex.getLinkedException() != null)
                 original = rex.getLinkedException();

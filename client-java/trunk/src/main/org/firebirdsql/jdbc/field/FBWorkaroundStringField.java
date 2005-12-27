@@ -23,9 +23,9 @@ import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.jdbc.FBConnectionHelper;
 
 
 /**
@@ -77,7 +77,7 @@ public class FBWorkaroundStringField extends FBStringField {
     public void setConnection(GDSHelper gdsHelper) {
         super.setConnection(gdsHelper);
 
-        bytesPerCharacter = FBConnectionHelper.getIscEncodingSize(iscEncoding);
+        bytesPerCharacter = EncodingFactory.getIscEncodingSize(iscEncoding);
         possibleCharLength = field.sqllen / bytesPerCharacter;
     }
     

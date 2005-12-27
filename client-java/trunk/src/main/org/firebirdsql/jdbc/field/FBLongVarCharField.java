@@ -26,6 +26,7 @@ import java.io.Reader;
 import java.sql.Blob;
 import java.sql.SQLException;
 
+import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.jdbc.*;
 

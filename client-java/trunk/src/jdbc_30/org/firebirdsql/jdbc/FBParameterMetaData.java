@@ -20,21 +20,21 @@
 package org.firebirdsql.jdbc;
 
 
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.impl.GDSHelper;
-
 import java.math.BigDecimal;
-
-import java.sql.ParameterMetaData;
-
-import java.sql.Blob;
 import java.sql.Array;
+import java.sql.Blob;
 import java.sql.Date;
+import java.sql.ParameterMetaData;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.FBSQLException;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * Describe class <code>FBParameterMetaData</code> here.
@@ -148,8 +148,8 @@ public class FBParameterMetaData implements ParameterMetaData {
                 XSQLVAR var = getXsqlvar(parameter);
                 int charset = var.sqlsubtype & 0xFF;
                 int charSetSize = charset == 127 /* CS_dynamic */ ?
-                    FBConnectionHelper.getIscEncodingSize(getIscEncoding()) :
-                    FBConnectionHelper.getCharacterSetSize(charset);
+                    EncodingFactory.getIscEncodingSize(getIscEncoding()) :
+                    EncodingFactory.getCharacterSetSize(charset);
                 return var.sqllen / charSetSize;
             }
 

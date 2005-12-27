@@ -20,7 +20,7 @@
 package org.firebirdsql.jdbc.field;
 
 
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.gds.FBSQLException;
 /**
  * This exception is thrown when the requested type conversion cannot be
  * performed.

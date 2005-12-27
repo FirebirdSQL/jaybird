@@ -32,9 +32,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.jdbc.FBConnectionHelper;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -142,7 +142,7 @@ public class XdrOutputStream {
         String javaEncoding = null;
         
         if (encoding != null && !"NONE".equals(encoding))
-            javaEncoding = FBConnectionHelper.getJavaEncoding(encoding);
+            javaEncoding = EncodingFactory.getJavaEncoding(encoding);
         
         if (javaEncoding != null)
             writeBuffer(s.getBytes(javaEncoding));
