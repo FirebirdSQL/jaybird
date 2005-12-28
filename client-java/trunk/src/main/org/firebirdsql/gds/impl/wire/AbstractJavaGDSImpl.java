@@ -3072,9 +3072,11 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                 }                 
                 doClose();
             } catch (IOException ioe){
-                throw new RuntimeException(ioe);
+                throw new RuntimeException(
+                        "IOException in event loop: " + ioe.getMessage());
             } catch (GDSException gdse){
-                throw new RuntimeException(gdse);
+                throw new RuntimeException(
+                        "GDSException in event loop: " + gdse.getMessage());
             }
         }
 

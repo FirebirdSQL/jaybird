@@ -226,7 +226,7 @@ public class TestFBEventManager extends FBTestBase {
                 ie.printStackTrace();
                 eventCount = 0;
             } catch (Exception e){
-                throw new RuntimeException(e);
+                throw new RuntimeException(e.getMessage());
             }
         }
 
@@ -270,7 +270,7 @@ public class TestFBEventManager extends FBTestBase {
                     conn.close();
                 }
             } catch (Exception e){
-                throw new RuntimeException(e);
+                throw new RuntimeException(e.getMessage());
             }
         }
     }
