@@ -73,19 +73,11 @@ public class FBSQLException extends SQLException {
         super(ex.getMessage(), 
                 ex.getErrorCode() != null ? ex.getErrorCode() : 
                                           SQL_STATE_GENERAL_ERROR);
-        
+
         // try to unwrap wrapped exception
-        if (ex instanceof ResourceException) {
-            
-            ResourceException rex = (ResourceException)ex;
-            
-            if (rex.getLinkedException() != null)
-                original = rex.getLinkedException();
-            else
-                original = rex;
-                
-        } else
-            original = ex;
+        if (ex.getLinkedException() != null) 
+            original = ex.getLinkedException();
+        else original = ex;
 
         if (original instanceof GDSException)
             message = "GDS Exception. "+ ((GDSException)original).getIntParam() + ". " + ex.getMessage();
