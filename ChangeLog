@@ -1,3 +1,25 @@
+2005-12-29 00:32  gab_reid
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java,
+	test/org/firebirdsql/event/TestFBEventManager.java:
+	
+	Fixed for JDK 1.3 compatibility
+
+2005-12-28 19:11  sjardine
+
+	* client-java/src/main/org/firebirdsql/gds/FBSQLException.java:
+	
+	Removed unnecessary code.
+
+2005-12-28 19:11  sjardine
+
+	* client-java/src/:
+	test_30/org/firebirdsql/jdbc/TestFBResultSet3_0.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	Moved JDBC 3.0 specific test code to proper source directory.
+
 2005-12-27 01:01  sjardine
 
 	* client-java/src/:
