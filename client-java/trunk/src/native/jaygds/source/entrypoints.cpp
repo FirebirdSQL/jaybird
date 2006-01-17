@@ -19,6 +19,7 @@
 
 #include "platform.h"
 
+#include "entrypoints_custom.h"
 #include "entrypoints_generated.h"
 
 #include "fb_binding.h"
