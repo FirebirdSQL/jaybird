@@ -4,6 +4,8 @@
 
 #ifndef _Included_org_firebirdsql_gds_impl_jni_GDS_0005fImpl
 #define _Included_org_firebirdsql_gds_impl_jni_GDS_0005fImpl
+#include "exceptions.h"
+#include <new>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,7 +50,7 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
   (JNIEnv *, jobject, jobject, jint, jbyteArray, jint, jbyteArray);
 
 /*
- * Class:     org_	firebirdsql_gds_impl_jni_GDS_0005fImpl
+ * Class:     org_  firebirdsql_gds_impl_jni_GDS_0005fImpl
  * Method:    native_isc_detach_database
  * Signature: (Lorg/firebirdsql/gds/IscDbHandle;)V
  */
@@ -313,6 +315,56 @@ JNIEXPORT jbyteArray JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native
 
 
 /*
+ * Method:    native_isc_service_query
+ * Signature: (Lorg/firebirdsql/gds/isc_blob_handle;)V
+ */
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Internal_native_1isc_1get_1curret_1attachment_1and_1transactional
+    (JNIEnv *, jobject, jobject, jobject);
+
+/*
+ * Class:     org_firebirdsql_ngds_GDS_0005fImpl
+ * Method:    native_isc_service_query
+ * Signature: (Lorg/firebirdsql/gds/isc_blob_handle;)V
+ */
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Internal_native_1isc_1unget_1curret_1attachment_1and_1transactional
+    (JNIEnv *, jobject, jobject, jobject);
+
+/*
+ * Class:     org_firebirdsql_ngds_GDS_0005fInternal
+ * Method:    native_isc_get_trigger_field
+ * Signature: (Ljava/lang/String;I)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_org_firebirdsql_ngds_GDS_1Internal_native_1isc_1get_1trigger_1field
+  (JNIEnv *, jclass, jstring, jint);
+
+/*
+ * Class:     org_firebirdsql_ngds_GDS_0005fInternal
+ * Method:    native_isc_set_trigger_field
+ * Signature: (Ljava/lang/String;ILjava/lang/Object;)V
+ */
+JNIEXPORT void JNICALL Java_org_firebirdsql_ngds_GDS_1Internal_native_1isc_1set_1trigger_1field
+  (JNIEnv *, jclass, jstring, jint, jobject);
+
+
+/*
+ * Class:     org_firebirdsql_ngds_GDS_0005fInternal
+ * Method:    native_isc_get_trigger_action
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_org_firebirdsql_ngds_GDS_1Internal_native_1isc_1get_1trigger_1action
+  (JNIEnv *, jclass);
+
+
+/*
+ * Class:     org_firebirdsql_ngds_GDS_0005fInternal
+ * Method:    native_isc_set_trigger_field
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_firebirdsql_ngds_GDS_1Internal_native_1isc_1get_1trigger_1table_1name
+  (JNIEnv *, jclass);
+
+
+/*
  * Class:     org_firebirdsql_gds_impl_jni_JniGDSImpl
  * Method:    native_isc_que_events
  * Signature: (Lorg/firebirdsql/gds/IscDbHandle;Lorg/firebirdsql/gds/impl/jni/EventHandleImp;Lorg/firebirdsql/gds/EventHandler;)I
@@ -351,4 +403,11 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 #ifdef __cplusplus
 }
 #endif
+
+JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_VariableInitilize(JNIEnv *javaEnvironment, jobject jThis);
+JNIEXPORT void EnsureJavaExceptionIssued(JNIEnv * javaEnvironment, InternalException& exception);
+JNIEXPORT void EnsureJavaExceptionIssued(JNIEnv * javaEnvironment);
+JNIEXPORT void MaybeIssueOutOfMemory(JNIEnv * javaEnvironment, std::bad_alloc& badAlloc);
+
+
 #endif
