@@ -38,3 +38,8 @@ SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name)
 			}
 	return handle; 
 	}
+	
+	void PlatformUnLoadLibrary(SHARED_LIBRARY_HANDLE handle)
+    {
+    	dlclose(handle);
+    }
