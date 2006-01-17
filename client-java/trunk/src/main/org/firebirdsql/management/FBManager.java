@@ -98,7 +98,7 @@ public class FBManager implements FBManagerMBean
         gds = GDSFactory.getGDSForType(type);
       
         c = gds.createDatabaseParameterBuffer();
-        c.addArgument(DatabaseParameterBuffer.NUM_BUFFERS, new byte[] {90});
+//        c.addArgument(DatabaseParameterBuffer.NUM_BUFFERS, new byte[] {90});
         c.addArgument(DatabaseParameterBuffer.DUMMY_PACKET_INTERVAL, new byte[] {120, 10, 0, 0});
         c.addArgument(DatabaseParameterBuffer.SQL_DIALECT, new byte[] {3, 0, 0, 0});
 
