@@ -439,7 +439,7 @@ public class FBManager implements FBManagerMBean
     
     //private methods
     private String getConnectString(String filename) throws GDSException {
-        return GDSFactory.getDatabasePath(((AbstractGDS)gds).getType(), host, port, filename);
+        return GDSFactory.getDatabasePath(type, host, port, filename);
     }
 
 }
