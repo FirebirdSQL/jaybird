@@ -18,6 +18,7 @@
  */
  
 #include <jni.h>
+#include <new>
 #include "exceptions.h"
  
 JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_VariableInitilize(JNIEnv *javaEnvironment, jobject jThis);
