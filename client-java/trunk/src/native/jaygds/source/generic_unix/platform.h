@@ -34,6 +34,7 @@
 #include <string.h>
 #include <stdarg.h>
 
+
 // Defines for fb_binding.h and fb_binding.cpp
 typedef void* SHARED_LIBRARY_HANDLE;
 
@@ -43,5 +44,25 @@ typedef void* SHARED_LIBRARY_HANDLE;
 				throw InternalException("FirebirdApiBinding:Initialize() - Entry-point "#X" not found")
 
 SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name);
+
+void PlatformUnLoadLibrary(SHARED_LIBRARY_HANDLE);
+
+#define OFFSETA(struct, fld)     ((size_t) ((struct) NULL)->fld)
+
+#define DEF_CALL_API(X) \
+    jint pointer_##X=isc_api_handle.GetInt(javaEnvironment,jThis);\
+    prototype_##X *X=interfaceManager.GetInterface(pointer_##X)->X; 
+
+#define CALL_API(X) DEF_CALL_API(X)\
+    Xvoid PlatformUnLoadLibrary(SHARED_LIBRARY_HANDLE);
+
+#define OFFSETA(struct, fld)     ((size_t) ((struct) NULL)->fld)
+
+#define DEF_CALL_API(X) \
+    jint pointer_##X=isc_api_handle.GetInt(javaEnvironment,jThis);\
+    prototype_##X *X=interfaceManager.GetInterface(pointer_##X)->X; 
+
+#define CALL_API(X) DEF_CALL_API(X)\
+    X
 
 #endif // ifndef(_JNGDS__Platform)
