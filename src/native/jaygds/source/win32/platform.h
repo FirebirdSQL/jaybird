@@ -33,7 +33,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#define WIN32_LEAN_AND_MEAN	
+#define WIN32_LEAN_AND_MEAN 
 
 #include <windows.h>
 
@@ -55,10 +55,21 @@ void processFailedEntryPoint(const char* const message);
 
 
 #define FB_ENTRYPOINT(X) \
-			if ((##X = (prototype_##X*)GetProcAddress(sHandle, #X)) == NULL) \
-				processFailedEntryPoint("FirebirdApiBinding:Initialize() - Entry-point "#X" not found")
+            if ((FirebirdApiBinding::X = (prototype_##X*)GetProcAddress(sHandle, #X)) == NULL) \
+                processFailedEntryPoint("FirebirdApiBinding:Initialize() - Entry-point "#X" not found")
 
 SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name);
+
+void PlatformUnLoadLibrary(SHARED_LIBRARY_HANDLE);
+
+#define OFFSETA(struct, fld)     ((size_t) ((struct) NULL)->fld)
+
+#define DEF_CALL_API(X) \
+    jint pointer_##X=isc_api_handle.GetInt(javaEnvironment,jThis);\
+    prototype_##X *X=interfaceManager.GetInterface(pointer_##X)->X; 
+
+#define CALL_API(X) DEF_CALL_API(X)\
+    X
 
 
 #endif // ifndef(_JNGDS__Platform)
