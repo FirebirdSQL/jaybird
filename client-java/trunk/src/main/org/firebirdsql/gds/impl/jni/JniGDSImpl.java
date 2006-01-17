@@ -12,7 +12,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
      * Name of the JNI library able to communicate with the client or embedded
      * server library.
      */
-    public static final String JAYBIRD_JNI_LIBRARY = "jaybird2";
+    public static final String JAYBIRD_JNI_LIBRARY = "jaybird21";
     
     private static Logger log = LoggerFactory.getLogger(JniGDSImpl.class,
             false);
