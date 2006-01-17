@@ -265,7 +265,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getDriverName() throws SQLException {
-        return "JayBird JCA/JDBC driver";
+        return "Jaybird JCA/JDBC driver";
     }
 
 
@@ -276,7 +276,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getDriverVersion() throws SQLException {
-        return "2.0";
+        return "2.1";
     }
 
 
@@ -296,7 +296,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return JDBC driver minor version number
      */
     public  int getDriverMinorVersion() {
-        return 0;
+        return 1;
     }
 
 

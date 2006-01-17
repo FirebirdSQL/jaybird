@@ -53,7 +53,7 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
      * Remove extension parameters in the newly created deep copy of this class.
      * 
      * @return a deep copy of this class where all extension parameters are 
-     * removed; needed to filter JayBird extensions that are not understood by
+     * removed; needed to filter Jaybird extensions that are not understood by
      * Firebird. 
      */
     DatabaseParameterBuffer removeExtensionParams();
