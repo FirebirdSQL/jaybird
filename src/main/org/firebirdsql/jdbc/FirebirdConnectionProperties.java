@@ -173,7 +173,7 @@ public interface FirebirdConnectionProperties {
     void setSocketBufferSize(int socketBufferSize);
 
     /**
-     * @return <code>true</code> if the JayBird 1.0 handling of the calendar
+     * @return <code>true</code> if the Jaybird 1.0 handling of the calendar
      *         in corresponding setters. This is also compatible with MySQL
      *         calendar treatment.
      */
@@ -181,7 +181,7 @@ public interface FirebirdConnectionProperties {
 
     /**
      * @param timestampUsesLocalTimezone
-     *            <code>true</code> if the JayBird 1.0 handling of the
+     *            <code>true</code> if the Jaybird 1.0 handling of the
      *            calendar in corresponding setters. This is also compatible
      *            with MySQL calendar treatment.
      */
@@ -251,7 +251,7 @@ public interface FirebirdConnectionProperties {
      * Set the property that does not have corresponding setter method.
      * 
      * @param propertyMapping
-     *            parameter value in the “propertyName[=propertyValue]” form,
+     *            parameter value in the ?propertyName[=propertyValue]? form,
      *            this allows setting non-standard parameters using
      *            configuration files.
      */

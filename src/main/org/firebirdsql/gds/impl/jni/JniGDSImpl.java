@@ -22,7 +22,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     }
     
     /**
-     * Create instance of this class. This constructor attempts to load JayBird
+     * Create instance of this class. This constructor attempts to load Jaybird
      * JNI library. Subclasses are responsible for initializing JNI layer by 
      * calling {@link #nativeInitilize(String)} method.
      * 
@@ -95,7 +95,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
                 // then we need to throw an exception.
                 if (i == clientLibraryList.length - 1)
                     throw new RuntimeException(
-                            "Failed to initilize JayBird native library. " +
+                            "Failed to initilize Jaybird native library. " +
                             "This is most likley due to a failure to load the " +
                             "firebird client library.");
 
@@ -126,7 +126,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
 
     
     /*
-     * Methods below must have corresponding implementations in the JayBird JNI
+     * Methods below must have corresponding implementations in the Jaybird JNI
      * layer (see code for jaybird2 shared library).
      */
 

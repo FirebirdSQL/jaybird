@@ -455,7 +455,7 @@ public class TestFBResultSet extends FBTestBase {
     
     /**
      * This test case tries to reproduce a NPE reported in Firebird-Java group
-     * by vmdd_tech after JayBird 1.5 beta 1 release.
+     * by vmdd_tech after Jaybird 1.5 beta 1 release.
      *  
      * @throws Exception if something goes wrong.
      */
