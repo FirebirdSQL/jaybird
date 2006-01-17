@@ -30,11 +30,11 @@
 		<equals arg1="${ant.java.version}" arg2="1.5"/>
 	</condition>
 	
-	<property name="Name" value="JayBird"/>
+	<property name="Name" value="Jaybird"/>
     <property name="name" value="jaybird"/>
 
     <property name="version.major" value="2"/>
-    <property name="version.minor" value="0"/>
+    <property name="version.minor" value="1"/>
     <property name="version.revision" value="0"/>
     <property name="version.tag" value=""/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
@@ -42,14 +42,14 @@
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
 
     <!-- This must be set to the CVS tag for any release -->
-    <property name="version.cvstag" value="JayBird_2_0_0"/>
+    <property name="version.cvstag" value="Jaybird_2_1_0"/>
 
     <!-- Manifest version info -->
-    <property name="specification.title" value="Firebird JayBird"/>
+    <property name="specification.title" value="Firebird Jaybird"/>
     <property name="specification.version" value="${version.major}.${version.minor}"/>
     <property name="specification.vendor" value="FirebirdSQL (http://www.firebirdsql.org)"/>
 
-    <property name="implementation.title" value="JayBird"/>
+    <property name="implementation.title" value="Jaybird"/>
     <property name="implementation.url" value="http://www.firebirdsql.org"/>
     <property name="implementation.version"
             value="${version.full} (build: CVSTag=${version.cvstag} date=${build.id})"/>
