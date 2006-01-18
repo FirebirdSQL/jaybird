@@ -1,3 +1,91 @@
+2006-01-17 14:01  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/management/FBManager.java:
+	
+	commented the num_buffers DPB property
+
+2006-01-17 13:59  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBStatementFetcher.java:
+	
+	fixed typo where maxRows setting was ignored
+
+2006-01-17 13:47  rrokytskyy
+
+	* client-java/src/native/jaygds/source/entrypoints_custom.h:
+	
+	fixed MSVC compilation issue with std namespace
+
+2006-01-17 13:42  rrokytskyy
+
+	* client-java/src/native/jaygds/source/: allocator.cpp,
+	entrypoints.cpp, entrypoints_custom.h, entrypoints_generated.h,
+	fb_binding.cpp, interface_manager.h:
+	
+	fixed newline at the end of the file warnings
+
+2006-01-17 13:42  rrokytskyy
+
+	* client-java/src/native/jaygds/source/: generic_unix/platform.cpp,
+	generic_unix/platform.h, solaris/platform.h:
+	
+	fixed "copy-paste" errors with defines
+
+2006-01-17 13:35  rrokytskyy
+
+	* client-java/src/: test/org/firebirdsql/jdbc/TestFBResultSet.java,
+	main/org/firebirdsql/gds/impl/DatabaseParameterBufferExtension.java
+	, main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java,
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/FirebirdConnectionProperties.java,
+	resources/isc_dpb_types.properties,
+	resources/translation/hpux.properties:
+	
+	According to the Firebird admin decision  wording is changed from
+	JayBird to Jaybird
+
+2006-01-17 13:28  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/management/FBManager.java:
+	
+	fixed possible NPE when FBManager is used without being started
+
+2006-01-17 13:26  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java:
+	
+	changed name of the shared library
+
+2006-01-17 12:47  rrokytskyy
+
+	* client-java/src/native/jaygds/source/solaris/: platform.cpp,
+	platform.h:
+	
+	merged with contribution by Evgeny Putilin and Vlad Horsun that
+	allows loading multiple client libraries simultaneously (solaris
+	prototype - not tested)
+
+2006-01-17 12:45  rrokytskyy
+
+	* client-java/src/native/jaygds/source/generic_unix/: platform.cpp,
+	platform.h:
+	
+	merged with contribution by Evgeny Putilin and Vlad Horsun that
+	allows loading multiple client libraries simultaneously (linux
+	fixes)
+
+2006-01-17 12:26  rrokytskyy
+
+	* client-java/src/native/jaygds/source/: win32/platform.cpp,
+	win32/platform.h, entrypoints_generated.h, interface_manager.cpp,
+	locks.cpp, locks.h, entrypoints.cpp, fb_binding.cpp, fb_binding.h,
+	interface_manager.h, jni_helpers.h:
+	
+	merged with contribution of Evgeny Putilin and Vlad Horsun that
+	allows loading multiple client libraries simultaneously
+
 2005-12-29 00:32  gab_reid
 
 	* client-java/src/:
