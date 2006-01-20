@@ -19,7 +19,6 @@
 
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.FBSQLException;
 
 /**
  * Parser for escaped procedure call.

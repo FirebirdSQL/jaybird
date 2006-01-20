@@ -21,7 +21,7 @@ package org.firebirdsql.encodings;
 import java.io.IOException;
 import java.util.*;
 
-import org.firebirdsql.gds.FBSQLException;
+import org.firebirdsql.jdbc.FBSQLException;
 
 /**
  * Class responsible for character translation.

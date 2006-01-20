@@ -40,7 +40,6 @@
  */
 package org.firebirdsql.event;
 
-import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
@@ -50,6 +49,7 @@ import org.firebirdsql.gds.IscDbHandle;
 
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.jdbc.FBSQLException;
 
 import java.util.Map;
 import java.util.Set;

@@ -22,7 +22,7 @@ package org.firebirdsql.pool;
 import java.lang.reflect.*;
 import java.sql.*;
 
-import org.firebirdsql.gds.FBSQLException;
+import org.firebirdsql.jdbc.FBSQLException;
 
 /**
  * Wrapper for prepared statements. This invocation handler notifies statement

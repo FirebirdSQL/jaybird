@@ -24,11 +24,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.jdbc.FBSQLException;
 
 /**
  * Implements the backup and restore functionality of Firebird Services API.
