@@ -22,7 +22,6 @@ package org.firebirdsql.jdbc;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.firebirdsql.gds.FBSQLException;
 
 import junit.framework.TestCase;
 

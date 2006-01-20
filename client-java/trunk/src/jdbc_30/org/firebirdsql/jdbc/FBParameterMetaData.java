@@ -31,7 +31,6 @@ import java.sql.Timestamp;
 import java.sql.Types;
 
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.GDSHelper;

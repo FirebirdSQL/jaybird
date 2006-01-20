@@ -19,7 +19,6 @@
 
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.FBSQLException;
 
 /**
  * This exception is thrown by FBEscapedParser when it cannot parse the

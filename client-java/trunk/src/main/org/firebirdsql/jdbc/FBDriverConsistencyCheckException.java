@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.FBSQLException;
 
 /**
  * Internal driver consistency check failed. This exception is thrown when some

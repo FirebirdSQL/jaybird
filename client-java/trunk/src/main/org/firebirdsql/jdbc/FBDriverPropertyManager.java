@@ -32,7 +32,6 @@ import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.FBSQLException;
 
 
 /**

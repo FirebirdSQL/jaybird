@@ -19,7 +19,7 @@
 
 package org.firebirdsql.pool;
 
-import org.firebirdsql.gds.FBSQLException;
+import org.firebirdsql.jdbc.FBSQLException;
 
 
 /**

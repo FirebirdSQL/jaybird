@@ -25,7 +25,6 @@ import java.sql.*;
 import java.util.Calendar;
 import java.util.Map;
 
-import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.GDSHelper;
 

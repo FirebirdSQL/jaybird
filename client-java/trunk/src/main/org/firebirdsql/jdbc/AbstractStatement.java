@@ -23,7 +23,6 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 import java.util.*;
 
-import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDSException;

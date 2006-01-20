@@ -23,7 +23,6 @@ package org.firebirdsql.jdbc;
 import java.lang.reflect.Constructor;
 
 import org.firebirdsql.gds.ClassFactory;
-import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.FBObjectListener.BlobListener;
 import org.firebirdsql.jdbc.FBObjectListener.StatementListener;

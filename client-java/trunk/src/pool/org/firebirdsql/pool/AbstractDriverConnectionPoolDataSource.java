@@ -25,8 +25,8 @@ import java.util.Properties;
 import javax.naming.*;
 import javax.sql.*;
 
-import org.firebirdsql.gds.FBSQLException;
 import org.firebirdsql.jdbc.FBConnectionHelper;
+import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 

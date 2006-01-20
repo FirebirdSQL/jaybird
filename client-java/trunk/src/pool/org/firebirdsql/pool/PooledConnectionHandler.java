@@ -24,7 +24,7 @@ import java.sql.*;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.firebirdsql.gds.FBSQLException;
+import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 

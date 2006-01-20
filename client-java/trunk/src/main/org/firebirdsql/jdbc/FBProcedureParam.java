@@ -20,7 +20,6 @@ package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 
-import org.firebirdsql.gds.FBSQLException;
 
 
 /**

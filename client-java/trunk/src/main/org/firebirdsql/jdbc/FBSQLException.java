@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.gds;
+package org.firebirdsql.jdbc;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -25,6 +25,8 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 
 import javax.resource.ResourceException;
+
+import org.firebirdsql.gds.GDSException;
 
 /**
  * @author Ken Richard
