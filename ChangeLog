@@ -1,3 +1,53 @@
+2006-01-20 05:09  sjardine
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FBCachedBlob.java,
+	main/org/firebirdsql/jdbc/FBCachedFetcher.java,
+	main/org/firebirdsql/jdbc/FBDataSource.java,
+	main/org/firebirdsql/jdbc/FBDriverConsistencyCheckException.java,
+	main/org/firebirdsql/jdbc/FBDriverNotCapableException.java,
+	main/org/firebirdsql/jdbc/FBDriverPropertyManager.java,
+	main/org/firebirdsql/jdbc/FBMissingParameterException.java,
+	main/org/firebirdsql/jdbc/FBProcedureParam.java,
+	main/org/firebirdsql/jdbc/FBResultSetNotUpdatableException.java,
+	main/org/firebirdsql/jdbc/FBStatementFactory.java,
+	main/org/firebirdsql/jdbc/InternalTransactionCoordinator.java,
+	main/org/firebirdsql/jdbc/field/FBBlobField.java,
+	main/org/firebirdsql/jdbc/field/FBField.java,
+	main/org/firebirdsql/jdbc/field/FBLongVarCharField.java,
+	main/org/firebirdsql/jdbc/field/TranslatingReader.java,
+	main/org/firebirdsql/jdbc/field/TypeConvertionException.java,
+	main/org/firebirdsql/management/FBBackupManager.java,
+	main/org/firebirdsql/management/FBServiceManager.java,
+	main/org/firebirdsql/management/FBUserManager.java,
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBParameterMetaData.java,
+	main/org/firebirdsql/encodings/CharacterTranslator.java,
+	main/org/firebirdsql/event/FBEventManager.java,
+	main/org/firebirdsql/gds/FBSQLException.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/FBEscapedCallParser.java,
+	main/org/firebirdsql/jdbc/FBEscapedParser.java,
+	main/org/firebirdsql/jdbc/FBProcedureCall.java,
+	main/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	main/org/firebirdsql/jdbc/FBRowUpdater.java,
+	main/org/firebirdsql/jdbc/FBSQLException.java,
+	main/org/firebirdsql/jdbc/FBSQLParseException.java,
+	main/org/firebirdsql/jdbc/FBStatementFetcher.java,
+	main/org/firebirdsql/jdbc/FirebirdPreparedStatement.java,
+	pool/org/firebirdsql/pool/AbstractDriverConnectionPoolDataSource.ja
+	va,
+	pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBPooledConnection.java,
+	pool/org/firebirdsql/pool/FBPooledDataSourceFactory.java,
+	pool/org/firebirdsql/pool/ObjectCloseTraceException.java,
+	pool/org/firebirdsql/pool/PooledConnectionHandler.java,
+	pool/org/firebirdsql/pool/PooledPreparedStatementHandler.java,
+	test/org/firebirdsql/jdbc/TestFBEscapedCallParser.java:
+	
+	Moved FBSQLException back to its rightfull package.
+
 2006-01-17 14:01  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/management/FBManager.java:
