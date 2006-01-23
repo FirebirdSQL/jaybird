@@ -83,6 +83,9 @@ public class FBEventManager implements EventManager {
     private List eventQueue = new ArrayList();
     private EventDispatcher eventDispatcher;
 
+    public FBEventManager() {
+    	this(GDSFactory.getDefaultGDSType());
+    }
 
     public FBEventManager(GDSType gdsType){
         gds = GDSFactory.getGDSForType(gdsType);
