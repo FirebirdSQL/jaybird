@@ -1,3 +1,9 @@
+2006-01-23 13:27  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/event/FBEventManager.java:
+	
+	added default constructor
+
 2006-01-20 05:09  sjardine
 
 	* client-java/src/:
