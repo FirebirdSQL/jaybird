@@ -4635,7 +4635,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         checkCatalogAndSchema(catalog, schema);
         String sql = GET_INDEX_INFO;
         ArrayList params = new ArrayList();
-        params.add(table.toUpperCase());
+        params.add(table);
 
         ResultSet rs = doQuery(sql, params);
 
