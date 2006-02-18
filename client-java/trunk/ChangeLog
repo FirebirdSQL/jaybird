@@ -1,3 +1,9 @@
+2006-02-17 04:47  d_jencks
+
+	* client-java/src/resources/META-INF/ra.xml:
+	
+	Issue 1433327.	ra.xml has incorrect credential-interface
+
 2006-01-23 13:27  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/event/FBEventManager.java:
