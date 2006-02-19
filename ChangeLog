@@ -1,3 +1,17 @@
+2006-02-18 15:43  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	merged with HEAD (uppercasing the table name)
+
+2006-02-18 15:39  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	removed uppercasing the table name to handle also quoted names
+
 2006-02-17 04:47  d_jencks
 
 	* client-java/src/resources/META-INF/ra.xml:
