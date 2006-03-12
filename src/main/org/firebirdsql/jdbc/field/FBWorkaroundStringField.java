@@ -86,13 +86,13 @@ public class FBWorkaroundStringField extends FBStringField {
     }
 
     public void setString(String value) throws SQLException {
-        setStringForced(value);
+        byte[] data = setStringForced(value);
 
         if (value == STRING_NULL_VALUE)
             return;
         
-        if (getFieldData().length > field.sqllen && !isSystemTable(field.relname))
-            throw new DataTruncation(-1, true, false, getFieldData().length, field.sqllen);
+        if (data.length > field.sqllen && !isSystemTable(field.relname))
+            throw new DataTruncation(-1, true, false, data.length, field.sqllen);
     }    
     
     /**
@@ -103,12 +103,14 @@ public class FBWorkaroundStringField extends FBStringField {
      * 
      * @throws SQLException if something went wrong.
      */
-    public void setStringForced(String value) throws SQLException {
+    public byte[] setStringForced(String value) throws SQLException {
         if (value == STRING_NULL_VALUE) {
             setNull();
-            return;
+            return null;
         }
-        setFieldData(field.encodeString(value,javaEncoding, mappingPath));
+        byte[] data = field.encodeString(value,javaEncoding, mappingPath);
+        setFieldData(data);
+        return data;
     }   
     
     /**
