@@ -2920,7 +2920,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                     byte[] ipBytes = db.in.readRawBuffer(4);
                     StringBuffer ipBuf = new StringBuffer();
                     for (int i = 3; i >= 0; i--){
-                        ipBuf.append(ipBytes[i]);
+                        ipBuf.append((int)(ipBytes[i] & 0xff));
                         if (i > 0) ipBuf.append(".");
                     }
                     String ipAddress = ipBuf.toString();
