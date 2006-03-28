@@ -32,6 +32,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
+import javax.sql.*;
 import javax.sql.DataSource;
 import javax.sql.PooledConnection;
 
@@ -903,6 +904,31 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             }
         } finally {
             pool.shutdown();
+        }
+    }
+
+    /**
+     * It is not allowed to call "getConnection()" method on a connection that
+     * is in pool.
+     * 
+     * @throws Exception if test did not suceed.
+     */
+    public void testConnectionInLoop() throws Exception {
+        PooledConnection xac = ((ConnectionPoolDataSource) pool).getPooledConnection();
+        
+        try {
+            Connection c = xac.getConnection(); 
+            c.close();
+            
+            try {
+                Connection c2 = xac.getConnection();
+                c2.close();
+                fail("Should not obtain logical connection.");
+            } catch(SQLException ex) {
+                // everything is fine
+            }
+        } finally {        
+            xac.close();
         }
     }
 }
