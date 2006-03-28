@@ -283,6 +283,7 @@ class PooledConnectionQueue {
             	}
             	else {
             		stack.push(connection);
+                    connection.setInPool(true);
                 
             		// save timestamp when connection was returned to queue
             		connectionIdleTime.put(
@@ -439,6 +440,8 @@ class PooledConnectionQueue {
 
         }
 
+        result.setInPool(false);
+        
         return result;
     }
 
