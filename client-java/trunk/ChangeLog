@@ -1,3 +1,13 @@
+2006-03-28 06:48  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java,
+	pool/org/firebirdsql/pool/PooledObject.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+	
+	fixed bug when getConnection() is called on a connection in pool
+
 2006-03-12 08:49  rrokytskyy
 
 	*
