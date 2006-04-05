@@ -54,6 +54,7 @@ public final class isc_svc_handle_impl implements IscSvcHandle {
     private byte[] resp_data;
 
     public isc_svc_handle_impl() {
+        this.invalid = true;
     }
 
     public boolean isValid()
@@ -74,8 +75,8 @@ public final class isc_svc_handle_impl implements IscSvcHandle {
     }
     
     public void setHandle(int rdb_id) {
-        checkValidity();
         this.handle = rdb_id;
+        this.invalid = false;
     }
 
     public int getHandle() {
