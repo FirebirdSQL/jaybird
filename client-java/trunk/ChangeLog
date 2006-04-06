@@ -1,3 +1,18 @@
+2006-04-05 16:25  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/management/:
+	TestBackupManager.java, TestFBStatisticsManager.java:
+	
+	fixed test cases to use configured GDS type instead of default one
+
+2006-04-05 16:22  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/wire/:
+	AbstractJavaGDSImpl.java, isc_svc_handle_impl.java:
+	
+	fixed issues that became visible with FB 2.0 release (internal
+	redirection of the services)
+
 2006-03-28 06:48  rrokytskyy
 
 	* client-java/src/:
