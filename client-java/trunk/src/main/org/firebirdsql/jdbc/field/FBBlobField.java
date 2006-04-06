@@ -154,8 +154,19 @@ public class FBBlobField extends FBField implements FBFlushableField {
     }
 
     public byte[] getCachedObject() throws SQLException {
-        if (getFieldData()==null) 
-            return BYTES_NULL_VALUE;
+        if (getFieldData() == null) {
+            
+            if (bytes != null)
+                return bytes;
+            else
+            if (binaryStream != null)
+                throw new FBDriverNotCapableException();
+            else
+            if (characterStream != null)
+                throw new FBDriverNotCapableException();
+            else
+                return BYTES_NULL_VALUE;
+        }
 
 		  return getBytesInternal();
     }
