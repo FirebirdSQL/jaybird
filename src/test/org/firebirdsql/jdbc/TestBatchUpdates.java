@@ -18,9 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.io.StringReader;
 import java.sql.*;
-import java.sql.Connection;
-import java.sql.Statement;
 
 import org.firebirdsql.common.FBTestBase;
 
@@ -38,7 +37,7 @@ public class TestBatchUpdates extends FBTestBase {
     public static final String CREATE_TABLE = ""
         + "CREATE TABLE batch_updates("
         + "  id INTEGER, "
-        + "  str_value VARCHAR(20)"
+        + "  str_value BLOB"
         + ")"
         ;
     
@@ -132,11 +131,20 @@ public class TestBatchUpdates extends FBTestBase {
             ps.setInt(1, 1);
             ps.setString(2, "test");
             ps.addBatch();
+
+            try {
+                ps.setInt(1, 3);
+                ps.setCharacterStream(2, new StringReader("should fail"), 11);
+                ps.addBatch();
+                fail("Should throw an exception");
+            } catch(SQLException ex) {
+                // everything is ok
+            }
             
             ps.setInt(1, 2);
             ps.setString(2, "another");
             ps.addBatch();
-            
+
             ps.executeBatch();
             
             Statement stmt = connection.createStatement();

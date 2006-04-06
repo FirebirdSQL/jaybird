@@ -761,6 +761,10 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         XSQLVAR[] newXsqlvar = new XSQLVAR[oldXsqlvar.length];
         for (int i = 0; i < newXsqlvar.length; i++) {
             newXsqlvar[i] = oldXsqlvar[i].deepCopy();
+
+            FBField field = getField(i + 1);
+            if (field instanceof FBFlushableField)
+                newXsqlvar[i].sqldata = ((FBFlushableField)field).getCachedObject();
         }
 
         batchList.add(newXsqlvar);
@@ -849,7 +853,14 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
 
                         XSQLVAR[] vars = fixedStmt.getInSqlda().sqlvar;
                         for (int i = 0; i < vars.length; i++) {
-                            vars[i].copyFrom(data[i]);
+                            FBField field = getField(i + 1);
+                            if (field instanceof FBFlushableField) {
+                                vars[i].copyFrom(data[i], false);
+                                field.setBytes(data[i].sqldata);
+                            } else {
+                                vars[i].copyFrom(data[i], true);
+                            }
+                                
                             isParamSet[i] = true;
                         }
 
