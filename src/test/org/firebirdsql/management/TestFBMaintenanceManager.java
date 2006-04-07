@@ -61,6 +61,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
         maintenanceManager = new FBMaintenanceManager(getGdsType());
         if (!"EMBEDDED".equalsIgnoreCase(gdsType) && !"LOCAL".equalsIgnoreCase(gdsType)) {
             maintenanceManager.setHost(DB_SERVER_URL);
+            maintenanceManager.setPort(DB_SERVER_PORT);
         }
         
         maintenanceManager.setUser(DB_USER);
