@@ -45,6 +45,7 @@ public class TestFBStatisticsManager extends FBTestBase {
     
         statManager = new FBStatisticsManager(getGdsType());
         statManager.setHost(DB_SERVER_URL);
+        statManager.setPort(DB_SERVER_PORT);
         statManager.setUser(DB_USER);
         statManager.setPassword(DB_PASSWORD);
         statManager.setDatabase(getDatabasePath());
