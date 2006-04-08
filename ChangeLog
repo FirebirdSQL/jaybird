@@ -1,3 +1,11 @@
+2006-04-07 23:10  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/management/:
+	TestBackupManager.java, TestFBMaintenanceManager.java,
+	TestFBStatisticsManager.java, TestUserManager.java:
+	
+	fixed port specification for the test cases
+
 2006-04-07 00:02  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/gds/XSQLVAR.java:
