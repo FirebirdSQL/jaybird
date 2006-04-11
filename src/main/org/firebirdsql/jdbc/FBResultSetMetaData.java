@@ -684,7 +684,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
         + ", F.RDB$FIELD_PRECISION as FIELD_PRECISION"
         + ", F.RDB$FIELD_SCALE as FIELD_SCALE"
         + ", F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE"
-        + ", F.RDB$CHARACTER_LENGTH as CHARACTER_LENGTH"
+        + ", F.RDB$CHARACTER_LENGTH as CHAR_LEN"
         + ", F.RDB$CHARACTER_SET_ID as CHARACTER_SET_ID"
         + " FROM"
         + "  RDB$RELATION_FIELDS RF "
@@ -838,7 +838,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
                     fieldInfo.fieldScale = rs.getInt("FIELD_SCALE");
                     fieldInfo.fieldSubtype = rs.getInt("FIELD_SUB_TYPE");
                     fieldInfo.characterSetId = rs.getInt("CHARACTER_SET_ID");
-                    fieldInfo.characterLength = rs.getInt("CHARACTER_LENGTH");
+                    fieldInfo.characterLength = rs.getInt("CHAR_LEN");
 
                     if (rs.wasNull())
                         fieldInfo.characterLength =
