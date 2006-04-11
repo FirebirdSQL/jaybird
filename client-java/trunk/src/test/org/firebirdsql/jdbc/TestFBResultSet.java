@@ -880,15 +880,6 @@ public class TestFBResultSet extends FBTestBase {
     public void testHoldability() throws Exception {
         ((FirebirdConnection)connection).setHoldability(FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT);
         
-        try {
-            Statement stmt = connection.createStatement(
-                    ResultSet.TYPE_FORWARD_ONLY,
-                    ResultSet.CONCUR_READ_ONLY);
-            
-            fail("Holdable cursor is not compatible with forward-only result set.");
-        } catch(FBDriverNotCapableException ex) {
-            // everything is ok
-        }
         
         Statement stmt = connection.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE, 
