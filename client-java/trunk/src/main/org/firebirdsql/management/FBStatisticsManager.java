@@ -63,6 +63,10 @@ import org.firebirdsql.gds.impl.GDSType;
 public class FBStatisticsManager extends FBServiceManager 
                                 implements StatisticsManager {
 
+    private static final int possibleStatistics = 
+        DATA_TABLE_STATISTICS | SYSTEM_TABLE_STATISTICS | INDEX_STATISTICS |
+        RECORD_VERSION_STATISTICS;
+
     /**
      * Create a new instance of <code>FBMaintenanceManager</code> based on
      * the default GDSType.
@@ -149,9 +153,7 @@ public class FBStatisticsManager extends FBServiceManager
      *        <code>INDEX_STATISTICS</code>. Can also be <code>0</code>.
      */
     public void getDatabaseStatistics(int options) throws SQLException {
-        final int possible = DATA_TABLE_STATISTICS 
-            | SYSTEM_TABLE_STATISTICS | INDEX_STATISTICS;
-        if (options != 0 && (options | possible) != possible){
+        if (options != 0 && (options | possibleStatistics) != possibleStatistics){
             throw new IllegalArgumentException("options must be 0 or a " 
                     + "combination of DATA_TABLE_STATISTICS, "
                     + "SYSTEM_TABLE_STATISTICS, INDEX_STATISTICS, or 0");
@@ -164,7 +166,40 @@ public class FBStatisticsManager extends FBServiceManager
         executeServicesOperation(srb);
     }
 
+    /**
+     * Get the table statistics. The statistics information is written
+     * to this <code>StatisticsManager</code>'s logger.
+     * <p>
+     * The listed data includes:
+     * <ul>
+     *      <li>the primary pointer and index root page numbers 
+     *      <li>number of data pages and their average fill
+     *      <li>fill distribution
+     * </ul>
+     * <p>
+     * Invoking this method is equivalent to the behaviour of 
+     * <code>gstat -t <table name></code> on the command-line.
+     * 
+     * @param tableNames array of table names to analyze.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    public void getTableStatistics(String[] tableName) throws SQLException {
+        ServiceRequestBuffer srb = createStatsSRB(ISCConstants.isc_spb_sts_table);
 
+        // create space-separated list of tables
+        StringBuffer commandLine = new StringBuffer();
+        for (int i = 0; i < tableName.length; i++) {
+            commandLine.append(tableName[i]);
+            if (i < tableName.length - 1)
+                commandLine.append(' ');
+        }
+        
+        //FIXME should be isc_spb_command_line, but FB 2.0 does not like it
+        srb.addArgument(ISCConstants.isc_spb_command_line, commandLine.toString());
+        
+        executeServicesOperation(srb);
+    }
 
 
     //---------- Private implementation methods -----------------
