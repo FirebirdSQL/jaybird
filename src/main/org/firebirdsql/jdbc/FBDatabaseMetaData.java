@@ -2794,9 +2794,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         switch (fieldType) {
             case smallint_type:
-                return Types.SMALLINT;
+                if (fieldSubType == 1)
+                    return Types.NUMERIC;
+                else if (fieldSubType == 2)
+                    return Types.DECIMAL;
+                else
+                    return Types.SMALLINT;
             case integer_type:
-                return Types.INTEGER;
+                if (fieldSubType == 1)
+                    return Types.NUMERIC;
+                else if (fieldSubType == 2)
+                    return Types.DECIMAL;
+                else
+                    return Types.INTEGER;
             case double_type:
             case d_float_type:
                 return Types.DOUBLE;
