@@ -2676,48 +2676,57 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 case Types.DECIMAL:
                 case Types.NUMERIC:
                    row[6] = xsqlvars[0].encodeInt(rs.getShort("FIELD_PRECISION"));
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
                    row[6] = xsqlvars[0].encodeInt(rs.getShort("CHAR_LEN"));
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
                    break;
                 case Types.FLOAT:
                    row[6] = xsqlvars[0].encodeInt(7);
+                   row[8] = xsqlvars[0].encodeInt(7);
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.DOUBLE:
                    row[6] = xsqlvars[0].encodeInt(15);
+                   row[8] = xsqlvars[0].encodeInt(15);
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.INTEGER:
                    row[6] = xsqlvars[0].encodeInt(10);
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.SMALLINT:
                    row[6] = xsqlvars[0].encodeInt(5);
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.DATE:
                    row[6] = xsqlvars[0].encodeInt(10);
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.TIME:
                    row[6] = xsqlvars[0].encodeInt(8);
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.TIMESTAMP:
                    row[6] = xsqlvars[0].encodeInt(19);
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 default:
                    row[6] = xsqlvars[0].encodeInt(0);
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                }
 
             row[7] = xsqlvars[0].encodeShort((short) 0);
-            row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
             row[9] = xsqlvars[0].encodeInt(10);
 
             short nullFlag = rs.getShort("NULL_FLAG");
