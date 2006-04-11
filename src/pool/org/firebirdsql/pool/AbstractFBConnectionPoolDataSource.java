@@ -805,6 +805,14 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
         connectionProperties.setUseTranslation(translationPath);
     }
 
+    public boolean isDefaultResultSetHoldable() {
+        return connectionProperties.isDefaultResultSetHoldable();
+    }
+
+    public void setDefaultResultSetHoldable(boolean isHoldable) {
+        checkNotStarted();
+        connectionProperties.setDefaultResultSetHoldable(isHoldable);
+    }
     
     protected static final String REF_PROPERTIES = "properties";
     protected static final String REF_NON_STANDARD_PROPERTY = "nonStandard";
@@ -848,5 +856,6 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
     protected BasicAbstractConnectionPool createObjectInstance() {
         return FBPooledDataSourceFactory.createFBConnectionPoolDataSource();
     }
+
 
 }

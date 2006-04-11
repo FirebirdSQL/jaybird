@@ -47,6 +47,7 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
     int LOCAL_ENCODING          = ISCConstants.isc_dpb_local_encoding;
     int MAPPING_PATH            = ISCConstants.isc_dpb_mapping_path;
     int NO_RESULT_SET_TRACKING  = ISCConstants.isc_dpb_no_result_set_tracking;
+    int RESULT_SET_HOLDABLE     = ISCConstants.isc_dpb_result_set_holdable;
     
 
     /**

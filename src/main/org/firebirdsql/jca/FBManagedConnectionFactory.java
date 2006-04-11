@@ -353,6 +353,14 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         connectionProperties.setUseTranslation(translationPath);        
     }
 
+    public boolean isDefaultResultSetHoldable() {
+        return connectionProperties.isDefaultResultSetHoldable();
+    }
+
+    public void setDefaultResultSetHoldable(boolean isHoldable) {
+        connectionProperties.setDefaultResultSetHoldable(isHoldable);
+    }
+
     public void setDefaultConnectionManager(ConnectionManager defaultCm) {
         this.defaultCm = defaultCm;
     }
