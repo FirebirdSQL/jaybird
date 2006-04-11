@@ -30,6 +30,7 @@ public class EncodingFactory {
       , { 1, 1}   // OCTETS
       , { 2, 1}   // ASCII
       , { 3, 3}   // UNICODE_FSS
+      , { 4, 4}   // UTF8 
       , { 5, 2}   // SJIS_0208
       , { 6, 2}   // EUJC_0208
       , { 9, 1}   // DOS737
@@ -70,6 +71,9 @@ public class EncodingFactory {
       , {58, 1}   // WIN1255
       , {59, 1}   // WIN1256
       , {60, 1}   // WIN1257
+      , {63, 1}   // KOI8R
+      , {64, 1}   // KOI8U
+      , {65, 1}   // WIN1258
   };
     /**
      * Default mapping table, provides an "identity" mapping.
@@ -383,6 +387,13 @@ public class EncodingFactory {
         Iterator iterator = props.keySet().iterator();
         while(iterator.hasNext()) {
             String iscEncoding = (String)iterator.next();
+            
+            // special handling for UTF8 and UNICODE_FSS encodings
+            // since UTF8 is an alias for UNICODE_FSS in Firebird 1.x
+            // it is safe to return UTF8 for all cases
+            if ("UNICODE_FSS".equals(iscEncoding))
+                continue;
+            
             String javaEncoding = (String)props.get(iscEncoding);
             javaEncodings.put(javaEncoding, iscEncoding);
         }
