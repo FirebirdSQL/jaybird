@@ -650,6 +650,14 @@ public class FBWrappingDataSource implements DataSource,
     public void setUseTranslation(String translationPath) {
         getPool().setUseTranslation(translationPath);
     }
+    
+    public boolean isDefaultResultSetHoldable() {
+        return getPool().isDefaultResultSetHoldable();
+    }
+
+    public void setDefaultResultSetHoldable(boolean isHoldable) {
+        getPool().setDefaultResultSetHoldable(isHoldable);
+    }
 
     /*
      * JNDI-related code. 

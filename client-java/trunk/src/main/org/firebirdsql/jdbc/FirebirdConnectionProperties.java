@@ -366,4 +366,7 @@ public interface FirebirdConnectionProperties {
      */
     void setTransactionParameters(int isolation, TransactionParameterBuffer tpb);
     
+    boolean isDefaultResultSetHoldable();
+    
+    void setDefaultResultSetHoldable(boolean isHoldable);
 }

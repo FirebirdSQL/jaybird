@@ -71,6 +71,13 @@ public abstract class AbstractConnection implements FirebirdConnection {
         this.mc = mc;
         
         this.txCoordinator = new InternalTransactionCoordinator();
+        
+        FBConnectionRequestInfo cri = (FBConnectionRequestInfo)mc.getConnectionRequestInfo();
+        
+        if (cri.hasArgument(DatabaseParameterBufferExtension.RESULT_SET_HOLDABLE))
+            resultSetHoldability = ResultSet.HOLD_CURSORS_OVER_COMMIT;
+        else
+            resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
     
     public FBObjectListener.StatementListener getStatementListener() {
@@ -740,11 +747,16 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized Statement createStatement(int resultSetType, 
         int resultSetConcurrency, int resultSetHoldability) throws SQLException 
     {
+        if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT && 
+                resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
+
+            addWarning(new FBSQLWarning("Holdable result set must be scrollable."));
+            resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+        }
+        
         if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE) {
             addWarning(new FBSQLWarning("Unsupported type and/or concurrency"));
-            
-            if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
-                resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+            resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
         }			  
           
         checkHoldability(resultSetType, resultSetHoldability);
@@ -824,6 +836,14 @@ public abstract class AbstractConnection implements FirebirdConnection {
         int resultSetType, int resultSetConcurrency, int resultSetHoldability, boolean metaData) throws SQLException 
     {
           PreparedStatement stmt;
+          
+          if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT && 
+                  resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
+
+              addWarning(new FBSQLWarning("Holdable result set must be scrollable."));
+              resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+          }
+
 		  if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
 		  {
 		      addWarning(new FBSQLWarning("resultSetType or resultSetConcurrency changed"));
@@ -883,14 +903,23 @@ public abstract class AbstractConnection implements FirebirdConnection {
         int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException 
     {
         CallableStatement stmt;
-		if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE && 
-            resultSetConcurrency != ResultSet.CONCUR_READ_ONLY)
+        
+        if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT && 
+                resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
+
+            addWarning(new FBSQLWarning("Holdable result set must be scrollable."));
+            resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+        }
+        
+		if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
 		{
-            addWarning(new FBSQLWarning("resultSetType or resultSetConcurrency changed"));
-            
-            if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
-                resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-            
+            addWarning(new FBSQLWarning("Scroll-sensitive result sets are not supported."));
+            resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+        }
+        
+        if (resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) {
+            addWarning(new FBSQLWarning(
+                "Updatable result sets from stored procedures are not supported."));
             resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
         }	
 
