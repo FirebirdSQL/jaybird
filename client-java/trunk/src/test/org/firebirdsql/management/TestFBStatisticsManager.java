@@ -132,4 +132,18 @@ public class TestFBStatisticsManager extends FBTestBase {
                 statistics.indexOf("RDB$DATABASE") != -1);
     }
 
+    public void testGetTableStatistics() throws SQLException {
+        
+        createTestTable();
+        statManager.getTableStatistics(new String[]{"TEST"});
+        String statistics = loggingStream.toString();
+
+        System.out.println(statistics);
+        
+        assertTrue("The database page analysis must be in the statistics",
+                statistics.indexOf("Data pages") != -1);
+
+        assertTrue("The table name must be in the statistics",
+            statistics.indexOf("TEST") != -1);
+    }
 }
