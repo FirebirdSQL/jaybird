@@ -356,7 +356,7 @@ class PooledConnectionQueue {
                                 "blocking timeout (" + blockingTimeout + " ms)");
                                 
                             if (pendingExceptions != null)
-                                ex.setNextException(ex);
+                                ex.setNextException(pendingExceptions);
                             
                             throw ex;
                         };
