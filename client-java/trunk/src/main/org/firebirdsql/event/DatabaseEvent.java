@@ -61,4 +61,3 @@ public interface DatabaseEvent {
      */
     public int getEventCount();
 }
-
