@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.*;
+import java.util.Properties;
 
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.ISCConstants;
@@ -345,5 +346,33 @@ public class TestFBConnection extends FBTestBase {
             connection.close();
         }
         
+    }
+    
+    public void testDefaultHoldableResultSet() throws Exception {
+        Properties props = getDefaultPropertiesForConnection();
+        props.put("defaultHoldable", "");
+        
+        Class.forName(FBDriver.class.getName());
+        Connection connection = DriverManager.getConnection(getUrl(), props);
+        try {
+            
+            Statement stmt1 = connection.createStatement();
+            assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, stmt1.getResultSetHoldability());
+            
+            Statement stmt2 = connection.createStatement();
+            
+            ResultSet rs1 = stmt1.executeQuery(
+                "SELECT rdb$collation_name, rdb$character_set_id FROM rdb$collations");
+            while(rs1.next()) {
+                ResultSet rs2 = stmt2.executeQuery(
+                    "SELECT rdb$character_set_name FROM rdb$character_sets " +
+                    "WHERE rdb$character_set_id = " + rs1.getInt(2));
+                
+                assertTrue("Should find corresponding charset.", rs2.next());
+            }
+            
+        } finally {
+            connection.close();
+        }
     }
 }
