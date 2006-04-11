@@ -264,6 +264,9 @@ public interface ServiceRequestBuffer {
     int STATS_HEADER_PAGES              = ISCConstants.isc_spb_sts_hdr_pages;
     int STATS_INDEX_PAGES               = ISCConstants.isc_spb_sts_idx_pages;
     int STATS_SYSTEM_RELATIONS          = ISCConstants.isc_spb_sts_sys_relations;
+    int STATS_RECORD_VERSIONS           = ISCConstants.isc_spb_sts_record_versions;
+    int STATS_TABLE                     = ISCConstants.isc_spb_sts_table;
+    int STATS_NOCREATION                = ISCConstants.isc_spb_sts_nocreation;
     
     
     /**
