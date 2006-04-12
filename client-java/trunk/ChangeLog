@@ -1,3 +1,123 @@
+2006-04-11 16:39  rrokytskyy
+
+	*
+	client-java/src/pool/org/firebirdsql/pool/PooledConnectionQueue.jav
+	a:
+	
+	fixed exception chaining logic
+
+2006-04-11 16:38  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/event/DatabaseEvent.java:
+	
+	possible problems with CVS (re-committed same code)
+
+2006-04-11 16:35  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	fixed bug with column names and case-sensitivity for table names
+
+2006-04-11 16:07  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	fixed the NUMERIC and DECIMAL type mapping for 16- and 32-bit
+	numbers
+
+2006-04-11 15:54  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+	
+	Fixed name of the column, since CHARACTER_LENGTH is reserved now.
+
+2006-04-11 15:52  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FBBlob.java,
+	field/FBBlobField.java:
+	
+	optimized FBField.getBytes() for Blob fields
+
+2006-04-11 15:48  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/management/TestFBStatisticsMan
+	ager.java:
+	
+	added record version statistics and statistics for the specific
+	table
+
+2006-04-11 15:36  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+	
+	adapted test case to a changed functionality
+
+2006-04-11 15:22  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBConnection.java:
+	
+	added new property to set default result set holdability
+
+2006-04-11 14:31  rrokytskyy
+
+	* client-java/src/resources/META-INF/ra.xml:
+	
+	fixed data types for the config properties
+
+2006-04-11 14:19  rrokytskyy
+
+	* client-java/src/resources/: driver_property_info.properties,
+	isc_dpb_types.properties:
+	
+	added new property to set default result set holdability
+
+2006-04-11 14:18  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	management/FBStatisticsManager.java,
+	management/StatisticsManager.java, gds/ServiceRequestBuffer.java:
+	
+	added record version statistics and statistics for the specific
+	table
+
+2006-04-11 14:16  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/gds/impl/DatabaseParameterBufferExtension.java
+	,
+	main/org/firebirdsql/gds/impl/jni/DatabaseParameterBufferImp.java,
+	main/org/firebirdsql/gds/impl/wire/DatabaseParameterBufferImp.java,
+	main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/FBConnectionProperties.java,
+	main/org/firebirdsql/jdbc/FirebirdConnectionProperties.java,
+	pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBSimpleDataSource.java,
+	pool/org/firebirdsql/pool/FBWrappingDataSource.java:
+	
+	added new property to set default result set holdability
+
+2006-04-11 14:14  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/encodings/EncodingFactory.java,
+	resources/isc_encoding_size.properties,
+	resources/isc_encodings.properties:
+	
+	fixed support of the UTF8 type
+
+2006-04-11 14:13  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	fixed the value of the DECIMAL_DIGITS column for double precision
+	columns (bug #1449499)
+
 2006-04-07 23:10  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/management/:
