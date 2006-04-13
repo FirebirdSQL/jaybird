@@ -33,12 +33,10 @@ import javax.naming.InitialContext;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.sql.*;
-import javax.sql.DataSource;
-import javax.sql.PooledConnection;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.gds.ClassFactory;
-import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.*;
+import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.FirebirdPreparedStatement;
 
 /**
@@ -929,6 +927,33 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             }
         } finally {        
             xac.close();
+        }
+    }
+    
+    /**
+     * Check whether pool can load custom TPB mapping.
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testCustomTpbMapping() throws Exception {
+        AbstractFBConnectionPoolDataSource fbPool = (AbstractFBConnectionPoolDataSource)pool;
+        fbPool.setTpbMapping("org.firebirdsql.pool.pool_tpb_mapping");
+        
+        try {
+            FirebirdConnection connection1 = 
+                (FirebirdConnection)fbPool.getPooledConnection().getConnection();
+            
+            try {
+                TransactionParameterBuffer tpb = connection1.getTransactionParameters(
+                    Connection.TRANSACTION_READ_COMMITTED);
+
+                assertTrue(tpb.hasArgument(TransactionParameterBuffer.NOWAIT));
+                
+            } finally {
+                connection1.close();
+            }
+        } finally {
+            pool.shutdown();
         }
     }
 }
