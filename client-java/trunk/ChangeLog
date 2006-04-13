@@ -1,3 +1,10 @@
+2006-04-13 16:42  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/pool/:
+	TestFBConnectionPoolDataSource.java, pool_tpb_mapping.properties:
+	
+	added test case to check the custom TPB mapping
+
 2006-04-11 16:39  rrokytskyy
 
 	*
