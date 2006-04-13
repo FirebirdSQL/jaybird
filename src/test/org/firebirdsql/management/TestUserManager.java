@@ -61,7 +61,6 @@ public class TestUserManager extends FBTestBase {
         // Initialize the UserManager.
         UserManager userManager = new FBUserManager(getGdsType());
         userManager.setHost(DB_SERVER_URL);
-        userManager.setPort(DB_SERVER_PORT);
         userManager.setUser(DB_USER);
         userManager.setPassword(DB_PASSWORD);
 

@@ -188,7 +188,7 @@ class FBStatementFetcher implements FBFetcher {
 
             int maxRows = 0;
 
-            if (this.maxRows != 0) maxRows = this.maxRows - rowNum;
+            if (maxRows != 0) maxRows = this.maxRows - rowNum;
 
             int fetchSize = this.fetchSize;
             if (fetchSize == 0) fetchSize = MAX_FETCH_ROWS;

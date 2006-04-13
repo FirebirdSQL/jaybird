@@ -71,8 +71,6 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
     private GDSServerVersion serverVersion;
     private int ODSMajorVersion = 0;
     private int ODSMinorVersion = 0;
-
-    EventCoordinator eventCoordinator = null;
 	 
     public isc_db_handle_impl() {
     }

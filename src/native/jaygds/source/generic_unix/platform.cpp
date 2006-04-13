@@ -27,10 +27,7 @@
 
 #include "exceptions.h"
 
-void processFailedEntryPoint(const char* const message)
-    {
-    throw InternalException(message);
-    }
+
 
 SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name)
 	{
@@ -41,8 +38,3 @@ SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name)
 			}
 	return handle; 
 	}
-	
-	void PlatformUnLoadLibrary(SHARED_LIBRARY_HANDLE handle)
-    {
-    	dlclose(handle);
-    }

@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 
-
 /**
  * Exception notifying developer that not all parameters were set when calling
  * the prepared statement.

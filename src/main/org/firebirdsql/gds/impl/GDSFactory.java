@@ -26,6 +26,7 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.impl.wire.JavaGDSImpl;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -42,7 +43,7 @@ import java.util.*;
  */
 public class GDSFactory {
 
-    private static Logger log = LoggerFactory.getLogger(GDSFactory.class,
+    private static Logger log = LoggerFactory.getLogger(JavaGDSImpl.class,
         false);
 
     /**

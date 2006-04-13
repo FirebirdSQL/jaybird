@@ -75,15 +75,6 @@ public interface StatisticsManager extends ServiceManager {
      * Request statistics on system tables.
      */
     public static final int SYSTEM_TABLE_STATISTICS = ISCConstants.isc_spb_sts_sys_relations;
-    
-    /**
-     * Request statistics on record versions.
-     */
-    public static final int RECORD_VERSION_STATISTICS = ISCConstants.isc_spb_sts_record_versions;
-    
-    /**
-     * Request statistics on 
-     */
 
     /**
      * Fetch the database statistics header page. The header information is
@@ -107,7 +98,7 @@ public interface StatisticsManager extends ServiceManager {
      * </ul>
      * <p>
      * Invoking this method is equivalent to the default behaviour of 
-     * <code>gstat</code> on the command-line.
+     * <code>gfix</code> on the command-line.
      *
      * @throws SQLException if a database access error occurs
      */
@@ -135,23 +126,4 @@ public interface StatisticsManager extends ServiceManager {
      */
     public void getDatabaseStatistics(int options) throws SQLException;
 
-    /**
-     * Get the table statistics. The statistics information is written
-     * to this <code>StatisticsManager</code>'s logger.
-     * <p>
-     * The listed data includes:
-     * <ul>
-     *      <li>the primary pointer and index root page numbers 
-     *      <li>number of data pages and their average fill
-     *      <li>fill distribution
-     * </ul>
-     * <p>
-     * Invoking this method is equivalent to the behaviour of 
-     * <code>gstat -t <table name></code> on the command-line.
-     * 
-     * @param tableNames array of table names to analyze.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    public void getTableStatistics(String[] tableNames) throws SQLException;
 }

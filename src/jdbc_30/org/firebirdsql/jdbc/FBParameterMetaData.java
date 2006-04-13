@@ -20,20 +20,21 @@
 package org.firebirdsql.jdbc;
 
 
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.impl.GDSHelper;
+
 import java.math.BigDecimal;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Date;
+
 import java.sql.ParameterMetaData;
+
+import java.sql.Blob;
+import java.sql.Array;
+import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-
-import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * Describe class <code>FBParameterMetaData</code> here.
@@ -83,7 +84,7 @@ public class FBParameterMetaData implements ParameterMetaData {
     /**
      * Retrieves whether null values are allowed in the designated parameter.
      *
-     * @param parameter the first parameter is 1, the second is 2, ...
+     * @param param the first parameter is 1, the second is 2, ...
      * @return the nullability status of the given parameter; one of
      *        <code>ParameterMetaData.parameterNoNulls</code>,
      *        <code>ParameterMetaData.parameterNullable</code>, or
@@ -147,8 +148,8 @@ public class FBParameterMetaData implements ParameterMetaData {
                 XSQLVAR var = getXsqlvar(parameter);
                 int charset = var.sqlsubtype & 0xFF;
                 int charSetSize = charset == 127 /* CS_dynamic */ ?
-                    EncodingFactory.getIscEncodingSize(getIscEncoding()) :
-                    EncodingFactory.getCharacterSetSize(charset);
+                    FBConnectionHelper.getIscEncodingSize(getIscEncoding()) :
+                    FBConnectionHelper.getCharacterSetSize(charset);
                 return var.sqllen / charSetSize;
             }
 
@@ -175,7 +176,7 @@ public class FBParameterMetaData implements ParameterMetaData {
     /**
      * Retrieves the designated parameter's number of digits to right of the decimal point.
      *
-     * @param parameter the first parameter is 1, the second is 2, ...
+     * @param param the first parameter is 1, the second is 2, ...
      * @return scale
      * @exception SQLException if a database access error occurs
      * @since 1.4

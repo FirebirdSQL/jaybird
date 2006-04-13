@@ -23,9 +23,9 @@ import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.jdbc.FBConnectionHelper;
 
 
 /**
@@ -77,7 +77,7 @@ public class FBWorkaroundStringField extends FBStringField {
     public void setConnection(GDSHelper gdsHelper) {
         super.setConnection(gdsHelper);
 
-        bytesPerCharacter = EncodingFactory.getIscEncodingSize(iscEncoding);
+        bytesPerCharacter = FBConnectionHelper.getIscEncodingSize(iscEncoding);
         possibleCharLength = field.sqllen / bytesPerCharacter;
     }
     
@@ -86,13 +86,13 @@ public class FBWorkaroundStringField extends FBStringField {
     }
 
     public void setString(String value) throws SQLException {
-        byte[] data = setStringForced(value);
+        setStringForced(value);
 
         if (value == STRING_NULL_VALUE)
             return;
         
-        if (data.length > field.sqllen && !isSystemTable(field.relname))
-            throw new DataTruncation(-1, true, false, data.length, field.sqllen);
+        if (getFieldData().length > field.sqllen && !isSystemTable(field.relname))
+            throw new DataTruncation(-1, true, false, getFieldData().length, field.sqllen);
     }    
     
     /**
@@ -103,14 +103,12 @@ public class FBWorkaroundStringField extends FBStringField {
      * 
      * @throws SQLException if something went wrong.
      */
-    public byte[] setStringForced(String value) throws SQLException {
+    public void setStringForced(String value) throws SQLException {
         if (value == STRING_NULL_VALUE) {
             setNull();
-            return null;
+            return;
         }
-        byte[] data = field.encodeString(value,javaEncoding, mappingPath);
-        setFieldData(data);
-        return data;
+        setFieldData(field.encodeString(value,javaEncoding, mappingPath));
     }   
     
     /**

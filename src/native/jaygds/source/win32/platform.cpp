@@ -28,23 +28,16 @@
 #include "exceptions.h"
 
 void processFailedEntryPoint(const char* const message)
-    {
-    throw InternalException(message);
-    }
+	{
+	throw InternalException(message);
+	}
 
 SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name)
-    {
+	{
     SHARED_LIBRARY_HANDLE handle = LoadLibrary(name);
-    if (handle == NULL) 
-            { 
-            throw InternalException("FirebirdApiBinding::Initialize - Could not find or load the GDS32.DLL"); 
-            }
-    return handle; 
-    }
-
-
-    void PlatformUnLoadLibrary(SHARED_LIBRARY_HANDLE handle)
-    {
-        FreeLibrary(handle);
-
-    }
+	if (handle == NULL) 
+			{ 
+			throw InternalException("FirebirdApiBinding::Initialize - Could not find or load the GDS32.DLL"); 
+			}
+	return handle; 
+	}

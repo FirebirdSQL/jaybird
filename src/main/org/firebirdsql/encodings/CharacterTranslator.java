@@ -18,10 +18,17 @@
  */
 package org.firebirdsql.encodings;
 
-import java.io.IOException;
-import java.util.*;
+import java.sql.SQLException;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.Properties;
+import java.util.ResourceBundle;
 
 import org.firebirdsql.jdbc.FBSQLException;
+
 
 /**
  * Class responsible for character translation.
@@ -65,7 +72,7 @@ public class CharacterTranslator {
      * @throws IOException if I/O error occured or specified mapping is 
      * incorrect or cannot be found.
      */
-    public void init(String mappingPath) throws FBSQLException {
+    public void init(String mappingPath) throws SQLException {
         
         Properties props = new Properties();
 
@@ -88,17 +95,17 @@ public class CharacterTranslator {
                 String value = (String)entry.getValue();
                 
                 if (!key.startsWith("db."))
-                    throw new FBSQLException("Incorrect mapping format. " +
+                    throw new SQLException("Incorrect mapping format. " +
                             "All properties should start with \"db.\", but " + 
                             key + " found.");
                 
                 if (key.length() != 4)
-                    throw new FBSQLException("Incorrect mapping format. " +
+                    throw new SQLException("Incorrect mapping format. " +
                             "Key should consist only of 4 characters, but " + 
                             key + " found.");
                 
                 if (value.length() != 1)
-                    throw new FBSQLException("Incorrect mapping format. " + 
+                    throw new SQLException("Incorrect mapping format. " + 
                         "Mapped value should consist only of single character, but " + 
                         value + " found.");
                 

@@ -1,6 +1,5 @@
 package org.firebirdsql.jdbc;
 
-
 /**
  * Exception is thrown when trying to modify the non-updatable result set. 
  */

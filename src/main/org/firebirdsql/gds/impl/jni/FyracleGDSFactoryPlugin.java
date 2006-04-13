@@ -6,19 +6,19 @@ import org.firebirdsql.gds.impl.GDSFactoryPlugin;
 import org.firebirdsql.jdbc.FBConnection;
 
 
-public class NativeGDSFactoryPlugin implements GDSFactoryPlugin {
+public class FyracleGDSFactoryPlugin implements GDSFactoryPlugin {
 
-    private static final String[] TYPE_ALIASES = new String[]{"TYPE2"};
-    private static final String[] JDBC_PROTOCOLS = new String[]{"jdbc:firebirdsql:native:"};
+    private static final String[] TYPE_ALIASES = new String[0];
+    private static final String[] JDBC_PROTOCOLS = new String[]{"jdbc:firebirdsql:oracle:"};
     
-    private static GDS gds;
+    private static NativeGDSImpl gds;
     
     public String getPluginName() {
         return "JNI-based GDS implementation.";
     }
 
     public String getTypeName() {
-        return NativeGDSImpl.NATIVE_TYPE_NAME;
+        return "ORACLE";
     }
 
     public String[] getTypeAliases() {
@@ -34,7 +34,7 @@ public class NativeGDSFactoryPlugin implements GDSFactoryPlugin {
     }
 
     public GDS getGDS() {
-        if (gds == null) 
+        if (gds == null)
             gds = new NativeGDSImpl();
         
         return gds;
@@ -82,9 +82,9 @@ public class NativeGDSFactoryPlugin implements GDSFactoryPlugin {
         if (obj == this) 
             return true;
         
-        if (!(obj instanceof NativeGDSFactoryPlugin))
+        if (!(obj instanceof FyracleGDSFactoryPlugin))
             return false;
         
         return true;
-    }   
+    } 
 }

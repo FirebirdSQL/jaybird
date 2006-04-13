@@ -168,7 +168,7 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
         ;
     
     private static final Logger LOG =
-        LoggerFactory.getLogger(AbstractFBConnectionPoolDataSource.class, false);
+        LoggerFactory.getLogger(FBConnectionPoolDataSource.class, false);
         
 	private transient PrintWriter logWriter;
     
@@ -805,14 +805,6 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
         connectionProperties.setUseTranslation(translationPath);
     }
 
-    public boolean isDefaultResultSetHoldable() {
-        return connectionProperties.isDefaultResultSetHoldable();
-    }
-
-    public void setDefaultResultSetHoldable(boolean isHoldable) {
-        checkNotStarted();
-        connectionProperties.setDefaultResultSetHoldable(isHoldable);
-    }
     
     protected static final String REF_PROPERTIES = "properties";
     protected static final String REF_NON_STANDARD_PROPERTY = "nonStandard";
@@ -826,7 +818,7 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
         return ref;
     }
     
-    protected Object processObjectInstance(AbstractFBConnectionPoolDataSource ds, Reference ref) throws Exception
+    protected Object processObjectInstance(FBConnectionPoolDataSource ds, Reference ref) throws Exception
     {
         if (ds == null)
             return null;
@@ -854,8 +846,7 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
     
     
     protected BasicAbstractConnectionPool createObjectInstance() {
-        return FBPooledDataSourceFactory.createFBConnectionPoolDataSource();
+        return new FBConnectionPoolDataSource();
     }
-
 
 }

@@ -103,7 +103,7 @@ public class TestFBResultSet extends FBTestBase {
         super(name);
     }
 
-    protected Connection connection;
+    private Connection connection;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -455,7 +455,7 @@ public class TestFBResultSet extends FBTestBase {
     
     /**
      * This test case tries to reproduce a NPE reported in Firebird-Java group
-     * by vmdd_tech after Jaybird 1.5 beta 1 release.
+     * by vmdd_tech after JayBird 1.5 beta 1 release.
      *  
      * @throws Exception if something goes wrong.
      */
@@ -880,6 +880,15 @@ public class TestFBResultSet extends FBTestBase {
     public void testHoldability() throws Exception {
         ((FirebirdConnection)connection).setHoldability(FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT);
         
+        try {
+            Statement stmt = connection.createStatement(
+                    ResultSet.TYPE_FORWARD_ONLY,
+                    ResultSet.CONCUR_READ_ONLY);
+            
+            fail("Holdable cursor is not compatible with forward-only result set.");
+        } catch(FBDriverNotCapableException ex) {
+            // everything is ok
+        }
         
         Statement stmt = connection.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE, 
@@ -975,58 +984,24 @@ public class TestFBResultSet extends FBTestBase {
     }
     
     public void testUpdatableResultSetMutipleStatements() throws Exception {
-        
-        int recordCount = 10;
-        PreparedStatement ps = connection.prepareStatement(
-            "INSERT INTO test_table("
-            + "id, long_str) VALUES (?, ?)");
-
-        try {
-            for (int i = 0; i < recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setString(2, "oldString" + i);
-                ps.executeUpdate();
-            }
-        } finally {
-            ps.close();
-        }
-        
-        connection.setAutoCommit(true);
-        Statement stmt = connection.createStatement(
-            ResultSet.TYPE_SCROLL_INSENSITIVE, 
-            ResultSet.CONCUR_UPDATABLE);
+        connection.setAutoCommit(false);
+        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
         
         try {
-            ResultSet rs = stmt.executeQuery(
-                "SELECT * FROM test_table");
+            ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
             
-            rs.first();
-            
-            PreparedStatement anotherStmt = 
-                stmt.getConnection().prepareStatement(
-                    "SELECT * FROM rdb$database");
+            Statement anotherStmt = stmt.getConnection().createStatement();
             try {
-                ResultSet anotherRs = anotherStmt.executeQuery();
-                while (anotherRs.next()) {
-                    Object tempObj = anotherRs.getObject(1);
-                }
-                anotherRs.close();
-  
-                try {
-                    rs.updateInt("id", 1);
-                    rs.updateString("blob_str", "test");
-                    rs.updateNull("str");
-                    rs.updateRow();
-                    
-                    fail("Should produce exception.");
-                    
-                } catch(SQLException ex) {
-                    // everything is ok
-                }
-
+                ResultSet anotherRs = anotherStmt.executeQuery("SELECT * FROM rdb$database");
             } finally {
                 anotherStmt.close();
             }
+            
+            rs.moveToInsertRow();
+            rs.updateInt("id", 1);
+            rs.updateString("blob_str", "test");
+            rs.updateNull("str");
+            rs.insertRow();
             
             rs.close();
 

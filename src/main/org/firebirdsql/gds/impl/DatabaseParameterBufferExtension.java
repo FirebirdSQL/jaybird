@@ -47,14 +47,13 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
     int LOCAL_ENCODING          = ISCConstants.isc_dpb_local_encoding;
     int MAPPING_PATH            = ISCConstants.isc_dpb_mapping_path;
     int NO_RESULT_SET_TRACKING  = ISCConstants.isc_dpb_no_result_set_tracking;
-    int RESULT_SET_HOLDABLE     = ISCConstants.isc_dpb_result_set_holdable;
     
 
     /**
      * Remove extension parameters in the newly created deep copy of this class.
      * 
      * @return a deep copy of this class where all extension parameters are 
-     * removed; needed to filter Jaybird extensions that are not understood by
+     * removed; needed to filter JayBird extensions that are not understood by
      * Firebird. 
      */
     DatabaseParameterBuffer removeExtensionParams();

@@ -29,9 +29,7 @@ import javax.naming.spi.ObjectFactory;
 import javax.sql.ConnectionPoolDataSource;
 import javax.sql.PooledConnection;
 
-import org.firebirdsql.gds.ClassFactory;
-import org.firebirdsql.pool.AbstractFBConnectionPoolDataSource;
-import org.firebirdsql.pool.FBPooledDataSourceFactory;
+import org.firebirdsql.pool.FBConnectionPoolDataSource;
 
 /**
  * Implementation of the {@link javax.sql.ConnectionPoolDataSource} interface
@@ -48,73 +46,73 @@ import org.firebirdsql.pool.FBPooledDataSourceFactory;
 public class AppServerConnectionPoolDataSource implements Serializable,
         ConnectionPoolDataSource, Referenceable, ObjectFactory {
 
-	private AbstractFBConnectionPoolDataSource dataSource;
+    private FBConnectionPoolDataSource dataSource;
 
     private AppServerConnectionPoolDataSource(
-            AbstractFBConnectionPoolDataSource dataSource) {
+            FBConnectionPoolDataSource dataSource) {
         this.dataSource = dataSource;
     }
 
     public AppServerConnectionPoolDataSource() {
-        this.dataSource = FBPooledDataSourceFactory.createFBConnectionPoolDataSource();
+        this.dataSource = new FBConnectionPoolDataSource();
     }
 
     public PooledConnection getPooledConnection() throws SQLException {
         return dataSource.getPooledConnection();
     }
 
-	public PooledConnection getPooledConnection(String username, String password)
-			throws SQLException {
-		return dataSource.getPooledConnection(username, password);
-	}
+    public PooledConnection getPooledConnection(String username, String password)
+            throws SQLException {
+        return dataSource.getPooledConnection(username, password);
+    }
 
-	public int getLoginTimeout() throws SQLException {
-		return dataSource.getLoginTimeout();
-	}
+    public int getLoginTimeout() throws SQLException {
+        return dataSource.getLoginTimeout();
+    }
 
-	public PrintWriter getLogWriter() throws SQLException {
-		return dataSource.getLogWriter();
-	}
+    public PrintWriter getLogWriter() throws SQLException {
+        return dataSource.getLogWriter();
+    }
 
-	public void setLoginTimeout(int seconds) throws SQLException {
-		dataSource.setLoginTimeout(seconds);
-	}
+    public void setLoginTimeout(int seconds) throws SQLException {
+        dataSource.setLoginTimeout(seconds);
+    }
 
-	public void setLogWriter(PrintWriter out) throws SQLException {
-		dataSource.setLogWriter(out);
-	}
+    public void setLogWriter(PrintWriter out) throws SQLException {
+        dataSource.setLogWriter(out);
+    }
 
-	public int getBlobBufferSize() {
-		return dataSource.getBlobBufferSize();
-	}
+    public int getBlobBufferSize() {
+        return dataSource.getBlobBufferSize();
+    }
 
-	public void setBlobBufferSize(int value) {
-		dataSource.setBlobBufferSize(value);
-	}
+    public void setBlobBufferSize(int value) {
+        dataSource.setBlobBufferSize(value);
+    }
 
-	public int getBlockingTimeout() {
-		return dataSource.getBlockingTimeout();
-	}
+    public int getBlockingTimeout() {
+        return dataSource.getBlockingTimeout();
+    }
 
-	public void setBlockingTimeout(int value) {
-		dataSource.setBlockingTimeout(value);
-	}
+    public void setBlockingTimeout(int value) {
+        dataSource.setBlockingTimeout(value);
+    }
 
-	public int getBuffersNumber() {
-		return dataSource.getBuffersNumber();
-	}
+    public int getBuffersNumber() {
+        return dataSource.getBuffersNumber();
+    }
 
-	public void setBuffersNumber(int value) {
-		dataSource.setBuffersNumber(value);
-	}
+    public void setBuffersNumber(int value) {
+        dataSource.setBuffersNumber(value);
+    }
 
-	public String getCharSet() {
-		return dataSource.getCharSet();
-	}
+    public String getCharSet() {
+        return dataSource.getCharSet();
+    }
 
-	public void setCharSet(String value) {
-		dataSource.setCharSet(value);
-	}
+    public void setCharSet(String value) {
+        dataSource.setCharSet(value);
+    }
 
     public String getDatabaseName() {
         return dataSource.getDatabase();
@@ -300,12 +298,12 @@ public class AppServerConnectionPoolDataSource implements Serializable,
         dataSource.setUseTranslation(value);
     }
 
-	public Reference getReference() throws NamingException {
-		Reference ref = new Reference(getClass().getName(), getClass()
-				.getName(), null);
+    public Reference getReference() throws NamingException {
+        Reference ref = new Reference(getClass().getName(), getClass()
+                .getName(), null);
 
-		Reference defaultRef = dataSource.getDefaultReference();
-		convertReference(ref, defaultRef);
+        Reference defaultRef = dataSource.getDefaultReference();
+        convertReference(ref, defaultRef);
 
         return ref;
     }
@@ -318,11 +316,10 @@ public class AppServerConnectionPoolDataSource implements Serializable,
         }
     }
 
-	public Object getObjectInstance(Object obj, Name name, Context nameCtx,
-			Hashtable environment) throws Exception {
+    public Object getObjectInstance(Object obj, Name name, Context nameCtx,
+            Hashtable environment) throws Exception {
 
-        if (!(obj instanceof Reference))
-            return null;
+        if (!(obj instanceof Reference)) return null;
 
         Reference passedRef = (Reference) obj;
         passedRef = (Reference) passedRef.clone();
@@ -330,13 +327,16 @@ public class AppServerConnectionPoolDataSource implements Serializable,
         if (!getClass().getName().equals(passedRef.getClassName()))
             return null;
 
-        Reference ref = new Reference(ClassFactory.FBConnectionPoolDataSource,
-                ClassFactory.FBConnectionPoolDataSource, null);
+        Reference ref = new Reference(FBConnectionPoolDataSource.class
+                .getName(), FBConnectionPoolDataSource.class.getName(), null);
 
         convertReference(ref, passedRef);
 
-        return new AppServerConnectionPoolDataSource(FBPooledDataSourceFactory
-                .getFBConnectionPoolInstance(ref, name, nameCtx, environment));
+        FBConnectionPoolDataSource objectFactory = new FBConnectionPoolDataSource();
+        FBConnectionPoolDataSource dataSource = (FBConnectionPoolDataSource) objectFactory
+                .getObjectInstance(ref, name, nameCtx, environment);
+
+        return new AppServerConnectionPoolDataSource(dataSource);
     }
 
 }

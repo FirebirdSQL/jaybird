@@ -19,7 +19,6 @@
 
 package org.firebirdsql.jdbc;
 
-
 /**
  * This exception is thrown by FBEscapedParser when it cannot parse the
  * escaped syntax.

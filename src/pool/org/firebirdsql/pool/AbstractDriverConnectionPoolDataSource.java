@@ -42,7 +42,7 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
 {
 
     private static final Logger logger = LoggerFactory.getLogger(
-    		AbstractDriverConnectionPoolDataSource.class, false);
+        DriverConnectionPoolDataSource.class, false);
     
     public static final UserPasswordPair EMPTY_USER_PASSWORD = new UserPasswordPair();
 
@@ -319,7 +319,7 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
      * Create instance of this data source.
      */
     protected BasicAbstractConnectionPool createObjectInstance() {
-        return FBPooledDataSourceFactory.createDriverConnectionPoolDataSource();
+        return new DriverConnectionPoolDataSource();
     }
     
     /**
@@ -343,7 +343,7 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
         return ref;
     }
     
-    protected Object processObjectInstance(AbstractDriverConnectionPoolDataSource ds, Object obj) throws Exception
+    protected Object processObjectInstance(DriverConnectionPoolDataSource ds, Object obj) throws Exception
     {
         if (ds == null)
             return null;

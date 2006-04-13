@@ -30,8 +30,7 @@ import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.management.FBManager;
-import org.firebirdsql.pool.AbstractFBConnectionPoolDataSource;
-import org.firebirdsql.pool.FBPooledDataSourceFactory;
+import org.firebirdsql.pool.FBConnectionPoolDataSource;
 import org.firebirdsql.pool.FBWrappingDataSource;
 
 /**
@@ -68,9 +67,9 @@ public class FBTestBase extends SimpleFBTestBase
      * @return
      * @throws SQLException
      */
-    protected AbstractFBConnectionPoolDataSource createFBConnectionPoolDataSource() throws SQLException
+    protected FBConnectionPoolDataSource createFBConnectionPoolDataSource() throws SQLException
         {
-        final AbstractFBConnectionPoolDataSource returnValue = FBPooledDataSourceFactory.createFBConnectionPoolDataSource();
+        final FBConnectionPoolDataSource returnValue = new FBConnectionPoolDataSource();
 
         returnValue.setType(getGdsType().toString());
 

@@ -73,7 +73,6 @@ public class DatabaseParameterBufferImp extends ParameterBufferBase implements
         copy.removeArgument(LOCAL_ENCODING);
         copy.removeArgument(MAPPING_PATH);
         copy.removeArgument(NO_RESULT_SET_TRACKING);
-        copy.removeArgument(RESULT_SET_HOLDABLE);
         
         return copy;
     }

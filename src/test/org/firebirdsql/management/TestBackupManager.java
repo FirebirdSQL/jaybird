@@ -38,9 +38,8 @@ public class TestBackupManager extends FBTestBase {
         fbManager.setForceCreate(true);
         fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
 
-        backupManager = new FBBackupManager(getGdsType());
+        backupManager = new FBBackupManager();
         backupManager.setHost(DB_SERVER_URL);
-        backupManager.setPort(DB_SERVER_PORT);
         backupManager.setUser(DB_USER);
         backupManager.setPassword(DB_PASSWORD);
         backupManager.setDatabase(getDatabasePath());

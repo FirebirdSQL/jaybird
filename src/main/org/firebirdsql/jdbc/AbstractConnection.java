@@ -71,13 +71,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
         this.mc = mc;
         
         this.txCoordinator = new InternalTransactionCoordinator();
-        
-        FBConnectionRequestInfo cri = (FBConnectionRequestInfo)mc.getConnectionRequestInfo();
-        
-        if (cri.hasArgument(DatabaseParameterBufferExtension.RESULT_SET_HOLDABLE))
-            resultSetHoldability = ResultSet.HOLD_CURSORS_OVER_COMMIT;
-        else
-            resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
     
     public FBObjectListener.StatementListener getStatementListener() {
@@ -747,22 +740,17 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized Statement createStatement(int resultSetType, 
         int resultSetConcurrency, int resultSetHoldability) throws SQLException 
     {
-        if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT && 
-                resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
-
-            addWarning(new FBSQLWarning("Holdable result set must be scrollable."));
-            resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-        }
-        
         if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE) {
             addWarning(new FBSQLWarning("Unsupported type and/or concurrency"));
-            resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+            
+            if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
+                resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
         }			  
           
         checkHoldability(resultSetType, resultSetHoldability);
         
         try {
-            Statement stmt = FBStatementFactory.createStatement(getGDSHelper(), resultSetType,
+            Statement stmt = new FBStatement(getGDSHelper(), resultSetType,
                     resultSetConcurrency, resultSetHoldability, txCoordinator);
             
             activeStatements.add(stmt);
@@ -836,14 +824,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
         int resultSetType, int resultSetConcurrency, int resultSetHoldability, boolean metaData) throws SQLException 
     {
           PreparedStatement stmt;
-          
-          if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT && 
-                  resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
-
-              addWarning(new FBSQLWarning("Holdable result set must be scrollable."));
-              resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-          }
-
 		  if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
 		  {
 		      addWarning(new FBSQLWarning("resultSetType or resultSetConcurrency changed"));
@@ -866,7 +846,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
               else
                   blobCoordinator = txCoordinator;
               
-              stmt = FBStatementFactory.createPreparedStatement(
+              stmt = new FBPreparedStatement(
                       getGDSHelper(), sql, resultSetType, resultSetConcurrency, 
                       resultSetHoldability, coordinator, blobCoordinator, metaData);
               
@@ -903,30 +883,21 @@ public abstract class AbstractConnection implements FirebirdConnection {
         int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException 
     {
         CallableStatement stmt;
-        
-        if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT && 
-                resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
-
-            addWarning(new FBSQLWarning("Holdable result set must be scrollable."));
-            resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-        }
-        
-		if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
+		if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE && 
+            resultSetConcurrency != ResultSet.CONCUR_READ_ONLY)
 		{
-            addWarning(new FBSQLWarning("Scroll-sensitive result sets are not supported."));
-            resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-        }
-        
-        if (resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) {
-            addWarning(new FBSQLWarning(
-                "Updatable result sets from stored procedures are not supported."));
+            addWarning(new FBSQLWarning("resultSetType or resultSetConcurrency changed"));
+            
+            if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
+                resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+            
             resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
         }	
 
         checkHoldability(resultSetType, resultSetHoldability);
         
         try {
-            stmt = FBStatementFactory.createCallableStatement(getGDSHelper(), sql, resultSetType,
+            stmt = new FBCallableStatement(getGDSHelper(), sql, resultSetType,
                     resultSetConcurrency, resultSetHoldability, txCoordinator, txCoordinator);
             activeStatements.add(stmt);
             return stmt;
@@ -990,7 +961,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see Savepoint
      */
     public synchronized FirebirdSavepoint setFirebirdSavepoint() throws SQLException {
-        AbstractSavepoint savepoint = FBStatementFactory.createSavepoint(getNextSavepointCounter());
+        FBSavepoint savepoint = new FBSavepoint(getNextSavepointCounter());
         
         setSavepoint(savepoint);
         
@@ -1006,7 +977,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * 
      * @throws SQLException if something went wrong.
      */
-    private void setSavepoint(AbstractSavepoint savepoint) throws SQLException {
+    private void setSavepoint(FBSavepoint savepoint) throws SQLException {
         if (getAutoCommit())
             throw new SQLException("Connection.setSavepoint() method cannot " + 
                     "be used in auto-commit mode.");
@@ -1032,7 +1003,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see Savepoint
      */
     public synchronized FirebirdSavepoint setFirebirdSavepoint(String name) throws SQLException {
-        AbstractSavepoint savepoint = FBStatementFactory.createSavepoint(name);
+        FBSavepoint savepoint = new FBSavepoint(name);
         
         setSavepoint(savepoint);
         
@@ -1059,11 +1030,11 @@ public abstract class AbstractConnection implements FirebirdConnection {
             throw new SQLException("Connection.setSavepoint() method cannot " + 
                     "be used in auto-commit mode.");
         
-        if (!(savepoint instanceof AbstractSavepoint))
+        if (!(savepoint instanceof FBSavepoint))
             throw new SQLException(
                     "Specified savepoint was not obtained from this connection.");
         
-        AbstractSavepoint fbSavepoint = (AbstractSavepoint)savepoint;
+        FBSavepoint fbSavepoint = (FBSavepoint)savepoint;
         
         if (!fbSavepoint.isValid())
             throw new SQLException("Savepoint is no longer valid.");
@@ -1092,11 +1063,11 @@ public abstract class AbstractConnection implements FirebirdConnection {
             throw new SQLException("Connection.setSavepoint() method cannot " + 
                     "be used in auto-commit mode.");
         
-        if (!(savepoint instanceof AbstractSavepoint))
+        if (!(savepoint instanceof FBSavepoint))
             throw new SQLException(
                     "Specified savepoint was not obtained from this connection.");
         
-        AbstractSavepoint fbSavepoint = (AbstractSavepoint)savepoint;
+        FBSavepoint fbSavepoint = (FBSavepoint)savepoint;
         
         if (!fbSavepoint.isValid())
             throw new SQLException("Savepoint is no longer valid.");
@@ -1119,7 +1090,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     protected synchronized void invalidateSavepoints() {
         Iterator iter = savepoints.iterator();
         while(iter.hasNext())
-            ((AbstractSavepoint)iter.next()).invalidate();
+            ((FBSavepoint)iter.next()).invalidate();
         
         savepoints.clear();
     }    

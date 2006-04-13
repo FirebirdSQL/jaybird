@@ -163,7 +163,7 @@ public abstract class AbstractSavepoint implements FirebirdSavepoint {
      */
     public boolean equals(Object obj) {
         if (obj == this) return true;
-        if (!(obj instanceof AbstractSavepoint)) return false;
+        if (!(obj instanceof FBSavepoint)) return false;
         
         AbstractSavepoint that = (AbstractSavepoint)obj;
         

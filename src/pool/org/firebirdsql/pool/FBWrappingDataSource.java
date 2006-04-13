@@ -156,7 +156,7 @@ public class FBWrappingDataSource implements DataSource,
     ObjectFactory, Referenceable, Serializable, FirebirdPool 
 {
 
-    private AbstractFBConnectionPoolDataSource pool;
+    private FBConnectionPoolDataSource pool;
     
     private Reference reference;
 
@@ -169,9 +169,9 @@ public class FBWrappingDataSource implements DataSource,
         // empty
     }
     
-    private synchronized AbstractFBConnectionPoolDataSource getPool() {
+    private synchronized FBConnectionPoolDataSource getPool() {
         if (pool == null)
-            pool = FBPooledDataSourceFactory.createFBConnectionPoolDataSource();
+            pool = new FBConnectionPoolDataSource();
             
         return pool;
     }
@@ -649,14 +649,6 @@ public class FBWrappingDataSource implements DataSource,
 
     public void setUseTranslation(String translationPath) {
         getPool().setUseTranslation(translationPath);
-    }
-    
-    public boolean isDefaultResultSetHoldable() {
-        return getPool().isDefaultResultSetHoldable();
-    }
-
-    public void setDefaultResultSetHoldable(boolean isHoldable) {
-        getPool().setDefaultResultSetHoldable(isHoldable);
     }
 
     /*

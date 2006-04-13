@@ -19,14 +19,13 @@
 
 package org.firebirdsql.jdbc;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.sql.SQLException;
-
 import javax.resource.ResourceException;
-
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.jca.FBResourceException;
+import java.io.PrintWriter;
+import java.io.PrintStream;
+import java.io.IOException;
 
 /**
  * @author Ken Richard
@@ -75,11 +74,19 @@ public class FBSQLException extends SQLException {
         super(ex.getMessage(), 
                 ex.getErrorCode() != null ? ex.getErrorCode() : 
                                           SQL_STATE_GENERAL_ERROR);
-
+        
         // try to unwrap wrapped exception
-        if (ex.getLinkedException() != null) 
-            original = ex.getLinkedException();
-        else original = ex;
+        if (ex instanceof FBResourceException) {
+            
+            FBResourceException rex = (FBResourceException)ex;
+            
+            if (rex.getLinkedException() != null)
+                original = rex.getLinkedException();
+            else
+                original = rex;
+                
+        } else
+            original = ex;
 
         if (original instanceof GDSException)
             message = "GDS Exception. "+ ((GDSException)original).getIntParam() + ". " + ex.getMessage();

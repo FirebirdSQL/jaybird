@@ -20,7 +20,13 @@
 package org.firebirdsql.pool;
 
 import java.lang.reflect.*;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 import org.firebirdsql.jdbc.FBSQLException;
 

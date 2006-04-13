@@ -19,7 +19,6 @@
 
 package org.firebirdsql.jdbc;
 
-
 /**
  * Parser for escaped procedure call.
  */

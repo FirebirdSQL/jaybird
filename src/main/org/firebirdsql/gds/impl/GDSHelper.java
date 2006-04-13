@@ -39,6 +39,7 @@ import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.IscBlobHandle;
 import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.IscTrHandle;
+import org.firebirdsql.jdbc.FBConnectionDefaults;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -47,8 +48,6 @@ import org.firebirdsql.logging.LoggerFactory;
  * Helper class for all GDS-related operations.
  */
 public class GDSHelper {
-    
-    public static final int DEFAULT_BLOB_BUFFER_SIZE = 16 * 1024;
     
     /**
      * Notification listener about any error that occured in this class.
@@ -63,7 +62,7 @@ public class GDSHelper {
         void errorOccured(GDSException ex);
     }
 
-    private static final Logger log = LoggerFactory.getLogger(GDSHelper.class, false);
+    private final Logger log = LoggerFactory.getLogger(getClass(), false);
 
     private GDS gds;
     private AbstractIscDbHandle currentDbHandle;
@@ -540,7 +539,7 @@ public class GDSHelper {
         if (dpb.hasArgument(ISCConstants.isc_dpb_blob_buffer_size))
             return dpb.getArgumentAsInt(ISCConstants.isc_dpb_blob_buffer_size);
         else
-            return DEFAULT_BLOB_BUFFER_SIZE;
+            return FBConnectionDefaults.DEFAULT_BLOB_BUFFER_SIZE;
     }
 
     /**

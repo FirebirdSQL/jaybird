@@ -2,26 +2,13 @@ package org.firebirdsql.gds.impl.jni;
 
 import java.io.UnsupportedEncodingException;
 
-import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.EventHandle;
-import org.firebirdsql.gds.EventHandler;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.IscBlobHandle;
-import org.firebirdsql.gds.IscDbHandle;
-import org.firebirdsql.gds.IscStmtHandle;
-import org.firebirdsql.gds.IscSvcHandle;
-import org.firebirdsql.gds.IscTrHandle;
-import org.firebirdsql.gds.ServiceParameterBuffer;
-import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.impl.AbstractGDS;
-import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.impl.AbstractIscTrHandle;
+import org.firebirdsql.jdbc.FBConnectionHelper;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -973,19 +960,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public abstract byte[] native_isc_transaction_info(IscTrHandle tr_handle,
             byte[] items, int bufferSize) throws GDSException;
 
-    public abstract int native_isc_que_events(IscDbHandle db_handle,
-            EventHandleImp eventHandle, EventHandler handler) 
-            throws GDSException;
-
-    public abstract long native_isc_event_block(EventHandleImp eventHandle,
-            String eventNames) throws GDSException;
-
-    public abstract void native_isc_event_counts(EventHandleImp eventHandle)
-            throws GDSException;
-
-    public abstract void native_isc_cancel_events(IscDbHandle db_handle,
-            EventHandleImp eventHandle) throws GDSException;
-
     public TransactionParameterBuffer newTransactionParameterBuffer() {
         return new TransactionParameterBufferImpl();
     }
@@ -1098,7 +1072,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             throws UnsupportedEncodingException {
         String javaEncoding = null;
         if (encoding != null && !"NONE".equals(encoding))
-            javaEncoding = EncodingFactory.getJavaEncoding(encoding);
+            javaEncoding = FBConnectionHelper.getJavaEncoding(encoding);
 
         final byte[] stringBytes;
         if (javaEncoding != null)
@@ -1168,64 +1142,4 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         }
     }
 
-    public int iscQueueEvents(IscDbHandle dbHandle, 
-            EventHandle eventHandle, EventHandler eventHandler) 
-            throws GDSException {
-        
-        EventHandleImp eventHandleImp = (EventHandleImp)eventHandle;
-        if (!eventHandleImp.isValid()){
-            throw new IllegalStateException(
-                    "Can't queue events on an invalid EventHandle");
-        }
-        if (eventHandleImp.isCancelled()){
-            throw new IllegalStateException(
-                    "Can't queue events on a cancelled EventHandle");
-        }
-        synchronized (dbHandle) {
-            return native_isc_que_events(
-                    dbHandle, eventHandleImp, eventHandler);
-        }
-    }
-
-    public void iscEventBlock(EventHandle eventHandle) 
-            throws GDSException {
-        
-        EventHandleImp eventHandleImp = (EventHandleImp)eventHandle;
-        native_isc_event_block(
-                eventHandleImp, eventHandle.getEventName());
-    }
-
-    public void iscEventCounts(EventHandle eventHandle)
-            throws GDSException {
-
-        EventHandleImp eventHandleImp = (EventHandleImp)eventHandle;
-        if (!eventHandleImp.isValid()){
-            throw new IllegalStateException(
-                    "Can't get counts on an invalid EventHandle");
-        }
-        native_isc_event_counts(eventHandleImp);
-    }
-
-
-    public void iscCancelEvents(IscDbHandle dbHandle, EventHandle eventHandle)
-            throws GDSException {
-
-        EventHandleImp eventHandleImp = (EventHandleImp)eventHandle;
-        if (!eventHandleImp.isValid()){
-            throw new IllegalStateException(
-                    "Can't cancel an invalid EventHandle");
-        }
-        if (eventHandleImp.isCancelled()){
-            throw new IllegalStateException(
-                    "Can't cancel a previously cancelled EventHandle");
-        }
-        eventHandleImp.cancel();
-        synchronized (dbHandle){
-            native_isc_cancel_events(dbHandle, eventHandleImp);
-        }
-    }
-
-    public EventHandle createEventHandle(String eventName){
-        return new EventHandleImp(eventName);
-    }
 }

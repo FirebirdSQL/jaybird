@@ -12,7 +12,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
      * Name of the JNI library able to communicate with the client or embedded
      * server library.
      */
-    public static final String JAYBIRD_JNI_LIBRARY = "jaybird21";
+    public static final String JAYBIRD_JNI_LIBRARY = "jaybird2";
     
     private static Logger log = LoggerFactory.getLogger(JniGDSImpl.class,
             false);
@@ -22,7 +22,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     }
     
     /**
-     * Create instance of this class. This constructor attempts to load Jaybird
+     * Create instance of this class. This constructor attempts to load JayBird
      * JNI library. Subclasses are responsible for initializing JNI layer by 
      * calling {@link #nativeInitilize(String)} method.
      * 
@@ -95,7 +95,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
                 // then we need to throw an exception.
                 if (i == clientLibraryList.length - 1)
                     throw new RuntimeException(
-                            "Failed to initilize Jaybird native library. " +
+                            "Failed to initilize JayBird native library. " +
                             "This is most likley due to a failure to load the " +
                             "firebird client library.");
 
@@ -126,7 +126,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
 
     
     /*
-     * Methods below must have corresponding implementations in the Jaybird JNI
+     * Methods below must have corresponding implementations in the JayBird JNI
      * layer (see code for jaybird2 shared library).
      */
 
@@ -247,19 +247,5 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
 
     public native byte[] native_isc_transaction_info(IscTrHandle tr_handle, 
             byte[] info, int bufferLength) throws GDSException;
-
-    public native int native_isc_que_events(IscDbHandle db_handle,
-            EventHandleImp eventHandle, EventHandler handler) 
-            throws GDSException;
-
-    public native long native_isc_event_block(
-            EventHandleImp eventHandle,
-            String eventName) throws GDSException;
-
-    public native void native_isc_event_counts(EventHandleImp eventHandle)
-            throws GDSException;
-
-    public native void native_isc_cancel_events(IscDbHandle db_handle,
-            EventHandleImp eventHandle) throws GDSException;
 
 }

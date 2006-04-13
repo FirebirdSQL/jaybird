@@ -3,11 +3,8 @@ package org.firebirdsql.jdbc;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
-import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.TransactionParameterBuffer;
@@ -36,7 +33,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String USER_NAME_PROPERTY = "userName";
     public static final String PASSWORD_PROPERTY = "password";
     public static final String BUFFERS_NUMBER_PROPERTY = "buffersNumber";
-    public static final String DEFAULT_HOLDABLE_RS_PROPERTY = "defaultHoldable";
     
     private HashMap properties = new HashMap();
     private String type;
@@ -98,10 +94,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     
     private void setBooleanProperty(String name) {
         properties.put(getCanonicalName(name), null);
-    }
-    
-    private void removeProperty(String name) {
-        properties.remove(name);
     }
     
     public int hashCode() {
@@ -190,7 +182,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         if (encoding != null)
             return;
         
-        encoding = EncodingFactory.getIscEncoding(charSet);
+        encoding = FBConnectionHelper.getIscEncoding(charSet);
         
         if (encoding != null)
             setStringProperty(ENCODING_PROPERTY, encoding);
@@ -207,7 +199,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         if (charSet != null)
             return;
         
-        charSet = EncodingFactory.getJavaEncoding(encoding);
+        charSet = FBConnectionHelper.getJavaEncoding(encoding);
         
         if (charSet != null)
             setStringProperty(LOCAL_ENCODING_PROPERTY, charSet);
@@ -242,10 +234,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public void setUseStreamBlobs(boolean useStreamBlobs) {
-        if (useStreamBlobs)
-            setBooleanProperty(USE_STREAM_BLOBS_PROPERTY);
-        else
-            removeProperty(USE_STREAM_BLOBS_PROPERTY);
+        setBooleanProperty(USE_STREAM_BLOBS_PROPERTY);
     }
 
     public boolean isUseStandardUdf() {
@@ -253,10 +242,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public void setUseStandardUdf(boolean useStandardUdf) {
-        if (useStandardUdf)
-            setBooleanProperty(USE_STANDARD_UDF_PROPERTY);
-        else
-            removeProperty(USE_STANDARD_UDF_PROPERTY);
+        setBooleanProperty(USE_STANDARD_UDF_PROPERTY);
     }
 
     public int getSocketBufferSize() {
@@ -272,10 +258,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        if (timestampUsesLocalTimezone)
-            setBooleanProperty(TIMESTAMP_USES_LOCAL_TIMEZONE_PROPERTY);
-        else
-            removeProperty(TIMESTAMP_USES_LOCAL_TIMEZONE_PROPERTY);
+        setBooleanProperty(TIMESTAMP_USES_LOCAL_TIMEZONE_PROPERTY);
     }
 
     public String getUserName() {
@@ -312,18 +295,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         else
             setStringProperty(key, value);
     }
-    
-    public boolean isDefaultResultSetHoldable() {
-        return getBooleanProperty(DEFAULT_HOLDABLE_RS_PROPERTY);
-    }
-
-    public void setDefaultResultSetHoldable(boolean isHoldable) {
-        if (isHoldable)
-            setBooleanProperty(DEFAULT_HOLDABLE_RS_PROPERTY);
-        else
-            removeProperty(DEFAULT_HOLDABLE_RS_PROPERTY);
-    }
-    
 
     public void setNonStandardProperty(String propertyMapping) {
         char[] chars = propertyMapping.toCharArray();
@@ -491,5 +462,4 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         
         return mapper;
     }
-
 }

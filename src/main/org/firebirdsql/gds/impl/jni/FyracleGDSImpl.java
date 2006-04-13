@@ -5,30 +5,29 @@ import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-public class EmbeddedGDSImpl extends JniGDSImpl {
 
-    private static Logger log = LoggerFactory.getLogger(NativeGDSImpl.class,
+public class FyracleGDSImpl extends JniGDSImpl {
+
+    private static Logger log = LoggerFactory.getLogger(FyracleGDSImpl.class,
             false);
 
-    private static final String[] EMBEDDED_LIBRARIES_TO_TRY = { 
-        "fbembed.dll",
-        "libfbembed.so"
-    };
+    private static final String[] LIST_OF_CLIENT_LIBRARIES_TO_TRY = {
+            "fyracle.dll", "libfyracle.so"};
 
-    public static final String EMBEDDED_TYPE_NAME = "EMBEDDED";
+    public static final String FYRACLE_TYPE_NAME = "ORACLE";
 
-    public EmbeddedGDSImpl() {
-        this(GDSType.getType(EMBEDDED_TYPE_NAME));
+    public FyracleGDSImpl() {
+        this(GDSType.getType(FYRACLE_TYPE_NAME));
     }
 
-    public EmbeddedGDSImpl(GDSType gdsType) {
+    public FyracleGDSImpl(GDSType gdsType) {
         super(gdsType);
 
         final boolean logging = log != null;
 
         if (logging) log.info("Attempting to initilize native library.");
 
-        attemptToLoadAClientLibraryFromList(EMBEDDED_LIBRARIES_TO_TRY);
+        attemptToLoadAClientLibraryFromList(LIST_OF_CLIENT_LIBRARIES_TO_TRY);
 
         if (logging) log.info("Initilized native library OK.");
     }

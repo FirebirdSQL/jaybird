@@ -184,9 +184,6 @@ public class TestFBCallableStatement extends FBTestBase {
      
      public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST = ""
          + "EXECUTE PROCEDURE test_out 'test'";
-     
-     public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION = ""
-         + "EXECUTE PROCEDURE test_out 'test?'";
 
     private Connection connection;
 
@@ -494,19 +491,6 @@ public class TestFBCallableStatement extends FBTestBase {
         
     }
     
-    public void testOutProcedureWithConstWithQuestionMart() throws Exception {
-        CallableStatement stmt = 
-            connection.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION);
-        try {
-            //stmt.setInt(1, 1);
-            //stmt.registerOutParameter(2, Types.INTEGER);
-            stmt.execute();
-            assertTrue("Should return correct value", "test?".equals(stmt.getString(1)));
-        } finally {
-            stmt.close();
-        }
-        
-    }
     public void testInOutProcedure() throws Exception {
         CallableStatement stmt = 
             connection.prepareCall(EXECUTE_IN_OUT_PROCEDURE);

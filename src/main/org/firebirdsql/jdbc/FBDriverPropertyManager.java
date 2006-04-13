@@ -290,14 +290,14 @@ public class FBDriverPropertyManager {
         String localEncoding = (String)info.get("isc_dpb_local_encoding");
         
         if (iscEncoding != null && localEncoding == null) {
-            String javaEncoding = EncodingFactory.getJavaEncoding(iscEncoding);
+            String javaEncoding = FBConnectionHelper.getJavaEncoding(iscEncoding);
             
             if (javaEncoding != null)
                 info.put("isc_dpb_local_encoding", javaEncoding);
         }
         
         if (iscEncoding == null && localEncoding != null) {
-            iscEncoding = EncodingFactory.getIscEncoding(localEncoding); 
+            iscEncoding = FBConnectionHelper.getIscEncoding(localEncoding); 
             info.put("isc_dpb_lc_ctype", iscEncoding);
         }
         

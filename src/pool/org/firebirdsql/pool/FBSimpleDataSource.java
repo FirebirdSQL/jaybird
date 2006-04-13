@@ -358,18 +358,13 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
         mcf.setUseTranslation(translationPath);
     }
 
-    public boolean isDefaultResultSetHoldable() {
-        return mcf.isDefaultResultSetHoldable();
-    }
-
-    public void setDefaultResultSetHoldable(boolean isHoldable) {
-        mcf.setDefaultResultSetHoldable(isHoldable);
-    }    
-
+    
     
     /*
      * INTERFACES IMPLEMENTATION
      */
+
+
 
     /**
      * Get previously set JNDI reference.

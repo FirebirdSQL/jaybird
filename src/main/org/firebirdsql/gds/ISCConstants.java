@@ -141,7 +141,6 @@ public final class ISCConstants {
     public final static int isc_dpb_local_encoding          = 135;
     public final static int isc_dpb_mapping_path            = 136;
     public final static int isc_dpb_no_result_set_tracking  = 137; 
-    public final static int isc_dpb_result_set_holdable     = 138;
     
 
     /*************************************/
@@ -380,9 +379,6 @@ public final class ISCConstants {
     public final static int isc_spb_sts_hdr_pages	=	0x04;
     public final static int isc_spb_sts_idx_pages	=	0x08;
     public final static int isc_spb_sts_sys_relations=	0x10;
-    public final static int isc_spb_sts_record_versions = 0x20;
-    public final static int isc_spb_sts_table       =   0x40;
-    public final static int isc_spb_sts_nocreation  =   0x80;
 
 
 

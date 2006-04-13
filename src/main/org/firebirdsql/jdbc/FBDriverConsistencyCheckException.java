@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-
 /**
  * Internal driver consistency check failed. This exception is thrown when some
  * internal consistency check fails.

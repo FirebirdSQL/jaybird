@@ -21,7 +21,6 @@ package org.firebirdsql.jdbc;
 
 import java.text.BreakIterator;
 
-
 /**
  * The class <code>FBEscapedParser</code>  parses the SQL 
  * and converts escaped syntax to native form.

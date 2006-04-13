@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-
 /**
  * Tell that driver is not able to serve the request due to missing capabilities.
  * 
