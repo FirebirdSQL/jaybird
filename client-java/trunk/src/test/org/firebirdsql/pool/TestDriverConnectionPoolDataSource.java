@@ -105,4 +105,9 @@ public class TestDriverConnectionPoolDataSource extends
     public void testEncoding() throws Exception {
         // test is not defined for this type of pool
     }
+
+    public void testCustomTpbMapping() throws Exception {
+        // test is not defined for this type of pool
+    }
+    
 }
