@@ -96,6 +96,8 @@ public class TestReconnectTransaction extends FBTestBase {
         //gds.isc_detach_database(dbHandle1);
         if (dbHandle1 instanceof isc_db_handle_impl)
             ((isc_db_handle_impl)dbHandle1).out.close();
+        else
+            fail("This test case does not work with JNI connections.");
         
         AbstractIscDbHandle dbHandle2 = (AbstractIscDbHandle)gds.createIscDbHandle();
         gds.iscAttachDatabase(getdbpath(DB_NAME), dbHandle2, dpb);
