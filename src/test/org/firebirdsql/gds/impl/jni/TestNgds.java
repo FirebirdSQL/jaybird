@@ -203,7 +203,7 @@ public class TestNgds extends SimpleFBTestBase {
        databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
        databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
        databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
-       databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_overwrite, 0);
+//       databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_overwrite, 0);
        databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_sql_dialect, new byte[] {3, 0, 0, 0});
 
      IscDbHandle db = gds.createIscDbHandle();
