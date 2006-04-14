@@ -1,3 +1,11 @@
+2006-04-13 17:38  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/pool/TestDriverConnectionPoolD
+	ataSource.java:
+	
+	undefined a test case
+
 2006-04-13 16:42  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/pool/:
