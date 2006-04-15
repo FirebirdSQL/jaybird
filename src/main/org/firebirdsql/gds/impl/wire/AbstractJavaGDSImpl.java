@@ -2570,20 +2570,28 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			throw new GDSException(ISCConstants.isc_arg_gds,
 					ISCConstants.isc_svcnotdef, service);
 
-		String server = service.substring(0, mgrIndex - 1);
-		int port = 3050;
-		String host = server;
+        if (mgrIndex > 0 && service.charAt(mgrIndex - 1) != ':')
+            throw new GDSException(ISCConstants.isc_arg_gds,
+                ISCConstants.isc_svcnotdef, service);
+        
+        int port = 3050;
+        String host = null;
+        
+        if (mgrIndex > 0) {
+            String server = service.substring(0, mgrIndex - 1);
+            host = server;
 
-		int portIndex = server.indexOf('/');
-		if (portIndex != -1) {
-			try {
-				port = Integer.parseInt(server.substring(portIndex + 1));
-				host = server.substring(0, portIndex);
-			} catch (NumberFormatException ex) {
-				// ignore, nothing happened, we try to connect directly
-			}
-
-		}
+    		int portIndex = server.indexOf('/');
+    		if (portIndex != -1) {
+    			try {
+    				port = Integer.parseInt(server.substring(portIndex + 1));
+    				host = server.substring(0, portIndex);
+    			} catch (NumberFormatException ex) {
+    				// ignore, nothing happened, we try to connect directly
+    			}
+    
+    		}
+        }
 
 		synchronized (svc) {
 			try {
@@ -2612,7 +2620,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 					log.debug("op_service_attach ");
 				svc.out.writeInt(op_service_attach);
 				svc.out.writeInt(0);
-				svc.out.writeString(host + ":" + serviceMgrStr);
+                svc.out.writeString(serviceMgrStr);
 
 				svc.out.writeTyped(ISCConstants.isc_spb_version,
 						(Xdrable) serviceParameterBuffer);
@@ -2850,8 +2858,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			svc.out.writeInt(op_service_info);
 			svc.out.writeInt(svc.getHandle());
 			svc.out.writeInt(0);
-			svc.out.writeBuffer(spb.toByteArray());
-			svc.out.writeBuffer(srb.toByteArray());
+			svc.out.writeBuffer(spb != null ? spb.toByteArray() : null);
+			svc.out.writeBuffer(srb != null ? srb.toByteArray() : null);
 			svc.out.writeInt(resultBuffer.length);
 			svc.out.flush();
 
