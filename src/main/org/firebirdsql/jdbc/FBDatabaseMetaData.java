@@ -2676,48 +2676,57 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 case Types.DECIMAL:
                 case Types.NUMERIC:
                    row[6] = xsqlvars[0].encodeInt(rs.getShort("FIELD_PRECISION"));
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
                    row[6] = xsqlvars[0].encodeInt(rs.getShort("CHAR_LEN"));
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
                    break;
                 case Types.FLOAT:
                    row[6] = xsqlvars[0].encodeInt(7);
+                   row[8] = xsqlvars[0].encodeInt(7);
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.DOUBLE:
                    row[6] = xsqlvars[0].encodeInt(15);
+                   row[8] = xsqlvars[0].encodeInt(15);
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.INTEGER:
                    row[6] = xsqlvars[0].encodeInt(10);
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.SMALLINT:
                    row[6] = xsqlvars[0].encodeInt(5);
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.DATE:
                    row[6] = xsqlvars[0].encodeInt(10);
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.TIME:
                    row[6] = xsqlvars[0].encodeInt(8);
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.TIMESTAMP:
                    row[6] = xsqlvars[0].encodeInt(19);
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 default:
                    row[6] = xsqlvars[0].encodeInt(0);
+                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
                }
 
             row[7] = xsqlvars[0].encodeShort((short) 0);
-            row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
             row[9] = xsqlvars[0].encodeInt(10);
 
             short nullFlag = rs.getShort("NULL_FLAG");
@@ -2785,9 +2794,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         switch (fieldType) {
             case smallint_type:
-                return Types.SMALLINT;
+                if (fieldSubType == 1)
+                    return Types.NUMERIC;
+                else if (fieldSubType == 2)
+                    return Types.DECIMAL;
+                else
+                    return Types.SMALLINT;
             case integer_type:
-                return Types.INTEGER;
+                if (fieldSubType == 1)
+                    return Types.NUMERIC;
+                else if (fieldSubType == 2)
+                    return Types.DECIMAL;
+                else
+                    return Types.INTEGER;
             case double_type:
             case d_float_type:
                 return Types.DOUBLE;
@@ -4236,8 +4255,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             row[3] = getBytes(rs.getString("PKCOLUMN_NAME").trim());
             row[4] = null;
             row[5] = null;
-            row[6] = getBytes(rs.getString("PKTABLE_NAME").trim());
-            row[7] = getBytes(rs.getString("PKCOLUMN_NAME").trim());
+            row[6] = getBytes(rs.getString("FKTABLE_NAME").trim());
+            row[7] = getBytes(rs.getString("FKCOLUMN_NAME").trim());
             row[8] = xsqlvars[0].encodeShort(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
             if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
@@ -4559,24 +4578,47 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     //int typeSearchable  = 3;
 
-    private static final String GET_INDEX_INFO = "select"
-    +" null as TABLE_CAT "
-    +" ,null as TABLE_SCHEM "
-    +" ,ind.RDB$RELATION_NAME AS TABLE_NAME "
-    +" ,ind.RDB$UNIQUE_FLAG AS NON_UNIQUE "
-    +" ,null as INDEX_QUALIFIER "
-    +" ,ind.RDB$INDEX_NAME as INDEX_NAME "
-    +" ,null as ITYPE "
-    +" ,ise.rdb$field_position+1 as ORDINAL_POSITION "
-    +" ,ise.rdb$field_name as COLUMN_NAME "
-    +" ,ind.RDB$INDEX_TYPE as ASC_OR_DESC "
-    +" ,0 as CARDINALITY "
-    +" ,0 as IPAGES "
-    +" ,null as FILTER_CONDITION "
-    +" from rdb$indices ind, rdb$index_segments ise "
-    +" where ind.rdb$index_name = ise.rdb$index_name "
-    +" and ind.rdb$relation_name = ? "
-    +" order by 4, 6, 8";
+    private static final String GET_INDEX_INFO_COLUMN_LIST = ""
+        + "  NULL as TABLE_CAT "
+        + ", NULL as TABLE_SCHEM "
+        + ", ind.RDB$RELATION_NAME AS TABLE_NAME "
+        + ", ind.RDB$UNIQUE_FLAG AS NON_UNIQUE "
+        + ", NULL as INDEX_QUALIFIER "
+        + ", ind.RDB$INDEX_NAME as INDEX_NAME "
+        + ", NULL as ITYPE "
+        + ", ise.rdb$field_position+1 as ORDINAL_POSITION "
+        + ", ise.rdb$field_name as COLUMN_NAME "
+        + ", ind.RDB$INDEX_TYPE as ASC_OR_DESC "
+        + ", 0 as CARDINALITY "
+        + ", 0 as IPAGES "
+        + ", null as FILTER_CONDITION "
+        ;
+    
+    private static final String GET_INDEX_INFO = "" 
+        + "SELECT"
+        +   GET_INDEX_INFO_COLUMN_LIST
+        + "FROM "
+        + "  rdb$indices ind, "
+        + "  rdb$index_segments ise "
+        + "WHERE "
+        + "  ind.rdb$index_name = ise.rdb$index_name "
+        + "AND " 
+        + "  ind.rdb$relation_name = ? "
+        + "ORDER BY 4, 6, 8"
+        ;
+    
+    private static final String GET_INDEX_INFO_UPPER = ""
+        + "SELECT"
+        +   GET_INDEX_INFO_COLUMN_LIST
+        + "FROM "
+        + "  rdb$indices ind, "
+        + "  rdb$index_segments ise "
+        + "WHERE "
+        + "  ind.rdb$index_name = ise.rdb$index_name "
+        + "AND " 
+        + "  UPPER(ind.rdb$relation_name) = ? "
+        + "ORDER BY 4, 6, 8"
+        ;
 
     /**
      * Gets a description of a table's indices and statistics. They are
@@ -4633,11 +4675,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getIndexInfo(String catalog, String schema, String table,
         boolean unique, boolean approximate) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
-        String sql = GET_INDEX_INFO;
-        ArrayList params = new ArrayList();
-        params.add(table);
-
-        ResultSet rs = doQuery(sql, params);
 
         XSQLVAR[] xsqlvars = new XSQLVAR[13];
 
@@ -4716,7 +4753,27 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         xsqlvars[12].relname = "INDEXINFO";
 
         ArrayList rows = new ArrayList();
-        while (rs.next()) {
+
+        ArrayList params = new ArrayList();
+        params.add(table);
+
+        ResultSet rs = doQuery(GET_INDEX_INFO, params);
+
+        // if no direct match happened, check the uppercased match
+        if (!rs.next()) {
+            params.clear();
+            params.add(table.toUpperCase());
+            rs = doQuery(GET_INDEX_INFO_UPPER, params);
+            
+            // open the second result set and check whether we have rows
+            // if no rows are available, we have to exit now, otherwise the 
+            // following do/while loop will throw SQLException that the
+            // result set is not positioned on a row
+            if (!rs.next())
+                return new FBResultSet(xsqlvars, rows);
+        }
+        
+        do {
             byte[][] row = new byte[13][];
             row[0] = null;
             row[1] = null;
@@ -4741,7 +4798,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             row[12] = null;
 
             rows.add(row);
-        }
+            
+        } while (rs.next());
+        
         return new FBResultSet(xsqlvars, rows);
     }
 
