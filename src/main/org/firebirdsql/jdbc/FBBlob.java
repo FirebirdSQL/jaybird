@@ -58,7 +58,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 
 public class FBBlob implements FirebirdBlob, Synchronizable {
     
-    private static final boolean SEGMENTED = true;
+    public static final boolean SEGMENTED = true;
     public static final int READ_FULLY_BUFFER_SIZE = 16 * 1024;
 
     /**
@@ -189,6 +189,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
     }
 
+   public static final byte[] BLOB_LENGTH_REQUEST = new byte[]{ISCConstants.isc_info_blob_total_length};
+    
   /**
    * Returns the number of bytes in the <code>BLOB</code> value
    * designated by this <code>Blob</code> object.
@@ -199,8 +201,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public long length() throws SQLException {
-        byte[] info = getInfo(
-            new byte[]{ISCConstants.isc_info_blob_total_length}, 20);
+        byte[] info = getInfo(BLOB_LENGTH_REQUEST, 20);
             
         return interpretLength(info, 0);
     }
@@ -215,16 +216,28 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * 
      * @throws SQLException if length cannot be interpreted.
      */            
-    private long interpretLength(byte[] info, int position) throws SQLException { 
+    public static long interpretLength(GDS gds, byte[] info, int position) throws SQLException { 
                 
         if (info[position] != ISCConstants.isc_info_blob_total_length)
             throw new FBSQLException("Length is not available.");
             
-        int dataLength = 
-            gdsHelper.getInternalAPIHandler().iscVaxInteger(info, position + 1, 2);
+        int dataLength = gds.iscVaxInteger(info, position + 1, 2);
             
-        return gdsHelper.getInternalAPIHandler().iscVaxInteger(
-            info, position + 3, dataLength);
+        return gds.iscVaxInteger(info, position + 3, dataLength);
+    }
+    
+    /**
+     * Interpret BLOB length from buffer.
+     * 
+     * @param info server response.
+     * @param position where to start interpreting.
+     * 
+     * @return length of the blob.
+     * 
+     * @throws SQLException if length cannot be interpreted.
+     */            
+    private long interpretLength(byte[] info, int position) throws SQLException { 
+       return interpretLength(gdsHelper.getInternalAPIHandler(), info, position);
     }
 
     /**

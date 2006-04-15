@@ -90,12 +90,23 @@ public class XSQLVAR {
      *        as the base for initializing this instance
      */
     public void copyFrom(XSQLVAR original) {
+        copyFrom(original, true);
+    }
+    
+    /**
+     * Copy constructor. Initialize this instance of <code>XSQLVAR</code> with
+     * values from another instance.
+     *
+     * @param original The other instance of <code>XSQLVAR</code> to be used
+     *        as the base for initializing this instance
+     */
+    public void copyFrom(XSQLVAR original, boolean copyData) {
         this.sqltype = original.sqltype;
         this.sqlscale = original.sqlscale;
         this.sqlsubtype = original.sqlsubtype;
         this.sqllen = original.sqllen;
         
-        if (original.sqldata != null) {
+        if (original.sqldata != null && copyData) {
             this.sqldata = new byte[original.sqldata.length]; 
             System.arraycopy(original.sqldata, 0, this.sqldata, 0, original.sqldata.length);
         } else

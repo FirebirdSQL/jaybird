@@ -26,7 +26,7 @@ import java.io.Reader;
 import java.sql.SQLException;
 import java.sql.Blob;
 
-import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.*;
 import org.firebirdsql.jdbc.*;
 
 /**
@@ -114,48 +114,74 @@ public class FBBlobField extends FBField implements FBFlushableField {
     }
     
     public byte[] getBytesInternal() throws SQLException {
-        Blob blob = getBlob();
 
-        if (blob == BLOB_NULL_VALUE)
+        final byte[] blobIdBuffer = getFieldData();
+        
+        if (blobIdBuffer == null) 
             return BYTES_NULL_VALUE;
-
-        InputStream in = blob.getBinaryStream();
-
-        if (in == STREAM_NULL_VALUE)
-            return BYTES_NULL_VALUE;
-
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-
-        // copy stream data
-        byte[] buff = new byte[BUFF_SIZE];
-        int counter = 0;
-        try {
-            while((counter = in.read(buff)) != -1) {
-                bout.write(buff, 0, counter);
-            }
-        } catch(IOException ioex) {
-            throw (SQLException)createException(
-                BYTES_CONVERSION_ERROR + " " + ioex.getMessage());
-        } finally {
+        
+        final long blobId = field.decodeLong(blobIdBuffer);
+        
+        Object syncObject = ((FBBlob)getBlob()).getSynchronizationObject();
+        synchronized (syncObject) {
             try {
-                in.close();
-            } catch(IOException ioex) {
-                throw new FBSQLException(ioex);
-            }
-
-            try {
-                bout.close();
-            } catch(IOException ioex) {
-                throw new FBSQLException(ioex);
+                final IscBlobHandle blobHandle = 
+                    gdsHelper.openBlob(blobId, FBBlob.SEGMENTED);
+                
+                try {
+                    final GDS gds = gdsHelper.getInternalAPIHandler();
+                    
+                    final byte[] lengthBuffer = 
+                        gds.iscBlobInfo(blobHandle, FBBlob.BLOB_LENGTH_REQUEST, 20);
+                    
+                    final int blobLength = (int)FBBlob.interpretLength(gds,lengthBuffer, 0);
+                    
+                    final int bufferLength = gdsHelper.getBlobBufferLength();
+                    final byte[] resultBuffer = new byte[blobLength];
+                    
+                    int offset = 0;
+                    
+                    while (offset < blobLength) {
+                        final byte[] segementBuffer = 
+                            gdsHelper.getBlobSegment(blobHandle, bufferLength);
+                        
+                        if (segementBuffer.length == 0) {
+                            // unexpected EOF
+                            throw (SQLException) createException(BYTES_CONVERSION_ERROR);
+                        }
+                        
+                        System.arraycopy(segementBuffer, 0, resultBuffer, offset, segementBuffer.length);
+                        
+                        offset += segementBuffer.length;
+                    }
+                    
+                    return resultBuffer;
+                    
+                } finally {
+                    gdsHelper.closeBlob(blobHandle);
+                }
+                
+            } catch (GDSException e) {
+                throw new FBSQLException(e);
             }
         }
 
-        return bout.toByteArray();
     }
 
     public byte[] getCachedObject() throws SQLException {
-        if (getFieldData()==null) 
-            return BYTES_NULL_VALUE;
+        if (getFieldData() == null) {
+            
+            if (bytes != null)
+                return bytes;
+            else
+            if (binaryStream != null)
+                throw new FBDriverNotCapableException();
+            else
+            if (characterStream != null)
+                throw new FBDriverNotCapableException();
+            else
+                return BYTES_NULL_VALUE;
+        }
 
 		  return getBytesInternal();
     }
