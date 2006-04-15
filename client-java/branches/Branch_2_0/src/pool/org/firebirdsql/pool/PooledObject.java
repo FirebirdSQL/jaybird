@@ -38,4 +38,21 @@ public interface PooledObject {
      * @return <code>true</code> when the object is valid.
      */
     boolean isValid();
+    
+    /**
+     * Check whether this object is currently in pool or had been released
+     * to the application.
+     * 
+     * @return <code>true</code> if the object is currently in pool. 
+     */
+    boolean isInPool();
+    
+    /**
+     * Set the "inPool" flag to this object. This method should be called only
+     * by the pool implementation.
+     * 
+     * @param inPool <code>true</code> if object is in pool, otherwise 
+     * <code>false</code>.
+     */
+    void setInPool(boolean inPool);
 }

@@ -32,12 +32,11 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
-import javax.sql.DataSource;
-import javax.sql.PooledConnection;
-
+import javax.sql.*;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.*;
+import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.FirebirdPreparedStatement;
 
 /**
@@ -60,7 +59,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     protected void setUp() throws Exception {
         super.setUp();
         
-        FBConnectionPoolDataSource connectionPool = new FBConnectionPoolDataSource();
+        AbstractFBConnectionPoolDataSource connectionPool = new FBConnectionPoolDataSource();
 
         connectionPool.setType(getGdsType().toString());
         
@@ -191,9 +190,9 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             
             Object obj = ctx.lookup("jdbc/test");
             
-            assertTrue("Should provide correct data source", obj instanceof FBConnectionPoolDataSource);
+            assertTrue("Should provide correct data source", obj instanceof AbstractFBConnectionPoolDataSource);
             
-            FBConnectionPoolDataSource ds = (FBConnectionPoolDataSource)obj;
+            AbstractFBConnectionPoolDataSource ds = (AbstractFBConnectionPoolDataSource)obj;
             
             assertPoolConfiguration(ds);
         } finally {
@@ -873,7 +872,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     };
 
     public void testEncoding() throws Exception {
-        FBConnectionPoolDataSource fbPool = (FBConnectionPoolDataSource)pool;
+    	AbstractFBConnectionPoolDataSource fbPool = (AbstractFBConnectionPoolDataSource)pool;
         
         fbPool.setEncoding("WIN1251");
         
@@ -903,6 +902,31 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             }
         } finally {
             pool.shutdown();
+        }
+    }
+
+    /**
+     * It is not allowed to call "getConnection()" method on a connection that
+     * is in pool.
+     * 
+     * @throws Exception if test did not suceed.
+     */
+    public void testConnectionInLoop() throws Exception {
+        PooledConnection xac = ((ConnectionPoolDataSource) pool).getPooledConnection();
+        
+        try {
+            Connection c = xac.getConnection(); 
+            c.close();
+            
+            try {
+                Connection c2 = xac.getConnection();
+                c2.close();
+                fail("Should not obtain logical connection.");
+            } catch(SQLException ex) {
+                // everything is fine
+            }
+        } finally {        
+            xac.close();
         }
     }
 }

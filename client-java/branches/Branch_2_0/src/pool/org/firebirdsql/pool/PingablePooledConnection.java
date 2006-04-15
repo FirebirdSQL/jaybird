@@ -24,6 +24,7 @@ import java.sql.*;
 
 import javax.sql.*;
 
+import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -50,6 +51,7 @@ public class PingablePooledConnection implements PooledConnection,
     private HashSet eventListeners = new HashSet();
 
     private boolean invalid;
+    private boolean inPool;
 
     private PooledConnectionHandler currentConnection;
 
@@ -196,7 +198,35 @@ public class PingablePooledConnection implements PooledConnection,
             return true;
         }
     }
+    
+    /**
+     * Check whether this object is currently in pool or had been released
+     * to the application.
+     * 
+     * @return <code>true</code> if the object is currently in pool. 
+     */
+    public boolean isInPool() {
+        return inPool;
+    }
+    
+    /**
+     * Set the "inPool" flag to this object. This method should be called only
+     * by the pool implementation.
+     * 
+     * @param inPool <code>true</code> if object is in pool, otherwise 
+     * <code>false</code>.
+     */
+    public void setInPool(boolean inPool) {
+        this.inPool = inPool;
+    }
 
+    private void checkInPool() throws SQLException {
+        if (inPool)
+            throw new FBSQLException(
+                "Physical connection is currently in pool, " +
+                "you cannot allocate logical connections now.");
+    }
+    
     /**
      * Add connection listener to be notified about connection events.
      *
@@ -307,6 +337,8 @@ public class PingablePooledConnection implements PooledConnection,
         Connection getConnection() throws SQLException {
 
         checkValidity();
+        
+        checkInPool();
 
         if (currentConnection != null) {
 
