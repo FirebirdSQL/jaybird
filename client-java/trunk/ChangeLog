@@ -1,3 +1,88 @@
+2006-04-15 18:05  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+	
+	merged with HEAD - CHARACTER_LENGTH is reserved word now
+
+2006-04-15 18:03  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/FBConnectionHelper.java,
+	resources/isc_encoding_size.properties,
+	resources/isc_encodings.properties:
+	
+	added support for UTF8 charset
+
+2006-04-15 17:54  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/XSQLVAR.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBBlob.java,
+	main/org/firebirdsql/jdbc/field/FBBlobField.java,
+	main/org/firebirdsql/jdbc/field/FBLongVarCharField.java,
+	test/org/firebirdsql/jdbc/TestBatchUpdates.java:
+	
+	merged with HEAD - fix to batch updates with BLOB fields (also a
+	FBBlobField.getBytes() performance improvement)
+
+2006-04-15 17:40  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/isc_svc_handle_i
+	mpl.java:
+	
+	merged fixes to Services API handling with HEAD
+
+2006-04-15 17:33  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java,
+	pool/org/firebirdsql/pool/PooledObject.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+	
+	merged with HEAD:   - bugfix for a case when logical connection is
+	obtained from a connection in pool   - fix to exception linking
+
+2006-04-15 17:19  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+	
+	merged with HEAD
+
+2006-04-15 17:14  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSI
+	mpl.java:
+	
+	merged fixes to Services API handling with HEAD
+
+2006-04-15 01:21  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/gds/impl/jni/TestNgdsBlobReadB
+	ug.java:
+	
+	reformatted code
+
+2006-04-15 01:19  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/gds/TestReconnectTransaction.j
+	ava:
+	
+	added text to fail when executed in JNI-mode
+
+2006-04-15 01:09  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/gds/impl/jni/TestNgds.java:
+	
+	commented out the isc_dpb_overwrite DPB parameter to prevet FB 2.0
+	RC1 crash
+
 2006-04-13 17:38  rrokytskyy
 
 	*
