@@ -55,7 +55,7 @@ them in the Database property like this: <host>/<port>:<path to db file> -->
     </config-property>
     <authentication-mechanism>
       <authentication-mechanism-type>BasicPassword</authentication-mechanism-type>
-      <credential-interface>javax.resource.security.PasswordCredential</credential-interface>
+      <credential-interface>javax.resource.spi.security.PasswordCredential</credential-interface>
     </authentication-mechanism>
     <reauthentication-support>false</reauthentication-support>
   </resourceadapter>
