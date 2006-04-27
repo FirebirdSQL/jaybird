@@ -56,6 +56,10 @@ import org.firebirdsql.jdbc.field.FieldDataProvider;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class FBRowUpdater implements FirebirdRowUpdater  {
+    
+    private static final int PARAMETER_UNUSED = 0;
+    private static final int PARAMETER_USED = 1;
+    private static final int PARAMETER_DBKEY = 2;
 
     private GDSHelper gdsHelper;
     private Synchronizable syncProvider;
@@ -206,7 +210,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
      * 
      * @return array of booleans that represent parameter mask.
      */
-    private boolean[] getParameterMask() throws SQLException {
+    private int[] getParameterMask() throws SQLException {
 
         // loop through the "best row identifiers" and set appropriate falgs.
         FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
@@ -215,7 +219,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
             "", "", tableName, DatabaseMetaData.bestRowSession, true);
 
         try {
-            boolean[] result = new boolean[xsqlvars.length];
+            int[] result = new int[xsqlvars.length];
             boolean hasParams = false;
             while(bestRowIdentifier.next()) {
                 String columnName = bestRowIdentifier.getString(2);
@@ -225,11 +229,19 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 
                 boolean found = false;
                 for (int i = 0; i < xsqlvars.length; i++) {
-                    
-                    if (columnName.equals(xsqlvars[i].sqlname)) {
-                        result[i] = true;
+
+                    // special handling for the RDB$DB_KEY columns that must be
+                    // selected as RDB$DB_KEY, but in XSQLVAR are represented
+                    // as DB_KEY
+                    if ("RDB$DB_KEY".equals(columnName) && "DB_KEY".equals(xsqlvars[i].sqlname)) {
+                        result[i] = PARAMETER_DBKEY;
                         found = true;
-                    }
+                    } else
+                    if (columnName.equals(xsqlvars[i].sqlname)) {
+                        result[i] = PARAMETER_USED;
+                        found = true;
+                    } else
+                        result[i] = PARAMETER_UNUSED;
                 }
                 
                 // if we did not found a column from the best row identifier
@@ -254,13 +266,28 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         }
     }
     
-    private void appendWhereClause(StringBuffer sb, boolean[] parameterMask) {
+    private void appendWhereClause(StringBuffer sb, int[] parameterMask) {
         sb.append("WHERE");
         sb.append("\n");
         
+        // handle the RDB$DB_KEY case first
+        boolean hasDbKey = false;
+        for (int i = 0; i < parameterMask.length; i++) {
+            if (parameterMask[i] == PARAMETER_DBKEY)
+                hasDbKey = true;
+        }
+        
+        if (hasDbKey) {
+            sb.append("RDB$DB_KEY = ?");
+            return;
+        }
+        
+        // if we are here, then no RDB$DB_KEY update was used
+        // therefore loop through the parameters and build the
+        // WHERE clause
         boolean first = true;
         for (int i = 0; i < xsqlvars.length; i++) {
-            if (!parameterMask[i])
+            if (parameterMask[i] == PARAMETER_UNUSED)
                 continue;
             
             if (!first)
@@ -273,7 +300,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         }
     }
     
-    private String buildUpdateStatement(boolean[] parameterMask) {
+    private String buildUpdateStatement(int[] parameterMask) {
         StringBuffer sb = new StringBuffer();
         
         sb.append("UPDATE ").append(tableName).append("\n");
@@ -299,7 +326,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         return sb.toString();
     }
     
-    private String buildDeleteStatement(boolean[] parameterMask) {
+    private String buildDeleteStatement(int[] parameterMask) {
         StringBuffer sb = new StringBuffer();
         
         sb.append("DELETE FROM ").append(tableName).append("\n");
@@ -340,7 +367,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         return sb.toString();
     }
     
-    private String buildSelectStatement(boolean[] parameterMask) {
+    private String buildSelectStatement(int[] parameterMask) {
         StringBuffer sb = new StringBuffer();
         StringBuffer columns = new StringBuffer();
         
@@ -517,7 +544,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                     ((FBFlushableField)fields[i]).flushCachedData();
             }
             
-            boolean[] parameterMask = getParameterMask();
+            int[] parameterMask = getParameterMask();
             
             String sql;
             switch(statementType) {
@@ -560,7 +587,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
             }
             
             for (int i = 0; i < xsqlvars.length; i++) {
-                if (!parameterMask[i] && statementType != INSERT_STATEMENT_TYPE)
+                if (parameterMask[i] == PARAMETER_UNUSED && statementType != INSERT_STATEMENT_TYPE)
                     continue;
                 else
                 if (!updatedFlags[i] && statementType == INSERT_STATEMENT_TYPE)
