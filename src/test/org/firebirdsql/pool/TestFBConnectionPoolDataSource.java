@@ -346,11 +346,13 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             
             try {
                 try {
-                    stmt.executeUpdate("CREATE TABLE test(a INTEGER)");
+                    stmt.executeUpdate("DROP TABLE test");
                 } catch(SQLException ex) {
-                    if (ex.getErrorCode() != ISCConstants.isc_no_meta_update)
+                    if (ex.getErrorCode() != ISCConstants.isc_dsql_error)
                         throw ex;
                 }
+                
+                stmt.executeUpdate("CREATE TABLE test(a INTEGER)");
                 
                 stmt.executeUpdate("INSERT INTO test VALUES(1)");
                 
