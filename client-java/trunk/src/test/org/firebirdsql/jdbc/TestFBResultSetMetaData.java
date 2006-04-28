@@ -21,11 +21,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Properties;
 
 /**
@@ -146,14 +142,34 @@ public class TestFBResultSetMetaData extends FBTestBase {
         
         Connection connection = DriverManager.getConnection(this.getUrl(), props);
         
+        DatabaseMetaData dmd = connection.getMetaData();
+        int firebirdVersion = dmd.getDatabaseMajorVersion();
+        
         Statement stmt = connection.createStatement();
         
         ResultSet rs = stmt.executeQuery(TEST_QUERY2);
         
         ResultSetMetaData metaData = rs.getMetaData();
         		  
-        assertTrue("RDB$SECURITY_CLASS must have display size 31 ",metaData.getColumnDisplaySize(3)==10);
-        assertTrue("RDB$CHARACTER_SET_NAME must have display size 31 ",metaData.getColumnDisplaySize(4)==10);
+        int columnDisplaySize = metaData.getColumnDisplaySize(3);
+        
+        if (firebirdVersion == 1)
+            assertTrue("RDB$SECURITY_CLASS must have display size 31 ", columnDisplaySize == 10);
+        else
+        if (firebirdVersion == 2)
+            assertTrue("RDB$SECURITY_CLASS must have display size 31 ", columnDisplaySize == 31);
+        else
+            fail("Unknown Firebird version, not clear what to compare.");
+        
+        int columnDisplaySize2 = metaData.getColumnDisplaySize(4);
+        
+        if (firebirdVersion == 1)
+            assertTrue("RDB$CHARACTER_SET_NAME must have display size 31 ",columnDisplaySize2 == 10);
+        else
+        if (firebirdVersion == 2)
+            assertTrue("RDB$CHARACTER_SET_NAME must have display size 31 ",columnDisplaySize2 == 31);
+        else
+            fail("Unknown Firebird version, not clear what to compare.");
         
         stmt.close();
         connection.close();
