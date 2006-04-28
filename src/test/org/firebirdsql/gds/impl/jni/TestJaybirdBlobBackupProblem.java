@@ -273,7 +273,7 @@ public class TestJaybirdBlobBackupProblem extends TestCase
 			file.close();
 			}
 
-        assertTrue( "Looks like the backup failed. See logfile "+outputFilename, stringBuffer.toString().indexOf("closing file, committing, and finishing.") != -1 );
+        assertTrue( "Looks like the backup failed. See logfile "+outputFilename, stringBuffer.toString().indexOf("committing, and finishing.") != -1 );
         }
 
     private void startBackup(final GDS gds, final IscSvcHandle handle) throws GDSException
