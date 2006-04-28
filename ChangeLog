@@ -1,3 +1,22 @@
+2006-04-27 23:50  rrokytskyy
+
+	* client-java/src/resources/META-INF/ra.xml:
+	
+	ported fix from HEAD
+
+2006-04-27 23:49  rrokytskyy
+
+	* client-java/src/resources/META-INF/ra.xml:
+	
+	fixed the bug introduced by overriding the commit of David Jencks
+
+2006-04-27 23:35  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBRowUpdater.java:
+	
+	fixed issue when updatable result set was used with rdb$db_key
+	columns
+
 2006-04-15 18:05  rrokytskyy
 
 	*
