@@ -111,17 +111,6 @@ public class TestFBStatisticsManager extends FBTestBase {
         }
     }
     
-    public void testGetStatsWithZeroOption() throws SQLException {
-        createTestTable();
-        statManager.getDatabaseStatistics(0);
-        String statistics = loggingStream.toString();
-        assertTrue("Statistics with 0 as options should not include data "
-                    + "page info",
-                statistics.indexOf("Data pages") == -1);
-        assertTrue("Statistics with 0 as options must include log info",
-                statistics.indexOf("log page information") != -1);
-    }
-
     public void testGetSystemStats() throws SQLException {
     
         statManager.getDatabaseStatistics(
