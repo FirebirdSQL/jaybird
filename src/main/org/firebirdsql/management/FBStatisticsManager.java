@@ -159,9 +159,6 @@ public class FBStatisticsManager extends FBServiceManager
                     + "SYSTEM_TABLE_STATISTICS, INDEX_STATISTICS, or 0");
         }
         
-        if (options == 0){
-            options = ISCConstants.isc_spb_sts_db_log;
-        }
         ServiceRequestBuffer srb = createStatsSRB(options);
         executeServicesOperation(srb);
     }

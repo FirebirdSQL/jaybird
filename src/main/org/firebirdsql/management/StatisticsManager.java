@@ -122,6 +122,7 @@ public interface StatisticsManager extends ServiceManager {
      *      <li><code>DATA_TABLE_STATISTICS</code>
      *      <li><code>SYSTEM_TABLE_STATISTICS</code>
      *      <li><code>INDEX_STATISTICS</code>
+     *      <li><code>RECORD_VERSION_STATISTICS</code>
      * </ul>
      * <p>
      * If this method is invoked with <code>0</code> as the 
@@ -130,8 +131,11 @@ public interface StatisticsManager extends ServiceManager {
      *
      * @param options A bitmask combination of 
      *        <code>DATA_TABLE_STATISTICS</code>, 
-     *        <code>SYSTEM_TABLE_STATISTICS</code>, or
-     *        <code>INDEX_STATISTICS</code>. Can also be <code>0</code>.
+     *        <code>SYSTEM_TABLE_STATISTICS</code>, 
+     *        <code>INDEX_STATISTICS</code>, or
+     *        <code>RECORD_VERSION_STATISTICS</code>. 
+     *        Can also be <code>0</code>, which is equivalent to calling method
+     *        {@link #getDatabaseStatistics()}
      */
     public void getDatabaseStatistics(int options) throws SQLException;
 
