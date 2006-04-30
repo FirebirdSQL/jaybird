@@ -142,7 +142,7 @@ public class TestFBResultSetMetaData extends FBTestBase {
         
         Connection connection = DriverManager.getConnection(this.getUrl(), props);
         
-        DatabaseMetaData dmd = connection.getMetaData();
+        FBDatabaseMetaData dmd = (FBDatabaseMetaData)connection.getMetaData();
         int firebirdVersion = dmd.getDatabaseMajorVersion();
         
         Statement stmt = connection.createStatement();
