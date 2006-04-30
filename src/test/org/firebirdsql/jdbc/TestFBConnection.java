@@ -356,8 +356,8 @@ public class TestFBConnection extends FBTestBase {
         Connection connection = DriverManager.getConnection(getUrl(), props);
         try {
             
-            Statement stmt1 = connection.createStatement();
-            assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, stmt1.getResultSetHoldability());
+            AbstractStatement stmt1 = (AbstractStatement)connection.createStatement();
+            assertEquals(FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT, stmt1.getResultSetHoldability());
             
             Statement stmt2 = connection.createStatement();
             

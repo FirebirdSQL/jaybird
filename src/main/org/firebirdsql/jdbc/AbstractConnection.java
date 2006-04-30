@@ -75,9 +75,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
         FBConnectionRequestInfo cri = (FBConnectionRequestInfo)mc.getConnectionRequestInfo();
         
         if (cri.hasArgument(DatabaseParameterBufferExtension.RESULT_SET_HOLDABLE))
-            resultSetHoldability = ResultSet.HOLD_CURSORS_OVER_COMMIT;
+            resultSetHoldability = FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT;
         else
-            resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+            resultSetHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
     
     public FBObjectListener.StatementListener getStatementListener() {
@@ -747,7 +747,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized Statement createStatement(int resultSetType, 
         int resultSetConcurrency, int resultSetHoldability) throws SQLException 
     {
-        if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT && 
+        if (resultSetHoldability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT && 
                 resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
 
             addWarning(new FBSQLWarning("Holdable result set must be scrollable."));
@@ -837,7 +837,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     {
           PreparedStatement stmt;
           
-          if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT && 
+          if (resultSetHoldability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT && 
                   resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
 
               addWarning(new FBSQLWarning("Holdable result set must be scrollable."));
@@ -904,7 +904,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     {
         CallableStatement stmt;
         
-        if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT && 
+        if (resultSetHoldability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT && 
                 resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
 
             addWarning(new FBSQLWarning("Holdable result set must be scrollable."));
