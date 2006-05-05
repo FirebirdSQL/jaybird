@@ -207,7 +207,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
 
     public native void native_isc_prepare_transaction(IscTrHandle tr_handle)
             throws GDSException;
-
+    
     public native void native_isc_prepare_transaction2(IscTrHandle tr_handle,
             byte[] bytes) throws GDSException;
 
@@ -262,4 +262,10 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     public native void native_isc_cancel_events(IscDbHandle db_handle,
             EventHandleImp eventHandle) throws GDSException;
 
+    protected native void native_isc_finalize(int isc_api_handle)
+        throws GDSException;
+
+    protected void finalize() throws Throwable {
+        native_isc_finalize(isc_api_handle);
+    }
 }

@@ -342,6 +342,14 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1cancel_1events
   (JNIEnv *, jobject, jobject, jobject);
 
+/*
+ * Class:     org_firebirdsql_gds_impl_jni_JniGDSImpl
+ * Method:    native_isc_finalize
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1finalize
+  (JNIEnv *, jobject, jint);
+
 #ifdef __cplusplus
 }
 #endif
