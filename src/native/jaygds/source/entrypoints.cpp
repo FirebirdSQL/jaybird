@@ -1257,4 +1257,9 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
     LEAVE_PROTECTED_BLOCK
 }
 
+JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1finalize
+  (JNIEnv *, jobject, jint isc_api)
+{
+    interfaceManager.ReleaseInterface(isc_api);
+}
 
