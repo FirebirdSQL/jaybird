@@ -1184,9 +1184,9 @@ JNIEXPORT jint JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 JNIEXPORT jlong JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1event_1block
   (JNIEnv * javaEnvironment, jobject jThis, jobject jEventHandle, jstring eventName)
 {
+   long length = -1;
     ENTER_PROTECTED_BLOCK
         char *event_buffer, *result_buffer;
-        long length;
         JString jEventName(javaEnvironment, eventName);
         JEventHandle eventHandle(javaEnvironment, jEventHandle);
         const char* const event_name = jEventName.AsCString();
@@ -1203,6 +1203,7 @@ JNIEXPORT jlong JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc
         eventHandle.SetSize(length);
         return length;
     LEAVE_PROTECTED_BLOCK
+    return length;
 }
 
 JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1event_1counts
