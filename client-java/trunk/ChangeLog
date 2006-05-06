@@ -1,3 +1,20 @@
+2006-05-05 14:02  rrokytskyy
+
+	* client-java/src/native/jaygds/source/entrypoints.cpp:
+	
+	fixed compiler warning about not all exit paths to return a value
+	(cannot happen in reality because of throwing exceptions in
+	LEAVE_PROTECTED_BLOCK)
+
+2006-05-05 13:41  rrokytskyy
+
+	* client-java/src/: native/jaygds/source/entrypoints_generated.h,
+	native/jaygds/source/entrypoints.cpp,
+	native/jaygds/source/entrypoints_custom.h,
+	main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java:
+	
+	added isc_native_finalize entrypoint
+
 2006-04-30 12:01  rrokytskyy
 
 	* client-java/src/etc/: release_notes.html, release_notes.pdf:
