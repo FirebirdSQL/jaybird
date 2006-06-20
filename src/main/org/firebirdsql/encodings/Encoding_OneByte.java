@@ -21,6 +21,10 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.4  2004/10/08 22:39:10  rrokytskyy
+ * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
+ * added possibility to translate characters if there are some encoding issues
+ *
  * Revision 1.3  2003/06/05 22:36:07  brodsom
  * Substitute package and inline imports
  *
@@ -58,17 +62,25 @@ public abstract class Encoding_OneByte implements Encoding{
         }
     }
 
-    byte[] bufferB = new byte[128];
-    char[] bufferC = new char[128];
+    byte[] sharedBufferB = new byte[128];
+    char[] sharedBufferC = new char[128];
 
     // encode
     public byte[] encodeToCharset(String str){
-        if (bufferB.length < str.length()) 
-            bufferB = new byte[str.length()];
-        int length = encodeToCharset(str.toCharArray(), 0, str.length(), bufferB);
-        byte[] result = new byte[length];
-        System.arraycopy(bufferB, 0, result, 0, length);
-        return result;
+        if (EncodingFactory.USE_ENCODING_CACHING) {
+            byte[] result = new byte[str.length()];
+            encodeToCharset(str.toCharArray(), 0, str.length(), result);
+            return result;
+        } else {
+            if (sharedBufferB.length < str.length()) 
+                sharedBufferB = new byte[str.length()];
+            
+            int length = encodeToCharset(str.toCharArray(), 0, str.length(), sharedBufferB);
+            
+            byte[] result = new byte[length];
+            System.arraycopy(sharedBufferB, 0, result, 0, length);
+            return result;            
+        }
     }
 
     public abstract int encodeToCharset(char[] in, int off, int len, byte[] out);
@@ -81,10 +93,16 @@ public abstract class Encoding_OneByte implements Encoding{
 
     // decode from charset
     public String decodeFromCharset(byte[] in){
-        if (bufferC.length < in.length)
-            bufferC = new char[in.length];
-        int length = decodeFromCharset(in, 0, in.length, bufferC);
-        return new String(bufferC, 0, length);
+        if (EncodingFactory.USE_ENCODING_CACHING) {
+            char[] bufferC = new char[in.length];
+            int length = decodeFromCharset(in, 0, in.length, bufferC);
+            return new String(bufferC, 0, length);
+        } else {
+            if (sharedBufferC.length < in.length)
+                sharedBufferC = new char[in.length];
+            int length = decodeFromCharset(in, 0, in.length, sharedBufferC);
+            return new String(sharedBufferC, 0, length);
+        }
     }
 
     public abstract int decodeFromCharset(byte[] in, int off, int len, char[] out);

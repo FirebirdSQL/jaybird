@@ -25,6 +25,8 @@ import java.util.*;
 
 public class EncodingFactory {
     
+    public static final boolean USE_ENCODING_CACHING = Boolean.getBoolean("jaybird.encoding.cache");
+    
     private static final int[][] CHARSET_MAXIMUM_SIZE = new int[][] {
         { 0, 1}   // NONE
       , { 1, 1}   // OCTETS
@@ -114,7 +116,20 @@ public class EncodingFactory {
         }
     }
     
+    private static HashMap mainCache = new HashMap();
     public static Encoding createEncoding(String encoding) {
+        if (USE_ENCODING_CACHING) {
+            Encoding result = (Encoding)mainCache.get(encoding);
+            if (result == null) {
+                result = createEncodingInternal(encoding);
+                mainCache.put(encoding, result);
+            }
+            return result;
+        } else
+            return createEncodingInternal(encoding);
+    }
+    
+    public static Encoding createEncodingInternal(String encoding) {
         if (encoding.equals("NONE"))
             encoding = defaultEncoding;
         
@@ -212,7 +227,22 @@ public class EncodingFactory {
         return createEncoding(encoding);
     }
 
+    private static HashMap translatorCache = new HashMap();
+    
     public static Encoding getEncoding(String encoding, char[] charMapping){
+        if (USE_ENCODING_CACHING) {
+            Encoding result = (Encoding)translatorCache.get(encoding);
+            
+            if (result == null) {
+                result = getEncodingInternal(encoding, charMapping);
+                translatorCache.put(encoding, charMapping);
+            }
+            
+            return result;
+        } else
+            return getEncodingInternal(encoding, charMapping);
+    }
+    public static Encoding getEncodingInternal(String encoding, char[] charMapping){
         if (encoding == null || encoding.equals("NONE"))
             encoding = defaultEncoding;
         
