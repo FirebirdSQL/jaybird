@@ -1,3 +1,11 @@
+2006-06-20 08:34  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/encodings/:
+	EncodingFactory.java, Encoding_OneByte.java:
+	
+	added encoding caching that can be enabled via
+	jaybird.encoding.cache property
+
 2006-05-05 14:02  rrokytskyy
 
 	* client-java/src/native/jaygds/source/entrypoints.cpp:
