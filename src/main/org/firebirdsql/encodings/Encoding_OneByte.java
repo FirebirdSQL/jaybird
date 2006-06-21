@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.5  2006/06/20 06:34:00  rrokytskyy
+ * added encoding caching that can be enabled via jaybird.encoding.cache property
+ *
  * Revision 1.4  2004/10/08 22:39:10  rrokytskyy
  * added code to solve the issue when database has encoding NONE and there is no chance to control regional settings of the host OS
  * added possibility to translate characters if there are some encoding issues
@@ -38,6 +41,8 @@ package org.firebirdsql.encodings;
 import java.io.UnsupportedEncodingException;
 
 public abstract class Encoding_OneByte implements Encoding{
+    
+    public static final boolean USE_LOCAL_MEMORY = false;
 
     protected static void Initialize(String encoding, char[] byteToChar,
             byte[] charToByte) {
@@ -67,7 +72,7 @@ public abstract class Encoding_OneByte implements Encoding{
 
     // encode
     public byte[] encodeToCharset(String str){
-        if (EncodingFactory.USE_ENCODING_CACHING) {
+        if (USE_LOCAL_MEMORY) {
             byte[] result = new byte[str.length()];
             encodeToCharset(str.toCharArray(), 0, str.length(), result);
             return result;
@@ -93,7 +98,7 @@ public abstract class Encoding_OneByte implements Encoding{
 
     // decode from charset
     public String decodeFromCharset(byte[] in){
-        if (EncodingFactory.USE_ENCODING_CACHING) {
+        if (USE_LOCAL_MEMORY) {
             char[] bufferC = new char[in.length];
             int length = decodeFromCharset(in, 0, in.length, bufferC);
             return new String(bufferC, 0, length);

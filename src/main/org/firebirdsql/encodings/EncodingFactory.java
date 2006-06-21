@@ -25,7 +25,7 @@ import java.util.*;
 
 public class EncodingFactory {
     
-    public static final boolean USE_ENCODING_CACHING = Boolean.getBoolean("jaybird.encoding.cache");
+    public static final boolean USE_ENCODING_CACHING = false; // Boolean.getBoolean("jaybird.encoding.cache");
     
     private static final int[][] CHARSET_MAXIMUM_SIZE = new int[][] {
         { 0, 1}   // NONE
