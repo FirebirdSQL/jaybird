@@ -21,6 +21,9 @@
  *
  * CVS modification log:
  * $Log$
+ * Revision 1.6  2006/06/21 05:39:38  rrokytskyy
+ * disabled caching
+ *
  * Revision 1.5  2006/06/20 06:34:00  rrokytskyy
  * added encoding caching that can be enabled via jaybird.encoding.cache property
  *
@@ -42,8 +45,6 @@ import java.io.UnsupportedEncodingException;
 
 public abstract class Encoding_OneByte implements Encoding{
     
-    public static final boolean USE_LOCAL_MEMORY = false;
-
     protected static void Initialize(String encoding, char[] byteToChar,
             byte[] charToByte) {
         Initialize(encoding, byteToChar, charToByte, EncodingFactory.DEFAULT_MAPPING);            
@@ -67,25 +68,11 @@ public abstract class Encoding_OneByte implements Encoding{
         }
     }
 
-    byte[] sharedBufferB = new byte[128];
-    char[] sharedBufferC = new char[128];
-
     // encode
     public byte[] encodeToCharset(String str){
-        if (USE_LOCAL_MEMORY) {
-            byte[] result = new byte[str.length()];
-            encodeToCharset(str.toCharArray(), 0, str.length(), result);
-            return result;
-        } else {
-            if (sharedBufferB.length < str.length()) 
-                sharedBufferB = new byte[str.length()];
-            
-            int length = encodeToCharset(str.toCharArray(), 0, str.length(), sharedBufferB);
-            
-            byte[] result = new byte[length];
-            System.arraycopy(sharedBufferB, 0, result, 0, length);
-            return result;            
-        }
+        byte[] result = new byte[str.length()];
+        encodeToCharset(str.toCharArray(), 0, str.length(), result);
+        return result;
     }
 
     public abstract int encodeToCharset(char[] in, int off, int len, byte[] out);
@@ -98,16 +85,9 @@ public abstract class Encoding_OneByte implements Encoding{
 
     // decode from charset
     public String decodeFromCharset(byte[] in){
-        if (USE_LOCAL_MEMORY) {
-            char[] bufferC = new char[in.length];
-            int length = decodeFromCharset(in, 0, in.length, bufferC);
-            return new String(bufferC, 0, length);
-        } else {
-            if (sharedBufferC.length < in.length)
-                sharedBufferC = new char[in.length];
-            int length = decodeFromCharset(in, 0, in.length, sharedBufferC);
-            return new String(sharedBufferC, 0, length);
-        }
+        char[] bufferC = new char[in.length];
+        int length = decodeFromCharset(in, 0, in.length, bufferC);
+        return new String(bufferC, 0, length);
     }
 
     public abstract int decodeFromCharset(byte[] in, int off, int len, char[] out);
