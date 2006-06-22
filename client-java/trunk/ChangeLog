@@ -1,3 +1,17 @@
+2006-06-21 07:41  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/encodings/:
+	EncodingFactory.java, Encoding_OneByte.java:
+	
+	removed disabled code
+
+2006-06-21 07:39  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/encodings/:
+	EncodingFactory.java, Encoding_OneByte.java:
+	
+	disabled caching
+
 2006-06-20 08:34  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/encodings/:
