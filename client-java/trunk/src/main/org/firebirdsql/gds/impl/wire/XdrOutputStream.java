@@ -127,25 +127,22 @@ public class XdrOutputStream {
      */
     public void writeString(String s) throws IOException {
         byte[] buffer = s.getBytes();
+        writeBuffer(buffer);
+        /*
         int len = buffer.length;
         writeInt(len);
         if (len > 0) {
             write(buffer, len, (4 - len) & 3);
         }
+        */
     }
 
     /**
-     * @deprecated due to character translation feature use of this method
-     * is discouraged
+     * Write content of the specified string using the specified Java encoding.
      */
     public void writeString(String s, String encoding) throws IOException {
-        String javaEncoding = null;
-        
-        if (encoding != null && !"NONE".equals(encoding))
-            javaEncoding = EncodingFactory.getJavaEncoding(encoding);
-        
-        if (javaEncoding != null)
-            writeBuffer(s.getBytes(javaEncoding));
+        if (encoding != null)
+            writeBuffer(s.getBytes(encoding));
         else
             writeBuffer(s.getBytes());
     }

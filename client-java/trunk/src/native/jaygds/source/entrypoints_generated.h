@@ -25,10 +25,10 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_nativeInitil
 /*
  * Class:     org_firebirdsql_gds_impl_jni_JniGDSImpl
  * Method:    native_isc_attach_database
- * Signature: (Ljava/lang/String;Lorg/firebirdsql/gds/IscDbHandle;[B)V
+ * Signature: ([BLorg/firebirdsql/gds/IscDbHandle;[B)V
  */
 JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1attach_1database
-  (JNIEnv *, jobject, jstring, jobject, jbyteArray);
+  (JNIEnv *, jobject, jbyteArray, jobject, jbyteArray);
 
 /*
  * Class:     org_firebirdsql_gds_impl_jni_JniGDSImpl
@@ -73,10 +73,10 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 /*
  * Class:     org_firebirdsql_gds_impl_jni_JniGDSImpl
  * Method:    native_isc_create_database
- * Signature: (Ljava/lang/String;Lorg/firebirdsql/gds/IscDbHandle;[B)V
+ * Signature: ([BLorg/firebirdsql/gds/IscDbHandle;[B)V
  */
 JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1create_1database
-  (JNIEnv *, jobject, jstring, jobject, jbyteArray);
+  (JNIEnv *, jobject, jbyteArray, jobject, jbyteArray);
 
 /*
  * Class:     org_firebirdsql_gds_impl_jni_JniGDSImpl

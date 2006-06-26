@@ -48,6 +48,7 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
     int MAPPING_PATH            = ISCConstants.isc_dpb_mapping_path;
     int NO_RESULT_SET_TRACKING  = ISCConstants.isc_dpb_no_result_set_tracking;
     int RESULT_SET_HOLDABLE     = ISCConstants.isc_dpb_result_set_holdable;
+    int FILENAME_CHARSET        = ISCConstants.isc_dpb_filename_charset;
     
 
     /**

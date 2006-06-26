@@ -115,7 +115,24 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                         .getBytesForNativeCode();
 
         synchronized (this) {
-            native_isc_attach_database(getServerUrl(file_name), db_handle,
+            String serverUrl = getServerUrl(file_name);
+            
+            byte[] urlData;
+            try {
+                String filenameCharset = databaseParameterBuffer.getArgumentAsString(ISCConstants.isc_dpb_filename_charset);
+                if (filenameCharset != null)
+                    urlData = serverUrl.getBytes(filenameCharset);
+                else
+                    urlData = serverUrl.getBytes();
+                
+                byte[] nullTerminated = new byte[urlData.length];
+                System.arraycopy(urlData, 0, nullTerminated, 0, urlData.length);
+                urlData = nullTerminated;
+            } catch(UnsupportedEncodingException ex) {
+                throw new GDSException(ISCConstants.isc_bad_dpb_content);
+            }
+            
+            native_isc_attach_database(urlData, db_handle,
                     dpbBytes);
         }
 
@@ -231,7 +248,25 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                         .getBytesForNativeCode();
 
         synchronized (this) {
-            native_isc_create_database(getServerUrl(file_name), db_handle,
+            String serverUrl  = getServerUrl(file_name);
+            
+            byte[] urlData;
+            try {
+                String filenameCharset = databaseParameterBuffer.getArgumentAsString(ISCConstants.isc_dpb_filename_charset);
+                if (filenameCharset != null)
+                    urlData = serverUrl.getBytes(filenameCharset);
+                else
+                    urlData = serverUrl.getBytes();
+                
+                byte[] nullTerminated = new byte[urlData.length];
+                System.arraycopy(urlData, 0, nullTerminated, 0, urlData.length);
+                urlData = nullTerminated;
+
+            } catch(UnsupportedEncodingException ex) {
+                throw new GDSException(ISCConstants.isc_bad_dpb_content);
+            }
+            
+            native_isc_create_database(urlData, db_handle,
                     dpbBytes);
         }
     }
@@ -852,7 +887,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         return (buffer[pos] & 0xff) | ((buffer[pos + 1] & 0xff) << 8);
     }
     
-    public abstract void native_isc_attach_database(String file_name,
+    public abstract void native_isc_attach_database(byte[] file_name,
             IscDbHandle db_handle, byte[] dpbBytes);
 
     public abstract byte[] native_isc_blob_info(isc_blob_handle_impl handle,
@@ -870,7 +905,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public abstract void native_isc_create_blob2(IscDbHandle db,
             IscTrHandle tr, IscBlobHandle blob, byte[] dpbBytes);
 
-    public abstract void native_isc_create_database(String file_name,
+    public abstract void native_isc_create_database(byte[] file_name,
             IscDbHandle db_handle, byte[] dpbBytes);
 
     public abstract void native_isc_database_info(IscDbHandle db_handle,
