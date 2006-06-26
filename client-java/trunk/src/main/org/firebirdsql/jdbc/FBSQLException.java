@@ -92,6 +92,12 @@ public class FBSQLException extends SQLException {
         this.message = message;
     }
 
+    public FBSQLException(String message, SQLException ex) {
+        super(message, SQL_STATE_GENERAL_ERROR);
+        this.message = message;
+        this.original = ex;
+    }
+
     public FBSQLException(String message, String sqlState) {
         super(message, sqlState);
         this.message = message;
@@ -130,5 +136,5 @@ public class FBSQLException extends SQLException {
             s.print("at ");
             original.printStackTrace(s);
         }
-    }
+    }    
 }

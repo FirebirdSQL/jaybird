@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 
 /**
@@ -351,13 +352,15 @@ class PooledConnectionQueue {
                     while (result == null) {
                         
                         if (!keepBlocking(startTime)) {
-                            SQLException ex = new SQLException(
-                                "Could not obtain connection during " + 
-                                "blocking timeout (" + blockingTimeout + " ms)");
-                                
-                            if (pendingExceptions != null)
-                                ex.setNextException(pendingExceptions);
+                            String message = "Could not obtain connection during " + 
+                                "blocking timeout (" + blockingTimeout + " ms)";
                             
+                            FBSQLException ex;
+                            if (pendingExceptions != null)
+                                ex = new FBSQLException(message, pendingExceptions);
+                            else
+                                ex = new FBSQLException(message);
+                                
                             throw ex;
                         };
     
