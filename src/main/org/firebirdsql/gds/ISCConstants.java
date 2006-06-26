@@ -142,6 +142,7 @@ public final class ISCConstants {
     public final static int isc_dpb_mapping_path            = 136;
     public final static int isc_dpb_no_result_set_tracking  = 137; 
     public final static int isc_dpb_result_set_holdable     = 138;
+    public final static int isc_dpb_filename_charset        = 139;
     
 
     /*************************************/

@@ -320,12 +320,15 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 			DbAttachInfo dbai = new DbAttachInfo(file_name);
 			connect(db, dbai, databaseParameterBuffer);
+
+            String filenameCharset = databaseParameterBuffer.getArgumentAsString(ISCConstants.isc_dpb_filename_charset);
+
 			try {
 				if (debug)
 					log.debug("op_create ");
 				db.out.writeInt(op_create);
 				db.out.writeInt(0); // packet->p_atch->p_atch_database
-				db.out.writeString(dbai.getFileName());
+				db.out.writeString(dbai.getFileName(), filenameCharset);
 
 				databaseParameterBuffer = ((DatabaseParameterBufferExtension) databaseParameterBuffer)
 						.removeExtensionParams();
@@ -356,7 +359,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			DatabaseParameterBuffer databaseParameterBuffer)
 			throws GDSException {
 		DbAttachInfo dbai = new DbAttachInfo(host, port, file_name);
-		isc_attach_database(dbai, db_handle, databaseParameterBuffer);
+		internalAttachDatabase(dbai, db_handle, databaseParameterBuffer);
 	}
 
 	public void iscAttachDatabase(String connectString, IscDbHandle db_handle,
@@ -364,7 +367,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			throws GDSException {
 
 		DbAttachInfo dbai = new DbAttachInfo(connectString);
-		isc_attach_database(dbai, db_handle, databaseParameterBuffer);
+		internalAttachDatabase(dbai, db_handle, databaseParameterBuffer);
 	}
 
 	final static byte[] describe_database_info = new byte[] {
@@ -376,7 +379,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			ISCConstants.isc_info_db_class, ISCConstants.isc_info_base_level,
 			ISCConstants.isc_info_end };
 
-	public void isc_attach_database(DbAttachInfo dbai, IscDbHandle db_handle,
+	public void internalAttachDatabase(DbAttachInfo dbai, IscDbHandle db_handle,
 			DatabaseParameterBuffer databaseParameterBuffer)
 			throws GDSException {
 
@@ -389,12 +392,14 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 		synchronized (db) {
 			connect(db, dbai, databaseParameterBuffer);
+            
+            String filenameCharset = databaseParameterBuffer.getArgumentAsString(ISCConstants.isc_dpb_filename_charset);
 			try {
 				if (debug)
 					log.debug("op_attach ");
 				db.out.writeInt(op_attach);
 				db.out.writeInt(0); // packet->p_atch->p_atch_database
-				db.out.writeString(dbai.getFileName());
+				db.out.writeString(dbai.getFileName(), filenameCharset);
 
 				databaseParameterBuffer = ((DatabaseParameterBufferExtension) databaseParameterBuffer)
 						.removeExtensionParams();

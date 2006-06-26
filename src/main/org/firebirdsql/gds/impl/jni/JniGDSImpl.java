@@ -130,7 +130,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
      * layer (see code for jaybird2 shared library).
      */
 
-    public native void native_isc_attach_database(String file_name,
+    public native void native_isc_attach_database(byte[] file_name,
             IscDbHandle db_handle, byte[] dpbBytes);
 
     public native byte[] native_isc_blob_info(isc_blob_handle_impl handle,
@@ -148,7 +148,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     public native void native_isc_create_blob2(IscDbHandle db, IscTrHandle tr,
             IscBlobHandle blob, byte[] dpbBytes);
 
-    public native void native_isc_create_database(String file_name,
+    public native void native_isc_create_database(byte[] file_name,
             IscDbHandle db_handle, byte[] dpbBytes);
 
     public native void native_isc_database_info(IscDbHandle db_handle,

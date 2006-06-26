@@ -145,20 +145,22 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_nativeInitil
     }
 
 JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1create_1database
-  (JNIEnv * javaEnvironment, jobject jThis, jstring jFileName, jobject jDatabaseHandle, jbyteArray jDpb)
+  (JNIEnv * javaEnvironment, jobject jThis, jbyteArray jFileName, jobject jDatabaseHandle, jbyteArray jDpb)
     {
 
     ENTER_PROTECTED_BLOCK
-        JString fileName( javaEnvironment, jFileName );
+        // JString fileName( javaEnvironment, jFileName );
         JIscDatabaseHandle databaseHandle(javaEnvironment, jDatabaseHandle);
         JByteArray dpb( javaEnvironment, jDpb );
+        JByteArray fileName(javaEnvironment, jFileName);
+        
 
         FirebirdStatusVector status;
         isc_db_handle rawDatabaseHandle = databaseHandle.GetHandleValue();
 
-        const char* const fileNameString = fileName.AsCString();
+        // const char* const fileNameString = fileName.AsCString();
 
-        CALL_API(isc_create_database)( status.RawAccess(), 0, const_cast<char*>(fileNameString), &rawDatabaseHandle, dpb.Size(), dpb.Read(), SQL_DIALECT_V6 );
+        CALL_API(isc_create_database)( status.RawAccess(), 0, fileName.Read(), &rawDatabaseHandle, dpb.Size(), dpb.Read(), SQL_DIALECT_V6 );
 
         databaseHandle.SetHandleValue( rawDatabaseHandle );
 
@@ -168,19 +170,20 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
     }
 
 JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1attach_1database
-  (JNIEnv * javaEnvironment, jobject jThis, jstring jFileName, jobject jDatabaseHandle, jbyteArray jDpb)
+  (JNIEnv * javaEnvironment, jobject jThis, jbyteArray jFileName, jobject jDatabaseHandle, jbyteArray jDpb)
     {
     ENTER_PROTECTED_BLOCK
-        JString fileName( javaEnvironment, jFileName );
+        //JString fileName( javaEnvironment, jFileName );
         JIscDatabaseHandle databaseHandle(javaEnvironment, jDatabaseHandle);
         JByteArray dpb( javaEnvironment, jDpb );
+        JByteArray fileName(javaEnvironment, jFileName);
 
         FirebirdStatusVector status;
         isc_db_handle rawDatabaseHandle = databaseHandle.GetHandleValue();
 
-        const char* const fileNameString = fileName.AsCString();
+        // const char* const fileNameString = fileName.AsCString();
 
-        CALL_API(isc_attach_database)( status.RawAccess(), 0, const_cast<char*>(fileNameString), &rawDatabaseHandle, dpb.Size(), dpb.Read() );
+        CALL_API(isc_attach_database)( status.RawAccess(), 0, fileName.Read(), &rawDatabaseHandle, dpb.Size(), dpb.Read() );
 
         databaseHandle.SetHandleValue( rawDatabaseHandle );
 
