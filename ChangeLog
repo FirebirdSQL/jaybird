@@ -1,3 +1,26 @@
+2006-06-26 16:05  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/gds/impl/DatabaseParameterBufferExtension.java
+	, main/org/firebirdsql/gds/impl/jni/BaseGDSImpl.java,
+	main/org/firebirdsql/gds/impl/jni/DatabaseParameterBufferImp.java,
+	main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java,
+	native/jaygds/source/entrypoints.cpp,
+	native/jaygds/source/entrypoints_generated.h,
+	main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java,
+	main/org/firebirdsql/gds/impl/wire/DatabaseParameterBufferImp.java,
+	main/org/firebirdsql/gds/impl/wire/XdrOutputStream.java:
+	
+	fixed issue when national characters in the database name were
+	converted using utf-8 encoding instead of the platform default
+
+2006-06-26 16:01  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/jdbc/FBSQLException.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java:
+	
+	changed exception handling in pool code
+
 2006-06-21 07:41  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/encodings/:
