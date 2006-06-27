@@ -354,7 +354,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	}
 
-	public void isc_attach_database(String host, Integer port,
+	public void internalAttachDatabase(String host, Integer port,
 			String file_name, IscDbHandle db_handle,
 			DatabaseParameterBuffer databaseParameterBuffer)
 			throws GDSException {
@@ -606,15 +606,10 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		}
 
 		synchronized (db) {
-			// if (db_handle.hasTransactions())
-			// {
-			// throw new GDSException(ISCConstants.isc_open_trans,
-			// db.getOpenTransactionCount());
-			// } // end of if ()
 			try {
-                                if (db.eventCoordinator != null){
-                                    db.eventCoordinator.close();
-                                }
+                if (db.eventCoordinator != null){
+                    db.eventCoordinator.close();
+                }
 
 				if (debug)
 					log.debug("op_detach ");
