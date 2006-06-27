@@ -60,7 +60,8 @@ public class TestFBPreparedStatement extends FBTestBase{
         + "FIELD3 VARCHAR(20),"
         + "FIELD4 FLOAT,"
         + "FIELD5 CHAR,"
-        + "FIELD6 VARCHAR(5)"
+        + "FIELD6 VARCHAR(5),"
+        + "FIELD7 CHAR(1)"
         + ")"
         ;
     
@@ -567,7 +568,10 @@ public class TestFBPreparedStatement extends FBTestBase{
                     ps.setString(1, "veeeeeeeeeeeeeeeeeeeeery looooooooooooooooooooooong striiiiiiiiiiiiiiiiiiing");
                 } catch(DataTruncation ex) {
                     // ignore
+                } catch(SQLException ex) {
+                    ex.printStackTrace();
                 }
+                
                 ps.setInt(2, 1);
                 
                 try {
@@ -587,6 +591,47 @@ public class TestFBPreparedStatement extends FBTestBase{
                 }
             } finally {
                 ps.close();
+            }
+            
+        } finally {
+            connection.close();
+        }
+    }
+    
+    /**
+     * Test if failure in setting the parameter leaves the driver in
+     * correct state (i.e. "not all params were set").
+     * @throws Exception
+     */
+    public void testLikeParameter() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        
+        try {
+            connection.setAutoCommit(false);
+            
+            PreparedStatement ps = connection.prepareStatement(
+                "SELECT * FROM testtab WHERE field7 = ?");
+            try {
+                try {
+                    ps.setString(1, "%a%");
+                    ResultSet rs = ps.executeQuery();
+//                    fail("should throw data truncation");
+                } catch(DataTruncation ex) {
+                    // ignore
+                }
+                
+            } finally {
+                ps.close();
+            }
+            
+            Statement stmt = connection.createStatement();
+            try {
+                stmt.execute("SELECT * FROM rdb$database");
+            } catch(Throwable t) {
+                if (t instanceof SQLException) {
+                    //ignore
+                } else
+                    fail("Should not throw exception");
             }
             
         } finally {
