@@ -1,3 +1,25 @@
+2006-06-27 23:12  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jca/TestFBXAResource.java:
+	
+	switched off test case for JNI runs
+
+2006-06-27 09:18  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSI
+	mpl.java:
+	
+	small reformatting and refactoring
+
+2006-06-27 09:11  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/field/FBWorkaroundStringField.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+	
+	JDBC-28 Data truncation when use PreparedStatement in CHAR fields
+
 2006-06-26 16:05  rrokytskyy
 
 	* client-java/src/: main/org/firebirdsql/gds/ISCConstants.java,
