@@ -152,6 +152,15 @@ public class FBEventManager implements EventManager {
     }
 
     /**
+     * Check whether this object is connected to the database.
+     * @return <code>true</code> if object is connected to the 
+     * database, otherwise <code>false</code>.
+     */
+    public boolean isConnected() {
+        return connected;
+    }
+
+    /**
      * Sets the username for the connection to the database .
      * @param username for the connection to the database.
      */
@@ -230,7 +239,7 @@ public class FBEventManager implements EventManager {
     public void setPort(int port){
         this.port = port;
     }
-
+    
     /**
      * Register an EventListener that will be called when an event occurs.
      *
