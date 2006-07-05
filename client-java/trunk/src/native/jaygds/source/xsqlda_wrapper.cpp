@@ -159,18 +159,18 @@ JXSqlda::JXSqlda( JNIEnv* javaEnvironment, jobject handle, bool isFetching )  : 
 			{
 			if( isVarying )
 				{
-				if( byteArray.Size() + 2 > dataSizeToAllocate )
-					throw InternalException( "JXSqlda::JXSqlda - byteArray to big !" );
+				//if( byteArray.Size() + 2 > dataSizeToAllocate )
+				//	throw InternalException( "JXSqlda::JXSqlda - byteArray to big !" );
 				
 				*((short*)currentXsqlvar.sqldata) = (short)byteArray.Size();
-
 				memcpy( currentXsqlvar.sqldata + 2, byteArray.Read(), byteArray.Size());
 				}
 			else
 				{
-				if( byteArray.Size() > dataSizeToAllocate )
-					throw InternalException( "JXSqlda::JXSqlda - byteArray to big !" );
+				// if( byteArray.Size() > dataSizeToAllocate )
+				// 	throw InternalException( "JXSqlda::JXSqlda - byteArray to big !" );
 
+				*((short*)currentXsqlvar.sqldata) = (short)byteArray.Size();
 				memcpy( currentXsqlvar.sqldata, byteArray.Read(), byteArray.Size());
 				}
 			}
