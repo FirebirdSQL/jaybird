@@ -125,7 +125,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                 else
                     urlData = serverUrl.getBytes();
                 
-                byte[] nullTerminated = new byte[urlData.length];
+                byte[] nullTerminated = new byte[urlData.length + 1];
                 System.arraycopy(urlData, 0, nullTerminated, 0, urlData.length);
                 urlData = nullTerminated;
             } catch(UnsupportedEncodingException ex) {
@@ -258,7 +258,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                 else
                     urlData = serverUrl.getBytes();
                 
-                byte[] nullTerminated = new byte[urlData.length];
+                byte[] nullTerminated = new byte[urlData.length + 1];
                 System.arraycopy(urlData, 0, nullTerminated, 0, urlData.length);
                 urlData = nullTerminated;
 
