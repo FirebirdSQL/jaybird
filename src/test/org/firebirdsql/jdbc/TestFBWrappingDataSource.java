@@ -25,14 +25,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
 
 import org.firebirdsql.pool.FBWrappingDataSource;
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.gds.impl.GDSType;
 
 /**
  * Describe class <code>TestFBWrappingDataSource</code> here.
@@ -49,6 +48,12 @@ public class TestFBWrappingDataSource extends FBTestBase {
         super(testName);
     }
 
+    protected void tearDown() throws Exception {
+        if (ds != null)
+            ds.shutdown();
+        
+        super.tearDown();
+    }
 
     public void testConnect() throws Exception {
         if (log != null) log.info("Testing FBWrapping DataSource on db: " + DB_DATASOURCE_URL);
@@ -157,6 +162,9 @@ public class TestFBWrappingDataSource extends FBTestBase {
     }
    
    public void testJNDI() throws Exception {
+       if (getGdsType() == GDSType.getType("EMBEDDED"))
+           fail("This test case is not supported for embedded mode.");
+       
        String JNDI_FACTORY = "com.sun.jndi.fscontext.RefFSContextFactory";
 
        ds = createFBWrappingDataSource();
@@ -175,21 +183,24 @@ public class TestFBWrappingDataSource extends FBTestBase {
            context.bind("jdbc/test", ds);
            FBWrappingDataSource testDS = 
                (FBWrappingDataSource)context.lookup("jdbc/test");
-           
-           Connection testConnection = testDS.getConnection();
-           
            try {
-               Statement stmt = testConnection.createStatement();
+               Connection testConnection = testDS.getConnection();
+               
                try {
-                   ResultSet rs = stmt.executeQuery("SELECT 1 FROM rdb$database");
-                   assertTrue("Result set should have at least one row.", rs.next());
-                   assertTrue("Should return correct value", rs.getInt(1) == 1);
-                   assertTrue("Result set should have only one row.", !rs.next());
+                   Statement stmt = testConnection.createStatement();
+                   try {
+                       ResultSet rs = stmt.executeQuery("SELECT 1 FROM rdb$database");
+                       assertTrue("Result set should have at least one row.", rs.next());
+                       assertTrue("Should return correct value", rs.getInt(1) == 1);
+                       assertTrue("Result set should have only one row.", !rs.next());
+                   } finally {
+                       stmt.close();
+                   }
                } finally {
-                   stmt.close();
+                   testConnection.close();
                }
            } finally {
-               testConnection.close();
+               testDS.shutdown();
            }
            
        } finally {
@@ -198,7 +209,7 @@ public class TestFBWrappingDataSource extends FBTestBase {
    }
    
    public void testValueAsString() throws Exception {
-       FBWrappingDataSource ds = new FBWrappingDataSource();
+       ds = new FBWrappingDataSource();
        ds.setType(System.getProperty("test.gds_type"));
        ds.setDatabase(DB_DATASOURCE_URL);
        ds.setUserName(DB_USER);

@@ -1,11 +1,13 @@
 package org.firebirdsql.management;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.SQLException;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.gds.impl.GDSType;
 
 
 /**
@@ -16,7 +18,7 @@ public class TestBackupManager extends FBTestBase {
         
     private BackupManager backupManager;
 
-    private FBManager fbManager;
+//    private FBManager fbManager;
 
     private static final String TEST_TABLE = "CREATE TABLE TEST (A INT)";
 
@@ -30,17 +32,21 @@ public class TestBackupManager extends FBTestBase {
     protected void setUp() throws Exception {
         super.setUp();
         
-        fbManager = createFBManager();
-        fbManager.setServer(DB_SERVER_URL);
-        fbManager.setPort(DB_SERVER_PORT);
-        fbManager.start();
-
-        fbManager.setForceCreate(true);
-        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
+//        fbManager = createFBManager();
+//        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+//            fbManager.setServer(DB_SERVER_URL);
+//            fbManager.setPort(DB_SERVER_PORT);
+//        }
+//        fbManager.start();
+//
+//        fbManager.setForceCreate(true);
+//        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
 
         backupManager = new FBBackupManager(getGdsType());
-        backupManager.setHost(DB_SERVER_URL);
-        backupManager.setPort(DB_SERVER_PORT);
+        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+            backupManager.setHost(DB_SERVER_URL);
+            backupManager.setPort(DB_SERVER_PORT);
+        }
         backupManager.setUser(DB_USER);
         backupManager.setPassword(DB_PASSWORD);
         backupManager.setDatabase(getDatabasePath());
@@ -63,17 +69,20 @@ public class TestBackupManager extends FBTestBase {
 
     protected void tearDown() throws Exception {
         try {
-        	//Drop database.
-            fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
-            fbManager.stop();            
-            //Delete backup file.            
-            File file = new File(getBackupPath());
-            file.delete();
-            
-        } catch (Exception e){
-            e.printStackTrace();
+            // fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
+            // fbManager.stop();
+            try {
+                // Drop database.
+                super.tearDown();
+            } finally {
+                // Delete backup file.
+                File file = new File(getBackupPath());
+                file.delete();
+            }
+
+        } catch (FileNotFoundException e) {
+            // ignore
         }
-        super.tearDown();
     }
     
     public void testBackup() throws Exception {

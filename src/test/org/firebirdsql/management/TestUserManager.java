@@ -32,7 +32,7 @@ import org.firebirdsql.common.FBTestBase;
  */
 public class TestUserManager extends FBTestBase {
 
-    private FBManager fbManager;
+//    private FBManager fbManager;
 
     /**
      * Create and instance of this class.
@@ -44,15 +44,15 @@ public class TestUserManager extends FBTestBase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        fbManager = createFBManager();
-        fbManager.setDropOnStop(false);
-        fbManager.setServer(DB_SERVER_URL);
-        fbManager.setPort(DB_SERVER_PORT);
-        fbManager.start();
+//        fbManager = createFBManager();
+//        fbManager.setDropOnStop(false);
+//        fbManager.setServer(DB_SERVER_URL);
+//        fbManager.setPort(DB_SERVER_PORT);
+//        fbManager.start();
     }
 
     protected void tearDown() throws Exception {
-        fbManager.stop();
+//        fbManager.stop();
         super.tearDown();
     }
 

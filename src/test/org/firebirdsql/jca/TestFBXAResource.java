@@ -73,6 +73,7 @@ public class TestFBXAResource extends TestXABase {
         }
         mc1.destroy();
         mc2.destroy();
+        mc3.destroy();
     }
 
     public void testStartXATrans() throws Exception {
@@ -253,6 +254,7 @@ public class TestFBXAResource extends TestXABase {
         assertTrue("Should find our transaction", found);
         
         xa2.commit(xid1, false);
+        mc2.destroy();
         
         connection = getConnectionViaDriverManager();
         try {

@@ -84,6 +84,7 @@ public class TestFBDriver extends FBTestBase {
         if (log != null) log.info(getUrl());
         connection = driver.connect(getUrl(), getDefaultPropertiesForConnection());
         assertTrue("Connection is null", connection != null);
+        connection.close();
     }
 
     public void testJdbcCompliant() {
@@ -105,25 +106,27 @@ public class TestFBDriver extends FBTestBase {
 	        Connection dialect1Connection = 
 	            DriverManager.getConnection(getUrl(), info);
 	            
-	        Statement stmt = dialect1Connection.createStatement();
-	        
-	        // execute select statement, driver will pass SQL dialect 3 
-	        // for this statement and database server will return a warning
-	        stmt.executeQuery("SELECT 1 as col1 FROM rdb$database");
-	        
-	        stmt.close();
-	        
-	        SQLWarning warning = dialect1Connection.getWarnings();
-	        
-	        assertTrue("Connection should have at least one warning.", 
-	            warning != null);
-	            
-	        dialect1Connection.clearWarnings();
-	        
-	        assertTrue("After clearing no warnings should be present.",
-	            dialect1Connection.getWarnings() == null);
-	            
-	        dialect1Connection.close();
+            try {
+    	        Statement stmt = dialect1Connection.createStatement();
+    	        
+    	        // execute select statement, driver will pass SQL dialect 3 
+    	        // for this statement and database server will return a warning
+    	        stmt.executeQuery("SELECT 1 as col1 FROM rdb$database");
+    	        
+    	        stmt.close();
+    	        
+    	        SQLWarning warning = dialect1Connection.getWarnings();
+    	        
+    	        assertTrue("Connection should have at least one warning.", 
+    	            warning != null);
+    	            
+    	        dialect1Connection.clearWarnings();
+    	        
+    	        assertTrue("After clearing no warnings should be present.",
+    	            dialect1Connection.getWarnings() == null);
+            } finally {	            
+                dialect1Connection.close();
+            }
         } finally {
         
 	        info.setProperty("set_db_sql_dialect", "3");
@@ -253,8 +256,7 @@ public class TestFBDriver extends FBTestBase {
                 s.execute("CREATE TABLE DATETEST (DATEID INTEGER NOT NULL PRIMARY KEY, TESTDATE TIMESTAMP)");
                 PreparedStatement ps = c.prepareStatement("INSERT INTO DATETEST (DATEID, TESTDATE) VALUES (?,?)");
                 Calendar cal = new GregorianCalendar(timeZoneUTC);
-                Date d1 = new Date("Sat Feb 17 20:59:31 EST 1917");
-                Timestamp x = new Timestamp(d1.getTime());
+                Timestamp x = Timestamp.valueOf("17-02-1917 20:59:31");
                 try 
                 {
                     ps.setInt(1, 1);
@@ -274,8 +276,7 @@ public class TestFBDriver extends FBTestBase {
                          
                         assertTrue("Should have one row!", rs.next());
                         Timestamp x2 = rs.getTimestamp(1, cal);
-                        java.util.Date d2 = new java.util.Date(x2.getTime());
-                        assertTrue("Retrieved wrong value! expected: " + d1 + ", actual: " + d2, d1.equals(d2));
+                        assertTrue("Retrieved wrong value! expected: " + x + ", actual: " + x2, x.equals(x2));
                     }
                     finally
                     {
@@ -308,34 +309,37 @@ public class TestFBDriver extends FBTestBase {
      */
     public void testClose() throws Exception {
         connection = getConnectionViaDriverManager();
-        
-        Statement stmt = connection.createStatement();
-        
-        stmt.executeUpdate("CREATE TABLE test(id INTEGER, test_value INTEGER)");
-        stmt.executeUpdate("INSERT INTO test VALUES (1, 1)");
-        
-        connection.setAutoCommit(false);
-        
-        stmt.executeUpdate("UPDATE test SET test_value = 2 WHERE id = 1");
-        
-        stmt.close();
-        
-        connection.close();
+        try {
+            Statement stmt = connection.createStatement();
+            
+            stmt.executeUpdate("CREATE TABLE test(id INTEGER, test_value INTEGER)");
+            stmt.executeUpdate("INSERT INTO test VALUES (1, 1)");
+            
+            connection.setAutoCommit(false);
+            
+            stmt.executeUpdate("UPDATE test SET test_value = 2 WHERE id = 1");
+            
+            stmt.close();
+        } finally {        
+            connection.close();
+        }
         
         connection = getConnectionViaDriverManager();
-        
-        stmt = connection.createStatement();
-        
-        ResultSet rs = stmt.executeQuery("SELECT test_value FROM test WHERE id = 1");
-        
-        assertTrue("Should have at least one row", rs.next());
-        assertTrue("Value should be 1.", rs.getInt(1) == 1);
-        assertTrue("Should have only one row.", !rs.next());
-        
-        rs.close();
-        stmt.executeUpdate("DROP TABLE test");
-        stmt.close();
-        connection.close();
+        try {
+            Statement stmt = connection.createStatement();
+            
+            ResultSet rs = stmt.executeQuery("SELECT test_value FROM test WHERE id = 1");
+            
+            assertTrue("Should have at least one row", rs.next());
+            assertTrue("Value should be 1.", rs.getInt(1) == 1);
+            assertTrue("Should have only one row.", !rs.next());
+            
+            rs.close();
+            stmt.executeUpdate("DROP TABLE test");
+            stmt.close();
+        } finally {
+            connection.close();
+        }
     }
 
 }

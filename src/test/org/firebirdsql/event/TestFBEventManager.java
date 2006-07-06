@@ -1,5 +1,6 @@
 package org.firebirdsql.event;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.DriverManager;
@@ -17,7 +18,7 @@ import org.firebirdsql.management.FBManager;
  */
 public class TestFBEventManager extends FBTestBase {
 
-    private FBManager fbManager;
+//    private FBManager fbManager;
 
     private EventManager eventManager;
 
@@ -46,36 +47,43 @@ public class TestFBEventManager extends FBTestBase {
     protected void setUp() throws Exception {
         super.setUp();
         
-        fbManager = createFBManager();
-        fbManager.setServer("localhost");
-        fbManager.start();
-
-        fbManager.setForceCreate(true);
-        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
+//        fbManager = createFBManager();
+//        if (getGdsType() == GDSType.getType("PURE_JAVA") ||  getGdsType() == GDSType.getType("NATIVE")) {
+//            fbManager.setServer("localhost");
+//        }
+//        fbManager.start();
+//
+//        fbManager.setForceCreate(true);
+//        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
         executeSql(TABLE_DEF);
         executeSql(TRIGGER_DEF);
 
-        GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type", "PURE_JAVA"));
-        eventManager = new FBEventManager(gdsType);
-        eventManager.setHost("localhost");
+        eventManager = new FBEventManager(getGdsType());
+        if (getGdsType() == GDSType.getType("PURE_JAVA") ||  getGdsType() == GDSType.getType("NATIVE")) {
+            eventManager.setHost("localhost");
+        }
         eventManager.setUser(DB_USER);
         eventManager.setPassword(DB_PASSWORD);
-        eventManager.setDatabase(getDatabasePath());
+        
+        // have to resolve relative path to the absolute one
+        File tempFile = new File(getDatabasePath());
+        eventManager.setDatabase(tempFile.getAbsolutePath());
+        
         eventManager.connect();
     }
 
-    public String getDatabasePath() {
-        return DB_PATH + "/" + DB_NAME;
-    }
+//    public String getDatabasePath() {
+//        return DB_PATH + "/" + DB_NAME;
+//    }
    
-    Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(
-            "jdbc:firebirdsql:localhost:" + getDatabasePath(), 
-            DB_USER, DB_PASSWORD);
-    }
+//    Connection getConnection() throws SQLException {
+//        return DriverManager.getConnection(
+//            "jdbc:firebirdsql:localhost:" + getDatabasePath(), 
+//            DB_USER, DB_PASSWORD);
+//    }
 
     private void executeSql(String sql) throws SQLException {
-        Connection conn = getConnection();
+        Connection conn = getConnectionViaDriverManager();
         try {
             Statement stmt = conn.createStatement();
             stmt.execute(sql);
@@ -86,7 +94,7 @@ public class TestFBEventManager extends FBTestBase {
 
     protected void tearDown() throws Exception {
         eventManager.disconnect();
-        fbManager.stop();
+//        fbManager.stop();
         super.tearDown();
     }
 
@@ -258,7 +266,7 @@ public class TestFBEventManager extends FBTestBase {
 
         public void run(){
             try {
-                Connection conn = getConnection();
+                Connection conn = getConnectionViaDriverManager();
                 PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO TEST VALUES (?)");
                 try {

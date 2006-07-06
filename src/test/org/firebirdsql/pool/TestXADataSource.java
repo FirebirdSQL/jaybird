@@ -98,6 +98,8 @@ public class TestXADataSource extends FBTestBase {
             con.close();
         }
 
+        pool.shutdown();
+        
         super.tearDown();
     }
 

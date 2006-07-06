@@ -23,6 +23,7 @@ import java.util.Properties;
 import javax.naming.Context;
 
 import org.firebirdsql.gds.ClassFactory;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBDriver;
 
 /**
@@ -57,6 +58,8 @@ public class TestDriverConnectionPoolDataSource extends
     }
 
     protected void tearDown() throws Exception {
+        pool.shutdown();
+        
         super.tearDown();
     }
 
@@ -77,6 +80,9 @@ public class TestDriverConnectionPoolDataSource extends
     }
 
     public void testJNDI() throws Exception {
+        if (getGdsType() != GDSType.getType("PURE_JAVA"))
+            fail("This test case does not work with JNI connections.");
+        
         String JNDI_FACTORY = "com.sun.jndi.fscontext.RefFSContextFactory";
 
         Properties props = new Properties();

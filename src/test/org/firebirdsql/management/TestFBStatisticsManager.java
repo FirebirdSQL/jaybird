@@ -8,13 +8,14 @@ import java.sql.Statement;
 import java.sql.SQLException;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.gds.impl.GDSType;
 
 /**
  * Test the FBStatisticsManager class
  */
 public class TestFBStatisticsManager extends FBTestBase {
 
-    private FBManager fbManager;
+//    private FBManager fbManager;
 
     private FBStatisticsManager statManager;
 
@@ -33,19 +34,24 @@ public class TestFBStatisticsManager extends FBTestBase {
     public void setUp() throws Exception {
         super.setUp();
 
-        fbManager = createFBManager();
-        fbManager.setServer(DB_SERVER_URL);
-        fbManager.setPort(DB_SERVER_PORT);
-        fbManager.start();
-
-        fbManager.setForceCreate(true);
-        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
+//        fbManager = createFBManager();
+//        
+//        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+//            fbManager.setServer(DB_SERVER_URL);
+//            fbManager.setPort(DB_SERVER_PORT);
+//        }
+//        fbManager.start();
+//
+//        fbManager.setForceCreate(true);
+//        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
 
         loggingStream = new ByteArrayOutputStream();
     
         statManager = new FBStatisticsManager(getGdsType());
-        statManager.setHost(DB_SERVER_URL);
-        statManager.setPort(DB_SERVER_PORT);
+        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+            statManager.setHost(DB_SERVER_URL);
+            statManager.setPort(DB_SERVER_PORT);
+        }
         statManager.setUser(DB_USER);
         statManager.setPassword(DB_PASSWORD);
         statManager.setDatabase(getDatabasePath());
@@ -53,7 +59,7 @@ public class TestFBStatisticsManager extends FBTestBase {
     }
 
     public void tearDown() throws Exception {
-        fbManager.stop();
+//        fbManager.stop();
         super.tearDown();
     }
 
