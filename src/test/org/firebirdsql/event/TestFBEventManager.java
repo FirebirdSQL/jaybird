@@ -266,7 +266,7 @@ public class TestFBEventManager extends FBTestBase {
 
         public void run(){
             try {
-                Connection conn = getConnectionViaDriverManager();
+                Connection conn = TestFBEventManager.this.getConnectionViaDriverManager();
                 PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO TEST VALUES (?)");
                 try {
