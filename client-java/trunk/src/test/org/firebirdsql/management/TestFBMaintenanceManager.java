@@ -16,13 +16,14 @@ import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.IscTrHandle;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.GDSType;
 
 /** 
  * Test the FBMaintenanceManager class
  */
 public class TestFBMaintenanceManager extends FBTestBase {
 
-    private FBManager fbManager;
+//    private FBManager fbManager;
 
     private FBMaintenanceManager maintenanceManager;
 
@@ -44,22 +45,22 @@ public class TestFBMaintenanceManager extends FBTestBase {
     protected void setUp() throws Exception {
         super.setUp();
         
-        fbManager = createFBManager();
-        
-        String gdsType = System.getProperty("test.gds_type", "PURE_JAVA");
-        
-        if (!"EMBEDDED".equalsIgnoreCase(gdsType) && !"LOCAL".equalsIgnoreCase(gdsType)) {
-            fbManager.setServer(DB_SERVER_URL);
-            fbManager.setPort(DB_SERVER_PORT);
-        }
-
-        fbManager.start();
-
-        fbManager.setForceCreate(true);
-        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
+//        fbManager = createFBManager();
+//        
+//        String gdsType = System.getProperty("test.gds_type", "PURE_JAVA");
+//        
+//        if (!"EMBEDDED".equalsIgnoreCase(gdsType) && !"LOCAL".equalsIgnoreCase(gdsType)) {
+//            fbManager.setServer(DB_SERVER_URL);
+//            fbManager.setPort(DB_SERVER_PORT);
+//        }
+//
+//        fbManager.start();
+//
+//        fbManager.setForceCreate(true);
+//        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
 
         maintenanceManager = new FBMaintenanceManager(getGdsType());
-        if (!"EMBEDDED".equalsIgnoreCase(gdsType) && !"LOCAL".equalsIgnoreCase(gdsType)) {
+        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
             maintenanceManager.setHost(DB_SERVER_URL);
             maintenanceManager.setPort(DB_SERVER_PORT);
         }
@@ -85,7 +86,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        fbManager.stop();
+//        fbManager.stop();
         super.tearDown();
     }
     
@@ -320,13 +321,25 @@ public class TestFBMaintenanceManager extends FBTestBase {
     }
 
     public void testMarkCorruptRecords() throws Exception {
-        // Just make sure it runs without an exception
-        maintenanceManager.markCorruptRecords();
+        // ensure that our maintenance manager has exclusive connection
+        fbManager.stop();
+        try {
+            // Just make sure it runs without an exception
+            maintenanceManager.markCorruptRecords();
+        } finally {
+            fbManager.start();
+        }
     }
 
     public void testValidateDatabase() throws Exception {
-        // Just make sure it runs without an exception
-        maintenanceManager.validateDatabase();
+        // ensure that our maintenance manager has exclusive connection
+        fbManager.stop();
+        try {
+            // Just make sure it runs without an exception
+            maintenanceManager.validateDatabase();
+        } finally {
+            fbManager.start();
+        }
     }
 
     public void testValidateDatabaseBadParam() throws Exception {
@@ -367,8 +380,14 @@ public class TestFBMaintenanceManager extends FBTestBase {
     }
 
     public void testValidateDatabaseFull() throws Exception {
-        // Just run to make sure it doesn't fail
-        maintenanceManager.validateDatabase(MaintenanceManager.VALIDATE_FULL);
+        // ensure that our maintenance manager has exclusive connection
+        fbManager.stop();
+        try {
+            // Just run to make sure it doesn't fail
+            maintenanceManager.validateDatabase(MaintenanceManager.VALIDATE_FULL);
+        } finally {
+            fbManager.start();
+        }
     }
 
     public void testSetSweepThresholdBadParams() throws Exception {

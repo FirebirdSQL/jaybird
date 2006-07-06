@@ -35,116 +35,116 @@ import org.firebirdsql.pool.FBPooledDataSourceFactory;
 import org.firebirdsql.pool.FBWrappingDataSource;
 
 /**
- * Base class for test cases which could be run against more then a single GDS implementation.
+ * Base class for test cases which could be run against more then a single GDS
+ * implementation.
  */
-public class FBTestBase extends SimpleFBTestBase
-    {
-    protected final Logger log = LoggerFactory.getLogger(getClass(),true);
+public class FBTestBase extends SimpleFBTestBase {
+
+    protected final Logger log = LoggerFactory.getLogger(getClass(), true);
 
     /**
-     *
+     * 
      */
-    protected static final String DB_LC_CTYPE    = System.getProperty("test.db.lc_ctype", "NONE");
+    protected static final String DB_LC_CTYPE = System.getProperty(
+        "test.db.lc_ctype", "NONE");
 
-     /**
-     *
+    /**
+     * 
      */
     protected final String DB_DATASOURCE_URL = getdbpath(DB_NAME);
 
-
-
-    protected FBTestBase(String name)
-        {
+    protected FBTestBase(String name) {
         super(name);
-        }
+    }
 
     // FACTORY METHODS
     //
-    // These methods should be used where possible so as to create the objects bound to the
+    // These methods should be used where possible so as to create the objects
+    // bound to the
     // appropriate GDS implementation.
 
     /**
-     *
+     * 
      * @return
      * @throws SQLException
      */
-    protected AbstractFBConnectionPoolDataSource createFBConnectionPoolDataSource() throws SQLException
-        {
-        final AbstractFBConnectionPoolDataSource returnValue = FBPooledDataSourceFactory.createFBConnectionPoolDataSource();
+    protected AbstractFBConnectionPoolDataSource createFBConnectionPoolDataSource()
+            throws SQLException {
+        final AbstractFBConnectionPoolDataSource returnValue = FBPooledDataSourceFactory
+                .createFBConnectionPoolDataSource();
 
         returnValue.setType(getGdsType().toString());
 
         return returnValue;
-        }
+    }
 
     /**
-     *
+     * 
      * @return
      */
-    protected FBManagedConnectionFactory createFBManagedConnectionFactory()
-        {
+    protected FBManagedConnectionFactory createFBManagedConnectionFactory() {
         return new FBManagedConnectionFactory(getGdsType());
-        }
-    
-    protected FBManagedConnectionFactory createFBManagedConnectionFactory(ConnectionManager cm) {
-        FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(getGdsType());
+    }
+
+    protected FBManagedConnectionFactory createFBManagedConnectionFactory(
+            ConnectionManager cm) {
+        FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(
+                getGdsType());
         mcf.setDefaultConnectionManager(new InternalConnectionManager());
         return mcf;
     }
 
     /**
-     *
+     * 
      * @return
      */
-    protected FBManager createFBManager()
-        {
+    protected FBManager createFBManager() {
         return new FBManager(getGdsType());
-        }
+    }
 
     /**
-     *
+     * 
      * @return
      * @throws SQLException
      */
-    protected FBWrappingDataSource createFBWrappingDataSource() throws SQLException
-        {
+    protected FBWrappingDataSource createFBWrappingDataSource()
+            throws SQLException {
         final FBWrappingDataSource returnValue = new FBWrappingDataSource();
 
         returnValue.setType(getGdsType().toString());
 
         return returnValue;
-        }
+    }
 
     /**
-     *
-     * @return
-//     */
-//    protected FBConnectionRequestInfo createFBConnectionRequestInfo()
-//        {
-//        return FBConnectionRequestInfo.newInstance(GDSFactory.getGDSForType(getGdsType()));
-//        }
-
+     * 
+     * @return //
+     */
+    // protected FBConnectionRequestInfo createFBConnectionRequestInfo()
+    // {
+    // return
+    // FBConnectionRequestInfo.newInstance(GDSFactory.getGDSForType(getGdsType()));
+    // }
     /**
-     *
+     * 
      * @return
      * @throws SQLException
      */
-    protected Connection getConnectionViaDriverManager() throws SQLException
-        {
+    protected Connection getConnectionViaDriverManager() throws SQLException {
         try {
             Class.forName(FBDriver.class.getName());
-        } catch(ClassNotFoundException ex) {
+        } catch (ClassNotFoundException ex) {
             throw new SQLException("No suitable driver.");
         }
-        
-        return DriverManager.getConnection(getUrl(), getDefaultPropertiesForConnection());
-        }
+
+        return DriverManager.getConnection(getUrl(),
+            getDefaultPropertiesForConnection());
+    }
 
     /**
-    *
-    */
-    protected Properties getDefaultPropertiesForConnection()
-        {
+     * 
+     */
+    protected Properties getDefaultPropertiesForConnection() {
         final Properties returnValue = new Properties();
 
         returnValue.setProperty("user", DB_USER);
@@ -152,76 +152,75 @@ public class FBTestBase extends SimpleFBTestBase
         returnValue.setProperty("lc_ctype", DB_LC_CTYPE);
 
         return returnValue;
-        }
-
+    }
 
     // USEFULL PROPERTY GETTERS
 
-    protected String getUrl()
-        {
+    protected String getUrl() {
         return gdsTypeToUrlPrefixMap.get(getGdsType()) + getdbpath(DB_NAME);
-        }
-
-    protected GDSType getGdsType()
-        {
-        final GDSType gdsType = GDSType.getType(System.getProperty("test.gds_type", "PURE_JAVA"));
-        if( gdsType == null )
-            throw new RuntimeException("Unrecoginzed value for 'test.gds_type' property.");
-
-        return gdsType;
-        }
-        
-    protected String getDatabasePath()
-    {
-    	return DB_PATH + "/" + DB_NAME;
     }
 
+    protected GDSType getGdsType() {
+        final GDSType gdsType = GDSType.getType(System.getProperty(
+            "test.gds_type", "PURE_JAVA"));
+        if (gdsType == null)
+            throw new RuntimeException(
+                    "Unrecoginzed value for 'test.gds_type' property.");
+
+        return gdsType;
+    }
+
+    protected String getDatabasePath() {
+        return DB_PATH + "/" + DB_NAME;
+    }
 
     // STANDARD RIG
 
-    protected void setUp() throws Exception
-        {
-        try
-            {
+    protected void setUp() throws Exception {
+//        try {
             fbManager = createFBManager();
 
-            fbManager.setServer(DB_SERVER_URL);
-            fbManager.setPort(DB_SERVER_PORT);
-            fbManager.setType(getGdsType().toString());
-            fbManager.start();
-            fbManager.createDatabase(DB_PATH + "/" + DB_NAME, DB_USER, DB_PASSWORD);
+            if (getGdsType() == GDSType.getType("PURE_JAVA")
+                    || getGdsType() == GDSType.getType("NATIVE")) {
+                fbManager.setServer(DB_SERVER_URL);
+                fbManager.setPort(DB_SERVER_PORT);
             }
-        catch (Exception e)
-            {
-            if (log!=null) log.warn("exception in setup of " + getName() + ": ", e);
-            } // end of try-catch
-        }
+            // fbManager.setType(getGdsType().toString());
+            fbManager.start();
+            fbManager.setForceCreate(true);
+            fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
+//        } catch (Exception e) {
+//            if (log != null)
+//                log.warn("exception in setup of " + getName() + ": ", e);
+//        } // end of try-catch
+    }
 
-    protected void tearDown() throws Exception
-        {
-        try
-            {
-            fbManager.dropDatabase(DB_DATASOURCE_URL, DB_USER, DB_PASSWORD);
+    protected void tearDown() throws Exception {
+//        try {
+            fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
             fbManager.stop();
             fbManager = null;
-            }
-        catch (Exception e)
-            {
-            if (log!=null) log.warn("exception in teardown of " + getName() + ": ", e);
-            } // end of try-catch
-        }
+//        } catch (Exception e) {
+//            if (log != null)
+//                log.warn("exception in teardown of " + getName() + ": ", e);
+//        } // end of try-catch
+    }
 
-
-    private FBManager fbManager = null;
+    protected FBManager fbManager = null;
 
     private static final Map gdsTypeToUrlPrefixMap = new HashMap();
-    static
-        {
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"),       "jdbc:firebirdsql:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"), "jdbc:firebirdsql:embedded:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("NATIVE"),          "jdbc:firebirdsql:native:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("ORACLE_MODE"),     "jdbc:firebirdsql:oracle:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("LOCAL"),    "jdbc:firebirdsql:local:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("NIO"),    "jdbc:firebirdsql:nio:");
-        }
+    static {
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"),
+            "jdbc:firebirdsql:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"),
+            "jdbc:firebirdsql:embedded:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("NATIVE"),
+            "jdbc:firebirdsql:native:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("ORACLE_MODE"),
+            "jdbc:firebirdsql:oracle:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("LOCAL"),
+            "jdbc:firebirdsql:local:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("NIO"),
+            "jdbc:firebirdsql:nio:");
     }
+}

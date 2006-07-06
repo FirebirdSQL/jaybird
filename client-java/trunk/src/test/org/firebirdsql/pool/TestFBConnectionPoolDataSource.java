@@ -36,6 +36,7 @@ import javax.sql.*;
 
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.FirebirdPreparedStatement;
 
@@ -98,6 +99,9 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
      * @throws Exception if something went wrong.
      */
     public void testJNDI() throws Exception {
+        if (getGdsType() != GDSType.getType("PURE_JAVA"))
+            fail("This test case does not work with JNI connections.");
+        
         String JNDI_FACTORY = "com.sun.jndi.fscontext.RefFSContextFactory";
 
         Properties props = new Properties();
@@ -125,20 +129,24 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             BasicAbstractConnectionPool testPool = 
                 (BasicAbstractConnectionPool)context.lookup("jdbc/test");
 
-            Connection testConnection = 
-                testPool.getPooledConnection().getConnection();
             try {
-                Statement stmt = testConnection.createStatement();
+                Connection testConnection = 
+                    testPool.getPooledConnection().getConnection();
                 try {
-                    ResultSet rs = stmt.executeQuery("SELECT 1 FROM rdb$database");
-                    assertTrue("Result set should have at least one row.", rs.next());
-                    assertTrue("Should return correct value", rs.getInt(1) == 1);
-                    assertTrue("Result set should have only one row.", !rs.next());
+                    Statement stmt = testConnection.createStatement();
+                    try {
+                        ResultSet rs = stmt.executeQuery("SELECT 1 FROM rdb$database");
+                        assertTrue("Result set should have at least one row.", rs.next());
+                        assertTrue("Should return correct value", rs.getInt(1) == 1);
+                        assertTrue("Result set should have only one row.", !rs.next());
+                    } finally {
+                        stmt.close();
+                    }
                 } finally {
-                    stmt.close();
+                    testConnection.close();
                 }
             } finally {
-                testConnection.close();
+                testPool.shutdown();
             }
             
         } finally {
@@ -709,15 +717,19 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     }
     
     public void testPrepareWithError() throws Exception {
-        Connection con = pool.getPooledConnection().getConnection();
-        con.setAutoCommit(false);
         try {
-            PreparedStatement stmt = con.prepareStatement("bla");
-            fail("Should not enter here.");
-        } catch(SQLException ex) {
-            // everything is fine
+            Connection con = pool.getPooledConnection().getConnection();
+            con.setAutoCommit(false);
+            try {
+                PreparedStatement stmt = con.prepareStatement("bla");
+                fail("Should not enter here.");
+            } catch(SQLException ex) {
+                // everything is fine
+            } finally {
+                con.close();
+            }
         } finally {
-            con.close();
+            pool.shutdown();
         }
     }
     
@@ -914,21 +926,25 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
      * @throws Exception if test did not suceed.
      */
     public void testConnectionInLoop() throws Exception {
-        PooledConnection xac = ((ConnectionPoolDataSource) pool).getPooledConnection();
-        
         try {
-            Connection c = xac.getConnection(); 
-            c.close();
+            PooledConnection xac = ((ConnectionPoolDataSource) pool).getPooledConnection();
             
             try {
-                Connection c2 = xac.getConnection();
-                c2.close();
-                fail("Should not obtain logical connection.");
-            } catch(SQLException ex) {
-                // everything is fine
+                Connection c = xac.getConnection(); 
+                c.close();
+                
+                try {
+                    Connection c2 = xac.getConnection();
+                    c2.close();
+                    fail("Should not obtain logical connection.");
+                } catch(SQLException ex) {
+                    // everything is fine
+                }
+            } finally {        
+                xac.close();
             }
-        } finally {        
-            xac.close();
+        } finally {
+            pool.shutdown();
         }
     }
     
