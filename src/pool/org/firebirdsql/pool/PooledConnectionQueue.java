@@ -205,7 +205,8 @@ class PooledConnectionQueue {
             while (iter.hasNext()) {
                 PooledObject item = (PooledObject)iter.next();
     
-                item.deallocate();
+                if (item.isValid())
+                    item.deallocate();
             }
     
             // close all free connections
@@ -221,8 +222,12 @@ class PooledConnectionQueue {
                 }
     
             totalConnections = 0;
+            workingConnections.clear();
+            workingConnectionsToClose.clear();
         } finally {
-            idleRemover.stop();
+            if (idleRemover != null)
+                idleRemover.stop();
+            
             idleRemover = null;
         }
     }
