@@ -1,3 +1,49 @@
+2006-07-06 23:41  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/event/TestFBEventManager.java:
+	
+	fixed jdk 1.3.x compilation issue
+
+2006-07-06 08:00  rrokytskyy
+
+	* client-java/src/messages/org/firebirdsql/util/MessageDump.java:
+	
+	updated to store messages in sorted order
+
+2006-07-06 07:59  rrokytskyy
+
+	* client-java/src/resources/isc_error_msg.properties:
+	
+	new version of Firebird error messages (FB 2.0 RC3)
+
+2006-07-06 07:04  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/: common/FBTestBase.java,
+	event/TestFBEventManager.java, gds/TestReconnectTransaction.java,
+	gds/impl/wire/TestGds.java, jca/TestFBXAResource.java,
+	jdbc/TestBoundary.java, jdbc/TestFBDriver.java,
+	jdbc/TestFBWrappingDataSource.java,
+	management/TestBackupManager.java,
+	management/TestFBMaintenanceManager.java,
+	management/TestFBStatisticsManager.java,
+	management/TestUserManager.java,
+	pool/TestDriverConnectionPoolDataSource.java,
+	pool/TestFBConnectionPoolDataSource.java,
+	pool/TestXADataSource.java:
+	
+	fixes to pass test suite in EMBEDDED mode (now database is
+	recreated after each test case)
+
+2006-07-06 06:52  rrokytskyy
+
+	*
+	client-java/src/pool/org/firebirdsql/pool/PooledConnectionQueue.jav
+	a:
+	
+	fixed incorrect shutdown handling (connection remained in
+	workingSet)
+
 2006-07-06 00:10  rrokytskyy
 
 	* client-java/src/native/jaygds/source/xsqlda_wrapper.cpp:
