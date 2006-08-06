@@ -3060,10 +3060,13 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                             
                             int count = 0;
                             int shift = 0;
-                            for (int i = buffer.length - 4; 
-                                    i < buffer.length; i++){
-                                count += ((buffer[i] & 0xff) << shift);
-                                shift += 8;
+                            
+                            if (buffer.length > 4) {
+                                for (int i = buffer.length - 4; 
+                                        i < buffer.length; i++){
+                                    count += ((buffer[i] & 0xff) << shift);
+                                    shift += 8;
+                                }
                             }
 
                             EventGlob glob = null;
