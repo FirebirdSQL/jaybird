@@ -1,3 +1,12 @@
+2006-08-06 15:21  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSI
+	mpl.java:
+	
+	Fixed possible ArrayIndexOutOfBoundsException when server does not
+	return event counts
+
 2006-07-06 23:41  rrokytskyy
 
 	*
