@@ -610,7 +610,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     public ResultSet getResultSet() throws SQLException {
         return getResultSet(false);
     }
-    public ResultSet getResultSet(boolean trimStrings) throws  SQLException {
+    public ResultSet getResultSet(boolean metaDataQuery) throws  SQLException {
         try {
             if (cursorName != null)
                 gdsHelper.setCursorName(fixedStmt, cursorName);
@@ -628,7 +628,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         else {
             if (isResultSet) {
                 currentRs = new FBResultSet(gdsHelper, this, fixedStmt,
-                        resultSetListener, trimStrings, rsType, rsConcurrency, 
+                        resultSetListener, metaDataQuery, rsType, rsConcurrency, 
                         rsHoldability, false);
                 
                 return currentRs;

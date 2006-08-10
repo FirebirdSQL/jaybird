@@ -55,7 +55,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      
     // This set contains all allocated but not closed statements
     // It is used to close them before the connection is closed
-    private HashSet activeStatements = new HashSet();
+    protected HashSet activeStatements = new HashSet();
     
     private int resultSetHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
     

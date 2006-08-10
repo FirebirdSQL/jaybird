@@ -104,7 +104,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
                           AbstractStatement fbStatement, 
                           AbstractIscStmtHandle stmt, 
                           FBObjectListener.ResultSetListener listener,
-                          boolean trimStrings, 
+                          boolean metaDataQuery, 
                           int rsType, 
                           int rsConcurrency,
                           int rsHoldability,
@@ -120,7 +120,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         this.rsConcurrency = rsConcurrency;
         this.rsHoldability = rsHoldability;
         
-        this.trimStrings = trimStrings;
+        this.trimStrings = metaDataQuery;
         
         this.xsqlvars = stmt.getOutSqlda().sqlvar;
         this.maxRows = fbStatement.getMaxRows();
@@ -129,7 +129,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         
         boolean updatableCursor = fbStatement.isUpdatableCursor();
 
-        if (rsType == ResultSet.TYPE_SCROLL_INSENSITIVE)
+        if (rsType != ResultSet.TYPE_FORWARD_ONLY || metaDataQuery)
             cached = true;
         
         if (cached) {
