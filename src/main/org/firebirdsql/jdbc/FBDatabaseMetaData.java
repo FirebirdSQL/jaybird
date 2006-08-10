@@ -58,7 +58,7 @@ import org.firebirdsql.logging.LoggerFactory;
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
-    private static final String SPACES = "                               ";//31 spaces
+    public static final String SPACES = "                               ";//31 spaces
 
     private GDSHelper gdsHelper;
     private AbstractConnection connection;
@@ -67,16 +67,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     //PreparedStatement tables = null;
 
-    FBDatabaseMetaData(GDSHelper gdsHelper) {
+    protected FBDatabaseMetaData(GDSHelper gdsHelper) {
         this.gdsHelper = gdsHelper;
     }
     
-    FBDatabaseMetaData(AbstractConnection c) throws GDSException {
+    protected FBDatabaseMetaData(AbstractConnection c) throws GDSException {
         this.gdsHelper = c.getGDSHelper();
         this.connection = c;
     }
 
-    void close() {
+    protected void close() {
         try {
             Iterator i = statements.values().iterator();
             while(i.hasNext()) {
@@ -4820,6 +4820,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         switch (type){
             case ResultSet.TYPE_FORWARD_ONLY:
             case ResultSet.TYPE_SCROLL_INSENSITIVE :
+            case ResultSet.TYPE_SCROLL_SENSITIVE :
                 return true;
             default:
                 return false;
@@ -4844,6 +4845,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         switch(type) {
             case ResultSet.TYPE_FORWARD_ONLY:
             case ResultSet.TYPE_SCROLL_INSENSITIVE :
+            case ResultSet.TYPE_SCROLL_SENSITIVE :
                 return concurrency == ResultSet.CONCUR_READ_ONLY || 
                     concurrency == ResultSet.CONCUR_UPDATABLE;
             default:
@@ -5415,8 +5417,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return 1; // same value as sqlStateXOpen, but makes JDK 1.3 happy.
     }
 
-    //private
-    private boolean isAllCondition(String pattern) {
+    public boolean isAllCondition(String pattern) {
         if ("%".equals(pattern)) {
             //asks for everything, no condition needed
             return true;
@@ -5478,7 +5479,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return stripped.toString();
     }
 
-    private String getWantsSystemTables(String[] types) {
+    protected String getWantsSystemTables(String[] types) {
         for (int i = 0; i < types.length; i++) {
             if (SYSTEM_TABLE.equals(types[i])) {
                 return "T";
@@ -5487,7 +5488,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return "F";
     }
 
-    private String getWantsTables(String[] types) {
+    protected String getWantsTables(String[] types) {
         for (int i = 0; i < types.length; i++) {
             if (TABLE.equals(types[i])) {
                 return "T";
@@ -5496,7 +5497,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return "F";
     }
 
-    private String getWantsViews(String[] types) {
+    protected String getWantsViews(String[] types) {
         for (int i = 0; i < types.length; i++) {
             if (VIEW.equals(types[i])) {
                 return "T";
@@ -5626,7 +5627,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    private byte[] getBytes(String value){
+    protected byte[] getBytes(String value){
         if (value !=null)
             return value.getBytes();
         else
