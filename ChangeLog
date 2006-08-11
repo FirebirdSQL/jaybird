@@ -1,3 +1,27 @@
+2006-08-10 21:23  rrokytskyy
+
+	* client-java/src/:
+	openoffice/org/firebirdsql/gds/impl/oo/OOGDSFactoryPlugin.java,
+	openoffice/org/firebirdsql/jdbc/oo/OOConnection.java,
+	openoffice/org/firebirdsql/jdbc/oo/OODatabaseMetaData.java,
+	openoffice/org/firebirdsql/jdbc/oo/OOParameterMetaData.java,
+	openoffice/org/firebirdsql/jdbc/oo/OOPreparedStatement.java,
+	openoffice/org/firebirdsql/jdbc/oo/OOResultSet.java,
+	openoffice/org/firebirdsql/jdbc/oo/OOStatement.java,
+	resources/META-INF/services/org.firebirdsql.gds.impl.GDSFactoryPlug
+	in:
+	
+	added separate support for OpenOffice until the JDBC specification
+	deviations will be fixed there
+
+2006-08-10 21:21  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractConnection.java, AbstractStatement.java,
+	FBCachedFetcher.java, FBDatabaseMetaData.java, FBResultSet.java:
+	
+	improved inheritance capabilities of the driver
+
 2006-08-06 15:21  rrokytskyy
 
 	*
