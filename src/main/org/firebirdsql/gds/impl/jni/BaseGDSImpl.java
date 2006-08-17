@@ -434,6 +434,8 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                 stmt.setAllRowsFetched(false);
                 stmt.setSingletonResult(false);
             }
+            
+            stmt.registerTransaction((AbstractIscTrHandle)tr_handle);
         }
     }
 
@@ -522,6 +524,16 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             }
 
             native_isc_dsql_free_statement(stmt_handle, option);
+            
+            // clear association with transaction
+            try {
+                AbstractIscTrHandle tr = stmt.getTransaction();
+                if (tr != null)
+                    tr.unregisterStatementFromTransaction(stmt);
+            } finally {
+                stmt.unregisterTransaction();
+            }
+
         }
     }
 

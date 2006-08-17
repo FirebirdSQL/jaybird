@@ -113,6 +113,12 @@ public final class isc_tr_handle_impl extends AbstractIscTrHandle {
             stmts.add(stmt);
 		}
     }
+    
+    public void unregisterStatementFromTransaction(AbstractIscStmtHandle stmt) {
+        synchronized(stmts) {
+            stmts.remove(stmt);
+        }
+    }
 
     public void forgetResultSets() {
         synchronized(stmts) {
