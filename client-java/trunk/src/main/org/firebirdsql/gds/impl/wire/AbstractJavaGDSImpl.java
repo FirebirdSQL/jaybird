@@ -1153,6 +1153,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 					stmt.setAllRowsFetched(false);
 				} // end of else
 				receiveResponse(db, op);
+                
+                stmt.registerTransaction(tr);
+                
 			} catch (IOException ex) {
 				throw new GDSException(ISCConstants.isc_net_read_err);
 			}
@@ -1407,6 +1410,14 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				}
 				// those rows are used by cachedFetcher don't clear
 				stmt.clearRows();
+
+                try {
+                    AbstractIscTrHandle tr = stmt.getTransaction();
+                    if (tr != null)
+                        tr.unregisterStatementFromTransaction(stmt);
+                } finally {
+                    stmt.unregisterTransaction();
+                }
 
 				/** @todo implement statement handle tracking correctly */
 				// db.rdb_sql_requests.remove(stmt);

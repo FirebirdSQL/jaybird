@@ -109,4 +109,25 @@ public abstract class AbstractIscStmtHandle implements IscStmtHandle {
      */
     public abstract void removeRows();
 
+    /**
+     * Register statement for the transaction. This method is used within
+     * the <code>GDS.iscDsqlExecXXX</code> methods to keep a reference on
+     * current transaction in which statement is executed.
+     * 
+     * @param trHandle instance of {@link AbstractIscTrHandle}.
+     */
+    public abstract void registerTransaction(AbstractIscTrHandle trHandle);
+    
+    /**
+     * Get current transaction in which statement is currently executed.
+     * 
+     * @return instance of {@link AbstractIscTrHandle} or <code>null</code>
+     * if statement is not assigned to a transaction.
+     */
+    public abstract AbstractIscTrHandle getTransaction();
+    
+    /**
+     * Unregister statement from the transaction.
+     */
+    public abstract void unregisterTransaction();
 }

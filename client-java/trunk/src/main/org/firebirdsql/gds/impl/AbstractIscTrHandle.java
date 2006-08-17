@@ -65,5 +65,10 @@ public abstract class AbstractIscTrHandle implements IscTrHandle {
      */
     public abstract void registerStatementWithTransaction(AbstractIscStmtHandle fbStatement);
 
-
+    /**
+     * Unregister a statement from the transaction in which it was registered.
+     *
+     * @param fbStatement Handle to the statement to be unregistered.
+     */
+    public abstract void unregisterStatementFromTransaction(AbstractIscStmtHandle fbStatement);
 }
