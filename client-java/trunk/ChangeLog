@@ -1,3 +1,21 @@
+2006-08-17 22:03  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/:
+	AbstractIscStmtHandle.java, AbstractIscTrHandle.java,
+	jni/BaseGDSImpl.java, jni/isc_stmt_handle_impl.java,
+	jni/isc_tr_handle_impl.java, wire/AbstractJavaGDSImpl.java,
+	wire/isc_stmt_handle_impl.java, wire/isc_tr_handle_impl.java:
+	
+	fixed issue when tracked statements were kept till transaction end
+	regardless whether the result set was closed or not.
+
+2006-08-17 21:56  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/gds/impl/wire/TestGds.java:
+	
+	fixed incorrect behavior when no test.gds_type property was
+	specified
+
 2006-08-10 21:23  rrokytskyy
 
 	* client-java/src/:
