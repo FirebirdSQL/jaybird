@@ -162,6 +162,10 @@ public abstract class AbstractConnection implements FirebirdConnection {
         }
         this.mc = mc;
     }
+    
+    public FBManagedConnection getManagedConnection() {
+        return mc;
+    }
 
     /**
      * Get connection handle for direct Firebird API access
