@@ -69,6 +69,11 @@ class FBXid implements Xid {
    private byte[] branchId;
    
    private long firebirdTransactionId;
+   private int xaState;
+   
+   public static int STATE_INLIMBO = 1;
+   public static int STATE_HEURCOM = 2;
+   public static int STATE_HEURRB = 3;
 
 
    /**
@@ -106,9 +111,10 @@ class FBXid implements Xid {
      * @param bytes a <code>byte[]</code> value
      * @exception ResourceException if an error occurs
      */
-    FBXid(InputStream rawIn, long firebirdTransactionId) throws ResourceException
+    FBXid(InputStream rawIn, long firebirdTransactionId, int xaState) throws ResourceException
     {
         this.firebirdTransactionId = firebirdTransactionId;
+        this.xaState = xaState;
         
         try 
         {
@@ -142,6 +148,9 @@ class FBXid implements Xid {
 
     // Public --------------------------------------------------------
 
+    public int getXAState() {
+        return xaState;
+    }
 
 
     // Xid implementation --------------------------------------------
@@ -278,5 +287,6 @@ class FBXid implements Xid {
             
         } while(length > 0);
     }
+
 }
 

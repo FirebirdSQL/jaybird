@@ -715,6 +715,20 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                     gds.iscRollbackTransaction(trHandle);
 
             } catch (GDSException ex) {
+                //check limbo transaction state in DB (committed/rolledback) to throw HEUR_RB or HEUR_COM
+                
+                //TODO: what if the XID is not an instance of FBXid ?
+                if (xid instanceof FBXid) {
+                    int xaState = ((FBXid) xid).getXAState();
+                    
+                    if (!commit && xaState == FBXid.STATE_HEURCOM)
+                        throw new FBXAException("Transaction forced to commit in database", XAException.XA_HEURCOM);
+                    else if (commit && xaState == FBXid.STATE_HEURRB)
+                        throw new FBXAException("Transaction forced to rollback in database", XAException.XA_HEURRB);
+                    else
+                        return; // heuristic termination by the DB, decision was the right one
+                }
+                
                 throw new FBXAException(XAException.XAER_RMERR, ex);
             } finally {
                 try {
