@@ -1,3 +1,13 @@
+2006-09-19 08:25  lorban
+
+	* client-java/src/main/org/firebirdsql/:
+	jca/FBManagedConnection.java, jca/FBXAConnection.java,
+	jca/FBXADataSource.java, jca/FBManagedConnectionFactory.java,
+	jca/FBXAConnectionHandle.java, jca/FBXAException.java,
+	jca/FBXid.java, jdbc/AbstractConnection.java:
+	
+	new XADataSource implementation + fixed sme JTA spec deviations
+
 2006-08-17 22:03  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/gds/impl/:
