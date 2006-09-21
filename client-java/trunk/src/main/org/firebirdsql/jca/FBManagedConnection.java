@@ -593,7 +593,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
                     XAException.XAER_NOTA);
 
         if (committingTr == gdsHelper.getCurrentTrHandle())
-            throw new FBXAException("Commit called with current xid",
+            throw new FBXAException("Commit called with non-ended xid",
                     XAException.XAER_PROTO);
 
         try {
@@ -654,7 +654,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      *                if an error occurs
      */
     void internalEnd(Xid xid, int flags) throws XAException {
-
         if (log != null) log.debug("End called: " + xid);
         IscTrHandle endingTr = (IscTrHandle)xidMap.get(xid);
 
@@ -848,7 +847,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             throw new FBXAException("Prepare called with unknown transaction",
                     XAException.XAER_NOTA);
         if (committingTr == gdsHelper.getCurrentTrHandle())
-            throw new FBXAException("Prepare called with current xid",
+            throw new FBXAException("Prepare called with non-ended xid",
                     XAException.XAER_PROTO);
         
         try {
@@ -1039,7 +1038,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         }
 
         if (committingTr == gdsHelper.getCurrentTrHandle())
-            throw new FBXAException("Rollback called with current xid",
+            throw new FBXAException("Rollback called with non-ended xid",
                     XAException.XAER_PROTO);
 
         try {
@@ -1119,7 +1118,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     public void internalStart(Xid id, int flags) throws XAException, GDSException {
         if (log != null) log.trace("start called: " + id);
 
-        if (gdsHelper.getCurrentTrHandle() != null) throw new XAException(XAException.XAER_PROTO);
+        synchronized (gdsHelper) {
+            while (gdsHelper.getCurrentTrHandle() != null) {
+                try {
+                    if (log != null) log.trace("getCurrentTrHandle is still set, waiting for it to become free ");
+                    gdsHelper.wait();
+                } catch (InterruptedException ex) {
+                }
+            }
+        }
 
         findIscTrHandle(id, flags);
     }
