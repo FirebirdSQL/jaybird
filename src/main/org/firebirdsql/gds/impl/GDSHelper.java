@@ -100,8 +100,9 @@ public class GDSHelper {
         return currentTr;
     }
     
-    public void setCurrentTrHandle(AbstractIscTrHandle currentTr) {
+    public synchronized void setCurrentTrHandle(AbstractIscTrHandle currentTr) {
         this.currentTr = currentTr;
+        notify();
     }
     
     public IscDbHandle getCurrentDbHandle() {
