@@ -1,3 +1,10 @@
+2006-09-21 19:44  lorban
+
+	* client-java/src/main/org/firebirdsql/: gds/impl/GDSHelper.java,
+	jca/FBManagedConnection.java:
+	
+	fixed TMJOIN semantics
+
 2006-09-19 08:25  lorban
 
 	* client-java/src/main/org/firebirdsql/:
