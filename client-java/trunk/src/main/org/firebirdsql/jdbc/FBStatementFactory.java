@@ -20,7 +20,7 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.lang.reflect.Constructor;
+import java.lang.reflect.*;
 
 import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -52,10 +52,22 @@ public class FBStatementFactory {
                     sql, new Integer(resultSetType), new Integer(resultSetConcurrency),
                     new Integer(resultSetHoldability), statementListener, blobListener });
 
-        } catch (Exception e) {
-
-            throw new FBSQLException(e);
-
+        } catch(InvocationTargetException ex) {
+            
+            Throwable t = ex.getTargetException();
+            if (t instanceof FBSQLException)
+                throw (FBSQLException)t;
+            else
+                throw new UndeclaredThrowableException(t);
+            
+        } catch (IllegalArgumentException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (InstantiationException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (IllegalAccessException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (NoSuchMethodException e) {
+            throw new UndeclaredThrowableException(e);
         }
     }
 
@@ -80,10 +92,22 @@ public class FBStatementFactory {
                     new Integer(resultSetHoldability), statementListener, blobListener,
                     new Boolean(metadata) });
 
-        } catch (Exception e) {
-
-            throw new FBSQLException(e);
-
+        } catch(InvocationTargetException ex) {
+            
+            Throwable t = ex.getTargetException();
+            if (t instanceof FBSQLException)
+                throw (FBSQLException)t;
+            else
+                throw new UndeclaredThrowableException(t);
+            
+        } catch (IllegalArgumentException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (InstantiationException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (IllegalAccessException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (NoSuchMethodException e) {
+            throw new UndeclaredThrowableException(e);
         }
 
     }
@@ -101,10 +125,22 @@ public class FBStatementFactory {
             return (AbstractSavepoint) constructor
                     .newInstance(new Object[] { new Integer(counter) });
 
-        } catch (Exception e) {
-
-            throw new FBSQLException(e);
-
+        } catch(InvocationTargetException ex) {
+            
+            Throwable t = ex.getTargetException();
+            if (t instanceof FBSQLException)
+                throw (FBSQLException)t;
+            else
+                throw new UndeclaredThrowableException(t);
+            
+        } catch (IllegalArgumentException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (InstantiationException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (IllegalAccessException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (NoSuchMethodException e) {
+            throw new UndeclaredThrowableException(e);
         }
 
     }
@@ -121,10 +157,22 @@ public class FBStatementFactory {
 
             return (AbstractSavepoint) constructor.newInstance(new Object[] { name });
 
-        } catch (Exception e) {
-
-            throw new FBSQLException(e);
-
+        } catch(InvocationTargetException ex) {
+            
+            Throwable t = ex.getTargetException();
+            if (t instanceof FBSQLException)
+                throw (FBSQLException)t;
+            else
+                throw new UndeclaredThrowableException(t);
+            
+        } catch (IllegalArgumentException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (InstantiationException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (IllegalAccessException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (NoSuchMethodException e) {
+            throw new UndeclaredThrowableException(e);
         }
 
     }
@@ -146,10 +194,22 @@ public class FBStatementFactory {
                     new Integer(resultSetType), new Integer(resultSetConcurrency),
                     new Integer(resultSetHoldability), statementListener });
 
-        } catch (Exception e) {
-
-            throw new FBSQLException(e);
-
+        } catch(InvocationTargetException ex) {
+            
+            Throwable t = ex.getTargetException();
+            if (t instanceof FBSQLException)
+                throw (FBSQLException)t;
+            else
+                throw new UndeclaredThrowableException(t);
+            
+        } catch (IllegalArgumentException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (InstantiationException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (IllegalAccessException e) {
+            throw new UndeclaredThrowableException(e);
+        } catch (NoSuchMethodException e) {
+            throw new UndeclaredThrowableException(e);
         }
 
     }
