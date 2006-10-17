@@ -86,7 +86,7 @@ public class GDSHelper {
         this.currentDbHandle = dbHandle;
 
         this.registerResultSets = !getDatabaseParameterBuffer().hasArgument(
-                ISCConstants.isc_dpb_no_result_set_tracking);
+                DatabaseParameterBufferExtension.NO_RESULT_SET_TRACKING);
         
         this.listener = listener;
     }
@@ -181,10 +181,10 @@ public class GDSHelper {
             if (log != null) log.trace("preparing sql: " + sql);
     
             String localEncoding = 
-                dpb.getArgumentAsString(ISCConstants.isc_dpb_local_encoding);
+                dpb.getArgumentAsString(DatabaseParameterBufferExtension.LOCAL_ENCODING);
             
             String mappingPath = 
-                dpb.getArgumentAsString(ISCConstants.isc_dpb_mapping_path);
+                dpb.getArgumentAsString(DatabaseParameterBufferExtension.MAPPING_PATH);
     
             Encoding encoding = 
                 EncodingFactory.getEncoding(localEncoding, mappingPath);
@@ -538,8 +538,8 @@ public class GDSHelper {
      * @return The length of blob buffers
      */
     public int getBlobBufferLength() {
-        if (dpb.hasArgument(ISCConstants.isc_dpb_blob_buffer_size))
-            return dpb.getArgumentAsInt(ISCConstants.isc_dpb_blob_buffer_size);
+        if (dpb.hasArgument(DatabaseParameterBufferExtension.BLOB_BUFFER_SIZE))
+            return dpb.getArgumentAsInt(DatabaseParameterBufferExtension.BLOB_BUFFER_SIZE);
         else
             return DEFAULT_BLOB_BUFFER_SIZE;
     }

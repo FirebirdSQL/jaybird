@@ -119,7 +119,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             
             byte[] urlData;
             try {
-                String filenameCharset = databaseParameterBuffer.getArgumentAsString(ISCConstants.isc_dpb_filename_charset);
+                String filenameCharset = databaseParameterBuffer.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
                 if (filenameCharset != null)
                     urlData = serverUrl.getBytes(filenameCharset);
                 else
@@ -252,7 +252,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             
             byte[] urlData;
             try {
-                String filenameCharset = databaseParameterBuffer.getArgumentAsString(ISCConstants.isc_dpb_filename_charset);
+                String filenameCharset = databaseParameterBuffer.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
                 if (filenameCharset != null)
                     urlData = serverUrl.getBytes(filenameCharset);
                 else
