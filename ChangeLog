@@ -1,3 +1,38 @@
+2006-10-17 07:23  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/jdbc/field/FBField.java,
+	resources/driver_property_info.properties:
+	
+	added a possibility to return byte[] in getObject() method if
+	charset is octets
+
+2006-10-17 07:23  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBStatementFactory.java:
+	
+	fixed exception handling
+
+2006-10-17 07:22  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FBConnectionRequestInfo.ja
+	va:
+	
+	fixed possible NPE
+
+2006-10-17 07:09  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/: ISCConstants.java,
+	impl/DatabaseParameterBufferExtension.java, impl/GDSHelper.java,
+	impl/jni/BaseGDSImpl.java,
+	impl/jni/DatabaseParameterBufferImp.java,
+	impl/wire/AbstractJavaGDSImpl.java,
+	impl/wire/DatabaseParameterBufferImp.java:
+	
+	refactoring to simplify adding new "custom" DPB properties and
+	their filtering in GDS layers
+
 2006-09-21 19:44  lorban
 
 	* client-java/src/main/org/firebirdsql/: gds/impl/GDSHelper.java,
