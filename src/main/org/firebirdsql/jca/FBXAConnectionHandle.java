@@ -18,24 +18,18 @@
  */
 package org.firebirdsql.jca;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.Savepoint;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Map;
 
-import org.firebirdsql.jdbc.AbstractConnection;
+import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.jdbc.*;
 
 /**
  * Simple Connection wrapper returned by FBXAConnection.
  * 
  * @author <a href="mailto:lorban@bitronix.be">Ludovic Orban</a>
  */
-public class FBXAConnectionHandle implements Connection {
+public class FBXAConnectionHandle implements FirebirdConnection {
     
     private AbstractConnection connection;
     
@@ -43,7 +37,7 @@ public class FBXAConnectionHandle implements Connection {
         this.connection = connection;
     }
 
-    private Connection getConnection() throws SQLException {
+    private AbstractConnection getConnection() throws SQLException {
         if (connection == null)
             throw new SQLException("connection is closed");
         return connection;
@@ -197,4 +191,49 @@ public class FBXAConnectionHandle implements Connection {
         return getConnection().prepareStatement(sql, columnNames);
     }
 
+    public Blob createBlob() throws SQLException {
+        return getConnection().createBlob();
+    }
+
+    public TransactionParameterBuffer createTransactionParameterBuffer() throws SQLException {
+        return getConnection().createTransactionParameterBuffer();
+    }
+
+    public String getIscEncoding() throws SQLException {
+        return getConnection().getIscEncoding();
+    }
+
+    public TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException {
+        return getConnection().getTransactionParameters(isolationLevel);
+    }
+
+    public void releaseSavepoint(FirebirdSavepoint savepoint) throws SQLException {
+        getConnection().releaseSavepoint(savepoint);
+    }
+
+    public void rollback(FirebirdSavepoint savepoint) throws SQLException {
+        getConnection().rollback(savepoint);
+    }
+
+    public FirebirdSavepoint setFirebirdSavepoint() throws SQLException {
+        return getConnection().setFirebirdSavepoint();
+    }
+
+    public FirebirdSavepoint setFirebirdSavepoint(String name) throws SQLException {
+        return getConnection().setFirebirdSavepoint(name);
+    }
+
+    public void setTransactionParameters(int isolationLevel, int[] parameters) throws SQLException {
+        getConnection().setTransactionParameters(isolationLevel, parameters);
+    }
+
+    public void setTransactionParameters(int isolationLevel, TransactionParameterBuffer tpb) throws SQLException {
+        getConnection().setTransactionParameters(isolationLevel, tpb);
+    }
+
+    public void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException {
+        getConnection().setTransactionParameters(tpb);
+    }
+
+    
 }
