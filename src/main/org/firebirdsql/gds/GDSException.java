@@ -250,7 +250,7 @@ public class GDSException extends Exception {
      * Returns the parameter depending on the type of the
      * error code.
      */
-    protected String getParam() {
+    public String getParam() {
         if ((type == ISCConstants.isc_arg_interpreted) ||
                 (type == ISCConstants.isc_arg_string))
             return strParam;
