@@ -72,7 +72,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     private boolean managedEnvironment = true;
     private boolean connectionSharing = true;
-    private boolean recoveryDone = false;
+    private boolean prepared = false;
 
     FBManagedConnection(Subject subject, ConnectionRequestInfo cri,
             FBManagedConnectionFactory mcf) throws ResourceException {
@@ -83,6 +83,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         this.tpb = mcf.getDefaultTpb();
         this.transactionIsolation = mcf.getDefaultTransactionIsolation();
         
+        //TODO: XIDs in limbo should be loaded so that XAER_DUPID can be thrown appropriately
+        
         try {
             this.dbHandle = gds.createIscDbHandle();
 
@@ -90,7 +92,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             gds.iscAttachDatabase(mcf.getDatabase(), dbHandle, dpb);
             
             this.gdsHelper = new GDSHelper(this.gds, dpb, (AbstractIscDbHandle)this.dbHandle, this);
-            
         } catch(GDSException ex) {
             throw new FBResourceException(ex);
         }
@@ -415,7 +416,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      *
      */
     private void disassociateConnections() throws ResourceException {
-        
         ResourceException ex = null;
         
         for (Iterator i = connectionHandles.iterator(); i.hasNext();) {
@@ -506,7 +506,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      *             illegal state for destroying connection
      */
     public void destroy() throws ResourceException {
-        
         if (gdsHelper == null)
             return;
         
@@ -531,7 +530,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      * 
      * @return the XAResource
      */
-    public javax.transaction.xa.XAResource getXAResource() {
+    public XAResource getXAResource() {
         if (log != null)
             log.debug("XAResource requested from FBManagedConnection");
         return this;
@@ -565,7 +564,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      */
     public void commit(Xid id, boolean onePhase) throws XAException {
         try {
-            
             mcf.notifyCommit(this, id, onePhase);
         } catch (GDSException ge) {
             throw new XAException(ge.getXAErrorCode());
@@ -587,7 +585,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             GDSException {
         if (log != null) log.trace("Commit called: " + xid);
         AbstractIscTrHandle committingTr = (AbstractIscTrHandle)xidMap.get(xid);
-
+        
+        // check that prepare has NOT been called when onePhase = true
+        if (onePhase && prepared)
+            throw new FBXAException("Cannot commit one-phase when transaction has been prepared", XAException.XAER_PROTO);
+            
+        // check that prepare has been called when onePhase = false
+        if (!onePhase && !prepared)
+            throw new FBXAException("Cannot commit two-phase when transaction has not been prepared", XAException.XAER_PROTO);
+        
         if (committingTr == null)
             throw new FBXAException("Commit called with unknown transaction",
                     XAException.XAER_NOTA);
@@ -610,13 +616,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
                 throw ge;
             } finally {
                 xidMap.remove(xid);
+                prepared = false;
             }
             
         } catch (GDSException ge) {
             ge.setXAErrorCode(XAException.XAER_RMERR);
             throw ge;
         }
-
     }
 
     /**
@@ -627,14 +633,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      *             the transaction ID is wrong.
      */
     public void end(Xid id, int flags) throws XAException {
+        if (flags != XAResource.TMSUCCESS && flags != XAResource.TMFAIL && flags != XAResource.TMSUSPEND)
+            throw new FBXAException("flag not allowed in this context: " + flags + ", valid flags are TMSUCCESS, TMFAIL, TMSUSPEND", XAException.XAER_PROTO);
 
-        if (flags != XAResource.TMSUSPEND && flags != XAResource.TMSUCCESS
-                && flags != XAResource.TMFAIL)
-            throw new FBXAException(
-                    "Invalid flag in end: must be TMSUSPEND, TMSUCCESS, or TMFAIL",
-                    XAException.XAER_INVAL); 
-
-        
         internalEnd(id, flags);
         
         mcf.notifyEnd(this, id);
@@ -650,29 +651,43 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      *            a <code>Xid</code> value
      * @param flags
      *            an <code>int</code> value
-     * @exception GDSException
+     * @exception XAException
      *                if an error occurs
      */
     void internalEnd(Xid xid, int flags) throws XAException {
         if (log != null) log.debug("End called: " + xid);
         IscTrHandle endingTr = (IscTrHandle)xidMap.get(xid);
-
+        
         if (endingTr == null)
-            throw new FBXAException("Unrecognized transaction",
-                    XAException.XAER_NOTA);
+            throw new FBXAException("Unrecognized transaction", XAException.XAER_NOTA);
 
-        if (endingTr == gdsHelper.getCurrentTrHandle())
-            gdsHelper.setCurrentTrHandle(null);
-        else 
-        if (flags == XAResource.TMSUSPEND)
-            throw new FBXAException("You are trying to suspend a transaction "
-                    + "that is not the current transaction", XAException.XAER_INVAL);
-
-        // Otherwise, it is fail or success for a tx that will be committed or
-        // rolled back shortly.
+        if (flags == XAResource.TMFAIL) {
+            try {
+                gds.iscRollbackTransaction(endingTr);
+                gdsHelper.setCurrentTrHandle(null);
+            } catch (GDSException ex) {
+                throw new FBXAException("can't rollback transaction", XAException.XAER_RMFAIL, ex);
+            }
+        }
+        else if (flags == XAResource.TMSUCCESS) {
+            if (endingTr == gdsHelper.getCurrentTrHandle())
+                gdsHelper.setCurrentTrHandle(null);
+            else
+                throw new FBXAException("You are trying to end a transaction "
+                        + "that is not the current transaction", XAException.XAER_INVAL);
+        }
+        else if (flags == XAResource.TMSUSPEND) {
+            if (endingTr == gdsHelper.getCurrentTrHandle())
+                gdsHelper.setCurrentTrHandle(null);
+            else 
+                throw new FBXAException("You are trying to suspend a transaction "
+                        + "that is not the current transaction", XAException.XAER_INVAL);
+            
+        }
     }
     
-    private final static String FORGET_FIND_QUERY = "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION, RDB$TRANSACTION_STATE FROM RDB$TRANSACTIONS";
+    private final static String FORGET_FIND_QUERY = "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
+                                                  + "FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE IN (2, 3)";
     private final static String FORGET_DELETE_QUERY = "DELETE FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_ID = ";
 
     /**
@@ -684,7 +699,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      *             Occurs when the state was not correct (end never called), or
      *             the transaction ID is wrong.
      */
-    public void forget(Xid id) throws javax.transaction.xa.XAException {
+    public void forget(Xid id) throws XAException {
         long inLimboId = -1;
 
         try {
@@ -705,15 +720,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             
             DataProvider dataProvider0 = new DataProvider(stmtHandle2, 0);
             DataProvider dataProvider1 = new DataProvider(stmtHandle2, 1);
-            DataProvider dataProvider2 = new DataProvider(stmtHandle2, 2);
             
             FBField field0 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[0], dataProvider0, gdsHelper2, false);
             FBField field1 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[1], dataProvider1, gdsHelper2, false);
-            FBField field2 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[2], dataProvider2, gdsHelper2, false);
             
             field0.setConnection(gdsHelper2);
             field1.setConnection(gdsHelper2);
-            field2.setConnection(gdsHelper2);
             
             int row = 0;
             while(row < stmtHandle2.getRows().length) {
@@ -725,22 +737,18 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
                 
                 dataProvider0.setRow(row);
                 dataProvider1.setRow(row);
-                dataProvider2.setRow(row);
                 
                 long inLimboTxId = field0.getLong();
                 byte[] inLimboMessage = field1.getBytes();
-                int xaState = field2.getInt();
             
                 try {
-                    FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId, xaState);
+                    FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
                     
                     boolean gtridEquals = Arrays.equals(xid.getGlobalTransactionId(), id.getGlobalTransactionId());
                     boolean bqualEquals = Arrays.equals(xid.getBranchQualifier(), id.getBranchQualifier());
                     
                     if (gtridEquals && bqualEquals) {
                         inLimboId = inLimboTxId;
-                        if (xaState == FBXid.STATE_INLIMBO)
-                            throw new FBXAException("Cannot forget the Xid of a transaction that is still in limbo", XAException.XAER_NOTA);
                         break;
                     }
                 } catch(FBIncorrectXidException ex) {
@@ -770,7 +778,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
         
         if (inLimboId == -1)
-            throw new FBXAException("XID not found in limbo transactions list", XAException.XAER_NOTA);
+            throw new FBXAException("XID not found", XAException.XAER_NOTA); // TODO: is XAER_NOTA the proper error code ?
             
         try {    
             // delete XID
@@ -818,8 +826,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      * @return <code>true</code> if <code>res</code> uses the same
      *         ResourceManager, <code>false</code> otherwise
      */
-    public boolean isSameRM(XAResource res)
-            throws javax.transaction.xa.XAException {
+    public boolean isSameRM(XAResource res) throws XAException {
         return (res instanceof FBManagedConnection)
                 && (dbHandle.equals(((FBManagedConnection) res).dbHandle));
     }
@@ -874,11 +881,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             throw ge;
         }
 
+        prepared = true;
         return XA_OK;
     }
 
     private static final String RECOVERY_QUERY = ""
-            + "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION, RDB$TRANSACTION_STATE "
+            + "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
             + "FROM RDB$TRANSACTIONS";
 
     /**
@@ -899,24 +907,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      *             An error has occurred. Possible values are XAER_RMERR,
      *             XAER_RMFAIL, XAER_INVAL, and XAER_PROTO.
      */
-    public Xid[] recover(int flag) throws javax.transaction.xa.XAException {
+    public Xid[] recover(int flags) throws javax.transaction.xa.XAException {
+        if (flags != XAResource.TMSTARTRSCAN && flags != XAResource.TMENDRSCAN && flags != XAResource.TMNOFLAGS && flags != (XAResource.TMSTARTRSCAN|XAResource.TMENDRSCAN))
+            throw new FBXAException("flag not allowed in this context: " + flags + ", valid flags are TMSTARTRSCAN, TMENDRSCAN, TMNOFLAGS, TMSTARTRSCAN|TMENDRSCAN", XAException.XAER_PROTO);
+        
         try {
-            if (recoveryDone)
+            if (!((flags & XAResource.TMSTARTRSCAN) == 0))
                 return new Xid[0];
-            
-            boolean startScan = (flag & XAResource.TMSTARTRSCAN) == XAResource.TMSTARTRSCAN;
-            boolean endScan = (flag & XAResource.TMENDRSCAN) == XAResource.TMENDRSCAN;
-            
-            if (startScan && endScan) {
-                recoveryDone = false;
-            }
-            else if (endScan) {
-                recoveryDone = false;
-                return new Xid[0];
-            }
-            else if (startScan) {
-                recoveryDone = true;
-            }
             
             ArrayList xids = new ArrayList();
             
@@ -937,19 +934,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             
             DataProvider dataProvider0 = new DataProvider(stmtHandle2, 0);
             DataProvider dataProvider1 = new DataProvider(stmtHandle2, 1);
-            DataProvider dataProvider2 = new DataProvider(stmtHandle2, 2);
             
             FBField field0 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[0], dataProvider0, gdsHelper2, false);
             FBField field1 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[1], dataProvider1, gdsHelper2, false);
-            FBField field2 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[2], dataProvider2, gdsHelper2, false);
             
             field0.setConnection(gdsHelper2);
             field1.setConnection(gdsHelper2);
-            field2.setConnection(gdsHelper2);
             
             int row = 0;
             while(row < stmtHandle2.getRows().length) {
-            
                 if (stmtHandle2.getRows()[row] == null) {
                     row++;
                     continue;
@@ -957,17 +950,16 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
                 
                 dataProvider0.setRow(row);
                 dataProvider1.setRow(row);
-                dataProvider2.setRow(row);
                 
                 long inLimboTxId = field0.getLong();
                 byte[] inLimboMessage = field1.getBytes();
-                int xaState = field2.getInt();
             
                 try {
-                    FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId, xaState);
+                    FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
                     xids.add(xid);
                 } catch(FBIncorrectXidException ex) {
-                    // ignore this Xid
+                    if (log != null)
+                        log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
                 }
     
                 row++;
@@ -1020,9 +1012,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      *             fails. The error code differs depending on the exact
      *             situation.
      */
-    public void rollback(Xid id) throws XAException {
+    public void rollback(Xid xid) throws XAException {
         try {
-            mcf.notifyRollback(this, id);
+            mcf.notifyRollback(this, xid);
         } catch (GDSException ge) {
             throw new FBXAException(ge.getXAErrorCode(), ge);
         }
@@ -1032,9 +1024,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         if (log != null) log.trace("rollback called: " + xid);
         AbstractIscTrHandle committingTr = (AbstractIscTrHandle)xidMap.get(xid); //mcf.getTrHandleForXid(id);
         if (committingTr == null) {
-            if (log != null)
-                log.warn("rollback called with unknown transaction: " + xid);
-            return;
+            throw new FBXAException ("Rollback called with unknown transaction: " + xid);
         }
 
         if (committingTr == gdsHelper.getCurrentTrHandle())
@@ -1047,6 +1037,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
                 gdsHelper.getInternalAPIHandler().iscRollbackTransaction(committingTr);
             } finally {
                 xidMap.remove(xid);
+                prepared = false;
             }
         } catch (GDSException ge) {
             if (log != null) log.debug("Exception in rollback", ge);
@@ -1089,6 +1080,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      *             closed.
      */
     public void start(Xid id, int flags) throws XAException {
+        if (flags != XAResource.TMNOFLAGS && flags != XAResource.TMJOIN && flags != XAResource.TMRESUME)
+            throw new FBXAException("flag not allowed in this context: " + flags + ", valid flags are TMNOFLAGS, TMJOIN, TMRESUME", XAException.XAER_PROTO);
+        if (flags == XAResource.TMJOIN)
+            throw new FBXAException("Joining two transactions is not supported", XAException.XAER_RMFAIL);
+        
         try {
             // reset the transaction parameters for the managed scenario 
             setTransactionIsolation(mcf.getDefaultTransactionIsolation());
@@ -1118,15 +1114,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     public void internalStart(Xid id, int flags) throws XAException, GDSException {
         if (log != null) log.trace("start called: " + id);
 
-        synchronized (gdsHelper) {
-            while (gdsHelper.getCurrentTrHandle() != null) {
-                try {
-                    if (log != null) log.trace("getCurrentTrHandle is still set, waiting for it to become free ");
-                    gdsHelper.wait();
-                } catch (InterruptedException ex) {
-                }
-            }
-        }
+        if (gdsHelper.getCurrentTrHandle() != null)
+            throw new FBXAException("Transaction already started", XAException.XAER_PROTO);
 
         findIscTrHandle(id, flags);
     }
@@ -1178,17 +1167,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     // package visibility
     // --------------------------------------------------------------------
 
-    private void findIscTrHandle(Xid xid, int flags) throws GDSException,
-            XAException {
-
+    private void findIscTrHandle(Xid xid, int flags) throws GDSException, XAException {
         // FIXME return old tr handle if it is still valid before proceeding
         gdsHelper.setCurrentTrHandle(null);
         
-        if (flags == XAResource.TMJOIN || flags == XAResource.TMRESUME) {
+        if (flags == XAResource.TMRESUME) {
             AbstractIscTrHandle trHandle = (AbstractIscTrHandle) xidMap.get(xid);
             if (trHandle == null) {
                 throw new FBXAException(
-                        "You are trying to join or resume a transaction that is not known to this XAResource",
+                        "You are trying to resume a transaction that is not attached to this XAResource",
                         XAException.XAER_INVAL);
             }
             
