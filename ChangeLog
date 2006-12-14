@@ -1,3 +1,10 @@
+2006-12-14 01:47  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/: FBCachedBlob.java,
+	field/FBBlobField.java:
+
+	fixed ClassCastException when using cached blobs
+
 2006-12-03 02:02  lorban
 
 	* client-java/src/main/org/firebirdsql/: gds/GDSException.java,
