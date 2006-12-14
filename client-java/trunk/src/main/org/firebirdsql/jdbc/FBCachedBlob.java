@@ -10,7 +10,7 @@ import java.io.ByteArrayInputStream;
 /**
  * This class represents a cached blob field.
  */
-public class FBCachedBlob implements FirebirdBlob {
+public class FBCachedBlob implements FirebirdBlob, Synchronizable {
 
     static final byte[] BYTES_NULL_VALUE = null;
 
@@ -137,5 +137,9 @@ public class FBCachedBlob implements FirebirdBlob {
      */
     public void truncate(long length) throws SQLException {
         throw new FBDriverNotCapableException();
+    }
+
+    public Object getSynchronizationObject() throws SQLException {
+        return new Object();
     }
 }
