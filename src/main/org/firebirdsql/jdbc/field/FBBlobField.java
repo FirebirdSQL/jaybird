@@ -122,7 +122,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
         
         final long blobId = field.decodeLong(blobIdBuffer);
         
-        Object syncObject = ((FBBlob)getBlob()).getSynchronizationObject();
+        Object syncObject = ((Synchronizable)getBlob()).getSynchronizationObject();
         synchronized (syncObject) {
             try {
                 final IscBlobHandle blobHandle = 
