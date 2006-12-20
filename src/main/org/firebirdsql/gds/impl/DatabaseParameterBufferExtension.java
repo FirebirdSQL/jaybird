@@ -38,17 +38,38 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
      * Driver-specific DPB params that must be removed before sending them
      * to the server. These params influence only the client side.
      */
-    int SOCKET_BUFFER_SIZE      = ISCConstants.isc_dpb_socket_buffer_size;
-    int BLOB_BUFFER_SIZE        = ISCConstants.isc_dpb_blob_buffer_size;
-    int USE_STREAM_BLOBS        = ISCConstants.isc_dpb_use_stream_blobs;
-    int PARANOIA_MODE           = ISCConstants.isc_dpb_paranoia_mode;
-    int TIMESTAMP_USES_LOCAL_TIMEZONE =     ISCConstants.isc_dpb_timestamp_uses_local_timezone;
-    int USE_STANDARD_UDF        = ISCConstants.isc_dpb_use_standard_udf;
-    int LOCAL_ENCODING          = ISCConstants.isc_dpb_local_encoding;
-    int MAPPING_PATH            = ISCConstants.isc_dpb_mapping_path;
-    int NO_RESULT_SET_TRACKING  = ISCConstants.isc_dpb_no_result_set_tracking;
-    int RESULT_SET_HOLDABLE     = ISCConstants.isc_dpb_result_set_holdable;
-    int FILENAME_CHARSET        = ISCConstants.isc_dpb_filename_charset;
+    int SOCKET_BUFFER_SIZE              = 129; // ISCConstants.isc_dpb_socket_buffer_size;
+    int BLOB_BUFFER_SIZE                = 130; // ISCConstants.isc_dpb_blob_buffer_size;
+    int USE_STREAM_BLOBS                = 131; // ISCConstants.isc_dpb_use_stream_blobs;
+    int PARANOIA_MODE                   = 132; // ISCConstants.isc_dpb_paranoia_mode;
+    int TIMESTAMP_USES_LOCAL_TIMEZONE   = 133; // ISCConstants.isc_dpb_timestamp_uses_local_timezone;
+    int USE_STANDARD_UDF                = 134; // ISCConstants.isc_dpb_use_standard_udf;
+    int LOCAL_ENCODING                  = 135; // ISCConstants.isc_dpb_local_encoding;
+    int MAPPING_PATH                    = 136; // ISCConstants.isc_dpb_mapping_path;
+    int NO_RESULT_SET_TRACKING          = 137; // ISCConstants.isc_dpb_no_result_set_tracking;
+    int RESULT_SET_HOLDABLE             = 138; // ISCConstants.isc_dpb_result_set_holdable;
+    int FILENAME_CHARSET                = 139; // ISCConstants.isc_dpb_filename_charset;
+    int OCTETS_AS_BYTES                 = 140; // ISCConstants.isc_dpb_octets_as_bytes;
+    
+    /**
+     * List of the DPB extensions. This array is used to filter the parameters
+     * from the DPB before sending it to Firebird. Any new extension code MUST
+     * be listed here.
+     */
+    public int[] EXTENSION_PARAMETERS = new int[] {
+        SOCKET_BUFFER_SIZE,
+        BLOB_BUFFER_SIZE, 
+        USE_STREAM_BLOBS,
+        PARANOIA_MODE,
+        TIMESTAMP_USES_LOCAL_TIMEZONE,
+        USE_STANDARD_UDF,
+        LOCAL_ENCODING,
+        MAPPING_PATH,
+        NO_RESULT_SET_TRACKING,
+        RESULT_SET_HOLDABLE,
+        FILENAME_CHARSET,
+        OCTETS_AS_BYTES
+    };
     
 
     /**

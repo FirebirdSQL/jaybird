@@ -29,6 +29,7 @@ package org.firebirdsql.gds.impl.jni;
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
+import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 
 /**
  * Describe class <code>isc_stmt_handle_impl</code> here.
@@ -55,6 +56,8 @@ public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
     private int updateCount;
     private int deleteCount;
     private int selectCount; //????
+    
+    private AbstractIscTrHandle trHandle;
 
     public void addWarning(GDSException warning) {
         rsr_rdb.addWarning(warning);
@@ -201,5 +204,17 @@ public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
 
     public void addRow(byte[][] row) {
         rows[size++] = row;
+    }
+    
+    public AbstractIscTrHandle getTransaction() {
+        return trHandle;
+    }
+
+    public void registerTransaction(AbstractIscTrHandle trHandle) {
+        this.trHandle = trHandle;
+    }
+
+    public void unregisterTransaction() {
+        this.trHandle = null;
     }
 }
