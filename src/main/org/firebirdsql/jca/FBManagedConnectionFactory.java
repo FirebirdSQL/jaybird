@@ -713,51 +713,9 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                     gds.iscCommitTransaction(trHandle);
                 else
                     gds.iscRollbackTransaction(trHandle);
-                
-                // remove heuristic data from rdb$transactions
-                try {
-                    String query = "delete from rdb$transactions where rdb$transaction_id = " + fbTransactionId;
-                    GDSHelper gdsHelper = new GDSHelper(gds, getDatabaseParameterBuffer(), (AbstractIscDbHandle)dbHandle, null);
-
-                    AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();
-                    gds.iscStartTransaction(trHandle2, gdsHelper.getCurrentDbHandle(), getDefaultTpb().getTransactionParameterBuffer());
-
-                    AbstractIscStmtHandle stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
-                    gds.iscDsqlAllocateStatement(gdsHelper.getCurrentDbHandle(), stmtHandle2);
-
-                    stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
-                    gds.iscDsqlAllocateStatement(gdsHelper.getCurrentDbHandle(), stmtHandle2);
-                    
-                    GDSHelper gdsHelper2 = new GDSHelper(gds, gdsHelper.getDatabaseParameterBuffer(), (AbstractIscDbHandle) gdsHelper.getCurrentDbHandle(), null);
-                    gdsHelper2.setCurrentTrHandle(trHandle2);
-
-                    gdsHelper2.prepareStatement(stmtHandle2, query, false);
-                    gdsHelper2.executeStatement(stmtHandle2, false);
-
-                    gdsHelper2.closeStatement(stmtHandle2, true);
-                    gds.iscCommitTransaction(trHandle2);
-                } catch (SQLException sqle) {
-                    throw new FBXAException("unable to remove in limbo transaction from rdb$transactions where rdb$transaction_id = " + fbTransactionId, XAException.XAER_RMERR);
-                }
 
             } catch (GDSException ex) {
-                /*
-                 * if ex.getIntParam() is 335544353 (transaction is not in limbo) and next ex.getIntParam() is 335544468 (transaction {0} is {1})
-                 *  => detected heuristic
-                 */
-                int errorCode = XAException.XAER_RMERR;
-                int intParam = ex.getIntParam();
-                int nextIntParam = ex.getNext().getIntParam();
-                
-                if (intParam == ISCConstants.isc_no_recon && nextIntParam == ISCConstants.isc_tra_state) {
-                    String param = ex.getNext().getNext().getNext().getParam();
-                    if ("committed".equals(param))
-                        errorCode = XAException.XA_HEURCOM;
-                    else if ("rolled back".equals(param))
-                        errorCode = XAException.XA_HEURRB;
-                }
-                
-                throw new FBXAException("unable to complete in limbo transaction", errorCode, ex);
+                throw new FBXAException(XAException.XAER_RMERR, ex);
             } finally {
                 try {
                     if (tempLocalTx != null && tempLocalTx.inTransaction())

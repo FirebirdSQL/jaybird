@@ -58,7 +58,7 @@ import org.firebirdsql.logging.LoggerFactory;
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
-    public static final String SPACES = "                               ";//31 spaces
+    private static final String SPACES = "                               ";//31 spaces
 
     private GDSHelper gdsHelper;
     private AbstractConnection connection;
@@ -67,16 +67,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     //PreparedStatement tables = null;
 
-    protected FBDatabaseMetaData(GDSHelper gdsHelper) {
+    FBDatabaseMetaData(GDSHelper gdsHelper) {
         this.gdsHelper = gdsHelper;
     }
     
-    protected FBDatabaseMetaData(AbstractConnection c) throws GDSException {
+    FBDatabaseMetaData(AbstractConnection c) throws GDSException {
         this.gdsHelper = c.getGDSHelper();
         this.connection = c;
     }
 
-    protected void close() {
+    void close() {
         try {
             Iterator i = statements.values().iterator();
             while(i.hasNext()) {
@@ -4820,7 +4820,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         switch (type){
             case ResultSet.TYPE_FORWARD_ONLY:
             case ResultSet.TYPE_SCROLL_INSENSITIVE :
-            case ResultSet.TYPE_SCROLL_SENSITIVE :
                 return true;
             default:
                 return false;
@@ -4845,7 +4844,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         switch(type) {
             case ResultSet.TYPE_FORWARD_ONLY:
             case ResultSet.TYPE_SCROLL_INSENSITIVE :
-            case ResultSet.TYPE_SCROLL_SENSITIVE :
                 return concurrency == ResultSet.CONCUR_READ_ONLY || 
                     concurrency == ResultSet.CONCUR_UPDATABLE;
             default:
@@ -5417,7 +5415,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return 1; // same value as sqlStateXOpen, but makes JDK 1.3 happy.
     }
 
-    public boolean isAllCondition(String pattern) {
+    //private
+    private boolean isAllCondition(String pattern) {
         if ("%".equals(pattern)) {
             //asks for everything, no condition needed
             return true;
@@ -5479,7 +5478,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return stripped.toString();
     }
 
-    protected String getWantsSystemTables(String[] types) {
+    private String getWantsSystemTables(String[] types) {
         for (int i = 0; i < types.length; i++) {
             if (SYSTEM_TABLE.equals(types[i])) {
                 return "T";
@@ -5488,7 +5487,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return "F";
     }
 
-    protected String getWantsTables(String[] types) {
+    private String getWantsTables(String[] types) {
         for (int i = 0; i < types.length; i++) {
             if (TABLE.equals(types[i])) {
                 return "T";
@@ -5497,7 +5496,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return "F";
     }
 
-    protected String getWantsViews(String[] types) {
+    private String getWantsViews(String[] types) {
         for (int i = 0; i < types.length; i++) {
             if (VIEW.equals(types[i])) {
                 return "T";
@@ -5627,7 +5626,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    protected byte[] getBytes(String value){
+    private byte[] getBytes(String value){
         if (value !=null)
             return value.getBytes();
         else
@@ -5638,6 +5637,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         
         AbstractPreparedStatement s = 
             (AbstractPreparedStatement)statements.get(sql);
+        
+        if (s != null && s.isClosed()) {
+            statements.remove(sql);
+            s = null;
+        }
         
         if (s != null) 
             return s;
