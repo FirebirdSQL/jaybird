@@ -42,17 +42,10 @@ public class DatabaseParameterBufferImp extends ParameterBufferBase implements
     public DatabaseParameterBuffer removeExtensionParams() {
         DatabaseParameterBuffer copy = deepCopy();
         
-        copy.removeArgument(SOCKET_BUFFER_SIZE);
-        copy.removeArgument(BLOB_BUFFER_SIZE);
-        copy.removeArgument(USE_STREAM_BLOBS);
-        copy.removeArgument(PARANOIA_MODE);
-        copy.removeArgument(TIMESTAMP_USES_LOCAL_TIMEZONE);
-        copy.removeArgument(USE_STANDARD_UDF);
-        copy.removeArgument(LOCAL_ENCODING);
-        copy.removeArgument(MAPPING_PATH);
-        copy.removeArgument(NO_RESULT_SET_TRACKING);
-        copy.removeArgument(RESULT_SET_HOLDABLE);
-        copy.removeArgument(FILENAME_CHARSET);
+        for (int i = 0; i < DatabaseParameterBufferExtension.EXTENSION_PARAMETERS.length; i++) {
+            copy.removeArgument(
+                DatabaseParameterBufferExtension.EXTENSION_PARAMETERS[i]);
+        }
         
         return copy;
     }

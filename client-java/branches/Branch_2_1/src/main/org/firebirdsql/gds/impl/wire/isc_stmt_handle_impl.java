@@ -28,6 +28,7 @@ package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
+import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -58,6 +59,8 @@ public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
     private int updateCount;
     private int deleteCount;
     private int selectCount; //????
+    
+    private AbstractIscTrHandle trHandle;
 
     public isc_stmt_handle_impl() {
     }
@@ -226,4 +229,18 @@ public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
         if (log != null)
             log.debug(sb.toString());
     }
+
+    public AbstractIscTrHandle getTransaction() {
+        return trHandle;
+    }
+
+    public void registerTransaction(AbstractIscTrHandle trHandle) {
+        this.trHandle = trHandle;
+    }
+
+    public void unregisterTransaction() {
+        this.trHandle = null;
+    }
+    
+    
 }

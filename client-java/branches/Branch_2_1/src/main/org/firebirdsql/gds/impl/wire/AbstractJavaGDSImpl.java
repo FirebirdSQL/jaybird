@@ -321,7 +321,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			DbAttachInfo dbai = new DbAttachInfo(file_name);
 			connect(db, dbai, databaseParameterBuffer);
 
-            String filenameCharset = databaseParameterBuffer.getArgumentAsString(ISCConstants.isc_dpb_filename_charset);
+            String filenameCharset = databaseParameterBuffer.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
 
 			try {
 				if (debug)
@@ -393,7 +393,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		synchronized (db) {
 			connect(db, dbai, databaseParameterBuffer);
             
-            String filenameCharset = databaseParameterBuffer.getArgumentAsString(ISCConstants.isc_dpb_filename_charset);
+            String filenameCharset = databaseParameterBuffer.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
 			try {
 				if (debug)
 					log.debug("op_attach ");
@@ -1153,6 +1153,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 					stmt.setAllRowsFetched(false);
 				} // end of else
 				receiveResponse(db, op);
+                
+                stmt.registerTransaction(tr);
+                
 			} catch (IOException ex) {
 				throw new GDSException(ISCConstants.isc_net_read_err);
 			}
@@ -1407,6 +1410,14 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				}
 				// those rows are used by cachedFetcher don't clear
 				stmt.clearRows();
+
+                try {
+                    AbstractIscTrHandle tr = stmt.getTransaction();
+                    if (tr != null)
+                        tr.unregisterStatementFromTransaction(stmt);
+                } finally {
+                    stmt.unregisterTransaction();
+                }
 
 				/** @todo implement statement handle tracking correctly */
 				// db.rdb_sql_requests.remove(stmt);
@@ -1880,8 +1891,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		}
         */
         
-        if (databaseParameterBuffer.hasArgument(ISCConstants.isc_dpb_socket_buffer_size))
-            socketBufferSize = databaseParameterBuffer.getArgumentAsInt(ISCConstants.isc_dpb_socket_buffer_size);
+        if (databaseParameterBuffer.hasArgument(DatabaseParameterBufferExtension.SOCKET_BUFFER_SIZE))
+            socketBufferSize = databaseParameterBuffer.getArgumentAsInt(DatabaseParameterBufferExtension.SOCKET_BUFFER_SIZE);
 
 		try {
 			openSocket(db, dbai, debug, socketBufferSize);
