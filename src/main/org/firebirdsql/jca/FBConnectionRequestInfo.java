@@ -112,12 +112,14 @@ public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension
 
     public void setUserName(String userName) {
         removeArgument(DatabaseParameterBufferExtension.USER_NAME);
-        addArgument(DatabaseParameterBufferExtension.USER_NAME, userName);
+        if (userName != null)
+            addArgument(DatabaseParameterBufferExtension.USER_NAME, userName);
     }
     
     public void setPassword(String password) {
         removeArgument(DatabaseParameterBufferExtension.PASSWORD);
-        addArgument(DatabaseParameterBufferExtension.PASSWORD, password);
+        if (password != null)
+            addArgument(DatabaseParameterBufferExtension.PASSWORD, password);
     }
     
     public boolean equals(Object obj) {
