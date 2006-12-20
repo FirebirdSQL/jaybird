@@ -520,6 +520,12 @@ public abstract class FBField {
         throw (SQLException)createException(
             STRING_CONVERSION_ERROR).fillInStackTrace();
     }
+    
+    private boolean isOctetsAsBytes() {
+        return gdsHelper.getDatabaseParameterBuffer().hasArgument(
+            DatabaseParameterBufferExtension.OCTETS_AS_BYTES);
+    }
+    
     public Object getObject() throws SQLException {
         
         if (isNull())
@@ -529,7 +535,11 @@ public abstract class FBField {
             case Types.CHAR :
             case Types.VARCHAR :
             case Types.LONGVARCHAR :
-                return getString();
+                // check whether OCTETS should be returned as byte[]
+                if (isOctetsAsBytes() && field.sqlsubtype == 1)
+                    return getBytes();
+                else
+                    return getString();
                 
             case Types.NUMERIC :
             case Types.DECIMAL :
