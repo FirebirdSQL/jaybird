@@ -5638,6 +5638,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         AbstractPreparedStatement s = 
             (AbstractPreparedStatement)statements.get(sql);
         
+        if (s != null && s.isClosed()) {
+            statements.remove(sql);
+            s = null;
+        }
+        
         if (s != null) 
             return s;
         
