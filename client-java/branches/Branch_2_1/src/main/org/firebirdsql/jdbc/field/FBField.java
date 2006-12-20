@@ -522,6 +522,10 @@ public abstract class FBField {
     }
     
     private boolean isOctetsAsBytes() {
+        
+        if (gdsHelper == null)
+            return false;
+        
         return gdsHelper.getDatabaseParameterBuffer().hasArgument(
             DatabaseParameterBufferExtension.OCTETS_AS_BYTES);
     }
