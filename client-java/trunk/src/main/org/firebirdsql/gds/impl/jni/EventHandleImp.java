@@ -4,9 +4,9 @@ import org.firebirdsql.gds.EventHandle;
 
 public class EventHandleImp implements EventHandle {
     
-    private volatile int inputBufferHandle = 0;
-    private volatile int outputBufferHandle = 0;
-    private volatile int eventStructHandle = 0;
+//    private volatile int inputBufferHandle = 0;
+//    private volatile int outputBufferHandle = 0;
+    private volatile int eventStructHandle = -1;
     private int eventCount = -1;
     private int size = -1;
     private String eventName;
@@ -33,25 +33,26 @@ public class EventHandleImp implements EventHandle {
     }
 
     public boolean isValid(){
-        return inputBufferHandle != 0 && outputBufferHandle != 0
-            && size > 0;
+//        return inputBufferHandle != 0 && outputBufferHandle != 0
+//            && size > 0;
+        return eventStructHandle != -1;
     }
 
-    public void setInputBufferHandle(int handle){
-        this.inputBufferHandle = handle;
-    }
-
-    public void setOutputBufferHandle(int handle){
-        this.outputBufferHandle = handle;
-    }
-
-    public int getInputBufferHandle(){
-        return this.inputBufferHandle;
-    }
-
-    public int getOutputBufferHandle(){
-        return this.outputBufferHandle;
-    }
+//    public void setInputBufferHandle(int handle){
+//        this.inputBufferHandle = handle;
+//    }
+//
+//    public void setOutputBufferHandle(int handle){
+//        this.outputBufferHandle = handle;
+//    }
+//
+//    public int getInputBufferHandle(){
+//        return this.inputBufferHandle;
+//    }
+//
+//    public int getOutputBufferHandle(){
+//        return this.outputBufferHandle;
+//    }
 
     public void setEventCount(int eventCount){
         this.eventCount = eventCount;
@@ -62,8 +63,7 @@ public class EventHandleImp implements EventHandle {
     }
 
     public String toString(){
-        return "input: " + inputBufferHandle + ", output: " 
-            + outputBufferHandle + ", size: " + size
+        return "eventHandle: " + eventStructHandle + ", size: " + size
             + ", eventCount: " + eventCount;
     }
 
