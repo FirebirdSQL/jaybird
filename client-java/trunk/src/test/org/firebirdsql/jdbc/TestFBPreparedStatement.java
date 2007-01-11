@@ -708,6 +708,14 @@ public class TestFBPreparedStatement extends FBTestBase{
                     FirebirdPreparedStatement.TYPE_UPDATE,
                     stmt.getStatementType());
             stmt.close();
+            
+            stmt = (AbstractPreparedStatement)conn.prepareStatement(
+                "INSERT INTO testtab(field1) VALUES(?) RETURNING id");
+            assertEquals(
+                "TYPE_EXEC_PROCEDURE should be returned for an UPDATE statement",
+                FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE,
+                stmt.getStatementType());
+            stmt.close();
         } finally {
             conn.close();
         }
