@@ -24,6 +24,7 @@
  */
 package org.firebirdsql.gds.impl;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.IscStmtHandle;
 
 
@@ -69,6 +70,13 @@ public abstract class AbstractIscStmtHandle implements IscStmtHandle {
      * @return The number of updated rows
      */
     public abstract int getUpdateCount();
+    
+    /**
+     * Get type of the statement.
+     * 
+     * @return value from the {@link ISCConstants} class.
+     */
+    public abstract int getStatementType();
 
     /**
      * Retrieve whether this statement has an open <code>ResultSet</code>.
