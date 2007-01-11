@@ -1186,8 +1186,9 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @return The identifier for the given statement's type
      */
     int getStatementType() throws FBSQLException {
-        populateStatementInfo();
-        return statementType;
+//        populateStatementInfo();
+//        return statementType;
+        return fixedStmt.getStatementType();
     }
 
 
@@ -1195,7 +1196,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         if (executionPlan == null){
             final byte [] REQUEST = new byte [] {
                 ISCConstants.isc_info_sql_get_plan,
-                ISCConstants.isc_info_sql_stmt_type,
+//                ISCConstants.isc_info_sql_stmt_type,
                 ISCConstants.isc_info_end };
 
             int bufferSize = 1024;
@@ -1228,11 +1229,11 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                         executionPlan = new String(buffer, i + 1, dataLength);
                         i += dataLength - 1;
                         break;
-                    case ISCConstants.isc_info_sql_stmt_type:
-                        dataLength = gds.iscVaxInteger(buffer, ++i, 2);
-                        i += 2;
-                        statementType = gds.iscVaxInteger(buffer, i, dataLength);
-                        i += dataLength;
+//                    case ISCConstants.isc_info_sql_stmt_type:
+//                        dataLength = gds.iscVaxInteger(buffer, ++i, 2);
+//                        i += 2;
+//                        statementType = gds.iscVaxInteger(buffer, i, dataLength);
+//                        i += dataLength;
                     case ISCConstants.isc_info_end:
                     case 0:
                         break;
