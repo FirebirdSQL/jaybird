@@ -61,6 +61,8 @@ public interface TransactionParameterBuffer {
     int RESTART_REQUESTS    = ISCConstants.isc_tpb_restart_requests;
     
     int NO_AUTO_UNDO        = ISCConstants.isc_tpb_no_auto_undo;
+    
+    int LOCK_TIMEOUT        = ISCConstants.isc_tpb_lock_timeout;
 
     /**
      * Add argument.
