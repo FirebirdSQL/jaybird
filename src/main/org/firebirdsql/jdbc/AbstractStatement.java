@@ -1106,7 +1106,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
 
         // closeResultSet(false);
         prepareFixedStatement(sql, false);
-        gdsHelper.executeStatement(fixedStmt, isExecuteProcedureStatement(sql));
+        gdsHelper.executeStatement(fixedStmt, fixedStmt.getStatementType() == ISCConstants.isc_info_sql_stmt_exec_procedure);
         hasMoreResults = true;
         isResultSet = fixedStmt.getOutSqlda().sqld > 0;
         return isResultSet;
