@@ -1,3 +1,27 @@
+2007-01-12 00:06  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+
+	fixed bug with not supporting the INSERT...RETURNING statement type
+
+2007-01-12 00:01  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/:
+	gds/impl/AbstractIscStmtHandle.java, gds/impl/jni/BaseGDSImpl.java,
+	gds/impl/wire/AbstractJavaGDSImpl.java,
+	jdbc/AbstractStatement.java:
+
+	added fetching the statement type during prepare
+
+2007-01-11 22:19  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/: ISCConstants.java,
+	TransactionParameterBuffer.java:
+
+	added new constants from ibase.h
+
 2006-12-27 17:18  rrokytskyy
 
 	*
