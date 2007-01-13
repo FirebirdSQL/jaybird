@@ -469,6 +469,9 @@ public class PingablePooledConnection implements PooledConnection,
             getLogChannel().info("Prepared statement cache cleaned.");
 
         }
+        
+        SQLException error = null;
+        
         synchronized (statements) {
             Iterator iter = statements.entrySet().iterator();
             while (iter.hasNext()) {
@@ -479,9 +482,19 @@ public class PingablePooledConnection implements PooledConnection,
 
                 iter.remove();
                 
-                stmtCache.invalidate();
+                try {
+                    stmtCache.invalidate();
+                } catch(SQLException ex) {
+                    if (error == null)
+                        error = ex;
+                    else
+                        error.setNextException(ex);
+                }
             }
         }
+        
+        if (error != null)
+                throw error;
     }
 
     /**
@@ -526,6 +539,18 @@ public class PingablePooledConnection implements PooledConnection,
 
         if (!keepStatements)
             cleanCache();
+        
+        try {
+            jdbcConnection.rollback();
+        } catch(SQLException ex) {
+            if (log != null && log.isWarnEnabled())
+                log.warn("Exception while trying to rollback transaction " +
+                        "before returning connection to pool.", ex);
+            
+            close();
+            
+            throw ex;
+        }
 
         currentConnection = null;
 
