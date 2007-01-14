@@ -1,3 +1,12 @@
+2007-01-13 22:45  rrokytskyy
+
+	*
+	client-java/src/pool/org/firebirdsql/pool/PingablePooledConnection.java:
+
+	JDBC-95: fixed bug when transaction gets committed if connection is
+	returned back to the pool without ending the transaction before
+	close() method.
+
 2007-01-12 00:06  rrokytskyy
 
 	* client-java/src/:
