@@ -541,7 +541,8 @@ public class PingablePooledConnection implements PooledConnection,
             cleanCache();
         
         try {
-            jdbcConnection.rollback();
+            if (!jdbcConnection.getAutoCommit() && !connection.isClosed())
+                jdbcConnection.rollback();
         } catch(SQLException ex) {
             if (log != null && log.isWarnEnabled())
                 log.warn("Exception while trying to rollback transaction " +
