@@ -1,3 +1,14 @@
+2007-01-17 23:43  rrokytskyy
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	pool/org/firebirdsql/pool/PooledConnectionHandler.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+
+	fixed a bug when close() was called on pooled connection in
+	autocommit mode and a bug when isClosed() method throws an
+	exception on closed connection
+
 2007-01-13 22:45  rrokytskyy
 
 	*
