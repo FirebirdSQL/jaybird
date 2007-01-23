@@ -1194,7 +1194,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
                         .setTrimString(trimStrings);
         }
 
-        this.isExecuteProcedureStatement = isExecuteProcedureStatement(sql);
+        this.isExecuteProcedureStatement = fixedStmt.getStatementType() == FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE;
     }
 
     /**
