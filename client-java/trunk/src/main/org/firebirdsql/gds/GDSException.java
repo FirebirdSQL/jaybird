@@ -149,6 +149,19 @@ public class GDSException extends Exception {
         else
             return -1;
     }
+    
+    /**
+     * Get the SQL state of this exception.
+     * 
+     * @return the SQL state of this exception or <code>null</code> if this 
+     * object does not represent an error.
+     */
+    public String getSQLState() {
+        if (type == ISCConstants.isc_arg_number) 
+            return GDSExceptionHelper.getSQLState(intParam);
+        else
+            return null;
+    }
 
     /**
      * Get the <code>int</code> parameter for this exception.
