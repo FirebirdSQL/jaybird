@@ -1,9 +1,7 @@
 package org.firebirdsql.util;
 
 import java.io.*;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 
 import org.firebirdsql.jdbc.FBDriver;
@@ -82,6 +80,31 @@ public class MessageDump {
 
         return result;
     }
+    
+    private static Properties extractSQLStates(FirebirdConnection connection) throws SQLException {
+        Properties result = new Properties();
+
+        Statement stmt = connection.createStatement();
+        try {
+            ResultSet rs = stmt
+                    .executeQuery("SELECT fac_code, number, sqlstate FROM system_errors");
+
+            while (rs.next()) {
+                int code = rs.getInt(1);
+                int number = rs.getInt(2);
+                String sqlState = rs.getString(3);
+
+                result.setProperty(
+                    Integer.toString(getErrorCode(code, number)),
+                    extractMessage(sqlState));
+            }
+
+        } finally {
+            stmt.close();
+        }
+
+        return result;
+    }
 
     public static void main(String[] args) throws Exception {
 
@@ -94,6 +117,11 @@ public class MessageDump {
             TreeMap sortedMap = new TreeMap(props);
 
             store(sortedMap, new FileOutputStream("./error.properties"), "");
+            
+            props = extractSQLStates(connection);
+            TreeMap sqlStates = new TreeMap(props);
+            
+            store(sqlStates, new FileOutputStream("./sqlstates.properties"), "");
         } finally {
             connection.close();
         }
@@ -104,7 +132,7 @@ public class MessageDump {
         BufferedWriter awriter;
         awriter = new BufferedWriter(new OutputStreamWriter(out, "8859_1"));
         if (header != null) writeln(awriter, "#" + header);
-        writeln(awriter, "#" + new Date().toString());
+        writeln(awriter, "#" + new java.util.Date().toString());
         synchronized (map) {
             for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
                 Map.Entry entry = (Map.Entry) iter.next();
