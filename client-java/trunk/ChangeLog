@@ -1,3 +1,21 @@
+2007-02-05 20:30  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/GDSException.java,
+	main/org/firebirdsql/gds/GDSExceptionHelper.java,
+	main/org/firebirdsql/jdbc/FBSQLException.java,
+	main/org/firebirdsql/jdbc/FBSQLWarning.java,
+	resources/isc_error_sqlstates.properties:
+
+	added support for SQLstate mapping
+
+2007-02-05 20:16  rrokytskyy
+
+	* client-java/src/messages/org/firebirdsql/util/: MessageDump.java,
+	sqlstates.sql:
+
+	added code to generate SQL states (the mapping contributed by Bill
+	Oliver)
+
 2007-01-23 13:29  rrokytskyy
 
 	*
