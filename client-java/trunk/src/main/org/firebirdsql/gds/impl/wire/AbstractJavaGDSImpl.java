@@ -2330,7 +2330,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 			info = iscDsqlSqlInfo(stmt_handle, new_items, size);
 			lastindex = index;
-            i = 2;
+            i = 0;
 		}
 		if (debug)
 			log.debug("parseSqlInfo ended");
