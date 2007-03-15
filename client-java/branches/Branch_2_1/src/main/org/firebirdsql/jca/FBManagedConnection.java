@@ -19,26 +19,23 @@
 
 package org.firebirdsql.jca;
 
-import java.io.ByteArrayInputStream;
 import java.io.PrintWriter;
-import java.sql.*;
+import java.sql.SQLException;
 import java.util.*;
 
+import javax.resource.NotSupportedException;
 import javax.resource.ResourceException;
 import javax.resource.spi.*;
+import javax.resource.spi.IllegalStateException;
+import javax.resource.spi.SecurityException;
 import javax.resource.spi.security.PasswordCredential;
 import javax.security.auth.Subject;
 import javax.transaction.xa.*;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.AbstractIscDbHandle;
-import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
-import org.firebirdsql.gds.impl.AbstractIscTrHandle;
-import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.gds.impl.GDSHelper.GDSHelperErrorListener;
-import org.firebirdsql.jdbc.*;
-import org.firebirdsql.jdbc.field.FBField;
-import org.firebirdsql.jdbc.field.FieldDataProvider;
+import org.firebirdsql.jdbc.AbstractConnection;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -762,10 +759,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         return XA_OK;
     }
 
-    private static final String RECOVERY_QUERY = ""
-            + "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
-            + "FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE = 1";
-
     /**
      * Obtain a list of prepared transaction branches from a resource manager.
      * The transaction manager calls this method during recovery to obtain the
@@ -786,57 +779,17 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      */
     public Xid[] recover(int flag) throws javax.transaction.xa.XAException {
         try {
-            ArrayList xids = new ArrayList();
             
             AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();
             gds.iscStartTransaction(trHandle2, gdsHelper.getCurrentDbHandle(), tpb.getTransactionParameterBuffer());
             
-            AbstractIscStmtHandle stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
-            gds.iscDsqlAllocateStatement(gdsHelper.getCurrentDbHandle(), stmtHandle2);
-            
             GDSHelper gdsHelper2 = new GDSHelper(gds, 
-                    gdsHelper.getDatabaseParameterBuffer(), 
-                    (AbstractIscDbHandle) gdsHelper.getCurrentDbHandle(), null);
+                gdsHelper.getDatabaseParameterBuffer(), 
+                (AbstractIscDbHandle) gdsHelper.getCurrentDbHandle(), null);
+            
             gdsHelper2.setCurrentTrHandle(trHandle2);
             
-            gdsHelper2.prepareStatement(stmtHandle2, RECOVERY_QUERY, false);
-            gdsHelper2.executeStatement(stmtHandle2, false);
-            gdsHelper2.fetch(stmtHandle2, 10);
-            
-            DataProvider dataProvider0 = new DataProvider(stmtHandle2, 0);
-            DataProvider dataProvider1 = new DataProvider(stmtHandle2, 1);
-            
-            FBField field0 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[0], dataProvider0, gdsHelper2, false);
-            FBField field1 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[1], dataProvider1, gdsHelper2, false);
-            
-            field0.setConnection(gdsHelper2);
-            field1.setConnection(gdsHelper2);
-            
-            int row = 0;
-            while(row < stmtHandle2.getRows().length) {
-            
-                if (stmtHandle2.getRows()[row] == null) {
-                    row++;
-                    continue;
-                }
-                
-                dataProvider0.setRow(row);
-                dataProvider1.setRow(row);
-                
-                long inLimboTxId = field0.getLong();
-                byte[] inLimboMessage = field1.getBytes();
-            
-                try {
-                    FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
-                    xids.add(xid);
-                } catch(FBIncorrectXidException ex) {
-                    // ignore this Xid
-                }
-    
-                row++;
-            }
-    
-            gdsHelper2.closeStatement(stmtHandle2, true);
+            ArrayList xids = FBManagedConnectionFactory.fetchInLimboXids(gds, gdsHelper2);
             gds.iscCommitTransaction(trHandle2);
             
             return (FBXid[])xids.toArray(new FBXid[xids.size()]);
@@ -857,29 +810,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         } 
     }
 
-    private static class DataProvider implements FieldDataProvider {
-
-        private AbstractIscStmtHandle stmtHandle;
-        private int fieldPos;
-        private int row;
-        
-        private DataProvider(AbstractIscStmtHandle stmtHandle, int fieldPos) {
-            this.stmtHandle = stmtHandle;
-            this.fieldPos = fieldPos;
-        }
-        
-        public void setRow(int row) {
-            this.row = row;
-        }
-        
-        public byte[] getFieldData() {
-            return ((byte[][])stmtHandle.getRows()[row])[fieldPos];
-        }
-        public void setFieldData(byte[] data) {
-            throw new UnsupportedOperationException();
-        }
-    }
-    
     /**
      * Rolls back the work, assuming it was done on behalf of the specified
      * transaction.
