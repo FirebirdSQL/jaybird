@@ -1,3 +1,16 @@
+2007-03-15 11:38  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jca/:
+	FBManagedConnection.java, FBManagedConnectionFactory.java:
+
+	reworked the transaction recovery code
+
+2007-03-15 11:36  rrokytskyy
+
+	* client-java/src/resources/isc_error_msg.properties:
+
+	fixed error messages
+
 2007-03-13 06:31  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jca/:
