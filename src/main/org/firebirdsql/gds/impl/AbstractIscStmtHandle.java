@@ -32,6 +32,9 @@ import org.firebirdsql.gds.IscStmtHandle;
  * interface.
  */
 public abstract class AbstractIscStmtHandle implements IscStmtHandle {
+    
+    private String executionPlan;
+    private int statementType = TYPE_UNKNOWN;
 
     /**
      * Clear all rows that have been fetched for this statement. This 
@@ -130,4 +133,21 @@ public abstract class AbstractIscStmtHandle implements IscStmtHandle {
      * Unregister statement from the transaction.
      */
     public abstract void unregisterTransaction();
+
+    public String getExecutionPlan() {
+        return executionPlan;
+    }
+    
+    public void setExecutionPlan(String plan) {
+        this.executionPlan = plan;
+    }
+
+    public int getStatementType() {
+        return statementType;
+    }
+    
+    public void setStatementType(int statementType) {
+        this.statementType = statementType;
+    }
+    
 }
