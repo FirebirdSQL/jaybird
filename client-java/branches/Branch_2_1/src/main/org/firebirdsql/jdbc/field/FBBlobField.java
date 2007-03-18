@@ -19,12 +19,9 @@
  
 package org.firebirdsql.jdbc.field;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.sql.SQLException;
+import java.io.*;
 import java.sql.Blob;
+import java.sql.SQLException;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.jdbc.*;
@@ -36,8 +33,6 @@ import org.firebirdsql.jdbc.*;
  * @version 1.0
  */
 public class FBBlobField extends FBField implements FBFlushableField {
-    private static final int BUFF_SIZE = 4096;
-
     private FBBlob blob;
 
 	// Rather then hold cached data in the XSQLDAVar we will hold it in here.
@@ -129,12 +124,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
                     gdsHelper.openBlob(blobId, FBBlob.SEGMENTED);
                 
                 try {
-                    final GDS gds = gdsHelper.getInternalAPIHandler();
-                    
-                    final byte[] lengthBuffer = 
-                        gds.iscBlobInfo(blobHandle, FBBlob.BLOB_LENGTH_REQUEST, 20);
-                    
-                    final int blobLength = (int)FBBlob.interpretLength(gds,lengthBuffer, 0);
+                    final int blobLength = gdsHelper.getBlobLength(blobHandle);
                     
                     final int bufferLength = gdsHelper.getBlobBufferLength();
                     final byte[] resultBuffer = new byte[blobLength];

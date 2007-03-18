@@ -26,19 +26,12 @@
 package org.firebirdsql.gds.impl;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.XSQLDA;
-import org.firebirdsql.gds.IscBlobHandle;
-import org.firebirdsql.gds.IscDbHandle;
-import org.firebirdsql.gds.IscTrHandle;
+import org.firebirdsql.gds.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -341,6 +334,82 @@ public class GDSHelper {
     }
 
     /**
+     * Fetch the count information for a statement handle. The count information
+     * that is updated includes the counts for update, insert, delete and
+     * select, and it is set in the handle itself.
+     * 
+     * @param stmt
+     *            handle to the statement for which counts will be fetched
+     * @throws GDSException
+     *             if a Firebird-specific database access error occurs
+     */
+    public void getSqlCounts(AbstractIscStmtHandle stmt) throws GDSException {
+        try {
+            gds.getSqlCounts(stmt);
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+    }
+    
+    public void populateStatementInfo(AbstractIscStmtHandle fixedStmt) throws GDSException {
+        final byte [] REQUEST = new byte [] {
+                ISCConstants.isc_info_sql_get_plan,
+                ISCConstants.isc_info_sql_stmt_type,
+                ISCConstants.isc_info_end };
+
+        try {
+            int bufferSize = 1024;
+            byte[] buffer;
+            while (true){
+                buffer = gds.iscDsqlSqlInfo(fixedStmt, REQUEST, bufferSize);
+                
+                if (buffer[0] != ISCConstants.isc_info_truncated){
+                    break;
+                } 
+                bufferSize *= 2;
+            }
+
+            if (buffer[0] == ISCConstants.isc_info_end){
+                throw new GDSException(ISCConstants.isc_req_sync);
+            }
+
+            String executionPlan = null;
+            int statementType = IscStmtHandle.TYPE_UNKNOWN;
+            
+            int dataLength = -1; 
+            for (int i = 0; i < buffer.length; i++){
+                switch(buffer[i]){
+                    case ISCConstants.isc_info_sql_get_plan:
+                        dataLength = gds.iscVaxInteger(buffer, ++i, 2);
+                        i += 2;
+                        executionPlan = new String(buffer, i + 1, dataLength);
+                        i += dataLength - 1;
+                        break;
+                    case ISCConstants.isc_info_sql_stmt_type:
+                        dataLength = gds.iscVaxInteger(buffer, ++i, 2);
+                        i += 2;
+                        statementType = gds.iscVaxInteger(buffer, i, dataLength);
+                        i += dataLength;
+                    case ISCConstants.isc_info_end:
+                    case 0:
+                        break;
+                    default:
+                        throw new GDSException(ISCConstants.isc_req_sync);
+                }
+            }
+            
+            fixedStmt.setExecutionPlan(executionPlan);
+            fixedStmt.setStatementType(statementType);
+            
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+
+    }
+
+    /**
      * Open a handle to a new blob within the current transaction with the given
      * id.
      * 
@@ -441,6 +510,15 @@ public class GDSHelper {
             throw ex;
         }
     }
+    
+    public void seekBlob(IscBlobHandle blob, int position, int mode) throws GDSException {
+        try {
+            gds.iscSeekBlob(blob, position, mode);
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+    }
 
     /**
      * Write a segment of data to a blob.
@@ -461,24 +539,86 @@ public class GDSHelper {
             throw ex;
         }
     }
-
-    /**
-     * Fetch the count information for a statement handle. The count information
-     * that is updated includes the counts for update, insert, delete and
-     * select, and it is set in the handle itself.
-     * 
-     * @param stmt
-     *            handle to the statement for which counts will be fetched
-     * @throws GDSException
-     *             if a Firebird-specific database access error occurs
-     */
-    public void getSqlCounts(AbstractIscStmtHandle stmt) throws GDSException {
+    
+    public byte[] getBlobInfo(IscBlobHandle blob, byte[] requestItems, int bufferLength) throws GDSException {
         try {
-            gds.getSqlCounts(stmt);
+            return gds.iscBlobInfo(blob, requestItems, bufferLength);
         } catch(GDSException ex) {
             notifyListeners(ex);
             throw ex;
         }
+    }
+
+    public static final byte[] BLOB_LENGTH_REQUEST = new byte[]{ISCConstants.isc_info_blob_total_length};
+    
+    public int getBlobLength(IscBlobHandle blob) throws GDSException {
+        try {
+            byte[] info = gds.iscBlobInfo(blob, BLOB_LENGTH_REQUEST, 20);
+            
+            if (info[0] != ISCConstants.isc_info_blob_total_length)
+                throw new GDSException(ISCConstants.isc_req_sync);
+                
+            int dataLength = gds.iscVaxInteger(info, 1, 2);
+                
+            return gds.iscVaxInteger(info, 3, dataLength);
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+    }
+    
+    public AbstractIscTrHandle startTransaction(TransactionParameterBuffer tpb) throws GDSException {
+        try {
+            AbstractIscTrHandle trHandle = (AbstractIscTrHandle)gds.createIscTrHandle();
+            
+            gds.iscStartTransaction(trHandle, currentDbHandle, tpb);
+            setCurrentTrHandle(trHandle);
+            
+            return trHandle;
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+    }
+    
+    public void prepareTransaction(AbstractIscTrHandle trHandle, byte[] message) throws GDSException {
+        try {
+            gds.iscPrepareTransaction2(trHandle, message);
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+    }
+    
+    public void commitTransaction(AbstractIscTrHandle trHandle) throws GDSException {
+        try {
+            gds.iscCommitTransaction(trHandle);
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+    }
+    
+    public void rollbackTransaction(AbstractIscTrHandle trHandle) throws GDSException {
+        try {
+            gds.iscRollbackTransaction(trHandle);
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+    }
+    
+    public void detachDatabase() throws GDSException {
+        try {
+            gds.iscDetachDatabase(currentDbHandle);
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+    }
+    
+    public int iscVaxInteger(byte[] buffer, int pos, int length) {
+        return gds.iscVaxInteger(buffer, pos, length);
     }
 
     // for DatabaseMetaData.
