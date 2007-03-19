@@ -1,3 +1,13 @@
+2007-03-18 23:42  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/IscStmtHandle.java,
+	gds/impl/AbstractIscStmtHandle.java, gds/impl/GDSHelper.java,
+	jca/FBManagedConnection.java, jdbc/AbstractStatement.java,
+	jdbc/FBBlob.java, jdbc/FirebirdPreparedStatement.java,
+	jdbc/field/FBBlobField.java:
+
+	big refactoring to restore the GDS encapsulation
+
 2007-03-15 11:38  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jca/:
