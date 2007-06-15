@@ -2475,7 +2475,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         " RF.RDB$DESCRIPTION AS REMARKS," +
         " RF.RDB$DEFAULT_SOURCE as DEFAULT_SOURCE," +
         " RF.RDB$FIELD_POSITION as FIELD_POSITION, " +
-        " RF.RDB$NULL_FLAG as NULL_FLAG " +
+        " RF.RDB$NULL_FLAG as NULL_FLAG, " +
+        " F.RDB$NULL_FLAG as SOURCE_NULL_FLAG " +
         "from" +
         " RDB$RELATION_FIELDS RF," +
         " RDB$FIELDS F " +
@@ -2730,8 +2731,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             row[9] = xsqlvars[0].encodeInt(10);
 
             short nullFlag = rs.getShort("NULL_FLAG");
-            row[10] = (nullFlag == 1) ? xsqlvars[0].encodeInt(columnNoNulls) :
-                                        xsqlvars[0].encodeInt(columnNullable);
+            short sourceNullFlag = rs.getShort("SOURCE_NULL_FLAG");
+            row[10] = (nullFlag == 1 || sourceNullFlag == 1) ? 
+                    xsqlvars[0].encodeInt(columnNoNulls) :
+                    xsqlvars[0].encodeInt(columnNullable);
 
             String remarks = rs.getString("REMARKS");  
             row[11] = getBytes(remarks);             
@@ -2753,7 +2756,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             row[13] = null;
             row[14] = null;
             row[16] = xsqlvars[0].encodeInt(rs.getShort("FIELD_POSITION") + 1);
-            row[17] = (nullFlag == 1) ? getBytes("NO") : getBytes("YES");
+            row[17] = (nullFlag == 1 || sourceNullFlag == 1) ? 
+                        getBytes("NO") : getBytes("YES");
 
             rows.add(row);
         }
