@@ -45,4 +45,9 @@ public class FBCachedBlobField extends FBBlobField {
 
         return new FBCachedBlob(getFieldData());
     }
+
+    public byte[] getBytes() throws SQLException {
+        return getFieldData();
+    }
+    
 }
