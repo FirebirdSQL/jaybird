@@ -76,7 +76,7 @@ public class FBStatementFactory {
      */
     public static AbstractPreparedStatement createPreparedStatement(GDSHelper gdsHelper,
             String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability,
-            StatementListener statementListener, BlobListener blobListener, boolean metadata)
+            StatementListener statementListener, BlobListener blobListener, boolean metadata, boolean standaloneStatement)
             throws FBSQLException {
 
         try {
@@ -85,12 +85,12 @@ public class FBStatementFactory {
                     .getConstructor(
                             new Class[] { GDSHelper.class, String.class, int.class, int.class,
                                     int.class, StatementListener.class, BlobListener.class,
-                                    boolean.class });
+                                    boolean.class, boolean.class });
 
             return (AbstractPreparedStatement) constructor.newInstance(new Object[] { gdsHelper,
                     sql, new Integer(resultSetType), new Integer(resultSetConcurrency),
                     new Integer(resultSetHoldability), statementListener, blobListener,
-                    new Boolean(metadata) });
+                    new Boolean(metadata), new Boolean(standaloneStatement) });
 
         } catch(InvocationTargetException ex) {
             
