@@ -76,6 +76,7 @@
     >
       <classpath refid="javac.driver.classpath"/>
       <src path="${source.java}"/>
+      <src path="${source.openoffice}"/>
       <src refid="source.java.additional"/>
       <src refid="source.java.wire"/>
     </javac>
