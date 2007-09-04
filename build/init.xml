@@ -34,15 +34,15 @@
     <property name="name" value="jaybird"/>
 
     <property name="version.major" value="2"/>
-    <property name="version.minor" value="1"/>
+    <property name="version.minor" value="2"/>
     <property name="version.revision" value="0"/>
-    <property name="version.tag" value="RC1"/>
+    <property name="version.tag" value="snapshot_20060810"/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
 
     <!-- This must be set to the CVS tag for any release -->
-    <property name="version.cvstag" value="Jaybird_2_1_0_RC1"/>
+    <property name="version.cvstag" value="HEAD"/>
 
     <!-- Manifest version info -->
     <property name="specification.title" value="Firebird Jaybird"/>
@@ -78,6 +78,7 @@
 
     <!-- Where source files live -->
     <property name="source.java" value="${module.source}/main"/>
+    <property name="source.openoffice" value="${module.source}/openoffice"/>
     <property name="source.jdbc.20" value="${module.source}/jdbc_20"/>
     <property name="source.jdbc.30" value="${module.source}/jdbc_30"/>
     <property name="source.wire1.3" value="${module.source}/wire_jdk1_3"/>
