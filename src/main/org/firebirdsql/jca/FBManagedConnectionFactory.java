@@ -35,6 +35,8 @@ import javax.transaction.xa.*;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.jdbc.*;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * FBManagedConnectionFactory implements the jca ManagedConnectionFactory
@@ -54,6 +56,9 @@ import org.firebirdsql.jdbc.*;
 public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         Serializable, FirebirdConnectionProperties {
 
+    private static final Logger log = LoggerFactory.getLogger(FBManagedConnectionFactory.class, false);
+
+    
     /**
      * The <code>mcfInstances</code> weak hash map is used in deserialization
      * to find the correct instance of a mcf after deserializing.

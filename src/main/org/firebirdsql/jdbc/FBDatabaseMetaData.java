@@ -5643,6 +5643,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         AbstractPreparedStatement s = 
             (AbstractPreparedStatement)statements.get(sql);
         
+        if (s != null && s.isClosed()) {
+            statements.remove(sql);
+            s = null;
+        }
+        
         if (s != null) 
             return s;
         
@@ -5654,7 +5659,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
                     FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT, 
                     metaDataTransactionCoordinator, metaDataTransactionCoordinator,
-                    true);
+                    true, true);
         } else {
             s = (AbstractPreparedStatement)connection.prepareMetaDataStatement(
                 sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);

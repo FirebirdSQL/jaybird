@@ -514,7 +514,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
                 "Can't destroy managed connection  with active transaction");
         
         try {
-            gdsHelper.getInternalAPIHandler().iscDetachDatabase(dbHandle);
+            gdsHelper.detachDatabase();
         } catch (GDSException ge) {
             throw new FBResourceException("Can't detach from db.", ge);
         } finally {
@@ -605,10 +605,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         try {
             committingTr.forgetResultSets();
             try {
-                gdsHelper.getInternalAPIHandler().iscCommitTransaction(committingTr);
+                gdsHelper.commitTransaction(committingTr);
             } catch (GDSException ge) {
                 try {
-                    gdsHelper.getInternalAPIHandler().iscRollbackTransaction(committingTr);
+                    gdsHelper.rollbackTransaction(committingTr);
                 } catch (GDSException ge2) {
                     if (log != null)
                         log.debug("Exception rolling back failed tx: ", ge2);
@@ -849,7 +849,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     int internalPrepare(Xid xid) throws FBXAException, GDSException {
         if (log != null) log.trace("prepare called: " + xid);
-        IscTrHandle committingTr = (IscTrHandle)xidMap.get(xid);
+        AbstractIscTrHandle committingTr = (AbstractIscTrHandle)xidMap.get(xid);
         if (committingTr == null)
             throw new FBXAException("Prepare called with unknown transaction",
                     XAException.XAER_NOTA);
@@ -866,10 +866,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             }
             byte[] message = fbxid.toBytes();
             
-            gdsHelper.getInternalAPIHandler().iscPrepareTransaction2(committingTr, message);
+            gdsHelper.prepareTransaction(committingTr, message);
         } catch (GDSException ge) {
             try {
-                gdsHelper.getInternalAPIHandler().iscRollbackTransaction(committingTr);
+                gdsHelper.rollbackTransaction(committingTr);
             } catch (GDSException ge2) {
                 if (log != null)
                     log.debug("Exception rolling back failed tx: ", ge2);
@@ -1034,7 +1034,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         try {
             committingTr.forgetResultSets();
             try {
-                gdsHelper.getInternalAPIHandler().iscRollbackTransaction(committingTr);
+                gdsHelper.rollbackTransaction(committingTr);
             } finally {
                 xidMap.remove(xid);
                 prepared = false;
@@ -1196,13 +1196,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         }
         
         // new xid for us
-        AbstractIscTrHandle trHandle = (AbstractIscTrHandle)gdsHelper.getInternalAPIHandler().createIscTrHandle();
-        gdsHelper.getInternalAPIHandler().iscStartTransaction(
-            trHandle, dbHandle, tpb.getTransactionParameterBuffer());
+        AbstractIscTrHandle trHandle = gdsHelper.startTransaction(tpb.getTransactionParameterBuffer());
 
         xidMap.put(xid, trHandle);
-        
-        gdsHelper.setCurrentTrHandle(trHandle);
     }
     
     void notify(CELNotifier notifier, ConnectionEvent ce) {

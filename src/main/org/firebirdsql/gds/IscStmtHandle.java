@@ -40,6 +40,21 @@ package org.firebirdsql.gds;
  * @version 1.0
  */
 public interface IscStmtHandle {
+    
+    int TYPE_UNKNOWN = -1;
+    int TYPE_SELECT = ISCConstants.isc_info_sql_stmt_select;
+    int TYPE_INSERT = ISCConstants.isc_info_sql_stmt_insert;
+    int TYPE_UPDATE = ISCConstants.isc_info_sql_stmt_update;
+    int TYPE_DELETE = ISCConstants.isc_info_sql_stmt_delete;
+    int TYPE_DDL = ISCConstants.isc_info_sql_stmt_ddl;
+    int TYPE_GET_SEGMENT = ISCConstants.isc_info_sql_stmt_get_segment;
+    int TYPE_PUT_SEGMENT = ISCConstants.isc_info_sql_stmt_put_segment;
+    int TYPE_EXEC_PROCEDURE = ISCConstants.isc_info_sql_stmt_exec_procedure;
+    int TYPE_START_TRANS = ISCConstants.isc_info_sql_stmt_start_trans;
+    int TYPE_COMMIT = ISCConstants.isc_info_sql_stmt_commit;
+    int TYPE_ROLLBACK = ISCConstants.isc_info_sql_stmt_rollback;
+    int TYPE_SELECT_FOR_UPDATE = ISCConstants.isc_info_sql_stmt_select_for_upd;
+    int TYPE_SET_GENERATOR = ISCConstants.isc_info_sql_stmt_set_generator;
 
     /**
      * Get the input data structure that contains data that is put into
@@ -65,4 +80,21 @@ public interface IscStmtHandle {
      *         <code>false</code> otherwise
      */
     boolean isAllRowsFetched();
+    
+    /**
+     * Get the execution plan from the statement.
+     * 
+     * @return execution plan or <code>null</code> if the execution plan was 
+     * not fetched from the server.
+     */
+    String getExecutionPlan();
+    
+    /**
+     * Get the statement type.
+     * 
+     * @return one of the constants defined in this interface or {@link #TYPE_UNKNOWN}
+     * when no statement type was received from the server.
+     */
+    int getStatementType();
+    
 }
