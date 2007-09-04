@@ -23,10 +23,12 @@ import java.util.*;
 
 import javax.resource.spi.ConnectionManager;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jca.InternalConnectionManager;
 import org.firebirdsql.jdbc.FBDriver;
+import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.management.FBManager;
@@ -130,14 +132,14 @@ public class FBTestBase extends SimpleFBTestBase {
      * @return
      * @throws SQLException
      */
-    protected Connection getConnectionViaDriverManager() throws SQLException {
+    protected FirebirdConnection getConnectionViaDriverManager() throws SQLException {
         try {
             Class.forName(FBDriver.class.getName());
         } catch (ClassNotFoundException ex) {
             throw new SQLException("No suitable driver.");
         }
 
-        return DriverManager.getConnection(getUrl(),
+        return (FirebirdConnection)DriverManager.getConnection(getUrl(),
             getDefaultPropertiesForConnection());
     }
 
@@ -152,6 +154,41 @@ public class FBTestBase extends SimpleFBTestBase {
         returnValue.setProperty("lc_ctype", DB_LC_CTYPE);
 
         return returnValue;
+    }
+    
+    protected void executeCreateTable(Connection connection, String sql) throws SQLException {
+        executeDDL(connection, sql, new int[]{ISCConstants.isc_no_meta_update});
+    }
+    
+    protected void executeDropTable(Connection connection, String sql) throws SQLException {
+        executeDDL(connection, sql, new int[]{ISCConstants.isc_no_meta_update});
+    }
+
+    protected void executeDDL(Connection connection, String sql, int[] ignoreErrors) throws SQLException {
+        try {
+            Statement stmt = connection.createStatement();
+            try {
+                stmt.execute(sql);
+            } finally {
+                stmt.close();
+            }
+        } catch(SQLException ex) {
+            if (ignoreErrors == null || ignoreErrors.length == 0)
+                throw ex;
+            
+            boolean ignoreException = false;
+            
+            int errorCode = ex.getErrorCode();
+            for (int i = 0; i < ignoreErrors.length; i++) {
+                if (ignoreErrors[i] == errorCode) {
+                    ignoreException = true;
+                    break;
+                }
+            }
+            
+            if (!ignoreException)
+                throw ex;
+        }
     }
 
     // USEFULL PROPERTY GETTERS
@@ -177,33 +214,22 @@ public class FBTestBase extends SimpleFBTestBase {
     // STANDARD RIG
 
     protected void setUp() throws Exception {
-//        try {
-            fbManager = createFBManager();
+        fbManager = createFBManager();
 
-            if (getGdsType() == GDSType.getType("PURE_JAVA")
-                    || getGdsType() == GDSType.getType("NATIVE")) {
-                fbManager.setServer(DB_SERVER_URL);
-                fbManager.setPort(DB_SERVER_PORT);
-            }
-            // fbManager.setType(getGdsType().toString());
-            fbManager.start();
-            fbManager.setForceCreate(true);
-            fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
-//        } catch (Exception e) {
-//            if (log != null)
-//                log.warn("exception in setup of " + getName() + ": ", e);
-//        } // end of try-catch
+        if (getGdsType() == GDSType.getType("PURE_JAVA")
+                || getGdsType() == GDSType.getType("NATIVE")) {
+            fbManager.setServer(DB_SERVER_URL);
+            fbManager.setPort(DB_SERVER_PORT);
+        }
+        fbManager.start();
+        fbManager.setForceCreate(true);
+        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
     }
 
     protected void tearDown() throws Exception {
-//        try {
-            fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
-            fbManager.stop();
-            fbManager = null;
-//        } catch (Exception e) {
-//            if (log != null)
-//                log.warn("exception in teardown of " + getName() + ": ", e);
-//        } // end of try-catch
+        fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
+        fbManager.stop();
+        fbManager = null;
     }
 
     protected FBManager fbManager = null;

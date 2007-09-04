@@ -21,11 +21,8 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
 
+import java.math.BigDecimal;
 import java.sql.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.Calendar;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -61,7 +58,8 @@ public class TestFBPreparedStatement extends FBTestBase{
         + "FIELD4 FLOAT,"
         + "FIELD5 CHAR,"
         + "FIELD6 VARCHAR(5),"
-        + "FIELD7 CHAR(1)"
+        + "FIELD7 CHAR(1),"
+        + "num_field numeric(9,2)"
         + ")"
         ;
     
@@ -720,4 +718,72 @@ public class TestFBPreparedStatement extends FBTestBase{
             conn.close();
         }
     }
+   
+   
+   public void testLikeFullLength() throws Exception {
+       Connection connection = getConnectionViaDriverManager();
+       try {
+           Statement stmt = connection.createStatement();
+           try {
+               stmt.execute("INSERT INTO testtab(field1) VALUES('abcdefghij')");
+           } finally {
+               stmt.close();
+           }
+           
+           PreparedStatement ps = connection.prepareStatement(
+               "SELECT field1 FROM testtab WHERE field1 LIKE ?");
+           try {
+               ps.setString(1, "%abcdefghi%");
+               
+               ResultSet rs = ps.executeQuery();
+               assertTrue("Should find a record.", rs.next());
+           } finally {
+               ps.close();
+           }
+       } finally {
+           connection.close();
+       }
+   }
+   
+   /**
+    * Test if parameters are correctly checked for their length.
+    * @throws Exception if something went wrong.
+    */
+   public void testNumeric15_2() throws Exception {
+       
+       Properties props = getDefaultPropertiesForConnection();
+       props.setProperty("sqlDialect", "1");
+       
+       Connection connection = DriverManager.getConnection(getUrl(), props);
+       try {
+       Statement stmt = connection.createStatement();
+       try {
+           stmt.execute("INSERT INTO testtab(id, field1, num_field) VALUES(1, '', 10.02)");
+       } finally {
+           stmt.close();
+       }
+       
+       PreparedStatement ps = connection.prepareStatement("SELECT num_field FROM testtab WHERE id = 1");
+       try {
+           ResultSet rs = ps.executeQuery();
+           
+           assertTrue(rs.next());
+           
+           float floatValue = rs.getFloat(1);
+           double doubleValue = rs.getDouble(1);
+           BigDecimal bigDecimalValue = rs.getBigDecimal(1);
+           
+           assertEquals(doubleValue, 10.02);
+           
+       } catch(SQLException ex) {
+           ex.printStackTrace();
+           
+           fail("No exception should be thrown.");
+       } finally {
+           ps.close();
+       }
+       } finally {
+           connection.close();
+       }
+   }
 }
