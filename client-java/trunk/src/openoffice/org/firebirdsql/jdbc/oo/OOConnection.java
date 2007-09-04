@@ -56,7 +56,7 @@ public class OOConnection extends AbstractConnection {
             PreparedStatement stmt = new OOPreparedStatement(getGDSHelper(),
                     sql, resultSetType, resultSetConcurrency,
                     resultSetHoldability, coordinator, blobCoordinator,
-                    metaData);
+                    metaData, false);
 
             activeStatements.add(stmt);
             return stmt;

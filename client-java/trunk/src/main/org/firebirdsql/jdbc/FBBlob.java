@@ -174,8 +174,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                 
                 IscBlobHandle blob = gdsHelper.openBlob(blob_id, SEGMENTED);
                 try {
-                    GDS gds = gdsHelper.getInternalAPIHandler();
-                    return gds.iscBlobInfo(blob, items, buffer_length);
+                    return gdsHelper.getBlobInfo(blob, items, buffer_length);
                 } finally {
                     gdsHelper.closeBlob(blob);
                 }
@@ -216,14 +215,14 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * 
      * @throws SQLException if length cannot be interpreted.
      */            
-    public static long interpretLength(GDS gds, byte[] info, int position) throws SQLException { 
+    public static long interpretLength(GDSHelper gdsHelper, byte[] info, int position) throws SQLException { 
                 
         if (info[position] != ISCConstants.isc_info_blob_total_length)
             throw new FBSQLException("Length is not available.");
             
-        int dataLength = gds.iscVaxInteger(info, position + 1, 2);
+        int dataLength = gdsHelper.iscVaxInteger(info, position + 1, 2);
             
-        return gds.iscVaxInteger(info, position + 3, dataLength);
+        return gdsHelper.iscVaxInteger(info, position + 3, dataLength);
     }
     
     /**
@@ -237,7 +236,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException if length cannot be interpreted.
      */            
     private long interpretLength(byte[] info, int position) throws SQLException { 
-       return interpretLength(gdsHelper.getInternalAPIHandler(), info, position);
+       return interpretLength(gdsHelper, info, position);
     }
 
     /**
@@ -255,11 +254,9 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         if (info[0] != ISCConstants.isc_info_blob_type)
             throw new FBSQLException("Cannot determine BLOB type");
 
-        int dataLength =
-            gdsHelper.getInternalAPIHandler().iscVaxInteger(info, 1, 2);
+        int dataLength = gdsHelper.iscVaxInteger(info, 1, 2);
 
-        int type = gdsHelper.getInternalAPIHandler().iscVaxInteger(
-            info, 3, dataLength);
+        int type = gdsHelper.iscVaxInteger(info, 3, dataLength);
 
         return type == ISCConstants.isc_bpb_type_segmented;
     }
@@ -664,7 +661,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             synchronized(syncObject) {
                 checkClosed();
                 try {
-                    gdsHelper.getInternalAPIHandler().iscSeekBlob(blob, position, seekMode);
+                    gdsHelper.seekBlob(blob, position, seekMode);
                 } catch (GDSException ex) {
                     /** @todo fix this */
                     throw new IOException(ex.getMessage());
@@ -679,7 +676,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             synchronized(syncObject) {
                 checkClosed();
                 try {
-                    byte[] info = gdsHelper.getInternalAPIHandler().iscBlobInfo(
+                    byte[] info = gdsHelper.getBlobInfo(
                         blob, new byte[] {ISCConstants.isc_info_blob_total_length}, 20);
 
                     return interpretLength(info, 0);
@@ -822,7 +819,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         
         public void seek(int position, int seekMode) throws SQLException {
             try {
-                gdsHelper.getInternalAPIHandler().iscSeekBlob(blob, position, seekMode);
+                gdsHelper.seekBlob(blob, position, seekMode);
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
             }
@@ -834,7 +831,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             
             synchronized(syncObject) {
                 try {
-                    byte[] info = gdsHelper.getInternalAPIHandler().iscBlobInfo(
+                    byte[] info = gdsHelper.getBlobInfo(
                         blob, new byte[] {ISCConstants.isc_info_blob_total_length}, 20);
 
                     return interpretLength(info, 0);

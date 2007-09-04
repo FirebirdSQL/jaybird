@@ -20,9 +20,9 @@ public class OOPreparedStatement extends AbstractPreparedStatement {
     public OOPreparedStatement(GDSHelper c, String sql, int rsType,
             int rsConcurrency, int rsHoldability,
             StatementListener statementListener, BlobListener blobListener,
-            boolean metaDataQuery) throws SQLException {
+            boolean metaDataQuery, boolean standaloneConnection) throws SQLException {
         super(c, sql, rsType, rsConcurrency, rsHoldability, statementListener,
-                blobListener, metaDataQuery);
+                blobListener, metaDataQuery, standaloneConnection);
     }
 
     public void completeStatement() throws SQLException {
