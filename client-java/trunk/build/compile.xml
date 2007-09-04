@@ -131,7 +131,7 @@
            deprecation="on"
            optimize="on"
            includes="org/**"
-           excludes="**/temp*"
+           excludes="**/temp* **/hibernate/*"
     >
       <classpath refid="javac.test.classpath"/>
       <src path="${source.test}"/>
