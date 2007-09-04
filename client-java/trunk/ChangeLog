@@ -1,3 +1,25 @@
+2007-09-03 17:24  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/field/FBCachedBlobField.java:
+
+	fixed an issue with cached blobs - method getObject() went directly
+	to the database
+
+2007-09-03 16:45  rrokytskyy
+
+	* client-java/src/:
+	jdbc_30/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/FBStatementFactory.java,
+	jdbc_20/org/firebirdsql/jdbc/FBPreparedStatement.java:
+
+	fixed an issue when PreparedStatement was created without
+	controlling connection and was garbage-collected after the socket
+	was closed
+
 2007-06-15 11:23  rrokytskyy
 
 	*
