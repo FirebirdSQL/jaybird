@@ -1,3 +1,53 @@
+2007-09-04 22:51  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/field/FBBlobField.java,
+	main/org/firebirdsql/jdbc/field/FBCachedBlobField.java,
+	main/org/firebirdsql/jdbc/field/FBDoubleField.java,
+	main/org/firebirdsql/jdbc/field/FBWorkaroundStringField.java,
+	openoffice/org/firebirdsql/jdbc/oo/OOConnection.java,
+	openoffice/org/firebirdsql/jdbc/oo/OOPreparedStatement.java,
+	main/org/firebirdsql/gds/impl/AbstractIscStmtHandle.java,
+	main/org/firebirdsql/gds/impl/GDSHelper.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBBlob.java,
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	jdbc_30/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	main/org/firebirdsql/gds/IscStmtHandle.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	main/org/firebirdsql/jca/FatalGDSErrorHelper.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FBStatementFactory.java,
+	jdbc_20/org/firebirdsql/jdbc/FBPreparedStatement.java:
+
+	Merge with Branch_2_1
+
+2007-09-04 22:50  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/: hibernate/Person.java,
+	hibernate/PersonHandler.java, common/FBTestBase.java,
+	common/SimpleFBTestBase.java, event/TestFBEventManager.java,
+	hibernate/Person.hbm.xml, jdbc/TestFBConnection.java,
+	jdbc/TestFBEncodings.java, jdbc/TestFBPreparedStatement.java,
+	jdbc/TestTableReservation.java,
+	jdbc/field/TestFBBigDecimalField.java:
+
+	Test-case enhancements and refactoring
+
+2007-09-04 22:49  rrokytskyy
+
+	* client-java/src/resources/log4j.properties:
+
+	should no longer be shipped with the driver
+
+2007-09-04 22:48  rrokytskyy
+
+	* client-java/src/resources/isc_error_msg.properties:
+
+	fixed error messages
+
 2007-09-03 17:24  rrokytskyy
 
 	*
