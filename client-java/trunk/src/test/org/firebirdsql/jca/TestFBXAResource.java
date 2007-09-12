@@ -178,7 +178,6 @@ public class TestFBXAResource extends TestXABase {
 
     public void testRecover() throws Exception
     {
-        
         if ("NATIVE".equals(getGdsType().toString()) || 
             "EMBEDDED".equals(getGdsType().toString()) || 
             "LOCAL".equals(getGdsType().toString()))
@@ -205,56 +204,62 @@ public class TestFBXAResource extends TestXABase {
         
         if (log != null) log.info("testRecover");
         FBManagedConnectionFactory mcf = initMcf();
-        ManagedConnection mc1 = mcf.createManagedConnection(null, null);
-        
-        FBManagedConnection fbmc1 = (FBManagedConnection)mc1;
-        XAResource xa1 = mc1.getXAResource();
         
         Xid xid1 = new XidImpl();
-        xa1.start(xid1, XAResource.TMNOFLAGS);
         
-        Connection fbc1 = (Connection)fbmc1.getConnection(null, null);
-        Statement fbstmt1 = fbc1.createStatement();
+        ManagedConnection mc1 = mcf.createManagedConnection(null, null);
         try {
-            fbstmt1.execute("INSERT INTO test_reconnect(id) VALUES(1)");
-        } finally {
-            fbstmt1.close();
-        }
-        
-        xa1.end(xid1, XAResource.TMSUCCESS);
-        xa1.prepare(xid1);
-        
-        // kill connection after prepare.
-        mc1.destroy();
-        
-
-        FBManagedConnectionFactory mcf2 = initMcf();
-        ManagedConnection mc2 = mcf2.createManagedConnection(null, null);
-        XAResource xa2 = mc2.getXAResource();
-
-        Xid xid2 = new XidImpl();
-        xa2.start(xid2, XAResource.TMNOFLAGS);
-        
-        Xid[] xids = xa2.recover(XAResource.TMSTARTRSCAN);
-        
-        xa2.end(xid2, XAResource.TMSUCCESS);
-        xa2.commit(xid2, true);
-        
-        assertTrue("Should recover non-null array", xids != null);
-        assertTrue("Should recover at least one transaction", xids.length > 0);
-        
-        boolean found = false;
-        for (int i = 0; i < xids.length; i++) {
-            if (xids[i].equals(xid1)) {
-                found = true;
-                break;
+            FBManagedConnection fbmc1 = (FBManagedConnection)mc1;
+            XAResource xa1 = mc1.getXAResource();
+            
+            xa1.start(xid1, XAResource.TMNOFLAGS);
+            
+            Connection fbc1 = (Connection)fbmc1.getConnection(null, null);
+            Statement fbstmt1 = fbc1.createStatement();
+            try {
+                fbstmt1.execute("INSERT INTO test_reconnect(id) VALUES(1)");
+            } finally {
+                fbstmt1.close();
             }
+            
+            xa1.end(xid1, XAResource.TMSUCCESS);
+            xa1.prepare(xid1);
+        } finally {        
+            // kill connection after prepare.
+            mc1.destroy();
         }
         
-        assertTrue("Should find our transaction", found);
+        FBManagedConnectionFactory mcf2 = initMcf();
         
-        xa2.commit(xid1, false);
-        mc2.destroy();
+        ManagedConnection mc2 = mcf2.createManagedConnection(null, null);
+        try {
+            XAResource xa2 = mc2.getXAResource();
+    
+            Xid xid2 = new XidImpl();
+            xa2.start(xid2, XAResource.TMNOFLAGS);
+            
+            Xid[] xids = xa2.recover(XAResource.TMSTARTRSCAN);
+            
+            xa2.end(xid2, XAResource.TMSUCCESS);
+            xa2.commit(xid2, true);
+            
+            assertTrue("Should recover non-null array", xids != null);
+            assertTrue("Should recover at least one transaction", xids.length > 0);
+            
+            boolean found = false;
+            for (int i = 0; i < xids.length; i++) {
+                if (xids[i].equals(xid1)) {
+                    found = true;
+                    break;
+                }
+            }
+            
+            assertTrue("Should find our transaction", found);
+            
+            xa2.commit(xid1, false);
+        } finally {
+            mc2.destroy();
+        }
         
         connection = getConnectionViaDriverManager();
         try {
