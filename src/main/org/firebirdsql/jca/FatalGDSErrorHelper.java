@@ -48,7 +48,7 @@ class FatalGDSErrorHelper {
      */
     static boolean isFatal(GDSException ex) {
         int iscErrorCode = ex.getFbErrorCode();
-        return Arrays.binarySearch(FATAL_ERRORS, iscErrorCode) != -1;
+        return Arrays.binarySearch(FATAL_ERRORS, iscErrorCode) >= 0;
     }
     
     /**
