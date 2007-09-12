@@ -75,7 +75,7 @@ public class FBCallableStatement extends AbstractCallableStatement {
     }
 
     public URL getURL(int colIndex) throws SQLException {
-        super.getURL(colIndex);
+        return super.getURL(colIndex);
     }
 
     // java.sql.CallableStatement methods --------------------------------------
