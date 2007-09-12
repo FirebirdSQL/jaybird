@@ -55,7 +55,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class AbstractDatabaseMetaData implements FirebirdDatabaseMetaData {
+public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
     public static final String SPACES = "                               ";//31 spaces

@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.sql.RowIdLifetime;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.GDSException;
