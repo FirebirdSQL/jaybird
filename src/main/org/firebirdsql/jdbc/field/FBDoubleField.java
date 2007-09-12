@@ -107,7 +107,7 @@ class FBDoubleField extends FBField {
         double result = field.decodeDouble(getFieldData());
         
         if (field.sqlscale != 0) {
-            BigDecimal tempValue = BigDecimal.valueOf(result);
+            BigDecimal tempValue = new BigDecimal(result);
             tempValue = tempValue.setScale(Math.abs(field.sqlscale), BigDecimal.ROUND_HALF_EVEN);
             result = tempValue.doubleValue();
         }
