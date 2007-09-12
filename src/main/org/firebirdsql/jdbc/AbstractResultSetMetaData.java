@@ -36,7 +36,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBResultSetMetaData implements ResultSetMetaData {
+public abstract class AbstractResultSetMetaData implements ResultSetMetaData {
 
     private final XSQLVAR[] xsqlvars;
     private Map extendedInfo;
@@ -52,7 +52,7 @@ public class FBResultSetMetaData implements ResultSetMetaData {
      * TODO Need another constructor for metadata from constructed
      * result set, where we supply the ext field info.
      */
-    protected FBResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
+    protected AbstractResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
     }

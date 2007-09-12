@@ -196,6 +196,11 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
             }
         }
     }
+    
+    public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
+        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
+    }
+
 
     /**
      * Sets the designated parameter to SQL <code>NULL</code>.

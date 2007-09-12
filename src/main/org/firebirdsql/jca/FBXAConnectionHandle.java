@@ -18,10 +18,13 @@
  */
 package org.firebirdsql.jca;
 
-import java.sql.*;
-import java.util.Map;
+import java.lang.reflect.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.HashSet;
 
-import org.firebirdsql.gds.TransactionParameterBuffer;
+import javax.sql.XAConnection;
+
 import org.firebirdsql.jdbc.*;
 
 /**
@@ -29,211 +32,167 @@ import org.firebirdsql.jdbc.*;
  * 
  * @author <a href="mailto:lorban@bitronix.be">Ludovic Orban</a>
  */
-public class FBXAConnectionHandle implements FirebirdConnection {
+public class FBXAConnectionHandle implements InvocationHandler {
     
-    private AbstractConnection connection;
+    /**
+     * Helper function to find specified method in a specified class.
+     * 
+     * @param clazz class in which we look for a specified method.
+     * @param name name of the method.
+     * @param args types of method params.
+     * 
+     * @return instance of {@link Method} corresponding to specified name
+     * and param types.
+     */
+    public static Method findMethod(Class clazz, String name, Class[] args) {
+        try {
+            return clazz.getMethod(name, args);
+        } catch (NoSuchMethodException nmex) {
+            throw new NullPointerException(
+                "No method for proxying found. Please check your classpath.");
+        }
+    }
     
-    protected FBXAConnectionHandle(AbstractConnection connection) {
-        this.connection = connection;
+    /**
+     * Get all implemented interfaces by the class.
+     * 
+     * @param clazz class to inspect.
+     * 
+     * @return array of all implemented interfaces.
+     */
+    public static Class[] getAllInterfaces(Class clazz) {
+        HashSet result = new HashSet();
+        
+        do {
+            Class[] interfaces = clazz.getInterfaces();
+            for (int i = 0; i < interfaces.length; i++) {
+                result.add(interfaces[i]);
+            }
+            clazz = clazz.getSuperclass();
+        } while(clazz.getSuperclass() != null);
+        
+        return (Class[])result.toArray(new Class[result.size()]);
     }
 
-    private AbstractConnection getConnection() throws SQLException {
-        if (connection == null)
-            throw new SQLException("connection is closed");
-        return connection;
+    private final static Method CONNECTION_CLOSE = findMethod(
+        Connection.class, "close", new Class[0]);
+
+    private final static Method CONNECTION_IS_CLOSED = findMethod(
+        Connection.class, "isClosed", new Class[0]);
+
+    
+    private AbstractConnection connection;
+    private XAConnection owner;
+    
+    private Connection proxy;
+    
+    private boolean closed;
+    private SQLException closeStackTrace;
+
+    /**
+     * Construct instance of this class. This method constructs new proxy
+     * that implements {@link Connection} interface and uses newly constructed
+     * object as invocation handler.
+     * 
+     * @param connection connection to wrap.
+     * 
+     * @param owner instance of {@link XConnectionOwner} that owns this 
+     * connection instance.
+     * 
+     * @param pingable <code>true</code> if created connection should be 
+     * pingable.
+     * 
+     * @param useProxy <code>true</code> if this class should use dynamic
+     * proxies, otherwise {@link PingableConnectionWrapper} will be used.
+     * 
+     * @throws SQLException if something went wrong during initialization.
+     */
+    public 
+        FBXAConnectionHandle(AbstractConnection connection, XAConnection owner) 
+            throws SQLException
+        {
+            
+            this.connection = connection;
+            this.owner = owner;
+            
+            Class[] implementedInterfaces = 
+                getAllInterfaces(connection.getClass());
+
+            proxy = (Connection)Proxy.newProxyInstance(
+                FirebirdConnection.class.getClassLoader(),
+                implementedInterfaces,
+                this);
+        }
+    
+    /**
+     * Get proxy implementing {@link Connection} interface and using this
+     * instance as invocation handler.
+     * 
+     * @return instance of {@link Connection}.
+     */
+    public Connection getProxy() {
+        return proxy;
+    }
+    
+    /**
+     * Get manager of this connection wrapper.
+     * 
+     * @return instance of {@link XAConnection}.
+     */
+    public XAConnection getXAConnection() {
+        return owner;
     }
     
     // Connection overridings
     
-    public void close() throws SQLException {
+    public void handleConnectionClose() throws SQLException {
         connection = null;
+        closeStackTrace = new SQLException("Close trace.");
     }
 
-    public boolean isClosed() throws SQLException {
-        return connection == null;
-    }
+    /**
+     * Invoke method on a specified proxy. Here we check if <code>method</code>
+     * is a method {@link Connection#prepareStatement(String)}. If yes, we check
+     * if there is already a prepared statement for the wrapped connection or
+     * wrap a newly created one.
+     * 
+     * @param proxy proxy on which method is invoked.
+     * @param method instance of {@link Method} describing method being invoked.
+     * @param args array with arguments.
+     * 
+     * @return result of method invokation.
+     * 
+     * @throws Throwable if invoked method threw an exception.
+     */
+    public Object invoke(Object proxy, Method method, Object[] args) 
+        throws Throwable 
+    {
+        try {
+            
+            // if object is closed, throw an exception
+            if (connection == null) { 
 
-    // Connection dumb impl
-    
-    public Statement createStatement() throws SQLException {
-        return getConnection().createStatement();
+                // check whether Connection.isClose() method is called first
+                if (CONNECTION_IS_CLOSED.equals(method))
+                    return Boolean.TRUE;
+                
+                FBSQLException ex = new FBSQLException(
+                    "Connection " + this + " was closed. " +
+                            "See the attached exception to find the place " +
+                            "where it was closed");
+                ex.setNextException(closeStackTrace);
+                throw ex;
+            }
+            
+            if (method.equals(CONNECTION_CLOSE)) {
+                handleConnectionClose();
+                return Void.TYPE;
+            } else
+                return method.invoke(connection, args);
+        } catch(InvocationTargetException ex) {
+            throw ex.getTargetException();
+        } catch(SQLException ex) {
+            throw ex;
+        }
     }
-
-    public PreparedStatement prepareStatement(String sql) throws SQLException {
-        return getConnection().prepareStatement(sql);
-    }
-
-    public CallableStatement prepareCall(String sql) throws SQLException {
-        return getConnection().prepareCall(sql);
-    }
-
-    public String nativeSQL(String sql) throws SQLException {
-        return getConnection().nativeSQL(sql);
-    }
-
-    public void setAutoCommit(boolean autoCommit) throws SQLException {
-        getConnection().setAutoCommit(autoCommit);
-    }
-
-    public boolean getAutoCommit() throws SQLException {
-        return getConnection().getAutoCommit();
-    }
-
-    public void commit() throws SQLException {
-        getConnection().commit();
-    }
-
-    public void rollback() throws SQLException {
-        getConnection().rollback();
-    }
-
-    public DatabaseMetaData getMetaData() throws SQLException {
-        return getConnection().getMetaData();
-    }
-
-    public void setReadOnly(boolean readOnly) throws SQLException {
-        getConnection().setReadOnly(readOnly);
-    }
-
-    public boolean isReadOnly() throws SQLException {
-        return getConnection().isReadOnly();
-    }
-
-    public void setCatalog(String catalog) throws SQLException {
-        getConnection().setCatalog(catalog);
-    }
-
-    public String getCatalog() throws SQLException {
-        return getConnection().getCatalog();
-    }
-
-    public void setTransactionIsolation(int level) throws SQLException {
-        getConnection().setTransactionIsolation(level);
-    }
-
-    public int getTransactionIsolation() throws SQLException {
-        return getConnection().getTransactionIsolation();
-    }
-
-    public SQLWarning getWarnings() throws SQLException {
-        return getConnection().getWarnings();
-    }
-
-    public void clearWarnings() throws SQLException {
-        getConnection().clearWarnings();
-    }
-
-    public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
-        return getConnection().createStatement(resultSetType, resultSetConcurrency);
-    }
-
-    public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-        return getConnection().prepareStatement(sql, resultSetType, resultSetConcurrency);
-    }
-
-    public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-        return getConnection().prepareCall(sql, resultSetType, resultSetConcurrency);
-    }
-
-    public Map getTypeMap() throws SQLException {
-        return getConnection().getTypeMap();
-    }
-
-    public void setTypeMap(Map arg0) throws SQLException {
-        getConnection().setTypeMap(arg0);
-    }
-
-    public void setHoldability(int holdability) throws SQLException {
-        getConnection().setHoldability(holdability);
-    }
-
-    public int getHoldability() throws SQLException {
-        return getConnection().getHoldability();
-    }
-
-    public Savepoint setSavepoint() throws SQLException {
-        return getConnection().setSavepoint();
-    }
-
-    public Savepoint setSavepoint(String name) throws SQLException {
-        return getConnection().setSavepoint(name);
-    }
-
-    public void rollback(Savepoint savepoint) throws SQLException {
-        getConnection().rollback(savepoint);
-    }
-
-    public void releaseSavepoint(Savepoint savepoint) throws SQLException {
-        getConnection().releaseSavepoint(savepoint);
-    }
-
-    public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-        return getConnection().createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
-    }
-
-    public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-        return getConnection().prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
-    }
-
-    public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-        return getConnection().prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
-    }
-
-    public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
-        return getConnection().prepareStatement(sql, autoGeneratedKeys);
-    }
-
-    public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
-        return getConnection().prepareStatement(sql, columnIndexes);
-    }
-
-    public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
-        return getConnection().prepareStatement(sql, columnNames);
-    }
-
-    public Blob createBlob() throws SQLException {
-        return getConnection().createBlob();
-    }
-
-    public TransactionParameterBuffer createTransactionParameterBuffer() throws SQLException {
-        return getConnection().createTransactionParameterBuffer();
-    }
-
-    public String getIscEncoding() throws SQLException {
-        return getConnection().getIscEncoding();
-    }
-
-    public TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException {
-        return getConnection().getTransactionParameters(isolationLevel);
-    }
-
-    public void releaseSavepoint(FirebirdSavepoint savepoint) throws SQLException {
-        getConnection().releaseSavepoint(savepoint);
-    }
-
-    public void rollback(FirebirdSavepoint savepoint) throws SQLException {
-        getConnection().rollback(savepoint);
-    }
-
-    public FirebirdSavepoint setFirebirdSavepoint() throws SQLException {
-        return getConnection().setFirebirdSavepoint();
-    }
-
-    public FirebirdSavepoint setFirebirdSavepoint(String name) throws SQLException {
-        return getConnection().setFirebirdSavepoint(name);
-    }
-
-    public void setTransactionParameters(int isolationLevel, int[] parameters) throws SQLException {
-        getConnection().setTransactionParameters(isolationLevel, parameters);
-    }
-
-    public void setTransactionParameters(int isolationLevel, TransactionParameterBuffer tpb) throws SQLException {
-        getConnection().setTransactionParameters(isolationLevel, tpb);
-    }
-
-    public void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException {
-        getConnection().setTransactionParameters(tpb);
-    }
-
-    
 }

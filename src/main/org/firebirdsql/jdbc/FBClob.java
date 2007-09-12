@@ -216,5 +216,13 @@ public class FBClob implements Clob {
         throw new FBDriverNotCapableException();
     }
 
+    public void free() throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public Reader getCharacterStream(long pos, long length) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
 
 }

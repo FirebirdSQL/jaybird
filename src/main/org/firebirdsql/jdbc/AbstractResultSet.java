@@ -40,7 +40,7 @@ import org.firebirdsql.jdbc.field.*;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.FetcherListener {
+public abstract class AbstractResultSet implements ResultSet, Synchronizable, FBObjectListener.FetcherListener {
 
     private AbstractStatement fbStatement;
     private FBFetcher fbFetcher;
@@ -100,7 +100,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
      * @param fbStatement a <code>AbstractStatement</code> value
      * @param stmt an <code>isc_stmt_handle</code> value
      */
-    protected FBResultSet(GDSHelper gdsHelper, 
+    protected AbstractResultSet(GDSHelper gdsHelper, 
                           AbstractStatement fbStatement, 
                           AbstractIscStmtHandle stmt, 
                           FBObjectListener.ResultSetListener listener,
@@ -170,7 +170,7 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         }
     }
 
-    protected FBResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
+    protected AbstractResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
         maxRows = 0;
         fbFetcher = new FBCachedFetcher(rows,this);
         this.xsqlvars = xsqlvars;
@@ -1511,6 +1511,20 @@ public class FBResultSet implements ResultSet, Synchronizable, FBObjectListener.
         return rsConcurrency;
     }
 
+    /**
+     * Retrieves the holdability of this <code>ResultSet</code> object
+     * 
+     * @return  either <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or 
+     * <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
+     * 
+     * @throws SQLException if a database access error occurs 
+     * or this method is called on a closed result set
+     * 
+     * @since 1.6
+     */
+    public int getHoldability() throws SQLException {
+        return rsHoldability;
+    }
 
     //---------------------------------------------------------------------
     // Updates

@@ -49,7 +49,7 @@ public class FBXAConnection implements XAConnection {
     }
 
     public Connection getConnection() throws SQLException {
-        return new FBXAConnectionHandle(connection);
+        return new FBXAConnectionHandle(connection, this).getProxy();
     }
 
     public void addConnectionEventListener(ConnectionEventListener listener) {
