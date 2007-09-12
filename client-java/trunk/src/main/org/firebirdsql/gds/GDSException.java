@@ -147,6 +147,9 @@ public class GDSException extends Exception {
         if (type == ISCConstants.isc_arg_number)
             return intParam;
         else
+        if (type == ISCConstants.isc_arg_gds)
+            return intParam;
+        else
             return -1;
     }
     
@@ -159,7 +162,10 @@ public class GDSException extends Exception {
     public String getSQLState() {
         if (type == ISCConstants.isc_arg_number) 
             return GDSExceptionHelper.getSQLState(intParam);
-        else
+        else 
+        if (type == ISCConstants.isc_arg_gds) {
+            return GDSExceptionHelper.getSQLState(intParam);
+        } else
             return null;
     }
 

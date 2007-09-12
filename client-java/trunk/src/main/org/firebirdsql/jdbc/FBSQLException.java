@@ -55,19 +55,19 @@ public class FBSQLException extends SQLException {
     
     public FBSQLException(Exception ex) {
         super(ex.getMessage(), SQL_STATE_GENERAL_ERROR);
-        original = ex;
+        setOriginal(ex);
         message = "Exception. " + ex.getMessage();
     }
     
     public FBSQLException(IOException ioex) {
         super(ioex.getMessage(), SQL_STATE_GENERAL_ERROR);
-        original = ioex;
+        setOriginal(ioex);
         message = "I/O Exception. " + ioex.getMessage();
     }
 
     public FBSQLException(GDSException ex) {
         super(ex.getMessage(), SQL_STATE_GENERAL_ERROR);
-        original = ex;
+        setOriginal(ex);
         message = "GDS Exception. "+ ex.getIntParam() + ". " + ex.getMessage();
     }
 
@@ -78,13 +78,9 @@ public class FBSQLException extends SQLException {
 
         // try to unwrap wrapped exception
         if (ex.getLinkedException() != null) 
-            original = ex.getLinkedException();
-        else original = ex;
-
-        if (original instanceof GDSException)
-            message = "GDS Exception. "+ ((GDSException)original).getIntParam() + ". " + ex.getMessage();
-        else
-            message = "Resource Exception. " + ex.getMessage();
+            setOriginal(ex.getLinkedException());
+        else 
+            setOriginal(ex);
     }
     
     public FBSQLException(String message) {
@@ -95,7 +91,7 @@ public class FBSQLException extends SQLException {
     public FBSQLException(String message, SQLException ex) {
         super(message, SQL_STATE_GENERAL_ERROR);
         this.message = message;
-        this.original = ex;
+        setOriginal(ex);
     }
 
     public FBSQLException(String message, String sqlState) {
@@ -144,4 +140,22 @@ public class FBSQLException extends SQLException {
             original.printStackTrace(s);
         }
     }    
+    
+    private void setOriginal(Exception original) {
+        this.original = original;
+        
+        if (original instanceof GDSException)
+            message = "GDS Exception. "+ ((GDSException)original).getIntParam() 
+                + ". " + original.getMessage();
+        else
+            message = "Resource Exception. " + original.getMessage();
+        
+        if (original instanceof GDSException) {
+            GDSException next = ((GDSException)original).getNext();
+            
+            if (next != null)
+                setNextException(new FBSQLException(next));
+        }
+        
+    }
 }
