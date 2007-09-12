@@ -24,7 +24,6 @@ import java.math.BigDecimal;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Date;
-import java.sql.ParameterMetaData;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -41,7 +40,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
  * @author <a href="mailto:skidder@users.sourceforge.net">Nickolay Samofatov</a>
  * @version 1.0
  */
-public class FBParameterMetaData implements ParameterMetaData {
+public class FBParameterMetaData implements FirebirdParameterMetaData {
 
     private final XSQLVAR[] xsqlvars;
     private final GDSHelper connection;

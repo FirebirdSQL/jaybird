@@ -335,7 +335,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * 
      * @return <code>true</code> if this statement was already closed.
      */
-    boolean isClosed() {
+    public boolean isClosed() {
         return closed;
     }
 

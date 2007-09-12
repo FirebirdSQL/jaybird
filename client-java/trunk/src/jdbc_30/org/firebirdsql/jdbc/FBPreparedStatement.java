@@ -24,6 +24,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.jdbc.FBObjectListener.BlobListener;
+import org.firebirdsql.jdbc.FBObjectListener.StatementListener;
 
 /**
  * 
@@ -41,6 +43,14 @@ public class FBPreparedStatement extends AbstractPreparedStatement {
         super(gdsHelper, sql, rsType, rsConcurrency, rsHoldability, 
             statementListener, blobListener, metaDataQuery, standaloneStatement);
     }
+
+    
+    public FBPreparedStatement(GDSHelper c, int rsType, int rsConcurrency,
+            int rsHoldability, StatementListener statementListener,
+            BlobListener blobListener) throws SQLException {
+        super(c, rsType, rsConcurrency, rsHoldability, statementListener, blobListener);
+    }
+
 
     /**
      * Sets the designated parameter to the given <code>java.net.URL</code>
@@ -73,7 +83,7 @@ public class FBPreparedStatement extends AbstractPreparedStatement {
      * @since 1.4
      */
     public ParameterMetaData getParameterMetaData() throws SQLException {
-        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
+        return new JDBC30ParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
     }
     
     /**

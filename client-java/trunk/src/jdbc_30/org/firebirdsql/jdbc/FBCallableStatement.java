@@ -93,7 +93,7 @@ public class FBCallableStatement extends AbstractCallableStatement {
             } 
         }
         
-        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
+        return new JDBC30ParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
     }
     
     

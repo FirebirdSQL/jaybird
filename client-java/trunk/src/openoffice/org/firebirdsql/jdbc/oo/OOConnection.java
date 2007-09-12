@@ -6,7 +6,7 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jdbc.*;
 
-public class OOConnection extends AbstractConnection {
+public class OOConnection extends FBConnection {
 
     private OODatabaseMetaData metaData;
 

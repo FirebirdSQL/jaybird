@@ -23,7 +23,9 @@ package org.firebirdsql.jdbc;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.sql.*;
+import java.sql.Date;
 import java.util.*;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
@@ -966,6 +968,106 @@ public abstract class AbstractCallableStatement
         return getCurrentResultSet().getTimestamp(parameterIndex, cal);
     }
 
+    public URL getURL(int colIndex) throws SQLException {
+        assertHasData(getCurrentResultSet());
+        // cast apparently to allow use of jdbc 2 interfaces with jdbc 3
+        // methods.
+        return ((FBResultSet) getCurrentResultSet()).getURL(colIndex);
+    }
+
+    public String getString(String colName) throws SQLException {
+        return getString(getCurrentResultSet().findColumn(colName));
+    }
+
+    public boolean getBoolean(String colName) throws SQLException {
+        return getBoolean(getCurrentResultSet().findColumn(colName));
+    }
+
+    public byte getByte(String colName) throws SQLException {
+        return getByte(getCurrentResultSet().findColumn(colName));
+    }
+
+    public short getShort(String colName) throws SQLException {
+        return getShort(getCurrentResultSet().findColumn(colName));
+    }
+
+    public int getInt(String colName) throws SQLException {
+        return getInt(getCurrentResultSet().findColumn(colName));
+    }
+
+    public long getLong(String colName) throws SQLException {
+        return getLong(getCurrentResultSet().findColumn(colName));
+    }
+
+    public float getFloat(String colName) throws SQLException {
+        return getFloat(getCurrentResultSet().findColumn(colName));
+    }
+
+    public double getDouble(String colName) throws SQLException {
+        return getDouble(getCurrentResultSet().findColumn(colName));
+    }
+
+    public byte[] getBytes(String colName) throws SQLException {
+        return getBytes(getCurrentResultSet().findColumn(colName));
+    }
+
+    public Date getDate(String colName) throws SQLException {
+        return getDate(getCurrentResultSet().findColumn(colName));
+    }
+
+    public Time getTime(String colName) throws SQLException {
+        return getTime(getCurrentResultSet().findColumn(colName));
+    }
+
+    public Timestamp getTimestamp(String colName) throws SQLException {
+        return getTimestamp(getCurrentResultSet().findColumn(colName));
+    }
+
+    public Object getObject(String colName) throws SQLException {
+        return getObject(getCurrentResultSet().findColumn(colName));
+    }
+
+    public BigDecimal getBigDecimal(String colName) throws SQLException {
+        return getBigDecimal(getCurrentResultSet().findColumn(colName));
+    }
+
+    public Object getObject(String colName, Map map) throws SQLException {
+        return getObject(getCurrentResultSet().findColumn(colName), map);
+    }
+
+    public Ref getRef(String colName) throws SQLException {
+        return getRef(getCurrentResultSet().findColumn(colName));
+    }
+
+    public Blob getBlob(String colName) throws SQLException {
+        return getBlob(getCurrentResultSet().findColumn(colName));
+    }
+
+    public Clob getClob(String colName) throws SQLException {
+        return getClob(getCurrentResultSet().findColumn(colName));
+    }
+
+    public Array getArray(String colName) throws SQLException {
+        return getArray(getCurrentResultSet().findColumn(colName));
+    }
+
+    public Date getDate(String colName, Calendar cal) throws SQLException {
+        return getDate(getCurrentResultSet().findColumn(colName), cal);
+    }
+
+    public Time getTime(String colName, Calendar cal) throws SQLException {
+        return getTime(getCurrentResultSet().findColumn(colName), cal);
+    }
+
+    public Timestamp getTimestamp(String colName, Calendar cal)
+        throws SQLException {
+        return getTimestamp(getCurrentResultSet().findColumn(colName), cal);
+    }
+
+    public URL getURL(String colName) throws SQLException {
+        return getURL(getCurrentResultSet().findColumn(colName));
+    }    
+    
     //--------------------------JDBC 3.0-----------------------------
 
     /**
