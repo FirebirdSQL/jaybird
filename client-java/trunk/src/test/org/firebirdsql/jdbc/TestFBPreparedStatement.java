@@ -773,7 +773,7 @@ public class TestFBPreparedStatement extends FBTestBase{
            double doubleValue = rs.getDouble(1);
            BigDecimal bigDecimalValue = rs.getBigDecimal(1);
            
-           assertEquals(doubleValue, 10.02);
+           assertTrue(doubleValue == 10.02);
            
        } catch(SQLException ex) {
            ex.printStackTrace();
