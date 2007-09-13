@@ -1,3 +1,112 @@
+2007-09-12 23:35  rrokytskyy
+
+	* client-java/src/:
+	jdbc_40/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_40/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	JDK 6.0 compatibility fixes
+
+2007-09-12 23:28  rrokytskyy
+
+	* client-java/src/:
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	jdbc_30/org/firebirdsql/jdbc/FBParameterMetaData.java,
+	jdbc_30/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBResultSet.java,
+	jdbc_30/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	jdbc_30/org/firebirdsql/jdbc/JDBC30ParameterMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBArray.java,
+	main/org/firebirdsql/jdbc/FBBlob.java,
+	main/org/firebirdsql/jdbc/FBBlobInputStream.java,
+	main/org/firebirdsql/jdbc/FBCachedBlob.java,
+	main/org/firebirdsql/jdbc/FBClob.java,
+	main/org/firebirdsql/jdbc/FBParameterMetaData.java,
+	main/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	openoffice/org/firebirdsql/jdbc/oo/OOConnection.java,
+	openoffice/org/firebirdsql/jdbc/oo/OOParameterMetaData.java,
+	openoffice/org/firebirdsql/jdbc/oo/OOPreparedStatement.java,
+	openoffice/org/firebirdsql/jdbc/oo/OOStatement.java,
+	jdbc_40/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_40/org/firebirdsql/jdbc/FBConnection.java,
+	jdbc_40/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	jdbc_40/org/firebirdsql/jdbc/FBResultSet.java,
+	jdbc_40/org/firebirdsql/jdbc/FBSavepoint.java,
+	jdbc_40/org/firebirdsql/jdbc/JDBC40ParameterMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractResultSet.java,
+	main/org/firebirdsql/jdbc/AbstractResultSetMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FBBlobOutputStream.java,
+	main/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/FBResultSet.java,
+	main/org/firebirdsql/jdbc/FirebirdParameterMetaData.java,
+	test/org/firebirdsql/jdbc/TestFBBlobAutocommit.java,
+	test/org/firebirdsql/jdbc/TestFBBlobStream.java,
+	jdbc_20/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	jdbc_20/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_20/org/firebirdsql/jdbc/FBResultSet.java,
+	jdbc_20/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	jdbc_40/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_40/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	jdbc_40/org/firebirdsql/jdbc/FBStatement.java,
+	main/org/firebirdsql/jca/FBXAConnection.java,
+	main/org/firebirdsql/jca/FBXAConnectionHandle.java:
+
+	JDK 6.0 compatibility fixes
+
+2007-09-12 23:25  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jca/TestFBXAResource.java:
+
+	corrected try/finally sections
+
+2007-09-12 23:23  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBDriver.java:
+
+	optimized imports
+
+2007-09-12 23:20  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/:
+	TestTableReservation.java, TestFBLongVarCharEncodings.java:
+
+	fixed incorrect test cases
+
+2007-09-12 23:20  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/field/TestFBBigDecimalField.java:
+
+	fixed wrong test cases
+
+2007-09-12 23:20  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/field/FBDoubleField.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+
+	fixed a compilation error on JDK 1.3.x
+
+2007-09-12 23:19  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FatalGDSErrorHelper.java:
+
+	fixed issue that result of Arrays.binarySearch might be less than
+	-1
+
+2007-09-12 23:18  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/GDSException.java,
+	jdbc/FBSQLException.java:
+
+	improved handling of SQL state
+
 2007-09-04 22:51  rrokytskyy
 
 	* client-java/src/:
