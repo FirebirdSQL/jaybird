@@ -495,7 +495,8 @@ public class FBCallableStatement extends AbstractCallableStatement {
     // java.sql.Wrapper -.------------------------------------------------------
     
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return iface != null && iface.isAssignableFrom(FBDatabaseMetaData.class);
+        return iface != null 
+            && iface.isAssignableFrom(FBCallableStatement.class);
     }
 
     public <T> T unwrap(Class<T> iface) throws SQLException {
