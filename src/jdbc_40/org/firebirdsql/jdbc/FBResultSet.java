@@ -269,14 +269,14 @@ public class FBResultSet extends AbstractResultSet {
 
     // java.sql.Wrapper interface
     
-    public boolean isWrapperFor(Class iface) throws SQLException {
-        return iface != null && iface.isAssignableFrom(FBDatabaseMetaData.class);
+    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        return iface != null && iface.isAssignableFrom(FBResultSet.class);
     }
 
-    public Object unwrap(Class iface) throws SQLException {
+    public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
             throw new FBDriverNotCapableException();
         
-        return this;
+        return (T)this;
     }
 }
