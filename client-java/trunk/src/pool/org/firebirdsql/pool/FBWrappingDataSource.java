@@ -33,6 +33,7 @@ import javax.sql.DataSource;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.jdbc.FBConnectionProperties;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 
 /**
  * Implementation of {@link javax.sql.DataSource} including connection pooling.
@@ -852,6 +853,16 @@ public class FBWrappingDataSource implements DataSource,
         ref.add(new BinaryRefAddr(REF_PROPERTIES, data));
         
         return ref;
+    }
+    
+    // JBBC 4.0
+    
+    public boolean isWrapperFor(Class iface) throws SQLException {
+    	return false;
+    }
+    
+    public Object unwrap(Class iface) throws SQLException {
+    	throw new FBDriverNotCapableException();
     }
 
 }

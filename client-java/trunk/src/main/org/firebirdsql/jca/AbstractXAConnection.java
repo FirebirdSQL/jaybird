@@ -32,11 +32,11 @@ import org.firebirdsql.jdbc.AbstractConnection;
  * 
  * @author <a href="mailto:lorban@bitronix.be">Ludovic Orban</a>
  */
-public class FBXAConnection implements XAConnection {
+public abstract class AbstractXAConnection implements XAConnection {
     
     private AbstractConnection connection;
     
-    protected FBXAConnection(AbstractConnection connection) {
+    protected AbstractXAConnection(AbstractConnection connection) {
         this.connection = connection;
     }
 

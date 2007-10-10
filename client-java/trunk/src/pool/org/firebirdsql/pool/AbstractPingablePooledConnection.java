@@ -35,7 +35,7 @@ import java.util.*;
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class PingablePooledConnection implements PooledConnection,
+public abstract class AbstractPingablePooledConnection implements PooledConnection,
     PooledObject, XConnectionManager,
     XPingableConnection, XStatementManager {
 
@@ -74,7 +74,7 @@ public class PingablePooledConnection implements PooledConnection,
         return log;
     }
 
-    protected PingablePooledConnection(Connection connection, 
+    protected AbstractPingablePooledConnection(Connection connection, 
                                        boolean statementPooling, 
                                        /*int transactionIsolation,*/
                                        int maxStatements, boolean keepStatements) 
@@ -106,9 +106,9 @@ public class PingablePooledConnection implements PooledConnection,
         }
     }
 
-    protected PingablePooledConnection(Connection connection,
+    protected AbstractPingablePooledConnection(Connection connection,
         String pingStatement, int pingInterval, boolean statementPooling, 
-        /*int transactionIsolation,*/ int maxStatements, boolean keepStatements) 
+        int maxStatements, boolean keepStatements) 
         throws SQLException 
     {
         this(connection, statementPooling, /*transactionIsolation,*/ maxStatements, keepStatements);
