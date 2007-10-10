@@ -29,6 +29,7 @@ import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
 import javax.sql.DataSource;
 
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.pool.FBWrappingDataSource;
 
 /**
@@ -338,4 +339,14 @@ public class AppServerDataSource implements DataSource, Referenceable,
         return new AppServerDataSource(dataSource);
     }
 
+    
+    // JDBC 4.0
+    
+    public boolean isWrapperFor(Class iface) throws SQLException {
+    	return false;
+    }
+    
+    public Object unwrap(Class iface) throws SQLException {
+    	throw new FBDriverNotCapableException();
+    }
 }

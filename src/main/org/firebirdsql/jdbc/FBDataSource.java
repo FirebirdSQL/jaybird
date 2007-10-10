@@ -196,7 +196,15 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
         return loginTimeout;
     }
 
-
+    // JDBC 4.0
+    
+    public boolean isWrapperFor(Class iface) throws SQLException {
+    	return false;
+    }
+    
+    public Object unwrap(Class iface) throws SQLException {
+    	throw new FBDriverNotCapableException();
+    }
 
 }
 
