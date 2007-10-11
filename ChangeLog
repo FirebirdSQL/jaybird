@@ -1,3 +1,42 @@
+2007-10-10 20:07  gab_reid
+
+	* client-java/src/:
+	jca_jdk1_6/org/firebirdsql/jca/FBXAConnection.java,
+	pool_jdk1_5/org/firebirdsql/pool/PingablePooledConnection.java,
+	pool_jdk1_6/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	pool_jdk1_6/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool_jdk1_6/org/firebirdsql/pool/PingablePooledConnection.java:
+
+	Updated for compatibility with JDK 1.6
+
+2007-10-10 20:03  gab_reid
+
+	* client-java/src/main/org/firebirdsql/:
+	jca/AbstractXAConnection.java, jca/FBXAConnection.java,
+	jdbc/FBDataSource.java:
+
+	Updated for compatibility with JDK 1.6
+
+2007-10-10 20:02  gab_reid
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBDriver.java:
+
+	Updated timestamp format to prevent problems running with JDK 1.6
+
+2007-10-10 20:00  gab_reid
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/AbstractPingablePooledConnection.java,
+	pool/org/firebirdsql/pool/FBWrappingDataSource.java,
+	pool/org/firebirdsql/pool/PingablePooledConnection.java,
+	pool/org/firebirdsql/pool/FBSimpleDataSource.java,
+	pool/org/firebirdsql/pool/SimpleDataSource.java,
+	pool/org/firebirdsql/pool/sun/AppServerDataSource.java,
+	pool_jdk1_4/org/firebirdsql/pool/PingablePooledConnection.java,
+	jca_jdk1_4/org/firebirdsql/jca/FBXAConnection.java:
+
+	Updated for compatibility with JDK 1.6
+
 2007-10-09 19:59  gab_reid
 
 	* client-java/src/jdbc_40/org/firebirdsql/jdbc/: FBConnection.java,
