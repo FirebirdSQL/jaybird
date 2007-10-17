@@ -632,9 +632,7 @@ public class TestFBResultSet extends FBTestBase {
 
         try {
 
-            Random rnd = new Random();
-            byte[] string = new byte[19000];
-            rnd.nextBytes(string);
+            byte[] string = createRandomByteString(19000);
 
             for (int i = 0; i < recordCount; i++) {
                 ps.setInt(1, i);
@@ -702,9 +700,7 @@ public class TestFBResultSet extends FBTestBase {
 
         try {
 
-            Random rnd = new Random();
-            byte[] string = new byte[19000];
-            rnd.nextBytes(string);
+            byte[] string = createRandomByteString(19000);
 
             for (int i = 0; i < recordCount; i++) {
                 ps.setInt(1, i);
@@ -738,6 +734,15 @@ public class TestFBResultSet extends FBTestBase {
             stmt.close();
         }
     }
+
+	private byte[] createRandomByteString(int length) {
+		Random random = new Random();
+		byte[] string = new byte[length];
+		for (int i = 0; i < length; i++){
+			string[i] = (byte) random.nextInt(128);
+		}
+		return string;
+	}
     
     public void testUpdatableResultSet() throws Exception {
         connection.setAutoCommit(false);
