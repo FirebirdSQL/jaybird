@@ -1,3 +1,10 @@
+2007-10-17 22:43  gab_reid
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+
+	Corrected invalid test error for systems that use a multi-byte
+	encoding by default
+
 2007-10-10 20:07  gab_reid
 
 	* client-java/src/:
