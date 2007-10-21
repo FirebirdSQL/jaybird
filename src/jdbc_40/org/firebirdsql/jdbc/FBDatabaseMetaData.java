@@ -57,7 +57,7 @@ public class FBDatabaseMetaData extends AbstractDatabaseMetaData {
      * @since 1.6
      */
     public RowIdLifetime getRowIdLifetime() throws SQLException {
-        throw new FBDriverNotCapableException();
+        return RowIdLifetime.ROWID_UNSUPPORTED;
     }
     
 }
