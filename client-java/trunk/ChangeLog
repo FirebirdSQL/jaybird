@@ -1,3 +1,10 @@
+2007-10-21 22:28  gab_reid
+
+	*
+	client-java/src/jdbc_40/org/firebirdsql/jdbc/FBDatabaseMetaData.java:
+
+	Return ROWID_UNSUPPORTED instead of throwing an exception
+
 2007-10-17 22:43  gab_reid
 
 	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
