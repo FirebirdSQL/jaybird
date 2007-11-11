@@ -247,10 +247,6 @@ public class FBConnection extends AbstractConnection {
         throw new FBDriverNotCapableException();
     }
 
-    public Clob createClob() throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
     public NClob createNClob() throws SQLException {
         throw new FBDriverNotCapableException();
     }

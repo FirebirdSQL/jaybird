@@ -329,6 +329,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return prepareCall(sql, 
                 ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
+    
+    
+    public Clob createClob() throws SQLException {
+        FBBlob blob = (FBBlob)createBlob();
+        return new FBClob(blob);
+    }
 
     /**
      * Converts the given SQL statement into the system's native SQL grammar.
