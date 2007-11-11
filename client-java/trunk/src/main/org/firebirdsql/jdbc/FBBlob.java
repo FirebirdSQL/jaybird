@@ -504,21 +504,21 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         if (blobOut != null) 
             throw new FBSQLException("Only one blob output stream open at a time!");
 
-        if (pos < 0) 
+        if (pos < 1) 
             throw new FBSQLException(
                     "You can't start before the beginning of the blob",
                     FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
 
-        if ((isNew) && (pos > 0)) 
+        if ((isNew) && (pos > 1)) 
             throw new FBSQLException(
-                    "Previous value was null, you must start at position 0",
+                    "Previous value was null, you must start at position 1",
                     FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
 
         blobOut = new FBBlobOutputStream(this);
-        if (pos > 0) {
+        if (pos > 1) {
             //copy pos bytes from input to output
             //implement this later
-            throw new FBDriverNotCapableException("Non-null positions are not yet supported.");
+            throw new FBDriverNotCapableException("Offset start positions are not yet supported.");
         }
         
         return blobOut;
@@ -546,7 +546,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     }
 
     public void copyBytes(byte[] bytes, int pos, int len) throws SQLException {
-        OutputStream out = setBinaryStream(0);
+        OutputStream out = setBinaryStream(1);
         try {
             try {
                 out.write(bytes, pos, len);
@@ -566,7 +566,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException if a database access error occurs
      */
     public void copyStream(InputStream inputStream, int length) throws SQLException {
-        OutputStream os = setBinaryStream(0);
+        OutputStream os = setBinaryStream(1);
         byte[] buffer = new byte[Math.min(bufferlength, length)];
         int chunk;
         try {
@@ -594,7 +594,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException if a database access error occurs
      */
     public void copyStream(InputStream inputStream) throws SQLException {
-        OutputStream os = setBinaryStream(0);
+        OutputStream os = setBinaryStream(1);
         try {
             int chunk = 0;
             byte[] buffer = new byte[bufferlength];
@@ -618,7 +618,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @param encoding The encoding used in the character stream
      */
     public void copyCharacterStream(Reader inputStream, int length, String encoding) throws SQLException {
-        OutputStream os = setBinaryStream(0);
+        OutputStream os = setBinaryStream(1);
         try {
             
             OutputStreamWriter osw;
