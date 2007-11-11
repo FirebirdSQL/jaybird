@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.XSQLVAR;
@@ -85,6 +86,16 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
 
         blob = new FBBlob(gdsHelper, field.decodeLong(getFieldData()));
         return blob;
+    }
+    
+    public Clob getClob() throws SQLException {
+    	FBBlob blob = (FBBlob) getBlob();
+    	
+    	if (blob == BLOB_NULL_VALUE){
+    		return CLOB_NULL_VALUE;
+    	}
+    	
+    	return new FBClob(blob);
     }
     
     public InputStream getBinaryStream() throws SQLException {
@@ -167,6 +178,11 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     public void setBlob(FBBlob blob) throws SQLException {
         setFieldData(field.encodeLong(blob.getBlobId()));
         this.blob = blob;
+    }
+    
+    public void setClob(FBClob clob) throws SQLException {
+    	FBBlob blob = clob.getWrappedBlob();
+    	setBlob(blob);
     }
 
     public void setCharacterStream(Reader in, int length) throws SQLException {
