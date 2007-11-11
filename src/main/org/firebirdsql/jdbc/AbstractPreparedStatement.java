@@ -1006,8 +1006,17 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
      *      </a>
      */
-    public void setClob(int i, Clob x) throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void setClob(int parameterIndex, Clob clob) throws SQLException {
+        // if the passed BLOB is not instance of our class, copy its content
+        // into the our BLOB
+        if (!(clob instanceof FBClob)) {
+            FBClob fbc = new FBClob(new FBBlob(gdsHelper, blobListener));
+            fbc.copyCharacterStream(clob.getCharacterStream());
+            clob = fbc;
+        } 
+        
+        getField(parameterIndex).setClob((FBClob) clob);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
