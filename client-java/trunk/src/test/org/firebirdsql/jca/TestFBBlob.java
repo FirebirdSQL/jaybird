@@ -120,7 +120,7 @@ public class TestFBBlob extends TestXABase {
         t.begin();
         PreparedStatement p = c.prepareStatement("insert into T1 values (?, ?)");
         Blob blob = c.createBlob();
-        OutputStream os = ((FBBlob)blob).setBinaryStream(0);//with  jdbc 3, just blob.setBinaryStrean(0);
+        OutputStream os = ((FBBlob)blob).setBinaryStream(1);//with  jdbc 3, just blob.setBinaryStrean(0);
         byte[] a = new String("a").getBytes();
         byte[] testbuf = new byte[bloblength];
         Arrays.fill(testbuf, a[0]);

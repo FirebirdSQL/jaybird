@@ -394,7 +394,7 @@ public class TestFBBlobStream extends FBTestBase {
         fbConnection.setAutoCommit(false);
         
         FirebirdBlob blob = (FirebirdBlob)fbConnection.createBlob();
-        OutputStream out = blob.setBinaryStream(0);
+        OutputStream out = blob.setBinaryStream(1);
         out.write(data);
         out.flush();
         out.close();
