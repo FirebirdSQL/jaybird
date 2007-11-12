@@ -1,3 +1,40 @@
+2007-11-11 10:58  gab_reid
+
+	* client-java/src/test/org/firebirdsql/: jca/TestFBBlob.java,
+	jdbc/TestFBBlobStream.java:
+
+	Updated FBBlob.setBinaryStream to use a 1-based index (in
+	accordance with API docs)
+
+2007-11-11 10:57  gab_reid
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBClob.java,
+	main/org/firebirdsql/jdbc/field/FBBlobField.java,
+	main/org/firebirdsql/jdbc/field/FBCachedBlobField.java,
+	main/org/firebirdsql/jdbc/field/FBField.java,
+	main/org/firebirdsql/jdbc/field/FBLongVarCharField.java,
+	main/org/firebirdsql/jdbc/field/FBCachedClob.java,
+	main/org/firebirdsql/jdbc/field/FBCachedLongVarCharField.java,
+	test/org/firebirdsql/jdbc/TestFBClob.java:
+
+	Added basic Clob support
+
+2007-11-11 10:54  gab_reid
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBBlob.java:
+
+	Updated setBinaryStream to use a 1-based index (in accordance with
+	API docs)
+
+2007-11-11 10:53  gab_reid
+
+	* client-java/src/: jdbc_40/org/firebirdsql/jdbc/FBConnection.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java:
+
+	Implemented createClob on connection
+
 2007-10-21 22:28  gab_reid
 
 	*
