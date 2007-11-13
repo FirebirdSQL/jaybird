@@ -39,18 +39,18 @@ public class FBStatementFactory {
      */
     public static AbstractCallableStatement createCallableStatement(GDSHelper gdsHelper,
             String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability,
-            StatementListener statementListener, BlobListener blobListener) throws FBSQLException {
+            StoredProcedureMetaData storedProcMetaData, StatementListener statementListener, BlobListener blobListener) throws FBSQLException {
 
         try {
 
             Constructor constructor = ClassFactory.get(ClassFactory.FBCallableStatement)
                     .getConstructor(
                             new Class[] { GDSHelper.class, String.class, int.class, int.class,
-                                    int.class, StatementListener.class, BlobListener.class });
+                                    int.class, StoredProcedureMetaData.class, StatementListener.class, BlobListener.class });
 
             return (AbstractCallableStatement) constructor.newInstance(new Object[] { gdsHelper,
                     sql, new Integer(resultSetType), new Integer(resultSetConcurrency),
-                    new Integer(resultSetHoldability), statementListener, blobListener });
+                    new Integer(resultSetHoldability), storedProcMetaData, statementListener, blobListener });
 
         } catch(InvocationTargetException ex) {
             

@@ -45,11 +45,11 @@ public class FBCallableStatement extends AbstractCallableStatement {
 	 *             if SQL error occured.
 	 */
 	public FBCallableStatement(GDSHelper c, String sql, int rsType,
-            int rsConcurrency, int rsHoldability,
+            int rsConcurrency, int rsHoldability, StoredProcedureMetaData callableStatementMetaData,
             FBObjectListener.StatementListener statementListener,
             FBObjectListener.BlobListener blobListener)
 		throws SQLException {
-		super(c, sql, rsType, rsConcurrency, rsHoldability, statementListener, blobListener);
+		super(c, sql, rsType, rsConcurrency, rsHoldability, callableStatementMetaData, statementListener, blobListener);
 	}
 
     // ----------JDBC 3.0 --- java.sql.PreparedStatement methods ---------------

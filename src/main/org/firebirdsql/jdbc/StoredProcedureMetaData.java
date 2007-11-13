@@ -23,38 +23,37 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package org.firebirdsql.jdbc;
 
-import java.sql.CallableStatement;
-
+import java.sql.SQLException;
 
 /**
- * Firebird extension to the {@link java.sql.CallableStatement} interface.
- * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * Meta-information on stored procedures in a Firebird database.
  */
-public interface FirebirdCallableStatement extends FirebirdPreparedStatement, CallableStatement {
+public interface StoredProcedureMetaData {
 
-    /**
-     * Mark this callable statement as a call of the selectable procedure. By
-     * default callable statement uses "EXECUTE PROCEDURE" SQL statement to 
-     * invoke stored procedures that return single row of output parameters or
-     * a result set. In former case it retrieves only the first row of the 
-     * result set.
-     *  
-     * @see getSelectableProcedure
-     * @param selectable <code>true</code> if the called procedure is selectable.
-     */
-    void setSelectableProcedure(boolean selectable);
-
-    /**
-     * Retrieve if this callable statement has been marked as selectable.
-     * 
-     * Starting from Firebird 2.1, this value is set automatically from metadata stored in the
-     * database. Prior to Firebird 2.1, it must be set manually.
-     * 
-     * @see setSelectableProcedure
-     * @return <code>true</code> if the called procedure is selectable, false otherwise
-     */
-	boolean isSelectableProcedure();
+	/**
+	 * Determine if the "selectability" of procedures is available. This functionality
+	 * is only available starting from Firebird 2.1, and only with databases created by that
+	 * version or later.
+	 * 
+	 * @return <code>true</code> if selectability information is available, <code>false</code> otherwise
+	 */
+	boolean canGetSelectableInformation();
+	
+	/**
+	 * Retrieve whether a given stored procedure is selectable.
+	 * 
+	 * A selectable procedure is one that can return multiple rows of results 
+	 * (ie it uses a SUSPEND statement).
+	 * 
+	 * @param procedureName 
+	 * 			The name of the procedure for which selectability information is to be retrieved
+	 * @return
+	 * 			<code>true</code> if the procedure is selectable, <code>false</code> otherwise
+	 * @throws SQLException If no selectability information is available
+	 */
+	boolean isSelectable(String procedureName) throws SQLException;
+	
 }

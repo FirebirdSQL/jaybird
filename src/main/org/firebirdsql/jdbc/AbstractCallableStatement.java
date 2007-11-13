@@ -92,10 +92,13 @@ public abstract class AbstractCallableStatement
     protected boolean selectableProcedure;
     
     protected FBProcedureCall procedureCall;
-
+    
+	private ArrayList batchList = new ArrayList();
+	
 
     protected AbstractCallableStatement(GDSHelper c, String sql, int rsType, 
             int rsConcurrency, int rsHoldability, 
+            StoredProcedureMetaData storedProcMetaData,
             FBObjectListener.StatementListener statementListener, 
             FBObjectListener.BlobListener blobListener) 
     throws SQLException {
@@ -115,9 +118,14 @@ public abstract class AbstractCallableStatement
         // in the future should be fixed by calling FBEscapedParser for
         // each parameter in FBEscapedCallParser class
         procedureCall = parser.parseCall(nativeSQL(sql));
+        
+        if (storedProcMetaData.canGetSelectableInformation()){
+        	setSelectabilityAutomatically(storedProcMetaData);
+        }
     }
-    
-    private ArrayList batchList = new ArrayList();
+   
+
+
     
     public void addBatch() throws SQLException {
 
@@ -182,6 +190,10 @@ public abstract class AbstractCallableStatement
      */
     public void setSelectableProcedure(boolean selectableProcedure) {
         this.selectableProcedure = selectableProcedure;
+    }
+    
+    public boolean isSelectableProcedure() {
+    	return this.selectableProcedure;
     }
     
     /**
@@ -1258,6 +1270,14 @@ public abstract class AbstractCallableStatement
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
     
+    /**
+     * Set the selectability of this stored procedure from RDB$PROCEDURE_TYPE
+     * @throws SQLException 
+     */
+	private void setSelectabilityAutomatically(StoredProcedureMetaData storedProcMetaData) throws SQLException {		
+		this.selectableProcedure = storedProcMetaData.isSelectable(procedureCall.getName());
+	}
+    
     private static class WrapperWithCalendar {
         private Object value;
         private Calendar c;
@@ -1293,6 +1313,7 @@ public abstract class AbstractCallableStatement
             return intValue;
         }
     }
+
 }
 
 

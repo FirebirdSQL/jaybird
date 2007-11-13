@@ -60,6 +60,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
     private int resultSetHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
     
     private boolean autoCommit;
+    
+    private StoredProcedureMetaData storedProcedureMetaData;
 	 
     /**
      * Create a new AbstractConnection instance based on a
@@ -448,7 +450,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
 
         txCoordinator.commit();
-        invalidateSavepoints();
+        invalidateTransactionLifetimeObjects();
     }
 
 
@@ -469,7 +471,15 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
 
         txCoordinator.rollback();
-        invalidateSavepoints();
+        invalidateTransactionLifetimeObjects();
+    }
+    
+    /**
+     * Invalidate everything that should only last for the lifetime of the current transaction.
+     */
+    protected void invalidateTransactionLifetimeObjects(){
+    	invalidateSavepoints();
+    	storedProcedureMetaData = null;
     }
 
     /**
@@ -912,7 +922,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized CallableStatement prepareCall(String sql, 
         int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException 
     {
-        CallableStatement stmt;
+        AbstractCallableStatement stmt;
         
         if (resultSetHoldability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT && 
                 resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
@@ -934,11 +944,16 @@ public abstract class AbstractConnection implements FirebirdConnection {
         }	
 
         checkHoldability(resultSetType, resultSetHoldability);
+
+        if (storedProcedureMetaData == null){
+        	storedProcedureMetaData = StoredProcedureMetaDataFactory.getInstance(this);
+        }
         
         try {
             stmt = FBStatementFactory.createCallableStatement(getGDSHelper(), sql, resultSetType,
-                    resultSetConcurrency, resultSetHoldability, txCoordinator, txCoordinator);
+                    resultSetConcurrency, resultSetHoldability, storedProcedureMetaData, txCoordinator, txCoordinator);
             activeStatements.add(stmt);
+            
             return stmt;
         } catch(GDSException ex) {
             throw new FBSQLException(ex);
