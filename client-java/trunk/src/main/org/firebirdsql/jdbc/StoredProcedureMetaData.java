@@ -33,27 +33,30 @@ import java.sql.SQLException;
  */
 public interface StoredProcedureMetaData {
 
-	/**
-	 * Determine if the "selectability" of procedures is available. This functionality
-	 * is only available starting from Firebird 2.1, and only with databases created by that
-	 * version or later.
-	 * 
-	 * @return <code>true</code> if selectability information is available, <code>false</code> otherwise
-	 */
-	boolean canGetSelectableInformation();
-	
-	/**
-	 * Retrieve whether a given stored procedure is selectable.
-	 * 
-	 * A selectable procedure is one that can return multiple rows of results 
-	 * (ie it uses a SUSPEND statement).
-	 * 
-	 * @param procedureName 
-	 * 			The name of the procedure for which selectability information is to be retrieved
-	 * @return
-	 * 			<code>true</code> if the procedure is selectable, <code>false</code> otherwise
-	 * @throws SQLException If no selectability information is available
-	 */
-	boolean isSelectable(String procedureName) throws SQLException;
-	
+    /**
+     * Determine if the "selectability" of procedures is available. 
+     * This functionality is only available starting from Firebird 2.1, 
+     * and only with databases created by that version or later.
+     * 
+     * @return <code>true</code> if selectability information is available, 
+     *          <code>false</code> otherwise
+     */
+    boolean canGetSelectableInformation();
+    
+    /**
+     * Retrieve whether a given stored procedure is selectable.
+     * 
+     * A selectable procedure is one that can return multiple rows of results 
+     * (ie it uses a SUSPEND statement).
+     * 
+     * @param procedureName 
+     *      The name of the procedure for which selectability information is 
+     *      to be retrieved
+     * @return
+     *      <code>true</code> if the procedure is selectable, 
+     *      <code>false</code> otherwise
+     * @throws SQLException If no selectability information is available
+     */
+    boolean isSelectable(String procedureName) throws SQLException;
+    
 }
