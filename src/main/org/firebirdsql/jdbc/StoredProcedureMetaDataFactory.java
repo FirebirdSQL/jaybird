@@ -37,46 +37,50 @@ import java.util.Set;
  */
 public abstract class StoredProcedureMetaDataFactory {
 
-	/**
-	 * Retrieve a {@link StoredProcedureMetaData} object for a Connection.
-	 * 
-	 * @param connection
-	 *            The connection for which data is to be retrieved
-	 * @return {@link StoredProcedureMetaData} for the current connection
-	 * @throws SQLException
-	 *             if an exception occurs while retrieving meta-data
-	 */
-	public static StoredProcedureMetaData getInstance(
-			AbstractConnection connection) throws SQLException {
+    /**
+     * Retrieve a {@link StoredProcedureMetaData} object for a Connection.
+     * 
+     * @param connection
+     *            The connection for which data is to be retrieved
+     * @return {@link StoredProcedureMetaData} for the current connection
+     * @throws SQLException
+     *             if an exception occurs while retrieving meta-data
+     */
+    public static StoredProcedureMetaData getInstance(
+            AbstractConnection connection) throws SQLException {
 
-		StoredProcedureMetaData metaData;
+        StoredProcedureMetaData metaData;
 
-		if (connectionHasProcedureMetadata(connection)) {
-			metaData = new DefaultCallableStatementMetaData(connection);
-		} else {
-			metaData = new DummyCallableStatementMetaData();
-		}
+        if (connectionHasProcedureMetadata(connection)) {
+            metaData = new DefaultCallableStatementMetaData(connection);
+        } else {
+            metaData = new DummyCallableStatementMetaData();
+        }
 
-		return metaData;
-	}
+        return metaData;
+    }
 
-	private static boolean connectionHasProcedureMetadata(
-			AbstractConnection connection) throws SQLException {
+    private static boolean connectionHasProcedureMetadata(
+            AbstractConnection connection) throws SQLException {
 
-		FirebirdDatabaseMetaData metaData = (FirebirdDatabaseMetaData) connection
-				.getMetaData();
-		return versionInformationEqualOrAbove(
-				metaData.getDatabaseMajorVersion(), metaData
-						.getDatabaseMinorVersion(), 2, 1)
-				&& versionInformationEqualOrAbove(metaData.getOdsMajorVersion(),
-						metaData.getOdsMinorVersion(), 2, 1);
-	}
+        FirebirdDatabaseMetaData metaData = 
+            (FirebirdDatabaseMetaData) connection.getMetaData();
 
-	private static boolean versionInformationEqualOrAbove(int majorVersion,
-			int minorVersion, int requiredMajorVersion, int requiredMinorVersion) {
-		return majorVersion > requiredMajorVersion
-				|| (majorVersion == requiredMajorVersion && minorVersion >= requiredMinorVersion);
-	}
+        return versionInformationEqualOrAbove(
+                metaData.getDatabaseMajorVersion(), metaData
+                        .getDatabaseMinorVersion(), 2, 1)
+                && versionInformationEqualOrAbove(metaData.getOdsMajorVersion(),
+                        metaData.getOdsMinorVersion(), 2, 1);
+    }
+
+    private static boolean versionInformationEqualOrAbove(int majorVersion,
+            int minorVersion, int requiredMajorVersion, 
+            int requiredMinorVersion) {
+
+        return majorVersion > requiredMajorVersion || 
+            (majorVersion == requiredMajorVersion 
+             && minorVersion >= requiredMinorVersion);
+    }
 
 }
 
@@ -85,41 +89,42 @@ public abstract class StoredProcedureMetaDataFactory {
  */
 class DefaultCallableStatementMetaData implements StoredProcedureMetaData {
 
-	Set selectableProcedureNames = new HashSet();
+    Set selectableProcedureNames = new HashSet();
 
-	public DefaultCallableStatementMetaData(Connection connection)
-			throws SQLException {
-		loadSelectableProcedureNames(connection);
-	}
+    public DefaultCallableStatementMetaData(Connection connection)
+            throws SQLException {
+        loadSelectableProcedureNames(connection);
+    }
 
-	private void loadSelectableProcedureNames(Connection connection)
-			throws SQLException {
-		Statement stmt = connection.createStatement();
-		try {
-			String sql = "SELECT RDB$PROCEDURE_NAME FROM RDB$PROCEDURES WHERE RDB$PROCEDURE_TYPE = 1";
-			ResultSet resultSet = stmt.executeQuery(sql);
-			try {
-				while (resultSet.next()) {
-					selectableProcedureNames.add(resultSet.getString(1).trim()
-							.toUpperCase());
-				}
-			} finally {
-				resultSet.close();
-			}
-		} finally {
-			stmt.close();
-		}
-	}
+    private void loadSelectableProcedureNames(Connection connection)
+            throws SQLException {
+        Statement stmt = connection.createStatement();
+        try {
+            String sql = "SELECT RDB$PROCEDURE_NAME FROM " + 
+                "RDB$PROCEDURES WHERE RDB$PROCEDURE_TYPE = 1";
+            ResultSet resultSet = stmt.executeQuery(sql);
+            try {
+                while (resultSet.next()) {
+                    selectableProcedureNames.add(resultSet.getString(1).trim()
+                            .toUpperCase());
+                }
+            } finally {
+                resultSet.close();
+            }
+        } finally {
+            stmt.close();
+        }
+    }
 
-	public boolean canGetSelectableInformation() {
-		return true;
-	}
+    public boolean canGetSelectableInformation() {
+        return true;
+    }
 
-	public boolean isSelectable(String procedureName) throws SQLException {
-		boolean value = selectableProcedureNames.contains(procedureName
-				.toUpperCase());
-		return value;
-	}
+    public boolean isSelectable(String procedureName) throws SQLException {
+        boolean value = selectableProcedureNames.contains(procedureName
+                .toUpperCase());
+        return value;
+    }
 
 }
 
@@ -129,13 +134,13 @@ class DefaultCallableStatementMetaData implements StoredProcedureMetaData {
  */
 class DummyCallableStatementMetaData implements StoredProcedureMetaData {
 
-	public boolean canGetSelectableInformation() {
-		return false;
-	}
+    public boolean canGetSelectableInformation() {
+        return false;
+    }
 
-	public boolean isSelectable(String procedureName) throws SQLException {
-		throw new FBSQLException(
-				"A DefaultCallableStatementMetaData can't retrieve selectable settings");
-	}
+    public boolean isSelectable(String procedureName) throws SQLException {
+        throw new FBSQLException("A DefaultCallableStatementMetaData can't "
+                + "retrieve selectable settings");
+    }
 
 }
