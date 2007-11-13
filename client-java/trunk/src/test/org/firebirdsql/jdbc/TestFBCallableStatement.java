@@ -21,11 +21,6 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.FBTestBase;
 
 import java.sql.*;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
 
 /**
  * This test case checks callable statements by executing procedure through
@@ -80,7 +75,7 @@ public class TestFBCallableStatement extends FBTestBase {
         "{call factorial(?, 0)}";
     
 	 public static final String CREATE_PROCEDURE_EMP_SELECT = ""
-	     + "CREATE PROCEDURE get_emp_proj(emp_no SMALLINT) "
+	     + "CREATE PROCEDURE get_emp_proj(emp_no SMALLINT) "	
 		  + " RETURNS (proj_id VARCHAR(25)) AS "
 		  + " BEGIN "
 		  + "    FOR SELECT PROJ_ID "
@@ -90,6 +85,8 @@ public class TestFBCallableStatement extends FBTestBase {
 		  + "    DO "
 		  + "        SUSPEND; "
 		  + "END";
+	 
+	
 
     public static final String DROP_PROCEDURE_EMP_SELECT =
         "DROP PROCEDURE get_emp_proj;";
@@ -249,12 +246,14 @@ public class TestFBCallableStatement extends FBTestBase {
     }
 
     public void testRun() throws Exception {
-        CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE);
+    	
+    	CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE);
         try {
-          cstmt.registerOutParameter(2, Types.INTEGER);
+          cstmt.registerOutParameter(3, Types.INTEGER);
           cstmt.registerOutParameter(4, Types.INTEGER);
+          ((FirebirdCallableStatement)cstmt).setSelectableProcedure(false);
           cstmt.setInt(1, 5);
-          cstmt.setInt(3, 0);
+          cstmt.setInt(2, 0);
           cstmt.execute();
           int ans = cstmt.getInt(4);
           assertTrue("got wrong answer, expected 120: " + ans, ans == 120);
@@ -751,6 +750,84 @@ public class TestFBCallableStatement extends FBTestBase {
         finally {
             stmt.close();
         }
+    }
+    
+    
+    
+    /**
+     * Test automatic retrieval of the selectability of a procedure from the
+     * RDB$PROCEDURE_TYPE field. This test is only run starting from Firebird 2.1.
+     * @throws SQLException 
+     */
+    public void testAutomaticSetSelectableProcedure() throws SQLException{
+    	if (!databaseEngineHasSelectabilityInfo()){
+    		return;
+    	}
+    	
+    	FirebirdCallableStatement cs = (FirebirdCallableStatement) connection.prepareCall(CALL_SELECT_PROCEDURE);
+        try {
+	        	assertTrue(cs.isSelectableProcedure());
+        } finally {
+        	cs.close();
+        }
+        
+        cs = (FirebirdCallableStatement) connection.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
+        try {
+        	assertFalse(cs.isSelectableProcedure());
+        } finally {
+        	cs.close();
+        }
+    }
+    
+    public void testAutomaticSetSelectableProcedureAfterMetaUpdate() throws SQLException {
+    	if (!databaseEngineHasSelectabilityInfo()){
+    		return;
+    	}
+    	
+    	final String CREATE_SIMPLE_PROC = ""
+    		+ "CREATE PROCEDURE MULT (A INTEGER, B INTEGER) RETURNS (C INTEGER)"
+    		+ "AS BEGIN "
+    		+ "    C = A * B;"
+    		+ "    SUSPEND;"
+    		+ "END";
+    	
+    	final String DROP_SIMPLE_PROC = "DROP PROCEDURE MULT";
+    	
+    	connection.setAutoCommit(false);
+    	CallableStatement callableStatement = connection.prepareCall(CALL_SELECT_PROCEDURE);
+    	callableStatement.close();
+    	
+    	Statement stmt = connection.createStatement();
+    	
+    	stmt.execute(CREATE_SIMPLE_PROC);
+    	connection.commit();
+    	
+    	try {
+	    	FirebirdCallableStatement cs = (FirebirdCallableStatement) connection.prepareCall("{call mult(?, ?)}");
+	    	try {
+	    		assertTrue(cs.isSelectableProcedure());
+	    	} finally {
+	    		cs.close();
+	    	}
+    	} finally {
+    		stmt.execute(DROP_SIMPLE_PROC);
+    		stmt.close();
+    	}
+    }
+    
+    
+    private boolean databaseEngineHasSelectabilityInfo() throws SQLException {
+    	DatabaseMetaData metaData = connection.getMetaData();
+    	int majorVersion = metaData.getDatabaseMajorVersion();
+    	int minorVersion = metaData.getDatabaseMinorVersion();
+    	
+    	if (majorVersion > 2){
+    		return true;
+    	}
+    	if (majorVersion == 2 && minorVersion >= 1){
+    		return true;
+    	}
+    	return false;
     }
 
 }

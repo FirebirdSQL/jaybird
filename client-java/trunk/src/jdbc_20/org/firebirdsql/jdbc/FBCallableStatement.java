@@ -41,11 +41,12 @@ public class FBCallableStatement extends AbstractCallableStatement {
      */
     public FBCallableStatement(GDSHelper gdsHelper, String sql, 
                                int rsType, int rsConcurrency, int rsHoldability,
+                               StoredProcedureMetaData storedProcedureMetaData,
                                FBObjectListener.StatementListener statementListener,
                                FBObjectListener.BlobListener blobListener)
         throws SQLException 
     {
-        super(gdsHelper, sql, rsType, rsConcurrency, rsHoldability, statementListener, blobListener);
+        super(gdsHelper, sql, rsType, rsConcurrency, rsHoldability, storedProcedureMetaData, statementListener, blobListener);
     }
 
     public void registerOutParameter(int paramIndex, int sqlType, 
