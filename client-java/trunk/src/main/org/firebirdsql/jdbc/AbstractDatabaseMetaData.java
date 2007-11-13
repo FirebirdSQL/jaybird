@@ -5388,6 +5388,24 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public int getDatabaseMinorVersion() throws SQLException {
         return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getDatabaseProductMinorVersion();
     }
+    
+    /**
+     * Get the major version of the ODS (On-Disk Structure) of the database.
+     * @return The major version number
+     * @exception SQLException if a database access error occurs
+     */
+    public int getOdsMajorVersion() throws SQLException {
+    	return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getODSMajorVersion();
+    }
+    
+    /**
+     * Get the minor version of the ODS (On-Disk Structure) of the database.
+     * @return The minor version number
+     * @exception SQLException if a database access error occurs
+     */
+    public int getOdsMinorVersion() throws SQLException {
+    	return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getODSMinorVersion();
+    }
 
     /**
      * Get the JDBC major version for this driver.

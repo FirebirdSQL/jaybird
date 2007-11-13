@@ -88,4 +88,21 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @throws SQLException if a database access error occurs
      */
     int getDatabaseMinorVersion() throws SQLException;
+    
+    /**
+     * Get the major version of the ODS (On-Disk Structure) of the database.
+     * 
+     * @return The major version number of the database itself
+     * @exception SQLException if a database access error occurs
+     */
+    int getOdsMajorVersion() throws SQLException;
+    
+    /**
+     * Get the minor version of the ODS (On-Disk Structure) of the database.
+     * 
+     * @return The minor version number of the database itself
+     * @exception SQLException if a database access error occurs
+     */
+    int getOdsMinorVersion() throws SQLException;
+    
 }
