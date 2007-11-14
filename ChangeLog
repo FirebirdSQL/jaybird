@@ -1,3 +1,34 @@
+2007-11-13 22:20  gab_reid
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	StoredProcedureMetaData.java, StoredProcedureMetaDataFactory.java:
+
+	Corrected code formatting
+
+2007-11-13 22:08  gab_reid
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractDatabaseMetaData.java, FirebirdDatabaseMetaData.java:
+
+	Added accessors for ODS version information
+
+2007-11-13 22:07  gab_reid
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/FirebirdCallableStatement.java,
+	main/org/firebirdsql/jdbc/StoredProcedureMetaData.java,
+	main/org/firebirdsql/jdbc/StoredProcedureMetaDataFactory.java,
+	jdbc_20/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_40/org/firebirdsql/jdbc/FBCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/FBStatementFactory.java,
+	test/org/firebirdsql/jdbc/TestFBCallableStatement.java:
+
+	Added automatic setting of selectability of stored procedures
+	starting for Firebird 2.1 (JDBC-105)
+
 2007-11-11 10:58  gab_reid
 
 	* client-java/src/test/org/firebirdsql/: jca/TestFBBlob.java,
