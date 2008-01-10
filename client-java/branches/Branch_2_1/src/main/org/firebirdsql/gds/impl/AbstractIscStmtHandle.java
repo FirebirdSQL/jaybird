@@ -35,6 +35,7 @@ public abstract class AbstractIscStmtHandle implements IscStmtHandle {
     
     private String executionPlan;
     private int statementType = TYPE_UNKNOWN;
+    public String statement;
 
     /**
      * Clear all rows that have been fetched for this statement. This 
