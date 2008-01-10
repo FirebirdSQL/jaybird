@@ -3,10 +3,11 @@
 <HEAD>
 	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
 	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.1  (Win32)">
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.3  (Win32)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
-	<META NAME="CHANGED" CONTENT="20061220;23043604">
-	<STYLE>
+	<META NAME="CHANGEDBY" CONTENT="Roman Rokytskyy">
+	<META NAME="CHANGED" CONTENT="20080110;16345120">
+	<STYLE TYPE="text/css">
 	<!--
 		@page { size: 21cm 29.7cm; margin: 2cm }
 		P { margin-bottom: 0.21cm }
@@ -45,7 +46,7 @@
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <H1 CLASS="western" ALIGN=CENTER>Jaybird JCA/JDBC Driver<BR>Release
-Notes v 2.1.1</H1>
+Notes v 2.1.2</H1>
 <DIV ID="Table of Contents1" DIR="LTR">
 	<DIV ID="Table of Contents1_Head" DIR="LTR">
 		<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Table
@@ -179,6 +180,18 @@ Specification support</H3>
 	<THEAD>
 		<TR VALIGN=TOP>
 			<TD WIDTH=32%>
+				<P CLASS="western">JDBC 4.0</P>
+			</TD>
+			<TD WIDTH=68%>
+				<P CLASS="western">Driver compiles and runs with JDK 6.0 and JDBC
+				4.0 interfaces. Almost all new methods either return
+				empty/unknown results or throw appropriate exceptions.</P>
+			</TD>
+		</TR>
+	</THEAD>
+	<TBODY>
+		<TR VALIGN=TOP>
+			<TD WIDTH=32%>
 				<P CLASS="western">JDBC 3.0</P>
 			</TD>
 			<TD WIDTH=68%>
@@ -187,8 +200,6 @@ Specification support</H3>
 				officially JDBC compliant, because of high certification costs.</P>
 			</TD>
 		</TR>
-	</THEAD>
-	<TBODY>
 		<TR VALIGN=TOP>
 			<TD WIDTH=32%>
 				<P CLASS="western">JDBC 2.0 Standard Extensions</P>
@@ -244,7 +255,50 @@ Specification support</H3>
 <H3 CLASS="western"></H3>
 <H2 CLASS="western"><A NAME="0.0.What's new in Jaybird 2.1|outline"></A>
 What's new in Jaybird 2.1</H2>
-<H3 CLASS="western">List of bugs fixed since JayBird 2.1.0</H3>
+<H3 CLASS="western">List of bugs fixed since Jaybird 2.1.1</H3>
+<TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=48*>
+	<COL WIDTH=208*>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">JDBC-100</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">When using the FBDatabaseMetaData.getColumns()
+			method to check wether a column is nullable or not, the method
+			will return wrong values for columns, wich are defined by a
+			domain.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">-</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">Fixed issue with <CODE CLASS="western">DatabaseMetaData</CODE>
+			result sets, when underlying statements were not closed when
+			connection was closed and caused errors during garbage collection.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">-</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">Support for <CODE CLASS="western">INSERT...RETURNING</CODE>
+			statements.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">-</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">JDK 6.0 compatibility.</P>
+		</TD>
+	</TR>
+</TABLE>
+<H3 CLASS="western">List of bugs fixed since Jaybird 2.1.0</H3>
 <TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=48*>
 	<COL WIDTH=208*>
@@ -316,9 +370,9 @@ package, which includes:</P>
 	<CODE CLASS="western">FBEventManager</CODE> and <CODE CLASS="western">FBDatabaseEvent</CODE>.</P>
 </UL>
 <P CLASS="western"><STRONG>Please note, that each instance of
-<CODE CLASS="western">FBEventManager</CODE> will open a new socket
-connection to the Firebird server on the port specified by the
-Firebird.</STRONG></P>
+</STRONG><CODE CLASS="western">FBEventManager</CODE><STRONG> will
+open a new socket connection to the Firebird server on the port
+specified by the Firebird.</STRONG></P>
 <P CLASS="western">Similar to other  JDBC extensions in Jaybird, the
 interfaces are released under the modified BSD license, the
 implementation of the code is released under LGPL license.</P>
@@ -374,8 +428,8 @@ problems with the restored JDBC 3.0 compatibility in Jaybird 2.0.</P>
 <P CLASS="western"><STRONG>Note, the price for using this feature is
 that each holdable result set will be fully cached in memory. The
 memory occupied by it will be released when the statement that
-produced the result set is <STRONG>either </STRONG>closed or
-re-executed.</STRONG></P>
+produced the result set is </STRONG><STRONG>either </STRONG><STRONG>closed
+or re-executed.</STRONG></P>
 <H3 CLASS="western"><A NAME="0.0.0.Other features|outline"></A>Other
 features</H3>
 <P CLASS="western"><CODE CLASS="western">StatisticsManager</CODE> now
@@ -997,18 +1051,18 @@ it is possible to enable extensive logging inside the driver.</P>
 <P CLASS="western">Following file groups can be found in distribution
 package:</P>
 <UL>
-	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-2.1.0.jar</CODE>
+	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-2.1.2.jar</CODE>
 	&ndash; archive containing JCA/JDBC driver and JMX management class.
 	It requires JCA 1.0, JTA 1.0.1, and JAAS 1.0.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-pool-2.1.0.jar</CODE>
+	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-pool-2.1.2.jar</CODE>
 	&ndash; archive contains implementation of connection pooling and
 	statement pooling interfaces.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-full-2.1.0.jar</CODE>
+	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-full-2.1.2.jar</CODE>
 	&ndash; merge of <CODE CLASS="western">firebirdsql.jar</CODE> and
-	<CODE CLASS="western">mini-j2ee.jar</CODE>. This archive can be used
-	for standalone<A CLASS="sdfootnoteanc" NAME="sdfootnote1anc" HREF="#sdfootnote1sym"><SUP>1</SUP></A>
+	<CODE CLASS="western">mini-j2ee.jar</CODE> (or <CODE CLASS="western">mini-j2ee_16.jar</CODE>
+	for JDK 6.0 deployments). This archive can be used for standalone<A CLASS="sdfootnoteanc" NAME="sdfootnote1anc" HREF="#sdfootnote1sym"><SUP>1</SUP></A>
 	Jaybird deployments.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-2.1.0.rar</CODE>
+	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-2.1.3.rar</CODE>
 	&ndash; resource archive ready for deployment in JCA-enabled
 	application servers.</P>
 	<LI><P CLASS="western"><CODE CLASS="western">lib/jaas.jar</CODE> &ndash;
@@ -1016,9 +1070,10 @@ package:</P>
 	<LI><P CLASS="western"><CODE CLASS="western">lib/log4j-core.jar</CODE>
 	&ndash; archive containing core Log4J classes that provide a
 	possibility to log into the file.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">lib/mini-j2ee.jar</CODE>
-	&ndash; archive containing JCA 1.0, JTA 1.0.1 and JDBC 2.0 Optional
-	Package classes.</P>
+	<LI><P CLASS="western"><CODE CLASS="western">lib/mini-j2ee.jar (or
+	</CODE><CODE CLASS="western">mini-j2ee_16.jar</CODE><CODE CLASS="western">
+	for JDK 6.0 deployments)</CODE> &ndash; archive containing JCA 1.0,
+	JTA 1.0.1 and JDBC 2.0 Optional Package classes.</P>
 	<LI><P CLASS="western"><CODE CLASS="western">jaybird21.dll</CODE> &ndash;
 	Windows version of the JNI library for Type 2 and Embedded Server
 	drivers.</P>
@@ -1485,6 +1540,57 @@ setter method.</P>
 				<P CLASS="western">Integer value from <CODE CLASS="western">java.sql.Connection</CODE>
 				interface corresponding to the transaction isolation level
 				specified in <CODE CLASS="western">isolation</CODE> property.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P CLASS="western"><BR>
+				</P>
+			</TD>
+			<TD WIDTH=18%>
+				<P CLASS="western" ALIGN=CENTER><BR>
+				</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P CLASS="western" ALIGN=CENTER><BR>
+				</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P CLASS="western"><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P CLASS="western"><CODE CLASS="western">octetsAsBytes</CODE></P>
+			</TD>
+			<TD WIDTH=18%>
+				<P CLASS="western" ALIGN=CENTER>-</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P CLASS="western" ALIGN=CENTER>-</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P CLASS="western">When set, the <CODE CLASS="western">getObject()</CODE>
+				method of <CODE CLASS="western">ResultSet</CODE> class will
+				return <CODE CLASS="western">byte[]</CODE> for character columns
+				with OCTETS charset.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P CLASS="western"><CODE CLASS="western">noResultSetTracking</CODE></P>
+			</TD>
+			<TD WIDTH=18%>
+				<P CLASS="western" ALIGN=CENTER>-</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P CLASS="western" ALIGN=CENTER>-</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P CLASS="western">When specified, the result sets are not
+				referenced by the underlying statement objects, allowing more
+				efficient garbage collection.</P>
 			</TD>
 		</TR>
 		<TR VALIGN=TOP>
