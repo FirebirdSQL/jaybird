@@ -63,7 +63,14 @@
     </path>
   </target>
 
-  <target name="set-pool1.4-src" unless="jdk1.5">
+  <target name="set-pool1.3-src" if="jdk1.3">
+  	<echo message="Using pool implementation for JDK 1.4 and below"/>
+    <path id="source.java.pool">
+      <pathelement path="${source.pool1.4}"/>
+    </path>
+  </target>
+
+  <target name="set-pool1.4-src" if="jdk1.4">
   	<echo message="Using pool implementation for JDK 1.4 and below"/>
     <path id="source.java.pool">
       <pathelement path="${source.pool1.4}"/>
@@ -80,7 +87,7 @@
   <target name="set-pool1.6-src" if="jdk1.6">
   	<echo message="Using pool implementation for JDK 6.0 and higher"/>
     <path id="source.java.pool">
-      <pathelement path="${source.pool1.5}"/>
+      <pathelement path="${source.pool1.6}"/>
     </path>
   </target>
 
@@ -101,7 +108,7 @@
     </javac>
   </target>
 
-  <target name="compile-pool" depends="set-pool1.4-src,set-pool1.5-src,set-pool1.6-src,compile-driver">
+  <target name="compile-pool" depends="set-pool1.3-src,set-pool1.4-src,set-pool1.5-src,set-pool1.6-src,compile-driver">
     <mkdir dir="${build.pool}"/>
     <javac srcdir="${source.pool}"
            destdir="${build.pool}"
