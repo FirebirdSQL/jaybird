@@ -3,10 +3,11 @@
 <HEAD>
 	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
 	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.0  (Win32)">
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.3  (Win32)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
-	<META NAME="CHANGED" CONTENT="20060705;17442671">
-	<STYLE>
+	<META NAME="CHANGEDBY" CONTENT="Roman Rokytskyy">
+	<META NAME="CHANGED" CONTENT="20080110;16345120">
+	<STYLE TYPE="text/css">
 	<!--
 		@page { size: 21cm 29.7cm; margin: 2cm }
 		P { margin-bottom: 0.21cm }
@@ -18,23 +19,25 @@
 		H2 { margin-bottom: 0.21cm; border: 1px solid #000000; padding: 0.05cm; page-break-before: auto; page-break-after: auto }
 		H2.western { font-family: "Albany", sans-serif; font-size: 14pt; font-style: normal }
 		H2.cjk { font-family: "MS Mincho"; font-size: 14pt; font-style: italic }
-		H2.ctl { font-size: 14pt; font-style: italic }
+		H2.ctl { font-family: "Tahoma"; font-size: 14pt; font-style: italic }
 		H3 { margin-bottom: 0.21cm }
 		H3.western { font-family: "Albany", sans-serif; font-size: 12pt }
 		H3.cjk { font-family: "MS Mincho" }
+		H3.ctl { font-family: "Tahoma" }
 		H4 { margin-bottom: 0.21cm }
 		H4.western { font-family: "Thorndale", serif }
 		H4.cjk { font-family: "Andale Sans UI" }
+		H4.ctl { font-family: "Tahoma" }
 		TD P { margin-bottom: 0.21cm }
 		TD P.western { font-family: "Times New Roman", serif }
 		TH P { margin-bottom: 0.21cm }
 		TH P.western { font-family: "Times New Roman", serif }
 		P.sdfootnote { margin-left: 0.5cm; text-indent: -0.5cm; margin-bottom: 0cm; font-size: 10pt }
-		PRE.western { font-family: "Cumberland", monospace; so-language:  }
+		PRE.western { font-family: "Cumberland", monospace; so-language: zxx }
 		PRE.cjk { font-family: "Cumberland", monospace }
 		PRE.ctl { font-family: "Cumberland", monospace }
 		CODE { color: #000000 }
-		CODE.western { font-family: "Cumberland", monospace; font-size: 10pt; so-language:  }
+		CODE.western { font-family: "Cumberland", monospace; font-size: 10pt; so-language: zxx }
 		CODE.cjk { font-family: "Cumberland", monospace }
 		CODE.ctl { font-family: "Cumberland", monospace }
 		A.sdfootnoteanc { font-size: 57% }
@@ -43,7 +46,7 @@
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <H1 CLASS="western" ALIGN=CENTER>Jaybird JCA/JDBC Driver<BR>Release
-Notes v 2.1</H1>
+Notes v 2.1.2</H1>
 <DIV ID="Table of Contents1" DIR="LTR">
 	<DIV ID="Table of Contents1_Head" DIR="LTR">
 		<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Table
@@ -137,7 +140,8 @@ Notes v 2.1</H1>
 </DIV>
 <P CLASS="western"><BR><BR>
 </P>
-<H2 CLASS="western">General Notes</H2>
+<H2 CLASS="western"><A NAME="0.0.General Notes|outline"></A>General
+Notes</H2>
 <P CLASS="western">Jaybird is JCA/JDBC driver suite to connect to
 Firebird database server. Historically Borland opened sources of type
 3 JDBC driver called InterClient. However due to some inherent
@@ -154,11 +158,12 @@ and resource pooling, and the driver supplies only the connection
 functionality. While similar to the JDBC 2 <CODE CLASS="western">XADataSource</CODE>
 idea, the JCA specification is considerably clearer on the division
 of responsibility between the application server and driver.</P>
-<H3 CLASS="western">Supported Firebird versions</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Supported Firebird versions|outline"></A>
+Supported Firebird versions</H3>
 <P CLASS="western">Jaybird supports Firebird 1.0.x, Firebird 1.5 and
-upcoming Firebird 2.0 SuperServer and Classic independently of the
-platform on which server runs when type 4 JDBC driver is used. Type 2
-and embedded server JDBC drivers require JNI library, precompiled
+Firebird 2.0 SuperServer and Classic regardless of the platform on
+which server runs when type 4 JDBC driver is used. Type 2 and
+embedded server JDBC drivers require JNI library, precompiled
 binaries for Win32 and Linux platforms are shipped in the default
 installation, other platforms require porting/building JNI library
 for that platform. 
@@ -166,12 +171,25 @@ for that platform.
 <P CLASS="western">Driver no longer supports InterBase servers due to
 a Firebird-specific changes in database attachment parameters that
 are send to the server.</P>
-<H3 CLASS="western">Specification support</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Specification support|outline"></A>
+Specification support</H3>
 <P CLASS="western">Driver supports following specifications:</P>
 <TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0 FRAME=HSIDES RULES=ROWS STYLE="page-break-before: auto; page-break-after: auto; page-break-inside: auto">
 	<COL WIDTH=82*>
 	<COL WIDTH=174*>
 	<THEAD>
+		<TR VALIGN=TOP>
+			<TD WIDTH=32%>
+				<P CLASS="western">JDBC 4.0</P>
+			</TD>
+			<TD WIDTH=68%>
+				<P CLASS="western">Driver compiles and runs with JDK 6.0 and JDBC
+				4.0 interfaces. Almost all new methods either return
+				empty/unknown results or throw appropriate exceptions.</P>
+			</TD>
+		</TR>
+	</THEAD>
+	<TBODY>
 		<TR VALIGN=TOP>
 			<TD WIDTH=32%>
 				<P CLASS="western">JDBC 3.0</P>
@@ -182,8 +200,6 @@ are send to the server.</P>
 				officially JDBC compliant, because of high certification costs.</P>
 			</TD>
 		</TR>
-	</THEAD>
-	<TBODY>
 		<TR VALIGN=TOP>
 			<TD WIDTH=32%>
 				<P CLASS="western">JDBC 2.0 Standard Extensions</P>
@@ -237,9 +253,101 @@ are send to the server.</P>
 	</TBODY>
 </TABLE>
 <H3 CLASS="western"></H3>
-<H2 CLASS="western">What's new in Jaybird 2.1</H2>
+<H2 CLASS="western"><A NAME="0.0.What's new in Jaybird 2.1|outline"></A>
+What's new in Jaybird 2.1</H2>
+<H3 CLASS="western">List of bugs fixed since Jaybird 2.1.1</H3>
+<TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=48*>
+	<COL WIDTH=208*>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">JDBC-100</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">When using the FBDatabaseMetaData.getColumns()
+			method to check wether a column is nullable or not, the method
+			will return wrong values for columns, wich are defined by a
+			domain.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">-</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">Fixed issue with <CODE CLASS="western">DatabaseMetaData</CODE>
+			result sets, when underlying statements were not closed when
+			connection was closed and caused errors during garbage collection.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">-</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">Support for <CODE CLASS="western">INSERT...RETURNING</CODE>
+			statements.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">-</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">JDK 6.0 compatibility.</P>
+		</TD>
+	</TR>
+</TABLE>
+<H3 CLASS="western">List of bugs fixed since Jaybird 2.1.0</H3>
+<TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=48*>
+	<COL WIDTH=208*>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">JDBC-92</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western"><CODE CLASS="western">DatabaseMetaData</CODE>
+			becomes unusable when the statement that serves the result set is
+			closed.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">JDBC-87</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">Backported feature of upcoming Jaybird 2.2
+			release that allows specifying the <CODE CLASS="western">octetsAsBytes</CODE>
+			connection property and receive <CODE CLASS="western">byte[]</CODE>
+			when using the <CODE CLASS="western">ResultSet.getObject()</CODE>
+			method</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">JDBC-85</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">Fixed returning of the error messages.</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">-</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">Bug reported in Firebird-Java group.
+			<CODE CLASS="western">ClassCastException</CODE> when obtaining
+			<CODE CLASS="western">byte[]</CODE> from BLOB fields in cached
+			result set.</P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western"><BR><BR>
+</P>
 <P CLASS="western">Jaybird 2.1 introduces following new features:</P>
-<H3 CLASS="western">Events</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Events|outline"></A>Events</H3>
 <P CLASS="western">Events is one of the unique features in the
 Firebird RDBMS and allows asynchronous notification of the
 applications about named events that happen in the database. The
@@ -262,13 +370,14 @@ package, which includes:</P>
 	<CODE CLASS="western">FBEventManager</CODE> and <CODE CLASS="western">FBDatabaseEvent</CODE>.</P>
 </UL>
 <P CLASS="western"><STRONG>Please note, that each instance of
-<CODE CLASS="western">FBEventManager</CODE> will open a new socket
-connection to the Firebird server on the port specified by the
-Firebird.</STRONG></P>
+</STRONG><CODE CLASS="western">FBEventManager</CODE><STRONG> will
+open a new socket connection to the Firebird server on the port
+specified by the Firebird.</STRONG></P>
 <P CLASS="western">Similar to other  JDBC extensions in Jaybird, the
 interfaces are released under the modified BSD license, the
 implementation of the code is released under LGPL license.</P>
-<H3 CLASS="western">Support for multiple JNI libraries</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Support for multiple JNI libraries|outline"></A>
+Support for multiple JNI libraries</H3>
 <P CLASS="western">Until this release only one client library could
 be loaded in the single JVM. That could be either embedded Firebird
 library (<CODE CLASS="western">fbembed.dll</CODE>/<CODE CLASS="western">libfbembed.so</CODE>),
@@ -284,11 +393,11 @@ requests correctly depending on the type of the driver being used.
 Note, this feature requires new JNI library
 (<CODE CLASS="western">jaybird21.dll</CODE>/<CODE CLASS="western">libjaybird21.so</CODE>)</P>
 <P CLASS="western"><STRONG>Note, the JNI library
-(<CODE CLASS="western">jaybird21.dll</CODE>/<CODE CLASS="western">libjaybird21.so</CODE>)
-was changed in a incompatible manner between Jaybird 2.1 beta 1 and
-Jaybird 2.1 RC1 releases. Please ensure to use the latest version.</STRONG></P>
-<H3 CLASS="western">Default holdable result sets (closed ResultSet in
-auto-commit mode)</H3>
+(jaybird21.dll/libjaybird21.so) was changed in a incompatible manner
+between Jaybird 2.1 beta 1 and Jaybird 2.1 RC1 releases. Please
+ensure to use the latest version.</STRONG></P>
+<H3 CLASS="western"><A NAME="0.0.0.Default holdable result sets|outline"></A>
+Default holdable result sets (closed ResultSet in auto-commit mode)</H3>
 <P CLASS="western">New connection property that allows to create
 holdable result sets by default. This is needed as an workaround for
 the applications that do not follow JDBC specification in regard to
@@ -319,19 +428,21 @@ problems with the restored JDBC 3.0 compatibility in Jaybird 2.0.</P>
 <P CLASS="western"><STRONG>Note, the price for using this feature is
 that each holdable result set will be fully cached in memory. The
 memory occupied by it will be released when the statement that
-produced the result set is <STRONG>either </STRONG>closed or
-re-executed.</STRONG></P>
-<H3 CLASS="western">Other features</H3>
+produced the result set is </STRONG><STRONG>either </STRONG><STRONG>closed
+or re-executed.</STRONG></P>
+<H3 CLASS="western"><A NAME="0.0.0.Other features|outline"></A>Other
+features</H3>
 <P CLASS="western"><CODE CLASS="western">StatisticsManager</CODE> now
 provides methods to fetch statistics for the specified tables only
 (like the -t switch in gstat) and to provide also analysis of average
 record and version length.</P>
-<H2 CLASS="western">What's new in Jaybird 2.0</H2>
+<H2 CLASS="western"><A NAME="0.0.What's new in Jaybird 2.0|outline"></A>
+What's new in Jaybird 2.0</H2>
 <P CLASS="western">Jaybird 2.0 underwent significant internal changes
 that are not directly visible to the client code, and not necessarily
 introduced new features. However those changes significantly increase
 code modularity, stability and maintainability.</P>
-<H3 CLASS="western">Refactorings</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Refactorings|outline"></A>Refactorings</H3>
 <UL>
 	<LI><P CLASS="western">Significant refactoring of the
 	<CODE CLASS="western">org.firebirdsql.gds.*</CODE> package.
@@ -352,7 +463,8 @@ code modularity, stability and maintainability.</P>
 	with different configuration possibilities in different modes.</P>
 	<LI><P CLASS="western">Refactorings to support JDK 5.0.</P>
 </UL>
-<H3 CLASS="western">Updatable result sets</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Updatable result sets|outline"></A>
+Updatable result sets</H3>
 <P CLASS="western" ALIGN=LEFT>Jaybird provides now support for the
 updatable result sets. Feature allows Java application to update
 current record using the <CODE CLASS="western">updateXXX</CODE>
@@ -373,7 +485,8 @@ the following limitation on the result set &ldquo;updatability&rdquo;:</P>
 	statement references all columns from the table primary key
 	definition or an <CODE CLASS="western">RDB$DB_KEY</CODE> column.</P>
 </UL>
-<H3 CLASS="western">Firebird management interfaces</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Firebird management interfaces|outline"></A>
+Firebird management interfaces</H3>
 <P CLASS="western">Jaybird provides full support of the Firebird
 Services API that allows Java applications to perform various server
 management tasks:</P>
@@ -417,7 +530,8 @@ management tasks:</P>
 	<CODE CLASS="western">TYPE_SCROLL_INSENSITIVE</CODE> and is
 	completely cached on the client side.</P>
 </UL>
-<H3 CLASS="western">Jaybird JDBC extensions</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Jaybird JDBC extensions|outline"></A>
+Jaybird JDBC extensions</H3>
 <P CLASS="western" ALIGN=LEFT>Jaybird provides extensions to some
 JDBC interfaces. JDBC extension interface classes are released under
 modified BSD license, on &ldquo;AS IS&rdquo; and &ldquo;do what you
@@ -921,13 +1035,15 @@ version in which the extension was introduced.</P>
 		</TR>
 	</TBODY>
 </TABLE>
-<H3 CLASS="western">JDBC 3.0 compatibility</H3>
+<H3 CLASS="western"><A NAME="0.0.0.JDBC 3.0 compatibility|outline"></A>
+JDBC 3.0 compatibility</H3>
 <P CLASS="western">Jaybird includes number of fixes that allow it
 pass JDBC 3.0 compatibility suite. It successfully passes 1216 tests,
 60 tests were excluded, because they are either not applicable to
 Firebird or fail due to some server problems (math rounding issues,
 limitations of NUMERIC data type, etc.).</P>
-<H2 CLASS="western">Distribution package</H2>
+<H2 CLASS="western"><A NAME="0.0.Distribution package|outline"></A>Distribution
+package</H2>
 <P CLASS="western">Jaybird driver has compile-time and run-time
 dependencies to JCA 1.0, JTA 1.0.1, JAAS 1.0 and JDBC 2.0 Optional
 Package. Additionally, if Log4J classes are found in the class path,
@@ -935,18 +1051,18 @@ it is possible to enable extensive logging inside the driver.</P>
 <P CLASS="western">Following file groups can be found in distribution
 package:</P>
 <UL>
-	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-2.1.0.jar</CODE>
+	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-2.1.2.jar</CODE>
 	&ndash; archive containing JCA/JDBC driver and JMX management class.
 	It requires JCA 1.0, JTA 1.0.1, and JAAS 1.0.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-pool-2.1.0.jar</CODE>
+	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-pool-2.1.2.jar</CODE>
 	&ndash; archive contains implementation of connection pooling and
 	statement pooling interfaces.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-full-2.1.0.jar</CODE>
+	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-full-2.1.2.jar</CODE>
 	&ndash; merge of <CODE CLASS="western">firebirdsql.jar</CODE> and
-	<CODE CLASS="western">mini-j2ee.jar</CODE>. This archive can be used
-	for standalone<A CLASS="sdfootnoteanc" NAME="sdfootnote1anc" HREF="#sdfootnote1sym"><SUP>1</SUP></A>
+	<CODE CLASS="western">mini-j2ee.jar</CODE> (or <CODE CLASS="western">mini-j2ee_16.jar</CODE>
+	for JDK 6.0 deployments). This archive can be used for standalone<A CLASS="sdfootnoteanc" NAME="sdfootnote1anc" HREF="#sdfootnote1sym"><SUP>1</SUP></A>
 	Jaybird deployments.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-2.1.0.rar</CODE>
+	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-2.1.3.rar</CODE>
 	&ndash; resource archive ready for deployment in JCA-enabled
 	application servers.</P>
 	<LI><P CLASS="western"><CODE CLASS="western">lib/jaas.jar</CODE> &ndash;
@@ -954,9 +1070,10 @@ package:</P>
 	<LI><P CLASS="western"><CODE CLASS="western">lib/log4j-core.jar</CODE>
 	&ndash; archive containing core Log4J classes that provide a
 	possibility to log into the file.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">lib/mini-j2ee.jar</CODE>
-	&ndash; archive containing JCA 1.0, JTA 1.0.1 and JDBC 2.0 Optional
-	Package classes.</P>
+	<LI><P CLASS="western"><CODE CLASS="western">lib/mini-j2ee.jar (or
+	</CODE><CODE CLASS="western">mini-j2ee_16.jar</CODE><CODE CLASS="western">
+	for JDK 6.0 deployments)</CODE> &ndash; archive containing JCA 1.0,
+	JTA 1.0.1 and JDBC 2.0 Optional Package classes.</P>
 	<LI><P CLASS="western"><CODE CLASS="western">jaybird21.dll</CODE> &ndash;
 	Windows version of the JNI library for Type 2 and Embedded Server
 	drivers.</P>
@@ -964,7 +1081,7 @@ package:</P>
 	&ndash; Linux version of the JNI library for Type 2 and Embedded
 	Server drivers.</P>
 </UL>
-<H3 CLASS="western">License</H3>
+<H3 CLASS="western"><A NAME="0.0.0.License|outline"></A>License</H3>
 <P CLASS="western">Jaybird JCA/JDBC driver is distributed under the
 GNU Lesser General Public License (LGPL). Text of the license can be
 obtained from <A HREF="http://www.gnu.org/copyleft/lesser.html">http://www.gnu.org/copyleft/lesser.html</A>.
@@ -980,7 +1097,8 @@ BSD license. Latter is basically &ldquo;AS IS&rdquo; license that
 allows any kind of use of that source code. Jaybird should be viewed
 as an implementation of that interfaces and LGPL section for dynamic
 linking is applicable in this case.</P>
-<H3 CLASS="western">Source Code</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Source Code|outline"></A>Source
+Code</H3>
 <P CLASS="western">Source code can be obtained from the CVS at
 SourceForge.net. The CVSROOT is
 <BR><CODE CLASS="western">:pserver:anonymous@cvs.sourceforge.net:/cvsroot/firebird</CODE>,
@@ -988,10 +1106,11 @@ the module name is <CODE CLASS="western">client-java</CODE>.
 Alternatively source code can be viewed online at
 <A HREF="http://cvs.sourceforge.net/viewcvs.py/firebird/client-java/">http://cvs.sourceforge.net/viewcvs.py/firebird/client-java/</A>
 </P>
-<H2 CLASS="western">JDBC URL Format</H2>
+<H2 CLASS="western"><A NAME="0.0.JDBC URL Format|outline"></A>JDBC
+URL Format</H2>
 <P CLASS="western" STYLE="page-break-before: auto; page-break-after: avoid">
 Driver provides different JDBC URLs for different usage scenarios:</P>
-<H3 CLASS="western">Pure Java</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Pure Java|outline"></A>Pure Java</H3>
 <P CLASS="western"><CODE CLASS="western">jdbc:firebirdsql:host[/port]:/path/to/db.fdb</CODE>
 <BR><CODE CLASS="western">jdbc:firebirdsql://host[:port]/path/to/db.fdb</CODE></P>
 <P CLASS="western">Default URL, will connect to the database using
@@ -1001,7 +1120,8 @@ dedicated database server. Port can be omitted (default value is
 </P>
 <P CLASS="western">First format is considered official, second &ndash;
 compatibility mode for InterClient migration.</P>
-<H3 CLASS="western">Using Firebird client library</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Using Firebird client library|outline"></A>
+Using Firebird client library</H3>
 <P CLASS="western"><CODE CLASS="western">jdbc:firebirdsql:native:host[/port]:/path/to/db.fdb</CODE>
 <CODE CLASS="western">jdbc:firebirdsql:native://host[:port]/path/to/db.fdb</CODE></P>
 <P CLASS="western">Type 2 driver, will connect to the database using
@@ -1014,13 +1134,15 @@ installation of the client library.</P>
 as in previous case, however will not use socket communication, but
 rather access database directly. Requires correct installation of the
 client library.</P>
-<H3 CLASS="western">Embedded Server</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Embedded Server|outline"></A>Embedded
+Server</H3>
 <P CLASS="western"><CODE CLASS="western">jdbc:firebirdsql:embedded:/path/to/db.fdb</CODE></P>
 <P CLASS="western">Similar to the Firebird client library, however
 <CODE CLASS="western">fbembed.dll</CODE> on Windows and <CODE CLASS="western">libfbembed.so</CODE>
 on Linux are used. Requires correctly installed and configured
 Firebird embedded server.</P>
-<H2 CLASS="western">JDBC connection properties</H2>
+<H2 CLASS="western"><A NAME="0.0.JDBC connection properties|outline"></A><A NAME="2.4.JDBC connection properties|outline"></A>
+JDBC connection properties</H2>
 <P CLASS="western">Table below contains properties that specify
 parameters of the connections that are obtained from this data
 source. Commonly used parameters have the corresponding getter and
@@ -1440,6 +1562,57 @@ setter method.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25%>
+				<P CLASS="western"><CODE CLASS="western">octetsAsBytes</CODE></P>
+			</TD>
+			<TD WIDTH=18%>
+				<P CLASS="western" ALIGN=CENTER>-</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P CLASS="western" ALIGN=CENTER>-</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P CLASS="western">When set, the <CODE CLASS="western">getObject()</CODE>
+				method of <CODE CLASS="western">ResultSet</CODE> class will
+				return <CODE CLASS="western">byte[]</CODE> for character columns
+				with OCTETS charset.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P CLASS="western"><CODE CLASS="western">noResultSetTracking</CODE></P>
+			</TD>
+			<TD WIDTH=18%>
+				<P CLASS="western" ALIGN=CENTER>-</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P CLASS="western" ALIGN=CENTER>-</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P CLASS="western">When specified, the result sets are not
+				referenced by the underlying statement objects, allowing more
+				efficient garbage collection.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
+				<P CLASS="western"><BR>
+				</P>
+			</TD>
+			<TD WIDTH=18%>
+				<P CLASS="western" ALIGN=CENTER><BR>
+				</P>
+			</TD>
+			<TD WIDTH=17%>
+				<P CLASS="western" ALIGN=CENTER><BR>
+				</P>
+			</TD>
+			<TD WIDTH=40%>
+				<P CLASS="western"><BR>
+				</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25%>
 				<P CLASS="western"><CODE CLASS="western">nonStandardProperty</CODE></P>
 			</TD>
 			<TD WIDTH=18%>
@@ -1468,7 +1641,8 @@ setter method.</P>
 		</TR>
 	</TBODY>
 </TABLE>
-<H2 CLASS="western">Using Type 2 and Embedded Server driver</H2>
+<H2 CLASS="western"><A NAME="0.0.Using Type 2 and Embedded Server driver|outline"></A>
+Using Type 2 and Embedded Server driver</H2>
 <P CLASS="western" ALIGN=LEFT>Jaybird 2.1 provides type 2 JDBC driver
 that uses native client library to connect to the databases.
 Additionally Jaybird 2.1 can use embedded version of Firebird
@@ -1503,7 +1677,8 @@ limitations:</P>
 	already at RC stage; adding it to the release would delay it for few
 	months.</SPAN></STRONG></P>
 </UL>
-<H3 CLASS="western">Configuring Type 2 JDBC driver</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Configuring Type 2 JDBC driver|outline"></A>
+Configuring Type 2 JDBC driver</H3>
 <P CLASS="western">Type 2 JDBC driver requires JNI library to be
 installed and available for Java Virtual Machine. Precompiled
 binaries for Windows and Linux platforms are distributed with
@@ -1535,7 +1710,8 @@ JVM application has to tell driver to start using this by either
 specifying TYPE2 or LOCAL type in the connection pool or data source
 properties or using appropriate JDBC URL when connecting via
 <CODE CLASS="western">java.sql.DriverManager</CODE>.</P>
-<H3 CLASS="western">Configuring Embedded Server JDBC driver</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Configuring Embedded Server JDBC driver|outline"></A>
+Configuring Embedded Server JDBC driver</H3>
 <P CLASS="western">Embedded Server JDBC driver uses same JNI library
 and configuration steps for the type 2 JDBC driver. 
 </P>
@@ -1568,13 +1744,15 @@ character encodings, UDFs or wants to fine-tune server's behavior
 through the configuration file, the <CODE CLASS="western">FIREBIRD</CODE>
 environment variable must be specified and point to the installation
 directory of the Embedded Server, e.g. current working directory.</P>
-<H2 CLASS="western">JDBC 3.0 Compatibility</H2>
+<H2 CLASS="western"><A NAME="0.0.JDBC 3.0 Compatibility|outline"></A>JDBC
+3.0 Compatibility</H2>
 <P CLASS="western">As it was mentioned before, Jaybird JCA/JDBC
 driver passed Sun JDBC CTS 1.3.1 test suite. All tests except those
 that do not apply to Firebird RDBMS succeeded. However driver is not
 officially JDBC-compliant because certification procedure is too
 expensive.</P>
-<H3 CLASS="western">JDBC 3.0 deviations and unimplemented features</H3>
+<H3 CLASS="western"><A NAME="0.0.0.JDBC 3.0 deviations and unimplemented features|outline"></A>
+JDBC 3.0 deviations and unimplemented features</H3>
 <P CLASS="western">The following optional features and the methods
 for their support are not implemented:</P>
 <UL>
@@ -1681,11 +1859,13 @@ from the specification:</P>
 		always returns true</P>
 	</UL>
 </UL>
-<H2 CLASS="western">Jaybird Specifics</H2>
+<H2 CLASS="western"><A NAME="0.0.Jaybird Specifics|outline"></A>Jaybird
+Specifics</H2>
 <P CLASS="western">Jaybird driver has also some
 implementation-specific issues that should be considered during
 development.</P>
-<H3 CLASS="western">Result sets</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Result sets|outline"></A>Result
+sets</H3>
 <P CLASS="western">Jaybird behaves differently not only when
 different result set types are used but also the behavior depends
 whether connection is in auto-commit mode or not.</P>
@@ -1704,8 +1884,8 @@ support, navigation is possible only in one direction.</P>
 holdability is supported in Jaybird only for result sets of type
 <CODE CLASS="western">ResultSet.TYPE_SCROLL_INSENSITIVE</CODE>. For
 other result set types driver will throw an exception.</P>
-<H3 CLASS="western">Using java.sql.ParameterMetaData with Callable
-Statements</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Using java.sql.ParameterMetaData with Callable Statements|outline"></A>
+Using java.sql.ParameterMetaData with Callable Statements</H3>
 <P CLASS="western">This interface can be used only to obtain
 information about the IN parameters. Also it is not allowed to call
 the <CODE CLASS="western">PreparedStatement.getParameterMetaData</CODE>
@@ -1714,8 +1894,8 @@ corresponding method of <CODE CLASS="western">CallableStatement</CODE>
 throws an <CODE CLASS="western">SQLException</CODE>, because the
 driver tries to prepare the procedure call with incorrect number of
 parameters.</P>
-<H3 CLASS="western">Using ResultSet.getCharacterStream with BLOB
-fields</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Using ResultSet.getCharacterStream with BLOB fields|outline"></A>
+Using ResultSet.getCharacterStream with BLOB fields</H3>
 <P CLASS="western">Jaybird JDBC driver always uses connection
 encoding when converting array of bytes into character stream. The
 BLOB SUB_TYPE 1 fields allow setting the character encoding for the
@@ -1727,7 +1907,8 @@ connection does not match the character encoding of the field,
 conversion errors might happen. Therefore it is recommended to
 convert such fields in the application using the appropriate
 encoding.</P>
-<H3 CLASS="western">Heuristic transaction completion support</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Heuristic transaction completion support|outline"></A>
+Heuristic transaction completion support</H3>
 <P CLASS="western">Current JCA implementation does not support
 <CODE CLASS="western">XAResource.forget(Xid)</CODE> method. It might
 be important in cases when distributed transaction that was some time
@@ -1759,7 +1940,8 @@ pooling, it can pool also prepared statement. Tests executed using
 AS3AP benchmark suite show that prepared statement pooling might
 increase speed of the application by 100% keeping source code clean
 and understandable.</P>
-<H3 CLASS="western">Usage scenario</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Usage scenario|outline"></A>Usage
+scenario</H3>
 <P CLASS="western">When some statement is used more than one time, it
 makes sense to use prepared statement. It will be compiled by the
 server only once, but reused many times. It provides significant
@@ -1787,42 +1969,42 @@ like? Here's the example</P>
 	<TBODY>
 		<TR VALIGN=TOP>
 			<TD WIDTH=7%>
-				<PRE LANG="" CLASS="western">001
-<SPAN LANG="">002</SPAN>
-<SPAN LANG="">003</SPAN>
-<SPAN LANG="">004</SPAN>
-<SPAN LANG="">005</SPAN>
-<SPAN LANG="">006</SPAN>
-<SPAN LANG="">007</SPAN>
-<SPAN LANG="">008</SPAN>
-<SPAN LANG="">009</SPAN>
-<SPAN LANG="">010</SPAN>
-<SPAN LANG="">011</SPAN>
-<SPAN LANG="">012</SPAN>
-<SPAN LANG="">013</SPAN>
-<SPAN LANG="">014</SPAN>
-<SPAN LANG="">015</SPAN>
-<SPAN LANG="">016<BR>017<BR>018</SPAN></PRE>
+				<PRE LANG="zxx" CLASS="western">001
+<SPAN LANG="zxx">002</SPAN>
+<SPAN LANG="zxx">003</SPAN>
+<SPAN LANG="zxx">004</SPAN>
+<SPAN LANG="zxx">005</SPAN>
+<SPAN LANG="zxx">006</SPAN>
+<SPAN LANG="zxx">007</SPAN>
+<SPAN LANG="zxx">008</SPAN>
+<SPAN LANG="zxx">009</SPAN>
+<SPAN LANG="zxx">010</SPAN>
+<SPAN LANG="zxx">011</SPAN>
+<SPAN LANG="zxx">012</SPAN>
+<SPAN LANG="zxx">013</SPAN>
+<SPAN LANG="zxx">014</SPAN>
+<SPAN LANG="zxx">015</SPAN>
+<SPAN LANG="zxx">016<BR>017<BR>018</SPAN></PRE>
 			</TD>
 			<TD WIDTH=93%>
-				<PRE LANG="" CLASS="western">...
-<SPAN LANG="">Connection connection = dataSource.getConnection();</SPAN>
-<SPAN LANG="">try {</SPAN>
-    <SPAN LANG="">PreparedStatement ps = connection.prepareStatement(</SPAN>
-        &ldquo;<SPAN LANG="">SELECT * FROM test_table WHERE id = ?&rdquo;);</SPAN>
-    <SPAN LANG="">try {</SPAN>
-        <SPAN LANG="">ps.setInt(1, id);</SPAN>
-        <SPAN LANG="">ResultSet rs = ps.executeQuery();</SPAN>
-        <SPAN LANG="">while (rs.next()) {</SPAN>
-            <SPAN LANG="">// do something here</SPAN>
-        <SPAN LANG="">}</SPAN>
-    <SPAN LANG="">} finally {</SPAN>
-        <SPAN LANG="">ps.close();</SPAN>
-    <SPAN LANG="">}</SPAN>
-<SPAN LANG="">} finally {</SPAN>
-    <SPAN LANG="">connection.close();</SPAN>
-<SPAN LANG="">}</SPAN>
-<SPAN LANG="">...</SPAN></PRE>
+				<PRE LANG="zxx" CLASS="western">...
+<SPAN LANG="zxx">Connection connection = dataSource.getConnection();</SPAN>
+<SPAN LANG="zxx">try {</SPAN>
+    <SPAN LANG="zxx">PreparedStatement ps = connection.prepareStatement(</SPAN>
+        &ldquo;<SPAN LANG="zxx">SELECT * FROM test_table WHERE id = ?&rdquo;);</SPAN>
+    <SPAN LANG="zxx">try {</SPAN>
+        <SPAN LANG="zxx">ps.setInt(1, id);</SPAN>
+        <SPAN LANG="zxx">ResultSet rs = ps.executeQuery();</SPAN>
+        <SPAN LANG="zxx">while (rs.next()) {</SPAN>
+            <SPAN LANG="zxx">// do something here</SPAN>
+        <SPAN LANG="zxx">}</SPAN>
+    <SPAN LANG="zxx">} finally {</SPAN>
+        <SPAN LANG="zxx">ps.close();</SPAN>
+    <SPAN LANG="zxx">}</SPAN>
+<SPAN LANG="zxx">} finally {</SPAN>
+    <SPAN LANG="zxx">connection.close();</SPAN>
+<SPAN LANG="zxx">}</SPAN>
+<SPAN LANG="zxx">...</SPAN></PRE>
 			</TD>
 		</TR>
 	</TBODY>
@@ -1840,7 +2022,8 @@ SQL query. If no such statement is found it prepares a new one. In
 line 013 prepared statement is not closed, but returned to the pool,
 where it waits for the next call. Same happens to the connection
 object that is returned to the pool in line 016.</P>
-<H3 CLASS="western">Connection Pool Classes</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Connection Pool Classes|outline"></A>
+Connection Pool Classes</H3>
 <P CLASS="western">Jaybird connection pooling classes belong to
 <CODE CLASS="western">org.firebirdsql.pool.*</CODE> package.</P>
 <TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0 FRAME=HSIDES RULES=ROWS STYLE="page-break-inside: auto">
@@ -1856,7 +2039,7 @@ object that is returned to the pool in line 016.</P>
 	<TBODY>
 		<TR VALIGN=TOP>
 			<TD WIDTH=40%>
-				<PRE LANG="" CLASS="western"><CODE CLASS="western">AbstractConnectionPool</CODE></PRE>
+				<PRE LANG="zxx" CLASS="western"><CODE CLASS="western">AbstractConnectionPool</CODE></PRE>
 			</TD>
 			<TD WIDTH=60%>
 				<P CLASS="western">Base class for all connection pools. Can be
@@ -1866,7 +2049,7 @@ object that is returned to the pool in line 016.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=40%>
-				<PRE LANG="" CLASS="western"><CODE CLASS="western">BasicAbstractConnectionPool</CODE></PRE>
+				<PRE LANG="zxx" CLASS="western"><CODE CLASS="western">BasicAbstractConnectionPool</CODE></PRE>
 			</TD>
 			<TD WIDTH=60%>
 				<P CLASS="western">Subclass of <CODE CLASS="western">AbstractConnectionPool</CODE>,
@@ -1878,7 +2061,7 @@ object that is returned to the pool in line 016.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=40%>
-				<PRE LANG="" CLASS="western"><CODE CLASS="western">DriverConnectionPoolDataSource</CODE></PRE>
+				<PRE LANG="zxx" CLASS="western"><CODE CLASS="western">DriverConnectionPoolDataSource</CODE></PRE>
 			</TD>
 			<TD WIDTH=60%>
 				<P CLASS="western">Implementation of
@@ -1889,7 +2072,7 @@ object that is returned to the pool in line 016.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=40%>
-				<PRE LANG="" CLASS="western"><CODE CLASS="western">FBConnectionPoolDataSource</CODE></PRE>
+				<PRE LANG="zxx" CLASS="western"><CODE CLASS="western">FBConnectionPoolDataSource</CODE></PRE>
 			</TD>
 			<TD WIDTH=60%>
 				<P CLASS="western">Jaybird specific implementation of
@@ -1900,7 +2083,7 @@ object that is returned to the pool in line 016.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=40%>
-				<PRE LANG="" CLASS="western"><CODE CLASS="western">FBSimpleDataSource</CODE></PRE>
+				<PRE LANG="zxx" CLASS="western"><CODE CLASS="western">FBSimpleDataSource</CODE></PRE>
 			</TD>
 			<TD WIDTH=60%>
 				<P CLASS="western">Implementation of <CODE CLASS="western">javax.sql.DataSource</CODE>
@@ -1912,7 +2095,7 @@ object that is returned to the pool in line 016.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=40%>
-				<PRE LANG="" CLASS="western"><CODE CLASS="western">FBWrappingDataSource</CODE></PRE>
+				<PRE LANG="zxx" CLASS="western"><CODE CLASS="western">FBWrappingDataSource</CODE></PRE>
 			</TD>
 			<TD WIDTH=60%>
 				<P CLASS="western">Implementation of <CODE CLASS="western">javax.sql.DataSource</CODE>
@@ -1924,7 +2107,7 @@ object that is returned to the pool in line 016.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=40%>
-				<PRE LANG="" CLASS="western"><CODE CLASS="western">SimpleDataSource</CODE></PRE>
+				<PRE LANG="zxx" CLASS="western"><CODE CLASS="western">SimpleDataSource</CODE></PRE>
 			</TD>
 			<TD WIDTH=60%>
 				<P CLASS="western">Implementation of <CODE CLASS="western">javax.sql.DataSource</CODE>
@@ -1934,7 +2117,8 @@ object that is returned to the pool in line 016.</P>
 		</TR>
 	</TBODY>
 </TABLE>
-<H3 CLASS="western">org.firebirdsql.pool.FBConnectionPoolDataSource</H3>
+<H3 CLASS="western"><A NAME="0.0.0.org.firebirdsql.pool.FBConnectionPoolDataSource|outline"></A>
+org.firebirdsql.pool.FBConnectionPoolDataSource</H3>
 <P CLASS="western">This class is a corner stone of connection and
 statement pooling in Jaybird. It can be instantiated within the
 application as well as it can be made accessible to other
@@ -2249,14 +2433,16 @@ about the state of the pool.</P>
 		</TR>
 	</TBODY>
 </TABLE>
-<H3 CLASS="western">org.firebirdsql.pool.FBWrappingDataSource</H3>
+<H3 CLASS="western"><A NAME="0.0.0.org.firebirdsql.pool.FBWrappingDataSource|outline"></A>
+org.firebirdsql.pool.FBWrappingDataSource</H3>
 <P CLASS="western" ALIGN=LEFT>This class is a wrapper for
 <CODE CLASS="western">FBConnectionPoolDataSource</CODE> converting
 interface from <CODE CLASS="western">javax.sql.ConnectionPoolDataSource</CODE>
 to <CODE CLASS="western">javax.sql.DataSource</CODE>. It defines same
 properties as <CODE CLASS="western">FBConnectionPoolDataSource</CODE>
 does.</P>
-<H3 CLASS="western">Runtime object allocation and deallocation hints</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Runtime object allocation and deallocation hints|outline"></A>
+Runtime object allocation and deallocation hints</H3>
 <P CLASS="western" ALIGN=LEFT>Pool implementation shipped with
 Jaybird can provide hints for the application where the connection
 was obtained from the pool, when it was released back to the pool,
@@ -2339,8 +2525,10 @@ previous call to <CODE CLASS="western">close()</CODE> method.</P>
 </TABLE>
 <P CLASS="western"><BR><BR>
 </P>
-<H2 CLASS="western">Documentation and Support</H2>
-<H3 CLASS="western">Where to get more information on Jaybird</H3>
+<H2 CLASS="western"><A NAME="0.0.Documentation and Support|outline"></A>
+Documentation and Support</H2>
+<H3 CLASS="western"><A NAME="0.0.0.Where to get more information on Jaybird|outline"></A>
+Where to get more information on Jaybird</H3>
 <P CLASS="western">The most detailed information can be found in the
 Jaybird Frequently Asked Questions (FAQ). The FAQ is included in the
 distribution, and is available on-line in several places. 
@@ -2348,7 +2536,8 @@ distribution, and is available on-line in several places.
 <P CLASS="western">Also a new resource, JaybirdWiki is available at
 <A HREF="http://jaybirdwiki.firebirdsql.org/">http://Jaybirdwiki.firebirdsql.org</A>.
 </P>
-<H3 CLASS="western">Where to get help</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Where to get help|outline"></A>Where
+to get help</H3>
 <P CLASS="western">The best place to start is the FAQ. Many details
 for using Jaybird with various programs are located there. Below are
 some links to useful web sites.</P>
@@ -2361,7 +2550,8 @@ some links to useful web sites.</P>
 	<LI><P CLASS="western">The Firebird project home page
 	<A HREF="http://www.firebirdsql.com/">http://www.firebirdsql.com</A>.</P>
 </UL>
-<H3 CLASS="western">Reporting Bugs</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Reporting Bugs|outline"></A>Reporting
+Bugs</H3>
 <P CLASS="western">The developers follow the
 Firebird-Java@yahoogroups.com list. Join the list and post
 information about suspected bugs. This is a good idea because what is
@@ -2372,7 +2562,8 @@ fixes might take awhile.</P>
 may report it in the Firebird bug tracker, &ldquo;Java Client
 (Jaybird)&rdquo; at SourceForge.net project area
 (<A HREF="http://sourceforge.net/projects/firebird">http://sourceforge.net/projects/firebird</A>).</P>
-<H3 CLASS="western">Corrections/Additions To Release Notes</H3>
+<H3 CLASS="western"><A NAME="0.0.0.Corrections/Additions To Release Notes|outline"></A>
+Corrections/Additions To Release Notes</H3>
 <P CLASS="western" ALIGN=LEFT>Please send corrections, suggestions,
 or additions to these Release Notes to to the mailing list at
 Firebird-Java@yahoogroups.com.</P>

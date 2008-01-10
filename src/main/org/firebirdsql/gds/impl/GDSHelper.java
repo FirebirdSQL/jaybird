@@ -194,6 +194,9 @@ public class GDSHelper {
             
             if (describeBind) 
                 gds.iscDsqlDescribeBind(stmt, ISCConstants.SQLDA_VERSION1);
+            
+            stmt.statement = sql;
+            
         } catch(GDSException ex) {
             notifyListeners(ex);
             throw ex;
@@ -214,6 +217,12 @@ public class GDSHelper {
     public void executeStatement(AbstractIscStmtHandle stmt, boolean sendOutSqlda)
             throws GDSException {
         try {
+            
+            if (log != null && log.isDebugEnabled())
+                log.debug("Executing " + stmt.statement);
+            
+            // System.out.println("Executing " + stmt.statement);
+            
             gds.iscDsqlExecute2(currentTr, stmt, ISCConstants.SQLDA_VERSION1,
                 stmt.getInSqlda(), (sendOutSqlda) ? stmt.getOutSqlda() : null);
         } catch(GDSException ex) {

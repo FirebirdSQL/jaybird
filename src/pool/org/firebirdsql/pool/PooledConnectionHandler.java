@@ -104,9 +104,6 @@ class PooledConnectionHandler implements InvocationHandler {
         
     private final static Method CONNECTION_ROLLBACK = findMethod(
         Connection.class, "rollback", new Class[0]);
-    
-    private final static Method CONNECTION_IS_CLOSED = findMethod(
-        Connection.class, "isClosed", new Class[0]);
         
     private Connection connection;
 	private XConnectionManager owner;
@@ -171,15 +168,6 @@ class PooledConnectionHandler implements InvocationHandler {
     }
     
     /**
-     * Check whether the {@link Connection#close()} method was called.
-     * 
-     * @return <code>true</code> if the method was called, false otherwise.
-     */
-    public boolean isClosed() {
-        return closed;
-    }
-    
-    /**
      * Deallocate current connection. This call is similar to the call
      * {@link Connection#close()} when invoked on the proxy object. However,
      * unlike that call no listener is notified that connection being closed;
@@ -218,11 +206,6 @@ class PooledConnectionHandler implements InvocationHandler {
 			
             // if object is closed, throw an exception
 			if (closed) { 
-
-                // check whether Connection.isClose() method is called first
-                if (CONNECTION_IS_CLOSED.equals(method))
-                    return Boolean.TRUE;
-                
 			    FBSQLException ex = new FBSQLException(
 				    "Connection " + this + " was closed. " +
                             "See the attached exception to find the place " +

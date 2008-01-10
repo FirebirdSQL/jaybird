@@ -35,6 +35,8 @@ import javax.transaction.xa.*;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.jdbc.*;
+import org.firebirdsql.jdbc.field.FBField;
+import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -681,99 +683,142 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
             throws XAException {
 
         try {
-            FBManagedConnection tempMc = null;
-            FirebirdLocalTransaction tempLocalTx = null;
+            FBManagedConnection tempMc = new FBManagedConnection(null, null, this);
             try {
-                tempMc = new FBManagedConnection(null, null, this);
-                tempLocalTx = (FirebirdLocalTransaction) tempMc.getLocalTransaction();
-                tempLocalTx.begin();
-
-                long fbTransactionId = 0;
-                boolean found = false;
-
-                FBXid[] inLimboIds = (FBXid[]) tempMc
-                        .recover(XAResource.TMSTARTRSCAN);
-                for (int i = 0; i < inLimboIds.length; i++) {
-                    if (inLimboIds[i].equals(xid)) {
-                        found = true;
-                        fbTransactionId = inLimboIds[i]
-                                .getFirebirdTransactionId();
-                    }
-                }
-
-                if (!found)
-                    throw new FBXAException((commit ? "Commit" : "Rollback")
-                            + " called with unknown transaction.",
-                            XAException.XAER_NOTA);
-
-                IscDbHandle dbHandle = tempMc.getGDSHelper()
-                        .getCurrentDbHandle();
-
-                IscTrHandle trHandle = gds.createIscTrHandle();
-                gds.iscReconnectTransaction(trHandle, dbHandle,
-                                fbTransactionId);
-
-                // complete transaction by commit or rollback
-                if (commit)
-                    gds.iscCommitTransaction(trHandle);
-                else
-                    gds.iscRollbackTransaction(trHandle);
-                
-                // remove heuristic data from rdb$transactions
                 try {
-                    String query = "delete from rdb$transactions where rdb$transaction_id = " + fbTransactionId;
-                    GDSHelper gdsHelper = new GDSHelper(gds, getDatabaseParameterBuffer(), (AbstractIscDbHandle)dbHandle, null);
-
-                    AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();
-                    gds.iscStartTransaction(trHandle2, gdsHelper.getCurrentDbHandle(), getDefaultTpb().getTransactionParameterBuffer());
-
-                    AbstractIscStmtHandle stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
-                    gds.iscDsqlAllocateStatement(gdsHelper.getCurrentDbHandle(), stmtHandle2);
-
-                    stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
-                    gds.iscDsqlAllocateStatement(gdsHelper.getCurrentDbHandle(), stmtHandle2);
+                    FirebirdLocalTransaction tempLocalTx = 
+                        (FirebirdLocalTransaction) tempMc.getLocalTransaction();
                     
-                    GDSHelper gdsHelper2 = new GDSHelper(gds, gdsHelper.getDatabaseParameterBuffer(), (AbstractIscDbHandle) gdsHelper.getCurrentDbHandle(), null);
-                    gdsHelper2.setCurrentTrHandle(trHandle2);
-
-                    gdsHelper2.prepareStatement(stmtHandle2, query, false);
-                    gdsHelper2.executeStatement(stmtHandle2, false);
-
-                    gdsHelper2.closeStatement(stmtHandle2, true);
-                    gds.iscCommitTransaction(trHandle2);
-                } catch (SQLException sqle) {
-                    throw new FBXAException("unable to remove in limbo transaction from rdb$transactions where rdb$transaction_id = " + fbTransactionId, XAException.XAER_RMERR);
-                }
-
-            } catch (GDSException ex) {
-                /*
-                 * if ex.getIntParam() is 335544353 (transaction is not in limbo) and next ex.getIntParam() is 335544468 (transaction {0} is {1})
-                 *  => detected heuristic
-                 */
-                int errorCode = XAException.XAER_RMERR;
-                int intParam = ex.getIntParam();
-                int nextIntParam = ex.getNext().getIntParam();
-                
-                if (intParam == ISCConstants.isc_no_recon && nextIntParam == ISCConstants.isc_tra_state) {
-                    String param = ex.getNext().getNext().getNext().getParam();
-                    if ("committed".equals(param))
-                        errorCode = XAException.XA_HEURCOM;
-                    else if ("rolled back".equals(param))
-                        errorCode = XAException.XA_HEURRB;
-                }
-                
-                throw new FBXAException("unable to complete in limbo transaction", errorCode, ex);
-            } finally {
-                try {
-                    if (tempLocalTx != null && tempLocalTx.inTransaction())
+                    long fbTransactionId = 0;
+                    boolean found = false;
+                    
+                    // loop through all in-limbo transactions and look for the required one
+                    tempLocalTx.begin();
+                    try {
+                        ArrayList inLimboIds = fetchInLimboXids(getGDS(), tempMc.getGDSHelper());
+                        
+                        for (Iterator iter = inLimboIds.iterator(); iter.hasNext();) {
+                            FBXid foundXid = (FBXid) iter.next();
+                            if (foundXid.equals(xid)) {
+                                found = true;
+                                fbTransactionId = foundXid.getFirebirdTransactionId();
+                            }
+                        }
+                        
+                    } catch(SQLException ex) {
+                        if (log != null)
+                            log.debug("can't perform query to fetch xids", ex);
+                        
+                        throw new FBXAException(XAException.XAER_RMFAIL, ex);
+                        
+                    } finally {
                         tempLocalTx.commit();
-                } finally {
-                    if (tempMc != null) tempMc.destroy();
+                    }
+    
+                    // if no such transaction found, notify the resource manager
+                    if (!found)
+                        throw new FBXAException((commit ? "Commit" : "Rollback")
+                                + " called with unknown transaction.",
+                                XAException.XAER_NOTA);
+    
+                    IscDbHandle dbHandle = tempMc.getGDSHelper().getCurrentDbHandle();
+    
+                    // reconnect the in-limbo transaction to temp connection
+                    IscTrHandle trHandle = gds.createIscTrHandle();
+                    gds.iscReconnectTransaction(trHandle, dbHandle, fbTransactionId);
+    
+                    // complete transaction by commit or rollback
+                    if (commit)
+                        gds.iscCommitTransaction(trHandle);
+                    else
+                        gds.iscRollbackTransaction(trHandle);
+    
+                } catch (GDSException ex) {
+                    throw new FBXAException(XAException.XAER_RMERR, ex);
                 }
+            } finally {
+                tempMc.destroy();
             }
         } catch (ResourceException ex) {
             throw new FBXAException(XAException.XAER_RMERR, ex);
         }
+    }
+    
+    // simple implementation of the FieldDataProvider interface
+    private static class DataProvider implements FieldDataProvider {
+
+        private AbstractIscStmtHandle stmtHandle;
+        private int fieldPos;
+        private int row;
+        
+        private DataProvider(AbstractIscStmtHandle stmtHandle, int fieldPos) {
+            this.stmtHandle = stmtHandle;
+            this.fieldPos = fieldPos;
+        }
+        
+        public void setRow(int row) {
+            this.row = row;
+        }
+        
+        public byte[] getFieldData() {
+            return ((byte[][])stmtHandle.getRows()[row])[fieldPos];
+        }
+        public void setFieldData(byte[] data) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private static final String RECOVERY_QUERY = ""
+        + "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
+        + "FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE = 1";
+
+    
+    public static ArrayList fetchInLimboXids(GDS gds, GDSHelper gdsHelper2) throws GDSException, SQLException, ResourceException {
+        ArrayList xids = new ArrayList();
+
+        AbstractIscStmtHandle stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
+        gds.iscDsqlAllocateStatement(gdsHelper2.getCurrentDbHandle(), stmtHandle2);
+        
+        
+        gdsHelper2.prepareStatement(stmtHandle2, RECOVERY_QUERY, false);
+        gdsHelper2.executeStatement(stmtHandle2, false);
+        gdsHelper2.fetch(stmtHandle2, 10);
+        
+        DataProvider dataProvider0 = new DataProvider(stmtHandle2, 0);
+        DataProvider dataProvider1 = new DataProvider(stmtHandle2, 1);
+        
+        FBField field0 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[0], dataProvider0, gdsHelper2, false);
+        FBField field1 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[1], dataProvider1, gdsHelper2, false);
+        
+        field0.setConnection(gdsHelper2);
+        field1.setConnection(gdsHelper2);
+        
+        int row = 0;
+        while(row < stmtHandle2.getRows().length) {
+        
+            if (stmtHandle2.getRows()[row] == null) {
+                row++;
+                continue;
+            }
+            
+            dataProvider0.setRow(row);
+            dataProvider1.setRow(row);
+            
+            long inLimboTxId = field0.getLong();
+            byte[] inLimboMessage = field1.getBytes();
+        
+            try {
+                FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
+                xids.add(xid);
+            } catch(FBIncorrectXidException ex) {
+                // ignore this Xid
+            }
+   
+            row++;
+        }
+   
+        gdsHelper2.closeStatement(stmtHandle2, true);
+        return xids;
     }
 
     AbstractConnection newConnection(FBManagedConnection mc)
