@@ -1172,6 +1172,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      */
     protected void prepareFixedStatement(String sql, boolean describeBind)
             throws GDSException, SQLException {
+        
         super.prepareFixedStatement(sql, describeBind);
 
         XSQLDA inSqlda = fixedStmt.getInSqlda();
@@ -1212,7 +1213,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
                         .setTrimString(trimStrings);
         }
 
-        this.isExecuteProcedureStatement = isExecuteProcedureStatement(sql);
+        this.isExecuteProcedureStatement = isExecuteProcedureStatement(fixedStmt);
     }
 
     /**
