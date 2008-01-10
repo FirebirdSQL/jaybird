@@ -28,43 +28,63 @@
     </javac>
   </target>
 
-  <target name="set-jdbc-20-src" unless="jdbc.30">
+  <target name="set-jdbc-20-src" if="jdbc.20">
+  	<echo message="Using JDBC 2.0 classes"/>
     <path id="source.java.additional">
       <pathelement path="${source.jdbc.20}"/>
     </path>
   </target>
   
   <target name="set-jdbc-30-src" if="jdbc.30">
+  	<echo message="Using JDBC 3.0 classes"/>
     <path id="source.java.additional">
       <pathelement path="${source.jdbc.30}"/>
     </path>
   </target>
 
+  <target name="set-jdbc-40-src" if="jdbc.40">
+  	<echo message="Using JDBC 4.0 classes"/>
+    <path id="source.java.additional">
+      <pathelement path="${source.jdbc.40}"/>
+    </path>
+  </target>
+  
   <target name="set-wire1.3-src" if="jdk1.3">
+  	<echo message="Using wire protocol implementation for JDK 1.3"/>
     <path id="source.java.wire">
       <pathelement path="${source.wire1.3}"/>
     </path>
   </target>
 
   <target name="set-wire1.4-src" unless="jdk1.3">
+  	<echo message="Using wire protocol implementation for JDK 1.4 and higher"/>
     <path id="source.java.wire">
       <pathelement path="${source.wire1.4}"/>
     </path>
   </target>
 
   <target name="set-pool1.4-src" unless="jdk1.5">
+  	<echo message="Using pool implementation for JDK 1.4 and below"/>
     <path id="source.java.pool">
       <pathelement path="${source.pool1.4}"/>
     </path>
   </target>
 
   <target name="set-pool1.5-src" if="jdk1.5">
+  	<echo message="Using pool implementation for JDK 5.0 and higher"/>
     <path id="source.java.pool">
       <pathelement path="${source.pool1.5}"/>
     </path>
   </target>
 
-  <target name="compile-driver" depends="set-jdbc-20-src,set-jdbc-30-src,set-wire1.3-src,set-wire1.4-src">
+  <target name="set-pool1.6-src" if="jdk1.6">
+  	<echo message="Using pool implementation for JDK 6.0 and higher"/>
+    <path id="source.java.pool">
+      <pathelement path="${source.pool1.5}"/>
+    </path>
+  </target>
+
+  <target name="compile-driver" depends="set-jdbc-20-src,set-jdbc-30-src,set-jdbc-40-src,set-wire1.3-src,set-wire1.4-src">
     <mkdir dir="${build.classes}"/>
     <javac destdir="${build.classes}"
            target="${ant.java.version}"
@@ -81,7 +101,7 @@
     </javac>
   </target>
 
-  <target name="compile-pool" depends="set-pool1.4-src,set-pool1.5-src,compile-driver">
+  <target name="compile-pool" depends="set-pool1.4-src,set-pool1.5-src,set-pool1.6-src,compile-driver">
     <mkdir dir="${build.pool}"/>
     <javac srcdir="${source.pool}"
            destdir="${build.pool}"
@@ -120,8 +140,14 @@
       <pathelement path="${source.test.30}"/>
     </path>
   </target>
+  
+  <target name="set-jdbc-40-test" if="jdbc.40">
+    <path id="source.test.additional">
+      <pathelement path="${source.test.30}"/>
+    </path>
+  </target>
 
-  <target name="compile-tests" depends="compile-pool,set-jdbc-20-test,set-jdbc-30-test">
+  <target name="compile-tests" depends="compile-pool,set-jdbc-20-test,set-jdbc-30-test,set-jdbc-30-test">
     <mkdir dir="${build.test}"/>
     <javac srcdir="${source.test}"
            destdir="${build.test}"

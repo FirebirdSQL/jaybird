@@ -29,6 +29,8 @@ import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
 import javax.sql.DataSource;
 
+import org.firebirdsql.jdbc.FBDatabaseMetaData;
+import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.pool.FBWrappingDataSource;
 
 /**
@@ -336,6 +338,17 @@ public class AppServerDataSource implements DataSource, Referenceable,
                 .getObjectInstance(ref, name, nameCtx, environment);
 
         return new AppServerDataSource(dataSource);
+    }
+
+    public boolean isWrapperFor(Class arg0) throws SQLException {
+        return arg0 != null && arg0.isAssignableFrom(AppServerDataSource.class);
+    }
+
+    public Object unwrap(Class arg0) throws SQLException {
+        if (!isWrapperFor(arg0))
+            throw new FBSQLException("No compatible class found.");
+        
+        return this;
     }
 
 }
