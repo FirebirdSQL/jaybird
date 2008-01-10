@@ -256,7 +256,7 @@ public class TestFBDriver extends FBTestBase {
                 s.execute("CREATE TABLE DATETEST (DATEID INTEGER NOT NULL PRIMARY KEY, TESTDATE TIMESTAMP)");
                 PreparedStatement ps = c.prepareStatement("INSERT INTO DATETEST (DATEID, TESTDATE) VALUES (?,?)");
                 Calendar cal = new GregorianCalendar(timeZoneUTC);
-                Timestamp x = Timestamp.valueOf("17-02-1917 20:59:31");
+                Timestamp x = Timestamp.valueOf("1917-02-17 20:59:31");
                 try 
                 {
                     ps.setInt(1, 1);
