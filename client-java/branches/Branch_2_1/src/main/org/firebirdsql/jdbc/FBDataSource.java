@@ -197,6 +197,16 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
     }
 
 
+    public boolean isWrapperFor(Class arg0) throws SQLException {
+        return arg0 != null && arg0.isAssignableFrom(FBDataSource.class);
+    }
+
+    public Object unwrap(Class arg0) throws SQLException {
+        if (!isWrapperFor(arg0))
+            throw new FBSQLException("No compatible class found.");
+        
+        return this;
+    }
 
 }
 

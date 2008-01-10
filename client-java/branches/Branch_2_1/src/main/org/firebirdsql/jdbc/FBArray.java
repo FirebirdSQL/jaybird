@@ -313,6 +313,10 @@ public class FBArray implements Array {
     }
 
 
+    public void free() throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
 }
 
 

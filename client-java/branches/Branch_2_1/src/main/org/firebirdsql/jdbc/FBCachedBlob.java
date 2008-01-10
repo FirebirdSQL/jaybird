@@ -142,4 +142,15 @@ public class FBCachedBlob implements FirebirdBlob, Synchronizable {
     public Object getSynchronizationObject() throws SQLException {
         return new Object();
     }
+
+    public void free() throws SQLException {
+        // FIXME all methods should not work after this being called
+        blobData = null;
+    }
+
+    public InputStream getBinaryStream(long pos, long length) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+    
+    
 }

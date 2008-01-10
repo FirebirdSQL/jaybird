@@ -21,13 +21,8 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.FBTestBase;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.sql.*;
-import java.sql.Blob;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.sql.Types;
 import java.util.Arrays;
 
 /**
@@ -306,6 +301,14 @@ public class TestFBBlobAutocommit extends FBTestBase {
             }
 
             public void truncate(long len) throws SQLException {
+                throw new FBDriverNotCapableException();
+            }
+
+            public void free() throws SQLException {
+                throw new FBDriverNotCapableException();
+            }
+
+            public InputStream getBinaryStream(long pos, long length) throws SQLException {
                 throw new FBDriverNotCapableException();
             }
         }

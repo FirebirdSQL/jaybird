@@ -48,7 +48,8 @@ public class PingablePooledConnection implements PooledConnection,
         LoggerFactory.getLogger(PingablePooledConnection.class, false);
 
     protected Connection jdbcConnection;
-    private HashSet eventListeners = new HashSet();
+    private HashSet connectionEventListeners = new HashSet();
+    private HashSet statementEventListeners = new HashSet();
 
     private boolean invalid;
     private boolean inPool;
@@ -234,7 +235,7 @@ public class PingablePooledConnection implements PooledConnection,
      */
     public synchronized
         void addConnectionEventListener(ConnectionEventListener listener) {
-        eventListeners.add(listener);
+        connectionEventListeners.add(listener);
     }
 
     /**
@@ -244,7 +245,15 @@ public class PingablePooledConnection implements PooledConnection,
      */
     public synchronized
         void removeConnectionEventListener(ConnectionEventListener listener) {
-        eventListeners.remove(listener);
+        connectionEventListeners.remove(listener);
+    }
+
+    public void addStatementEventListener(StatementEventListener listener) {
+        statementEventListeners.add(listener);
+    }
+
+    public void removeStatementEventListener(StatementEventListener listener) {
+        statementEventListeners.remove(listener);
     }
 
     /**
@@ -259,7 +268,7 @@ public class PingablePooledConnection implements PooledConnection,
         
         ConnectionEvent event = new ConnectionEvent(this);
         
-        List tempListeners = new ArrayList(eventListeners);
+        List tempListeners = new ArrayList(connectionEventListeners);
         
         Iterator iter = tempListeners.iterator();
         while (iter.hasNext()) {
@@ -308,7 +317,7 @@ public class PingablePooledConnection implements PooledConnection,
             // and finally notify about the event
             ConnectionEvent event = new ConnectionEvent(this);
             
-            List tempListeners = new ArrayList(eventListeners);
+            List tempListeners = new ArrayList(connectionEventListeners);
             
             Iterator iter = tempListeners.iterator();
             while (iter.hasNext()) {
@@ -531,7 +540,7 @@ public class PingablePooledConnection implements PooledConnection,
 
         ConnectionEvent event = new ConnectionEvent(this);
         
-        List tempListeners = new ArrayList(eventListeners);
+        List tempListeners = new ArrayList(connectionEventListeners);
         
         Iterator iter = tempListeners.iterator();
         while (iter.hasNext()) {
@@ -542,7 +551,7 @@ public class PingablePooledConnection implements PooledConnection,
     public void connectionErrorOccured(PooledConnectionHandler connection, SQLException ex) {
         ConnectionEvent event = new ConnectionEvent(this, ex);
 
-        List tempListeners = new ArrayList(eventListeners);
+        List tempListeners = new ArrayList(connectionEventListeners);
         
         Iterator iter = tempListeners.iterator();
         while (iter.hasNext()) {
