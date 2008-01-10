@@ -53,10 +53,7 @@ import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
-import org.firebirdsql.gds.impl.AbstractGDS;
-import org.firebirdsql.gds.impl.AbstractIscTrHandle;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -1046,6 +1043,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	}
 
 	final static byte[] describe_select_info = new byte[] {
+            ISCConstants.isc_info_sql_stmt_type,
 			ISCConstants.isc_info_sql_select,
 			ISCConstants.isc_info_sql_describe_vars,
 			ISCConstants.isc_info_sql_sqlda_seq,
@@ -1067,6 +1065,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	}
 
 	final static byte[] describe_bind_info = new byte[] {
+            ISCConstants.isc_info_sql_stmt_type,
 			ISCConstants.isc_info_sql_bind,
 			ISCConstants.isc_info_sql_describe_vars,
 			ISCConstants.isc_info_sql_sqlda_seq,
@@ -1429,6 +1428,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	}
 
 	final static byte[] sql_prepare_info = new byte[] {
+            ISCConstants.isc_info_sql_stmt_type,
 			ISCConstants.isc_info_sql_select,
 			ISCConstants.isc_info_sql_describe_vars,
 			ISCConstants.isc_info_sql_sqlda_seq,
@@ -2299,16 +2299,26 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		if (debug)
 			log.debug("parseSqlInfo started");
 
+        // check the statement type
+        int i = 0;
+        if (info[i] == ISCConstants.isc_info_sql_stmt_type) {
+            int dataLength = iscVaxInteger(info, ++i, 2);
+            i += 2;
+            int statementType = iscVaxInteger(info, i, dataLength);
+            ((isc_stmt_handle_impl)stmt_handle).setStatementType(statementType);
+            i += dataLength;
+        }
+        
 		XSQLDA xsqlda = new XSQLDA();
 		int lastindex = 0;
 		int index = 0;
-		while ((index = parseTruncSqlInfo(info, infoLength, xsqlda, lastindex)) > 0) {
-			byte[] new_items = new byte[4 + items.length];
+		while ((index = parseTruncSqlInfo(i + 2, info, infoLength, xsqlda, lastindex)) > 0) {
+			byte[] new_items = new byte[4 + items.length - 1];
 			new_items[0] = ISCConstants.isc_info_sql_sqlda_start;
 			new_items[1] = 2;
 			new_items[2] = (byte) (index & 255);
 			new_items[3] = (byte) (index >> 8);
-			System.arraycopy(items, 0, new_items, 4, items.length);
+			System.arraycopy(items, 1, new_items, 4, items.length - 1);
 
 			int size = infoLength;
 
@@ -2320,6 +2330,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 			info = iscDsqlSqlInfo(stmt_handle, new_items, size);
 			lastindex = index;
+            i = 0;
 		}
 		if (debug)
 			log.debug("parseSqlInfo ended");
@@ -2328,7 +2339,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		return xsqlda;
 	}
 
-	private int parseTruncSqlInfo(byte[] info, int infoLength, XSQLDA xsqlda,
+	private int parseTruncSqlInfo(int startAt, byte[] info, int infoLength, XSQLDA xsqlda,
 			int lastindex) throws GDSException {
 		boolean debug = log != null && log.isDebugEnabled();
 		byte item;
@@ -2338,7 +2349,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 					+ iscVaxInteger(info, 0, 2) + " or: " + info[0] + ", "
 					+ info[1]);
 
-		int i = 2;
+		int i = startAt;
 
 		int len = iscVaxInteger(info, i, 2);
 		i += 2;
