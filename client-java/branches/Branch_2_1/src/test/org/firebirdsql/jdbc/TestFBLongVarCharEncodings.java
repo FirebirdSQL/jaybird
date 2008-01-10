@@ -44,7 +44,9 @@ public class TestFBLongVarCharEncodings extends TestFBEncodings {
         "  win1254_field BLOB SUB_TYPE 1 CHARACTER SET WIN1254, " +
         "  unicode_field BLOB SUB_TYPE 1 CHARACTER SET UNICODE_FSS, " +
         "  ascii_field BLOB SUB_TYPE 1 CHARACTER SET ASCII, " +
-        "  none_field BLOB SUB_TYPE 1 CHARACTER SET NONE " +
+        "  none_field BLOB SUB_TYPE 1 CHARACTER SET NONE, " +
+        "  char_field BLOB SUB_TYPE 1 CHARACTER SET UNICODE_FSS, " +
+        "  utf8_field BLOB SUB_TYPE 1 CHARACTER SET UTF8 " +
         ")"
         ;
 
