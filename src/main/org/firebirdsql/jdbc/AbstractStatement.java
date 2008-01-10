@@ -23,8 +23,7 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 import java.util.*;
 
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.*;
 
 /**
@@ -336,7 +335,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * 
      * @return <code>true</code> if this statement was already closed.
      */
-    boolean isClosed() {
+    public boolean isClosed() {
         return closed;
     }
 
@@ -1080,15 +1079,16 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * 
      * @throws SQLException if translating statement into native code failed.
      */
-    protected boolean isExecuteProcedureStatement(String sql) throws SQLException {
-        
+    protected boolean isExecuteProcedureStatement(AbstractIscStmtHandle handle) throws SQLException {
+        /*
         String trimmedSql = nativeSQL(sql).trim();
         
         if (trimmedSql.startsWith("EXECUTE"))
             return true;
         else
             return false;
-        
+        */
+        return handle.getStatementType() == FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE;
     }
 
     protected boolean internalExecute(String sql)
@@ -1099,7 +1099,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
 
         // closeResultSet(false);
         prepareFixedStatement(sql, false);
-        gdsHelper.executeStatement(fixedStmt, isExecuteProcedureStatement(sql));
+        gdsHelper.executeStatement(fixedStmt, isExecuteProcedureStatement(fixedStmt));
         hasMoreResults = true;
         isResultSet = fixedStmt.getOutSqlda().sqld > 0;
         return isResultSet;
@@ -1176,7 +1176,9 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @return The identifier for the given statement's type
      */
     int getStatementType() throws FBSQLException {
-        populateStatementInfo();
+        if (fixedStmt.getStatementType() == IscStmtHandle.TYPE_UNKNOWN)
+            populateStatementInfo();
+        
         return fixedStmt.getStatementType();
     }
 
