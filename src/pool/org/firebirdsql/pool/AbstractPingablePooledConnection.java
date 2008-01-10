@@ -35,7 +35,7 @@ import java.util.*;
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class PingablePooledConnection implements PooledConnection,
+public abstract class AbstractPingablePooledConnection implements PooledConnection,
     PooledObject, XConnectionManager,
     XPingableConnection, XStatementManager {
 
@@ -49,7 +49,6 @@ public class PingablePooledConnection implements PooledConnection,
 
     protected Connection jdbcConnection;
     private HashSet connectionEventListeners = new HashSet();
-    private HashSet statementEventListeners = new HashSet();
 
     private boolean invalid;
     private boolean inPool;
@@ -75,7 +74,7 @@ public class PingablePooledConnection implements PooledConnection,
         return log;
     }
 
-    protected PingablePooledConnection(Connection connection, 
+    protected AbstractPingablePooledConnection(Connection connection, 
                                        boolean statementPooling, 
                                        /*int transactionIsolation,*/
                                        int maxStatements, boolean keepStatements) 
@@ -107,7 +106,7 @@ public class PingablePooledConnection implements PooledConnection,
         }
     }
 
-    protected PingablePooledConnection(Connection connection,
+    protected AbstractPingablePooledConnection(Connection connection,
         String pingStatement, int pingInterval, boolean statementPooling, 
         /*int transactionIsolation,*/ int maxStatements, boolean keepStatements) 
         throws SQLException 
@@ -246,14 +245,6 @@ public class PingablePooledConnection implements PooledConnection,
     public synchronized
         void removeConnectionEventListener(ConnectionEventListener listener) {
         connectionEventListeners.remove(listener);
-    }
-
-    public void addStatementEventListener(StatementEventListener listener) {
-        statementEventListeners.add(listener);
-    }
-
-    public void removeStatementEventListener(StatementEventListener listener) {
-        statementEventListeners.remove(listener);
     }
 
     /**
