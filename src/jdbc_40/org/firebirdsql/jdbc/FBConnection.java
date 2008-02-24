@@ -238,60 +238,65 @@ public class FBConnection extends AbstractConnection {
         releaseSavepoint((FirebirdSavepoint)savepoint);
     }
 
-    // -------------------------------------------------------------------------
-    // JDBC 4.0
-    // -------------------------------------------------------------------------
-    
-    public Array createArrayOf(String typeName, Object[] elements)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public Array createArrayOf(String typeName, Object[] elements) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    public Clob createClob() throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
     public NClob createNClob() throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
     public SQLXML createSQLXML() throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public Struct createStruct(String typeName, Object[] attributes)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public Struct createStruct(String typeName, Object[] attributes) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
     public Properties getClientInfo() throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
     public String getClientInfo(String name) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
     public boolean isValid(int timeout) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public void setClientInfo(Properties properties)
-            throws SQLClientInfoException {
+    public void setClientInfo(Properties properties) throws SQLClientInfoException {
+        // TODO: implement this java.sql.PreparedStatement method
         throw new SQLClientInfoException();
     }
 
-    public void setClientInfo(String name, String value)
-            throws SQLClientInfoException {
+    public void setClientInfo(String name, String value) throws SQLClientInfoException {
+        // TODO: implement this java.sql.PreparedStatement method
         throw new SQLClientInfoException();
     }
 
-    // java.sql.Wrapper interface
+    public boolean isWrapperFor(Class arg0) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    public Object unwrap(Class arg0) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
+    }
+
     
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return iface != null && iface.isAssignableFrom(FBConnection.class);
-    }
-
-    public <T> T unwrap(Class<T> iface) throws SQLException {
-        if (!isWrapperFor(iface))
-            throw new FBDriverNotCapableException();
-        
-        return (T)this;
-    }
 }

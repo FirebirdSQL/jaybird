@@ -580,13 +580,11 @@ void		JIscServiceHandle::AddWarning( jthrowable warning )
 
 
 JClassBinding  JEventHandle::sClassBinding;
-
-/*
+	
 JMethodBinding JEventHandle::sMethodBinding_GetInputHandle;
 JMethodBinding JEventHandle::sMethodBinding_GetOutputHandle;
 JMethodBinding JEventHandle::sMethodBinding_SetInputHandle;
 JMethodBinding JEventHandle::sMethodBinding_SetOutputHandle;
-*/
 JMethodBinding JEventHandle::sMethodBinding_SetSize;
 JMethodBinding JEventHandle::sMethodBinding_GetSize;
 JMethodBinding JEventHandle::sMethodBinding_SetEventCount;
@@ -609,13 +607,10 @@ void JEventHandle::Initialize( JNIEnv* javaEnvironment )
 
 	sClassBinding = JClassBinding( javaEnvironment, "org/firebirdsql/gds/impl/jni/EventHandleImp" );
 
-	/*
 	sMethodBinding_SetInputHandle = sClassBinding.GetMethodBinding( javaEnvironment, "setInputBufferHandle", "(I)V" );
 	sMethodBinding_SetOutputHandle = sClassBinding.GetMethodBinding( javaEnvironment, "setOutputBufferHandle", "(I)V" );
 	sMethodBinding_GetInputHandle = sClassBinding.GetMethodBinding( javaEnvironment, "getInputBufferHandle", "()I" );
 	sMethodBinding_GetOutputHandle = sClassBinding.GetMethodBinding( javaEnvironment, "getOutputBufferHandle", "()I" );
-	*/
-
 	sMethodBinding_SetSize = sClassBinding.GetMethodBinding( javaEnvironment, "setSize", "(I)V" );
 	sMethodBinding_GetSize = sClassBinding.GetMethodBinding( javaEnvironment, "getSize", "()I" );
         sMethodBinding_SetEventCount = sClassBinding.GetMethodBinding(javaEnvironment, "setEventCount", "(I)V");
@@ -644,28 +639,39 @@ JEventHandle::~JEventHandle()
 	}
 
 /*
+ *
+ */
 void JEventHandle::SetInputHandleValue( char* handle )
 	{
 	sMethodBinding_SetInputHandle.CallVoid( mJavaEnvironment, mJavaObjectHandle, handle );
 	}
 
+
+/*
+ *
+ */
 void JEventHandle::SetOutputHandleValue( char* handle)
 	{
 	sMethodBinding_SetOutputHandle.CallVoid( mJavaEnvironment, mJavaObjectHandle, handle );
 	}
 
 
+/*
+ *
+ */	
 char* JEventHandle::GetInputHandleValue()
 	{
 	return (char*)sMethodBinding_GetInputHandle.CallInteger( mJavaEnvironment, mJavaObjectHandle );
 	}
 
 
+/*
+ *
+ */	
 char* JEventHandle::GetOutputHandleValue()
 	{
 	return (char*)sMethodBinding_GetOutputHandle.CallInteger( mJavaEnvironment, mJavaObjectHandle );
 	}
-*/
 
 void JEventHandle::SetSize(int size)
 {
@@ -758,70 +764,3 @@ void JEventHandler::EventOccurred()
 	}
 
 
-EventStructManager::EventStructManager() : increment(10)
-{
-	// this->increment = 10;
-	this->size = 10;
-	this->lastPosition = 0;
-	this->eventStructPtr = new event_struct*[this->size];
-}
-
-EventStructManager::~EventStructManager() 
-{
-	for(long i = 0; i < size; i++) {
-		event_struct* tempEventStructPtr = eventStructPtr[i];
-		
-		// release pointer if required
-		if (eventStructPtr != 0) 
-			delete tempEventStructPtr;
-		
-		eventStructPtr[i] = 0;
-	}
-
-	delete[] eventStructPtr;
-}
-
-long EventStructManager::addEventStruct() 
-{
-	for(long i = 0; i < size; i++) {
-		event_struct* tempEventStructPtr = eventStructPtr[i];
-		if (tempEventStructPtr == 0) {
-			eventStructPtr[i] = new event_struct();
-			return i;
-		}
-	}
-
-	if (lastPosition == size - 1)
-		grow();
-
-	event_struct* newStruct = new event_struct();
-
-	long result = lastPosition;
-	this->eventStructPtr[result] = newStruct;
-	
-	lastPosition++;
-
-	return result;
-}
-
-event_struct* EventStructManager::getEventStruct(long index) 
-{
-	return this->eventStructPtr[index];
-}
-
-void EventStructManager::releaseEventStruct(long index)
-{
-	event_struct* tempEventStruct = this->eventStructPtr[index];
-	delete tempEventStruct;
-	this->eventStructPtr[index] = 0;
-}
-
-void EventStructManager::grow()
-{
-	event_struct** newStruct = new event_struct*[this->size + this->increment];
-	memcpy(newStruct, this->eventStructPtr, this->size * sizeof(event_struct*));
-
-	delete this->eventStructPtr;
-	this->eventStructPtr = newStruct;
-	this->size += this->increment;
-}

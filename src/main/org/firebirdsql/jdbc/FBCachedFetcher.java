@@ -257,7 +257,6 @@ class FBCachedFetcher implements FBFetcher {
     }
 
     public void close() throws SQLException {
-        rowsArray = new Object[0];
     }
 
     public int getRowNum() {

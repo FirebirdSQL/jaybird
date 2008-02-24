@@ -22,7 +22,8 @@ import java.sql.*;
 import java.util.Properties;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 
 /**
  * Test cases for FirebirdConnection interface.
@@ -284,8 +285,8 @@ public class TestFBConnection extends FBTestBase {
                     anotherTpb.addArgument(TransactionParameterBuffer.WRITE);
                     anotherTpb.addArgument(TransactionParameterBuffer.NOWAIT);
                     
-                    anotherTpb.addArgument(TransactionParameterBuffer.LOCK_WRITE, "TEST_LOCK");
                     anotherTpb.addArgument(TransactionParameterBuffer.PROTECTED);
+                    anotherTpb.addArgument(TransactionParameterBuffer.LOCK_WRITE, "TEST_LOCK");
                     
                     anotherConnection.setTransactionParameters(anotherTpb);
                     
@@ -368,40 +369,6 @@ public class TestFBConnection extends FBTestBase {
                     "WHERE rdb$character_set_id = " + rs1.getInt(2));
                 
                 assertTrue("Should find corresponding charset.", rs2.next());
-            }
-            
-        } finally {
-            connection.close();
-        }
-    }
-    
-    public void testGetAttachments() throws Exception {
-        FirebirdConnection connection = getConnectionViaDriverManager();
-        try {
-            AbstractConnection abstractConnection = (AbstractConnection)connection;
-            
-            GDS gds = (abstractConnection).getInternalAPIHandler();
-            
-            byte[] infoRequest = new byte[] {ISCConstants.isc_info_user_names, ISCConstants.isc_info_end};
-            byte[] reply = gds.iscDatabaseInfo(
-                abstractConnection.getIscDBHandle(), infoRequest, 1024);
-            
-            int i = 0;
-            
-            while(reply[i] != ISCConstants.isc_info_end) {
-                switch(reply[i++]) {
-                    case ISCConstants.isc_info_user_names :
-                        int len = gds.iscVaxInteger(reply, i, 2); // can be ignored
-                        i += 2;
-                        int strLen = reply[i] & 0xff;
-                        i += 1;
-                        String userName = new String(reply, i, strLen);
-                        i += strLen;
-                        System.out.println(userName);
-                        break;
-                    default :
-                        break;
-                }
             }
             
         } finally {

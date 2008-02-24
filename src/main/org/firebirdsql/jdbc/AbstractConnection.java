@@ -55,13 +55,11 @@ public abstract class AbstractConnection implements FirebirdConnection {
      
     // This set contains all allocated but not closed statements
     // It is used to close them before the connection is closed
-    protected HashSet activeStatements = new HashSet();
+    private HashSet activeStatements = new HashSet();
     
     private int resultSetHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
     
     private boolean autoCommit;
-    
-    private StoredProcedureMetaData storedProcedureMetaData;
 	 
     /**
      * Create a new AbstractConnection instance based on a
@@ -163,10 +161,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
             metaData = null;
         }
         this.mc = mc;
-    }
-    
-    public FBManagedConnection getManagedConnection() {
-        return mc;
     }
 
     /**
@@ -331,12 +325,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return prepareCall(sql, 
                 ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
-    
-    
-    public Clob createClob() throws SQLException {
-        FBBlob blob = (FBBlob)createBlob();
-        return new FBClob(blob);
-    }
 
     /**
      * Converts the given SQL statement into the system's native SQL grammar.
@@ -450,7 +438,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
 
         txCoordinator.commit();
-        invalidateTransactionLifetimeObjects();
+        invalidateSavepoints();
     }
 
 
@@ -471,15 +459,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
 
         txCoordinator.rollback();
-        invalidateTransactionLifetimeObjects();
-    }
-    
-    /**
-     * Invalidate everything that should only last for the lifetime of the current transaction.
-     */
-    protected void invalidateTransactionLifetimeObjects(){
-    	invalidateSavepoints();
-    	storedProcedureMetaData = null;
+        invalidateSavepoints();
     }
 
     /**
@@ -922,7 +902,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized CallableStatement prepareCall(String sql, 
         int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException 
     {
-        AbstractCallableStatement stmt;
+        CallableStatement stmt;
         
         if (resultSetHoldability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT && 
                 resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
@@ -944,16 +924,11 @@ public abstract class AbstractConnection implements FirebirdConnection {
         }	
 
         checkHoldability(resultSetType, resultSetHoldability);
-
-        if (storedProcedureMetaData == null){
-        	storedProcedureMetaData = StoredProcedureMetaDataFactory.getInstance(this);
-        }
         
         try {
             stmt = FBStatementFactory.createCallableStatement(getGDSHelper(), sql, resultSetType,
-                    resultSetConcurrency, resultSetHoldability, storedProcedureMetaData, txCoordinator, txCoordinator);
+                    resultSetConcurrency, resultSetHoldability, txCoordinator, txCoordinator);
             activeStatements.add(stmt);
-            
             return stmt;
         } catch(GDSException ex) {
             throw new FBSQLException(ex);

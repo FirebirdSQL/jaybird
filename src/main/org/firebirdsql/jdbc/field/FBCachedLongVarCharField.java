@@ -19,7 +19,6 @@
 
 package org.firebirdsql.jdbc.field;
 
-import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.Blob;
 import org.firebirdsql.gds.XSQLVAR;
@@ -47,12 +46,5 @@ public class FBCachedLongVarCharField extends FBLongVarCharField {
             return BLOB_NULL_VALUE;
 
         return new FBCachedBlob(getFieldData());
-    }
-    
-    public Clob getClob() throws SQLException {
-    	if (getFieldData() == null){
-    		return CLOB_NULL_VALUE;
-    	}
-    	return new FBCachedClob((FBCachedBlob)getBlob(), gdsHelper.getJavaEncoding());
     }
 }

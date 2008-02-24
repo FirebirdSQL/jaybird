@@ -27,7 +27,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.Properties;
+import java.util.Vector;
 
 
 /**
@@ -52,10 +53,7 @@ public class TestFBEncodings extends FBTestBase {
         "  unicode_field VARCHAR(50) CHARACTER SET UNICODE_FSS, " +
         "  ascii_field VARCHAR(50) CHARACTER SET ASCII, " +
         "  none_field VARCHAR(50) CHARACTER SET NONE, " +
-        "  char_field CHAR(50) CHARACTER SET UNICODE_FSS, " +
-        "  octets_field CHAR(10) CHARACTER SET OCTETS, " +
-        "  var_octets_field VARCHAR(10) CHARACTER SET OCTETS, " +
-        "  none_octets_field CHAR(10) CHARACTER SET NONE " +
+        "  char_field CHAR(50) CHARACTER SET UNICODE_FSS " +
         ")"
         ;
 
@@ -783,116 +781,6 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
             assertTrue("Value should be correct.", TRANSLATION_TEST.equals(rs.getString(1)));
             
             stmt.close();
-
-            
-        } finally {
-            connection.close();
-        }
-    }
-    
-    private final static byte[] OCTETS_DATA = new byte[] {
-        1, 2, 3, 4, 5, 6, 0, 0, 7
-    };
-    
-    public void testOctets() throws Exception {
-        Properties props = new Properties();
-        props.putAll(getDefaultPropertiesForConnection());
-//        props.put("type", "NATIVE");
-//        props.put("lc_ctype", "OCTETS");
-        props.put("charSet", "Cp1252");
-        
-        Connection connection = 
-            DriverManager.getConnection(getUrl(), props);
-
-        try {
-            PreparedStatement stmt = connection.prepareStatement(
-                "INSERT INTO test_encodings(" + 
-                "  id, octets_field, var_octets_field, none_octets_field) " +
-                "VALUES(?, ?, ?, ?)");
-            
-            stmt.setInt(1, UNIVERSAL_TEST_ID);
-            stmt.setBytes(2, OCTETS_DATA);
-            stmt.setBytes(3, OCTETS_DATA);
-            stmt.setBytes(4, OCTETS_DATA);
-            
-            int updated = stmt.executeUpdate();
-            stmt.close();
-            
-            assertTrue("Should insert one row", updated == 1);
-            
-            // 
-            // Test each column
-            //
-            stmt = connection.prepareStatement("SELECT octets_field, " +
-                    "var_octets_field, none_octets_field " + 
-                    "FROM test_encodings WHERE id = ?");
-            
-            stmt.setInt(1, UNIVERSAL_TEST_ID);
-            
-            ResultSet rs = stmt.executeQuery();
-            assertTrue("Should have at least one row", rs.next());
-            
-            byte[] charBytes = rs.getBytes(1);
-            byte[] varcharBytes = rs.getBytes(2);
-            byte[] noneBytes = rs.getBytes(3);
-
-            //assertTrue("Value should be correct.", Arrays.equals(OCTETS_DATA, charBytes));
-            assertTrue("Value should be correct.", Arrays.equals(OCTETS_DATA, varcharBytes));
-            
-            stmt.close();
-
-            
-        } finally {
-            connection.close();
-        }
-    }
-    
-    public void testExecuteBlock() throws Exception {
-        Properties props = new Properties();
-        props.putAll(getDefaultPropertiesForConnection());
-//        props.put("type", "NATIVE");
-//        props.put("lc_ctype", "OCTETS");
-//        props.put("charSet", "UTF-8");
-        
-        Connection connection = 
-            DriverManager.getConnection(getUrl(), props);
-
-        try {
-                
-            Statement stmt = connection.createStatement();
-            try {
-                stmt.execute("INSERT INTO test_encodings(unicode_field) VALUES('" + 
-                    "0123456789" +
-                    "abcdefghij" +
-                    "klmnopqrst" +
-                    "uvwxyz____" +
-                    "0123456789" +
-                    
-                    "0123456789" +
-                    "abcdefghij" +
-                    "klmnopqrst" +
-                    "uvwxyz____" +
-                    "0123456789" +
-
-                    "0123456789" +
-                    "abcdefghij" +
-                    "klmnopqrst" +
-                    "uvwxyz____" +
-                    "0123456789" +
-                    
-                    "')"); 
-                
-                ResultSet rs = stmt.executeQuery("EXECUTE BLOCK RETURNS ( " +
-                        "STR VARCHAR(3) CHARACTER SET UNICODE_FSS) " +
-                        "AS BEGIN   STR = 'abcde';   SUSPEND; " +
-                        "END ");
-                
-                rs.next();
-                System.out.println(rs.getString(1));
-                
-            } finally {
-                stmt.close();
-            }
 
             
         } finally {

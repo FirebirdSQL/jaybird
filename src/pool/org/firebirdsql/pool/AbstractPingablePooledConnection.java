@@ -48,7 +48,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
         LoggerFactory.getLogger(PingablePooledConnection.class, false);
 
     protected Connection jdbcConnection;
-    private HashSet eventListeners = new HashSet();
+    private HashSet connectionEventListeners = new HashSet();
 
     private boolean invalid;
     private boolean inPool;
@@ -108,7 +108,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
 
     protected AbstractPingablePooledConnection(Connection connection,
         String pingStatement, int pingInterval, boolean statementPooling, 
-        int maxStatements, boolean keepStatements) 
+        /*int transactionIsolation,*/ int maxStatements, boolean keepStatements) 
         throws SQLException 
     {
         this(connection, statementPooling, /*transactionIsolation,*/ maxStatements, keepStatements);
@@ -234,7 +234,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
      */
     public synchronized
         void addConnectionEventListener(ConnectionEventListener listener) {
-        eventListeners.add(listener);
+        connectionEventListeners.add(listener);
     }
 
     /**
@@ -244,7 +244,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
      */
     public synchronized
         void removeConnectionEventListener(ConnectionEventListener listener) {
-        eventListeners.remove(listener);
+        connectionEventListeners.remove(listener);
     }
 
     /**
@@ -259,7 +259,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
         
         ConnectionEvent event = new ConnectionEvent(this);
         
-        List tempListeners = new ArrayList(eventListeners);
+        List tempListeners = new ArrayList(connectionEventListeners);
         
         Iterator iter = tempListeners.iterator();
         while (iter.hasNext()) {
@@ -308,7 +308,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
             // and finally notify about the event
             ConnectionEvent event = new ConnectionEvent(this);
             
-            List tempListeners = new ArrayList(eventListeners);
+            List tempListeners = new ArrayList(connectionEventListeners);
             
             Iterator iter = tempListeners.iterator();
             while (iter.hasNext()) {
@@ -469,9 +469,6 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
             getLogChannel().info("Prepared statement cache cleaned.");
 
         }
-        
-        SQLException error = null;
-        
         synchronized (statements) {
             Iterator iter = statements.entrySet().iterator();
             while (iter.hasNext()) {
@@ -482,19 +479,9 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
 
                 iter.remove();
                 
-                try {
-                    stmtCache.invalidate();
-                } catch(SQLException ex) {
-                    if (error == null)
-                        error = ex;
-                    else
-                        error.setNextException(ex);
-                }
+                stmtCache.invalidate();
             }
         }
-        
-        if (error != null)
-                throw error;
     }
 
     /**
@@ -539,25 +526,12 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
 
         if (!keepStatements)
             cleanCache();
-        
-        try {
-            if (!jdbcConnection.getAutoCommit() && !connection.isClosed())
-                jdbcConnection.rollback();
-        } catch(SQLException ex) {
-            if (log != null && log.isWarnEnabled())
-                log.warn("Exception while trying to rollback transaction " +
-                        "before returning connection to pool.", ex);
-            
-            close();
-            
-            throw ex;
-        }
 
         currentConnection = null;
 
         ConnectionEvent event = new ConnectionEvent(this);
         
-        List tempListeners = new ArrayList(eventListeners);
+        List tempListeners = new ArrayList(connectionEventListeners);
         
         Iterator iter = tempListeners.iterator();
         while (iter.hasNext()) {
@@ -568,7 +542,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
     public void connectionErrorOccured(PooledConnectionHandler connection, SQLException ex) {
         ConnectionEvent event = new ConnectionEvent(this, ex);
 
-        List tempListeners = new ArrayList(eventListeners);
+        List tempListeners = new ArrayList(connectionEventListeners);
         
         Iterator iter = tempListeners.iterator();
         while (iter.hasNext()) {

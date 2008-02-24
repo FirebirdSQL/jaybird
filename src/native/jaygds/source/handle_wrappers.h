@@ -405,13 +405,18 @@ class JEventHandle
 	 */
 	virtual ~JEventHandle();
 
+        void SetInputHandleValue(char* handle);
+
 	/*
-    void SetInputHandleValue(char* handle);
+	 *	
+	 */
 	void SetOutputHandleValue(char* handle);
 
-    char* GetInputHandleValue();
+        /*
+	 *	
+	 */
+        char* GetInputHandleValue();
 	char* GetOutputHandleValue();
-	*/
 
         void SetSize(int size);
         int GetSize();
@@ -440,12 +445,10 @@ class JEventHandle
 
 	static JClassBinding  sClassBinding;
 	
-	/*
 	static JMethodBinding sMethodBinding_GetOutputHandle;
 	static JMethodBinding sMethodBinding_GetInputHandle;
 	static JMethodBinding sMethodBinding_SetOutputHandle;
 	static JMethodBinding sMethodBinding_SetInputHandle;
-	*/
         static JMethodBinding sMethodBinding_SetSize;
         static JMethodBinding sMethodBinding_GetSize;
         static JMethodBinding sMethodBinding_SetEventCount;
@@ -503,27 +506,8 @@ struct event_struct {
     jobject handler;
     jobject eventHandle;
     int state;
-	char* eventBuffer;
-	char* resultBuffer;
 };
 
-class EventStructManager
-{
-public:
-	EventStructManager();
-	~EventStructManager();
 
-	long addEventStruct();
-	event_struct* getEventStruct(long position);
-	void releaseEventStruct(long position);
-private:
-	void grow();
-
-	event_struct** eventStructPtr;
-	long size;
-	long lastPosition;
-	long increment;
-
-};
 
 #endif
