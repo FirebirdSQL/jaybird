@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.3  (Win32)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
 	<META NAME="CHANGEDBY" CONTENT="Roman Rokytskyy">
-	<META NAME="CHANGED" CONTENT="20080110;16345120">
+	<META NAME="CHANGED" CONTENT="20080224;17374300">
 	<STYLE TYPE="text/css">
 	<!--
 		@page { size: 21cm 29.7cm; margin: 2cm }
@@ -46,7 +46,7 @@
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <H1 CLASS="western" ALIGN=CENTER>Jaybird JCA/JDBC Driver<BR>Release
-Notes v 2.1.2</H1>
+Notes v 2.1.3</H1>
 <DIV ID="Table of Contents1" DIR="LTR">
 	<DIV ID="Table of Contents1_Head" DIR="LTR">
 		<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Table
@@ -255,6 +255,22 @@ Specification support</H3>
 <H3 CLASS="western"></H3>
 <H2 CLASS="western"><A NAME="0.0.What's new in Jaybird 2.1|outline"></A>
 What's new in Jaybird 2.1</H2>
+<H3 CLASS="western">List of bugs fixed since Jaybird 2.1.2</H3>
+<TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=48*>
+	<COL WIDTH=208*>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">JDBC-106</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">When table name contains lower case letters,
+			metadata information about table columns is not returned from the
+			driver. 
+			</P>
+		</TD>
+	</TR>
+</TABLE>
 <H3 CLASS="western">List of bugs fixed since Jaybird 2.1.1</H3>
 <TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=48*>
@@ -709,7 +725,7 @@ version in which the extension was introduced.</P>
 				<P CLASS="western" ALIGN=CENTER>2.0</P>
 			</TD>
 			<TD WIDTH=35%>
-				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">setTransactionParameters(<BR>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">setTransactionParameters(<BR></CODE><CODE CLASS="western">
 				   TransactionParameterBuffer tpb<BR>)</CODE></P>
 			</TD>
 			<TD WIDTH=32%>
@@ -1669,13 +1685,13 @@ limitations:</P>
 	<LI><P CLASS="western"><STRONG><SPAN STYLE="font-weight: medium">Current
 	implementation of the JNI library allows that either client library
 	or embedded server library is loaded into memory. The first library
-	being loaded wins, attempt to load second library will produce an
-	error. Usually this is not a problem, since embedded server library
-	can also act as a client library, so it is enough to load embedded
-	server library first. This limitation will be removed in Jaybird
-	2.1, implementation already exists, however it was contributed
-	already at RC stage; adding it to the release would delay it for few
-	months.</SPAN></STRONG></P>
+	being loaded wins, attempt to load </SPAN></STRONG><STRONG><SPAN STYLE="font-weight: medium">second
+	library will produce an error. Usually this is not a problem, since
+	embedded server library can also act as a client library, so it is
+	enough to load embedded server library first. This limitation will
+	be removed in Jaybird 2.1, implementation already exists, however it
+	was contributed already at RC stage; adding it to the release would
+	delay it for few months.</SPAN></STRONG></P>
 </UL>
 <H3 CLASS="western"><A NAME="0.0.0.Configuring Type 2 JDBC driver|outline"></A>
 Configuring Type 2 JDBC driver</H3>
