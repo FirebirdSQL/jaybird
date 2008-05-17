@@ -7,6 +7,8 @@ import org.firebirdsql.logging.LoggerFactory;
 
 
 public abstract class JniGDSImpl extends BaseGDSImpl {
+    
+    private static final boolean DEVELOPMENT_DEBUG_OUTPUT = false;
 
     /**
      * Name of the JNI library able to communicate with the client or embedded
@@ -84,9 +86,10 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
             try {
                 nativeInitilize(currentClientLibraryToTry);
             } catch (Throwable th) {
-                th.printStackTrace(); // Dont hide it completly
+                if (DEVELOPMENT_DEBUG_OUTPUT)
+                    th.printStackTrace(); // Dont hide it completly
 
-                if (logging)
+                if (logging && DEVELOPMENT_DEBUG_OUTPUT)
                     System.out.println("Failed to load client library # " + i
                         + " - \"" + currentClientLibraryToTry + "\"."
                         + th.toString());

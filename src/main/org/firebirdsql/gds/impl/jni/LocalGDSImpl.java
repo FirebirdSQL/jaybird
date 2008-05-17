@@ -11,7 +11,7 @@ public class LocalGDSImpl extends JniGDSImpl {
             false);
 
     private static final String[] LIST_OF_CLIENT_LIBRARIES_TO_TRY = {
-            "fbclient.dll", "libfbclient.so", "gds32.dll", "libgds.so",};
+            "fbclient.dll", "libfbclient.so"};
 
     public static final String LOCAL_TYPE_NAME = "LOCAL";
 
