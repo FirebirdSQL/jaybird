@@ -186,6 +186,17 @@ public class XdrInputStream {
     public int readInt() throws IOException {
         return (read() << 24) | (read() << 16) | (read() << 8) | (read() << 0);
     }
+    
+    /**
+     * Read in a <code>short</code>.
+     *
+     * @return The <code>short</code> that was read
+     * @throws IOException if an error occurs while reading from the 
+     *         underlying input stream
+     */
+    public int readShort() throws IOException {
+        return (read() << 8) | (read() << 0);
+    }
 
     /**
      * Read a given amount of data from the underlying input stream. The data
