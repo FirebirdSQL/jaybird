@@ -1638,6 +1638,20 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		}
 		return value;
 	}
+	
+	public int iscInteger(byte[] buffer, int pos, int length) {
+        int value;
+        int shift;
+
+        value = shift = 0;
+
+        int i = pos;
+        while (i < length) {
+            value = value << 8;
+            value += (buffer[i++] & 0xff);
+        }
+        return value;
+    }
 
 	// -----------------------------------------------
 	// Blob methods
@@ -2940,23 +2954,33 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                     nextOperation(db); 
 
                     int auxHandle = db.in.readInt();
+                    // garbage
+                    byte[] buffer = db.in.readRawBuffer(8);
 
-                    int port = iscVaxInteger(db.in.readRawBuffer(2), 0, 2);
+                    int respLen = db.in.readInt();
+                    respLen += respLen % 4;
 
                     // sin family
-                    db.in.readRawBuffer(2);
+                    int dummySinFamily = db.in.readShort();
+                    respLen -= 2;
+                    
+                    // sin port
+                    int port = db.in.readShort();
+                    respLen -= 2;
 
                     // IP address
                     byte[] ipBytes = db.in.readRawBuffer(4);
+                    respLen -= 4;
+                    
                     StringBuffer ipBuf = new StringBuffer();
-                    for (int i = 3; i >= 0; i--){
+                    for (int i = 0; i < 4; i++){
                         ipBuf.append((int)(ipBytes[i] & 0xff));
-                        if (i > 0) ipBuf.append(".");
+                        if (i < 4) ipBuf.append(".");
                     }
                     String ipAddress = ipBuf.toString();
 
                     // Ignore
-                    db.in.readRawBuffer(12);
+                    buffer = db.in.readRawBuffer(respLen);
                     readStatusVector(db);
 
                     db.eventCoordinator = 
@@ -3000,7 +3024,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
             throw new GDSException(ISCConstants.isc_bad_db_handle);
         }
         
-        if (db.eventCoordinator.cancelEvents(handleImp)){
+        if (db.eventCoordinator != null && db.eventCoordinator.cancelEvents(handleImp)){
             synchronized (db){
                 try {
                     db.out.writeInt(op_cancel_events);
