@@ -1,3 +1,25 @@
+2008-05-17 22:30  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/jni/:
+	JniGDSImpl.java, LocalGDSImpl.java, NativeGDSImpl.java:
+
+	fixed incorrect logging of the library loading process and cleaned
+	up the DLL names
+
+2008-05-17 22:22  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/wire/:
+	AbstractJavaGDSImpl.java, XdrInputStream.java:
+
+	fixed unregistered bug equivalent to DNET-140
+
+2008-05-17 22:18  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/wire/:
+	AbstractJavaGDSImpl.java, XdrInputStream.java:
+
+	fixed unregistered bug equivalent to DNET-140
+
 2008-02-24 17:40  rrokytskyy
 
 	* client-java/src/etc/: release_notes.html, release_notes.odt,
