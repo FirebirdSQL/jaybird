@@ -265,8 +265,10 @@ public class TestFBConnection extends FBTestBase {
                 TransactionParameterBuffer tpb = 
                     connection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
                 
-                tpb.removeArgument(TransactionParameterBuffer.WAIT);
-                tpb.addArgument(TransactionParameterBuffer.NOWAIT);
+                if (tpb.hasArgument(TransactionParameterBuffer.WAIT)) {
+                    tpb.removeArgument(TransactionParameterBuffer.WAIT);
+                    tpb.addArgument(TransactionParameterBuffer.NOWAIT);
+                }
                 
                 connection.setTransactionParameters(Connection.TRANSACTION_READ_COMMITTED, tpb);
                 connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
@@ -285,8 +287,8 @@ public class TestFBConnection extends FBTestBase {
                     anotherTpb.addArgument(TransactionParameterBuffer.WRITE);
                     anotherTpb.addArgument(TransactionParameterBuffer.NOWAIT);
                     
-                    anotherTpb.addArgument(TransactionParameterBuffer.PROTECTED);
                     anotherTpb.addArgument(TransactionParameterBuffer.LOCK_WRITE, "TEST_LOCK");
+                    anotherTpb.addArgument(TransactionParameterBuffer.PROTECTED);
                     
                     anotherConnection.setTransactionParameters(anotherTpb);
                     
@@ -311,6 +313,9 @@ public class TestFBConnection extends FBTestBase {
             } finally {
                 stmt.close();
             }
+        } catch(SQLException ex) {
+            ex.printStackTrace();
+            throw ex;
         } finally {
             connection.close();
         }
