@@ -1,3 +1,23 @@
+2008-05-26 04:23  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBConnection.java:
+
+	fixed bug with incorrect filling the TPB
+
+2008-05-25 23:12  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+
+	made test run with FB 2.1
+
+2008-05-25 23:04  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/gds/impl/wire/TestGds.java:
+
+	fixed bug in test case when the TPB was filled twice - FB 2.1 does
+	not like it.
+
 2008-05-17 22:30  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/gds/impl/jni/:
