@@ -28,7 +28,7 @@ public class SimpleFBTestBase extends TestCase
     /**
      * Default name of database file to use for the test case.
      */
-    protected final String DB_NAME = "fbtest.gdb";
+    protected final String DB_NAME = "fbtest.fdb";
 
     /**
      * Default user name for database connection
