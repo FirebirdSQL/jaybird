@@ -53,7 +53,8 @@ public class TestFBEncodings extends FBTestBase {
         "  unicode_field VARCHAR(50) CHARACTER SET UNICODE_FSS, " +
         "  ascii_field VARCHAR(50) CHARACTER SET ASCII, " +
         "  none_field VARCHAR(50) CHARACTER SET NONE, " +
-        "  char_field CHAR(50) CHARACTER SET UNICODE_FSS " +
+        "  char_field CHAR(50) CHARACTER SET UNICODE_FSS, " +
+        "  utf8_field VARCHAR(50) CHARACTER SET UTF8 " +
         ")"
         ;
 
@@ -786,5 +787,63 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
         } finally {
             connection.close();
         }
+    }
+    
+    public void _testWrongTranslation() throws Exception {
+        Properties props = new Properties();
+        props.putAll(getDefaultPropertiesForConnection());
+        props.put("lc_ctype", "NONE");
+        props.put("charSet", "Cp1252");
+        
+        Connection connection = 
+            DriverManager.getConnection(getUrl(), props);
+
+        try {
+            PreparedStatement stmt = connection.prepareStatement(
+                "INSERT INTO test_encodings(" + 
+                "  id, utf8_field) " +
+                "VALUES(?, ?)");
+            try {
+                stmt.setInt(1, UNIVERSAL_TEST_ID);
+                // stmt.setString(2, "\u00e4");
+                stmt.setBytes(2, "\u00e4".getBytes("UTF-8"));
+                
+                int updated = stmt.executeUpdate();
+                assertTrue("Should insert one row", updated == 1);
+            } finally {
+                stmt.close();
+            }
+            
+        } finally {
+            connection.close();
+        }
+        
+        props = new Properties();
+        props.putAll(getDefaultPropertiesForConnection());
+        props.put("lc_ctype", "NONE");
+        props.put("charSet", "Cp1251");
+        
+        connection = DriverManager.getConnection(getUrl(), props);
+
+        try {
+            PreparedStatement stmt = connection.prepareStatement("SELECT utf8_field " + 
+            "FROM test_encodings WHERE id = ?");
+            try {
+                stmt.setInt(1, UNIVERSAL_TEST_ID);
+                
+                ResultSet rs = stmt.executeQuery();
+                assertTrue("Should have at least one row", rs.next());
+                
+                String str = rs.getString(1);
+                
+                assertTrue("Value should be correct.", "\u0434".equals(str));
+            } finally {
+                stmt.close();
+            }
+            
+        } finally {
+            connection.close();
+        }
+
     }
 }
