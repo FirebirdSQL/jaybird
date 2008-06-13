@@ -84,8 +84,9 @@ public class TestGds extends SimpleFBTestBase {
 
 
     protected void setUp() {
-        if (!System.getProperty("test.gds_type").equals("PURE_JAVA") &&
-                !System.getProperty("test.gds_type").equals("TYPE4"))
+        if (!"PURE_JAVA".equals(System.getProperty("test.gds_type")) &&
+                !"TYPE4".equals(System.getProperty("test.gds_type")) &&
+                System.getProperty("test.gds_type") != null)
             fail("This test cannot be run for JNI driver");
         
        //super.setUp(); we will create our own db's directly
