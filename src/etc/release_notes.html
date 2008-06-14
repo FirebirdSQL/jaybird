@@ -3,10 +3,10 @@
 <HEAD>
 	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
 	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.3  (Win32)">
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.4  (Win32)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
 	<META NAME="CHANGEDBY" CONTENT="Roman Rokytskyy">
-	<META NAME="CHANGED" CONTENT="20080224;17374300">
+	<META NAME="CHANGED" CONTENT="20080614;22403963">
 	<STYLE TYPE="text/css">
 	<!--
 		@page { size: 21cm 29.7cm; margin: 2cm }
@@ -46,7 +46,7 @@
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <H1 CLASS="western" ALIGN=CENTER>Jaybird JCA/JDBC Driver<BR>Release
-Notes v 2.1.3</H1>
+Notes v 2.1.4</H1>
 <DIV ID="Table of Contents1" DIR="LTR">
 	<DIV ID="Table of Contents1_Head" DIR="LTR">
 		<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Table
@@ -160,13 +160,13 @@ idea, the JCA specification is considerably clearer on the division
 of responsibility between the application server and driver.</P>
 <H3 CLASS="western"><A NAME="0.0.0.Supported Firebird versions|outline"></A>
 Supported Firebird versions</H3>
-<P CLASS="western">Jaybird supports Firebird 1.0.x, Firebird 1.5 and
-Firebird 2.0 SuperServer and Classic regardless of the platform on
-which server runs when type 4 JDBC driver is used. Type 2 and
-embedded server JDBC drivers require JNI library, precompiled
-binaries for Win32 and Linux platforms are shipped in the default
-installation, other platforms require porting/building JNI library
-for that platform. 
+<P CLASS="western">Jaybird supports Firebird 1.0.x, Firebird 1.5.x,
+Firebird 2.0.x and Firebird 2.1.x SuperServer and Classic regardless
+of the platform on which server runs when type 4 JDBC driver is used.
+Type 2 and embedded server JDBC drivers require JNI library,
+precompiled binaries for Win32 and Linux platforms are shipped in the
+default installation, other platforms require porting/building JNI
+library for that platform. 
 </P>
 <P CLASS="western">Driver no longer supports InterBase servers due to
 a Firebird-specific changes in database attachment parameters that
@@ -254,7 +254,32 @@ Specification support</H3>
 </TABLE>
 <H3 CLASS="western"></H3>
 <H2 CLASS="western"><A NAME="0.0.What's new in Jaybird 2.1|outline"></A>
-What's new in Jaybird 2.1</H2>
+What's new in Jaybird 2.1.4</H2>
+<H3 CLASS="western">List of bugs fixed since Jaybird 2.1.3</H3>
+<TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=48*>
+	<COL WIDTH=208*>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">-</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">Updated wire protocol implementation for events
+			handling to make Jaybird compatible with Firebird 2.1. See also
+			<A HREF="http://tracker.firebirdsql.org/browse/DNET-140">http://tracker.firebirdsql.org/browse/DNET-140</A>
+						</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">-</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">Updated handling of the table reservation in
+			test cases to make it compatible with Firebird 2.1</P>
+		</TD>
+	</TR>
+</TABLE>
 <H3 CLASS="western">List of bugs fixed since Jaybird 2.1.2</H3>
 <TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=48*>
@@ -507,16 +532,18 @@ Firebird management interfaces</H3>
 Services API that allows Java applications to perform various server
 management tasks:</P>
 <UL>
-	<LI><P CLASS="western">database backup/restore on remote server; it
-	is possible to performs metadata-only backups, switch the garbage
-	collection during backup off, restore databases with no validity
-	constraints or active indices, etc.</P>
-	<LI><P CLASS="western">database maintenance, e.g. database shutdown,
-	sweep, changing the forced writes settings, changing SQL dialect of
-	the database, shadow management, etc.</P>
-	<LI><P CLASS="western">retrieving database statistics including
-	header page statistics, system table statistics, data page
-	statistics and index statistics.</P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif">database
+	backup/restore on remote server; it is possible to performs
+	metadata-only backups, switch the garbage collection during backup
+	off, restore databases with no validity constraints or active
+	indices, etc.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif">database
+	maintenance, e.g. database shutdown, sweep, changing the forced
+	writes settings, changing SQL dialect of the database, shadow
+	management, etc.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif">retrieving
+	database statistics including header page statistics, system table
+	statistics, data page statistics and index statistics.</FONT></P>
 	<LI><P CLASS="western" ALIGN=LEFT>user management, including adding,
 	modifying, and deleting user accounts.</P>
 </UL>
@@ -691,7 +718,7 @@ version in which the extension was introduced.</P>
 				<P CLASS="western" ALIGN=CENTER>2.0</P>
 			</TD>
 			<TD WIDTH=35%>
-				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">createTransactionParameterBuffer()</CODE></P>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western">createTransactionParameter</CODE><CODE CLASS="western">Buffer()</CODE></P>
 			</TD>
 			<TD WIDTH=32%>
 				<P CLASS="western" ALIGN=LEFT>Create an empty transaction
@@ -1067,32 +1094,32 @@ it is possible to enable extensive logging inside the driver.</P>
 <P CLASS="western">Following file groups can be found in distribution
 package:</P>
 <UL>
-	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-2.1.2.jar</CODE>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-2.1.4.jar</CODE>
 	&ndash; archive containing JCA/JDBC driver and JMX management class.
-	It requires JCA 1.0, JTA 1.0.1, and JAAS 1.0.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-pool-2.1.2.jar</CODE>
+	It requires JCA 1.0, JTA 1.0.1, and JAAS 1.0.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-pool-2.1.4.jar</CODE>
 	&ndash; archive contains implementation of connection pooling and
-	statement pooling interfaces.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-full-2.1.2.jar</CODE>
+	statement pooling interfaces.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-full-2.1.4.jar</CODE>
 	&ndash; merge of <CODE CLASS="western">firebirdsql.jar</CODE> and
 	<CODE CLASS="western">mini-j2ee.jar</CODE> (or <CODE CLASS="western">mini-j2ee_16.jar</CODE>
 	for JDK 6.0 deployments). This archive can be used for standalone<A CLASS="sdfootnoteanc" NAME="sdfootnote1anc" HREF="#sdfootnote1sym"><SUP>1</SUP></A>
-	Jaybird deployments.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">Jaybird-2.1.3.rar</CODE>
+	Jaybird deployments.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-2.1.4.rar</CODE>
 	&ndash; resource archive ready for deployment in JCA-enabled
-	application servers.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">lib/jaas.jar</CODE> &ndash;
-	archive containing JAAS 1.0 classes.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">lib/log4j-core.jar</CODE>
+	application servers.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">lib/jaas.jar</CODE>
+	&ndash; archive containing JAAS 1.0 classes.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">lib/log4j-core.jar</CODE>
 	&ndash; archive containing core Log4J classes that provide a
-	possibility to log into the file.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">lib/mini-j2ee.jar (or
-	</CODE><CODE CLASS="western">mini-j2ee_16.jar</CODE><CODE CLASS="western">
+	possibility to log into the file.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">lib/mini-j2ee.jar
+	(or </CODE><CODE CLASS="western">mini-j2ee_16.jar</CODE><CODE CLASS="western">
 	for JDK 6.0 deployments)</CODE> &ndash; archive containing JCA 1.0,
-	JTA 1.0.1 and JDBC 2.0 Optional Package classes.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">jaybird21.dll</CODE> &ndash;
-	Windows version of the JNI library for Type 2 and Embedded Server
-	drivers.</P>
+	JTA 1.0.1 and JDBC 2.0 Optional Package classes.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird21.dll</CODE>
+	&ndash; Windows version of the JNI library for Type 2 and Embedded
+	Server drivers.</FONT></P>
 	<LI><P CLASS="western" ALIGN=LEFT><CODE CLASS="western">libjaybird21.so</CODE>
 	&ndash; Linux version of the JNI library for Type 2 and Embedded
 	Server drivers.</P>
@@ -1157,7 +1184,7 @@ Server</H3>
 <CODE CLASS="western">fbembed.dll</CODE> on Windows and <CODE CLASS="western">libfbembed.so</CODE>
 on Linux are used. Requires correctly installed and configured
 Firebird embedded server.</P>
-<H2 CLASS="western"><A NAME="0.0.JDBC connection properties|outline"></A><A NAME="2.4.JDBC connection properties|outline"></A>
+<H2 CLASS="western"><A NAME="2.4.JDBC connection properties|outline"></A><A NAME="0.0.JDBC connection properties|outline"></A>
 JDBC connection properties</H2>
 <P CLASS="western">Table below contains properties that specify
 parameters of the connections that are obtained from this data
@@ -1772,104 +1799,107 @@ JDBC 3.0 deviations and unimplemented features</H3>
 <P CLASS="western">The following optional features and the methods
 for their support are not implemented:</P>
 <UL>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.Array</CODE>
-	data type is not yet supported.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.Blob</CODE>
-	does not implement following methods:</P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.Array</CODE>
+	data type is not yet supported.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.Blob</CODE>
+	does not implement following methods:</FONT></P>
 	<UL>
-		<LI><P CLASS="western"><CODE CLASS="western">position(Blob, long)</CODE>
-		and <CODE CLASS="western">position(byte[], long)</CODE>; Firebird
-		does not provide any server-side optimization for these calls,
-		client application must fetch complete BLOB content from the server
-		to do pattern search.</P>
-		<LI><P CLASS="western"><CODE CLASS="western">truncate(long)</CODE>;
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">position(Blob,
+		long)</CODE> and <CODE CLASS="western">position(byte[], long)</CODE>;
+		Firebird does not provide any server-side optimization for these
+		calls, client application must fetch complete BLOB content from the
+		server to do pattern search.</FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">truncate(long)</CODE>;
 		Firebird does not provide such functionality on the server side,
 		application must fetch old BLOB from the server and pump old
-		content into a newly created BLOB.</P>
+		content into a newly created BLOB.</FONT></P>
 	</UL>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.Clob</CODE>
-	data type is not yet supported.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.Connection</CODE></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.Clob</CODE>
+	data type is not yet supported.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.Connection</CODE></FONT></P>
 	<UL>
-		<LI><P CLASS="western"><CODE CLASS="western">getCatalog()</CODE>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">getCatalog()</CODE>
 		and <CODE CLASS="western">setCatalog(String)</CODE> are not
-		supported by Firebird server.</P>
-		<LI><P CLASS="western"><CODE CLASS="western">getTypeMap()</CODE>
-		and <CODE CLASS="western">setTypeMap(Map)</CODE> are not supported.</P>
-		<LI><P CLASS="western"><CODE CLASS="western">prepareStatement(String,
+		supported by Firebird server.</FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">getTypeMap()</CODE>
+		and <CODE CLASS="western">setTypeMap(Map)</CODE> are not supported.</FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">prepareStatement(String,
 		int)</CODE>, <CODE CLASS="western">prepareStatement(String, int[])</CODE>
 		and <CODE CLASS="western">prepareStatement(String, String[])</CODE>
 		 that return auto-generated keys are not implemented, because this
-		functionality is not provided by server.</P>
+		functionality is not provided by server.</FONT></P>
 	</UL>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.PreparedStatement</CODE></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.PreparedStatement</CODE></FONT></P>
 	<UL>
-		<LI><P CLASS="western"><CODE CLASS="western">setObject(int index,
-		Object object, int type)</CODE> Target SQL type is determined from
-		the class of the passed object and corresponding parameter is
-		ignored.</P>
-		<LI><P CLASS="western"><CODE CLASS="western">setObject(int index,
-		Object object, int type, int scale)</CODE> Same as above, type and
-		scale are ignored.</P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">setObject(int
+		index, Object object, int type)</CODE> Target SQL type is
+		determined from the class of the passed object and corresponding
+		parameter is ignored.</FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">setObject(int
+		index, Object object, int type, int scale)</CODE> Same as above,
+		type and scale are ignored.</FONT></P>
 	</UL>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.Ref </CODE>data
-	type is not supported by Firebird server.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.SQLData</CODE>
-	data type is not supported by Firebird server.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.SQLInput</CODE>
-	is not supported.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.SQLOutput</CODE>
-	is not supported.</P>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.Statement</CODE></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.Ref
+	</CODE>data type is not supported by Firebird server.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.SQLData</CODE>
+	data type is not supported by Firebird server.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.SQLInput</CODE>
+	is not supported.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.SQLOutput</CODE>
+	is not supported.</FONT></P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.Statement</CODE></FONT></P>
 	<UL>
-		<LI><P CLASS="western"><CODE CLASS="western">cancel()</CODE> is not
-		supported by Firebird server.</P>
-		<LI><P CLASS="western"><CODE CLASS="western">execute(String, int)</CODE>,
-		<CODE CLASS="western">execute(String, int[])</CODE>,
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">cancel()</CODE>
+		is not supported by Firebird server.</FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">execute(String,
+		int)</CODE>, <CODE CLASS="western">execute(String, int[])</CODE>,
 		<CODE CLASS="western">execute(String, String[])</CODE>,
 		<CODE CLASS="western">executeUpdate(String, int)</CODE>,
 		<CODE CLASS="western">executeUpdate(String, int[])</CODE>, and
 		<CODE CLASS="western">executeUpdate(String, String[])</CODE> that
 		return auto-generated keys are not implemented, because of server
-		incapability.</P>
-		<LI><P CLASS="western"><CODE CLASS="western">getGeneratedKeys()</CODE>
+		incapability.</FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">getGeneratedKeys()</CODE>
 		is not implemented because server does not support this feature
 		yet. As soon as support for this feature is available, driver will
-		be updated.</P>
+		be updated.</FONT></P>
 	</UL>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.Struct</CODE>
-	data type is not supported by server.</P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.Struct</CODE>
+	data type is not supported by server.</FONT></P>
 </UL>
 <P CLASS="western">The following methods are implemented, but deviate
 from the specification:</P>
 <UL>
-	<LI VALUE=1><P CLASS="western"><CODE CLASS="western">java.sql.Statement</CODE>
-		</P>
+	<LI VALUE=1><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.Statement</CODE>
+	</FONT>
+	</P>
 	<UL>
-		<LI><P CLASS="western"><CODE CLASS="western">get/setMaxFieldSize</CODE>
-		does nothing, Firebird server does not support this feature.</P>
-		<LI><P CLASS="western"><CODE CLASS="western">get/setQueryTimeout</CODE>
-		does nothing, Firebird server does not support this feature.</P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">get/setMaxFieldSize</CODE>
+		does nothing, Firebird server does not support this feature.</FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">get/setQueryTimeout</CODE>
+		does nothing, Firebird server does not support this feature.</FONT></P>
 	</UL>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.PreparedStatement</CODE>
-		</P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.PreparedStatement</CODE>
+	</FONT>
+	</P>
 	<UL>
-		<LI><P CLASS="western"><CODE CLASS="western">setObject(int index,
-		Object object, int type)</CODE> Target SQL type is determined from
-		the class of the passed object and corresponding parameter is
-		ignored.</P>
-		<LI><P CLASS="western"><CODE CLASS="western">setObject(int index,
-		Object object, int type, int scale)</CODE> Same as above, type and
-		scale are ignored.</P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">setObject(int
+		index, Object object, int type)</CODE> Target SQL type is
+		determined from the class of the passed object and corresponding
+		parameter is ignored.</FONT></P>
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">setObject(int
+		index, Object object, int type, int scale)</CODE> Same as above,
+		type and scale are ignored.</FONT></P>
 	</UL>
-	<LI><P CLASS="western"><CODE CLASS="western">java.sql.ResultSetMetaData</CODE>
-		</P>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">java.sql.ResultSetMetaData</CODE>
+	</FONT>
+	</P>
 	<UL>
-		<LI><P CLASS="western"><CODE CLASS="western">isReadOnly()</CODE>
-		always returns false 
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">isReadOnly()</CODE>
+		always returns false </FONT>
 		</P>
-		<LI><P CLASS="western"><CODE CLASS="western">isWritable()</CODE>
-		always returns true 
+		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">isWritable()</CODE>
+		always returns true </FONT>
 		</P>
 		<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><CODE CLASS="western">isDefinitivelyWritable()</CODE>
 		always returns true</P>
