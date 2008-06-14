@@ -1,5 +1,5 @@
-// #include <string.h>
-// #include <memory.h>
+#include <string.h>
+#include <memory.h>
 #include "locks.h"
 
 #include "platform.h"

@@ -309,8 +309,6 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         } finally {
             con.close();
             
-            assertTrue("Connection should report as being closed.", con.isClosed());
-            
             pool.shutdown();
         }
     }

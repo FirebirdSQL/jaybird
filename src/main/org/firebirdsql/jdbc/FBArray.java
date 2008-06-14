@@ -20,7 +20,9 @@
 package org.firebirdsql.jdbc;
 
 
-import java.sql.*;
+import java.sql.Array;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import java.util.Map;
 
@@ -311,26 +313,10 @@ public class FBArray implements Array {
     }
 
 
-    /**
-     * This method frees the <code>Array</code> object and releases the resources that 
-     * it holds. The object is invalid once the <code>free</code>
-     * method is called.
-     *<p>
-     * After <code>free</code> has been called, any attempt to invoke a
-     * method other than <code>free</code> will result in a <code>SQLException</code> 
-     * being thrown.  If <code>free</code> is called multiple times, the subsequent
-     * calls to <code>free</code> are treated as a no-op.
-     *<p>
-     * 
-     * @throws SQLException if an error occurs releasing
-     * the Array's resources
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
-     * @since 1.6
-     */
     public void free() throws SQLException {
-        
+        throw new FBDriverNotCapableException();
     }
+
 }
 
 

@@ -3,12 +3,25 @@ package org.firebirdsql.gds.impl.jni;
 import java.io.UnsupportedEncodingException;
 
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.EventHandle;
+import org.firebirdsql.gds.EventHandler;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.IscBlobHandle;
+import org.firebirdsql.gds.IscDbHandle;
+import org.firebirdsql.gds.IscStmtHandle;
+import org.firebirdsql.gds.IscSvcHandle;
+import org.firebirdsql.gds.IscTrHandle;
+import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -545,50 +558,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             stmt.setOutSqlda(native_isc_dsql_prepare(tr_handle, stmt_handle,
                     getZeroTerminatedArray(statement), dialect));
 
-            getStatementType(stmt);
-            
             return stmt_handle.getOutSqlda();
-        }
-    }
-
-    /**
-     * Find out the type of the specified statement.
-     * 
-     * @param stmt instance of {@link isc_stmt_handle_impl}.
-     * 
-     * @throws GDSException if error occured.
-     */
-    private void getStatementType(isc_stmt_handle_impl stmt) throws GDSException {
-        final byte [] REQUEST = new byte [] {
-            ISCConstants.isc_info_sql_stmt_type,
-            ISCConstants.isc_info_end };
-
-        int bufferSize = 1024;
-        byte[] buffer;
-        
-        buffer = iscDsqlSqlInfo(stmt, REQUEST, bufferSize); 
-
-        /*
-        if (buffer[0] == ISCConstants.isc_info_end){
-            throw new GDSException("Statement info could not be retrieved");
-        }
-        */
-
-        int dataLength = -1; 
-        for (int i = 0; i < buffer.length; i++){
-            switch(buffer[i]){
-                case ISCConstants.isc_info_sql_stmt_type:
-                    dataLength = iscVaxInteger(buffer, ++i, 2);
-                    i += 2;
-                    stmt.setStatementType(iscVaxInteger(buffer, i, dataLength));
-                    i += dataLength;
-                case ISCConstants.isc_info_end:
-                case 0:
-                    break;
-                default:
-                    throw new GDSException("Unknown data block [" 
-                            + buffer[i] + "]");
-            }
         }
     }
 

@@ -171,7 +171,6 @@ public final class ISCConstants {
     public final static int isc_tpb_no_rec_version          = 18;
     public final static int isc_tpb_restart_requests        = 19;
     public final static int isc_tpb_no_auto_undo            = 20;
-    public final static int isc_tpb_lock_timeout            = 21;
 
     /*************************************/
     /* Service parameter block stuff */
@@ -564,8 +563,6 @@ public final class ISCConstants {
     public final static int isc_info_next_transaction = 107;
     public final static int isc_info_db_provider = 108;
     public final static int isc_info_active_transactions = 109;
-    public final static int isc_info_active_tran_count = 110;
-    public final static int isc_info_creation_date = 111;
     
     public final static int isc_info_db_impl_rdb_vms = 1;
     public final static int isc_info_db_impl_rdb_eln = 2;
@@ -676,12 +673,6 @@ public final class ISCConstants {
     /* Transaction information items */
     /*********************************/
     public final static int isc_info_tra_id = 4;
-    public final static int isc_info_tra_oldest_interesting = 5;
-    public final static int isc_info_tra_oldest_snapshot = 6;
-    public final static int isc_info_tra_oldest_active = 7;
-    public final static int isc_info_tra_isolation = 8;
-    public final static int isc_info_tra_access = 9;
-    public final static int isc_info_tra_lock_timeout = 10;
 
 
     /********************/

@@ -196,14 +196,16 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
         return loginTimeout;
     }
 
-    // JDBC 4.0
-    
-    public boolean isWrapperFor(Class iface) throws SQLException {
-    	return false;
+
+    public boolean isWrapperFor(Class arg0) throws SQLException {
+        return arg0 != null && arg0.isAssignableFrom(FBDataSource.class);
     }
-    
-    public Object unwrap(Class iface) throws SQLException {
-    	throw new FBDriverNotCapableException();
+
+    public Object unwrap(Class arg0) throws SQLException {
+        if (!isWrapperFor(arg0))
+            throw new FBSQLException("No compatible class found.");
+        
+        return this;
     }
 
 }

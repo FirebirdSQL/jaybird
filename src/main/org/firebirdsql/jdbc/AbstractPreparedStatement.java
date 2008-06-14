@@ -196,11 +196,6 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
             }
         }
     }
-    
-    public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
-        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
-    }
-
 
     /**
      * Sets the designated parameter to SQL <code>NULL</code>.
@@ -1006,17 +1001,8 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
      *      </a>
      */
-    public void setClob(int parameterIndex, Clob clob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content
-        // into the our BLOB
-        if (!(clob instanceof FBClob)) {
-            FBClob fbc = new FBClob(new FBBlob(gdsHelper, blobListener));
-            fbc.copyCharacterStream(clob.getCharacterStream());
-            clob = fbc;
-        } 
-        
-        getField(parameterIndex).setClob((FBClob) clob);
-        isParamSet[parameterIndex - 1] = true;
+    public void setClob(int i, Clob x) throws SQLException {
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -1186,6 +1172,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      */
     protected void prepareFixedStatement(String sql, boolean describeBind)
             throws GDSException, SQLException {
+        
         super.prepareFixedStatement(sql, describeBind);
 
         XSQLDA inSqlda = fixedStmt.getInSqlda();
@@ -1226,7 +1213,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
                         .setTrimString(trimStrings);
         }
 
-        this.isExecuteProcedureStatement = fixedStmt.getStatementType() == FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE;
+        this.isExecuteProcedureStatement = isExecuteProcedureStatement(fixedStmt);
     }
 
     /**

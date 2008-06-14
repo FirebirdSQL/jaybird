@@ -19,14 +19,14 @@
 
 package org.firebirdsql.pool;
 
+import java.sql.*;
+
+import javax.sql.*;
+
+import org.firebirdsql.jdbc.FBDatabaseMetaData;
+import org.firebirdsql.jdbc.FBSQLException;
+
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.SQLException;
-
-import javax.sql.ConnectionPoolDataSource;
-import javax.sql.DataSource;
-
-import org.firebirdsql.jdbc.FBDriverNotCapableException;
 
 /**
  * This is simple implementation of {@link DataSource} interface that uses
@@ -90,15 +90,16 @@ public class SimpleDataSource implements DataSource {
     public void setLoginTimeout(int seconds) throws SQLException {
 		this.timeout = seconds;
     }
-	
-    // JDBC 4.0
-    
-    public boolean isWrapperFor(Class iface) throws SQLException {
-    	return false;
+
+    public boolean isWrapperFor(Class arg0) throws SQLException {
+        return arg0 != null && arg0.isAssignableFrom(SimpleDataSource.class);
     }
-    
-    public Object unwrap(Class iface) throws SQLException {
-    	throw new FBDriverNotCapableException();
+
+    public Object unwrap(Class arg0) throws SQLException {
+        if (!isWrapperFor(arg0))
+            throw new FBSQLException("No compatible class found.");
+        
+        return this;
     }
-    
+
 }

@@ -45,9 +45,7 @@ public class GDSExceptionHelper {
    private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class,false);
 
     private static final String MESSAGES = "isc_error_msg";
-    private static final String SQLSTATES = "isc_error_sqlstates";
     private static Properties messages = new Properties();
-    private static Properties sqlstates = new Properties();
 
     private static boolean initialized = false;
 
@@ -56,13 +54,8 @@ public class GDSExceptionHelper {
      * @todo think about better exception handling.
      */
     private static void init() {
-        loadResource(MESSAGES, messages);
-        loadResource(SQLSTATES, sqlstates);
-    }
-
-    private static void loadResource(String resource, Properties propeties) {
         try {
-            String res = "/" + resource.replace('.','/') + ".properties";
+            String res = "/" + MESSAGES.replace('.','/') + ".properties";
 			InputStream in = GDSException.class.getResourceAsStream(res);
             
             if (in == null) {
@@ -71,7 +64,7 @@ public class GDSExceptionHelper {
             }
             
             if (in != null)
-                propeties.load(in);
+                messages.load(in);
                 
         } catch (Exception ex) {
             if (log!=null) log.info("Exception in init of GDSExceptionHelper", ex);
@@ -90,23 +83,6 @@ public class GDSExceptionHelper {
         if (!initialized) init();
         return new GDSMessage(messages.getProperty(
             "" + code, "No message for code " + code + " found."));
-    }
-    
-    /**
-     * Get the SQL state for the specified error code.
-     * 
-     * @param code Firebird error code
-     *  
-     * @return string with SQL state, "HY000" if nothing found. 
-     */
-    public static String getSQLState(int code) {
-        if (!initialized) init();
-        String result = sqlstates.getProperty(Integer.toString(code));
-        
-        if (result == null)
-            result = "HY000";
-        
-        return result;
     }
 
     /**
