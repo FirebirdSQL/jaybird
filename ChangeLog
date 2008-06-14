@@ -1,3 +1,30 @@
+2008-06-13 21:42  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/management/FBBackupManager.java:
+
+	fixed bug with restore
+
+2008-06-13 21:15  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/gds/impl/wire/TestGds.java:
+
+	fixed possible NPE while testing in IDE
+
+2008-06-13 21:08  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
+
+	added a test case that should reproduce incorrect translations -
+	not working
+
+2008-06-13 21:07  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/common/SimpleFBTestBase.java:
+
+	fixed the extension
+
 2008-05-26 04:23  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/jdbc/TestFBConnection.java:
