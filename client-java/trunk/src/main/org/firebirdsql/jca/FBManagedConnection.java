@@ -912,8 +912,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             throw new FBXAException("flag not allowed in this context: " + flags + ", valid flags are TMSTARTRSCAN, TMENDRSCAN, TMNOFLAGS, TMSTARTRSCAN|TMENDRSCAN", XAException.XAER_PROTO);
         
         try {
-            if (!((flags & XAResource.TMSTARTRSCAN) == 0))
-                return new Xid[0];
+            // if (!((flags & XAResource.TMSTARTRSCAN) == 0))
+//            if ((flags & XAResource.TMENDRSCAN) == 0 && (flags & XAResource.TMNOFLAGS) == 0)
+//                return new Xid[0];
             
             ArrayList xids = new ArrayList();
             

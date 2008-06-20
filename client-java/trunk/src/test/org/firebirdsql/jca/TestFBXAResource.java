@@ -238,7 +238,7 @@ public class TestFBXAResource extends TestXABase {
             Xid xid2 = new XidImpl();
             xa2.start(xid2, XAResource.TMNOFLAGS);
             
-            Xid[] xids = xa2.recover(XAResource.TMSTARTRSCAN);
+            Xid[] xids = xa2.recover(XAResource.TMSTARTRSCAN | XAResource.TMENDRSCAN);
             
             xa2.end(xid2, XAResource.TMSUCCESS);
             xa2.commit(xid2, true);
