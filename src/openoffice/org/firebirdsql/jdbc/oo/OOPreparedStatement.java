@@ -19,9 +19,9 @@ public class OOPreparedStatement extends FBPreparedStatement {
     public OOPreparedStatement(GDSHelper c, String sql, int rsType,
             int rsConcurrency, int rsHoldability,
             StatementListener statementListener, BlobListener blobListener,
-            boolean metaDataQuery, boolean standaloneConnection) throws SQLException {
+            boolean metaDataQuery, boolean standaloneConnection, boolean generatedKeys) throws SQLException {
         super(c, sql, rsType, rsConcurrency, rsHoldability, statementListener,
-                blobListener, metaDataQuery, standaloneConnection);
+                blobListener, metaDataQuery, standaloneConnection, generatedKeys);
     }
 
     public void completeStatement() throws SQLException {

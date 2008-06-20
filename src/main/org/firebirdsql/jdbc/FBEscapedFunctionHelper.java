@@ -248,7 +248,7 @@ public class FBEscapedFunctionHelper {
         String firebirdTemplate = (String)FUNCTION_MAP.get(name.toUpperCase());
 
         if (firebirdTemplate != null) 
-            return MessageFormat.format(firebirdTemplate, params);
+            return MessageFormat.format(firebirdTemplate, (Object[])params);
         
         if (mode == FBEscapedParser.USE_STANDARD_UDF)
             return convertUsingStandardUDF(name, params);

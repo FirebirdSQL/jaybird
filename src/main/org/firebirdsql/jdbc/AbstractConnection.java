@@ -837,6 +837,45 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return prepareStatement(sql, resultSetType, resultSetConcurrency, this.resultSetHoldability);
     }
 
+    /**
+     * Creates a <code>PreparedStatement</code> object that will generate
+     * <code>ResultSet</code> objects with the given type, concurrency,
+     * and holdability.
+     * <P>
+     * This method is the same as the <code>prepareStatement</code> method
+     * above, but it allows the default result set
+     * type, concurrency, and holdability to be overridden.
+     *
+     * @param sql a <code>String</code> object that is the SQL statement to
+     *            be sent to the database; may contain one or more '?' IN
+     *            parameters
+     * @param resultSetType one of the following <code>ResultSet</code> 
+     *        constants:
+     *         <code>ResultSet.TYPE_FORWARD_ONLY</code>, 
+     *         <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
+     *         <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
+     * @param resultSetConcurrency one of the following <code>ResultSet</code> 
+     *        constants:
+     *         <code>ResultSet.CONCUR_READ_ONLY</code> or
+     *         <code>ResultSet.CONCUR_UPDATABLE</code>
+     * @param resultSetHoldability one of the following <code>ResultSet</code> 
+     *        constants:
+     *         <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or
+     *         <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
+     * @return a new <code>PreparedStatement</code> object, containing the
+     *         pre-compiled SQL statement, that will generate
+     *         <code>ResultSet</code> objects with the given type,
+     *         concurrency, and holdability
+     * @exception SQLException if a database access error occurs, this 
+     * method is called on a closed connection 
+     *            or the given parameters are not <code>ResultSet</code> 
+     *            constants indicating type, concurrency, and holdability
+      * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
+     * this method or this method is not supported for the specified result 
+     * set type, result set holdability and result set concurrency.
+     * @see ResultSet
+     * @since 1.4
+     */
     public synchronized PreparedStatement prepareStatement(String sql,
             int resultSetType, int resultSetConcurrency,
             int resultSetHoldability) throws SQLException {
@@ -852,7 +891,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
             resultSetHoldability, true);
     }
     
-    public synchronized PreparedStatement prepareStatement(String sql, 
+    protected synchronized PreparedStatement prepareStatement(String sql, 
         int resultSetType, int resultSetConcurrency, int resultSetHoldability, boolean metaData) throws SQLException 
     {
           PreparedStatement stmt;
@@ -888,7 +927,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
               
               stmt = FBStatementFactory.createPreparedStatement(
                       getGDSHelper(), sql, resultSetType, resultSetConcurrency, 
-                      resultSetHoldability, coordinator, blobCoordinator, metaData, false);
+                      resultSetHoldability, coordinator, blobCoordinator, 
+                      metaData, false, false);
               
               activeStatements.add(stmt);
               return stmt;

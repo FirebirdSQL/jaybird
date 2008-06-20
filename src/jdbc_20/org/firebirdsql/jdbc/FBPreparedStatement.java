@@ -45,10 +45,12 @@ public class FBPreparedStatement extends AbstractPreparedStatement {
                                int rsType, int rsConcurrency, int rsHoldability,
                                FBObjectListener.StatementListener statementListener,
                                FBObjectListener.BlobListener blobListener,
-                               boolean metaData, boolean standaloneStatement)
+                               boolean metaData, boolean standaloneStatement,
+                               boolean generatedKeys)
     throws SQLException {
         super(gdsHelper, sql, rsType, rsConcurrency, rsHoldability,
-                statementListener, blobListener, metaData, standaloneStatement);
+                statementListener, blobListener, metaData, standaloneStatement,
+                generatedKeys);
     }
 
     public FBPreparedStatement(GDSHelper c, int rsType, int rsConcurrency,
