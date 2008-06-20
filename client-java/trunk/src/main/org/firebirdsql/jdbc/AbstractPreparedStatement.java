@@ -49,6 +49,13 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      * queries we have only GDSHelper instance)
      */
     private boolean standaloneStatement;
+    
+    /**
+     * This flag is needed to prevent throwing an exception for the case when
+     * result set is returned for INSERT statement and the statement should
+     * return the generated keys.
+     */
+    private boolean generatedKeys;
 
     // this array contains either true or false indicating if parameter
     // was initialized, executeQuery, executeUpdate and execute methods
@@ -110,13 +117,14 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
             int rsConcurrency, int rsHoldability,
             FBObjectListener.StatementListener statementListener,
             FBObjectListener.BlobListener blobListener,
-            boolean metaDataQuery, boolean someOtherFlag)
+            boolean metaDataQuery, boolean standaloneStatement, boolean generatedKeys)
             throws SQLException {
         super(c, rsType, rsConcurrency, rsHoldability, statementListener);
 
         this.blobListener = blobListener;
         this.metaDataQuery = metaDataQuery;
-        this.standaloneStatement = someOtherFlag;
+        this.standaloneStatement = standaloneStatement;
+        this.generatedKeys = generatedKeys;
         
         notifyStatementStarted();
 
@@ -187,8 +195,10 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         synchronized (syncObject) {
             notifyStatementStarted();
             try {
-                if (internalExecute(isExecuteProcedureStatement)) { throw new FBSQLException(
-                        "Update statement returned results."); }
+                if (internalExecute(isExecuteProcedureStatement) && !generatedKeys) {
+                    throw new FBSQLException(
+                            "Update statement returned results.");
+                }
 
                 return getUpdateCount();
             } finally {
@@ -197,6 +207,12 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         }
     }
     
+
+    public ResultSet getGeneratedKeys() throws SQLException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
         return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
     }

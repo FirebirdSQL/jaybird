@@ -40,7 +40,7 @@ public class OOConnection extends FBConnection {
 
     public synchronized PreparedStatement prepareStatement(String sql,
             int resultSetType, int resultSetConcurrency,
-            int resultSetHoldability, boolean metaData) throws SQLException {
+            int resultSetHoldability, boolean metaData, boolean generatedKeys) throws SQLException {
         try {
             FBObjectListener.StatementListener coordinator = txCoordinator;
             if (metaData)
@@ -56,7 +56,7 @@ public class OOConnection extends FBConnection {
             PreparedStatement stmt = new OOPreparedStatement(getGDSHelper(),
                     sql, resultSetType, resultSetConcurrency,
                     resultSetHoldability, coordinator, blobCoordinator,
-                    metaData, false);
+                    metaData, false, generatedKeys);
 
             activeStatements.add(stmt);
             return stmt;

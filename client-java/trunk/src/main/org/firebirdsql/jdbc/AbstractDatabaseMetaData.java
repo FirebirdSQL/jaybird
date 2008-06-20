@@ -5949,7 +5949,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                     ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
                     FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT, 
                     metaDataTransactionCoordinator, metaDataTransactionCoordinator,
-                    true, true);
+                    true, true, false);
         } else {
             s = (AbstractPreparedStatement)connection.prepareMetaDataStatement(
                 sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
