@@ -691,13 +691,11 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                 long fbTransactionId = 0;
                 boolean found = false;
 
-                FBXid[] inLimboIds = (FBXid[]) tempMc
-                        .recover(XAResource.TMSTARTRSCAN);
+                FBXid[] inLimboIds = (FBXid[]) tempMc.recover(XAResource.TMSTARTRSCAN);
                 for (int i = 0; i < inLimboIds.length; i++) {
                     if (inLimboIds[i].equals(xid)) {
                         found = true;
-                        fbTransactionId = inLimboIds[i]
-                                .getFirebirdTransactionId();
+                        fbTransactionId = inLimboIds[i].getFirebirdTransactionId();
                     }
                 }
 
@@ -706,8 +704,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                             + " called with unknown transaction.",
                             XAException.XAER_NOTA);
 
-                IscDbHandle dbHandle = tempMc.getGDSHelper()
-                        .getCurrentDbHandle();
+                IscDbHandle dbHandle = tempMc.getGDSHelper().getCurrentDbHandle();
 
                 IscTrHandle trHandle = gds.createIscTrHandle();
                 gds.iscReconnectTransaction(trHandle, dbHandle,
