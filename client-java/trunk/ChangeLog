@@ -1,3 +1,46 @@
+2008-06-20 22:49  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	test/org/firebirdsql/jca/TestFBXAResource.java:
+
+	enabled recovery for TMENDRSCAN
+
+2008-06-20 22:47  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java:
+
+	reformatting
+
+2008-06-20 22:44  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/parser/JaybirdSqlLexer.java,
+	main/org/firebirdsql/jdbc/parser/JaybirdSql__.g,
+	main/org/firebirdsql/jdbc/parser/JaybirdStatementModel.java,
+	openoffice/org/firebirdsql/jdbc/oo/OOConnection.java,
+	openoffice/org/firebirdsql/jdbc/oo/OOPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FirebirdStatement.java,
+	main/org/firebirdsql/jdbc/parser/CaseInsensitiveStream.java,
+	main/org/firebirdsql/jdbc/parser/JaybirdSql.g3,
+	main/org/firebirdsql/jdbc/parser/JaybirdSql.tokens,
+	main/org/firebirdsql/jdbc/parser/JaybirdSqlParser.java,
+	jdbc_30/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_40/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	main/org/firebirdsql/jdbc/FBEscapedFunctionHelper.java,
+	main/org/firebirdsql/jdbc/FBStatementFactory.java,
+	test/org/firebirdsql/jdbc/parser/TestGrammar.java,
+	jdbc_20/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	lib/antlr-runtime-3.0.1.jar:
+
+	first version of SQL parser and support for getGeneratedKeys()
+	method
+
 2008-06-14 22:41  rrokytskyy
 
 	* client-java/src/etc/: release_notes.html, release_notes.odt,
