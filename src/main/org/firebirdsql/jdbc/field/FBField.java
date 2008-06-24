@@ -96,9 +96,6 @@ public abstract class FBField {
         
     static String BLOB_CONVERSION_ERROR = 
         "Error converting to Firebird BLOB object";
-    
-    static String CLOB_CONVERSION_ERROR =
-    	"Error converting to Firebird CLOB object";
 
     static String SQL_TYPE_NOT_SUPPORTED =
         "SQL type for this field is not yet supported.";
@@ -128,7 +125,6 @@ public abstract class FBField {
     static final Reader READER_NULL_VALUE = null;
     static final byte[] BYTES_NULL_VALUE = null;
     static final FBBlob BLOB_NULL_VALUE = null;
-    static final FBClob CLOB_NULL_VALUE = null;
     
     static final byte MAX_BYTE_VALUE = Byte.MAX_VALUE;
     static final byte MIN_BYTE_VALUE = (byte)(-1 * MAX_BYTE_VALUE - 1);
@@ -662,8 +658,7 @@ public abstract class FBField {
                 throw new FBDriverNotCapableException();
     }
     public Clob getClob() throws  SQLException {
-        throw (SQLException)createException(
-                BLOB_CONVERSION_ERROR).fillInStackTrace();
+                throw new FBDriverNotCapableException();
     }
     public Array getArray() throws  SQLException {
                 throw new FBDriverNotCapableException();
@@ -814,12 +809,7 @@ public abstract class FBField {
         throw (SQLException)createException(
             BLOB_CONVERSION_ERROR).fillInStackTrace();
     }
-    
-    public void setClob(FBClob clob) throws SQLException {
-    	throw (SQLException)createException(
-    			CLOB_CONVERSION_ERROR).fillInStackTrace();
-    }
-    
+    //
     // This method is only for the tests
     //
     void copyOI(){
@@ -832,6 +822,4 @@ public abstract class FBField {
         DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
         return dpb.hasArgument(DatabaseParameterBufferExtension.TIMESTAMP_USES_LOCAL_TIMEZONE);
     }
-
-	
 }

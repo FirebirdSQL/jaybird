@@ -39,18 +39,18 @@ public class FBStatementFactory {
      */
     public static AbstractCallableStatement createCallableStatement(GDSHelper gdsHelper,
             String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability,
-            StoredProcedureMetaData storedProcMetaData, StatementListener statementListener, BlobListener blobListener) throws FBSQLException {
+            StatementListener statementListener, BlobListener blobListener) throws FBSQLException {
 
         try {
 
             Constructor constructor = ClassFactory.get(ClassFactory.FBCallableStatement)
                     .getConstructor(
                             new Class[] { GDSHelper.class, String.class, int.class, int.class,
-                                    int.class, StoredProcedureMetaData.class, StatementListener.class, BlobListener.class });
+                                    int.class, StatementListener.class, BlobListener.class });
 
             return (AbstractCallableStatement) constructor.newInstance(new Object[] { gdsHelper,
                     sql, new Integer(resultSetType), new Integer(resultSetConcurrency),
-                    new Integer(resultSetHoldability), storedProcMetaData, statementListener, blobListener });
+                    new Integer(resultSetHoldability), statementListener, blobListener });
 
         } catch(InvocationTargetException ex) {
             
@@ -76,8 +76,7 @@ public class FBStatementFactory {
      */
     public static AbstractPreparedStatement createPreparedStatement(GDSHelper gdsHelper,
             String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability,
-            StatementListener statementListener, BlobListener blobListener, boolean metadata, 
-            boolean standaloneStatement, boolean generatedKeys)
+            StatementListener statementListener, BlobListener blobListener, boolean metadata, boolean standaloneStatement)
             throws FBSQLException {
 
         try {
@@ -91,8 +90,7 @@ public class FBStatementFactory {
             return (AbstractPreparedStatement) constructor.newInstance(new Object[] { gdsHelper,
                     sql, new Integer(resultSetType), new Integer(resultSetConcurrency),
                     new Integer(resultSetHoldability), statementListener, blobListener,
-                    new Boolean(metadata), new Boolean(standaloneStatement), 
-                    new Boolean(generatedKeys)});
+                    new Boolean(metadata), new Boolean(standaloneStatement) });
 
         } catch(InvocationTargetException ex) {
             

@@ -21,6 +21,14 @@ package org.firebirdsql.jdbc;
 
 
 import java.sql.*;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLWarning;
+import java.sql.Statement;
+import java.sql.Timestamp;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -162,9 +170,8 @@ public class TestFBDriver extends FBTestBase {
                 stmt.executeQuery("select * from");
             } catch(SQLException ex) {
                 
-                String sqlState = ex.getSQLState();
                 assertTrue("getSQLState() method does not returns String Value",
-                        sqlState instanceof java.lang.String);
+                        ex.getSQLState() instanceof java.lang.String);
                 
             } finally {
                 stmt.close();

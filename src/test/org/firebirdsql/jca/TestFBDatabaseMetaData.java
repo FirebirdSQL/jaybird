@@ -209,8 +209,10 @@ public class TestFBDatabaseMetaData extends TestXABase {
         if (metaData.getDatabaseMajorVersion() < 2)
             sysTableCount = 32;
         else
-        if (metaData.getDatabaseMajorVersion() == 2)
+        if (metaData.getDatabaseMajorVersion() == 2 && metaData.getDatabaseMinorVersion() == 0)
             sysTableCount = 33;
+        if (metaData.getDatabaseMajorVersion() == 2 && metaData.getDatabaseMinorVersion() == 1)
+            sysTableCount = 40;
         else {
             fail("Unsupported database server version for this test case: found table count " + count);
             
@@ -232,10 +234,10 @@ public class TestFBDatabaseMetaData extends TestXABase {
                 .hasNoWildcards("test\\_me"));
         assertTrue("strip escape wrong", d.stripEscape("test\\_me").equals(
             "test_me"));
-        assertTrue("strip quotes wrong", d.stripQuotes("test_me").equals(
+        assertTrue("strip quotes wrong", d.stripQuotes("test_me", true).equals(
             "TEST_ME"));
-        assertTrue("strip quotes wrong: " + d.stripQuotes("\"test_me\""), d
-                .stripQuotes("\"test_me\"").equals("test_me"));
+        assertTrue("strip quotes wrong: " + d.stripQuotes("\"test_me\"", true), d
+                .stripQuotes("\"test_me\"", true).equals("test_me"));
     }
 
     public void testGetTablesWildcardQuote() throws Exception {
@@ -338,13 +340,13 @@ public class TestFBDatabaseMetaData extends TestXABase {
             String name = rs.getString(3);
             String column = rs.getString(4);
             if (log != null) log.info("table name: " + name);
-            assertTrue("wrong name found: " + name, "TEST_ME".equals(name)
-                    || "TEST__ME".equals(name));
+            assertTrue("wrong name found: " + name, "test_ me".equals(name)
+                    || "test_ me too".equals(name) || "test_me too".equals(name));
             assertTrue("wrong column found: " + column, "my_ column2"
                     .equals(column));
             count++;
         }
-        assertTrue("more than one table found: " + count, count == 2);
+        assertTrue("more than one table found: " + count, count == 3);
         rs.close();
         t.commit();
 

@@ -24,8 +24,6 @@ import java.net.URL;
 import java.sql.*;
 
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.jdbc.FBObjectListener.BlobListener;
-import org.firebirdsql.jdbc.FBObjectListener.StatementListener;
 
 /**
  * 
@@ -38,172 +36,237 @@ public class FBPreparedStatement extends AbstractPreparedStatement {
             int rsConcurrency, int rsHoldability,
             FBObjectListener.StatementListener statementListener,
             FBObjectListener.BlobListener blobListener,
-            boolean metaDataQuery, boolean standaloneStatement, boolean generatedKeys)
+            boolean metaDataQuery, boolean standaloneStatement)
             throws SQLException {
         super(gdsHelper, sql, rsType, rsConcurrency, rsHoldability, 
-            statementListener, blobListener, metaDataQuery, standaloneStatement, generatedKeys);
+            statementListener, blobListener, metaDataQuery, standaloneStatement);
     }
-    
-    public FBPreparedStatement(GDSHelper c, int rsType, int rsConcurrency,
-            int rsHoldability, StatementListener statementListener,
-            BlobListener blobListener) throws SQLException {
-        super(c, rsType, rsConcurrency, rsHoldability, statementListener, blobListener);
-    }
-    
-    
-    //--------------------------------------------------------------------------
-    // JDBC 3.0
-    //--------------------------------------------------------------------------
 
-
-    public ParameterMetaData getParameterMetaData() throws SQLException {
-        return new JDBC40ParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
-    }
-    
+    /**
+     * Sets the designated parameter to the given <code>java.net.URL</code>
+     * value. The driver converts this to an SQL <code>DATALINK</code> value
+     * when it sends it to the database.
+     * 
+     * @param parameterIndex
+     *            the first parameter is 1, the second is 2, ...
+     * @param url
+     *            the <code>java.net.URL</code> object to be set
+     * @exception SQLException
+     *                if a database access error occurs
+     * @since 1.4
+     */
     public void setURL(int parameterIndex, URL url) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("Not yet implemented");
+    }
+
+    /**
+     * Retrieves the number, types and properties of this
+     * <code>PreparedStatement</code> object's parameters.
+     * 
+     * @return a <code>ParameterMetaData</code> object that contains
+     *         information about the number, types and properties of this
+     *         <code>PreparedStatement</code> object's parameters
+     * @exception SQLException
+     *                if a database access error occurs
+     * @see ParameterMetaData
+     * @since 1.4
+     */
+    public ParameterMetaData getParameterMetaData() throws SQLException {
+        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
     }
     
+    /**
+     * jdbc 3
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
     public ResultSet getGeneratedKeys() throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
     }
     
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
     public int executeUpdate(String param1, int param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("Not yet implemented");
     }
     
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
     public int executeUpdate(String param1, int[] param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("Not yet implemented");
     }
     
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
     public int executeUpdate(String param1, String[] param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("Not yet implemented");
     }
     
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
     public boolean execute(String param1, int param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
     }
 
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
     public boolean execute(String param1, int[] param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
     }
 
+    /**
+     * jdbc 3
+     * @param param1 <description>
+     * @param param2 <description>
+     * @return <description>
+     * @exception java.sql.SQLException <description>
+     */
     public boolean execute(String param1, String[] param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.Statement method
+        throw new SQLException("not yet implemented");
     }
 
-    //--------------------------------------------------------------------------
-    // JDBC 3.0
-    //--------------------------------------------------------------------------
-
-    // java.sql.Statement ------------------------------------------------------
-    
-    public boolean isPoolable() throws SQLException {
-        return false;
+    public void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public void setPoolable(boolean poolable) throws SQLException {
-        // ignore
+    public void setAsciiStream(int parameterIndex, InputStream x) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    // java.sql.Statement ------------------------------------------------------
-    
-    public void setAsciiStream(int parameterIndex, InputStream x, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void setBinaryStream(int parameterIndex, InputStream x, long length) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public void setAsciiStream(int parameterIndex, InputStream x)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public void setBinaryStream(int parameterIndex, InputStream x, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public void setBinaryStream(int parameterIndex, InputStream x)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public void setBlob(int parameterIndex, InputStream inputStream, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public void setBlob(int parameterIndex, InputStream inputStream)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public void setCharacterStream(int parameterIndex, Reader reader,
-            long length) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setCharacterStream(int parameterIndex, Reader reader)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setClob(int parameterIndex, Reader reader, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
     public void setClob(int parameterIndex, Reader reader) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public void setNCharacterStream(int parameterIndex, Reader value,
-            long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public void setNCharacterStream(int parameterIndex, Reader value)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
     public void setNClob(int parameterIndex, NClob value) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public void setNClob(int parameterIndex, Reader reader, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void setNClob(int parameterIndex, Reader reader, long length) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
     public void setNClob(int parameterIndex, Reader reader) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public void setNString(int parameterIndex, String value)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void setNString(int parameterIndex, String value) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
     public void setRowId(int parameterIndex, RowId x) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    public void setSQLXML(int parameterIndex, SQLXML xmlObject)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
     }
 
-    // java.sql.Wrapper -.------------------------------------------------------
+    public boolean isPoolable() throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    public void setPoolable(boolean poolable) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    public boolean isWrapperFor(Class arg0) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
+    }
+
+    public Object unwrap(Class arg0) throws SQLException {
+        // TODO: implement this java.sql.PreparedStatement method
+        throw new SQLException("not yet implemented");
+    }
+
     
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return iface != null && iface.isAssignableFrom(FBPreparedStatement.class);
-    }
-
-    public <T> T unwrap(Class<T> iface) throws SQLException {
-        if (!isWrapperFor(iface))
-            throw new FBDriverNotCapableException();
-        
-        return (T)this;
-    }
 }

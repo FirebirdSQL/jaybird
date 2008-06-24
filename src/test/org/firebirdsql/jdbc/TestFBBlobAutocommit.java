@@ -308,11 +308,9 @@ public class TestFBBlobAutocommit extends FBTestBase {
                 throw new FBDriverNotCapableException();
             }
 
-            public InputStream getBinaryStream(long pos, long length)
-                    throws SQLException {
+            public InputStream getBinaryStream(long pos, long length) throws SQLException {
                 throw new FBDriverNotCapableException();
             }
-            
         }
         
         stmt.setInt(1, 2);

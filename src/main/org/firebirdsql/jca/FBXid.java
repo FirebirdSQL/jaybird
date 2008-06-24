@@ -69,7 +69,7 @@ class FBXid implements Xid {
    private byte[] branchId;
    
    private long firebirdTransactionId;
-   
+
 
    /**
     *  Return a string that describes any Xid instance.
@@ -141,6 +141,7 @@ class FBXid implements Xid {
 
 
     // Public --------------------------------------------------------
+
 
 
     // Xid implementation --------------------------------------------
@@ -277,6 +278,5 @@ class FBXid implements Xid {
             
         } while(length > 0);
     }
-
 }
 

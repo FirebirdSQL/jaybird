@@ -35,9 +35,7 @@ import javax.naming.Reference;
 import javax.resource.Referenceable;
 import javax.resource.ResourceException;
 
-import org.firebirdsql.jdbc.FBDataSource;
-import org.firebirdsql.jdbc.FBDriverNotCapableException;
-import org.firebirdsql.jdbc.FirebirdConnectionProperties;
+import org.firebirdsql.jdbc.*;
 
 import javax.naming.NamingException;
 
@@ -506,13 +504,15 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
         }
     }
     
-    // JDBC 4.0
-    
-    public boolean isWrapperFor(Class iface) throws SQLException {
-    	return false;
+    public boolean isWrapperFor(Class arg0) throws SQLException {
+        return arg0 != null && arg0.isAssignableFrom(FBSimpleDataSource.class);
     }
-    
-    public Object unwrap(Class iface) throws SQLException {
-    	throw new FBDriverNotCapableException();
+
+    public Object unwrap(Class arg0) throws SQLException {
+        if (!isWrapperFor(arg0))
+            throw new FBSQLException("No compatible class found.");
+        
+        return this;
     }
+
 }

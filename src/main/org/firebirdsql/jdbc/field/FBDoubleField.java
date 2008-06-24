@@ -104,25 +104,12 @@ class FBDoubleField extends FBField {
     public double getDouble() throws SQLException {
         if (getFieldData()==null) return DOUBLE_NULL_VALUE;
 
-        double result = field.decodeDouble(getFieldData());
-        
-        if (field.sqlscale != 0) {
-            BigDecimal tempValue = new BigDecimal(result);
-            tempValue = tempValue.setScale(Math.abs(field.sqlscale), BigDecimal.ROUND_HALF_EVEN);
-            result = tempValue.doubleValue();
-        }
-        
-        return result;
+        return field.decodeDouble(getFieldData());
     }
     public BigDecimal getBigDecimal() throws SQLException {
         if (getFieldData()==null) return BIGDECIMAL_NULL_VALUE;
 
-        BigDecimal result = new BigDecimal(field.decodeDouble(getFieldData()));
-        
-        if (field.sqlscale != 0)
-            result = result.setScale(Math.abs(field.sqlscale), BigDecimal.ROUND_HALF_EVEN);
-        
-        return result;
+        return new BigDecimal(field.decodeDouble(getFieldData()));
     }
     
     /*

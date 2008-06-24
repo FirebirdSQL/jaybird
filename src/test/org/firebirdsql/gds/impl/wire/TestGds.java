@@ -84,15 +84,13 @@ public class TestGds extends SimpleFBTestBase {
 
 
     protected void setUp() {
-        String tmpGdsType = System.getProperty("test.gds_type");
-        if (tmpGdsType != null && 
-                !"PURE_JAVA".equals(tmpGdsType) &&
-                !"TYPE4".equals(tmpGdsType))
+        if (!"PURE_JAVA".equals(System.getProperty("test.gds_type")) &&
+                !"TYPE4".equals(System.getProperty("test.gds_type")) &&
+                System.getProperty("test.gds_type") != null)
             fail("This test cannot be run for JNI driver");
         
        //super.setUp(); we will create our own db's directly
         gds = GDSFactory.getDefaultGDS();
-        tpb  = new FBTpb(FBTpbMapper.getDefaultMapper(gds).getDefaultMapping());
 
         c = gds.createDatabaseParameterBuffer();
 
@@ -102,10 +100,13 @@ public class TestGds extends SimpleFBTestBase {
         c.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
         c.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
 
-        tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_write);
-        tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_no_rec_version);
-        tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_wait);
+        TransactionParameterBufferImpl tpbImpl = new TransactionParameterBufferImpl();
+        tpbImpl.addArgument(ISCConstants.isc_tpb_read_committed);
+        tpbImpl.addArgument(ISCConstants.isc_tpb_no_rec_version);
+        tpbImpl.addArgument(ISCConstants.isc_tpb_write);
+        tpbImpl.addArgument(ISCConstants.isc_tpb_wait);
+
+        tpb = new FBTpb(tpbImpl);
     }
 
    protected void tearDown() {}//hide superclass teardown.
