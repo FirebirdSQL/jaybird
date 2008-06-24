@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.4  (Win32)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
 	<META NAME="CHANGEDBY" CONTENT="Roman Rokytskyy">
-	<META NAME="CHANGED" CONTENT="20080614;22403963">
+	<META NAME="CHANGED" CONTENT="20080624;16570725">
 	<STYLE TYPE="text/css">
 	<!--
 		@page { size: 21cm 29.7cm; margin: 2cm }
@@ -46,7 +46,7 @@
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <H1 CLASS="western" ALIGN=CENTER>Jaybird JCA/JDBC Driver<BR>Release
-Notes v 2.1.4</H1>
+Notes v 2.1.5</H1>
 <DIV ID="Table of Contents1" DIR="LTR">
 	<DIV ID="Table of Contents1_Head" DIR="LTR">
 		<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Table
@@ -254,7 +254,20 @@ Specification support</H3>
 </TABLE>
 <H3 CLASS="western"></H3>
 <H2 CLASS="western"><A NAME="0.0.What's new in Jaybird 2.1|outline"></A>
-What's new in Jaybird 2.1.4</H2>
+What's new in Jaybird 2.1.5</H2>
+<H3 CLASS="western">List of bugs fixed since Jaybird 2.1.4</H3>
+<TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=48*>
+	<COL WIDTH=208*>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">-</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">Fixed bug in event handling code under Linux.</P>
+		</TD>
+	</TR>
+</TABLE>
 <H3 CLASS="western">List of bugs fixed since Jaybird 2.1.3</H3>
 <TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=48*>
@@ -1094,18 +1107,18 @@ it is possible to enable extensive logging inside the driver.</P>
 <P CLASS="western">Following file groups can be found in distribution
 package:</P>
 <UL>
-	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-2.1.4.jar</CODE>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-2.1.5.jar</CODE>
 	&ndash; archive containing JCA/JDBC driver and JMX management class.
 	It requires JCA 1.0, JTA 1.0.1, and JAAS 1.0.</FONT></P>
-	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-pool-2.1.4.jar</CODE>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-pool-2.1.5.jar</CODE>
 	&ndash; archive contains implementation of connection pooling and
 	statement pooling interfaces.</FONT></P>
-	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-full-2.1.4.jar</CODE>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-full-2.1.5.jar</CODE>
 	&ndash; merge of <CODE CLASS="western">firebirdsql.jar</CODE> and
 	<CODE CLASS="western">mini-j2ee.jar</CODE> (or <CODE CLASS="western">mini-j2ee_16.jar</CODE>
 	for JDK 6.0 deployments). This archive can be used for standalone<A CLASS="sdfootnoteanc" NAME="sdfootnote1anc" HREF="#sdfootnote1sym"><SUP>1</SUP></A>
 	Jaybird deployments.</FONT></P>
-	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-2.1.4.rar</CODE>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-2.1.5.rar</CODE>
 	&ndash; resource archive ready for deployment in JCA-enabled
 	application servers.</FONT></P>
 	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">lib/jaas.jar</CODE>
@@ -1708,7 +1721,8 @@ limitations:</P>
 	main library directory of the web and/or application server, not in
 	the library directory of the web or enterprise application
 	(WEB-INF/lib directory or in the .EAR file). This issue will be
-	fixed in Firebird client library after merge with Vulcan project.</STRONG></P>
+	fixed in </STRONG><STRONG>Firebird client library after merge with
+	Vulcan project.</STRONG></P>
 	<LI><P CLASS="western"><STRONG><SPAN STYLE="font-weight: medium">Current
 	implementation of the JNI library allows that either client library
 	or embedded server library is loaded into memory. The first library
