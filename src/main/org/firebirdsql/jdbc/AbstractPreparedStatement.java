@@ -209,8 +209,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
     
 
     public ResultSet getGeneratedKeys() throws SQLException {
-        // TODO Auto-generated method stub
-        return null;
+        return getResultSet();
     }
 
     public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {

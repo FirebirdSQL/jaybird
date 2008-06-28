@@ -86,7 +86,7 @@ public class FBStatementFactory {
                     .getConstructor(
                             new Class[] { GDSHelper.class, String.class, int.class, int.class,
                                     int.class, StatementListener.class, BlobListener.class,
-                                    boolean.class, boolean.class });
+                                    boolean.class, boolean.class, boolean.class });
 
             return (AbstractPreparedStatement) constructor.newInstance(new Object[] { gdsHelper,
                     sql, new Integer(resultSetType), new Integer(resultSetConcurrency),
