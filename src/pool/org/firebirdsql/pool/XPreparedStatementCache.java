@@ -46,10 +46,8 @@ class XPreparedStatementCache {
     private XStatementManager owner;
     private BlockingStack freeReferences = new BlockingStack();
     private HashMap workingReferences = new HashMap();
-    private String sql;
-    private int resultSetType;
-    private int resultSetConcurrency;
     
+    private XPreparedStatementModel key;
     private int maxSize;
     
     /**
@@ -59,25 +57,20 @@ class XPreparedStatementCache {
      * @param owner instance of {@link XStatementManager} that will prepare
      * new statements.
      * 
-     * @param sql SQL statement to prepare.
+     * @param key key of the prepared statement.
      * 
-     * @param resultSetType type of result set.
-     * 
-     * @param resultSetConcurrency result set concurrency.
+     * @param maxSize maximum pool size.
      */
-    public XPreparedStatementCache(XStatementManager owner, String sql,
-        int resultSetType, int resultSetConcurrency, int maxSize) 
-    {
+    public XPreparedStatementCache(XStatementManager owner,
+            XPreparedStatementModel key, int maxSize) {
+        
         this.owner = owner;
         this.maxSize = maxSize;
         
-        if (sql == null)
-            throw new NullPointerException(
-                "Null objects cannot be guarded.");
+        if (key == null)
+            throw new NullPointerException("Null objects cannot be guarded.");
 
-        this.sql = sql;
-        this.resultSetType = resultSetType;
-        this.resultSetConcurrency = resultSetConcurrency;
+        this.key = key;
     }
 
     /**
@@ -96,7 +89,7 @@ class XPreparedStatementCache {
         throws SQLException 
     {
 
-        if (sql == null)
+        if (key == null)
             throw new IllegalStateException(
                 "This reference guard was already destroyed.");
 
@@ -104,8 +97,7 @@ class XPreparedStatementCache {
             XCachablePreparedStatement result;
 
             if (!CACHE_PREPARED_STATEMENTS)
-                result = owner.prepareStatement(
-                    sql, resultSetType, resultSetConcurrency, false);
+                result = prepareStatement(key, false);
             else {
                 if (freeReferences.isEmpty()) {
 
@@ -114,8 +106,7 @@ class XPreparedStatementCache {
                             "Found no free prepared statements, " + 
                             "preparing new one.");
 
-                    result = owner.prepareStatement(
-                        sql, resultSetType, resultSetConcurrency, 
+                    result = prepareStatement(key,
                         workingReferences.size() < maxSize);
                 } else {
                     if (LOG_STATEMENT_IN_POOL && logChannel != null)
@@ -134,6 +125,26 @@ class XPreparedStatementCache {
         } catch(InterruptedException iex) {
             throw new SQLException("Cannot prepare SQL statement in pool");
         }
+    }
+    
+    /**
+     * Prepare the SQL statement. This method checks the type of the statement
+     * (i.e. whether generated keys should be returned or not).
+     * 
+     * @param key instance of {@link XPreparedStatementModel} that will be used
+     * to prepare the statement.
+     * 
+     * @param cached <code>true</code> if statement should be cached, otherwise
+     * <code>false</code>
+     * 
+     * @return instance of {@link XCachablePreparedStatement}
+     * 
+     * @throws SQLException if statement cannot be prepared.
+     */
+    protected XCachablePreparedStatement prepareStatement(
+            XPreparedStatementModel key, boolean cached) throws SQLException {
+        
+        return owner.prepareStatement(key, cached);
     }
 
     /**
@@ -186,7 +197,7 @@ class XPreparedStatementCache {
      * method can be invoked.
      */
     synchronized void invalidate() throws SQLException {
-        sql = null;
+        key = null;
         
         // clear free references
         SQLException error = null;

@@ -68,10 +68,59 @@ interface XConnectionManager {
      * specified SQL statement.
      * 
      * @throws SQLException if prepared statement cannot be obtained.
+     * 
+     * @deprecated
      */
     PreparedStatement getPreparedStatement(String sql, int resultSetType,
         int resultSetConcurrency) throws SQLException;
+    
+    /**
+     * Get instance of {@link PreparedStatement} for the specified SQL statement.
+     * Default implementation would call 
+     * {@link Connection#prepareStatement(String, int, int)} on physical 
+     * connection. However it is also possible to implement prepared statement
+     * pooling for increased performance.
+     * 
+     * @param sql SQL statement for which prepared statement must be constructed.
+     * 
+     * @param resultSetType type of the result set.
+     * @param resultSetConcurrency result set concurrency.
+     * @param resultSetHoldability result set holdability.
+     * 
+     * @return instance of {@link PreparedStatement} corresponding to the 
+     * specified SQL statement.
+     * 
+     * @throws SQLException if prepared statement cannot be obtained.
+     */
+    PreparedStatement getPreparedStatement(String sql, int resultSetType,
+        int resultSetConcurrency, int resultSetHoldability) throws SQLException;
 	
+    /**
+     * Prepare specified SQL statement that will return the generated keys. 
+     * This method should call corresponding methods on physical JDBC
+     * connection:
+     * <ul> 
+     * <li>{@link java.sql.Connection#prepareStatement(String, int)}
+     * <li>{@link java.sql.Connection#prepareStatement(String, int[])}
+     * <li>{@link java.sql.Connection#prepareStatement(String, String[])}
+     * </ul>
+     * 
+     * @param sql SQL statement for which prepared statement must be constructed.
+     * 
+     * @param keyIndexes - array of key column indexes if they were specified or 
+     * <code>null</code> in other cases. 
+     * 
+     * @param keyColumns - array of key column names if they were specified or 
+     * <code>null</code> in other cases. 
+     * 
+     * @return instance of {@link PreparedStatement} corresponding to the 
+     * specified SQL statement.
+     * 
+     * @throws SQLException if prepared statement cannot be obtained.
+     */
+    PreparedStatement getPreparedStatement(String sql, int[] keyIndexes,
+            String[] keyColumns) throws SQLException;
+    
 	/**
 	 * Notify connection owner about invocation of the {@link Connection#close()} 
 	 * operation on {@link PooledConnectionHandler} instance.

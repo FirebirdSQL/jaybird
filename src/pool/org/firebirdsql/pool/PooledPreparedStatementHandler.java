@@ -62,7 +62,7 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
     private final static Method PREPARED_STATEMENT_IS_CACHED = findMethod(
             XCachablePreparedStatement.class, "isCached", new Class[0]);
     
-    private String statement;
+    private XPreparedStatementModel key;
     private PreparedStatement preparedStatement;
     private XStatementManager owner;
     private Connection associatedConnection;
@@ -82,10 +82,11 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
      * @param owner instance of {@link XConnection} that created prepared
      * statement.
      */
-    PooledPreparedStatementHandler(String statement, PreparedStatement preparedStatement, 
-        XStatementManager owner, boolean cached) 
-    {
-        this.statement = statement;
+    PooledPreparedStatementHandler(XPreparedStatementModel key,
+            PreparedStatement preparedStatement, XStatementManager owner,
+            boolean cached) {
+        
+        this.key = key;
         this.preparedStatement = preparedStatement;
         this.owner = owner;
         this.invalid = false;
@@ -102,13 +103,13 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
      * 
      * @throws SQLException if something went wrong.
      */
-    protected void handleStatementClose(String statement, Object proxy) 
+    protected void handleStatementClose(XPreparedStatementModel key, Object proxy) 
         throws SQLException 
     {
         if (invalid)
             throw new SQLException("Statement is already closed.");
             
-        owner.statementClosed(statement, proxy);
+        owner.statementClosed(key, proxy);
     }
     
     protected void handleForceClose() throws SQLException {
@@ -142,7 +143,7 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
         
         try {
             if (method.equals(PREPARED_STATEMENT_CLOSE)) {
-                handleStatementClose(statement, proxy);
+                handleStatementClose(key, proxy);
                 return Void.TYPE;
             } else
             if (method.equals(PREPARED_STATEMENT_GET_CONNECTION)) {

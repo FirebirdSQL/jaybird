@@ -184,7 +184,7 @@ class FBPooledConnection extends PingablePooledConnection
      * 
      * @throws SQLException if something went wrong.
      */
-    public void statementClosed(String statement, Object proxy)
+    public void statementClosed(XPreparedStatementModel key, Object proxy)
             throws SQLException {
         
         if (proxy instanceof FirebirdStatement) {
@@ -197,7 +197,7 @@ class FBPooledConnection extends PingablePooledConnection
             
         }
         
-        super.statementClosed(statement, proxy);
+        super.statementClosed(key, proxy);
     }
     
     void setManagedEnvironment(boolean managedEnvironment) throws SQLException {
