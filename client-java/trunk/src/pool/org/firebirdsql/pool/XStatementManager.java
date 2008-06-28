@@ -50,10 +50,33 @@ public interface XStatementManager {
      * @throws SQLException if something went wrong.
      * 
      * @see java.sql.Connection#prepareStatement(java.lang.String, int, int)
+     * 
+     * @deprecated use {@link #prepareStatement(String, int, int, int, boolean)}
+     * intead.
      */
     XCachablePreparedStatement prepareStatement(String sql, int resultSetType, 
         int resultSetConcurrency, boolean cached) throws SQLException;
-        
+    
+    /**
+     * Prepare specified SQL statement. This method should call 
+     * {@link java.sql.Connection#prepareStatement(String)} method on physical JDBC
+     * connection.
+     * 
+     * @param key instance of {@link XPreparedStatementModel} containing all needed
+     * information to prepare a statement.
+     * 
+     * @param cached <code>true</code> if prepared statement will be cached.
+     * 
+     * @return instance of {@link java.sql.PreparedStatement} corresponding to the 
+     * specified SQL statement.
+     * 
+     * @throws SQLException if something went wrong.
+     * 
+     * @see java.sql.Connection#prepareStatement(java.lang.String, int, int, int)
+     */
+    XCachablePreparedStatement prepareStatement(XPreparedStatementModel key, boolean cached) 
+    throws SQLException;
+    
     /**
      * Notify about statement close.
      * 
@@ -61,6 +84,18 @@ public interface XStatementManager {
      * @param proxy proxy on which {@link java.sql.Statement#close()} method was called.
      * 
      * @throws SQLException if something went wrong.
+     * 
+     * @deprecated 
      */
     void statementClosed(String statement, Object proxy) throws SQLException;
+    
+    /**
+     * Notify about statement close.
+     * 
+     * @param key Key of the SQL statement that was closed.
+     * @param proxy proxy on which {@link java.sql.Statement#close()} method was called.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    void statementClosed(XPreparedStatementModel key, Object proxy) throws SQLException;
 }
