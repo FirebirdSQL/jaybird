@@ -106,7 +106,7 @@ public class NativeGDSImpl extends JniGDSImpl {
      * sucesfully.
      */
     private static final String[] CLIENT_LIBRARIES_TO_TRY = {
-            "fbclient.dll", "libfbclient.so", "gds32.dll", "libgds.so",};
+            "fbclient.dll", "libfbclient.so"};
 
     public static final String NATIVE_TYPE_NAME = "NATIVE";
 

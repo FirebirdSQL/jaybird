@@ -209,8 +209,10 @@ public class TestFBDatabaseMetaData extends TestXABase {
         if (metaData.getDatabaseMajorVersion() < 2)
             sysTableCount = 32;
         else
-        if (metaData.getDatabaseMajorVersion() == 2)
+        if (metaData.getDatabaseMajorVersion() == 2 && metaData.getDatabaseMinorVersion() == 0)
             sysTableCount = 33;
+        if (metaData.getDatabaseMajorVersion() == 2 && metaData.getDatabaseMinorVersion() == 1)
+            sysTableCount = 40;
         else {
             fail("Unsupported database server version for this test case: found table count " + count);
             

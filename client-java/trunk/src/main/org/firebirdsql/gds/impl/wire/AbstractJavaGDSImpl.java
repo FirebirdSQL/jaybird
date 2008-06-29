@@ -2975,7 +2975,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                     StringBuffer ipBuf = new StringBuffer();
                     for (int i = 0; i < 4; i++){
                         ipBuf.append((int)(ipBytes[i] & 0xff));
-                        if (i < 4) ipBuf.append(".");
+                        if (i < 3) ipBuf.append(".");
                     }
                     String ipAddress = ipBuf.toString();
 
