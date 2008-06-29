@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source J2EE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -347,14 +345,14 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
         for (Iterator iter = backupPaths.iterator(); iter.hasNext();) {
             PathSizeStruct pathSize = (PathSizeStruct) iter.next();
             
-            restoreSPB.addArgument(ISCConstants.isc_spb_dbname, pathSize.getPath());            
+            restoreSPB.addArgument(ISCConstants.isc_spb_bkp_file, pathSize.getPath());            
         }
         
         // restore files with sizes except the last one
         for (Iterator iter = restorePaths.iterator(); iter.hasNext();) {
             PathSizeStruct pathSize = (PathSizeStruct) iter.next();
             
-            restoreSPB.addArgument(ISCConstants.isc_spb_bkp_file, pathSize.getPath());
+            restoreSPB.addArgument(ISCConstants.isc_spb_dbname, pathSize.getPath());
             
             if (iter.hasNext() && pathSize.getSize() != -1)
                 restoreSPB.addArgument(ISCConstants.isc_spb_res_length, pathSize.getSize());

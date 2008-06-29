@@ -64,33 +64,33 @@ public class FBPreparedStatement extends AbstractPreparedStatement {
         throw new FBDriverNotCapableException();
     }
     
-    public ResultSet getGeneratedKeys() throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-    
-    public int executeUpdate(String param1, int param2) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-    
-    public int executeUpdate(String param1, int[] param2) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-    
-    public int executeUpdate(String param1, String[] param2) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-    
-    public boolean execute(String param1, int param2) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public boolean execute(String param1, int[] param2) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public boolean execute(String param1, String[] param2) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
+//    public ResultSet getGeneratedKeys() throws SQLException {
+//        throw new FBDriverNotCapableException();
+//    }
+//    
+//    public int executeUpdate(String param1, int param2) throws SQLException {
+//        throw new FBDriverNotCapableException();
+//    }
+//    
+//    public int executeUpdate(String param1, int[] param2) throws SQLException {
+//        throw new FBDriverNotCapableException();
+//    }
+//    
+//    public int executeUpdate(String param1, String[] param2) throws SQLException {
+//        throw new FBDriverNotCapableException();
+//    }
+//    
+//    public boolean execute(String param1, int param2) throws SQLException {
+//        throw new FBDriverNotCapableException();
+//    }
+//
+//    public boolean execute(String param1, int[] param2) throws SQLException {
+//        throw new FBDriverNotCapableException();
+//    }
+//
+//    public boolean execute(String param1, String[] param2) throws SQLException {
+//        throw new FBDriverNotCapableException();
+//    }
 
     //--------------------------------------------------------------------------
     // JDBC 3.0

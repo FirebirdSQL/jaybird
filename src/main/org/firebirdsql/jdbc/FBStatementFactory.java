@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source J2EE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
