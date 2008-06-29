@@ -1,3 +1,22 @@
+2008-06-28 23:50  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractConnection.java, AbstractPreparedStatement.java,
+	FBStatementFactory.java:
+
+	finished support for getGeneratedKeys() method
+
+2008-06-28 23:47  rrokytskyy
+
+	* client-java/src/pool/org/firebirdsql/pool/:
+	AbstractPingablePooledConnection.java, FBPooledConnection.java,
+	PooledConnectionHandler.java, PooledPreparedStatementHandler.java,
+	XConnectionManager.java, XPreparedStatementCache.java,
+	XPreparedStatementModel.java, XStatementManager.java:
+
+	JDBC-116 tracking of the prepared statement did not check the
+	result set type, concurrency, holdability and/or generated keys
+
 2008-06-24 17:02  rrokytskyy
 
 	*
