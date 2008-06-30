@@ -1,3 +1,31 @@
+2008-06-29 22:05  rrokytskyy
+
+	* client-java/src/: jdbc_40/org/firebirdsql/jdbc/FBConnection.java,
+	jdbc_40/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_40/org/firebirdsql/jdbc/FBStatement.java,
+	main/org/firebirdsql/gds/impl/AbstractIscStmtHandle.java,
+	main/org/firebirdsql/gds/impl/GDSHelper.java,
+	main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java,
+	main/org/firebirdsql/gds/impl/jni/LocalGDSImpl.java,
+	main/org/firebirdsql/gds/impl/jni/NativeGDSImpl.java,
+	main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java,
+	main/org/firebirdsql/jdbc/FBStatementFactory.java,
+	main/org/firebirdsql/management/FBBackupManager.java,
+	test/org/firebirdsql/gds/impl/wire/TestGds.java,
+	test/org/firebirdsql/jca/TestFBDatabaseMetaData.java,
+	test/org/firebirdsql/jdbc/.cvsignore,
+	test/org/firebirdsql/jdbc/TestFBConnection.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+
+	merged with Branch_2_1
+
+2008-06-29 21:57  rrokytskyy
+
+	* client-java/lib/: ant-trax.jar, ant.jar, antlr-runtime-3.0.1.jar,
+	ant-launcher.jar, ant-junit.jar, xercesImpl.jar, xml-apis.jar:
+
+	upgrade to a newer Ant version - needed to support JDK 1.6
+
 2008-06-28 23:50  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/:
