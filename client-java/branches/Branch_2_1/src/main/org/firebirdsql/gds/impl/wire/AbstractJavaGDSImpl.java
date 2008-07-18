@@ -32,6 +32,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -390,7 +392,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		synchronized (db) {
 			connect(db, dbai, databaseParameterBuffer);
             
-            String filenameCharset = databaseParameterBuffer.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
+            String filenameCharset = databaseParameterBuffer.getArgumentAsString(
+                DatabaseParameterBufferExtension.FILENAME_CHARSET);
+            
 			try {
 				if (debug)
 					log.debug("op_attach ");
@@ -398,11 +402,30 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				db.out.writeInt(0); // packet->p_atch->p_atch_database
 				db.out.writeString(dbai.getFileName(), filenameCharset);
 
-				databaseParameterBuffer = ((DatabaseParameterBufferExtension) databaseParameterBuffer)
-						.removeExtensionParams();
+			    databaseParameterBuffer = ((DatabaseParameterBufferExtension)
+			            databaseParameterBuffer).removeExtensionParams();
+				
+                String pidStr = getSystemPropertyPrivileged("pid");
+                if (pidStr != null) {
+                    
+                    try {
+                        int pid = Integer.parseInt(pidStr);
+                        
+                        databaseParameterBuffer.addArgument(
+                            DatabaseParameterBuffer.PROCESS_ID, 
+                            pid);
+                    } catch(NumberFormatException ex) {
+                        // ignore
+                    }
+                }
+                
+                String processName = getSystemPropertyPrivileged("processName");
+                if (processName != null)
+                    databaseParameterBuffer.addArgument(
+                        DatabaseParameterBuffer.PROCESS_NAME, 
+                        processName);
 
-				db.out.writeTyped(ISCConstants.isc_dpb_version1,
-						(Xdrable) databaseParameterBuffer);
+				db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable) databaseParameterBuffer);
 				db.out.flush();
 				if (debug)
 					log.debug("sent");
@@ -423,6 +446,14 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		}
 	}
 
+	private String getSystemPropertyPrivileged(final String propertyName) {
+	    return (String)AccessController.doPrivileged(new PrivilegedAction() {
+	       public Object run() {
+	           return System.getProperty(propertyName);
+	       } 
+	    });
+	}
+	
 	public byte[] iscDatabaseInfo(IscDbHandle handle, byte[] items,
 			int buffer_length) throws GDSException {
 		boolean debug = log != null && log.isDebugEnabled();
