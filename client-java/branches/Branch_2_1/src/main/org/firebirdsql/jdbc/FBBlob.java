@@ -301,6 +301,9 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
    */
     public byte[] getBytes(long pos, int length) throws SQLException{
         
+        if (pos < 1)
+            throw new FBSQLException("Blob position should be >= 1");
+        
         if (pos > Integer.MAX_VALUE)
             throw new FBSQLException("Blob position is limited to 2^31 - 1 " + 
                 "due to isc_seek_blob limitations.",
