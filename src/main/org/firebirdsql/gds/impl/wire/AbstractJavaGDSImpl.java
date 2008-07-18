@@ -405,7 +405,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			    databaseParameterBuffer = ((DatabaseParameterBufferExtension)
 			            databaseParameterBuffer).removeExtensionParams();
 				
-                String pidStr = getSystemPropertyPrivileged("pid");
+                String pidStr = getSystemPropertyPrivileged("org.firebirdsql.jdbc.pid");
                 if (pidStr != null) {
                     
                     try {
@@ -419,7 +419,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                     }
                 }
                 
-                String processName = getSystemPropertyPrivileged("processName");
+                String processName = getSystemPropertyPrivileged("org.firebirdsql.jdbc.processName");
                 if (processName != null)
                     databaseParameterBuffer.addArgument(
                         DatabaseParameterBuffer.PROCESS_NAME, 
