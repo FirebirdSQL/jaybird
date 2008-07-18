@@ -1,3 +1,15 @@
+2008-07-18 20:22  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBBlob.java:
+
+	fixed JDBC-97
+
+2008-07-18 19:10  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBRowUpdater.java:
+
+	fixed bug that caused incorrect updates for composite keys
+
 2008-06-29 22:05  rrokytskyy
 
 	* client-java/src/: jdbc_40/org/firebirdsql/jdbc/FBConnection.java,
