@@ -49,14 +49,14 @@
 
     <property name="version.major" value="2"/>
     <property name="version.minor" value="1"/>
-    <property name="version.revision" value="5"/>
+    <property name="version.revision" value="6"/>
     <property name="version.tag" value=""/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
 
     <!-- This must be set to the CVS tag for any release -->
-    <property name="version.cvstag" value="Jaybird_2_1_5"/>
+    <property name="version.cvstag" value="Jaybird_2_1_6"/>
 
     <!-- Manifest version info -->
     <property name="specification.title" value="Firebird Jaybird"/>
