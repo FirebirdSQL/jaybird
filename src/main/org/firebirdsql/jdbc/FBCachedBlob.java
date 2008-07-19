@@ -2,7 +2,9 @@ package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 import java.sql.Blob;
-import java.io.*;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.ByteArrayInputStream;
 
 
 /**
@@ -142,11 +144,11 @@ public class FBCachedBlob implements FirebirdBlob, Synchronizable {
     }
 
     public void free() throws SQLException {
-        this.blobData = null;
+        // FIXME all methods should not work after this being called
+        blobData = null;
     }
 
-    public InputStream getBinaryStream(long pos, long length)
-            throws SQLException {
+    public InputStream getBinaryStream(long pos, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
     

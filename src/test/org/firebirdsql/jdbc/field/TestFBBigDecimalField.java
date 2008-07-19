@@ -40,44 +40,17 @@ public class TestFBBigDecimalField extends BaseTestFBField {
     protected void tearDown() {
     }
 
-    
-    public void testDouble() throws SQLException {
-    }
-
-    public void testFloat() throws SQLException {
-    }
-
     public void testBigDecimal() throws SQLException {
+        
     }
 
     public void testObject() throws SQLException {
+        
     }
 
     public void testString() throws SQLException {
+        
     }
-
-    public void testAsciiStream() throws SQLException {
-    }
-
-    public void testBinaryStream() throws SQLException {
-    }
-
-    public void testBoolean() throws SQLException {
-    }
-
-    public void testBytes() throws SQLException {
-    }
-
-    public void testDate() throws SQLException {
-    }
-
-    public void testTime() throws SQLException {
-    }
-
-    public void testTimestamp() throws SQLException {
-    }
-
-    public void testUnicodeStream() throws SQLException {
-    }
+    
     
 }

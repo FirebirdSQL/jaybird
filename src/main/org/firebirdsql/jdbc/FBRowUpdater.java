@@ -240,8 +240,9 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                     if (columnName.equals(xsqlvars[i].sqlname)) {
                         result[i] = PARAMETER_USED;
                         found = true;
-                    } else
-                        result[i] = PARAMETER_UNUSED;
+                    } 
+                    //else
+                    //    result[i] = PARAMETER_UNUSED;
                 }
                 
                 // if we did not found a column from the best row identifier

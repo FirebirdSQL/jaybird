@@ -104,7 +104,7 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
                           AbstractStatement fbStatement, 
                           AbstractIscStmtHandle stmt, 
                           FBObjectListener.ResultSetListener listener,
-                          boolean metaDataQuery, 
+                          boolean trimStrings, 
                           int rsType, 
                           int rsConcurrency,
                           int rsHoldability,
@@ -120,7 +120,7 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         this.rsConcurrency = rsConcurrency;
         this.rsHoldability = rsHoldability;
         
-        this.trimStrings = metaDataQuery;
+        this.trimStrings = trimStrings;
         
         this.xsqlvars = stmt.getOutSqlda().sqlvar;
         this.maxRows = fbStatement.getMaxRows();
@@ -129,7 +129,7 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         boolean updatableCursor = fbStatement.isUpdatableCursor();
 
-        if (rsType != ResultSet.TYPE_FORWARD_ONLY || metaDataQuery)
+        if (rsType == ResultSet.TYPE_SCROLL_INSENSITIVE)
             cached = true;
         
         if (cached) {
@@ -1511,20 +1511,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return rsConcurrency;
     }
 
-    /**
-     * Retrieves the holdability of this <code>ResultSet</code> object
-     * 
-     * @return  either <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or 
-     * <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
-     * 
-     * @throws SQLException if a database access error occurs 
-     * or this method is called on a closed result set
-     * 
-     * @since 1.6
-     */
-    public int getHoldability() throws SQLException {
-        return rsHoldability;
-    }
 
     //---------------------------------------------------------------------
     // Updates
@@ -3102,7 +3088,15 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return fbStatement.getExecutionPlan();
     }
 
-    //--------------------------------------------------------------------
+    public int getHoldability() throws SQLException {
+        return rsHoldability;
+    }
+    
+    public boolean isClosed() throws SQLException {
+        return closed;
+    }
+
+    //-------------------------------------------------------------------------
 
      protected void addWarning(SQLWarning warning){
          if (firstWarning == null)

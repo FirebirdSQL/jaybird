@@ -34,6 +34,8 @@
 
 #include "jni.h"
 
+#include <new>
+
 
 // Dll Entrypoints
 
@@ -49,8 +51,6 @@ JClassBinding  sInternalErrorClassBinding;
 JClassBinding  sOutOfMemoryErrorClassBinding;
 JFieldBinding  isc_api_handle;
 InterfaceManager interfaceManager;
-EventStructManager eventStructManager;
-
 
 JNIEXPORT  void EnsureJavaExceptionIssued(JNIEnv * javaEnvironment, InternalException& exception)
     {
@@ -103,6 +103,7 @@ JNIEXPORT void MaybeIssueOutOfMemory(JNIEnv * javaEnvironment, std::bad_alloc& b
 // until a client library is located.
 bool sHasMostInitilizationBeenDone = false;
 static JavaVM *jvm;
+
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
 {
@@ -1090,11 +1091,9 @@ isc_callback event_function(event_struct* es, short length, char* updated)
         JEventHandle eventHandle(javaEnvironment, es->eventHandle);
         bool freeGlobals = false;
 
-		long eventStructPos = eventHandle.GetEventStructHandle();
-
         if (es->state != EVENT_CANCELLED)
         {
-			char* buffer = es->resultBuffer;
+            char* buffer = eventHandle.GetOutputHandleValue();
             if (buffer != 0)
             {
                 while(length--)
@@ -1117,8 +1116,7 @@ isc_callback event_function(event_struct* es, short length, char* updated)
         {
             javaEnvironment->DeleteGlobalRef(es->handler);
             javaEnvironment->DeleteGlobalRef(es->eventHandle);
-
-			eventStructManager.releaseEventStruct(eventStructPos);
+            free(es);
         }
     LEAVE_PROTECTED_BLOCK
 
@@ -1144,14 +1142,9 @@ JNIEXPORT jint JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 
         isc_db_handle rawDatabaseHandle = 
             databaseHandle.GetHandleValue();
+        char* event_buffer = eventHandle.GetInputHandleValue();
+        char* result_buffer = eventHandle.GetOutputHandleValue();
 
-		long eventStructPos = eventHandle.GetEventStructHandle();
-		event_struct* es = eventStructManager.getEventStruct(eventStructPos);
-
-        // char* event_buffer = eventHandle.GetInputHandleValue();
-        // char* result_buffer = eventHandle.GetOutputHandleValue();
-
-		/*
         event_struct* es = 0;
         if (eventHandle.GetEventStructHandle() == 0)
         {
@@ -1172,29 +1165,12 @@ JNIEXPORT jint JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
             es = (event_struct*)eventHandle.GetEventStructHandle();
             es->state = EVENT_ACTIVE;
         }
-		*/
-
-		if (es->eventHandle == 0) {
-			es->state = EVENT_UNINITIALIZED;
-
-			jobject globalEventHandler = 
-                javaEnvironment->NewGlobalRef(eventHandler);
-
-			jobject globalEventHandle = 
-                javaEnvironment->NewGlobalRef(jEventHandle);
-            
-            es->handler = globalEventHandler;
-            es->eventHandle = globalEventHandle;
-		} else {
-			es->state = EVENT_ACTIVE;
-		}
-
         CALL_API(isc_que_events)(
                 status.RawAccess(), 
                 &rawDatabaseHandle, 
                 &eventId,
                 eventHandle.GetSize(),
-                es->eventBuffer, 
+                event_buffer, 
                 (isc_callback)event_function, 
                 (void*)es);
         
@@ -1211,33 +1187,26 @@ JNIEXPORT jint JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
 JNIEXPORT jlong JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1event_1block
   (JNIEnv * javaEnvironment, jobject jThis, jobject jEventHandle, jstring eventName)
 {
-   //long length = -1;
+   long length = -1;
     ENTER_PROTECTED_BLOCK
-
-        // char *event_buffer, *result_buffer;
+        char *event_buffer, *result_buffer;
         JString jEventName(javaEnvironment, eventName);
         JEventHandle eventHandle(javaEnvironment, jEventHandle);
         const char* const event_name = jEventName.AsCString();
-
-		long eventStructPos = eventStructManager.addEventStruct();
-		event_struct* eventStructPtr = eventStructManager.getEventStruct(eventStructPos);
-
-		eventHandle.SetEventStructHandle(eventStructPos);
         
         DEF_CALL_API(isc_event_block)
         
-        long length = isc_event_block(
-				&eventStructPtr->eventBuffer,
-                &eventStructPtr->resultBuffer,
+        length = isc_event_block(
+                &event_buffer,
+                &result_buffer,
                 1,
                 const_cast<char*>(event_name));
-        // eventHandle.SetInputHandleValue(event_buffer);
-        // eventHandle.SetOutputHandleValue(result_buffer);
+        eventHandle.SetInputHandleValue(event_buffer);
+        eventHandle.SetOutputHandleValue(result_buffer);
         eventHandle.SetSize(length);
-		
         return length;
     LEAVE_PROTECTED_BLOCK
-    return -1;
+    return length;
 }
 
 JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_1event_1counts
@@ -1247,16 +1216,14 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
         ISC_STATUS stat[20];
         FirebirdStatusVector status;
         JEventHandle eventHandle(javaEnvironment, jEventHandle);
-        // char* event_buffer = eventHandle.GetInputHandleValue();
-        // char* result_buffer = eventHandle.GetOutputHandleValue();
-		long eventStructPos = eventHandle.GetEventStructHandle();
-		event_struct* es = eventStructManager.getEventStruct(eventStructPos);
+        char* event_buffer = eventHandle.GetInputHandleValue();
+        char* result_buffer = eventHandle.GetOutputHandleValue();
 
         CALL_API(isc_event_counts)( 
                                     stat, 
                                     eventHandle.GetSize(),
-                                    es->eventBuffer,
-                                    es->resultBuffer);
+                                    event_buffer,
+                                    result_buffer);
         eventHandle.SetEventCount(stat[0]);
     LEAVE_PROTECTED_BLOCK
 }
@@ -1269,13 +1236,10 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
         JIscDatabaseHandle databaseHandle(javaEnvironment, jDatabaseHandle);
         JEventHandle eventHandle(javaEnvironment, jEventHandle);
 
-		long eventStructPos = eventHandle.GetEventStructHandle();
 
-		event_struct* es = eventStructManager.getEventStruct(eventStructPos);
+        event_struct* es = (event_struct*)eventHandle.GetEventStructHandle();
         es->state = EVENT_CANCELLED;
 
-		char* event_buffer = es->eventBuffer;
-		char* result_buffer = es->resultBuffer;
 
         FirebirdStatusVector status;
         ISC_LONG eventId = eventHandle.GetEventId(); 
@@ -1284,12 +1248,13 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
                 status.RawAccess(), 
                 &rawDatabaseHandle, 
                 &eventId);
-
-        // eventHandle.SetInputHandleValue(0);
-        // eventHandle.SetOutputHandleValue(0);
+        char* event_buffer = eventHandle.GetInputHandleValue();
+        char* result_buffer = eventHandle.GetOutputHandleValue();
 
         CALL_API(isc_free)(event_buffer);
         isc_free(result_buffer);
+        eventHandle.SetInputHandleValue(0);
+        eventHandle.SetOutputHandleValue(0);
 
         status.IssueExceptionsAndOrAddWarnings(
                 javaEnvironment, databaseHandle);

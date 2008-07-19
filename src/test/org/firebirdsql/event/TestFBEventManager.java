@@ -1,15 +1,24 @@
 package org.firebirdsql.event;
 
 import java.io.File;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.PreparedStatement;
 
 import org.firebirdsql.common.FBTestBase;
+
 import org.firebirdsql.gds.impl.GDSType;
+
+import org.firebirdsql.management.FBManager;
 
 /** 
  * Test the FBEventManager class
  */
 public class TestFBEventManager extends FBTestBase {
+
+//    private FBManager fbManager;
 
     private EventManager eventManager;
 
@@ -38,6 +47,14 @@ public class TestFBEventManager extends FBTestBase {
     protected void setUp() throws Exception {
         super.setUp();
         
+//        fbManager = createFBManager();
+//        if (getGdsType() == GDSType.getType("PURE_JAVA") ||  getGdsType() == GDSType.getType("NATIVE")) {
+//            fbManager.setServer("localhost");
+//        }
+//        fbManager.start();
+//
+//        fbManager.setForceCreate(true);
+//        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
         executeSql(TABLE_DEF);
         executeSql(TRIGGER_DEF);
 
@@ -55,6 +72,16 @@ public class TestFBEventManager extends FBTestBase {
         eventManager.connect();
     }
 
+//    public String getDatabasePath() {
+//        return DB_PATH + "/" + DB_NAME;
+//    }
+   
+//    Connection getConnection() throws SQLException {
+//        return DriverManager.getConnection(
+//            "jdbc:firebirdsql:localhost:" + getDatabasePath(), 
+//            DB_USER, DB_PASSWORD);
+//    }
+
     private void executeSql(String sql) throws SQLException {
         Connection conn = getConnectionViaDriverManager();
         try {
@@ -67,6 +94,7 @@ public class TestFBEventManager extends FBTestBase {
 
     protected void tearDown() throws Exception {
         eventManager.disconnect();
+//        fbManager.stop();
         super.tearDown();
     }
 

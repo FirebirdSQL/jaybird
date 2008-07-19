@@ -4,10 +4,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.jdbc.*;
+import org.firebirdsql.jdbc.AbstractStatement;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.FBObjectListener.StatementListener;
 
-public class OOStatement extends FBStatement {
+public class OOStatement extends AbstractStatement {
 
     public OOStatement(GDSHelper c, int rsType, int rsConcurrency,
             int rsHoldability, StatementListener statementListener)

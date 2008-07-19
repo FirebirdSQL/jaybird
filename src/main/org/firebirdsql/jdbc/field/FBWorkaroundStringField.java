@@ -93,7 +93,7 @@ public class FBWorkaroundStringField extends FBStringField {
         
         if (data.length > field.sqllen && !isSystemTable(field.relname)) {
             // special handling for the LIKE ? queries with CHAR(1) fields
-            if (!(value.length() <= field.sqllen + 2 && (value.charAt(0) == '%' || value.charAt(value.length() - 1) == '%'))) 
+            if (!(value.length() <= field.sqllen + 2 && value.charAt(0) == '%' && value.charAt(value.length() - 1) == '%')) 
                 throw new DataTruncation(-1, true, false, data.length, field.sqllen);
         }
     }    

@@ -21,7 +21,6 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 
 
@@ -160,78 +159,43 @@ public class TestTableReservation extends FBTestBase {
     }
 
     public void testProtectedWriteProtectedWrite() throws SQLException {
-        try {
-            prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
-            prepareTPB(connection2, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
-            
-            execute(connection1, INSERT_TABLE_1, new Object[] {new Integer(1)});
-            execute(connection2, SELECT_TABLE_1, new Object[] {new Integer(1)});
-            
-            fail();
-        } catch(SQLException ex) {
-            int fbErrorCode = ex.getErrorCode();
-            assertEquals(ISCConstants.isc_lock_conflict, fbErrorCode);
-        }
+        prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
+        prepareTPB(connection2, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
+        
+        execute(connection1, INSERT_TABLE_1, new Object[] {new Integer(1)});
+        execute(connection2, SELECT_TABLE_1, new Object[] {new Integer(1)});
     }
     
     public void testProtectedWriteProtectedRead() throws SQLException {
-        try {
-            prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
-            prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", PROTECTED, false);
-            
-            execute(connection1, INSERT_TABLE_1, new Object[] {new Integer(1)});
-            execute(connection2, SELECT_TABLE_1, new Object[] {new Integer(1)});
-            
-            fail();
-        } catch(SQLException ex) {
-            int fbErrorCode = ex.getErrorCode();
-            assertEquals(ISCConstants.isc_lock_conflict, fbErrorCode);
-        }
+        prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
+        prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", PROTECTED, false);
+        
+        execute(connection1, INSERT_TABLE_1, new Object[] {new Integer(1)});
+        execute(connection2, SELECT_TABLE_1, new Object[] {new Integer(1)});
     }
 
     public void testProtectedWriteSharedWrite() throws SQLException {
-        try {
-            prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
-            prepareTPB(connection2, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
-            
-            execute(connection1, INSERT_TABLE_1, new Object[] {new Integer(1)});
-            execute(connection2, SELECT_TABLE_1, new Object[] {new Integer(1)});
-            
-            fail();
-        } catch(SQLException ex) {
-            int fbErrorCode = ex.getErrorCode();
-            assertEquals(ISCConstants.isc_lock_conflict, fbErrorCode);
-        }
+        prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
+        prepareTPB(connection2, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
+        
+        execute(connection1, INSERT_TABLE_1, new Object[] {new Integer(1)});
+        execute(connection2, SELECT_TABLE_1, new Object[] {new Integer(1)});
     }
     
     public void testProtectedWriteSharedRead() throws SQLException {
-        try {
-            prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
-            prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", SHARED, false);
-            
-            execute(connection1, INSERT_TABLE_1, new Object[] {new Integer(1)});
-            execute(connection2, SELECT_TABLE_1, new Object[] {new Integer(1)});
-            
-            fail();
-        } catch(SQLException ex) {
-            int fbErrorCode = ex.getErrorCode();
-            assertEquals(ISCConstants.isc_lock_conflict, fbErrorCode);
-        }
+        prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
+        prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", SHARED, false);
+        
+        execute(connection1, INSERT_TABLE_1, new Object[] {new Integer(1)});
+        execute(connection2, SELECT_TABLE_1, new Object[] {new Integer(1)});
     }
 
     public void testSharedWriteSharedRead() throws SQLException {
-        try {
-            prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
-            prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", SHARED, false);
-            
-            execute(connection1, INSERT_TABLE_1, new Object[] {new Integer(1)});
-            execute(connection2, SELECT_TABLE_1, new Object[] {new Integer(1)});
-            
-            fail();
-        } catch(SQLException ex) {
-            int fbErrorCode = ex.getErrorCode();
-            assertEquals(ISCConstants.isc_lock_conflict, fbErrorCode);
-        }
+        prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
+        prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", SHARED, false);
+        
+        execute(connection1, INSERT_TABLE_1, new Object[] {new Integer(1)});
+        execute(connection2, SELECT_TABLE_1, new Object[] {new Integer(1)});
     }
     
     public void testSharedReadSharedRead() throws SQLException {
@@ -259,18 +223,11 @@ public class TestTableReservation extends FBTestBase {
     }
     
     public void testSharedWriteProtectedRead() throws SQLException {
-        try {
-            prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
-            prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", PROTECTED, false);
-            
-            execute(connection1, SELECT_TABLE_1, new Object[] {new Integer(1)});
-            execute(connection2, SELECT_TABLE_1, new Object[] {new Integer(1)});
-            
-            fail();
-        } catch(SQLException ex) {
-            int fbErrorCode = ex.getErrorCode();
-            assertEquals(ISCConstants.isc_lock_conflict, fbErrorCode);
-        }
+        prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
+        prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", PROTECTED, false);
+        
+        execute(connection1, SELECT_TABLE_1, new Object[] {new Integer(1)});
+        execute(connection2, SELECT_TABLE_1, new Object[] {new Integer(1)});
     }
 
     public void testProtectedReadProtectedRead() throws SQLException {

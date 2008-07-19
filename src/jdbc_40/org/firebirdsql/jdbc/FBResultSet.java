@@ -1,26 +1,6 @@
-/*
- *
- * Firebird Open Source J2ee connector - jdbc driver
- *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
- *
- * All rights reserved.
- */
 package org.firebirdsql.jdbc;
 
-import java.io.InputStream;
-import java.io.Reader;
+import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -34,249 +14,179 @@ public class FBResultSet extends AbstractResultSet {
 
     public FBResultSet(GDSHelper gdsHelper, AbstractStatement fbStatement,
             AbstractIscStmtHandle stmt, ResultSetListener listener,
-            boolean metaDataQuery, int rsType, int rsConcurrency,
+            boolean trimStrings, int rsType, int rsConcurrency,
             int rsHoldability, boolean cached) throws SQLException {
-        
-        super(gdsHelper, fbStatement, stmt, listener, metaDataQuery, rsType,
+        super(gdsHelper, fbStatement, stmt, listener, trimStrings, rsType,
                 rsConcurrency, rsHoldability, cached);
+        // TODO Auto-generated constructor stub
     }
-
     public FBResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
         super(xsqlvars, rows);
+        // TODO Auto-generated constructor stub
     }
 
+    //------------------------- JDBC 4.0 --------------------------------------
+    
     public int getHoldability() throws SQLException {
         return super.getHoldability();
     }
-
     public Reader getNCharacterStream(int columnIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getCharacterStream(columnIndex);
     }
-
     public Reader getNCharacterStream(String columnLabel) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getCharacterStream(findColumn(columnLabel));
     }
-
     public NClob getNClob(int columnIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return (NClob)getClob(columnIndex);
     }
-
     public NClob getNClob(String columnLabel) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getNClob(findColumn(columnLabel));
     }
-
     public String getNString(int columnIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getString(columnIndex);
     }
-
     public String getNString(String columnLabel) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getNString(findColumn(columnLabel));
     }
-
     public RowId getRowId(int columnIndex) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
     public RowId getRowId(String columnLabel) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
     public SQLXML getSQLXML(int columnIndex) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
     public SQLXML getSQLXML(String columnLabel) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
     public boolean isClosed() throws SQLException {
+        return super.isClosed();
+    }
+    
+    public void updateAsciiStream(int columnIndex, InputStream x, long length) throws SQLException {
+        // TODO fix the length
+        updateAsciiStream(columnIndex, x);
+    }
+    public void updateAsciiStream(int columnIndex, InputStream x) throws SQLException {
+        try {
+            updateCharacterStream(columnIndex, new InputStreamReader(x, "ASCII"));
+        } catch(UnsupportedEncodingException ex) {
+            throw new FBSQLException(ex);
+        }
+    }
+    public void updateAsciiStream(String columnLabel, InputStream x, long length) throws SQLException {
+        updateAsciiStream(findColumn(columnLabel), x);
+    }
+    public void updateAsciiStream(String columnLabel, InputStream x) throws SQLException {
+        updateAsciiStream(findColumn(columnLabel), x);
+    }
+    
+    public void updateBinaryStream(int columnIndex, InputStream x, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateAsciiStream(int columnIndex, InputStream x, long length)
-            throws SQLException {
+    public void updateBinaryStream(int columnIndex, InputStream x) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateAsciiStream(int columnIndex, InputStream x)
-            throws SQLException {
+    public void updateBinaryStream(String columnLabel, InputStream x, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateAsciiStream(String columnLabel, InputStream x, long length)
-            throws SQLException {
+    public void updateBinaryStream(String columnLabel, InputStream x) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateAsciiStream(String columnLabel, InputStream x)
-            throws SQLException {
+    public void updateBlob(int columnIndex, InputStream inputStream, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateBinaryStream(int columnIndex, InputStream x, long length)
-            throws SQLException {
+    public void updateBlob(int columnIndex, InputStream inputStream) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateBinaryStream(int columnIndex, InputStream x)
-            throws SQLException {
+    public void updateBlob(String columnLabel, InputStream inputStream, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateBinaryStream(String columnLabel, InputStream x,
-            long length) throws SQLException {
+    public void updateBlob(String columnLabel, InputStream inputStream) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateBinaryStream(String columnLabel, InputStream x)
-            throws SQLException {
+    public void updateCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateBlob(int columnIndex, InputStream inputStream, long length)
-            throws SQLException {
+    public void updateCharacterStream(int columnIndex, Reader x) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateBlob(int columnIndex, InputStream inputStream)
-            throws SQLException {
+    public void updateCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateBlob(String columnLabel, InputStream inputStream,
-            long length) throws SQLException {
+    public void updateCharacterStream(String columnLabel, Reader reader) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateBlob(String columnLabel, InputStream inputStream)
-            throws SQLException {
+    public void updateClob(int columnIndex, Reader reader, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateCharacterStream(int columnIndex, Reader x, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void updateCharacterStream(int columnIndex, Reader x)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void updateCharacterStream(String columnLabel, Reader reader,
-            long length) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void updateCharacterStream(String columnLabel, Reader reader)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void updateClob(int columnIndex, Reader reader, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
     public void updateClob(int columnIndex, Reader reader) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateClob(String columnLabel, Reader reader, long length)
-            throws SQLException {
+    public void updateClob(String columnLabel, Reader reader, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateClob(String columnLabel, Reader reader)
-            throws SQLException {
+    public void updateClob(String columnLabel, Reader reader) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateNCharacterStream(int columnIndex, Reader x, long length)
-            throws SQLException {
+    public void updateNCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateNCharacterStream(int columnIndex, Reader x)
-            throws SQLException {
+    public void updateNCharacterStream(int columnIndex, Reader x) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateNCharacterStream(String columnLabel, Reader reader,
-            long length) throws SQLException {
+    public void updateNCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateNCharacterStream(String columnLabel, Reader reader)
-            throws SQLException {
+    public void updateNCharacterStream(String columnLabel, Reader reader) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateNClob(int columnIndex, NClob clob) throws SQLException {
+    public void updateNClob(int columnIndex, NClob nClob) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateNClob(int columnIndex, Reader reader, long length)
-            throws SQLException {
+    public void updateNClob(int columnIndex, Reader reader, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
     public void updateNClob(int columnIndex, Reader reader) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateNClob(String columnLabel, NClob clob) throws SQLException {
+    public void updateNClob(String columnLabel, NClob nClob) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateNClob(String columnLabel, Reader reader, long length)
-            throws SQLException {
+    public void updateNClob(String columnLabel, Reader reader, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateNClob(String columnLabel, Reader reader)
-            throws SQLException {
+    public void updateNClob(String columnLabel, Reader reader) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateNString(int columnIndex, String string)
-            throws SQLException {
+    public void updateNString(int columnIndex, String nString) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateNString(String columnLabel, String string)
-            throws SQLException {
+    public void updateNString(String columnLabel, String nString) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
     public void updateRowId(int columnIndex, RowId x) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
     public void updateRowId(String columnLabel, RowId x) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateSQLXML(int columnIndex, SQLXML xmlObject)
-            throws SQLException {
+    public void updateSQLXML(int columnIndex, SQLXML xmlObject) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    public void updateSQLXML(String columnLabel, SQLXML xmlObject)
-            throws SQLException {
+    public void updateSQLXML(String columnLabel, SQLXML xmlObject) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-
-    // java.sql.Wrapper interface
-    
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return iface != null && iface.isAssignableFrom(FBResultSet.class);
+    public boolean isWrapperFor(Class arg0) throws SQLException {
+        return arg0 != null && arg0.isAssignableFrom(FBDatabaseMetaData.class);
     }
-
-    public <T> T unwrap(Class<T> iface) throws SQLException {
-        if (!isWrapperFor(iface))
-            throw new FBDriverNotCapableException();
+    public Object unwrap(Class arg0) throws SQLException {
+        if (!isWrapperFor(arg0))
+            throw new FBSQLException("No compatible class found.");
         
-        return (T)this;
+        return this;
     }
+    
+
 }

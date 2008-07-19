@@ -6,7 +6,7 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jdbc.*;
 
-public class OOConnection extends FBConnection {
+public class OOConnection extends AbstractConnection {
 
     private OODatabaseMetaData metaData;
 
@@ -40,7 +40,7 @@ public class OOConnection extends FBConnection {
 
     public synchronized PreparedStatement prepareStatement(String sql,
             int resultSetType, int resultSetConcurrency,
-            int resultSetHoldability, boolean metaData, boolean generatedKeys) throws SQLException {
+            int resultSetHoldability, boolean metaData) throws SQLException {
         try {
             FBObjectListener.StatementListener coordinator = txCoordinator;
             if (metaData)
@@ -56,7 +56,7 @@ public class OOConnection extends FBConnection {
             PreparedStatement stmt = new OOPreparedStatement(getGDSHelper(),
                     sql, resultSetType, resultSetConcurrency,
                     resultSetHoldability, coordinator, blobCoordinator,
-                    metaData, false, generatedKeys);
+                    metaData, false);
 
             activeStatements.add(stmt);
             return stmt;

@@ -62,7 +62,7 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
     private final static Method PREPARED_STATEMENT_IS_CACHED = findMethod(
             XCachablePreparedStatement.class, "isCached", new Class[0]);
     
-    private XPreparedStatementModel key;
+    private String statement;
     private PreparedStatement preparedStatement;
     private XStatementManager owner;
     private Connection associatedConnection;
@@ -82,11 +82,10 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
      * @param owner instance of {@link XConnection} that created prepared
      * statement.
      */
-    PooledPreparedStatementHandler(XPreparedStatementModel key,
-            PreparedStatement preparedStatement, XStatementManager owner,
-            boolean cached) {
-        
-        this.key = key;
+    PooledPreparedStatementHandler(String statement, PreparedStatement preparedStatement, 
+        XStatementManager owner, boolean cached) 
+    {
+        this.statement = statement;
         this.preparedStatement = preparedStatement;
         this.owner = owner;
         this.invalid = false;
@@ -103,13 +102,13 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
      * 
      * @throws SQLException if something went wrong.
      */
-    protected void handleStatementClose(XPreparedStatementModel key, Object proxy) 
+    protected void handleStatementClose(String statement, Object proxy) 
         throws SQLException 
     {
         if (invalid)
             throw new SQLException("Statement is already closed.");
             
-        owner.statementClosed(key, proxy);
+        owner.statementClosed(statement, proxy);
     }
     
     protected void handleForceClose() throws SQLException {
@@ -143,7 +142,7 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
         
         try {
             if (method.equals(PREPARED_STATEMENT_CLOSE)) {
-                handleStatementClose(key, proxy);
+                handleStatementClose(statement, proxy);
                 return Void.TYPE;
             } else
             if (method.equals(PREPARED_STATEMENT_GET_CONNECTION)) {

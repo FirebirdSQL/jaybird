@@ -24,7 +24,7 @@ import java.sql.*;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.firebirdsql.jdbc.*;
+import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -54,7 +54,8 @@ class PooledConnectionHandler implements InvocationHandler {
         try {
             return clazz.getMethod(name, args);
         } catch (NoSuchMethodException nmex) {
-            return null;
+            throw new NullPointerException(
+                "No method for proxying found. Please check your classpath.");
         }
     }
     
@@ -87,26 +88,6 @@ class PooledConnectionHandler implements InvocationHandler {
             String.class, Integer.TYPE, Integer.TYPE
         });
         
-    private final static Method CONNECTION_PREPARE_STATEMENT3 = findMethod(
-        Connection.class, "prepareStatement", new Class[] {
-            String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE
-        });
-
-    private final static Method CONNECTION_PREPARE_STATEMENT_GENKEYS1 = findMethod(
-        Connection.class, "prepareStatement", new Class[] {
-            String.class, Integer.TYPE
-        });
-
-    private final static Method CONNECTION_PREPARE_STATEMENT_GENKEYS2 = findMethod(
-        Connection.class, "prepareStatement", new Class[] {
-            String.class, new int[0].getClass()
-        });
-
-    private final static Method CONNECTION_PREPARE_STATEMENT_GENKEYS3 = findMethod(
-        Connection.class, "prepareStatement", new Class[] {
-            String.class, new String[0].getClass()
-        });
-    
     private final static Method CONNECTION_CREATE_STATEMENT = findMethod(
             Connection.class, "createStatement", new Class[0]);
 
@@ -123,9 +104,6 @@ class PooledConnectionHandler implements InvocationHandler {
         
     private final static Method CONNECTION_ROLLBACK = findMethod(
         Connection.class, "rollback", new Class[0]);
-    
-    private final static Method CONNECTION_IS_CLOSED = findMethod(
-        Connection.class, "isClosed", new Class[0]);
         
     private Connection connection;
 	private XConnectionManager owner;
@@ -190,15 +168,6 @@ class PooledConnectionHandler implements InvocationHandler {
     }
     
     /**
-     * Check whether the {@link Connection#close()} method was called.
-     * 
-     * @return <code>true</code> if the method was called, false otherwise.
-     */
-    public boolean isClosed() {
-        return closed;
-    }
-    
-    /**
      * Deallocate current connection. This call is similar to the call
      * {@link Connection#close()} when invoked on the proxy object. However,
      * unlike that call no listener is notified that connection being closed;
@@ -237,11 +206,6 @@ class PooledConnectionHandler implements InvocationHandler {
 			
             // if object is closed, throw an exception
 			if (closed) { 
-
-                // check whether Connection.isClose() method is called first
-                if (CONNECTION_IS_CLOSED.equals(method))
-                    return Boolean.TRUE;
-                
 			    FBSQLException ex = new FBSQLException(
 				    "Connection " + this + " was closed. " +
                             "See the attached exception to find the place " +
@@ -254,14 +218,12 @@ class PooledConnectionHandler implements InvocationHandler {
 			    throw new SQLException(
 				    "This connection owner is not valid anymore.");
 			
-			// Connection.prepareStatement(...) methods
 			if (method.equals(CONNECTION_PREPARE_STATEMENT)){
 				String statement = (String)args[0];
 				return handlePrepareStatement(
                     statement, 
                     ResultSet.TYPE_FORWARD_ONLY,
-                    ResultSet.CONCUR_READ_ONLY,
-                    FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT);
+                    ResultSet.CONCUR_READ_ONLY);
             } else
             if (method.equals(CONNECTION_PREPARE_STATEMENT2)) {
                 String statement = (String)args[0];
@@ -270,48 +232,8 @@ class PooledConnectionHandler implements InvocationHandler {
                 return handlePrepareStatement(
                     statement, 
                     resultSetType.intValue(), 
-                    resultSetConcurrency.intValue(),
-                    FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT);
+                    resultSetConcurrency.intValue());
 			} else
-            if (method.equals(CONNECTION_PREPARE_STATEMENT3)) {
-                String statement = (String)args[0];
-                Integer resultSetType = (Integer)args[1];
-                Integer resultSetConcurrency = (Integer)args[2];
-                Integer resultSetHoldability = (Integer)args[3];
-                return handlePrepareStatement(
-                    statement, 
-                    resultSetType.intValue(), 
-                    resultSetConcurrency.intValue(),
-                    resultSetHoldability.intValue());
-            } else
-            
-            // Connection.prepareStatement(...) for generated keys
-                
-            if (method.equals(CONNECTION_PREPARE_STATEMENT_GENKEYS1)){
-                String statement = (String)args[0];
-                Integer returnGeneratedKeys = (Integer)args[1];
-                
-                if (returnGeneratedKeys.intValue() == FirebirdStatement.RETURN_GENERATED_KEYS)
-                    return handlePrepareStatement(statement, null, null);
-                else
-                    return handlePrepareStatement(
-                        statement, 
-                        ResultSet.TYPE_FORWARD_ONLY,
-                        ResultSet.CONCUR_READ_ONLY,
-                        FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT);
-            } else
-            if (method.equals(CONNECTION_PREPARE_STATEMENT_GENKEYS2)) {
-                String statement = (String)args[0];
-                int[] keyIndexes = (int[])args[1];
-                return handlePrepareStatement(statement, keyIndexes, null);
-            } else
-                if (method.equals(CONNECTION_PREPARE_STATEMENT_GENKEYS3)) {
-                    String statement = (String)args[0];
-                    String[] keyColumns = (String[])args[1];
-                    return handlePrepareStatement(statement, null, keyColumns);
-            } else
-                
-            // Connection.createStatement(...) methods
             if (method.equals(CONNECTION_CREATE_STATEMENT)){
                 return handleCreateStatement(
                     ResultSet.TYPE_FORWARD_ONLY,
@@ -324,8 +246,6 @@ class PooledConnectionHandler implements InvocationHandler {
                     resultSetType.intValue(), 
                     resultSetConcurrency.intValue());
             } else
-                
-            // Connection lifycycle methods
 			if (method.equals(CONNECTION_COMMIT)) {
 				handleConnectionCommit();
 				return Void.TYPE;
@@ -363,42 +283,17 @@ class PooledConnectionHandler implements InvocationHandler {
      * Otherwise, it prepares statement and caches it.
      * 
      * @param statement statement to prepare.
-     * @param resultSetType result set type.
-     * @param resultSetConcurrency result set concurrency.
-     * @param resultSetHoldability result set holdability
      * 
      * @return instance of {@link PreparedStatement} corresponding to the 
      * <code>statement</code>.
      * 
      * @throws SQLException if there was problem preparing statement. 
      */
-    synchronized PreparedStatement handlePrepareStatement(String statement,
-            int resultSetType, int resultSetConcurrency,
-            int resultSetHoldability) throws SQLException {
-        
-        return getManager().getPreparedStatement(statement, resultSetType,
-            resultSetConcurrency, resultSetHoldability);
-    }
-
-    /**
-     * Handle {@link Connection#prepareStatement(String, int)}, 
-     * {@link Connection#prepareStatement(String, int[])} and 
-     * {@link Connection#prepareStatement(String, String[])} calls. This 
-     * method checks internal cache first and returns the prepared statement 
-     * if found. Otherwise, it prepares statement and caches it.
-     * 
-     * @param statement statement to prepare.
-     * 
-     * @return instance of {@link PreparedStatement} corresponding to the 
-     * <code>statement</code>.
-     * 
-     * @throws SQLException if there was problem preparing statement. 
-     */
-    synchronized PreparedStatement handlePrepareStatement(String statement,
-            int[] keyIndexes, String[] keyColumns) throws SQLException {
-        
-        return getManager().getPreparedStatement(statement, keyIndexes,
-            keyColumns);
+    synchronized PreparedStatement handlePrepareStatement(String statement, 
+        int resultSetType, int resultSetConcurrency) throws SQLException 
+    {
+        return getManager().getPreparedStatement(
+            statement, resultSetType, resultSetConcurrency);
     }
     
     private HashSet openStatements = new HashSet();
