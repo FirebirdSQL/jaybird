@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.4  (Win32)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
 	<META NAME="CHANGEDBY" CONTENT="Roman Rokytskyy">
-	<META NAME="CHANGED" CONTENT="20080624;16570725">
+	<META NAME="CHANGED" CONTENT="20080719;18182900">
 	<STYLE TYPE="text/css">
 	<!--
 		@page { size: 21cm 29.7cm; margin: 2cm }
@@ -46,7 +46,7 @@
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <H1 CLASS="western" ALIGN=CENTER>Jaybird JCA/JDBC Driver<BR>Release
-Notes v 2.1.5</H1>
+Notes v 2.1.6</H1>
 <DIV ID="Table of Contents1" DIR="LTR">
 	<DIV ID="Table of Contents1_Head" DIR="LTR">
 		<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><FONT FACE="Albany, sans-serif"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Table
@@ -254,7 +254,48 @@ Specification support</H3>
 </TABLE>
 <H3 CLASS="western"></H3>
 <H2 CLASS="western"><A NAME="0.0.What's new in Jaybird 2.1|outline"></A>
-What's new in Jaybird 2.1.5</H2>
+What's new in Jaybird 2.1.6</H2>
+<H3 CLASS="western">List of bugs fixed since Jaybird 2.1.5</H3>
+<TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
+	<COL WIDTH=48*>
+	<COL WIDTH=208*>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">JDBC-97</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">Blob.getBytes() method should not allow
+			position below 1</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">JDBC-108 and JDBC-119</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">JDBC-108: Problems with record resultset to
+			call primary composite</P>
+			<P CLASS="western">JDBC-119: updateRow() primary key violation
+			issue</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=19%>
+			<P CLASS="western">JDBC-118</P>
+		</TD>
+		<TD WIDTH=81%>
+			<P CLASS="western">Remote PID and process name for FB 2.1
+			monitoring tables</P>
+			<P CLASS="western">The only platform independent solution turns
+			out to be via the -D property, therefore two new properties:
+			<CODE CLASS="western">org.firebirdsql.jdbc.pid</CODE> and
+			<CODE CLASS="western">org.firebirdsql.jdbc.processName</CODE>. If
+			they are specified, values are passed to Firebird 2.1. Also the
+			behavior with previous versions of FB is undefined, so use them
+			with care.</P>
+		</TD>
+	</TR>
+</TABLE>
 <H3 CLASS="western">List of bugs fixed since Jaybird 2.1.4</H3>
 <TABLE WIDTH=100% BORDER=1 BORDERCOLOR="#000000" CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=48*>
@@ -480,8 +521,8 @@ problems with the restored JDBC 3.0 compatibility in Jaybird 2.0.</P>
 	and <CODE CLASS="western">FBWrappingDataSource</CODE> classes.</P>
 </UL>
 <P CLASS="western"><STRONG>Note, the price for using this feature is
-that each holdable result set will be fully cached in memory. The
-memory occupied by it will be released when the statement that
+that each holdable result set will be fully cached in </STRONG><STRONG>memory.
+The memory occupied by it will be released when the statement that
 produced the result set is </STRONG><STRONG>either </STRONG><STRONG>closed
 or re-executed.</STRONG></P>
 <H3 CLASS="western"><A NAME="0.0.0.Other features|outline"></A>Other
@@ -1107,18 +1148,18 @@ it is possible to enable extensive logging inside the driver.</P>
 <P CLASS="western">Following file groups can be found in distribution
 package:</P>
 <UL>
-	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-2.1.5.jar</CODE>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-2.1.6.jar</CODE>
 	&ndash; archive containing JCA/JDBC driver and JMX management class.
 	It requires JCA 1.0, JTA 1.0.1, and JAAS 1.0.</FONT></P>
-	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-pool-2.1.5.jar</CODE>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-pool-2.1.6.jar</CODE>
 	&ndash; archive contains implementation of connection pooling and
 	statement pooling interfaces.</FONT></P>
-	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-full-2.1.5.jar</CODE>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-full-2.1.6.jar</CODE>
 	&ndash; merge of <CODE CLASS="western">firebirdsql.jar</CODE> and
 	<CODE CLASS="western">mini-j2ee.jar</CODE> (or <CODE CLASS="western">mini-j2ee_16.jar</CODE>
 	for JDK 6.0 deployments). This archive can be used for standalone<A CLASS="sdfootnoteanc" NAME="sdfootnote1anc" HREF="#sdfootnote1sym"><SUP>1</SUP></A>
 	Jaybird deployments.</FONT></P>
-	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-2.1.5.rar</CODE>
+	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">jaybird-2.1.6.rar</CODE>
 	&ndash; resource archive ready for deployment in JCA-enabled
 	application servers.</FONT></P>
 	<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><FONT FACE="Thorndale, serif"><CODE CLASS="western">lib/jaas.jar</CODE>
@@ -1718,11 +1759,11 @@ limitations:</P>
 	however corresponding mutex is local to the classloader that loaded
 	Jaybird driver<EM>. </EM><STRONG>Care should be taken when deploying
 	applications in web or application servers: put jar files in the
-	main library directory of the web and/or application server, not in
-	the library directory of the web or enterprise application
-	(WEB-INF/lib directory or in the .EAR file). This issue will be
-	fixed in </STRONG><STRONG>Firebird client library after merge with
-	Vulcan project.</STRONG></P>
+	main library directory of </STRONG><STRONG>the web and/or
+	application server, not in the library directory of the web or
+	enterprise application (WEB-INF/lib directory or in the .EAR file).
+	This issue will be fixed in </STRONG><STRONG>Firebird client library
+	after merge with Vulcan project.</STRONG></P>
 	<LI><P CLASS="western"><STRONG><SPAN STYLE="font-weight: medium">Current
 	implementation of the JNI library allows that either client library
 	or embedded server library is loaded into memory. The first library
@@ -2619,9 +2660,9 @@ often thought to be a bug turns out to be something else. List
 members may be able o help out and get you going again, whereas bug
 fixes might take awhile.</P>
 <P CLASS="western" ALIGN=LEFT>If you are sure that this is a bug you
-may report it in the Firebird bug tracker, &ldquo;Java Client
-(Jaybird)&rdquo; at SourceForge.net project area
-(<A HREF="http://sourceforge.net/projects/firebird">http://sourceforge.net/projects/firebird</A>).</P>
+may report it in the Firebird bug tracker
+<A HREF="http://tracker.firebirdsql.org/">http://tracker.firebirdsql.org</A>
+for the project &ldquo;Jaybird JCA/JDBC Driver&rdquo;.</P>
 <H3 CLASS="western"><A NAME="0.0.0.Corrections/Additions To Release Notes|outline"></A>
 Corrections/Additions To Release Notes</H3>
 <P CLASS="western" ALIGN=LEFT>Please send corrections, suggestions,
