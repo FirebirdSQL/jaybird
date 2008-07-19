@@ -36,7 +36,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public abstract class AbstractResultSetMetaData implements ResultSetMetaData {
+public class FBResultSetMetaData implements ResultSetMetaData {
 
     private final XSQLVAR[] xsqlvars;
     private Map extendedInfo;
@@ -52,7 +52,7 @@ public abstract class AbstractResultSetMetaData implements ResultSetMetaData {
      * TODO Need another constructor for metadata from constructed
      * result set, where we supply the ext field info.
      */
-    protected AbstractResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
+    protected FBResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
     }
@@ -640,7 +640,21 @@ public abstract class AbstractResultSetMetaData implements ResultSetMetaData {
         }
     }
 
+    //----------------------------- JDBC 4.0 ----------------------------------
+    
+    public boolean isWrapperFor(Class arg0) throws SQLException {
+        return arg0 != null && arg0.isAssignableFrom(FBDatabaseMetaData.class);
+    }
 
+    public Object unwrap(Class arg0) throws SQLException {
+        if (!isWrapperFor(arg0))
+            throw new FBSQLException("No compatible class found.");
+        
+        return this;
+    }
+
+    //-------------------------------------------------------------------------
+    
     //private methods
 
     private XSQLVAR getXsqlvar(int columnIndex) {
@@ -777,8 +791,6 @@ public abstract class AbstractResultSetMetaData implements ResultSetMetaData {
             else
                 return (relationName.hashCode() ^ fieldName.hashCode()) + 11;
         }
-
-
     }
 
     /**

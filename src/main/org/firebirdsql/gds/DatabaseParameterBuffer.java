@@ -106,6 +106,13 @@ public interface DatabaseParameterBuffer {
     int GSTAT_ATTACH            = ISCConstants.isc_dpb_gstat_attach;
     int SET_DB_CHARSET          = ISCConstants.isc_dpb_set_db_charset;
     
+    int GSEC_ATTACH             = ISCConstants.isc_dpb_gsec_attach;
+    int ADDRESS_PATH            = ISCConstants.isc_dpb_address_path;
+    int PROCESS_ID              = ISCConstants.isc_dpb_process_id;
+    int NO_DB_TRIGGERS          = ISCConstants.isc_dpb_no_db_triggers;
+    int TRUSTED_AUTH            = ISCConstants.isc_dpb_trusted_auth;
+    int PROCESS_NAME            = ISCConstants.isc_dpb_process_name;
+    
     /**
      * Add argument with no parameters.
      * 

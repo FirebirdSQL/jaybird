@@ -27,7 +27,7 @@ package org.firebirdsql.jdbc;
 
 import java.sql.PreparedStatement;
 
-import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.IscStmtHandle;
 
 /**
  * Firebird extensions to the {@link PreparedStatement} interface.
@@ -37,56 +37,43 @@ import org.firebirdsql.gds.ISCConstants;
 public interface FirebirdPreparedStatement extends FirebirdStatement, PreparedStatement {
  
     /** A <code>SELECT</code> statement */
-    public static final int TYPE_SELECT = 
-        ISCConstants.isc_info_sql_stmt_select;
+    public static final int TYPE_SELECT =  IscStmtHandle.TYPE_SELECT;
 
     /** An <code>INSERT</code> statement */
-    public static final int TYPE_INSERT =
-        ISCConstants.isc_info_sql_stmt_insert;
+    public static final int TYPE_INSERT = IscStmtHandle.TYPE_INSERT;
 
     /** An <code>UPDATE</code> statement */
-    public static final int TYPE_UPDATE =
-        ISCConstants.isc_info_sql_stmt_update;
+    public static final int TYPE_UPDATE = IscStmtHandle.TYPE_UPDATE;
 
     /** A <code>DELETE</code> statement */
-    public static final int TYPE_DELETE =
-        ISCConstants.isc_info_sql_stmt_delete;
+    public static final int TYPE_DELETE = IscStmtHandle.TYPE_DELETE;
 
     /** A DDL statment */
-    public static final int TYPE_DDL =
-        ISCConstants.isc_info_sql_stmt_ddl;
+    public static final int TYPE_DDL = IscStmtHandle.TYPE_DDL;
 
     /** A GET SEGMENT statement */
-    public static final int TYPE_GET_SEGMENT =
-        ISCConstants.isc_info_sql_stmt_get_segment;
+    public static final int TYPE_GET_SEGMENT = IscStmtHandle.TYPE_GET_SEGMENT;
 
     /** A PUT SEGMENT statement */
-    public static final int TYPE_PUT_SEGMENT =
-        ISCConstants.isc_info_sql_stmt_put_segment;
+    public static final int TYPE_PUT_SEGMENT = IscStmtHandle.TYPE_PUT_SEGMENT;
 
     /** An <code>EXEC PROCEDURE</code> statement */
-    public static final int TYPE_EXEC_PROCEDURE =
-        ISCConstants.isc_info_sql_stmt_exec_procedure;
+    public static final int TYPE_EXEC_PROCEDURE = IscStmtHandle.TYPE_EXEC_PROCEDURE;
 
     /** A START TRANSACTION statement */
-    public static final int TYPE_START_TRANS =
-        ISCConstants.isc_info_sql_stmt_start_trans;
+    public static final int TYPE_START_TRANS = IscStmtHandle.TYPE_START_TRANS;
 
     /** A <code>COMMIT</code> statement */
-    public static final int TYPE_COMMIT =
-        ISCConstants.isc_info_sql_stmt_commit;
+    public static final int TYPE_COMMIT = IscStmtHandle.TYPE_COMMIT;
 
     /** A <code>ROLLBACK</code> statement */
-    public static final int TYPE_ROLLBACK =
-        ISCConstants.isc_info_sql_stmt_rollback;
+    public static final int TYPE_ROLLBACK = IscStmtHandle.TYPE_ROLLBACK;
 
     /** A <code>SELECT FOR UPDATE</code> statement */
-    public static final int TYPE_SELECT_FOR_UPDATE =
-        ISCConstants.isc_info_sql_stmt_select_for_upd;
+    public static final int TYPE_SELECT_FOR_UPDATE = IscStmtHandle.TYPE_SELECT_FOR_UPDATE;
 
     /** A <code>SET GENERATOR</code> statement */
-    public static final int TYPE_SET_GENERATOR =
-        ISCConstants.isc_info_sql_stmt_set_generator;
+    public static final int TYPE_SET_GENERATOR = IscStmtHandle.TYPE_SET_GENERATOR;
 
     /**
      * Get the execution plan of this PreparedStatement

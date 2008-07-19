@@ -21,10 +21,12 @@ package org.firebirdsql.jdbc;
 
 
 import java.io.*;
-import java.sql.*;
+import java.sql.Blob;
+import java.sql.SQLException;
 import java.util.*;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
@@ -64,14 +66,14 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * also used for the BufferedInputStream/BufferedOutputStream wrappers.
      *
      */
-    int bufferlength;
+    private int bufferlength;
 
-    boolean isNew;
-    long blob_id;
-    GDSHelper gdsHelper;
+    private boolean isNew;
+    private long blob_id;
+    private GDSHelper gdsHelper;
     private FBObjectListener.BlobListener blobListener;
 
-    Collection inputStreams = new HashSet();
+    private Collection inputStreams = new HashSet();
     private FBBlobOutputStream blobOut = null;
 
     private FBBlob(GDSHelper c, boolean isNew, FBObjectListener.BlobListener blobListener) {
@@ -147,52 +149,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             if (error != null)
                 throw error;
         }
-    }
-
-    /**
-     * This method frees the <code>Blob</code> object and releases the resources that 
-     * it holds. The object is invalid once the <code>free</code>
-     * method is called.
-     *<p>
-     * After <code>free</code> has been called, any attempt to invoke a
-     * method other than <code>free</code> will result in a <code>SQLException</code> 
-     * being thrown.  If <code>free</code> is called multiple times, the subsequent
-     * calls to <code>free</code> are treated as a no-op.
-     *<p>
-     * 
-     * @throws SQLException if an error occurs releasing
-     * the Blob's resources
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
-     * @since 1.6
-     */
-    public void free() throws SQLException {
-        try {
-            close();
-        } catch(IOException ex) {
-            throw new FBSQLException(ex);
-        }
-    }
-
-    /**
-     * Returns an <code>InputStream</code> object that contains a partial <code>Blob</code> value, 
-     * starting  with the byte specified by pos, which is length bytes in length.
-     *
-     * @param pos the offset to the first byte of the partial value to be retrieved.
-     *  The first byte in the <code>Blob</code> is at position 1
-     * @param length the length in bytes of the partial value to be retrieved
-     * @return <code>InputStream</code> through which the partial <code>Blob</code> value can be read.
-     * @throws SQLException if pos is less than 1 or if pos is greater than the number of bytes
-     * in the <code>Blob</code> or if pos + length is greater than the number of bytes 
-     * in the <code>Blob</code>
-     *
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
-     * @since 1.6
-     */
-    public InputStream getBinaryStream(long pos, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -279,7 +235,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * 
      * @throws SQLException if length cannot be interpreted.
      */            
-    long interpretLength(byte[] info, int position) throws SQLException { 
+    private long interpretLength(byte[] info, int position) throws SQLException { 
        return interpretLength(gdsHelper, info, position);
     }
 
@@ -344,6 +300,9 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public byte[] getBytes(long pos, int length) throws SQLException{
+        
+        if (pos < 1)
+            throw new FBSQLException("Blob position should be >= 1");
         
         if (pos > Integer.MAX_VALUE)
             throw new FBSQLException("Blob position is limited to 2^31 - 1 " + 
@@ -504,21 +463,21 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         if (blobOut != null) 
             throw new FBSQLException("Only one blob output stream open at a time!");
 
-        if (pos < 1) 
+        if (pos < 0) 
             throw new FBSQLException(
                     "You can't start before the beginning of the blob",
                     FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
 
-        if ((isNew) && (pos > 1)) 
+        if ((isNew) && (pos > 0)) 
             throw new FBSQLException(
-                    "Previous value was null, you must start at position 1",
+                    "Previous value was null, you must start at position 0",
                     FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
 
-        blobOut = new FBBlobOutputStream(this);
-        if (pos > 1) {
+        blobOut = new FBBlobOutputStream();
+        if (pos > 0) {
             //copy pos bytes from input to output
             //implement this later
-            throw new FBDriverNotCapableException("Offset start positions are not yet supported.");
+            throw new FBDriverNotCapableException("Non-null positions are not yet supported.");
         }
         
         return blobOut;
@@ -546,7 +505,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     }
 
     public void copyBytes(byte[] bytes, int pos, int len) throws SQLException {
-        OutputStream out = setBinaryStream(1);
+        OutputStream out = setBinaryStream(0);
         try {
             try {
                 out.write(bytes, pos, len);
@@ -566,7 +525,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException if a database access error occurs
      */
     public void copyStream(InputStream inputStream, int length) throws SQLException {
-        OutputStream os = setBinaryStream(1);
+        OutputStream os = setBinaryStream(0);
         byte[] buffer = new byte[Math.min(bufferlength, length)];
         int chunk;
         try {
@@ -594,7 +553,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException if a database access error occurs
      */
     public void copyStream(InputStream inputStream) throws SQLException {
-        OutputStream os = setBinaryStream(1);
+        OutputStream os = setBinaryStream(0);
         try {
             int chunk = 0;
             byte[] buffer = new byte[bufferlength];
@@ -618,7 +577,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @param encoding The encoding used in the character stream
      */
     public void copyCharacterStream(Reader inputStream, int length, String encoding) throws SQLException {
-        OutputStream os = setBinaryStream(1);
+        OutputStream os = setBinaryStream(0);
         try {
             
             OutputStreamWriter osw;
@@ -652,6 +611,338 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
     }
 
+
+    //Inner classes
+
+    /**
+     * An input stream for reading directly from a FBBlob instance.
+     */
+    public class FBBlobInputStream extends InputStream 
+        implements FirebirdBlob.BlobInputStream
+    {
+
+
+        private byte[] buffer = null;
+        private IscBlobHandle blob;
+        private int pos = 0;
+        
+        private boolean closed;
+        
+        private FBBlob owner;
+
+        private FBBlobInputStream(FBBlob owner) throws SQLException {
+            this.owner = owner;
+            
+            closed = false;
+            
+            if (isNew) 
+                throw new FBSQLException("You can't read a new blob");
+            
+            Object syncObject = FBBlob.this.getSynchronizationObject();
+            
+            synchronized(syncObject) {
+                try {
+                    blob = gdsHelper.openBlob(blob_id, SEGMENTED);
+                } catch (GDSException ge) {
+                    throw new FBSQLException(ge);
+                }
+            }
+        }
+        
+        public FirebirdBlob getBlob() {
+            return owner;
+        }
+
+        public void seek(int position) throws IOException {
+            seek(position, SEEK_MODE_ABSOLUTE);
+        }
+
+        public void seek(int position, int seekMode) throws IOException {
+            
+            Object syncObject = getSynchronizationObject();
+            
+            synchronized(syncObject) {
+                checkClosed();
+                try {
+                    gdsHelper.seekBlob(blob, position, seekMode);
+                } catch (GDSException ex) {
+                    /** @todo fix this */
+                    throw new IOException(ex.getMessage());
+                }
+            }
+        }
+        
+        public long length() throws IOException {
+            
+            Object syncObject = getSynchronizationObject();
+            
+            synchronized(syncObject) {
+                checkClosed();
+                try {
+                    byte[] info = gdsHelper.getBlobInfo(
+                        blob, new byte[] {ISCConstants.isc_info_blob_total_length}, 20);
+
+                    return interpretLength(info, 0);
+                } catch (GDSException ex) {
+                    throw new IOException(ex.getMessage());
+                } catch (SQLException ex) {
+                    throw new IOException(ex.getMessage());
+                }
+            }
+        }
+
+        public int available() throws IOException {
+            
+            Object syncObject = getSynchronizationObject();
+            synchronized(syncObject) {
+                checkClosed();
+                if (buffer == null) {
+                    if (blob.isEof()) {
+                        return -1;
+                    }
+                    
+                    try {
+                        //bufferlength is in FBBlob enclosing class
+                        buffer = gdsHelper.getBlobSegment(blob, bufferlength);
+                    } catch (GDSException ge) {
+                        throw new IOException("Blob read problem: " +
+                            ge.toString());
+                    }
+                    
+                    pos = 0;
+                    if (buffer.length == 0) {
+                       return -1;
+                    }
+                }
+                return buffer.length - pos;
+            }
+        }
+
+        public int read() throws IOException {
+            if (available() <= 0) {
+                return -1;
+            }
+            int result = buffer[pos++] & 0x00FF;//& seems to convert signed byte to unsigned byte
+            if (pos == buffer.length) {
+                buffer = null;
+            }
+            return result;
+        }
+
+        public int read(byte[] b, int off, int len) throws IOException {
+            int result = available();
+            if (result <= 0) {
+                return -1;
+            }
+            if (result > len) {//not expected to happen
+                System.arraycopy(buffer, pos, b, off, len);
+                pos += len;
+                return len;
+            }
+            System.arraycopy(buffer, pos, b, off, result);
+            buffer = null;
+            pos = 0;
+            return result;
+        }
+        
+        public void readFully(byte[] b, int off, int len) throws IOException {
+            int counter = 0;
+            int pos = 0;
+            byte[] buffer = new byte[Math.min(READ_FULLY_BUFFER_SIZE, len)];
+
+            int toRead = len;
+
+            while(toRead > 0 && (counter = read(buffer, 0, toRead)) != -1) {
+                System.arraycopy(buffer, 0, b, pos, counter);
+                pos += counter;
+                
+                toRead -= counter;
+            }
+            
+            if (counter == -1)
+                throw new EOFException();
+        }
+        
+        public void readFully(byte[] b) throws IOException {
+            readFully(b, 0, b.length);
+        }
+
+        public void close() throws IOException {
+            
+            Object syncObject = getSynchronizationObject();
+            
+            synchronized(syncObject) {
+                if (blob != null) {
+                    try {
+                        gdsHelper.closeBlob(blob);
+                        
+                        inputStreams.remove(this);
+                    } catch (GDSException ge) {
+                        throw new IOException("couldn't close blob: " + ge);
+                    }
+                    blob = null;
+                    closed = true;
+                }
+            }
+        }
+        
+        private void checkClosed() throws IOException {
+            if (closed) throw new IOException("Input stream is already closed.");
+        }
+    }
+
+    public class FBBlobOutputStream extends OutputStream 
+        implements FirebirdBlob.BlobOutputStream
+    {
+
+        private IscBlobHandle blob;
+
+        private FBBlobOutputStream() throws SQLException {
+            
+            Object syncObject = getSynchronizationObject();
+            
+            synchronized(syncObject) {
+                try {
+                    DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
+                    
+                    boolean useStreamBlobs = 
+                        dpb.hasArgument(DatabaseParameterBufferExtension.USE_STREAM_BLOBS);
+                    
+                    blob = gdsHelper.createBlob(!useStreamBlobs);
+                    
+                } catch (GDSException ge) {
+                    throw new FBSQLException(ge);
+                }
+            }
+            
+            if (isNew) {
+                setBlobId(blob.getBlobId());
+            }
+        }
+        
+        public void seek(int position, int seekMode) throws SQLException {
+            try {
+                gdsHelper.seekBlob(blob, position, seekMode);
+            } catch(GDSException ex) {
+                throw new FBSQLException(ex);
+            }
+        }
+        
+        public long length() throws IOException {
+            
+            Object syncObject = getSynchronizationObject();
+            
+            synchronized(syncObject) {
+                try {
+                    byte[] info = gdsHelper.getBlobInfo(
+                        blob, new byte[] {ISCConstants.isc_info_blob_total_length}, 20);
+
+                    return interpretLength(info, 0);
+                } catch (GDSException ex) {
+                    throw new IOException(ex.getMessage());
+                } catch (SQLException ex) {
+                    throw new IOException(ex.getMessage());
+                }
+            }
+        }
+
+        public void write(int b) throws IOException {
+            //This won't be called, don't implement
+            throw new IOException("FBBlobOutputStream.write(int b) not implemented");
+        }
+
+        public void writeSegment(byte[] buf) throws GDSException {
+            Object syncObject = getSynchronizationObject();
+            synchronized(syncObject) {
+                gdsHelper.putBlobSegment(blob, buf);
+            }
+        }
+        
+        public void write(byte[] b, int off, int len) throws IOException {
+            try {
+                if (off == 0 && len == b.length && len < bufferlength) {
+                    /*
+                     * If we are just writing the entire byte array, we need to
+                     * do nothing but just write it over
+                     */
+                    writeSegment(b);
+                } else {
+                    /*
+                     * In this case, we need to chunk it over since <code>putBlobSegment</code>
+                     * cannot currently support length and offset.
+                     */
+                    int chunk = bufferlength;
+                    int lastChunk = 0;
+                    byte[] buf = null;
+                    while (len > 0) {
+                        if (len < chunk) chunk = len;
+
+                        // this allows us to reused the chunk if its size has
+                        // not changed
+                        if (chunk != lastChunk) {
+                            buf = new byte[chunk];
+                            lastChunk = chunk;
+                        }
+
+                        System.arraycopy(b, off, buf, 0, chunk);
+                        writeSegment(buf);
+
+                        len -= chunk;
+                        off += chunk;
+                    }
+
+                }
+            } catch (GDSException ge) {
+                throw new IOException("Problem writing to FBBlobOutputStream: "
+                        + ge);
+            }
+        }
+
+        public void close() throws IOException {
+            if (blob != null) {
+                try {
+                    
+                    Object syncObject = getSynchronizationObject();
+                    
+                    synchronized(syncObject) {
+                        gdsHelper.closeBlob(blob);
+                    }
+                    
+                    setBlobId(blob.getBlobId());
+                    
+                } catch (GDSException ge) {
+                    throw new IOException("could not close blob: " + ge);
+                }
+                
+                blob = null;
+            }
+        }
+
+    }
+
+    public void free() throws SQLException {
+        
+    }
+
+    /**
+     * Returns an <code>InputStream</code> object that contains a partial <code>Blob</code> value, 
+     * starting  with the byte specified by pos, which is length bytes in length.
+     *
+     * @param pos the offset to the first byte of the partial value to be retrieved.
+     *  The first byte in the <code>Blob</code> is at position 1
+     * @param length the length in bytes of the partial value to be retrieved
+     * @return <code>InputStream</code> through which the partial <code>Blob</code> value can be read.
+     * @throws SQLException if pos is less than 1 or if pos is greater than the number of bytes
+     * in the <code>Blob</code> or if pos + length is greater than the number of bytes 
+     * in the <code>Blob</code>
+     *
+     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
+     * this method
+     * @since 1.6
+     */
+    public InputStream getBinaryStream(long pos, long length) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
 }
 

@@ -42,19 +42,7 @@ public interface FirebirdCallableStatement extends FirebirdPreparedStatement, Ca
      * a result set. In former case it retrieves only the first row of the 
      * result set.
      *  
-     * @see getSelectableProcedure
      * @param selectable <code>true</code> if the called procedure is selectable.
      */
     void setSelectableProcedure(boolean selectable);
-
-    /**
-     * Retrieve if this callable statement has been marked as selectable.
-     * 
-     * Starting from Firebird 2.1, this value is set automatically from metadata stored in the
-     * database. Prior to Firebird 2.1, it must be set manually.
-     * 
-     * @see setSelectableProcedure
-     * @return <code>true</code> if the called procedure is selectable, false otherwise
-     */
-	boolean isSelectableProcedure();
 }
