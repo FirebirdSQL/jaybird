@@ -1,3 +1,25 @@
+2008-07-19 18:20  rrokytskyy
+
+	* client-java/src/etc/: release_notes.html, release_notes.odt,
+	release_notes.pdf:
+
+	new version 2.1.6
+
+2008-07-18 21:38  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java:
+
+	changed the name of the properties
+
+2008-07-18 21:35  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/:
+	DatabaseParameterBuffer.java, ISCConstants.java,
+	impl/wire/AbstractJavaGDSImpl.java:
+
+	Implemented JDBC-118
+
 2008-07-18 20:22  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/FBBlob.java:
