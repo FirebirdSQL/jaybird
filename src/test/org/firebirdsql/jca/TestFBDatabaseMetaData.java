@@ -234,10 +234,10 @@ public class TestFBDatabaseMetaData extends TestXABase {
                 .hasNoWildcards("test\\_me"));
         assertTrue("strip escape wrong", d.stripEscape("test\\_me").equals(
             "test_me"));
-        assertTrue("strip quotes wrong", d.stripQuotes("test_me").equals(
+        assertTrue("strip quotes wrong", d.stripQuotes("test_me", false).equals(
             "TEST_ME"));
-        assertTrue("strip quotes wrong: " + d.stripQuotes("\"test_me\""), d
-                .stripQuotes("\"test_me\"").equals("test_me"));
+        assertTrue("strip quotes wrong: " + d.stripQuotes("\"test_me\"", false), d
+                .stripQuotes("\"test_me\"", false).equals("test_me"));
     }
 
     public void testGetTablesWildcardQuote() throws Exception {
