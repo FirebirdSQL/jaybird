@@ -1,3 +1,16 @@
+2008-07-20 22:28  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/DatabaseParameterBuffer.java,
+	main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/FBBlob.java,
+	main/org/firebirdsql/jdbc/FBRowUpdater.java,
+	main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java,
+	test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+
+	merge with Branch 2.1
+
 2008-07-19 18:20  rrokytskyy
 
 	* client-java/src/etc/: release_notes.html, release_notes.odt,
