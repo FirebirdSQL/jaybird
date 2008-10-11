@@ -304,6 +304,9 @@ public class EncodingFactory {
      * found.
      */
     public static String getIscEncoding(String javaEncoding) {
+        if ("UTF8".equals(javaEncoding))
+            javaEncoding = "UTF-8";
+        
         if (!encodingsLoaded)
             loadEncodings();
 
