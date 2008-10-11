@@ -48,8 +48,6 @@ import org.firebirdsql.gds.impl.GDSHelper;
  */
 public class FBWorkaroundStringField extends FBStringField {
 
-    private int possibleCharLength;
-    private int bytesPerCharacter;
     private boolean trimString;
     
     /**
@@ -65,20 +63,6 @@ public class FBWorkaroundStringField extends FBStringField {
             int requiredType) throws SQLException 
     {
         super(field, dataProvider, requiredType);
-        
-        bytesPerCharacter = 1;
-        possibleCharLength = field.sqllen / bytesPerCharacter;
-    }
-    
-    /**
-     * Set connection for this field. This method estimates character
-     * length and bytes per chracter.
-     */
-    public void setConnection(GDSHelper gdsHelper) {
-        super.setConnection(gdsHelper);
-
-        bytesPerCharacter = EncodingFactory.getIscEncodingSize(iscEncoding);
-        possibleCharLength = field.sqllen / bytesPerCharacter;
     }
     
     public void setTrimString(boolean trimString) {
