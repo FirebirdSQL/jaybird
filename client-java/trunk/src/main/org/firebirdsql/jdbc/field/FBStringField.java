@@ -34,7 +34,9 @@ import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
  * Describe class <code>FBStringField</code> here.
@@ -62,12 +64,31 @@ public class FBStringField extends FBField {
     private static final String SHORT_TRUE_2 = "T";
     private static final String SHORT_TRUE_3 = "1";
     
+    protected int possibleCharLength;
+    protected int bytesPerCharacter;
+
 
     FBStringField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
         throws SQLException 
     {
         super(field, dataProvider, requiredType);
+        
+        bytesPerCharacter = 1;
+        possibleCharLength = field.sqllen / bytesPerCharacter;
+
     }
+    
+    /**
+     * Set connection for this field. This method estimates character
+     * length and bytes per chracter.
+     */
+    public void setConnection(GDSHelper gdsHelper) {
+        super.setConnection(gdsHelper);
+
+        bytesPerCharacter = EncodingFactory.getIscEncodingSize(iscEncoding);
+        possibleCharLength = field.sqllen / bytesPerCharacter;
+    }
+
 	 
     //----- Math code
 
@@ -258,7 +279,7 @@ public class FBStringField extends FBField {
         if (field.sqllen == 1)
             setString(value ? SHORT_TRUE : SHORT_FALSE);
         else
-        if (field.sqllen > 4)
+        if (field.sqllen / bytesPerCharacter > 4)
             setString(value ? LONG_TRUE : LONG_FALSE);
     }
     public void setString(String value) throws SQLException {
