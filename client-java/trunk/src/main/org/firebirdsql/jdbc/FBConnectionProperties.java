@@ -184,6 +184,9 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public void setCharSet(String charSet) {
+        if (charSet == null)
+            return;
+        
         setStringProperty(LOCAL_ENCODING_PROPERTY, charSet);
 
         String encoding = getStringProperty(LOCAL_ENCODING_PROPERTY);
@@ -201,6 +204,9 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public void setEncoding(String encoding) {
+        if (encoding == null)
+            return;
+        
         setStringProperty(ENCODING_PROPERTY, encoding);
         
         String charSet = getStringProperty(LOCAL_ENCODING_PROPERTY);
@@ -218,6 +224,9 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public void setRoleName(String roleName) {
+        if (roleName == null)
+            return;
+        
         setStringProperty(ROLE_NAME_PROPERTY, roleName);
     }
 
@@ -226,6 +235,9 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public void setSqlDialect(String sqlDialect) {
+        if (sqlDialect == null)
+            return;
+        
         setStringProperty(SQL_DIALECT_PROPERTY, sqlDialect);
     }
 
@@ -234,6 +246,9 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public void setUseTranslation(String translationPath) {
+        if (translationPath == null)
+            return;
+        
         setStringProperty(USE_TRANSLATION_PROPERTY, translationPath);
     }
 
