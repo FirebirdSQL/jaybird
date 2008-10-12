@@ -12,6 +12,7 @@ import org.firebirdsql.gds.impl.GDSType;
 public class TestFBEventManager extends FBTestBase {
 
     private EventManager eventManager;
+    private boolean eventManagerDisconnected;
 
     public static final String TABLE_DEF = ""
         + "CREATE TABLE TEST ("
@@ -53,6 +54,7 @@ public class TestFBEventManager extends FBTestBase {
         eventManager.setDatabase(tempFile.getAbsolutePath());
         
         eventManager.connect();
+        eventManagerDisconnected = false;
     }
 
     private void executeSql(String sql) throws SQLException {
@@ -66,7 +68,11 @@ public class TestFBEventManager extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        eventManager.disconnect();
+        if (!eventManagerDisconnected)
+            eventManager.disconnect();
+        
+        eventManagerDisconnected = true;
+        
         super.tearDown();
     }
 
@@ -113,6 +119,16 @@ public class TestFBEventManager extends FBTestBase {
         executeSql("INSERT INTO TEST VALUES (3)");
         assertEquals("No notification for events after removal of listener", 
                 totalEvents, ael.getTotalEvents());
+    }
+    
+    public void testAsyncEventsNoEvents() throws Exception {
+        Thread.sleep(DELAY);
+        try {
+            eventManager.disconnect();
+        } finally {
+            eventManagerDisconnected = true;
+        }
+        
     }
 
     public void testMultipleListenersOnOneEvent() throws Exception {
