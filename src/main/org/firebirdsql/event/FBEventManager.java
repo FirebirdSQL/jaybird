@@ -82,6 +82,8 @@ public class FBEventManager implements EventManager {
     private Map handlerMap = Collections.synchronizedMap(new HashMap());
     private List eventQueue = new ArrayList();
     private EventDispatcher eventDispatcher;
+    private Thread dispatchThread;
+    private long waitTimeout = 1000;
 
     public FBEventManager() {
     	this(GDSFactory.getDefaultGDSType());
@@ -113,7 +115,7 @@ public class FBEventManager implements EventManager {
         }
         connected = true;
         eventDispatcher = new EventDispatcher();
-        Thread dispatchThread = new Thread(eventDispatcher);
+        dispatchThread = new Thread(eventDispatcher);
         dispatchThread.setDaemon(true);
         dispatchThread.start();
     }
@@ -149,6 +151,13 @@ public class FBEventManager implements EventManager {
         connected = false;
 
         eventDispatcher.stop();
+        
+        // join the thread and wait until it dies
+        try {
+            dispatchThread.join();
+        } catch(InterruptedException ex) {
+            throw new FBSQLException(ex);
+        }
     }
 
     /**
@@ -240,6 +249,33 @@ public class FBEventManager implements EventManager {
         this.port = port;
     }
     
+    /**
+     * Get the time in milliseconds, after which the async threa will exit from
+     * the {@link Object#wait(long)} method and check whether it was stopped or 
+     * not. 
+     * <p>
+     * Default value is 1000 (1 second);
+     * 
+     * @return wait timeout in milliseconds
+     */
+    public long getWaitTimeout() {
+        return waitTimeout;
+    }
+
+    
+    /**
+     * Set the time in milliseconds, after which the async threa will exit from
+     * the {@link Object#wait(long)} method and check whether it was stopped or 
+     * not. 
+     * <p>
+     * Default value is 1000 (1 second);
+     * 
+     * @param waitTimeout wait timeout in milliseconds
+     */
+    public void setWaitTimeout(long waitTimeout) {
+        this.waitTimeout = waitTimeout;
+    }
+
     /**
      * Register an EventListener that will be called when an event occurs.
      *
@@ -440,9 +476,9 @@ public class FBEventManager implements EventManager {
             List events = new ArrayList(); 
             while (running){
                 synchronized (eventQueue){
-                    while (eventQueue.isEmpty()){
+                    while (eventQueue.isEmpty() && running){
                         try {
-                            eventQueue.wait();
+                            eventQueue.wait(waitTimeout);
                         } catch (InterruptedException ie){ }
                     }
                     events.addAll(eventQueue);
