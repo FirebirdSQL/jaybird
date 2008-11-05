@@ -1,3 +1,31 @@
+2008-10-12 19:14  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/event/FBEventManager.java,
+	test/org/firebirdsql/event/TestFBEventManager.java:
+
+	Fixed JDBC-122
+
+2008-10-12 18:32  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBConnectionProperties.java:
+
+	Fixed JDBC-113.
+
+2008-10-11 14:23  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/encodings/EncodingFactory.java:
+
+	FIxed JDBC-101
+
+2008-10-11 14:06  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/field/:
+	FBStringField.java, FBWorkaroundStringField.java:
+
+	Fix JDBC-112
+
 2008-07-20 22:28  rrokytskyy
 
 	* client-java/src/:
