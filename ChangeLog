@@ -1,3 +1,11 @@
+2008-11-30 15:30  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
+
+	added testcase from JDBC-128 - turns out that everything is ok, the
+	original test case was missing the encoding property set and that
+	caused the failure
+
 2008-10-12 19:14  rrokytskyy
 
 	* client-java/src/: main/org/firebirdsql/event/FBEventManager.java,
