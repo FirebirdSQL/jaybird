@@ -55,7 +55,9 @@ public class TestFBEncodings extends FBTestBase {
         "  char_field CHAR(50) CHARACTER SET UNICODE_FSS, " +
         "  octets_field CHAR(10) CHARACTER SET OCTETS, " +
         "  var_octets_field VARCHAR(10) CHARACTER SET OCTETS, " +
-        "  none_octets_field CHAR(10) CHARACTER SET NONE " +
+        "  none_octets_field CHAR(10) CHARACTER SET NONE, " +
+        "  uuid_char CHAR(36) CHARACTER SET UTF8, " + 
+        "  uuid_varchar CHAR(36) CHARACTER SET UTF8 " +
         ")"
         ;
 
@@ -899,4 +901,37 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
             connection.close();
         }
     }
+    
+	public void testCharFieldWithUTF8Encoding() throws Exception {
+		Properties props = new Properties();
+        props.putAll(getDefaultPropertiesForConnection());
+        props.put("lc_ctype", "UTF8");
+        
+        Connection connection = DriverManager.getConnection(getUrl(), props);
+		try {
+			String randomUUID = UUID.randomUUID().toString();
+			Statement statement = connection.createStatement();
+			try {
+				String updateSql = "INSERT INTO test_encodings (uuid_char, uuid_varchar) VALUES ('" + randomUUID + "', '" + randomUUID + "')";
+				statement.executeUpdate(updateSql);
+			
+				String sql = "SELECT uuid_char, CHAR_LENGTH(uuid_char), uuid_varchar, CHAR_LENGTH(uuid_varchar) FROM test_encodings";
+			
+				ResultSet rs = statement.executeQuery(sql);
+				if (rs.next()) {
+					String uuidChar = rs.getString("uuid_char");
+					assertEquals("compare CHAR_LENGTH", rs.getInt(2), rs.getInt(4));
+					assertEquals(randomUUID.length(), rs.getInt(2));
+					assertEquals(randomUUID, rs.getString("uuid_varchar"));
+					// now it fails:
+					assertEquals(randomUUID.length(), uuidChar.length());
+					assertEquals(randomUUID, uuidChar);
+				}
+			} finally {
+				statement.close();
+			}
+		} finally {
+			connection.close();
+		}
+	}
 }
