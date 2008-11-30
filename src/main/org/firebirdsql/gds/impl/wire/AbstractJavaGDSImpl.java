@@ -1950,12 +1950,15 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				log.debug("user.name: " + user);
 			String host = InetAddress.getLocalHost().getHostName();
 
-			byte[] user_id = new byte[6 + user.length() + host.length()];
+			byte[] userBytes = user.getBytes();
+			byte[] hostBytes = host.getBytes();
+
+			byte[] user_id = new byte[6 + userBytes.length + hostBytes.length];
 			int n = 0;
 			user_id[n++] = 1; // CNCT_user
-			user_id[n++] = (byte) user.length();
-			System.arraycopy(user.getBytes(), 0, user_id, n, user.length());
-			n += user.length();
+			user_id[n++] = (byte) userBytes.length;
+			System.arraycopy(userBytes, 0, user_id, n, userBytes.length);
+			n += userBytes.length;
 
 			/*
 			 * String passwd = "masterkey"; user_id[n++] = 2; // CNCT_passwd
@@ -1965,9 +1968,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			 */
 
 			user_id[n++] = 4; // CNCT_host
-			user_id[n++] = (byte) host.length();
-			System.arraycopy(host.getBytes(), 0, user_id, n, host.length());
-			n += host.length();
+			user_id[n++] = (byte) hostBytes.length;
+			System.arraycopy(hostBytes, 0, user_id, n, hostBytes.length);
+			n += hostBytes.length;
 
 			user_id[n++] = 6; // CNCT_user_verification
 			user_id[n++] = 0;
