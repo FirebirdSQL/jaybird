@@ -49,6 +49,16 @@ public class MessageDump {
                 } else
                     sb.append('%').append(chars[i]);
             } else
+            if (chars[i] == '@') {
+            	i++;
+            	
+            	try {
+            		int msgNum = Integer.parseInt("" + chars[i]);
+            		sb.append('{').append(Integer.toString(msgNum - 1)).append('}');
+            	} catch(NumberFormatException ex) {
+            		sb.append(chars[i]);
+            	}
+            } else
                 sb.append(chars[i]);
         }
 
@@ -87,7 +97,7 @@ public class MessageDump {
         Statement stmt = connection.createStatement();
         try {
             ResultSet rs = stmt
-                    .executeQuery("SELECT fac_code, number, sqlstate FROM system_errors");
+                    .executeQuery("SELECT fac_code, number, sql_state FROM system_errors");
 
             while (rs.next()) {
                 int code = rs.getInt(1);
@@ -109,7 +119,7 @@ public class MessageDump {
     public static void main(String[] args) throws Exception {
 
         if (args.length == 0)
-            args = new String[] { "localhost:c:/database/messages.fdb"};
+            args = new String[] { "localhost:d:/database/fb_messages.fdb"};
 
         FirebirdConnection connection = getConnection(args[0]);
         try {
