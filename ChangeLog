@@ -1,3 +1,28 @@
+2008-12-01 01:05  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractResultSet.java, FBRowUpdater.java:
+
+	Fixed JDBC-127 - FBRowUpdater.close() was not called when statement
+	was closed and statements allocated in FBRowUpdater were never
+	deallocated.
+
+2008-12-01 00:41  rrokytskyy
+
+	* client-java/src/: resources/isc_error_msg.properties,
+	resources/isc_error_sqlstates.properties,
+	messages/org/firebirdsql/util/MessageDump.java:
+
+	updated messages to the newest state
+
+2008-11-30 22:59  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java:
+
+	Fixed JDBC-121: code assumed one-byte character set conversion
+	using the String.getBytes() method and incorrect length was used.
+
 2008-11-30 15:30  rrokytskyy
 
 	* client-java/src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
