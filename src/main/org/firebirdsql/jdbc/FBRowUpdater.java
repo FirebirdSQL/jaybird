@@ -165,8 +165,35 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         rsListener.executionCompleted(this, success);
         this.processing = false;
     }
+
+    private SQLException deallocateStatement(AbstractIscStmtHandle handle, SQLException previousException) {
+    	try {
+    		if (handle != null)
+    			gdsHelper.closeStatement(handle, true);
+    		
+    		return null;
+    		
+    	} catch(GDSException ex) {
+    		if (previousException == null)
+    			previousException = new FBSQLException(ex);
+    		else
+    			previousException.setNextException(new FBSQLException(ex));
+    		
+    		return previousException;
+    	}
+    }
     
     public void close() throws SQLException {
+    	
+    	SQLException possibleError = null;
+    	possibleError = deallocateStatement(selectStatement, possibleError);
+    	possibleError = deallocateStatement(insertStatement, possibleError);
+    	possibleError = deallocateStatement(updateStatement, possibleError);
+    	possibleError = deallocateStatement(deleteStatement, possibleError);
+    	
+    	if (possibleError != null)
+    		throw possibleError;
+    	
         this.closed = true;
         if (processing)
             notifyExecutionCompleted(true);
@@ -497,8 +524,9 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 if (selectStatement == null)
                     selectStatement = gdsHelper.allocateStatement();
                 
-                executeStatement(SELECT_STATEMENT_TYPE, selectStatement);
                 try {
+                    executeStatement(SELECT_STATEMENT_TYPE, selectStatement);
+                    
                     // should fetch one row anyway
                     gdsHelper.fetch(selectStatement, 10);
                     
@@ -512,6 +540,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                     setRow((byte[][])rows[0]);
                 } finally {
                     gdsHelper.closeStatement(selectStatement, false);
+                    selectStatement = null;
                 }
                 
                 success = true;
