@@ -290,11 +290,10 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
             if (fbFetcher != null) {
                 fbFetcher.close();
 
+                if (rowUpdater != null)
+                    rowUpdater.close();
+
                 if (notifyListener) {
-                
-                    if (rowUpdater != null)
-                        rowUpdater.close();
-                    
                     if (listener != null)
                         listener.resultSetClosed(this);
                 }
