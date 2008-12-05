@@ -1,3 +1,18 @@
+2008-12-05 15:36  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java,
+	test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+
+	fixed JDBC-130
+
+2008-12-05 15:35  rrokytskyy
+
+	* client-java/src/test/: unit_test_defaults.properties,
+	org/firebirdsql/common/SimpleFBTestBase.java:
+
+	added possibility to specify test defaults in a property file
+
 2008-12-01 01:05  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/jdbc/:
