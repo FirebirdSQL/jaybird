@@ -6101,7 +6101,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             }
             else {
                 value = stripQuotes(pattern, true) + SPACES + "%";
-                originalCaseValue = stripQuotes(pattern, false) + "%";
+                originalCaseValue = stripQuotes(pattern, false) + SPACES + "%";
                 condition = columnName + " || '" + SPACES + "' like ? escape '\\' and ";
             }
         }
