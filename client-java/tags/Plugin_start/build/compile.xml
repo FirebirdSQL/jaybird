@@ -1,0 +1,241 @@
+  <!-- =================================================================== -->
+  <!-- Compiles the source code                                            -->
+  <!-- =================================================================== -->
+  <target name="compile" depends="compile-j2ee, compile-driver, compile-pool, compile-compatibility, compile-tests, compile-etc, compile-examples, compile-resources, compile-stylesheets"/>
+
+  <!-- calling this unjar a compile is stretching the truth a bit-->
+  <target name="compile-j2ee" depends="init">
+    <mkdir dir="${build.j2ee}"/>
+    <unjar src="${module.thirdparty}/mini-j2ee.jar" dest="${build.j2ee}"/>
+  </target>
+
+  <target name="compile-native" depends="init">
+    <ant antfile="build_native.xml"/>
+  </target>
+ 
+  <target name="compile-examples">
+  	<mkdir dir="${build.examples}"/>
+    <javac srcdir="${source.examples}"
+           destdir="${build.examples}"
+           target="${ant.java.version}"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+           includes="*"
+           excludes="**/temp*"
+    >
+      <classpath refid="javac.examples.classpath"/>
+    </javac>
+  </target>
+
+  <target name="set-jdbc-20-src" if="jdbc.20">
+    <path id="source.java.additional">
+      <pathelement path="${source.jdbc.20}"/>
+    </path>
+  </target>
+  
+  <target name="set-jdbc-30-src" if="jdbc.30">
+    <path id="source.java.additional">
+      <pathelement path="${source.jdbc.30}"/>
+    </path>
+  </target>
+
+  <target name="set-jdbc-40-src" if="jdbc.40">
+    <path id="source.java.additional">
+      <pathelement path="${source.jdbc.40}"/>
+    </path>
+  </target>
+
+  <target name="set-wire1.3-src" if="jdk1.3">
+    <path id="source.java.wire">
+      <pathelement path="${source.wire1.3}"/>
+    </path>
+  </target>
+
+  <target name="set-wire1.4-src" unless="jdk1.3">
+    <path id="source.java.wire">
+      <pathelement path="${source.wire1.4}"/>
+    </path>
+  </target>
+
+  <target name="set-pool1.4-src" unless="jdk1.5">
+    <path id="source.java.pool">
+      <pathelement path="${source.pool1.4}"/>
+    </path>
+  </target>
+
+  <target name="set-pool1.5-src" if="jdk1.5">
+    <path id="source.java.pool">
+      <pathelement path="${source.pool1.5}"/>
+    </path>
+  </target>
+
+  <target name="set-pool1.6-src" if="jdk1.6">
+	<path id="source.java.pool">
+      <pathelement path="${source.pool1.6}"/>
+    </path>
+  </target>
+  
+  <target name="set-openoffice-src-14" unless="jdk1.3">
+  	<echo message="OpenOffice support"/>
+  	<path id="source.java.openoffice">
+  		<pathelement path="${source.openoffice}"/>
+  	</path>
+  </target>
+
+  <target name="set-openoffice-src-13" if="jdk1.3">
+  	<echo message="No OpenOffice support!"/>
+  	<path id="source.java.openoffice">
+  	</path>
+  </target>
+
+  <target name="set-jca-src-14" unless="jdk1.6">
+  	<path id="source.java.jca">
+    	<pathelement path="${source.jca1.4}"/>
+    </path>
+  </target>
+
+  <target name="set-jca-src-16" if="jdk1.6">
+  	<path id="source.java.jca">
+    	<pathelement path="${source.jca1.6}"/>
+    </path>
+  </target>
+
+  <target name="compile-driver" depends="set-jdbc-20-src,set-jdbc-30-src,set-jdbc-40-src,set-wire1.3-src,set-wire1.4-src,set-openoffice-src-13,set-openoffice-src-14,set-jca-src-14,set-jca-src-16">
+    <mkdir dir="${build.classes}"/>
+    
+    <echo message="${jdk1.3}"/>
+    <echo message="${toString:source.java.openoffice}"/>
+    <echo message="${toString:source.java.additional}"/>
+    <echo message="${toString:source.java.wire}"/>
+    <echo message="${toString:source.java.jca}"/>
+    
+    <javac destdir="${build.classes}"
+           target="${ant.java.version}"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+           includes="org/**"
+           excludes="**/temp*,org/firebirdsql/pool/**"
+    >
+      <classpath refid="javac.driver.classpath"/>
+      <src path="${source.java}"/>
+      <src refid="source.java.openoffice"/>
+      <src refid="source.java.additional"/>
+      <src refid="source.java.wire"/>
+      <src refid="source.java.jca"/>
+    </javac>
+  </target>
+
+  <target name="compile-pool" depends="set-pool1.4-src,set-pool1.5-src,set-pool1.6-src,compile-driver">
+    <mkdir dir="${build.pool}"/>
+    <javac srcdir="${source.pool}"
+           destdir="${build.pool}"
+           target="${ant.java.version}"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+           includes="org/firebirdsql/pool/**"
+           excludes="**/temp*"
+    >
+      <classpath refid="javac.pool.classpath"/>
+      <src refid="source.java.pool"/>
+    </javac>
+  </target>
+  
+  <target name="compile-compatibility" depends="compile-pool">
+  	<mkdir dir="${build.compatibility}"/>
+    <javac srcdir="${source.compatibility}"
+           destdir="${build.compatibility}"
+           target="${ant.java.version}"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+    >
+      <classpath refid="javac.compatibility.classpath"/>
+    </javac>
+  </target>
+
+  <target name="set-jdbc-20-test" unless="jdbc.30">
+    <path id="source.test.additional">
+    </path>
+  </target>
+
+  <target name="set-jdbc-30-test" if="jdbc.30">
+    <path id="source.test.additional">
+      <pathelement path="${source.test.30}"/>
+    </path>
+  </target>
+
+  <target name="compile-tests" depends="compile-pool,set-jdbc-20-test,set-jdbc-30-test">
+    <mkdir dir="${build.test}"/>
+    <javac srcdir="${source.test}"
+           destdir="${build.test}"
+           target="${ant.java.version}"
+           debug="on"
+           deprecation="on"
+           optimize="on"
+           includes="org/**"
+           excludes="**/temp* **/hibernate/*"
+    >
+      <classpath refid="javac.test.classpath"/>
+      <src path="${source.test}"/>
+      <src refid="source.test.additional"/>
+    </javac>
+
+    <copy todir="${build.test}" filtering="no">
+      <fileset dir="${source.test}">
+         <include name="**/*.properties"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+  <!-- Compile etc files (manifest) -->
+  <target name="compile-etc" depends="init">
+    <mkdir dir="${build.etc}"/>
+    <copy todir="${build.etc}" filtering="yes">
+      <fileset dir="${source.etc}">
+         <include name="default.mf"/>
+         <include name="JDBC20_conformance.html"/>
+         <include name="faq.html"/>
+         <include name="FAQ.txt"/>
+         <include name="release_notes.html"/>
+      </fileset>
+      <filterset>
+        <filter token="java.vm.version" value="${java.vm.version}"/>
+        <filter token="java.vm.vendor" value="${java.vm.vendor}"/>
+
+        <filter token="specification.title" value="${specification.title}"/>
+        <filter token="specification.version" value="${specification.version}"/>
+        <filter token="specification.vendor" value="${specification.vendor}"/>
+
+        <filter token="implementation.title" value="${implementation.title}"/>
+        <filter token="implementation.url" value="${implementation.url}"/>
+        <filter token="implementation.version" value="${implementation.version}"/>
+        <filter token="implementation.vendor" value="${implementation.vendor}"/>
+        <filter token="implementation.vendor.id" value="${implementation.vendor.id}"/>
+
+      </filterset>
+    </copy>
+  </target>
+
+  <!-- Compile resource files -->
+  <target name="compile-resources" depends="init">
+    <mkdir dir="${build.resources}"/>
+    <copy todir="${build.resources}" filtering="no">
+      <fileset dir="${source.resources}">
+         <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- Compile stylesheets -->
+  <target name="compile-stylesheets" depends="init">
+    <mkdir dir="${build.stylesheets}"/>
+    <copy todir="${build.stylesheets}" filtering="yes">
+      <fileset dir="${source.stylesheets}">
+         <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
