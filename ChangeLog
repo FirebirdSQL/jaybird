@@ -1,3 +1,11 @@
+2008-12-24 20:54  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	test/org/firebirdsql/jdbc/TestFBConnection.java:
+
+	Fixed JDBC-126
+
 2008-12-05 15:36  rrokytskyy
 
 	* client-java/src/:
