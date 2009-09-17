@@ -300,6 +300,14 @@ public class AppServerConnectionPoolDataSource implements Serializable,
         dataSource.setUseTranslation(value);
     }
 
+    public boolean isDefaultResultSetHoldable() {
+    	return dataSource.isDefaultResultSetHoldable();
+    }
+    
+    public void setDefaultResultSetHoldable(boolean isHoldable) {
+    	dataSource.setDefaultResultSetHoldable(isHoldable);
+    }
+    
 	public Reference getReference() throws NamingException {
 		Reference ref = new Reference(getClass().getName(), getClass()
 				.getName(), null);
