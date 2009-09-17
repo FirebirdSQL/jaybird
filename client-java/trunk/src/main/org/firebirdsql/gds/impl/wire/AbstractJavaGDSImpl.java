@@ -1082,12 +1082,12 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
 			ISCConstants.isc_info_sql_field,
 			ISCConstants.isc_info_sql_relation,
+			ISCConstants.isc_info_sql_relation_alias,
 			ISCConstants.isc_info_sql_owner, ISCConstants.isc_info_sql_alias,
 			ISCConstants.isc_info_sql_describe_end };
 
 	public XSQLDA iscDsqlDescribe(IscStmtHandle stmt_handle, int da_version)
 			throws GDSException {
-
 		byte[] buffer = iscDsqlSqlInfo(stmt_handle,
 		/* describe_select_info.length, */describe_select_info,
 				MAX_BUFFER_SIZE);
@@ -1103,13 +1103,13 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
 			ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
 			ISCConstants.isc_info_sql_field,
-			ISCConstants.isc_info_sql_relation,
+			ISCConstants.isc_info_sql_relation, 
+			ISCConstants.isc_info_sql_relation_alias, 
 			ISCConstants.isc_info_sql_owner, ISCConstants.isc_info_sql_alias,
 			ISCConstants.isc_info_sql_describe_end };
 
 	public XSQLDA iscDsqlDescribeBind(IscStmtHandle stmt_handle, int da_version)
 			throws GDSException {
-
 		isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
 
 		byte[] buffer = iscDsqlSqlInfo(stmt_handle,
@@ -1467,6 +1467,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
 			ISCConstants.isc_info_sql_field,
 			ISCConstants.isc_info_sql_relation,
+			ISCConstants.isc_info_sql_relation_alias,
 			ISCConstants.isc_info_sql_owner, ISCConstants.isc_info_sql_alias,
 			ISCConstants.isc_info_sql_describe_end };
 
@@ -1581,6 +1582,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		boolean debug = log != null && log.isDebugEnabled();
 		isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
 		isc_db_handle_impl db = stmt.getRsr_rdb();
+
 
 		synchronized (db) {
 			try {
@@ -2409,6 +2411,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		}
 		if (debug)
 			log.debug("xsqlda.sqln read as " + xsqlda.sqln);
+        if (debug)
+            log.debug ("info: " + new String(info));
 
 		while (info[i] != ISCConstants.isc_info_end) {
 			while ((item = info[i++]) != ISCConstants.isc_info_sql_describe_end) {
@@ -2480,6 +2484,16 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 						log.debug("isc_info_sql_relation "
 								+ xsqlda.sqlvar[index - 1].relname);
 					break;
+				case ISCConstants.isc_info_sql_relation_alias:
+					len = iscVaxInteger(info, i, 2);
+					i += 2;
+					xsqlda.sqlvar[index - 1].relaliasname = new String(info, i, len);
+					i += len;
+					if (debug)
+						log.debug("isc_info_sql_relation_alias "
+								+ xsqlda.sqlvar[index - 1].relaliasname);
+					break;
+	
 				case ISCConstants.isc_info_sql_owner:
 					len = iscVaxInteger(info, i, 2);
 					i += 2;
