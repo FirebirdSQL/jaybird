@@ -19,19 +19,50 @@
 
 package org.firebirdsql.jdbc;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLClientInfoException;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLWarning;
+import java.sql.Savepoint;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
-import javax.resource.*;
+import javax.resource.ResourceException;
 
-import org.antlr.runtime.*;
+import org.antlr.runtime.CharStream;
+import org.antlr.runtime.CommonTokenStream;
+import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.tree.CommonTree;
-import org.apache.commons.logging.Log;
-import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.IscDbHandle;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.jca.*;
-import org.firebirdsql.jdbc.parser.*;
+import org.firebirdsql.jca.FBConnectionRequestInfo;
+import org.firebirdsql.jca.FBLocalTransaction;
+import org.firebirdsql.jca.FBManagedConnection;
+import org.firebirdsql.jca.FirebirdLocalTransaction;
+import org.firebirdsql.jdbc.parser.CaseInsensitiveStream;
+import org.firebirdsql.jdbc.parser.JaybirdSqlLexer;
+import org.firebirdsql.jdbc.parser.JaybirdSqlParser;
+import org.firebirdsql.jdbc.parser.JaybirdStatementModel;
 
 /**
  * The class <code>AbstractConnection</code> is a handle to a 
