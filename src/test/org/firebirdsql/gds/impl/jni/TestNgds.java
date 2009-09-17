@@ -72,7 +72,7 @@ public class TestNgds extends SimpleFBTestBase {
 
 
     protected void setUp() {
-        if ("EMBEDDED".equals(System.getProperty("test.gds_type")))
+        if ("EMBEDDED".equals(getProperty("test.gds_type")))
             gds = GDSFactory.getGDSForType(GDSType.getType("EMBEDDED"));
         else
             gds = GDSFactory.getGDSForType(GDSType.getType("NATIVE"));
@@ -192,7 +192,7 @@ public class TestNgds extends SimpleFBTestBase {
        
        GDS gds;
 
-       if ("EMBEDDED".equals(System.getProperty("test.gds_type")))
+       if ("EMBEDDED".equals(getProperty("test.gds_type")))
            return;
        else
            gds = GDSFactory.getGDSForType(GDSType.getType("NATIVE"));
@@ -501,7 +501,7 @@ public class TestNgds extends SimpleFBTestBase {
 
             }
 
-            out += System.getProperty("line.separator");
+            out += getProperty("line.separator");
 
         }
 

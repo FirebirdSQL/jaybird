@@ -60,7 +60,7 @@ public class TestNgdsBlobReadBug extends SimpleFBTestBase {
 
     public void testBlobReadBug() throws Exception {
 
-        String gdsType = System.getProperty("test.gds_type", "PURE_JAVA");
+        String gdsType = getProperty("test.gds_type", "PURE_JAVA");
 
         // no tests for embedded or local mode
         if ("LOCAL".equalsIgnoreCase(gdsType) || "EMBEDDED".equals(gdsType))
