@@ -430,7 +430,7 @@ public class TestFBPreparedStatement extends FBTestBase{
                     int maxLength = 22;
                     
                     // workaround for the bug in java.sql.Timestamp in JDK 1.3 
-                    if ("1.3".equals(System.getProperty("java.specification.version")))
+                    if ("1.3".equals(getProperty("java.specification.version")))
                         maxLength = 19;
                     
                     while(rs.next()) {

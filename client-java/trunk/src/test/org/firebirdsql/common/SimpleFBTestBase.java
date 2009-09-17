@@ -30,7 +30,11 @@ import junit.framework.TestCase;
 public class SimpleFBTestBase extends TestCase {
 	private static ResourceBundle testDefaults = ResourceBundle.getBundle("unit_test_defaults");
 
-	private static String getProperty(String property, String defaultValue) {
+	public static String getProperty(String property) {
+		return getProperty(property, null);
+	}
+	
+	public static String getProperty(String property, String defaultValue) {
 		try {
 			return System.getProperty(property, testDefaults
 					.getString(property));

@@ -84,7 +84,7 @@ public class TestGds extends SimpleFBTestBase {
 
 
     protected void setUp() {
-        String tmpGdsType = System.getProperty("test.gds_type");
+        String tmpGdsType = getProperty("test.gds_type");
         if (tmpGdsType != null && 
                 !"PURE_JAVA".equals(tmpGdsType) &&
                 !"TYPE4".equals(tmpGdsType))
@@ -454,7 +454,7 @@ public class TestGds extends SimpleFBTestBase {
                 Short data =  new Short(new XSQLVAR().decodeShort(row[i]));
                 out += data.shortValue() + "    ";
             }
-            out += System.getProperty("line.separator");
+            out += getProperty("line.separator");
         }
         if (log!=null) log.info("fetch returned: " + out);
         if (log!=null) log.info("test- isc_dsql_free_statement");

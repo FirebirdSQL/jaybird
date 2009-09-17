@@ -47,8 +47,7 @@ public class FBTestBase extends SimpleFBTestBase {
     /**
      * 
      */
-    protected static final String DB_LC_CTYPE = System.getProperty(
-        "test.db.lc_ctype", "NONE");
+    protected static final String DB_LC_CTYPE = getProperty("test.db.lc_ctype", "NONE");
 
     /**
      * 
@@ -198,8 +197,7 @@ public class FBTestBase extends SimpleFBTestBase {
     }
 
     protected GDSType getGdsType() {
-        final GDSType gdsType = GDSType.getType(System.getProperty(
-            "test.gds_type", "PURE_JAVA"));
+        final GDSType gdsType = GDSType.getType(getProperty("test.gds_type", "PURE_JAVA"));
         if (gdsType == null)
             throw new RuntimeException(
                     "Unrecoginzed value for 'test.gds_type' property.");

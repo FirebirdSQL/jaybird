@@ -210,7 +210,7 @@ public class TestFBWrappingDataSource extends FBTestBase {
    
    public void testValueAsString() throws Exception {
        ds = new FBWrappingDataSource();
-       ds.setType(System.getProperty("test.gds_type"));
+       ds.setType(getProperty("test.gds_type"));
        ds.setDatabase(DB_DATASOURCE_URL);
        ds.setUserName(DB_USER);
        ds.setPassword(DB_PASSWORD);

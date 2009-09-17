@@ -47,7 +47,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
         
 //        fbManager = createFBManager();
 //        
-//        String gdsType = System.getProperty("test.gds_type", "PURE_JAVA");
+//        String gdsType = getProperty("test.gds_type", "PURE_JAVA");
 //        
 //        if (!"EMBEDDED".equalsIgnoreCase(gdsType) && !"LOCAL".equalsIgnoreCase(gdsType)) {
 //            fbManager.setServer(DB_SERVER_URL);
