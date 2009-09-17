@@ -21,6 +21,9 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 import java.util.Properties;
 
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jca.FBManagedConnection;
 
 /**
@@ -269,7 +272,15 @@ public class FBConnection extends AbstractConnection {
     }
 
     public boolean isValid(int timeout) throws SQLException {
-        throw new FBDriverNotCapableException();
+    	try {
+	        GDS gds = getInternalAPIHandler();
+	        
+	        byte[] infoRequest = new byte[] {ISCConstants.isc_info_user_names, ISCConstants.isc_info_end};
+	        byte[] reply = gds.iscDatabaseInfo(getIscDBHandle(), infoRequest, 1024);
+	        return true;
+    	} catch(GDSException ex) {
+    		return false;
+    	}
     }
 
     public void setClientInfo(Properties properties)
