@@ -1950,7 +1950,17 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			String user = System.getProperty("user.name");
 			if (debug)
 				log.debug("user.name: " + user);
-			String host = InetAddress.getLocalHost().getHostName();
+			
+			String host;
+			try {
+				host = InetAddress.getLocalHost().getHostName();
+			} catch(UnknownHostException ex) {
+				try {
+					host = InetAddress.getLocalHost().getHostAddress();
+				} catch(UnknownHostException ex1) {
+					host = "127.0.0.1";
+				}
+			}
 
 			byte[] userBytes = user.getBytes();
 			byte[] hostBytes = host.getBytes();
