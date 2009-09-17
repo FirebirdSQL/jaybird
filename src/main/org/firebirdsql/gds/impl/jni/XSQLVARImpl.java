@@ -27,7 +27,7 @@ public abstract class XSQLVARImpl extends XSQLVAR {
 
     XSQLVARImpl(int sqltype, int sqlscale, int sqlsubtype, int sqllen,
             byte[] sqldata, String sqlname, String relname, String ownname, 
-            String aliasname) {
+            String aliasname, String relaliasname) {
         
         this.sqltype = sqltype;
         this.sqlscale = sqlscale;
@@ -36,6 +36,7 @@ public abstract class XSQLVARImpl extends XSQLVAR {
         this.sqldata = sqldata;
         this.sqlname = sqlname;
         this.relname = relname;
+        this.relaliasname = relaliasname;
         this.ownname = ownname;
         this.aliasname = aliasname;
     }
@@ -44,6 +45,7 @@ public abstract class XSQLVARImpl extends XSQLVAR {
     public XSQLVARImpl() {
         this.sqlname = "";
         this.relname = "";
+        this.relaliasname = "";
         this.ownname = "";
         this.aliasname = "";
     }

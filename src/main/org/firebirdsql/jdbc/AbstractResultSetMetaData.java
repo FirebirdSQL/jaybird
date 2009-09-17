@@ -36,7 +36,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public abstract class AbstractResultSetMetaData implements ResultSetMetaData {
+public abstract class AbstractResultSetMetaData implements FirebirdResultSetMetaData {
 
     private final XSQLVAR[] xsqlvars;
     private Map extendedInfo;
@@ -364,7 +364,20 @@ public abstract class AbstractResultSetMetaData implements ResultSetMetaData {
         return result;
     }
 
+    /**
+     * Gets the designated column's table alias.
+     *
+     * @param column the first column is 1, the second is 2, ...
+     * @return table alias or "" if not applicable
+     * @exception SQLException if a database access error occurs
+     */
+    public String getTableAlias(int column) throws SQLException {
+        String result = getXsqlvar(column).relaliasname;
+        if (result == null) result = getTableName(column);
+        return result;
+    }
 
+    
     /**
      * Gets the designated column's table's catalog name.
      *

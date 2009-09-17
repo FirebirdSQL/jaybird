@@ -1040,7 +1040,28 @@ public class TestFBResultSet extends FBTestBase {
         }
         connection.setAutoCommit(true);
     }
-    
+
+    public void testRelAlias() throws Exception {
+        
+        Statement stmt = connection.createStatement();
+        
+        try {
+            // execute first query
+            ResultSet rs = stmt.executeQuery("SELECT a.rdb$description, b.rdb$character_set_name FROM rdb$database a, rdb$database b where a.rdb$relation_id = b.rdb$relation_id");
+            
+            // now let's access the result set
+            assertTrue(rs.next());
+            
+            FirebirdResultSetMetaData frsMeta = (FirebirdResultSetMetaData)rs.getMetaData();
+            
+            assertEquals("A", frsMeta.getTableAlias(1));
+            assertEquals("B", frsMeta.getTableAlias(2));
+            
+        } finally {
+            stmt.close();
+        }
+    }
+
     public static void main(String[] args) {
         TestRunner.run(new TestFBResultSet("testMemoryGrowth"));
     }

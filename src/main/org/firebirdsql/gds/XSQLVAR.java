@@ -63,6 +63,7 @@ public class XSQLVAR {
 //    public int sqlind;
     public String sqlname;
     public String relname;
+    public String relaliasname;
     public String ownname;
     public String aliasname;
     //
@@ -114,6 +115,7 @@ public class XSQLVAR {
         
         this.sqlname = original.sqlname;
         this.relname = original.relname;
+        this.relaliasname = original.relaliasname;
         this.ownname = original.ownname;
         this.aliasname = original.aliasname;
     }

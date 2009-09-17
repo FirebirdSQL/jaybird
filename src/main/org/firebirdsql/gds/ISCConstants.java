@@ -455,6 +455,7 @@ public final class ISCConstants {
     public final static int isc_info_sql_get_plan            = 22;
     public final static int isc_info_sql_records             = 23;
     public final static int isc_info_sql_batch_fetch         = 24;
+    public final static int isc_info_sql_relation_alias      = 25;
 
     /*********************************/
     /* SQL information return values */
