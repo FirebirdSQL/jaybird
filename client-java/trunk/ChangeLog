@@ -1,3 +1,16 @@
+2009-09-17 10:26  rrokytskyy
+
+	* client-java/src/resources/META-INF/services/java.sql.Driver:
+
+	fixed JDBC-140
+
+2009-09-17 09:33  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
+
+	removed unneeded import
+
 2008-12-24 20:54  rrokytskyy
 
 	* client-java/src/:
