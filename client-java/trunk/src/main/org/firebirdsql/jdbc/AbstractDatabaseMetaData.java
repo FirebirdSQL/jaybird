@@ -2427,17 +2427,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getSchemas() throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[1];
-
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TABLE_SCHEM";
-        xsqlvars[0].relname = "TABLESCHEMAS";
-
-        ArrayList rows = new ArrayList(0);
-
-        return new FBResultSet(xsqlvars, rows);
+        return getSchemas(null, null);
     }
 
 
