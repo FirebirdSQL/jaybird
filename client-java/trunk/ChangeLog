@@ -1,3 +1,73 @@
+2009-09-18 10:12  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/:
+	jni/BaseGDSImpl.java, wire/AbstractJavaGDSImpl.java:
+
+	fixed JDBC-136
+
+2009-09-17 23:18  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java:
+
+	fixed JDBC-120
+
+2009-09-17 23:11  rrokytskyy
+
+	* client-java/src/jdbc_40/org/firebirdsql/jdbc/FBConnection.java:
+
+	implemented JDBC-135
+
+2009-09-17 23:00  rrokytskyy
+
+	*
+	client-java/src/pool/org/firebirdsql/pool/sun/AppServerConnectionPoolDataSource.java:
+
+	implemented JDBC-138
+
+2009-09-17 22:47  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/gds/XSQLVAR.java,
+	main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java,
+	main/org/firebirdsql/gds/impl/jni/XSQLVARBigEndianImpl.java,
+	main/org/firebirdsql/gds/impl/jni/XSQLVARImpl.java,
+	main/org/firebirdsql/gds/impl/jni/XSQLVARLittleEndianImpl.java,
+	main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java,
+	main/org/firebirdsql/jdbc/AbstractResultSetMetaData.java,
+	main/org/firebirdsql/jdbc/FirebirdResultSetMetaData.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java:
+
+	Applied patch to implement JDBC-110
+
+2009-09-17 22:46  rrokytskyy
+
+	* client-java/src/test/unit_test_defaults.properties:
+
+	PURE_JAVA type by default
+
+2009-09-17 21:44  rrokytskyy
+
+	* client-java/src/test/: unit_test_defaults.properties,
+	org/firebirdsql/common/FBTestBase.java,
+	org/firebirdsql/common/SimpleFBTestBase.java,
+	org/firebirdsql/gds/impl/jni/TestNgds.java,
+	org/firebirdsql/gds/impl/jni/TestNgdsBlobReadBug.java,
+	org/firebirdsql/gds/impl/wire/TestGds.java,
+	org/firebirdsql/jca/TestFBDatabaseMetaData.java,
+	org/firebirdsql/jdbc/TestFBPreparedStatement.java,
+	org/firebirdsql/jdbc/TestFBWrappingDataSource.java,
+	org/firebirdsql/management/TestFBMaintenanceManager.java:
+
+	tests might have fixed properties on file system
+
+2009-09-17 21:11  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	fixed JDBC-142
+
 2009-09-17 10:26  rrokytskyy
 
 	* client-java/src/resources/META-INF/services/java.sql.Driver:
