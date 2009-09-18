@@ -1196,8 +1196,13 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
     public void getSqlCounts(IscStmtHandle stmt_handle) throws GDSException {
         isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
-        byte[] buffer = iscDsqlSqlInfo(stmt, /* stmtInfo.length, */stmtInfo,
-                INFO_SIZE);
+        byte[] buffer = iscDsqlSqlInfo(stmt, /* stmtInfo.length, */stmtInfo, INFO_SIZE);
+
+        stmt.setInsertCount(0);
+		stmt.setUpdateCount(0);
+		stmt.setDeleteCount(0);
+		stmt.setSelectCount(0);
+
         int pos = 0;
         int length;
         int type;
