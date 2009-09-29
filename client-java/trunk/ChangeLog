@@ -1,3 +1,12 @@
+2009-09-29 08:58  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java:
+
+	Jaybird was not sending op_disconnect on isc_database_detach and
+	isc_service_detach and there was no op_connect on
+	isc_service_attach
+
 2009-09-18 10:12  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/gds/impl/:
