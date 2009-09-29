@@ -267,10 +267,6 @@ public class FBConnection extends AbstractConnection {
         throw new FBDriverNotCapableException();
     }
 
-    public String getClientInfo(String name) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
     public boolean isValid(int timeout) throws SQLException {
     	try {
 	        GDS gds = getInternalAPIHandler();
@@ -284,11 +280,6 @@ public class FBConnection extends AbstractConnection {
     }
 
     public void setClientInfo(Properties properties)
-            throws SQLClientInfoException {
-        throw new SQLClientInfoException();
-    }
-
-    public void setClientInfo(String name, String value)
             throws SQLClientInfoException {
         throw new SQLClientInfoException();
     }
