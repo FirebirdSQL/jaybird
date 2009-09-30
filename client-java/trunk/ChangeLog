@@ -1,3 +1,9 @@
+2009-09-29 21:34  rrokytskyy
+
+	* client-java/src/jdbc_40/org/firebirdsql/jdbc/FBConnection.java:
+
+	removed stub methods for client info
+
 2009-09-29 08:58  rrokytskyy
 
 	*
