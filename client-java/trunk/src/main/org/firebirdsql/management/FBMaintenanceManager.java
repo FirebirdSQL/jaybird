@@ -58,6 +58,7 @@ import java.io.ByteArrayOutputStream;
  * Among the responsibilities of this class are:
  * <ul>
  *      <li>Database shutdown
+ *      <li>Extended database shutdown/online modes new with Firebird 2.5
  *      <li>Changing database mode to read-only or read-write
  *      <li>Enabling or disabling forced writes in the database
  *      <li>Changing the dialect of the database
@@ -69,6 +70,7 @@ import java.io.ByteArrayOutputStream;
  * </ul>
  *
  * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
+ * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
  */
 public class FBMaintenanceManager extends FBServiceManager 
                                 implements MaintenanceManager {
@@ -250,6 +252,38 @@ public class FBMaintenanceManager extends FBServiceManager
         executeServicesOperation(srb);
     }
 
+    
+    public void shutdownDatabase(byte operationMode, int shutdownModeEx, int timeout) throws SQLException {
+
+    	if (
+    			operationMode != OPERATION_MODE_MULTI 
+    			&& operationMode != OPERATION_MODE_SINGLE 
+    			&& operationMode != OPERATION_MODE_FULL_SHUTDOWN 
+    		) {
+    	    throw new IllegalArgumentException("Operation mode must be "
+    	            + "one of: OPERATION_MODE_MULTI, " 
+    	            + "OPERATION_MODE_SINGLE, OPERATION_MODE_FULL_SHUTDOWN");
+    	}
+    	if (
+    			shutdownModeEx != SHUTDOWNEX_FORCE
+    			&& shutdownModeEx != SHUTDOWNEX_ATTACHMENTS 
+    			&& shutdownModeEx != SHUTDOWNEX_TRANSACTIONS 
+    		) {
+    	    throw new IllegalArgumentException("Extended shutdown mode must be "
+    	            + "one of: SHUTDOWNEX_FORCE, SHUTDOWNEX_ATTACHMENTS, " 
+    	            + "SHUTDOWNEX_TRANSACTIONS");
+    	}
+    	if (timeout < 0) {
+    		throw new IllegalArgumentException("Timeout must be >= 0");
+    	}
+
+		ServiceRequestBuffer srb = createDefaultPropertiesSRB();
+		srb.addArgument(ISCConstants.isc_spb_prp_shutdown_mode, operationMode);
+		srb.addArgument(shutdownModeEx, timeout);
+		executeServicesOperation(srb);
+    }
+
+
     /**
      * Bring a shutdown database online.
      *
@@ -259,6 +293,28 @@ public class FBMaintenanceManager extends FBServiceManager
         executePropertiesOperation(ISCConstants.isc_spb_prp_db_online);
     }
 
+    /**
+     * Bring a shutdown database online with enhanced operation modes
+     * new since Firebird 2.5.
+     *
+     * @throws SQLException if a database access error occurs
+     */
+    public void bringDatabaseOnline(byte operationMode) throws SQLException {
+
+    	if (
+    			operationMode != OPERATION_MODE_NORMAL
+    			&& operationMode != OPERATION_MODE_MULTI 
+    			&& operationMode != OPERATION_MODE_SINGLE 
+    		) {
+    	    throw new IllegalArgumentException("Operation mode must be "
+    	            + "one of: OPERATION_MODE_NORMAL, OPERATION_MODE_MULTI, " 
+    	            + "OPERATION_MODE_SINGLE");
+    	}
+
+		ServiceRequestBuffer srb = createDefaultPropertiesSRB();
+		srb.addArgument(ISCConstants.isc_spb_prp_online_mode, operationMode);
+		executeServicesOperation(srb);
+    }
 
     //-------------- Database Repair ----------------------
 

@@ -50,6 +50,7 @@ import org.firebirdsql.gds.ISCConstants;
  * Among the responsibilities of this class are:
  * <ul>
  *      <li>Database shutdown
+ *      <li>Extended database shutdown/online modes new with Firebird 2.5
  *      <li>Changing database mode to read-only or read-write
  *      <li>Enabling or disabling forced writes in the database
  *      <li>Changing the dialect of the database
@@ -62,6 +63,7 @@ import org.firebirdsql.gds.ISCConstants;
  * </ul>
  *
  * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
+ * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
  */
 public interface MaintenanceManager extends ServiceManager {
 
@@ -116,7 +118,56 @@ public interface MaintenanceManager extends ServiceManager {
      * record deltas
      */
     public static final int PAGE_FILL_RESERVE = ISCConstants.isc_spb_prp_res;
+    
+    /**
+     * Operation mode normal online. New with Firebird 2.5.
+     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
+     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     */
+    public static final byte OPERATION_MODE_NORMAL = ISCConstants.isc_spb_prp_sm_normal;
+    
+    /**
+     * Operation mode multi shutdown/online. New with Firebird 2.5. 
+     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
+     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     */
+    public static final byte OPERATION_MODE_MULTI = ISCConstants.isc_spb_prp_sm_multi;
+    
+    /**
+     * Operation mode single shutdown/online. New with Firebird 2.5. 
+     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
+     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     */
+    public static final byte OPERATION_MODE_SINGLE = ISCConstants.isc_spb_prp_sm_single;
+    
+    /**
+     * Operation mode full shutdown. New with Firebird 2.5. 
+     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
+     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     */
+    public static final byte OPERATION_MODE_FULL_SHUTDOWN = ISCConstants.isc_spb_prp_sm_full;
+    
+    /**
+     * Force shutdown. New with Firebird 2.5. 
+     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
+     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     */
+    public static final int SHUTDOWNEX_FORCE = ISCConstants.isc_spb_prp_force_shutdown;
+    
+    /**
+     * Shutdown attachments. New with Firebird 2.5. 
+     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
+     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     */
+    public static final int SHUTDOWNEX_ATTACHMENTS = ISCConstants.isc_spb_prp_attachments_shutdown;
 
+    /**
+     * Shutdown transactions. New with Firebird 2.5. 
+     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
+     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     */
+    public static final int SHUTDOWNEX_TRANSACTIONS = ISCConstants.isc_spb_prp_transactions_shutdown;
+    
     /**
      * Set the database to have read-write or read-only access.
      *
@@ -204,7 +255,33 @@ public interface MaintenanceManager extends ServiceManager {
     public void shutdownDatabase(int shutdownMode, int timeout) 
             throws SQLException ;
 
+    /**
+     * Shutdown the current database with enhanced modes new since Firebird 2.5.
+     * There are three operation modes for shutdown available:
+     * <ul>
+     *      <li><code>OPERATION_MODE_MULTI</code> - Multi-user maintenance. Unlimited SYSDBA/database owner connections are allowed.
+     *
+     *      <li><code>OPERATION_MODE_SINGLE</code> - Single-user maintenance. Only one SYSDBA/database owner connection is allowed.
+     *
+     *      <li><code>OPERATION_MODE_FULL_SHUTDOWN</code> - Full shutdown. Full exclusive shutdown. No connections are allowed.
+     * </ul>
+     * There are three extended shutdown modes for shutdown available:
+     * <ul>
+     *      <li><code>SHUTDOWNEX_FORCE</code> - Force shutdown.
+     *
+     *      <li><code>SHUTDOWNEX_ATTACHMENTS</code> - Shutdown attachments.
+     *
+     *      <li><code>SHUTDOWNEX_TRANSACTIONS</code> - Shutdown transactions.
+     * </ul>
+     * @param operationMode one of <code>OPERATION_MODE_*</code> operation modes listed above
+     * @param shutdownModeEx one of <code>SHUTDOWNEX_*</code> extended shutdown modes listed above
+     * @param timeout The maximum amount of time allocated for the operation, in seconds. 0 = immediately. 
+     * @throws SQLException if the requested operation cannot be completed
+     * 		   within the given timeout, or a database access error occurs
+     */
+    public void shutdownDatabase(byte operationMode, int shutdownModeEx, int timeout) throws SQLException ;
 
+    
     /**
      * Bring a shutdown database online.
      *
@@ -212,7 +289,20 @@ public interface MaintenanceManager extends ServiceManager {
      */
     public void bringDatabaseOnline() throws SQLException; 
 
-
+    /**
+     * Bring a shutdown database online with enhanced operation modes
+     * new since Firebird 2.5.
+     * There are three operation modes for bringing a database online available:
+     * <ul>
+     *      <li><code>OPERATION_MODE_NORMAL</code> - Normal operation modes.
+     *      
+     *      <li><code>OPERATION_MODE_MULTI</code> - Multi-user maintenance. Unlimited SYSDBA/database owner connections are allowed.
+     *
+     *      <li><code>OPERATION_MODE_SINGLE</code> - Single-user maintenance. Only one SYSDBA/database owner connection is allowed.
+     * </ul>
+     * @throws SQLException if a database access error occurs
+     */
+    public void bringDatabaseOnline(byte operationMode) throws SQLException; 
 
 
     //-------------- Database Repair ----------------------
