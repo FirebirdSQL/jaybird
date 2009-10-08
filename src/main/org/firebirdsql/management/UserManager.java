@@ -50,7 +50,7 @@ import java.util.Map;
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
  */
 public interface UserManager extends ServiceManager {
-
+	
     /**
      * Add a user to the Firebird Security Database.
      * 
@@ -86,5 +86,24 @@ public interface UserManager extends ServiceManager {
      * @throws IOException
      */
     public Map getUsers() throws SQLException, IOException;
-
+    
+	/**
+	 * Sets the security database and therefore overrides the
+	 * per default used security database (e.g. security2.fdb)
+	 * 
+	 * Supported since Firebird 2.1
+	 * 
+	 * @param name/path of securityDatabase
+	 */
+    public void setSecurityDatabase(String securityDatabase);
+    
+    /**
+     * Sets AUTO ADMIN MAPPING for role RDB$ADMIN in security database
+     */
+    public void setAdminRoleMapping() throws SQLException, IOException;
+    
+    /**
+     * Drops AUTO ADMIN MAPPING from role RDB$ADMIN in security database
+     */
+    public void dropAdminRoleMapping() throws SQLException, IOException;
 }
