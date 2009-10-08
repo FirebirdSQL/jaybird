@@ -45,6 +45,7 @@ import org.firebirdsql.management.FBUser;
 public class FBUserManager extends FBServiceManager implements UserManager {
 
     private int count = 0;
+    private String securityDatabase = null;
 
     /**
      * Create a new instance of <code>FBMaintenanceManager</code> based on
@@ -202,6 +203,16 @@ public class FBUserManager extends FBServiceManager implements UserManager {
         return string;
         
     }
+    
+    /**
+     * Sets the security database in the service request buffer, in
+     * case it is provided.
+     * @param srb - ServiceRequestBuffer
+     */
+    private void setSecurityDatabaseArgument(ServiceRequestBuffer srb) {
+        if (securityDatabase != null)
+        	srb.addArgument(ISCConstants.isc_spb_dbname, securityDatabase);
+    }
 
     /**
      * Perform the specified action.
@@ -228,7 +239,8 @@ public class FBUserManager extends FBServiceManager implements UserManager {
             IscSvcHandle handle = attachServiceManager(gds);
             try {
 
-                ServiceRequestBuffer srb = getUserSRB(action, user);
+            	ServiceRequestBuffer srb = getUserSRB(action, user);
+            	setSecurityDatabaseArgument(srb);
                 gds.iscServiceStart(handle, srb);
 
                 queueService(gds, handle);
@@ -290,7 +302,6 @@ public class FBUserManager extends FBServiceManager implements UserManager {
      * 
      * @see org.firebirdsql.management.UserManager#getUsers()
      */
-
     public Map getUsers() throws SQLException, IOException {
         
         OutputStream savedStream = getLogger();
@@ -303,5 +314,62 @@ public class FBUserManager extends FBServiceManager implements UserManager {
             setLogger(savedStream);
         }
 
+    }
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.firebirdsql.management.UserManager#setSecurityDatabase(String securityDatabase)
+     */
+	public void setSecurityDatabase(String securityDatabase) {
+		this.securityDatabase = securityDatabase;
+	}
+	
+	
+	/**
+	 * Services API execution for setting and dropping the auto admin role mapping 
+	 * @param action
+	 * @throws SQLException
+	 * @throws IOException
+	 */
+	private void adminRoleAction(int action) throws SQLException, IOException {
+
+		GDS gds = getGds();
+        
+        try {
+            IscSvcHandle handle = attachServiceManager(gds);
+            try {
+
+            	ServiceRequestBuffer srb = getGds().createServiceRequestBuffer(action);
+            	setSecurityDatabaseArgument(srb);
+                gds.iscServiceStart(handle, srb);
+
+                queueService(gds, handle);
+            } finally {
+                detachServiceManager(gds, handle);
+            }
+        } catch (GDSException ex) {
+            throw new FBSQLException(ex);
+        }
+		
+	}
+	
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.firebirdsql.management.UserManager#setAdminRoleMapping()
+     */
+    public void setAdminRoleMapping() throws SQLException, IOException {
+    	adminRoleAction(ISCConstants.isc_action_svc_set_mapping);
+    }
+    
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.firebirdsql.management.UserManager#dropAdminRoleMapping()
+     */
+    public void dropAdminRoleMapping() throws SQLException, IOException {
+    	adminRoleAction(ISCConstants.isc_action_svc_drop_mapping);
     }
 }
