@@ -202,6 +202,17 @@ public final class ISCConstants {
     public final static int isc_spb_connect_timeout         = isc_dpb_connect_timeout;
     public final static int isc_spb_dummy_packet_interval   = isc_dpb_dummy_packet_interval;
     public final static int isc_spb_sql_role_name           = isc_dpb_sql_role_name;
+    
+
+    /*****************************************
+     * Parameters for isc_action_svc_nbak    *
+     * New with Firebird 2.5
+     *****************************************/
+
+    public final static int isc_spb_nbk_level = 5;
+    public final static int isc_spb_nbk_file = 6;
+    public final static int isc_spb_nbk_no_triggers = 0x01;
+
 
     /*****************************
      * Service action items      *
@@ -219,7 +230,27 @@ public final class ISCConstants {
     public final static int isc_action_svc_remove_license =10;	/* Removes a license from the license file */
     public final static int isc_action_svc_db_stats	      =11;	/* Retrieves database statistics */
     public final static int isc_action_svc_get_ib_log     =12;	/* Retrieves the InterBase log file from the server */
+    // NBackup - New with Firebird 2.5
+    public final static int isc_action_svc_nbak   		  = 20; // Starts Nbackup
+    public final static int isc_action_svc_nrest  		  = 21; // Restores Nbackup
+    // Trace - New with Firebird 2.5
+    public final static int isc_action_svc_trace_start    = 22; // Starts a trace
+    public final static int isc_action_svc_trace_stop     = 23; // Stops a trace
+    public final static int isc_action_svc_trace_suspend  = 24; // Suspends a trace
+    public final static int isc_action_svc_trace_resume   = 25; // Resumes a trace
+    public final static int isc_action_svc_trace_list     = 26; // Lists all trace sessions
+    // RDB$ADMIN mapping - New with Firebird 2.5
+    public final static int isc_action_svc_set_mapping  = 27; // Sets RDB$ADMIN auto mapping in security database
+    public final static int isc_action_svc_drop_mapping = 28; // Drops RDB$ADMIN auto mapping in security database
+    
+    /*****************************************
+     * Parameters for isc_action_svc_trace   *
+     *****************************************/
 
+    public final static int isc_spb_trc_id    = 1; // relevant for stop, suspend and resume
+    public final static int isc_spb_trc_name  = 2; // relevant for start
+    public final static int isc_spb_trc_cfg   = 3; // relevant for start
+      
     /*****************************
      * Service information items *
      *****************************/
@@ -298,6 +329,18 @@ public final class ISCConstants {
     public final static int isc_spb_prp_set_sql_dialect		=14;
     public final static int isc_spb_prp_activate			=0x0100;
     public final static int isc_spb_prp_db_online			=0x0200;
+    
+    // New shutdown/online modes - New with Firebird 2.5
+    public final static int isc_spb_prp_force_shutdown = 41;
+    public final static int isc_spb_prp_attachments_shutdown  = 42;
+    public final static int isc_spb_prp_transactions_shutdown = 43;
+    public final static int isc_spb_prp_shutdown_mode         = 44;
+    public final static int isc_spb_prp_online_mode           = 45;
+    public final static int isc_spb_prp_sm_normal = 0;
+    public final static int isc_spb_prp_sm_multi = 1;
+    public final static int isc_spb_prp_sm_single = 2;
+    public final static int isc_spb_prp_sm_full = 3;
+
 
     /********************************************
      * Parameters for isc_spb_prp_reserve_space *
