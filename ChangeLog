@@ -1,3 +1,40 @@
+2009-10-08 15:50  tsteinmaurer
+
+	* client-java/src/main/org/firebirdsql/management/:
+	FBTraceManager.java, TraceManager.java:
+
+	Support for Trace/Audit via Services API in Firebird 2.5
+
+2009-10-08 15:50  tsteinmaurer
+
+	* client-java/src/main/org/firebirdsql/management/:
+	FBNBackupManager.java, NBackupManager.java:
+
+	Support for NBackup via Services API in Firebird 2.5
+
+2009-10-08 15:48  tsteinmaurer
+
+	* client-java/src/main/org/firebirdsql/management/:
+	FBUserManager.java, UserManager.java:
+
+	Added support for Firebird 2.5 Services API enhancements: * The
+	security database can be set * Support for SET/DROP AUTO ADMIN
+	Mapping for new role RDB$ADMIN in security database
+
+2009-10-08 15:46  tsteinmaurer
+
+	* client-java/src/main/org/firebirdsql/management/:
+	FBMaintenanceManager.java, MaintenanceManager.java:
+
+	Added new Firebird 2.1 shutdown/online modes availabe in Firebird
+	2.5 via the Services API
+
+2009-10-08 15:45  tsteinmaurer
+
+	* client-java/src/main/org/firebirdsql/gds/ISCConstants.java:
+
+	Added new Firebird 2.5 Services API constants
+
 2009-09-29 21:34  rrokytskyy
 
 	* client-java/src/jdbc_40/org/firebirdsql/jdbc/FBConnection.java:
