@@ -263,10 +263,6 @@ public class FBConnection extends AbstractConnection {
         throw new FBDriverNotCapableException();
     }
 
-    public Properties getClientInfo() throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
     public boolean isValid(int timeout) throws SQLException {
     	try {
 	        GDS gds = getInternalAPIHandler();
@@ -277,11 +273,6 @@ public class FBConnection extends AbstractConnection {
     	} catch(GDSException ex) {
     		return false;
     	}
-    }
-
-    public void setClientInfo(Properties properties)
-            throws SQLClientInfoException {
-        throw new SQLClientInfoException();
     }
 
     // java.sql.Wrapper interface
