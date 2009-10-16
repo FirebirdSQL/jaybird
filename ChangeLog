@@ -1,3 +1,9 @@
+2009-10-14 18:04  rrokytskyy
+
+	* client-java/src/jdbc_40/org/firebirdsql/jdbc/FBConnection.java:
+
+	client info is implemented in AbstractConnection
+
 2009-10-08 15:50  tsteinmaurer
 
 	* client-java/src/main/org/firebirdsql/management/:
