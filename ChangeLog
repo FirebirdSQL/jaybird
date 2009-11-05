@@ -1,3 +1,12 @@
+2009-11-05 10:12  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/: gds/XSQLVAR.java,
+	jdbc/field/FBDateField.java, jdbc/field/FBTimeField.java,
+	jdbc/field/FBTimestampField.java:
+
+	fixed issue when timestamps are converted using the UTC/GMT
+	calendar
+
 2009-10-14 18:04  rrokytskyy
 
 	* client-java/src/jdbc_40/org/firebirdsql/jdbc/FBConnection.java:
