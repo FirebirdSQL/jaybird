@@ -57,7 +57,7 @@ class FBTimestampField extends FBField {
     public Date getDate(Calendar cal) throws SQLException {
         if (getFieldData()==null) return DATE_NULL_VALUE;
 
-        return field.decodeDate(getDate(),cal);
+        return new java.sql.Date(field.decodeTimestampCalendar(getFieldData(),cal).getTime());
     }
     public Date getDate() throws SQLException {
         if (getFieldData()==null) return DATE_NULL_VALUE;
@@ -67,7 +67,7 @@ class FBTimestampField extends FBField {
     public Time getTime(Calendar cal) throws SQLException {
         if (getFieldData()==null) return TIME_NULL_VALUE;
 
-        return field.decodeTime(getTime(),cal, isInvertTimeZone());
+        return new java.sql.Time(field.decodeTimestampCalendar(getFieldData(),cal).getTime());
     }
     public Time getTime() throws SQLException {
         if (getFieldData()==null) return TIME_NULL_VALUE;
@@ -77,7 +77,7 @@ class FBTimestampField extends FBField {
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
 		  
-        return field.decodeTimestamp(getTimestamp(),cal, isInvertTimeZone());
+        return field.decodeTimestampCalendar(getFieldData(),cal);
     }
     public Timestamp getTimestamp() throws SQLException {
         if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
@@ -100,7 +100,7 @@ class FBTimestampField extends FBField {
             return;
         }
 
-        setDate(field.encodeDate(value,cal));
+        setFieldData(field.encodeTimestampCalendar(new java.sql.Timestamp(value.getTime()),cal));
     }
     public void setDate(Date value) throws SQLException {
         if (value == DATE_NULL_VALUE) {
@@ -116,7 +116,7 @@ class FBTimestampField extends FBField {
             return;
         }
 
-        setTime(field.encodeTime(value,cal, isInvertTimeZone()));
+        setFieldData(field.encodeTimestampCalendar(new java.sql.Timestamp(value.getTime()),cal));
     }
     public void setTime(Time value) throws SQLException {
         if (value == TIME_NULL_VALUE) {
@@ -132,7 +132,7 @@ class FBTimestampField extends FBField {
             return;
         }
 
-        setTimestamp(field.encodeTimestamp(value,cal, isInvertTimeZone()));
+        setFieldData(field.encodeTimestampCalendar(value,cal));
     }
     public void setTimestamp(Timestamp value) throws SQLException {
         if (value == TIMESTAMP_NULL_VALUE) {

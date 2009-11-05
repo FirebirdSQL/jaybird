@@ -43,7 +43,7 @@ class FBDateField extends FBField {
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
 		  
-        return field.decodeTimestamp(getTimestamp(),cal);
+        return new java.sql.Timestamp(field.decodeDateCalendar(getFieldData(),cal).getTime());
     }
     public Timestamp getTimestamp() throws SQLException {
         if (getFieldData()==null) return TIMESTAMP_NULL_VALUE;
@@ -53,7 +53,7 @@ class FBDateField extends FBField {
     public Date getDate(Calendar cal) throws SQLException {
         if (getFieldData()==null) return DATE_NULL_VALUE;
 
-        return field.decodeDate(getDate(),cal);
+        return field.decodeDateCalendar(getFieldData(),cal);
     }
     public Date getDate() throws SQLException {
         if (getFieldData()==null) return DATE_NULL_VALUE;
@@ -82,7 +82,7 @@ class FBDateField extends FBField {
             return;
         }
 
-        setTimestamp(field.encodeTimestamp(value,cal));
+        setFieldData(field.encodeDateCalendar(new java.sql.Date(value.getTime()),cal));
     }
     public void setTimestamp(Timestamp value) throws SQLException {
         if (value == TIMESTAMP_NULL_VALUE) {
@@ -98,7 +98,7 @@ class FBDateField extends FBField {
             return;
         }
 
-        setDate(field.encodeDate(value,cal));
+        setFieldData(field.encodeDateCalendar(value,cal));
     }
     public void setDate(Date value) throws SQLException {
         if (value == DATE_NULL_VALUE) {
