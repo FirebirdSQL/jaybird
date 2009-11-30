@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="examples"/>
+	<classpathentry kind="src" path="src/pool_jdk1_6"/>
+	<classpathentry kind="src" path="src/jdbc_40"/>
+	<classpathentry kind="src" path="src/jca_jdk1_6"/>
+	<classpathentry kind="src" path="src/test_30"/>
+	<classpathentry kind="src" path="src/wire_jdk1_4"/>
+	<classpathentry kind="src" path="src/messages"/>
+	<classpathentry kind="src" path="src/resources"/>
+	<classpathentry kind="src" path="other"/>
+	<classpathentry kind="src" path="src/main"/>
+	<classpathentry kind="src" path="src/pool"/>
+	<classpathentry kind="src" path="src/test"/>
+	<classpathentry kind="src" path="src/openoffice"/>
+	<classpathentry kind="lib" path="src/lib/fscontext.jar"/>
+	<classpathentry kind="lib" path="src/lib/jaas.jar"/>
+	<classpathentry kind="lib" path="src/lib/mini-j2ee.jar"/>
+	<classpathentry kind="lib" path="src/lib/providerutil.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="src/lib/antlr-runtime-3.0.1.jar"/>
+	<classpathentry kind="lib" path="src/lib/log4j-core.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Hibernate 3.2"/>
+	<classpathentry kind="lib" path="lib/junit.jar"/>
+	<classpathentry kind="output" path="classes"/>
+</classpath>
