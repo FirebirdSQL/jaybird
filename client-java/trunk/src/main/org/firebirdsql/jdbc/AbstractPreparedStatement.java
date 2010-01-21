@@ -28,6 +28,7 @@ import java.util.*;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.*;
+import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 
 /**
  * Implementation of {@link java.sql.PreparedStatement}interface. This class
@@ -802,7 +803,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
 
             FBField field = getField(i + 1);
             if (field instanceof FBFlushableField)
-                newXsqlvar[i].sqldata = ((FBFlushableField)field).getCachedObject();
+                newXsqlvar[i].cachedobject = ((FBFlushableField)field).getCachedObject();
         }
 
         batchList.add(newXsqlvar);
@@ -894,7 +895,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
                             FBField field = getField(i + 1);
                             if (field instanceof FBFlushableField) {
                                 vars[i].copyFrom(data[i], false);
-                                field.setBytes(data[i].sqldata);
+                                ((FBFlushableField)field).setCachedObject((CachedObject)data[i].cachedobject);
                             } else {
                                 vars[i].copyFrom(data[i], true);
                             }

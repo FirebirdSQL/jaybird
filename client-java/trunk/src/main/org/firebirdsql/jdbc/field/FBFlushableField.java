@@ -19,6 +19,8 @@
 
 package org.firebirdsql.jdbc.field;
 
+import java.io.InputStream;
+import java.io.Reader;
 import java.sql.SQLException;
 
 /**
@@ -30,6 +32,20 @@ import java.sql.SQLException;
  */
 public interface FBFlushableField {
     
+    public static class CachedObject {
+        public byte[] bytes;
+        public InputStream binaryStream;
+        public Reader characterStream;
+        public int length;
+        
+        public CachedObject(byte[] bytes, InputStream binaryStream, Reader characterStream, int length) {
+            this.bytes = bytes;
+            this.binaryStream = binaryStream;
+            this.characterStream = characterStream;
+            this.length = length;
+        }
+    }
+    
     /**
      * Flush cached data to the database server.
      * 
@@ -38,12 +54,15 @@ public interface FBFlushableField {
     void flushCachedData() throws SQLException;
     
     /**
-     * Get cached object.
+     * Get cached data.
      * 
      * @return cached object of this field.
      * 
      * @throws SQLException if something went wrong.
      */
-    byte[] getCachedObject() throws SQLException;
+    byte[] getCachedData() throws SQLException;
     
+    CachedObject getCachedObject() throws SQLException;
+    
+    void setCachedObject(CachedObject cachedObject) throws SQLException;
 }
