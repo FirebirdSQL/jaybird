@@ -70,7 +70,7 @@ public class FBEscapedFunctionHelper {
         FUNCTION_MAP.put("INSERT", null);
         FUNCTION_MAP.put("LCASE", null);
         FUNCTION_MAP.put("LEFT", "SUBSTRING({0} FROM 1 FOR {1}");
-        FUNCTION_MAP.put("LENGTH", null);
+        FUNCTION_MAP.put("LENGTH", "CHARACTER_LENGTH({0})");
         FUNCTION_MAP.put("LOCATE", null);
         FUNCTION_MAP.put("LTRIM", null);
         FUNCTION_MAP.put("REPEAT", null);
