@@ -30,14 +30,15 @@ import org.firebirdsql.common.FBTestBase;
  */
 public class TestBatchUpdates extends FBTestBase {
 
-	public TestBatchUpdates(String name) {
-		super(name);
-	}
+    public TestBatchUpdates(String name) {
+        super(name);
+    }
 
     public static final String CREATE_TABLE = ""
         + "CREATE TABLE batch_updates("
         + "  id INTEGER, "
-        + "  str_value BLOB"
+        + "  str_value BLOB, "
+        + "  clob_value BLOB SUB_TYPE 1"
         + ")"
         ;
     
@@ -47,8 +48,8 @@ public class TestBatchUpdates extends FBTestBase {
     
     private Connection connection;
     
-	protected void setUp() throws Exception {
-		super.setUp();
+    protected void setUp() throws Exception {
+        super.setUp();
         
         connection = getConnectionViaDriverManager();
         
@@ -65,9 +66,9 @@ public class TestBatchUpdates extends FBTestBase {
         } finally {
             stmt.close();
         }
-	}
+    }
 
-	protected void tearDown() throws Exception {
+    protected void tearDown() throws Exception {
         
         try {
             Statement stmt = connection.createStatement();
@@ -80,8 +81,8 @@ public class TestBatchUpdates extends FBTestBase {
             connection.close();
         }
         
-		super.tearDown();
-	}
+        super.tearDown();
+    }
 
     /**
      * Test if batch updates in {@link Statement} implementation works correctly.
@@ -126,23 +127,21 @@ public class TestBatchUpdates extends FBTestBase {
      */
     public void testPreparedStatementBatch() throws SQLException {
         PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO batch_updates(id, str_value) VALUES (?, ?)");
+                "INSERT INTO batch_updates(id, str_value, clob_value) VALUES (?, ?, ?)");
         try {
             ps.setInt(1, 1);
             ps.setString(2, "test");
+            ps.setNull(3, Types.LONGVARBINARY);
             ps.addBatch();
 
-            try {
-                ps.setInt(1, 3);
-                ps.setCharacterStream(2, new StringReader("should fail"), 11);
-                ps.addBatch();
-                fail("Should throw an exception");
-            } catch(SQLException ex) {
-                // everything is ok
-            }
+            ps.setInt(1, 3);
+            ps.setCharacterStream(2, new StringReader("stream"), 11);
+            ps.setString(3, "string");
+            ps.addBatch();
             
             ps.setInt(1, 2);
             ps.setString(2, "another");
+            ps.setNull(3, Types.LONGVARBINARY);
             ps.addBatch();
 
             ps.executeBatch();
@@ -155,12 +154,14 @@ public class TestBatchUpdates extends FBTestBase {
                     counter++;
                     int id = rs.getInt(1);
                     String value = rs.getString(2);
-                    assertTrue("Should contain correct ID", id == 1 || id == 2);
+                    String clob = rs.getString(3);
+                    assertTrue("Should contain correct ID", id == 1 || id == 2 || id == 3);
                     assertTrue("Should contain correct value",
                         id == 1 ? "test".equals(value) :
-                                     id == 2 ? "another".equals(value) : false);
+                                     id == 2 ? "another".equals(value) : 
+                                     id == 3 ? "stream".equals(value) && "string".equals(clob) : false);
                 }
-                assertTrue("Should insert 2 rows.", counter == 2);
+                assertTrue("Should insert 3 rows.", counter == 3);
             } finally {
                 stmt.close();
             }

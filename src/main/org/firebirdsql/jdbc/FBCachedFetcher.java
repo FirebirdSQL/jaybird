@@ -114,7 +114,7 @@ class FBCachedFetcher implements FBFetcher {
                                     xsqlvars[j], dataProvider, gdsHelper, false);
                             
                             FBFlushableField blob = (FBFlushableField)localField;
-                            localRow[j] = blob.getCachedObject();
+                            localRow[j] = blob.getCachedData();
                         }
                     }
                 }

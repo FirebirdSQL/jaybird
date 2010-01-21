@@ -60,6 +60,7 @@ public class XSQLVAR {
     public int sqlsubtype;
     public int sqllen;
     public byte[] sqldata;
+    public Object cachedobject;
 //    public int sqlind;
     public String sqlname;
     public String relname;
