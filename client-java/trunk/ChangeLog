@@ -1,3 +1,35 @@
+2010-01-21 23:34  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java:
+
+	commented out duplicate code
+
+2010-01-21 23:32  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FBEscapedFunctionHelper.java:
+
+	added CHARACTER_LENGTH built-in function
+
+2010-01-21 23:32  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBSQLException.java:
+
+	Seems to fix JDBC-139
+
+2010-01-21 23:31  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/XSQLVAR.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBCachedFetcher.java,
+	main/org/firebirdsql/jdbc/field/FBBlobField.java,
+	main/org/firebirdsql/jdbc/field/FBFlushableField.java,
+	main/org/firebirdsql/jdbc/field/FBLongVarCharField.java,
+	test/org/firebirdsql/jdbc/TestBatchUpdates.java:
+
+	Fixed JDBC-143
+
 2009-11-05 10:12  rrokytskyy
 
 	* client-java/src/main/org/firebirdsql/: gds/XSQLVAR.java,
