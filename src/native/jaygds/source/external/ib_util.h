@@ -24,6 +24,14 @@
 #ifndef _IB_UTIL_H
 #define _IB_UTIL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern void *ib_util_malloc(long);
+
+#ifdef __cplusplus
+}	/* extern "C" */
+#endif
 
 #endif /* _IB_UTIL_H */

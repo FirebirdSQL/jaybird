@@ -115,7 +115,7 @@ FirebirdApiBinding* InterfaceManager::GetInterface(const long intfHandle)
 
 SHARED_LIBRARY_HANDLE InterfaceManager::loadLibrary(const char *libName)
 {
-	return PlatformLoadLibrary(libName);
+	return PlatformLoadLibrary(libName[0] ? libName : NULL);
 }
 
 

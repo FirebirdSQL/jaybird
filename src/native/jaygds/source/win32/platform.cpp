@@ -27,6 +27,25 @@
 
 #include "exceptions.h"
 
+
+static HINSTANCE hInstance = NULL;
+
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved)
+{
+	switch (reason)
+	{
+		case DLL_PROCESS_ATTACH:
+			hInstance = h;
+			break;
+
+		default:
+			break;
+	}
+
+	return TRUE;
+}
+
 void processFailedEntryPoint(const char* const message)
     {
     throw InternalException(message);
@@ -34,10 +53,31 @@ void processFailedEntryPoint(const char* const message)
 
 SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name)
     {
-    SHARED_LIBRARY_HANDLE handle = LoadLibrary(name);
+    SHARED_LIBRARY_HANDLE handle = LoadLibraryEx(name, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
     if (handle == NULL) 
             { 
-            throw InternalException("FirebirdApiBinding::Initialize - Could not find or load the GDS32.DLL"); 
+			char buffer[MAX_PATH];
+			DWORD dw;
+
+			if ((dw = GetModuleFileName(hInstance, buffer, sizeof(buffer))) != 0)
+			{
+				for (char* p = buffer + dw -1; p >= buffer; --p)
+				{
+					if (*p == '\\')
+					{
+						*p = '\0';
+						break;
+					}
+				}
+
+				strcat(buffer, "\\");
+				strcat(buffer, name);
+
+				handle = LoadLibraryEx(buffer, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+			}
+
+			if (handle == NULL)
+				throw InternalException("FirebirdApiBinding::Initialize - Could not find or load the client library / embeded server"); 
             }
     return handle; 
     }
