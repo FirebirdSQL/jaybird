@@ -47,6 +47,13 @@ SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name);
 
 void PlatformUnLoadLibrary(SHARED_LIBRARY_HANDLE);
 
+template <typename T> T PlatformFindSymbol(SHARED_LIBRARY_HANDLE library,
+	const char* symbolName, T& pointer)
+{
+	pointer = reinterpret_cast<T>(dlsym(library, symbolName));
+	return pointer;
+}
+
 #define OFFSETA(struct, fld)     ((size_t) ((struct) NULL)->fld)
 
 #define DEF_CALL_API(X) \

@@ -438,6 +438,20 @@ jlong  JIscBlobHandle::GetJLongFromIscQuad(ISC_QUAD value)
  */
 ISC_QUAD JIscBlobHandle::GetIscQuadFromJavaLong(jlong value)
 	{
+	ISC_QUAD* returnValue = (ISC_QUAD*)&value;
+	
+	if( IsLittleEndianByteOrdering() == false )
+		{
+		char* pointerToReturnValue = (char*)returnValue;
+
+		std::reverse(pointerToReturnValue, pointerToReturnValue + sizeof(ISC_QUAD));
+		}
+	
+	return *returnValue;
+
+	/***
+	 * ASF: This code is equivalent with the above one, but it was returning incorrect
+	 * result using GCC 4.2.3 with optimizations turned on in AMD64.
 	ISC_QUAD returnValue = *((ISC_QUAD*)&value);
 	
 	if( IsLittleEndianByteOrdering() == false )
@@ -448,6 +462,7 @@ ISC_QUAD JIscBlobHandle::GetIscQuadFromJavaLong(jlong value)
 		}
 	
 	return returnValue;
+	***/
 	}
 
 
@@ -764,11 +779,12 @@ EventStructManager::EventStructManager() : increment(10)
 	this->size = 10;
 	this->lastPosition = 0;
 	this->eventStructPtr = new event_struct*[this->size];
+	memset(this->eventStructPtr, 0, sizeof(this->eventStructPtr) * this->size);
 }
 
 EventStructManager::~EventStructManager() 
 {
-	for(long i = 0; i < size; i++) {
+	for(long i = 0; i < lastPosition; i++) {
 		event_struct* tempEventStructPtr = eventStructPtr[i];
 		
 		// release pointer if required
@@ -783,7 +799,7 @@ EventStructManager::~EventStructManager()
 
 long EventStructManager::addEventStruct() 
 {
-	for(long i = 0; i < size; i++) {
+	for(long i = 0; i < lastPosition; i++) {
 		event_struct* tempEventStructPtr = eventStructPtr[i];
 		if (tempEventStructPtr == 0) {
 			eventStructPtr[i] = new event_struct();
@@ -806,7 +822,7 @@ long EventStructManager::addEventStruct()
 
 event_struct* EventStructManager::getEventStruct(long index) 
 {
-	return this->eventStructPtr[index];
+	return index < this->lastPosition ? this->eventStructPtr[index] : NULL;
 }
 
 void EventStructManager::releaseEventStruct(long index)
@@ -820,8 +836,9 @@ void EventStructManager::grow()
 {
 	event_struct** newStruct = new event_struct*[this->size + this->increment];
 	memcpy(newStruct, this->eventStructPtr, this->size * sizeof(event_struct*));
+	memset(newStruct + this->size, 0, sizeof(this->eventStructPtr) * this->increment);
 
-	delete this->eventStructPtr;
+	delete[] this->eventStructPtr;
 	this->eventStructPtr = newStruct;
 	this->size += this->increment;
 }
