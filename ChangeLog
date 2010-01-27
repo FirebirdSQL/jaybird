@@ -1,3 +1,19 @@
+2010-01-26 18:45  rrokytskyy
+
+	* client-java/src/native/jaygds/builds/msvc6/: java_gds.sln,
+	java_gds.vcproj:
+
+	added VS2005 project
+
+2010-01-26 18:38  rrokytskyy
+
+	* client-java/src/native/jaygds/source/: fb_binding.h,
+	handle_wrappers.cpp, interface_manager.cpp, external/ib_util.h,
+	external/ibase.h, external/iberror.h, generic_unix/platform.h,
+	win32/platform.cpp, win32/platform.h:
+
+	merged changes in java_plugin SVN tree
+
 2010-01-21 23:34  rrokytskyy
 
 	*
