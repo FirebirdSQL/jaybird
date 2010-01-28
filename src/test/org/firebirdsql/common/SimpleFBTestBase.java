@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.common;
 
+import java.io.File;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -55,6 +56,11 @@ public class SimpleFBTestBase extends TestCase {
 	protected static final String DB_SERVER_URL = getProperty("test.db.host", "localhost");
 	protected static final int DB_SERVER_PORT = Integer.parseInt(getProperty("test.db.port", "3050"));
 
+    protected String getDatabasePath() {
+        return new File(DB_PATH + "/" + DB_NAME).getAbsolutePath();
+    }
+
+
 	/**
 	 * Builds an firebird database connection string for the supplied database
 	 * file.
@@ -64,12 +70,12 @@ public class SimpleFBTestBase extends TestCase {
 	 */
 	protected String getdbpath(String name) {
 		if ("EMBEDDED".equalsIgnoreCase(getProperty("test.gds_type", null)))
-			return DB_PATH + "/" + name;
+			return new File(DB_PATH + "/" + name).getAbsolutePath();
 		else if ("LOCAL".equalsIgnoreCase(getProperty("test.gds_type", null)))
-			return DB_PATH + "/" + name;
+			return new File(DB_PATH + "/" + name).getAbsolutePath();
 		else
-			return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + DB_PATH + "/"
-					+ name;
+			return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + 
+			    (new File(DB_PATH + "/" + name).getAbsolutePath());
 	}
 
 	/**
