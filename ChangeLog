@@ -1,3 +1,18 @@
+2010-01-28 22:43  rrokytskyy
+
+	* client-java/src/etc/: release_notes.html, release_notes.odt,
+	release_notes.pdf:
+
+	updated release notes
+
+2010-01-28 22:03  rrokytskyy
+
+	* client-java/src/: test/org/firebirdsql/common/FBTestBase.java,
+	test/org/firebirdsql/common/SimpleFBTestBase.java,
+	resources/unit_test_defaults.properties:
+
+	added better unit test customization
+
 2010-01-26 18:45  rrokytskyy
 
 	* client-java/src/native/jaygds/builds/msvc6/: java_gds.sln,
