@@ -1,3 +1,11 @@
+2010-10-13 14:23  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	JDBC-163 fixed: DatabaseMetaData.getBestRowIdentifier(...) does not
+	work for quoted table names
+
 2010-01-28 22:43  rrokytskyy
 
 	* client-java/src/etc/: release_notes.html, release_notes.odt,
