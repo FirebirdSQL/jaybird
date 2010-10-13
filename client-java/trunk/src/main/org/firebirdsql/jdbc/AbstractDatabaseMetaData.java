@@ -3419,7 +3419,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         if (!tables.next())
             return new FBResultSet(xsqlvars, new ArrayList());
         
-        ArrayList rows = getPrimaryKeyIdentifier(table, scope, xsqlvars);
+        ArrayList rows = getPrimaryKeyIdentifier(tables.getString(3), scope, xsqlvars);
 
         // if no primary key exists, add RDB$DB_KEY as pseudo-column
         if (rows.size() == 0) {
