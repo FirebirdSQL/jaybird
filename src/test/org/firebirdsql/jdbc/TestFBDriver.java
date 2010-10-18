@@ -335,5 +335,14 @@ public class TestFBDriver extends FBTestBase {
         }
     }
 
+    public void testDummyPacketIntervalConnect() throws Exception {
+        if (log != null) log.info(getUrl());
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("soTimeout", "2000");
+        connection = driver.connect(getUrl(), props);
+        assertTrue("Connection is null", connection != null);
+        connection.close();
+    }
+
 }
 

@@ -659,10 +659,20 @@ public class FBWrappingDataSource implements DataSource,
     public void setDefaultResultSetHoldable(boolean isHoldable) {
         getPool().setDefaultResultSetHoldable(isHoldable);
     }
+    
+    public int getSoTimeout() {
+        return getPool().getSoTimeout();
+    }
+
+    public void setSoTimeout(int soTimeout) {
+        getPool().setSoTimeout(soTimeout);
+    }
+    
 
     /*
      * JNDI-related code. 
      */
+
 
     private static final String REF_BLOCKING_TIMEOUT = "blockingTimeout";
 //    private static final String REF_DATABASE = "database";

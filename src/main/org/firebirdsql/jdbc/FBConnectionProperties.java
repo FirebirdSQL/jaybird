@@ -37,6 +37,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String PASSWORD_PROPERTY = "password";
     public static final String BUFFERS_NUMBER_PROPERTY = "buffersNumber";
     public static final String DEFAULT_HOLDABLE_RS_PROPERTY = "defaultHoldable";
+    public static final String SO_TIMEOUT = "soTimeout";
     
     private HashMap properties = new HashMap();
     private String type;
@@ -338,7 +339,14 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         else
             removeProperty(DEFAULT_HOLDABLE_RS_PROPERTY);
     }
-    
+
+    public int getSoTimeout() {
+        return getIntProperty(SO_TIMEOUT);
+    }
+
+    public void setSoTimeout(int soTimeout) {
+        setIntProperty(SO_TIMEOUT, soTimeout);
+    }
 
     public void setNonStandardProperty(String propertyMapping) {
         char[] chars = propertyMapping.toCharArray();

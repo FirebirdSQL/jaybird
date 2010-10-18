@@ -366,11 +366,21 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
     public void setDefaultResultSetHoldable(boolean isHoldable) {
         mcf.setDefaultResultSetHoldable(isHoldable);
     }    
+    
+    public int getSoTimeout() {
+        return mcf.getSoTimeout();
+    }
+
+    public void setSoTimeout(int soTimeout) {
+        mcf.setSoTimeout(soTimeout);
+    }
+    
 
     
     /*
      * INTERFACES IMPLEMENTATION
      */
+
 
     /**
      * Get previously set JNDI reference.

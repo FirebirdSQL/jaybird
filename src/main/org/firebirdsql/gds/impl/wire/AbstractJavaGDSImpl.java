@@ -1930,26 +1930,16 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		boolean debug = log != null && log.isDebugEnabled();
 
 		int socketBufferSize = -1;
+		int soTimeout = -1;
 
-        /*
-		String iscSocketBufferLength = databaseParameterBuffer
-				.getArgumentAsString(ISCConstants.isc_dpb_socket_buffer_size);
-
-		if (iscSocketBufferLength != null) {
-			try {
-				socketBufferSize = Integer.parseInt(iscSocketBufferLength);
-			} catch (NumberFormatException ex) {
-				throw new GDSException(ISCConstants.isc_arg_gds,
-						ISCConstants.isc_bad_dpb_content);
-			}
-		}
-        */
-        
         if (databaseParameterBuffer.hasArgument(DatabaseParameterBufferExtension.SOCKET_BUFFER_SIZE))
             socketBufferSize = databaseParameterBuffer.getArgumentAsInt(DatabaseParameterBufferExtension.SOCKET_BUFFER_SIZE);
+        
+        if (databaseParameterBuffer.hasArgument(DatabaseParameterBufferExtension.SO_TIMEOUT))
+            soTimeout = databaseParameterBuffer.getArgumentAsInt(DatabaseParameterBufferExtension.SO_TIMEOUT);
 
 		try {
-			openSocket(db, dbai, debug, socketBufferSize);
+			openSocket(db, dbai, debug, socketBufferSize, soTimeout);
 			
 			XdrOutputStream out = db.out;
 			XdrInputStream in = db.in;
@@ -2072,11 +2062,14 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			throws IOException, UnknownHostException;
 
 	protected void openSocket(isc_db_handle_impl db, DbAttachInfo dbai,
-			boolean debug, int socketBufferSize) throws IOException,
+			boolean debug, int socketBufferSize, int soTimeout) throws IOException,
 			SocketException, GDSException {
 		try {
 			db.socket = getSocket(dbai.getServer(), dbai.getPort());
 			db.socket.setTcpNoDelay(true);
+			
+			if (soTimeout != -1)
+			    db.socket.setSoTimeout(soTimeout);
 
 			if (socketBufferSize != -1) {
 				db.socket.setReceiveBufferSize(socketBufferSize);
