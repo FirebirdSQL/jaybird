@@ -50,6 +50,7 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
     int RESULT_SET_HOLDABLE             = 138; // ISCConstants.isc_dpb_result_set_holdable;
     int FILENAME_CHARSET                = 139; // ISCConstants.isc_dpb_filename_charset;
     int OCTETS_AS_BYTES                 = 140; // ISCConstants.isc_dpb_octets_as_bytes;
+    int SO_TIMEOUT                      = 141; // ISCConstants.isc_dpb_so_timeout;
     
     /**
      * List of the DPB extensions. This array is used to filter the parameters
@@ -68,7 +69,8 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
         NO_RESULT_SET_TRACKING,
         RESULT_SET_HOLDABLE,
         FILENAME_CHARSET,
-        OCTETS_AS_BYTES
+        OCTETS_AS_BYTES,
+        SO_TIMEOUT
     };
     
 

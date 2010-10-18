@@ -153,6 +153,7 @@ public final class ISCConstants {
     public final static int isc_dpb_result_set_holdable     = 138;
     public final static int isc_dpb_filename_charset        = 139;
     public final static int isc_dpb_octets_as_bytes         = 140;
+    public final static int isc_dpb_so_timeout              = 141;
     
     /*************************************/
     /* Transaction parameter block stuff */
