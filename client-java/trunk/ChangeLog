@@ -1,3 +1,10 @@
+2010-10-19 20:49  rrokytskyy
+
+	* client-java/src/resources/: isc_error_msg.properties,
+	isc_error_sqlstates.properties:
+
+	messages from FB 2.5 release
+
 2010-10-18 11:03  rrokytskyy
 
 	* client-java/src/: main/org/firebirdsql/gds/ISCConstants.java,
