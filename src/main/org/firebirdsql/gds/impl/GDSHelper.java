@@ -564,7 +564,7 @@ public class GDSHelper {
         try {
             byte[] info = gds.iscBlobInfo(blob, BLOB_LENGTH_REQUEST, 20);
             
-            if (info[0] != ISCConstants.isc_info_blob_total_length)
+            if (info.length == 0 || info[0] != ISCConstants.isc_info_blob_total_length)
                 throw new GDSException(ISCConstants.isc_req_sync);
                 
             int dataLength = gds.iscVaxInteger(info, 1, 2);
