@@ -48,7 +48,9 @@ public class TestFBLongVarCharEncodings extends TestFBEncodings {
         "  char_field BLOB SUB_TYPE 1 CHARACTER SET UNICODE_FSS, " +
         "  octets_field BLOB SUB_TYPE 1 CHARACTER SET OCTETS, " +
         "  var_octets_field BLOB SUB_TYPE 1 CHARACTER SET OCTETS, " +
-        "  none_octets_field BLOB SUB_TYPE 1 CHARACTER SET NONE " +
+        "  none_octets_field BLOB SUB_TYPE 1 CHARACTER SET NONE, " +
+        "  uuid_char BLOB SUB_TYPE 1 CHARACTER SET UTF8, " + 
+        "  uuid_varchar BLOB SUB_TYPE 1 CHARACTER SET UTF8 " +
         ")"
         ;
 
