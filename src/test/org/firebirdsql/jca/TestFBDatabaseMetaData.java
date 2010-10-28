@@ -212,8 +212,12 @@ public class TestFBDatabaseMetaData extends TestXABase {
         else
         if (metaData.getDatabaseMajorVersion() == 2 && metaData.getDatabaseMinorVersion() == 0)
             sysTableCount = 33;
+        else
         if (metaData.getDatabaseMajorVersion() == 2 && metaData.getDatabaseMinorVersion() == 1)
             sysTableCount = 40;
+        else
+        if (metaData.getDatabaseMajorVersion() == 2 && metaData.getDatabaseMinorVersion() == 5)
+            sysTableCount = 42;
         else {
             fail("Unsupported database server version for this test case: found table count " + count);
             
@@ -231,12 +235,14 @@ public class TestFBDatabaseMetaData extends TestXABase {
 
         if (log != null) log.info("testAAStringFunctions");
         FBDatabaseMetaData d = (FBDatabaseMetaData) dmd;
-        assertTrue("claims test\\_me has wildcards", d
-                .hasNoWildcards("test\\_me"));
-        assertTrue("strip escape wrong", d.stripEscape("test\\_me").equals(
-            "test_me"));
-        assertTrue("strip quotes wrong", d.stripQuotes("test_me", false).equals(
-            "TEST_ME"));
+        
+        assertTrue("claims test\\_me has wildcards", d.hasNoWildcards("test\\_me"));
+        
+        assertTrue("strip escape wrong", d.stripEscape("test\\_me").equals("test_me"));
+        
+        String str = d.stripQuotes("test_me", true);
+        assertTrue("strip quotes wrong", str.equals("TEST_ME"));
+        
         assertTrue("strip quotes wrong: " + d.stripQuotes("\"test_me\"", false), d
                 .stripQuotes("\"test_me\"", false).equals("test_me"));
     }
