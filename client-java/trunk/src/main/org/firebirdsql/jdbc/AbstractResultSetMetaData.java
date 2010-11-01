@@ -248,7 +248,8 @@ public abstract class AbstractResultSetMetaData implements FirebirdResultSetMeta
      */
     public  String getColumnLabel(int column) throws  SQLException {
         return (getXsqlvar(column).aliasname == null) ?
-            getXsqlvar(column).sqlname: getXsqlvar(column).aliasname;
+            (getXsqlvar(column).sqlname != null ? getXsqlvar(column).sqlname : "") : 
+                getXsqlvar(column).aliasname;
     }
 
 
@@ -260,8 +261,10 @@ public abstract class AbstractResultSetMetaData implements FirebirdResultSetMeta
      * @exception SQLException if a database access error occurs
      */
     public  String getColumnName(int column) throws  SQLException {
-        //return getXsqlvar(column).sqlname;
-        return getColumnLabel(column);
+        if (getXsqlvar(column).sqlname == null)
+            return getColumnLabel(column);
+        else
+            return getXsqlvar(column).sqlname;
     }
 
     public String getSourceColumnName(int column) throws SQLException {
