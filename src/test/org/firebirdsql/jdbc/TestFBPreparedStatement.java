@@ -807,13 +807,13 @@ public class TestFBPreparedStatement extends FBTestBase {
         + " begin"
         + "    i = 1;"
         + "    while(i < 10000) do begin"
-        + "     SELECT :i FROM rdb$database INTO :a;"
+        + "     EXECUTE STATEMENT 'SELECT ' || :i || ' FROM rdb$database' INTO :a;"
         + "     i = i + 1;"
         + "     suspend;"
         + "    end"
         + " end";
     
-    public void _testCancelStatement() throws Exception {
+    public void testCancelStatement() throws Exception {
         Connection conn = getConnectionViaDriverManager();
         try {
             final Statement stmt = conn.createStatement();
@@ -830,7 +830,6 @@ public class TestFBPreparedStatement extends FBTestBase {
                            stmt.cancel();
                            Thread.currentThread().sleep(100);
                        } catch(SQLException ex) {
-                           ex.printStackTrace();
                            fail("Cancel operation should work.");
                        } catch(InterruptedException ex) {
                            // empty
@@ -854,9 +853,8 @@ public class TestFBPreparedStatement extends FBTestBase {
                     System.err.println("Should raise an error on one of the records.");
                     fail("Should raise an error on one of the records.");
                 } catch(SQLException ex) {
-                    System.err.println("RS was closed on record " + i);
+                    System.out.println("testCancelStatement: RS was closed on record " + i);
                     // everything is fine
-                    ex.printStackTrace();
                 } catch(RuntimeException ex) {
                     ex.printStackTrace();
                     throw ex;
