@@ -1062,6 +1062,10 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
     public abstract void native_isc_cancel_events(IscDbHandle db_handle,
             EventHandleImp eventHandle) throws GDSException;
+    
+    public abstract void native_fb_cancel_operation(IscDbHandle dbHanle, 
+            int kind) throws GDSException;
+
 
     public TransactionParameterBuffer newTransactionParameterBuffer() {
         return new TransactionParameterBufferImpl();
@@ -1309,5 +1313,16 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
     public EventHandle createEventHandle(String eventName){
         return new EventHandleImp(eventName);
+    }
+    
+    public void fbCancelOperation(IscDbHandle dbHandle, int kind)
+            throws GDSException {
+        isc_db_handle_impl db = (isc_db_handle_impl) dbHandle;
+        if (db == null) { throw new GDSException(ISCConstants.isc_bad_db_handle); }
+
+        synchronized (this) {
+            native_fb_cancel_operation(dbHandle, kind);
+            ((isc_db_handle_impl) dbHandle).invalidate();
+        }
     }
 }
