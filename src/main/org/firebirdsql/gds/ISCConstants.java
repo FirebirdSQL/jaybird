@@ -736,6 +736,14 @@ public final class ISCConstants {
     public final static int isc_info_tra_isolation = 8;
     public final static int isc_info_tra_access = 9;
     public final static int isc_info_tra_lock_timeout = 10;
+    
+    /****************************************/
+    /* Cancel types for fb_cancel_operation */
+    /****************************************/
+    public final static int fb_cancel_disable = 1;
+    public final static int fb_cancel_enable = 2;
+    public final static int fb_cancel_raise = 3;
+    public final static int fb_cancel_abort = 4;
 
 
     /********************/

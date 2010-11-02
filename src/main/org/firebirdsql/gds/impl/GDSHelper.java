@@ -625,7 +625,19 @@ public class GDSHelper {
             throw ex;
         }
     }
-    
+
+    /**
+     * Cancel the currently running operation.
+     */
+    public void cancelOperation() throws GDSException {
+        try {
+            gds.fbCancelOperation(currentDbHandle, ISCConstants.fb_cancel_raise);
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+    }
+
     public int iscVaxInteger(byte[] buffer, int pos, int length) {
         return gds.iscVaxInteger(buffer, pos, length);
     }
@@ -692,7 +704,7 @@ public class GDSHelper {
         else
             return DEFAULT_BLOB_BUFFER_SIZE;
     }
-
+    
     /**
      * Get the encoding used for this connection.
      * 

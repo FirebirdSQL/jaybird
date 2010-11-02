@@ -273,6 +273,9 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     protected native void native_isc_finalize(int isc_api_handle)
         throws GDSException;
 
+    public native void native_fb_cancel_operation(IscDbHandle dbHanle, int kind) 
+        throws GDSException;
+    
     protected void finalize() throws Throwable {
         native_isc_finalize(isc_api_handle);
     }

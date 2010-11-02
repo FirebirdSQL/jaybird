@@ -885,4 +885,19 @@ public interface GDS {
      * @return The newly created <code>EventHandle</code>
      */
     EventHandle createEventHandle(String eventName);
+    
+    /**
+     * Cancel the currently running operation on the server 
+     * 
+     * @param dbHandle Handle to the database operation of which should be
+     * cancelled.
+     * 
+     * @param kind one of {@link ISCConstants#fbfb_cancel_disable},
+     * {@link ISCConstants#fbfb_cancel_enable}, {@link ISCConstants#fbfb_cancel_raise}
+     * or {@link ISCConstants#fbfb_cancel_abort} 
+     * 
+     * @throws GDSException If a database communication error happens.
+     */
+    void fbCancelOperation(IscDbHandle dbHandle, int kind) 
+        throws GDSException;
 }

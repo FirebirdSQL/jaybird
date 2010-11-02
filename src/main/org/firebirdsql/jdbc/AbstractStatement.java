@@ -902,7 +902,11 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @exception SQLException if a database access error occurs
      */
     public void cancel() throws  SQLException {
-        throw new FBDriverNotCapableException();
+        try {
+            gdsHelper.cancelOperation();
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
+        }
     }
 
 

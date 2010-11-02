@@ -35,6 +35,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.security.auth.Subject;
+import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.AbstractIscDbHandle;
@@ -83,6 +84,10 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
     }
 
     protected void invalidate() throws IOException {
+        
+        if (invalid)
+            return;
+        
         in.close();
         out.close();
         socket.close();

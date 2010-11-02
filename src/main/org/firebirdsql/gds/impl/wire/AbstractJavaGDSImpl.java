@@ -275,6 +275,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	static final int op_service_start = 85;
 
 	static final int op_rollback_retaining = 86;
+	
+	static final int op_cancel = 91;
 
 	static final int MAX_BUFFER_SIZE = 1024;
 
@@ -629,7 +631,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	public void iscDetachDatabase(IscDbHandle db_handle) throws GDSException {
 		boolean debug = log != null && log.isDebugEnabled();
 		isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
-		if (db == null) {
+		if (db == null || !db.isValid()) {
 			throw new GDSException(ISCConstants.isc_bad_db_handle);
 		}
 
@@ -805,6 +807,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
 		isc_db_handle_impl db = (isc_db_handle_impl) tr.getDbHandle();
 
+		if (db == null || !db.isValid())
+		    throw new GDSException(ISCConstants.isc_bad_db_handle);
+		
 		synchronized (db) {
 
 			if (tr.getState() != AbstractIscTrHandle.TRANSACTIONSTARTED
@@ -1303,6 +1308,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
 		isc_db_handle_impl db = stmt.getRsr_rdb();
 
+		if (db == null || !db.isValid())
+		    throw new GDSException(ISCConstants.isc_bad_db_handle);
+		
 		if (stmt_handle == null) {
 			throw new GDSException(ISCConstants.isc_bad_req_handle);
 		}
@@ -3324,4 +3332,36 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
     }
 
 
+    public void fbCancelOperation(IscDbHandle dbHandle, int kind)
+            throws GDSException {
+        
+        boolean debug = log != null && log.isDebugEnabled();
+        isc_db_handle_impl db = (isc_db_handle_impl) dbHandle;
+        if (db == null) {
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
+        }
+
+        //synchronized (db) {
+            try {
+                if (debug)
+                    log.debug("op_cancel ");
+                db.out.writeInt(op_cancel);
+                db.out.writeInt(kind);
+                db.out.flush();
+                if (debug)
+                    log.debug("sent");
+                // receiveResponse(db, -1);
+
+            } catch (IOException ex) {
+                throw new GDSException(ISCConstants.isc_network_error);
+            } finally {
+//                try {
+//                    disconnect(db);
+//                } catch (IOException ex2) {
+//                    throw new GDSException(ISCConstants.isc_network_error);
+//                }
+            } // end of finally
+        //}
+        
+    }
 }
