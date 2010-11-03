@@ -1,3 +1,25 @@
+2010-11-02 17:06  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+
+	changed test case to reproduce fb_cancel_operation
+
+2010-11-02 17:03  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/GDS.java,
+	main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/gds/impl/GDSHelper.java,
+	main/org/firebirdsql/gds/impl/jni/BaseGDSImpl.java,
+	main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java,
+	main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java,
+	main/org/firebirdsql/gds/impl/wire/isc_db_handle_impl.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+
+	added implementation of fb_cancel_operation, however it is not
+	clear how to test this thing...
+
 2010-11-01 17:00  rrokytskyy
 
 	*
