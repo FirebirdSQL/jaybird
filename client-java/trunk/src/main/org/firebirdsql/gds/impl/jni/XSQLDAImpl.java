@@ -24,6 +24,10 @@ import org.firebirdsql.gds.XSQLDA;
 
 public class XSQLDAImpl extends XSQLDA {
 
+    public XSQLDAImpl() {
+        // empty
+    }
+    
     XSQLDAImpl(int sqln, int sqld, XSQLVAR[] sqlvar) {
         super();
 

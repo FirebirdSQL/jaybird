@@ -8,7 +8,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 public abstract class JniGDSImpl extends BaseGDSImpl {
 
-    private static final boolean DEVELOPMENT_DEBUG_OUTPUT = false;
+    private static final boolean DEVELOPMENT_DEBUG_OUTPUT = true;
 
     /**
      * Name of the JNI library able to communicate with the client or embedded
@@ -40,7 +40,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
      * it must ensure that correct type is returned from 
      * {@link org.firebirdsql.gds.impl.AbstractGDS#getType()} method.
      */
-    protected JniGDSImpl() {
+    public JniGDSImpl() {
         super();
     }
 

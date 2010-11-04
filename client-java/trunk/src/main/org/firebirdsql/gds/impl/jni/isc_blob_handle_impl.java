@@ -39,7 +39,7 @@ public final class isc_blob_handle_impl implements IscBlobHandle {
 
     boolean isEndOfFile = false;
     
-    isc_blob_handle_impl() {
+    public isc_blob_handle_impl() {
     };
 
     public void addWarning(GDSException warning) {

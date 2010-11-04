@@ -33,7 +33,7 @@ class isc_svc_handle_impl implements IscSvcHandle {
     private List warnings = new ArrayList();
     private int handle = 0;
 
-    isc_svc_handle_impl() {
+    public isc_svc_handle_impl() {
     }
 
     public List getWarnings() {
