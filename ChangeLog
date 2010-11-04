@@ -1,3 +1,11 @@
+2010-11-04 13:49  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/jni/XSQLVARLittleEndianImpl.java:
+
+	fixed incorrect constructor for the case of relaliasname for the
+	JNI part
+
 2010-11-02 17:06  rrokytskyy
 
 	*
