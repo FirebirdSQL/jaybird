@@ -867,4 +867,60 @@ public class TestFBPreparedStatement extends FBTestBase {
             conn.close();
         }
     }
+    
+    public void testParameterIsNullQuery() throws Throwable {
+        Connection conn = getConnectionViaDriverManager();
+        try {
+            Statement stmt = conn.createStatement();
+            try {
+                stmt.executeUpdate("INSERT INTO testtab(id, field1, field2) VALUES (1, '1', 'a')");
+                stmt.executeUpdate("INSERT INTO testtab(id, field1, field2) VALUES (2, '2', NULL)");
+            } finally {
+                stmt.close();
+            }
+            
+            PreparedStatement ps = conn.prepareStatement(
+                "SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1");
+            ResultSet rs;
+            try {
+                ps.setNull(1, Types.VARCHAR);
+                ps.setNull(2, Types.VARCHAR);
+                
+                rs = ps.executeQuery();
+                
+                boolean hasRecord = rs.next();
+                
+                assertTrue("Step 1.1 - should get a record.", hasRecord);
+                assertEquals("Step 1.1 - ID should be equal 2", 1, rs.getInt(1));
+
+                hasRecord = rs.next();
+                
+                assertTrue("Step 1.2 - should get a record.", hasRecord);
+                assertEquals("Step 1.2 - ID should be equal 2", 2, rs.getInt(1));
+
+                ps.clearParameters();
+                
+                ps.setString(1, "a");
+                ps.setString(2, "a");
+                
+                rs = ps.executeQuery();
+                
+                hasRecord = rs.next();
+                assertTrue("Step 2.1 - should get a record.", hasRecord);
+                assertEquals("Step 2.1 - ID should be equal 1", 1, rs.getInt(1));
+
+                hasRecord = rs.next();
+                assertTrue("Step 2 - should get only one record.", !hasRecord);
+
+            } catch(Throwable ex) {
+                ex.printStackTrace();
+                throw ex;
+            } finally {
+                ps.close();
+            }
+            
+        } finally {
+            conn.close();
+        }
+    }
 }

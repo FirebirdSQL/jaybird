@@ -33,8 +33,7 @@ import java.io.OutputStream;
 import java.util.Arrays;
 
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.XSQLDA;
-import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.*;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -225,6 +224,10 @@ public class XdrOutputStream {
             }
             int len = xsqlda.ioLength[i];
             byte[] buffer = xsqlvar.sqldata;
+            int tempType = xsqlvar.sqltype & ~1;
+            if (tempType == ISCConstants.SQL_NULL) {
+                write(xsqlvar.sqldata != null ? zero : minusOne, 4, 0);
+            } else
             if (len==0) {
                 if (buffer != null) {
                     len = buffer.length;
