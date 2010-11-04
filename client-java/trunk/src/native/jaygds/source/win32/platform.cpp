@@ -56,6 +56,8 @@ SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name)
     SHARED_LIBRARY_HANDLE handle = LoadLibraryEx(name, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
     if (handle == NULL) 
             { 
+			DWORD dwReturn = GetLastError();
+
 			char buffer[MAX_PATH];
 			DWORD dw;
 
@@ -75,9 +77,12 @@ SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name)
 
 				handle = LoadLibraryEx(buffer, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 			}
+			char message[200];
+			int n;
+			n = sprintf(message, "FirebirdApiBinding::Initialize - Could not find or load the client library / embeded server. Error [%d].", dwReturn);
 
 			if (handle == NULL)
-				throw InternalException("FirebirdApiBinding::Initialize - Could not find or load the client library / embeded server"); 
+				throw InternalException(message); 
             }
     return handle; 
     }
