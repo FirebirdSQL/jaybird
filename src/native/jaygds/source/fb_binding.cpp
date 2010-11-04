@@ -96,6 +96,7 @@ void FirebirdApiBinding::Load(SHARED_LIBRARY_HANDLE sHandle)
         FB_ENTRYPOINT(isc_wait_for_event);
         FB_ENTRYPOINT(isc_cancel_events);
         FB_ENTRYPOINT(isc_free);      
+		FB_ENTRYPOINT_OPTIONAL(fb_cancel_operation);
     }
 
     #define FB_COMP(X) if(X!=v.X) return false;
@@ -163,5 +164,6 @@ bool FirebirdApiBinding::operator==(const FirebirdApiBinding &v)
         FB_COMP(isc_event_counts);
         FB_COMP(isc_cancel_events);
         FB_COMP(isc_free);
+		FB_COMP(fb_cancel_operation);
         return true;
     }

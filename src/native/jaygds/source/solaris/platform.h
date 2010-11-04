@@ -42,6 +42,9 @@ typedef void* SHARED_LIBRARY_HANDLE;
 			if ((##X = (prototype_##X*)dlsym(sHandle, #X)) == NULL) \
 				throw InternalException("FirebirdApiBinding:Initialize() - Entry-point "#X" not found")
 
+#define FB_ENTRYPOINT_OPTIONAL(X) \
+			##X = (prototype_##X*)dlsym(sHandle, #X)
+
 SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name);
 
 void PlatformUnLoadLibrary(SHARED_LIBRARY_HANDLE);
@@ -50,7 +53,9 @@ void PlatformUnLoadLibrary(SHARED_LIBRARY_HANDLE);
 
 #define DEF_CALL_API(X) \
     jint pointer_##X=isc_api_handle.GetInt(javaEnvironment,jThis);\
-    prototype_##X *X=interfaceManager.GetInterface(pointer_##X)->X; 
+    prototype_##X *X=interfaceManager.GetInterface(pointer_##X)->X;\ 
+	if (X == NULL) \
+		processFailedEntryPoint("FirebirdApiBinding:Initialize() - Entry-point "#X" not found");
 
 #define CALL_API(X) DEF_CALL_API(X)\
     X
