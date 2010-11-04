@@ -1302,3 +1302,18 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
     interfaceManager.ReleaseInterface(isc_api);
 }
 
+JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1fb_1cancel_1operation
+  (JNIEnv * javaEnvironment, jobject jThis, jobject jDatabaseHandle, jint jKind)
+{
+    ENTER_PROTECTED_BLOCK
+        JIscDatabaseHandle databaseHandle(javaEnvironment, jDatabaseHandle);
+
+		FirebirdStatusVector status;
+        isc_db_handle rawDatabaseHandle = databaseHandle.GetHandleValue();
+
+		CALL_API(fb_cancel_operation)(status.RawAccess(), &rawDatabaseHandle, (short)jKind);
+
+        status.IssueExceptionsAndOrAddWarnings(javaEnvironment, databaseHandle);
+
+    LEAVE_PROTECTED_BLOCK
+}
