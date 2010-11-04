@@ -1252,6 +1252,12 @@ ISC_STATUS ISC_EXPORT isc_print_blr(const ISC_SCHAR*,
 									void*,
 									short);
 
+int ISC_EXPORT fb_print_blr(const ISC_UCHAR*,
+							ISC_ULONG,
+							ISC_PRINT_CALLBACK,
+							void*,
+							short);
+
 void ISC_EXPORT isc_set_debug(int);
 
 void ISC_EXPORT isc_qtoq(const ISC_QUAD*,
@@ -1269,7 +1275,7 @@ int ISC_EXPORT isc_version(isc_db_handle*,
 						   ISC_VERSION_CALLBACK,
 						   void*);
 
-ISC_LONG ISC_EXPORT isc_reset_fpe(ISC_USHORT);
+ISC_LONG FB_API_DEPRECATED ISC_EXPORT isc_reset_fpe(ISC_USHORT);
 
 uintptr_t	ISC_EXPORT isc_baddress(ISC_SCHAR*);
 void		ISC_EXPORT isc_baddress_s(const ISC_SCHAR*,
@@ -1282,10 +1288,10 @@ void		ISC_EXPORT isc_baddress_s(const ISC_SCHAR*,
 #define ADD_SPB_LENGTH(p, length)	{*(p)++ = (length); \
     					 *(p)++ = (length) >> 8;}
 
-#define ADD_SPB_NUMERIC(p, data)	{*(p)++ = (ISC_SCHAR) (data); \
-    					 *(p)++ = (ISC_SCHAR) ((data) >> 8); \
-					 *(p)++ = (ISC_SCHAR) ((data) >> 16); \
-					 *(p)++ = (ISC_SCHAR) ((data) >> 24);}
+#define ADD_SPB_NUMERIC(p, data)	{*(p)++ = (ISC_SCHAR) (ISC_UCHAR) (data); \
+    					 *(p)++ = (ISC_SCHAR) (ISC_UCHAR) ((data) >> 8); \
+					 *(p)++ = (ISC_SCHAR) (ISC_UCHAR) ((data) >> 16); \
+					 *(p)++ = (ISC_SCHAR) (ISC_UCHAR) ((data) >> 24);}
 
 ISC_STATUS ISC_EXPORT isc_service_attach(ISC_STATUS*,
 										 unsigned short,
@@ -1732,6 +1738,7 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 #define isc_dpb_trusted_role                      75
 #define isc_dpb_org_filename                      76
 #define isc_dpb_utf8_filename                     77
+#define isc_dpb_ext_call_depth                    78
 
 #define isc_dpb_address 1
 
@@ -1843,7 +1850,8 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 #define isc_action_svc_trace_list     26        
 #define isc_action_svc_set_mapping    27        
 #define isc_action_svc_drop_mapping   28        
-#define isc_action_svc_last                       29    
+#define isc_action_svc_display_user_adm 29      
+#define isc_action_svc_last                       30    
 
 #define isc_info_svc_svr_db_info      50        
 #define isc_info_svc_get_license      51        
@@ -1873,6 +1881,7 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 #define isc_spb_sec_firstname         10
 #define isc_spb_sec_middlename        11
 #define isc_spb_sec_lastname          12
+#define isc_spb_sec_admin             13
 
 #define isc_spb_lic_key               5
 #define isc_spb_lic_id                6
@@ -1954,6 +1963,8 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 #define isc_spb_res_page_size                   10
 #define isc_spb_res_length                              11
 #define isc_spb_res_access_mode                 12
+#define isc_spb_res_fix_fss_data                13
+#define isc_spb_res_fix_fss_metadata    14
 #define isc_spb_res_deactivate_idx              0x0100
 #define isc_spb_res_no_shadow                   0x0200
 #define isc_spb_res_no_validity                 0x0400
@@ -1979,6 +1990,7 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 
 #define isc_spb_nbk_level                       5
 #define isc_spb_nbk_file                        6
+#define isc_spb_nbk_direct                      7
 #define isc_spb_nbk_no_triggers         0x01
 
 #define isc_spb_trc_id                          1
@@ -2241,6 +2253,7 @@ int  ISC_EXPORT isc_get_client_minor_version ();
 #define isc_dyn_user_first                                                      5
 #define isc_dyn_user_middle                                                     6
 #define isc_dyn_user_last                                                       7
+#define isc_dyn_user_admin                                                      8
 #define isc_user_end                                                            0
 
 #define isc_dyn_last_dyn_value            247
@@ -2515,6 +2528,10 @@ enum  info_db_implementations
 
         isc_info_db_impl_darwin_ppc64 = 77,
         isc_info_db_impl_linux_s390x = 78,
+        isc_info_db_impl_linux_s390 = 79,
+
+        isc_info_db_impl_linux_sh = 80,
+        isc_info_db_impl_linux_sheb = 81,
 
         isc_info_db_impl_last_value   
 };
