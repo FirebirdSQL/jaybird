@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="9,00"
 	Name="java_gds"
 	ProjectGUID="{EA22DEAD-6F2F-4EE4-AC5D-39A81ED1D480}"
+	TargetFrameworkVersion="0"
 	>
 	<Platforms>
 		<Platform
@@ -51,7 +52,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="2"
-				AdditionalIncludeDirectories="./;..\..\source\;..\..\source\external\;..\..\source\win32;&quot;C:\Program Files (x86)\Java\jdk1.6.0-32bit\include&quot;;&quot;C:\Program Files (x86)\Java\jdk1.6.0-32bit\include\win32&quot;"
+				AdditionalIncludeDirectories="./;..\..\source\;..\..\source\external\;..\..\source\win32;&quot;C:\Program Files (x86)\Java\jdk1.6.0\include&quot;;&quot;C:\Program Files (x86)\Java\jdk1.6.0\include\win32&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;JAVA_GDS_EXPORTS;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -102,9 +103,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -198,9 +196,6 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -238,7 +233,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="./;..\..\source\;..\..\source\external\;..\..\source\win32\;&quot;C:\Program Files (x86)\Java\jdk1.6.0-32bit\include&quot;;&quot;C:\Program Files (x86)\Java\jdk1.6.0-32bit\include\win32&quot;"
+				AdditionalIncludeDirectories="./;..\..\source\;..\..\source\external\;..\..\source\win32\;&quot;C:\Program Files (x86)\Java\jdk1.6.0\include&quot;;&quot;C:\Program Files (x86)\Java\jdk1.6.0\include\win32&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;JAVA_GDS_EXPORTS;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -291,9 +286,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -386,9 +378,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -815,6 +804,10 @@
 		<Filter
 			Name="external headers"
 			>
+			<File
+				RelativePath="..\..\source\win32\platform.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath="ReadMe.txt"
