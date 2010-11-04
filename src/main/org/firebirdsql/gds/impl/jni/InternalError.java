@@ -23,6 +23,10 @@ package org.firebirdsql.gds.impl.jni;
  */
 public class InternalError extends RuntimeException {
 
+    public InternalError() {
+        // empty
+    }
+    
     public InternalError(String message) {
         super(message);
     }

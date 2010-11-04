@@ -13,6 +13,10 @@ public class EventHandleImp implements EventHandle {
     private int eventId = -1;
     private volatile boolean cancelled = false;
 
+    public EventHandleImp() {
+        // empty
+    }
+    
     public EventHandleImp(String eventName){
         if (eventName == null){
             throw new NullPointerException();
