@@ -57,7 +57,10 @@ public class SimpleFBTestBase extends TestCase {
 	protected static final int DB_SERVER_PORT = Integer.parseInt(getProperty("test.db.port", "3050"));
 
     protected String getDatabasePath() {
-        return new File(DB_PATH + "/" + DB_NAME).getAbsolutePath();
+        if (!"127.0.0.1".equals(DB_SERVER_URL) && !"localhost".equals(DB_SERVER_URL))
+            return DB_PATH + "/" + DB_NAME;
+        else
+            return new File(DB_PATH + "/" + DB_NAME).getAbsolutePath();
     }
 
 
@@ -73,9 +76,13 @@ public class SimpleFBTestBase extends TestCase {
 			return new File(DB_PATH + "/" + name).getAbsolutePath();
 		else if ("LOCAL".equalsIgnoreCase(getProperty("test.gds_type", null)))
 			return new File(DB_PATH + "/" + name).getAbsolutePath();
-		else
-			return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + 
-			    (new File(DB_PATH + "/" + name).getAbsolutePath());
+		else {
+		    if (!"127.0.0.1".equals(DB_SERVER_URL) && !"localhost".equals(DB_SERVER_URL))
+	            return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + DB_PATH + "/" + name;
+		    else
+    			return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + 
+    			    (new File(DB_PATH + "/" + name).getAbsolutePath());
+		}
 	}
 
 	/**
