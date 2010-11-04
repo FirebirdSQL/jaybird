@@ -1405,6 +1405,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			case ISCConstants.SQL_INT64:
 				xsqlda.ioLength[i] = -8;
 				break;
+			case ISCConstants.SQL_NULL:
+			    xsqlda.ioLength[i] = 0;
+			    break;
 			}
 		}
 	}
@@ -2292,7 +2295,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			for (int i = 0; i < xsqlda.sqld; i++) {
 				int dtype = xsqlda.sqlvar[i].sqltype & ~1;
 				if (dtype == ISCConstants.SQL_VARYING
-						|| dtype == ISCConstants.SQL_TEXT) {
+						|| dtype == ISCConstants.SQL_TEXT 
+						|| dtype == ISCConstants.SQL_NULL) {
 					blr_len += 3;
 				} else if (dtype == ISCConstants.SQL_SHORT
 						|| dtype == ISCConstants.SQL_LONG
@@ -2330,6 +2334,10 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 					blr[n++] = 14; // blr_text
 					blr[n++] = (byte) (len & 255);
 					blr[n++] = (byte) (len >> 8);
+                } else if (dtype == ISCConstants.SQL_NULL) {
+                    blr[n++] = 14; // blr_text
+                    blr[n++] = 0;
+                    blr[n++] = 0;
 				} else if (dtype == ISCConstants.SQL_DOUBLE) {
 					blr[n++] = 27; // blr_double
 				} else if (dtype == ISCConstants.SQL_FLOAT) {

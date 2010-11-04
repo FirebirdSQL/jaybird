@@ -279,6 +279,9 @@ public abstract class FBField {
 
             case ISCConstants.SQL_VARYING:
                 return (type == Types.VARCHAR);
+                
+            case ISCConstants.SQL_NULL:
+                return false;
 
             default:
                 return false;
@@ -350,10 +353,20 @@ public abstract class FBField {
             case ISCConstants.SQL_TYPE_TIME:
                 return  (type == Types.TIME) ||
                         (type == Types.TIMESTAMP);
+                
+            case ISCConstants.SQL_NULL:
+                return true;
 
             default:
                 return false;
         }
+    }
+    
+    public final static boolean isNullType(XSQLVAR field) {
+        int tempType = field.sqltype & ~1;
+
+        return tempType == ISCConstants.SQL_NULL
+                || field.sqltype == ISCConstants.SQL_NULL;
     }
     
     /**
@@ -448,6 +461,9 @@ public abstract class FBField {
         else
         if (isType(field, Types.ARRAY))
             throw (SQLException)createException(SQL_ARRAY_NOT_SUPPORTED);
+        else
+        if (isNullType(field))
+            return new FBNullField(field, dataProvider, Types.VARCHAR);
         else
             throw (SQLException)createException(SQL_TYPE_NOT_SUPPORTED);
     }
