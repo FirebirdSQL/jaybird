@@ -1,3 +1,59 @@
+2010-11-04 21:45  rrokytskyy
+
+	* client-java/src/native/jaygds/source/: entrypoints.cpp,
+	entrypoints_generated.h, fb_binding.cpp, fb_binding.h,
+	generic_unix/platform.h, solaris/platform.h, win32/platform.h:
+
+	added support for FB 2.5 (fb_cancel_operation)
+
+2010-11-04 21:41  rrokytskyy
+
+	* client-java/src/native/jaygds/source/win32/platform.cpp:
+
+	improved error information by returning the error code when loading
+	a library failed
+
+2010-11-04 21:40  rrokytskyy
+
+	* client-java/src/native/jaygds/source/external/: ibase.h,
+	iberror.h:
+
+	updated to FB 2.5.0
+
+2010-11-04 21:39  rrokytskyy
+
+	* client-java/src/native/jaygds/builds/msvc6/java_gds.vcproj:
+
+	changes in the includes
+
+2010-11-04 21:36  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/gds/ISCConstants.java,
+	main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java,
+	main/org/firebirdsql/gds/impl/wire/XdrOutputStream.java,
+	main/org/firebirdsql/jdbc/field/FBField.java,
+	main/org/firebirdsql/jdbc/field/FBNullField.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+
+	JDBC-164 implemented
+
+2010-11-04 21:35  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/common/SimpleFBTestBase.java:
+
+	fixed code to enable execution against remote server
+
+2010-11-04 21:34  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/gds/impl/jni/:
+	EventHandleImp.java, InternalError.java, JniGDSImpl.java,
+	XSQLDAImpl.java, isc_blob_handle_impl.java,
+	isc_svc_handle_impl.java:
+
+	added public default constructors, just in case, to ensure that
+	types are instantiable from JNI-code
+
 2010-11-04 13:49  rrokytskyy
 
 	*
