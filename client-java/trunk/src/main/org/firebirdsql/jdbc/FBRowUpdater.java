@@ -322,7 +322,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 sb.append("AND");
             
             sb.append("\n\t");
-            sb.append(xsqlvars[i].sqlname).append(" = ").append("?");
+            sb.append("\"").append(xsqlvars[i].sqlname).append("\" = ").append("?");
             
             first = false;
         }
@@ -343,7 +343,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 sb.append(",");
             
             sb.append("\n\t");
-            sb.append(xsqlvars[i].sqlname).append(" = ").append("?");
+            sb.append("\"").append(xsqlvars[i].sqlname).append("\" = ").append("?");
             
             first = false;
         }
@@ -407,7 +407,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
             if (!first) 
                 columns.append(", ");
             
-            columns.append(xsqlvars[i].sqlname);
+            columns.append("\"").append(xsqlvars[i].sqlname).append("\"");
             
             first = false;
         }
