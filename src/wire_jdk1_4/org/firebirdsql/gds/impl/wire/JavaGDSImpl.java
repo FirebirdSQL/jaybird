@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 /**
  * Implements JDK1.4+ specific socket creation.
@@ -33,7 +36,7 @@ public class JavaGDSImpl extends AbstractJavaGDSImpl {
 
 		// Create the socket using an instance of the InetAddress class if the
 		// ip address is a valid IPV4 or IPV6 address
-		if (address != null)
+		if (address != null && address.length != 0)
 			return new Socket(InetAddress.getByAddress(address), port);
 		else
 			return new Socket(server, port);
@@ -48,29 +51,63 @@ public class JavaGDSImpl extends AbstractJavaGDSImpl {
 	 *            a string representation of the host server.
 	 * @return a byte array representing the ip address
 	 */
-	private byte[] parseRawAddress(String server) {
+	public static byte[] parseRawAddress(String server) {
 
-		byte[] address = null;
-		String[] bytes = server.split(".");
-		// Only 4 byte (IPv4) and 16 byte (IPv6) addresses are acceptable.
-		if (bytes.length == 4 || bytes.length == 16) {
+		ArrayList<Byte> result = new ArrayList<Byte>();
+		String[] bytes = server.split("\\.|:");
+		
+		try {
+    		// Only 4 byte (IPv4) and 16 byte (IPv6) addresses are acceptable.
+    		if (bytes.length == 4 ) {
+                // convert each string into a byte. If the string doesn't isn't in
+                // the range of 0 .. 255 return null.
+                for (int index = 0; index < bytes.length; index++) {
+                    int value = Integer.parseInt(bytes[index]);
+                    
+                    if (value >= 0 && value <= 255)
+                        result.add((byte) value);
+                    else
+                        return null;
 
-			// convert each string into a byte. If the string doesn't isn't in
-			// the range of 0 .. 255 return null.
-			address = new byte[bytes.length];
-			for (int index = 0; index < bytes.length; index++) {
-
-				int value = Integer.parseInt(bytes[index]);
-				if (value > 0 && value < 255)
-					address[index] = (byte) value;
-				else
-					return null;
-
-			}
-
-		}
+                }    		    
+    		} else
+    		if (bytes.length == 16 || bytes.length == 8) {
+    
+    			// convert each string into a byte. If the string doesn't isn't in
+    			// the range of 0 .. 255 return null.
+    			for (int index = 0; index < bytes.length; index++) {
+    
+                    bytes[index] = prependZeros(bytes[index], 4);
+                    String hi = bytes[index].substring(0, 2);
+                    String lo = bytes[index].substring(2);
+                    
+                    int hiValue = Integer.parseInt(hi, 16);
+                    int loValue = Integer.parseInt(lo, 16);
+                    
+                    if (hiValue == -1 || loValue == -1)
+                        return null;
+                    
+                    result.add((byte)hiValue);
+                    result.add((byte)loValue);
+    
+    			}
+    		} else
+    		    return null;
+        } catch(NumberFormatException ex) {
+            return null;
+        }
+        
+		byte[] address = new byte[result.size()];
+		for(int i = 0 ; i < result.size(); i++)
+		    address[i] = result.get(i);
+		
 		return address;
 
+	}
+	
+	private static String prependZeros(String s, int totalLength) {
+        s= "000000000000"+s; // twelve zeros prepended
+        return s.substring(s.length()-totalLength); // keep the rightmost 13 chars
 	}
 
 }
