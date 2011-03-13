@@ -1,3 +1,25 @@
+2011-03-13 09:03  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/management/TestFBMaintenanceManager.java:
+
+	fix for test case with database shutdown
+
+2011-03-13 09:01  rrokytskyy
+
+	* client-java/src/: main/org/firebirdsql/jdbc/FBRowUpdater.java,
+	test/org/firebirdsql/jdbc/TestFBResultSet.java:
+
+	JDBC-166 fix for row updater with case-sensitive names
+
+2011-03-13 08:59  rrokytskyy
+
+	* client-java/src/:
+	wire_jdk1_4/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java,
+	test/org/firebirdsql/gds/impl/wire/TestGds.java:
+
+	JDBC-159 fix for IPv6 format
+
 2010-11-04 21:45  rrokytskyy
 
 	* client-java/src/native/jaygds/source/: entrypoints.cpp,
