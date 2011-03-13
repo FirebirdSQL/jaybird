@@ -204,6 +204,9 @@ public class TestFBMaintenanceManager extends FBTestBase {
             } catch (SQLException e2){
                 // Ignore this exception, which will always be thrown due 
                 // to the database being shutdown
+            } catch(IllegalStateException e2) {
+                // Ignore this exception, which will always be thrown due 
+                // to the database being shutdown
             }
         }
     }
@@ -217,12 +220,14 @@ public class TestFBMaintenanceManager extends FBTestBase {
             Statement stmt = conn.createStatement();
             stmt.executeUpdate(sql);
             conn.commit();
+            conn.close();
 
             // Shutting down when no transactions are active should work
             maintenanceManager.shutdownDatabase(
                     MaintenanceManager.SHUTDOWN_TRANSACTIONAL, 0);
+            Thread.sleep(100);
             maintenanceManager.bringDatabaseOnline();
-            conn.close();
+            Thread.sleep(100);
             conn = getConnectionViaDriverManager();
             conn.setAutoCommit(false);
 
@@ -237,7 +242,11 @@ public class TestFBMaintenanceManager extends FBTestBase {
                 // Ignore
             }
         } finally {
-            conn.close();
+            try {
+                conn.close();
+            } catch(SQLException ex) {
+                // empty
+            }
         }
     }
 
