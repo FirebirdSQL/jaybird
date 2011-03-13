@@ -47,7 +47,8 @@ public class TestFBResultSet extends FBTestBase {
         + "  str VARCHAR(10), " 
         + "  long_str VARCHAR(255), "
         + "  very_long_str VARCHAR(20000), "
-        + "  blob_str BLOB SUB_TYPE 1"
+        + "  blob_str BLOB SUB_TYPE 1, "
+        + "  \"CamelStr\" VARCHAR(255)"
         + ")"
         ;
         
@@ -775,7 +776,7 @@ public class TestFBResultSet extends FBTestBase {
         try {
             assertTrue("No warnings should be added", connection.getWarnings() == null);
             
-            ResultSet rs = stmt.executeQuery("SELECT id, long_str, str FROM test_table ORDER BY id");
+            ResultSet rs = stmt.executeQuery("SELECT id, long_str, str, \"CamelStr\" FROM test_table ORDER BY id");
 
             int counter = 0;
             while(rs.next()) {
@@ -794,6 +795,9 @@ public class TestFBResultSet extends FBTestBase {
                 assertEquals(null, rs.getString(3));
                 rs.updateString(3, "str" + counter);
                 
+                assertEquals(null, rs.getString(4));
+                rs.updateString(4, "str" + counter);
+                
                 // check whether row can be updated
                 rs.updateRow();
                 
@@ -803,6 +807,7 @@ public class TestFBResultSet extends FBTestBase {
                 assertEquals(counter, rs.getInt(1)); 
                 assertEquals("newString" + counter, rs.getString(2));
                 assertEquals("str" + counter, rs.getString(3));
+                assertEquals("str" + counter, rs.getString(4));
                 
                 counter++;
             }
