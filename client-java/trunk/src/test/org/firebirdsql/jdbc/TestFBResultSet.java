@@ -51,11 +51,26 @@ public class TestFBResultSet extends FBTestBase {
         + "  \"CamelStr\" VARCHAR(255)"
         + ")"
         ;
-        
+
+    public static final String CREATE_TABLE_STATEMENT2 = ""
+        + "CREATE TABLE test_table2(" 
+        + "  id INTEGER NOT NULL, " 
+        + "  str VARCHAR(10), " 
+        + "  long_str VARCHAR(255), "
+        + "  very_long_str VARCHAR(20000), "
+        + "  blob_str BLOB SUB_TYPE 1, "
+        + "  \"CamelStr\" VARCHAR(255)"
+        + ")"
+        ;
+
     public static final String DROP_TABLE_STATEMENT = ""
         + "DROP TABLE test_table"
         ;
-        
+
+    public static final String DROP_TABLE_STATEMENT2 = ""
+        + "DROP TABLE test_table2"
+        ;
+
     public static final String CREATE_VIEW_STATEMENT = ""
         + "CREATE VIEW test_empty_string_view(marker, id, empty_char) "
         + "  AS  "
@@ -127,7 +142,13 @@ public class TestFBResultSet extends FBTestBase {
             } catch (SQLException ex) {
                 // do nothing here
             }
-            
+
+            try {
+                stmt.execute(DROP_TABLE_STATEMENT2);
+            } catch (SQLException ex) {
+                // do nothing here
+            }
+
             try {
                 stmt.execute(DROP_SUBSTR_FUNCTION);
             } catch(SQLException ex) {
@@ -135,6 +156,7 @@ public class TestFBResultSet extends FBTestBase {
             }
             
             stmt.execute(CREATE_TABLE_STATEMENT);
+            stmt.execute(CREATE_TABLE_STATEMENT2);
             stmt.execute(CREATE_VIEW_STATEMENT);
             stmt.execute(CREATE_SUBSTR_FUNCTION);
         } finally {
@@ -849,6 +871,79 @@ public class TestFBResultSet extends FBTestBase {
             
             assertTrue(rs.next());
             assertTrue(rs.getInt(1) == recordCount);
+            
+        } finally {
+            stmt.close();
+        }
+        
+    }
+
+    public void testUpdatableResultSetNoPK() throws Exception {
+        connection.setAutoCommit(false);
+        
+        int recordCount = 10;
+        PreparedStatement ps = connection
+                .prepareStatement("INSERT INTO test_table2("
+                        + "id, long_str) VALUES (?, ?)");
+
+        try {
+
+            for (int i = 0; i < recordCount; i++) {
+                ps.setInt(1, i);
+                ps.setString(2, "oldString" + i);
+                ps.executeUpdate();
+            }
+        } finally {
+            ps.close();
+        }
+
+        connection.commit();
+
+        connection.setAutoCommit(true);
+        
+        connection.clearWarnings();
+        Statement stmt = connection.createStatement(
+            ResultSet.TYPE_SCROLL_INSENSITIVE, 
+            ResultSet.CONCUR_UPDATABLE);
+        
+        try {
+            assertTrue("No warnings should be added", connection.getWarnings() == null);
+            
+            ResultSet rs = stmt.executeQuery("SELECT rdb$db_key, id, long_str, str, \"CamelStr\" FROM test_table2 ORDER BY 2");
+
+            int counter = 0;
+            while(rs.next()) {
+                
+                int id = rs.getInt(2);
+                assertEquals(counter, id);
+                
+                String longStr = rs.getString(3);
+                assertEquals("oldString" + counter, longStr);
+                
+                rs.updateString(3, "newString" + counter);
+                
+                assertEquals(counter, rs.getInt(2)); 
+                assertEquals("newString" + counter, rs.getString(3));
+
+                assertEquals(null, rs.getString(4));
+                rs.updateString(4, "str" + counter);
+                
+                assertEquals(null, rs.getString(5));
+                rs.updateString(5, "str" + counter);
+                
+                // check whether row can be updated
+                rs.updateRow();
+                
+                // check whether row can be refreshed
+                rs.refreshRow();
+
+                assertEquals(counter, rs.getInt(2)); 
+                assertEquals("newString" + counter, rs.getString(3));
+                assertEquals("str" + counter, rs.getString(4));
+                assertEquals("str" + counter, rs.getString(5));
+                
+                counter++;
+            }
             
         } finally {
             stmt.close();
