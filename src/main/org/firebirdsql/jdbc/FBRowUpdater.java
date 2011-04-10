@@ -23,8 +23,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.FBField;
@@ -407,7 +406,14 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
             if (!first) 
                 columns.append(", ");
             
-            columns.append("\"").append(xsqlvars[i].sqlname).append("\"");
+            // do special handling of RDB$DB_KEY, since Firebird returns
+            // DB_KEY column name instead of the correct one
+            if ("DB_KEY".equals(xsqlvars[i].sqlname)
+                    && ((xsqlvars[i].sqltype & ~1) == ISCConstants.SQL_TEXT)
+                    && xsqlvars[i].sqllen == 8)
+                columns.append("RDB$DB_KEY");
+            else
+                columns.append("\"").append(xsqlvars[i].sqlname).append("\"");
             
             first = false;
         }
