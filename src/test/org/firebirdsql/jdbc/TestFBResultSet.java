@@ -1025,6 +1025,20 @@ public class TestFBResultSet extends FBTestBase {
             stmt.close();
         }
     }
+    
+    public void testDoubleNext() throws Exception {
+        connection.setAutoCommit(false);
+        Statement stmt = connection.createStatement();
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT * FROM rdb$database");
+            assertTrue("Should find at least one row", rs.next());
+            assertFalse("Should find only one row", rs.next());
+            assertFalse("Should not throw when after next", rs.next());
+        } finally {
+            stmt.close();
+        }
+        connection.setAutoCommit(true);
+    }
 
     public void testInsertUpdatableCursor() throws Exception {
         
