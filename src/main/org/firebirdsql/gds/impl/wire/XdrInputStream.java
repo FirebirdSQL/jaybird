@@ -172,8 +172,8 @@ public class XdrInputStream {
      *         underlying input stream
      */
     public long readLong() throws IOException {
-        return (read() << 56) | (read() << 48) | (read() << 40) | (read() << 32) 
-        | (read() << 24) | (read() << 16) | (read() << 8) | (read() << 0);
+        return ((long)read() << 56) | ((long)read() << 48) | ((long)read() << 40) | ((long)read() << 32) 
+        | ((long)read() << 24) | ((long)read() << 16) | ((long)read() << 8) | ((long)read() << 0);
     }
 
     /**
