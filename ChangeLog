@@ -1,3 +1,16 @@
+2011-07-14 22:17  rrokytskyy
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/XdrInputStream.java:
+
+	JDBC-174 fixed issue with incorrect reading of blob IDs
+
+2011-07-14 22:15  rrokytskyy
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBResultSet.java:
+
+	added test case to test double call of ResultSet.next()
+
 2011-04-10 22:11  rrokytskyy
 
 	* client-java/src/: test/org/firebirdsql/jdbc/TestFBResultSet.java,
