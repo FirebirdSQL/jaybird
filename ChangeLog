@@ -1,3 +1,11 @@
+2011-07-16 12:23  mrotteveel
+
+	* client-java/src/: main/org/firebirdsql/jdbc/FBSQLException.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java:
+
+	Enhancement for JDBC-139 : Delegate more to superclass to get JDBC
+	4.0 compliant behaviour for exception chaining
+
 2011-07-14 22:17  rrokytskyy
 
 	*
