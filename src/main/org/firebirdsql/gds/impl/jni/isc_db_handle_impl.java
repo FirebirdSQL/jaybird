@@ -158,7 +158,7 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
 
     public void setVersion(String value) throws GDSException {
         version = value;
-        this.serverVersion = new GDSServerVersion(version);
+        this.serverVersion = GDSServerVersion.parseRawVersion(version);
     }
 
     public String getVersion() {
@@ -170,7 +170,7 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
     }
 
     public String getDatabaseProductVersion() {
-        return version;
+        return serverVersion.getFullVersion();
     }
 
     public int getDatabaseProductMajorVersion() {
