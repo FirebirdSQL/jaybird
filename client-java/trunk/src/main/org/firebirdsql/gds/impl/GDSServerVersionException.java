@@ -33,7 +33,9 @@ import org.firebirdsql.gds.ISCConstants;
  */
 public class GDSServerVersionException extends GDSException {
 
-    public GDSServerVersionException(String message) {
+	private static final long serialVersionUID = -7437228877120690612L;
+
+	public GDSServerVersionException(String message) {
         super(ISCConstants.isc_infinap);
         
         GDSException messageEx = new GDSException(message);

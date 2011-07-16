@@ -25,8 +25,8 @@
 package org.firebirdsql.gds.impl;
 
 import java.io.Serializable;
-import java.util.NoSuchElementException;
-import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Object representing a Firebird server version. The version string is returned
@@ -42,15 +42,31 @@ import java.util.StringTokenizer;
  */
 public class GDSServerVersion implements Serializable {
 
-    public static final String TYPE_PRODUCTION = "V";
+	private static final long serialVersionUID = -153657557318248541L;
+	
+	public static final String TYPE_PRODUCTION = "V";
     public static final String TYPE_BETA = "T";
     public static final String TYPE_DEVELOPMENT = "X";
+
+    private static final Pattern VERSION_PATTERN = 
+    	Pattern.compile("((\\w{2})-(\\w)(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)) ([^-,]+)(?:[-,](.*))?");
+    
+    private static final int FULL_VERSION_IDX = 1;
+    private static final int PLATFORM_IDX = 2;
+    private static final int TYPE_IDX = 3;
+    private static final int MAJOR_IDX = 4;
+    private static final int MINOR_IDX = 5;
+    private static final int VARIANT_IDX = 6;
+    private static final int BUILD_IDX = 7;
+    private static final int SERVER_NAME_IDX = 8;
+    private static final int EXTENDED_INFO_IDX = 9;    
 
     private String rawStr;
     
     private String platform;
     private String type;
 
+    private String fullVersion;
     private int majorVersion;
     private int minorVersion;
     private int variant;
@@ -59,18 +75,7 @@ public class GDSServerVersion implements Serializable {
     private String serverName;
     private String extendedServerName;
 
-    /**
-     * Create instance of this class for the specified version string.
-     * 
-     * @param rawStr raw string that was received from the server.
-     * 
-     * @throws GDSServerVersionException if the specified raw string cannot 
-     * be correctly parsed.
-     */
-    public GDSServerVersion(String rawStr) throws GDSServerVersionException {
-        this.rawStr = rawStr;
-
-        parseRawStr(rawStr);
+    private GDSServerVersion() {
     }
 
     public int getBuildNumber() {
@@ -104,6 +109,10 @@ public class GDSServerVersion implements Serializable {
     public String getExtendedServerName() {
         return extendedServerName;
     }
+    
+    public String getFullVersion() {
+    	return fullVersion;
+    }
 
     public int hashCode() {
         return rawStr.hashCode();
@@ -124,57 +133,33 @@ public class GDSServerVersion implements Serializable {
     }
 
     /**
-     * Parse the raw string and store the components in appropriate places.
+     * Parse the raw version string and create a GDSServerVersion object.
      * 
-     * @param str string to parse.
+     * @param versionString string to parse.
      * 
-     * @throws GDSServerVersionException if parsing cannot be completed.
+     * @throws GDSServerVersionException if versionString does not match expected pattern
      */
-    private void parseRawStr(String str) throws GDSServerVersionException {
-        int firstSpacePosition = str.indexOf(' ');
+    public static GDSServerVersion parseRawVersion(String versionString) throws GDSServerVersionException {
+    	Matcher matcher = VERSION_PATTERN.matcher(versionString);
+    	if (!matcher.matches()) {
+    		throw new GDSServerVersionException("Version string does not match expected format");
+    	}
+    	
+    	GDSServerVersion version = new GDSServerVersion();
+    	
+    	version.rawStr = versionString;
+    	
+    	version.serverName = matcher.group(SERVER_NAME_IDX);
+    	version.extendedServerName = matcher.group(EXTENDED_INFO_IDX);
+    	version.platform = matcher.group(PLATFORM_IDX);
+    	version.type = matcher.group(TYPE_IDX);
 
-        if (firstSpacePosition == -1)
-            throw new GDSServerVersionException("No server name is available.");
-
-        this.serverName = str.substring(firstSpacePosition + 1);
-        int commaPosition = serverName.indexOf(',');
-        if (commaPosition != -1) {
-            this.extendedServerName = this.serverName
-                    .substring(commaPosition + 1);
-            this.serverName = this.serverName.substring(0, commaPosition);
-        }
-
-        String platformVersionStr = str.substring(0, firstSpacePosition);
-
-        int dashPosition = platformVersionStr.indexOf('-');
-
-        if (dashPosition == -1)
-            throw new GDSServerVersionException("No platform/version available.");
-
-        this.platform = platformVersionStr.substring(0, dashPosition);
-        this.type = platformVersionStr.substring(dashPosition + 1, dashPosition + 2);
-
-        String versionStr = platformVersionStr.substring(dashPosition + 2);
-
-        try {
-            StringTokenizer st = new StringTokenizer(versionStr, ".");
-            String majorVersionStr = st.nextToken();
-            String minorVersionStr = st.nextToken();
-            String variantStr = st.nextToken();
-            String buildNumStr = st.nextToken();
-
-            this.majorVersion = Integer.parseInt(majorVersionStr);
-            this.minorVersion = Integer.parseInt(minorVersionStr);
-            this.variant = Integer.parseInt(variantStr);
-            this.buildNumber = Integer.parseInt(buildNumStr);
-
-        } catch (NoSuchElementException ex) {
-            throw new GDSServerVersionException(
-                    "One of the version components not available: " + str);
-        } catch (NumberFormatException ex) {
-            throw new GDSServerVersionException(
-                    "One of the version components not a number : " + str);
-        }
-
+    	version.fullVersion = matcher.group(FULL_VERSION_IDX);
+    	version.majorVersion = Integer.parseInt(matcher.group(MAJOR_IDX));
+    	version.minorVersion = Integer.parseInt(matcher.group(MINOR_IDX));
+    	version.variant = Integer.parseInt(matcher.group(VARIANT_IDX));
+    	version.buildNumber = Integer.parseInt(matcher.group(BUILD_IDX));
+    	
+    	return version;
     }
 }

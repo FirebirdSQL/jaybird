@@ -27,7 +27,6 @@
 
 package org.firebirdsql.gds.impl.wire;
 
-
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -35,7 +34,6 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.security.auth.Subject;
-import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.AbstractIscDbHandle;
@@ -190,7 +188,7 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
 
     public void setVersion(String value) throws GDSException {
         version = value;
-        serverVersion = new GDSServerVersion(value);
+        serverVersion = GDSServerVersion.parseRawVersion(value);
     }
 
     public String getVersion(){
@@ -202,7 +200,7 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
     }
 
     public String getDatabaseProductVersion(){
-        return version;
+        return serverVersion.getFullVersion();
     }
 
     public int getDatabaseProductMajorVersion(){
