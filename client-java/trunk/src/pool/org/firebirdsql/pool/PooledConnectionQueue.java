@@ -360,11 +360,10 @@ class PooledConnectionQueue {
                             String message = "Could not obtain connection during " + 
                                 "blocking timeout (" + blockingTimeout + " ms)";
                             
-                            FBSQLException ex;
-                            if (pendingExceptions != null)
-                                ex = new FBSQLException(message, pendingExceptions);
-                            else
-                                ex = new FBSQLException(message);
+                            FBSQLException ex = new FBSQLException(message, FBSQLException.SQL_STATE_CONNECTION_FAILURE);
+                            if (pendingExceptions != null) {
+                                ex.setNextException(ex);
+                            }
                                 
                             throw ex;
                         };
