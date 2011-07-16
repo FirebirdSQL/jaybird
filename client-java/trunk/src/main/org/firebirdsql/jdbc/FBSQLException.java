@@ -53,12 +53,12 @@ public class FBSQLException extends SQLException {
     
     public FBSQLException(GDSException ex) {
         super("GDS Exception. " + ex.getIntParam() + ". " + ex.getMessage(),
-        		SQL_STATE_GENERAL_ERROR, ex.getFbErrorCode());
+        		SQL_STATE_GENERAL_ERROR, ex.getIntParam());
     }
 
     public FBSQLException(ResourceException ex) {
         super(getResourceMessage(ex), 
-                ex.getErrorCode() != null ? ex.getErrorCode() : SQL_STATE_GENERAL_ERROR);
+                ex.getErrorCode() != null ? ex.getErrorCode() : SQL_STATE_GENERAL_ERROR, getSqlErrorCode(ex));
 
         // try to unwrap wrapped GDS exception, in this case FBResourceException
         // will never appear on the stack
@@ -102,12 +102,33 @@ public class FBSQLException extends SQLException {
      */
     private static String getResourceMessage(ResourceException ex) {
     	Throwable cause = ex;
-    	if (ex instanceof FBResourceException && ex.getLinkedException() != null) 
+    	if (ex instanceof FBResourceException && ex.getLinkedException() != null) { 
             cause = ex.getLinkedException();
+    	}
     	
-    	if (cause instanceof GDSException)
+    	if (cause instanceof GDSException) {
             return "GDS Exception. "+ ((GDSException)cause).getIntParam() + ". " + ex.getMessage();
-        else
+    	} else {
             return "Resource Exception. " + ex.getMessage();
+    	}
+    }
+    
+    /**
+     * Helper method to get the SQL vendor code (or in the case of Firebird: the isc errorcode).
+     * 
+     * @param ex ResourceException
+     * @return isc errorcode, or 0
+     */
+    private static int getSqlErrorCode(ResourceException ex) {
+    	Throwable cause = ex;
+    	if (ex instanceof FBResourceException && ex.getLinkedException() != null) {
+            cause = ex.getLinkedException();
+    	}
+    	
+    	if (cause instanceof GDSException) {
+    		return ((GDSException)cause).getIntParam();
+    	} else {
+    		return 0;
+    	}
     }
 }
