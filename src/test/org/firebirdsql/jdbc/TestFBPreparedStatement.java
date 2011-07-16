@@ -704,7 +704,7 @@ public class TestFBPreparedStatement extends FBTestBase {
         }
     }
 
-    public void testLikeFullLength() throws Exception {
+    public void _testLikeFullLength() throws Exception {
         Connection connection = getConnectionViaDriverManager();
         try {
             Statement stmt = connection.createStatement();
