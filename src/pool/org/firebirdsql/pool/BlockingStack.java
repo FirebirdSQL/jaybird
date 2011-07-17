@@ -25,33 +25,17 @@ package org.firebirdsql.pool;
  * implementation will block when the list is empty.
  * 
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class BlockingStack {
+public final class BlockingStack {
 
 	/**
 	 * Container class for objects in the stack.
 	 */
-	protected class Node {
-		private Node next = null;
+	private static class Node {
+		private final Node next;
 
-		private Object object = null;
-
-		/**
-		 * Creates a node with null object and null next node.
-		 */
-		public Node() {
-			object = null;
-			next = null;
-		}
-
-		/**
-		 * Creates a node with the specified object and null next node.
-		 * 
-		 * @param object
-		 */
-		public Node(Object object) {
-			this.object = object;
-		}
+		private final Object object;
 
 		/**
 		 * Creates a Node with the specific object and next node.
@@ -59,55 +43,26 @@ public class BlockingStack {
 		 * @param object
 		 * @param next
 		 */
-		public Node(Object object, Node next) {
+		private Node(Object object, Node next) {
 			this.object = object;
 			this.next = next;
-
 		}
 
-		/**
-		 * @return Returns the next.
-		 */
-		public Node getNext() {
+		private Node getNext() {
 			return next;
 		}
 
-		/**
-		 * @return Returns the object.
-		 */
-		public Object getObject() {
+		private Object getObject() {
 			return object;
 		}
-
-		/**
-		 * @param next
-		 *            The next to set.
-		 */
-		public void setNext(Node next) {
-			this.next = next;
-		}
-
-		/**
-		 * @param object
-		 *            The object to set.
-		 */
-		public void setObject(Object object) {
-			this.object = object;
-		}
-
 	}
 
 	/**
 	 * Actual top of the stack.
 	 */
-	protected Node top = null;
+	private Node top = null;
 
-	/**
-	 * Number of threads waiting for an object.
-	 */
-	protected int waiting = 0;
-
-	protected Object topLock = new Object();
+	private final Object topLock = new Object();
 
 	/**
 	 * Checks to see if the stack is empty.
@@ -131,13 +86,16 @@ public class BlockingStack {
 		}
 	}
 
-	protected Object extract() {
+	private Object extract() {
 		Object result = null;
 		synchronized (topLock) {
 			if (top != null) {
 				Node item = top;
 				top = item.getNext();
 				result = item.getObject();
+			}
+			if (top != null) {
+				topLock.notify();
 			}
 		}
 		return result;
@@ -152,23 +110,18 @@ public class BlockingStack {
 	public Object pop() throws InterruptedException {
 		if (Thread.interrupted())
 			throw new InterruptedException();
-
-		Object result = extract();
-
-		if (result == null)
-			synchronized (topLock) {
+		
+		synchronized (topLock) {
+			while (isEmpty()) {
 				try {
-					waiting++;
 					topLock.wait();
-					result = extract();
 				} catch (InterruptedException e) {
-					waiting--;
 					topLock.notify();
 					throw e;
 				}
 			}
-
-		return result;
+			return extract();
+		}
 	}
 
 	/**
@@ -181,31 +134,25 @@ public class BlockingStack {
 	 * @return the object at the top of the stack.
 	 * @throws InterruptedException
 	 */
-	public Object pop(long msec) throws InterruptedException {
+	public Object pop(final long msec) throws InterruptedException {
 		if (Thread.interrupted())
 			throw new InterruptedException();
-
-		Object result = extract();
-
-		if (result == null)
-			synchronized (topLock) {
+		
+		long wait = msec;
+		long start = System.currentTimeMillis();
+		
+		synchronized (topLock) {
+			while (isEmpty() && wait > 0) {
 				try {
-					long wait = (msec <= 0) ? 0 : msec;
-					long start = System.currentTimeMillis();
-					while (wait > 0) {
-						waiting++;
-						topLock.wait(msec);
-						wait = msec - (System.currentTimeMillis() - start);
-						result = extract();
-					}
+					topLock.wait(wait);
+					wait = msec - (System.currentTimeMillis() - start);
 				} catch (InterruptedException e) {
-					waiting--;
 					topLock.notify();
 					throw e;
 				}
 			}
-
-		return result;
+			return extract();
+		}
 	}
 
 	/**
@@ -222,12 +169,11 @@ public class BlockingStack {
 			throw new IllegalArgumentException();
 		if (Thread.interrupted())
 			throw new InterruptedException();
+		
 		synchronized (topLock) {
 			top = new Node(item, top);
 			// Notify waiting threads.
-			if (waiting > 0) {
-				topLock.notify();
-			}
+			topLock.notify();
 		}
 	}
 }

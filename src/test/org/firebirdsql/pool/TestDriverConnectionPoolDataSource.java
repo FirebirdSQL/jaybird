@@ -29,6 +29,7 @@ import org.firebirdsql.jdbc.FBDriver;
 /**
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class TestDriverConnectionPoolDataSource extends
         TestFBConnectionPoolDataSource {
@@ -63,22 +64,6 @@ public class TestDriverConnectionPoolDataSource extends
         super.tearDown();
     }
 
-    public void testBlocking() throws Exception {
-        super.testBlocking();
-    }
-
-    public void testConnection() throws Exception {
-        super.testConnection();
-    }
-
-    public void testFalseConnectionUsage() throws Exception {
-        super.testFalseConnectionUsage();
-    }
-
-    public void testIdleRemover() throws Exception {
-        super.testIdleRemover();
-    }
-
     public void testJNDI() throws Exception {
         if (getGdsType() != GDSType.getType("PURE_JAVA"))
             fail("This test case does not work with JNI connections.");
@@ -92,18 +77,6 @@ public class TestDriverConnectionPoolDataSource extends
         checkJNDI(props);
     }
 
-    public void testPoolStart() throws Exception {
-        super.testPoolStart();
-    }
-
-    public void testPreparedStatement() throws Exception {
-        super.testPreparedStatement();
-    }
-    
-    public void testSqlRole() throws Exception {
-        // test is not defined for this type of pool
-    }
-    
     public void testReleaseResultSet() throws Exception {
         // test is not defined for this type of pool
     }
