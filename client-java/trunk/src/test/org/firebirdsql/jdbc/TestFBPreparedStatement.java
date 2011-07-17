@@ -239,9 +239,9 @@ public class TestFBPreparedStatement extends FBTestBase {
 
         assertTrue("Should get at least one row", rs.next());
 
-        long genValue = rs.getLong("new_value");
+        rs.getLong("new_value");
 
-        assertTrue("should have only one row", !rs.next());
+        assertFalse("should have only one row", rs.next());
 
         rs.close();
         ps.close();
@@ -826,9 +826,9 @@ public class TestFBPreparedStatement extends FBTestBase {
                 Thread cancelThread = new Thread(new Runnable() {
                    public void run() {
                        try {
-                           Thread.currentThread().sleep(20);
+                           Thread.sleep(20);
                            stmt.cancel();
-                           Thread.currentThread().sleep(100);
+                           Thread.sleep(100);
                        } catch(SQLException ex) {
                            fail("Cancel operation should work.");
                        } catch(InterruptedException ex) {
@@ -837,7 +837,7 @@ public class TestFBPreparedStatement extends FBTestBase {
                    } 
                 });
                 
-                cancelThread.run();
+                cancelThread.start();
                 cancelThread.join();
 
                 
