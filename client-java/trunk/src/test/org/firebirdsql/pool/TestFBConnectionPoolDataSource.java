@@ -25,8 +25,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
+import java.util.Timer;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -35,6 +38,7 @@ import javax.naming.StringRefAddr;
 import javax.sql.*;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.ThreadInterrupter;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FirebirdConnection;
@@ -44,6 +48,7 @@ import org.firebirdsql.jdbc.FirebirdPreparedStatement;
  * Test suite for JDBC connection pool.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class TestFBConnectionPoolDataSource extends FBTestBase {
     
@@ -74,10 +79,6 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         this.pool = connectionPool;
     }
 
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
     /**
      * Test if pool is started correctly.
      * 
@@ -85,7 +86,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
      */
     public void testPoolStart() throws Exception {
         try {
-            PooledConnection pooledConnection = pool.getPooledConnection();
+            pool.getPooledConnection();
         } catch(SQLException ex) {
             fail("Pool should have been started.");
         } finally {
@@ -330,7 +331,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             con.close();
             
             try {
-                Statement stmt = con.createStatement();
+                con.createStatement();
                 
                 fail("Should not be able to create statement with closed connection.");
             } catch(SQLException ex) {
@@ -436,7 +437,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             con.close();
             
             try {
-                rs = stmt.executeQuery("SELECT * FROM rdb$database");
+                stmt.executeQuery("SELECT * FROM rdb$database");
                 fail("Should throw exception that statement is closed.");
             } catch(SQLException ex) {
                 // everything is fine
@@ -531,6 +532,65 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         }
     }
     
+    /**
+     * Test if a connection is successfully obtained if the thread initially was blocked on
+     * the the pool.
+     * <p>
+     * Background: The original implementation of BlockingStack would return null if initially
+     * blocked.
+     * </p>
+     * @throws Exception
+     */
+    public void testBlocking_availability() throws Exception {
+    	// Limit test duration
+		final Timer timer = new Timer("waitLimit");
+    	try {
+    		ThreadInterrupter interrupter = new ThreadInterrupter();
+    		timer.schedule(interrupter, 5000);
+	    	pool.setRetryInterval(500);
+	    	pool.setBlockingTimeout(400);
+	    	pool.setMinPoolSize(2);
+	    	pool.setMaxPoolSize(2);
+	    	pool.restart();
+	    	final DataSource ds = new SimpleDataSource(pool);
+	    	final List resultHolder = Collections.synchronizedList(new ArrayList());
+	    	Runnable obtainConnection = new Runnable() {
+	    		public void run() {
+	    			try {
+		    			Connection con = ds.getConnection();
+		    			resultHolder.add(con);
+	    			} catch (SQLException e) { }
+	    		}
+	    	};
+	    	Thread wait1 = new Thread(obtainConnection, "wait1");
+	    	// Obtain two connections to checkout all connections from pool
+	    	Connection con1 = ds.getConnection();
+	    	Connection con2 = ds.getConnection();
+	    	// Start second thread to obtain another connection
+	    	wait1.start();
+	    	// Make sure other thread gets time to run (and wait on the pool)
+	    	Thread.sleep(5);
+	    	// Close connections to return them to the pool
+	    	con1.close();
+	    	con2.close();
+	    	// Wait 500 ms for wait1 to complete
+	    	wait1.join(500);
+	    	if (wait1.isAlive()) {
+	    		wait1.interrupt();
+	    		fail("wait1 thread was still blocked, it should have been able to return a connection");
+	    	}
+	    	assertEquals("wait1 thread should have gotten a result", 1, resultHolder.size());
+	    	assertNotNull("Expected a connection", resultHolder.get(0));
+	    	Connection result = (Connection)resultHolder.get(0);
+	    	assertTrue("Expected a valid connection", result.isValid(1));
+	    	result.close();
+	    	interrupter.cancel();
+    	} finally {
+    		pool.shutdown();
+    	}
+    	timer.cancel();
+    }
+    
     public void testIdleRemover() throws Exception {
         
         pool.setMaxIdleTime(1 * 1000);
@@ -616,7 +676,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
                 pool.getTotalSize() == 0);
             
             try {
-                physConnection = pool.getPooledConnection();
+                pool.getPooledConnection();
             } catch(SQLException ex) {
                 fail("Should get the connection without any problem. " + ex.toString());
             }
@@ -640,13 +700,13 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     	
     	DataSource datasource = new SimpleDataSource(pool);
     	
-    	assertTrue("Total size should equal MinPoolSize", pool.getTotalSize() == pool.getMinPoolSize());
+    	assertEquals("Total size should equal MinPoolSize", pool.getMinPoolSize(), pool.getTotalSize());
     	
     	ArrayList connections = new ArrayList(pool.getMaxPoolSize());
     	while (connections.size() < pool.getMaxPoolSize())
     		connections.add(datasource.getConnection());
 
-    	assertTrue("Total size should equal MaxPoolSize", pool.getTotalSize() == pool.getMaxPoolSize());
+    	assertEquals("Total size should equal MaxPoolSize", pool.getMaxPoolSize(), pool.getTotalSize());
     	
     	Iterator iter = connections.iterator();
     	while (iter.hasNext())
@@ -723,7 +783,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             Connection con = pool.getPooledConnection().getConnection();
             con.setAutoCommit(false);
             try {
-                PreparedStatement stmt = con.prepareStatement("bla");
+                con.prepareStatement("bla");
                 fail("Should not enter here.");
             } catch(SQLException ex) {
                 // everything is fine
@@ -832,7 +892,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             connection1.close();
             assertTrue(pool.getTotalSize() == 0);
             
-            Connection connection2 = pool.getPooledConnection().getConnection();
+            pool.getPooledConnection().getConnection();
             assertTrue(pool.getTotalSize() == 1);
         } finally {
             pool.shutdown();
@@ -849,7 +909,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
                 FirebirdPreparedStatement ps = (FirebirdPreparedStatement) 
                     connection.prepareStatement(sql);
                 
-                ResultSet rs = ps.executeQuery();
+                ps.executeQuery();
 
                 assertTrue("Statement should have open result set.", 
                     ps.hasOpenResultSet());
