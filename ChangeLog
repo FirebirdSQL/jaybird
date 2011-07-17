@@ -1,3 +1,38 @@
+2011-07-17 11:56  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+
+	Remove some warnings and incorrect thread usage in test
+
+2011-07-16 23:11  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+
+	disabled testLikeFullLength test case, as it fails due to an issue
+	in Firebird.
+
+2011-07-16 17:16  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/impl/GDSServerVersion.java,
+	main/org/firebirdsql/gds/impl/GDSServerVersionException.java,
+	main/org/firebirdsql/gds/impl/jni/isc_db_handle_impl.java,
+	main/org/firebirdsql/gds/impl/wire/isc_db_handle_impl.java,
+	test/org/firebirdsql/gds/TestGDSServerVersion.java:
+
+	JDBC-152 : DatabaseMetaData getDatabaseProductName() and
+	getDatabaseProductVersion() return illogical / incorrect
+	information Also fixes JDBC-115
+
+2011-07-16 17:15  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBSQLException.java:
+
+	Missed two cases were the isc errorcode was not set to vendorcode.
+	Additional fix for JDBC-139
+
 2011-07-16 12:23  mrotteveel
 
 	* client-java/src/: main/org/firebirdsql/jdbc/FBSQLException.java,
