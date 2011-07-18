@@ -1,3 +1,20 @@
+2011-07-17 18:19  mrotteveel
+
+	* client-java/src/: pool/org/firebirdsql/pool/BlockingStack.java,
+	test/org/firebirdsql/common/ThreadInterrupter.java,
+	test/org/firebirdsql/pool/TestBlockingStack.java,
+	test/org/firebirdsql/pool/TestDriverConnectionPoolDataSource.java,
+	test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java:
+
+	Fix for JDBC-93 (and maybe others): incorrect synchronization and
+	incorrect lock condition waiting caused incorrect stack semantics
+	in BlockingStack, occasionally emptying the entire stack instead of
+	returning the first available connection and/or returning null
+	instead of the expected object.
+
+	Added additional tests and removed unnecessary code from
+	BlockingStack.
+
 2011-07-17 11:56  mrotteveel
 
 	*
