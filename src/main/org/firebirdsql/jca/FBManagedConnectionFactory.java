@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -35,8 +37,6 @@ import javax.transaction.xa.*;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.jdbc.*;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * FBManagedConnectionFactory implements the jca ManagedConnectionFactory
@@ -55,10 +55,9 @@ import org.firebirdsql.logging.LoggerFactory;
 
 public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         Serializable, FirebirdConnectionProperties {
-
-    private static final Logger log = LoggerFactory.getLogger(FBManagedConnectionFactory.class, false);
-
     
+    private static final long serialVersionUID = 7500832904323015501L;
+
     /**
      * The <code>mcfInstances</code> weak hash map is used in deserialization
      * to find the correct instance of a mcf after deserializing.
@@ -147,7 +146,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * @deprecated use {@link #getDefaultTransactionIsolation()}
      */
     public Integer getTransactionIsolation() {
-        return new Integer(getDefaultTransactionIsolation());
+        return Integer.valueOf(getDefaultTransactionIsolation());
     }
     
     /**

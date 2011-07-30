@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *  
+ * Firebird Open Source J2EE connector - JDBC driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,7 +20,6 @@
  */
 
 package org.firebirdsql.jdbc;
-
 
 import java.io.PrintWriter;
 import java.io.Serializable;
@@ -43,6 +44,8 @@ import org.firebirdsql.jca.FBManagedConnectionFactory;
  * @version 1.0
  */
 public class FBDataSource implements DataSource, Serializable, Referenceable {
+
+    private static final long serialVersionUID = 1178461472062969634L;
 
     private ConnectionManager cm;
 
