@@ -1,3 +1,22 @@
+2011-07-30 21:12  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/:
+	jca/FBManagedConnectionFactory.java, jdbc/FBDataSource.java:
+
+	Minor cleanup: add serialVersionUID and replace new Integer(..)
+	with Integer.valueOf(..)
+
+2011-07-30 19:11  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	FBConnectionProperties.java, FBTpbMapper.java:
+
+	General cleanup and maintenance: * Make FBConnectionProperties
+	really cloneable * Include FBTbpMapper in equals and hashcode of
+	FBConnectionProperties and ensure better distributed hashcode *
+	Make FBTbpMapper cloneable and implement equals and hashcode * Add
+	serialVersionUID * Replace new Integer(..) with Integer.valueOf(..)
+
 2011-07-17 18:19  mrotteveel
 
 	* client-java/src/: pool/org/firebirdsql/pool/BlockingStack.java,
