@@ -134,7 +134,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
                         .hasNext();) {
                     Object cred = i.next();
                     if (cred instanceof PasswordCredential
-                            && equals(((PasswordCredential) cred)
+                            && mcf.equals(((PasswordCredential) cred)
                                     .getManagedConnectionFactory())) {
                         PasswordCredential pcred = (PasswordCredential) cred;
                         String user = pcred.getUserName();
