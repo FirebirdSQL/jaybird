@@ -72,15 +72,15 @@ public class FBSQLWarning extends SQLWarning {
      * @return error code for this warning.
      */
     public int getErrorCode() {
-        if (original instanceof GDSException)
-            return ((GDSException)original).getIntParam();
+        if (original != null)
+            return original.getIntParam();
         else
             return 0;
     }
     
     public String getSQLState() {
-        if (original instanceof GDSException)
-            return ((GDSException)original).getSQLState();
+        if (original != null)
+            return original.getSQLState();
         else
             return super.getSQLState();
     }
