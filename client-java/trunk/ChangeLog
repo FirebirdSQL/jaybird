@@ -1,3 +1,17 @@
+2011-08-05 15:16  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FBManagedConnection.java:
+
+	Fix incorrect incorrect equality check to run against the right
+	object.
+
+2011-08-05 15:14  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBSQLWarning.java:
+
+	Replace inefficient instanceof check with != null check
+
 2011-07-30 21:12  mrotteveel
 
 	* client-java/src/main/org/firebirdsql/:
