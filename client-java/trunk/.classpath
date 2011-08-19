@@ -4,14 +4,14 @@
 	<classpathentry kind="src" path="src/pool_jdk1_6"/>
 	<classpathentry kind="src" path="src/jdbc_40"/>
 	<classpathentry kind="src" path="src/jca_jdk1_6"/>
-	<classpathentry kind="src" path="src/test_30"/>
 	<classpathentry kind="src" path="src/wire_jdk1_4"/>
 	<classpathentry kind="src" path="src/messages"/>
 	<classpathentry kind="src" path="src/resources"/>
-	<classpathentry kind="src" path="other"/>
 	<classpathentry kind="src" path="src/main"/>
 	<classpathentry kind="src" path="src/pool"/>
 	<classpathentry kind="src" path="src/test"/>
+	<classpathentry kind="src" path="src/test_30"/>
+	<classpathentry kind="src" path="src/test_40"/>
 	<classpathentry kind="src" path="src/openoffice"/>
 	<classpathentry kind="lib" path="src/lib/fscontext.jar"/>
 	<classpathentry kind="lib" path="src/lib/jaas.jar"/>
@@ -22,5 +22,12 @@
 	<classpathentry kind="lib" path="src/lib/log4j-core.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Hibernate 3.2"/>
 	<classpathentry kind="lib" path="lib/junit.jar"/>
+	<classpathentry kind="lib" path="lib/test/jmock-2.5.1.jar"/>
+	<classpathentry kind="lib" path="lib/test/jmock-junit3-2.5.1.jar"/>
+	<classpathentry kind="lib" path="lib/test/hamcrest-core-1.1.jar"/>
+	<classpathentry kind="lib" path="lib/test/hamcrest-library-1.1.jar"/>
+	<classpathentry kind="lib" path="lib/test/cglib-nodep-2.1_3.jar"/>
+	<classpathentry kind="lib" path="lib/test/jmock-legacy-2.5.1.jar"/>
+	<classpathentry kind="lib" path="lib/test/objenesis-1.0.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
