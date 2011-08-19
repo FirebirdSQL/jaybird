@@ -42,13 +42,16 @@ public class FBSQLException extends SQLException {
     public static final String SQL_STATE_NO_RESULT_SET = "07005";
     public static final String SQL_STATE_INVALID_CONVERSION = "07006";
     
+    public static final String SQL_STATE_INVALID_STATEMENT_ID = "30000";
+    
     public static final String SQL_STATE_CONNECTION_CLOSED = "08003";
     public static final String SQL_STATE_CONNECTION_FAILURE = "08006";
     public static final String SQL_STATE_CONNECTION_FAILURE_IN_TX = "08007";
     public static final String SQL_STATE_COMM_LINK_FAILURE = "08S01";
     
     public FBSQLException(Exception ex) {
-        super("Exception. " + ex.getMessage(), SQL_STATE_GENERAL_ERROR, ex);
+        super("Exception. " + ex.getMessage(), SQL_STATE_GENERAL_ERROR);
+        initCause(ex);
     }
     
     public FBSQLException(GDSException ex) {
