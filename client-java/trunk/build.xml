@@ -5,13 +5,13 @@
 <!-- ======================================================================= -->
 
 <!DOCTYPE project [
-  <!ENTITY init     SYSTEM "file:./build/init.xml">
-  <!ENTITY util     SYSTEM "file:./build/util.xml">
-  <!ENTITY compile  SYSTEM "file:./build/compile.xml">
-  <!ENTITY archive  SYSTEM "file:./build/archive.xml">
-  <!ENTITY deploy   SYSTEM "file:./build/deploy.xml">
-  <!ENTITY test     SYSTEM "file:./build/test.xml">
-  <!ENTITY dist     SYSTEM "file:./build/dist.xml">
+  <!ENTITY init     SYSTEM "./build/init.xml">
+  <!ENTITY util     SYSTEM "./build/util.xml">
+  <!ENTITY compile  SYSTEM "./build/compile.xml">
+  <!ENTITY archive  SYSTEM "./build/archive.xml">
+  <!ENTITY deploy   SYSTEM "./build/deploy.xml">
+  <!ENTITY test     SYSTEM "./build/test.xml">
+  <!ENTITY dist     SYSTEM "./build/dist.xml">
 ]>
        
 <project name="FirebirdSQL" default="tests-report-html-pure-java" basedir=".">

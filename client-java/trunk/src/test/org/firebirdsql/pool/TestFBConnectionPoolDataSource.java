@@ -534,7 +534,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     
     /**
      * Test if a connection is successfully obtained if the thread initially was blocked on
-     * the the pool.
+     * the pool.
      * <p>
      * Background: The original implementation of BlockingStack would return null if initially
      * blocked.
@@ -582,7 +582,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
 	    	assertEquals("wait1 thread should have gotten a result", 1, resultHolder.size());
 	    	assertNotNull("Expected a connection", resultHolder.get(0));
 	    	Connection result = (Connection)resultHolder.get(0);
-	    	assertTrue("Expected a valid connection", result.isValid(1));
+	    	assertFalse("Expected an open connection", result.isClosed());
 	    	result.close();
 	    	interrupter.cancel();
     	} finally {
