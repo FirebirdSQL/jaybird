@@ -156,7 +156,7 @@
     </javac>
   </target>
 
-  <target name="set-jdbc-20-test" unless="jdbc.30">
+  <target name="set-jdbc-20-test" if="jdbc.20">
     <path id="source.test.additional">
     </path>
   </target>
@@ -166,10 +166,17 @@
       <pathelement path="${source.test.30}"/>
     </path>
   </target>
+  
+  <target name="set-jdbc-40-test" if="jdbc.40">
+    <path id="source.test.additional">
+      <pathelement path="${source.test.30}"/>
+      <pathelement path="${source.test.40}"/>
+    </path>
+  </target>
 
-  <target name="compile-tests" depends="compile-pool,set-jdbc-20-test,set-jdbc-30-test">
+  <target name="compile-tests" depends="compile-pool,set-jdbc-20-test,set-jdbc-30-test,set-jdbc-40-test">
     <mkdir dir="${build.test}"/>
-    <javac srcdir="${source.test}"
+    <javac 
            destdir="${build.test}"
            target="${ant.java.version}"
            debug="on"

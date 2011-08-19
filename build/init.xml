@@ -1,3 +1,4 @@
+
   <target name="init">
     <!-- Setup the build timestamp & build identifer properties -->
     <tstamp>
@@ -74,6 +75,7 @@
 
     <!--where everything goes -->
     <property name="lib.dir" value="${basedir}/lib"/>
+    <property name="lib_test.dir" value="${lib.dir}/test"/>
 
     <!--you will presumably need to change this if you want to use it.-->
     <!--
@@ -112,6 +114,7 @@
     <property name="source.stylesheets" value="${module.source}/stylesheets"/>
     <property name="source.test" value="${module.source}/test"/>
     <property name="source.test.30" value="${module.source}/test_30"/>
+    <property name="source.test.40" value="${module.source}/test_40"/>
     <property name="source.pool" value="${module.source}/pool"/>
     <property name="source.compatibility" value="${module.source}/compatibility"/>
 
@@ -208,6 +211,7 @@
       <pathelement location="${lib.dir}/junit.jar"/>
       <pathelement location="${module.thirdparty}/fscontext.jar"/>
       <pathelement location="${module.thirdparty}/providerutil.jar"/>
+      <fileset dir="${lib_test.dir}" includes="*.jar"/>
     </path>
 
     <path id="javac.examples.classpath">

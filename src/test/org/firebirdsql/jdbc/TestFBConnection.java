@@ -413,17 +413,4 @@ public class TestFBConnection extends FBTestBase {
             connection.close();
         }
     }
-    
-    public void testClientInfo() throws Exception {
-        AbstractConnection connection = (AbstractConnection)getConnectionViaDriverManager();
-        try {
-            
-            connection.setClientInfo("TestProperty", "testValue");
-            String checkValue = connection.getClientInfo("TestProperty");
-            assertEquals("testValue", checkValue);
-            
-        } finally {
-            connection.close();
-        }
-    }
 }
