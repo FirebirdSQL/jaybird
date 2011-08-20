@@ -216,6 +216,15 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
             throw new FBSQLException("The result set is closed");
         
+        closeFields();
+    }
+    
+    /**
+     * Close the fields if they were open (applies mainly to the stream fields).
+     * 
+     * @throws SQLException if something wrong happened.
+     */
+    protected void closeFields() throws SQLException {
         wasNullValid = false;
 
         // close current fields, so that resources are freed.
