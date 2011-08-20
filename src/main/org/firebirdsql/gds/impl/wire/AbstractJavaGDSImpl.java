@@ -279,7 +279,94 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	static final int op_cancel = 91;
 
 	static final int MAX_BUFFER_SIZE = 1024;
+	
+    final static byte[] sql_prepare_info2 = new byte[] {
+            ISCConstants.isc_info_sql_stmt_type,
+            ISCConstants.isc_info_sql_select,
+            ISCConstants.isc_info_sql_describe_vars,
+            ISCConstants.isc_info_sql_sqlda_seq,
+            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
+            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
+            ISCConstants.isc_info_sql_field,
+            ISCConstants.isc_info_sql_relation,
+            ISCConstants.isc_info_sql_relation_alias,
+            ISCConstants.isc_info_sql_owner, ISCConstants.isc_info_sql_alias,
+            ISCConstants.isc_info_sql_describe_end};
 
+    final static byte[] sql_prepare_info15 = new byte[] {
+            ISCConstants.isc_info_sql_stmt_type,
+            ISCConstants.isc_info_sql_select,
+            ISCConstants.isc_info_sql_describe_vars,
+            ISCConstants.isc_info_sql_sqlda_seq,
+            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
+            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
+            ISCConstants.isc_info_sql_field,
+            ISCConstants.isc_info_sql_relation,
+            ISCConstants.isc_info_sql_owner, ISCConstants.isc_info_sql_alias,
+            ISCConstants.isc_info_sql_describe_end};
+
+    final static byte[] describe_select_info2 = new byte[] {
+            ISCConstants.isc_info_sql_stmt_type,
+            ISCConstants.isc_info_sql_select,
+            ISCConstants.isc_info_sql_describe_vars,
+            ISCConstants.isc_info_sql_sqlda_seq,
+            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
+            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
+            ISCConstants.isc_info_sql_field,
+            ISCConstants.isc_info_sql_relation,
+            ISCConstants.isc_info_sql_relation_alias,
+            ISCConstants.isc_info_sql_owner, ISCConstants.isc_info_sql_alias,
+            ISCConstants.isc_info_sql_describe_end};
+
+    /**
+     * Info buffer for Firebird 1.5 and below - it does not support the relation
+     * alias info item.
+     */
+    final static byte[] describe_select_info15 = new byte[] {
+            ISCConstants.isc_info_sql_stmt_type,
+            ISCConstants.isc_info_sql_select,
+            ISCConstants.isc_info_sql_describe_vars,
+            ISCConstants.isc_info_sql_sqlda_seq,
+            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
+            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
+            ISCConstants.isc_info_sql_field,
+            ISCConstants.isc_info_sql_relation,
+            ISCConstants.isc_info_sql_owner, ISCConstants.isc_info_sql_alias,
+            ISCConstants.isc_info_sql_describe_end};
+    
+    final static byte[] describe_bind_info2 = new byte[] {
+            ISCConstants.isc_info_sql_stmt_type,
+            ISCConstants.isc_info_sql_bind,
+            ISCConstants.isc_info_sql_describe_vars,
+            ISCConstants.isc_info_sql_sqlda_seq,
+            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
+            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
+            ISCConstants.isc_info_sql_field,
+            ISCConstants.isc_info_sql_relation,
+            ISCConstants.isc_info_sql_relation_alias,
+            ISCConstants.isc_info_sql_owner, ISCConstants.isc_info_sql_alias,
+            ISCConstants.isc_info_sql_describe_end};
+
+    /**
+     * Info buffer for Firebird 1.5 and below - it does not support the relation
+     * alias info item.
+     */
+    final static byte[] describe_bind_info15 = new byte[] {
+            ISCConstants.isc_info_sql_stmt_type,
+            ISCConstants.isc_info_sql_bind,
+            ISCConstants.isc_info_sql_describe_vars,
+            ISCConstants.isc_info_sql_sqlda_seq,
+            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
+            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
+            ISCConstants.isc_info_sql_field,
+            ISCConstants.isc_info_sql_relation,
+            ISCConstants.isc_info_sql_owner, ISCConstants.isc_info_sql_alias,
+            ISCConstants.isc_info_sql_describe_end};
+    
+	private byte[] describe_bind_info_item;
+	private byte[] describe_select_info_item;
+	private byte[] sql_prepare_info_item;
+	
 	public AbstractJavaGDSImpl() {
 		super(GDSType.getType(PURE_JAVA_TYPE_NAME));
 	}
@@ -442,6 +529,20 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				// read database information
 				parseAttachDatabaseInfo(iscDatabaseInfo(db,
 						describe_database_info, 1024), db);
+				
+				int majorVersion = db.getDatabaseProductMajorVersion();
+				int minorVersion = db.getDatabaseProductMinorVersion();
+				
+				if (majorVersion == 1 && minorVersion <= 5) {
+	                this.describe_bind_info_item = describe_bind_info15;
+	                this.describe_select_info_item = describe_select_info15;
+	                this.sql_prepare_info_item = sql_prepare_info15;
+				} else {
+	                this.describe_bind_info_item = describe_bind_info2;
+	                this.describe_select_info_item = describe_select_info2;
+	                this.sql_prepare_info_item = sql_prepare_info2;
+				}
+				
 			} catch (IOException ex) {
 				throw new GDSException(ISCConstants.isc_net_write_err);
 			}
@@ -1079,50 +1180,24 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		throw new GDSException(ISCConstants.isc_wish_list);
 	}
 
-	final static byte[] describe_select_info = new byte[] {
-            ISCConstants.isc_info_sql_stmt_type,
-			ISCConstants.isc_info_sql_select,
-			ISCConstants.isc_info_sql_describe_vars,
-			ISCConstants.isc_info_sql_sqlda_seq,
-			ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
-			ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
-			ISCConstants.isc_info_sql_field,
-			ISCConstants.isc_info_sql_relation,
-			ISCConstants.isc_info_sql_relation_alias,
-			ISCConstants.isc_info_sql_owner, ISCConstants.isc_info_sql_alias,
-			ISCConstants.isc_info_sql_describe_end };
-
+	
 	public XSQLDA iscDsqlDescribe(IscStmtHandle stmt_handle, int da_version)
 			throws GDSException {
-		byte[] buffer = iscDsqlSqlInfo(stmt_handle,
-		/* describe_select_info.length, */describe_select_info,
-				MAX_BUFFER_SIZE);
+		byte[] buffer = iscDsqlSqlInfo(stmt_handle, 
+		        describe_select_info_item, MAX_BUFFER_SIZE);
 		return parseSqlInfo(stmt_handle, buffer, buffer.length,
-				describe_select_info);
+				describe_select_info_item);
 	}
-
-	final static byte[] describe_bind_info = new byte[] {
-            ISCConstants.isc_info_sql_stmt_type,
-			ISCConstants.isc_info_sql_bind,
-			ISCConstants.isc_info_sql_describe_vars,
-			ISCConstants.isc_info_sql_sqlda_seq,
-			ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
-			ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
-			ISCConstants.isc_info_sql_field,
-			ISCConstants.isc_info_sql_relation, 
-			ISCConstants.isc_info_sql_relation_alias, 
-			ISCConstants.isc_info_sql_owner, ISCConstants.isc_info_sql_alias,
-			ISCConstants.isc_info_sql_describe_end };
 
 	public XSQLDA iscDsqlDescribeBind(IscStmtHandle stmt_handle, int da_version)
 			throws GDSException {
 		isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
 
 		byte[] buffer = iscDsqlSqlInfo(stmt_handle,
-		/* describe_bind_info.length, */describe_bind_info, MAX_BUFFER_SIZE);
+		    describe_bind_info_item, MAX_BUFFER_SIZE);
 
 		stmt.setInSqlda(parseSqlInfo(stmt_handle, buffer, buffer.length,
-				describe_bind_info));
+				describe_bind_info_item));
 		return stmt.getInSqlda();
 	}
 
@@ -1470,19 +1545,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	}
 
-	final static byte[] sql_prepare_info = new byte[] {
-            ISCConstants.isc_info_sql_stmt_type,
-			ISCConstants.isc_info_sql_select,
-			ISCConstants.isc_info_sql_describe_vars,
-			ISCConstants.isc_info_sql_sqlda_seq,
-			ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
-			ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
-			ISCConstants.isc_info_sql_field,
-			ISCConstants.isc_info_sql_relation,
-			ISCConstants.isc_info_sql_relation_alias,
-			ISCConstants.isc_info_sql_owner, ISCConstants.isc_info_sql_alias,
-			ISCConstants.isc_info_sql_describe_end };
-
 	public XSQLDA iscDsqlPrepare(IscTrHandle tr_handle,
 			IscStmtHandle stmt_handle, String statement, int dialect/*
 																	 * , xsqlda
@@ -1533,7 +1595,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				db.out.writeInt(stmt.getRsr_id());
 				db.out.writeInt(dialect);
 				db.out.writeBuffer(statement);
-				db.out.writeBuffer(sql_prepare_info);
+				db.out.writeBuffer(sql_prepare_info_item);
 				db.out.writeInt(MAX_BUFFER_SIZE);
 				db.out.flush();
 
@@ -1541,7 +1603,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 					log.debug("sent");
 				receiveResponse(db, -1);
 				stmt.setOutSqlda(parseSqlInfo(stmt_handle, db.getResp_data(),
-						db.getResp_data_len(), sql_prepare_info));
+						db.getResp_data_len(), sql_prepare_info_item));
 				return stmt.getOutSqlda();
 			} catch (IOException ex) {
 				throw new GDSException(ISCConstants.isc_net_read_err);
@@ -1691,9 +1753,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	
 	public int iscInteger(byte[] buffer, int pos, int length) {
         int value;
-        int shift;
 
-        value = shift = 0;
+        value = 0;
 
         int i = pos;
         while (i < length) {
@@ -1934,7 +1995,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		connect(db, dbai, databaseParameterBuffer);
 	}
 
-	protected void connect(isc_db_handle_impl db, DbAttachInfo dbai,
+	@SuppressWarnings("unused")
+    protected void connect(isc_db_handle_impl db, DbAttachInfo dbai,
 			DatabaseParameterBuffer databaseParameterBuffer)
 			throws GDSException {
 
@@ -3030,6 +3092,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	}
 
 
+    @SuppressWarnings("unused")
     public int iscQueueEvents(IscDbHandle dbHandle, 
             EventHandle eventHandle, EventHandler eventHandler) 
             throws GDSException {

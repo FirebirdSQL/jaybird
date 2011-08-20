@@ -413,4 +413,21 @@ public class TestFBConnection extends FBTestBase {
             connection.close();
         }
     }
+    
+    public void testWireProtocolCompatibility() throws Exception {
+        String sql = "SELECT max(rdb$format) FROM rdb$formats";
+        
+        FirebirdConnection connection = getConnectionViaDriverManager();
+        try {
+            Statement stmt = connection.createStatement();
+            try {
+                ResultSet rs = stmt.executeQuery(sql);
+                assertTrue("Should fetch some rows.", rs.next());
+            } finally {
+                stmt.close();
+            }
+        } finally {
+            connection.close();
+        }
+    }
 }
