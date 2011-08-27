@@ -29,9 +29,14 @@ import javax.naming.spi.ObjectFactory;
 
 /**
  * Implementation of the javax.naming.spi.ObjectFactory interface.
+ * <p>
+ * <b>NOTE</b>: This implementation contains a bug in the handling of PooledConnections.
+ * We strongly advise you to use the replacement implementation {@link org.firebirdsql.ds.FBConnectionPoolDataSource}.
+ * </p>
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steve Jardine </a>
+ * @author <a href="mailto:sjardine@users.sourceforge.net">Steve Jardine</a>
+ * @deprecated Use {@link org.firebirdsql.ds.FBConnectionPoolDataSource}
  */
 public class FBConnectionPoolDataSource extends
         AbstractFBConnectionPoolDataSource implements ObjectFactory {
