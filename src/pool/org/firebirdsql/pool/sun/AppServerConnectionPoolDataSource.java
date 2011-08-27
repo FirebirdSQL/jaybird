@@ -42,8 +42,14 @@ import org.firebirdsql.pool.FBPooledDataSourceFactory;
  * that Sun software engineers had chosen to set data source properties.
  * <p>
  * This class also acts as an object factory for the JNDI de-referencing.
+ * </p>
+ * <p>
+ * <b>NOTE</b>: This implementation contains a bug in the handling of PooledConnections.
+ * We strongly advise you to use the replacement implementation {@link org.firebirdsql.ds.FBConnectionPoolDataSource}.
+ * </p>
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @deprecated Use {@link org.firebirdsql.ds.FBConnectionPoolDataSource}
  */
 public class AppServerConnectionPoolDataSource implements Serializable,
         ConnectionPoolDataSource, Referenceable, ObjectFactory {
