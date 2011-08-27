@@ -23,6 +23,10 @@ package org.firebirdsql.ds;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 
+import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.naming.Referenceable;
+import javax.naming.StringRefAddr;
 import javax.resource.ResourceException;
 import javax.sql.ConnectionPoolDataSource;
 import javax.sql.PooledConnection;
@@ -50,7 +54,7 @@ import org.firebirdsql.jdbc.FBSQLException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public class FBConnectionPoolDataSource implements ConnectionPoolDataSource {
+public class FBConnectionPoolDataSource implements ConnectionPoolDataSource, Referenceable {
     
     // TODO Implement Referenceable
 
@@ -276,5 +280,32 @@ public class FBConnectionPoolDataSource implements ConnectionPoolDataSource {
         } else {
             connectionProperties.setDatabase(null);
         }
+    }
+
+    public Reference getReference() throws NamingException {
+        Reference ref = new Reference(getClass().getName(), DataSourceFactory.class.getName(), null);
+        
+        ref.add(new StringRefAddr("description", getDescription()));
+        ref.add(new StringRefAddr("serverName", getServerName()));
+        if (getPortNumber() != 0) {
+            ref.add(new StringRefAddr("portNumber", Integer.toString(getPortNumber())));
+        }
+        ref.add(new StringRefAddr("databaseName", getDatabaseName()));
+        ref.add(new StringRefAddr("user", getUser()));
+        ref.add(new StringRefAddr("password", getPassword()));
+        ref.add(new StringRefAddr("charSet", getCharSet()));
+        try {
+            if (getLoginTimeout() != 0) {
+                ref.add(new StringRefAddr("loginTimeout", Integer.toString(getLoginTimeout())));
+            }
+        } catch (SQLException ex) {
+            NamingException ne = new NamingException();
+            ne.setRootCause(ex);
+            throw ne;
+        }
+        ref.add(new StringRefAddr("roleName", getRoleName()));
+        ref.add(new StringRefAddr("type", getType()));
+
+        return ref;
     }
 }
