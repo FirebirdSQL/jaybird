@@ -92,8 +92,6 @@ class StatementHandler implements InvocationHandler {
             return Boolean.valueOf(isClosed());
         }
         if (isClosed() && !method.equals(STATEMENT_CLOSE)) {
-            // TODO Double check the SQLstate, might be 26000 instead of
-            // 30000
             throw new FBSQLException("Statement already closed",
                     FBSQLException.SQL_STATE_INVALID_STATEMENT_ID);
         }
