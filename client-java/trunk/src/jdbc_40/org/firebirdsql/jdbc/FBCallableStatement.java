@@ -75,10 +75,6 @@ public class FBCallableStatement extends AbstractCallableStatement {
                 gdsHelper);
     }
 
-    public URL getURL(int colIndex) throws SQLException {
-        return super.getURL(colIndex);
-    }
-
     // java.sql.CallableStatement methods --------------------------------------
 
     public void registerOutParameter(String param1, int param2)
