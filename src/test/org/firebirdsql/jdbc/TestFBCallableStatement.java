@@ -830,4 +830,29 @@ public class TestFBCallableStatement extends FBTestBase {
     	return false;
     }
 
+    
+    public void testJdbc181() throws Exception {
+        Connection con = getConnectionViaDriverManager();
+        try {
+            PreparedStatement ps = con.prepareCall("{call factorial(?, ?)}"); //con.prepareStatement("EXECUTE PROCEDURE factorial(?, ?)");
+            try {
+                ps.setInt(1, 5);
+                ps.setInt(2, 1);
+                ResultSet rs = ps.executeQuery();
+                int counter = 0; 
+                int factorial = 1;
+                while(rs.next()) {
+                    assertEquals(counter, rs.getInt(1));
+                    assertEquals(factorial, rs.getInt(2));
+                    counter++;
+                    if (counter > 0)
+                        factorial *= counter;
+                }
+            } finally {
+                ps.close();
+            }
+        } finally  {
+            con.close();
+        }
+    }
 }
