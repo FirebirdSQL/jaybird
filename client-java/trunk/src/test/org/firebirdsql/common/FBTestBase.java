@@ -243,4 +243,36 @@ public class FBTestBase extends SimpleFBTestBase {
         gdsTypeToUrlPrefixMap.put(GDSType.getType("NIO"),
             "jdbc:firebirdsql:nio:");
     }
+    
+    /**
+     * Helper method to quietly close statements.
+     * 
+     * @param stmt Statement object
+     */
+    protected void closeQuietly(Statement stmt) {
+        if (stmt == null) {
+            return;
+        }
+        try {
+            stmt.close();
+        } catch (SQLException ex) {
+            //ignore
+        }
+    }
+    
+    /**
+     * Helper method to quietly close connections.
+     * 
+     * @param stmt Statement object
+     */
+    protected void closeQuietly(Connection con) {
+        if (con == null) {
+            return;
+        }
+        try {
+            con.close();
+        } catch (SQLException ex) {
+            //ignore
+        }
+    }
 }
