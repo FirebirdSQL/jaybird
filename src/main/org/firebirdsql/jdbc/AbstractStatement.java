@@ -1507,6 +1507,27 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         return currentRs;
     }
     
+    public boolean isPoolable() throws SQLException {
+        checkValidity();
+        return false;
+    }
+
+    public void setPoolable(boolean poolable) throws SQLException {
+        checkValidity();
+        // ignore the hint
+    }
+    
+    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        return iface != null && iface.isAssignableFrom(FBStatement.class);
+    }
+
+    public <T> T unwrap(Class<T> iface) throws SQLException {
+        if (!isWrapperFor(iface))
+            throw new FBDriverNotCapableException();
+        
+        return (T)this;
+    }
+     
     /**
      * This method checks if supplied statement is executing procedure or
      * it is generic statement. This check is needed to handle correctly 
