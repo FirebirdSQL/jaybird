@@ -165,4 +165,11 @@ public class FBProcedureParam implements Cloneable {
         this.value != null ? this.value.equals(that.value) : 
                            that.value == null;
     }
+    
+    public int hashCode() {
+        int hashCode = 887;
+        hashCode = 31 * hashCode + position;
+        hashCode = 31 * hashCode + (value != null ? value.hashCode() : 0);
+        return hashCode;
+    }
 }

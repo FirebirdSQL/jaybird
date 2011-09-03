@@ -187,29 +187,35 @@ class FBXid implements Xid {
      *  and if they have the same global transaction id and transaction
      *  branch qualifier.
      */
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof Xid)) 
-            return false;
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Xid)) return false;
         
-            Xid other = (Xid)obj;
+        Xid other = (Xid)obj;
 
-            boolean result = true;
-            
-            result &= formatId == other.getFormatId();
-            
-            byte[] otherGlobalID = other.getGlobalTransactionId();
-            byte[] otherBranchID = other.getBranchQualifier();
+        boolean result = true;
+        
+        result &= formatId == other.getFormatId();
+        
+        byte[] otherGlobalID = other.getGlobalTransactionId();
+        byte[] otherBranchID = other.getBranchQualifier();
 
-            result &= Arrays.equals(globalId, otherGlobalID);
-            result &= Arrays.equals(branchId, otherBranchID);
-            
-            return result;
+        result &= Arrays.equals(globalId, otherGlobalID);
+        result &= Arrays.equals(branchId, otherBranchID);
+        
+        return result;
+    }
+    
+    public int hashCode() {
+        int hashCode = 1109;
+        hashCode = 43 * hashCode + formatId;
+        hashCode = 43 * hashCode + Arrays.hashCode(globalId);
+        hashCode = 43 * hashCode + Arrays.hashCode(branchId);
+        return hashCode;
     }
 
 
-    public String toString()
-    {
+    public String toString() {
         return toString(this);
     }
 

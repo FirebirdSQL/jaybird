@@ -410,6 +410,14 @@ public class FBProcedureCall implements Cloneable {
         return result;
     }
     
+    public int hashCode() {
+        int hashCode = 547;
+        hashCode = 37 * hashCode + (name != null ? name.hashCode() : 0);
+        hashCode = 37 * hashCode + inputParams.hashCode();
+        hashCode = 37 * hashCode + outputParams.hashCode();
+        return hashCode;
+    }
+    
     /**
      * This class defines procedure parameter that does not have any value
      * and value of which cannot be set. It is created in order to avoid NPE
