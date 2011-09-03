@@ -18,10 +18,15 @@
  */
 package org.firebirdsql.pool;
 
-import java.lang.reflect.*;
+import static org.firebirdsql.ds.ReflectionHelper.findMethod;
+
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * Wrapper for result sets. This class watches the {@link ResultSet#getStatement()}
@@ -31,11 +36,6 @@ import java.sql.*;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class ResultSetHandler implements InvocationHandler {
-
-
-    public static Method findMethod(Class clazz, String name, Class[] params) {
-        return PooledConnectionHandler.findMethod(clazz, name, params);
-    }
     
     private final static Method RESULT_SET_GET_STATEMENT = findMethod(
         ResultSet.class, "getStatement", new Class[0]);

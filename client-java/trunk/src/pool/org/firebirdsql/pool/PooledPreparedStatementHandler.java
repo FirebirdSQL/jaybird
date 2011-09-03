@@ -19,8 +19,17 @@
  
 package org.firebirdsql.pool;
 
-import java.lang.reflect.*;
-import java.sql.*;
+import static org.firebirdsql.ds.ReflectionHelper.findMethod;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import org.firebirdsql.jdbc.FBSQLException;
 
@@ -38,10 +47,6 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
      * {@link IllegalStateException}.
      */
     private static final boolean TOLERANT_CHECK_MODE = false;
-    
-    public static Method findMethod(Class clazz, String name, Class[] params) {
-        return PooledConnectionHandler.findMethod(clazz, name, params);
-    }
     
     private final static Method PREPARED_STATEMENT_CLOSE = findMethod(
         PreparedStatement.class, "close", new Class[0]);

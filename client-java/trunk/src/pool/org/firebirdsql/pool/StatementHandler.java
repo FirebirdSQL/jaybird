@@ -18,13 +18,15 @@
  */
 package org.firebirdsql.pool;
 
+import static org.firebirdsql.ds.ReflectionHelper.findMethod;
+import static org.firebirdsql.ds.ReflectionHelper.getAllInterfaces;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.ResultSet;
 import java.sql.Statement;
-
 
 /**
  * Dynamic proxy handler that together with {@link org.firebirdsql.pool.PooledConnectionHandler}
@@ -36,7 +38,7 @@ import java.sql.Statement;
 public class StatementHandler implements InvocationHandler {
     
     private static final Method STATEMENT_CLOSE = 
-        PooledConnectionHandler.findMethod(Statement.class, "close", new Class[0]);
+        findMethod(Statement.class, "close", new Class[0]);
     
     private PooledConnectionHandler connectionHandler;
     private Statement wrappedObject;
@@ -59,7 +61,7 @@ public class StatementHandler implements InvocationHandler {
         
         proxy = (Statement)Proxy.newProxyInstance(
                 wrappedObject.getClass().getClassLoader(),
-                PooledConnectionHandler.getAllInterfaces(wrappedObject.getClass()),
+                getAllInterfaces(wrappedObject.getClass()),
                 this);
     }
 

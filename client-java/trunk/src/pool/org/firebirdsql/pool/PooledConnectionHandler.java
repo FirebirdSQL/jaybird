@@ -19,12 +19,24 @@
  
 package org.firebirdsql.pool;
 
-import java.lang.reflect.*;
-import java.sql.*;
+import static org.firebirdsql.ds.ReflectionHelper.findMethod;
+import static org.firebirdsql.ds.ReflectionHelper.getAllInterfaces;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.firebirdsql.jdbc.*;
+import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.FirebirdResultSet;
+import org.firebirdsql.jdbc.FirebirdStatement;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -39,45 +51,6 @@ class PooledConnectionHandler implements InvocationHandler {
 	private static final boolean LOG_REENTRANT_ACCESS = PoolDebugConfiguration.DEBUG_REENTRANT;
 	
 	private static Logger logChannel = LoggerFactory.getLogger(PooledConnectionHandler.class, false);
-    
-    /**
-     * Helper function to find specified method in a specified class.
-     * 
-     * @param clazz class in which we look for a specified method.
-     * @param name name of the method.
-     * @param args types of method params.
-     * 
-     * @return instance of {@link Method} corresponding to specified name
-     * and param types.
-     */
-    public static Method findMethod(Class clazz, String name, Class[] args) {
-        try {
-            return clazz.getMethod(name, args);
-        } catch (NoSuchMethodException nmex) {
-            return null;
-        }
-    }
-    
-    /**
-     * Get all implemented interfaces by the class.
-     * 
-     * @param clazz class to inspect.
-     * 
-     * @return array of all implemented interfaces.
-     */
-    public static Class[] getAllInterfaces(Class clazz) {
-    	HashSet result = new HashSet();
-        
-        do {
-            Class[] interfaces = clazz.getInterfaces();
-            for (int i = 0; i < interfaces.length; i++) {
-				result.add(interfaces[i]);
-			}
-            clazz = clazz.getSuperclass();
-        } while(clazz.getSuperclass() != null);
-        
-        return (Class[])result.toArray(new Class[result.size()]);
-    }
     
     private final static Method CONNECTION_PREPARE_STATEMENT = findMethod(
         Connection.class, "prepareStatement", new Class[] {String.class});
