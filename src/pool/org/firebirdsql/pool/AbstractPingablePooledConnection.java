@@ -19,6 +19,8 @@
 
 package org.firebirdsql.pool;
 
+import static org.firebirdsql.ds.ReflectionHelper.getAllInterfaces;
+
 import java.lang.reflect.Proxy;
 import java.sql.*;
 
@@ -553,7 +555,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
             XPreparedStatementModel key, boolean cached, PreparedStatement stmt) {
         
         Class[] implementedInterfaces = 
-            PooledConnectionHandler.getAllInterfaces(stmt.getClass());
+            getAllInterfaces(stmt.getClass());
 
         PooledPreparedStatementHandler handler =
             new PooledPreparedStatementHandler(key, stmt, this, cached);
