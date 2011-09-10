@@ -424,6 +424,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
         if (this.autoCommit == autoCommit) 
             return;
         
+        // TODO: Is this correct for managed (XA) connections?
+        
         InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
         if (autoCommit)
             coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, getLocalTransaction());

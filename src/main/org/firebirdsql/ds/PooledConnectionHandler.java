@@ -51,12 +51,12 @@ import org.firebirdsql.jdbc.FBSQLException;
  */
 class PooledConnectionHandler implements InvocationHandler {
 
-    static final String CLOSED_MESSAGE = "Logical connection already closed";
-    static final String FORCIBLY_CLOSED_MESSAGE = "Logical connection was forcibly closed by the connection pool";
-    private final AbstractPooledConnection owner;
-    private volatile Connection connection;
-    private volatile Connection proxy;
-    private volatile boolean forcedClose;
+    protected static final String CLOSED_MESSAGE = "Logical connection already closed";
+    protected static final String FORCIBLY_CLOSED_MESSAGE = "Logical connection was forcibly closed by the connection pool";
+    protected final AbstractPooledConnection owner;
+    protected volatile Connection connection;
+    protected volatile Connection proxy;
+    protected volatile boolean forcedClose;
 
     private final List openStatements = Collections.synchronizedList(new LinkedList());
 
@@ -151,7 +151,7 @@ class PooledConnectionHandler implements InvocationHandler {
      * @throws SQLException
      *             if underlying connection threw an exception.
      */
-    private void handleClose(boolean notifyOwner) throws SQLException {
+    protected void handleClose(boolean notifyOwner) throws SQLException {
         SQLException sqle = null;
         try {
             closeStatements();
@@ -196,7 +196,7 @@ class PooledConnectionHandler implements InvocationHandler {
      * @throws SQLException
      *             if underlying connection threw this exception.
      */
-    private void handleCommit() throws SQLException {
+    protected void handleCommit() throws SQLException {
         connection.commit();
     }
 
@@ -207,7 +207,7 @@ class PooledConnectionHandler implements InvocationHandler {
      * @throws SQLException
      *             if underlying connection threw this exception.
      */
-    private void handleRollback() throws SQLException {
+    protected void handleRollback() throws SQLException {
         connection.rollback();
     }
 
