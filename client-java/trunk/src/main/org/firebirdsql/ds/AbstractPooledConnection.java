@@ -65,15 +65,28 @@ public abstract class AbstractPooledConnection implements PooledConnection {
             if (handler != null) {
                 handler.close();
             }
-            // TODO Verify if this is correct behavior, or if it needs to be configurable
+            // TODO Verify if this is correct behavior, or if it needs to be configurable;
+            // TODO 2: may need to handle this in separate overridable method in light of FBXAConnection
             connection.setAutoCommit(true);
         } catch (SQLException ex) {
             fireFatalConnectionError(ex);
             throw ex;
         }
-        handler = new PooledConnectionHandler(connection, this);
+        handler = createConnectionHandler();
 
         return handler.getProxy();
+    }
+
+    /**
+     * Creates the PooledConnectionHandler for the connection.
+     * <p>
+     * Subclasses may override this method to return their own subclass of PooledConnectionHandler.
+     * </p>
+     * 
+     * @return PooledConnectionHandler
+     */
+    protected PooledConnectionHandler createConnectionHandler() {
+        return new PooledConnectionHandler(connection, this);
     }
 
     public synchronized void close() throws SQLException {

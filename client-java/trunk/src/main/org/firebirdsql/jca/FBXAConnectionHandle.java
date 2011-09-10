@@ -38,6 +38,7 @@ import org.firebirdsql.jdbc.FirebirdConnection;
  * Simple Connection wrapper returned by FBXAConnection.
  * 
  * @author <a href="mailto:lorban@bitronix.be">Ludovic Orban</a>
+ * @deprecated
  */
 public class FBXAConnectionHandle implements InvocationHandler {
     

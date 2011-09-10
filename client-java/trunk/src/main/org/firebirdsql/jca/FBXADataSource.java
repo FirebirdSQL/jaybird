@@ -44,6 +44,7 @@ import org.firebirdsql.jdbc.FBSQLException;
  *
  * @author <a href="mailto:lorban@bitronix.be">Ludovic Orban</a>
  * @version 1.0
+ * @deprecated Use {@link org.firebirdsql.ds.FBXADataSource}
  */
 public class FBXADataSource implements XADataSource {
     

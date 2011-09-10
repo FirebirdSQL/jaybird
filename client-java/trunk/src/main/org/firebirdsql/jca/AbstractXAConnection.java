@@ -31,6 +31,7 @@ import org.firebirdsql.jdbc.AbstractConnection;
  * Simple non-pooled XAConnection implementation.
  * 
  * @author <a href="mailto:lorban@bitronix.be">Ludovic Orban</a>
+ * @deprecated
  */
 public abstract class AbstractXAConnection implements XAConnection {
     
