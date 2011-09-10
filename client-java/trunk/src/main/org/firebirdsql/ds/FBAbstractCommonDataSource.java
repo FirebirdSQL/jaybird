@@ -23,6 +23,7 @@ package org.firebirdsql.ds;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 
+import javax.naming.BinaryRefAddr;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
@@ -39,6 +40,12 @@ import org.firebirdsql.jdbc.FBConnectionProperties;
  */
 public abstract class FBAbstractCommonDataSource implements CommonDataSource {
 
+    protected static final String REF_DATABASE_NAME = "databaseName";
+    protected static final String REF_PORT_NUMBER = "portNumber";
+    protected static final String REF_SERVER_NAME = "serverName";
+    protected static final String REF_DESCRIPTION = "description";
+    protected static final String REF_PROPERTIES = "properties";
+    
     protected PrintWriter logWriter;
     protected String description;
     protected String serverName;
@@ -204,28 +211,21 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
     public void setLoginTimeout(int seconds) throws SQLException {
         connectionProperties.setSoTimeout(seconds * 1000);
     }
-
-    protected static void updateReference(Reference ref, FBAbstractCommonDataSource instance) throws NamingException {
-        ref.add(new StringRefAddr("description", instance.getDescription()));
-        ref.add(new StringRefAddr("serverName", instance.getServerName()));
-        if (instance.getPortNumber() != 0) {
-            ref.add(new StringRefAddr("portNumber", Integer.toString(instance.getPortNumber())));
-        }
-        ref.add(new StringRefAddr("databaseName", instance.getDatabaseName()));
-        ref.add(new StringRefAddr("user", instance.getUser()));
-        ref.add(new StringRefAddr("password", instance.getPassword()));
-        ref.add(new StringRefAddr("charSet", instance.getCharSet()));
-        try {
-            if (instance.getLoginTimeout() != 0) {
-                ref.add(new StringRefAddr("loginTimeout", Integer.toString(instance.getLoginTimeout())));
-            }
-        } catch (SQLException ex) {
-            NamingException ne = new NamingException();
-            ne.setRootCause(ex);
-            throw ne;
-        }
-        ref.add(new StringRefAddr("roleName", instance.getRoleName()));
-        ref.add(new StringRefAddr("type", instance.getType()));
+    
+    /**
+     * Method that allows setting non-standard property in the form "key=value"
+     * form. This method is needed by some containers to specify properties
+     * in the configuration.
+     * 
+     * @param propertyMapping mapping between property name (key) and its value.
+     * Name and value are separated with "=", ":" or whitespace character. 
+     * Whitespace characters on the beginning of the string and between key and
+     * value are ignored. No escaping is possible: "\n" is backslash-en, not
+     * a new line mark.
+     */
+    public void setNonStandardProperty(String propertyMapping) {
+        checkNotStarted();
+        connectionProperties.setNonStandardProperty(propertyMapping);
     }
 
     /**
@@ -252,6 +252,21 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
         } else {
             connectionProperties.setDatabase(null);
         }
+    }
+    
+    protected void setConnectionProperties(FBConnectionProperties connectionProperties) {
+        this.connectionProperties = connectionProperties;
+    }
+    
+    protected static void updateReference(Reference ref, FBAbstractCommonDataSource instance) throws NamingException {
+        ref.add(new StringRefAddr(REF_DESCRIPTION, instance.getDescription()));
+        ref.add(new StringRefAddr(REF_SERVER_NAME, instance.getServerName()));
+        if (instance.getPortNumber() != 0) {
+            ref.add(new StringRefAddr(REF_PORT_NUMBER, Integer.toString(instance.getPortNumber())));
+        }
+        ref.add(new StringRefAddr(REF_DATABASE_NAME, instance.getDatabaseName()));
+        byte[] data = DataSourceFactory.serialize(instance.connectionProperties);
+        ref.add(new BinaryRefAddr(REF_PROPERTIES, data));
     }
 
 }
