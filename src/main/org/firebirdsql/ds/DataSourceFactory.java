@@ -20,6 +20,11 @@
  */
 package org.firebirdsql.ds;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Hashtable;
 
 import javax.naming.Context;
@@ -27,6 +32,8 @@ import javax.naming.Name;
 import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
+
+import org.firebirdsql.jdbc.FBConnectionProperties;
 
 /**
  * ObjectFactory for the DataSources in org.firebirdsql.ds.
@@ -66,22 +73,19 @@ public class DataSourceFactory implements ObjectFactory {
     }
     
     private void loadAbstractCommonDataSource(FBAbstractCommonDataSource ds, Reference ref) throws Exception {
-        ds.setDescription(getRefAddr(ref, "description"));
-        ds.setServerName(getRefAddr(ref, "serverName"));
-        String portNumber = getRefAddr(ref, "portNumber");
+        RefAddr propertyContent = ref.get(FBAbstractCommonDataSource.REF_PROPERTIES);
+        if (propertyContent != null) {
+            byte[] data = (byte[]) propertyContent.getContent();
+            FBConnectionProperties props = (FBConnectionProperties) deserialize(data);
+            ds.setConnectionProperties(props);
+        }
+        ds.setDescription(getRefAddr(ref, FBAbstractCommonDataSource.REF_DESCRIPTION));
+        ds.setServerName(getRefAddr(ref, FBAbstractCommonDataSource.REF_SERVER_NAME));
+        String portNumber = getRefAddr(ref, FBAbstractCommonDataSource.REF_PORT_NUMBER);
         if (portNumber != null) {
             ds.setPortNumber(Integer.parseInt(portNumber));
         }
-        ds.setDatabaseName(getRefAddr(ref, "databaseName"));
-        ds.setUser(getRefAddr(ref, "user"));
-        ds.setPassword(getRefAddr(ref, "password"));
-        ds.setCharSet(getRefAddr(ref, "charSet"));
-        String loginTimeout = getRefAddr(ref, "loginTimeout");
-        if (loginTimeout != null) {
-            ds.setLoginTimeout(Integer.parseInt(loginTimeout));
-        }
-        ds.setRoleName(getRefAddr(ref, "roleName"));
-        ds.setType(getRefAddr(ref, "type"));
+        ds.setDatabaseName(getRefAddr(ref, FBAbstractCommonDataSource.REF_DATABASE_NAME));
     }
     
     /**
@@ -97,6 +101,33 @@ public class DataSourceFactory implements ObjectFactory {
             return null;
         } else {
             return addr.getContent().toString();
+        }
+    }
+    
+    protected static byte[] serialize(Object obj) {
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        
+        try {
+            ObjectOutputStream out = new ObjectOutputStream(bout);
+            out.writeObject(obj);
+            out.flush();
+        } catch(IOException ex) {
+            return null;
+        }
+        
+        return bout.toByteArray();
+    }
+
+    protected static Object deserialize(byte[] data) {
+        ByteArrayInputStream bin = new ByteArrayInputStream(data);
+        
+        try {
+            ObjectInputStream in = new ObjectInputStream(bin);
+            return in.readObject();
+        } catch(IOException ex) {
+            return null;
+        } catch(ClassNotFoundException ex) {
+            return null;
         }
     }
 
