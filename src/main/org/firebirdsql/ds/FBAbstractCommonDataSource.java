@@ -24,7 +24,6 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 
 import javax.naming.BinaryRefAddr;
-import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.sql.CommonDataSource;
@@ -46,19 +45,19 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
     protected static final String REF_DESCRIPTION = "description";
     protected static final String REF_PROPERTIES = "properties";
     
-    protected PrintWriter logWriter;
-    protected String description;
-    protected String serverName;
-    protected int portNumber;
-    protected String databaseName;
+    private PrintWriter logWriter;
+    private String description;
+    private String serverName;
+    private int portNumber;
+    private String databaseName;
     protected final Object lock = new Object();
-    protected FBConnectionProperties connectionProperties = new FBConnectionProperties();
+    private FBConnectionProperties connectionProperties = new FBConnectionProperties();
 
     /**
      * Method to check if this DataSource has not yet started.
      * <p>
      * Implementations should throw IllegalStateException when the DataSource is
-     * already in use and modifying properties would be ignored.
+     * already in use and modifying properties is not allowed.
      * </p>
      * 
      * @throws IllegalStateException
@@ -74,13 +73,13 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
         this.description = description;
     }
 
-    public String getServerName() {
+    public final String getServerName() {
         synchronized (lock) {
             return serverName;
         }
     }
 
-    public void setServerName(String serverName) {
+    public final void setServerName(String serverName) {
         synchronized (lock) {
             checkNotStarted();
             this.serverName = serverName;
@@ -88,13 +87,13 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
         }
     }
 
-    public int getPortNumber() {
+    public final int getPortNumber() {
         synchronized (lock) {
             return portNumber;
         }
     }
 
-    public void setPortNumber(int portNumber) {
+    public final void setPortNumber(int portNumber) {
         synchronized (lock) {
             checkNotStarted();
             this.portNumber = portNumber;
@@ -102,7 +101,7 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
         }
     }
 
-    public String getDatabaseName() {
+    public final String getDatabaseName() {
         synchronized (lock) {
             return databaseName;
         }
@@ -118,7 +117,7 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
      * @param databaseName
      *            Databasename (filepath or alias)
      */
-    public void setDatabaseName(String databaseName) {
+    public final void setDatabaseName(String databaseName) {
         synchronized (lock) {
             checkNotStarted();
             this.databaseName = databaseName;
@@ -126,13 +125,13 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
         }
     }
 
-    public String getType() {
+    public final String getType() {
         synchronized (lock) {
             return connectionProperties.getType();
         }
     }
 
-    public void setType(String type) {
+    public final void setType(String type) {
         synchronized (lock) {
             checkNotStarted();
             connectionProperties.setType(type);
@@ -163,8 +162,10 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
         connectionProperties.setPassword(password);
     }
 
-    public String getCharSet() {
-        return connectionProperties.getCharSet();
+    public final String getCharSet() {
+        synchronized (lock) {
+            return connectionProperties.getCharSet();
+        }
     }
 
     /**
@@ -173,15 +174,17 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
      *            <code>encoding</code> property, but accepts Java names instead
      *            of Firebird ones.
      */
-    public void setCharSet(String charSet) {
+    public final void setCharSet(String charSet) {
         synchronized (lock) {
             checkNotStarted();
             connectionProperties.setCharSet(charSet);
         }
     }
 
-    public String getEncoding() {
-        return connectionProperties.getEncoding();
+    public final String getEncoding() {
+        synchronized (lock) {
+            return connectionProperties.getEncoding();
+        }
     }
 
     /**
@@ -189,7 +192,7 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
      *            Firebird name of the character encoding for the connection.
      *            See Firebird documentation for more information.
      */
-    public void setEncoding(String encoding) {
+    public final void setEncoding(String encoding) {
         synchronized (lock) {
             checkNotStarted();
             connectionProperties.setEncoding(encoding);
@@ -222,19 +225,44 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
      * Whitespace characters on the beginning of the string and between key and
      * value are ignored. No escaping is possible: "\n" is backslash-en, not
      * a new line mark.
+     * @see #setNonStandardProperty(String, String)
      */
-    public void setNonStandardProperty(String propertyMapping) {
+    public final void setNonStandardProperty(String propertyMapping) {
         checkNotStarted();
         connectionProperties.setNonStandardProperty(propertyMapping);
+    }
+    
+    /**
+     * Method to set properties which are not exposed through JavaBeans-style setters.
+     * 
+     * @param key Name of the property (see Jaybird releasenotes)
+     * @param value Value of the property
+     * @see #setNonStandardProperty(String)
+     */
+    public final void setNonStandardProperty(String key, String value) {
+        checkNotStarted();
+        connectionProperties.setNonStandardProperty(key, value);
+    }
+    
+    /**
+     * Method to get the value of properties which are not exposed through JavaBeans-style setters.
+     * 
+     * @param key Name of the property (see Jaybird releasenotes)
+     * @return Value of the property
+     * @see #setNonStandardProperty(String)
+     * @see #setNonStandardProperty(String, String)
+     */
+    public final String getNonStandardProperty(String key) {
+        return connectionProperties.getNonStandardProperty(key);
     }
 
     /**
      * Sets the database property of connectionProperties.
      */
-    protected void setDatabase() {
+    protected final void setDatabase() {
         // TODO: Not 100% sure if this works for all GDSTypes, may need to defer
         // to getDatabasePath of the relevant GDSFactoryPlugin
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if (serverName != null && serverName.length() > 0) {
             sb.append("//").append(serverName);
             if (portNumber > 0) {
@@ -254,11 +282,21 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
         }
     }
     
-    protected void setConnectionProperties(FBConnectionProperties connectionProperties) {
+    protected final void setConnectionProperties(FBConnectionProperties connectionProperties) {
         this.connectionProperties = connectionProperties;
     }
     
-    protected static void updateReference(Reference ref, FBAbstractCommonDataSource instance) throws NamingException {
+    protected final FBConnectionProperties getConnectionProperties() {
+        return connectionProperties;
+    }
+    
+    /**
+     * Updates the supplied reference with RefAddr properties relevant to this class.
+     * 
+     * @param ref Reference to update
+     * @param instance Instance of this class to obtain values
+     */
+    protected static void updateReference(Reference ref, FBAbstractCommonDataSource instance) {
         ref.add(new StringRefAddr(REF_DESCRIPTION, instance.getDescription()));
         ref.add(new StringRefAddr(REF_SERVER_NAME, instance.getServerName()));
         if (instance.getPortNumber() != 0) {

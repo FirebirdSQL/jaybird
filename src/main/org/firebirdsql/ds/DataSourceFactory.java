@@ -99,9 +99,9 @@ public class DataSourceFactory implements ObjectFactory {
         RefAddr addr = ref.get(type);
         if (addr == null) {
             return null;
-        } else {
-            return addr.getContent().toString();
-        }
+        } 
+        Object content = addr.getContent();
+        return content != null ? content.toString() : null;
     }
     
     protected static byte[] serialize(Object obj) {

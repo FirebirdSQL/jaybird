@@ -81,10 +81,10 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
                     gdsType = GDSFactory.getDefaultGDSType();
                 }
                 FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(gdsType,
-                        connectionProperties);
+                        getConnectionProperties());
                 mcf.setDefaultConnectionManager(new XAConnectionManager());
                 internalDs = (FBDataSource) mcf.createConnectionFactory();
-                internalDs.setLogWriter(logWriter);
+                internalDs.setLogWriter(getLogWriter());
             } catch (ResourceException e) {
                 throw new FBSQLException(e);
             }
