@@ -57,8 +57,7 @@ public class FBConnectionPoolDataSource extends FBAbstractCommonDataSource imple
     private volatile transient FBDataSource internalDs;
 
     public PooledConnection getPooledConnection() throws SQLException {
-        return getPooledConnection(connectionProperties.getUserName(),
-                connectionProperties.getPassword());
+        return getPooledConnection(getUser(), getPassword());
     }
 
     public PooledConnection getPooledConnection(String user, String password) throws SQLException {
@@ -86,9 +85,9 @@ public class FBConnectionPoolDataSource extends FBAbstractCommonDataSource imple
                     gdsType = GDSFactory.getDefaultGDSType();
                 }
                 FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(
-                        gdsType, connectionProperties);
+                        gdsType, getConnectionProperties());
                 internalDs = (FBDataSource) mcf.createConnectionFactory();
-                internalDs.setLogWriter(logWriter);
+                internalDs.setLogWriter(getLogWriter());
             } catch (ResourceException e) {
                 throw new FBSQLException(e);
             }
