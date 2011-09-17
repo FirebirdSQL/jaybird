@@ -148,6 +148,7 @@ public class TestDataSourceFactory extends TestCase {
      * <li>If the reference returned has the right classname</li>
      * <li>If the object returned by the factory is a distinct new instance</li>
      * <li>If all the properties set on the original are also set on the new instance</li>
+     * <li>If an unset property is handled correctly</li>
      * </ol>
      * </p>
      * @throws Exception
@@ -164,6 +165,7 @@ public class TestDataSourceFactory extends TestCase {
         assertEquals("127", newDS.getNonStandardProperty("buffersNumber"));
         assertEquals(Integer.toString(Connection.TRANSACTION_SERIALIZABLE), newDS.getNonStandardProperty("defaultTransactionIsolation"));
         assertEquals("madeUpValue", newDS.getNonStandardProperty("madeUpProperty"));
+        assertNull(newDS.getDescription());
     }
     
     /**
@@ -175,6 +177,7 @@ public class TestDataSourceFactory extends TestCase {
      * <li>If the reference returned has the right classname</li>
      * <li>If the object returned by the factory is a distinct new instance</li>
      * <li>If all the properties set on the original are also set on the new instance</li>
+     * <li>If an unset property is handled correctly</li> 
      * </ol>
      * </p>
      * @throws Exception
@@ -191,6 +194,7 @@ public class TestDataSourceFactory extends TestCase {
         assertEquals("127", newDS.getNonStandardProperty("buffersNumber"));
         assertEquals(Integer.toString(Connection.TRANSACTION_SERIALIZABLE), newDS.getNonStandardProperty("defaultTransactionIsolation"));
         assertEquals("madeUpValue", newDS.getNonStandardProperty("madeUpProperty"));
+        assertNull(newDS.getDescription());
     }
 
 }
