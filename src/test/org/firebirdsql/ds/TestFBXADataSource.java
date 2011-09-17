@@ -286,5 +286,23 @@ public class TestFBXADataSource extends FBTestBase {
             con.close();
         }
     }
+    
+    /**
+     * Test if a property stored with {@link FBXADataSource#setNonStandardProperty(String)} is retrievable.
+     */
+    public void testSetNonStandardProperty_singleParam() {
+        ds.setNonStandardProperty("someProperty=someValue");
+        
+        assertEquals("someValue", ds.getNonStandardProperty("someProperty"));
+    }
+    
+    /**
+     * Test if a property stored with {@link FBXADataSource#setNonStandardProperty(String, String)} is retrievable.
+     */
+    public void testSetNonStandardProperty_twoParam() {
+        ds.setNonStandardProperty("someProperty", "someValue");
+        
+        assertEquals("someValue", ds.getNonStandardProperty("someProperty"));
+    }
 
 }
