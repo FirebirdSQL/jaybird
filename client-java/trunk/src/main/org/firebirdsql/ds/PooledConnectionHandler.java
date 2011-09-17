@@ -109,14 +109,6 @@ class PooledConnectionHandler implements InvocationHandler {
                 handleClose(true);
                 return null;
             }
-            if (method.equals(CONNECTION_COMMIT)) {
-                handleCommit();
-                return null;
-            }
-            if (method.equals(CONNECTION_ROLLBACK)) {
-                handleRollback();
-                return null;
-            }
 
             if (method.getDeclaringClass().equals(Connection.class)
                     && STATEMENT_CREATION_METHOD_NAMES.contains(method.getName())) {
@@ -139,6 +131,18 @@ class PooledConnectionHandler implements InvocationHandler {
             throw se;
         }
     }
+    
+    /**
+     * Method to decide if calling rollback on the physical connection for cleanup (in handleClose()) is allowed.
+     * <p>
+     * NOTE: This method is not involved in rollback decisions for calls to the proxy.
+     * </p>
+     * 
+     * @return <code>true</code> when calling rollback is allowed
+     */
+    protected boolean isRollbackAllowed() throws SQLException {
+        return !connection.getAutoCommit();
+    }
 
     /**
      * Handle {@link Connection#close()} method. This implementation closes the
@@ -158,7 +162,7 @@ class PooledConnectionHandler implements InvocationHandler {
         } catch (SQLException ex) {
             sqle = ex;
         }
-        if (!connection.getAutoCommit()) {
+        if (isRollbackAllowed()) {
             try {
                 connection.rollback();
             } catch (SQLException ex) {
@@ -187,28 +191,6 @@ class PooledConnectionHandler implements InvocationHandler {
         if (sqle != null) {
             throw sqle;
         }
-    }
-
-    /**
-     * Handle {@link Connection#commit()} method. This implementation calls
-     * commit on the underlying connection.
-     * 
-     * @throws SQLException
-     *             if underlying connection threw this exception.
-     */
-    protected void handleCommit() throws SQLException {
-        connection.commit();
-    }
-
-    /**
-     * Handle {@link Connection#rollback()} method. This implementation calls
-     * rollback on the underlying connection.
-     * 
-     * @throws SQLException
-     *             if underlying connection threw this exception.
-     */
-    protected void handleRollback() throws SQLException {
-        connection.rollback();
     }
 
     /**
@@ -248,7 +230,7 @@ class PooledConnectionHandler implements InvocationHandler {
         openStatements.remove(stmtHandler);
     }
 
-    private void closeStatements() throws SQLException {
+    protected void closeStatements() throws SQLException {
         SQLException sqle = null;
         synchronized (openStatements) {
             Iterator iter = openStatements.iterator();
@@ -279,10 +261,6 @@ class PooledConnectionHandler implements InvocationHandler {
     private final static Method CONNECTION_IS_CLOSED = findMethod(Connection.class, "isClosed",
             new Class[0]);
     private final static Method CONNECTION_CLOSE = findMethod(Connection.class, "close",
-            new Class[0]);
-    private final static Method CONNECTION_COMMIT = findMethod(Connection.class, "commit",
-            new Class[0]);
-    private final static Method CONNECTION_ROLLBACK = findMethod(Connection.class, "rollback",
             new Class[0]);
     
     private static final Set STATEMENT_CREATION_METHOD_NAMES;

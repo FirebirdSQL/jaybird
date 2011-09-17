@@ -42,6 +42,8 @@ public class FBSQLException extends SQLException {
     public static final String SQL_STATE_NO_RESULT_SET = "07005";
     public static final String SQL_STATE_INVALID_CONVERSION = "07006";
     
+    public static final String SQL_STATE_INVALID_TX_STATE = "25000";
+    
     public static final String SQL_STATE_INVALID_STATEMENT_ID = "26000";
     
     public static final String SQL_STATE_CONNECTION_CLOSED = "08003";

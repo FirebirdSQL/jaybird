@@ -21,7 +21,6 @@
 package org.firebirdsql.ds;
 
 import java.lang.ref.WeakReference;
-import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.sql.XAConnection;
@@ -39,8 +38,6 @@ import org.firebirdsql.jdbc.FBSQLException;
  */
 public class FBXAConnection extends FBPooledConnection implements XAConnection {
     
-    // TODO Verify if we need to override some of the behavior of the superclass
-    
     private WeakReference mc;
     
     public FBXAConnection(AbstractConnection connection) {
@@ -52,22 +49,18 @@ public class FBXAConnection extends FBPooledConnection implements XAConnection {
         return getManagedConnection().getXAResource();
     }
     
-    public Connection getConnection() throws SQLException {
-        Connection con = super.getConnection();
-        
-        // TODO Verify if this is correct
-        if(!inTransaction()) {
-            con.setAutoCommit(true);
+    protected void resetConnection() throws SQLException {
+        if(!inDistributedTransaction()) {
+            connection.setAutoCommit(true);
         }
-        
-        return con;
     }
     
-    // TODO Verify if we need to handle the close of the connectionhandle different from FBPooledConnection
+    protected PooledConnectionHandler createConnectionHandler() {
+        return new XAConnectionHandler(connection, this);
+    }
     
-    protected boolean inTransaction() throws SQLException {
-        // TODO Current FBManagedConnection.inTransaction() does not check if it is actually participating in a XA transaction, is this sufficient?
-        return getManagedConnection().inTransaction();
+    protected boolean inDistributedTransaction() throws SQLException {
+        return getManagedConnection().inDistributedTransaction();
     }
     
     private FBManagedConnection getManagedConnection() throws SQLException {
