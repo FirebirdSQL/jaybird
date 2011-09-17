@@ -416,15 +416,15 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * auto-commit.
      * @exception SQLException if a database access error occurs
      */
-    public synchronized void setAutoCommit(boolean autoCommit) 
-        throws SQLException 
-    {
+    public synchronized void setAutoCommit(boolean autoCommit) throws SQLException {
         checkValidity();
-
+        
         if (this.autoCommit == autoCommit) 
             return;
         
-        // TODO: Is this correct for managed (XA) connections?
+        if (autoCommit && mc.inDistributedTransaction()) {
+            throw new FBSQLException("Connection enlisted in distributed transaction", FBSQLException.SQL_STATE_INVALID_TX_STATE);
+        }
         
         InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
         if (autoCommit)
@@ -436,11 +436,10 @@ public abstract class AbstractConnection implements FirebirdConnection {
         this.autoCommit = autoCommit;
     }
 
-    public void setManagedEnvironment(boolean managedConnection) throws SQLException {
+    public synchronized void setManagedEnvironment(boolean managedConnection) throws SQLException {
         checkValidity();
         
         InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
-        
         if (managedConnection && mc.inTransaction()) {
             coordinator = new InternalTransactionCoordinator.ManagedTransactionCoordinator(this);
             this.autoCommit = false;
@@ -478,10 +477,15 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see #setAutoCommit
      */
     public synchronized void commit() throws SQLException {
-        if (isClosed())
+        if (isClosed()) {
             throw new FBSQLException(
                 "You cannot commit a closed connection.",
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
+        }
+        
+        if (mc.inDistributedTransaction()) {
+            throw new FBSQLException("Connection enlisted in distributed transaction", FBSQLException.SQL_STATE_INVALID_TX_STATE);
+        }
 
         txCoordinator.commit();
         invalidateTransactionLifetimeObjects();
@@ -498,11 +502,15 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @see #setAutoCommit
      */
     public synchronized void rollback() throws SQLException {
-
-        if (isClosed())
+        if (isClosed()) {
             throw new FBSQLException(
                 "You cannot rollback closed connection.",
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
+        }
+        
+        if (mc.inDistributedTransaction()) {
+            throw new FBSQLException("Connection enlisted in distributed transaction", FBSQLException.SQL_STATE_INVALID_TX_STATE);
+        }
 
         txCoordinator.rollback();
         invalidateTransactionLifetimeObjects();
@@ -639,7 +647,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
      *
      * @exception SQLException if a database access error occurs
      */
-    public synchronized void setCatalog(String catalog) throws SQLException {
+    public void setCatalog(String catalog) throws SQLException {
+        checkValidity();
     }
 
 
@@ -650,6 +659,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public String getCatalog() throws SQLException {
+        checkValidity();
         return null;
     }
 
@@ -1361,10 +1371,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public synchronized FirebirdSavepoint setFirebirdSavepoint() throws SQLException {
         AbstractSavepoint savepoint = FBStatementFactory.createSavepoint(getNextSavepointCounter());
-        
         setSavepoint(savepoint);
-        
-        savepoints.addLast(savepoint);
         
         return savepoint;
     }
@@ -1377,14 +1384,20 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @throws SQLException if something went wrong.
      */
     private void setSavepoint(AbstractSavepoint savepoint) throws SQLException {
-        if (getAutoCommit())
+        if (getAutoCommit()) {
             throw new SQLException("Connection.setSavepoint() method cannot " + 
                     "be used in auto-commit mode.");
+        }
+        
+        if (mc.inDistributedTransaction()) {
+            throw new FBSQLException("Connection enlisted in distributed transaction", FBSQLException.SQL_STATE_INVALID_TX_STATE);
+        }
 
         try {
             txCoordinator.ensureTransaction();
             
             getGDSHelper().executeImmediate("SAVEPOINT " + savepoint.getServerSavepointId());
+            savepoints.addLast(savepoint);
         } catch(GDSException ex) {
             throw new FBSQLException(ex);
         }
@@ -1403,7 +1416,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public synchronized FirebirdSavepoint setFirebirdSavepoint(String name) throws SQLException {
         AbstractSavepoint savepoint = FBStatementFactory.createSavepoint(name);
-        
         setSavepoint(savepoint);
         
         return savepoint;
@@ -1432,6 +1444,10 @@ public abstract class AbstractConnection implements FirebirdConnection {
         if (!(savepoint instanceof AbstractSavepoint))
             throw new SQLException(
                     "Specified savepoint was not obtained from this connection.");
+        
+        if (mc.inDistributedTransaction()) {
+            throw new FBSQLException("Connection enlisted in distributed transaction", FBSQLException.SQL_STATE_INVALID_TX_STATE);
+        }
         
         AbstractSavepoint fbSavepoint = (AbstractSavepoint)savepoint;
         

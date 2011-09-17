@@ -65,9 +65,7 @@ public abstract class AbstractPooledConnection implements PooledConnection {
             if (handler != null) {
                 handler.close();
             }
-            // TODO Verify if this is correct behavior, or if it needs to be configurable;
-            // TODO 2: may need to handle this in separate overridable method in light of FBXAConnection
-            connection.setAutoCommit(true);
+            resetConnection();
         } catch (SQLException ex) {
             fireFatalConnectionError(ex);
             throw ex;
@@ -75,6 +73,10 @@ public abstract class AbstractPooledConnection implements PooledConnection {
         handler = createConnectionHandler();
 
         return handler.getProxy();
+    }
+    
+    protected void resetConnection() throws SQLException {
+        connection.setAutoCommit(true);
     }
 
     /**
