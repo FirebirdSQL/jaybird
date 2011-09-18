@@ -21,13 +21,13 @@ public class TestGrammar extends TestCase {
     public void testGrammar() throws Exception {
         
         JaybirdSqlParser parser = createParser(
-            "insert into someTable(a, \"те\"\"ст\", aaa) " +
+            "insert into someTable(a, \"\u0442\u0435\"\"\u0441\u0442\", aaa) " +
             "values('a', -1.23, a(a,aa))");
         
         CommonTree tree = (CommonTree)parser.statement().getTree();
         
         assertTrue("someTable".equals(parser.getStatementModel().getTableName()));
-        assertTrue(parser.getStatementModel().getColumns().contains("\"те\"\"ст\""));
+        assertTrue(parser.getStatementModel().getColumns().contains("\"\u0442\u0435\"\"\u0441\u0442\""));
         // assertTrue("'a'".equals(parser._values.get(0)));
         
         System.out.println(tree.toStringTree());
