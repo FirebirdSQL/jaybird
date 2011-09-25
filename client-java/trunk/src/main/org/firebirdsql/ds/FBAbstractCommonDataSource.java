@@ -20,13 +20,11 @@
  */
 package org.firebirdsql.ds;
 
-import java.io.PrintWriter;
 import java.sql.SQLException;
 
 import javax.naming.BinaryRefAddr;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
-import javax.sql.CommonDataSource;
 
 import org.firebirdsql.jdbc.FBConnectionProperties;
 
@@ -37,7 +35,7 @@ import org.firebirdsql.jdbc.FBConnectionProperties;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public abstract class FBAbstractCommonDataSource implements CommonDataSource {
+public abstract class FBAbstractCommonDataSource extends RootCommonDataSource {
 
     protected static final String REF_DATABASE_NAME = "databaseName";
     protected static final String REF_PORT_NUMBER = "portNumber";
@@ -45,7 +43,6 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
     protected static final String REF_DESCRIPTION = "description";
     protected static final String REF_PROPERTIES = "properties";
     
-    private PrintWriter logWriter;
     private String description;
     private String serverName;
     private int portNumber;
@@ -197,14 +194,6 @@ public abstract class FBAbstractCommonDataSource implements CommonDataSource {
             checkNotStarted();
             connectionProperties.setEncoding(encoding);
         }
-    }
-
-    public PrintWriter getLogWriter() throws SQLException {
-        return logWriter;
-    }
-
-    public void setLogWriter(PrintWriter out) throws SQLException {
-        logWriter = out;
     }
 
     public int getLoginTimeout() throws SQLException {

@@ -91,13 +91,6 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
         }
     }
 
-    public void setLogWriter(PrintWriter out) throws SQLException {
-        super.setLogWriter(out);
-        if (internalDs != null) {
-            internalDs.setLogWriter(out);
-        }
-    }
-
     protected void checkNotStarted() throws IllegalStateException {
         if (internalDs != null) {
             throw new IllegalStateException(

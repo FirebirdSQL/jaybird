@@ -19,13 +19,13 @@
 
 package org.firebirdsql.pool;
 
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.sql.ConnectionPoolDataSource;
 import javax.sql.DataSource;
 
+import org.firebirdsql.ds.RootCommonDataSource;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 
 /**
@@ -34,11 +34,10 @@ import org.firebirdsql.jdbc.FBDriverNotCapableException;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class SimpleDataSource implements DataSource {
+public class SimpleDataSource extends RootCommonDataSource implements DataSource {
 	
 	private ConnectionPoolDataSource pool;
 	private int timeout;
-	private PrintWriter log;
 	
 	/**
 	 * Create instance of this class.
@@ -75,16 +74,8 @@ public class SimpleDataSource implements DataSource {
 		return pool.getPooledConnection(username, password).getConnection();
     }
 
-    public PrintWriter getLogWriter() throws SQLException {
-		return log;
-    }
-
     public int getLoginTimeout() throws SQLException {
 		return timeout;
-    }
-
-    public void setLogWriter(PrintWriter out) throws SQLException {
-		this.log = out;
     }
 
     public void setLoginTimeout(int seconds) throws SQLException {

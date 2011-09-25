@@ -28,6 +28,7 @@ import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
 import javax.sql.*;
 
+import org.firebirdsql.ds.RootCommonDataSource;
 import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.pool.AbstractFBConnectionPoolDataSource;
 import org.firebirdsql.pool.FBPooledDataSourceFactory;
@@ -44,14 +45,16 @@ import org.firebirdsql.pool.FBPooledDataSourceFactory;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class AppServerXADataSource
+public class AppServerXADataSource extends RootCommonDataSource
 		implements
 			Serializable,
 			XADataSource,
 			Referenceable,
 			ObjectFactory {
 
-	private AbstractFBConnectionPoolDataSource dataSource;
+    private static final long serialVersionUID = 7094811274092461678L;
+    
+    private AbstractFBConnectionPoolDataSource dataSource;
 
 	private AppServerXADataSource(AbstractFBConnectionPoolDataSource dataSource) {
 		this.dataSource = dataSource;

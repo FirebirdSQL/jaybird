@@ -19,6 +19,7 @@
  
 package org.firebirdsql.pool;
 
+import org.firebirdsql.ds.RootCommonDataSource;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.AbstractGDS;
@@ -26,7 +27,6 @@ import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 
-import java.io.PrintWriter;
 import java.io.Serializable;
 import java.sql.Connection;
 import javax.sql.DataSource;
@@ -50,11 +50,12 @@ import javax.naming.NamingException;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBSimpleDataSource implements DataSource, Serializable, Referenceable, FirebirdConnectionProperties {
+public final class FBSimpleDataSource extends RootCommonDataSource implements DataSource, Serializable, Referenceable, FirebirdConnectionProperties {
     
-    transient protected FBManagedConnectionFactory mcf;
-    transient protected FBDataSource ds;
-    transient protected PrintWriter log;
+    private static final long serialVersionUID = 3156578540634970427L;
+    
+    protected FBManagedConnectionFactory mcf;
+    protected transient FBDataSource ds;
     
     protected Reference jndiReference;
     protected String description;
@@ -428,29 +429,6 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
     }
 
     /**
-     * Get log for this datasource.
-     * 
-     * @return log associated with this datasource.
-     *
-     * @throws SQLException if something went wrong.
-     */
-    public PrintWriter getLogWriter() throws SQLException {
-        return log;
-    }
-
-    /**
-     * Set log for this datasource.
-     * 
-     * @param log instance of {@link PrintWriter} that should be associated 
-     * with this datasource.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    public void setLogWriter(PrintWriter log) throws SQLException {
-        this.log = log;
-    }
-
-    /**
      * Get login timeout specified for this datasource.
      * 
      * @return login timeout of this datasource in seconds.
@@ -518,11 +496,14 @@ public class FBSimpleDataSource implements DataSource, Serializable, Referenceab
     
     // JDBC 4.0
     
-    public boolean isWrapperFor(Class iface) throws SQLException {
-    	return false;
+    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        return iface != null && iface.isAssignableFrom(getClass());
     }
-    
-    public Object unwrap(Class iface) throws SQLException {
-    	throw new FBDriverNotCapableException();
+
+    public <T> T unwrap(Class<T> iface) throws SQLException {
+        if (!isWrapperFor(iface))
+            throw new FBDriverNotCapableException();
+        
+        return iface.cast(this);
     }
 }

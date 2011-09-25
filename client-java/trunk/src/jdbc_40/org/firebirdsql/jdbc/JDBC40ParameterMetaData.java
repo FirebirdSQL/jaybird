@@ -23,6 +23,6 @@ class JDBC40ParameterMetaData extends FBParameterMetaData
         if (!isWrapperFor(iface))
             throw new FBDriverNotCapableException();
         
-        return (T)this;
+        return iface.cast(this);
     }
 }

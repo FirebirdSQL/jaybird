@@ -30,6 +30,7 @@ import javax.naming.spi.ObjectFactory;
 import javax.resource.Referenceable;
 import javax.sql.DataSource;
 
+import org.firebirdsql.ds.RootCommonDataSource;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.jdbc.FBConnectionProperties;
@@ -153,9 +154,10 @@ import org.firebirdsql.jdbc.FBDriverNotCapableException;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBWrappingDataSource implements DataSource, 
-    ObjectFactory, Referenceable, Serializable, FirebirdPool 
-{
+public class FBWrappingDataSource extends RootCommonDataSource implements DataSource, 
+    ObjectFactory, Referenceable, Serializable, FirebirdPool {
+
+    private static final long serialVersionUID = -2282667414407311473L;
 
     private AbstractFBConnectionPoolDataSource pool;
     

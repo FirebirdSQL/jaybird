@@ -16,13 +16,9 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jca;
 
-
-import java.io.PrintWriter;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
@@ -31,6 +27,7 @@ import javax.resource.ResourceException;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 
+import org.firebirdsql.ds.RootCommonDataSource;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
@@ -46,17 +43,14 @@ import org.firebirdsql.jdbc.FBSQLException;
  * @version 1.0
  * @deprecated Use {@link org.firebirdsql.ds.FBXADataSource}
  */
-public class FBXADataSource implements XADataSource {
+public class FBXADataSource extends RootCommonDataSource implements XADataSource {
     
-    private Map mcfToDataSourceMap = new HashMap();
-    //private ConnectionManager cm = new FBStandAloneConnectionManager();
     private String user;
     private String password;
     private String database;
 
     public FBXADataSource() {
     }
-
 
     public String getPassword() {
         return password;
@@ -75,16 +69,15 @@ public class FBXADataSource implements XADataSource {
     public String getUser() {
         return user;
     }
+
     public void setUser(String user) {
         this.user = user;
     }
-
 
     private String getUrl() {
         return "jdbc:firebirdsql:" + database;
     }
 
-    
     private static AbstractConnection createConnection(String url, String user, String password) throws ResourceException, SQLException, GDSException {
         FBManagedConnectionFactory mcf = createMcf(url, user, password);
 
@@ -97,7 +90,6 @@ public class FBXADataSource implements XADataSource {
         mc.setConnectionSharing(false);
         return (AbstractConnection) mc.getConnection(null, subjectCri);
     }
-
 
     private static FBManagedConnectionFactory createMcf(String url, String user, String password) throws SQLException, ResourceException, GDSException, FBResourceException {
         GDSType type = GDSFactory.getTypeForProtocol(url);
@@ -136,7 +128,6 @@ public class FBXADataSource implements XADataSource {
         return getXAConnection(user, password);
     }
 
-
     public XAConnection getXAConnection(String user, String password) throws SQLException {
         if (database == null)
             throw new SQLException("database cannot be null");
@@ -153,13 +144,6 @@ public class FBXADataSource implements XADataSource {
         } catch (GDSException ex) {
             throw new FBSQLException(ex);
         }
-    }
-
-
-    public PrintWriter getLogWriter() throws SQLException {
-        return null;
-    }
-    public void setLogWriter(PrintWriter writer) throws SQLException {
     }
 
     public int getLoginTimeout() throws SQLException {

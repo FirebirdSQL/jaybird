@@ -160,12 +160,10 @@ public class TestFBDriver extends FBTestBase {
             Statement stmt = connection.createStatement();
             try {
                 stmt.executeQuery("select * from");
+                fail("Expected exception to be thrown");
             } catch(SQLException ex) {
-                
                 String sqlState = ex.getSQLState();
-                assertTrue("getSQLState() method does not returns String Value",
-                        sqlState instanceof java.lang.String);
-                
+                assertNotNull("getSQLState() method does not return value", sqlState);
             } finally {
                 stmt.close();
             }

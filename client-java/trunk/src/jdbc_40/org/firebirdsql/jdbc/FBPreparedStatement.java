@@ -204,6 +204,6 @@ public class FBPreparedStatement extends AbstractPreparedStatement {
         if (!isWrapperFor(iface))
             throw new FBDriverNotCapableException();
         
-        return (T)this;
+        return iface.cast(this);
     }
 }

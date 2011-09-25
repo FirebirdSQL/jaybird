@@ -29,6 +29,7 @@ import javax.naming.spi.ObjectFactory;
 import javax.sql.ConnectionPoolDataSource;
 import javax.sql.PooledConnection;
 
+import org.firebirdsql.ds.RootCommonDataSource;
 import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.pool.AbstractFBConnectionPoolDataSource;
 import org.firebirdsql.pool.FBPooledDataSourceFactory;
@@ -51,10 +52,12 @@ import org.firebirdsql.pool.FBPooledDataSourceFactory;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @deprecated Use {@link org.firebirdsql.ds.FBConnectionPoolDataSource}
  */
-public class AppServerConnectionPoolDataSource implements Serializable,
+public class AppServerConnectionPoolDataSource extends RootCommonDataSource implements Serializable,
         ConnectionPoolDataSource, Referenceable, ObjectFactory {
 
-	private AbstractFBConnectionPoolDataSource dataSource;
+    private static final long serialVersionUID = 136149417226908998L;
+    
+    private AbstractFBConnectionPoolDataSource dataSource;
 
     private AppServerConnectionPoolDataSource(
             AbstractFBConnectionPoolDataSource dataSource) {

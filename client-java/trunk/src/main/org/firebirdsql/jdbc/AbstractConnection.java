@@ -133,11 +133,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @throws SQLException if this connection has been closed and cannot be 
      * used anymore.
      */
-    private void checkValidity() throws SQLException {
-        if (invalid || isClosed())
+    protected void checkValidity() throws SQLException {
+        if (invalid || isClosed()) {
             throw new FBSQLException(
                 "This connection is closed and cannot be used now.",
                 FBSQLException.SQL_STATE_CONNECTION_CLOSED);
+        }
     }
     
     /**
@@ -1343,7 +1344,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public synchronized void setTypeMap(Map map) throws SQLException {
+    public void setTypeMap(Map map) throws SQLException {
         throw new FBDriverNotCapableException();
     }
     

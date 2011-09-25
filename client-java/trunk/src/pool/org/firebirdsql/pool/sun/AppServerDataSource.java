@@ -29,6 +29,7 @@ import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
 import javax.sql.DataSource;
 
+import org.firebirdsql.ds.RootCommonDataSource;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.pool.FBWrappingDataSource;
 
@@ -44,9 +45,11 @@ import org.firebirdsql.pool.FBWrappingDataSource;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class AppServerDataSource implements DataSource, Referenceable,
+public class AppServerDataSource extends RootCommonDataSource implements DataSource, Referenceable,
         Serializable, ObjectFactory {
 
+    private static final long serialVersionUID = 7129672234735607712L;
+    
     private FBWrappingDataSource dataSource;
 
     private AppServerDataSource(FBWrappingDataSource dataSource) {
