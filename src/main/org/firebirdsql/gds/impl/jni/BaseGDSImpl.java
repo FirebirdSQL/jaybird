@@ -95,11 +95,13 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         if (db_handle == null) { throw new GDSException(
                 ISCConstants.isc_bad_db_handle); }
 
-        DatabaseParameterBuffer cleanDPB = ((DatabaseParameterBufferExtension)databaseParameterBuffer).removeExtensionParams();
-
-        final byte[] dpbBytes = databaseParameterBuffer == null ? null
-                : ((DatabaseParameterBufferImp) cleanDPB)
-                        .getBytesForNativeCode();
+        final byte[] dpbBytes;
+        if (databaseParameterBuffer != null) {
+            DatabaseParameterBuffer cleanDPB = ((DatabaseParameterBufferExtension)databaseParameterBuffer).removeExtensionParams();
+            dpbBytes = ((DatabaseParameterBufferImp) cleanDPB).getBytesForNativeCode();
+        } else {
+            dpbBytes = null;
+        }
 
         synchronized (this) {
             String serverUrl = getServerUrl(file_name);
@@ -225,21 +227,22 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     // isc_create_database
     // ---------------------------------------------------------------------------------------------
     public void iscCreateDatabase(String file_name, IscDbHandle db_handle,
-            DatabaseParameterBuffer databaseParameterBuffer)
+            DatabaseParameterBuffer dpb)
             throws GDSException {
-        if (db_handle == null) { throw new GDSException(
-                ISCConstants.isc_bad_db_handle); }
+        if (db_handle == null) { 
+            throw new GDSException(ISCConstants.isc_bad_db_handle); 
+        }
 
-        final byte[] dpbBytes = databaseParameterBuffer == null ? null
-                : ((DatabaseParameterBufferImp) databaseParameterBuffer)
-                        .getBytesForNativeCode();
+        final byte[] dpbBytes = (dpb == null ? null
+                : ((DatabaseParameterBufferImp) dpb)
+                        .getBytesForNativeCode());
 
         synchronized (this) {
             String serverUrl  = getServerUrl(file_name);
             
             byte[] urlData;
             try {
-                String filenameCharset = databaseParameterBuffer.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
+                String filenameCharset = (dpb != null ? dpb.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET) : null);
                 if (filenameCharset != null)
                     urlData = serverUrl.getBytes(filenameCharset);
                 else
@@ -455,19 +458,22 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public void iscDsqlFetch(IscStmtHandle stmt_handle, int da_version,
             XSQLDA xsqlda, int fetchSize) throws GDSException {
         fetchSize = 1;
+        
+        if (stmt_handle == null) { 
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
+        }
+        if (xsqlda == null) { 
+            throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
+        }
+        // TODO: Above declares fetchSize = 1, so parameter is ignored and this check is not necessary
+        if (fetchSize <= 0) { 
+            throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
+        }
 
         isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
         isc_db_handle_impl db = stmt.getRsr_rdb();
 
         synchronized (db) {
-            if (stmt_handle == null) { throw new GDSException(
-                    ISCConstants.isc_bad_req_handle); }
-
-            if (xsqlda == null) { throw new GDSException(
-                    ISCConstants.isc_dsql_sqlda_err); }
-
-            if (fetchSize <= 0) { throw new GDSException(
-                    ISCConstants.isc_dsql_sqlda_err); }
             // Apply fetchSize
             // Fetch next batch of rows
             stmt.ensureCapacity(fetchSize);
@@ -493,13 +499,13 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     // ---------------------------------------------------------------------------------------------
     public void iscDsqlFreeStatement(IscStmtHandle stmt_handle, int option)
             throws GDSException {
+        if (stmt_handle == null) { 
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
+        }
         isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
         isc_db_handle_impl db = stmt.getRsr_rdb();
 
         synchronized (db) {
-            if (stmt_handle == null) { throw new GDSException(
-                    ISCConstants.isc_bad_req_handle); }
-
             // Does not seem to be possible or necessary to close
             // an execute procedure statement.
             if (stmt.isSingletonResult() && option == ISCConstants.DSQL_close) { return; }
@@ -529,16 +535,17 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public XSQLDA iscDsqlPrepare(IscTrHandle tr_handle,
             IscStmtHandle stmt_handle, byte[] statement, int dialect)
             throws GDSException {
+        if (tr_handle == null) { 
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
+        }
+
+        if (stmt_handle == null) { 
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
+        }
         isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
         isc_db_handle_impl db = stmt.getRsr_rdb();
 
         synchronized (db) {
-            if (tr_handle == null) { throw new GDSException(
-                    ISCConstants.isc_bad_trans_handle); }
-
-            if (stmt_handle == null) { throw new GDSException(
-                    ISCConstants.isc_bad_req_handle); }
-
             stmt.setInSqlda(null);
             stmt.setOutSqlda(null);
 
@@ -582,6 +589,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                     i += 2;
                     stmt.setStatementType(iscVaxInteger(buffer, i, dataLength));
                     i += dataLength;
+                    break;
                 case ISCConstants.isc_info_end:
                 case 0:
                     break;
@@ -616,13 +624,14 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     // ---------------------------------------------------------------------------------------------
     public void iscDsqlSetCursorName(IscStmtHandle stmt_handle,
             String cursor_name, int type) throws GDSException {
+        if (stmt_handle == null) { 
+            throw new GDSException(ISCConstants.isc_bad_req_handle);
+        }
+        
         isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
         isc_db_handle_impl db = stmt.getRsr_rdb();
 
         synchronized (db) {
-            if (stmt_handle == null) { throw new GDSException(
-                    ISCConstants.isc_bad_req_handle); }
-
             native_isc_dsql_set_cursor_name(stmt_handle, cursor_name, type);
         }
     }
