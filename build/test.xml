@@ -40,6 +40,7 @@
 
         <fileset dir="lib">
           <include name="**/*.jar"/>
+		  <exclude name="**/ant.jar **/ant-*.jar"/>
         </fileset>
 
         <path refid="javac.test.classpath"/>
@@ -105,6 +106,7 @@
 
         <fileset dir="lib">
           <include name="**/*.jar"/>
+		  <exclude name="**/ant.jar **/ant-*.jar"/>
         </fileset>
 
         <path refid="javac.test.classpath"/>
@@ -173,6 +175,7 @@
 
         <fileset dir="lib">
           <include name="**/*.jar"/>
+		  <exclude name="**/ant.jar **/ant-*.jar"/>
         </fileset>
 
         <path refid="javac.test.classpath"/>
@@ -231,7 +234,10 @@
         <pathelement location="${build.classes}"/>
         <pathelement location="${build.test}"/>
         <pathelement location="${build.resources}"/>
-        <pathelement location="${lib.dir}/*.jar"/>
+        <fileset dir="lib">
+          <include name="**/*.jar"/>
+		  <exclude name="**/ant.jar **/ant-*.jar"/>
+        </fileset>
         <path refid="javac.test.classpath"/>
       </classpath>
 
@@ -283,6 +289,7 @@
 
         <fileset dir="lib">
           <include name="**/*.jar"/>
+		  <exclude name="**/ant.jar **/ant-*.jar"/>
         </fileset>
 
         <path refid="javac.test.classpath"/>
@@ -331,6 +338,7 @@
 
         <fileset dir="lib">
           <include name="**/*.jar"/>
+		  <exclude name="**/ant.jar **/ant-*.jar"/>
         </fileset>
 
         <path refid="javac.test.classpath"/>

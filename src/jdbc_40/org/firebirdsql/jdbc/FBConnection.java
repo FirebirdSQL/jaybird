@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Executor;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
@@ -287,6 +288,34 @@ public class FBConnection extends AbstractConnection {
         if (!isWrapperFor(iface))
             throw new FBDriverNotCapableException();
         
-        return (T)this;
+        return iface.cast(this);
+    }
+
+    public void setSchema(String schema) throws SQLException {
+        // Ignore: no schema support
+        checkValidity();
+    }
+
+    public String getSchema() throws SQLException {
+        checkValidity();
+        return null;
+    }
+
+    public void abort(Executor executor) throws SQLException {
+        // TODO Write implementation
+        checkValidity();
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
+        // TODO Write implementation
+        checkValidity();
+        throw new FBDriverNotCapableException();
+    }
+
+    public int getNetworkTimeout() throws SQLException {
+        // TODO Write implementation
+        checkValidity();
+        return 0;
     }
 }

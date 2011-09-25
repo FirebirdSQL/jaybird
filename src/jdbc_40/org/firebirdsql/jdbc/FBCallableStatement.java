@@ -23,7 +23,6 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
 import java.util.Calendar;
-import java.util.Map;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -500,7 +499,17 @@ public class FBCallableStatement extends AbstractCallableStatement {
         if (!isWrapperFor(iface))
             throw new FBDriverNotCapableException();
         
-        return (T)this;
+        return iface.cast(this);
+    }
+
+    public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
+        // TODO Write implementation
+        throw new FBDriverNotCapableException();
+    }
+
+    public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
+        // TODO Write implementation
+        throw new FBDriverNotCapableException();
     }
     
 }

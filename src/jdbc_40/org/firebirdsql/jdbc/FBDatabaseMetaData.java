@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
 
@@ -59,5 +60,15 @@ public class FBDatabaseMetaData extends AbstractDatabaseMetaData {
     public RowIdLifetime getRowIdLifetime() throws SQLException {
         return RowIdLifetime.ROWID_UNSUPPORTED;
     }
-    
+
+    public ResultSet getPseudoColumns(String catalog, String schemaPattern,
+            String tableNamePattern, String columnNamePattern) throws SQLException {
+        // TODO Write implementation
+        throw new FBDriverNotCapableException();
+    }
+
+    public boolean generatedKeyAlwaysReturned() throws SQLException {
+        // TODO Double check if this is correct
+        return false;
+    }
 }

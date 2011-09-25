@@ -20,7 +20,6 @@
  */
 package org.firebirdsql.ds;
 
-import java.io.PrintWriter;
 import java.sql.SQLException;
 
 import javax.naming.NamingException;
@@ -67,13 +66,6 @@ public class FBConnectionPoolDataSource extends FBAbstractCommonDataSource imple
         return new FBPooledConnection(internalDs.getConnection(user, password));
     }
     
-    public void setLogWriter(PrintWriter out) throws SQLException {
-        super.setLogWriter(out);
-        if (internalDs != null) {
-            internalDs.setLogWriter(out);
-        }
-    }
-
     private void initialize() throws SQLException {
         synchronized (lock) {
             if (internalDs != null) {

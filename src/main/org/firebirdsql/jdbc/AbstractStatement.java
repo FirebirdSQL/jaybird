@@ -59,6 +59,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     private boolean closed;
     protected boolean completed = true;
     private boolean escapedProcessing = true;
+    private volatile boolean closeOnCompletion = false;
 
 	 protected SQLWarning firstWarning = null;
 
@@ -97,6 +98,9 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             
             // notify listener that statement is completed.
             notifyStatementCompleted();
+            if (closeOnCompletion) {
+                close();
+            }
         }
         
         
@@ -1518,14 +1522,24 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     }
     
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return iface != null && iface.isAssignableFrom(FBStatement.class);
+        return iface != null && iface.isAssignableFrom(getClass());
     }
 
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
             throw new FBDriverNotCapableException();
         
-        return (T)this;
+        return iface.cast(this);
+    }
+    
+    // JDBC 4.1
+    
+    public void closeOnCompletion() {
+        closeOnCompletion = true;
+    }
+    
+    public boolean isCloseOnCompletion() {
+        return closeOnCompletion;
     }
      
     /**

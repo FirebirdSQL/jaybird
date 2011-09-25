@@ -760,20 +760,13 @@ public abstract class AbstractResultSetMetaData implements FirebirdResultSetMeta
 
             if (obj == this) return true;
 
-            if (!(obj instanceof FieldKey)) return false;
+            if (obj == null || !(obj instanceof FieldKey)) return false;
 
             FieldKey that = (FieldKey)obj;
-
-            if (relationName == null && fieldName == null)
-                return that.relationName == null && that.fieldName == null;
-            else
-            if (relationName == null && fieldName != null)
-                return that.relationName == null && fieldName.equals(that.fieldName);
-            else
-            if (relationName != null && fieldName == null)
-                return relationName.equals(that.relationName) && that.fieldName == null;
-            else
-                return relationName.equals(that.relationName) && fieldName.equals(that.fieldName);
+            
+            return (relationName != null ? relationName.equals(that.relationName) : that.relationName == null) 
+            		&&
+            		(fieldName != null ? fieldName.equals(that.fieldName) : that.fieldName == null);
         }
 
         /**
@@ -783,15 +776,10 @@ public abstract class AbstractResultSetMetaData implements FirebirdResultSetMeta
          * and <code>fieldName</code> field.
          */
         public int hashCode() {
-            if (relationName == null && fieldName == null)
-                return 0;
-            if (relationName == null && fieldName != null)
-                return fieldName.hashCode();
-            else
-            if (relationName != null && fieldName == null)
-                return relationName.hashCode();
-            else
-                return (relationName.hashCode() ^ fieldName.hashCode()) + 11;
+            int result = 971;
+            result = 23 * result + (relationName != null ? relationName.hashCode() : 0);
+            result = 23 * result + (fieldName != null ? fieldName.hashCode() : 0);
+            return result;
         }
 
 

@@ -21,7 +21,6 @@
 
 package org.firebirdsql.jdbc;
 
-import java.io.PrintWriter;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -33,6 +32,7 @@ import javax.resource.spi.ConnectionManager;
 import javax.resource.spi.ManagedConnectionFactory;
 import javax.sql.DataSource;
 
+import org.firebirdsql.ds.RootCommonDataSource;
 import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 
@@ -43,15 +43,13 @@ import org.firebirdsql.jca.FBManagedConnectionFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBDataSource implements DataSource, Serializable, Referenceable {
+public class FBDataSource extends RootCommonDataSource implements DataSource, Serializable, Referenceable {
 
     private static final long serialVersionUID = 1178461472062969634L;
 
     private ConnectionManager cm;
 
     private FBManagedConnectionFactory mcf;
-
-    transient private PrintWriter log;
 
     private Reference jndiReference;
 
@@ -126,48 +124,6 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
         }
     }
 
-
-  /**
-   * <p>Get the log writer for this data source.
-   *
-   * <p>The log writer is a character output stream to which all logging
-   * and tracing messages for this data source object instance will be
-   * printed.  This includes messages printed by the methods of this
-   * object, messages printed by methods of other objects manufactured
-   * by this object, and so on.  Messages printed to a data source
-   * specific log writer are not printed to the log writer associated
-   * with the java.sql.Drivermanager class.  When a DataSource object is
-   * created the log writer is initially null, in other words, logging
-   * is disabled.
-   *
-   * @return the log writer for this data source, null if disabled
-   */
-    public PrintWriter getLogWriter() {
-        return log;
-    }
-
-
-  /**
-   * <p>Set the log writer for this data source.
-   *
-   * <p>The log writer is a character output stream to which all logging
-   * and tracing messages for this data source object instance will be
-   * printed.  This includes messages printed by the methods of this
-   * object, messages printed by methods of other objects manufactured
-   * by this object, and so on.  Messages printed to a data source
-   * specific log writer are not printed to the log writer associated
-   * with the java.sql.Drivermanager class. When a DataSource object is
-   * created the log writer is initially null, in other words, logging
-   * is disabled.
-   *
-   * @param out the new log writer; to disable, set to null
-   * @exception SQLException if a database-access error occurs.
-   */
-    public void setLogWriter(PrintWriter out) {
-        log = out;
-    }
-
-
   /**
    * <p>Sets the maximum time in seconds that this data source will wait
    * while attempting to connect to a database.  A value of zero
@@ -201,12 +157,15 @@ public class FBDataSource implements DataSource, Serializable, Referenceable {
 
     // JDBC 4.0
     
-    public boolean isWrapperFor(Class iface) throws SQLException {
-    	return false;
+    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        return iface != null && iface.isAssignableFrom(getClass());
     }
-    
-    public Object unwrap(Class iface) throws SQLException {
-    	throw new FBDriverNotCapableException();
+
+    public <T> T unwrap(Class<T> iface) throws SQLException {
+        if (!isWrapperFor(iface))
+            throw new FBDriverNotCapableException();
+        
+        return iface.cast(this);
     }
 
 }

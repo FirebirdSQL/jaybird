@@ -57,7 +57,7 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     private boolean wasNull = false;
     private boolean wasNullValid = false;
     // closed is false until the close method is invoked;
-    private boolean closed = false;
+    private volatile boolean closed = false;
 
     //might be a bit of a kludge, or a useful feature.
     private boolean trimStrings;
@@ -283,6 +283,10 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
      */
     public void close() throws  SQLException {
         close(true);
+    }
+    
+    public boolean isClosed() throws SQLException {
+        return closed;
     }
     
     void close(boolean notifyListener) throws SQLException {

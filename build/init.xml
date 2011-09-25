@@ -24,7 +24,11 @@
 	</condition>
 
 	<condition property="jdbc.40" value="true">
-		<equals arg1="${ant.java.version}" arg2="1.6"/>
+		<or>
+			<equals arg1="${ant.java.version}" arg2="1.6"/>
+			<!-- Technically JDK 1.7 is JDBC 4.1, we use this here as un indication to use the jdbc4.0 sources -->
+			<equals arg1="${ant.java.version}" arg2="1.7"/>
+		</or>
 	</condition>
 	
 	<!-- We set jdk1.3 property if JDK version is 1.3 -->
@@ -45,6 +49,11 @@
 	<!-- We set jdk1.6 property if JDK version is 1.6 -->
 	<condition property="jdk1.6" value="true">
 		<equals arg1="${ant.java.version}" arg2="1.6"/>
+	</condition>
+	
+	<!-- We set jdk1.7 property if JDK version is 1.7 -->
+	<condition property="jdk1.7" value="true">
+		<equals arg1="${ant.java.version}" arg2="1.7"/>
 	</condition>
 	
 	<property name="Name" value="Jaybird"/>
@@ -180,7 +189,7 @@
 
     <property name="packages" value="org.firebirdsql.gds,org.firebirdsql.jca,org.firebirdsql.jdbc,org.firebirdsql.management,org.firebirdsql.pool,org.firebirdsql.event"/>
 
-    <property name="build.compiler" value="classic"/>
+    <property name="build.compiler" value="modern"/>
 
     <path id="javac.j2ee.classpath">
       <pathelement location="${module.thirdparty}/mini-j2ee.jar"/>
@@ -191,6 +200,7 @@
       <path refid="javac.j2ee.classpath"/>
       <pathelement location="${build.j2ee}"/>
       <pathelement location="${module.thirdparty}/log4j-core.jar"/>
+	  <pathelement location="${lib.dir}/antlr-runtime-3.0.1.jar"/>
     </path>
 
     <path id="javac.pool.classpath">

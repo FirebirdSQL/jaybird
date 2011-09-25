@@ -45,10 +45,6 @@ public class FBResultSet extends AbstractResultSet {
         super(xsqlvars, rows);
     }
 
-    public int getHoldability() throws SQLException {
-        return super.getHoldability();
-    }
-
     public Reader getNCharacterStream(int columnIndex) throws SQLException {
         throw new FBDriverNotCapableException();
     }
@@ -86,10 +82,6 @@ public class FBResultSet extends AbstractResultSet {
     }
 
     public SQLXML getSQLXML(String columnLabel) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public boolean isClosed() throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -270,13 +262,25 @@ public class FBResultSet extends AbstractResultSet {
     // java.sql.Wrapper interface
     
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return iface != null && iface.isAssignableFrom(FBResultSet.class);
+        return iface != null && iface.isAssignableFrom(this.getClass());
     }
 
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
             throw new FBDriverNotCapableException();
         
-        return (T)this;
+        return iface.cast(this);
+    }
+    
+    // JDBC 4.1
+
+    public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+        // TODO Write implementation
+        throw new FBDriverNotCapableException();
+    }
+
+    public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
+        // TODO Write implementation
+        throw new FBDriverNotCapableException();
     }
 }

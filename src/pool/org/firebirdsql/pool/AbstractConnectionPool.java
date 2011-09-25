@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.firebirdsql.ds.RootCommonDataSource;
 import org.firebirdsql.logging.Logger;
 
 /**
@@ -34,7 +35,7 @@ import org.firebirdsql.logging.Logger;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public abstract class AbstractConnectionPool implements PooledObjectListener {
+public abstract class AbstractConnectionPool extends RootCommonDataSource implements PooledObjectListener {
         
     /**
      * Structure class to store user name and password. 

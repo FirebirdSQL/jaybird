@@ -18,6 +18,7 @@
     <javac srcdir="${source.examples}"
            destdir="${build.examples}"
            target="${ant.java.version}"
+		   source="${ant.java.version}"
            debug="on"
            deprecation="on"
            optimize="on"
@@ -58,7 +59,7 @@
     </path>
   </target>
 
-  <target name="set-pool1.4-src" unless="jdk1.5">
+  <target name="set-pool1.4-src" if="jdk1.4">
     <path id="source.java.pool">
       <pathelement path="${source.pool1.4}"/>
     </path>
@@ -70,7 +71,7 @@
     </path>
   </target>
 
-  <target name="set-pool1.6-src" if="jdk1.6">
+  <target name="set-pool1.6-src" if="jdbc.40">
 	<path id="source.java.pool">
       <pathelement path="${source.pool1.6}"/>
     </path>
@@ -89,13 +90,13 @@
   	</path>
   </target>
 
-  <target name="set-jca-src-14" unless="jdk1.6">
+  <target name="set-jca-src-14" unless="jdbc.40">
   	<path id="source.java.jca">
     	<pathelement path="${source.jca1.4}"/>
     </path>
   </target>
 
-  <target name="set-jca-src-16" if="jdk1.6">
+  <target name="set-jca-src-16" if="jdbc.40">
   	<path id="source.java.jca">
     	<pathelement path="${source.jca1.6}"/>
     </path>
@@ -105,6 +106,7 @@
     <mkdir dir="${build.classes}"/>
     
     <echo message="${jdk1.3}"/>
+	<echo message="${ant.java.version}"/>
     <echo message="${toString:source.java.openoffice}"/>
     <echo message="${toString:source.java.additional}"/>
     <echo message="${toString:source.java.wire}"/>
@@ -112,6 +114,7 @@
     
     <javac destdir="${build.classes}"
            target="${ant.java.version}"
+		   source="${ant.java.version}"
            debug="on"
            deprecation="on"
            optimize="on"
@@ -129,9 +132,11 @@
 
   <target name="compile-pool" depends="set-pool1.4-src,set-pool1.5-src,set-pool1.6-src,compile-driver">
     <mkdir dir="${build.pool}"/>
+	<echo message="${toString:source.java.pool}"/>
     <javac srcdir="${source.pool}"
            destdir="${build.pool}"
            target="${ant.java.version}"
+		   source="${ant.java.version}"
            debug="on"
            deprecation="on"
            optimize="on"
@@ -148,6 +153,7 @@
     <javac srcdir="${source.compatibility}"
            destdir="${build.compatibility}"
            target="${ant.java.version}"
+		   source="${ant.java.version}"
            debug="on"
            deprecation="on"
            optimize="on"
@@ -179,6 +185,7 @@
     <javac 
            destdir="${build.test}"
            target="${ant.java.version}"
+		   source="${ant.java.version}"
            debug="on"
            deprecation="on"
            optimize="on"
