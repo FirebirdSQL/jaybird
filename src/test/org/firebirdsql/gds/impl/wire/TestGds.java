@@ -29,7 +29,6 @@ import org.firebirdsql.gds.impl.wire.isc_blob_handle_impl;
 import org.firebirdsql.gds.impl.wire.isc_db_handle_impl;
 import org.firebirdsql.gds.impl.wire.isc_stmt_handle_impl;
 import org.firebirdsql.jca.FBTpb;
-import org.firebirdsql.jdbc.FBTpbMapper;
 import org.firebirdsql.common.SimpleFBTestBase;
 
 /**
@@ -42,45 +41,13 @@ public class TestGds extends SimpleFBTestBase {
     private Logger log = LoggerFactory.getLogger(getClass(), true);
 
     static final String dbName = "testdb.gdb";
-
     static final String dbName2 = "testdb2.gdb";
 
     private GDS gds;
-
     private IscDbHandle db1;
-
     private IscDbHandle db2;
-
-    // private byte[][] status = new Object[20];
     private IscTrHandle t1;
-
-    private byte[] dpb = new byte[256];
-    {
-        dpb[0] = (byte) ISCConstants.isc_dpb_version1;
-        dpb[1] = (byte) ISCConstants.isc_dpb_num_buffers;
-        dpb[2] = (byte) 1;
-        dpb[3] = (byte) 90;
-
-        dpb[4] = (byte) ISCConstants.isc_dpb_dummy_packet_interval;
-        dpb[5] = (byte) 4;
-        dpb[6] = (byte) 120;
-        dpb[7] = (byte) 10;
-        dpb[8] = (byte) 0;
-        dpb[9] = (byte) 0;
-        dpb[10] = (byte) 0;
-        dpb[11] = (byte) 0;
-        dpb[12] = (byte) 0;
-        dpb[13] = (byte) 0;
-        dpb[14] = (byte) 3;
-        dpb[15] = (byte) 0;
-        dpb[16] = (byte) 0;
-        dpb[17] = (byte) 0;
-    }
-
-    private short dpb_length = (short) dpb.length;
-
     private DatabaseParameterBuffer c;
-
     private FBTpb tpb;
 
     public TestGds(String name) {
@@ -228,7 +195,28 @@ public class TestGds extends SimpleFBTestBase {
         if (log != null) log.info("test- isc_attach_database");
         gds.iscAttachDatabase(getdbpath(dbName2), db, databaseParameterBuffer);
         dropDatabase(db);
+    }
+    
+    /**
+     * Test to check if creating (and subsequently attaching to) a database with the org.firebirdsql.jdbc.pid and org.firebirdsql.jdbc.processName
+     * does not fail. NOTE: This does not check if this information is correctly communicated to Firebird.
+     * 
+     * @throws Exception
+     */
+    public void testCreateWithProcessIdandName() throws Exception {
+        if (log != null) log.info("test- testCreateWithProcessIdandName");
+        
+        System.setProperty("org.firebirdsql.jdbc.pid", "9513");
+        System.setProperty("org.firebirdsql.jdbc.processName", "TestGds");
 
+        db1 = createDatabase(dbName);
+        if (log != null) log.info("test- isc_detach_database");
+        gds.iscDetachDatabase(db1);
+
+        db1 = gds.createIscDbHandle();
+        if (log != null) log.info("test- isc_attach_database");
+        gds.iscAttachDatabase(getdbpath(dbName), db1, c);
+        dropDatabase(db1);
     }
 
     public void testDbHandleEquality() throws Exception {
@@ -395,8 +383,8 @@ public class TestGds extends SimpleFBTestBase {
 
         if (log != null)
             log.info("test- retrieved inserted row C1 = "
-                    + xsqlda.sqlvar[0].sqldata + "     " + "C2 = "
-                    + xsqlda.sqlvar[1].sqldata);
+                    + Arrays.toString(xsqlda.sqlvar[0].sqldata) + "     " + "C2 = "
+                    + Arrays.toString(xsqlda.sqlvar[1].sqldata));
 
         commit(t1);
 
@@ -443,18 +431,18 @@ public class TestGds extends SimpleFBTestBase {
         // gds.isc_dsql_set_cursor_name(stmt1, "cur1", 0);
 
         // int fetch_stat;
-        String out = "";
         byte[][] row = null;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();
         int size = stmt1.size();
+        StringBuilder out = new StringBuilder();
         for (int rowNum = 0; rowNum < size; rowNum++) {
             row = (byte[][]) rows[rowNum];
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Short data = new Short(new XSQLVAR().decodeShort(row[i]));
-                out += data.shortValue() + "    ";
+                short data = new XSQLVAR().decodeShort(row[i]);
+                out.append(data).append("    ");
             }
-            out += getProperty("line.separator");
+            out.append(getProperty("line.separator"));
         }
         if (log != null) log.info("fetch returned: " + out);
         if (log != null) log.info("test- isc_dsql_free_statement");
@@ -482,7 +470,7 @@ public class TestGds extends SimpleFBTestBase {
          * byte[] testbuf = new byte[1024]; for (int i = 0; i < 1024; i++) {
          * testbuf[i] = (byte)i; }
          */
-        byte[] testbuf = new String("xxThis is a test of a blob").getBytes();
+        byte[] testbuf = "xxThis is a test of a blob".getBytes();
         // testbuf[0] = 0;
         // testbuf[1] = 24;
         if (log != null) log.info("test- test- testCreateAndWriteBlob");
@@ -538,10 +526,9 @@ public class TestGds extends SimpleFBTestBase {
         int size = stmt1.size();
         for (int rowNum = 0; rowNum < size; rowNum++) {
             row = (byte[][]) rows[rowNum];
-            String out = "";
+            StringBuilder out = new StringBuilder();
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Object data = row[i];
-                out += "column: " + i + ", value: " + data;
+                out.append("column: ").append(i).append(", value: ").append(Arrays.toString(row[i]));
             }
 
             if (log != null) log.info("fetch returned: " + out);
@@ -565,7 +552,7 @@ public class TestGds extends SimpleFBTestBase {
     }
 
     public void testCreateAndWriteBlobStream() throws Exception {
-        byte[] a = new String("a").getBytes();
+        byte[] a = "a".getBytes();
         byte[] testbuf = new byte[500];
         for (int i = 0; i < 500; i++) {
             testbuf[i] = a[0];// (byte)i;
@@ -628,10 +615,9 @@ public class TestGds extends SimpleFBTestBase {
         int size = stmt1.size();
         for (int rowNum = 0; rowNum < size; rowNum++) {
             row = (byte[][]) rows[rowNum];
-            String out = "";
+            StringBuilder out = new StringBuilder();
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Object data = row[i];
-                out += "column: " + i + ", value: " + data;
+                out.append("column: ").append(i).append(", value: ").append(Arrays.toString(row[i]));
             }
             if (log != null) log.info(out);
             blob2.setBlobId(xsqlvar.decodeLong(row[1]));
@@ -661,7 +647,7 @@ public class TestGds extends SimpleFBTestBase {
 
     public void testCreateAndWriteBlobStreamInSegmentedPieces()
             throws Exception {
-        byte[] a = new String("a").getBytes();
+        byte[] a = "a".getBytes();
         byte[] testbuf = new byte[64];// 33];//1024];
         for (int i = 0; i < 64; i++) {
             testbuf[i] = a[0];// (byte)i;
@@ -725,10 +711,9 @@ public class TestGds extends SimpleFBTestBase {
         int size = stmt1.size();
         for (int rowNum = 0; rowNum < size; rowNum++) {
             row = (byte[][]) rows[rowNum];
-            String out = "";
+            StringBuilder out = new StringBuilder();
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Object data = row[i];
-                out += "column: " + i + ", value: " + data;
+                out.append("column: ").append(i).append(", value: ").append(Arrays.toString(row[i]));
             }
             if (log != null) log.info(out);
             blob2.setBlobId(xsqlvar.decodeLong(row[1]));
@@ -756,7 +741,7 @@ public class TestGds extends SimpleFBTestBase {
     }
 
     public void testCreateAndWriteBlobStreamInStreamPieces() throws Exception {
-        byte[] a = new String("a").getBytes();
+        byte[] a = "a".getBytes();
         byte[] testbuf = new byte[4096];// 2030];
         int reps = 10;// 10000;
         Arrays.fill(testbuf, a[0]);
@@ -818,10 +803,9 @@ public class TestGds extends SimpleFBTestBase {
         int size = stmt1.size();
         for (int rowNum = 0; rowNum < size; rowNum++) {
             row = (byte[][]) rows[rowNum];
-            String out = "";
+            StringBuilder out = new StringBuilder();
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Object data = row[i];
-                out += "column: " + i + ", value: " + data;
+                out.append("column: ").append(", value: ").append(Arrays.toString(row[i]));
             }
             if (log != null) log.info(out);
             blob2.setBlobId(xsqlvar.decodeLong(row[1]));
