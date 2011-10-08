@@ -33,9 +33,11 @@ package org.firebirdsql.gds;
  */
 public class GDSException extends Exception {
 
-    protected int type;
-    protected int intParam;
-    protected String strParam;
+    private static final long serialVersionUID = -2993273656432230359L;
+    
+    private final int type;
+    private final int intParam;
+    private final String strParam;
 
     /**
      * The variable <code>xaErrorCode</code> is used to allow the same
@@ -46,12 +48,12 @@ public class GDSException extends Exception {
      * exception.
      *
      */
-    protected int xaErrorCode;
+    private int xaErrorCode;
 
     /**
      * My child
      */
-    protected GDSException next;
+    private GDSException next;
 
     /**
      * Factory method to create a new instance with a given <code>XA</code>
@@ -60,8 +62,7 @@ public class GDSException extends Exception {
      * @param message Message for the new instance
      * @param xaErrorCode The <code>XA</code> error code
      */
-    public static GDSException createWithXAErrorCode(String message, int xaErrorCode)
-    {
+    public static GDSException createWithXAErrorCode(String message, int xaErrorCode) {
         GDSException gdse = new GDSException(message);
         gdse.setXAErrorCode(xaErrorCode);
         return gdse;
@@ -78,6 +79,7 @@ public class GDSException extends Exception {
     public GDSException(int type, int intParam) {
         this.type = type;
         this.intParam = intParam;
+        this.strParam = null;
     }
 
     /**
@@ -93,6 +95,7 @@ public class GDSException extends Exception {
     public GDSException(int type, String strParam) {
         this.type = type;
         this.strParam = strParam;
+        this.intParam = 0;
     }
     
     /**
@@ -112,6 +115,7 @@ public class GDSException extends Exception {
     public GDSException(int type, int fbErrorCode, String strParam) {
         this.type = type;
         this.intParam = fbErrorCode;
+        this.strParam = null;
         setNext(new GDSException(ISCConstants.isc_arg_string, strParam));
     }
 
@@ -122,9 +126,9 @@ public class GDSException extends Exception {
      *        in {@link GDS} interface
      */
     public GDSException(int fbErrorCode) {
-        // this.fbErrorCode = fbErrorCode;
         this.intParam = fbErrorCode;
         this.type = ISCConstants.isc_arg_gds;
+        this.strParam = null;
     }
 
     /**
@@ -135,6 +139,8 @@ public class GDSException extends Exception {
     public GDSException(String message) {
         super(message);
         this.type = ISCConstants.isc_arg_string;
+        this.intParam = 0;
+        this.strParam = null;
     }
 
     /**
@@ -143,14 +149,13 @@ public class GDSException extends Exception {
      * @return The Firebird error code
      */
     public int getFbErrorCode() {
-        //return fbErrorCode;
-        if (type == ISCConstants.isc_arg_number)
+        switch (type) {
+        case ISCConstants.isc_arg_number:
+        case ISCConstants.isc_arg_gds:
             return intParam;
-        else
-        if (type == ISCConstants.isc_arg_gds)
-            return intParam;
-        else
+        default:
             return -1;
+        }
     }
     
     /**
@@ -160,13 +165,13 @@ public class GDSException extends Exception {
      * object does not represent an error.
      */
     public String getSQLState() {
-        if (type == ISCConstants.isc_arg_number) 
+        switch (type) {
+        case ISCConstants.isc_arg_number:
+        case ISCConstants.isc_arg_gds:
             return GDSExceptionHelper.getSQLState(intParam);
-        else 
-        if (type == ISCConstants.isc_arg_gds) {
-            return GDSExceptionHelper.getSQLState(intParam);
-        } else
+        default:
             return null;
+        }
     }
 
     /**
@@ -183,8 +188,7 @@ public class GDSException extends Exception {
      * Get the XaErrorCode value.
      * @return the XaErrorCode value.
      */
-    public int getXAErrorCode()
-    {
+    public int getXAErrorCode() {
         return xaErrorCode;
     }
 
@@ -192,8 +196,7 @@ public class GDSException extends Exception {
      * Set the XaErrorCode value.
      * @param xaErrorCode The new XaErrorCode value.
      */
-    public void setXAErrorCode(int xaErrorCode)
-    {
+    public void setXAErrorCode(int xaErrorCode) {
         this.xaErrorCode = xaErrorCode;
     }
 
@@ -256,28 +259,26 @@ public class GDSException extends Exception {
         }
   
         // Do we have more children? Then include their messages too.
-        //while (child != null) {
-        if (child != null)
+        if (child != null) {
             msg += "\n" + child.getMessage();
-        //    child = child.next;
-        //}
+        }
  
         return msg;
     }
 
     /**
-     * Returns the parameter depending on the type of the
-     * error code.
+     * Returns the parameter depending on the type of the error code.
      */
     public String getParam() {
-        if ((type == ISCConstants.isc_arg_interpreted) ||
-                (type == ISCConstants.isc_arg_string))
+        switch (type) {
+        case ISCConstants.isc_arg_interpreted:
+        case ISCConstants.isc_arg_string:
             return strParam;
-        else
-        if (type == ISCConstants.isc_arg_number)
-            return "" + intParam;
-        else
+        case ISCConstants.isc_arg_number:
+            return String.valueOf(intParam);
+        default:
             return "";
+        }
     }
 
 }
