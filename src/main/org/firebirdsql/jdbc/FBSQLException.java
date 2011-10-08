@@ -27,113 +27,151 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.jca.FBResourceException;
 
 public class FBSQLException extends SQLException {
-    
-	private static final long serialVersionUID = 8157410954186424083L;
-	
-	public static final String SQL_STATE_INVALID_CONN_ATTR = "01S00";
+
+    private static final long serialVersionUID = 8157410954186424083L;
+
+    public static final String SQL_STATE_INVALID_CONN_ATTR = "01S00";
     public static final String SQL_STATE_NO_ROW_AVAIL = "01S06";
-    
+
     public static final String SQL_STATE_GENERAL_ERROR = "HY000";
     public static final String SQL_STATE_INVALID_COLUMN = "HY002";
     public static final String SQL_STATE_INVALID_PARAM_TYPE = "HY105";
     public static final String SQL_STATE_INVALID_ARG_VALUE = "HY009";
-    
+
     public static final String SQL_STATE_WRONG_PARAM_NUM = "07001";
     public static final String SQL_STATE_NO_RESULT_SET = "07005";
     public static final String SQL_STATE_INVALID_CONVERSION = "07006";
-    
+
     public static final String SQL_STATE_INVALID_TX_STATE = "25000";
-    
+
     public static final String SQL_STATE_INVALID_STATEMENT_ID = "26000";
-    
+
     public static final String SQL_STATE_CONNECTION_CLOSED = "08003";
     public static final String SQL_STATE_CONNECTION_FAILURE = "08006";
     public static final String SQL_STATE_CONNECTION_FAILURE_IN_TX = "08007";
     public static final String SQL_STATE_COMM_LINK_FAILURE = "08S01";
-    
+
     public FBSQLException(Exception ex) {
-        super("Exception. " + ex.getMessage(), SQL_STATE_GENERAL_ERROR);
+        this("Exception. " + ex.getMessage());
         initCause(ex);
     }
-    
+
     public FBSQLException(GDSException ex) {
-        super("GDS Exception. " + ex.getIntParam() + ". " + ex.getMessage(),
-        		SQL_STATE_GENERAL_ERROR, ex.getIntParam());
+        super(createGDSExceptionMessage(ex), defaultSQLStateIfNull(ex.getSQLState()), ex.getIntParam());
+        initCause(ex);
     }
 
     public FBSQLException(ResourceException ex) {
-        super(getResourceMessage(ex), 
-                ex.getErrorCode() != null ? ex.getErrorCode() : SQL_STATE_GENERAL_ERROR, getSqlErrorCode(ex));
+        super(createResourceMessage(ex), defaultSQLStateIfNull(ex.getErrorCode()), getSqlErrorCode(ex));
 
         // try to unwrap wrapped GDS exception, in this case FBResourceException
         // will never appear on the stack
-        if (ex instanceof FBResourceException && ex.getLinkedException() != null) 
-            initCause(ex.getLinkedException());
-        else 
-            initCause(ex);
+        Throwable cause = resolveCause(ex);
+        initCause(cause);
     }
-    
+
     public FBSQLException(String message) {
         super(message, SQL_STATE_GENERAL_ERROR);
     }
 
     /**
      * 
-     * @param message Exception message
-     * @param ex SQLException that should be set as the 'next exception'
-     * @deprecated In all most all cases use {@link #FBSQLException(String, String) in combination with {@link #setNextException(SQLException)}.
+     * @param message
+     *            Exception message
+     * @param ex
+     *            SQLException that should be set as the 'next exception'
+     * @deprecated In all most all cases use
+     *             {@link #FBSQLException(String, String) in combination with
+     *             {@link #setNextException(SQLException)}.
      */
     public FBSQLException(String message, SQLException ex) {
-        super(message, SQL_STATE_GENERAL_ERROR);
+        this(message);
         setNextException(ex);
     }
 
-    public FBSQLException(String message, String sqlState) {
-        super(message, sqlState);
-    }
-    
     /**
-     * @deprecated use {@link #getCause()} instead. 
+     * 
+     * @param message
+     *            Exception message
+     * @param sqlState
+     *            SQL State for this exception. Replaced with
+     *            {@link FBSQLException#SQL_STATE_GENERAL_ERROR} if null
      */
-    public Exception getInternalException() {
-        return (Exception)getCause();
+    public FBSQLException(String message, String sqlState) {
+        super(message, defaultSQLStateIfNull(sqlState));
     }
 
     /**
-     * Helper method to create message text for constructor accepting ResourceException ({@link #FBSQLException(ResourceException)})
+     * @deprecated use {@link #getCause()} instead.
+     */
+    public Exception getInternalException() {
+        return (Exception) getCause();
+    }
+
+    /**
+     * Helper method to create message text for constructor accepting
+     * ResourceException ({@link #FBSQLException(ResourceException)})
      * 
-     * @param ex ResourceException
+     * @param ex
+     *            ResourceException
      * @return Exception message
      */
-    private static String getResourceMessage(ResourceException ex) {
-    	Throwable cause = ex;
-    	if (ex instanceof FBResourceException && ex.getLinkedException() != null) { 
-            cause = ex.getLinkedException();
-    	}
-    	
-    	if (cause instanceof GDSException) {
-            return "GDS Exception. "+ ((GDSException)cause).getIntParam() + ". " + ex.getMessage();
-    	} else {
-            return "Resource Exception. " + ex.getMessage();
-    	}
+    private static String createResourceMessage(ResourceException ex) {
+        Throwable cause = resolveCause(ex);
+        if (cause instanceof GDSException) {
+            return createGDSExceptionMessage((GDSException) cause);
+        }
+        return "Resource Exception. " + ex.getMessage();
     }
     
     /**
-     * Helper method to get the SQL vendor code (or in the case of Firebird: the isc errorcode).
+     * Helper method to create message text for GDSException.
      * 
-     * @param ex ResourceException
+     * @param ex
+     *            The GDSException
+     * @return Message text
+     */
+    private static String createGDSExceptionMessage(GDSException ex) {
+        return "GDS Exception. " + ex.getIntParam() + ". " + ex.getMessage();
+    }
+
+    /**
+     * Helper method to get the SQL vendor code (or in the case of Firebird: the
+     * isc errorcode).
+     * 
+     * @param ex
+     *            ResourceException
      * @return isc errorcode, or 0
      */
     private static int getSqlErrorCode(ResourceException ex) {
-    	Throwable cause = ex;
-    	if (ex instanceof FBResourceException && ex.getLinkedException() != null) {
-            cause = ex.getLinkedException();
-    	}
-    	
-    	if (cause instanceof GDSException) {
-    		return ((GDSException)cause).getIntParam();
-    	} else {
-    		return 0;
-    	}
+        Throwable cause = resolveCause(ex);
+        if (cause instanceof GDSException) {
+            return ((GDSException) cause).getIntParam();
+        }
+        return 0;
+    }
+
+    /**
+     * @param ex
+     *            ResourceException
+     * @return Non-null exception linked to FBResourceException, or the original
+     *         (FB)ResourceException.
+     */
+    private static Throwable resolveCause(ResourceException ex) {
+        if (ex instanceof FBResourceException && ex.getLinkedException() != null) {
+            return ex.getLinkedException();
+        }
+        return ex;
+    }
+
+    /**
+     * @param sqlState
+     *            SQL State value (or null)
+     * @return The passed sqlState or
+     *         {@link FBSQLException#SQL_STATE_GENERAL_ERROR} if sqlState is
+     *         null.
+     */
+    public static String defaultSQLStateIfNull(String sqlState) {
+        return sqlState != null ? sqlState : FBSQLException.SQL_STATE_GENERAL_ERROR;
     }
 }
