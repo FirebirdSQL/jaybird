@@ -500,28 +500,26 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             notifyStatementStarted();
             try {
                 try {
-
                     JaybirdStatementModel statementModel = parseInsertStatement(sql);
                     
-                    ArrayList columns = new ArrayList();
                     if (statementModel.getReturningColumns().size() > 0) {
-                        columns.addAll(statementModel.getReturningColumns());
-                    } else {
-                        DatabaseMetaData metaData = connection.getMetaData();
-                        ResultSet rs = metaData.getColumns(null, null, statementModel.getTableName(), null);
-                        try {
-                            while(rs.next()) {
-                                columns.add(rs.getString(4));
-                            }
-                        } finally {
-                            rs.close();
+                        return execute(sql);
+                    } 
+
+                    ArrayList columns = new ArrayList();
+                    DatabaseMetaData metaData = connection.getMetaData();
+                    ResultSet rs = metaData.getColumns(null, null, statementModel.getTableName(), null);
+                    try {
+                        while(rs.next()) {
+                            columns.add(rs.getString(4));
                         }
+                    } finally {
+                        rs.close();
                     }
                     
                     String[] columnNames = (String[])columns.toArray(new String[columns.size()]);
-                    
                     return internalExecuteInsertReturning(sql, columnNames);
-                    
+
                 } catch (GDSException ge) {
                     throw new FBSQLException(ge);
                 } catch (RecognitionException ex) {
@@ -585,11 +583,12 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
 
                     JaybirdStatementModel statementModel = parseInsertStatement(sql);
                     
-                    ArrayList columns = new ArrayList();
-                    if (statementModel.getReturningColumns().size() > 0)
-                        throw new FBSQLException("Specified SQL statement already contains the RETURNING clause.");
-                        
+                    if (statementModel.getReturningColumns().size() > 0) {
+                        // throw new FBSQLException("Specified SQL statement already contains the RETURNING clause.");
+                    	return execute(sql);
+                    }
                     
+                    ArrayList columns = new ArrayList();
                     int[] sortedIndexes = new int[columnIndexes.length];
                     for (int i = 0; i < columnIndexes.length; i++) {
                         sortedIndexes[i]= columnIndexes[i];
@@ -679,7 +678,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                     JaybirdStatementModel statementModel = parseInsertStatement(sql);
                     
                     if (statementModel.getReturningColumns().size() > 0)
-                        throw new FBSQLException("Specified SQL statement already contains the RETURNING clause.");
+                    	return execute(sql);
                         
                     return internalExecuteInsertReturning(sql, columnNames);
                     

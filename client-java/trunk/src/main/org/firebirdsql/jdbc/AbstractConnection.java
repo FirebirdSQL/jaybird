@@ -1007,9 +1007,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
             statementModel = parseInsertStatement(sql);
             
             ArrayList columns = new ArrayList();
-            if (statementModel.getReturningColumns().size() > 0) {
-                columns.addAll(statementModel.getReturningColumns());
-            } else {
+            if (statementModel.getReturningColumns().size() == 0) {
                 DatabaseMetaData metaData = getMetaData();
                 ResultSet rs = metaData.getColumns(null, null, statementModel.getTableName(), null);
                 try {
@@ -1019,14 +1017,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 } finally {
                     rs.close();
                 }
+                String[] columnNames = (String[])columns.toArray(new String[columns.size()]);
+                sql = addReturningClause(sql, columnNames);
             }
             
-            String[] columnNames = (String[])columns.toArray(new String[columns.size()]);
-            
-            String modifiedSql = addReturningClause(sql, columnNames);
-            
-            return prepareStatement(modifiedSql, 
-                ResultSet.HOLD_CURSORS_OVER_COMMIT, 
+            return prepareStatement(sql, 
+                ResultSet.TYPE_FORWARD_ONLY, 
                 ResultSet.CONCUR_READ_ONLY, 
                 FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT, 
                 false, true);
@@ -1087,35 +1083,33 @@ public abstract class AbstractConnection implements FirebirdConnection {
             JaybirdStatementModel statementModel = parseInsertStatement(sql);
             
             ArrayList columns = new ArrayList();
-            if (statementModel.getReturningColumns().size() > 0)
-                throw new FBSQLException("Specified SQL statement already contains the RETURNING clause.");
-                
-            
-            int[] sortedIndexes = new int[columnIndexes.length];
-            for (int i = 0; i < columnIndexes.length; i++) {
-                sortedIndexes[i]= columnIndexes[i];
+            if (statementModel.getReturningColumns().size() == 0) {
+	            int[] sortedIndexes = new int[columnIndexes.length];
+	            for (int i = 0; i < columnIndexes.length; i++) {
+	                sortedIndexes[i]= columnIndexes[i];
+	            }
+	            Arrays.sort(sortedIndexes);
+	            
+	            DatabaseMetaData metaData = getMetaData();
+	            ResultSet rs = metaData.getColumns(null, null, statementModel.getTableName(), null);
+	            try {
+	                int counter = 0;
+	                while(rs.next()) {
+	                    
+	                    if (Arrays.binarySearch(sortedIndexes, counter) >=0)
+	                        columns.add(rs.getString(4));
+	                }
+	            } finally {
+	                rs.close();
+	            }
+	            
+	            String[] columnNames = (String[])columns.toArray(new String[columns.size()]);
+	            
+	            sql = addReturningClause(sql, columnNames);
             }
-            Arrays.sort(sortedIndexes);
             
-            DatabaseMetaData metaData = getMetaData();
-            ResultSet rs = metaData.getColumns(null, null, statementModel.getTableName(), null);
-            try {
-                int counter = 0;
-                while(rs.next()) {
-                    
-                    if (Arrays.binarySearch(sortedIndexes, counter) >=0)
-                        columns.add(rs.getString(4));
-                }
-            } finally {
-                rs.close();
-            }
-            
-            String[] columnNames = (String[])columns.toArray(new String[columns.size()]);
-            
-            String modifiedSql = addReturningClause(sql, columnNames);
-            
-            return prepareStatement(modifiedSql, 
-                ResultSet.HOLD_CURSORS_OVER_COMMIT, 
+            return prepareStatement(sql, 
+                ResultSet.TYPE_FORWARD_ONLY, 
                 ResultSet.CONCUR_READ_ONLY, 
                 FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT, 
                 false, true);
@@ -1172,14 +1166,21 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public PreparedStatement prepareStatement(String sql, String[] columnNames)
             throws SQLException {
+
+    	try {
+        JaybirdStatementModel statementModel = parseInsertStatement(sql);
         
-        String modifiedSql = addReturningClause(sql, columnNames);
+        if (statementModel.getReturningColumns().size() == 0)
+        	sql = addReturningClause(sql, columnNames);
         
-        return prepareStatement(modifiedSql, 
-            ResultSet.HOLD_CURSORS_OVER_COMMIT, 
+        return prepareStatement(sql, 
+            ResultSet.TYPE_FORWARD_ONLY, 
             ResultSet.CONCUR_READ_ONLY, 
             FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT, 
             false, true);
+    	} catch(RecognitionException ex) {
+    		throw new FBSQLException(ex);
+    	}
     }
     
     /**
