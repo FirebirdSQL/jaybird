@@ -1193,6 +1193,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return the modified SQL statement.
      */
     protected String addReturningClause(String sql, String[] columnNames) {
+    	if (columnNames == null || columnNames.length == 0)
+    		return sql;
+    	
         StringBuffer modifiedSql = new StringBuffer();
         modifiedSql.append(sql);
         modifiedSql.append("\n");
