@@ -426,6 +426,8 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @throws GDSException
      */
     protected boolean internalExecuteInsertReturning(String sql, String[] columnNames) throws SQLException, GDSException {
+        if (columnNames == null || columnNames.length == 0)
+        	return execute(sql);
         
         StringBuffer modifiedSql = new StringBuffer();
         modifiedSql.append(sql);
