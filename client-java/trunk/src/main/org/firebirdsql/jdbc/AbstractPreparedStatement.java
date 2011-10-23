@@ -207,16 +207,10 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
             }
         }
     }
-    
-
-    public ResultSet getGeneratedKeys() throws SQLException {
-        return getResultSet();
-    }
 
     public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
         return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
     }
-
 
     /**
      * Sets the designated parameter to SQL <code>NULL</code>.
