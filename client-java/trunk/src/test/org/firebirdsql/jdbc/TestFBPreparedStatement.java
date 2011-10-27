@@ -800,18 +800,6 @@ public class TestFBPreparedStatement extends FBTestBase {
         }
     }
 
-    public void testInsertReturningUnknownTable() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
-            FirebirdPreparedStatement stmt = (FirebirdPreparedStatement) conn
-                    .prepareStatement("INSERT INTO bla(id, field1) VALUES(gen_id(test_generator, 1), 'a') RETURNING id");
-        } catch(SQLException ex) {
-        	assertEquals(ex.getErrorCode(), 335544569);
-        } finally {
-            conn.close();
-        }
-    }
-
     private static final String dummySelect =
         "execute block returns(a integer) "
         + " as"
