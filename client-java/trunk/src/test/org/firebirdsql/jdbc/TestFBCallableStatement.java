@@ -30,8 +30,8 @@ import java.sql.*;
  * @version 1.0
  */
 public class TestFBCallableStatement extends FBTestBase {
-    public static final String CREATE_PROCEDURE = ""
-        + "CREATE PROCEDURE factorial( " 
+    public static final String CREATE_PROCEDURE =
+        "CREATE PROCEDURE factorial( " 
         + "  max_rows INTEGER, "
         + "  mode INTEGER "
         + ") RETURNS ( "
@@ -85,8 +85,6 @@ public class TestFBCallableStatement extends FBTestBase {
 		  + "    DO "
 		  + "        SUSPEND; "
 		  + "END";
-	 
-	
 
     public static final String DROP_PROCEDURE_EMP_SELECT =
         "DROP PROCEDURE get_emp_proj;";
@@ -185,69 +183,66 @@ public class TestFBCallableStatement extends FBTestBase {
      public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION = ""
          + "EXECUTE PROCEDURE test_out 'test?'";
 
-    private Connection connection;
+    private Connection con;
 
     public TestFBCallableStatement(String testName) {
         super(testName);
     }
 
-
     protected void setUp() throws Exception {
-       super.setUp();
-        Class.forName(FBDriver.class.getName());
-        connection = getConnectionViaDriverManager();
-        Statement stmt = connection.createStatement();
+        super.setUp();
+        con = getConnectionViaDriverManager();
+        Statement stmt = con.createStatement();
         try {
-            stmt.executeUpdate(DROP_PROCEDURE);
-        }
-        catch (Exception e) {}
-        try {
-            stmt.executeUpdate(DROP_PROCEDURE_EMP_SELECT);
-        }
-        catch (Exception e) {}
-        try {
-            stmt.executeUpdate(DROP_PROCEDURE_EMP_INSERT);
-        }
-        catch (Exception e) {}
-        try {
-            stmt.executeUpdate(DROP_EMPLOYEE_PROJECT);
-        }
-        catch (Exception e) {}
-        try {
-            stmt.executeUpdate(DROP_SIMPLE_OUT_PROC);
-        }
-        catch (Exception e) {}
-        try {
-            stmt.executeUpdate(DROP_PROCEDURE_WITHOUT_PARAMS);
-        }
-        catch (Exception e) {}
-        
+            try {
+                stmt.executeUpdate(DROP_PROCEDURE);
+            } catch (Exception e) {}
+            try {
+                stmt.executeUpdate(DROP_PROCEDURE_EMP_SELECT);
+            } catch (Exception e) {}
+            try {
+                stmt.executeUpdate(DROP_PROCEDURE_EMP_INSERT);
+            } catch (Exception e) {}
+            try {
+                stmt.executeUpdate(DROP_EMPLOYEE_PROJECT);
+            } catch (Exception e) {}
+            try {
+                stmt.executeUpdate(DROP_SIMPLE_OUT_PROC);
+            } catch (Exception e) {}
+            try {
+                stmt.executeUpdate(DROP_PROCEDURE_WITHOUT_PARAMS);
+            } catch (Exception e) {}
 
-        stmt.executeUpdate(CREATE_PROCEDURE);
-        stmt.executeUpdate(CREATE_EMPLOYEE_PROJECT);
-        stmt.executeUpdate(CREATE_PROCEDURE_EMP_SELECT);
-        stmt.executeUpdate(CREATE_PROCEDURE_EMP_INSERT);
-        stmt.executeUpdate(CREATE_SIMPLE_OUT_PROC);
-        stmt.executeUpdate(CREATE_PROCEDURE_WITHOUT_PARAMS);
-        
-        stmt.close();
+            stmt.executeUpdate(CREATE_PROCEDURE);
+            stmt.executeUpdate(CREATE_EMPLOYEE_PROJECT);
+            stmt.executeUpdate(CREATE_PROCEDURE_EMP_SELECT);
+            stmt.executeUpdate(CREATE_PROCEDURE_EMP_INSERT);
+            stmt.executeUpdate(CREATE_SIMPLE_OUT_PROC);
+            stmt.executeUpdate(CREATE_PROCEDURE_WITHOUT_PARAMS);
+
+        } finally {
+            closeQuietly(stmt);
+        }
     }
+    
     protected void tearDown() throws Exception {
-        Statement stmt = connection.createStatement();
-        stmt.executeUpdate(DROP_PROCEDURE);
-        stmt.executeUpdate(DROP_PROCEDURE_EMP_SELECT);
-        stmt.executeUpdate(DROP_PROCEDURE_EMP_INSERT);
-        stmt.executeUpdate(DROP_EMPLOYEE_PROJECT);
-        stmt.executeUpdate(DROP_SIMPLE_OUT_PROC);
-        stmt.executeUpdate(DROP_PROCEDURE_WITHOUT_PARAMS);
-        stmt.close();
-        connection.close();
-        super.tearDown();
+        try {
+            Statement stmt = con.createStatement();
+            stmt.executeUpdate(DROP_PROCEDURE);
+            stmt.executeUpdate(DROP_PROCEDURE_EMP_SELECT);
+            stmt.executeUpdate(DROP_PROCEDURE_EMP_INSERT);
+            stmt.executeUpdate(DROP_EMPLOYEE_PROJECT);
+            stmt.executeUpdate(DROP_SIMPLE_OUT_PROC);
+            stmt.executeUpdate(DROP_PROCEDURE_WITHOUT_PARAMS);
+            closeQuietly(stmt);
+        } finally {
+            closeQuietly(con);
+            super.tearDown();
+        }
     }
 
     public void testRun() throws Exception {
-    	
-    	CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE);
+    	CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE);
         try {
           cstmt.registerOutParameter(3, Types.INTEGER);
           cstmt.registerOutParameter(4, Types.INTEGER);
@@ -261,7 +256,7 @@ public class TestFBCallableStatement extends FBTestBase {
           cstmt.close();
         }
         
-        PreparedStatement stmt = connection.prepareStatement(SELECT_PROCEDURE);
+        PreparedStatement stmt = con.prepareStatement(SELECT_PROCEDURE);
         try {
           stmt.setInt(1, 5);
           ResultSet rs = stmt.executeQuery();
@@ -275,7 +270,7 @@ public class TestFBCallableStatement extends FBTestBase {
           stmt.close();
         }
         
-        CallableStatement cs = connection.prepareCall(CALL_SELECT_PROCEDURE);
+        CallableStatement cs = con.prepareCall(CALL_SELECT_PROCEDURE);
         try {
           ((FirebirdCallableStatement)cs).setSelectableProcedure(true);
           cs.registerOutParameter(2, Types.INTEGER);
@@ -304,7 +299,7 @@ public class TestFBCallableStatement extends FBTestBase {
         //
         // Insert and select with callable statement
         // 		 
-        CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
+        CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         try {
           cstmt.setInt(1, 44);
           cstmt.setString(2, "DGPII");
@@ -330,7 +325,7 @@ public class TestFBCallableStatement extends FBTestBase {
           cstmt.close();
         }
         
-        cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
+        cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
         try {
           cstmt.setInt(1, 44);
           ResultSet rs = cstmt.executeQuery();
@@ -349,7 +344,7 @@ public class TestFBCallableStatement extends FBTestBase {
           cstmt.close();
         }
 
-        cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
+        cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
         try {
           cstmt.setInt(1, 44);
           cstmt.execute();
@@ -364,8 +359,8 @@ public class TestFBCallableStatement extends FBTestBase {
           cstmt.close();
         }
 		  
-        connection.setAutoCommit(true);
-        PreparedStatement stmt = connection.prepareStatement(SELECT_PROCEDURE_EMP_SELECT);
+        con.setAutoCommit(true);
+        PreparedStatement stmt = con.prepareStatement(SELECT_PROCEDURE_EMP_SELECT);
         try {
           stmt.setInt(1, 44);
           stmt.execute();
@@ -390,7 +385,7 @@ public class TestFBCallableStatement extends FBTestBase {
           stmt.close();
         }
         
-        cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT_1);
+        cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT_1);
         try {
           cstmt.setInt(1, 44);
           cstmt.setString(2, "DGPII");
@@ -416,7 +411,7 @@ public class TestFBCallableStatement extends FBTestBase {
           cstmt.close();
         }
 
-        cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT_SPACES);
+        cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT_SPACES);
         try {
             cstmt.setInt(1, 44);
             cstmt.setString(2, "DGPII");
@@ -431,12 +426,10 @@ public class TestFBCallableStatement extends FBTestBase {
         } finally {
             cstmt.close();
         }
-
-        connection.setAutoCommit(false);
     }
 
     public void testFatalError() throws Exception {
-        PreparedStatement stmt = connection.prepareStatement(EXECUTE_PROCEDURE_AS_STMT);
+        PreparedStatement stmt = con.prepareStatement(EXECUTE_PROCEDURE_AS_STMT);
         try {
           stmt.setInt(1, 5);
           ResultSet rs = stmt.executeQuery();
@@ -453,7 +446,7 @@ public class TestFBCallableStatement extends FBTestBase {
 	 
     public void testOutProcedure() throws Exception {
         CallableStatement stmt = 
-            connection.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+            con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
             stmt.setInt(1, 1);
             stmt.registerOutParameter(2, Types.INTEGER);
@@ -467,7 +460,7 @@ public class TestFBCallableStatement extends FBTestBase {
 
     public void testOutProcedure1() throws Exception {
         CallableStatement stmt = 
-            connection.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_1);
+            con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_1);
         try {
             stmt.registerOutParameter(1, Types.INTEGER);
             stmt.setInt(2, 1);
@@ -481,7 +474,7 @@ public class TestFBCallableStatement extends FBTestBase {
     
     public void testOutProcedureWithConst() throws Exception {
         CallableStatement stmt = 
-            connection.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST);
+            con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST);
         try {
             //stmt.setInt(1, 1);
             //stmt.registerOutParameter(2, Types.INTEGER);
@@ -495,7 +488,7 @@ public class TestFBCallableStatement extends FBTestBase {
     
     public void testOutProcedureWithConstWithQuestionMart() throws Exception {
         CallableStatement stmt = 
-            connection.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION);
+            con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION);
         try {
             //stmt.setInt(1, 1);
             //stmt.registerOutParameter(2, Types.INTEGER);
@@ -508,7 +501,7 @@ public class TestFBCallableStatement extends FBTestBase {
     }
     public void testInOutProcedure() throws Exception {
         CallableStatement stmt = 
-            connection.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
+            con.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
         try {
             stmt.clearParameters();
             stmt.setInt(1, 1);
@@ -533,7 +526,7 @@ public class TestFBCallableStatement extends FBTestBase {
      */
     public void testProcedureWithoutParams() throws Exception {
         CallableStatement stmt = 
-            connection.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS);
+            con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS);
         try {
             stmt.execute();
         } finally {
@@ -549,7 +542,7 @@ public class TestFBCallableStatement extends FBTestBase {
      */
     public void testProcedureWithoutParams1() throws Exception {
         CallableStatement stmt = 
-            connection.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_1);
+            con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_1);
         try {
             stmt.execute();
         } finally {
@@ -566,7 +559,7 @@ public class TestFBCallableStatement extends FBTestBase {
      */
     public void testProcedureWithoutParams2() throws Exception {
         CallableStatement stmt = 
-            connection.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_2);
+            con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_2);
         try {
             stmt.execute();
             // assertTrue("Should return correct value", stmt.getInt(1) == 1);
@@ -575,7 +568,7 @@ public class TestFBCallableStatement extends FBTestBase {
         }
         
         // and now test EXECUTE PROCEDURE syntax
-        stmt = connection.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_3);
+        stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_3);
         try {
             stmt.execute();
         } finally {
@@ -585,7 +578,7 @@ public class TestFBCallableStatement extends FBTestBase {
     }
     
     public void testBatch() throws Exception {
-        CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
+        CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         try {
           cstmt.setInt(1, 44);
           cstmt.setString(2, "DGPII");
@@ -610,7 +603,7 @@ public class TestFBCallableStatement extends FBTestBase {
           
           cstmt.executeBatch();
          
-          Statement stmt = connection.createStatement(
+          Statement stmt = con.createStatement(
               ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
           
           try {
@@ -653,7 +646,7 @@ public class TestFBCallableStatement extends FBTestBase {
     
     public void testBatchResultSet() throws Exception
     {
-        CallableStatement cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
+        CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         try {
           cstmt.setInt(1, 44);
           cstmt.setString(2, "DGPII");
@@ -679,7 +672,7 @@ public class TestFBCallableStatement extends FBTestBase {
           cstmt.close();
         }
         
-        cstmt = connection.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
+        cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
         try {
             cstmt.setInt(1, 44);
             cstmt.addBatch();
@@ -706,7 +699,7 @@ public class TestFBCallableStatement extends FBTestBase {
      */
     public void testBatchInOut() throws Exception {
        CallableStatement stmt = 
-            connection.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
+            con.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
         try {
             stmt.clearParameters();
             stmt.setInt(1, 1);
@@ -732,7 +725,7 @@ public class TestFBCallableStatement extends FBTestBase {
      */
     public void testBatchOut() throws Exception {
         CallableStatement stmt = 
-            connection.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+            con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
             stmt.setInt(1, 1);
             stmt.registerOutParameter(2, Types.INTEGER);
@@ -764,14 +757,14 @@ public class TestFBCallableStatement extends FBTestBase {
     		return;
     	}
     	
-    	FirebirdCallableStatement cs = (FirebirdCallableStatement) connection.prepareCall(CALL_SELECT_PROCEDURE);
+    	FirebirdCallableStatement cs = (FirebirdCallableStatement) con.prepareCall(CALL_SELECT_PROCEDURE);
         try {
 	        	assertTrue(cs.isSelectableProcedure());
         } finally {
         	cs.close();
         }
         
-        cs = (FirebirdCallableStatement) connection.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
+        cs = (FirebirdCallableStatement) con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         try {
         	assertFalse(cs.isSelectableProcedure());
         } finally {
@@ -793,17 +786,17 @@ public class TestFBCallableStatement extends FBTestBase {
     	
     	final String DROP_SIMPLE_PROC = "DROP PROCEDURE MULT";
     	
-    	connection.setAutoCommit(false);
-    	CallableStatement callableStatement = connection.prepareCall(CALL_SELECT_PROCEDURE);
+    	con.setAutoCommit(false);
+    	CallableStatement callableStatement = con.prepareCall(CALL_SELECT_PROCEDURE);
     	callableStatement.close();
     	
-    	Statement stmt = connection.createStatement();
+    	Statement stmt = con.createStatement();
     	
     	stmt.execute(CREATE_SIMPLE_PROC);
-    	connection.commit();
+    	con.commit();
     	
     	try {
-	    	FirebirdCallableStatement cs = (FirebirdCallableStatement) connection.prepareCall("{call mult(?, ?)}");
+	    	FirebirdCallableStatement cs = (FirebirdCallableStatement) con.prepareCall("{call mult(?, ?)}");
 	    	try {
 	    		assertTrue(cs.isSelectableProcedure());
 	    	} finally {
@@ -815,9 +808,8 @@ public class TestFBCallableStatement extends FBTestBase {
     	}
     }
     
-    
     private boolean databaseEngineHasSelectabilityInfo() throws SQLException {
-    	DatabaseMetaData metaData = connection.getMetaData();
+    	DatabaseMetaData metaData = con.getMetaData();
     	int majorVersion = metaData.getDatabaseMajorVersion();
     	int minorVersion = metaData.getDatabaseMinorVersion();
     	
@@ -829,30 +821,71 @@ public class TestFBCallableStatement extends FBTestBase {
     	}
     	return false;
     }
-
     
     public void testJdbc181() throws Exception {
-        Connection con = getConnectionViaDriverManager();
+        PreparedStatement ps = con.prepareCall("{call factorial(?, ?)}"); //con.prepareStatement("EXECUTE PROCEDURE factorial(?, ?)");
         try {
-            PreparedStatement ps = con.prepareCall("{call factorial(?, ?)}"); //con.prepareStatement("EXECUTE PROCEDURE factorial(?, ?)");
-            try {
-                ps.setInt(1, 5);
-                ps.setInt(2, 1);
-                ResultSet rs = ps.executeQuery();
-                int counter = 0; 
-                int factorial = 1;
-                while(rs.next()) {
-                    assertEquals(counter, rs.getInt(1));
-                    assertEquals(factorial, rs.getInt(2));
-                    counter++;
-                    if (counter > 0)
-                        factorial *= counter;
-                }
-            } finally {
-                ps.close();
+            ps.setInt(1, 5);
+            ps.setInt(2, 1);
+            ResultSet rs = ps.executeQuery();
+            int counter = 0; 
+            int factorial = 1;
+            while(rs.next()) {
+                assertEquals(counter, rs.getInt(1));
+                assertEquals(factorial, rs.getInt(2));
+                counter++;
+                if (counter > 0)
+                    factorial *= counter;
             }
-        } finally  {
-            con.close();
+        } finally {
+            closeQuietly(ps);
         }
     }
+    
+    /**
+     * Closing a statement twice should not result in an Exception.
+     * 
+     * @throws SQLException
+     */
+    public void testDoubleClose() throws SQLException {
+        CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
+        try {
+            stmt.close();
+            stmt.close();
+        } finally {
+            closeQuietly(stmt);
+        }
+    }
+    
+    /**
+     * Test if an implicit close (by fully reading the resultset) while closeOnCompletion is true, will close
+     * the statement.
+     * <p>
+     * JDBC 4.1 feature
+     * </p>
+     * 
+     * @throws SQLException
+     */
+    public void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
+        FBCallableStatement stmt = (FBCallableStatement)con.prepareCall("{call factorial(?, ?)}");
+        try {
+            stmt.closeOnCompletion();
+            stmt.setInt(1, 5);
+            stmt.setInt(2, 1);
+            stmt.execute();
+            // Cast so it also works under JDBC 3.0
+            FBResultSet rs = (FBResultSet)stmt.getResultSet();
+            int count = 0;
+            while (rs.next()) {
+                assertEquals(count, rs.getInt(1));
+                count++;
+            }
+            assertTrue("Resultset should be closed (automatically closed after last result read)", rs.isClosed());
+            assertTrue("Statement should be closed", stmt.isClosed());
+        } finally {
+            stmt.close();
+        }
+    }
+    
+    // Other closeOnCompletion behavior considered to be sufficiently tested in TestFBStatement
 }
