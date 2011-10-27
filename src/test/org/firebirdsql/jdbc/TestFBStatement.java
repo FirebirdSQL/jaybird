@@ -12,10 +12,10 @@ public class TestFBStatement extends FBTestBase {
     private Connection con;
 
     private static final int DATA_ITEMS = 5;
-    public static final String CREATE_TABLE = "CREATE TABLE test ( col1 INTEGER )";
-    public static final String DROP_TABLE = "DROP TABLE test";
-    public static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
-    public static final String SELECT_DATA = "SELECT col1 FROM test ORDER BY col1";
+    private static final String CREATE_TABLE = "CREATE TABLE test ( col1 INTEGER )";
+    private static final String DROP_TABLE = "DROP TABLE test";
+    private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
+    private static final String SELECT_DATA = "SELECT col1 FROM test ORDER BY col1";
 
     public TestFBStatement(String name) {
         super(name);
@@ -30,18 +30,12 @@ public class TestFBStatement extends FBTestBase {
         try {
             Statement ddlStmt = con.createStatement();
             try {
-                try {
-                    ddlStmt.execute(DROP_TABLE);
-                } catch (SQLException ex) {
-                    // ignore
-                }
+                ddlStmt.execute(DROP_TABLE);
+            } catch (Exception ex) {}
+            ddlStmt.execute(CREATE_TABLE);
+            prepareTestData();
 
-                ddlStmt.execute(CREATE_TABLE);
-
-            } finally {
-                closeQuietly(ddlStmt);
-            }
-
+            closeQuietly(ddlStmt);
         } finally {
             closeQuietly(con);
         }
@@ -49,16 +43,14 @@ public class TestFBStatement extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        Statement stmt = con.createStatement();
         try {
-
-        } finally {
+            Statement stmt = con.createStatement();
+            stmt.execute(DROP_TABLE);
             closeQuietly(stmt);
+        } finally {
+            closeQuietly(con);
+            super.tearDown();
         }
-
-        closeQuietly(con);
-
-        super.tearDown();
     }
 
     /**
@@ -129,7 +121,6 @@ public class TestFBStatement extends FBTestBase {
      * @throws SQLException
      */
     public void testNoCloseOnCompletion_StatementOpen_afterImplicitResultSetClose() throws SQLException {
-        prepareTestData();
         FBStatement stmt = (FBStatement)con.createStatement();
         try {
             stmt.execute(SELECT_DATA);
@@ -157,7 +148,6 @@ public class TestFBStatement extends FBTestBase {
      * @throws SQLException
      */
     public void testNoCloseOnCompletion_StatementOpen_afterExplicitResultSetClose() throws SQLException {
-        prepareTestData();
         FBStatement stmt = (FBStatement)con.createStatement();
         try {
             stmt.execute(SELECT_DATA);
@@ -182,7 +172,6 @@ public class TestFBStatement extends FBTestBase {
      * @throws SQLException
      */
     public void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
-        prepareTestData();
         FBStatement stmt = (FBStatement)con.createStatement();
         try {
             stmt.execute(SELECT_DATA);
@@ -211,7 +200,6 @@ public class TestFBStatement extends FBTestBase {
      * @throws SQLException
      */
     public void testCloseOnCompletion_StatementClosed_afterExplicitResultSetClose() throws SQLException {
-        prepareTestData();
         FBStatement stmt = (FBStatement)con.createStatement();
         try {
             stmt.execute(SELECT_DATA);
@@ -230,8 +218,23 @@ public class TestFBStatement extends FBTestBase {
         }
     }
     
-    // TODO Add test for queries not producing a ResultSet (closeOnCompletion should not affect the statement)
-    // TODO Add similar tests for PreparedStatement and CallableStatement
+    /**
+     * Test if a executing a query which does not produce a resultset (eg an INSERT without generated keys) will not close the
+     * statement.
+     *  
+     * @throws SQLException
+     */
+    public void testCloseOnCompletion_StatementOpen_afterNonResultSetQuery() throws SQLException {
+        FBStatement stmt = (FBStatement)con.createStatement();
+        try {
+            stmt.closeOnCompletion();
+            stmt.execute("INSERT INTO test(col1) VALUES(" + DATA_ITEMS +")");
+            
+            assertFalse("Statement should be open", stmt.isClosed());
+        } finally {
+            stmt.close();
+        }
+    }
 
     private void prepareTestData() throws SQLException {
         PreparedStatement pstmt = con.prepareStatement(INSERT_DATA);
