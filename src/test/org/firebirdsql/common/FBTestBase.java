@@ -275,4 +275,20 @@ public class FBTestBase extends SimpleFBTestBase {
             //ignore
         }
     }
+    
+    /**
+     * Helper method to quietly close resultsets.
+     * 
+     * @param stmt Statement object
+     */
+    protected void closeQuietly(ResultSet rs) {
+        if (rs == null) {
+            return;
+        }
+        try {
+            rs.close();
+        } catch (SQLException ex) {
+            //ignore
+        }
+    }
 }
