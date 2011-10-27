@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
@@ -70,5 +72,29 @@ public class FBDatabaseMetaData extends AbstractDatabaseMetaData {
     public boolean generatedKeyAlwaysReturned() throws SQLException {
         // TODO Double check if this is correct
         return false;
+    }
+    
+    public int getJDBCMajorVersion() {
+        return 4;
+    }
+    
+    public int getJDBCMinorVersion() {
+        try {
+            String javaImplementation = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                public String run() {
+                    return System.getProperty("java.implementation.version");
+                } 
+             });
+            if (javaImplementation != null && "1.7".compareTo(javaImplementation) <= 0) {
+                // JDK 1.7 or higher: JDBC 4.1
+                return 1;
+            } else {
+                // JDK 1.6 (or lower): JDBC 4.0
+                return 0;
+            }
+        } catch (RuntimeException ex) {
+            // default to 0 (JDBC 4.0) when privileged call fails
+            return 0;
+        }
     }
 }
