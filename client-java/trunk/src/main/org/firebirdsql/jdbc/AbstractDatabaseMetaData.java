@@ -85,10 +85,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                     stmt.close();
             }
             statements.clear();
-            /*if (tables != null) {
-                tables.close();
-                tables = null;
-                }*/
         }
         catch (SQLException e) {
            if (log!=null) log.warn("error in DatabaseMetaData.close", e);
@@ -172,7 +168,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         if (getDatabaseMajorVersion() == 1) {
             return false;
         } else
-        if (getDatabaseMajorVersion() == 2) {
+        if (getDatabaseMajorVersion() >= 2) {
             return false;
         } else
             throw new FBDriverNotCapableException();
@@ -191,7 +187,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         if (getDatabaseMajorVersion() == 1) {
             return false;
         } else
-        if (getDatabaseMajorVersion() == 2) {
+        if (getDatabaseMajorVersion() >= 2) {
             return true;
         } else
             throw new FBDriverNotCapableException();
@@ -210,7 +206,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         if (getDatabaseMajorVersion() == 1) {
             return false;
         } else
-        if (getDatabaseMajorVersion() == 2) {
+        if (getDatabaseMajorVersion() >= 2) {
             return false;
         } else
             throw new FBDriverNotCapableException();
@@ -229,7 +225,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         if (getDatabaseMajorVersion() == 1) {
             return true;
         } else
-        if (getDatabaseMajorVersion() == 2) {
+        if (getDatabaseMajorVersion() >= 2) {
             return false;
         } else
             throw new FBDriverNotCapableException();
@@ -276,7 +272,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  String getDriverVersion() throws SQLException {
-        return "2.1";
+        return "2.2";
     }
 
 
@@ -296,7 +292,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @return JDBC driver minor version number
      */
     public  int getDriverMinorVersion() {
-        return 1;
+        return 2;
     }
 
 
@@ -844,7 +840,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  boolean nullPlusNonNullIsNull() throws SQLException {
-        return true;//I didn't check (rrokytskyy: checked, true for FB 1.0 RC2)
+        return true;
     }
 
 
@@ -917,7 +913,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsOrderByUnrelated() throws SQLException {
-        return true;//I'm not sure on this one, (rrokytskyy: works on FB 1.0 RC2)
+        return true;
     }
 
 
@@ -1103,7 +1099,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsFullOuterJoins() throws SQLException {
-        return true;//lets see what the tests say
+        return true;
     }
 
 
@@ -1422,7 +1418,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsUnionAll() throws SQLException {
-        return false;//I think
+        return true;
     }
 
 
@@ -1473,9 +1469,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return true;//commit retaining only.
     }
 
-
-
-
     //----------------------------------------------------------------------
     // The following group of methods exposes various limitations
     // based on the target database with the current driver.
@@ -1492,8 +1485,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public  int getMaxBinaryLiteralLength() throws SQLException {
         return 0;//anyone know for sure?
     }
-
-
 
     /**
      * What's the max length for a character literal?
@@ -1516,10 +1507,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxColumnNameLength() throws SQLException {
-        return 31;//I think
+        return 31;
     }
-
-
 
     /**
      * What's the maximum number of columns in a "GROUP BY" clause?
@@ -1532,8 +1521,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return 0; //I don't know
     }
 
-
-
     /**
      * What's the maximum number of columns allowed in an index?
      *
@@ -1544,8 +1531,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public  int getMaxColumnsInIndex() throws SQLException {
         return 0; //I don't know
     }
-
-
 
     /**
      * What's the maximum number of columns in an "ORDER BY" clause?
@@ -1558,8 +1543,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return 0; //I don't know
     }
 
-
-
     /**
      * What's the maximum number of columns in a "SELECT" list?
      *
@@ -1571,8 +1554,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return 0; //I don't know
     }
 
-
-
     /**
      * What's the maximum number of columns in a table?
      *
@@ -1581,10 +1562,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxColumnsInTable() throws SQLException {
-        return 32767; //I don't know
+        return 32767; // Depends on datatypes and sizes, at most 64 kbyte excluding blobs (but including blob ids)
     }
-
-
 
     /**
      * How many active connections can we have at a time to this database?
@@ -1597,8 +1576,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return 0; //I don't know
     }
 
-
-
     /**
      * What's the maximum cursor name length?
      *
@@ -1610,8 +1587,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return 31;
     }
 
-
-
     /**
      * Retrieves the maximum number of bytes for an index, including all
      * of the parts of the index.
@@ -1622,10 +1597,12 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxIndexLength() throws SQLException {
-        return 0; //I don't know
+        if (getDatabaseMajorVersion() == 1) {
+            return 252; // See http://www.firebirdsql.org/en/firebird-technical-specifications/
+        } else {
+            return 0; // 1/4 of page size, maybe retrieve page size and use that?
+        }
     }
-
-
 
     /**
      * What's the maximum length allowed for a schema name?
@@ -1638,8 +1615,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return 0; //No schemas
     }
 
-
-
     /**
      * What's the maximum length of a procedure name?
      *
@@ -1650,8 +1625,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public  int getMaxProcedureNameLength() throws SQLException {
         return 31;
     }
-
-
 
     /**
      * What's the maximum length of a catalog name?
@@ -1664,8 +1637,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return 0; //No catalogs
     }
 
-
-
     /**
      * What's the maximum length of a single row?
      *
@@ -1674,13 +1645,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxRowSize() throws SQLException {
-        if (getDatabaseMajorVersion() >= 1 && getDatabaseMinorVersion() >= 5)
+        if ((getDatabaseMajorVersion() == 1 && getDatabaseMinorVersion() >= 5) || getDatabaseMajorVersion() >= 2)
             return 65531;
         else 
             return 0;
     }
-
-
 
     /**
      * Did getMaxRowSize() include LONGVARCHAR and LONGVARBINARY
@@ -1690,10 +1659,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  boolean doesMaxRowSizeIncludeBlobs() throws SQLException {
-        return true;
+        return false; // Blob sizes are not included in rowsize 
     }
-
-
 
     /**
      * What's the maximum length of an SQL statement?
@@ -1703,10 +1670,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxStatementLength() throws SQLException {
-        return 0;
+        return 65536;
     }
-
-
 
     /**
      * How many active statements can we have open at one time to this
@@ -1720,8 +1685,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return 0;
     }
 
-
-
     /**
      * What's the maximum length of a table name?
      *
@@ -1732,8 +1695,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public  int getMaxTableNameLength() throws SQLException {
         return 31;
     }
-
-
 
     /**
      * What's the maximum number of tables in a SELECT statement?
@@ -1746,8 +1707,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return 0;
     }
 
-
-
     /**
      * What's the maximum length of a user name?
      *
@@ -1758,8 +1717,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public  int getMaxUserNameLength() throws SQLException {
         return 31;//I don't know??
     }
-
-
 
     //----------------------------------------------------------------------
 
@@ -1775,8 +1732,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return Connection.TRANSACTION_READ_COMMITTED;//close enough to snapshot.
     }
 
-
-
     /**
      * Are transactions supported? If not, invoking the method
      * <code>commit</code> is a noop and the
@@ -1788,8 +1743,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public  boolean supportsTransactions() throws SQLException {
         return true;
     }
-
-
 
     /**
      * Does this database support the given transaction isolation level?
@@ -1808,10 +1761,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             case Connection.TRANSACTION_SERIALIZABLE: return true;//????
             default: return false;
         }
-
     }
-
-
 
     /**
      * Are both data definition and data manipulation statements
@@ -1824,7 +1774,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return true;//but not on the tables you defined in the transaction!
     }
 
-
     /**
      * Are only data manipulation statements within a transaction
      * supported?
@@ -1836,7 +1785,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return false;
     }
 
-
     /**
      * Does a data definition statement within a transaction force the
      * transaction to commit?
@@ -1847,7 +1795,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public boolean dataDefinitionCausesTransactionCommit() throws SQLException {
         return false;//but you can't use the table till the transaction is committed.
     }
-
 
     /**
      * Is a data definition statement within a transaction ignored?
@@ -2411,15 +2358,14 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return doQuery(sql, params);
     }
 
-
-
     /**
      * Gets the schema names available in this database.  The results
      * are ordered by schema name.
      *
-     * <P>The schema column is:
+     * <P>The schema columns are:
      *  <OL>
      *  <LI><B>TABLE_SCHEM</B> String => schema name
+     *  <LI><B>TABLE_CATALOG</B> String => catalog name (may be <code>null</code>)
      *  </OL>
      *
      * @return <code>ResultSet</code> - each row has a single String column that is a
@@ -2429,8 +2375,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public  ResultSet getSchemas() throws SQLException {
         return getSchemas(null, null);
     }
-
-
 
     /**
      * Gets the catalog names available in this database.  The results
@@ -2458,8 +2402,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         return new FBResultSet(xsqlvars, rows);
     }
-
-
 
     /**
      * Gets the table types available in this database.  The results
@@ -5009,8 +4951,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         }
     }
 
-
-
     /**
      * Does the database support the concurrency type in combination
      * with the given result set type?
@@ -5035,8 +4975,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         }
     }
 
-
-
     /**
      *
      * Indicates whether a result set's own updates are visible.
@@ -5052,8 +4990,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
             ResultSet.TYPE_SCROLL_SENSITIVE == type;
     }
-
-
 
     /**
      *
@@ -5071,8 +5007,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             ResultSet.TYPE_SCROLL_SENSITIVE == type;
     }
 
-
-
     /**
      *
      * Indicates whether a result set's own inserts are visible.
@@ -5088,8 +5022,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
             ResultSet.TYPE_SCROLL_SENSITIVE == type;
     }
-
-
 
     /**
      *
@@ -5107,8 +5039,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return false;
     }
 
-
-
     /**
      *
      * Indicates whether deletes made by others are visible.
@@ -5124,8 +5054,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public boolean othersDeletesAreVisible(int type) throws SQLException {
         return false;
     }
-
-
 
     /**
      *
@@ -5144,8 +5072,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return false;
     }
 
-
-
     /**
      *
      * Indicates whether or not a visible row update can be detected by
@@ -5161,8 +5087,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public boolean updatesAreDetected(int type) throws SQLException {
         return false;
     }
-
-
 
     /**
      *
@@ -5180,8 +5104,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return false;
     }
 
-
-
     /**
      *
      * Indicates whether or not a visible row insert can be detected
@@ -5197,8 +5119,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return false;
     }
 
-
-
     /**
      *
      * Indicates whether the driver supports batch updates.
@@ -5209,8 +5129,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public boolean supportsBatchUpdates() throws SQLException {
         return true;
     }
-
-
 
     /**
      *
@@ -5333,7 +5251,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public boolean supportsSavepoints() throws SQLException {
-        return getDatabaseMajorVersion() >= 1 && getDatabaseMinorVersion() >= 5;
+        return (getDatabaseMajorVersion() == 1 && getDatabaseMinorVersion() >= 5) || getDatabaseMajorVersion() >= 2;
     }
 
     /**
@@ -5365,9 +5283,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs 
      */
     public boolean supportsGetGeneratedKeys() throws SQLException {
-        return false;
+        return true;
     }
-
 
     /**
      *
@@ -5613,8 +5530,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException should never be thrown in this implementation 
      */
     public int getSQLStateType() throws SQLException {
-        // return sqlStateXOpen;
-        return 1; // same value as sqlStateXOpen, but makes JDK 1.3 happy.
+        return DatabaseMetaData.sqlStateSQL99;
     }
 
     //-------------------------- JDBC 4.0 -------------------------------------
