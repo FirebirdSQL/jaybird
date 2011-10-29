@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -18,7 +20,6 @@
  */
 
 package org.firebirdsql.jdbc;
-
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -859,5 +860,16 @@ public abstract class AbstractResultSetMetaData implements FirebirdResultSetMeta
             pending -= maxLength;
         }
         return result;
+    }
+    
+    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        return iface != null && iface.isAssignableFrom(getClass());
+    }
+
+    public <T> T unwrap(Class<T> iface) throws SQLException {
+        if (!isWrapperFor(iface))
+            throw new FBDriverNotCapableException();
+        
+        return iface.cast(this);
     }
 }

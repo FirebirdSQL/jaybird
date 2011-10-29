@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -21,6 +23,7 @@ package org.firebirdsql.jdbc;
 
 import java.io.*;
 import java.math.*;
+import java.net.URL;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
@@ -34,13 +37,12 @@ import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
  * Implementation of {@link java.sql.PreparedStatement}interface. This class
  * contains all methods from the JDBC 2.0 specification.
  * 
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy
- *         </a>
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public abstract class AbstractPreparedStatement extends AbstractStatement implements
         FirebirdPreparedStatement {
-
 
     private boolean metaDataQuery;
     
@@ -566,6 +568,83 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         setBinaryStream(parameterIndex, x, length);
         isParamSet[parameterIndex - 1] = true;
     }
+    
+    public void setURL(int parameterIndex, URL url) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+    
+    public void setAsciiStream(int parameterIndex, InputStream x, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setAsciiStream(int parameterIndex, InputStream x)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setBinaryStream(int parameterIndex, InputStream x, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setBinaryStream(int parameterIndex, InputStream x)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setBlob(int parameterIndex, InputStream inputStream, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setBlob(int parameterIndex, InputStream inputStream)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setCharacterStream(int parameterIndex, Reader reader,
+            long length) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setCharacterStream(int parameterIndex, Reader reader)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setClob(int parameterIndex, Reader reader, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setClob(int parameterIndex, Reader reader) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setNCharacterStream(int parameterIndex, Reader value,
+            long length) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setNCharacterStream(int parameterIndex, Reader value)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setNClob(int parameterIndex, Reader reader, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setNClob(int parameterIndex, Reader reader) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setNString(int parameterIndex, String value)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
     /**
      * Clears the current parameter values immediately.
@@ -765,9 +844,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         }
     }
 
-    // --------------------------JDBC 2.0-----------------------------
-
-    private LinkedList batchList = new LinkedList();
+    protected final List batchList = new LinkedList();
 
     /**
      * Adds a set of parameters to this <code>PreparedStatement</code>
@@ -955,7 +1032,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         getField(parameterIndex).setCharacterStream(reader, length);
         isParamSet[parameterIndex - 1] = true;
     }
-
+    
     /**
      * Sets the designated parameter to the given
      * <code>REF(&lt;structured-type&gt;)</code> value.
@@ -1257,5 +1334,9 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      */
     public int getStatementType() throws FBSQLException {
         return super.getStatementType();
+    }
+
+    public ParameterMetaData getParameterMetaData() throws SQLException {
+        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
     }
 }
