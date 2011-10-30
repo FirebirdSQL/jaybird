@@ -1,4 +1,4 @@
-// $ANTLR 3.0.1 D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3 2008-06-20 22:29:26
+// $ANTLR 3.4 D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g 2011-10-30 20:15:38
 
 package org.firebirdsql.jdbc.parser;
 
@@ -7,97 +7,92 @@ import org.antlr.runtime.*;
 import java.util.Stack;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
+
+@SuppressWarnings({"all", "warnings", "unchecked"})
 public class JaybirdSqlLexer extends Lexer {
-    public static final int CAST=8;
-    public static final int KW_TIMESTAMP=61;
-    public static final int T79=79;
-    public static final int T78=78;
-    public static final int KW_CHAR=50;
-    public static final int CURRENT_USER=12;
-    public static final int LETTER=73;
-    public static final int EXECUTE=22;
-    public static final int KW_SIZE=64;
-    public static final int SUB_TYPE=41;
-    public static final int CURRENT_TIME=15;
-    public static final int UPDATE=45;
-    public static final int FOR=23;
-    public static final int COUNT=10;
-    public static final int KW_FLOAT=55;
-    public static final int SUM=42;
     public static final int EOF=-1;
-    public static final int QUOTED_ID=66;
-    public static final int CHARACTER=9;
-    public static final int KW_BIGINT=49;
-    public static final int ESCqs=77;
-    public static final int AS=5;
-    public static final int RIGHT_PAREN=68;
-    public static final int KW_PRECISION=54;
-    public static final int KW_TIME=60;
-    public static final int INSERT=26;
-    public static final int COMMA=72;
-    public static final int KW_NUMERIC=58;
-    public static final int MINIMUM=30;
-    public static final int RETURNING=36;
-    public static final int AVG=6;
+    public static final int T__74=74;
+    public static final int T__75=75;
+    public static final int T__76=76;
+    public static final int T__77=77;
+    public static final int T__78=78;
+    public static final int T__79=79;
+    public static final int T__80=80;
+    public static final int T__81=81;
+    public static final int T__82=82;
+    public static final int T__83=83;
+    public static final int T__84=84;
     public static final int ALL=4;
-    public static final int KW_SET=63;
+    public static final int AS=5;
+    public static final int AVG=6;
     public static final int BOTH=7;
-    public static final int NEXT=33;
-    public static final int EXTRACT=21;
+    public static final int CAST=8;
+    public static final int CHARACTER=9;
+    public static final int COLLATE=10;
+    public static final int COMMA=11;
+    public static final int COUNT=12;
+    public static final int CURRENT_DATE=13;
+    public static final int CURRENT_ROLE=14;
+    public static final int CURRENT_TIME=15;
     public static final int CURRENT_TIMESTAMP=16;
-    public static final int SELECT=38;
-    public static final int INTO=27;
-    public static final int SEGMENT=37;
-    public static final int ESCqd=74;
-    public static final int COLLATE=11;
-    public static final int INTEGER=70;
-    public static final int KW_VARCHAR=62;
-    public static final int KW_BLOB=48;
-    public static final int KW_INT=57;
-    public static final int KW_SMALLINT=59;
-    public static final int KW_DECIMAL=52;
-    public static final int NULL=32;
-    public static final int DEFAULT=17;
-    public static final int VALUES=47;
-    public static final int TRAILING=44;
-    public static final int SET=39;
-    public static final int DB_KEY=20;
-    public static final int DELETE=18;
-    public static final int GEN_ID=25;
-    public static final int VALUE=46;
-    public static final int Tokens=89;
-    public static final int KW_DOUBLE=53;
-    public static final int PROCEDURE=35;
-    public static final int LEADING=28;
-    public static final int SUBSTRING=40;
-    public static final int T88=88;
-    public static final int REAL=71;
-    public static final int MATCHING=29;
-    public static final int KW_DATE=51;
-    public static final int T84=84;
-    public static final int WS=75;
-    public static final int T85=85;
-    public static final int T86=86;
-    public static final int T87=87;
-    public static final int CURRENT_ROLE=13;
-    public static final int OR=34;
-    public static final int GENERIC_ID=65;
-    public static final int SL_COMMENT=76;
-    public static final int TRIM=43;
-    public static final int KW_INTEGER=56;
-    public static final int LEFT_PAREN=67;
-    public static final int MAXIMUM=31;
-    public static final int T81=81;
-    public static final int FROM=24;
-    public static final int T80=80;
-    public static final int T83=83;
-    public static final int DISTINCT=19;
-    public static final int T82=82;
-    public static final int CURRENT_DATE=14;
-    public static final int STRING=69;
-    
+    public static final int CURRENT_USER=17;
+    public static final int DB_KEY=18;
+    public static final int DEFAULT=19;
+    public static final int DELETE=20;
+    public static final int DISTINCT=21;
+    public static final int EXECUTE=22;
+    public static final int EXTRACT=23;
+    public static final int FOR=24;
+    public static final int FROM=25;
+    public static final int GENERIC_ID=26;
+    public static final int GEN_ID=27;
+    public static final int INSERT=28;
+    public static final int INTEGER=29;
+    public static final int INTO=30;
+    public static final int KW_BIGINT=31;
+    public static final int KW_BLOB=32;
+    public static final int KW_CHAR=33;
+    public static final int KW_DATE=34;
+    public static final int KW_DECIMAL=35;
+    public static final int KW_DOUBLE=36;
+    public static final int KW_FLOAT=37;
+    public static final int KW_INT=38;
+    public static final int KW_INTEGER=39;
+    public static final int KW_NUMERIC=40;
+    public static final int KW_PRECISION=41;
+    public static final int KW_SIZE=42;
+    public static final int KW_SMALLINT=43;
+    public static final int KW_TIME=44;
+    public static final int KW_TIMESTAMP=45;
+    public static final int KW_VARCHAR=46;
+    public static final int LEADING=47;
+    public static final int LEFT_PAREN=48;
+    public static final int MATCHING=49;
+    public static final int MAXIMUM=50;
+    public static final int MINIMUM=51;
+    public static final int NEXT=52;
+    public static final int NULL=53;
+    public static final int OR=54;
+    public static final int PROCEDURE=55;
+    public static final int QUOTED_ID=56;
+    public static final int REAL=57;
+    public static final int RETURNING=58;
+    public static final int RIGHT_PAREN=59;
+    public static final int SEGMENT=60;
+    public static final int SELECT=61;
+    public static final int SET=62;
+    public static final int SL_COMMENT=63;
+    public static final int STRING=64;
+    public static final int SUBSTRING=65;
+    public static final int SUB_TYPE=66;
+    public static final int SUM=67;
+    public static final int TRAILING=68;
+    public static final int TRIM=69;
+    public static final int UPDATE=70;
+    public static final int VALUE=71;
+    public static final int VALUES=72;
+    public static final int WS=73;
+
     	protected int _mismatchCount;
     	protected java.util.ArrayList _errorMessages = new java.util.ArrayList();
     	
@@ -108,1507 +103,1738 @@ public class JaybirdSqlLexer extends Lexer {
     	public java.util.Collection getErrorMessages() {
     		return _errorMessages;
     	}
-    
-    	protected void mismatch(IntStream input, int ttype, BitSet follow)	
-    		throws RecognitionException {
-    		
-    		_mismatchCount++;
-    		
-    		super.mismatch(input, ttype, follow);
-    	}
-    
+
+      public boolean mismatchIsUnwantedToken(IntStream input, int ttype) {
+        boolean result = super.mismatchIsUnwantedToken(input, ttype);
+        _mismatchCount++;
+        return result;
+      }
+
+      public boolean mismatchIsMissingToken(IntStream input, BitSet follow) {
+        boolean result = super.mismatchIsMissingToken(input, follow);
+        _mismatchCount++;
+        return result;
+      }
+
     	public void emitErrorMessage(String msg) {
     		_errorMessages.add(msg);
     	}
-    	
-    	public void recoverFromMismatchedToken(IntStream input,
-    										   RecognitionException e,
-    										   int ttype,
-    										   BitSet follow)
-    		throws RecognitionException
-    	{
-    		// if next token is what we are looking for then "delete" this token
-    		if ( input.LA(2)==ttype ) {
-    			reportError(e);
-    			beginResync();
-    			input.consume(); // simply delete extra token
-    			endResync();
-    			input.consume(); // move past ttype token as if all were ok
-    			return;
-    		}
-    		if ( !recoverFromMismatchedElement(input,e,follow) ) {
-    			throw e;
-    		}
-    	}
 
-    public JaybirdSqlLexer() {;} 
+
+    // delegates
+    // delegators
+    public Lexer[] getDelegates() {
+        return new Lexer[] {};
+    }
+
+    public JaybirdSqlLexer() {} 
     public JaybirdSqlLexer(CharStream input) {
-        super(input);
-        ruleMemo = new HashMap[88+1];
-     }
-    public String getGrammarFileName() { return "D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3"; }
+        this(input, new RecognizerSharedState());
+    }
+    public JaybirdSqlLexer(CharStream input, RecognizerSharedState state) {
+        super(input,state);
+    }
+    public String getGrammarFileName() { return "D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g"; }
 
-    // $ANTLR start ALL
+    // $ANTLR start "ALL"
     public final void mALL() throws RecognitionException {
         try {
             int _type = ALL;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:50:5: ( 'all' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:50:7: 'all'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:34:5: ( 'all' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:34:7: 'all'
             {
-            match("all"); if (failed) return ;
+            match("all"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end ALL
+    // $ANTLR end "ALL"
 
-    // $ANTLR start AS
+    // $ANTLR start "AS"
     public final void mAS() throws RecognitionException {
         try {
             int _type = AS;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:51:4: ( 'as' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:51:6: 'as'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:35:4: ( 'as' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:35:6: 'as'
             {
-            match("as"); if (failed) return ;
+            match("as"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end AS
+    // $ANTLR end "AS"
 
-    // $ANTLR start AVG
+    // $ANTLR start "AVG"
     public final void mAVG() throws RecognitionException {
         try {
             int _type = AVG;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:52:5: ( 'avg' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:52:7: 'avg'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:36:5: ( 'avg' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:36:7: 'avg'
             {
-            match("avg"); if (failed) return ;
+            match("avg"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end AVG
+    // $ANTLR end "AVG"
 
-    // $ANTLR start BOTH
+    // $ANTLR start "BOTH"
     public final void mBOTH() throws RecognitionException {
         try {
             int _type = BOTH;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:53:6: ( 'both' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:53:8: 'both'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:37:6: ( 'both' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:37:8: 'both'
             {
-            match("both"); if (failed) return ;
+            match("both"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end BOTH
+    // $ANTLR end "BOTH"
 
-    // $ANTLR start CAST
+    // $ANTLR start "CAST"
     public final void mCAST() throws RecognitionException {
         try {
             int _type = CAST;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:54:6: ( 'cast' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:54:8: 'cast'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:38:6: ( 'cast' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:38:8: 'cast'
             {
-            match("cast"); if (failed) return ;
+            match("cast"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end CAST
+    // $ANTLR end "CAST"
 
-    // $ANTLR start CHARACTER
+    // $ANTLR start "CHARACTER"
     public final void mCHARACTER() throws RecognitionException {
         try {
             int _type = CHARACTER;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:55:11: ( 'character' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:55:13: 'character'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:39:11: ( 'character' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:39:13: 'character'
             {
-            match("character"); if (failed) return ;
+            match("character"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end CHARACTER
+    // $ANTLR end "CHARACTER"
 
-    // $ANTLR start COUNT
-    public final void mCOUNT() throws RecognitionException {
-        try {
-            int _type = COUNT;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:56:7: ( 'count' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:56:9: 'count'
-            {
-            match("count"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end COUNT
-
-    // $ANTLR start COLLATE
+    // $ANTLR start "COLLATE"
     public final void mCOLLATE() throws RecognitionException {
         try {
             int _type = COLLATE;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:57:9: ( 'collate' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:57:11: 'collate'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:40:9: ( 'collate' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:40:11: 'collate'
             {
-            match("collate"); if (failed) return ;
+            match("collate"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end COLLATE
+    // $ANTLR end "COLLATE"
 
-    // $ANTLR start CURRENT_USER
-    public final void mCURRENT_USER() throws RecognitionException {
+    // $ANTLR start "COUNT"
+    public final void mCOUNT() throws RecognitionException {
         try {
-            int _type = CURRENT_USER;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:58:14: ( 'current_user' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:58:16: 'current_user'
+            int _type = COUNT;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:41:7: ( 'count' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:41:9: 'count'
             {
-            match("current_user"); if (failed) return ;
+            match("count"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end CURRENT_USER
+    // $ANTLR end "COUNT"
 
-    // $ANTLR start CURRENT_ROLE
-    public final void mCURRENT_ROLE() throws RecognitionException {
-        try {
-            int _type = CURRENT_ROLE;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:59:14: ( 'current_role' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:59:16: 'current_role'
-            {
-            match("current_role"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end CURRENT_ROLE
-
-    // $ANTLR start CURRENT_DATE
+    // $ANTLR start "CURRENT_DATE"
     public final void mCURRENT_DATE() throws RecognitionException {
         try {
             int _type = CURRENT_DATE;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:60:14: ( 'current_date' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:60:16: 'current_date'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:42:14: ( 'current_date' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:42:16: 'current_date'
             {
-            match("current_date"); if (failed) return ;
+            match("current_date"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end CURRENT_DATE
+    // $ANTLR end "CURRENT_DATE"
 
-    // $ANTLR start CURRENT_TIME
+    // $ANTLR start "CURRENT_ROLE"
+    public final void mCURRENT_ROLE() throws RecognitionException {
+        try {
+            int _type = CURRENT_ROLE;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:43:14: ( 'current_role' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:43:16: 'current_role'
+            {
+            match("current_role"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "CURRENT_ROLE"
+
+    // $ANTLR start "CURRENT_TIME"
     public final void mCURRENT_TIME() throws RecognitionException {
         try {
             int _type = CURRENT_TIME;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:61:14: ( 'current_time' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:61:16: 'current_time'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:44:14: ( 'current_time' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:44:16: 'current_time'
             {
-            match("current_time"); if (failed) return ;
+            match("current_time"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end CURRENT_TIME
+    // $ANTLR end "CURRENT_TIME"
 
-    // $ANTLR start CURRENT_TIMESTAMP
+    // $ANTLR start "CURRENT_TIMESTAMP"
     public final void mCURRENT_TIMESTAMP() throws RecognitionException {
         try {
             int _type = CURRENT_TIMESTAMP;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:62:19: ( 'current_timestamp' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:62:21: 'current_timestamp'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:45:19: ( 'current_timestamp' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:45:21: 'current_timestamp'
             {
-            match("current_timestamp"); if (failed) return ;
+            match("current_timestamp"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end CURRENT_TIMESTAMP
+    // $ANTLR end "CURRENT_TIMESTAMP"
 
-    // $ANTLR start DEFAULT
-    public final void mDEFAULT() throws RecognitionException {
+    // $ANTLR start "CURRENT_USER"
+    public final void mCURRENT_USER() throws RecognitionException {
         try {
-            int _type = DEFAULT;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:63:9: ( 'default' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:63:11: 'default'
+            int _type = CURRENT_USER;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:46:14: ( 'current_user' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:46:16: 'current_user'
             {
-            match("default"); if (failed) return ;
+            match("current_user"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end DEFAULT
+    // $ANTLR end "CURRENT_USER"
 
-    // $ANTLR start DELETE
-    public final void mDELETE() throws RecognitionException {
-        try {
-            int _type = DELETE;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:64:8: ( 'delete' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:64:10: 'delete'
-            {
-            match("delete"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end DELETE
-
-    // $ANTLR start DISTINCT
-    public final void mDISTINCT() throws RecognitionException {
-        try {
-            int _type = DISTINCT;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:65:10: ( 'distinct' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:65:12: 'distinct'
-            {
-            match("distinct"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end DISTINCT
-
-    // $ANTLR start DB_KEY
+    // $ANTLR start "DB_KEY"
     public final void mDB_KEY() throws RecognitionException {
         try {
             int _type = DB_KEY;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:66:8: ( 'db_key' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:66:10: 'db_key'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:47:8: ( 'db_key' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:47:10: 'db_key'
             {
-            match("db_key"); if (failed) return ;
+            match("db_key"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end DB_KEY
+    // $ANTLR end "DB_KEY"
 
-    // $ANTLR start EXTRACT
-    public final void mEXTRACT() throws RecognitionException {
+    // $ANTLR start "DEFAULT"
+    public final void mDEFAULT() throws RecognitionException {
         try {
-            int _type = EXTRACT;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:67:9: ( 'extract' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:67:11: 'extract'
+            int _type = DEFAULT;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:48:9: ( 'default' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:48:11: 'default'
             {
-            match("extract"); if (failed) return ;
+            match("default"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end EXTRACT
+    // $ANTLR end "DEFAULT"
 
-    // $ANTLR start EXECUTE
+    // $ANTLR start "DELETE"
+    public final void mDELETE() throws RecognitionException {
+        try {
+            int _type = DELETE;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:49:8: ( 'delete' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:49:10: 'delete'
+            {
+            match("delete"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "DELETE"
+
+    // $ANTLR start "DISTINCT"
+    public final void mDISTINCT() throws RecognitionException {
+        try {
+            int _type = DISTINCT;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:50:10: ( 'distinct' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:50:12: 'distinct'
+            {
+            match("distinct"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "DISTINCT"
+
+    // $ANTLR start "EXECUTE"
     public final void mEXECUTE() throws RecognitionException {
         try {
             int _type = EXECUTE;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:68:9: ( 'execute' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:68:11: 'execute'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:51:9: ( 'execute' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:51:11: 'execute'
             {
-            match("execute"); if (failed) return ;
+            match("execute"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end EXECUTE
+    // $ANTLR end "EXECUTE"
 
-    // $ANTLR start FOR
+    // $ANTLR start "EXTRACT"
+    public final void mEXTRACT() throws RecognitionException {
+        try {
+            int _type = EXTRACT;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:52:9: ( 'extract' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:52:11: 'extract'
+            {
+            match("extract"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "EXTRACT"
+
+    // $ANTLR start "FOR"
     public final void mFOR() throws RecognitionException {
         try {
             int _type = FOR;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:69:5: ( 'for' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:69:7: 'for'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:53:5: ( 'for' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:53:7: 'for'
             {
-            match("for"); if (failed) return ;
+            match("for"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end FOR
+    // $ANTLR end "FOR"
 
-    // $ANTLR start FROM
+    // $ANTLR start "FROM"
     public final void mFROM() throws RecognitionException {
         try {
             int _type = FROM;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:70:6: ( 'from' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:70:8: 'from'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:54:6: ( 'from' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:54:8: 'from'
             {
-            match("from"); if (failed) return ;
+            match("from"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end FROM
+    // $ANTLR end "FROM"
 
-    // $ANTLR start GEN_ID
+    // $ANTLR start "GEN_ID"
     public final void mGEN_ID() throws RecognitionException {
         try {
             int _type = GEN_ID;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:71:8: ( 'gen_id' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:71:10: 'gen_id'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:55:8: ( 'gen_id' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:55:10: 'gen_id'
             {
-            match("gen_id"); if (failed) return ;
+            match("gen_id"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end GEN_ID
+    // $ANTLR end "GEN_ID"
 
-    // $ANTLR start INSERT
+    // $ANTLR start "INSERT"
     public final void mINSERT() throws RecognitionException {
         try {
             int _type = INSERT;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:72:8: ( 'insert' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:72:10: 'insert'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:56:8: ( 'insert' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:56:10: 'insert'
             {
-            match("insert"); if (failed) return ;
+            match("insert"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end INSERT
+    // $ANTLR end "INSERT"
 
-    // $ANTLR start INTO
+    // $ANTLR start "INTO"
     public final void mINTO() throws RecognitionException {
         try {
             int _type = INTO;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:73:6: ( 'into' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:73:8: 'into'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:57:6: ( 'into' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:57:8: 'into'
             {
-            match("into"); if (failed) return ;
+            match("into"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end INTO
+    // $ANTLR end "INTO"
 
-    // $ANTLR start LEADING
-    public final void mLEADING() throws RecognitionException {
-        try {
-            int _type = LEADING;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:74:9: ( 'leading' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:74:11: 'leading'
-            {
-            match("leading"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end LEADING
-
-    // $ANTLR start MATCHING
-    public final void mMATCHING() throws RecognitionException {
-        try {
-            int _type = MATCHING;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:75:10: ( 'matching' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:75:12: 'matching'
-            {
-            match("matching"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end MATCHING
-
-    // $ANTLR start MINIMUM
-    public final void mMINIMUM() throws RecognitionException {
-        try {
-            int _type = MINIMUM;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:76:9: ( 'min' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:76:11: 'min'
-            {
-            match("min"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end MINIMUM
-
-    // $ANTLR start MAXIMUM
-    public final void mMAXIMUM() throws RecognitionException {
-        try {
-            int _type = MAXIMUM;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:77:9: ( 'max' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:77:11: 'max'
-            {
-            match("max"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end MAXIMUM
-
-    // $ANTLR start NULL
-    public final void mNULL() throws RecognitionException {
-        try {
-            int _type = NULL;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:78:6: ( 'null' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:78:8: 'null'
-            {
-            match("null"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end NULL
-
-    // $ANTLR start NEXT
-    public final void mNEXT() throws RecognitionException {
-        try {
-            int _type = NEXT;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:79:6: ( 'next' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:79:8: 'next'
-            {
-            match("next"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end NEXT
-
-    // $ANTLR start OR
-    public final void mOR() throws RecognitionException {
-        try {
-            int _type = OR;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:80:4: ( 'or' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:80:6: 'or'
-            {
-            match("or"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end OR
-
-    // $ANTLR start PROCEDURE
-    public final void mPROCEDURE() throws RecognitionException {
-        try {
-            int _type = PROCEDURE;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:81:11: ( 'procedure' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:81:13: 'procedure'
-            {
-            match("procedure"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end PROCEDURE
-
-    // $ANTLR start RETURNING
-    public final void mRETURNING() throws RecognitionException {
-        try {
-            int _type = RETURNING;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:82:11: ( 'returning' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:82:13: 'returning'
-            {
-            match("returning"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end RETURNING
-
-    // $ANTLR start SEGMENT
-    public final void mSEGMENT() throws RecognitionException {
-        try {
-            int _type = SEGMENT;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:83:9: ( 'segment' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:83:11: 'segment'
-            {
-            match("segment"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end SEGMENT
-
-    // $ANTLR start SELECT
-    public final void mSELECT() throws RecognitionException {
-        try {
-            int _type = SELECT;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:84:8: ( 'select' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:84:10: 'select'
-            {
-            match("select"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end SELECT
-
-    // $ANTLR start SET
-    public final void mSET() throws RecognitionException {
-        try {
-            int _type = SET;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:85:5: ( 'set' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:85:7: 'set'
-            {
-            match("set"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end SET
-
-    // $ANTLR start SUBSTRING
-    public final void mSUBSTRING() throws RecognitionException {
-        try {
-            int _type = SUBSTRING;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:86:11: ( 'substring' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:86:13: 'substring'
-            {
-            match("substring"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end SUBSTRING
-
-    // $ANTLR start SUB_TYPE
-    public final void mSUB_TYPE() throws RecognitionException {
-        try {
-            int _type = SUB_TYPE;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:87:10: ( 'sub_type' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:87:12: 'sub_type'
-            {
-            match("sub_type"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end SUB_TYPE
-
-    // $ANTLR start SUM
-    public final void mSUM() throws RecognitionException {
-        try {
-            int _type = SUM;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:88:5: ( 'sum' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:88:7: 'sum'
-            {
-            match("sum"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end SUM
-
-    // $ANTLR start TRIM
-    public final void mTRIM() throws RecognitionException {
-        try {
-            int _type = TRIM;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:89:6: ( 'trim' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:89:8: 'trim'
-            {
-            match("trim"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end TRIM
-
-    // $ANTLR start TRAILING
-    public final void mTRAILING() throws RecognitionException {
-        try {
-            int _type = TRAILING;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:90:10: ( 'trailing' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:90:12: 'trailing'
-            {
-            match("trailing"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end TRAILING
-
-    // $ANTLR start UPDATE
-    public final void mUPDATE() throws RecognitionException {
-        try {
-            int _type = UPDATE;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:91:8: ( 'update' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:91:10: 'update'
-            {
-            match("update"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end UPDATE
-
-    // $ANTLR start VALUE
-    public final void mVALUE() throws RecognitionException {
-        try {
-            int _type = VALUE;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:92:7: ( 'value' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:92:9: 'value'
-            {
-            match("value"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end VALUE
-
-    // $ANTLR start VALUES
-    public final void mVALUES() throws RecognitionException {
-        try {
-            int _type = VALUES;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:93:8: ( 'values' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:93:10: 'values'
-            {
-            match("values"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end VALUES
-
-    // $ANTLR start KW_BLOB
-    public final void mKW_BLOB() throws RecognitionException {
-        try {
-            int _type = KW_BLOB;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:94:9: ( 'blob' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:94:11: 'blob'
-            {
-            match("blob"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end KW_BLOB
-
-    // $ANTLR start KW_BIGINT
+    // $ANTLR start "KW_BIGINT"
     public final void mKW_BIGINT() throws RecognitionException {
         try {
             int _type = KW_BIGINT;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:95:11: ( 'bigint' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:95:13: 'bigint'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:58:11: ( 'bigint' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:58:13: 'bigint'
             {
-            match("bigint"); if (failed) return ;
+            match("bigint"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end KW_BIGINT
+    // $ANTLR end "KW_BIGINT"
 
-    // $ANTLR start KW_CHAR
+    // $ANTLR start "KW_BLOB"
+    public final void mKW_BLOB() throws RecognitionException {
+        try {
+            int _type = KW_BLOB;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:59:9: ( 'blob' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:59:11: 'blob'
+            {
+            match("blob"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "KW_BLOB"
+
+    // $ANTLR start "KW_CHAR"
     public final void mKW_CHAR() throws RecognitionException {
         try {
             int _type = KW_CHAR;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:96:9: ( 'char' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:96:11: 'char'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:60:9: ( 'char' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:60:11: 'char'
             {
-            match("char"); if (failed) return ;
+            match("char"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end KW_CHAR
+    // $ANTLR end "KW_CHAR"
 
-    // $ANTLR start KW_DATE
+    // $ANTLR start "KW_DATE"
     public final void mKW_DATE() throws RecognitionException {
         try {
             int _type = KW_DATE;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:97:9: ( 'date' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:97:11: 'date'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:61:9: ( 'date' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:61:11: 'date'
             {
-            match("date"); if (failed) return ;
+            match("date"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end KW_DATE
+    // $ANTLR end "KW_DATE"
 
-    // $ANTLR start KW_DECIMAL
+    // $ANTLR start "KW_DECIMAL"
     public final void mKW_DECIMAL() throws RecognitionException {
         try {
             int _type = KW_DECIMAL;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:98:12: ( 'decimal' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:98:14: 'decimal'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:62:12: ( 'decimal' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:62:14: 'decimal'
             {
-            match("decimal"); if (failed) return ;
+            match("decimal"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end KW_DECIMAL
+    // $ANTLR end "KW_DECIMAL"
 
-    // $ANTLR start KW_DOUBLE
+    // $ANTLR start "KW_DOUBLE"
     public final void mKW_DOUBLE() throws RecognitionException {
         try {
             int _type = KW_DOUBLE;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:99:11: ( 'double' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:99:13: 'double'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:63:11: ( 'double' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:63:13: 'double'
             {
-            match("double"); if (failed) return ;
+            match("double"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end KW_DOUBLE
+    // $ANTLR end "KW_DOUBLE"
 
-    // $ANTLR start KW_PRECISION
-    public final void mKW_PRECISION() throws RecognitionException {
-        try {
-            int _type = KW_PRECISION;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:100:14: ( 'precision' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:100:16: 'precision'
-            {
-            match("precision"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end KW_PRECISION
-
-    // $ANTLR start KW_FLOAT
+    // $ANTLR start "KW_FLOAT"
     public final void mKW_FLOAT() throws RecognitionException {
         try {
             int _type = KW_FLOAT;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:101:10: ( 'float' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:101:12: 'float'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:64:10: ( 'float' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:64:12: 'float'
             {
-            match("float"); if (failed) return ;
+            match("float"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end KW_FLOAT
+    // $ANTLR end "KW_FLOAT"
 
-    // $ANTLR start KW_INTEGER
-    public final void mKW_INTEGER() throws RecognitionException {
-        try {
-            int _type = KW_INTEGER;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:102:12: ( 'integer' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:102:14: 'integer'
-            {
-            match("integer"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end KW_INTEGER
-
-    // $ANTLR start KW_INT
+    // $ANTLR start "KW_INT"
     public final void mKW_INT() throws RecognitionException {
         try {
             int _type = KW_INT;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:103:8: ( 'int' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:103:10: 'int'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:65:8: ( 'int' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:65:10: 'int'
             {
-            match("int"); if (failed) return ;
+            match("int"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end KW_INT
+    // $ANTLR end "KW_INT"
 
-    // $ANTLR start KW_NUMERIC
+    // $ANTLR start "KW_INTEGER"
+    public final void mKW_INTEGER() throws RecognitionException {
+        try {
+            int _type = KW_INTEGER;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:66:12: ( 'integer' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:66:14: 'integer'
+            {
+            match("integer"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "KW_INTEGER"
+
+    // $ANTLR start "KW_NUMERIC"
     public final void mKW_NUMERIC() throws RecognitionException {
         try {
             int _type = KW_NUMERIC;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:104:12: ( 'numeric' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:104:14: 'numeric'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:67:12: ( 'numeric' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:67:14: 'numeric'
             {
-            match("numeric"); if (failed) return ;
+            match("numeric"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end KW_NUMERIC
+    // $ANTLR end "KW_NUMERIC"
 
-    // $ANTLR start KW_SMALLINT
-    public final void mKW_SMALLINT() throws RecognitionException {
+    // $ANTLR start "KW_PRECISION"
+    public final void mKW_PRECISION() throws RecognitionException {
         try {
-            int _type = KW_SMALLINT;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:105:13: ( 'smallint' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:105:15: 'smallint'
+            int _type = KW_PRECISION;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:68:14: ( 'precision' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:68:16: 'precision'
             {
-            match("smallint"); if (failed) return ;
+            match("precision"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end KW_SMALLINT
+    // $ANTLR end "KW_PRECISION"
 
-    // $ANTLR start KW_TIME
-    public final void mKW_TIME() throws RecognitionException {
-        try {
-            int _type = KW_TIME;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:106:9: ( 'time' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:106:11: 'time'
-            {
-            match("time"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end KW_TIME
-
-    // $ANTLR start KW_TIMESTAMP
-    public final void mKW_TIMESTAMP() throws RecognitionException {
-        try {
-            int _type = KW_TIMESTAMP;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:107:14: ( 'timestamp' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:107:16: 'timestamp'
-            {
-            match("timestamp"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end KW_TIMESTAMP
-
-    // $ANTLR start KW_VARCHAR
-    public final void mKW_VARCHAR() throws RecognitionException {
-        try {
-            int _type = KW_VARCHAR;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:108:12: ( 'varchar' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:108:14: 'varchar'
-            {
-            match("varchar"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end KW_VARCHAR
-
-    // $ANTLR start KW_SET
-    public final void mKW_SET() throws RecognitionException {
-        try {
-            int _type = KW_SET;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:109:8: ( 'set' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:109:10: 'set'
-            {
-            match("set"); if (failed) return ;
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end KW_SET
-
-    // $ANTLR start KW_SIZE
+    // $ANTLR start "KW_SIZE"
     public final void mKW_SIZE() throws RecognitionException {
         try {
             int _type = KW_SIZE;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:110:9: ( 'size' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:110:11: 'size'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:69:9: ( 'size' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:69:11: 'size'
             {
-            match("size"); if (failed) return ;
+            match("size"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end KW_SIZE
+    // $ANTLR end "KW_SIZE"
 
-    // $ANTLR start T78
-    public final void mT78() throws RecognitionException {
+    // $ANTLR start "KW_SMALLINT"
+    public final void mKW_SMALLINT() throws RecognitionException {
         try {
-            int _type = T78;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:111:5: ( '=' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:111:7: '='
+            int _type = KW_SMALLINT;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:70:13: ( 'smallint' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:70:15: 'smallint'
             {
-            match('='); if (failed) return ;
+            match("smallint"); 
+
+
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end T78
+    // $ANTLR end "KW_SMALLINT"
 
-    // $ANTLR start T79
-    public final void mT79() throws RecognitionException {
+    // $ANTLR start "KW_TIME"
+    public final void mKW_TIME() throws RecognitionException {
         try {
-            int _type = T79;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:112:5: ( '.' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:112:7: '.'
+            int _type = KW_TIME;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:71:9: ( 'time' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:71:11: 'time'
             {
-            match('.'); if (failed) return ;
+            match("time"); 
+
+
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end T79
+    // $ANTLR end "KW_TIME"
 
-    // $ANTLR start T80
-    public final void mT80() throws RecognitionException {
+    // $ANTLR start "KW_TIMESTAMP"
+    public final void mKW_TIMESTAMP() throws RecognitionException {
         try {
-            int _type = T80;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:113:5: ( '+' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:113:7: '+'
+            int _type = KW_TIMESTAMP;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:72:14: ( 'timestamp' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:72:16: 'timestamp'
             {
-            match('+'); if (failed) return ;
+            match("timestamp"); 
+
+
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end T80
+    // $ANTLR end "KW_TIMESTAMP"
 
-    // $ANTLR start T81
-    public final void mT81() throws RecognitionException {
+    // $ANTLR start "KW_VARCHAR"
+    public final void mKW_VARCHAR() throws RecognitionException {
         try {
-            int _type = T81;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:114:5: ( '-' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:114:7: '-'
+            int _type = KW_VARCHAR;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:73:12: ( 'varchar' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:73:14: 'varchar'
             {
-            match('-'); if (failed) return ;
+            match("varchar"); 
+
+
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end T81
+    // $ANTLR end "KW_VARCHAR"
 
-    // $ANTLR start T82
-    public final void mT82() throws RecognitionException {
+    // $ANTLR start "LEADING"
+    public final void mLEADING() throws RecognitionException {
         try {
-            int _type = T82;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:115:5: ( '*' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:115:7: '*'
+            int _type = LEADING;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:74:9: ( 'leading' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:74:11: 'leading'
             {
-            match('*'); if (failed) return ;
+            match("leading"); 
+
+
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end T82
+    // $ANTLR end "LEADING"
 
-    // $ANTLR start T83
-    public final void mT83() throws RecognitionException {
+    // $ANTLR start "MATCHING"
+    public final void mMATCHING() throws RecognitionException {
         try {
-            int _type = T83;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:116:5: ( '/' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:116:7: '/'
+            int _type = MATCHING;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:75:10: ( 'matching' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:75:12: 'matching'
             {
-            match('/'); if (failed) return ;
+            match("matching"); 
+
+
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end T83
+    // $ANTLR end "MATCHING"
 
-    // $ANTLR start T84
-    public final void mT84() throws RecognitionException {
+    // $ANTLR start "MAXIMUM"
+    public final void mMAXIMUM() throws RecognitionException {
         try {
-            int _type = T84;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:117:5: ( '||' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:117:7: '||'
+            int _type = MAXIMUM;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:76:9: ( 'max' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:76:11: 'max'
             {
-            match("||"); if (failed) return ;
+            match("max"); 
+
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end T84
+    // $ANTLR end "MAXIMUM"
 
-    // $ANTLR start T85
-    public final void mT85() throws RecognitionException {
+    // $ANTLR start "MINIMUM"
+    public final void mMINIMUM() throws RecognitionException {
         try {
-            int _type = T85;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:118:5: ( '?' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:118:7: '?'
+            int _type = MINIMUM;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:77:9: ( 'min' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:77:11: 'min'
             {
-            match('?'); if (failed) return ;
+            match("min"); 
+
+
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end T85
+    // $ANTLR end "MINIMUM"
 
-    // $ANTLR start T86
-    public final void mT86() throws RecognitionException {
+    // $ANTLR start "NEXT"
+    public final void mNEXT() throws RecognitionException {
         try {
-            int _type = T86;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:119:5: ( '[' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:119:7: '['
+            int _type = NEXT;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:78:6: ( 'next' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:78:8: 'next'
             {
-            match('['); if (failed) return ;
+            match("next"); 
+
+
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end T86
+    // $ANTLR end "NEXT"
 
-    // $ANTLR start T87
-    public final void mT87() throws RecognitionException {
+    // $ANTLR start "NULL"
+    public final void mNULL() throws RecognitionException {
         try {
-            int _type = T87;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:120:5: ( ']' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:120:7: ']'
+            int _type = NULL;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:79:6: ( 'null' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:79:8: 'null'
             {
-            match(']'); if (failed) return ;
+            match("null"); 
+
+
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end T87
+    // $ANTLR end "NULL"
 
-    // $ANTLR start T88
-    public final void mT88() throws RecognitionException {
+    // $ANTLR start "OR"
+    public final void mOR() throws RecognitionException {
         try {
-            int _type = T88;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:121:5: ( ':' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:121:7: ':'
+            int _type = OR;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:80:4: ( 'or' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:80:6: 'or'
             {
-            match(':'); if (failed) return ;
+            match("or"); 
+
+
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end T88
+    // $ANTLR end "OR"
 
-    // $ANTLR start LEFT_PAREN
+    // $ANTLR start "PROCEDURE"
+    public final void mPROCEDURE() throws RecognitionException {
+        try {
+            int _type = PROCEDURE;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:81:11: ( 'procedure' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:81:13: 'procedure'
+            {
+            match("procedure"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "PROCEDURE"
+
+    // $ANTLR start "RETURNING"
+    public final void mRETURNING() throws RecognitionException {
+        try {
+            int _type = RETURNING;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:82:11: ( 'returning' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:82:13: 'returning'
+            {
+            match("returning"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "RETURNING"
+
+    // $ANTLR start "SEGMENT"
+    public final void mSEGMENT() throws RecognitionException {
+        try {
+            int _type = SEGMENT;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:83:9: ( 'segment' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:83:11: 'segment'
+            {
+            match("segment"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "SEGMENT"
+
+    // $ANTLR start "SELECT"
+    public final void mSELECT() throws RecognitionException {
+        try {
+            int _type = SELECT;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:84:8: ( 'select' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:84:10: 'select'
+            {
+            match("select"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "SELECT"
+
+    // $ANTLR start "SET"
+    public final void mSET() throws RecognitionException {
+        try {
+            int _type = SET;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:85:5: ( 'set' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:85:7: 'set'
+            {
+            match("set"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "SET"
+
+    // $ANTLR start "SUBSTRING"
+    public final void mSUBSTRING() throws RecognitionException {
+        try {
+            int _type = SUBSTRING;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:86:11: ( 'substring' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:86:13: 'substring'
+            {
+            match("substring"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "SUBSTRING"
+
+    // $ANTLR start "SUB_TYPE"
+    public final void mSUB_TYPE() throws RecognitionException {
+        try {
+            int _type = SUB_TYPE;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:87:10: ( 'sub_type' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:87:12: 'sub_type'
+            {
+            match("sub_type"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "SUB_TYPE"
+
+    // $ANTLR start "SUM"
+    public final void mSUM() throws RecognitionException {
+        try {
+            int _type = SUM;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:88:5: ( 'sum' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:88:7: 'sum'
+            {
+            match("sum"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "SUM"
+
+    // $ANTLR start "TRAILING"
+    public final void mTRAILING() throws RecognitionException {
+        try {
+            int _type = TRAILING;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:89:10: ( 'trailing' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:89:12: 'trailing'
+            {
+            match("trailing"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "TRAILING"
+
+    // $ANTLR start "TRIM"
+    public final void mTRIM() throws RecognitionException {
+        try {
+            int _type = TRIM;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:90:6: ( 'trim' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:90:8: 'trim'
+            {
+            match("trim"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "TRIM"
+
+    // $ANTLR start "UPDATE"
+    public final void mUPDATE() throws RecognitionException {
+        try {
+            int _type = UPDATE;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:91:8: ( 'update' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:91:10: 'update'
+            {
+            match("update"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "UPDATE"
+
+    // $ANTLR start "VALUE"
+    public final void mVALUE() throws RecognitionException {
+        try {
+            int _type = VALUE;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:92:7: ( 'value' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:92:9: 'value'
+            {
+            match("value"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "VALUE"
+
+    // $ANTLR start "VALUES"
+    public final void mVALUES() throws RecognitionException {
+        try {
+            int _type = VALUES;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:93:8: ( 'values' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:93:10: 'values'
+            {
+            match("values"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "VALUES"
+
+    // $ANTLR start "T__74"
+    public final void mT__74() throws RecognitionException {
+        try {
+            int _type = T__74;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:94:7: ( '*' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:94:9: '*'
+            {
+            match('*'); 
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__74"
+
+    // $ANTLR start "T__75"
+    public final void mT__75() throws RecognitionException {
+        try {
+            int _type = T__75;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:95:7: ( '+' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:95:9: '+'
+            {
+            match('+'); 
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__75"
+
+    // $ANTLR start "T__76"
+    public final void mT__76() throws RecognitionException {
+        try {
+            int _type = T__76;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:96:7: ( '-' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:96:9: '-'
+            {
+            match('-'); 
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__76"
+
+    // $ANTLR start "T__77"
+    public final void mT__77() throws RecognitionException {
+        try {
+            int _type = T__77;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:97:7: ( '.' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:97:9: '.'
+            {
+            match('.'); 
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__77"
+
+    // $ANTLR start "T__78"
+    public final void mT__78() throws RecognitionException {
+        try {
+            int _type = T__78;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:98:7: ( '/' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:98:9: '/'
+            {
+            match('/'); 
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__78"
+
+    // $ANTLR start "T__79"
+    public final void mT__79() throws RecognitionException {
+        try {
+            int _type = T__79;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:99:7: ( ':' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:99:9: ':'
+            {
+            match(':'); 
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__79"
+
+    // $ANTLR start "T__80"
+    public final void mT__80() throws RecognitionException {
+        try {
+            int _type = T__80;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:100:7: ( '=' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:100:9: '='
+            {
+            match('='); 
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__80"
+
+    // $ANTLR start "T__81"
+    public final void mT__81() throws RecognitionException {
+        try {
+            int _type = T__81;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:101:7: ( '?' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:101:9: '?'
+            {
+            match('?'); 
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__81"
+
+    // $ANTLR start "T__82"
+    public final void mT__82() throws RecognitionException {
+        try {
+            int _type = T__82;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:102:7: ( '[' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:102:9: '['
+            {
+            match('['); 
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__82"
+
+    // $ANTLR start "T__83"
+    public final void mT__83() throws RecognitionException {
+        try {
+            int _type = T__83;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:103:7: ( ']' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:103:9: ']'
+            {
+            match(']'); 
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__83"
+
+    // $ANTLR start "T__84"
+    public final void mT__84() throws RecognitionException {
+        try {
+            int _type = T__84;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:104:7: ( '||' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:104:9: '||'
+            {
+            match("||"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__84"
+
+    // $ANTLR start "LEFT_PAREN"
     public final void mLEFT_PAREN() throws RecognitionException {
         try {
             int _type = LEFT_PAREN;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:601:3: ( '(' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:601:5: '('
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:559:3: ( '(' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:559:5: '('
             {
-            match('('); if (failed) return ;
+            match('('); 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end LEFT_PAREN
+    // $ANTLR end "LEFT_PAREN"
 
-    // $ANTLR start RIGHT_PAREN
+    // $ANTLR start "RIGHT_PAREN"
     public final void mRIGHT_PAREN() throws RecognitionException {
         try {
             int _type = RIGHT_PAREN;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:605:3: ( ')' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:605:5: ')'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:563:3: ( ')' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:563:5: ')'
             {
-            match(')'); if (failed) return ;
+            match(')'); 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end RIGHT_PAREN
+    // $ANTLR end "RIGHT_PAREN"
 
-    // $ANTLR start COMMA
+    // $ANTLR start "COMMA"
     public final void mCOMMA() throws RecognitionException {
         try {
             int _type = COMMA;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:608:8: ( ',' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:608:10: ','
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:566:8: ( ',' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:566:10: ','
             {
-            match(','); if (failed) return ;
+            match(','); 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end COMMA
+    // $ANTLR end "COMMA"
 
-    // $ANTLR start GENERIC_ID
+    // $ANTLR start "GENERIC_ID"
     public final void mGENERIC_ID() throws RecognitionException {
         try {
             int _type = GENERIC_ID;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:612:6: ( ( LETTER | '_' | ':' | '$' ) ( options {greedy=true; } : LETTER | '0' .. '9' | '.' | '-' | '_' | ':' | '$' )* )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:612:8: ( LETTER | '_' | ':' | '$' ) ( options {greedy=true; } : LETTER | '0' .. '9' | '.' | '-' | '_' | ':' | '$' )*
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:570:6: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' | ':' | '$' ) ( options {greedy=true; } : 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '.' | '-' | '_' | ':' | '$' )* )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:570:8: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | ':' | '$' ) ( options {greedy=true; } : 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '.' | '-' | '_' | ':' | '$' )*
             {
-            if ( input.LA(1)=='$'||input.LA(1)==':'||(input.LA(1)>='A' && input.LA(1)<='Z')||input.LA(1)=='_'||(input.LA(1)>='a' && input.LA(1)<='z') ) {
+            if ( input.LA(1)=='$'||input.LA(1)==':'||(input.LA(1) >= 'A' && input.LA(1) <= 'Z')||input.LA(1)=='_'||(input.LA(1) >= 'a' && input.LA(1) <= 'z') ) {
                 input.consume();
-            failed=false;
             }
             else {
-                if (backtracking>0) {failed=true; return ;}
-                MismatchedSetException mse =
-                    new MismatchedSetException(null,input);
-                recover(mse);    throw mse;
+                MismatchedSetException mse = new MismatchedSetException(null,input);
+                recover(mse);
+                throw mse;
             }
 
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:613:10: ( options {greedy=true; } : LETTER | '0' .. '9' | '.' | '-' | '_' | ':' | '$' )*
+
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:10: ( options {greedy=true; } : 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '.' | '-' | '_' | ':' | '$' )*
             loop1:
             do {
-                int alt1=8;
+                int alt1=9;
                 switch ( input.LA(1) ) {
-                case 'A':
-                case 'B':
-                case 'C':
-                case 'D':
-                case 'E':
-                case 'F':
-                case 'G':
-                case 'H':
-                case 'I':
-                case 'J':
-                case 'K':
-                case 'L':
-                case 'M':
-                case 'N':
-                case 'O':
-                case 'P':
-                case 'Q':
-                case 'R':
-                case 'S':
-                case 'T':
-                case 'U':
-                case 'V':
-                case 'W':
-                case 'X':
-                case 'Y':
-                case 'Z':
                 case 'a':
                 case 'b':
                 case 'c':
@@ -1639,6 +1865,36 @@ public class JaybirdSqlLexer extends Lexer {
                     alt1=1;
                     }
                     break;
+                case 'A':
+                case 'B':
+                case 'C':
+                case 'D':
+                case 'E':
+                case 'F':
+                case 'G':
+                case 'H':
+                case 'I':
+                case 'J':
+                case 'K':
+                case 'L':
+                case 'M':
+                case 'N':
+                case 'O':
+                case 'P':
+                case 'Q':
+                case 'R':
+                case 'S':
+                case 'T':
+                case 'U':
+                case 'V':
+                case 'W':
+                case 'X':
+                case 'Y':
+                case 'Z':
+                    {
+                    alt1=2;
+                    }
+                    break;
                 case '0':
                 case '1':
                 case '2':
@@ -1650,32 +1906,32 @@ public class JaybirdSqlLexer extends Lexer {
                 case '8':
                 case '9':
                     {
-                    alt1=2;
+                    alt1=3;
                     }
                     break;
                 case '.':
                     {
-                    alt1=3;
+                    alt1=4;
                     }
                     break;
                 case '-':
                     {
-                    alt1=4;
+                    alt1=5;
                     }
                     break;
                 case '_':
                     {
-                    alt1=5;
+                    alt1=6;
                     }
                     break;
                 case ':':
                     {
-                    alt1=6;
+                    alt1=7;
                     }
                     break;
                 case '$':
                     {
-                    alt1=7;
+                    alt1=8;
                     }
                     break;
 
@@ -1683,51 +1939,58 @@ public class JaybirdSqlLexer extends Lexer {
 
                 switch (alt1) {
             	case 1 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:613:37: LETTER
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:37: 'a' .. 'z'
             	    {
-            	    mLETTER(); if (failed) return ;
+            	    matchRange('a','z'); 
 
             	    }
             	    break;
             	case 2 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:613:46: '0' .. '9'
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:46: 'A' .. 'Z'
             	    {
-            	    matchRange('0','9'); if (failed) return ;
+            	    matchRange('A','Z'); 
 
             	    }
             	    break;
             	case 3 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:613:57: '.'
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:57: '0' .. '9'
             	    {
-            	    match('.'); if (failed) return ;
+            	    matchRange('0','9'); 
 
             	    }
             	    break;
             	case 4 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:613:63: '-'
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:68: '.'
             	    {
-            	    match('-'); if (failed) return ;
+            	    match('.'); 
 
             	    }
             	    break;
             	case 5 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:613:69: '_'
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:74: '-'
             	    {
-            	    match('_'); if (failed) return ;
+            	    match('-'); 
 
             	    }
             	    break;
             	case 6 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:613:75: ':'
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:80: '_'
             	    {
-            	    match(':'); if (failed) return ;
+            	    match('_'); 
 
             	    }
             	    break;
             	case 7 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:613:80: '$'
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:86: ':'
             	    {
-            	    match('$'); if (failed) return ;
+            	    match(':'); 
+
+            	    }
+            	    break;
+            	case 8 :
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:91: '$'
+            	    {
+            	    match('$'); 
 
             	    }
             	    break;
@@ -1740,119 +2003,126 @@ public class JaybirdSqlLexer extends Lexer {
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end GENERIC_ID
+    // $ANTLR end "GENERIC_ID"
 
-    // $ANTLR start QUOTED_ID
+    // $ANTLR start "QUOTED_ID"
     public final void mQUOTED_ID() throws RecognitionException {
         try {
             int _type = QUOTED_ID;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:617:3: ( '\\\"' ( ( ESCqd )=> ESCqd | ~ '\\\"' )* '\\\"' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:617:5: '\\\"' ( ( ESCqd )=> ESCqd | ~ '\\\"' )* '\\\"'
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:3: ( '\\\"' ( '$' | '_' | '\\u00A0' .. '\\uFFFF' | '\\\"\\\"' | '0' .. '9' )+ '\\\"' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:5: '\\\"' ( '$' | '_' | '\\u00A0' .. '\\uFFFF' | '\\\"\\\"' | '0' .. '9' )+ '\\\"'
             {
-            match('\"'); if (failed) return ;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:617:10: ( ( ESCqd )=> ESCqd | ~ '\\\"' )*
+            match('\"'); 
+
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:10: ( '$' | '_' | '\\u00A0' .. '\\uFFFF' | '\\\"\\\"' | '0' .. '9' )+
+            int cnt2=0;
             loop2:
             do {
-                int alt2=3;
+                int alt2=6;
                 int LA2_0 = input.LA(1);
 
                 if ( (LA2_0=='\"') ) {
                     int LA2_1 = input.LA(2);
 
-                    if ( (LA2_1=='\"') && (synpred1())) {
-                        alt2=1;
+                    if ( (LA2_1=='\"') ) {
+                        alt2=4;
                     }
 
 
                 }
-                else if ( ((LA2_0>='\u0000' && LA2_0<='!')||(LA2_0>='#' && LA2_0<='\uFFFE')) ) {
+                else if ( (LA2_0=='$') ) {
+                    alt2=1;
+                }
+                else if ( (LA2_0=='_') ) {
                     alt2=2;
+                }
+                else if ( ((LA2_0 >= '\u00A0' && LA2_0 <= '\uFFFF')) ) {
+                    alt2=3;
+                }
+                else if ( ((LA2_0 >= '0' && LA2_0 <= '9')) ) {
+                    alt2=5;
                 }
 
 
                 switch (alt2) {
             	case 1 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:617:11: ( ESCqd )=> ESCqd
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:11: '$'
             	    {
-            	    mESCqd(); if (failed) return ;
+            	    match('$'); 
 
             	    }
             	    break;
             	case 2 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:617:28: ~ '\\\"'
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:15: '_'
             	    {
-            	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='!')||(input.LA(1)>='#' && input.LA(1)<='\uFFFE') ) {
-            	        input.consume();
-            	    failed=false;
-            	    }
-            	    else {
-            	        if (backtracking>0) {failed=true; return ;}
-            	        MismatchedSetException mse =
-            	            new MismatchedSetException(null,input);
-            	        recover(mse);    throw mse;
-            	    }
+            	    match('_'); 
 
+            	    }
+            	    break;
+            	case 3 :
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:19: '\\u00A0' .. '\\uFFFF'
+            	    {
+            	    matchRange('\u00A0','\uFFFF'); 
+
+            	    }
+            	    break;
+            	case 4 :
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:41: '\\\"\\\"'
+            	    {
+            	    match("\"\""); 
+
+
+
+            	    }
+            	    break;
+            	case 5 :
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:50: '0' .. '9'
+            	    {
+            	    matchRange('0','9'); 
 
             	    }
             	    break;
 
             	default :
-            	    break loop2;
+            	    if ( cnt2 >= 1 ) break loop2;
+                        EarlyExitException eee =
+                            new EarlyExitException(2, input);
+                        throw eee;
                 }
+                cnt2++;
             } while (true);
 
-            match('\"'); if (failed) return ;
+
+            match('\"'); 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end QUOTED_ID
+    // $ANTLR end "QUOTED_ID"
 
-    // $ANTLR start LETTER
-    public final void mLETTER() throws RecognitionException {
-        try {
-            int _type = LETTER;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:620:8: ( 'a' .. 'z' | 'A' .. 'Z' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:
-            {
-            if ( (input.LA(1)>='A' && input.LA(1)<='Z')||(input.LA(1)>='a' && input.LA(1)<='z') ) {
-                input.consume();
-            failed=false;
-            }
-            else {
-                if (backtracking>0) {failed=true; return ;}
-                MismatchedSetException mse =
-                    new MismatchedSetException(null,input);
-                recover(mse);    throw mse;
-            }
-
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end LETTER
-
-    // $ANTLR start INTEGER
+    // $ANTLR start "INTEGER"
     public final void mINTEGER() throws RecognitionException {
         try {
             int _type = INTEGER;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:624:9: ( ( '-' )? ( '0' .. '9' )+ )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:624:11: ( '-' )? ( '0' .. '9' )+
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:582:9: ( ( '-' )? ( '0' .. '9' )+ )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:582:11: ( '-' )? ( '0' .. '9' )+
             {
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:624:11: ( '-' )?
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:582:11: ( '-' )?
             int alt3=2;
             int LA3_0 = input.LA(1);
 
@@ -1861,39 +2131,47 @@ public class JaybirdSqlLexer extends Lexer {
             }
             switch (alt3) {
                 case 1 :
-                    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:624:12: '-'
+                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:582:12: '-'
                     {
-                    match('-'); if (failed) return ;
+                    match('-'); 
 
                     }
                     break;
 
             }
 
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:624:17: ( '0' .. '9' )+
+
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:582:17: ( '0' .. '9' )+
             int cnt4=0;
             loop4:
             do {
                 int alt4=2;
                 int LA4_0 = input.LA(1);
 
-                if ( ((LA4_0>='0' && LA4_0<='9')) ) {
+                if ( ((LA4_0 >= '0' && LA4_0 <= '9')) ) {
                     alt4=1;
                 }
 
 
                 switch (alt4) {
             	case 1 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:624:18: '0' .. '9'
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
             	    {
-            	    matchRange('0','9'); if (failed) return ;
+            	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
+            	        input.consume();
+            	    }
+            	    else {
+            	        MismatchedSetException mse = new MismatchedSetException(null,input);
+            	        recover(mse);
+            	        throw mse;
+            	    }
+
 
             	    }
             	    break;
 
             	default :
             	    if ( cnt4 >= 1 ) break loop4;
-            	    if (backtracking>0) {failed=true; return ;}
                         EarlyExitException eee =
                             new EarlyExitException(4, input);
                         throw eee;
@@ -1904,21 +2182,24 @@ public class JaybirdSqlLexer extends Lexer {
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end INTEGER
+    // $ANTLR end "INTEGER"
 
-    // $ANTLR start REAL
+    // $ANTLR start "REAL"
     public final void mREAL() throws RecognitionException {
         try {
             int _type = REAL;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:627:7: ( ( '-' )? ( '0' .. '9' )* '.' ( '0' .. '9' )+ )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:627:9: ( '-' )? ( '0' .. '9' )* '.' ( '0' .. '9' )+
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:585:7: ( ( '-' )? ( '0' .. '9' )* '.' ( '0' .. '9' )+ )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:585:9: ( '-' )? ( '0' .. '9' )* '.' ( '0' .. '9' )+
             {
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:627:9: ( '-' )?
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:585:9: ( '-' )?
             int alt5=2;
             int LA5_0 = input.LA(1);
 
@@ -1927,31 +2208,40 @@ public class JaybirdSqlLexer extends Lexer {
             }
             switch (alt5) {
                 case 1 :
-                    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:627:10: '-'
+                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:585:10: '-'
                     {
-                    match('-'); if (failed) return ;
+                    match('-'); 
 
                     }
                     break;
 
             }
 
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:627:15: ( '0' .. '9' )*
+
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:585:15: ( '0' .. '9' )*
             loop6:
             do {
                 int alt6=2;
                 int LA6_0 = input.LA(1);
 
-                if ( ((LA6_0>='0' && LA6_0<='9')) ) {
+                if ( ((LA6_0 >= '0' && LA6_0 <= '9')) ) {
                     alt6=1;
                 }
 
 
                 switch (alt6) {
             	case 1 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:627:16: '0' .. '9'
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
             	    {
-            	    matchRange('0','9'); if (failed) return ;
+            	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
+            	        input.consume();
+            	    }
+            	    else {
+            	        MismatchedSetException mse = new MismatchedSetException(null,input);
+            	        recover(mse);
+            	        throw mse;
+            	    }
+
 
             	    }
             	    break;
@@ -1961,31 +2251,40 @@ public class JaybirdSqlLexer extends Lexer {
                 }
             } while (true);
 
-            match('.'); if (failed) return ;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:627:29: ( '0' .. '9' )+
+
+            match('.'); 
+
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:585:29: ( '0' .. '9' )+
             int cnt7=0;
             loop7:
             do {
                 int alt7=2;
                 int LA7_0 = input.LA(1);
 
-                if ( ((LA7_0>='0' && LA7_0<='9')) ) {
+                if ( ((LA7_0 >= '0' && LA7_0 <= '9')) ) {
                     alt7=1;
                 }
 
 
                 switch (alt7) {
             	case 1 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:627:30: '0' .. '9'
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
             	    {
-            	    matchRange('0','9'); if (failed) return ;
+            	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
+            	        input.consume();
+            	    }
+            	    else {
+            	        MismatchedSetException mse = new MismatchedSetException(null,input);
+            	        recover(mse);
+            	        throw mse;
+            	    }
+
 
             	    }
             	    break;
 
             	default :
             	    if ( cnt7 >= 1 ) break loop7;
-            	    if (backtracking>0) {failed=true; return ;}
                         EarlyExitException eee =
                             new EarlyExitException(7, input);
                         throw eee;
@@ -1996,45 +2295,46 @@ public class JaybirdSqlLexer extends Lexer {
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end REAL
+    // $ANTLR end "REAL"
 
-    // $ANTLR start WS
+    // $ANTLR start "WS"
     public final void mWS() throws RecognitionException {
         try {
             int _type = WS;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:630:5: ( ( ' ' | '\\t' | '\\n' | '\\r' )+ )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:630:7: ( ' ' | '\\t' | '\\n' | '\\r' )+
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:588:5: ( ( ' ' | '\\t' | '\\n' | '\\r' )+ )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:588:7: ( ' ' | '\\t' | '\\n' | '\\r' )+
             {
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:630:7: ( ' ' | '\\t' | '\\n' | '\\r' )+
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:588:7: ( ' ' | '\\t' | '\\n' | '\\r' )+
             int cnt8=0;
             loop8:
             do {
                 int alt8=2;
                 int LA8_0 = input.LA(1);
 
-                if ( ((LA8_0>='\t' && LA8_0<='\n')||LA8_0=='\r'||LA8_0==' ') ) {
+                if ( ((LA8_0 >= '\t' && LA8_0 <= '\n')||LA8_0=='\r'||LA8_0==' ') ) {
                     alt8=1;
                 }
 
 
                 switch (alt8) {
             	case 1 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
             	    {
-            	    if ( (input.LA(1)>='\t' && input.LA(1)<='\n')||input.LA(1)=='\r'||input.LA(1)==' ' ) {
+            	    if ( (input.LA(1) >= '\t' && input.LA(1) <= '\n')||input.LA(1)=='\r'||input.LA(1)==' ' ) {
             	        input.consume();
-            	    failed=false;
             	    }
             	    else {
-            	        if (backtracking>0) {failed=true; return ;}
-            	        MismatchedSetException mse =
-            	            new MismatchedSetException(null,input);
-            	        recover(mse);    throw mse;
+            	        MismatchedSetException mse = new MismatchedSetException(null,input);
+            	        recover(mse);
+            	        throw mse;
             	    }
 
 
@@ -2043,7 +2343,6 @@ public class JaybirdSqlLexer extends Lexer {
 
             	default :
             	    if ( cnt8 >= 1 ) break loop8;
-            	    if (backtracking>0) {failed=true; return ;}
                         EarlyExitException eee =
                             new EarlyExitException(8, input);
                         throw eee;
@@ -2051,52 +2350,54 @@ public class JaybirdSqlLexer extends Lexer {
                 cnt8++;
             } while (true);
 
-            if ( backtracking==0 ) {
-              channel = HIDDEN;
-            }
+
+            _channel = HIDDEN;
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end WS
+    // $ANTLR end "WS"
 
-    // $ANTLR start SL_COMMENT
+    // $ANTLR start "SL_COMMENT"
     public final void mSL_COMMENT() throws RecognitionException {
         try {
             int _type = SL_COMMENT;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:634:9: ( '--' (~ ( '\\n' | '\\r' ) )* ( '\\n' | '\\r' ( '\\n' )? ) )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:634:11: '--' (~ ( '\\n' | '\\r' ) )* ( '\\n' | '\\r' ( '\\n' )? )
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:9: ( '--' (~ ( '\\n' | '\\r' ) )* ( '\\n' | '\\r' ( '\\n' )? ) )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:11: '--' (~ ( '\\n' | '\\r' ) )* ( '\\n' | '\\r' ( '\\n' )? )
             {
-            match("--"); if (failed) return ;
+            match("--"); 
 
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:634:16: (~ ( '\\n' | '\\r' ) )*
+
+
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:16: (~ ( '\\n' | '\\r' ) )*
             loop9:
             do {
                 int alt9=2;
                 int LA9_0 = input.LA(1);
 
-                if ( ((LA9_0>='\u0000' && LA9_0<='\t')||(LA9_0>='\u000B' && LA9_0<='\f')||(LA9_0>='\u000E' && LA9_0<='\uFFFE')) ) {
+                if ( ((LA9_0 >= '\u0000' && LA9_0 <= '\t')||(LA9_0 >= '\u000B' && LA9_0 <= '\f')||(LA9_0 >= '\u000E' && LA9_0 <= '\uFFFF')) ) {
                     alt9=1;
                 }
 
 
                 switch (alt9) {
             	case 1 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:634:17: ~ ( '\\n' | '\\r' )
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
             	    {
-            	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='\t')||(input.LA(1)>='\u000B' && input.LA(1)<='\f')||(input.LA(1)>='\u000E' && input.LA(1)<='\uFFFE') ) {
+            	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '\t')||(input.LA(1) >= '\u000B' && input.LA(1) <= '\f')||(input.LA(1) >= '\u000E' && input.LA(1) <= '\uFFFF') ) {
             	        input.consume();
-            	    failed=false;
             	    }
             	    else {
-            	        if (backtracking>0) {failed=true; return ;}
-            	        MismatchedSetException mse =
-            	            new MismatchedSetException(null,input);
-            	        recover(mse);    throw mse;
+            	        MismatchedSetException mse = new MismatchedSetException(null,input);
+            	        recover(mse);
+            	        throw mse;
             	    }
 
 
@@ -2108,7 +2409,8 @@ public class JaybirdSqlLexer extends Lexer {
                 }
             } while (true);
 
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:634:32: ( '\\n' | '\\r' ( '\\n' )? )
+
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:32: ( '\\n' | '\\r' ( '\\n' )? )
             int alt11=2;
             int LA11_0 = input.LA(1);
 
@@ -2119,25 +2421,26 @@ public class JaybirdSqlLexer extends Lexer {
                 alt11=2;
             }
             else {
-                if (backtracking>0) {failed=true; return ;}
                 NoViableAltException nvae =
-                    new NoViableAltException("634:32: ( '\\n' | '\\r' ( '\\n' )? )", 11, 0, input);
+                    new NoViableAltException("", 11, 0, input);
 
                 throw nvae;
+
             }
             switch (alt11) {
                 case 1 :
-                    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:634:33: '\\n'
+                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:33: '\\n'
                     {
-                    match('\n'); if (failed) return ;
+                    match('\n'); 
 
                     }
                     break;
                 case 2 :
-                    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:634:38: '\\r' ( '\\n' )?
+                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:38: '\\r' ( '\\n' )?
                     {
-                    match('\r'); if (failed) return ;
-                    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:634:42: ( '\\n' )?
+                    match('\r'); 
+
+                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:42: ( '\\n' )?
                     int alt10=2;
                     int LA10_0 = input.LA(1);
 
@@ -2146,9 +2449,9 @@ public class JaybirdSqlLexer extends Lexer {
                     }
                     switch (alt10) {
                         case 1 :
-                            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:634:43: '\\n'
+                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:43: '\\n'
                             {
-                            match('\n'); if (failed) return ;
+                            match('\n'); 
 
                             }
                             break;
@@ -2164,64 +2467,50 @@ public class JaybirdSqlLexer extends Lexer {
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end SL_COMMENT
+    // $ANTLR end "SL_COMMENT"
 
-    // $ANTLR start STRING
+    // $ANTLR start "STRING"
     public final void mSTRING() throws RecognitionException {
         try {
             int _type = STRING;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:638:3: ( ( '\\'' ( ( ESCqs )=> ESCqs | ~ '\\'' )* '\\'' ) )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:638:5: ( '\\'' ( ( ESCqs )=> ESCqs | ~ '\\'' )* '\\'' )
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:596:3: ( ( '\\'' (~ '\\'' )* '\\'' ) )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:596:5: ( '\\'' (~ '\\'' )* '\\'' )
             {
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:638:5: ( '\\'' ( ( ESCqs )=> ESCqs | ~ '\\'' )* '\\'' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:638:7: '\\'' ( ( ESCqs )=> ESCqs | ~ '\\'' )* '\\''
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:596:5: ( '\\'' (~ '\\'' )* '\\'' )
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:596:7: '\\'' (~ '\\'' )* '\\''
             {
-            match('\''); if (failed) return ;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:638:12: ( ( ESCqs )=> ESCqs | ~ '\\'' )*
+            match('\''); 
+
+            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:596:12: (~ '\\'' )*
             loop12:
             do {
-                int alt12=3;
+                int alt12=2;
                 int LA12_0 = input.LA(1);
 
-                if ( (LA12_0=='\'') ) {
-                    int LA12_1 = input.LA(2);
-
-                    if ( (LA12_1=='\'') && (synpred2())) {
-                        alt12=1;
-                    }
-
-
-                }
-                else if ( ((LA12_0>='\u0000' && LA12_0<='&')||(LA12_0>='(' && LA12_0<='\uFFFE')) ) {
-                    alt12=2;
+                if ( ((LA12_0 >= '\u0000' && LA12_0 <= '&')||(LA12_0 >= '(' && LA12_0 <= '\uFFFF')) ) {
+                    alt12=1;
                 }
 
 
                 switch (alt12) {
             	case 1 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:638:13: ( ESCqs )=> ESCqs
+            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
             	    {
-            	    mESCqs(); if (failed) return ;
-
-            	    }
-            	    break;
-            	case 2 :
-            	    // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:638:30: ~ '\\''
-            	    {
-            	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='&')||(input.LA(1)>='(' && input.LA(1)<='\uFFFE') ) {
+            	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '&')||(input.LA(1) >= '(' && input.LA(1) <= '\uFFFF') ) {
             	        input.consume();
-            	    failed=false;
             	    }
             	    else {
-            	        if (backtracking>0) {failed=true; return ;}
-            	        MismatchedSetException mse =
-            	            new MismatchedSetException(null,input);
-            	        recover(mse);    throw mse;
+            	        MismatchedSetException mse = new MismatchedSetException(null,input);
+            	        recover(mse);
+            	        throw mse;
             	    }
 
 
@@ -2233,915 +2522,882 @@ public class JaybirdSqlLexer extends Lexer {
                 }
             } while (true);
 
-            match('\''); if (failed) return ;
+
+            match('\''); 
 
             }
 
 
             }
 
-            this.type = _type;
+            state.type = _type;
+            state.channel = _channel;
         }
         finally {
+        	// do for sure before leaving
         }
     }
-    // $ANTLR end STRING
-
-    // $ANTLR start ESCqs
-    public final void mESCqs() throws RecognitionException {
-        try {
-            int _type = ESCqs;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:641:7: ( '\\'' '\\'' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:641:9: '\\'' '\\''
-            {
-            match('\''); if (failed) return ;
-            match('\''); if (failed) return ;
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end ESCqs
-
-    // $ANTLR start ESCqd
-    public final void mESCqd() throws RecognitionException {
-        try {
-            int _type = ESCqd;
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:642:7: ( '\\\"' '\\\"' )
-            // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:642:9: '\\\"' '\\\"'
-            {
-            match('\"'); if (failed) return ;
-            match('\"'); if (failed) return ;
-
-            }
-
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end ESCqd
+    // $ANTLR end "STRING"
 
     public void mTokens() throws RecognitionException {
-        // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:8: ( ALL | AS | AVG | BOTH | CAST | CHARACTER | COUNT | COLLATE | CURRENT_USER | CURRENT_ROLE | CURRENT_DATE | CURRENT_TIME | CURRENT_TIMESTAMP | DEFAULT | DELETE | DISTINCT | DB_KEY | EXTRACT | EXECUTE | FOR | FROM | GEN_ID | INSERT | INTO | LEADING | MATCHING | MINIMUM | MAXIMUM | NULL | NEXT | OR | PROCEDURE | RETURNING | SEGMENT | SELECT | SET | SUBSTRING | SUB_TYPE | SUM | TRIM | TRAILING | UPDATE | VALUE | VALUES | KW_BLOB | KW_BIGINT | KW_CHAR | KW_DATE | KW_DECIMAL | KW_DOUBLE | KW_PRECISION | KW_FLOAT | KW_INTEGER | KW_INT | KW_NUMERIC | KW_SMALLINT | KW_TIME | KW_TIMESTAMP | KW_VARCHAR | KW_SET | KW_SIZE | T78 | T79 | T80 | T81 | T82 | T83 | T84 | T85 | T86 | T87 | T88 | LEFT_PAREN | RIGHT_PAREN | COMMA | GENERIC_ID | QUOTED_ID | LETTER | INTEGER | REAL | WS | SL_COMMENT | STRING | ESCqs | ESCqd )
-        int alt13=85;
+        // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:8: ( ALL | AS | AVG | BOTH | CAST | CHARACTER | COLLATE | COUNT | CURRENT_DATE | CURRENT_ROLE | CURRENT_TIME | CURRENT_TIMESTAMP | CURRENT_USER | DB_KEY | DEFAULT | DELETE | DISTINCT | EXECUTE | EXTRACT | FOR | FROM | GEN_ID | INSERT | INTO | KW_BIGINT | KW_BLOB | KW_CHAR | KW_DATE | KW_DECIMAL | KW_DOUBLE | KW_FLOAT | KW_INT | KW_INTEGER | KW_NUMERIC | KW_PRECISION | KW_SIZE | KW_SMALLINT | KW_TIME | KW_TIMESTAMP | KW_VARCHAR | LEADING | MATCHING | MAXIMUM | MINIMUM | NEXT | NULL | OR | PROCEDURE | RETURNING | SEGMENT | SELECT | SET | SUBSTRING | SUB_TYPE | SUM | TRAILING | TRIM | UPDATE | VALUE | VALUES | T__74 | T__75 | T__76 | T__77 | T__78 | T__79 | T__80 | T__81 | T__82 | T__83 | T__84 | LEFT_PAREN | RIGHT_PAREN | COMMA | GENERIC_ID | QUOTED_ID | INTEGER | REAL | WS | SL_COMMENT | STRING )
+        int alt13=81;
         alt13 = dfa13.predict(input);
         switch (alt13) {
             case 1 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:10: ALL
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:10: ALL
                 {
-                mALL(); if (failed) return ;
+                mALL(); 
+
 
                 }
                 break;
             case 2 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:14: AS
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:14: AS
                 {
-                mAS(); if (failed) return ;
+                mAS(); 
+
 
                 }
                 break;
             case 3 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:17: AVG
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:17: AVG
                 {
-                mAVG(); if (failed) return ;
+                mAVG(); 
+
 
                 }
                 break;
             case 4 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:21: BOTH
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:21: BOTH
                 {
-                mBOTH(); if (failed) return ;
+                mBOTH(); 
+
 
                 }
                 break;
             case 5 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:26: CAST
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:26: CAST
                 {
-                mCAST(); if (failed) return ;
+                mCAST(); 
+
 
                 }
                 break;
             case 6 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:31: CHARACTER
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:31: CHARACTER
                 {
-                mCHARACTER(); if (failed) return ;
+                mCHARACTER(); 
+
 
                 }
                 break;
             case 7 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:41: COUNT
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:41: COLLATE
                 {
-                mCOUNT(); if (failed) return ;
+                mCOLLATE(); 
+
 
                 }
                 break;
             case 8 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:47: COLLATE
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:49: COUNT
                 {
-                mCOLLATE(); if (failed) return ;
+                mCOUNT(); 
+
 
                 }
                 break;
             case 9 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:55: CURRENT_USER
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:55: CURRENT_DATE
                 {
-                mCURRENT_USER(); if (failed) return ;
+                mCURRENT_DATE(); 
+
 
                 }
                 break;
             case 10 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:68: CURRENT_ROLE
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:68: CURRENT_ROLE
                 {
-                mCURRENT_ROLE(); if (failed) return ;
+                mCURRENT_ROLE(); 
+
 
                 }
                 break;
             case 11 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:81: CURRENT_DATE
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:81: CURRENT_TIME
                 {
-                mCURRENT_DATE(); if (failed) return ;
+                mCURRENT_TIME(); 
+
 
                 }
                 break;
             case 12 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:94: CURRENT_TIME
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:94: CURRENT_TIMESTAMP
                 {
-                mCURRENT_TIME(); if (failed) return ;
+                mCURRENT_TIMESTAMP(); 
+
 
                 }
                 break;
             case 13 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:107: CURRENT_TIMESTAMP
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:112: CURRENT_USER
                 {
-                mCURRENT_TIMESTAMP(); if (failed) return ;
+                mCURRENT_USER(); 
+
 
                 }
                 break;
             case 14 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:125: DEFAULT
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:125: DB_KEY
                 {
-                mDEFAULT(); if (failed) return ;
+                mDB_KEY(); 
+
 
                 }
                 break;
             case 15 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:133: DELETE
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:132: DEFAULT
                 {
-                mDELETE(); if (failed) return ;
+                mDEFAULT(); 
+
 
                 }
                 break;
             case 16 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:140: DISTINCT
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:140: DELETE
                 {
-                mDISTINCT(); if (failed) return ;
+                mDELETE(); 
+
 
                 }
                 break;
             case 17 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:149: DB_KEY
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:147: DISTINCT
                 {
-                mDB_KEY(); if (failed) return ;
+                mDISTINCT(); 
+
 
                 }
                 break;
             case 18 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:156: EXTRACT
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:156: EXECUTE
                 {
-                mEXTRACT(); if (failed) return ;
+                mEXECUTE(); 
+
 
                 }
                 break;
             case 19 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:164: EXECUTE
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:164: EXTRACT
                 {
-                mEXECUTE(); if (failed) return ;
+                mEXTRACT(); 
+
 
                 }
                 break;
             case 20 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:172: FOR
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:172: FOR
                 {
-                mFOR(); if (failed) return ;
+                mFOR(); 
+
 
                 }
                 break;
             case 21 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:176: FROM
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:176: FROM
                 {
-                mFROM(); if (failed) return ;
+                mFROM(); 
+
 
                 }
                 break;
             case 22 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:181: GEN_ID
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:181: GEN_ID
                 {
-                mGEN_ID(); if (failed) return ;
+                mGEN_ID(); 
+
 
                 }
                 break;
             case 23 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:188: INSERT
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:188: INSERT
                 {
-                mINSERT(); if (failed) return ;
+                mINSERT(); 
+
 
                 }
                 break;
             case 24 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:195: INTO
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:195: INTO
                 {
-                mINTO(); if (failed) return ;
+                mINTO(); 
+
 
                 }
                 break;
             case 25 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:200: LEADING
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:200: KW_BIGINT
                 {
-                mLEADING(); if (failed) return ;
+                mKW_BIGINT(); 
+
 
                 }
                 break;
             case 26 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:208: MATCHING
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:210: KW_BLOB
                 {
-                mMATCHING(); if (failed) return ;
+                mKW_BLOB(); 
+
 
                 }
                 break;
             case 27 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:217: MINIMUM
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:218: KW_CHAR
                 {
-                mMINIMUM(); if (failed) return ;
+                mKW_CHAR(); 
+
 
                 }
                 break;
             case 28 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:225: MAXIMUM
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:226: KW_DATE
                 {
-                mMAXIMUM(); if (failed) return ;
+                mKW_DATE(); 
+
 
                 }
                 break;
             case 29 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:233: NULL
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:234: KW_DECIMAL
                 {
-                mNULL(); if (failed) return ;
+                mKW_DECIMAL(); 
+
 
                 }
                 break;
             case 30 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:238: NEXT
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:245: KW_DOUBLE
                 {
-                mNEXT(); if (failed) return ;
+                mKW_DOUBLE(); 
+
 
                 }
                 break;
             case 31 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:243: OR
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:255: KW_FLOAT
                 {
-                mOR(); if (failed) return ;
+                mKW_FLOAT(); 
+
 
                 }
                 break;
             case 32 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:246: PROCEDURE
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:264: KW_INT
                 {
-                mPROCEDURE(); if (failed) return ;
+                mKW_INT(); 
+
 
                 }
                 break;
             case 33 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:256: RETURNING
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:271: KW_INTEGER
                 {
-                mRETURNING(); if (failed) return ;
+                mKW_INTEGER(); 
+
 
                 }
                 break;
             case 34 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:266: SEGMENT
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:282: KW_NUMERIC
                 {
-                mSEGMENT(); if (failed) return ;
+                mKW_NUMERIC(); 
+
 
                 }
                 break;
             case 35 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:274: SELECT
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:293: KW_PRECISION
                 {
-                mSELECT(); if (failed) return ;
+                mKW_PRECISION(); 
+
 
                 }
                 break;
             case 36 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:281: SET
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:306: KW_SIZE
                 {
-                mSET(); if (failed) return ;
+                mKW_SIZE(); 
+
 
                 }
                 break;
             case 37 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:285: SUBSTRING
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:314: KW_SMALLINT
                 {
-                mSUBSTRING(); if (failed) return ;
+                mKW_SMALLINT(); 
+
 
                 }
                 break;
             case 38 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:295: SUB_TYPE
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:326: KW_TIME
                 {
-                mSUB_TYPE(); if (failed) return ;
+                mKW_TIME(); 
+
 
                 }
                 break;
             case 39 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:304: SUM
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:334: KW_TIMESTAMP
                 {
-                mSUM(); if (failed) return ;
+                mKW_TIMESTAMP(); 
+
 
                 }
                 break;
             case 40 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:308: TRIM
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:347: KW_VARCHAR
                 {
-                mTRIM(); if (failed) return ;
+                mKW_VARCHAR(); 
+
 
                 }
                 break;
             case 41 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:313: TRAILING
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:358: LEADING
                 {
-                mTRAILING(); if (failed) return ;
+                mLEADING(); 
+
 
                 }
                 break;
             case 42 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:322: UPDATE
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:366: MATCHING
                 {
-                mUPDATE(); if (failed) return ;
+                mMATCHING(); 
+
 
                 }
                 break;
             case 43 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:329: VALUE
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:375: MAXIMUM
                 {
-                mVALUE(); if (failed) return ;
+                mMAXIMUM(); 
+
 
                 }
                 break;
             case 44 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:335: VALUES
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:383: MINIMUM
                 {
-                mVALUES(); if (failed) return ;
+                mMINIMUM(); 
+
 
                 }
                 break;
             case 45 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:342: KW_BLOB
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:391: NEXT
                 {
-                mKW_BLOB(); if (failed) return ;
+                mNEXT(); 
+
 
                 }
                 break;
             case 46 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:350: KW_BIGINT
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:396: NULL
                 {
-                mKW_BIGINT(); if (failed) return ;
+                mNULL(); 
+
 
                 }
                 break;
             case 47 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:360: KW_CHAR
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:401: OR
                 {
-                mKW_CHAR(); if (failed) return ;
+                mOR(); 
+
 
                 }
                 break;
             case 48 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:368: KW_DATE
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:404: PROCEDURE
                 {
-                mKW_DATE(); if (failed) return ;
+                mPROCEDURE(); 
+
 
                 }
                 break;
             case 49 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:376: KW_DECIMAL
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:414: RETURNING
                 {
-                mKW_DECIMAL(); if (failed) return ;
+                mRETURNING(); 
+
 
                 }
                 break;
             case 50 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:387: KW_DOUBLE
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:424: SEGMENT
                 {
-                mKW_DOUBLE(); if (failed) return ;
+                mSEGMENT(); 
+
 
                 }
                 break;
             case 51 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:397: KW_PRECISION
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:432: SELECT
                 {
-                mKW_PRECISION(); if (failed) return ;
+                mSELECT(); 
+
 
                 }
                 break;
             case 52 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:410: KW_FLOAT
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:439: SET
                 {
-                mKW_FLOAT(); if (failed) return ;
+                mSET(); 
+
 
                 }
                 break;
             case 53 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:419: KW_INTEGER
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:443: SUBSTRING
                 {
-                mKW_INTEGER(); if (failed) return ;
+                mSUBSTRING(); 
+
 
                 }
                 break;
             case 54 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:430: KW_INT
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:453: SUB_TYPE
                 {
-                mKW_INT(); if (failed) return ;
+                mSUB_TYPE(); 
+
 
                 }
                 break;
             case 55 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:437: KW_NUMERIC
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:462: SUM
                 {
-                mKW_NUMERIC(); if (failed) return ;
+                mSUM(); 
+
 
                 }
                 break;
             case 56 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:448: KW_SMALLINT
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:466: TRAILING
                 {
-                mKW_SMALLINT(); if (failed) return ;
+                mTRAILING(); 
+
 
                 }
                 break;
             case 57 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:460: KW_TIME
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:475: TRIM
                 {
-                mKW_TIME(); if (failed) return ;
+                mTRIM(); 
+
 
                 }
                 break;
             case 58 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:468: KW_TIMESTAMP
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:480: UPDATE
                 {
-                mKW_TIMESTAMP(); if (failed) return ;
+                mUPDATE(); 
+
 
                 }
                 break;
             case 59 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:481: KW_VARCHAR
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:487: VALUE
                 {
-                mKW_VARCHAR(); if (failed) return ;
+                mVALUE(); 
+
 
                 }
                 break;
             case 60 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:492: KW_SET
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:493: VALUES
                 {
-                mKW_SET(); if (failed) return ;
+                mVALUES(); 
+
 
                 }
                 break;
             case 61 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:499: KW_SIZE
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:500: T__74
                 {
-                mKW_SIZE(); if (failed) return ;
+                mT__74(); 
+
 
                 }
                 break;
             case 62 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:507: T78
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:506: T__75
                 {
-                mT78(); if (failed) return ;
+                mT__75(); 
+
 
                 }
                 break;
             case 63 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:511: T79
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:512: T__76
                 {
-                mT79(); if (failed) return ;
+                mT__76(); 
+
 
                 }
                 break;
             case 64 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:515: T80
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:518: T__77
                 {
-                mT80(); if (failed) return ;
+                mT__77(); 
+
 
                 }
                 break;
             case 65 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:519: T81
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:524: T__78
                 {
-                mT81(); if (failed) return ;
+                mT__78(); 
+
 
                 }
                 break;
             case 66 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:523: T82
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:530: T__79
                 {
-                mT82(); if (failed) return ;
+                mT__79(); 
+
 
                 }
                 break;
             case 67 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:527: T83
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:536: T__80
                 {
-                mT83(); if (failed) return ;
+                mT__80(); 
+
 
                 }
                 break;
             case 68 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:531: T84
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:542: T__81
                 {
-                mT84(); if (failed) return ;
+                mT__81(); 
+
 
                 }
                 break;
             case 69 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:535: T85
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:548: T__82
                 {
-                mT85(); if (failed) return ;
+                mT__82(); 
+
 
                 }
                 break;
             case 70 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:539: T86
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:554: T__83
                 {
-                mT86(); if (failed) return ;
+                mT__83(); 
+
 
                 }
                 break;
             case 71 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:543: T87
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:560: T__84
                 {
-                mT87(); if (failed) return ;
+                mT__84(); 
+
 
                 }
                 break;
             case 72 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:547: T88
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:566: LEFT_PAREN
                 {
-                mT88(); if (failed) return ;
+                mLEFT_PAREN(); 
+
 
                 }
                 break;
             case 73 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:551: LEFT_PAREN
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:577: RIGHT_PAREN
                 {
-                mLEFT_PAREN(); if (failed) return ;
+                mRIGHT_PAREN(); 
+
 
                 }
                 break;
             case 74 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:562: RIGHT_PAREN
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:589: COMMA
                 {
-                mRIGHT_PAREN(); if (failed) return ;
+                mCOMMA(); 
+
 
                 }
                 break;
             case 75 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:574: COMMA
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:595: GENERIC_ID
                 {
-                mCOMMA(); if (failed) return ;
+                mGENERIC_ID(); 
+
 
                 }
                 break;
             case 76 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:580: GENERIC_ID
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:606: QUOTED_ID
                 {
-                mGENERIC_ID(); if (failed) return ;
+                mQUOTED_ID(); 
+
 
                 }
                 break;
             case 77 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:591: QUOTED_ID
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:616: INTEGER
                 {
-                mQUOTED_ID(); if (failed) return ;
+                mINTEGER(); 
+
 
                 }
                 break;
             case 78 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:601: LETTER
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:624: REAL
                 {
-                mLETTER(); if (failed) return ;
+                mREAL(); 
+
 
                 }
                 break;
             case 79 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:608: INTEGER
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:629: WS
                 {
-                mINTEGER(); if (failed) return ;
+                mWS(); 
+
 
                 }
                 break;
             case 80 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:616: REAL
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:632: SL_COMMENT
                 {
-                mREAL(); if (failed) return ;
+                mSL_COMMENT(); 
+
 
                 }
                 break;
             case 81 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:621: WS
+                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:643: STRING
                 {
-                mWS(); if (failed) return ;
+                mSTRING(); 
 
-                }
-                break;
-            case 82 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:624: SL_COMMENT
-                {
-                mSL_COMMENT(); if (failed) return ;
-
-                }
-                break;
-            case 83 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:635: STRING
-                {
-                mSTRING(); if (failed) return ;
-
-                }
-                break;
-            case 84 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:642: ESCqs
-                {
-                mESCqs(); if (failed) return ;
-
-                }
-                break;
-            case 85 :
-                // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:1:648: ESCqd
-                {
-                mESCqd(); if (failed) return ;
 
                 }
                 break;
 
         }
 
-    }
-
-    // $ANTLR start synpred1
-    public final void synpred1_fragment() throws RecognitionException {   
-        // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:617:11: ( ESCqd )
-        // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:617:12: ESCqd
-        {
-        mESCqd(); if (failed) return ;
-
-        }
-    }
-    // $ANTLR end synpred1
-
-    // $ANTLR start synpred2
-    public final void synpred2_fragment() throws RecognitionException {   
-        // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:638:13: ( ESCqs )
-        // D:\\projects\\Firebird\\client-java.22.head\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g3:638:14: ESCqs
-        {
-        mESCqs(); if (failed) return ;
-
-        }
-    }
-    // $ANTLR end synpred2
-
-    public final boolean synpred1() {
-        backtracking++;
-        int start = input.mark();
-        try {
-            synpred1_fragment(); // can never throw exception
-        } catch (RecognitionException re) {
-            System.err.println("impossible: "+re);
-        }
-        boolean success = !failed;
-        input.rewind(start);
-        backtracking--;
-        failed=false;
-        return success;
-    }
-    public final boolean synpred2() {
-        backtracking++;
-        int start = input.mark();
-        try {
-            synpred2_fragment(); // can never throw exception
-        } catch (RecognitionException re) {
-            System.err.println("impossible: "+re);
-        }
-        boolean success = !failed;
-        input.rewind(start);
-        backtracking--;
-        failed=false;
-        return success;
     }
 
 
     protected DFA13 dfa13 = new DFA13(this);
     static final String DFA13_eotS =
-        "\1\uffff\22\43\1\uffff\1\115\1\uffff\1\117\6\uffff\1\120\6\uffff"+
-        "\1\123\2\uffff\1\126\31\43\1\167\12\43\13\uffff\1\u0088\1\u0089"+
-        "\22\43\1\u009c\2\43\1\u00a1\2\43\1\u00a4\1\43\1\u00a6\3\43\1\uffff"+
-        "\5\43\1\u00af\3\43\1\u00b4\6\43\2\uffff\1\u00bb\1\43\1\u00bd\3\43"+
-        "\1\u00c2\1\u00c3\4\43\1\u00c8\5\43\1\uffff\1\u00ce\1\43\1\u00d0"+
-        "\1\43\1\uffff\2\43\1\uffff\1\43\1\uffff\1\43\1\u00d6\1\u00d7\5\43"+
-        "\1\uffff\1\43\1\u00de\2\43\1\uffff\1\u00e2\1\u00e3\4\43\1\uffff"+
-        "\1\43\1\uffff\1\43\1\u00ea\2\43\2\uffff\4\43\1\uffff\4\43\1\u00f5"+
-        "\1\uffff\1\43\1\uffff\5\43\2\uffff\6\43\1\uffff\3\43\2\uffff\2\43"+
-        "\1\u0108\1\43\1\u010a\1\43\1\uffff\2\43\1\u010e\2\43\1\u0111\1\43"+
-        "\1\u0113\2\43\1\uffff\1\u0116\1\43\1\u0118\7\43\1\u0120\5\43\1\u0126"+
-        "\1\u0127\1\uffff\1\43\1\uffff\1\u0129\2\43\1\uffff\1\u012c\1\u012d"+
-        "\1\uffff\1\43\1\uffff\1\u012f\1\u0130\1\uffff\1\u0131\1\uffff\1"+
-        "\u0132\1\43\1\u0134\4\43\1\uffff\1\u0139\4\43\2\uffff\1\u013e\1"+
-        "\uffff\2\43\2\uffff\1\u0144\4\uffff\1\u0145\1\uffff\3\43\1\u0149"+
-        "\1\uffff\1\u014a\2\43\1\u014d\1\uffff\4\43\1\u0152\2\uffff\1\u0153"+
-        "\1\u0154\1\u0155\2\uffff\1\u0156\1\u0157\1\uffff\4\43\6\uffff\4"+
-        "\43\1\u0161\1\u0162\1\u0163\1\u0164\1\43\4\uffff\3\43\1\u0169\1"+
-        "\uffff";
+        "\1\uffff\22\41\2\uffff\1\114\1\116\1\uffff\1\117\12\uffff\1\120"+
+        "\2\uffff\1\41\1\122\40\41\1\u0080\2\41\6\uffff\1\u0083\1\uffff\1"+
+        "\u0084\21\41\1\u0096\4\41\1\u009d\11\41\1\u00a7\1\41\1\u00aa\7\41"+
+        "\1\u00b2\1\u00b3\1\uffff\2\41\2\uffff\1\u00b6\1\41\1\u00b8\1\u00b9"+
+        "\1\u00bb\10\41\1\u00c4\3\41\1\uffff\1\u00c8\3\41\1\u00cc\1\41\1"+
+        "\uffff\1\41\1\u00cf\1\u00d0\2\41\1\u00d3\3\41\1\uffff\2\41\1\uffff"+
+        "\1\u00da\1\41\1\u00dc\4\41\2\uffff\2\41\1\uffff\1\41\2\uffff\1\41"+
+        "\1\uffff\1\41\1\u00e6\6\41\1\uffff\3\41\1\uffff\1\u00f0\2\41\1\uffff"+
+        "\2\41\2\uffff\2\41\1\uffff\6\41\1\uffff\1\41\1\uffff\1\41\1\u0100"+
+        "\4\41\1\u0105\2\41\1\uffff\1\41\1\u0109\1\41\1\u010b\2\41\1\u010e"+
+        "\2\41\1\uffff\1\u0111\1\u0112\6\41\1\u0119\5\41\1\u011f\1\uffff"+
+        "\3\41\1\u0123\1\uffff\1\41\1\u0125\1\41\1\uffff\1\u0127\1\uffff"+
+        "\1\u0128\1\41\1\uffff\1\u012a\1\u012b\2\uffff\1\u012c\1\u012d\3"+
+        "\41\1\u0131\1\uffff\4\41\1\u0136\1\uffff\1\u0137\2\41\1\uffff\1"+
+        "\41\1\uffff\1\41\2\uffff\1\u013f\4\uffff\2\41\1\u0142\1\uffff\1"+
+        "\41\1\u0144\1\41\1\u0146\2\uffff\1\u0147\1\41\1\u0149\4\41\1\uffff"+
+        "\1\u014e\1\u014f\1\uffff\1\u0150\1\uffff\1\u0151\2\uffff\1\u0152"+
+        "\1\uffff\4\41\5\uffff\4\41\1\u015b\1\u015c\1\u015e\1\u015f\2\uffff"+
+        "\1\41\2\uffff\3\41\1\u0164\1\uffff";
     static final String DFA13_eofS =
-        "\u016a\uffff";
+        "\u0165\uffff";
     static final String DFA13_minS =
-        "\1\11\1\154\1\151\2\141\1\170\1\154\1\145\1\156\1\145\1\141\1\145"+
-        "\2\162\2\145\1\151\1\160\1\141\1\uffff\1\60\1\uffff\1\55\6\uffff"+
-        "\1\44\4\uffff\1\0\1\uffff\1\56\1\uffff\1\0\1\44\1\154\1\147\1\164"+
-        "\1\147\1\157\1\154\1\162\1\141\1\163\1\165\1\143\1\164\1\163\1\137"+
-        "\1\145\1\157\1\162\1\157\1\156\1\163\1\141\1\164\1\156\1\154\1\170"+
-        "\1\44\1\145\1\164\1\141\1\147\1\172\1\142\1\155\1\141\1\144\1\154"+
-        "\13\uffff\2\44\1\150\1\151\1\142\1\154\1\156\2\162\1\164\1\142\1"+
-        "\151\1\141\2\145\1\164\1\153\1\162\1\143\1\141\1\44\1\155\1\137"+
-        "\1\44\1\145\1\144\1\44\1\143\1\44\1\145\1\154\1\164\1\uffff\2\143"+
-        "\1\165\1\154\1\145\1\44\1\155\1\145\1\137\1\44\1\145\1\155\1\151"+
-        "\1\141\1\165\1\143\2\uffff\1\44\1\156\1\44\1\141\1\164\1\145\2\44"+
-        "\1\154\1\155\1\165\1\164\1\44\1\151\1\145\1\141\1\165\1\164\1\uffff"+
-        "\1\44\1\151\1\44\1\147\1\uffff\1\162\1\151\1\uffff\1\150\1\uffff"+
-        "\1\162\2\44\1\151\1\145\1\162\1\154\1\143\1\uffff\1\145\1\44\2\164"+
-        "\1\uffff\2\44\1\154\1\164\1\145\1\150\1\uffff\1\164\1\uffff\1\164"+
-        "\1\44\1\156\1\143\2\uffff\1\145\1\141\1\154\1\145\1\uffff\1\156"+
-        "\1\171\1\143\1\164\1\44\1\uffff\1\144\1\uffff\1\145\1\164\1\156"+
-        "\2\151\2\uffff\1\163\1\144\1\156\1\151\1\164\1\156\1\uffff\1\171"+
-        "\1\162\1\164\2\uffff\1\151\1\145\1\44\1\141\1\44\1\145\1\uffff\2"+
-        "\164\1\44\1\154\1\164\1\44\1\143\1\44\1\164\1\145\1\uffff\1\44\1"+
-        "\162\1\44\1\147\1\156\1\143\1\151\1\165\1\151\1\156\1\44\1\164\1"+
-        "\160\1\151\1\141\1\156\2\44\1\uffff\1\162\1\uffff\1\44\1\137\1\145"+
-        "\1\uffff\2\44\1\uffff\1\164\1\uffff\2\44\1\uffff\1\44\1\uffff\1"+
-        "\44\1\147\1\44\1\157\1\162\1\156\1\164\1\uffff\1\44\1\145\1\156"+
-        "\1\155\1\147\2\uffff\1\44\1\uffff\1\144\1\162\2\uffff\1\44\4\uffff"+
-        "\1\44\1\uffff\1\156\1\145\1\147\1\44\1\uffff\1\44\1\147\1\160\1"+
-        "\44\1\uffff\1\151\1\163\1\157\1\141\1\44\2\uffff\3\44\2\uffff\2"+
-        "\44\1\uffff\1\155\1\145\1\154\1\164\6\uffff\1\145\1\162\2\145\4"+
-        "\44\1\164\4\uffff\1\141\1\155\1\160\1\44\1\uffff";
+        "\1\11\1\154\1\151\2\141\1\170\1\154\1\145\1\156\1\145\1\162\1\145"+
+        "\1\151\1\141\1\145\1\141\1\162\1\145\1\160\2\uffff\1\55\1\60\1\uffff"+
+        "\1\44\12\uffff\1\56\2\uffff\1\154\1\44\1\147\1\164\1\147\1\157\1"+
+        "\163\1\141\1\154\1\162\1\137\1\143\1\163\1\164\1\165\1\145\1\162"+
+        "\2\157\1\156\1\163\1\154\1\170\1\145\1\172\1\141\1\147\1\142\1\155"+
+        "\1\141\1\154\1\141\1\164\1\156\1\44\1\164\1\144\6\uffff\1\44\1\uffff"+
+        "\1\44\1\150\1\151\1\142\1\164\1\162\1\154\1\156\1\162\1\153\1\141"+
+        "\1\145\1\151\1\164\1\145\1\142\1\143\1\162\1\44\1\155\1\141\1\137"+
+        "\1\145\1\44\1\145\1\154\1\164\2\143\1\145\1\154\1\155\1\145\1\44"+
+        "\1\137\1\44\1\145\1\151\1\155\1\143\1\165\1\144\1\143\2\44\1\uffff"+
+        "\1\165\1\141\2\uffff\1\44\1\156\3\44\1\141\1\164\2\145\1\165\1\164"+
+        "\1\155\1\151\1\44\1\154\1\165\1\141\1\uffff\1\44\1\164\1\151\1\162"+
+        "\1\44\1\147\1\uffff\1\162\2\44\1\151\1\145\1\44\1\154\1\145\1\143"+
+        "\1\uffff\2\164\1\uffff\1\44\1\154\1\44\1\150\1\145\1\151\1\150\2"+
+        "\uffff\1\162\1\164\1\uffff\1\164\2\uffff\1\143\1\uffff\1\164\1\44"+
+        "\1\156\1\171\1\154\1\145\1\141\1\156\1\uffff\1\145\1\164\1\143\1"+
+        "\uffff\1\44\1\144\1\164\1\uffff\1\145\1\151\2\uffff\1\163\1\144"+
+        "\1\uffff\1\151\1\156\1\164\1\162\1\171\1\164\1\uffff\1\151\1\uffff"+
+        "\1\141\1\44\1\156\1\151\1\156\1\145\1\44\1\164\1\145\1\uffff\1\164"+
+        "\1\44\1\164\1\44\1\154\1\143\1\44\1\145\1\164\1\uffff\2\44\1\162"+
+        "\1\143\1\151\1\165\1\156\1\164\1\44\1\151\1\160\1\141\1\156\1\162"+
+        "\1\44\1\uffff\1\147\1\156\1\151\1\44\1\uffff\1\145\1\44\1\137\1"+
+        "\uffff\1\44\1\uffff\1\44\1\164\1\uffff\2\44\2\uffff\2\44\1\157\1"+
+        "\162\1\164\1\44\1\uffff\1\156\1\145\1\155\1\147\1\44\1\uffff\1\44"+
+        "\1\147\1\156\1\uffff\1\162\1\uffff\1\144\2\uffff\1\44\4\uffff\1"+
+        "\156\1\145\1\44\1\uffff\1\147\1\44\1\160\1\44\2\uffff\1\44\1\147"+
+        "\1\44\1\141\1\157\1\151\1\163\1\uffff\2\44\1\uffff\1\44\1\uffff"+
+        "\1\44\2\uffff\1\44\1\uffff\1\164\1\154\1\155\1\145\5\uffff\3\145"+
+        "\1\162\4\44\2\uffff\1\164\2\uffff\1\141\1\155\1\160\1\44\1\uffff";
     static final String DFA13_maxS =
-        "\1\174\1\166\1\157\1\165\1\157\1\170\1\162\1\145\1\156\1\145\1\151"+
-        "\1\165\2\162\1\145\1\165\1\162\1\160\1\141\1\uffff\1\71\1\uffff"+
-        "\1\71\6\uffff\1\172\4\uffff\1\ufffe\1\uffff\1\71\1\uffff\1\ufffe"+
-        "\1\172\1\154\1\147\1\164\1\147\1\157\1\165\1\162\1\141\1\163\1\165"+
-        "\1\154\1\164\1\163\1\137\1\164\1\157\1\162\1\157\1\156\1\164\1\141"+
-        "\1\170\1\156\1\155\1\170\1\172\1\157\1\164\1\141\1\164\1\172\2\155"+
-        "\1\151\1\144\1\162\13\uffff\2\172\1\150\1\151\1\142\1\154\1\156"+
-        "\2\162\1\164\1\142\1\151\1\141\2\145\1\164\1\153\1\162\1\143\1\141"+
-        "\1\172\1\155\1\137\1\172\1\145\1\144\1\172\1\143\1\172\1\145\1\154"+
-        "\1\164\1\uffff\2\143\1\165\1\154\1\145\1\172\1\155\1\145\1\163\1"+
-        "\172\1\145\1\155\1\151\1\141\1\165\1\143\2\uffff\1\172\1\156\1\172"+
-        "\1\141\1\164\1\145\2\172\1\154\1\155\1\165\1\164\1\172\1\151\1\145"+
-        "\1\141\1\165\1\164\1\uffff\1\172\1\151\1\172\1\147\1\uffff\1\162"+
-        "\1\151\1\uffff\1\150\1\uffff\1\162\2\172\1\151\1\145\1\162\1\154"+
-        "\1\143\1\uffff\1\145\1\172\2\164\1\uffff\2\172\1\154\1\164\1\145"+
-        "\1\150\1\uffff\1\164\1\uffff\1\164\1\172\1\156\1\143\2\uffff\1\145"+
-        "\1\141\1\154\1\145\1\uffff\1\156\1\171\1\143\1\164\1\172\1\uffff"+
-        "\1\144\1\uffff\1\145\1\164\1\156\2\151\2\uffff\1\163\1\144\1\156"+
-        "\1\151\1\164\1\156\1\uffff\1\171\1\162\1\164\2\uffff\1\151\1\145"+
-        "\1\172\1\141\1\172\1\145\1\uffff\2\164\1\172\1\154\1\164\1\172\1"+
-        "\143\1\172\1\164\1\145\1\uffff\1\172\1\162\1\172\1\147\1\156\1\143"+
-        "\1\151\1\165\1\151\1\156\1\172\1\164\1\160\1\151\1\141\1\156\2\172"+
-        "\1\uffff\1\162\1\uffff\1\172\1\137\1\145\1\uffff\2\172\1\uffff\1"+
-        "\164\1\uffff\2\172\1\uffff\1\172\1\uffff\1\172\1\147\1\172\1\157"+
-        "\1\162\1\156\1\164\1\uffff\1\172\1\145\1\156\1\155\1\147\2\uffff"+
-        "\1\172\1\uffff\1\165\1\162\2\uffff\1\172\4\uffff\1\172\1\uffff\1"+
-        "\156\1\145\1\147\1\172\1\uffff\1\172\1\147\1\160\1\172\1\uffff\1"+
-        "\151\1\163\1\157\1\141\1\172\2\uffff\3\172\2\uffff\2\172\1\uffff"+
-        "\1\155\1\145\1\154\1\164\6\uffff\1\145\1\162\2\145\4\172\1\164\4"+
-        "\uffff\1\141\1\155\1\160\1\172\1\uffff";
+        "\1\174\1\166\1\157\1\165\1\157\1\170\1\162\1\145\1\156\1\165\1\162"+
+        "\1\165\1\162\1\141\1\145\1\151\1\162\1\145\1\160\2\uffff\2\71\1"+
+        "\uffff\1\172\12\uffff\1\71\2\uffff\1\154\1\172\1\147\1\164\1\147"+
+        "\1\157\1\163\1\141\1\165\1\162\1\137\1\154\1\163\1\164\1\165\1\164"+
+        "\1\162\2\157\1\156\1\164\1\155\1\170\1\157\1\172\1\141\1\164\2\155"+
+        "\1\151\1\162\1\141\1\170\1\156\1\172\1\164\1\144\6\uffff\1\172\1"+
+        "\uffff\1\172\1\150\1\151\1\142\1\164\1\162\1\154\1\156\1\162\1\153"+
+        "\1\141\1\145\1\151\1\164\1\145\1\142\1\143\1\162\1\172\1\155\1\141"+
+        "\1\137\1\145\1\172\1\145\1\154\1\164\2\143\1\145\1\154\1\155\1\145"+
+        "\1\172\1\163\1\172\1\145\1\151\1\155\1\143\1\165\1\144\1\143\2\172"+
+        "\1\uffff\1\165\1\141\2\uffff\1\172\1\156\3\172\1\141\1\164\2\145"+
+        "\1\165\1\164\1\155\1\151\1\172\1\154\1\165\1\141\1\uffff\1\172\1"+
+        "\164\1\151\1\162\1\172\1\147\1\uffff\1\162\2\172\1\151\1\145\1\172"+
+        "\1\154\1\145\1\143\1\uffff\2\164\1\uffff\1\172\1\154\1\172\1\150"+
+        "\1\145\1\151\1\150\2\uffff\1\162\1\164\1\uffff\1\164\2\uffff\1\143"+
+        "\1\uffff\1\164\1\172\1\156\1\171\1\154\1\145\1\141\1\156\1\uffff"+
+        "\1\145\1\164\1\143\1\uffff\1\172\1\144\1\164\1\uffff\1\145\1\151"+
+        "\2\uffff\1\163\1\144\1\uffff\1\151\1\156\1\164\1\162\1\171\1\164"+
+        "\1\uffff\1\151\1\uffff\1\141\1\172\1\156\1\151\1\156\1\145\1\172"+
+        "\1\164\1\145\1\uffff\1\164\1\172\1\164\1\172\1\154\1\143\1\172\1"+
+        "\145\1\164\1\uffff\2\172\1\162\1\143\1\151\1\165\1\156\1\164\1\172"+
+        "\1\151\1\160\1\141\1\156\1\162\1\172\1\uffff\1\147\1\156\1\151\1"+
+        "\172\1\uffff\1\145\1\172\1\137\1\uffff\1\172\1\uffff\1\172\1\164"+
+        "\1\uffff\2\172\2\uffff\2\172\1\157\1\162\1\164\1\172\1\uffff\1\156"+
+        "\1\145\1\155\1\147\1\172\1\uffff\1\172\1\147\1\156\1\uffff\1\162"+
+        "\1\uffff\1\165\2\uffff\1\172\4\uffff\1\156\1\145\1\172\1\uffff\1"+
+        "\147\1\172\1\160\1\172\2\uffff\1\172\1\147\1\172\1\141\1\157\1\151"+
+        "\1\163\1\uffff\2\172\1\uffff\1\172\1\uffff\1\172\2\uffff\1\172\1"+
+        "\uffff\1\164\1\154\1\155\1\145\5\uffff\3\145\1\162\4\172\2\uffff"+
+        "\1\164\2\uffff\1\141\1\155\1\160\1\172\1\uffff";
     static final String DFA13_acceptS =
-        "\23\uffff\1\76\1\uffff\1\100\1\uffff\1\102\1\103\1\104\1\105\1\106"+
-        "\1\107\1\uffff\1\111\1\112\1\113\1\114\1\uffff\1\114\1\uffff\1\121"+
-        "\46\uffff\1\120\1\77\1\122\1\101\1\110\2\115\1\117\2\123\1\2\40"+
-        "\uffff\1\37\20\uffff\1\1\1\3\22\uffff\1\24\4\uffff\1\66\2\uffff"+
-        "\1\34\1\uffff\1\33\10\uffff\1\44\4\uffff\1\47\6\uffff\1\4\1\uffff"+
-        "\1\55\4\uffff\1\57\1\5\4\uffff\1\60\5\uffff\1\25\1\uffff\1\30\5"+
-        "\uffff\1\35\1\36\6\uffff\1\75\3\uffff\1\71\1\50\6\uffff\1\7\12\uffff"+
-        "\1\64\22\uffff\1\53\1\uffff\1\56\3\uffff\1\62\2\uffff\1\17\1\uffff"+
-        "\1\21\2\uffff\1\26\1\uffff\1\27\7\uffff\1\43\5\uffff\1\52\1\54\1"+
-        "\uffff\1\10\2\uffff\1\61\1\16\1\uffff\1\22\1\23\1\65\1\31\1\uffff"+
-        "\1\67\4\uffff\1\42\4\uffff\1\73\5\uffff\1\20\1\32\3\uffff\1\70\1"+
-        "\46\2\uffff\1\51\4\uffff\1\6\1\63\1\40\1\41\1\45\1\72\11\uffff\1"+
-        "\14\1\11\1\12\1\13\4\uffff\1\15";
+        "\23\uffff\1\75\1\76\2\uffff\1\101\1\uffff\1\103\1\104\1\105\1\106"+
+        "\1\107\1\110\1\111\1\112\1\113\1\114\1\uffff\1\117\1\121\45\uffff"+
+        "\1\120\1\77\1\116\1\100\1\102\1\115\1\uffff\1\2\55\uffff\1\57\2"+
+        "\uffff\1\1\1\3\21\uffff\1\24\6\uffff\1\40\11\uffff\1\64\2\uffff"+
+        "\1\67\7\uffff\1\53\1\54\2\uffff\1\4\1\uffff\1\32\1\5\1\uffff\1\33"+
+        "\10\uffff\1\34\3\uffff\1\25\3\uffff\1\30\2\uffff\1\56\1\55\2\uffff"+
+        "\1\44\6\uffff\1\46\1\uffff\1\71\11\uffff\1\10\11\uffff\1\37\17\uffff"+
+        "\1\73\4\uffff\1\31\3\uffff\1\16\1\uffff\1\20\2\uffff\1\36\2\uffff"+
+        "\1\26\1\27\6\uffff\1\63\5\uffff\1\74\3\uffff\1\72\1\uffff\1\7\1"+
+        "\uffff\1\17\1\35\1\uffff\1\22\1\23\1\41\1\42\3\uffff\1\62\4\uffff"+
+        "\1\50\1\51\7\uffff\1\21\2\uffff\1\45\1\uffff\1\66\1\uffff\1\70\1"+
+        "\52\1\uffff\1\6\4\uffff\1\43\1\60\1\65\1\47\1\61\10\uffff\1\11\1"+
+        "\12\1\uffff\1\13\1\15\4\uffff\1\14";
     static final String DFA13_specialS =
-        "\u016a\uffff}>";
+        "\u0165\uffff}>";
     static final String[] DFA13_transitionS = {
-            "\2\45\2\uffff\1\45\22\uffff\1\45\1\uffff\1\42\1\uffff\1\43\2"+
-            "\uffff\1\46\1\36\1\37\1\27\1\25\1\40\1\26\1\24\1\30\12\44\1"+
-            "\35\2\uffff\1\23\1\uffff\1\32\1\uffff\32\41\1\33\1\uffff\1\34"+
-            "\1\uffff\1\43\1\uffff\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\41\1\10"+
-            "\2\41\1\11\1\12\1\13\1\14\1\15\1\41\1\16\1\17\1\20\1\21\1\22"+
-            "\4\41\1\uffff\1\31",
-            "\1\50\6\uffff\1\47\2\uffff\1\51",
-            "\1\53\2\uffff\1\54\2\uffff\1\52",
-            "\1\60\6\uffff\1\57\6\uffff\1\55\5\uffff\1\56",
-            "\1\63\1\65\2\uffff\1\62\3\uffff\1\64\5\uffff\1\61",
-            "\1\66",
-            "\1\67\2\uffff\1\70\2\uffff\1\71",
+            "\2\44\2\uffff\1\44\22\uffff\1\44\1\uffff\1\42\1\uffff\1\41\2"+
+            "\uffff\1\45\1\36\1\37\1\23\1\24\1\40\1\25\1\26\1\27\12\43\1"+
+            "\30\2\uffff\1\31\1\uffff\1\32\1\uffff\32\41\1\33\1\uffff\1\34"+
+            "\1\uffff\1\41\1\uffff\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\41\1\10"+
+            "\2\41\1\16\1\17\1\11\1\20\1\12\1\41\1\21\1\13\1\14\1\22\1\15"+
+            "\4\41\1\uffff\1\35",
+            "\1\46\6\uffff\1\47\2\uffff\1\50",
+            "\1\52\2\uffff\1\53\2\uffff\1\51",
+            "\1\54\6\uffff\1\55\6\uffff\1\56\5\uffff\1\57",
+            "\1\63\1\60\2\uffff\1\61\3\uffff\1\62\5\uffff\1\64",
+            "\1\65",
+            "\1\70\2\uffff\1\66\2\uffff\1\67",
+            "\1\71",
             "\1\72",
-            "\1\73",
-            "\1\74",
-            "\1\75\7\uffff\1\76",
-            "\1\100\17\uffff\1\77",
-            "\1\101",
-            "\1\102",
-            "\1\103",
-            "\1\105\3\uffff\1\106\3\uffff\1\104\7\uffff\1\107",
-            "\1\110\10\uffff\1\111",
+            "\1\74\17\uffff\1\73",
+            "\1\75",
+            "\1\100\3\uffff\1\76\3\uffff\1\77\7\uffff\1\101",
+            "\1\102\10\uffff\1\103",
+            "\1\104",
+            "\1\105",
+            "\1\106\7\uffff\1\107",
+            "\1\110",
+            "\1\111",
             "\1\112",
-            "\1\113",
-            "",
-            "\12\114",
-            "",
-            "\1\116\1\114\1\uffff\12\44",
             "",
             "",
+            "\1\113\1\115\1\uffff\12\43",
+            "\12\115",
             "",
-            "",
-            "",
-            "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "",
             "",
             "",
             "",
-            "\42\122\1\121\uffdc\122",
             "",
-            "\1\114\1\uffff\12\44",
             "",
-            "\47\125\1\124\uffd7\125",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "",
+            "",
+            "",
+            "",
+            "\1\115\1\uffff\12\43",
+            "",
+            "",
+            "\1\121",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\123",
+            "\1\124",
+            "\1\125",
+            "\1\126",
             "\1\127",
             "\1\130",
-            "\1\131",
-            "\1\132",
+            "\1\131\10\uffff\1\132",
             "\1\133",
-            "\1\134\10\uffff\1\135",
-            "\1\136",
-            "\1\137",
+            "\1\134",
+            "\1\137\2\uffff\1\135\5\uffff\1\136",
             "\1\140",
             "\1\141",
-            "\1\142\2\uffff\1\143\5\uffff\1\144",
+            "\1\142",
+            "\1\143\16\uffff\1\144",
             "\1\145",
             "\1\146",
             "\1\147",
-            "\1\151\16\uffff\1\150",
-            "\1\152",
-            "\1\153",
-            "\1\154",
+            "\1\150",
+            "\1\151\1\152",
+            "\1\154\1\153",
             "\1\155",
-            "\1\157\1\156",
+            "\1\156\11\uffff\1\157",
             "\1\160",
-            "\1\162\3\uffff\1\161",
-            "\1\163",
-            "\1\165\1\164",
-            "\1\166",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\170\11\uffff\1\171",
-            "\1\172",
-            "\1\173",
-            "\1\176\4\uffff\1\174\7\uffff\1\175",
+            "\1\161",
+            "\1\162\4\uffff\1\163\7\uffff\1\164",
+            "\1\165\12\uffff\1\166",
+            "\1\167",
+            "\1\170\7\uffff\1\171",
+            "\1\173\5\uffff\1\172",
+            "\1\174",
+            "\1\175\3\uffff\1\176",
             "\1\177",
-            "\1\u0080\12\uffff\1\u0081",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\u0081",
             "\1\u0082",
-            "\1\u0084\7\uffff\1\u0083",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u0085",
-            "\1\u0086\5\uffff\1\u0087",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\u0086",
+            "\1\u0087",
+            "\1\u0088",
+            "\1\u0089",
             "\1\u008a",
             "\1\u008b",
             "\1\u008c",
@@ -3154,132 +3410,135 @@ public class JaybirdSqlLexer extends Lexer {
             "\1\u0093",
             "\1\u0094",
             "\1\u0095",
-            "\1\u0096",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u0097",
             "\1\u0098",
             "\1\u0099",
             "\1\u009a",
-            "\1\u009b",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\u009d",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\4\41\1\u009c\11\41\1\u009b\13\41",
             "\1\u009e",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\4\43\1\u00a0\11\43\1\u009f\13\43",
+            "\1\u009f",
+            "\1\u00a0",
+            "\1\u00a1",
             "\1\u00a2",
             "\1\u00a3",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\u00a4",
             "\1\u00a5",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\u00a7",
-            "\1\u00a8",
-            "\1\u00a9",
-            "",
-            "\1\u00aa",
+            "\1\u00a6",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\u00a9\23\uffff\1\u00a8",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u00ab",
             "\1\u00ac",
             "\1\u00ad",
             "\1\u00ae",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\u00af",
             "\1\u00b0",
             "\1\u00b1",
-            "\1\u00b2\23\uffff\1\u00b3",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "",
+            "\1\u00b4",
             "\1\u00b5",
-            "\1\u00b6",
+            "",
+            "",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u00b7",
-            "\1\u00b8",
-            "\1\u00b9",
-            "\1\u00ba",
-            "",
-            "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\1\u00ba\31\41",
             "\1\u00bc",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\u00bd",
             "\1\u00be",
             "\1\u00bf",
             "\1\u00c0",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\1\u00c1\31\43",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\u00c4",
+            "\1\u00c1",
+            "\1\u00c2",
+            "\1\u00c3",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u00c5",
             "\1\u00c6",
             "\1\u00c7",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u00c9",
             "\1\u00ca",
             "\1\u00cb",
-            "\1\u00cc",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u00cd",
             "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\u00cf",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\u00ce",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u00d1",
-            "",
             "\1\u00d2",
-            "\1\u00d3",
-            "",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u00d4",
-            "",
             "\1\u00d5",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\u00d8",
-            "\1\u00d9",
-            "\1\u00da",
-            "\1\u00db",
-            "\1\u00dc",
+            "\1\u00d6",
             "",
+            "\1\u00d7",
+            "\1\u00d8",
+            "",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\22\41\1\u00d9\7\41",
+            "\1\u00db",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u00dd",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\u00de",
             "\1\u00df",
             "\1\u00e0",
             "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\22\43\1\u00e1\7\43",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "",
+            "\1\u00e1",
+            "\1\u00e2",
+            "",
+            "\1\u00e3",
+            "",
+            "",
             "\1\u00e4",
+            "",
             "\1\u00e5",
-            "\1\u00e6",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u00e7",
-            "",
             "\1\u00e8",
-            "",
             "\1\u00e9",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\u00ea",
             "\1\u00eb",
             "\1\u00ec",
-            "",
             "",
             "\1\u00ed",
             "\1\u00ee",
             "\1\u00ef",
-            "\1\u00f0",
             "",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u00f1",
             "\1\u00f2",
+            "",
             "\1\u00f3",
             "\1\u00f4",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
             "",
+            "",
+            "\1\u00f5",
             "\1\u00f6",
             "",
             "\1\u00f7",
@@ -3287,189 +3546,181 @@ public class JaybirdSqlLexer extends Lexer {
             "\1\u00f9",
             "\1\u00fa",
             "\1\u00fb",
-            "",
-            "",
             "\1\u00fc",
-            "\1\u00fd",
-            "\1\u00fe",
-            "\1\u00ff",
-            "\1\u0100",
-            "\1\u0101",
             "",
+            "\1\u00fd",
+            "",
+            "\1\u00fe",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\22\41\1\u00ff\7\41",
+            "\1\u0101",
             "\1\u0102",
             "\1\u0103",
             "\1\u0104",
-            "",
-            "",
-            "\1\u0105",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u0106",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\22\43\1\u0107\7\43",
-            "\1\u0109",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\u010b",
+            "\1\u0107",
             "",
+            "\1\u0108",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\u010a",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u010c",
             "\1\u010d",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u010f",
             "\1\u0110",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\u0112",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\u0113",
             "\1\u0114",
             "\1\u0115",
-            "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\u0116",
             "\1\u0117",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\u0119",
+            "\1\u0118",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u011a",
             "\1\u011b",
             "\1\u011c",
             "\1\u011d",
             "\1\u011e",
-            "\1\u011f",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "",
+            "\1\u0120",
             "\1\u0121",
             "\1\u0122",
-            "\1\u0123",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "",
             "\1\u0124",
-            "\1\u0125",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\u0126",
             "",
-            "\1\u0128",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\u012a",
-            "\1\u012b",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\u0129",
             "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "",
+            "",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u012e",
+            "\1\u012f",
+            "\1\u0130",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\u0132",
             "\1\u0133",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\u0134",
             "\1\u0135",
-            "\1\u0136",
-            "\1\u0137",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u0138",
+            "\1\u0139",
             "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
             "\1\u013a",
-            "\1\u013b",
-            "\1\u013c",
-            "\1\u013d",
+            "",
+            "\1\u013b\15\uffff\1\u013c\1\uffff\1\u013d\1\u013e",
             "",
             "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "",
-            "\1\u0142\15\uffff\1\u0141\1\uffff\1\u013f\1\u0140",
+            "",
+            "",
+            "",
+            "\1\u0140",
+            "\1\u0141",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "",
             "\1\u0143",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\u0145",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "",
             "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "",
-            "",
-            "",
-            "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "",
-            "\1\u0146",
-            "\1\u0147",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "\1\u0148",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\u014a",
             "\1\u014b",
             "\1\u014c",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\u014d",
             "",
-            "\1\u014e",
-            "\1\u014f",
-            "\1\u0150",
-            "\1\u0151",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "",
             "",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "",
+            "\1\u0153",
+            "\1\u0154",
+            "\1\u0155",
+            "\1\u0156",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "\1\u0157",
             "\1\u0158",
             "\1\u0159",
             "\1\u015a",
-            "\1\u015b",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\22\41\1\u015d\7\41",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             "",
             "",
+            "\1\u0160",
             "",
             "",
-            "",
-            "",
-            "\1\u015c",
-            "\1\u015d",
-            "\1\u015e",
-            "\1\u015f",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\22\43\1\u0160\7\43",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
-            "\1\u0165",
-            "",
-            "",
-            "",
-            "",
-            "\1\u0166",
-            "\1\u0167",
-            "\1\u0168",
-            "\1\43\10\uffff\2\43\1\uffff\13\43\6\uffff\32\43\4\uffff\1\43"+
-            "\1\uffff\32\43",
+            "\1\u0161",
+            "\1\u0162",
+            "\1\u0163",
+            "\1\41\10\uffff\2\41\1\uffff\13\41\6\uffff\32\41\4\uffff\1\41"+
+            "\1\uffff\32\41",
             ""
     };
 
@@ -3503,7 +3754,7 @@ public class JaybirdSqlLexer extends Lexer {
             this.transition = DFA13_transition;
         }
         public String getDescription() {
-            return "1:1: Tokens : ( ALL | AS | AVG | BOTH | CAST | CHARACTER | COUNT | COLLATE | CURRENT_USER | CURRENT_ROLE | CURRENT_DATE | CURRENT_TIME | CURRENT_TIMESTAMP | DEFAULT | DELETE | DISTINCT | DB_KEY | EXTRACT | EXECUTE | FOR | FROM | GEN_ID | INSERT | INTO | LEADING | MATCHING | MINIMUM | MAXIMUM | NULL | NEXT | OR | PROCEDURE | RETURNING | SEGMENT | SELECT | SET | SUBSTRING | SUB_TYPE | SUM | TRIM | TRAILING | UPDATE | VALUE | VALUES | KW_BLOB | KW_BIGINT | KW_CHAR | KW_DATE | KW_DECIMAL | KW_DOUBLE | KW_PRECISION | KW_FLOAT | KW_INTEGER | KW_INT | KW_NUMERIC | KW_SMALLINT | KW_TIME | KW_TIMESTAMP | KW_VARCHAR | KW_SET | KW_SIZE | T78 | T79 | T80 | T81 | T82 | T83 | T84 | T85 | T86 | T87 | T88 | LEFT_PAREN | RIGHT_PAREN | COMMA | GENERIC_ID | QUOTED_ID | LETTER | INTEGER | REAL | WS | SL_COMMENT | STRING | ESCqs | ESCqd );";
+            return "1:1: Tokens : ( ALL | AS | AVG | BOTH | CAST | CHARACTER | COLLATE | COUNT | CURRENT_DATE | CURRENT_ROLE | CURRENT_TIME | CURRENT_TIMESTAMP | CURRENT_USER | DB_KEY | DEFAULT | DELETE | DISTINCT | EXECUTE | EXTRACT | FOR | FROM | GEN_ID | INSERT | INTO | KW_BIGINT | KW_BLOB | KW_CHAR | KW_DATE | KW_DECIMAL | KW_DOUBLE | KW_FLOAT | KW_INT | KW_INTEGER | KW_NUMERIC | KW_PRECISION | KW_SIZE | KW_SMALLINT | KW_TIME | KW_TIMESTAMP | KW_VARCHAR | LEADING | MATCHING | MAXIMUM | MINIMUM | NEXT | NULL | OR | PROCEDURE | RETURNING | SEGMENT | SELECT | SET | SUBSTRING | SUB_TYPE | SUM | TRAILING | TRIM | UPDATE | VALUE | VALUES | T__74 | T__75 | T__76 | T__77 | T__78 | T__79 | T__80 | T__81 | T__82 | T__83 | T__84 | LEFT_PAREN | RIGHT_PAREN | COMMA | GENERIC_ID | QUOTED_ID | INTEGER | REAL | WS | SL_COMMENT | STRING );";
         }
     }
  
