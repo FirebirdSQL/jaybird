@@ -123,7 +123,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             Statement stmt = con.createStatement();
 
             boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY + " RETURNING ID", Statement.RETURN_GENERATED_KEYS);
-            assertFalse("Expected execute to report false (no resultset) for INSERT with generated keys returned", producedResultSet);
+            assertTrue("Expected execute to report true (has resultset) for INSERT with generated keys returned", producedResultSet);
             
             ResultSet rs = stmt.getGeneratedKeys();
             assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
