@@ -127,7 +127,7 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
             assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement)stmt).getStatementType());
             
             stmt.setString(1, TEXT_VALUE);
-            assertFalse("Expected statement not to produce a resultset", stmt.execute());
+            assertTrue("Expected statement to produce a resultset", stmt.execute());
             
             ResultSet rs = stmt.getGeneratedKeys();
             assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
