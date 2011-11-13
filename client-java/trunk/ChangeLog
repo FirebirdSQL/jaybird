@@ -1,3 +1,465 @@
+2011-11-13 14:01  mrotteveel
+
+	* client-java/src/etc/release_notes.odt:
+
+	Revised releatesnotes for Jaybird 2.2 (work in progress)
+
+2011-10-30 22:47  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/:
+	TestFBPreparedStatementGeneratedKeys.java,
+	TestFBStatementGeneratedKeys.java:
+
+	JDBC-192: Forgot to change two tests after decision to return true
+	for  (normal) resultset for queries with generated keys
+
+2011-10-30 20:26  rrokytskyy
+
+	* client-java/build/init.xml:
+
+	upgraded to ANTLR 3.4
+
+2011-10-30 20:22  rrokytskyy
+
+	* client-java/:
+	src/main/org/firebirdsql/jdbc/parser/JaybirdSqlParser.java,
+	.classpath, src/lib/antlr-runtime-3.0.1.jar,
+	src/lib/antlr-runtime-3.4.jar,
+	src/main/org/firebirdsql/jdbc/parser/JaybirdSql.g,
+	src/main/org/firebirdsql/jdbc/parser/JaybirdSql.tokens,
+	src/main/org/firebirdsql/jdbc/parser/JaybirdSqlLexer.java,
+	src/main/org/firebirdsql/jdbc/parser/JaybirdSql__.g:
+
+	Fixed grammar for INSERT RETURNING code
+
+2011-10-29 12:21  mrotteveel
+
+	* client-java/src/:
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/JDBC30ParameterMetaData.java,
+	jdbc_40/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_40/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	jdbc_40/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	jdbc_40/org/firebirdsql/jdbc/JDBC40ParameterMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/AbstractResultSetMetaData.java,
+	main/org/firebirdsql/jdbc/FBParameterMetaData.java,
+	main/org/firebirdsql/jdbc/FirebirdParameterMetaData.java:
+
+	JDBC-194: Move methods as high in the class-hierarchy as possible
+	to avoid code duplication between JDBC-30 and JDBC-40
+	implementations JDBC-192: Fix some generatedKeys related problems
+	for Java 5/JDBC30 I missed before
+
+2011-10-27 23:19  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/:
+	TestFBCallableStatement.java, TestFBPreparedStatement.java,
+	TestFBStatement.java:
+
+	JDBC-191: Add additional tests for Statement, PreparedStatement and
+	CallableStatement
+
+2011-10-27 23:15  mrotteveel
+
+	* client-java/src/jdbc_30/org/firebirdsql/jdbc/: FBConnection.java,
+	FBPreparedStatement.java:
+
+	JDBC-192: Changes for generated keys to also work on Java 5
+
+2011-10-27 17:39  mrotteveel
+
+	* client-java/src/: test/org/firebirdsql/common/FBTestBase.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	test/org/firebirdsql/jdbc/FBTestGeneratedKeysBase.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatement.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatementGeneratedKeys.java,
+	test/org/firebirdsql/jdbc/TestFBStatementGeneratedKeys.java:
+
+	Changes for JDBC-192: * Reversed decision to return false for
+	execute() (to indicate no ResultSet if only generated keys are
+	available) as getResultSet will return a ResultSet (the one
+	containing the keys) and to avoid potential backwards compatibility
+	issues for statements using INSERT ... RETURNING in 2.1.6 * Added
+	more tests for AbstractGeneratedKeys * Added (integration) tests
+	for generated keys from Statement (FBStatement) * Added
+	(integration) tests for generated keys from PreparedStatement
+	(FBPreparedStatement) NOTE: some tests are currently failing due to
+	outstanding parser-issue
+
+2011-10-27 14:18  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestGeneratedKeysQuery.java:
+
+	JDBC-192: Additional testcases for AbstractGeneratedKeys (includes
+	columnIndexes and columnNames constructor)
+
+2011-10-27 12:49  mrotteveel
+
+	* client-java/src/:
+	jdbc_40/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	Update some of the information returned
+
+2011-10-25 22:49  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractGeneratedKeysQuery.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	test/org/firebirdsql/jdbc/TestGeneratedKeysQuery.java:
+
+	JDBC-192: Refactoring to move generated keys related functionality
+	to one location Included basic tests (two currently failing due to
+	parser problem), more tests to be added
+
+2011-10-23 17:12  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement.java:
+
+	Remove method already implemented in superclass
+
+2011-10-21 14:51  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractConnection.java, AbstractStatement.java:
+
+	added code to fallback to a normal statement when no columns for
+	RETURNING clause are specified.
+
+2011-10-21 14:44  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+
+	added test case for the unknown table
+
+2011-10-21 12:50  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractConnection.java, AbstractStatement.java:
+
+	partial fix for JDBC-192
+
+2011-10-08 17:38  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/gds/GDSException.java:
+
+	Minor cleanup of GDSException + tighten up encapsulation
+
+2011-10-08 17:16  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBSQLException.java:
+
+	* Ensure exception cause is initialized for GDSException * Try to
+	always set SQL State * Minor refactoring
+
+2011-09-25 10:52  mrotteveel
+
+	* client-java/: build/compile.xml, build/init.xml, build/test.xml,
+	src/jdbc_30/org/firebirdsql/ds/RootCommonDataSource.java,
+	src/jdbc_30/org/firebirdsql/jdbc/FBDriver.java,
+	src/jdbc_30/org/firebirdsql/jdbc/FBDriverNotCapableException.java,
+	src/jdbc_40/org/firebirdsql/ds/RootCommonDataSource.java,
+	src/jdbc_40/org/firebirdsql/jdbc/FBCallableStatement.java,
+	src/jdbc_40/org/firebirdsql/jdbc/FBConnection.java,
+	src/jdbc_40/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	src/jdbc_40/org/firebirdsql/jdbc/FBDriver.java,
+	src/jdbc_40/org/firebirdsql/jdbc/FBDriverNotCapableException.java,
+	src/jdbc_40/org/firebirdsql/jdbc/FBPreparedStatement.java,
+	src/jdbc_40/org/firebirdsql/jdbc/FBResultSet.java,
+	src/jdbc_40/org/firebirdsql/jdbc/FBStatement.java,
+	src/jdbc_40/org/firebirdsql/jdbc/JDBC40ParameterMetaData.java,
+	src/main/org/firebirdsql/ds/FBAbstractCommonDataSource.java,
+	src/main/org/firebirdsql/ds/FBConnectionPoolDataSource.java,
+	src/main/org/firebirdsql/ds/FBXADataSource.java,
+	src/main/org/firebirdsql/jca/FBXADataSource.java,
+	src/main/org/firebirdsql/jdbc/AbstractConnection.java,
+	src/main/org/firebirdsql/jdbc/AbstractDriver.java,
+	src/main/org/firebirdsql/jdbc/AbstractResultSet.java,
+	src/main/org/firebirdsql/jdbc/AbstractResultSetMetaData.java,
+	src/main/org/firebirdsql/jdbc/AbstractStatement.java,
+	src/main/org/firebirdsql/jdbc/FBDataSource.java,
+	src/main/org/firebirdsql/jdbc/FBDriver.java,
+	src/main/org/firebirdsql/jdbc/FBDriverNotCapableException.java,
+	src/pool/org/firebirdsql/pool/AbstractConnectionPool.java,
+	src/pool/org/firebirdsql/pool/FBSimpleDataSource.java,
+	src/pool/org/firebirdsql/pool/FBWrappingDataSource.java,
+	src/pool/org/firebirdsql/pool/SimpleDataSource.java,
+	src/pool/org/firebirdsql/pool/sun/AppServerConnectionPoolDataSource.java,
+	src/pool/org/firebirdsql/pool/sun/AppServerDataSource.java,
+	src/pool/org/firebirdsql/pool/sun/AppServerXADataSource.java,
+	src/test/org/firebirdsql/jdbc/TestFBDriver.java,
+	src/test/org/firebirdsql/jdbc/TestFBStatement.java:
+
+	JDBC-185: Add base implementations for JDBC 4.1 methods
+
+2011-09-25 10:40  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/jni/BaseGDSImpl.java:
+
+	Prevent potential NPE by reordering null-checks to occur before
+	dereference
+
+2011-09-25 10:29  mrotteveel
+
+	* client-java/src/:
+	test/org/firebirdsql/gds/impl/wire/TestGds.java,
+	main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java:
+
+	JDBC-190: Queries on a newly created database fail if that is the
+	first and only attachment * Create and attach now share the same
+	code * describe info items dynamically decided based on db
+	implementation version * Fixed some potential NPEs
+
+2011-09-18 12:18  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/parser/TestGrammar.java:
+
+	Replace UTF string with unicode escape to remove warning under JDK
+	1.6 and earlier, and error under JDK 1.7 because of characterset
+	mismatch.
+
+2011-09-17 16:14  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/ds/:
+	TestFBConnectionPoolDataSource.java, TestFBXADataSource.java:
+
+	Add tests for nonStandardProperty (JDBC-184)
+
+2011-09-17 15:44  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/ds/AbstractPooledConnection.java,
+	main/org/firebirdsql/ds/FBXAConnection.java,
+	main/org/firebirdsql/ds/PooledConnectionHandler.java,
+	main/org/firebirdsql/ds/XAConnectionHandler.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/FBSQLException.java,
+	test/org/firebirdsql/ds/TestFBXADataSource.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java:
+
+	* Correct behavior of commit(), rollback() etc when in XA
+	transaction (JDBC-188) * Test for FBXADataSource * Improvements +
+	simplification for XA handling (JDBC-178)
+
+2011-09-17 15:30  mrotteveel
+
+	* client-java/src/jdbc_40/org/firebirdsql/jdbc/FBConnection.java:
+
+	Remove commented out methods.
+
+2011-09-17 11:03  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/ds/TestDataSourceFactory.java:
+
+	Add check for unset property
+
+2011-09-16 17:55  mrotteveel
+
+	* client-java/src/: main/org/firebirdsql/ds/DataSourceFactory.java,
+	main/org/firebirdsql/ds/FBAbstractCommonDataSource.java,
+	main/org/firebirdsql/ds/FBConnectionPoolDataSource.java,
+	main/org/firebirdsql/ds/FBXADataSource.java,
+	test/org/firebirdsql/ds/TestDataSourceFactory.java:
+
+	* Don't expose all your privates ;) * Make sure synchronization
+	behavior cannot be broken by making methods final * Add tests for
+	DataSourceFactory and getReference() of the datasources * Fixes +
+	changes as a result of the test
+
+2011-09-10 17:48  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/ds/: DataSourceFactory.java,
+	FBAbstractCommonDataSource.java:
+
+	JDBC-184 Ensure setting nonStandardProperty works for replacement
+	datasources
+
+2011-09-10 16:49  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/:
+	jdbc/AbstractConnection.java, ds/AbstractPooledConnection.java,
+	ds/DataSourceFactory.java, ds/FBAbstractCommonDataSource.java,
+	ds/FBConnectionPoolDataSource.java, ds/FBXAConnection.java,
+	ds/FBXADataSource.java, ds/PooledConnectionHandler.java,
+	jca/AbstractXAConnection.java, jca/FBXAConnectionHandle.java,
+	jca/FBXADataSource.java:
+
+	JDBC-178 Review and revise FBXADataSource implementation: new
+	FBXADataSource implemention + deprecation of old implementation
+
+2011-09-03 12:04  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/: jca/FBXid.java,
+	jdbc/FBProcedureCall.java, jdbc/FBProcedureParam.java:
+
+	Add hashCode() implementation to satisfy equals()/hashCode contract
+
+2011-09-03 11:35  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/jca/FBXAConnectionHandle.java,
+	pool/org/firebirdsql/pool/AbstractPingablePooledConnection.java,
+	pool/org/firebirdsql/pool/PooledConnectionHandler.java,
+	pool/org/firebirdsql/pool/PooledPreparedStatementHandler.java,
+	pool/org/firebirdsql/pool/ResultSetHandler.java,
+	pool/org/firebirdsql/pool/StatementHandler.java:
+
+	Remove duplicated reflection methods in favor of static import from
+	ReflectiveHelper
+
+2011-09-02 21:38  rrokytskyy
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBCallableStatement.java:
+
+	Added test case for JDBC-181
+
+2011-09-02 14:37  mrotteveel
+
+	* client-java/src/: jdbc_20/org/firebirdsql/jdbc/FBStatement.java,
+	jdbc_30/org/firebirdsql/jdbc/FBStatement.java,
+	jdbc_40/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_40/org/firebirdsql/jdbc/FBStatement.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java:
+
+	Move methods as high in the hierarchy as possible to avoid
+	duplication
+
+2011-09-02 14:35  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/common/FBTestBase.java:
+
+	FBTestBase changes required for JDBC-183 test
+
+2011-09-02 14:33  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	test/org/firebirdsql/jdbc/TestFBStatement.java:
+
+	Fix for JDBC-183: double close() throws SQLException contrary to
+	JDBC spec
+
+2011-08-27 17:35  mrotteveel
+
+	* client-java/src/lib/mini-j2ee.jar:
+
+	javax.transaction.xa is also part of the standard API shipped with
+	Java SE, so removing it from mini-j2ee.jar
+
+2011-08-27 12:30  mrotteveel
+
+	* client-java/src/:
+	pool/org/firebirdsql/pool/sun/AppServerConnectionPoolDataSource.java,
+	pool_jdk1_4/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	pool_jdk1_4/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool_jdk1_5/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	pool_jdk1_5/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool_jdk1_6/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	pool_jdk1_6/org/firebirdsql/pool/FBConnectionPoolDataSource.java:
+
+	JDBC-177: Mark old ConnectionPoolDataSource implementations as
+	broken and advice use of
+	org.firebirdsql.ds.FBConnectionPoolDataSource
+
+2011-08-27 12:06  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/: ds/StatementHandler.java,
+	jdbc/FBSQLException.java:
+
+	Use SQL State 26000 instead of 30000 for closed statements /
+	invalid statements
+
+2011-08-27 11:47  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/ds/: DataSourceFactory.java,
+	FBConnectionPoolDataSource.java:
+
+	Implement Referenceable for FBConnectionPoolDataSource
+
+2011-08-20 21:48  rrokytskyy
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java,
+	test/org/firebirdsql/jdbc/TestFBConnection.java:
+
+	JDBC-180 fixed
+
+2011-08-20 21:03  rrokytskyy
+
+	* client-java/src/main/org/firebirdsql/jdbc/AbstractResultSet.java:
+
+	splitted code to be able to close fields from the subclasses
+
+2011-08-19 18:12  mrotteveel
+
+	* client-java/: lib/test/cglib-nodep-2.1_3.jar,
+	lib/test/hamcrest-core-1.1.jar, lib/test/hamcrest-library-1.1.jar,
+	lib/test/jmock-2.5.1.jar, lib/test/jmock-junit3-2.5.1.jar,
+	lib/test/jmock-legacy-2.5.1.jar, lib/test/objenesis-1.0.jar,
+	src/main/org/firebirdsql/ds/AbstractPooledConnection.java,
+	src/main/org/firebirdsql/ds/FBConnectionPoolDataSource.java,
+	src/main/org/firebirdsql/ds/PooledConnectionHandler.java,
+	src/main/org/firebirdsql/ds/ReflectionHelper.java,
+	src/main/org/firebirdsql/ds/StatementHandler.java, .classpath,
+	src/jdbc_30/org/firebirdsql/ds/FBPooledConnection.java,
+	src/jdbc_40/org/firebirdsql/ds/FBPooledConnection.java,
+	src/main/org/firebirdsql/jdbc/FBSQLException.java,
+	src/test/org/firebirdsql/ds/ConnectionEventMatcher.java,
+	src/test/org/firebirdsql/ds/TestFBConnectionPoolDataSource.java,
+	src/test/org/firebirdsql/ds/TestFBPooledConnectionMock.java,
+	src/test/org/firebirdsql/ds/TestPooledConnectionHandlerMock.java,
+	src/test/org/firebirdsql/ds/TestStatementHandlerMock.java,
+	src/test_40/org/firebirdsql/ds/TestStatementHandlerMock4_0.java:
+
+	JDBC-177 Reimplementation of ConnectionPoolDataSource (note: still
+	misses some JNDI related things)
+
+2011-08-19 18:05  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
+
+	Follow up on previous commit: move 4.0 JDBC related methods to JDBC
+	4 implementation (part of it was already in the previous commit)
+
+2011-08-19 18:03  mrotteveel
+
+	*
+	client-java/src/test_40/org/firebirdsql/jdbc/TestFBConnection4_0.java:
+
+	Include copyright comment
+
+2011-08-19 18:01  mrotteveel
+
+	* client-java/: build.xml, build/compile.xml, build/init.xml,
+	src/jdbc_40/org/firebirdsql/jdbc/FBConnection.java,
+	src/test/org/firebirdsql/jdbc/TestFBConnection.java,
+	src/test/org/firebirdsql/pool/TestFBConnectionPoolDataSource.java,
+	src/test_40/org/firebirdsql/jdbc/TestFBConnection4_0.java:
+
+	* Ensure tests work under Java 5 by moving JDBC 4 related tests to
+	separate test folder or removing use of JDBC 4 features * Remove
+	warning from build.xml about SYSTEM reference starting with file:
+
+2011-08-19 15:34  mrotteveel
+
+	* client-java/src/lib/mini-j2ee.jar:
+
+	Remove javax.sql from mini-j2ee.jar as it conflicts with the
+	existence of javax.sql in the JSE library (since version 1.5).
+
 2011-08-05 15:16  mrotteveel
 
 	*
