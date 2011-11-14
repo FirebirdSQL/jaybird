@@ -26,7 +26,7 @@
 	<condition property="jdbc.40" value="true">
 		<or>
 			<equals arg1="${ant.java.version}" arg2="1.6"/>
-			<!-- Technically JDK 1.7 is JDBC 4.1, we use this here as un indication to use the jdbc4.0 sources -->
+			<!-- Technically JDK 1.7 is JDBC 4.1, we use this here as an indication to use the jdbc4.0 sources -->
 			<equals arg1="${ant.java.version}" arg2="1.7"/>
 		</or>
 	</condition>
@@ -200,7 +200,7 @@
       <path refid="javac.j2ee.classpath"/>
       <pathelement location="${build.j2ee}"/>
       <pathelement location="${module.thirdparty}/log4j-core.jar"/>
-	  <pathelement location="${lib.dir}/antlr-runtime-3.4.jar"/>
+	  <pathelement location="${module.thirdparty}/antlr-runtime-3.4.jar"/>
     </path>
 
     <path id="javac.pool.classpath">
@@ -233,7 +233,7 @@
     <!--
     Determine if native code has been built and if so set 'native_library_present' property
     -->
-    <property name="native.library.name" value="jaybird"/>
+    <property name="native.library.name" value="jaybird22"/>
     <property name="native.library.location" value="${module.output}/native"/>
     <condition property="native_library_present">
         <available file="${native.library.location}/${native.library.name}.dll"/>

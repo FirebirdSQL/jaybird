@@ -90,7 +90,7 @@
         	Name of the output library. On Windows this will be 
         	resolved to jaybird.dll, on Linux it will be libjaybird.so
         -->
-        <property name="build.native.name" value="jaybird21"/>
+        <property name="build.native.name" value="jaybird22"/>
 
         <!--  -->
         <property name="source.native" value="${module.source}/native/jaygds/source"/>
