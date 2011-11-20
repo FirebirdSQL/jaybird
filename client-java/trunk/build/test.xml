@@ -127,10 +127,10 @@
           <exclude name="**/TestXABase*.class"/>
           <exclude name="**/TestConst.class"/>
           <exclude name="**/*$$*.class"/>
-          <exclude name="**/ngds/TestSpecialEmbeddedServerUrls.class"/>
-          <exclude name="**/ngds/TestServicesAPI.class"/>
-	      <exclude name="**/ngds/TestJaybirdBlobBackupProblem.class"/>
-
+          <exclude name="**/jni/TestSpecialEmbeddedServerUrls.class"/>
+          <exclude name="**/jni/TestServicesAPI.class"/>
+	      <exclude name="**/jni/TestJaybirdBlobBackupProblem.class"/>
+          <exclude name="**/TestReconnectTransaction.class"/>
         </fileset>
       </batchtest>
     </junit>
