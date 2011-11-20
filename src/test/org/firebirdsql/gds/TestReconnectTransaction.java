@@ -47,7 +47,6 @@ public class TestReconnectTransaction extends FBTestBase {
         dpb.addArgument(DatabaseParameterBuffer.PASSWORD, this.DB_PASSWORD);
         
         tpb = new FBTpb(FBTpbMapper.getDefaultMapper(gds).getDefaultMapping());
-//        tpb.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
     }
     
     protected void tearDown() throws Exception {
