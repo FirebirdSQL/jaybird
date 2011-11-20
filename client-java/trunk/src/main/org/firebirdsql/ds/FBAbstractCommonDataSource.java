@@ -26,7 +26,10 @@ import javax.naming.BinaryRefAddr;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.jdbc.FBConnectionProperties;
+import org.firebirdsql.jdbc.FirebirdConnectionProperties;
 
 /**
  * Abstract class for properties and behaviour common to DataSources,
@@ -35,7 +38,7 @@ import org.firebirdsql.jdbc.FBConnectionProperties;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public abstract class FBAbstractCommonDataSource extends RootCommonDataSource {
+public abstract class FBAbstractCommonDataSource extends RootCommonDataSource implements FirebirdConnectionProperties {
 
     protected static final String REF_DATABASE_NAME = "databaseName";
     protected static final String REF_PORT_NUMBER = "portNumber";
@@ -204,6 +207,165 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource {
         connectionProperties.setSoTimeout(seconds * 1000);
     }
     
+    @Deprecated
+    public String getDatabase() {
+        synchronized(lock) {
+            return connectionProperties.getDatabase();
+        }
+    }
+
+    @Deprecated
+    public void setDatabase(String database) {
+        synchronized(lock) {
+            // TODO: Try to set databaseName, portNumber and serverName?
+            connectionProperties.setDatabase(database);
+        }
+    }
+
+    public int getBlobBufferSize() {
+        return connectionProperties.getBlobBufferSize();
+    }
+
+    public void setBlobBufferSize(int bufferSize) {
+        checkNotStarted();
+        connectionProperties.setBlobBufferSize(bufferSize);
+    }
+
+    public String getSqlDialect() {
+        return connectionProperties.getSqlDialect();
+    }
+
+    public void setSqlDialect(String sqlDialect) {
+        checkNotStarted();
+        connectionProperties.setSqlDialect(sqlDialect);
+    }
+
+    public String getUseTranslation() {
+        synchronized(lock) {
+            return connectionProperties.getUseTranslation();
+        }
+    }
+
+    public void setUseTranslation(String translationPath) {
+        synchronized(lock) {
+            checkNotStarted();
+            connectionProperties.setUseTranslation(translationPath);
+        }
+    }
+
+    public boolean isUseStreamBlobs() {
+        return connectionProperties.isUseStreamBlobs();
+    }
+
+    public void setUseStreamBlobs(boolean useStreamBlobs) {
+        checkNotStarted();
+        connectionProperties.setUseStreamBlobs(useStreamBlobs);
+    }
+
+    public boolean isUseStandardUdf() {
+        return connectionProperties.isUseStandardUdf();
+    }
+
+    public void setUseStandardUdf(boolean useStandardUdf) {
+        checkNotStarted();
+        connectionProperties.setUseStandardUdf(useStandardUdf);
+    }
+
+    public int getSocketBufferSize() {
+        return connectionProperties.getSocketBufferSize();
+    }
+
+    public void setSocketBufferSize(int socketBufferSize) {
+        checkNotStarted();
+        connectionProperties.setSocketBufferSize(socketBufferSize);
+    }
+
+    public boolean isTimestampUsesLocalTimezone() {
+        return connectionProperties.isTimestampUsesLocalTimezone();
+    }
+
+    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
+        checkNotStarted();
+        connectionProperties.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
+    }
+
+    @Deprecated
+    public String getUserName() {
+        return getUser();
+    }
+
+    @Deprecated
+    public void setUserName(String userName) {
+        setUser(userName);
+    }
+
+    public int getBuffersNumber() {
+        return connectionProperties.getBuffersNumber();
+    }
+
+    public void setBuffersNumber(int buffersNumber) {
+        checkNotStarted();
+        connectionProperties.setBuffersNumber(buffersNumber);
+    }
+
+    public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
+        return connectionProperties.getDatabaseParameterBuffer();
+    }
+
+    public String getTpbMapping() {
+        return connectionProperties.getTpbMapping();
+    }
+
+    public void setTpbMapping(String tpbMapping) {
+        checkNotStarted();
+        connectionProperties.setTpbMapping(tpbMapping);
+    }
+
+    public int getDefaultTransactionIsolation() {
+        return connectionProperties.getDefaultTransactionIsolation();
+    }
+
+    public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
+        checkNotStarted();
+        connectionProperties.setDefaultTransactionIsolation(defaultIsolationLevel);
+    }
+
+    public String getDefaultIsolation() {
+        return connectionProperties.getDefaultIsolation();
+    }
+
+    public void setDefaultIsolation(String isolation) {
+        checkNotStarted();
+        connectionProperties.setDefaultIsolation(isolation);
+    }
+
+    public TransactionParameterBuffer getTransactionParameters(int isolation) {
+        return connectionProperties.getTransactionParameters(isolation);
+    }
+
+    public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
+        checkNotStarted();
+        connectionProperties.setTransactionParameters(isolation, tpb);
+    }
+
+    public boolean isDefaultResultSetHoldable() {
+        return connectionProperties.isDefaultResultSetHoldable();
+    }
+
+    public void setDefaultResultSetHoldable(boolean isHoldable) {
+        checkNotStarted();
+        connectionProperties.setDefaultResultSetHoldable(isHoldable);
+    }
+
+    public int getSoTimeout() {
+        return connectionProperties.getSoTimeout();
+    }
+
+    public void setSoTimeout(int soTimeout) {
+        checkNotStarted();
+        connectionProperties.setSoTimeout(soTimeout);
+    }
+    
     /**
      * Method that allows setting non-standard property in the form "key=value"
      * form. This method is needed by some containers to specify properties
@@ -295,5 +457,4 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource {
         byte[] data = DataSourceFactory.serialize(instance.connectionProperties);
         ref.add(new BinaryRefAddr(REF_PROPERTIES, data));
     }
-
 }

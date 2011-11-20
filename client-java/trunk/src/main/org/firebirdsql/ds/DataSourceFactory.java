@@ -79,6 +79,7 @@ public class DataSourceFactory implements ObjectFactory {
             FBConnectionProperties props = (FBConnectionProperties) deserialize(data);
             ds.setConnectionProperties(props);
         }
+        String oldDatabase = ds.getConnectionProperties().getDatabase();
         ds.setDescription(getRefAddr(ref, FBAbstractCommonDataSource.REF_DESCRIPTION));
         ds.setServerName(getRefAddr(ref, FBAbstractCommonDataSource.REF_SERVER_NAME));
         String portNumber = getRefAddr(ref, FBAbstractCommonDataSource.REF_PORT_NUMBER);
@@ -86,6 +87,11 @@ public class DataSourceFactory implements ObjectFactory {
             ds.setPortNumber(Integer.parseInt(portNumber));
         }
         ds.setDatabaseName(getRefAddr(ref, FBAbstractCommonDataSource.REF_DATABASE_NAME));
+        /*
+         * When the user uses the database property instead of databaseName (with serverName and portNumber),
+         * then the database connection property might be set to null now, so restore original value
+         */
+        ds.getConnectionProperties().setDatabase(oldDatabase);
     }
     
     /**
