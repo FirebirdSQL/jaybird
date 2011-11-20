@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -61,67 +63,6 @@ public class FBTpb implements Serializable {
     public int hashCode() {
         return transactionParams.hashCode();
     }
-
-//    /**
-//     * Attempts to change the transaction isolation level to the one given. The
-//     * constants defined in the interface <code>Connection</code> are the
-//     * possible transaction isolation levels.
-//     * 
-//     * <P>
-//     * <B>Note: </B> This method cannot be called while in the middle of a
-//     * transaction.
-//     * 
-//     * @param level
-//     *            one of the TRANSACTION_* isolation values with the exception
-//     *            of TRANSACTION_NONE; some databases may not support other
-//     *            values
-//     * @throws SQLException
-//     *             if the isolation level is invalid
-//     */
-//    public void setTransactionIsolation(int level) throws ResourceException {
-//
-//        switch (level) {
-//            case Connection.TRANSACTION_SERIALIZABLE:
-//            case Connection.TRANSACTION_REPEATABLE_READ:
-//            case Connection.TRANSACTION_READ_COMMITTED:
-//
-//                transactionParams = mapper.getMapping(level);
-//                txIsolation = level;
-//
-//                // apply read-only flag cached locally
-//                setReadOnly(readOnly);
-//
-//                break;
-//
-//            // promote to the higher isolation level,
-//            // because this one is not supported
-//            case Connection.TRANSACTION_READ_UNCOMMITTED:
-//
-//                transactionParams = mapper.getMapping(Connection.TRANSACTION_READ_COMMITTED);
-//                txIsolation = Connection.TRANSACTION_READ_COMMITTED;
-//
-//                // apply read-only flag cached locally
-//                setReadOnly(readOnly);
-//
-//                break;
-//
-//            default:
-//                throw new FBResourceException(
-//                        "Unsupported transaction isolation level");
-//        }
-//    }
-//
-//    /**
-//     * Gets this Connection's current transaction isolation level.
-//     * 
-//     * @return the current TRANSACTION_* mode value
-//     * @exception SQLException
-//     *                if a database access error occurs, should not be possible
-//     *                for this to be thrown
-//     */
-//    public int getTransactionIsolation() throws ResourceException {
-//        return txIsolation;
-//    }
 
     /**
      * Set the read-only flag on this TPB.
