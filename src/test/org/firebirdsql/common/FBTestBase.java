@@ -44,14 +44,8 @@ public class FBTestBase extends SimpleFBTestBase {
 
     protected final Logger log = LoggerFactory.getLogger(getClass(), true);
 
-    /**
-     * 
-     */
     protected static final String DB_LC_CTYPE = getProperty("test.db.lc_ctype", "NONE");
 
-    /**
-     * 
-     */
     protected final String DB_DATASOURCE_URL = getdbpath(DB_NAME);
 
     protected FBTestBase(String name) {
@@ -64,11 +58,6 @@ public class FBTestBase extends SimpleFBTestBase {
     // bound to the
     // appropriate GDS implementation.
 
-    /**
-     * 
-     * @return
-     * @throws SQLException
-     */
     protected AbstractFBConnectionPoolDataSource createFBConnectionPoolDataSource()
             throws SQLException {
         final AbstractFBConnectionPoolDataSource returnValue = FBPooledDataSourceFactory
@@ -79,10 +68,6 @@ public class FBTestBase extends SimpleFBTestBase {
         return returnValue;
     }
 
-    /**
-     * 
-     * @return
-     */
     protected FBManagedConnectionFactory createFBManagedConnectionFactory() {
         return new FBManagedConnectionFactory(getGdsType());
     }
@@ -95,19 +80,10 @@ public class FBTestBase extends SimpleFBTestBase {
         return mcf;
     }
 
-    /**
-     * 
-     * @return
-     */
     protected FBManager createFBManager() {
         return new FBManager(getGdsType());
     }
 
-    /**
-     * 
-     * @return
-     * @throws SQLException
-     */
     protected FBWrappingDataSource createFBWrappingDataSource()
             throws SQLException {
         final FBWrappingDataSource returnValue = new FBWrappingDataSource();
@@ -117,20 +93,6 @@ public class FBTestBase extends SimpleFBTestBase {
         return returnValue;
     }
 
-    /**
-     * 
-     * @return //
-     */
-    // protected FBConnectionRequestInfo createFBConnectionRequestInfo()
-    // {
-    // return
-    // FBConnectionRequestInfo.newInstance(GDSFactory.getGDSForType(getGdsType()));
-    // }
-    /**
-     * 
-     * @return
-     * @throws SQLException
-     */
     protected FirebirdConnection getConnectionViaDriverManager() throws SQLException {
         try {
             Class.forName(FBDriver.class.getName());
@@ -142,9 +104,6 @@ public class FBTestBase extends SimpleFBTestBase {
             getDefaultPropertiesForConnection());
     }
 
-    /**
-     * 
-     */
     protected Properties getDefaultPropertiesForConnection() {
         final Properties returnValue = new Properties();
 
