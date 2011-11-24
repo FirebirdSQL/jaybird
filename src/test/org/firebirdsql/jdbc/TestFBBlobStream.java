@@ -178,8 +178,7 @@ public class TestFBBlobStream extends FBTestBase {
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
 
         try {
-            long start = System.currentTimeMillis();
-    
+        	// TODO: Check reason for unused
             long size = testData[0].length;
     
             ps.setInt(1, 1);
@@ -324,8 +323,6 @@ public class TestFBBlobStream extends FBTestBase {
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
 
         try {
-            long start = System.currentTimeMillis();
-
             ByteArrayInputStream in = new ByteArrayInputStream(new byte[0]);
     
             ps.setInt(1, 1);

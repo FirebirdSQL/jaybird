@@ -396,7 +396,7 @@ public class TestFBConnection extends FBTestBase {
             while(reply[i] != ISCConstants.isc_info_end) {
                 switch(reply[i++]) {
                     case ISCConstants.isc_info_user_names :
-                        int len = gds.iscVaxInteger(reply, i, 2); // can be ignored
+                        gds.iscVaxInteger(reply, i, 2); // can be ignored
                         i += 2;
                         int strLen = reply[i] & 0xff;
                         i += 1;

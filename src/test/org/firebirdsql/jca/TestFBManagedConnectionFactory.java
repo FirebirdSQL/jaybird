@@ -19,8 +19,6 @@
 package org.firebirdsql.jca;
 
 import javax.resource.spi.ManagedConnection;
-import javax.resource.spi.ManagedConnectionFactory;
-
 
 /**
  * Describe class <code>TestFBManagedConnectionFactory</code> here.
@@ -35,92 +33,16 @@ public class TestFBManagedConnectionFactory extends TestXABase {
         super(name);
     }
 
-
-
-
-
     public void testCreateMcf() throws Exception {
         if (log != null) log.info("testCreateMcf");
-        FBManagedConnectionFactory mcf = initMcf();
-        ManagedConnectionFactory realMcf = mcf;
+        initMcf();
     }
 
     public void testCreateMc() throws Exception {
-        
         if (log != null) log.info("testCreateMc");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         mc.destroy();
     }
-
-
-/*
-    public void testSqlInfo() throws Exception {
-        
-        if (log != null) log.info("testSqlInfo");
-        byte[] testbuffer = {
-23, //isc_info_sql_records
-29,  //length
-0,
-15,  //isc_info_req_update_count
-4,//length
-0,
-4,
-0,
-0,
-0,
-16,//isc_info_req_delete_count
-4,//length
-0,
-3,
-0,
-0,
-0,
-13,//isc_info_req_select_count
-4,//length
-0,
-2,
-0,
-0,
-0,
-14,//isc_info_req_insert_count
-4,//length
-0,
-1,
-0,
-0,
-0,
-1,  //isc_info_end
-21,  //isc_info_sql_stmt_type
-4,  //length
-0,
-2,  //isc_info_sql_stmt_insert
-0,
-0,
-0,
-1,  //isc_info_end
-0,
-0,
-0,
-0,
-0,
-0,
-0,
-0,
-0,
-0};
-        FBManagedConnectionFactory mcf = initMcf();
-        ManagedConnection mc = mcf.createManagedConnection(null, null);
-        SqlInfo si = new SqlInfo(testbuffer, GDSFactory.newGDS());
-
-        assertTrue("selectcount wrong " + si.getSelectCount(), si.getSelectCount() == 2);
-        assertTrue("insertcount wrong " + si.getInsertCount(), si.getInsertCount() == 1);
-        assertTrue("updatecount wrong " + si.getUpdateCount(), si.getUpdateCount() == 4);
-        assertTrue("deletecount wrong " + si.getDeleteCount(), si.getDeleteCount() == 3);
-        assertTrue("statement type wrong " + si.getStatementType(), si.getStatementType() == 2);
-
-        mc.destroy();
-    }
-*/
 }
 

@@ -132,7 +132,7 @@ public class TestTableReservation extends FBTestBase {
             if (query) {
                 ResultSet rs = stmt.getResultSet();
                 while(rs.next()) {
-                    Object dummy = rs.getObject(1);
+                    rs.getObject(1);
                 }
             }
         } finally {

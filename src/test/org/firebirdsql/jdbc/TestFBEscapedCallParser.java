@@ -107,7 +107,7 @@ public class TestFBEscapedCallParser extends TestCase {
         }
         assertEquals(1, procedureCall.mapOutParamIndexToPosition(1, false));
         try {
-            int outPosition = procedureCall.mapOutParamIndexToPosition(2, false);
+            procedureCall.mapOutParamIndexToPosition(2, false);
             fail("Should not allow to obtain position when no compatibility " +
                     "mode is specified.");
         } catch(SQLException ex) {

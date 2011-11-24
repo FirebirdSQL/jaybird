@@ -66,6 +66,7 @@ public class TestFBTpbMapper extends FBTestBase {
      * @throws Exception if something went wrong.
      */
     public void testTpbMapper() throws Exception {
+    	// TODO Why is this mapper created and then not used?
         FBTpbMapper mapper = new FBTpbMapper(mcf.getGDS(), TEST_TPB_MAPPING, getClass().getClassLoader());
         
         mcf.setTpbMapping(TEST_TPB_MAPPING);

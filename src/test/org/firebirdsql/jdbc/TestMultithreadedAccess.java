@@ -198,7 +198,6 @@ public class TestMultithreadedAccess extends FBTestBase {
      */
     private static class RandomSelector implements Runnable {
     
-        private int delay;
         private int maxId;
         
         private Statement stmt;

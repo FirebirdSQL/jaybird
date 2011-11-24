@@ -192,6 +192,7 @@ public class TestServicesAPI extends TestCase
 
             final ByteArrayInputStream byteArrayInputStream  = new ByteArrayInputStream(buffer);
 
+            // TODO Find out why unused
             final byte firstByte = (byte) byteArrayInputStream.read();
 
             int numberOfBytes = (short)((byteArrayInputStream.read() << 0) + (byteArrayInputStream.read() << 8));

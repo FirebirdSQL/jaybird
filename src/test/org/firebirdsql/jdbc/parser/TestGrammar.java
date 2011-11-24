@@ -1,13 +1,13 @@
 package org.firebirdsql.jdbc.parser;
+
 import org.antlr.runtime.*;
 import org.antlr.runtime.tree.CommonTree;
-import org.firebirdsql.jdbc.parser.*;
 
 import junit.framework.TestCase;
 
-
-
 public class TestGrammar extends TestCase {
+	
+	// TODO Add more testcases for grammar
 
     protected JaybirdSqlParser createParser(String testString) {
         CharStream stream = new CaseInsensitiveStream(testString);
@@ -26,9 +26,8 @@ public class TestGrammar extends TestCase {
         
         CommonTree tree = (CommonTree)parser.statement().getTree();
         
-        assertTrue("someTable".equals(parser.getStatementModel().getTableName()));
+        assertEquals("someTable", parser.getStatementModel().getTableName());
         assertTrue(parser.getStatementModel().getColumns().contains("\"\u0442\u0435\"\"\u0441\u0442\""));
-        // assertTrue("'a'".equals(parser._values.get(0)));
         
         System.out.println(tree.toStringTree());
         System.out.println(parser.getStatementModel().getTableName());
@@ -40,8 +39,8 @@ public class TestGrammar extends TestCase {
             "Insert Into someTable " +
             "Select * From anotherTable");
         
-        CommonTree tree = (CommonTree)parser.statement().getTree();
-        assertTrue("someTable".equals(parser.getStatementModel().getTableName()));        
+        parser.statement().getTree();
+        assertEquals("someTable", parser.getStatementModel().getTableName());        
     }
     
     public void testInsertWithCase() throws Exception {
@@ -49,8 +48,8 @@ public class TestGrammar extends TestCase {
             "Insert Into someTable ( col1, col2) " +
             "values((case when a = 1 Then 2 else 3 end), 2)");
         
-        CommonTree tree = (CommonTree)parser.statement().getTree();
-        assertTrue("someTable".equals(parser.getStatementModel().getTableName()));
+        parser.statement().getTree();
+        assertEquals("someTable", parser.getStatementModel().getTableName());
         assertTrue(parser.getMismatchCount() > 0);
     }
     
@@ -59,20 +58,8 @@ public class TestGrammar extends TestCase {
             "Update someTable Set " +
             "col1 = 25, col2 = 'abc' Where 1=0 Returning col3");
         
-        CommonTree tree = (CommonTree)parser.statement().getTree();
-        assertTrue("someTable".equals(parser.getStatementModel().getTableName()));
-        assertTrue(parser.getMismatchCount() == 0);
-        
+        parser.statement().getTree();
+        assertEquals("someTable", parser.getStatementModel().getTableName());
+        assertEquals(0, parser.getMismatchCount());
     }
-    
-//    public void testANTRLv3Parser() throws Exception {
-//        CharStream stream = new ANTLRFileStream("./src/grammar/JaybirdTest.g3");
-//        
-//        ANTLRv3Lexer lexer = new ANTLRv3Lexer(stream);
-//        ANTLRv3Parser parser = new ANTLRv3Parser(new CommonTokenStream(lexer));
-//        
-//        CommonTree tree = (CommonTree)parser.grammarDef().getTree();
-//        
-//        System.out.println(tree.toStringTree());
-//    }
 }
