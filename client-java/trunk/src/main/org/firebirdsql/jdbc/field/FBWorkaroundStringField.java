@@ -23,10 +23,7 @@ import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.impl.GDSHelper;
-
 
 /**
  * Class implementing workaround for "operation was cancelled" bug in server.

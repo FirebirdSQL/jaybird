@@ -682,6 +682,7 @@ public abstract class AbstractResultSetMetaData implements FirebirdResultSetMeta
 
     private int estimatePrecision(int columnIndex) {
         int sqltype = getXsqlvar(columnIndex).sqltype & ~1;
+        // TODO: Why unused?
         int sqlscale = getXsqlvar(columnIndex).sqlscale;
 
         switch(sqltype) {
@@ -719,6 +720,7 @@ public abstract class AbstractResultSetMetaData implements FirebirdResultSetMeta
      * information about fields in a database.
      */
     private static class ExtendedFieldInfo {
+    	// TODO Find out why there are unused fields here
         String relationName;
         String fieldName;
         int fieldLength;

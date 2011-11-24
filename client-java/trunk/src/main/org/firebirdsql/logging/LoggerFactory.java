@@ -49,7 +49,7 @@ public class LoggerFactory{
 
             if (log4j){
                  try {
-                     Class verify = Class.forName("org.apache.log4j.Category");
+                     Class.forName("org.apache.log4j.Category");
                      log4j = true;
                  }
                  catch (ClassNotFoundException cnfe){

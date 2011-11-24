@@ -8,7 +8,6 @@ import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 

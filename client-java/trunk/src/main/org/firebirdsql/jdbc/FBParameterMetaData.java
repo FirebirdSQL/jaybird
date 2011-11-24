@@ -424,8 +424,10 @@ public class FBParameterMetaData implements FirebirdParameterMetaData {
         return xsqlvars[parameterIndex - 1];
     }
 
+    // TODO: Exact duplicate of method in AbstractResultSetMetaData
     private int estimatePrecision(int parameterIndex) {
         int sqltype = getXsqlvar(parameterIndex).sqltype & ~1;
+        // TODO Why unused
         int sqlscale = getXsqlvar(parameterIndex).sqlscale;
 
         switch(sqltype) {

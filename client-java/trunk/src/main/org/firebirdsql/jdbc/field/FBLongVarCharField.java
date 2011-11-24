@@ -29,8 +29,6 @@ import java.sql.SQLException;
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.jdbc.*;
-import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
-
 
 /**
  * This is Blob-based implementation of {@link FBStringField}. It should be used

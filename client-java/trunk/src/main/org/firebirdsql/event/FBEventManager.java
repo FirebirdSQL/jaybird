@@ -43,7 +43,6 @@ package org.firebirdsql.event;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.IscDbHandle;
 
@@ -58,7 +57,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Collections;
 
 import java.sql.SQLException;
@@ -406,7 +404,6 @@ public class FBEventManager implements EventManager {
         private EventHandle eventHandle;
         private boolean initialized = false;
         private boolean cancelled = false;
-        private Object registerLock = new Object();
 
         public GdsEventHandler(String eventName) throws GDSException {
             eventHandle = gds.createEventHandle(eventName);
