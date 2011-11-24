@@ -488,6 +488,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
             short coltype = rs.getShort(5);
             short datatype = rs.getShort(6);
             String typename = rs.getString(7);
+            // TODO Find out why unused
             int precision = rs.getInt(8);
             int length = rs.getInt(9);
             short scale = rs.getShort(10);
@@ -705,7 +706,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
 
     public void testCatalogsAndSchema() throws Exception {
         DatabaseMetaData dmd = c.getMetaData();
-        String catalog = null;
+        
         t.begin();
         ResultSet rs = dmd.getSchemas();
         while (rs.next()) {

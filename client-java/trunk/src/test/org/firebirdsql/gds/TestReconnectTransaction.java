@@ -88,7 +88,7 @@ public class TestReconnectTransaction extends FBTestBase {
         AbstractIscTrHandle trHandle1 = (AbstractIscTrHandle)gds.createIscTrHandle();
         gds.iscStartTransaction(trHandle1, dbHandle1, tpb.getTransactionParameterBuffer());
 
-        int trId1 = gdsHelper1.getTransactionId(trHandle1);
+        gdsHelper1.getTransactionId(trHandle1);
         
         gds.iscPrepareTransaction2(trHandle1, message);
         

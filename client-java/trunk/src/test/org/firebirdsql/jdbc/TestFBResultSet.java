@@ -527,7 +527,7 @@ public class TestFBResultSet extends FBTestBase {
                 rs = stmt.executeQuery(query);
                 assertTrue("Should have at least one row", rs.next());
                 
-                Object tempObj = rs.getObject(1);
+                rs.getObject(1);
                 
                 rs.close();
             } catch(SQLException ex) {
@@ -999,7 +999,7 @@ public class TestFBResultSet extends FBTestBase {
             
             // now let's access the result set
             while(rs.next()) {
-                String str1 = rs.getString(1);
+                rs.getString(1);
             }
         } finally {
             stmt.close();
@@ -1127,7 +1127,7 @@ public class TestFBResultSet extends FBTestBase {
             try {
                 ResultSet anotherRs = anotherStmt.executeQuery();
                 while (anotherRs.next()) {
-                    Object tempObj = anotherRs.getObject(1);
+                    anotherRs.getObject(1);
                 }
                 anotherRs.close();
   

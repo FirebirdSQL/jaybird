@@ -19,11 +19,9 @@
 
 package org.firebirdsql.jdbc;
 
-
 import java.sql.*;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -51,22 +49,16 @@ public class TestFBDriver extends FBTestBase {
         return new TestSuite(TestFBDriver.class);
     }
 
-
-
     protected void setUp() throws Exception {
        super.setUp();
         Class.forName(org.firebirdsql.jdbc.FBDriver.class.getName());
         driver = DriverManager.getDriver(getUrl());
     }
 
-
-
     protected void tearDown() throws Exception
     {
        super.tearDown();
     }
-
-
 
     public void testAcceptsURL() throws Exception {
         assertTrue(driver.acceptsURL(getUrl()));
@@ -172,8 +164,6 @@ public class TestFBDriver extends FBTestBase {
         }
     }
     
-
-
     public void testLongRange() throws Exception
     {
         Connection c = getConnectionViaDriverManager();

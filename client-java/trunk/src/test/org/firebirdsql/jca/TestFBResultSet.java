@@ -433,7 +433,6 @@ public class TestFBResultSet extends TestXABase {
         AbstractConnection c = (AbstractConnection)ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
-        Exception ex = null;
         t.begin();
         try {
             s.execute("DROP PROCEDURE testproc");
@@ -459,10 +458,6 @@ public class TestFBResultSet extends TestXABase {
         s.close();
         t.commit();
         c.close();
-        if (ex != null) {
-            throw ex;
-        }
-
     }
 
 

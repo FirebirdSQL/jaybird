@@ -281,10 +281,10 @@ public class TestFBEncodings extends FBTestBase {
             try {
                 rs = stmt.executeQuery();
                 
-                String noneStr = rs.getString(1);
+                rs.getString(1);
                 
-                assertTrue("Should not be able to read none_field " + 
-                    "with special characters", false);
+                fail("Should not be able to read none_field " + 
+                    "with special characters");
             } catch(SQLException sqlex) {
                 // everything is ok
             }
@@ -400,6 +400,7 @@ for (int i=0; i< CYRL_TEST_BYTES.length ; i++){
             assertTrue("Should have at least one row", rs.next());
             
             String cyrlValueUpper = rs.getString(1);
+            // TODO Find out why variable is unused
             byte[] cyrlUpperBytes = cyrlValueUpper.getBytes("Cp1251");
             /*
 for (int i=0; i< cyrlUpperBytes.length	; i++){
@@ -502,10 +503,10 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
             try {
                 rs = stmt.executeQuery();
                 
-                String noneStr = rs.getString(1);
+                rs.getString(1);
                 
-                assertTrue("Should not be able to read none_field " + 
-                    "with special characters", false);
+                fail("Should not be able to read none_field " + 
+                    "with special characters");
             } catch(SQLException sqlex) {
                 // everything is ok
             }
@@ -604,10 +605,10 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
             try {
                 rs = stmt.executeQuery();
                 
-                String noneStr = rs.getString(1);
+                rs.getString(1);
                 
-                assertTrue("Should not be able to read none_field " + 
-                    "with special characters", false);
+                fail("Should not be able to read none_field " + 
+                    "with special characters");
             } catch(SQLException sqlex) {
                 // everything is ok
             }
@@ -780,9 +781,7 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
             ResultSet rs = stmt.executeQuery();
             assertTrue("Should have at least one row", rs.next());
             
-            String str = rs.getString(1);
-            
-            assertTrue("Value should be correct.", TRANSLATION_TEST.equals(rs.getString(1)));
+            assertEquals("Value should be correct.", TRANSLATION_TEST, rs.getString(1));
             
             stmt.close();
 
@@ -834,6 +833,7 @@ for (int i=0; i< win1251UpperBytes.length	; i++){
             ResultSet rs = stmt.executeQuery();
             assertTrue("Should have at least one row", rs.next());
             
+            // TODO Find out why these variables are unused
             byte[] charBytes = rs.getBytes(1);
             byte[] varcharBytes = rs.getBytes(2);
             byte[] noneBytes = rs.getBytes(3);
