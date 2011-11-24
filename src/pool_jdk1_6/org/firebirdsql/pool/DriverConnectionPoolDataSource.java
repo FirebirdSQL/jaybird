@@ -19,12 +19,9 @@
 package org.firebirdsql.pool;
 
 import java.util.Hashtable;
-import java.util.Properties;
 
 import javax.naming.Context;
 import javax.naming.Name;
-import javax.naming.RefAddr;
-import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
 
 import org.firebirdsql.pool.AbstractDriverConnectionPoolDataSource;
