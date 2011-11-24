@@ -43,10 +43,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import org.firebirdsql.gds.ISCConstants;
-
-
-
 /**
  * Implements the Trace/Audit API availabe new in Firebird 2.5. 
  * This functionality includes:

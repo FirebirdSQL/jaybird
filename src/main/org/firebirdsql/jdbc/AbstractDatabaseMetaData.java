@@ -4485,6 +4485,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         byte[] NOTAUTOINC = getBytes("F");
         byte[] BINARY = anXSQLVAR.encodeInt(2);
         byte[] PREDNONE = anXSQLVAR.encodeShort((short) DatabaseMetaData.typePredNone);
+        // TODO Find out why unused
         byte[] PREDBASIC = anXSQLVAR.encodeShort((short) DatabaseMetaData.typePredBasic);
         byte[] SEARCHABLE = anXSQLVAR.encodeShort((short) DatabaseMetaData.typeSearchable);
         byte[] NULLABLE = anXSQLVAR.encodeShort((short) DatabaseMetaData.typeNullable);

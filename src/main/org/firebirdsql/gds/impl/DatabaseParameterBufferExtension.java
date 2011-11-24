@@ -25,7 +25,6 @@
 package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
 
 /**
  * Extension of the {@link org.firebirdsql.gds.DatabaseParameterBuffer} 

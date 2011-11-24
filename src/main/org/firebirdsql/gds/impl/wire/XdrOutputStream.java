@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 
-import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.*;
 
 import org.firebirdsql.logging.Logger;

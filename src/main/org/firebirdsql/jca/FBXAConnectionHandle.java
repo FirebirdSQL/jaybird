@@ -54,7 +54,6 @@ public class FBXAConnectionHandle implements InvocationHandler {
     
     private Connection proxy;
     
-    private boolean closed;
     private SQLException closeStackTrace;
 
     /**
