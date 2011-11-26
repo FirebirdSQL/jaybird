@@ -335,23 +335,16 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      *
      * @return a <code>boolean</code> value
      * @exception SQLException if an error occurs
-     * TODO implement statemet pooling on the server.. then in the driver
+     * TODO implement statement pooling on the server.. then in the driver
      */
     public boolean supportsStatementPooling() throws SQLException {
         return false;
     }
 
-    /**
-     * Describe <code>locatorsUpdateCopy</code> method here.
-     *
-     * @return a <code>boolean</code> value
-     * @exception SQLException if an error occurs
-     * TODO find out what this even means
-     */
     public boolean locatorsUpdateCopy() throws SQLException {
-        return false;
+        // Firebird creates a new blob when making changes
+        return true;
     }
-
 
     /**
      * Does the database treat mixed case unquoted SQL identifiers as
