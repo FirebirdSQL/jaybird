@@ -178,9 +178,6 @@ public class TestFBBlobStream extends FBTestBase {
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
 
         try {
-        	// TODO: Check reason for unused
-            long size = testData[0].length;
-    
             ps.setInt(1, 1);
             ps.setBytes(2, testData[0]);
             ps.executeUpdate();
