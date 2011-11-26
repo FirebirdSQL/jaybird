@@ -267,6 +267,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          */
         public void executionCompleted(FirebirdBlob blob) throws SQLException {
             // do nothing, next line exists only for breakpoint
+            @SuppressWarnings("unused")
             int i = 0;
         }
         /* (non-Javadoc)
