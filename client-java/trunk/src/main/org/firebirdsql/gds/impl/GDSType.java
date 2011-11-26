@@ -44,6 +44,7 @@ public final class GDSType implements Serializable {
     }
     
     // DO NOT REMOVE: needed to initiate static initialization of the GDSFactory
+    @SuppressWarnings("unused")
     private static final GDSFactory factory = new GDSFactory();
     
     
