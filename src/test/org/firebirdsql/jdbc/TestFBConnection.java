@@ -97,6 +97,7 @@ public class TestFBConnection extends FBTestBase {
      * 
      * @throws Exception if something went wrong.
      */
+    @SuppressWarnings("deprecation")
     public void testTpbMapping() throws Exception {
         
         Connection conA = getConnectionViaDriverManager();
