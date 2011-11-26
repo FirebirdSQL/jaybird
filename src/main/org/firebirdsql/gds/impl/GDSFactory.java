@@ -72,6 +72,7 @@ public class GDSFactory {
 
     private static GDSType defaultType;
 
+    // TODO: Replace with explicit initializer from GDSType?
     static {
         
         // register first all plugins that belong to the same classloader
@@ -102,7 +103,7 @@ public class GDSFactory {
      * @throws IOException if I/O error occured.
      */
     private static void loadPluginsFromClassLoader(ClassLoader classLoader) throws IOException {
-        
+        // TODO: Replace with Java.util.ServiceLoader usage
         Enumeration res = classLoader.getResources(
             "META-INF/services/" + GDSFactoryPlugin.class.getName());
         
