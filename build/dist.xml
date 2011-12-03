@@ -15,12 +15,13 @@
       <classpath refid="javac.pool.classpath"/>
       <sourcepath>
 		<pathelement path="${source.java}"/>
+		<pathelement path="${source.pool}"/>
       </sourcepath>
       <sourcepath refid="source.java.openoffice"/>
       <sourcepath refid="source.java.additional"/>
+      <sourcepath refid="source.java.pool"/>
       <sourcepath refid="source.java.wire"/>
       <sourcepath refid="source.java.jca"/>
-      <sourcepath refid="source.java.pool"/>
     </javadoc>
   </target>
 
