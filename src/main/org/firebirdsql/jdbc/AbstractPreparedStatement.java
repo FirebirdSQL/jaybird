@@ -1082,16 +1082,14 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
     /**
      * Sets the designated parameter to the given <code>Clob</code> object.
      * 
-     * @param i
+     * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
-     * @param x
+     * @param clob
      *            a <code>Clob</code> object that maps an SQL
      *            <code>CLOB</code> value
      * @exception SQLException
      *                if a database access error occurs
      * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
-     *      </a>
      */
     public void setClob(int parameterIndex, Clob clob) throws SQLException {
         // if the passed BLOB is not instance of our class, copy its content

@@ -196,7 +196,7 @@ public class FBConnectionHelper {
     }
     /**
      * This method extracts TPB mapping information from the connection 
-     * parameters. Two formats are supported:
+     * parameters and adds it to the connectionProperties. Two formats are supported:
      * <ul>
      * <li><code>info</code> contains <code>"tpb_mapping"</code> parameter
      * pointing to a resource bundle with mapping information;
@@ -207,9 +207,6 @@ public class FBConnectionHelper {
      * </ul>
      * 
      * @param info connection parameters passed into a driver.
-     * 
-     * @return instance of {@link FBTpbMapper} containing specified TPB mapping
-     * or <code>null</code> if not TPB mapping was specified.
      * 
      * @throws FBResourceException if specified mapping is incorrect.
      */

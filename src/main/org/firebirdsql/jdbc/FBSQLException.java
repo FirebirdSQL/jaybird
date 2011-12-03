@@ -81,7 +81,7 @@ public class FBSQLException extends SQLException {
      * @param ex
      *            SQLException that should be set as the 'next exception'
      * @deprecated In all most all cases use
-     *             {@link #FBSQLException(String, String) in combination with
+     *             {@link #FBSQLException(String, String)} in combination with
      *             {@link #setNextException(SQLException)}.
      */
     public FBSQLException(String message, SQLException ex) {

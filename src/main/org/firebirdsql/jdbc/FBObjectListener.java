@@ -105,7 +105,7 @@ public interface FBObjectListener {
         /**
          * Get the connection object to which this listener belongs to.
          * 
-         * @return instance of {@link Connection}
+         * @return instance of {@link AbstractConnection}
          * 
          * @throws SQLException if something went wrong.
          */

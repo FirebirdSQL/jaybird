@@ -63,80 +63,80 @@ public interface GDS {
     IscDbHandle createIscDbHandle();
 
     /**
-     * Factory method to create a new <code>IscTrHandle</code> instance that
+     * Factory method to create a new {@link IscTrHandle} instance that
      * is linked to the current <code>GDS</code> implementation.
      * 
-     * @return A new <code>IscTrHandle</code> instance
+     * @return A new {@link IscTrHandle} instance
      */
     IscTrHandle createIscTrHandle();
 
     /**
-     * Factory method to create a new <code>IscStmtHandle</code> instance
+     * Factory method to create a new {@link IscStmtHandle} instance
      * specific to the implementation of this interface.
      * 
-     * @return A new <code>IscStmtHandle</code> instance
+     * @return A new {@link IscStmtHandle}  instance
      */
     IscStmtHandle createIscStmtHandle();
 
     /**
-     * Factory method to create a new <code>IscBlobHandle</code> instance
+     * Factory method to create a new {@link IscBlobHandle} instance
      * specific to the implementation of this interface.
      * 
-     * @return A new <code>IscBlobHandle</code> instance
+     * @return A new {@link IscBlobHandle} instance
      */
     IscBlobHandle createIscBlobHandle();
 
     /**
-     * Factory method to create a new <code>IscSvcHandle</code> instance
+     * Factory method to create a new {@link IscSvcHandle} instance
      * that is linked to the current <code>GDS</code> implemenation.
      * 
-     * @return A new <code>IscSvcHandle</code> instance
+     * @return A new {@link IscSvcHandle} instance
      */
     IscSvcHandle createIscSvcHandle();
 
     /**
-     * Create a new <code>ServiceParameterBuffer</code> instance for setting
+     * Create a new {@link ServiceParameterBuffer} instance for setting
      * service parameters in the current GDS implementation.
      * 
-     * @return a new <code>ServiceParameterBuffer</code>
+     * @return a new {@link ServiceParameterBuffer} 
      */
     ServiceParameterBuffer createServiceParameterBuffer();
 
     /**
-     * Create a new <code>ServiceRequestBuffer</code> instance for setting
+     * Create a new {@link ServiceRequestBuffer} instance for setting
      * service request parameters in the current GDS implementation. The
-     * returned <code>ServiceRequestBuffer</code> is linked to a specific
+     * returned {@link ServiceRequestBuffer} is linked to a specific
      * Services API task, and must be one of the <code>isc_info_svc_*</code>
      * or <code>isc_action_svc</code> constants from {@link ISCConstants}.
      * 
      * @param taskIdentifier
      *            The specific Services API task for which the
-     *            <code>ServiceRequestBuffer</code> is created
-     * @return A new <code>ServiceRequestBuffer</code>
+     *            {@link ServiceRequestBuffer} is created
+     * @return A new {@link ServiceRequestBuffer}
      */
     ServiceRequestBuffer createServiceRequestBuffer(int taskIdentifier);
 
     /**
-     * Create a new <code>DatabaseParameterBuffer</code> instance for setting
+     * Create a new {@link DatabaseParameterBuffer} instance for setting
      * database parameters in the current GDS implementation.
      * 
-     * @return A new <code>DatabaseParameterBuffer</code>
+     * @return A new {@link DatabaseParameterBuffer}
      */
     DatabaseParameterBuffer createDatabaseParameterBuffer();
 
     /**
-     * Create a new <code>BlobParameterBuffer</code> instance for setting blob
+     * Create a new {@link BlobParameterBuffer} instance for setting blob
      * parameters in the current GDS implementation.
      * 
-     * @return A new <code>BlobParameterBuffer</code>
+     * @return A new {@link BlobParameterBuffer}
      */
     BlobParameterBuffer createBlobParameterBuffer();
 
     /**
-     * Create new <code>TransactionParameterBuffer</code> instance for setting
+     * Create new {@link TransactionParameterBuffer} instance for setting
      * transaction parameters in the current GDS implementation.
      * 
-     * @return A new <code>TransactionParameterBuffer</code>.
+     * @return A new {@link TransactionParameterBuffer} .
      */
     TransactionParameterBuffer newTransactionParameterBuffer();
 
@@ -190,7 +190,7 @@ public interface GDS {
             throws GDSException;
 
     /**
-     * Get information about the database to which <code>IscDbHandle</code> is
+     * Get information about the database to which {@link IscDbHandle} is
      * attached. The requested parameters are values set in <code>items</code>,
      * and the values in the returned byte-array correspond to the requested
      * parameters in <code>items</code>
@@ -843,7 +843,7 @@ public interface GDS {
 
     /**
      * Initialize the internal databastructures for an 
-     * <code>EventHandle</code>.
+     * {@link EventHandle}.
      *
      * @param eventHandle 
      *              The event handle to be initialized
@@ -865,7 +865,7 @@ public interface GDS {
             throws GDSException;
 
     /**
-     * Cancel event listening based on an <code>EventHandle</code>.
+     * Cancel event listening based on an {@link EventHandle}.
      *
      * @param dbHandle
      *              Handle to the database where events are being 
@@ -879,10 +879,10 @@ public interface GDS {
             throws GDSException;
 
     /**
-     * Create a new <code>EventHandle</code> specific to a given 
+     * Create a new {@link EventHandle} specific to a given 
      * <code>GDS</code> implementation.
      *
-     * @return The newly created <code>EventHandle</code>
+     * @return The newly created {@link EventHandle}
      */
     EventHandle createEventHandle(String eventName);
     
@@ -892,9 +892,9 @@ public interface GDS {
      * @param dbHandle Handle to the database operation of which should be
      * cancelled.
      * 
-     * @param kind one of {@link ISCConstants#fbfb_cancel_disable},
-     * {@link ISCConstants#fbfb_cancel_enable}, {@link ISCConstants#fbfb_cancel_raise}
-     * or {@link ISCConstants#fbfb_cancel_abort} 
+     * @param kind one of {@link ISCConstants#fb_cancel_disable},
+     * {@link ISCConstants#fb_cancel_enable}, {@link ISCConstants#fb_cancel_raise}
+     * or {@link ISCConstants#fb_cancel_abort} 
      * 
      * @throws GDSException If a database communication error happens.
      */

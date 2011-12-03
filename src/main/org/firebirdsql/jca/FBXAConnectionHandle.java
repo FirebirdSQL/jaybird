@@ -63,14 +63,8 @@ public class FBXAConnectionHandle implements InvocationHandler {
      * 
      * @param connection connection to wrap.
      * 
-     * @param owner instance of {@link XConnectionOwner} that owns this 
+     * @param owner instance of {@link XAConnection} that owns this 
      * connection instance.
-     * 
-     * @param pingable <code>true</code> if created connection should be 
-     * pingable.
-     * 
-     * @param useProxy <code>true</code> if this class should use dynamic
-     * proxies, otherwise {@link PingableConnectionWrapper} will be used.
      * 
      * @throws SQLException if something went wrong during initialization.
      */

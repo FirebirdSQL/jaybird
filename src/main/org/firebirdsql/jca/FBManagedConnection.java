@@ -900,7 +900,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      * list of transaction branches that are currently in prepared or
      * heuristically completed states.
      * 
-     * @param flag
+     * @param flags
      *            One of TMSTARTRSCAN, TMENDRSCAN, TMNOFLAGS. TMNOFLAGS must be
      *            used when no other flags are set in flags.
      * @return The resource manager returns zero or more XIDs for the

@@ -470,7 +470,9 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
      * Prepare the specified statement and wrap it with cache notification
      * wrapper.
      *
-     * @param statement statement to prepare.
+     * @param key Statement model of the statement to prepare
+     * 
+     * @param cached <code>true</code> if prepared statement will be cached
      *
      * @return prepared and wrapped statement.
      *
@@ -510,8 +512,8 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
      * 
      * @see java.sql.Connection#prepareStatement(java.lang.String, int, int)
      * 
-     * @deprecated use {@link #prepareStatement(String, int, int, int, boolean)}
-     * intead.
+     * @deprecated use {@link #prepareStatement(XPreparedStatementModel, boolean)}
+     * instead.
      */
     public XCachablePreparedStatement prepareStatement(String sql,
             int resultSetType, int resultSetConcurrency,
@@ -631,7 +633,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
      * Handle {@link java.sql.PreparedStatement#close()} method. This implementation
      * dereferences proxy in cache.
      *
-     * @param statement SQL statement corresponding to the proxy.
+     * @param key Statement model of the statement to prepare
      * @param proxy proxy wrapping the connection.
      *
      * @throws SQLException if prepared statement cannot be added to the pool.
