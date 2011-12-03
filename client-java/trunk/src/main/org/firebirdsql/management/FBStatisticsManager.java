@@ -36,7 +36,6 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
-
 package org.firebirdsql.management;
 
 import java.sql.SQLException;
@@ -44,7 +43,6 @@ import java.sql.SQLException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
-
 
 /**
  * The <code>FBStatisticsManager</code> class is responsible for replicating 
@@ -71,8 +69,7 @@ public class FBStatisticsManager extends FBServiceManager
      * Create a new instance of <code>FBMaintenanceManager</code> based on
      * the default GDSType.
      */
-    public FBStatisticsManager()
-    {
+    public FBStatisticsManager() {
     	super();
     }
 
@@ -82,8 +79,7 @@ public class FBStatisticsManager extends FBServiceManager
      * 
      * @param gdsType type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
-    public FBStatisticsManager(String gdsType)
-    {
+    public FBStatisticsManager(String gdsType) {
     	super(gdsType);
     }
 
@@ -93,65 +89,21 @@ public class FBStatisticsManager extends FBServiceManager
      *
      * @param gdsType The GDS implementation type to use
      */
-    public FBStatisticsManager(GDSType gdsType){
+    public FBStatisticsManager(GDSType gdsType) {
         super(gdsType);
     }
 
-    /**
-     * Fetch the database statistics header page. The header information is
-     * written to this <code>StatisticsManager</code>'s logger.
-     *
-     * @throws SQLException if a database access error occurs
-     */
     public void getHeaderPage() throws SQLException {
         ServiceRequestBuffer srb = createStatsSRB(
                 ISCConstants.isc_spb_sts_hdr_pages);
         executeServicesOperation(srb);
     }
 
-    /**
-     * Get the full database statistics information, excluding system table 
-     * information. The statistics information is written to this
-     * <code>StatisticsManager</code>'s logger.
-     * <p>
-     * The listed data includes:
-     * <ul>
-     *      <li>statistics header page
-     *      <li>log statistics 
-     *      <li>index statistics
-     *      <li>data table statistics
-     * </ul>
-     * <p>
-     * Invoking this method is equivalent to the default behaviour of 
-     * <code>gfix</code> on the command-line.
-     *
-     * @throws SQLException if a database access error occurs
-     */
     public void getDatabaseStatistics() throws SQLException {
         ServiceRequestBuffer srb = createDefaultStatsSRB();
         executeServicesOperation(srb);
     }
 
-    /**
-     * Get specific database statistics. The statistics information is written
-     * to this <code>StatisticsManager</code>'s logger. All invocations of
-     * this method will result in the header page and log data being output. 
-     * The following options can be supplied as a bitmask:
-     * <ul>
-     *      <li><code>DATA_TABLE_STATISTICS</code>
-     *      <li><code>SYSTEM_TABLE_STATISTICS</code>
-     *      <li><code>INDEX_STATISTICS</code>
-     * </ul>
-     * <p>
-     * If this method is invoked with <code>0</code> as the 
-     * <code>options</code> value, only the header and log statistics will
-     * be output.
-     *
-     * @param options A bitmask combination of 
-     *        <code>DATA_TABLE_STATISTICS</code>, 
-     *        <code>SYSTEM_TABLE_STATISTICS</code>, or
-     *        <code>INDEX_STATISTICS</code>. Can also be <code>0</code>.
-     */
     public void getDatabaseStatistics(int options) throws SQLException {
         if (options != 0 && (options | possibleStatistics) != possibleStatistics){
             throw new IllegalArgumentException("options must be 0 or a " 
@@ -163,32 +115,14 @@ public class FBStatisticsManager extends FBServiceManager
         executeServicesOperation(srb);
     }
 
-    /**
-     * Get the table statistics. The statistics information is written
-     * to this <code>StatisticsManager</code>'s logger.
-     * <p>
-     * The listed data includes:
-     * <ul>
-     *      <li>the primary pointer and index root page numbers 
-     *      <li>number of data pages and their average fill
-     *      <li>fill distribution
-     * </ul>
-     * <p>
-     * Invoking this method is equivalent to the behaviour of 
-     * <code>gstat -t <table name></code> on the command-line.
-     * 
-     * @param tableNames array of table names to analyze.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    public void getTableStatistics(String[] tableName) throws SQLException {
+    public void getTableStatistics(String[] tableNames) throws SQLException {
         ServiceRequestBuffer srb = createStatsSRB(ISCConstants.isc_spb_sts_table);
 
         // create space-separated list of tables
         StringBuffer commandLine = new StringBuffer();
-        for (int i = 0; i < tableName.length; i++) {
-            commandLine.append(tableName[i]);
-            if (i < tableName.length - 1)
+        for (int i = 0; i < tableNames.length; i++) {
+            commandLine.append(tableNames[i]);
+            if (i < tableNames.length - 1)
                 commandLine.append(' ');
         }
         

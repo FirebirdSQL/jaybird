@@ -51,7 +51,7 @@ public interface XStatementManager {
      * 
      * @see java.sql.Connection#prepareStatement(java.lang.String, int, int)
      * 
-     * @deprecated use {@link #prepareStatement(String, int, int, int, boolean)}
+     * @deprecated use {@link #prepareStatement(XPreparedStatementModel, boolean)}
      * intead.
      */
     XCachablePreparedStatement prepareStatement(String sql, int resultSetType, 

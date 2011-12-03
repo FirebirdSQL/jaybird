@@ -30,10 +30,9 @@ import java.sql.SQLException;
 public interface PooledConnectionManager {
 
     /**
-     * Allocate pooled connection using specified user name and password.
+     * Allocate pooled connection using specified key.
      * 
-     * @param userName user name that will be used to access database.
-     * @param password password corresponding to the specified user name.
+     * @param key Key of the pool
      * 
      * @return instance of {@link javax.sql.PooledConnection}.
      * 

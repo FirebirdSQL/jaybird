@@ -121,50 +121,50 @@ public interface MaintenanceManager extends ServiceManager {
     
     /**
      * Operation mode normal online. New with Firebird 2.5.
-     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
-     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
+     * @see #shutdownDatabase(byte, int, int) 
      */
     public static final byte OPERATION_MODE_NORMAL = ISCConstants.isc_spb_prp_sm_normal;
     
     /**
      * Operation mode multi shutdown/online. New with Firebird 2.5. 
-     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
-     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
+     * @see #shutdownDatabase(byte, int, int) 
      */
     public static final byte OPERATION_MODE_MULTI = ISCConstants.isc_spb_prp_sm_multi;
     
     /**
      * Operation mode single shutdown/online. New with Firebird 2.5. 
-     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
-     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
+     * @see #shutdownDatabase(byte, int, int) 
      */
     public static final byte OPERATION_MODE_SINGLE = ISCConstants.isc_spb_prp_sm_single;
     
     /**
      * Operation mode full shutdown. New with Firebird 2.5. 
-     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
-     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
+     * @see #shutdownDatabase(byte, int, int) 
      */
     public static final byte OPERATION_MODE_FULL_SHUTDOWN = ISCConstants.isc_spb_prp_sm_full;
     
     /**
      * Force shutdown. New with Firebird 2.5. 
-     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
-     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
+     * @see #shutdownDatabase(byte, int, int)
      */
     public static final int SHUTDOWNEX_FORCE = ISCConstants.isc_spb_prp_force_shutdown;
     
     /**
      * Shutdown attachments. New with Firebird 2.5. 
-     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
-     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
+     * @see #shutdownDatabase(byte, int, int) 
      */
     public static final int SHUTDOWNEX_ATTACHMENTS = ISCConstants.isc_spb_prp_attachments_shutdown;
 
     /**
      * Shutdown transactions. New with Firebird 2.5. 
-     * To be used with the new shutdownDatabase(int operationMode, int shutdownMode, int timeout) method.
-     * @see org.firebirdsql.management.MaintenanceManager#shutdownDatabase(int operationMode, int shutdownMode, int timeout) 
+     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
+     * @see #shutdownDatabase(byte, int, int) 
      */
     public static final int SHUTDOWNEX_TRANSACTIONS = ISCConstants.isc_spb_prp_transactions_shutdown;
     

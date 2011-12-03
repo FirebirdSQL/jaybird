@@ -92,11 +92,6 @@ public class FBEventManager implements EventManager {
         dbHandle = gds.createIscDbHandle();
     }
 
-    /**
-     * Make a connection with a database to listen for events.
-     *
-     * @throws SQLException If a database communication error occurs
-     */
     public void connect() throws SQLException {
         if (connected){
             throw new IllegalStateException(
@@ -118,11 +113,6 @@ public class FBEventManager implements EventManager {
         dispatchThread.start();
     }
 
-    /**
-     * Close the connection to the database.
-     *
-     * @throws SQLException If a database communication error occurs
-     */
     public void disconnect() throws SQLException {
         if (!connected){
             throw new IllegalStateException(
@@ -158,91 +148,46 @@ public class FBEventManager implements EventManager {
         }
     }
 
-    /**
-     * Check whether this object is connected to the database.
-     * @return <code>true</code> if object is connected to the 
-     * database, otherwise <code>false</code>.
-     */
     public boolean isConnected() {
         return connected;
     }
 
-    /**
-     * Sets the username for the connection to the database .
-     * @param username for the connection to the database.
-     */
     public void setUser(String user){
         this.user = user;
     }
 
-    /**
-     * Returns the username for the connection to the databaes.
-     * @return the username for the connection to the database.
-     */
     public String getUser(){
         return this.user;
     }
 
-    /**
-     * Sets the password for the connection to the database.
-     * @param password for the connection to the database.
-     */
     public void setPassword(String password){
         this.password = password;
     }
 
-    /**
-     * Returns the password for the connection to the database.
-     * @return the password for the connection to the database.
-     */
     public String getPassword(){
         return this.password;
     }
 
-    /**
-     * Sets the database path for the connection to the database.
-     * @param database path for the connection to the database.
-     */
     public void setDatabase(String database){
         this.database = database;
     }
 
-    /**
-     * Returns the database path for the connection to the database.
-     * @return the database path for the connection to the database.
-     */
     public String getDatabase(){
         return this.database;
     }
 
-    /**
-     * Returns the host for the connection to the database.
-     * @return the host for the connection to the database.
-     */
     public String getHost(){
         return this.host;
     }
 
-    /**
-     * Sets the host for the connection to the database.
-     * @param host for the connection to the database.
-     */
     public void setHost(String host){
         this.host = host;
     }
        
-    /**
-     * Returns the port for the connection to the database.
-     * @return the port for the connection to the database.
-     */
     public int getPort(){
         return this.port;
     }
 
-    /**
-     * Sets the port for the connection to the database.
-     * @param port for the connection to the database.
-     */
     public void setPort(int port){
         this.port = port;
     }
@@ -274,15 +219,6 @@ public class FBEventManager implements EventManager {
         this.waitTimeout = waitTimeout;
     }
 
-    /**
-     * Register an EventListener that will be called when an event occurs.
-     *
-     * @param eventName The name of the event for which the listener will
-     *                  be notified
-     * @param listener The EventListener that will be called when the given
-     *                 event occurs
-     * @throws SQLException If a database access error occurs
-     */
     public void addEventListener(
             String eventName, EventListener listener) throws SQLException {
         if (!connected){
@@ -306,14 +242,6 @@ public class FBEventManager implements EventManager {
         }
     }
 
-    /**
-     * Remove an EventListener for a given event.
-     *
-     * @param eventName The name of the event for which the listener 
-     *                  will be unregistered.
-     * @param listener The EventListener that is to be unregistered
-     * @throws SQLException If a database access error occurs
-     */
     public void removeEventListener(
             String eventName, EventListener listener) throws SQLException {
         if (eventName == null || listener == null){
@@ -333,40 +261,11 @@ public class FBEventManager implements EventManager {
         }
     }
 
-    /**
-     * Wait for the one-time occurence of an event.
-     *
-     * This method blocks indefinitely until the event identified by the
-     * value of <code>eventName</code> occurs. The return value is the
-     * number of occurrences of the requested event.
-     *
-     * @param eventName The name of the event to wait for
-     * @return The number of occurences of the requested event
-     * @throws InterruptedException If interrupted while waiting
-     * @throws SQLException If a database access error occurs
-     */
     public int waitForEvent(String eventName) 
             throws InterruptedException, SQLException {
         return waitForEvent(eventName, 0);
     }
 
-    /**
-     * Wait for the one-time occurence of an event.
-     *
-     * This method blocks for a maximum of <code>timeout</code> milliseconds,
-     * waiting for the event identified by <code>eventName</code> to occur.
-     * A timeout value of <code>0</code> means wait indefinitely.
-     *
-     * The return value is the number of occurences of the event in question,
-     * or <code>-1</code> if the call timed out.
-     *
-     * @param exenvtName The name of the event to wait for
-     * @param timeout The maximum number of milliseconds to wait
-     * @return The number of occurrences of the requested event, or 
-     *         <code>-1</code> if the call timed out
-     * @throws InterruptedException If interrupted while waiting
-     * @throws SQLException If a database access error occurs
-     */
     public int waitForEvent(String eventName, final int timeout) 
             throws InterruptedException, SQLException {
         if (!connected){
@@ -459,7 +358,6 @@ public class FBEventManager implements EventManager {
 
     }
 
-
     class EventDispatcher implements Runnable {
         
         private volatile boolean running = false;
@@ -505,7 +403,6 @@ public class FBEventManager implements EventManager {
 
 }
 
-
 class OneTimeEventListener implements EventListener {
 
     private int eventCount = -1;
@@ -529,9 +426,6 @@ class OneTimeEventListener implements EventListener {
         return eventCount;
     }
 }
-
-
-
 
 class DatabaseEventImpl implements DatabaseEvent {
     

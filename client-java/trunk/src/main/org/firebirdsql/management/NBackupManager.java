@@ -68,7 +68,7 @@ public interface NBackupManager extends ServiceManager {
 
     /**
      * Clear the information about backup files. This method undoes all 
-     * parameters set in the {@link #addBackupFile(String} method. 
+     * parameters set in the {@link #addBackupFile(String)} method. 
      */
     void clearBackupFiles();
 

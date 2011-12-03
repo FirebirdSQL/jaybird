@@ -108,7 +108,7 @@ public interface FirebirdParameterMetaData extends ParameterMetaData {
      * @return SQL type from <code>java.sql.Types</code>
      * @exception SQLException if a database access error occurs
      * @since 1.4
-     * @see Types
+     * @see java.sql.Types
      */
     int getParameterType(int param) throws SQLException;
 

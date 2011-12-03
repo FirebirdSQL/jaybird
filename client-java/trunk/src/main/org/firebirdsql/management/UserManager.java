@@ -93,7 +93,7 @@ public interface UserManager extends ServiceManager {
 	 * 
 	 * Supported since Firebird 2.1
 	 * 
-	 * @param name/path of securityDatabase
+	 * @param securityDatabase name/path of securityDatabase
 	 */
     public void setSecurityDatabase(String securityDatabase);
     

@@ -161,7 +161,6 @@ public final class BlockingStack {
 	 * 
 	 * @param item
 	 *            to be pushed onto the stack.
-	 * @return true is successful, false otherwise.
 	 * @throws InterruptedException
 	 */
 	public void push(Object item) throws InterruptedException {

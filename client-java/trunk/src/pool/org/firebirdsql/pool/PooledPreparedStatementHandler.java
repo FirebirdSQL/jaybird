@@ -101,8 +101,7 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
     /**
      * Handle {@link Statement#close()} call.
      * 
-     * @param statement SQL statement corresponding to the wrapped prepared 
-     * statement.
+     * @param key {@link XPreparedStatementModel} to close
      * 
      * @param proxy dynamic proxy wrapping prepared statement.
      * 
