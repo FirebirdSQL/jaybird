@@ -42,6 +42,7 @@
         <include name="${archive.name.full}"/>
         <include name="${archive.name.pool}"/>
         <include name="${archive.name.simple}"/>
+        <include name="${archive.name.sources}"/>
       </fileset>
       <fileset dir="${module.etc}">
         <include name="release_notes.pdf"/>
@@ -74,6 +75,7 @@
 
   <!-- =================================================================== -->
   <!-- Packages the source files with ZIP                                  -->
+  <!-- Also see task jar-sources in archive.xml                            -->
   <!-- =================================================================== -->
   <target name="src-zip" depends="init">
     <zip zipfile="${Name}-src-${version.full}.zip" basedir="../.." includes="clients/java/**" excludes="clients/java/**.zip"/>

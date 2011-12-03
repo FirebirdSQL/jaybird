@@ -1,7 +1,7 @@
   <!-- =================================================================== -->
   <!-- Creates the jar archives                                            -->
   <!-- =================================================================== -->
-  <target name="jars" depends="jar-j2ee, rar, jar-test"/>
+  <target name="jars" depends="jar-j2ee, rar, jar-test, jar-sources"/>
 
   <!-- Not really a jar operation but necessary :) -->
   <target name="jar-j2ee" depends="compile">
@@ -11,7 +11,6 @@
   </target>
 
   <target name="jar-ra" depends="compile">
-
     <mkdir dir="${build.lib}"/>
     <jar jarfile="${build.lib}/${archive.name.simple}" manifest="${build.etc}/default.mf">
        <fileset dir="${build.classes}">
@@ -52,13 +51,10 @@
        <zipfileset dir="${build.resources}/META-INF" prefix="META-INF">
          <include name="services/**/*"/>
        </zipfileset>
-       
     </jar>
-
   </target>
 
   <target name="jar-test" depends="compile">
-
     <mkdir dir="${build.lib}"/>
     <jar jarfile="${build.lib}/${archive.name.test}" manifest="${build.etc}/default.mf">
        <fileset dir="${build.test}">
@@ -68,6 +64,40 @@
          <include name="**/*.properties"/>
        </fileset>
     </jar>
+  </target>
+  
+  <target name="jar-sources" depends="set-driver-sources,set-pool-sources">
+  	<mkdir dir="${build.lib}"/>
+  	<jar jarfile="${build.lib}/${archive.name.sources}" update="true">
+      	<fileset dir="${source.java}">
+      		<include name="**/*.java"/>
+      	</fileset>
+      	<fileset dir="${source.pool}">
+      		<include name="**/*.java"/>
+      	</fileset>
+      	<fileset dir="${toString:source.java.openoffice}">
+	  		<include name="**/*.java"/>
+	  	</fileset>
+  		<fileset dir="${toString:source.java.additional}">
+	  		<include name="**/*.java"/>
+	  	</fileset>
+	  	<fileset dir="${toString:source.java.pool}">
+	  		<include name="**/*.java"/>
+	  	</fileset>
+	  	<fileset dir="${toString:source.java.wire}">
+	  		<include name="**/*.java"/>
+	  	</fileset>
+	  	<fileset dir="${toString:source.java.jca}">
+	  		<include name="**/*.java"/>
+	  	</fileset>
+		<fileset dir="${source.resources}">
+			<exclude name="log4j.properties"/>
+			<include name="**/*.properties"/>
+		</fileset>
+		<zipfileset dir="${source.resources}/META-INF" prefix="META-INF">
+			<include name="services/**/*"/>
+		</zipfileset>
+  	</jar>
   </target>
 
 
