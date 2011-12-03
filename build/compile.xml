@@ -102,9 +102,9 @@
     </path>
   </target>
   
-  <target name="set-driver-sources" depends="set-jdbc-20-src,set-jdbc-30-src,set-jdbc-40-src,set-wire1.3-src,set-wire1.4-src,set-openoffice-src-13,set-openoffice-src-14,set-jca-src-14,set-jca-src-16"/>
+  <target name="set-driver-sources" depends="init,set-jdbc-20-src,set-jdbc-30-src,set-jdbc-40-src,set-wire1.3-src,set-wire1.4-src,set-openoffice-src-13,set-openoffice-src-14,set-jca-src-14,set-jca-src-16"/>
   
-  <target name="set-pool-sources" depends="set-pool1.4-src,set-pool1.5-src,set-pool1.6-src"/>
+  <target name="set-pool-sources" depends="init,set-pool1.4-src,set-pool1.5-src,set-pool1.6-src"/>
 
   <target name="compile-driver" depends="set-driver-sources">
     <mkdir dir="${build.classes}"/>
