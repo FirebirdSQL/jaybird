@@ -387,9 +387,10 @@ public class EncodingFactory {
         // fill the direct and inversed mappings
         iscEncodings.putAll(props);
 
-        Iterator iterator = props.keySet().iterator();
+        Iterator iterator = props.entrySet().iterator();
         while(iterator.hasNext()) {
-            String iscEncoding = (String)iterator.next();
+            Map.Entry entry = (Map.Entry)iterator.next();
+            String iscEncoding = (String)entry.getKey();
             
             // special handling for UTF8 and UNICODE_FSS encodings
             // since UTF8 is an alias for UNICODE_FSS in Firebird 1.x
@@ -397,7 +398,7 @@ public class EncodingFactory {
             if ("UNICODE_FSS".equals(iscEncoding))
                 continue;
             
-            String javaEncoding = (String)props.get(iscEncoding);
+            String javaEncoding = (String)entry.getValue();
             javaEncodings.put(javaEncoding, iscEncoding);
         }
 
@@ -421,10 +422,11 @@ public class EncodingFactory {
             return;
         }
 
-        Iterator iterator = props.keySet().iterator();
+        Iterator iterator = props.entrySet().iterator();
         while(iterator.hasNext()) {
-            String iscEncoding = (String)iterator.next();
-            String size = (String)props.get(iscEncoding);
+            Map.Entry entry = (Map.Entry)iterator.next();
+            String iscEncoding = (String)entry.getKey();
+            String size = (String)entry.getValue();
             iscEncodingSizes.put(iscEncoding, new Byte(size));
         }
 
