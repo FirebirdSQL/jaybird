@@ -32,14 +32,11 @@ import java.util.HashMap;
  */
 public final class GDSType implements Serializable {
     
-    private static HashMap typeMap;
+    private final static HashMap typeMap = new HashMap();
 
     // Getter for the typeMap variable, please note that static initializer of
     // the GDSFactory class will access the registerType(String) method
     private static HashMap getTypeMap() {
-        if (typeMap == null)
-            typeMap = new HashMap();
-        
         return typeMap;
     }
     
