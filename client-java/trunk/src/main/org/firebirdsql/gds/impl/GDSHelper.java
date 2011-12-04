@@ -89,7 +89,7 @@ public class GDSHelper {
             listener.errorOccured(ex);
     }
         
-    public AbstractIscTrHandle getCurrentTrHandle() {
+    public synchronized AbstractIscTrHandle getCurrentTrHandle() {
         return currentTr;
     }
     
@@ -400,6 +400,7 @@ public class GDSHelper {
                         i += 2;
                         statementType = gds.iscVaxInteger(buffer, i, dataLength);
                         i += dataLength;
+                        break;
                     case ISCConstants.isc_info_end:
                     case 0:
                         break;
