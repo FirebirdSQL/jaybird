@@ -1,3 +1,23 @@
+/*
+ * $Id$
+ * 
+ * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.gds.impl.jni;
 
 import java.io.UnsupportedEncodingException;
@@ -95,33 +115,34 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                 ISCConstants.isc_bad_db_handle); }
 
         final byte[] dpbBytes;
+        final String filenameCharset;
         if (databaseParameterBuffer != null) {
             DatabaseParameterBuffer cleanDPB = ((DatabaseParameterBufferExtension)databaseParameterBuffer).removeExtensionParams();
             dpbBytes = ((DatabaseParameterBufferImp) cleanDPB).getBytesForNativeCode();
+            filenameCharset = databaseParameterBuffer.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
         } else {
             dpbBytes = null;
+            filenameCharset = null;
         }
 
+        String serverUrl = getServerUrl(file_name);
+        
+        byte[] urlData;
+        try {
+            if (filenameCharset != null)
+                urlData = serverUrl.getBytes(filenameCharset);
+            else
+                urlData = serverUrl.getBytes();
+            
+            byte[] nullTerminated = new byte[urlData.length + 1];
+            System.arraycopy(urlData, 0, nullTerminated, 0, urlData.length);
+            urlData = nullTerminated;
+        } catch(UnsupportedEncodingException ex) {
+            throw new GDSException(ISCConstants.isc_bad_dpb_content);
+        }
+        
         synchronized (this) {
-            String serverUrl = getServerUrl(file_name);
-            
-            byte[] urlData;
-            try {
-                String filenameCharset = databaseParameterBuffer.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
-                if (filenameCharset != null)
-                    urlData = serverUrl.getBytes(filenameCharset);
-                else
-                    urlData = serverUrl.getBytes();
-                
-                byte[] nullTerminated = new byte[urlData.length + 1];
-                System.arraycopy(urlData, 0, nullTerminated, 0, urlData.length);
-                urlData = nullTerminated;
-            } catch(UnsupportedEncodingException ex) {
-                throw new GDSException(ISCConstants.isc_bad_dpb_content);
-            }
-            
-            native_isc_attach_database(urlData, db_handle,
-                    dpbBytes);
+            native_isc_attach_database(urlData, db_handle, dpbBytes);
         }
 
         parseAttachDatabaseInfo(iscDatabaseInfo(db_handle,
