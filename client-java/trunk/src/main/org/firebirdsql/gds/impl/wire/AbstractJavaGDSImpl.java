@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -22,7 +24,6 @@
  * Portions created by Alejandro Alberola are Copyright (C) 2001
  * Boix i Oltra, S.L. All Rights Reserved.
  */
-
 package org.firebirdsql.gds.impl.wire;
 
 import java.io.IOException;
@@ -105,10 +106,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	static final int op_read_page = 13; /* optionally lock and read page */
 
-	static final int op_write_page = 14; /*
-											 * write page and optionally release
-											 * lock
-											 */
+	static final int op_write_page = 14; /* write page and optionally release lock */
 
 	static final int op_lock = 15; /* sieze lock */
 
@@ -214,10 +212,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	/* DSQL operations */
 
-	static final int op_allocate_statement = 62; /*
-													 * allocate a statment
-													 * handle
-													 */
+	static final int op_allocate_statement = 62; /* allocate a statement handle */
 
 	static final int op_execute = 63; /* execute a prepared statement */
 
@@ -237,28 +232,19 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	static final int op_dummy = 71; /* dummy packet to detect loss of client */
 
-	static final int op_response_piggyback = 72; /*
-													 * response block for
-													 * piggybacked messages
-													 */
+	static final int op_response_piggyback = 72; /* response block for piggybacked messages */
 
 	static final int op_start_and_receive = 73;
 
 	static final int op_start_send_and_receive = 74;
 
-	static final int op_exec_immediate2 = 75; /*
-												 * execute an immediate
-												 * statement with msgs
-												 */
+	static final int op_exec_immediate2 = 75; /* execute an immediate statement with msgs */
 
 	static final int op_execute2 = 76; /* execute a statement with msgs */
 
 	static final int op_insert = 77;
 
-	static final int op_sql_response = 78; /*
-											 * response from execute; exec
-											 * immed; insert
-											 */
+	static final int op_sql_response = 78; /* response from execute; exec immed; insert */
 
 	static final int op_transact = 79;
 
@@ -719,7 +705,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				} catch (IOException ex2) {
 					throw new GDSException(ISCConstants.isc_network_error);
 				}
-			} // end of finally
+			}
 		}
 	}
 
@@ -805,7 +791,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			tr.setDbHandle(db);
 			tr.setState(AbstractIscTrHandle.TRANSACTIONSTARTED);
 			// db.rdb_transactions.addElement(tr);
-		}// end synch on db
+		}
 
 	}
 
@@ -854,8 +840,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			tr.setDbHandle(db);
 			tr.setState(AbstractIscTrHandle.TRANSACTIONSTARTED);
 			// db.rdb_transactions.addElement(tr);
-		}// end synch on db
-
+		}
 	}
 
 	public void iscCommitTransaction(IscTrHandle tr_handle) throws GDSException {
@@ -1026,10 +1011,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			} finally {
 				tr.setState(AbstractIscTrHandle.NOTRANSACTION);
 				tr.unsetDbHandle();
-			} // end of finally
-
+			}
 		}
-
 	}
 
 	public void iscRollbackRetaining(IscTrHandle tr_handle) throws GDSException {
@@ -1455,14 +1438,14 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		// an execute procedure statement.
 		if (stmt.isSingletonResult() && option == ISCConstants.DSQL_close) {
 			return;
-		} // end of if ()
+		}
 
 		synchronized (db) {
 			try {
 				if (!db.isValid()) {
 					// too late, socket has been closed
 					return;
-				} // end of if ()
+				}
 
 				if (debug)
 					log.debug("op_free_statement ");
@@ -2609,87 +2592,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	// inner classes
 
-	protected static class DbAttachInfo {
-		private String server = "localhost";
-
-		private int port = 3050;
-
-		private String fileName;
-
-		public DbAttachInfo(String connectInfo) throws GDSException {
-
-			if (connectInfo == null) {
-				throw new GDSException("Connection string missing");
-			}
-
-			// allows standard syntax //host:port/....
-			// and old fb syntax host/port:....
-			connectInfo = connectInfo.trim();
-			char hostSepChar;
-			char portSepChar;
-			if (connectInfo.startsWith("//")) {
-				connectInfo = connectInfo.substring(2);
-				hostSepChar = '/';
-				portSepChar = ':';
-			} else {
-				hostSepChar = ':';
-				portSepChar = '/';
-			}
-
-			int sep = connectInfo.indexOf(hostSepChar);
-			if (sep == 0 || sep == connectInfo.length() - 1) {
-				throw new GDSException("Bad connection string: '" + hostSepChar
-						+ "' at beginning or end of:" + connectInfo
-						+ ISCConstants.isc_bad_db_format);
-			} else if (sep > 0) {
-				server = connectInfo.substring(0, sep);
-				fileName = connectInfo.substring(sep + 1);
-				int portSep = server.indexOf(portSepChar);
-				if (portSep == 0 || portSep == server.length() - 1) {
-					throw new GDSException("Bad server string: '" + portSepChar
-							+ "' at beginning or end of: " + server
-							+ ISCConstants.isc_bad_db_format);
-				} else if (portSep > 0) {
-					port = Integer.parseInt(server.substring(portSep + 1));
-					server = server.substring(0, portSep);
-				}
-			} else if (sep == -1) {
-				fileName = connectInfo;
-			} // end of if ()
-
-		}
-
-		public DbAttachInfo(String server, Integer port, String fileName)
-				throws GDSException {
-			if (fileName == null || fileName.equals("")) {
-				throw new GDSException("null filename in DbAttachInfo");
-			} // end of if ()
-			if (server != null) {
-				this.server = server;
-			} // end of if ()
-			if (port != null) {
-				this.port = port.intValue();
-			} // end of if ()
-			this.fileName = fileName;
-			if (fileName == null || fileName.equals("")) {
-				throw new GDSException("null filename in DbAttachInfo");
-			} // end of if ()
-
-		}
-
-		public String getServer() {
-			return server;
-		}
-
-		public int getPort() {
-			return port;
-		}
-
-		public String getFileName() {
-			return fileName;
-		}
-	}
-
 	public DatabaseParameterBuffer createDatabaseParameterBuffer() {
 		return new DatabaseParameterBufferImp();
 	}
@@ -3384,7 +3286,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 //                } catch (IOException ex2) {
 //                    throw new GDSException(ISCConstants.isc_network_error);
 //                }
-            } // end of finally
+            }
         //}
     }
     
