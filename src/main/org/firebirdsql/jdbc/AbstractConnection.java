@@ -449,7 +449,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      * @see #setAutoCommit
      */
-    public boolean getAutoCommit() throws SQLException {
+    public synchronized boolean getAutoCommit() throws SQLException {
         if (isClosed())
             throw new FBSQLException("You cannot getAutomcommit on an " +
                     "unassociated closed connection.");
@@ -696,7 +696,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return the current TRANSACTION_* mode value
      * @exception SQLException if a database access error occurs
      */
-    public int getTransactionIsolation() throws SQLException {
+    public synchronized int getTransactionIsolation() throws SQLException {
         try 
         {
             return mc.getTransactionIsolation();
@@ -717,7 +717,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @return the first SQLWarning or null
      * @exception SQLException if a database access error occurs
      */
-    public SQLWarning getWarnings() throws SQLException {
+    public synchronized SQLWarning getWarnings() throws SQLException {
         SQLWarning warning = firstWarning;
         SQLWarning iscWarning = getIscWarnings();
         
@@ -739,7 +739,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      *
      * @exception SQLException if a database access error occurs
      */
-    public void clearWarnings() throws SQLException {
+    public synchronized void clearWarnings() throws SQLException {
 		 firstWarning = null;
          clearIscWarnings();
     }
