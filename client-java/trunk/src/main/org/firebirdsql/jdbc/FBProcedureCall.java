@@ -373,14 +373,12 @@ public class FBProcedureCall implements Cloneable {
                         FBSQLException.SQL_STATE_WRONG_PARAM_NUM);
             }
             
-            if (param != null) {
-                if (!firstParam)
-                    paramsBuffer.append(", ");
-                else
-                    firstParam = false;
-                
-                paramsBuffer.append(param.getParamValue());
-            }
+            if (!firstParam)
+                paramsBuffer.append(", ");
+            else
+                firstParam = false;
+            
+            paramsBuffer.append(param.getParamValue());
         }
         
         if (paramsBuffer.length() > 0)
