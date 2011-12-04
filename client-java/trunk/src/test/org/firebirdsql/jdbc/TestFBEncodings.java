@@ -765,15 +765,19 @@ public class TestFBEncodings extends FBTestBase {
         }
     }
 
-    private static final byte[] OCTETS_DATA = new byte[] {
+    protected static final byte[] OCTETS_DATA = new byte[] {
         1, 2, 3, 4, 5, 6, 0, 0, 7
     };
 
     // Full length of the octets fields (10 bytes)
-    private static final byte[] OCTETS_DATA_FULL_LENGTH = new byte[10];
+    protected static final byte[] OCTETS_DATA_FULL_LENGTH = new byte[10];
     static {
         Arrays.fill(OCTETS_DATA_FULL_LENGTH, (byte) 32);
         System.arraycopy(OCTETS_DATA, 0, OCTETS_DATA_FULL_LENGTH, 0, OCTETS_DATA.length);
+    }
+    
+    protected byte[] getOctetsFullLength() {
+        return OCTETS_DATA_FULL_LENGTH;
     }
 
     public void testOctets() throws Exception {
@@ -815,9 +819,9 @@ public class TestFBEncodings extends FBTestBase {
             byte[] varcharBytes = rs.getBytes(2);
             byte[] noneBytes = rs.getBytes(3);
 
-            assertTrue("Value should be correct.", Arrays.equals(OCTETS_DATA_FULL_LENGTH, charBytes));
+            assertTrue("Value should be correct.", Arrays.equals(getOctetsFullLength(), charBytes));
             assertTrue("Value should be correct.", Arrays.equals(OCTETS_DATA, varcharBytes));
-            assertTrue("Value should be correct.", Arrays.equals(OCTETS_DATA_FULL_LENGTH, noneBytes));
+            assertTrue("Value should be correct.", Arrays.equals(getOctetsFullLength(), noneBytes));
 
             stmt.close();
         } finally {

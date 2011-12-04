@@ -135,4 +135,10 @@ public class TestFBLongVarCharEncodings extends TestFBEncodings {
             connection.close();
         }
     }
+    
+    protected byte[] getOctetsFullLength() {
+        // This is to make sure testOctets() works correctly as 
+    	// the datatype of the fields is different then defined in TestFBEncodings
+        return OCTETS_DATA;
+    }
 }
