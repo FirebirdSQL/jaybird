@@ -102,20 +102,28 @@ public class FBClob implements Clob {
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
 	 */
 	public String getSubString(long pos, int length) throws SQLException {
-		StringBuffer stringBuffer = new StringBuffer();
 		Reader reader = getCharacterStream();
-		char[] buffer = new char[1024];
-		int n = 0;
 		try {
-			reader.skip(pos - 1); // 1-based index
-			while ((n = reader.read(buffer)) != -1) {
-				stringBuffer.append(String.valueOf(buffer, 0, Math.min(n, length)));
+		    long toSkip = pos - 1; // 1-based index
+		    while (toSkip > 0) {
+		        toSkip -= reader.skip(toSkip);
+		    }
+		    int n;
+		    char[] buffer = new char[1024];
+		    StringBuffer stringBuffer = new StringBuffer();
+			while (length > 0 && (n = reader.read(buffer, 0, Math.min(length, buffer.length))) != -1) {
+				stringBuffer.append(buffer, 0, Math.min(n, length));
 				length -= n;
 			}
-			reader.close();
 			return stringBuffer.toString();
 		} catch (IOException e) {
 			throw new FBSQLException(e);
+		} finally {
+			try {
+                reader.close();
+            } catch (IOException e) {
+                throw new FBSQLException(e);
+            }
 		}
 	}
 
