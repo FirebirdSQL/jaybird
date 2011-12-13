@@ -80,7 +80,7 @@ public class TestReconnectTransaction extends FBTestBase {
         if (getGdsType() != GDSType.getType("PURE_JAVA"))
             fail("This test case does not work with JNI connections.");
         
-        AbstractIscDbHandle dbHandle1 = (AbstractIscDbHandle)gds.createIscDbHandle();
+        IscDbHandle dbHandle1 = gds.createIscDbHandle();
         gds.iscAttachDatabase(getdbpath(DB_NAME), dbHandle1, dpb);
         
         GDSHelper gdsHelper1 = new GDSHelper(gds, dpb, dbHandle1, null);
@@ -98,7 +98,7 @@ public class TestReconnectTransaction extends FBTestBase {
         if (dbHandle1 instanceof isc_db_handle_impl)
             ((isc_db_handle_impl)dbHandle1).out.close();
         
-        AbstractIscDbHandle dbHandle2 = (AbstractIscDbHandle)gds.createIscDbHandle();
+        IscDbHandle dbHandle2 = gds.createIscDbHandle();
         gds.iscAttachDatabase(getdbpath(DB_NAME), dbHandle2, dpb);
         
         AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();

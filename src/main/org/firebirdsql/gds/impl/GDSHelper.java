@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -22,7 +24,6 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package org.firebirdsql.gds.impl;
 
 import java.sql.SQLException;
@@ -59,7 +60,7 @@ public class GDSHelper {
     private static final Logger log = LoggerFactory.getLogger(GDSHelper.class, false);
 
     private GDS gds;
-    private AbstractIscDbHandle currentDbHandle;
+    private IscDbHandle currentDbHandle;
     private AbstractIscTrHandle currentTr;
     /**
      * Needed from mcf when killing a db handle when a new tx cannot be started.
@@ -73,7 +74,7 @@ public class GDSHelper {
     /**
      * Create instance of this class.
      */
-    public GDSHelper(GDS gds, DatabaseParameterBuffer dpb, AbstractIscDbHandle dbHandle, GDSHelperErrorListener listener) {
+    public GDSHelper(GDS gds, DatabaseParameterBuffer dpb, IscDbHandle dbHandle, GDSHelperErrorListener listener) {
         this.gds = gds;
         this.dpb = dpb;
         this.currentDbHandle = dbHandle;
