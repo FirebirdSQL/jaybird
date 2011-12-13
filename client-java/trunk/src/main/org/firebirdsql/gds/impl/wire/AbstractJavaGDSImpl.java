@@ -451,7 +451,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 				try {
 					receiveResponse(db, -1);
-					db.setRdb_id(db.getResp_object());
+					db.setRdbId(db.getResp_object());
 				} catch (GDSException ge) {
 					disconnect(db);
 					throw ge;
@@ -511,7 +511,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				if (debug)
 					log.debug("op_info_database ");
 				db.out.writeInt(op_info_database);
-				db.out.writeInt(db.getRdb_id());
+				db.out.writeInt(db.getRdbId());
 				db.out.writeInt(0);
 				db.out.writeBuffer(items);
 				db.out.writeInt(buffer_length);
@@ -690,7 +690,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				if (debug)
 					log.debug("op_detach ");
 				db.out.writeInt(op_detach);
-				db.out.writeInt(db.getRdb_id());
+				db.out.writeInt(db.getRdbId());
 				db.out.writeInt(op_disconnect);
 				db.out.flush();
 				if (debug)
@@ -724,7 +724,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				if (debug)
 					log.debug("op_drop_database ");
 				db.out.writeInt(op_drop_database);
-				db.out.writeInt(db.getRdb_id());
+				db.out.writeInt(db.getRdbId());
 				db.out.flush();
 				if (debug)
 					log.debug("sent");
@@ -772,7 +772,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				if (debug)
 					log.debug("op_transaction ");
 				db.out.writeInt(op_transaction);
-				db.out.writeInt(db.getRdb_id());
+				db.out.writeInt(db.getRdbId());
 
 				db.out.writeTyped(ISCConstants.isc_tpb_version3, tpbImpl);
 				// db.out.writeSet(ISCConstants.isc_tpb_version3, tpb);
@@ -820,7 +820,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				db.out.writeInt(op_reconnect);
 
 				// TODO check if sending db handle is needed, most likely not
-				db.out.writeInt(db.getRdb_id());
+				db.out.writeInt(db.getRdbId());
 				byte[] buf = new byte[4];
 				for (int i = 0; i < 4; i++) {
 					buf[i] = (byte) (transactionId >>> (i * 8));
@@ -1098,7 +1098,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				if (debug)
 					log.debug("op_allocate_statement ");
 				db.out.writeInt(op_allocate_statement);
-				db.out.writeInt(db.getRdb_id());
+				db.out.writeInt(db.getRdbId());
 				db.out.flush();
 				if (debug)
 					log.debug("sent");
@@ -2965,7 +2965,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                     
                     db.out.writeInt(op_connect_request);
                     db.out.writeInt(1);  // Connection type
-                    db.out.writeInt(db.getRdb_id());
+                    db.out.writeInt(db.getRdbId());
                     db.out.writeInt(0);
                     db.out.flush();
                    
@@ -3046,7 +3046,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
             synchronized (db){
                 try {
                     db.out.writeInt(op_cancel_events);
-                    db.out.writeInt(db.getRdb_id());
+                    db.out.writeInt(db.getRdbId());
                     db.out.writeInt(handleImp.getLocalId());
                     db.out.flush();
                     receiveResponse(db, -1);
