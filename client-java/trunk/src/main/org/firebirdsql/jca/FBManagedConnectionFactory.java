@@ -726,7 +726,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                 // remove heuristic data from rdb$transactions
                 try {
                     String query = "delete from rdb$transactions where rdb$transaction_id = " + fbTransactionId;
-                    GDSHelper gdsHelper = new GDSHelper(gds, getDatabaseParameterBuffer(), (AbstractIscDbHandle)dbHandle, null);
+                    GDSHelper gdsHelper = new GDSHelper(gds, getDatabaseParameterBuffer(), dbHandle, null);
 
                     AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();
                     gds.iscStartTransaction(trHandle2, gdsHelper.getCurrentDbHandle(), getDefaultTpb().getTransactionParameterBuffer());
@@ -737,7 +737,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                     stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
                     gds.iscDsqlAllocateStatement(gdsHelper.getCurrentDbHandle(), stmtHandle2);
                     
-                    GDSHelper gdsHelper2 = new GDSHelper(gds, gdsHelper.getDatabaseParameterBuffer(), (AbstractIscDbHandle) gdsHelper.getCurrentDbHandle(), null);
+                    GDSHelper gdsHelper2 = new GDSHelper(gds, gdsHelper.getDatabaseParameterBuffer(), gdsHelper.getCurrentDbHandle(), null);
                     gdsHelper2.setCurrentTrHandle(trHandle2);
 
                     gdsHelper2.prepareStatement(stmtHandle2, query, false);

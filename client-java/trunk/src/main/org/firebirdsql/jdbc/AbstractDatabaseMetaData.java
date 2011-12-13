@@ -25,7 +25,6 @@ import java.util.*;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractGDS;
-import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.logging.Logger;
@@ -5466,7 +5465,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs 
      */
     public int getDatabaseMajorVersion() throws SQLException {
-        return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getDatabaseProductMajorVersion();
+        return gdsHelper.getIscDBHandle().getDatabaseProductMajorVersion();
     }
 
     /**
@@ -5475,7 +5474,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs 
      */
     public int getDatabaseMinorVersion() throws SQLException {
-        return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getDatabaseProductMinorVersion();
+        return gdsHelper.getIscDBHandle().getDatabaseProductMinorVersion();
     }
     
     /**
@@ -5484,7 +5483,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public int getOdsMajorVersion() throws SQLException {
-    	return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getODSMajorVersion();
+    	return gdsHelper.getIscDBHandle().getODSMajorVersion();
     }
     
     /**
@@ -5493,7 +5492,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public int getOdsMinorVersion() throws SQLException {
-    	return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getODSMinorVersion();
+    	return gdsHelper.getIscDBHandle().getODSMinorVersion();
     }
 
     /**
