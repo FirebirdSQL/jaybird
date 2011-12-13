@@ -50,7 +50,7 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
     EventCoordinator eventCoordinator;
 
     public isc_db_handle_impl() {
-        resp_data = new byte[DEFAULT_RESP_DATA];
+        super(new byte[DEFAULT_RESP_DATA]);
     }
 
     protected void invalidate() throws IOException {
