@@ -53,7 +53,7 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
     private List rdb_warnings = new ArrayList();
     private int dialect;
     private int protocol;
-    protected GDSServerVersion serverVersion;
+    private GDSServerVersion serverVersion;
     private int ODSMajorVersion;
     private int ODSMinorVersion;
     private int resp_object;
