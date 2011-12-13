@@ -54,8 +54,96 @@ public interface IscDbHandle {
     List getWarnings();
     
     /**
+     * Add a warning from the server to this connection.
+     * 
+     * @param warning {@link GDSException} representing a server warning
+     */
+    void addWarning(GDSException warning);
+    
+    /**
      * Clear warning list associated with this connection.
      */
     void clearWarnings();
+    
+    /**
+     * Get the major version number of the database product to which this
+     * handle is attached.
+     *
+     * @return The major product version number
+     */
+    int getDatabaseProductMajorVersion();
+
+    /**
+     * Get the minor version number of the database product to which this
+     * handle is attached.
+     *
+     * @return The minor product version number
+     */
+    int getDatabaseProductMinorVersion();
+
+    /**
+     * Get the product name for the database to which this handle is attached.
+     *
+     * @return The product name of the database
+     */
+    String getDatabaseProductName();
+
+    /**
+     * Get the product version for the database to which this handle 
+     * is attached.
+     *
+     * @return The product version of the database
+     */
+    String getDatabaseProductVersion();
+
+    /**
+     * Get the Firebird dialect that is being used with this handle.
+     *
+     * @return The dialect being used
+     */
+    int getDialect();
+    
+    void setDialect(int value);
+    
+    /**
+     * Get the Firebird protocol version that is used for this handle
+     * 
+     * @return Protocol version number
+     */
+    int getProtocol();
+
+    /**
+     * @return the major ODS version of the database. 
+     */
+    int getODSMajorVersion();
+    
+    void setODSMajorVersion(int value);
+
+    /**
+     * @return the minor ODS version of the database.
+     */
+    int getODSMinorVersion();
+    
+    void setODSMinorVersion(int value);
+
+    /**
+     * @return database server version.
+     */
+    String getVersion();
+    
+    /**
+     * 
+     * @param version Version string
+     * @throws GDSException For failures to parse or process the version string
+     */
+    void setVersion(String version) throws GDSException;
+
+    /**
+     * Retrieve whether this handle is valid.
+     *
+     * @return <code>true</code> if this handle is valid, 
+     *         <code>false</code> otherwise
+     */
+    boolean isValid();
 }
 

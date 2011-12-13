@@ -227,9 +227,9 @@ public class TestGds extends SimpleFBTestBase {
         gds.iscAttachDatabase(getdbpath(dbName), db2, c);
 
         if (log != null)
-            log.info("test- rdb_id1: " + ((isc_db_handle_impl) db1).getRdb_id());
+            log.info("test- rdb_id1: " + ((isc_db_handle_impl) db1).getRdbId());
         if (log != null)
-            log.info("test- rdb_id2: " + ((isc_db_handle_impl) db2).getRdb_id());
+            log.info("test- rdb_id2: " + ((isc_db_handle_impl) db2).getRdbId());
         if (log != null) log.info("test- isc_detach_database");
         gds.iscDetachDatabase(db1);
         gds.iscDetachDatabase(db2);
@@ -248,9 +248,9 @@ public class TestGds extends SimpleFBTestBase {
         db2 = createDatabase(dbName2);
 
         if (log != null)
-            log.info("test- rdb_id1: " + ((isc_db_handle_impl) db1).getRdb_id());
+            log.info("test- rdb_id1: " + ((isc_db_handle_impl) db1).getRdbId());
         if (log != null)
-            log.info("test- rdb_id2: " + ((isc_db_handle_impl) db2).getRdb_id());
+            log.info("test- rdb_id2: " + ((isc_db_handle_impl) db2).getRdbId());
         t1 = startTransaction(db1);
         doSQLImmed(db1, t1,
             "create table r1 (col1 smallint not null primary key)");
@@ -275,8 +275,8 @@ public class TestGds extends SimpleFBTestBase {
      * gds.isc_attach_database(dbName, db2, c);
      * 
      * if (log!=null) log.info("test- rdb_id1: " +
-     * ((isc_db_handle_impl)db1).getRdb_id()); if (log!=null)
-     * log.info("test- rdb_id2: " + ((isc_db_handle_impl)db2).getRdb_id()); t1 =
+     * ((isc_db_handle_impl)db1).getRdbId()); if (log!=null)
+     * log.info("test- rdb_id2: " + ((isc_db_handle_impl)db2).getRdbId()); t1 =
      * startTransaction(db1); doSQLImmed(db1, t1,
      * "create table r1 (col1 smallint not null primary key)");
      * ((isc_tr_handle)t1).rtr_rdb = (isc_db_handle_impl)db2; commit(t1); //on
