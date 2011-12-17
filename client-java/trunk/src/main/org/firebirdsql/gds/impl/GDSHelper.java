@@ -685,6 +685,31 @@ public class GDSHelper {
         /** @todo add check if mc is not null */
         return currentDbHandle.getDatabaseProductMinorVersion();
     }
+    
+    /**
+     * Compares the version of the this database to the specified major and
+     * minor version.
+     * <p>
+     * This method follows the semantics of {@link Comparable}: returns a
+     * negative value if the version of this database connection is smaller than
+     * the supplied arguments, 0 if they are equal or positive if its bigger.
+     * </p>
+     * 
+     * @param major
+     *            Major version to compare
+     * @param minor
+     *            Minor version to compare
+     * @return a negative integer, zero, or a positive integer as this database
+     *         version is less than, equal to, or greater than the specified
+     *         major and minor version
+     */
+    public int compareToVersion(int major, int minor) {
+        int differenceMajor = getDatabaseProductMajorVersion() - major;
+        if (differenceMajor == 0) {
+            return getDatabaseProductMinorVersion() - minor;
+        }
+        return differenceMajor;
+    }
 
     /**
      * Get the database login name of the user that we're connected as.
