@@ -164,13 +164,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public  boolean nullsAreSortedHigh() throws SQLException {
         // in Firebird 1.5.x NULLs are always sorted at the end
         // in Firebird 2.0.x NULLs are sorted low
-        if (getDatabaseMajorVersion() == 1) {
-            return false;
-        } else
-        if (getDatabaseMajorVersion() >= 2) {
-            return false;
-        } else
-            throw new FBDriverNotCapableException();
+        return false;
     }
 
 
@@ -183,13 +177,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public  boolean nullsAreSortedLow() throws SQLException {
         // in Firebird 1.5.x NULLs are always sorted at the end
         // in Firebird 2.0.x NULLs are sorted low
-        if (getDatabaseMajorVersion() == 1) {
-            return false;
-        } else
-        if (getDatabaseMajorVersion() >= 2) {
-            return true;
-        } else
-            throw new FBDriverNotCapableException();
+        return gdsHelper.compareToVersion(2, 0) >= 0;
     }
 
 
@@ -202,13 +190,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public  boolean nullsAreSortedAtStart() throws SQLException {
         // in Firebird 1.5.x NULLs are always sorted at the end
         // in Firebird 2.0.x NULLs are sorted low
-        if (getDatabaseMajorVersion() == 1) {
-            return false;
-        } else
-        if (getDatabaseMajorVersion() >= 2) {
-            return false;
-        } else
-            throw new FBDriverNotCapableException();
+        return false;
     }
 
 
@@ -221,13 +203,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public  boolean nullsAreSortedAtEnd() throws SQLException {
         // in Firebird 1.5.x NULLs are always sorted at the end
         // in Firebird 2.0.x NULLs are sorted low
-        if (getDatabaseMajorVersion() == 1) {
-            return true;
-        } else
-        if (getDatabaseMajorVersion() >= 2) {
-            return false;
-        } else
-            throw new FBDriverNotCapableException();
+        return gdsHelper.compareToVersion(2, 0) < 0;
     }
 
 
@@ -1589,7 +1565,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxIndexLength() throws SQLException {
-        if (getDatabaseMajorVersion() == 1) {
+        if (gdsHelper.compareToVersion(2, 0) < 0) {
             return 252; // See http://www.firebirdsql.org/en/firebird-technical-specifications/
         } else {
             return 0; // 1/4 of page size, maybe retrieve page size and use that?
@@ -1637,7 +1613,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxRowSize() throws SQLException {
-        if ((getDatabaseMajorVersion() == 1 && getDatabaseMinorVersion() >= 5) || getDatabaseMajorVersion() >= 2)
+        if (gdsHelper.compareToVersion(1, 5) >= 0)
             return 65531;
         else 
             return 0;
@@ -5244,7 +5220,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public boolean supportsSavepoints() throws SQLException {
-        return (getDatabaseMajorVersion() == 1 && getDatabaseMinorVersion() >= 5) || getDatabaseMajorVersion() >= 2;
+        return gdsHelper.compareToVersion(1, 5) >= 0;
     }
 
     /**
@@ -5465,7 +5441,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs 
      */
     public int getDatabaseMajorVersion() throws SQLException {
-        return gdsHelper.getIscDBHandle().getDatabaseProductMajorVersion();
+        return gdsHelper.getDatabaseProductMajorVersion();
     }
 
     /**
@@ -5474,7 +5450,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs 
      */
     public int getDatabaseMinorVersion() throws SQLException {
-        return gdsHelper.getIscDBHandle().getDatabaseProductMinorVersion();
+        return gdsHelper.getDatabaseProductMinorVersion();
     }
     
     /**
