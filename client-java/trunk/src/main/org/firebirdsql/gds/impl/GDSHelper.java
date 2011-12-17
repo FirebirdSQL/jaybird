@@ -687,7 +687,7 @@ public class GDSHelper {
     }
     
     /**
-     * Compares the version of the this database to the specified major and
+     * Compares the version of this database to the specified major and
      * minor version.
      * <p>
      * This method follows the semantics of {@link Comparable}: returns a
