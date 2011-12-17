@@ -35,8 +35,10 @@ public class FBSQLException extends SQLException {
 
     public static final String SQL_STATE_GENERAL_ERROR = "HY000";
     public static final String SQL_STATE_INVALID_COLUMN = "HY002";
-    public static final String SQL_STATE_INVALID_PARAM_TYPE = "HY105";
     public static final String SQL_STATE_INVALID_ARG_VALUE = "HY009";
+    public static final String SQL_STATE_INVALID_OPTION_IDENTIFIER = "HY092";
+    public static final String SQL_STATE_INVALID_PARAM_TYPE = "HY105";
+    
 
     public static final String SQL_STATE_WRONG_PARAM_NUM = "07001";
     public static final String SQL_STATE_NO_RESULT_SET = "07005";
