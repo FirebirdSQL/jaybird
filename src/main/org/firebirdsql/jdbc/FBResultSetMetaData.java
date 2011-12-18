@@ -18,7 +18,6 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 import java.math.BigDecimal;
@@ -32,12 +31,12 @@ import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
- * Implementation of {@link ResultSetMetaData} interface.
+ * Implementation of {@link java.sql.ResultSetMetaData} interface.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public abstract class AbstractResultSetMetaData implements FirebirdResultSetMetaData {
+public class FBResultSetMetaData implements FirebirdResultSetMetaData {
 
     private final XSQLVAR[] xsqlvars;
     private Map extendedInfo;
@@ -53,7 +52,7 @@ public abstract class AbstractResultSetMetaData implements FirebirdResultSetMeta
      * TODO Need another constructor for metadata from constructed
      * result set, where we supply the ext field info.
      */
-    protected AbstractResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
+    protected FBResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
     }
