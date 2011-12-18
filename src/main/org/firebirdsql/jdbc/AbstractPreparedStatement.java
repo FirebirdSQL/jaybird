@@ -254,6 +254,18 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         getField(parameterIndex).setBinaryStream(inputStream, length);
         isParamSet[parameterIndex - 1] = true;
     }
+    
+    public void setBinaryStream(int parameterIndex, InputStream x, long length)
+            throws SQLException {
+        if (length > Integer.MAX_VALUE)
+            throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
+        setBinaryStream(parameterIndex, x, (int)length);
+    }
+
+    public void setBinaryStream(int parameterIndex, InputStream x)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
     /**
      * Set the designated parameter to the given byte array.
@@ -505,7 +517,6 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
             throw new FBSQLException("Invalid column index.",
                     FBSQLException.SQL_STATE_INVALID_COLUMN);
 
-        // isParamSet[columnIndex-1] = true;
         return fields[columnIndex - 1];
     }
 
@@ -533,7 +544,16 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
     public void setAsciiStream(int parameterIndex, InputStream x, int length)
             throws SQLException {
         setBinaryStream(parameterIndex, x, length);
-        isParamSet[parameterIndex - 1] = true;
+    }
+    
+    public void setAsciiStream(int parameterIndex, InputStream x, long length)
+            throws SQLException {
+        setBinaryStream(parameterIndex, x, length);
+    }
+
+    public void setAsciiStream(int parameterIndex, InputStream x)
+            throws SQLException {
+        setBinaryStream(parameterIndex, x);
     }
 
     /**
@@ -573,58 +593,11 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         throw new FBDriverNotCapableException();
     }
     
-    public void setAsciiStream(int parameterIndex, InputStream x, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setAsciiStream(int parameterIndex, InputStream x)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setBinaryStream(int parameterIndex, InputStream x, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setBinaryStream(int parameterIndex, InputStream x)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setBlob(int parameterIndex, InputStream inputStream, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setBlob(int parameterIndex, InputStream inputStream)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setCharacterStream(int parameterIndex, Reader reader,
-            long length) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setCharacterStream(int parameterIndex, Reader reader)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setClob(int parameterIndex, Reader reader, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setClob(int parameterIndex, Reader reader) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
     public void setNCharacterStream(int parameterIndex, Reader value,
             long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        if (length > Integer.MAX_VALUE)
+            throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
+        setNCharacterStream(parameterIndex, value, (int)length);
     }
 
     public void setNCharacterStream(int parameterIndex, Reader value)
@@ -634,7 +607,9 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
 
     public void setNClob(int parameterIndex, Reader reader, long length)
             throws SQLException {
-        throw new FBDriverNotCapableException();
+        if (length > Integer.MAX_VALUE)
+            throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
+        setNClob(parameterIndex, reader, (int)length);
     }
 
     public void setNClob(int parameterIndex, Reader reader) throws SQLException {
@@ -1033,6 +1008,18 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         isParamSet[parameterIndex - 1] = true;
     }
     
+    public void setCharacterStream(int parameterIndex, Reader reader,
+            long length) throws SQLException {
+        if (length > Integer.MAX_VALUE)
+            throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
+        setCharacterStream(parameterIndex, reader, (int)length);
+    }
+
+    public void setCharacterStream(int parameterIndex, Reader reader)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+    
     /**
      * Sets the designated parameter to the given
      * <code>REF(&lt;structured-type&gt;)</code> value.
@@ -1078,6 +1065,18 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         getField(parameterIndex).setBlob((FBBlob) blob);
         isParamSet[parameterIndex - 1] = true;
     }
+    
+    public void setBlob(int parameterIndex, InputStream inputStream, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setBlob(int parameterIndex, InputStream inputStream)
+            throws SQLException {
+        FBBlob blob = new FBBlob(gdsHelper, blobListener);
+        blob.copyStream(inputStream);
+        setBlob(parameterIndex, blob);
+    }
 
     /**
      * Sets the designated parameter to the given <code>Clob</code> object.
@@ -1102,6 +1101,17 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         
         getField(parameterIndex).setClob((FBClob) clob);
         isParamSet[parameterIndex - 1] = true;
+    }
+    
+    public void setClob(int parameterIndex, Reader reader, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setClob(int parameterIndex, Reader reader) throws SQLException {
+        FBClob clob = new FBClob(new FBBlob(gdsHelper, blobListener));
+        clob.copyCharacterStream(reader);
+        setClob(parameterIndex, clob);
     }
 
     /**
