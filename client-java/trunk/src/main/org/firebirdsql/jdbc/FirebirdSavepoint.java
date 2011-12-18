@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver, public Firebird-specific 
  * JDBC extensions.
  *
@@ -25,31 +27,12 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.SQLException;
+import java.sql.Savepoint;
 
 /**
  * Savepoint interface, corresponds to the <code>java.sql.Savepoint</code>
  * interface defined in JDBC 3.0, but can be used in JDBC 2.0 applications.
  */
-public interface FirebirdSavepoint {
-    
-    /**
-     * Retrieves the generated ID for the savepoint that this 
-     * <code>Savepoint</code> object represents.
-     * 
-     * @return the numeric ID of this savepoint
-     * 
-     * @exception SQLException if this is a named savepoint
-     */
-    int getSavepointId() throws SQLException;
-
-    /**
-     * Retrieves the name of the savepoint that this <code>Savepoint</code>
-     * object represents.
-     * 
-     * @return the name of this savepoint
-     * 
-     * @exception SQLException if this is an un-named savepoint
-     */
-    String getSavepointName() throws SQLException;
+public interface FirebirdSavepoint extends Savepoint {
+    /* Empty interface retained for backwards compatibility */
 }

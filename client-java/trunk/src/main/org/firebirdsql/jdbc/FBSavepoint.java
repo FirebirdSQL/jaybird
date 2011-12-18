@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -21,30 +23,24 @@ package org.firebirdsql.jdbc;
 import java.sql.SQLException;
 
 /**
- * Implementation of the {@link org.firebirdsql.jdbc.FirebirdSavepoint} 
- * interface. Subclasses might additionally implement {@link java.sql.Savepoint}
- * interface.
+ * Savepoint implementation.
+ * 
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public abstract class AbstractSavepoint implements FirebirdSavepoint {
+public class FBSavepoint implements FirebirdSavepoint {
     public static final String SAVEPOINT_ID_PREFIX = "svpt";
 
-    private boolean valid;
+    private boolean valid = true;
     private int savepointId;
     private String name;
     private String serverId;
-    
-    private AbstractSavepoint() {
-        this.valid = true;
-    }
     
     /**
      * Create instance of this class.
      * 
      * @param id ID of the savepoint.
      */
-    public AbstractSavepoint(int id) {
-        this();
-        
+    public FBSavepoint(int id) {
         this.savepointId = id;
         this.serverId = getSavepointServerId(id);
     }
@@ -54,9 +50,7 @@ public abstract class AbstractSavepoint implements FirebirdSavepoint {
      * 
      * @param name name of the savepoint.
      */
-    public AbstractSavepoint(String name) {
-        this();
-        
+    public FBSavepoint(String name) {
         this.name = name;
         this.serverId = getSavepointServerId(name);
     }
@@ -163,9 +157,9 @@ public abstract class AbstractSavepoint implements FirebirdSavepoint {
      */
     public boolean equals(Object obj) {
         if (obj == this) return true;
-        if (!(obj instanceof AbstractSavepoint)) return false;
+        if (!(obj instanceof FBSavepoint)) return false;
         
-        AbstractSavepoint that = (AbstractSavepoint)obj;
+        FBSavepoint that = (FBSavepoint)obj;
         
         return this.name == null ? 
             this.savepointId == that.savepointId : 
