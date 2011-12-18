@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
@@ -30,6 +31,7 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Savepoint;
 import java.sql.Statement;
+import java.sql.Struct;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -356,10 +358,27 @@ public abstract class AbstractConnection implements FirebirdConnection {
                 ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
     
+    public synchronized Blob createBlob() throws SQLException {
+        try {
+            return new FBBlob(getGDSHelper(), txCoordinator);
+        } catch(GDSException ex) {
+            throw new FBSQLException(ex);
+        }
+    }
     
     public Clob createClob() throws SQLException {
         FBBlob blob = (FBBlob)createBlob();
         return new FBClob(blob);
+    }
+    
+    public Struct createStruct(String typeName, Object[] attributes)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+    
+    public Array createArrayOf(String typeName, Object[] elements)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
     }
 
     /**
@@ -567,7 +586,18 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public boolean isClosed() {
         return mc == null;
     }
-
+    
+    public boolean isValid(int timeout) throws SQLException {
+        try {
+            GDS gds = getInternalAPIHandler();
+            
+            byte[] infoRequest = new byte[] {ISCConstants.isc_info_user_names, ISCConstants.isc_info_end};
+            gds.iscDatabaseInfo(getIscDBHandle(), infoRequest, 1024);
+            return true;
+        } catch(GDSException ex) {
+            return false;
+        }
+    }
 
     //======================================================================
     // Advanced features:
@@ -1269,6 +1299,22 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * Savepoint stuff.  
      */
     
+    public Savepoint setSavepoint() throws SQLException {
+        return (Savepoint)setFirebirdSavepoint();
+    }
+
+    public Savepoint setSavepoint(String name) throws SQLException {
+        return (Savepoint)setFirebirdSavepoint(name);
+    }
+
+    public void rollback(Savepoint savepoint) throws SQLException {
+        rollback((FirebirdSavepoint)savepoint);
+    }
+
+    public void releaseSavepoint(Savepoint savepoint) throws SQLException {
+        releaseSavepoint((FirebirdSavepoint)savepoint);
+    }
+    
     private int savepointCounter = 0;
     private LinkedList savepoints = new LinkedList();
 
@@ -1441,18 +1487,27 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return localTransaction;
     }
 
-    /**
-     * This non-interface method is included so you can
-     * actually get a blob object to use to write new data
-     * into a blob field without needing a preexisting blob
-     * to modify.
-    */
-    public synchronized Blob createBlob() throws SQLException {
-        try {
-            return new FBBlob(getGDSHelper(), txCoordinator);
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
-        }
+    // java.sql.Wrapper interface
+    
+    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        return iface != null && iface.isAssignableFrom(FBConnection.class);
+    }
+
+    public <T> T unwrap(Class<T> iface) throws SQLException {
+        if (!isWrapperFor(iface))
+            throw new FBDriverNotCapableException();
+        
+        return iface.cast(this);
+    }
+
+    public void setSchema(String schema) throws SQLException {
+        // Ignore: no schema support
+        checkValidity();
+    }
+
+    public String getSchema() throws SQLException {
+        checkValidity();
+        return null;
     }
 
     //package methods

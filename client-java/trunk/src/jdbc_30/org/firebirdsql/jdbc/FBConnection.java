@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -18,9 +20,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.*;
-import java.sql.SQLException;
-
 import org.firebirdsql.jca.FBManagedConnection;
 
 /**
@@ -39,70 +38,4 @@ public class FBConnection extends AbstractConnection {
     public FBConnection(FBManagedConnection mc) {
         super(mc);
     }
-
-    /**
-     * Creates an unnamed savepoint in the current transaction and 
-     * returns the new <code>Savepoint</code> object that represents it.
-     *
-     * @return the new <code>Savepoint</code> object
-     * @exception SQLException if a database access error occurs
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     * @since 1.4
-     */
-    public Savepoint setSavepoint() throws SQLException {
-        return (Savepoint)setFirebirdSavepoint();
-    }
-
-    /**
-     * Creates a savepoint with the given name in the current transaction
-     * and returns the new <code>Savepoint</code> object that represents it.
-     *
-     * @param name a <code>String</code> containing the name of the savepoint
-     * @return the new <code>Savepoint</code> object
-     * @exception SQLException if a database access error occurs
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     * @since 1.4
-     */
-    public Savepoint setSavepoint(String name) throws SQLException {
-        return (Savepoint)setFirebirdSavepoint(name);
-    }
-
-    /**
-     * Undoes all changes made after the given <code>Savepoint</code> object
-     * was set. 
-     * <P>
-     * This method should be used only when auto-commit has been disabled.
-     *
-     * @param savepoint the <code>Savepoint</code> object to roll back to
-     * @exception SQLException if a database access error occurs,
-     *            the <code>Savepoint</code> object is no longer valid,
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     * @see #rollback
-     * @since 1.4
-     */
-    public void rollback(Savepoint savepoint) throws SQLException {
-        rollback((FirebirdSavepoint)savepoint);
-    }
-
-    /**
-     * Removes the given <code>Savepoint</code> object from the current 
-     * transaction. Any reference to the savepoint after it have been removed 
-     * will cause an <code>SQLException</code> to be thrown.
-     *
-     * @param savepoint the <code>Savepoint</code> object to be removed
-     * @exception SQLException if a database access error occurs or
-     *            the given <code>Savepoint</code> object is not a valid 
-     *            savepoint in the current transaction
-     * @since 1.4
-     */
-    public void releaseSavepoint(Savepoint savepoint) throws SQLException {
-        releaseSavepoint((FirebirdSavepoint)savepoint);
-    }
-
 }
