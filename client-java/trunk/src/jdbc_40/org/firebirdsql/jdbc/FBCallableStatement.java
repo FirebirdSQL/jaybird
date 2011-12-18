@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  * 
  * Distributable under LGPL license. You may obtain a copy of the License at
@@ -46,46 +48,40 @@ public class FBCallableStatement extends AbstractCallableStatement {
     }
 
     public NClob getNClob(int parameterIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return getCurrentResultSet().getNClob(parameterIndex);
     }
 
     public NClob getNClob(String parameterName) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getNClob(findOutParameter(parameterName));
     }
 
     public RowId getRowId(int parameterIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return getCurrentResultSet().getRowId(parameterIndex);
     }
 
     public RowId getRowId(String parameterName) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getRowId(findOutParameter(parameterName));
     }
 
     public SQLXML getSQLXML(int parameterIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return getCurrentResultSet().getSQLXML(parameterIndex);
     }
 
     public SQLXML getSQLXML(String parameterName) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setNClob(int parameterIndex, NClob value) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getSQLXML(findOutParameter(parameterName));
     }
 
     public void setNClob(String parameterName, NClob value) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
-    public void setRowId(int parameterIndex, RowId x) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
     public void setRowId(String parameterName, RowId x) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 

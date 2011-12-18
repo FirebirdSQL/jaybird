@@ -46,8 +46,4 @@ public class FBCallableStatement extends AbstractCallableStatement {
         super(c, sql, rsType, rsConcurrency, rsHoldability, callableStatementMetaData,
                 statementListener, blobListener);
     }
-
-    protected ParameterMetaData buildParameterMetaData() throws SQLException {
-        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
-    }
 }

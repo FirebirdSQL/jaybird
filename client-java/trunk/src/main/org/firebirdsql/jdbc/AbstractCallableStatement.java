@@ -18,7 +18,6 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 import java.io.InputStream;
@@ -81,7 +80,7 @@ import org.firebirdsql.jdbc.field.TypeConversionException;
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public abstract class AbstractCallableStatement extends AbstractPreparedStatement implements CallableStatement, FirebirdCallableStatement {
+public abstract class AbstractCallableStatement extends FBPreparedStatement implements CallableStatement, FirebirdCallableStatement {
     
     static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE";
     static final String NATIVE_SELECT_COMMAND = "SELECT * FROM";
@@ -732,27 +731,12 @@ public abstract class AbstractCallableStatement extends AbstractPreparedStatemen
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getObject(parameterIndex);
     }
-
-    /**
-    *
-    * Gets the value of a JDBC <code>NUMERIC</code> parameter as a
-    * <code>java.math.BigDecimal</code> object with as many digits to the
-    * right of the decimal point as the value contains.
-    * @param parameterIndex the first parameter is 1, the second is 2,
-    * and so on
-    * @return the parameter value in full precision.  If the value is
-    * SQL <code>NULL</code>, the result is <code>null</code>.
-    * @exception SQLException if a database access error occurs
-    * @since 1.2
-    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-    */
-    public BigDecimal getBigDecimal(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
-        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getBigDecimal(parameterIndex);
+    
+    public Object getObject(String colName) throws SQLException {
+        return getObject(findOutParameter(colName));
     }
-
-    /**
+    
+   /**
     *
     * Returns an object representing the value of OUT parameter
     * <code>i</code> and uses <code>map</code> for the custom
@@ -775,8 +759,41 @@ public abstract class AbstractCallableStatement extends AbstractPreparedStatemen
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getObject(parameterIndex, map);
     }
+    
+    public Object getObject(String colName, Map map) throws SQLException {
+        return getObject(findOutParameter(colName), map);
+    }
+    
+    public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
+        assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return ((FBResultSet)getCurrentResultSet()).getObject(parameterIndex, type);
+    }
+
+    public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
+        return getObject(findOutParameter(parameterName), type);
+    }
 
     /**
+    *
+    * Gets the value of a JDBC <code>NUMERIC</code> parameter as a
+    * <code>java.math.BigDecimal</code> object with as many digits to the
+    * right of the decimal point as the value contains.
+    * @param parameterIndex the first parameter is 1, the second is 2,
+    * and so on
+    * @return the parameter value in full precision.  If the value is
+    * SQL <code>NULL</code>, the result is <code>null</code>.
+    * @exception SQLException if a database access error occurs
+    * @since 1.2
+    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
+    */
+    public BigDecimal getBigDecimal(int parameterIndex) throws SQLException {
+        assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return getCurrentResultSet().getBigDecimal(parameterIndex);
+    }
+    
+   /**
     *
     * Gets the value of a JDBC <code>REF(&lt;structured-type&gt;)</code>
     * parameter as a {@link Ref} object in the Java programming language.
@@ -936,119 +953,117 @@ public abstract class AbstractCallableStatement extends AbstractPreparedStatemen
     }
 
     public String getString(String colName) throws SQLException {
-        return getString(getCurrentResultSet().findColumn(colName));
+        return getString(findOutParameter(colName));
     }
 
     public boolean getBoolean(String colName) throws SQLException {
-        return getBoolean(getCurrentResultSet().findColumn(colName));
+        return getBoolean(findOutParameter(colName));
     }
 
     public byte getByte(String colName) throws SQLException {
-        return getByte(getCurrentResultSet().findColumn(colName));
+        return getByte(findOutParameter(colName));
     }
 
     public short getShort(String colName) throws SQLException {
-        return getShort(getCurrentResultSet().findColumn(colName));
+        return getShort(findOutParameter(colName));
     }
 
     public int getInt(String colName) throws SQLException {
-        return getInt(getCurrentResultSet().findColumn(colName));
+        return getInt(findOutParameter(colName));
     }
 
     public long getLong(String colName) throws SQLException {
-        return getLong(getCurrentResultSet().findColumn(colName));
+        return getLong(findOutParameter(colName));
     }
 
     public float getFloat(String colName) throws SQLException {
-        return getFloat(getCurrentResultSet().findColumn(colName));
+        return getFloat(findOutParameter(colName));
     }
 
     public double getDouble(String colName) throws SQLException {
-        return getDouble(getCurrentResultSet().findColumn(colName));
+        return getDouble(findOutParameter(colName));
     }
 
     public byte[] getBytes(String colName) throws SQLException {
-        return getBytes(getCurrentResultSet().findColumn(colName));
+        return getBytes(findOutParameter(colName));
     }
 
     public Date getDate(String colName) throws SQLException {
-        return getDate(getCurrentResultSet().findColumn(colName));
+        return getDate(findOutParameter(colName));
     }
 
     public Time getTime(String colName) throws SQLException {
-        return getTime(getCurrentResultSet().findColumn(colName));
+        return getTime(findOutParameter(colName));
     }
 
     public Timestamp getTimestamp(String colName) throws SQLException {
-        return getTimestamp(getCurrentResultSet().findColumn(colName));
-    }
-
-    public Object getObject(String colName) throws SQLException {
-        return getObject(getCurrentResultSet().findColumn(colName));
+        return getTimestamp(findOutParameter(colName));
     }
 
     public BigDecimal getBigDecimal(String colName) throws SQLException {
-        return getBigDecimal(getCurrentResultSet().findColumn(colName));
-    }
-
-    public Object getObject(String colName, Map map) throws SQLException {
-        return getObject(getCurrentResultSet().findColumn(colName), map);
+        return getBigDecimal(findOutParameter(colName));
     }
 
     public Ref getRef(String colName) throws SQLException {
-        return getRef(getCurrentResultSet().findColumn(colName));
+        return getRef(findOutParameter(colName));
     }
 
     public Blob getBlob(String colName) throws SQLException {
-        return getBlob(getCurrentResultSet().findColumn(colName));
+        return getBlob(findOutParameter(colName));
     }
 
     public Clob getClob(String colName) throws SQLException {
-        return getClob(getCurrentResultSet().findColumn(colName));
+        return getClob(findOutParameter(colName));
     }
 
     public Array getArray(String colName) throws SQLException {
-        return getArray(getCurrentResultSet().findColumn(colName));
+        return getArray(findOutParameter(colName));
     }
 
     public Date getDate(String colName, Calendar cal) throws SQLException {
-        return getDate(getCurrentResultSet().findColumn(colName), cal);
+        return getDate(findOutParameter(colName), cal);
     }
 
     public Time getTime(String colName, Calendar cal) throws SQLException {
-        return getTime(getCurrentResultSet().findColumn(colName), cal);
+        return getTime(findOutParameter(colName), cal);
     }
 
     public Timestamp getTimestamp(String colName, Calendar cal) throws SQLException {
-        return getTimestamp(getCurrentResultSet().findColumn(colName), cal);
+        return getTimestamp(findOutParameter(colName), cal);
     }
 
     public URL getURL(String colName) throws SQLException {
-        return getURL(getCurrentResultSet().findColumn(colName));
+        return getURL(findOutParameter(colName));
     }
 
     public Reader getCharacterStream(int parameterIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return getCurrentResultSet().getCharacterStream(parameterIndex);
     }
 
     public Reader getCharacterStream(String parameterName) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getCharacterStream(findOutParameter(parameterName));
     }
 
     public Reader getNCharacterStream(int parameterIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return ((FBResultSet)getCurrentResultSet()).getNCharacterStream(parameterIndex);
     }
 
     public Reader getNCharacterStream(String parameterName) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getNCharacterStream(findOutParameter(parameterName));
     }
 
     public String getNString(int parameterIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        assertHasData(getCurrentResultSet());
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return ((FBResultSet)getCurrentResultSet()).getNString(parameterIndex);
     }
 
     public String getNString(String parameterName) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getNString(findOutParameter(parameterName));
     }
 
     public void setAsciiStream(String parameterName, InputStream x, long length)
@@ -1236,69 +1251,6 @@ public abstract class AbstractCallableStatement extends AbstractPreparedStatemen
         throw new FBDriverNotCapableException();
     }
 
-    public void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setAsciiStream(int parameterIndex, InputStream x) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setBinaryStream(int parameterIndex, InputStream x, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setBlob(int parameterIndex, InputStream inputStream, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setCharacterStream(int parameterIndex, Reader reader, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setClob(int parameterIndex, Reader reader) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setNCharacterStream(int parameterIndex, Reader value, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setNClob(int parameterIndex, Reader reader, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setNClob(int parameterIndex, Reader reader) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setNString(int parameterIndex, String value) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
     public void setURL(int parameterIndex, URL x) throws SQLException {
         throw new FBDriverNotCapableException();
     }
@@ -1381,10 +1333,6 @@ public abstract class AbstractCallableStatement extends AbstractPreparedStatemen
 
     public void setArray(int i, Array x) throws SQLException {
         procedureCall.getInputParam(i).setValue(x);
-    }
-
-    public void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException {
-        setBinaryStream(parameterIndex, x, length);
     }
 
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
@@ -1499,22 +1447,23 @@ public abstract class AbstractCallableStatement extends AbstractPreparedStatemen
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
-    public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
-    }
-
-    public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
-    }
-
     /**
      * Set the selectability of this stored procedure from RDB$PROCEDURE_TYPE
      * @throws SQLException 
      */
     private void setSelectabilityAutomatically(StoredProcedureMetaData storedProcMetaData) throws SQLException {
-        this.selectableProcedure = storedProcMetaData.isSelectable(procedureCall.getName());
+        selectableProcedure = storedProcMetaData.isSelectable(procedureCall.getName());
+    }
+    
+    /**
+     * Helper method to identify the right resultset column for the give OUT
+     * parameter name.
+     * 
+     * @param paramName
+     *            Name of the OUT parameter
+     */
+    protected int findOutParameter(String paramName) throws SQLException {
+        return getCurrentResultSet().findColumn(paramName);
     }
 
     private static class WrapperWithCalendar {
