@@ -17,9 +17,7 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
-
 
 import java.io.*;
 import java.math.*;
@@ -33,12 +31,12 @@ import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.*;
 
-
 /**
  * Implementation of {@link ResultSet} interface.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public abstract class AbstractResultSet implements ResultSet, Synchronizable, FBObjectListener.FetcherListener {
 
@@ -81,19 +79,22 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         // notify our listener that all rows were fetched.
         listener.allRowsFetched(this);
     }
+    
     /* (non-Javadoc)
      * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#fetcherClosed(org.firebirdsql.jdbc.FBFetcher)
      */
     public void fetcherClosed(FBFetcher fetcher) throws SQLException {
         // ignore, there nothing to do here
     }
+    
     /* (non-Javadoc)
      * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#rowChanged(org.firebirdsql.jdbc.FBFetcher, byte[][])
      */
     public void rowChanged(FBFetcher fetcher, byte[][] newRow) throws SQLException {
         this.row = newRow;
     }
-	 /**
+    
+	/**
      * Creates a new <code>FBResultSet</code> instance.
      *
      * @param gdsHelper a <code>AbstractConnection</code> value
@@ -238,6 +239,7 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public Object getSynchronizationObject() throws SQLException {
         return fbStatement.getSynchronizationObject();
     }
+    
     /**
      * Moves the cursor down one row from its current position.
      * A <code>ResultSet</code> cursor is initially positioned
@@ -263,8 +265,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         return result;
     }
-
-
 
     /**
      * Releases this <code>ResultSet</code> object's database and
@@ -318,7 +318,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         }
     }
 
-
     /**
      * Reports whether
      * the last column read had a value of SQL <code>NULL</code>.
@@ -371,7 +370,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return getField(columnIndex).getBigDecimal();
     }
 
-
     /**
      * Retrieve the value of the designated column in the current row of
      * this ResultSet as a binary InputStream.
@@ -413,7 +411,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public boolean getBoolean(int columnIndex) throws SQLException {
         return getField(columnIndex).getBoolean();
     }
-
 
     /**
      * Retrieve the value of the designated column in the current row of
@@ -558,6 +555,10 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         } else
             return getField(columnIndex).getString();
     }
+    
+    public String getNString(int columnIndex) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
     /**
      * Retrieve the value of the designated column in the current row of
@@ -593,7 +594,11 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public InputStream getUnicodeStream(int columnIndex) throws SQLException {
         return getField(columnIndex).getUnicodeStream();
     }
-
+    
+    public Reader getNCharacterStream(int columnIndex) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+    
     /**
      * Returns the XSQLVAR structure for the specified column.
      */
@@ -678,7 +683,8 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         wasNull = (row != null ? row[colNum - 1] == null : true);
         return field;
     }
-     /**
+    
+    /**
      * Gets the value of the designated column in the current row
      * of this <code>ResultSet</code> object as
      * a <code>java.math.BigDecimal</code> in the Java programming language.
@@ -693,9 +699,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws  SQLException {
         return getField(columnIndex).getBigDecimal(scale);
     }
-
-
-
 
     //======================================================================
     // Methods for accessing results by column name
@@ -715,7 +718,10 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         } else
             return getField(columnName).getString();
     }
-
+    
+    public String getNString(String columnLabel) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
     /**
      * Retrieves the value of the designated column in the current row of this 
@@ -827,7 +833,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return getField(columnName).getBytes();
     }
 
-
     /**
      * Retrieves the value of the designated column in the current row of this 
      * <code>ResultSet</code> object as a <code>Date</code>. 
@@ -839,7 +844,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public Date getDate(String columnName) throws  SQLException {
         return getField(columnName).getDate();
     }
-
 
     /**
      * Retrieves the value of the designated column in the current row of this 
@@ -889,7 +893,10 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public InputStream getUnicodeStream(String columnName) throws  SQLException {
         return getField(columnName).getUnicodeStream();
     }
-
+    
+    public Reader getNCharacterStream(String columnLabel) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
     /**
      * Retrieves the value of the designated column in the current row of this 
@@ -902,8 +909,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public InputStream getBinaryStream(String columnName) throws  SQLException {
         return getField(columnName).getBinaryStream();
     }
-
-
 
     //=====================================================================
     // Advanced features:
@@ -932,7 +937,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
        return firstWarning;
     }
 
-
     /**
      * Clears all warnings reported on this <code>ResultSet</code> object.
      * After this method is called, the method <code>getWarnings</code>
@@ -944,7 +948,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public void clearWarnings() throws  SQLException {
        firstWarning = null;
     }
-
 
     /**
      * Gets the name of the SQL cursor used by this <code>ResultSet</code>
@@ -973,7 +976,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return cursorName;
     }
 
-
     /**
      * Retrieves the  number, types and properties of
      * this <code>ResultSet</code> object's columns.
@@ -987,8 +989,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public ResultSetMetaData getMetaData() throws  SQLException {
         return new FBResultSetMetaData(xsqlvars, gdsHelper);
     }
-
-
 
     /**
      * <p>Gets the value of the designated column in the current row
@@ -1018,7 +1018,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public Object getObject(String columnName) throws  SQLException {
         return getField(columnName).getObject();
     }
-
 
     //----------------------------------------------------------------
 
@@ -1073,8 +1072,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
                 FBSQLException.SQL_STATE_INVALID_COLUMN); 
     }
 
-
-
     //--------------------------JDBC 2.0-----------------------------------
 
     //---------------------------------------------------------------------
@@ -1097,7 +1094,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return getField(columnIndex).getCharacterStream();
     }
 
-
     /**
      * Gets the value of the designated column in the current row
      * of this <code>ResultSet</code> object as a
@@ -1115,8 +1111,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public Reader getCharacterStream(String columnName) throws  SQLException {
         return getField(columnName).getCharacterStream();
     }
-
-
 
     /**
      * Gets the value of the designated column in the current row
@@ -1136,7 +1130,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public BigDecimal getBigDecimal(String columnName) throws  SQLException {
         return getField(columnName).getBigDecimal();
     }
-
 
     //---------------------------------------------------------------------
     // Traversal/Positioning
@@ -1158,7 +1151,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
          return fbFetcher.isBeforeFirst();
     }
 
-
     /**
      * Indicates whether the cursor is after the last row in
      * this <code>ResultSet</code> object.
@@ -1175,7 +1167,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return fbFetcher.isAfterLast();
     }
 
-
     /**
      * Indicates whether the cursor is on the first row of
      * this <code>ResultSet</code> object.
@@ -1190,7 +1181,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public boolean isFirst() throws  SQLException {
          return fbFetcher.isFirst();
     }
-
 
     /**
      * Indicates whether the cursor is on the last row of
@@ -1211,7 +1201,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
        return fbFetcher.isLast();
     }
 
-
     /**
      * Moves the cursor to the front of
      * this <code>ResultSet</code> object, just before the
@@ -1229,7 +1218,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         notifyRowUpdater();
     }
 
-
     /**
      * Moves the cursor to the end of
      * this <code>ResultSet</code> object, just after the
@@ -1245,7 +1233,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         fbFetcher.afterLast();
         notifyRowUpdater();
     }
-
 
     /**
      * Moves the cursor to the first row in
@@ -1267,7 +1254,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return result;
     }
 
-
     /**
      * Moves the cursor to the last row in
      * this <code>ResultSet</code> object.
@@ -1288,7 +1274,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return result;
     }
 
-
     /**
      * Retrieves the current row number.  The first row is number 1, the
      * second number 2, and so on.
@@ -1302,7 +1287,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public int getRow() throws  SQLException {
        return fbFetcher.getRowNum();
     }
-
 
     /**
      * Moves the cursor to the given row number in
@@ -1345,7 +1329,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return result;
     }
 
-
     /**
      * Moves the cursor a relative number of rows, either positive or negative.
      * Attempting to move beyond the first/last row in the
@@ -1377,7 +1360,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return result;
     }
 
-
     /**
      * Moves the cursor to the previous row in this
      * <code>ResultSet</code> object.
@@ -1401,7 +1383,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
             notifyRowUpdater();
         return result;
     }
-
 
     //---------------------------------------------------------------------
     // Properties
@@ -1428,7 +1409,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
             throw new FBDriverNotCapableException("Can't set fetch direction");
     }
 
-
     /**
      * Returns the fetch direction for this
      * <code>ResultSet</code> object.
@@ -1442,7 +1422,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public int getFetchDirection() throws  SQLException {
        return ResultSet.FETCH_FORWARD;
     }
-
 
     /**
      * Gives the JDBC driver a hint as to the number of rows that should
@@ -1473,7 +1452,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         fbFetcher.setFetchSize(rows);
     }
 
-
     /**
      *
      * Returns the fetch size for this
@@ -1488,7 +1466,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public int getFetchSize() throws  SQLException {
         return fbFetcher.getFetchSize();
     }
-
 
     /**
      * Returns the type of this <code>ResultSet</code> object.
@@ -1562,7 +1539,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
             throw new FBResultSetNotUpdatableException();
     }
 
-
     /**
      * Indicates whether the current row has had an insertion.
      * The value returned depends on whether or not this
@@ -1583,7 +1559,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         else
             throw new FBResultSetNotUpdatableException();
     }
-
 
     /**
      * Indicates whether a row has been deleted.  A deleted row may leave
@@ -1607,7 +1582,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
             throw new FBResultSetNotUpdatableException();
     }
 
-
     /**
      * Gives a nullable column a null value.
      *
@@ -1629,7 +1603,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnIndex).setNull();
     }
 
-
     /**
      * Updates the designated column with a <code>boolean</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -1650,7 +1623,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnIndex).setBoolean(x);
     }
-
 
     /**
      * Updates the designated column with a <code>byte</code> value.
@@ -1674,7 +1646,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnIndex).setByte(x);
     }
 
-
     /**
      * Updates the designated column with a <code>short</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -1695,7 +1666,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnIndex).setShort(x);
     }
-
 
     /**
      * Updates the designated column with an <code>int</code> value.
@@ -1718,7 +1688,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnIndex).setInteger(x);
     }
 
-
     /**
      * Updates the designated column with a <code>long</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -1739,7 +1708,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnIndex).setLong(x);
     }
-
 
     /**
      * Updates the designated column with a <code>float</code> value.
@@ -1762,7 +1730,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnIndex).setFloat(x);
     }
 
-
     /**
      * Updates the designated column with a <code>double</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -1783,7 +1750,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnIndex).setDouble(x);
     }
-
 
     /**
      * Updates the designated column with a <code>java.math.BigDecimal</code>
@@ -1807,7 +1773,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnIndex).setBigDecimal(x);
     }
 
-
     /**
      * Updates the designated column with a <code>String</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -1828,7 +1793,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnIndex).setString(x);
     }
-
 
     /**
      * Updates the designated column with a <code>byte</code> array value.
@@ -1851,7 +1815,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnIndex).setBytes(x);
     }
 
-
     /**
      * Updates the designated column with a <code>java.sql.Date</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -1872,7 +1835,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnIndex).setDate(x);
     }
-
 
     /**
      * Updates the designated column with a <code>java.sql.Time</code> value.
@@ -1895,7 +1857,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnIndex).setTime(x);
     }
 
-
     /**
      * Updates the designated column with a <code>java.sql.Timestamp</code>
      * value.
@@ -1917,7 +1878,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnIndex).setTimestamp(x);
     }
-
 
     /**
      * Updates the designated column with an ascii stream value.
@@ -1943,7 +1903,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnIndex).setAsciiStream(x, length);
     }
 
-
     /**
      * Updates the designated column with a binary stream value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -1967,7 +1926,26 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnIndex).setBinaryStream(x, length);
     }
+    
+    public void updateBinaryStream(int columnIndex, InputStream x, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
+    public void updateBinaryStream(int columnIndex, InputStream x)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateBinaryStream(String columnLabel, InputStream x,
+            long length) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateBinaryStream(String columnLabel, InputStream x)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
     /**
      * Updates the designated column with a character stream value.
@@ -1992,7 +1970,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnIndex).setCharacterStream(x, length);
     }
-
 
     /**
      * Updates the designated column with an <code>Object</code> value.
@@ -2021,7 +1998,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnIndex).setObject(x);
     }
 
-
     /**
      * Updates the designated column with an <code>Object</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -2043,7 +2019,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnIndex).setObject(x);
     }
 
-
     /**
      * Updates the designated column with a <code>null</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -2063,7 +2038,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnName).setNull();
     }
-
 
     /**
      * Updates the designated column with a <code>boolean</code> value.
@@ -2086,7 +2060,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnName).setBoolean(x);
     }
 
-
     /**
      * Updates the designated column with a <code>byte</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -2107,7 +2080,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnName).setByte(x);
     }
-
 
     /**
      * Updates the designated column with a <code>short</code> value.
@@ -2130,7 +2102,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnName).setShort(x);
     }
 
-
     /**
      * Updates the designated column with an <code>int</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -2151,7 +2122,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnName).setInteger(x);
     }
-
 
     /**
      * Updates the designated column with a <code>long</code> value.
@@ -2174,7 +2144,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnName).setLong(x);
     }
 
-
     /**
      * Updates the designated column with a <code>float </code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -2196,7 +2165,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnName).setFloat(x);
     }
 
-
     /**
      * Updates the designated column with a <code>double</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -2217,7 +2185,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnName).setDouble(x);
     }
-
 
     /**
      * Updates the designated column with a <code>java.sql.BigDecimal</code>
@@ -2241,7 +2208,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnName).setBigDecimal(x);
     }
 
-
     /**
      * Updates the designated column with a <code>String</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -2262,7 +2228,16 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnName).setString(x);
     }
+    
+    public void updateNString(int columnIndex, String string)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
+    public void updateNString(String columnLabel, String string)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
     /**
      * Updates the designated column with a <code>boolean</code> value.
@@ -2294,7 +2269,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnName).setBytes(x);
     }
 
-
     /**
      * Updates the designated column with a <code>java.sql.Date</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -2315,7 +2289,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnName).setDate(x);
     }
-
 
     /**
      * Updates the designated column with a <code>java.sql.Time</code> value.
@@ -2338,7 +2311,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnName).setTime(x);
     }
 
-
     /**
      * Updates the designated column with a <code>java.sql.Timestamp</code>
      * value.
@@ -2360,7 +2332,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnName).setTimestamp(x);
     }
-
 
     /**
      * Updates the designated column with an ascii stream value.
@@ -2385,7 +2356,26 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnName).setAsciiStream(x, length);
     }
+    
+    public void updateAsciiStream(int columnIndex, InputStream x, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
+    public void updateAsciiStream(int columnIndex, InputStream x)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateAsciiStream(String columnLabel, InputStream x, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateAsciiStream(String columnLabel, InputStream x)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
     /**
      * Updates the designated column with a binary stream value.
@@ -2411,7 +2401,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnName).setBinaryStream(x, length);
     }
 
-
     /**
      * Updates the designated column with a character stream value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -2435,7 +2424,46 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnName).setCharacterStream(reader, length);
     }
+    
+    public void updateCharacterStream(int columnIndex, Reader x, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
+    public void updateCharacterStream(int columnIndex, Reader x)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateCharacterStream(String columnLabel, Reader reader,
+            long length) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateCharacterStream(String columnLabel, Reader reader)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+    
+    public void updateNCharacterStream(int columnIndex, Reader x, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateNCharacterStream(int columnIndex, Reader x)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateNCharacterStream(String columnLabel, Reader reader,
+            long length) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateNCharacterStream(String columnLabel, Reader reader)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
     /**
      * Updates the designated column with an <code>Object</code> value.
@@ -2464,7 +2492,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         getField(columnName).setObject(x);
     }
 
-
     /**
      * Updates the designated column with an <code>Object</code> value.
      * The <code>updateXXX</code> methods are used to update column values in the
@@ -2485,7 +2512,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         
         getField(columnName).setObject(x);
     }
-
 
     /**
      * Inserts the contents of the insert row into this
@@ -2509,7 +2535,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
             throw new FBResultSetNotUpdatableException();
     }
 
-
     /**
      * Updates the underlying database with the new contents of the
      * current row of this <code>ResultSet</code> object.
@@ -2530,7 +2555,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
             throw new FBResultSetNotUpdatableException();
     }
 
-
     /**
      * Deletes the current row from this <code>ResultSet</code> object
      * and from the underlying database.  This method cannot be called when
@@ -2550,7 +2574,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         } else
             throw new FBResultSetNotUpdatableException();
     }
-
 
     /**
      * Refreshes the current row with its most recent value in
@@ -2590,7 +2613,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
             throw new FBResultSetNotUpdatableException();
     }
 
-
     /**
      * Cancels the updates made to the current row in this
      * <code>ResultSet</code> object.
@@ -2613,7 +2635,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         else
             throw new FBResultSetNotUpdatableException();
     }
-
 
     /**
      * Moves the cursor to the insert row.  The current cursor position is
@@ -2645,7 +2666,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
             throw new FBResultSetNotUpdatableException();
     }
 
-
     /**
      * Moves the cursor to the remembered cursor position, usually the
      * current row.  This method has no effect if the cursor is not on
@@ -2664,7 +2684,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
             throw new FBResultSetNotUpdatableException();
     }
 
-
     /**
      * Returns the <code>Statement</code> object that produced this
      * <code>ResultSet</code> object.
@@ -2679,7 +2698,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public Statement getStatement() {
         return fbStatement;
     }
-
 
     /**
      * Returns the value of the designated column in the current row
@@ -2702,7 +2720,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return getField(i).getObject(map);
     }
 
-
     /**
      * Returns the value of the designated column in the current row
      * of this <code>ResultSet</code> object as a <code>Ref</code> object
@@ -2717,8 +2734,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public Ref getRef(int i) throws  SQLException {
         return getField(i).getRef();
     }
-
-
 
     /**
      * Returns the value of the designated column in the current row
@@ -2736,7 +2751,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return getField(i).getClob();
     }
 
-
     /**
      * Returns the value of the designated column in the current row
      * of this <code>ResultSet</code> object as an <code>Array</code> object
@@ -2752,7 +2766,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public Array getArray(int i) throws  SQLException {
         return getField(i).getArray();
     }
-
 
     /**
      * Returns the value of the designated column in the current row
@@ -2773,7 +2786,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return getField(columnName).getObject(map);
     }
 
-
     /**
      * Returns the value of the designated column in the current row
      * of this <code>ResultSet</code> object as a <code>Ref</code> object
@@ -2789,7 +2801,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public Ref getRef(String columnName) throws  SQLException {
         return getField(columnName).getRef();
     }
-
 
     /**
      * Returns the value of the designated column in the current row
@@ -2807,7 +2818,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return getField(columnName).getBlob();
     }
 
-
     /**
      * Returns the value of the designated column in the current row
      * of this <code>ResultSet</code> object as a <code>Clob</code> object
@@ -2824,7 +2834,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return getField(columnName).getClob();
     }
 
-
     /**
      * Returns the value of the designated column in the current row
      * of this <code>ResultSet</code> object as an <code>Array</code> object
@@ -2840,7 +2849,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public Array getArray(String columnName) throws  SQLException {
         return getField(columnName).getArray();
     }
-
 
     /**
      * Returns the value of the designated column in the current row
@@ -2867,7 +2875,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return getField(columnIndex).getDate(cal);
     }
 
-
     /**
      * Returns the value of the designated column in the current row
      * of this <code>ResultSet</code> object as a <code>java.sql.Date</code> object
@@ -2890,7 +2897,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public Date getDate(String columnName, Calendar cal) throws  SQLException {
         return getField(columnName).getDate(cal);
     }
-
 
     /**
      * Returns the value of the designated column in the current row
@@ -2917,7 +2923,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         return getField(columnIndex).getTime(cal);
     }
 
-
     /**
      * Returns the value of the designated column in the current row
      * of this <code>ResultSet</code> object as a <code>java.sql.Time</code> object
@@ -2940,7 +2945,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public Time getTime(String columnName, Calendar cal) throws  SQLException {
        return getField(columnName).getTime(cal);
      }
-
 
     /**
      * Returns the value of the designated column in the current row
@@ -2966,7 +2970,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     {
         return getField(columnIndex).getTimestamp(cal);
     }
-
 
     /**
      * Returns the value of the designated column in the current row
@@ -3014,7 +3017,16 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public URL getURL(String param1) throws SQLException {
         throw new FBDriverNotCapableException();
     }
+    
+    public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+        // TODO Write implementation
+        throw new FBDriverNotCapableException();
+    }
 
+    public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
+        // TODO Write implementation
+        throw new FBDriverNotCapableException();
+    }
 
     /**
      * <b>This operation is not supported</b>
@@ -3059,6 +3071,26 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     public void updateBlob(String param1, Blob param2) throws SQLException {
         throw new FBDriverNotCapableException();
     }
+    
+    public void updateBlob(int columnIndex, InputStream inputStream, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateBlob(int columnIndex, InputStream inputStream)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateBlob(String columnLabel, InputStream inputStream,
+            long length) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateBlob(String columnLabel, InputStream inputStream)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
 
     /**
      * <b>This operation is not supported</b>
@@ -3079,6 +3111,25 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
      * @exception java.sql.SQLException <description>
      */
     public void updateClob(String param1, Clob param2) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+    
+    public void updateClob(int columnIndex, Reader reader, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateClob(int columnIndex, Reader reader) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateClob(String columnLabel, Reader reader, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateClob(String columnLabel, Reader reader)
+            throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -3104,7 +3155,6 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
         throw new FBDriverNotCapableException();
     }
 
-
     public String getExecutionPlan() throws SQLException {
         checkCursorMove();
         
@@ -3112,6 +3162,19 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
             return "";
             
         return fbStatement.getExecutionPlan();
+    }
+    
+    // java.sql.Wrapper interface
+    
+    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        return iface != null && iface.isAssignableFrom(this.getClass());
+    }
+
+    public <T> T unwrap(Class<T> iface) throws SQLException {
+        if (!isWrapperFor(iface))
+            throw new FBDriverNotCapableException();
+        
+        return iface.cast(this);
     }
 
     //--------------------------------------------------------------------
