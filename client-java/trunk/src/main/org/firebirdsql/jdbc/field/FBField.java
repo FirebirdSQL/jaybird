@@ -183,7 +183,7 @@ public abstract class FBField {
      * @todo add XSQLVAR type into the message
      */
     static Throwable createException(String message) {
-        return new TypeConvertionException(message);
+        return new TypeConversionException(message);
     }
     
     /**

@@ -1,4 +1,6 @@
- /*
+/*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -16,19 +18,21 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc.field;
 
-
 import org.firebirdsql.jdbc.FBSQLException;
+
 /**
  * This exception is thrown when the requested type conversion cannot be
  * performed.
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TypeConvertionException extends FBSQLException {
-    public TypeConvertionException(String msg) { 
+public class TypeConversionException extends FBSQLException {
+
+    private static final long serialVersionUID = 9145386635318036933L;
+
+    public TypeConversionException(String msg) { 
         super(msg, SQL_STATE_INVALID_CONVERSION);
     }
 }
