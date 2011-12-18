@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -25,9 +27,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jca.FBManagedConnection;
 
 /**
@@ -49,103 +48,16 @@ public class FBConnection extends AbstractConnection {
         super(mc);
     }
 
-    /**
-     * Creates an unnamed savepoint in the current transaction and 
-     * returns the new <code>Savepoint</code> object that represents it.
-     *
-     * @return the new <code>Savepoint</code> object
-     * @exception SQLException if a database access error occurs
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     * @since 1.4
-     */
-    public Savepoint setSavepoint() throws SQLException {
-        return (Savepoint)setFirebirdSavepoint();
-    }
-
-    /**
-     * Creates a savepoint with the given name in the current transaction
-     * and returns the new <code>Savepoint</code> object that represents it.
-     *
-     * @param name a <code>String</code> containing the name of the savepoint
-     * @return the new <code>Savepoint</code> object
-     * @exception SQLException if a database access error occurs
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     * @since 1.4
-     */
-    public Savepoint setSavepoint(String name) throws SQLException {
-        return (Savepoint)setFirebirdSavepoint(name);
-    }
-
-    /**
-     * Undoes all changes made after the given <code>Savepoint</code> object
-     * was set. 
-     * <P>
-     * This method should be used only when auto-commit has been disabled.
-     *
-     * @param savepoint the <code>Savepoint</code> object to roll back to
-     * @exception SQLException if a database access error occurs,
-     *            the <code>Savepoint</code> object is no longer valid,
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     * @see #rollback
-     * @since 1.4
-     */
-    public void rollback(Savepoint savepoint) throws SQLException {
-        rollback((FirebirdSavepoint)savepoint);
-    }
-
-    /**
-     * Removes the given <code>Savepoint</code> object from the current 
-     * transaction. Any reference to the savepoint after it have been removed 
-     * will cause an <code>SQLException</code> to be thrown.
-     *
-     * @param savepoint the <code>Savepoint</code> object to be removed
-     * @exception SQLException if a database access error occurs or
-     *            the given <code>Savepoint</code> object is not a valid 
-     *            savepoint in the current transaction
-     * @since 1.4
-     */
-    public void releaseSavepoint(Savepoint savepoint) throws SQLException {
-        releaseSavepoint((FirebirdSavepoint)savepoint);
-    }
-
     // -------------------------------------------------------------------------
     // JDBC 4.0
     // -------------------------------------------------------------------------
     
-    public Array createArrayOf(String typeName, Object[] elements)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
     public NClob createNClob() throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
     public SQLXML createSQLXML() throws SQLException {
         throw new FBDriverNotCapableException();
-    }
-
-    public Struct createStruct(String typeName, Object[] attributes)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public boolean isValid(int timeout) throws SQLException {
-        try {
-            GDS gds = getInternalAPIHandler();
-            
-            byte[] infoRequest = new byte[] {ISCConstants.isc_info_user_names, ISCConstants.isc_info_end};
-            gds.iscDatabaseInfo(getIscDBHandle(), infoRequest, 1024);
-            return true;
-        } catch(GDSException ex) {
-            return false;
-        }
     }
 
     private static final String GET_CLIENT_INFO_SQL = 
@@ -276,29 +188,6 @@ public class FBConnection extends AbstractConnection {
         } catch (SQLException ex) {
             throw new SQLClientInfoException(null, ex);
         }
-    }
-
-    // java.sql.Wrapper interface
-    
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return iface != null && iface.isAssignableFrom(FBConnection.class);
-    }
-
-    public <T> T unwrap(Class<T> iface) throws SQLException {
-        if (!isWrapperFor(iface))
-            throw new FBDriverNotCapableException();
-        
-        return iface.cast(this);
-    }
-
-    public void setSchema(String schema) throws SQLException {
-        // Ignore: no schema support
-        checkValidity();
-    }
-
-    public String getSchema() throws SQLException {
-        checkValidity();
-        return null;
     }
 
     public void abort(Executor executor) throws SQLException {
