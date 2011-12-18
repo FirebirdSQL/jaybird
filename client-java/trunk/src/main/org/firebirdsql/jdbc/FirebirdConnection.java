@@ -27,6 +27,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -53,6 +54,15 @@ public interface FirebirdConnection extends Connection {
     
     int TPB_REC_VERSION = ISCConstants.isc_tpb_rec_version;
     int TPB_NO_REC_VERSION = ISCConstants.isc_tpb_no_rec_version;
+    
+    /**
+     * Create Blob object.
+     * 
+     * @return instance of {@link FirebirdBlob}.
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    Blob createBlob() throws SQLException;
     
     /**
      * Get current ISC encoding.
