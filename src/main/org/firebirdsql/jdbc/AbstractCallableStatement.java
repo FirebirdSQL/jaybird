@@ -34,7 +34,7 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.FBField;
-import org.firebirdsql.jdbc.field.TypeConvertionException;
+import org.firebirdsql.jdbc.field.TypeConversionException;
 
 /**
  * The interface used to execute SQL
@@ -81,10 +81,8 @@ import org.firebirdsql.jdbc.field.TypeConvertionException;
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public abstract class AbstractCallableStatement 
-extends AbstractPreparedStatement 
-implements CallableStatement, FirebirdCallableStatement 
-{
+public abstract class AbstractCallableStatement extends AbstractPreparedStatement implements CallableStatement, FirebirdCallableStatement {
+    
     static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE";
     static final String NATIVE_SELECT_COMMAND = "SELECT * FROM";
 
@@ -127,7 +125,7 @@ implements CallableStatement, FirebirdCallableStatement
         Object syncObject = getSynchronizationObject();
         synchronized (syncObject) {
             try {
-                prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
+                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
             } catch (GDSException ge) {
                 throw new FBSQLException(ge);
             }
@@ -141,41 +139,23 @@ implements CallableStatement, FirebirdCallableStatement
     }
 
     public int[] executeBatch() throws SQLException {
-
         Object syncObject = getSynchronizationObject();
         synchronized (syncObject) {
-
             boolean success = false;
             try {
                 notifyStatementStarted();
 
-                ArrayList results = new ArrayList(batchList.size());
+                List results = new ArrayList(batchList.size());
                 Iterator iterator = batchList.iterator();
 
                 try {
                     while (iterator.hasNext()) {
-
                         procedureCall = (FBProcedureCall) iterator.next();
-
-                        try {
-                        	prepareFixedStatement(procedureCall
-                                    .getSQL(selectableProcedure), true);
-
-                            if (internalExecute(!selectableProcedure))
-                                throw new BatchUpdateException(toArray(results));
-
-                            results.add(new Integer(getUpdateCount()));
-
-                        } catch (GDSException ex) {
-                        	throw new BatchUpdateException(ex.getMessage(), "", ex.getFbErrorCode(),
-                                    toArray(results));
-                        }
+                        executeSingleForBatch(results);
                     }
 
                     success = true;
-
                     return toArray(results);
-
                 } finally {
                     clearBatch();
                 }
@@ -183,7 +163,25 @@ implements CallableStatement, FirebirdCallableStatement
                 notifyStatementCompleted(success);
             }
         }
+    }
+    
+    private void executeSingleForBatch(List results) throws SQLException {
+        /*
+         * TODO: array given to BatchUpdateException might not be JDBC-compliant
+         * (should set Statement.EXECUTE_FAILED and throwing it right away
+         * instead of continuing may fail intention)
+         */
+        try {
+            prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
 
+            if (internalExecute(!isSelectableProcedure()))
+                throw new BatchUpdateException(toArray(results));
+
+            results.add(new Integer(getUpdateCount()));
+        } catch (GDSException ex) {
+            throw new BatchUpdateException(ex.getMessage(), "", ex.getFbErrorCode(),
+                    toArray(results));
+        }
     }
 
     /* (non-Javadoc)
@@ -194,7 +192,7 @@ implements CallableStatement, FirebirdCallableStatement
     }
 
     public boolean isSelectableProcedure() {
-        return this.selectableProcedure;
+        return selectableProcedure;
     }
 
     /**
@@ -247,7 +245,7 @@ implements CallableStatement, FirebirdCallableStatement
         Object syncObject = getSynchronizationObject();
         synchronized (syncObject) {
             try {
-                prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
+                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
             } catch (GDSException ge) {
                 throw new FBSQLException(ge);
             }
@@ -275,8 +273,8 @@ implements CallableStatement, FirebirdCallableStatement
             try {
                 currentRs = null;
 
-                prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
-                hasResultSet = internalExecute(!selectableProcedure);
+                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
+                hasResultSet = internalExecute(!isSelectableProcedure());
 
                 if (hasResultSet)
                     setRequiredTypes();
@@ -304,9 +302,9 @@ implements CallableStatement, FirebirdCallableStatement
             try {
                 currentRs = null;
 
-                prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
+                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
 
-                if (!internalExecute(!selectableProcedure))
+                if (!internalExecute(!isSelectableProcedure()))
                 	throw new FBSQLException(
                             "No resultset for sql",
                             FBSQLException.SQL_STATE_NO_RESULT_SET);
@@ -335,7 +333,7 @@ implements CallableStatement, FirebirdCallableStatement
 
                 currentRs = null;
 
-                prepareFixedStatement(procedureCall.getSQL(selectableProcedure), true);
+                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
 
                 /*
                  * // R.Rokytskyy: JDBC CTS suite uses executeUpdate() //
@@ -346,7 +344,7 @@ implements CallableStatement, FirebirdCallableStatement
                  * "Update statement returned results.");
                  */
 
-                boolean hasResults = internalExecute(!selectableProcedure);
+                boolean hasResults = internalExecute(!isSelectableProcedure());
 
                 if (hasResults) {
                     setRequiredTypes();
@@ -384,46 +382,9 @@ implements CallableStatement, FirebirdCallableStatement
                 if (value == null)
                     field.setNull();
                 else if (value instanceof WrapperWithCalendar) {
-
-                    Object obj = ((WrapperWithCalendar) value).getValue();
-
-                    if (obj == null) {
-                        field.setNull();
-                    } else {
-                        Calendar cal = ((WrapperWithCalendar) value).getCalendar();
-
-                        if (obj instanceof Timestamp)
-                            field.setTimestamp((Timestamp) obj, cal);
-                        else if (obj instanceof java.sql.Date)
-                            field.setDate((java.sql.Date) obj, cal);
-                        else if (obj instanceof Time)
-                            field.setTime((Time) obj, cal);
-                        else
-                        	throw new TypeConvertionException(
-                                    "Cannot convert type " + 
-                                    obj.getClass().getName());
-
-                    }
+                    setField(field, (WrapperWithCalendar)value);
                 } else if (value instanceof WrapperWithInt) {
-
-                    Object obj = ((WrapperWithInt) value).getValue();
-
-                    if (obj == null) {
-                        field.setNull();
-                    } else {
-                        int intValue = ((WrapperWithInt) value).getIntValue();
-
-                        if (obj instanceof InputStream)
-                            field.setBinaryStream((InputStream) obj, intValue);
-                        else if (obj instanceof Reader)
-                            field.setCharacterStream((Reader) obj, intValue);
-                        else
-                        	throw new TypeConvertionException(
-                                    "Cannot convert type " + 
-                                    obj.getClass().getName());
-
-                    }
-
+                    setField(field, (WrapperWithInt)value);
                 } else
                     field.setObject(value);
 
@@ -432,6 +393,42 @@ implements CallableStatement, FirebirdCallableStatement
         }
 
         return super.internalExecute(sendOutParams);
+    }
+
+    private void setField(FBField field, WrapperWithInt value) throws SQLException {
+        Object obj = value.getValue();
+
+        if (obj == null) {
+            field.setNull();
+        } else {
+            int intValue = value.getIntValue();
+
+            if (obj instanceof InputStream)
+                field.setBinaryStream((InputStream) obj, intValue);
+            else if (obj instanceof Reader)
+                field.setCharacterStream((Reader) obj, intValue);
+            else
+                throw new TypeConversionException("Cannot convert type " + obj.getClass().getName());
+        }
+    }
+
+    private void setField(FBField field, WrapperWithCalendar value) throws SQLException {
+        Object obj = value.getValue();
+
+        if (obj == null) {
+            field.setNull();
+        } else {
+            Calendar cal = value.getCalendar();
+
+            if (obj instanceof Timestamp)
+                field.setTimestamp((Timestamp) obj, cal);
+            else if (obj instanceof java.sql.Date)
+                field.setDate((java.sql.Date) obj, cal);
+            else if (obj instanceof Time)
+                field.setTime((Time) obj, cal);
+            else
+                throw new TypeConversionException("Cannot convert type " + obj.getClass().getName());
+        }
     }
 
     /**
