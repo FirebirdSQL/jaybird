@@ -1,4 +1,5 @@
 /*
+ * $Id$
  *
  * Firebird Open Source J2ee connector - jdbc driver
  *
@@ -29,7 +30,12 @@ import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.FBObjectListener.ResultSetListener;
 
-
+/**
+ * Implementation of {@link java.sql.ResultSet} interface.
+ *
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ */
 public class FBResultSet extends AbstractResultSet {
 
     public FBResultSet(GDSHelper gdsHelper, AbstractStatement fbStatement,
