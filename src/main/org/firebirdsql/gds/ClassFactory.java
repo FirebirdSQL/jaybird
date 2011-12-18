@@ -42,8 +42,6 @@ public class ClassFactory {
 
     public static final String FBPreparedStatement = "org.firebirdsql.jdbc.FBPreparedStatement";
 
-    public static final String FBSavepoint = "org.firebirdsql.jdbc.FBSavepoint";
-
     public static final String FBStatement = "org.firebirdsql.jdbc.FBStatement";
 
     public static final String JavaGDSImpl = "org.firebirdsql.gds.impl.wire.JavaGDSImpl";

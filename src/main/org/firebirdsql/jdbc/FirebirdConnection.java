@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver, public Firebird-specific 
  * JDBC extensions.
  *
@@ -23,10 +25,8 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package org.firebirdsql.jdbc;
 
-import java.sql.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -53,15 +53,6 @@ public interface FirebirdConnection extends Connection {
     
     int TPB_REC_VERSION = ISCConstants.isc_tpb_rec_version;
     int TPB_NO_REC_VERSION = ISCConstants.isc_tpb_no_rec_version;
-    
-    /**
-     * Create Blob object.
-     * 
-     * @return instance of {@link FirebirdBlob}.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    Blob createBlob() throws SQLException;
     
     /**
      * Get current ISC encoding.
@@ -191,40 +182,4 @@ public interface FirebirdConnection extends Connection {
      * @exception SQLException if a database access error occurs
      */
     void releaseSavepoint(FirebirdSavepoint savepoint) throws SQLException;
-    
-    /**
-     * Changes the holdability of <code>ResultSet</code> objects
-     * created using this <code>Connection</code> object to the given
-     * holdability.
-     * <p>
-     * Method copied from the JDBC 3.0 specification.
-     *
-     * @param holdability a <code>ResultSet</code> holdability constant; one of
-     *        <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or
-     *        <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
-     * @throws SQLException if a database access occurs, the given parameter
-     *         is not a <code>ResultSet</code> constant indicating holdability,
-     *         or the given holdability is not supported
-     * @see #getHoldability
-     * @see ResultSet
-     * @since 1.4
-     */
-    void setHoldability(int holdability) throws SQLException;
-
-    /**
-     * Retrieves the current holdability of <code>ResultSet</code> objects
-     * created using this <code>Connection</code> object.
-     * <p>
-     * Method copied from the JDBC 3.0 specification.
-     *
-     * @return the holdability, one of
-     *        <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or
-     *        <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
-     * @throws SQLException if a database access occurs
-     * @see #setHoldability
-     * @see ResultSet
-     * @since 1.4
-     */
-    int getHoldability() throws SQLException;
-
 }
