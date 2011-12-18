@@ -1048,7 +1048,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return true; // rrokytskyy: yep, they call so foreign keys + cascade deletes
     }
 
-
     /**
      * Is some form of outer join supported?
      *
@@ -1058,7 +1057,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public  boolean supportsOuterJoins() throws SQLException {
         return true;
     }
-
 
     /**
      * Are full nested outer joins supported?
@@ -1070,7 +1068,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return true;
     }
 
-
     /**
      * Is there limited support for outer joins?  (This will be true
      * if supportFullOuterJoins is true.)
@@ -1081,7 +1078,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public  boolean supportsLimitedOuterJoins() throws SQLException {
         return true;
     }
-
 
     /**
      * What's the database vendor's preferred term for "schema"?
@@ -5864,12 +5860,23 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                 return pattern;
         }
     }
+    
+    public ResultSet getPseudoColumns(String catalog, String schemaPattern,
+            String tableNamePattern, String columnNamePattern) throws SQLException {
+        // TODO Write implementation
+        throw new FBDriverNotCapableException();
+    }
 
-     /*
-         * (non-Javadoc)
-         * 
-         * @see org.firebirdsql.jdbc.FirebirdDatabaseMetaData#getProcedureSourceCode(java.lang.String)
-         */
+    public boolean generatedKeyAlwaysReturned() throws SQLException {
+        // TODO Double check if this is correct
+        return false;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.firebirdsql.jdbc.FirebirdDatabaseMetaData#getProcedureSourceCode(java.lang.String)
+     */
     public String getProcedureSourceCode(String procedureName)
             throws SQLException {
         String sResult = null;
@@ -5882,8 +5889,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         rs.close();
 
         return sResult;
-    } // public String getProcedureSourceCode(String procedureName) throws
-        // SQLException
+    } 
 
     /*
      * (non-Javadoc)
@@ -5923,16 +5929,9 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
     
     private void checkCatalogAndSchema(String catalog, String schema) throws SQLException {
-        /*
-        // we ignore incorrect catalog and schema specification as
-        // suggested by Thomas Kellerer in JDBC Forum 
-        
-        if (catalog != null && !catalog.equals("") && !catalog.equals("%")) {
-            throw new SQLException("Catalogs not supported");
-        }
-        if (schema != null && (!schema.equals("")) && (!schema.equals("%"))) {
-            throw new SQLException("Schemas not supported");
-        }
+        /* 
+         * we ignore incorrect catalog and schema specification as 
+         * suggested by Thomas Kellerer in JDBC Forum 
         */
     }
 
