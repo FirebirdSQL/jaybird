@@ -63,17 +63,6 @@ public class FBDatabaseMetaData extends AbstractDatabaseMetaData {
         return RowIdLifetime.ROWID_UNSUPPORTED;
     }
 
-    public ResultSet getPseudoColumns(String catalog, String schemaPattern,
-            String tableNamePattern, String columnNamePattern) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
-    }
-
-    public boolean generatedKeyAlwaysReturned() throws SQLException {
-        // TODO Double check if this is correct
-        return false;
-    }
-    
     public int getJDBCMajorVersion() {
         return 4;
     }
