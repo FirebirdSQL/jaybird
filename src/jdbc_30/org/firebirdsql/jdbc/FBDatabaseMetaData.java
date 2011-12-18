@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.sql.SQLException;
+
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.GDSHelper;
 
@@ -31,6 +33,12 @@ public class FBDatabaseMetaData extends AbstractDatabaseMetaData {
     public FBDatabaseMetaData(GDSHelper gdsHelper) {
         super(gdsHelper);
     }
-
     
+    public int getJDBCMajorVersion() throws SQLException {
+        return 3;
+    }
+
+    public int getJDBCMinorVersion() throws SQLException {
+        return 0;
+    }
 }
