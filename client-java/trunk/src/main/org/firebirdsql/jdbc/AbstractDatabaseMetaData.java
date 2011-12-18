@@ -5472,26 +5472,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     /**
-     * Get the JDBC major version for this driver.
-     *
-     * @return the JDBC major version 
-     * @exception SQLException should never be thrown in this implementation
-     */
-    public int getJDBCMajorVersion() throws SQLException {
-        return 3;
-    }
-
-    /**
-     * Get the JDBC minor version for this driver
-     *
-     * @return the JDBC minor version
-     * @exception SQLException should never be thrown in this implementation
-     */
-    public int getJDBCMinorVersion() throws SQLException {
-        return 0;
-    }
-
-    /**
      * Indicates whether the SQLSTATEs returned by SQLException.getSQLState is 
      * X/Open (now known as Open Group) SQL CLI or SQL99
      *

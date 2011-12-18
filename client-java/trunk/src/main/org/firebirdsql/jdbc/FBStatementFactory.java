@@ -26,7 +26,7 @@ import org.firebirdsql.jdbc.FBObjectListener.BlobListener;
 import org.firebirdsql.jdbc.FBObjectListener.StatementListener;
 
 /**
- * Creates statement/savepoint objects.
+ * Creates statement objects.
  * 
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
  */
