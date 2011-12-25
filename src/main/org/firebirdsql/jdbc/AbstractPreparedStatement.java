@@ -595,9 +595,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
     
     public void setNCharacterStream(int parameterIndex, Reader value,
             long length) throws SQLException {
-        if (length > Integer.MAX_VALUE)
-            throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
-        setNCharacterStream(parameterIndex, value, (int)length);
+        throw new FBDriverNotCapableException();
     }
 
     public void setNCharacterStream(int parameterIndex, Reader value)
@@ -607,9 +605,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
 
     public void setNClob(int parameterIndex, Reader reader, long length)
             throws SQLException {
-        if (length > Integer.MAX_VALUE)
-            throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
-        setNClob(parameterIndex, reader, (int)length);
+        throw new FBDriverNotCapableException();
     }
 
     public void setNClob(int parameterIndex, Reader reader) throws SQLException {
