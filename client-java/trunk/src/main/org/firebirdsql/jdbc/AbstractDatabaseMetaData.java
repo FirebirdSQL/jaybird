@@ -1802,6 +1802,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      *      <LI> procedureNoResult - Does not return a result
      *      <LI> procedureReturnsResult - Returns a result
      *      </UL>
+     *  <LI><B>SPECIFIC_NAME</B> String => The name which uniquely identifies this procedure within its schema.
      *  </OL>
      *
      * @param catalog a catalog name; "" retrieves those without a
@@ -1817,7 +1818,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             String procedureNamePattern) throws SQLException {
         checkCatalogAndSchema(catalog, schemaPattern);
 
-        XSQLVAR[] xsqlvars = new XSQLVAR[8];
+        XSQLVAR[] xsqlvars = new XSQLVAR[9];
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
@@ -1865,6 +1866,12 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[7].sqltype = ISCConstants.SQL_SHORT;
         xsqlvars[7].sqlname = "PROCEDURE_TYPE";
         xsqlvars[7].relname = "RDB$PROCEDURES";
+        
+        xsqlvars[8] = new XSQLVAR();
+        xsqlvars[8].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[8].sqllen = 31;
+        xsqlvars[8].sqlname = "SPECIFIC_NAME";
+        xsqlvars[8].relname = "RDB$PROCEDURES";
 
         Clause procedureClause = new Clause("RDB$PROCEDURE_NAME", procedureNamePattern);
         
@@ -1909,6 +1916,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                 xsqlvars[6].sqllen = remarks.length();
             short procedureType = rs.getShort("PROCEDURE_TYPE");
             row[7] = (procedureType == 0) ? xsqlvars[0].encodeShort((short)procedureNoResult) : xsqlvars[0].encodeShort((short)procedureReturnsResult);
+            row[8] = row[2];
             rows.add(row);
         } while (rs.next());
         
@@ -1938,22 +1946,22 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " PP.RDB$PARAMETER_NUMBER ";
 
     /**
-     * Gets a description of a catalog's stored procedure parameters
+     * Retrieves a description of the given catalog's stored procedure parameter
      * and result columns.
      *
      * <P>Only descriptions matching the schema, procedure and
      * parameter name criteria are returned.  They are ordered by
-     * PROCEDURE_SCHEM and PROCEDURE_NAME. Within this, the return value,
+     * PROCEDURE_CAT, PROCEDURE_SCHEM, PROCEDURE_NAME and SPECIFIC_NAME. Within this, the return value,
      * if any, is first. Next are the parameter descriptions in call
      * order. The column descriptions follow in column number order.
      *
      * <P>Each row in the <code>ResultSet</code> is a parameter description or
      * column description with the following fields:
      *  <OL>
-     *  <LI><B>PROCEDURE_CAT</B> String => procedure catalog (may be null)
-     *  <LI><B>PROCEDURE_SCHEM</B> String => procedure schema (may be null)
+     *  <LI><B>PROCEDURE_CAT</B> String => procedure catalog (may be <code>null</code>)
+     *  <LI><B>PROCEDURE_SCHEM</B> String => procedure schema (may be <code>null</code>)
      *  <LI><B>PROCEDURE_NAME</B> String => procedure name
-     *  <LI><B>COLUMN_NAME</B> String => column/parameter name
+     *  <LI><B>COLUMN_NAME</B> String => column/parameter name 
      *  <LI><B>COLUMN_TYPE</B> Short => kind of column/parameter:
      *      <UL>
      *      <LI> procedureColumnUnknown - nobody knows
@@ -1963,36 +1971,71 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      *      <LI> procedureColumnReturn - procedure return value
      *      <LI> procedureColumnResult - result column in <code>ResultSet</code>
      *      </UL>
-     *  <LI><B>DATA_TYPE</B> short => SQL type from java.sql.Types
+     *  <LI><B>DATA_TYPE</B> int => SQL type from java.sql.Types
      *  <LI><B>TYPE_NAME</B> String => SQL type name, for a UDT type the
      *  type name is fully qualified
      *  <LI><B>PRECISION</B> int => precision
      *  <LI><B>LENGTH</B> int => length in bytes of data
-     *  <LI><B>SCALE</B> short => scale
+     *  <LI><B>SCALE</B> short => scale -  null is returned for data types where  
+     * SCALE is not applicable.
      *  <LI><B>RADIX</B> short => radix
-     *  <LI><B>NULLABLE</B> short => can it contain NULL?
+     *  <LI><B>NULLABLE</B> short => can it contain NULL.
      *      <UL>
      *      <LI> procedureNoNulls - does not allow NULL values
      *      <LI> procedureNullable - allows NULL values
      *      <LI> procedureNullableUnknown - nullability unknown
      *      </UL>
      *  <LI><B>REMARKS</B> String => comment describing parameter/column
+     *  <LI><B>COLUMN_DEF</B> String => default value for the column, which should be interpreted as a string when the value is enclosed in single quotes (may be <code>null</code>)
+     *      <UL>
+     *      <LI> The string NULL (not enclosed in quotes) - if NULL was specified as the default value
+     *      <LI> TRUNCATE (not enclosed in quotes)        - if the specified default value cannot be represented without truncation
+     *      <LI> NULL                                     - if a default value was not specified
+     *      </UL>
+     *  <LI><B>SQL_DATA_TYPE</B> int  => reserved for future use
+     *  <LI><B>SQL_DATETIME_SUB</B> int  => reserved for future use
+     *  <LI><B>CHAR_OCTET_LENGTH</B> int  => the maximum length of binary and character based columns.  For any other datatype the returned value is a 
+     * NULL
+     *  <LI><B>ORDINAL_POSITION</B> int  => the ordinal position, starting from 1, for the input and output parameters for a procedure. A value of 0
+     *is returned if this row describes the procedure's return value.  For result set columns, it is the
+     *ordinal position of the column in the result set starting from 1.  If there are
+     *multiple result sets, the column ordinal positions are implementation
+     * defined.
+     *  <LI><B>IS_NULLABLE</B> String  => ISO rules are used to determine the nullability for a column.
+     *       <UL>
+     *       <LI> YES           --- if the parameter can include NULLs
+     *       <LI> NO            --- if the parameter cannot include NULLs
+     *       <LI> empty string  --- if the nullability for the 
+     * parameter is unknown
+     *       </UL>
+     *  <LI><B>SPECIFIC_NAME</B> String  => the name which uniquely identifies this procedure within its schema.
      *  </OL>
      *
      * <P><B>Note:</B> Some databases may not return the column
-     * descriptions for a procedure. Additional columns beyond
-     * REMARKS can be defined by the database.
-     *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schemaPattern a schema name pattern; "" retrieves those
-     * without a schema
-     * @param procedureNamePattern a procedure name pattern
-     * @param columnNamePattern a column name pattern
-     * @return <code>ResultSet</code> - each row describes a stored procedure parameter or
+     * descriptions for a procedure. 
+     * 
+     * <p>The PRECISION column represents the specified column size for the given column. 
+     * For numeric data, this is the maximum precision.  For character data, this is the length in characters. 
+     * For datetime datatypes, this is the length in characters of the String representation (assuming the 
+     * maximum allowed precision of the fractional seconds component). For binary data, this is the length in bytes.  For the ROWID datatype, 
+     * this is the length in bytes. Null is returned for data types where the
+     * column size is not applicable.
+     * @param catalog a catalog name; must match the catalog name as it
+     *        is stored in the database; "" retrieves those without a catalog;
+     *        <code>null</code> means that the catalog name should not be used to narrow
+     *        the search
+     * @param schemaPattern a schema name pattern; must match the schema name
+     *        as it is stored in the database; "" retrieves those without a schema;
+     *        <code>null</code> means that the schema name should not be used to narrow
+     *        the search
+     * @param procedureNamePattern a procedure name pattern; must match the
+     *        procedure name as it is stored in the database 
+     * @param columnNamePattern a column name pattern; must match the column name
+     *        as it is stored in the database 
+     * @return <code>ResultSet</code> - each row describes a stored procedure parameter or 
      *      column
      * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape
+     * @see #getSearchStringEscape 
      */
     public ResultSet getProcedureColumns(String catalog,
             String schemaPattern,
@@ -2000,7 +2043,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             String columnNamePattern) throws SQLException {
         checkCatalogAndSchema(catalog, schemaPattern);
 
-        XSQLVAR[] xsqlvars = new XSQLVAR[13];
+        XSQLVAR[] xsqlvars = new XSQLVAR[20];
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
@@ -2032,7 +2075,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[4].relname = "COLUMNINFO";
 
         xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_SHORT;
+        xsqlvars[5].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[5].sqlname = "DATA_TYPE";
         xsqlvars[5].relname = "COLUMNINFO";
 
@@ -2072,6 +2115,44 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[12].sqllen = 80; // gets updated if we get a longer description
         xsqlvars[12].sqlname = "REMARKS";
         xsqlvars[12].relname = "COLUMNINFO";
+        
+        xsqlvars[13] = new XSQLVAR();
+        xsqlvars[13].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[13].sqllen = 31;
+        xsqlvars[13].sqlname = "COLUMN_DEF";
+        xsqlvars[13].relname = "COLUMNINFO";
+        
+        xsqlvars[14] = new XSQLVAR();
+        xsqlvars[14].sqltype = ISCConstants.SQL_LONG;
+        xsqlvars[14].sqlname = "SQL_DATA_TYPE";
+        xsqlvars[14].relname = "COLUMNINFO";
+        
+        xsqlvars[15] = new XSQLVAR();
+        xsqlvars[15].sqltype = ISCConstants.SQL_LONG;
+        xsqlvars[15].sqlname = "SQL_DATETIME_SUB";
+        xsqlvars[15].relname = "COLUMNINFO";
+        
+        xsqlvars[16] = new XSQLVAR();
+        xsqlvars[16].sqltype = ISCConstants.SQL_LONG;
+        xsqlvars[16].sqlname = "CHAR_OCTET_LENGTH";
+        xsqlvars[16].relname = "COLUMNINFO";
+        
+        xsqlvars[17] = new XSQLVAR();
+        xsqlvars[17].sqltype = ISCConstants.SQL_LONG;
+        xsqlvars[17].sqlname = "ORDINAL_POSITION";
+        xsqlvars[17].relname = "COLUMNINFO";
+        
+        xsqlvars[18] = new XSQLVAR();
+        xsqlvars[18].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[18].sqllen = 3;
+        xsqlvars[18].sqlname = "IS_NULLABLE";
+        xsqlvars[18].relname = "COLUMNINFO";
+        
+        xsqlvars[19] = new XSQLVAR();
+        xsqlvars[19].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[19].sqllen = 31;
+        xsqlvars[19].sqlname = "SPECIFIC_NAME";
+        xsqlvars[19].relname = "COLUMNINFO";
 
         Clause procedureClause = new Clause("PP.RDB$PROCEDURE_NAME", procedureNamePattern);
         Clause columnClause = new Clause("PP.RDB$PARAMETER_NAME", columnNamePattern);
@@ -2125,14 +2206,12 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             short fieldScale = rs.getShort("FIELD_SCALE");
             int dataType = getDataType(fieldType, fieldSubType, fieldScale);
 
-            row[5] = xsqlvars[0].encodeShort((short) dataType);
+            row[5] = xsqlvars[0].encodeInt(dataType);
 
             row[6] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
 
             row[7] = null;
-            if (dataType == Types.DECIMAL ||
-                dataType == Types.NUMERIC)
-            {
+            if (dataType == Types.DECIMAL || dataType == Types.NUMERIC) {
                 row[7] = xsqlvars[0].encodeInt(rs.getShort("FIELD_PRECISION"));
             } else {
                 row[7] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
@@ -2141,7 +2220,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             row[8] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
             row[9] = xsqlvars[0].encodeShort((short)(fieldScale * (-1)));
             row[10] = xsqlvars[0].encodeShort((short)10); // RADIX
-
+            
+            // TODO: Find out what the difference is with NULL_FLAG in RDB$PROCEDURE_PARAMETERS 
             short nullFlag = rs.getShort("NULL_FLAG");
             row[11] = (nullFlag == 1) ? xsqlvars[0].encodeShort((short)procedureNoNulls) :
                                         xsqlvars[0].encodeShort((short)procedureNullable);
@@ -2150,12 +2230,32 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             row[12] = getBytes(remarks);
             if (remarks != null && remarks.length() > xsqlvars[12].sqllen)
                 xsqlvars[12].sqllen = remarks.length();
+            // TODO: Need to write ODS version dependent method to retrieve some of the info
+            row[13] = null; // TODO From 2.0 defaults for procedure parameters
+            row[14] = null;
+            row[15] = null;
+            switch (dataType) {
+            case Types.CHAR:
+            case Types.VARCHAR:
+            case Types.BINARY:
+            case Types.VARBINARY:
+                row[16] = row[8];
+                break;
+            default:
+                row[16] = null;
+            }
+            // TODO: Find correct value for ORDINAL_POSITION (+ intent)
+            row[17] = null;
+            // TODO: Find out if there is a conceptual difference with NULLABLE (idx 11)
+            row[18] = (nullFlag == 1) ? getBytes("NO") : getBytes("YES");
+            row[19] = row[2];
 
             rows.add(row);
         } while (rs.next());
         return new FBResultSet(xsqlvars, rows);
     }
 
+    // TODO: Include GLOBAL TEMPORARY
     public static final String TABLE = "TABLE";
     public static final String SYSTEM_TABLE = "SYSTEM TABLE";
     public static final String VIEW = "VIEW";
@@ -2166,6 +2266,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " RDB$RELATION_NAME as TABLE_NAME,"
         + " cast('" + SYSTEM_TABLE + "' as varchar(31)) as TABLE_TYPE,"
         + " RDB$DESCRIPTION as REMARKS,"
+        + " null as TYPE_CAT,"
+        + " null as TYPE_SCHEM,"
+        + " null as TYPE_NAME,"
+        + " null as SELF_REFERENCING_COL_NAME,"
+        + " null as REF_GENERATION,"
         + " RDB$OWNER_NAME as OWNER_NAME"
         + " from RDB$RELATIONS"
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
@@ -2175,6 +2280,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " RDB$RELATION_NAME as TABLE_NAME,"
         + " cast('" + TABLE + "' as varchar(31)) as TABLE_TYPE,"
         + " RDB$DESCRIPTION as REMARKS,"
+        + " null as TYPE_CAT,"
+        + " null as TYPE_SCHEM,"
+        + " null as TYPE_NAME,"
+        + " null as SELF_REFERENCING_COL_NAME,"
+        + " null as REF_GENERATION,"
         + " RDB$OWNER_NAME as OWNER_NAME"
         + " from RDB$RELATIONS"
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
@@ -2184,6 +2294,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " RDB$RELATION_NAME as TABLE_NAME,"
         + " cast('" + VIEW + "' as varchar(31)) as TABLE_TYPE,"
         + " RDB$DESCRIPTION as REMARKS,"
+        + " null as TYPE_CAT,"
+        + " null as TYPE_SCHEM,"
+        + " null as TYPE_NAME,"
+        + " null as SELF_REFERENCING_COL_NAME,"
+        + " null as REF_GENERATION,"
         + " RDB$OWNER_NAME as OWNER_NAME"
         + " from RDB$RELATIONS"
         + " where ? = 'T' and RDB$VIEW_SOURCE is not null "
@@ -2194,6 +2309,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " RDB$RELATION_NAME as TABLE_NAME,"
         + " cast('" + SYSTEM_TABLE + "' as varchar(31)) as TABLE_TYPE,"
         + " RDB$DESCRIPTION as REMARKS,"
+        + " null as TYPE_CAT,"
+        + " null as TYPE_SCHEM,"
+        + " null as TYPE_NAME,"
+        + " null as SELF_REFERENCING_COL_NAME,"
+        + " null as REF_GENERATION,"
         + " RDB$OWNER_NAME as OWNER_NAME"
         + " from RDB$RELATIONS"
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
@@ -2204,6 +2324,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " RDB$RELATION_NAME as TABLE_NAME,"
         + " cast('" + TABLE + "' as varchar(31)) as TABLE_TYPE,"
         + " RDB$DESCRIPTION as REMARKS,"
+        + " null as TYPE_CAT,"
+        + " null as TYPE_SCHEM,"
+        + " null as TYPE_NAME,"
+        + " null as SELF_REFERENCING_COL_NAME,"
+        + " null as REF_GENERATION,"
         + " RDB$OWNER_NAME as OWNER_NAME"
         + " from RDB$RELATIONS"
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
@@ -2214,6 +2339,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " RDB$RELATION_NAME as TABLE_NAME,"
         + " cast('" + VIEW + "' as varchar(31)) as TABLE_TYPE,"
         + " RDB$DESCRIPTION as REMARKS,"
+        + " null as TYPE_CAT,"
+        + " null as TYPE_SCHEM,"
+        + " null as TYPE_NAME,"
+        + " null as SELF_REFERENCING_COL_NAME,"
+        + " null as REF_GENERATION,"
         + " RDB$OWNER_NAME as OWNER_NAME"
         + " from RDB$RELATIONS"
         + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
@@ -2224,6 +2354,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " RDB$RELATION_NAME as TABLE_NAME,"
         + " cast('" + SYSTEM_TABLE + "' as varchar(31)) as TABLE_TYPE,"
         + " RDB$DESCRIPTION as REMARKS,"
+        + " null as TYPE_CAT,"
+        + " null as TYPE_SCHEM,"
+        + " null as TYPE_NAME,"
+        + " null as SELF_REFERENCING_COL_NAME,"
+        + " null as REF_GENERATION,"
         + " RDB$OWNER_NAME as OWNER_NAME"
         + " from RDB$RELATIONS"
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
@@ -2234,6 +2369,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " RDB$RELATION_NAME as TABLE_NAME,"
         + " cast('" + TABLE + "' as varchar(31)) as TABLE_TYPE,"
         + " RDB$DESCRIPTION as REMARKS,"
+        + " null as TYPE_CAT,"
+        + " null as TYPE_SCHEM,"
+        + " null as TYPE_NAME,"
+        + " null as SELF_REFERENCING_COL_NAME,"
+        + " null as REF_GENERATION,"
         + " RDB$OWNER_NAME as OWNER_NAME"
         + " from RDB$RELATIONS"
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
@@ -2244,6 +2384,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " RDB$RELATION_NAME as TABLE_NAME,"
         + " cast('" + VIEW + "' as varchar(31)) as TABLE_TYPE,"
         + " RDB$DESCRIPTION as REMARKS,"
+        + " null as TYPE_CAT,"
+        + " null as TYPE_SCHEM,"
+        + " null as TYPE_NAME,"
+        + " null as SELF_REFERENCING_COL_NAME,"
+        + " null as REF_GENERATION,"
         + " RDB$OWNER_NAME as OWNER_NAME"
         + " from RDB$RELATIONS"
         + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
@@ -2251,35 +2396,50 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " order by 3 ";
 
     /**
-     * Gets a description of tables available in a catalog.
-     *
-     * <P>Only table descriptions matching the catalog, schema, table
+     * Retrieves a description of the tables available in the given catalog.
+     * Only table descriptions matching the catalog, schema, table
      * name and type criteria are returned.  They are ordered by
-     * TABLE_TYPE, TABLE_SCHEM and TABLE_NAME.
-     *
-     * <P>Each table description has the following columns:
+     * <code>TABLE_TYPE</code>, <code>TABLE_CAT</code>, 
+     * <code>TABLE_SCHEM</code> and <code>TABLE_NAME</code>.
+     * <P>
+     * Each table description has the following columns:
      *  <OL>
-     *  <LI><B>TABLE_CAT</B> String => table catalog (may be null)
-     *  <LI><B>TABLE_SCHEM</B> String => table schema (may be null)
+     *  <LI><B>TABLE_CAT</B> String => table catalog (may be <code>null</code>)
+     *  <LI><B>TABLE_SCHEM</B> String => table schema (may be <code>null</code>)
      *  <LI><B>TABLE_NAME</B> String => table name
      *  <LI><B>TABLE_TYPE</B> String => table type.  Typical types are "TABLE",
-     *          "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY",
+     *          "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY", 
      *          "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
      *  <LI><B>REMARKS</B> String => explanatory comment on the table
+     *  <LI><B>TYPE_CAT</B> String => the types catalog (may be <code>null</code>)
+     *  <LI><B>TYPE_SCHEM</B> String => the types schema (may be <code>null</code>)
+     *  <LI><B>TYPE_NAME</B> String => type name (may be <code>null</code>)
+     *  <LI><B>SELF_REFERENCING_COL_NAME</B> String => name of the designated 
+     *                  "identifier" column of a typed table (may be <code>null</code>)
+     *  <LI><B>REF_GENERATION</B> String => specifies how values in 
+     *                  SELF_REFERENCING_COL_NAME are created. Values are
+     *                  "SYSTEM", "USER", "DERIVED". (may be <code>null</code>) 
      *  </OL>
      *
      * <P><B>Note:</B> Some databases may not return information for
      * all tables.
      *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schemaPattern a schema name pattern; "" retrieves those
-     * without a schema
-     * @param tableNamePattern a table name pattern
-     * @param types a list of table types to include; null returns all types
+     * @param catalog a catalog name; must match the catalog name as it
+     *        is stored in the database; "" retrieves those without a catalog;
+     *        <code>null</code> means that the catalog name should not be used to narrow
+     *        the search
+     * @param schemaPattern a schema name pattern; must match the schema name
+     *        as it is stored in the database; "" retrieves those without a schema;
+     *        <code>null</code> means that the schema name should not be used to narrow
+     *        the search
+     * @param tableNamePattern a table name pattern; must match the
+     *        table name as it is stored in the database 
+     * @param types a list of table types, which must be from the list of table types 
+     *         returned from {@link #getTableTypes},to include; <code>null</code> returns
+     * all types
      * @return <code>ResultSet</code> - each row is a table description
      * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape
+     * @see #getSearchStringEscape 
      */
     public ResultSet getTables(String catalog, String schemaPattern,
         String tableNamePattern, String types[]) throws SQLException {
@@ -2422,54 +2582,91 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         "order by 1, 11";
 
     /**
-     * Gets a description of table columns available in
+     * Retrieves a description of table columns available in
      * the specified catalog.
      *
      * <P>Only column descriptions matching the catalog, schema, table
      * and column name criteria are returned.  They are ordered by
-     * TABLE_SCHEM, TABLE_NAME and ORDINAL_POSITION.
+     * <code>TABLE_CAT</code>,<code>TABLE_SCHEM</code>,
+     * <code>TABLE_NAME</code>, and <code>ORDINAL_POSITION</code>.
      *
      * <P>Each column description has the following columns:
      *  <OL>
-     *  <LI><B>TABLE_CAT</B> String => table catalog (may be null)
-     *  <LI><B>TABLE_SCHEM</B> String => table schema (may be null)
+     *  <LI><B>TABLE_CAT</B> String => table catalog (may be <code>null</code>)
+     *  <LI><B>TABLE_SCHEM</B> String => table schema (may be <code>null</code>)
      *  <LI><B>TABLE_NAME</B> String => table name
      *  <LI><B>COLUMN_NAME</B> String => column name
-     *  <LI><B>DATA_TYPE</B> short => SQL type from java.sql.Types
+     *  <LI><B>DATA_TYPE</B> int => SQL type from java.sql.Types
      *  <LI><B>TYPE_NAME</B> String => Data source dependent type name,
      *  for a UDT the type name is fully qualified
-     *  <LI><B>COLUMN_SIZE</B> int => column size.  For char or date
-     *      types this is the maximum number of characters, for numeric or
-     *      decimal types this is precision.
+     *  <LI><B>COLUMN_SIZE</B> int => column size.
      *  <LI><B>BUFFER_LENGTH</B> is not used.
-     *  <LI><B>DECIMAL_DIGITS</B> int => the number of fractional digits
+     *  <LI><B>DECIMAL_DIGITS</B> int => the number of fractional digits. Null is returned for data types where
+     * DECIMAL_DIGITS is not applicable.
      *  <LI><B>NUM_PREC_RADIX</B> int => Radix (typically either 10 or 2)
-     *  <LI><B>NULLABLE</B> int => is NULL allowed?
+     *  <LI><B>NULLABLE</B> int => is NULL allowed.
      *      <UL>
-     *      <LI> columnNoNulls - might not allow NULL values
-     *      <LI> columnNullable - definitely allows NULL values
+     *      <LI> columnNoNulls - might not allow <code>NULL</code> values
+     *      <LI> columnNullable - definitely allows <code>NULL</code> values
      *      <LI> columnNullableUnknown - nullability unknown
      *      </UL>
-     *  <LI><B>REMARKS</B> String => comment describing column (may be null)
-     *  <LI><B>COLUMN_DEF</B> String => default value (may be null)
+     *  <LI><B>REMARKS</B> String => comment describing column (may be <code>null</code>)
+     *  <LI><B>COLUMN_DEF</B> String => default value for the column, which should be interpreted as a string when the value is enclosed in single quotes (may be <code>null</code>)
      *  <LI><B>SQL_DATA_TYPE</B> int => unused
      *  <LI><B>SQL_DATETIME_SUB</B> int => unused
-     *  <LI><B>CHAR_OCTET_LENGTH</B> int => for char types the
      *  <LI><B>CHAR_OCTET_LENGTH</B> int => for char types the
      *       maximum number of bytes in the column
      *  <LI><B>ORDINAL_POSITION</B> int => index of column in table
      *      (starting at 1)
-     *  <LI><B>IS_NULLABLE</B> String => "NO" means column definitely
-     *      does not allow NULL values; "YES" means the column might
-     *      allow NULL values.  An empty string means nobody knows.
+     *  <LI><B>IS_NULLABLE</B> String  => ISO rules are used to determine the nullability for a column.
+     *       <UL>
+     *       <LI> YES           --- if the column can include NULLs
+     *       <LI> NO            --- if the column cannot include NULLs
+     *       <LI> empty string  --- if the nullability for the
+     * column is unknown
+     *       </UL>
+     *  <LI><B>SCOPE_CATALOG</B> String => catalog of table that is the scope
+     *      of a reference attribute (<code>null</code> if DATA_TYPE isn't REF)
+     *  <LI><B>SCOPE_SCHEMA</B> String => schema of table that is the scope
+     *      of a reference attribute (<code>null</code> if the DATA_TYPE isn't REF)
+     *  <LI><B>SCOPE_TABLE</B> String => table name that this the scope
+     *      of a reference attribute (<code>null</code> if the DATA_TYPE isn't REF)
+     *  <LI><B>SOURCE_DATA_TYPE</B> short => source type of a distinct type or user-generated
+     *      Ref type, SQL type from java.sql.Types (<code>null</code> if DATA_TYPE
+     *      isn't DISTINCT or user-generated REF)
+     *   <LI><B>IS_AUTOINCREMENT</B> String  => Indicates whether this column is auto incremented
+     *       <UL>
+     *       <LI> YES           --- if the column is auto incremented
+     *       <LI> NO            --- if the column is not auto incremented
+     *       <LI> empty string  --- if it cannot be determined whether the column is auto incremented
+     *       </UL>
+     *   <LI><B>IS_GENERATEDCOLUMN</B> String  => Indicates whether this is a generated column
+     *       <UL>
+     *       <LI> YES           --- if this a generated column
+     *       <LI> NO            --- if this not a generated column
+     *       <LI> empty string  --- if it cannot be determined whether this is a generated column
+     *       </UL>
      *  </OL>
      *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schemaPattern a schema name pattern; "" retrieves those
-     * without a schema
-     * @param tableNamePattern a table name pattern
-     * @param columnNamePattern a column name pattern
+     * <p>The COLUMN_SIZE column specifies the column size for the given column.
+     * For numeric data, this is the maximum precision.  For character data, this is the length in characters.
+     * For datetime datatypes, this is the length in characters of the String representation (assuming the
+     * maximum allowed precision of the fractional seconds component). For binary data, this is the length in bytes.  For the ROWID datatype,
+     * this is the length in bytes. Null is returned for data types where the
+     * column size is not applicable.
+     *
+     * @param catalog a catalog name; must match the catalog name as it
+     *        is stored in the database; "" retrieves those without a catalog;
+     *        <code>null</code> means that the catalog name should not be used to narrow
+     *        the search
+     * @param schemaPattern a schema name pattern; must match the schema name
+     *        as it is stored in the database; "" retrieves those without a schema;
+     *        <code>null</code> means that the schema name should not be used to narrow
+     *        the search
+     * @param tableNamePattern a table name pattern; must match the
+     *        table name as it is stored in the database
+     * @param columnNamePattern a column name pattern; must match the column
+     *        name as it is stored in the database
      * @return <code>ResultSet</code> - each row is a column description
      * @exception SQLException if a database access error occurs
      * @see #getSearchStringEscape
@@ -2478,9 +2675,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         String tableNamePattern, String columnNamePattern) throws SQLException {
         checkCatalogAndSchema(catalog, schemaPattern);
 
-        // ResultSet rs = doQuery(sql, params);
-
-        XSQLVAR[] xsqlvars = new XSQLVAR[18];
+        XSQLVAR[] xsqlvars = new XSQLVAR[24];
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
@@ -2579,6 +2774,41 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[17].sqllen = 3;
         xsqlvars[17].sqlname = "IS_NULLABLE";
         xsqlvars[17].relname = "COLUMNINFO";
+        
+        xsqlvars[18] = new XSQLVAR();
+        xsqlvars[18].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[18].sqllen = 31;
+        xsqlvars[18].sqlname = "SCOPE_CATALOG";
+        xsqlvars[18].relname = "COLUMNINFO";
+        
+        xsqlvars[19] = new XSQLVAR();
+        xsqlvars[19].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[19].sqllen = 31;
+        xsqlvars[19].sqlname = "SCOPE_SCHEMA";
+        xsqlvars[19].relname = "COLUMNINFO";
+        
+        xsqlvars[20] = new XSQLVAR();
+        xsqlvars[20].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[20].sqllen = 31;
+        xsqlvars[20].sqlname = "SCOPE_TABLE";
+        xsqlvars[20].relname = "COLUMNINFO";
+        
+        xsqlvars[21] = new XSQLVAR();
+        xsqlvars[21].sqltype = ISCConstants.SQL_SHORT;
+        xsqlvars[21].sqlname = "SOURCE_DATA_TYPE";
+        xsqlvars[21].relname = "COLUMNINFO";
+        
+        xsqlvars[22] = new XSQLVAR();
+        xsqlvars[22].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[22].sqllen = 3;
+        xsqlvars[22].sqlname = "IS_AUTOINCREMENT";
+        xsqlvars[22].relname = "COLUMNINFO";
+        
+        xsqlvars[23] = new XSQLVAR();
+        xsqlvars[23].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[23].sqllen = 3;
+        xsqlvars[23].sqlname = "IS_GENERATEDCOLUMN";
+        xsqlvars[23].relname = "COLUMNINFO";
 
         Clause tableClause = new Clause("RF.RDB$RELATION_NAME", tableNamePattern);
         Clause columnClause = new Clause("RF.RDB$FIELD_NAME", columnNamePattern);
@@ -2687,7 +2917,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                    row[6] = xsqlvars[0].encodeInt(0);
                    row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(0);
-               }
+            }
 
             row[7] = xsqlvars[0].encodeShort((short) 0);
             row[9] = xsqlvars[0].encodeInt(10);
@@ -2720,6 +2950,23 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             row[16] = xsqlvars[0].encodeInt(rs.getShort("FIELD_POSITION") + 1);
             row[17] = (nullFlag == 1 || sourceNullFlag == 1) ? 
                         getBytes("NO") : getBytes("YES");
+            row[18] = null;
+            row[19] = null;
+            row[20] = null;
+            row[21] = null;
+            switch (dataType) {
+            case Types.INTEGER:
+            case Types.TINYINT:
+            case Types.BIGINT:
+            case Types.SMALLINT:
+                // Could be autoincrement, but we simply don't know
+                row[22] = getBytes(""); 
+            default:
+                // All other types are never autoincrement
+                row[22] = getBytes("NO");
+            }
+            // TODO: Maybe generated is also meant for computed columns?
+            row[23] = getBytes("");
 
             rows.add(row);
         } while (rs.next());
@@ -5096,47 +5343,57 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     /**
-     *
-     * Gets a description of the user-defined types defined in a particular
-     * schema.  Schema-specific UDTs may have type JAVA_OBJECT, STRUCT,
-     * or DISTINCT.
+     * Retrieves a description of the user-defined types (UDTs) defined
+     * in a particular schema.  Schema-specific UDTs may have type
+     * <code>JAVA_OBJECT</code>, <code>STRUCT</code>,
+     * or <code>DISTINCT</code>.
      *
      * <P>Only types matching the catalog, schema, type name and type
-     * criteria are returned.  They are ordered by DATA_TYPE, TYPE_SCHEM
-     * and TYPE_NAME.  The type name parameter may be a fully-qualified
+     * criteria are returned.  They are ordered by <code>DATA_TYPE</code>,
+     * <code>TYPE_CAT</code>, <code>TYPE_SCHEM</code>  and
+     * <code>TYPE_NAME</code>.  The type name parameter may be a fully-qualified
      * name.  In this case, the catalog and schemaPattern parameters are
      * ignored.
      *
      * <P>Each type description has the following columns:
      *  <OL>
-     *  <LI><B>TYPE_CAT</B> String => the type's catalog (may be null)
-     *  <LI><B>TYPE_SCHEM</B> String => type's schema (may be null)
+     *  <LI><B>TYPE_CAT</B> String => the type's catalog (may be <code>null</code>)
+     *  <LI><B>TYPE_SCHEM</B> String => type's schema (may be <code>null</code>)
      *  <LI><B>TYPE_NAME</B> String => type name
      *  <LI><B>CLASS_NAME</B> String => Java class name
-     *  <LI><B>DATA_TYPE</B> String => type value defined in java.sql.Types.
-     *  One of JAVA_OBJECT, STRUCT, or DISTINCT
+     *  <LI><B>DATA_TYPE</B> int => type value defined in java.sql.Types.
+     *     One of JAVA_OBJECT, STRUCT, or DISTINCT
      *  <LI><B>REMARKS</B> String => explanatory comment on the type
+     *  <LI><B>BASE_TYPE</B> short => type code of the source type of a
+     *     DISTINCT type or the type that implements the user-generated
+     *     reference type of the SELF_REFERENCING_COLUMN of a structured
+     *     type as defined in java.sql.Types (<code>null</code> if DATA_TYPE is not
+     *     DISTINCT or not STRUCT with REFERENCE_GENERATION = USER_DEFINED)
      *  </OL>
      *
      * <P><B>Note:</B> If the driver does not support UDTs, an empty
      * result set is returned.
      *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schemaPattern a schema name pattern; "" retrieves those
-     * without a schema
-     * @param typeNamePattern a type name pattern; may be a fully-qualified
-     * name
-     * @param types a list of user-named types to include (JAVA_OBJECT,
-     * STRUCT, or DISTINCT); null returns all types
-     * @return <code>ResultSet</code> - each row is a type description
+     * @param catalog a catalog name; must match the catalog name as it
+     *        is stored in the database; "" retrieves those without a catalog;
+     *        <code>null</code> means that the catalog name should not be used to narrow
+     *        the search
+     * @param schemaPattern a schema pattern name; must match the schema name
+     *        as it is stored in the database; "" retrieves those without a schema;
+     *        <code>null</code> means that the schema name should not be used to narrow
+     *        the search
+     * @param typeNamePattern a type name pattern; must match the type name
+     *        as it is stored in the database; may be a fully qualified name
+     * @param types a list of user-defined types (JAVA_OBJECT,
+     *        STRUCT, or DISTINCT) to include; <code>null</code> returns all types
+     * @return <code>ResultSet</code> object in which each row describes a UDT
      * @exception SQLException if a database access error occurs
+     * @see #getSearchStringEscape
      * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public ResultSet getUDTs(String catalog, String schemaPattern,
               String typeNamePattern, int[] types) throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[6];
+        XSQLVAR[] xsqlvars = new XSQLVAR[7];
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
@@ -5172,6 +5429,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[5].sqllen = 31;
         xsqlvars[5].sqlname = "REMARKS";
+        xsqlvars[5].relname = "UDT";
+        
+        xsqlvars[5] = new XSQLVAR();
+        xsqlvars[5].sqltype = ISCConstants.SQL_SHORT;
+        xsqlvars[5].sqlname = "BASE_TYPE";
         xsqlvars[5].relname = "UDT";
 
         ArrayList rows = new ArrayList(0);
