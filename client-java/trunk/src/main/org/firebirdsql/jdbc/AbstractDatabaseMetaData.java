@@ -2418,7 +2418,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      *                  "identifier" column of a typed table (may be <code>null</code>)
      *  <LI><B>REF_GENERATION</B> String => specifies how values in 
      *                  SELF_REFERENCING_COL_NAME are created. Values are
-     *                  "SYSTEM", "USER", "DERIVED". (may be <code>null</code>) 
+     *                  "SYSTEM", "USER", "DERIVED". (may be <code>null</code>)
+     *  <LI><B>OWNER_NAME</B> String => Username of the owner of the table (Jaybird-specific) 
      *  </OL>
      *
      * <P><B>Note:</B> Some databases may not return information for
@@ -2960,7 +2961,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             case Types.BIGINT:
             case Types.SMALLINT:
                 // Could be autoincrement, but we simply don't know
-                row[22] = getBytes(""); 
+                row[22] = getBytes("");
+                break;
             default:
                 // All other types are never autoincrement
                 row[22] = getBytes("NO");
