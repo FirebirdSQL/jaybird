@@ -1903,7 +1903,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         }
         
         do {
-            byte[][] row = new byte[8][];
+            byte[][] row = new byte[9][];
             row[0] = null;
             row[1] = null;
             row[2] = getBytes(rs.getString("PROCEDURE_NAME").trim());
@@ -2192,7 +2192,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         }
 
         do {
-            byte[][] row = new byte[13][];
+            byte[][] row = new byte[20][];
             row[0] = null;
             row[1] = null;
             row[2] = getBytes(rs.getString("PROCEDURE_NAME").trim());
@@ -2852,7 +2852,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         }
 
         do {
-            byte[][] row = new byte[18][];
+            byte[][] row = new byte[24][];
             row[0] = null;
             row[1] = null;
             row[2] = getBytes(rs.getString("RELATION_NAME").trim());
