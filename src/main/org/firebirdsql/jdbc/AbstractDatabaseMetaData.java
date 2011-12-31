@@ -2559,25 +2559,29 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return new FBResultSet(xsqlvars, rows);
     }
 
-
-    private static final String GET_COLUMNS_START = "select " +
-        " RF.RDB$RELATION_NAME as RELATION_NAME," +
-        " RF.RDB$FIELD_NAME as FIELD_NAME," +
-        " F.RDB$FIELD_TYPE as FIELD_TYPE," +
-        " F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE," +
-        " F.RDB$FIELD_PRECISION as FIELD_PRECISION," +
-        " F.RDB$FIELD_SCALE as FIELD_SCALE," +
-        " F.RDB$FIELD_LENGTH as FIELD_LENGTH," +
-        " F.RDB$CHARACTER_LENGTH as CHAR_LEN," +
-        " RF.RDB$DESCRIPTION AS REMARKS," +
-        " RF.RDB$DEFAULT_SOURCE as DEFAULT_SOURCE," +
-        " RF.RDB$FIELD_POSITION as FIELD_POSITION, " +
-        " RF.RDB$NULL_FLAG as NULL_FLAG, " +
-        " F.RDB$NULL_FLAG as SOURCE_NULL_FLAG " +
-        "from" +
-        " RDB$RELATION_FIELDS RF," +
-        " RDB$FIELDS F " +
-        "where ";
+    private static final String GET_COLUMNS_START = 
+            "SELECT   RF.RDB$RELATION_NAME  AS RELATION_NAME  ," + 
+    		"         RF.RDB$FIELD_NAME     AS FIELD_NAME     ," + 
+    		"         F.RDB$FIELD_TYPE      AS FIELD_TYPE     ," + 
+    		"         F.RDB$FIELD_SUB_TYPE  AS FIELD_SUB_TYPE ," + 
+    		"         F.RDB$FIELD_PRECISION AS FIELD_PRECISION," + 
+    		"         F.RDB$FIELD_SCALE     AS FIELD_SCALE    ," + 
+    		"         F.RDB$FIELD_LENGTH    AS FIELD_LENGTH   ," + 
+    		"         CASE" + 
+    		"                  WHEN F.RDB$CHARACTER_LENGTH IS NULL" + 
+    		"                  AND      F.RDB$FIELD_TYPE IN (14," + 
+    		"                                                37)" + 
+    		"                  THEN F.RDB$FIELD_LENGTH" + 
+    		"                  ELSE F.RDB$CHARACTER_LENGTH" + 
+    		"         END                   AS CHAR_LEN       ," + 
+    		"         RF.RDB$DESCRIPTION    AS REMARKS        ," + 
+    		"         RF.RDB$DEFAULT_SOURCE AS DEFAULT_SOURCE ," + 
+    		"         RF.RDB$FIELD_POSITION AS FIELD_POSITION ," + 
+    		"         RF.RDB$NULL_FLAG      AS NULL_FLAG      ," + 
+    		"         F.RDB$NULL_FLAG       AS SOURCE_NULL_FLAG " + 
+    		"FROM     RDB$RELATION_FIELDS RF," + 
+    		"         RDB$FIELDS F " + 
+    		"WHERE ";
 
     public static final String GET_COLUMNS_END = " RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME " +
         "order by 1, 11";
