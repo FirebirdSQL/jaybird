@@ -23,6 +23,7 @@ import java.util.*;
 
 import javax.resource.spi.ConnectionManager;
 
+import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
@@ -119,7 +120,7 @@ public class FBTestBase extends SimpleFBTestBase {
     }
     
     protected void executeDropTable(Connection connection, String sql) throws SQLException {
-        executeDDL(connection, sql, new int[]{ISCConstants.isc_no_meta_update});
+        executeDDL(connection, sql, new int[]{ISCConstants.isc_no_meta_update, ISCConstants.isc_dsql_table_not_found});
     }
 
     protected void executeDDL(Connection connection, String sql, int[] ignoreErrors) throws SQLException {
@@ -137,12 +138,25 @@ public class FBTestBase extends SimpleFBTestBase {
             boolean ignoreException = false;
             
             int errorCode = ex.getErrorCode();
-            for (int i = 0; i < ignoreErrors.length; i++) {
-                if (ignoreErrors[i] == errorCode) {
-                    ignoreException = true;
-                    break;
+            Throwable current = ex;
+            errorcodeloop: do {
+                for (int i = 0; i < ignoreErrors.length; i++) {
+                    if (ignoreErrors[i] == errorCode) {
+                        ignoreException = true;
+                        break errorcodeloop;
+                    }
                 }
-            }
+                if (current instanceof GDSException) {
+                    current = ((GDSException)current).getNext();
+                } else {
+                    current = current.getCause();
+                }
+                if (current == null || !(current instanceof GDSException)) {
+                    break;
+                } else {
+                    errorCode = ((GDSException)current).getFbErrorCode();
+                }
+            } while (errorCode != -1);
             
             if (!ignoreException)
                 throw ex;
