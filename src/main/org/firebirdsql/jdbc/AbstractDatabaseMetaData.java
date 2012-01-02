@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -16,7 +18,6 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 
@@ -52,7 +53,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * SQLException is thrown.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaData {
 
@@ -2783,7 +2784,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[18] = new XSQLVAR();
         xsqlvars[18].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[18].sqllen = 31;
-        xsqlvars[18].sqlname = "SCOPE_CATALOG";
+        if (getJDBCMajorVersion() > 4 || getJDBCMajorVersion() == 4 && getJDBCMinorVersion() >= 1) {
+            xsqlvars[18].sqlname = "SCOPE_CATALOG";
+        } else {
+            xsqlvars[18].sqlname = "SCOPE_CATLOG";
+        }
         xsqlvars[18].relname = "COLUMNINFO";
         
         xsqlvars[19] = new XSQLVAR();
@@ -2869,63 +2874,60 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
             row[4] = xsqlvars[0].encodeShort((short) dataType);
             row[5] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
-
+            
+            row[7] = null;
+            
+            // Defaults: some are overridden in the switch
+            row[8] = null;
+            row[9] = null;
+            row[15] = null;
             switch (dataType){
                 case Types.DECIMAL:
                 case Types.NUMERIC:
                    row[6] = xsqlvars[0].encodeInt(rs.getShort("FIELD_PRECISION"));
                    row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
-                   row[15] = xsqlvars[0].encodeInt(0);
+                   row[9] = xsqlvars[0].encodeInt(10);
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
                    row[6] = xsqlvars[0].encodeInt(rs.getShort("CHAR_LEN"));
-                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
                    row[15] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
                    break;
                 case Types.FLOAT:
                    row[6] = xsqlvars[0].encodeInt(7);
-                   row[8] = xsqlvars[0].encodeInt(7);
-                   row[15] = xsqlvars[0].encodeInt(0);
+                   row[9] = xsqlvars[0].encodeInt(10);
                    break;
                 case Types.DOUBLE:
                    row[6] = xsqlvars[0].encodeInt(15);
-                   row[8] = xsqlvars[0].encodeInt(15);
-                   row[15] = xsqlvars[0].encodeInt(0);
+                   row[9] = xsqlvars[0].encodeInt(10);
                    break;
+                case Types.BIGINT:
+                    row[6] = xsqlvars[0].encodeInt(19);
+                    row[8] = xsqlvars[0].encodeInt(0);
+                    row[9] = xsqlvars[0].encodeInt(10);
+                    break;
                 case Types.INTEGER:
                    row[6] = xsqlvars[0].encodeInt(10);
-                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
-                   row[15] = xsqlvars[0].encodeInt(0);
+                   row[8] = xsqlvars[0].encodeInt(0);
+                   row[9] = xsqlvars[0].encodeInt(10);
                    break;
                 case Types.SMALLINT:
                    row[6] = xsqlvars[0].encodeInt(5);
-                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
-                   row[15] = xsqlvars[0].encodeInt(0);
+                   row[8] = xsqlvars[0].encodeInt(0);
+                   row[9] = xsqlvars[0].encodeInt(10);
                    break;
                 case Types.DATE:
                    row[6] = xsqlvars[0].encodeInt(10);
-                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
-                   row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.TIME:
                    row[6] = xsqlvars[0].encodeInt(8);
-                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
-                   row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 case Types.TIMESTAMP:
                    row[6] = xsqlvars[0].encodeInt(19);
-                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
-                   row[15] = xsqlvars[0].encodeInt(0);
                    break;
                 default:
-                   row[6] = xsqlvars[0].encodeInt(0);
-                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
-                   row[15] = xsqlvars[0].encodeInt(0);
+                   row[6] = null;
             }
-
-            row[7] = xsqlvars[0].encodeShort((short) 0);
-            row[9] = xsqlvars[0].encodeInt(10);
 
             short nullFlag = rs.getShort("NULL_FLAG");
             short sourceNullFlag = rs.getShort("SOURCE_NULL_FLAG");
@@ -2967,6 +2969,16 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                 // Could be autoincrement, but we simply don't know
                 row[22] = getBytes("");
                 break;
+            case Types.NUMERIC:
+            case Types.DECIMAL:
+            	if (fieldScale == 0) {
+            		// Could be autoincrement, but we simply don't know
+                    row[22] = getBytes("");
+            	} else {
+            		// Scaled NUMERIC/DECIMAL: definitely not autoincrement
+            		row[22] = getBytes("NO");
+            	}
+            	break;
             default:
                 // All other types are never autoincrement
                 row[22] = getBytes("NO");
@@ -2992,26 +3004,10 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     private static final short double_type = 27;
     private static final short timestamp_type = 35;
     private static final short varchar_type = 37;
-//    private static final short cstring_type = 40;
+//  private static final short cstring_type = 40;
     private static final short blob_type = 261;
 
     private int getDataType (short fieldType, short fieldSubType, short fieldScale) {
-        if (fieldScale < 0) {
-            switch (fieldType) {
-                case smallint_type:
-                case integer_type:
-                case int64_type:
-                case double_type:
-                    // NOTE: can't be BIGINT because of scale
-                    if (fieldSubType == 2)
-                        return Types.DECIMAL;
-                    else
-                        return Types.NUMERIC;
-                default:
-                    break;
-            }
-        }
-
         switch (fieldType) {
             case smallint_type:
                 if (fieldSubType == 1)
@@ -3043,7 +3039,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             case date_type:
                 return Types.DATE;
             case int64_type:
-                //This might need some help for long mapping
                 if (fieldSubType == 1)
                     return Types.NUMERIC;
                 else if (fieldSubType == 2)
@@ -3067,27 +3062,21 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     static String getDataTypeName(short sqltype, short sqlsubtype, short sqlscale) {
-        if (sqlscale < 0) {
-            switch (sqltype) {
-                case smallint_type:
-                case integer_type:
-                case int64_type:
-                case double_type:
-                    // NOTE: can't be BIGINT because of scale
-                    if (sqlsubtype == 2)
-                        return "DECIMAL";
-                    else
-                        return "NUMERIC";
-                default:
-                    break;
-            }
-        }
-
         switch (sqltype) {
             case smallint_type:
-                return "SMALLINT";
+                if (sqlsubtype == 1)
+                    return "NUMERIC";
+                else if (sqlsubtype == 2)
+                    return "DECIMAL";
+                else
+                    return "SMALLINT";
             case integer_type:
-                return "INTEGER";
+                if (sqlsubtype == 1)
+                    return "NUMERIC";
+                else if (sqlsubtype == 2)
+                    return "DECIMAL";
+                else
+                    return "INTEGER";
             case double_type:
             case d_float_type:
                 return "DOUBLE PRECISION";
@@ -3104,7 +3093,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             case date_type:
                 return "DATE";
             case int64_type:
-                //this might need some help for long mapping
                 if (sqlsubtype == 1)
                     return "NUMERIC";
                 else if (sqlsubtype == 2)
