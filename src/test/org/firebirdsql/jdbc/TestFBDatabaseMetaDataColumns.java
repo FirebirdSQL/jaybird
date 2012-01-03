@@ -69,8 +69,18 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
             "    col_varchar_10_octets VARCHAR(10) CHARACTER SET OCTETS," + 
             "    col_blob_text_utf8 BLOB SUB_TYPE TEXT CHARACTER SET UTF8," + 
             "    col_blob_text_iso8859_1 BLOB SUB_TYPE TEXT CHARACTER SET ISO8859_1," + 
-            "    col_blob_binary BLOB SUB_TYPE 0" + 
+            "    col_blob_binary BLOB SUB_TYPE 0," +
+            "    col_integer_not_null INTEGER NOT NULL," + 
+            "    col_varchar_not_null VARCHAR(100) NOT NULL," +
+            "    col_integer_default_null INTEGER DEFAULT NULL," + 
+            "    col_integer_default_999 INTEGER DEFAULT 999," + 
+            "    col_varchar_default_null VARCHAR(100) DEFAULT NULL," + 
+            "    col_varchar_default_user VARCHAR(100) DEFAULT USER," + 
+            "    col_varchar_default_literal VARCHAR(100) DEFAULT 'literal'" + 
             ")";
+    
+    public static final String ADD_COMMENT_ON_COLUMN =
+            "COMMENT ON COLUMN test_column_metadata.col_integer IS 'Some comment'";
     
     public static final String DROP_COLUMN_METADATA_TEST_TABLE =
             "DROP TABLE test_column_metadata";
@@ -81,13 +91,10 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
     protected void setUp() throws Exception {
         super.setUp();
         con = getConnectionViaDriverManager();
-        try {
-            executeDropTable(con, DROP_COLUMN_METADATA_TEST_TABLE);
-        } catch (SQLException e) {
-            System.out.println(e.getErrorCode());
-            throw e;
-        }
+        executeDropTable(con, DROP_COLUMN_METADATA_TEST_TABLE);
+
         executeCreateTable(con, CREATE_COLUMN_METADATA_TEST_TABLE);
+        executeCreateTable(con, ADD_COMMENT_ON_COLUMN);
         dbmd = con.getMetaData();
     }
     
@@ -101,7 +108,7 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
     }
     
     /**
-     * Checked getColumns() metadata for an INTEGER column without further constraints, defaults and remarks.
+     * Checked getColumns() metadata for an INTEGER column without further constraints, defaults, but with an explicit remark.
      * 
      * @throws SQLException
      */
@@ -119,12 +126,109 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
         assertFalse("DECIMAL_DIGITS expected to be actual 0 for INTEGER", columns.wasNull());
         assertEquals("Unexpected NUM_PREC_RADIX", 10, columns.getInt("NUM_PREC_RADIX"));
         assertEquals("Unexpected NULLABLE", DatabaseMetaData.columnNullable, columns.getInt("NULLABLE"));
-        assertNull("Unexpected REMARKS not NULL", columns.getString("REMARKS"));
+        // Explicit comment:
+        assertEquals("Unexpected REMARKS", "Some comment", columns.getString("REMARKS"));
         assertNull("Unexpected COLUMN_DEF not NULL", columns.getString("COLUMN_DEF"));
         assertEquals("Unexpected CHAR_OCTET_LENGTH", 0, columns.getInt("CHAR_OCTET_LENGTH"));
         assertTrue("CHAR_OCTET_LENGTH expected to be actual NULL for INTEGER", columns.wasNull());
         assertEquals("Unexpected ORDINAL_POSITION", 1, columns.getInt("ORDINAL_POSITION"));
         assertEquals("Unexpected IS_NULLABLE", "YES", columns.getString("IS_NULLABLE"));
+        assertEquals("Unexpected IS_AUTOINCREMENT", "", columns.getString("IS_AUTOINCREMENT"));
+        
+        assertFalse("Expected only one row in resultset", columns.next());
+    }
+    
+    /**
+     * Checked getColumns() metadata for an INTEGER column with explicit DEFAULT NULL
+     * 
+     * @throws SQLException
+     */
+    public void testInteger_DefaultNullColumn() throws SQLException {
+        ResultSet columns = dbmd.getColumns(null, null, "test_column_metadata", "col_integer_default_null");
+        assertTrue("Expected row in column metadata", columns.next());
+        assertEquals("Unexpected TABLE_NAME", "TEST_COLUMN_METADATA", columns.getString("TABLE_NAME"));
+        assertEquals("Unexpected COLUMN_NAME", "COL_INTEGER_DEFAULT_NULL", columns.getString("COLUMN_NAME"));
+        assertInvariantColumnMetaData(columns);
+        
+        assertEquals("Unexpected COLUMN_DEF not literal NULL", "NULL", columns.getString("COLUMN_DEF"));
+        
+        // Other checks for completeness (repeats testIntegerColumn() test)
+        assertEquals("Unexpected DATA_TYPE", Types.INTEGER, columns.getInt("DATA_TYPE"));
+        assertEquals("Unexpected TYPE_NAME", "INTEGER", columns.getString("TYPE_NAME"));
+        assertEquals("Unexpected COLUMN_SIZE", 10, columns.getInt("COLUMN_SIZE"));
+        assertEquals("Unexpected DECIMAL_DIGITS", 0, columns.getInt("DECIMAL_DIGITS"));
+        assertFalse("DECIMAL_DIGITS expected to be actual 0 for INTEGER", columns.wasNull());
+        assertEquals("Unexpected NUM_PREC_RADIX", 10, columns.getInt("NUM_PREC_RADIX"));
+        assertEquals("Unexpected NULLABLE", DatabaseMetaData.columnNullable, columns.getInt("NULLABLE"));
+        assertNull("Unexpected REMARKS not NULL", columns.getString("REMARKS"));
+        assertEquals("Unexpected CHAR_OCTET_LENGTH", 0, columns.getInt("CHAR_OCTET_LENGTH"));
+        assertTrue("CHAR_OCTET_LENGTH expected to be actual NULL for INTEGER", columns.wasNull());
+        assertEquals("Unexpected ORDINAL_POSITION", 32, columns.getInt("ORDINAL_POSITION"));
+        assertEquals("Unexpected IS_NULLABLE", "YES", columns.getString("IS_NULLABLE"));
+        assertEquals("Unexpected IS_AUTOINCREMENT", "", columns.getString("IS_AUTOINCREMENT"));
+        
+        assertFalse("Expected only one row in resultset", columns.next());
+    }
+    
+    /**
+     * Checked getColumns() metadata for an INTEGER column with DEFAULT 999
+     * 
+     * @throws SQLException
+     */
+    public void testInteger_Default999Column() throws SQLException {
+        ResultSet columns = dbmd.getColumns(null, null, "test_column_metadata", "col_integer_default_999");
+        assertTrue("Expected row in column metadata", columns.next());
+        assertEquals("Unexpected TABLE_NAME", "TEST_COLUMN_METADATA", columns.getString("TABLE_NAME"));
+        assertEquals("Unexpected COLUMN_NAME", "COL_INTEGER_DEFAULT_999", columns.getString("COLUMN_NAME"));
+        assertInvariantColumnMetaData(columns);
+        
+        assertEquals("Unexpected COLUMN_DEF not literal 999", "999", columns.getString("COLUMN_DEF"));
+        
+        // Other checks for completeness (repeats testIntegerColumn() test)
+        assertEquals("Unexpected DATA_TYPE", Types.INTEGER, columns.getInt("DATA_TYPE"));
+        assertEquals("Unexpected TYPE_NAME", "INTEGER", columns.getString("TYPE_NAME"));
+        assertEquals("Unexpected COLUMN_SIZE", 10, columns.getInt("COLUMN_SIZE"));
+        assertEquals("Unexpected DECIMAL_DIGITS", 0, columns.getInt("DECIMAL_DIGITS"));
+        assertFalse("DECIMAL_DIGITS expected to be actual 0 for INTEGER", columns.wasNull());
+        assertEquals("Unexpected NUM_PREC_RADIX", 10, columns.getInt("NUM_PREC_RADIX"));
+        assertEquals("Unexpected NULLABLE", DatabaseMetaData.columnNullable, columns.getInt("NULLABLE"));
+        assertNull("Unexpected REMARKS not NULL", columns.getString("REMARKS"));
+        assertEquals("Unexpected CHAR_OCTET_LENGTH", 0, columns.getInt("CHAR_OCTET_LENGTH"));
+        assertTrue("CHAR_OCTET_LENGTH expected to be actual NULL for INTEGER", columns.wasNull());
+        assertEquals("Unexpected ORDINAL_POSITION", 33, columns.getInt("ORDINAL_POSITION"));
+        assertEquals("Unexpected IS_NULLABLE", "YES", columns.getString("IS_NULLABLE"));
+        assertEquals("Unexpected IS_AUTOINCREMENT", "", columns.getString("IS_AUTOINCREMENT"));
+        
+        assertFalse("Expected only one row in resultset", columns.next());
+    }
+    
+    /**
+     * Checked getColumns() metadata for an INTEGER column with NOT NULL constraint
+     * 
+     * @throws SQLException
+     */
+    public void testInteger_NotNullColumn() throws SQLException {
+        ResultSet columns = dbmd.getColumns(null, null, "test_column_metadata", "col_integer_not_null");
+        assertTrue("Expected row in column metadata", columns.next());
+        assertEquals("Unexpected TABLE_NAME", "TEST_COLUMN_METADATA", columns.getString("TABLE_NAME"));
+        assertEquals("Unexpected COLUMN_NAME", "COL_INTEGER_NOT_NULL", columns.getString("COLUMN_NAME"));
+        assertInvariantColumnMetaData(columns);
+        
+        assertEquals("Unexpected NULLABLE", DatabaseMetaData.columnNoNulls, columns.getInt("NULLABLE"));
+        assertEquals("Unexpected IS_NULLABLE", "NO", columns.getString("IS_NULLABLE"));
+        
+        // Other checks for completeness (repeats testIntegerColumn() test)
+        assertEquals("Unexpected DATA_TYPE", Types.INTEGER, columns.getInt("DATA_TYPE"));
+        assertEquals("Unexpected TYPE_NAME", "INTEGER", columns.getString("TYPE_NAME"));
+        assertEquals("Unexpected COLUMN_SIZE", 10, columns.getInt("COLUMN_SIZE"));
+        assertEquals("Unexpected DECIMAL_DIGITS", 0, columns.getInt("DECIMAL_DIGITS"));
+        assertFalse("DECIMAL_DIGITS expected to be actual 0 for INTEGER", columns.wasNull());
+        assertEquals("Unexpected NUM_PREC_RADIX", 10, columns.getInt("NUM_PREC_RADIX"));
+        assertNull("Unexpected REMARKS not NULL", columns.getString("REMARKS"));
+        assertNull("Unexpected COLUMN_DEF not NULL", columns.getString("COLUMN_DEF"));
+        assertEquals("Unexpected CHAR_OCTET_LENGTH", 0, columns.getInt("CHAR_OCTET_LENGTH"));
+        assertTrue("CHAR_OCTET_LENGTH expected to be actual NULL for INTEGER", columns.wasNull());
+        assertEquals("Unexpected ORDINAL_POSITION", 30, columns.getInt("ORDINAL_POSITION"));
         assertEquals("Unexpected IS_AUTOINCREMENT", "", columns.getString("IS_AUTOINCREMENT"));
         
         assertFalse("Expected only one row in resultset", columns.next());
@@ -839,7 +943,7 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
     }
     
     /**
-     * Checked getColumns() metadata for a CHAR(10) CHARACTER SET ISO8859_1 column without further constraints, defaults and remarks.
+     * Checked getColumns() metadata for a VARCHAR(10) CHARACTER SET ISO8859_1 column without further constraints, defaults and remarks.
      * 
      * @throws SQLException
      */
@@ -869,7 +973,7 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
     }
     
     /**
-     * Checked getColumns() metadata for a CHAR(10) CHARACTER SET OCTETS column without further constraints, defaults and remarks.
+     * Checked getColumns() metadata for a VARCHAR(10) CHARACTER SET OCTETS column without further constraints, defaults and remarks.
      * 
      * @throws SQLException
      */
@@ -893,6 +997,134 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
         assertEquals("Unexpected CHAR_OCTET_LENGTH", 10, columns.getInt("CHAR_OCTET_LENGTH"));
         assertEquals("Unexpected ORDINAL_POSITION", 26, columns.getInt("ORDINAL_POSITION"));
         assertEquals("Unexpected IS_NULLABLE", "YES", columns.getString("IS_NULLABLE"));
+        assertEquals("Unexpected IS_AUTOINCREMENT", "NO", columns.getString("IS_AUTOINCREMENT"));
+        
+        assertFalse("Expected only one row in resultset", columns.next());
+    }
+    
+    /**
+     * Checked getColumns() metadata for a VARCHAR(100) column with explicit DEFAULT NULL.
+     * 
+     * @throws SQLException
+     */
+    public void testVarchar_DefaultNull() throws SQLException {
+        ResultSet columns = dbmd.getColumns(null, null, "test_column_metadata", "col_varchar_default_null");
+        assertTrue("Expected row in column metadata", columns.next());
+        assertEquals("Unexpected TABLE_NAME", "TEST_COLUMN_METADATA", columns.getString("TABLE_NAME"));
+        assertEquals("Unexpected COLUMN_NAME", "COL_VARCHAR_DEFAULT_NULL", columns.getString("COLUMN_NAME"));
+        assertInvariantColumnMetaData(columns);
+        
+        assertEquals("Unexpected COLUMN_DEF not literal NULL", "NULL", columns.getString("COLUMN_DEF"));
+        
+        // Other tests for completeness (repeats other testVarchar...() tests)
+        assertEquals("Unexpected DATA_TYPE", Types.VARCHAR, columns.getInt("DATA_TYPE"));
+        assertEquals("Unexpected TYPE_NAME", "VARCHAR", columns.getString("TYPE_NAME"));
+        assertEquals("Unexpected COLUMN_SIZE", 100, columns.getInt("COLUMN_SIZE"));
+        assertEquals("Unexpected DECIMAL_DIGITS", 0, columns.getInt("DECIMAL_DIGITS"));
+        assertTrue("DECIMAL_DIGITS expected to be actual NULL for VARCHAR", columns.wasNull());
+        assertEquals("Unexpected NUM_PREC_RADIX", 0, columns.getInt("NUM_PREC_RADIX"));
+        assertTrue("NUM_PREC_RADIX expected to be actual NULL for VARCHAR", columns.wasNull());
+        assertEquals("Unexpected NULLABLE", DatabaseMetaData.columnNullable, columns.getInt("NULLABLE"));
+        assertNull("Unexpected REMARKS not NULL", columns.getString("REMARKS"));
+        assertEquals("Unexpected CHAR_OCTET_LENGTH", 100, columns.getInt("CHAR_OCTET_LENGTH"));
+        assertEquals("Unexpected ORDINAL_POSITION", 34, columns.getInt("ORDINAL_POSITION"));
+        assertEquals("Unexpected IS_NULLABLE", "YES", columns.getString("IS_NULLABLE"));
+        assertEquals("Unexpected IS_AUTOINCREMENT", "NO", columns.getString("IS_AUTOINCREMENT"));
+        
+        assertFalse("Expected only one row in resultset", columns.next());
+    }
+    
+    /**
+     * Checked getColumns() metadata for a VARCHAR(100) column with explicit DEFAULT USER.
+     * 
+     * @throws SQLException
+     */
+    public void testVarchar_DefaultUser() throws SQLException {
+        ResultSet columns = dbmd.getColumns(null, null, "test_column_metadata", "col_varchar_default_user");
+        assertTrue("Expected row in column metadata", columns.next());
+        assertEquals("Unexpected TABLE_NAME", "TEST_COLUMN_METADATA", columns.getString("TABLE_NAME"));
+        assertEquals("Unexpected COLUMN_NAME", "COL_VARCHAR_DEFAULT_USER", columns.getString("COLUMN_NAME"));
+        assertInvariantColumnMetaData(columns);
+        
+        assertEquals("Unexpected COLUMN_DEF not USER", "USER", columns.getString("COLUMN_DEF"));
+        
+        // Other tests for completeness (repeats other testVarchar...() tests)
+        assertEquals("Unexpected DATA_TYPE", Types.VARCHAR, columns.getInt("DATA_TYPE"));
+        assertEquals("Unexpected TYPE_NAME", "VARCHAR", columns.getString("TYPE_NAME"));
+        assertEquals("Unexpected COLUMN_SIZE", 100, columns.getInt("COLUMN_SIZE"));
+        assertEquals("Unexpected DECIMAL_DIGITS", 0, columns.getInt("DECIMAL_DIGITS"));
+        assertTrue("DECIMAL_DIGITS expected to be actual NULL for VARCHAR", columns.wasNull());
+        assertEquals("Unexpected NUM_PREC_RADIX", 0, columns.getInt("NUM_PREC_RADIX"));
+        assertTrue("NUM_PREC_RADIX expected to be actual NULL for VARCHAR", columns.wasNull());
+        assertEquals("Unexpected NULLABLE", DatabaseMetaData.columnNullable, columns.getInt("NULLABLE"));
+        assertNull("Unexpected REMARKS not NULL", columns.getString("REMARKS"));
+        assertEquals("Unexpected CHAR_OCTET_LENGTH", 100, columns.getInt("CHAR_OCTET_LENGTH"));
+        assertEquals("Unexpected ORDINAL_POSITION", 35, columns.getInt("ORDINAL_POSITION"));
+        assertEquals("Unexpected IS_NULLABLE", "YES", columns.getString("IS_NULLABLE"));
+        assertEquals("Unexpected IS_AUTOINCREMENT", "NO", columns.getString("IS_AUTOINCREMENT"));
+        
+        assertFalse("Expected only one row in resultset", columns.next());
+    }
+    
+    /**
+     * Checked getColumns() metadata for a VARCHAR(100) column with literal DEFAULT (DEFAULT 'literal').
+     * 
+     * @throws SQLException
+     */
+    public void testVarchar_DefaultLiteral() throws SQLException {
+        ResultSet columns = dbmd.getColumns(null, null, "test_column_metadata", "col_varchar_default_literal");
+        assertTrue("Expected row in column metadata", columns.next());
+        assertEquals("Unexpected TABLE_NAME", "TEST_COLUMN_METADATA", columns.getString("TABLE_NAME"));
+        assertEquals("Unexpected COLUMN_NAME", "COL_VARCHAR_DEFAULT_LITERAL", columns.getString("COLUMN_NAME"));
+        assertInvariantColumnMetaData(columns);
+        
+        assertEquals("Unexpected COLUMN_DEF not literal 'literal'", "'literal'", columns.getString("COLUMN_DEF"));
+        
+        // Other tests for completeness (repeats other testVarchar...() tests)
+        assertEquals("Unexpected DATA_TYPE", Types.VARCHAR, columns.getInt("DATA_TYPE"));
+        assertEquals("Unexpected TYPE_NAME", "VARCHAR", columns.getString("TYPE_NAME"));
+        assertEquals("Unexpected COLUMN_SIZE", 100, columns.getInt("COLUMN_SIZE"));
+        assertEquals("Unexpected DECIMAL_DIGITS", 0, columns.getInt("DECIMAL_DIGITS"));
+        assertTrue("DECIMAL_DIGITS expected to be actual NULL for VARCHAR", columns.wasNull());
+        assertEquals("Unexpected NUM_PREC_RADIX", 0, columns.getInt("NUM_PREC_RADIX"));
+        assertTrue("NUM_PREC_RADIX expected to be actual NULL for VARCHAR", columns.wasNull());
+        assertEquals("Unexpected NULLABLE", DatabaseMetaData.columnNullable, columns.getInt("NULLABLE"));
+        assertNull("Unexpected REMARKS not NULL", columns.getString("REMARKS"));
+        assertEquals("Unexpected CHAR_OCTET_LENGTH", 100, columns.getInt("CHAR_OCTET_LENGTH"));
+        assertEquals("Unexpected ORDINAL_POSITION", 36, columns.getInt("ORDINAL_POSITION"));
+        assertEquals("Unexpected IS_NULLABLE", "YES", columns.getString("IS_NULLABLE"));
+        assertEquals("Unexpected IS_AUTOINCREMENT", "NO", columns.getString("IS_AUTOINCREMENT"));
+        
+        assertFalse("Expected only one row in resultset", columns.next());
+    }
+    
+    /**
+     * Checked getColumns() metadata for a VARCHAR(100) with NOT NULL constraint.
+     * 
+     * @throws SQLException
+     */
+    public void testVarchar_NotNullColumn() throws SQLException {
+        ResultSet columns = dbmd.getColumns(null, null, "test_column_metadata", "col_varchar_not_null");
+        assertTrue("Expected row in column metadata", columns.next());
+        assertEquals("Unexpected TABLE_NAME", "TEST_COLUMN_METADATA", columns.getString("TABLE_NAME"));
+        assertEquals("Unexpected COLUMN_NAME", "COL_VARCHAR_NOT_NULL", columns.getString("COLUMN_NAME"));
+        assertInvariantColumnMetaData(columns);
+        
+        assertEquals("Unexpected NULLABLE", DatabaseMetaData.columnNoNulls, columns.getInt("NULLABLE"));
+        assertEquals("Unexpected IS_NULLABLE", "NO", columns.getString("IS_NULLABLE"));
+        
+        // Other tests for completeness (repeats other testVarchar...() tests)
+        assertEquals("Unexpected DATA_TYPE", Types.VARCHAR, columns.getInt("DATA_TYPE"));
+        assertEquals("Unexpected TYPE_NAME", "VARCHAR", columns.getString("TYPE_NAME"));
+        assertEquals("Unexpected COLUMN_SIZE", 100, columns.getInt("COLUMN_SIZE"));
+        assertEquals("Unexpected DECIMAL_DIGITS", 0, columns.getInt("DECIMAL_DIGITS"));
+        assertTrue("DECIMAL_DIGITS expected to be actual NULL for VARCHAR", columns.wasNull());
+        assertEquals("Unexpected NUM_PREC_RADIX", 0, columns.getInt("NUM_PREC_RADIX"));
+        assertTrue("NUM_PREC_RADIX expected to be actual NULL for VARCHAR", columns.wasNull());
+        assertNull("Unexpected REMARKS not NULL", columns.getString("REMARKS"));
+        assertNull("Unexpected COLUMN_DEF not NULL", columns.getString("COLUMN_DEF"));
+        assertEquals("Unexpected CHAR_OCTET_LENGTH", 100, columns.getInt("CHAR_OCTET_LENGTH"));
+        assertEquals("Unexpected ORDINAL_POSITION", 31, columns.getInt("ORDINAL_POSITION"));
         assertEquals("Unexpected IS_AUTOINCREMENT", "NO", columns.getString("IS_AUTOINCREMENT"));
         
         assertFalse("Expected only one row in resultset", columns.next());
@@ -1023,6 +1255,7 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
         assertNull("SCOPE_TABLE should be NULL", columns.getString("SCOPE_TABLE"));
         assertEquals("SOURCE_DATA_TYPE  should NULL/0", 0, columns.getShort("SOURCE_DATA_TYPE"));
         assertTrue("SOURCE_DATA_TYPE should be actual NULL", columns.wasNull());
+        // TODO Should IS_GENERATEDCOLUMN report on COMPUTED BY columns?
         assertEquals("", columns.getString("IS_GENERATEDCOLUMN"));
     }
 }
