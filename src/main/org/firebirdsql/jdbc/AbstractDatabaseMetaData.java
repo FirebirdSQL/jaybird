@@ -2561,25 +2561,30 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     private static final String GET_COLUMNS_START = 
-            "SELECT   RF.RDB$RELATION_NAME  AS RELATION_NAME  ," + 
-    		"         RF.RDB$FIELD_NAME     AS FIELD_NAME     ," + 
-    		"         F.RDB$FIELD_TYPE      AS FIELD_TYPE     ," + 
-    		"         F.RDB$FIELD_SUB_TYPE  AS FIELD_SUB_TYPE ," + 
-    		"         F.RDB$FIELD_PRECISION AS FIELD_PRECISION," + 
-    		"         F.RDB$FIELD_SCALE     AS FIELD_SCALE    ," + 
-    		"         F.RDB$FIELD_LENGTH    AS FIELD_LENGTH   ," + 
+            "SELECT   RF.RDB$RELATION_NAME  AS RELATION_NAME   ," + 
+    		"         RF.RDB$FIELD_NAME     AS FIELD_NAME      ," + 
+    		"         F.RDB$FIELD_TYPE      AS FIELD_TYPE      ," + 
+    		"         F.RDB$FIELD_SUB_TYPE  AS FIELD_SUB_TYPE  ," + 
+    		"         F.RDB$FIELD_PRECISION AS FIELD_PRECISION ," + 
+    		"         F.RDB$FIELD_SCALE     AS FIELD_SCALE     ," + 
+    		"         F.RDB$FIELD_LENGTH    AS FIELD_LENGTH    ," + 
     		"         CASE" + 
     		"                  WHEN F.RDB$CHARACTER_LENGTH IS NULL" + 
     		"                  AND      F.RDB$FIELD_TYPE IN (14," + 
     		"                                                37)" + 
     		"                  THEN F.RDB$FIELD_LENGTH" + 
     		"                  ELSE F.RDB$CHARACTER_LENGTH" + 
-    		"         END                   AS CHAR_LEN       ," + 
-    		"         RF.RDB$DESCRIPTION    AS REMARKS        ," + 
-    		"         RF.RDB$DEFAULT_SOURCE AS DEFAULT_SOURCE ," + 
-    		"         RF.RDB$FIELD_POSITION AS FIELD_POSITION ," + 
-    		"         RF.RDB$NULL_FLAG      AS NULL_FLAG      ," + 
-    		"         F.RDB$NULL_FLAG       AS SOURCE_NULL_FLAG " + 
+    		"         END                   AS CHAR_LEN        ," + 
+    		"         RF.RDB$DESCRIPTION    AS REMARKS         ," + 
+    		"         RF.RDB$DEFAULT_SOURCE AS DEFAULT_SOURCE  ," + 
+    		"         RF.RDB$FIELD_POSITION AS FIELD_POSITION  ," + 
+    		"         RF.RDB$NULL_FLAG      AS NULL_FLAG       ," + 
+    		"         F.RDB$NULL_FLAG       AS SOURCE_NULL_FLAG," +
+    		"         CASE" +
+    		"                  WHEN F.RDB$COMPUTED_BLR IS NULL" +
+    		"                  THEN 'NO'" +
+    		"                  ELSE 'YES'" +
+    		"         END                   AS IS_GENERATED " +
     		"FROM     RDB$RELATION_FIELDS RF," + 
     		"         RDB$FIELDS F " + 
     		"WHERE ";
@@ -2983,8 +2988,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                 // All other types are never autoincrement
                 row[22] = getBytes("NO");
             }
-            // TODO: Maybe generated is also meant for computed columns?
-            row[23] = getBytes("");
+            row[23] = getBytes(rs.getString("IS_GENERATED"));
 
             rows.add(row);
         } while (rs.next());
