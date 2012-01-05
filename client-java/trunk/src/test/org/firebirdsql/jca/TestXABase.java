@@ -36,7 +36,7 @@ import org.firebirdsql.common.FBTestBase;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class TestXABase extends FBTestBase {
+public abstract class TestXABase extends FBTestBase {
 
 
     public TestXABase(String name) {
@@ -48,27 +48,11 @@ public class TestXABase extends FBTestBase {
 
         FBManagedConnectionFactory mcf = createFBManagedConnectionFactory(new InternalConnectionManager());
         mcf.setDatabase(DB_DATASOURCE_URL);
-//        FBConnectionRequestInfo cri = createFBConnectionRequestInfo();
-//        cri.setProperty(ISCConstants.isc_dpb_user_name, DB_USER);
-//        cri.setProperty(ISCConstants.isc_dpb_password, DB_PASSWORD);
-//        cri.setProperty(ISCConstants.isc_dpb_num_buffers, new byte[] {90});
-//        cri.setProperty(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] {120, 10, 0, 0});
-//        cri.setProperty(ISCConstants.isc_dpb_sql_dialect, new byte[] {3});
-//        mcf.setConnectionRequestInfo(cri);
-        
         mcf.setUserName(DB_USER);
         mcf.setPassword(DB_PASSWORD);
         mcf.setBuffersNumber(90);
         mcf.setSqlDialect("3");
         
-        /*
-        HashSet tpb = new HashSet();
-        tpb.add(new Integer(ISCConstants.isc_tpb_write));
-        tpb.add(new Integer(ISCConstants.isc_tpb_read_committed));
-        tpb.add(new Integer(ISCConstants.isc_tpb_no_rec_version));
-        tpb.add(new Integer(ISCConstants.isc_tpb_wait));
-        mcf.setTpb(tpb);
-        */
         return mcf;
     }
 
@@ -81,14 +65,6 @@ public class TestXABase extends FBTestBase {
      * Distributable under LGPL license.
      * See terms of license at gnu.org.
      */
-     /*
-    package org.firebirdsql.jca.test;
-
-    import java.net.InetAddress;
-    import java.net.UnknownHostException;
-
-    import javax.transaction.xa.Xid;
-    */
 
     /**
      *  This object encapsulates the ID of a transaction.
@@ -297,8 +273,6 @@ public class TestXABase extends FBTestBase {
           return toString(this);
        }
 
-       // Package protected ---------------------------------------------
-
        /**
         *  Return the global transaction id of this transaction.
         *  Unlike the {@link #getGlobalTransactionId()} method, this one
@@ -310,12 +284,6 @@ public class TestXABase extends FBTestBase {
           return (byte[])globalId.clone();
        }
 
-
-       // Protected -----------------------------------------------------
-
-       // Private -------------------------------------------------------
-
-       // Inner classes -------------------------------------------------
     }
 
 }
