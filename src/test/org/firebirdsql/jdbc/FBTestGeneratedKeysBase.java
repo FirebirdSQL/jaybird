@@ -33,7 +33,7 @@ import org.firebirdsql.common.FBTestBase;
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-class FBTestGeneratedKeysBase extends FBTestBase {
+abstract class FBTestGeneratedKeysBase extends FBTestBase {
 
     private static final String DROP_TABLE = "DROP TABLE_WITH_TRIGGER";
     private static final String CREATE_TABLE = "CREATE TABLE TABLE_WITH_TRIGGER (\n"
