@@ -1420,6 +1420,7 @@ public final class ISCConstants {
     public final static int isc_gbak_not_ownr                    = 336331026;
     public final static int isc_gbak_mode_req                    = 336331031;
     public final static int isc_dsql_table_not_found             = 336397206;
+    public final static int isc_dsql_view_not_found              = 336397207;
     public final static int isc_gsec_cant_open_db                = 336723983;
     public final static int isc_gsec_switches_error              = 336723984;
     public final static int isc_gsec_no_op_spec                  = 336723985;

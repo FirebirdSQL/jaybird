@@ -28,7 +28,7 @@ import junit.framework.TestCase;
  * Base class for test cases which can be run against only a single GDS
  * implementation.
  */
-public class SimpleFBTestBase extends TestCase {
+public abstract class SimpleFBTestBase extends TestCase {
 	private static ResourceBundle testDefaults = ResourceBundle.getBundle("unit_test_defaults");
 
 	public static String getProperty(String property) {

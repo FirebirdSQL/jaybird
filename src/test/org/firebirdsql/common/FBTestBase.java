@@ -41,7 +41,7 @@ import org.firebirdsql.pool.FBWrappingDataSource;
  * Base class for test cases which could be run against more then a single GDS
  * implementation.
  */
-public class FBTestBase extends SimpleFBTestBase {
+public abstract class FBTestBase extends SimpleFBTestBase {
 
     protected final Logger log = LoggerFactory.getLogger(getClass(), true);
 
@@ -120,7 +120,7 @@ public class FBTestBase extends SimpleFBTestBase {
     }
     
     protected void executeDropTable(Connection connection, String sql) throws SQLException {
-        executeDDL(connection, sql, new int[]{ISCConstants.isc_no_meta_update, ISCConstants.isc_dsql_table_not_found});
+        executeDDL(connection, sql, new int[]{ISCConstants.isc_no_meta_update, ISCConstants.isc_dsql_table_not_found, ISCConstants.isc_dsql_view_not_found});
     }
 
     protected void executeDDL(Connection connection, String sql, int[] ignoreErrors) throws SQLException {
