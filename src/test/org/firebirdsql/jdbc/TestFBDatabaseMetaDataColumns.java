@@ -23,7 +23,6 @@ package org.firebirdsql.jdbc;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collections;
@@ -33,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for column related metadata.
@@ -120,8 +120,9 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
     public void testColumnMetaDataColumns() throws SQLException {
         ResultSet columns = dbmd.getColumns(null, null, null, null);
         for (ColumnMetaData column : getValidColumnMetaData()) {
-            column.assertColumnPosition(columns);
-            column.assertColumnType(columns);
+            MetaDataValidator<?> validator = column.getValidator();
+            validator.assertColumnPosition(columns);
+            validator.assertColumnType(columns);
         }
     }
 
@@ -826,7 +827,7 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
         try {
             assertTrue("Expected row in column metadata", columns.next());
             for (Map.Entry<ColumnMetaData, Object> rule : validationRules.entrySet()) {
-                rule.getKey().assertColumnValue(columns, rule.getValue());
+                rule.getKey().getValidator().assertColumnValue(columns, rule.getValue());
             }
             assertFalse("Expected only one row in resultset", columns.next());
         } finally {
@@ -916,7 +917,7 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
     /**
      * Columns defined for the getColumns() metadata.
      */
-    private enum ColumnMetaData {
+    private enum ColumnMetaData implements MetaDataInfo {
         TABLE_CAT(1, String.class), 
         TABLE_SCHEM(2, String.class), 
         TABLE_NAME(3, String.class), 
@@ -955,92 +956,12 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
             return position;
         }
         
-        /**
-         * Asserts the expected position of this column in the resultset.
-         * 
-         * @param rs ResultSet to use for asserting the column position
-         * @throws SQLException
-         */
-        public void assertColumnPosition(ResultSet rs) throws SQLException {
-            assertEquals(String.format("Unexpected column position for %s", this), getPosition(), rs.findColumn(name()));
+        public Class<?> getColumnClass() {
+            return columnClass;
         }
         
-        /**
-         * Asserts the type of this column as reported by the ResultSetMetaData.
-         * 
-         * @param rs ResultSet
-         * @throws SQLException
-         */
-        public void assertColumnType(ResultSet rs) throws SQLException {
-            ResultSetMetaData md = rs.getMetaData();
-            assertEquals(String.format("Unexpected SQL Type for column %s", this), getSqlType(), md.getColumnType(getPosition()));
-        }
-
-        /**
-         * Asserts the value of this column on the current row of the resultset.
-         * 
-         * @param rs ResultSet
-         * @param expectedValue Value expected
-         * @throws SQLException
-         */
-        public void assertColumnValue(ResultSet rs, Object expectedValue) throws SQLException {
-            if (columnClass.isInstance(expectedValue) || expectedValue == null) {
-                if (columnClass.equals(String.class)) {
-                    assertStringColumnValue(rs, (String) expectedValue);
-                } else if (columnClass.equals(Integer.class)) {
-                    assertIntegerColumnValue(rs, (Integer) expectedValue);
-                } else if (columnClass.equals(Short.class)) {
-                    assertShortColumnValue(rs, (Short) expectedValue);
-                } else {
-                    assertObjectColumnValue(rs, expectedValue);
-                }
-            } else {
-                assertObjectColumnValue(rs, expectedValue);
-            }
-        }
-
-        private void assertObjectColumnValue(ResultSet rs, Object expectedValue) throws SQLException {
-            Object value = rs.getObject(name());
-            assertEquals(String.format("Unexpected value for %s", this), expectedValue, value);
-        }
-
-        private void assertShortColumnValue(ResultSet rs, Short expectedValue) throws SQLException {
-            short value = rs.getShort(name());
-            if (expectedValue != null) {
-                assertEquals(String.format("Unexpected value for %s", this), expectedValue.shortValue(), value);
-                assertFalse(String.format("%s should not be actual NULL", name()), rs.wasNull());
-            } else {
-                assertEquals(String.format("Unexpected value for %s (expected NULL/0)", this), 0, value);
-                assertTrue(String.format("%s should be actual NULL", name()), rs.wasNull());
-            }
-        }
-
-        private void assertIntegerColumnValue(ResultSet rs, Integer expectedValue) throws SQLException {
-            int value = rs.getInt(name());
-            if (expectedValue != null) {
-                assertEquals(String.format("Unexpected value for %s", this), expectedValue.intValue(), value);
-                assertFalse(String.format("%s should not be actual NULL", name()), rs.wasNull());
-            } else {
-                assertEquals(String.format("Unexpected value for %s (expected NULL/0)", this), 0, value);
-                assertTrue(String.format("%s should be actual NULL", name()), rs.wasNull());
-            }
-        }
-
-        private void assertStringColumnValue(ResultSet rs, String expectedValue)
-                throws SQLException {
-            String value = rs.getString(name());
-            assertEquals(String.format("Unexpected value for %s", this), expectedValue, value);
-        }
-        
-        private int getSqlType() {
-            if (columnClass == String.class) {
-                return Types.VARCHAR;
-            } else if (columnClass == Integer.class) {
-                return Types.INTEGER;
-            } else if (columnClass == Short.class) {
-                return Types.SMALLINT;
-            }
-            return Types.OTHER;
+        public MetaDataValidator<?> getValidator() {
+            return new MetaDataValidator<ColumnMetaData>(this);
         }
     }
 }
