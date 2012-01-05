@@ -23,6 +23,7 @@ package org.firebirdsql.jdbc;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collections;
@@ -114,12 +115,13 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
     }
     
     /**
-     * Tests the ordinal positions for the metadata columns of getColumns().
+     * Tests the ordinal positions and types for the metadata columns of getColumns().
      */
-    public void testColumnMetaDataPositions() throws SQLException {
+    public void testColumnMetaDataColumns() throws SQLException {
         ResultSet columns = dbmd.getColumns(null, null, null, null);
         for (ColumnMetaData column : getValidColumnMetaData()) {
             column.assertColumnPosition(columns);
+            column.assertColumnType(columns);
         }
     }
 
@@ -890,11 +892,13 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
         return defaults;
     }
     
-    private static final EnumSet<ColumnMetaData> JDBC_41_COLUMN_METADATA;
-    private static final EnumSet<ColumnMetaData> JDBC_40_COLUMN_METADATA;
+    private static final Set<ColumnMetaData> JDBC_41_COLUMN_METADATA;
+    private static final Set<ColumnMetaData> JDBC_40_COLUMN_METADATA;
     static {
-        JDBC_41_COLUMN_METADATA = EnumSet.complementOf(EnumSet.of(ColumnMetaData.SCOPE_CATLOG));
-        JDBC_40_COLUMN_METADATA = EnumSet.complementOf(EnumSet.of(ColumnMetaData.SCOPE_CATALOG));
+        JDBC_41_COLUMN_METADATA = Collections.unmodifiableSet(
+                EnumSet.complementOf(EnumSet.of(ColumnMetaData.SCOPE_CATLOG)));
+        JDBC_40_COLUMN_METADATA = Collections.unmodifiableSet(
+                EnumSet.complementOf(EnumSet.of(ColumnMetaData.SCOPE_CATALOG)));
     }
     
     /**
@@ -960,6 +964,17 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
         public void assertColumnPosition(ResultSet rs) throws SQLException {
             assertEquals(String.format("Unexpected column position for %s", this), getPosition(), rs.findColumn(name()));
         }
+        
+        /**
+         * Asserts the type of this column as reported by the ResultSetMetaData.
+         * 
+         * @param rs ResultSet
+         * @throws SQLException
+         */
+        public void assertColumnType(ResultSet rs) throws SQLException {
+            ResultSetMetaData md = rs.getMetaData();
+            assertEquals(String.format("Unexpected SQL Type for column %s", this), getSqlType(), md.getColumnType(getPosition()));
+        }
 
         /**
          * Asserts the value of this column on the current row of the resultset.
@@ -1015,6 +1030,17 @@ public class TestFBDatabaseMetaDataColumns extends FBTestBase {
                 throws SQLException {
             String value = rs.getString(name());
             assertEquals(String.format("Unexpected value for %s", this), expectedValue, value);
+        }
+        
+        private int getSqlType() {
+            if (columnClass == String.class) {
+                return Types.VARCHAR;
+            } else if (columnClass == Integer.class) {
+                return Types.INTEGER;
+            } else if (columnClass == Short.class) {
+                return Types.SMALLINT;
+            }
+            return Types.OTHER;
         }
     }
 }

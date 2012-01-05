@@ -2713,7 +2713,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[3].relname = "COLUMNINFO";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_SHORT;
+        xsqlvars[4].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[4].sqlname = "DATA_TYPE";
         xsqlvars[4].relname = "COLUMNINFO";
 
@@ -2729,7 +2729,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[6].relname = "COLUMNINFO";
 
         xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = ISCConstants.SQL_SHORT;
+        xsqlvars[7].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[7].sqlname = "BUFFER_LENGTH";
         xsqlvars[7].relname = "COLUMNINFO";
 
@@ -2877,7 +2877,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             short fieldScale = rs.getShort("FIELD_SCALE");
             int dataType = getDataType(fieldType, fieldSubType, fieldScale);
 
-            row[4] = xsqlvars[0].encodeShort((short) dataType);
+            row[4] = xsqlvars[0].encodeInt(dataType);
             row[5] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
             
             row[7] = null;
