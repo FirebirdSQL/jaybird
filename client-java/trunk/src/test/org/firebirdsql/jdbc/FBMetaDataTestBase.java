@@ -106,8 +106,8 @@ public abstract class FBMetaDataTestBase<T extends Enum & MetaDataInfo> extends 
     }
 
     /**
-     * Method providing the list of DROP statements to be executed in the
-     * setUp() and tearDown().
+     * Provides the list of DROP statements to be executed in the setUp() and
+     * tearDown().
      * <p>
      * The provided list must be ordered based on dependencies between objects
      * (if any)
@@ -118,8 +118,7 @@ public abstract class FBMetaDataTestBase<T extends Enum & MetaDataInfo> extends 
     protected abstract List<String> getDropStatements();
 
     /**
-     * Methods providing the list of CREATE (or other DDL) to be executed in the
-     * setUp().
+     * Provides the list of CREATE (or other DDL) to be executed in the setUp().
      * <p>
      * The provided list must be ordered based on dependencies between objects
      * (if any)

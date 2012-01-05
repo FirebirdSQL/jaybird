@@ -59,7 +59,8 @@ public class MetaDataValidator<T extends Enum & MetaDataValidator.MetaDataInfo> 
      */
     public void assertColumnType(ResultSet rs) throws SQLException {
         ResultSetMetaData md = rs.getMetaData();
-        assertEquals(String.format("Unexpected SQL Type for column %s", mdi), getSqlType(), md.getColumnType(mdi.getPosition()));
+        int sqlType = md.getColumnType(mdi.getPosition());
+        assertTrue(String.format("Unexpected SQL Type %d for column %s", sqlType, mdi), isAllowedSqlType(sqlType));
     }
 
     /**
@@ -118,17 +119,16 @@ public class MetaDataValidator<T extends Enum & MetaDataValidator.MetaDataInfo> 
         assertEquals(String.format("Unexpected value for %s", mdi), expectedValue, value);
     }
     
-    private int getSqlType() {
+    private boolean isAllowedSqlType(int sqlType) {
         if (mdi.getColumnClass() == String.class) {
-            return Types.VARCHAR;
+            return (sqlType == Types.CHAR || sqlType == Types.VARCHAR || sqlType == Types.LONGVARCHAR);
         } else if (mdi.getColumnClass() == Integer.class) {
-            return Types.INTEGER;
+            return (sqlType == Types.INTEGER);
         } else if (mdi.getColumnClass() == Short.class) {
-            return Types.SMALLINT;
+            return (sqlType == Types.SMALLINT);
         }
-        return Types.OTHER;
+        return false;
     }
-
     
     /**
      * Interface for the information enums for metadata columns should be able to provide for the {@link MetaDataValidator}.
