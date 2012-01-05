@@ -2261,137 +2261,64 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public static final String SYSTEM_TABLE = "SYSTEM TABLE";
     public static final String VIEW = "VIEW";
     public static final String[] ALL_TYPES = {TABLE, SYSTEM_TABLE, VIEW};
+    
+    private static final String TABLE_COLUMNS_FORMAT =
+              " select cast(null as varchar(31)) as TABLE_CAT,"
+            + " cast(null as varchar(31)) as TABLE_SCHEM,"
+            + " RDB$RELATION_NAME as TABLE_NAME,"
+            + " cast('%s' as varchar(31)) as TABLE_TYPE,"
+            + " RDB$DESCRIPTION as REMARKS,"
+            + " cast(null as varchar(31)) as TYPE_CAT,"
+            + " cast(null as varchar(31)) as TYPE_SCHEM,"
+            + " cast(null as varchar(31)) as TYPE_NAME,"
+            + " cast(null as varchar(31)) as SELF_REFERENCING_COL_NAME,"
+            + " cast(null as varchar(31)) as REF_GENERATION,"
+            + " RDB$OWNER_NAME as OWNER_NAME"
+            + " from RDB$RELATIONS";
+    
+    private static final String TABLE_COLUMNS_SYSTEM =
+            String.format(TABLE_COLUMNS_FORMAT, SYSTEM_TABLE);
+    
+    private static final String TABLE_COLUMNS_NORMAL =
+            String.format(TABLE_COLUMNS_FORMAT, TABLE);
+    
+    private static final String TABLE_COLUMNS_VIEW =
+            String.format(TABLE_COLUMNS_FORMAT, VIEW);
 
-    private static final String GET_TABLES_ALL = "select null as TABLE_CAT,"
-        + " null as TABLE_SCHEM,"
-        + " RDB$RELATION_NAME as TABLE_NAME,"
-        + " cast('" + SYSTEM_TABLE + "' as varchar(31)) as TABLE_TYPE,"
-        + " RDB$DESCRIPTION as REMARKS,"
-        + " null as TYPE_CAT,"
-        + " null as TYPE_SCHEM,"
-        + " null as TYPE_NAME,"
-        + " null as SELF_REFERENCING_COL_NAME,"
-        + " null as REF_GENERATION,"
-        + " RDB$OWNER_NAME as OWNER_NAME"
-        + " from RDB$RELATIONS"
+    private static final String GET_TABLES_ALL = 
+          TABLE_COLUMNS_SYSTEM
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
         + " union"
-        + " select null as TABLE_CAT,"
-        + " null as TABLE_SCHEM,"
-        + " RDB$RELATION_NAME as TABLE_NAME,"
-        + " cast('" + TABLE + "' as varchar(31)) as TABLE_TYPE,"
-        + " RDB$DESCRIPTION as REMARKS,"
-        + " null as TYPE_CAT,"
-        + " null as TYPE_SCHEM,"
-        + " null as TYPE_NAME,"
-        + " null as SELF_REFERENCING_COL_NAME,"
-        + " null as REF_GENERATION,"
-        + " RDB$OWNER_NAME as OWNER_NAME"
-        + " from RDB$RELATIONS"
+        + TABLE_COLUMNS_NORMAL
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
         + " union"
-        + " select null as TABLE_CAT,"
-        + " null as TABLE_SCHEM,"
-        + " RDB$RELATION_NAME as TABLE_NAME,"
-        + " cast('" + VIEW + "' as varchar(31)) as TABLE_TYPE,"
-        + " RDB$DESCRIPTION as REMARKS,"
-        + " null as TYPE_CAT,"
-        + " null as TYPE_SCHEM,"
-        + " null as TYPE_NAME,"
-        + " null as SELF_REFERENCING_COL_NAME,"
-        + " null as REF_GENERATION,"
-        + " RDB$OWNER_NAME as OWNER_NAME"
-        + " from RDB$RELATIONS"
+        + TABLE_COLUMNS_VIEW
         + " where ? = 'T' and RDB$VIEW_SOURCE is not null "
         + " order by 3 ";
 
-    private static final String GET_TABLES_EXACT = "select null as TABLE_CAT,"
-        + " null as TABLE_SCHEM,"
-        + " RDB$RELATION_NAME as TABLE_NAME,"
-        + " cast('" + SYSTEM_TABLE + "' as varchar(31)) as TABLE_TYPE,"
-        + " RDB$DESCRIPTION as REMARKS,"
-        + " null as TYPE_CAT,"
-        + " null as TYPE_SCHEM,"
-        + " null as TYPE_NAME,"
-        + " null as SELF_REFERENCING_COL_NAME,"
-        + " null as REF_GENERATION,"
-        + " RDB$OWNER_NAME as OWNER_NAME"
-        + " from RDB$RELATIONS"
+    private static final String GET_TABLES_EXACT = 
+          TABLE_COLUMNS_SYSTEM
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
         + " and ? = RDB$RELATION_NAME"
         + " union"
-        + " select null as TABLE_CAT,"
-        + " null as TABLE_SCHEM,"
-        + " RDB$RELATION_NAME as TABLE_NAME,"
-        + " cast('" + TABLE + "' as varchar(31)) as TABLE_TYPE,"
-        + " RDB$DESCRIPTION as REMARKS,"
-        + " null as TYPE_CAT,"
-        + " null as TYPE_SCHEM,"
-        + " null as TYPE_NAME,"
-        + " null as SELF_REFERENCING_COL_NAME,"
-        + " null as REF_GENERATION,"
-        + " RDB$OWNER_NAME as OWNER_NAME"
-        + " from RDB$RELATIONS"
+        + TABLE_COLUMNS_NORMAL
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
         + " and ? = RDB$RELATION_NAME"
         + " union"
-        + " select null as TABLE_CAT,"
-        + " null as TABLE_SCHEM,"
-        + " RDB$RELATION_NAME as TABLE_NAME,"
-        + " cast('" + VIEW + "' as varchar(31)) as TABLE_TYPE,"
-        + " RDB$DESCRIPTION as REMARKS,"
-        + " null as TYPE_CAT,"
-        + " null as TYPE_SCHEM,"
-        + " null as TYPE_NAME,"
-        + " null as SELF_REFERENCING_COL_NAME,"
-        + " null as REF_GENERATION,"
-        + " RDB$OWNER_NAME as OWNER_NAME"
-        + " from RDB$RELATIONS"
+        + TABLE_COLUMNS_VIEW
         + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
         + " and ? = RDB$RELATION_NAME";
 
-    private static final String GET_TABLES_LIKE = "select null as TABLE_CAT,"
-        + " null as TABLE_SCHEM,"
-        + " RDB$RELATION_NAME as TABLE_NAME,"
-        + " cast('" + SYSTEM_TABLE + "' as varchar(31)) as TABLE_TYPE,"
-        + " RDB$DESCRIPTION as REMARKS,"
-        + " null as TYPE_CAT,"
-        + " null as TYPE_SCHEM,"
-        + " null as TYPE_NAME,"
-        + " null as SELF_REFERENCING_COL_NAME,"
-        + " null as REF_GENERATION,"
-        + " RDB$OWNER_NAME as OWNER_NAME"
-        + " from RDB$RELATIONS"
+    private static final String GET_TABLES_LIKE = 
+          TABLE_COLUMNS_SYSTEM
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
         + " and RDB$RELATION_NAME || '" + SPACES + "' like ? escape '\\'"
         + " union"
-        + " select null as TABLE_CAT,"
-        + " null as TABLE_SCHEM,"
-        + " RDB$RELATION_NAME as TABLE_NAME,"
-        + " cast('" + TABLE + "' as varchar(31)) as TABLE_TYPE,"
-        + " RDB$DESCRIPTION as REMARKS,"
-        + " null as TYPE_CAT,"
-        + " null as TYPE_SCHEM,"
-        + " null as TYPE_NAME,"
-        + " null as SELF_REFERENCING_COL_NAME,"
-        + " null as REF_GENERATION,"
-        + " RDB$OWNER_NAME as OWNER_NAME"
-        + " from RDB$RELATIONS"
+        + TABLE_COLUMNS_NORMAL
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
         + " and RDB$RELATION_NAME || '" + SPACES + "' like ? escape '\\'"
         + " union"
-        + " select null as TABLE_CAT,"
-        + " null as TABLE_SCHEM,"
-        + " RDB$RELATION_NAME as TABLE_NAME,"
-        + " cast('" + VIEW + "' as varchar(31)) as TABLE_TYPE,"
-        + " RDB$DESCRIPTION as REMARKS,"
-        + " null as TYPE_CAT,"
-        + " null as TYPE_SCHEM,"
-        + " null as TYPE_NAME,"
-        + " null as SELF_REFERENCING_COL_NAME,"
-        + " null as REF_GENERATION,"
-        + " RDB$OWNER_NAME as OWNER_NAME"
-        + " from RDB$RELATIONS"
+        + TABLE_COLUMNS_VIEW
         + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
         + " and RDB$RELATION_NAME || '" + SPACES + "' like ? escape '\\' "
         + " order by 3 ";
@@ -2453,7 +2380,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         if (types == null) {
             types = ALL_TYPES;
         }
-        String sql = "";
+        String sql;
         ArrayList params = new ArrayList();
         if (isAllCondition(tableNamePattern)) {
             sql = GET_TABLES_ALL;
@@ -2463,7 +2390,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         }
         else if (hasNoWildcards(tableNamePattern)) {
             tableNamePattern = stripQuotes(stripEscape(tableNamePattern), true);
-            sql = (GET_TABLES_EXACT);
+            sql = GET_TABLES_EXACT;
             params.add(getWantsSystemTables(types));
             params.add(tableNamePattern);
             params.add(getWantsTables(types));
@@ -2472,8 +2399,9 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             params.add(tableNamePattern);
         }
         else {
+            // TODO Usages of 1) uppercase and 2) SPACES + % might be wrong
             tableNamePattern = stripQuotes(tableNamePattern, true) + SPACES + "%";
-            sql = (GET_TABLES_LIKE);
+            sql = GET_TABLES_LIKE;
             params.add(getWantsSystemTables(types));
             params.add(tableNamePattern);
             params.add(getWantsTables(types));
