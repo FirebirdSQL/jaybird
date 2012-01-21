@@ -57,11 +57,11 @@ public class TestFBDatabaseMetaDataUDTs extends FBMetaDataTestBase<TestFBDatabas
      * Tests the ordinal positions and types for the metadata columns of getUDTs().
      */
     public void testUDTMetaDataColumns() throws Exception {
-        ResultSet columns = dbmd.getUDTs(null, null, null, null);
+        ResultSet udts = dbmd.getUDTs(null, null, null, null);
         try {
-            validateResultSetColumns(columns);
+            validateResultSetColumns(udts);
         } finally {
-            closeQuietly(columns);
+            closeQuietly(udts);
         }
     }
     

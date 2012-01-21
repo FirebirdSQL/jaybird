@@ -1818,6 +1818,10 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public ResultSet getProcedures(String catalog, String schemaPattern,
             String procedureNamePattern) throws SQLException {
         checkCatalogAndSchema(catalog, schemaPattern);
+        
+        if (procedureNamePattern == null || procedureNamePattern.equals("")) {
+            procedureNamePattern = "%";
+        }
 
         XSQLVAR[] xsqlvars = new XSQLVAR[9];
 

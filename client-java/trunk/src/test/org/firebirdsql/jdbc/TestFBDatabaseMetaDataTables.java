@@ -168,6 +168,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types);
         // TODO: Should quoted table names be returned quoted?
         // Expected user tables + a selection of expected system tables (some that existed in Firebird 1.0)
+        // TODO Add test for order?
         Set<String> expectedTables = new HashSet(Arrays.asList("TEST_NORMAL_TABLE",
                 "test_quoted_normal_table", "TEST_NORMAL_VIEW", "test_quoted_normal_view",
                 "RDB$FIELDS", "RDB$GENERATORS", "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS"));
